@@ -1,0 +1,72 @@
+/* default */
+
+body {
+	color: #FFF;
+}
+
+body,
+#home {
+	background-image: linear-gradient(to top, #3f51b1 0%, #5a55ae 13%, #7b5fac 25%, #8f6aae 38%, #a86aa4 50%, #cc6b8e 62%, #f18271 75%, #f3a469 87%, #f7c978 100%);
+}
+
+header,
+#fixednav {
+	background-color:rgba(72, 37, 108, 0.72);
+	box-shadow: 0.5em 0.5em 0.5em rgba(0, 0, 0, 0.2);
+}
+
+.requestlist, .applist {
+	padding:0 0.5em 2em 0.3em;
+}
+
+.requestlist li.rqli,
+.applist > li {
+	background-color: rgba(255, 255, 255, 0.15);
+	margin: 0.3em 0;
+	border-radius:1em;
+	border-left: 0.5em solid #60457c;
+}
+
+.requestlist li .brmarker {
+	display:none;
+}
+
+#usedcurrencies {
+	filter:inherit;
+	-webkit-filter:none;
+	filter:none;
+}
+
+.liwrap {
+	color:white;
+}
+
+.settinglist .iconbox {
+	color: #FFF;
+}
+
+.requestlist .rq_date {
+	color:#FFF;
+}
+
+.requestlist li.requestoutgoing.visible_request,
+.requestlist li.requestoutgoing.visible_request .brstatuspanel,
+.requestlist li.requestoutgoing .brmarker {
+	background-color: rgba(255, 255, 255, 0.25);
+}
+
+.requestlist li.requestlocal.visible_request,
+.requestlist li.requestlocal.visible_request .brstatuspanel,
+.requestlist li.requestlocal .brmarker {
+	background-color: rgba(255, 255, 255, 0.11);
+}
+
+/* ccustom */
+
+.requestlist li .liwrap img.cmc_icon {
+	filter: none!important;
+	-webkit-filter:!important;
+	filter: none!important;
+	background-color: rgba(255, 255, 255, 0.59);
+	border-radius:50%;
+}

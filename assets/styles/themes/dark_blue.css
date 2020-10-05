@@ -1,0 +1,43 @@
+body {
+	background-color: #1c2837;
+	color:#adadad;
+}
+
+header,
+#fixednav {
+	background-color: #243242;
+	box-shadow: 0.5em 0.5em 0.5em rgba(0, 0, 0, 0.4);
+}
+
+#header h1,
+#homenav,
+.nav li a {
+	color:#adadad;
+}
+
+.highlighter {
+	background-color: #adadad;
+}
+
+.requestlist, .applist {
+	padding:0 0.5em 2em 0.3em;
+}
+
+.requestlist li.rqli,
+.applist > li {
+	background-color: #243242;
+	margin: 0.3em 0;
+	border-radius:1em;
+	border-left: 0.5em solid #46494C;
+	box-shadow: 0.5em 0.5em 0.5em rgba(0, 0, 0, 0.2);
+}
+
+.requestlist li .brmarker {
+	display:none;
+}
+
+#usedcurrencies {
+	filter:inherit;
+	-webkit-filter:none;
+	filter:none;
+}

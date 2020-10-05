@@ -1,0 +1,20 @@
+{
+  "short_name": "Bitrequest",
+  "name": "Bitrequest",
+  "icons": [
+    {
+      "src": "img/icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "img/icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#4D5359",
+  "display": "standalone",	
+  "theme_color": "#4D5359"
+}

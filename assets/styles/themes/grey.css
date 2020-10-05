@@ -1,0 +1,39 @@
+/* default */
+
+body {
+	color: #cccccc;
+}
+
+body,
+#home {
+	background-color: #4D5359;
+}
+
+header,
+#fixednav {
+	background-color:#4d4d4d;
+}
+
+#header h1,
+#homenav,
+.nav li a {
+	color:#cccccc;
+}
+
+.heading {
+	padding-bottom:1.3em;
+}
+
+.highlighter {
+	background-color: #7e7e7e;
+}
+
+.liwrap {
+	color:#cccccc;
+}
+
+.requestlist .rq_date {
+	color:#cccccc;
+}
+
+/* ccustom */

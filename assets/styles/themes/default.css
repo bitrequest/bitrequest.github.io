@@ -1,0 +1,31 @@
+body,
+.requestlist li.rqli,
+.requestlist li .brmarker,
+.requestlist li .brstatuspanel {
+	background-color: #2c333a;
+}
+
+.requestlist li.rqli:nth-child(odd) {
+	background-color: rgba(78, 83, 89, 0.15);
+}
+
+header,
+#fixednav {
+	background-color: #4D5359;
+}
+
+.heading {
+	padding-bottom:1.3em;
+}
+
+.requestlist li.requestoutgoing.visible_request,
+.requestlist li.requestoutgoing.visible_request .brstatuspanel,
+.requestlist li.requestoutgoing .brmarker {
+	background-color: #484c46;
+}
+
+.requestlist li.requestlocal.visible_request,
+.requestlist li.requestlocal.visible_request .brstatuspanel,
+.requestlist li.requestlocal .brmarker {
+	background-color: #3F4F5B;
+}

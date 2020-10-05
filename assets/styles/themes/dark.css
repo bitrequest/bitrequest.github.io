@@ -1,0 +1,48 @@
+body,
+.requestlist li .brmarker,
+.requestlist li .brstatuspanel {
+	background-color: #121217;
+}
+
+header,
+#fixednav {
+	background-color: #27272c;
+	box-shadow: 0.5em 0.5em 0.5em rgba(0, 0, 0, 0.4);
+}
+
+#header h1,
+#homenav,
+.nav li a {
+	color:#94979a;
+}
+
+.highlighter {
+	background-color: #b3b3b3;
+}
+
+.requestlist, .applist {
+	padding:0 0.5em 2em 0.3em;
+}
+
+.requestlist li.rqli,
+.applist > li {
+	background-color: #27272c;
+	margin: 0.3em 0;
+	border-radius:1em;
+	border-left: 0.5em solid #46494C;
+	box-shadow: 0.5em 0.5em 0.5em rgba(0, 0, 0, 0.2);
+}
+
+.requestlist li .brmarker {
+	display:none;
+}
+
+.requestlist li.requestoutgoing.visible_request,
+.requestlist li.requestoutgoing.visible_request .brstatuspanel {
+	background-color: #46494C;
+}
+
+.requestlist li.requestlocal.visible_request,
+.requestlist li.requestlocal.visible_request .brstatuspanel {
+	background-color: #3F4F5B;
+}
