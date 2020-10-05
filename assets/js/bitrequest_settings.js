@@ -178,7 +178,7 @@ function edit_contactform(checkout) {
         countryinput = thisdata.country,
         emailinput = thisdata.email,
         formheader = (checkout === true) ? "Contactform / shipping" : "Contactform",
-        form_subheader = (checkout === true) ? "" : "<p>You details for online purchases.</p>",
+        form_subheader = (checkout === true) ? "" : "<p>Your details for online purchases.</p>",
         content = "\
 	<div class='formbox' id='contactformbox'>\
 		<h2 class='icon-sphere'>" + formheader + "</h2>" + form_subheader +
