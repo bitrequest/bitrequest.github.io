@@ -62,7 +62,7 @@ function blockcypher_scan_data(data, setconfirmations, ccsymbol) { // scan
 }
 
 function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) { // poll
-    if (data) {
+	if (data) {
         var is_eth = (ccsymbol == "eth"),
         	datetimeparts = (data.received) ? data.received.split("T") : null,
 			transactiontime = (datetimeparts) ? returntimestamp(makedatestring(datetimeparts)).getTime() : null,

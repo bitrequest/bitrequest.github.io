@@ -2343,7 +2343,7 @@ function api_proxy(ad) { // callback function from bitrequest.js
         set_key = (api_key) ? true : false,
         nokey = (key_param == "post") ? false : (!key_param) ? true : false,
         key_pass = (nokey === true || set_key === true);
-    if (proxy === false || (phpsupportglobal === false && key_pass === true && proxy !== true)) {
+    if (proxy === false && key_pass === true) {
         params.url = api_url;
         var bearer = ad.bearer;
         if (bearer && bearer === true) {

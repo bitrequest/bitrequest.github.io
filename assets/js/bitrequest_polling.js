@@ -67,7 +67,8 @@ function api_monitor(api_data, txhash, tx_data) {
             });
         }
 
-        function api_result(data) {
+        function api_result(result) {
+	        var data = result.result;
             if (data.error) {
                 clearpingtx();
                 handle_api_fails(false, data.error, api_name, payment, txhash);
@@ -137,7 +138,8 @@ function rpc_monitor(rpcdata, txhash, tx_data) {
             });
         }
 
-        function rpc_result(data) {
+        function rpc_result(result) {
+	        var data = result.result;
             if (data.error) {
                 clearpingtx();
                 handle_rpc_monitor_fails(rpcdata, data.error, txhash);
@@ -208,7 +210,6 @@ function rmpl(payment, rpcurl, txhash) { // rpc_monitor payload
 function ping_eth_node(rpcdata, txhash) {
     if (web3) {
         var rpcurl = rpcdata.url + get_infura_apikey(rpcdata.url);
-        console.log(rpcurl);
         if (web3.currentProvider.host == rpcurl) {} else {
             web3.setProvider(rpcurl);
         }
@@ -345,7 +346,7 @@ function handle_rpc_monitor_fails(rpcdata, error, txhash) {
 }
 
 function confirmations(tx_data, direct) {
-    if (tx_data === false || tx_data.ccval === undefined) {
+	if (tx_data === false || tx_data.ccval === undefined) {
         return false;
     }
     var brstatuspanel = $("#paymentdialogbox .brstatuspanel"),

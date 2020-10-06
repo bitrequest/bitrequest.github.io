@@ -582,7 +582,7 @@ function continue_paymentfunction(payment) {
                 "cachefolder": "1h",
                 "params": {
                     "method": "GET",
-                    "cache": false
+                    "cache": true
                 },
             }).done(function(e) {
                 var data = br_result(e).result,
@@ -900,8 +900,8 @@ function continue_paymentfunction(payment) {
             ccamounttext = "(" + thiscurrencyvaluefixedvar + " " + payment + ")",
             sharebuttonclass = (rn_set === true && rt_set === true) ? " sbactive" : "",
             cryptologo = getcc_icon(cmcid, cpid, erc20),
-            sharebutton = "<div class='button" + sharebuttonclass + "' id='sharebutton'><span class='icon-share2'>Share request</span></div>";
-        initrequestname = (rn_set === true) ? requestname : $("#accountsettings").data("selected"),
+            sharebutton = "<div class='button" + sharebuttonclass + "' id='sharebutton'><span class='icon-share2'>Share request</span></div>",
+			initrequestname = (rn_set === true) ? requestname : $("#accountsettings").data("selected"),
             sharetitle_exceed = (requesttitle && requesttitle.length > 65),
             exceedclass = (sharetitle_exceed === true) ? "title_exceed" : "",
             requesttitle_short = (sharetitle_exceed === true) ? requesttitle.substring(0, 44) + "<span>...</span>" : requesttitle,
@@ -1057,6 +1057,8 @@ function continue_paymentfunction(payment) {
         if (inframe === true) {
             parent.postMessage("close_loader", "*");
         }
+        var title_node = $("#requesttitle");
+        title_node.attr("placeholder", "eg: " + title_node.attr("data-ph" + getrandomnumber(1, 13)));
         console.log({"request_object": request});
         console.log({"helper": helper});
     }
@@ -1767,7 +1769,7 @@ function whatsappshare() {
     $(document).on("click touch", "#whatsappshare", function(e) {
         e.preventDefault();
         sharecallback();
-        window.location.href = "https://api.whatsapp.com/send?text=" + encodeURIComponent(getshareinfo().body);
+        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(getshareinfo().body));
     });
 }
 
