@@ -598,13 +598,13 @@ html.showmain ul#currencylist {
 #newrequest_alias {
     display: block;
     position: fixed;
-    bottom:0.2em;
+    bottom:0.3em;
     left:50%;
     float: right;
     font-size: 250%;
-    width: 1.5em;
-    height: 1.5em;
-    margin: 0 0 0 -0.75em;
+    width: 2em;
+    height: 2em;
+    margin: 0 0 0 -1em;
     background-color: #009788;
     color: #009788;
     border-radius: 50%;
@@ -626,12 +626,12 @@ html.showmain #newrequest_alias {
 #newrequest_alias>span {
     display: block;
     position: absolute;
-    top: 0.4em;
-    left: 0.42em;
+    top: 0.38em;
+    left: 0.41em;
     margin: 0;
     padding: 0;
     text-align: center;
-    font-size: 80%;
+    font-size: 110%;
     color: #FFF;
 }
 
