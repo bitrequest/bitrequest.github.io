@@ -42,7 +42,7 @@ body {
 html.noframe body.showstartpage #mainwrap,
 html.inframe body.showstartpage #mainwrap header,
 html.inframe body.showstartpage #mainwrap #viewarchive,
-html.inframe body.showstartpage #mainwrap .newrequest_alias,
+html.inframe body.showstartpage #newrequest_alias,
 html.inframe body.showstartpage #fixednav {
     display: none !important;
 }
@@ -595,14 +595,16 @@ html.showmain ul#currencylist {
     padding: 0.35em;
 }
 
-.newrequest_alias {
+#newrequest_alias {
     display: block;
-    position: relative;
+    position: fixed;
+    bottom:0.2em;
+    left:50%;
     float: right;
     font-size: 250%;
     width: 1.5em;
     height: 1.5em;
-    margin: 0.3em 0.3em 0.3em 0;
+    margin: 0 0 0 -0.75em;
     background-color: #009788;
     color: #009788;
     border-radius: 50%;
@@ -612,9 +614,16 @@ html.showmain ul#currencylist {
     -webkit-transition: opacity 300ms linear;
     -ms-transition: opacity 300ms linear;
     transition: opacity 300ms linear;
+    pointer-events:none;
+    opacity:0;
 }
 
-.newrequest_alias>span {
+html.showmain #newrequest_alias {
+	pointer-events:all;
+	opacity:0.75;
+}
+
+#newrequest_alias>span {
     display: block;
     position: absolute;
     top: 0.4em;

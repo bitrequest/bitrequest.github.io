@@ -45,7 +45,7 @@ var bitrequest_coin_data = [{
                 "switch": true,
             },
             "Use random address": {
-                "icon": "point-up",
+                "icon": "dice",
                 "selected": false,
                 "switch": true,
             },
@@ -117,7 +117,7 @@ var bitrequest_coin_data = [{
         },
         "settings": {
             "Use random address": {
-                "icon": "point-up",
+                "icon": "dice",
                 "selected": false,
                 "switch": true,
             }
@@ -140,7 +140,7 @@ var bitrequest_coin_data = [{
                 "selected": 0
             },
             "Use random address": {
-                "icon": "point-up",
+                "icon": "dice",
                 "selected": false,
                 "switch": true,
             },
@@ -201,7 +201,7 @@ var bitrequest_coin_data = [{
                 "selected": 0
             },
             "Use random address": {
-                "icon": "point-up",
+                "icon": "dice",
                 "selected": false,
                 "switch": true,
             },
@@ -258,7 +258,7 @@ var bitrequest_coin_data = [{
         },
         "settings": {
 	        "Use random address": {
-                "icon": "point-up",
+                "icon": "dice",
                 "selected": false,
                 "switch": true,
             },
@@ -326,7 +326,7 @@ var bitrequest_coin_data = [{
                 "selected": 0
             },
             "Use random address": {
-                "icon": "point-up",
+                "icon": "dice",
                 "selected": false,
                 "switch": true,
             },
@@ -398,7 +398,7 @@ var erc20_settings = {
         "selected": 0
     },
     "Use random address": {
-        "icon": "point-up",
+        "icon": "dice",
         "selected": false,
         "switch": true,
     },
@@ -479,7 +479,7 @@ var app_settings = [{
         "id": "contactform",
         "heading": "Contact form",
         "selected": "Contact form",
-        "icon": "icon-user",
+        "icon": "icon-file-text",
         "name": "",
         "address": "",
         "zipcode": "",

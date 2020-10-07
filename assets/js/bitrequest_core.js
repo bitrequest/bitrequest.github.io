@@ -1971,7 +1971,7 @@ function showoptions(content, addclass) {
 }
 
 function newrequest_alias() {
-    $(document).on("click touch", ".newrequest_alias", function() {
+    $(document).on("click touch", "#newrequest_alias", function() {
         var currencylist = $("#currencylist"),
             active_currencies = currencylist.find("li").not(".hide"),
             active_currency_count = active_currencies.length;
@@ -2925,7 +2925,6 @@ function buildpage(cd, init) {
 				<div class='reset_cc_settings button' data-currency='" + currency + "'>\
 					<span>Reset</span>\
 				</div>\
-				<div class='newrequest_alias noselect'>a<span class='icon-qrcode'></span></div>\
 			</div>\
 		</div>" : "";
         var settingsbutton = (has_settings === true) ? "<a href='?p=" + currency + "_settings' class='self icon-cog'></a>" : "";
@@ -2934,7 +2933,6 @@ function buildpage(cd, init) {
 				<h2 class='heading'>" + currency + settingsbutton + "</h2>\
 				<ul class='applist listyle2 pobox' data-currency='" + currency + "'>\
 					<div class='endli'><div class='button addaddress' data-currency='" + currency + "'><span class='icon-plus'>Add address</span></div></div>\
-					<div class='newrequest_alias noselect'>a<span class='icon-qrcode'></span></div>\
 				</ul>\
 			</div>\
 		</div>" +

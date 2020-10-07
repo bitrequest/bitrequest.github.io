@@ -380,10 +380,10 @@
     content: "\e964";
 }
 
-.icon-profile:before {
-	content: "\e923";
+.icon-dice:before {
+	content: "\e915";
 }
 
-.icon-point-up:before {
-	content: "\ea03";
+.icon-file-text:before {
+	content: "\e922";
 }
