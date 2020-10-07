@@ -10,7 +10,7 @@ Create and share payment requests for cryptocurrencies
 
 * Point of Sale
 * Send cryptocurrency payment requests to your friends
-* Integrate in your webshop
+* Integrate in your webshop (Beta)
 
 ## Features
 
