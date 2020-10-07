@@ -379,3 +379,11 @@
 .icon-database:before {
     content: "\e964";
 }
+
+.icon-profile:before {
+	content: "\e923";
+}
+
+.icon-point-up:before {
+	content: "\ea03";
+}

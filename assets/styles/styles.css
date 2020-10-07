@@ -864,6 +864,11 @@ html.dragmode .currentpage .applist li {
     -webkit-transition: -webkit-transform 200ms linear;
     -ms-transition: -ms-transform 200ms linear;
     transition: transform 200ms linear;
+    touch-action: none;
+}
+
+html.dragmode .currentpage .applist li .popoptions {
+    touch-action: none;
 }
 
 html.dragmode .currentpage .applist li.dragging {
@@ -4171,4 +4176,4 @@ html.inframe body {
 #proxy_info a {
 	color: #3498db;
 	font-weight: 700;
-}
+}z

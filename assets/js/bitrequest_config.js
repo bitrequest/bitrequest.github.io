@@ -41,7 +41,13 @@ var bitrequest_coin_data = [{
             },
             "showsatoshis": {
                 "icon": "eye",
-                "selected": false
+                "selected": false,
+                "switch": true,
+            },
+            "Use random address": {
+                "icon": "point-up",
+                "selected": false,
+                "switch": true,
             },
             "blockexplorers": {
                 "icon": "eye",
@@ -108,6 +114,13 @@ var bitrequest_coin_data = [{
 		    	return payment + ":" + address + ((iszero === true) ? "" : "?tx_amount=" + amount);
 		    },
             "address_regex": "^[48](?:[0-9AB]|[1-9A-HJ-NP-Za-km-z]{12}(?:[1-9A-HJ-NP-Za-km-z]{30})?)[1-9A-HJ-NP-Za-km-z]{93}$"
+        },
+        "settings": {
+            "Use random address": {
+                "icon": "point-up",
+                "selected": false,
+                "switch": true,
+            }
         }
     },
     {
@@ -125,6 +138,11 @@ var bitrequest_coin_data = [{
             "confirmations": {
                 "icon": "clock",
                 "selected": 0
+            },
+            "Use random address": {
+                "icon": "point-up",
+                "selected": false,
+                "switch": true,
             },
             "blockexplorers": {
                 "icon": "eye",
@@ -182,6 +200,11 @@ var bitrequest_coin_data = [{
                 "icon": "clock",
                 "selected": 0
             },
+            "Use random address": {
+                "icon": "point-up",
+                "selected": false,
+                "switch": true,
+            },
             "blockexplorers": {
                 "icon": "eye",
                 "selected": "blockchair.com"
@@ -234,6 +257,11 @@ var bitrequest_coin_data = [{
             "address_regex": "^(xrb|nano)_([a-z1-9]{60})$"
         },
         "settings": {
+	        "Use random address": {
+                "icon": "point-up",
+                "selected": false,
+                "switch": true,
+            },
             "blockexplorers": {
                 "icon": "eye",
                 "selected": "nanocrawler.cc"
@@ -296,6 +324,11 @@ var bitrequest_coin_data = [{
             "confirmations": {
                 "icon": "clock",
                 "selected": 0
+            },
+            "Use random address": {
+                "icon": "point-up",
+                "selected": false,
+                "switch": true,
             },
             "blockexplorers": {
                 "icon": "eye",
@@ -363,6 +396,11 @@ var erc20_settings = {
     "confirmations": {
         "icon": "clock",
         "selected": 0
+    },
+    "Use random address": {
+        "icon": "point-up",
+        "selected": false,
+        "switch": true,
     },
     "blockexplorers": {
         "icon": "eye",

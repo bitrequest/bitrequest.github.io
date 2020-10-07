@@ -148,8 +148,6 @@ function checkphp() { //check for php support by fetching fiat currencies from l
 function setsymbols() { //fetch fiat currencies from fixer.io api
     //set globals
     local = (hostlocation == "local" && phpsupportglobal === false);
-    console.log(hostlocation);
-    console.log(local);
     if (localStorage.getItem("bitrequest_symbols")) {
         geterc20tokens();
     } else {
@@ -1024,8 +1022,13 @@ function triggertx() {
 
 function triggertxfunction(thislink) {
     var currency = thislink.data("currency"),
-        thisaddress = $("#" + currency + ".page ul.pobox li[data-checked='true']").data("address"),
-        cd = getcoindata(currency),
+    	pick_random = $("#" + currency + "_settings .cc_settinglist li[data-id='Use random address']").data("selected"),
+    	addresslist = $("#" + currency + ".page ul.pobox li[data-checked='true']"),
+    	addresscount = addresslist.length,
+    	random = getrandomnumber(1, addresscount) - 1,
+		pick_address = (pick_random === true) ? addresslist.eq(random) : addresslist,
+		thisaddress = pick_address.data("address"),
+		cd = getcoindata(currency),
         currencysettings = $("#currencysettings").data(),
         c_default = currencysettings.default;
     currencysymbol = (c_default === true && offline === false) ? currencysettings.currencysymbol : cd.ccsymbol,
@@ -2963,7 +2966,7 @@ function append_coinsetting(currency, settings, init) {
             var selected_string = selected_val.toString(),
                 check_setting_li = coinsettings_list.children("li[data-id='" + dat + "']");
             if (check_setting_li.length === 0) {
-                var trigger = (dat == "showsatoshis") ? switchpanel(selected_string, " global") : "<span class='icon-pencil'></span>";
+                var trigger = (val.switch === true) ? switchpanel(selected_string, " global") : "<span class='icon-pencil'></span>";
                 var coinsettings_li = $("<li data-id='" + dat + "'>\
 					<div class='liwrap edit_trigger iconright' data-currency='" + currency + "'>\
 						<span class='icon-" + val.icon + "'></span>\
@@ -2977,7 +2980,7 @@ function append_coinsetting(currency, settings, init) {
                 coinsettings_li.data(val).appendTo(coinsettings_list);
             } else {
                 check_setting_li.data(val).find("p").html(selected_string);
-                if (dat == "showsatoshis") {
+                if (val.switch === true) {
                     check_setting_li.find(".switchpanel").removeClass("true false").addClass(selected_string);
                 }
             }

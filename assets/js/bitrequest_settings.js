@@ -101,7 +101,7 @@ $(document).ready(function() {
     // Confirmations
     edit_confirmations();
     submit_confirmations();
-    showsat();
+    cc_switch();
 
     // Blockexplorer
     edit_blockexplorer();
@@ -1781,8 +1781,8 @@ function submit_confirmations() {
     })
 }
 
-function showsat() {
-    $(document).on("click touch", ".cc_settinglist li[data-id='showsatoshis'] .switchpanel", function() {
+function cc_switch() {
+    $(document).on("click touch", ".cc_settinglist li .switchpanel", function() {
         var thistrigger = $(this),
             thislist = thistrigger.closest("li"),
             thisliwrap = thistrigger.closest(".liwrap"),
