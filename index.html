@@ -26,54 +26,12 @@
 		<link rel="pwa-setup" href="manifest.json" type="application/json"/>
 		<script src="https://apis.google.com/js/api.js"></script>
 		<link rel="stylesheet" media="screen" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700"/>
-		<link rel="stylesheet" type="text/css" media="screen" href="assets/styles/styles.css?v=0.058"/>
-		<link rel="stylesheet" type="text/css" media="screen" href="assets/styles/icons.css?v=0.058"/>
-		<link rel="stylesheet" type="text/css" media="screen" href="assets/styles/themes/default.css?v=0.058" id="theme"/>
+		<link rel="stylesheet" type="text/css" media="screen" href="assets/styles/styles.css?v=0.059"/>
+		<link rel="stylesheet" type="text/css" media="screen" href="assets/styles/icons.css?v=0.059"/>
+		<link rel="stylesheet" type="text/css" media="screen" href="assets/styles/themes/default.css?v=0.059" id="theme"/>
 	</head>
 	<body>
 		<img src="img/qrplaceholder.png" id="icon_placeholder"/>
-		<div id="startpage" class="sp_intro">
-			<div id="startsteps">
-				<div id="intro" class="startpanel validstep panelactive" data-next="entername">
-					<div class="panelwrap flex">
-						<div class="startcenter">
-							<h1>Bitrequest</h1>
-							<h2>Accept crypto anywhere</h2>
-						</div>
-					</div>
-					<div class="proceed icon-arrow-right2"></div>
-				</div>
-				<div id="entername" class="startpanel" data-next="choosecurrency" data-prev="intro">
-					<div class="panelwrap flex">
-						<div class="startcenter">
-							<div class="div">
-								<span id="usericon"><div id="lettercount">20</div></span>
-							</div>
-							<div class="div">
-								<div class="mirrordiv"><span>Enter your name</span>
-									<input id="eninput" type="text" placeholder="Your name" data-min="3" data-max="20" spellcheck="false" cap/>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="proceed icon-arrow-right2"></div>
-				</div>
-				<div id="choosecurrency" class="startpanel" data-prev="entername">
-					<div class="panelwrap">
-						<div class="startcenter">
-							<h2>I would like to get paid in:</h2>
-							<ul id="allcurrencies" class="applist">
-							</ul>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div id="progression">
-				<span class="pbullet pb_intro"></span>
-				<span class="pbullet pb_entername"></span>
-				<span class="pbullet pb_choosecurrency"></span>
-			</div>
-		</div>
 		<div id="mainwrap">
 			<header>
 				<a href="?p=home" id="header">
@@ -128,7 +86,7 @@
 							<a href="https://www.bitrequest.io/donate/" target="_blank" id="donate" class="button">
 								<span class="icon-heart">Donate</span>
 							</a>
-							<p>PWA v0.058<br/>
+							<p>PWA v0.059<br/>
 								<a href="https://github.com/bitrequest/bitrequest.github.io/wiki" target="_blank">About</a><br/>
 								<a href="https://github.com/bitrequest/bitrequest.github.io/wiki/Privacy" target="_blank">Privacy / Disclaimer</a><br/>
 							</p>
@@ -155,6 +113,49 @@
 					</div>
 				</div>
 			</main>
+		</div>
+		<div id="newrequest_alias" class="noselect">a<span class="icon-qrcode"></span></div>
+		<div id="startpage" class="sp_intro">
+			<div id="startsteps">
+				<div id="intro" class="startpanel validstep panelactive" data-next="entername">
+					<div class="panelwrap flex">
+						<div class="startcenter">
+							<h1>Bitrequest</h1>
+							<h2>Accept crypto anywhere</h2>
+						</div>
+					</div>
+					<div class="proceed icon-arrow-right2"></div>
+				</div>
+				<div id="entername" class="startpanel" data-next="choosecurrency" data-prev="intro">
+					<div class="panelwrap flex">
+						<div class="startcenter">
+							<div class="div">
+								<span id="usericon"><div id="lettercount">20</div></span>
+							</div>
+							<div class="div">
+								<div class="mirrordiv"><span>Enter your name</span>
+									<input id="eninput" type="text" placeholder="Your name" data-min="3" data-max="20" spellcheck="false" cap/>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="proceed icon-arrow-right2"></div>
+				</div>
+				<div id="choosecurrency" class="startpanel" data-prev="entername">
+					<div class="panelwrap">
+						<div class="startcenter">
+							<h2>I would like to get paid in:</h2>
+							<ul id="allcurrencies" class="applist">
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="progression">
+				<span class="pbullet pb_intro"></span>
+				<span class="pbullet pb_entername"></span>
+				<span class="pbullet pb_choosecurrency"></span>
+			</div>
 		</div>
 		<nav id="fixednav" class="navstyle">
 		</nav>
@@ -226,17 +227,17 @@
 		<audio id="cashier"><source src="assets/styles/sounds/cashier.mp3"><source src="assets/styles/sounds/cashier.ogg"></audio>
 		<audio id="blip"><source src="assets/styles/sounds/blip.mp3"><source src="assets/styles/sounds/blip.ogg"></audio>
 		<audio id="waterdrop"><source src="assets/styles/sounds/waterdrop.mp3"><source src="assets/styles/sounds/waterdrop.ogg"></audio>
-		<script src="assets/js/lib/web3.min.js?v=0.058"></script>
-		<script src="assets/js/lib/jquery-3.3.1.min.js?v=0.058"></script>
-		<script src="assets/js/bitrequest_config.js?v=0.058"></script>
-		<script src="assets/js/bitrequest_txdata.js?v=0.058"></script>
-		<script src="assets/js/bitrequest_core.js?v=0.058"></script>
-		<script src="assets/js/lib/google_drive_api.js?v=0.058"></script>
-		<script src="assets/js/bitrequest_settings.js?v=0.058"></script>
-		<script src="assets/js/bitrequest_sockets.js?v=0.058"></script>
-		<script src="assets/js/bitrequest_polling.js?v=0.058"></script>
-		<script src="assets/js/bitrequest_payments.js?v=0.058"></script>
-		<script src="assets/js/bitrequest_monitors.js?v=0.058"></script>
-		<script src="assets/js/lib/jquery.qrcode.min.js?v=0.058"></script>
+		<script src="assets/js/lib/web3.min.js?v=0.059"></script>
+		<script src="assets/js/lib/jquery-3.3.1.min.js?v=0.059"></script>
+		<script src="assets/js/bitrequest_config.js?v=0.059"></script>
+		<script src="assets/js/bitrequest_txdata.js?v=0.059"></script>
+		<script src="assets/js/bitrequest_core.js?v=0.059"></script>
+		<script src="assets/js/lib/google_drive_api.js?v=0.059"></script>
+		<script src="assets/js/bitrequest_settings.js?v=0.059"></script>
+		<script src="assets/js/bitrequest_sockets.js?v=0.059"></script>
+		<script src="assets/js/bitrequest_polling.js?v=0.059"></script>
+		<script src="assets/js/bitrequest_payments.js?v=0.059"></script>
+		<script src="assets/js/bitrequest_monitors.js?v=0.059"></script>
+		<script src="assets/js/lib/jquery.qrcode.min.js?v=0.059"></script>
 	</body>
 </html>
