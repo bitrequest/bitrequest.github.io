@@ -22,6 +22,7 @@ var language = navigator.language || navigator.userLanguage,
     referrer = document.referrer,
     isrefferer = (referrer.length > 0),
     is_android_app = (window.matchMedia("(display-mode: standalone)").matches || referrer == "android-app://" + androidpackagename), // android app fingerprint
+    is_ios_app = (userAgent == "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0_1 like Mac OS X) AppleWebKit/604.2.10 (KHTML, like Gecko) Version/13.0.3 Safari/605.1.15"), // ios app fingerprint
     inframe = (self !== top),
     offline = (navigator.onLine === false),
     thishostname = location.hostname,
@@ -49,6 +50,11 @@ $(document).ready(function() {
     //close potential websockets and pings
     forceclosesocket();
     clearpingtx("close");
+    
+    //Set classname for ios app	
+	if(is_ios_app === true) {
+		body.addClass("ios");
+	}
 
     //Set classname for iframe	
     if (inframe === true) {
@@ -717,6 +723,7 @@ function pinback(pininput) {
 //Set classname for ios app
 
 function ios_init() {
+	is_ios_app = true,
 	body.addClass("ios"); // ios app fingerprint
 }
 
@@ -2542,7 +2549,7 @@ function getcc_icon(cmcid, cpid, erc20) {
 function getdevicetype() {
     var ua = userAgent;
     return (is_android_app === true) ? "android-app" :
-        (body.hasClass("ios")) ? "apple-app" :
+        (is_ios_app === true) ? "apple-app" :
         (/iPad/.test(ua)) ? "iPad" :
         (/iPhone/.test(ua)) ? "iPhone" :
         (/Android/.test(ua)) ? "Android" :
@@ -3340,7 +3347,7 @@ function detectapp() {
         if (show_dialog) {
             return false;
         } else {
-            if (is_android_app === true || body.hasClass("ios")) {
+            if (is_android_app === true || is_ios_app === true) {
                 return false;
             } else {
                 if (supportsTouch === true) {

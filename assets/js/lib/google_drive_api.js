@@ -2,7 +2,6 @@ var gapi,
     GoogleAuth,
     user,
     scope = "https://www.googleapis.com/auth/drive.appdata",
-    is_ios_app = (userAgent == "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0_1 like Mac OS X) AppleWebKit/604.2.10 (KHTML, like Gecko) Version/13.0.3 Safari/605.1.15"), // ios app fingerprint
     redirect = (is_ios_app === true) ? "redirect" : ""; // useragent of ios app
 $(document).ready(function() {
     if (gapi) {
