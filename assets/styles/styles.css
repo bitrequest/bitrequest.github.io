@@ -602,9 +602,9 @@ html.showmain ul#currencylist {
     left:50%;
     float: right;
     font-size: 250%;
-    width: 2em;
-    height: 2em;
-    margin: 0 0 0 -1em;
+    width: 1.7em;
+    height: 1.7em;
+    margin: 0 0 0 -0.85em;
     background-color: #009788;
     color: #009788;
     border-radius: 50%;
@@ -620,14 +620,14 @@ html.showmain ul#currencylist {
 
 html.showmain #newrequest_alias {
 	pointer-events:all;
-	opacity:0.75;
+	opacity:0.85;
 }
 
 #newrequest_alias>span {
     display: block;
     position: absolute;
-    top: 0.38em;
-    left: 0.41em;
+    top: 0.23em;
+    left: 0.29em;
     margin: 0;
     padding: 0;
     text-align: center;
@@ -4157,6 +4157,14 @@ body.ios .proceed {
 
 body.ios .page {
     padding-bottom: 50px;
+}
+
+body.ios #newrequest_alias {
+    bottom:60px;
+}
+
+body.ios #notifysign {
+    margin: 0 auto 75px auto;
 }
 
 /* iframe styles */
