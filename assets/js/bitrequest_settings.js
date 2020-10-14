@@ -702,8 +702,8 @@ function cachecontrol() {
 						</div>\
 					</div>\
 					<div id='backupactions'>\
-						<div id='canceltheme' class='customtrigger'>OK</div>\
-						<div id='canceltheme' class='customtrigger'>CANCEL</div>\
+						<div class='cancel_dialog customtrigger'>OK</div>\
+						<div class='cancel_dialog customtrigger'>CANCEL</div>\
 					</div>\
 				</div>";
         popdialog(content);

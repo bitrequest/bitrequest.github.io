@@ -370,6 +370,7 @@ function finishfunctions() {
     submit_erc20();
     //validateaddress
     //check_address
+    canceldialog_click();
     canceldialogtrigger();
     //canceldialog
     cancelpaymentdialogtrigger();
@@ -1803,6 +1804,12 @@ function check_address(address, currency) {
     var regex = getcoindata(currency).regex;
     return (currency == "ethereum" || regex == "web3") ? (web3) ? web3.utils.isAddress(address) : false :
         (regex) ? new RegExp(regex).test(address) : false;
+}
+
+function canceldialog_click() {
+    $(document).on("click touch", ".cancel_dialog", function() {
+        canceldialog();
+    })
 }
 
 function canceldialogtrigger() {
