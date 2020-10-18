@@ -1,22 +1,5 @@
-<IfModule !mod_rewrite.c>
-    SetEnv HTTP_MOD_REWRITE No
-</IfModule>
-
-<IfModule mod_rewrite.c>
-
-    <IfModule mod_negotiation.c>
-        Options -MultiViews
-    </IfModule>
-
-    RewriteEngine on
-    RewriteRule ^(.*)4bR(.*)$ https://bit.ly/$1 [L,R=301]
-	RewriteRule ^(.*)5bR(.*)$ https://bitrequest.page.link/$1 [L,R=301]
-	RewriteRule ^apple-app-site-association$ .well-known/apple-app-site-association.json [NC,L]
-	RewriteRule ^.well-known/apple-app-site-association$ .well-known/apple-app-site-association.json [NC,L]
-	
-	<IfModule mod_headers.c>
-    	Header set Access-Control-Allow-Origin "*"
-	</IfModule>
-
-</IfModule>
-######
+RewriteEngine on
+RewriteRule ^(.*)4bR(.*)$ https://bit.ly/$1 [L,R=301]
+RewriteRule ^apple-app-site-association$ .well-known/apple-app-site-association.json [NC,L]
+RewriteRule ^.well-known/apple-app-site-association$ .well-known/apple-app-site-association.json [NC,L]
+Header set Access-Control-Allow-Origin "*"
