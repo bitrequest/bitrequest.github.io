@@ -391,7 +391,7 @@ function get_api_inputs(rd, api_data, api_name) {
                             }
                         }
                         if (txd) {
-                            if (txd.ccval) {
+                            if (txd.ccval !== undefined) {
                                 var tx_listitem = append_tx_li(txd, thislist);
                                 if (tx_listitem) {
                                     transactionlist.append(tx_listitem.data(txd));
