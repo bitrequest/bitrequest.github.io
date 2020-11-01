@@ -3385,6 +3385,16 @@ html.noframe body.showstartpage #startpage {
     background-color: #4D5359;
 }
 
+#home_privacy {
+	display:block;
+	position:absolute;
+	bottom:0;
+	left:0;
+	font-size:14px;
+	padding:1em;
+    color: #d2d2d2;
+}
+
 .startcenter h1 {
     font-weight: 300;
     font-size: 300%;
