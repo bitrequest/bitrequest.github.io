@@ -507,7 +507,7 @@ function continue_paymentfunction(payment) {
             selected_socket: selected_socket,
             requestclass: requestclass,
             iszeroclass: iszeroclass,
-            currencylistitem: $("#currencylist > li[data-currency='" + payment + "'] a"),
+            currencylistitem: $("#currencylist > li[data-currency='" + payment + "'] .rq_icon"),
         },
         payment_attributes = {
             "data-cmcid": cmcid,
@@ -984,14 +984,14 @@ function continue_paymentfunction(payment) {
 						<div class='button' id='scanqr'>\
 							<span class='icon-qrcode'>Scan qr-code</span>\
 						</div><br/>\
-						<a href='' class='button openwallet' id='openwallet' data-currency='" + payment + "'><span class='icon-folder-open'>Open wallet</span></a>\
+						<div class='button openwallet' id='openwallet' data-currency='" + payment + "'><span class='icon-folder-open'>Open wallet</span></div>\
 					</div>\
 				</div>",
 			poweredby = "<div class='poweredby'>Powered by: <a href='https://www.bitrequest.io' target='_blank'>Bitrequest</a></div>",
             bottomcard = (isrequest === true) ? paymethods : shareform;
         $("#request_front").prepend("<div id='cl_wrap'>" + cryptologo + "</div>\
 			<div class='actionbar clearfix'>\
-				<a href='' id='sharerequest' class='abl icon-share2 sbactive'>Share request</a><a href='' class='openwallet abr icon-folder-open' data-currency='" + payment + "'>Open wallet</a>\
+				<div id='sharerequest' class='abl icon-share2 sbactive'>Share request</div><div class='openwallet abr icon-folder-open' data-currency='" + payment + "'>Open wallet</div>\
 			</div>\
 			<div id='qrwrap' class='flex'>\
 				<div id='qrcode'>\
@@ -1291,7 +1291,7 @@ function renderqr(payment, address, amount) {
         urlscheme = getcoindata(payment).urlscheme(payment, address, amount, this_iszero);
     }
     $("#qrcode").html("").qrcode(urlscheme);
-    $(".openwallet").attr("href", urlscheme);
+    $(".openwallet").attr("data-rel", urlscheme);
 }
 
 function switchaddress() {
@@ -1766,16 +1766,14 @@ function sharefallback(sharedurl, sharedtitle) {
 }
 
 function whatsappshare() {
-    $(document).on("click touch", "#whatsappshare", function(e) {
-        e.preventDefault();
+    $(document).on("click touch", "#whatsappshare", function() {
         sharecallback();
         window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(getshareinfo().body));
     });
 }
 
 function mailto() {
-    $(document).on("click touch", "#mailto", function(e) {
-        e.preventDefault();
+    $(document).on("click touch", "#mailto", function() {
         sharecallback();
         var shareinfo = getshareinfo(),
             mailto = "mailto:?subject=" + encodeURIComponent(shareinfo.title) + "&body=" + encodeURIComponent(shareinfo.body);
@@ -1784,16 +1782,14 @@ function mailto() {
 }
 
 function copyurl() {
-    $(document).on("click touch", "#copyurl", function(e) {
-        e.preventDefault();
+    $(document).on("click touch", "#copyurl", function() {
         sharecallback();
         copytoclipboard(getshareinfo().url, "address");
     });
 }
 
 function gmailshare() {
-    $(document).on("click touch", "#gmailshare", function(e) {
-        e.preventDefault();
+    $(document).on("click touch", "#gmailshare", function() {
         sharecallback();
         var shareinfo = getshareinfo(),
             mailto = "https://mail.google.com/mail/?view=cm&fs=1&su=" + encodeURIComponent(shareinfo.title) + "&body=" + encodeURIComponent(shareinfo.body);
@@ -1802,8 +1798,7 @@ function gmailshare() {
 }
 
 function telegramshare() {
-    $(document).on("click touch", "#telegramshare", function(e) {
-        e.preventDefault();
+    $(document).on("click touch", "#telegramshare", function() {
         sharecallback();
         var shareinfo = getshareinfo();
         window.location.href = "https://telegram.me/share/url?url=" + shareinfo.url + "&text=" + encodeURIComponent(shareinfo.body);
@@ -1811,8 +1806,7 @@ function telegramshare() {
 }
 
 function outlookshare() {
-    $(document).on("click touch", "#outlookshare", function(e) {
-        e.preventDefault();
+    $(document).on("click touch", "#outlookshare", function() {
         sharecallback();
         var shareinfo = getshareinfo();
         window.location.href = "ms-outlook://compose?subject=" + encodeURIComponent(shareinfo.title) + "&body=" + encodeURIComponent(shareinfo.body);
@@ -2093,7 +2087,7 @@ function openwallet() {
     $(document).on("click touch", ".openwallet", function(e) {
         e.preventDefault();
         var thisnode = $(this),
-            content = "<div class='formbox' id='backupformbox'><h2 class='icon-folder-open'>Do you have a " + thisnode.attr("data-currency") + " wallet on this device?</h2><div class='popnotify'></div><div id='backupactions'><a href='" + thisnode.attr("href") + "' class='customtrigger' id='openwalleturl'>Yes</a><div id='backupcd'>No</div></div>";
+            content = "<div class='formbox' id='backupformbox'><h2 class='icon-folder-open'>Do you have a " + thisnode.attr("data-currency") + " wallet on this device?</h2><div class='popnotify'></div><div id='backupactions'><div data-rel='" + thisnode.attr("data-rel") + "' class='customtrigger' id='openwalleturl'>Yes</div><div id='backupcd'>No</div></div>";
         popdialog(content, "alert", "triggersubmit");
     });
 }
@@ -2102,7 +2096,7 @@ function openwalleturl() {
     $(document).on("click touch", "#openwalleturl", function(e) {
         e.preventDefault();
         canceldialog();
-        window.location.href = $(this).attr("href");
+        window.location.href = $(this).attr("data-rel");
     });
 }
 

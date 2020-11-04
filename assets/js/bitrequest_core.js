@@ -900,9 +900,8 @@ function choosecurrency() {
 // ** Navigation **
 
 function togglenav() {
-    $(document).on("click touch", "#header", function(e) {
-        e.preventDefault();
-        if (html.hasClass("showmain")) {
+    $(document).on("click touch", "#header", function() {
+	   	if (html.hasClass("showmain")) {
             loadpage("?p=home");
             $(".navstyle li a").removeClass("activemenu");
         } else {
@@ -935,7 +934,7 @@ function loadurl() {
 function clicklink() {
     $(document).on("click touch", ".self", function(e) {
         e.preventDefault();
-        loadpage($(this).attr("href"));
+        loadpage($(this).attr("data-rel"));
         return false
     })
 }
@@ -1021,14 +1020,14 @@ function shownav(pagename) { // show / hide navigation
 // ** Triggerrequest **
 
 function triggertx() {
-    $(document).on("click touch", ".currencylist li a", function(e) {
-	    e.preventDefault();
-        triggertxfunction($(this));
+    $(document).on("click touch", ".currencylist li > .rq_icon", function() {
+	    triggertxfunction($(this));
         canceloptions();
     });
 }
 
 function triggertxfunction(thislink) {
+	console.log(thislink.data());
     var currency = thislink.data("currency"),
     	pick_random = $("#" + currency + "_settings .cc_settinglist li[data-id='Use random address']").data("selected"),
     	addresslist = $("#" + currency + ".page ul.pobox li[data-checked='true']"),
@@ -1047,13 +1046,16 @@ function triggertxfunction(thislink) {
     prefix = currentpage_correct + currency + "&uoa=",
         newlink = prefix + currencysymbol + "&amount=0" + "&address=" + thisaddress,
         href = (!savedurl || offline !== false) ? newlink : savedurl; //load saved url if exists
+    //console.log(savedurl);
+    //console.log(newlink);
+    //console.log(href);
     localStorage.setItem("bitrequest_editurl", href); // to check if request is being edited
     remove_flip(); // reset request card facing front
     openpage(href, title, "payment");
 }
 
 function clear_savedurl() {
-    $("#currencylist li a").removeData("url");
+    $("#currencylist li > .rq_icon").removeData("url");
 }
 
 function payrequest() {
@@ -1076,7 +1078,7 @@ function payrequest() {
                 rl_iscrypto = rldata.iscrypto,
                 rl_uoa = rldata.uoa,
                 insufficient = (rl_status == "insufficient"),
-                midstring = thisnode.attr("data-href"),
+                midstring = thisnode.attr("data-rel"),
                 endstring = "&status=" + rl_status + "&type=" + rl_requesttype,
                 amount_short_rounded = amountshort(rl_amount, rl_receivedamount, rl_fiatvalue, rl_iscrypto),
                 paymenturl_amount = (insufficient === true) ? amount_short_rounded : rl_amount,
@@ -1960,17 +1962,17 @@ function showoptionstrigger() {
     $(document).on("click touch", ".popoptions", function(e) {
         var ad = $(this).closest("li").data(),
             savedrequest = $("#requestlist li[data-address='" + ad.address + "']"),
-            showrequests = (savedrequest.length > 0) ? "<li><a href='#' class='showrequests'><span class='icon-qrcode'></span> Show requests</a></li>" : "",
+            showrequests = (savedrequest.length > 0) ? "<li><div class='showrequests'><span class='icon-qrcode'></span> Show requests</div></li>" : "",
             content = $("\
 				<ul id='optionslist''>\
 					<li>\
-						<a href='' class='newrequest' title='create request'>\
-							<span class='icon-plus'></span> New request</a>\
+						<div data-rel='' class='newrequest' title='create request'>\
+							<span class='icon-plus'></span> New request</div>\
 					</li>" +
                 showrequests +
-                "<li><a href='#' class='editaddress'> <span class='icon-pencil'></span> Edit address</a></li>\
-					<li><a href='#' class='removeaddress'><span class='icon-bin'></span> Remove address</a></li>\
-					<li><a href='#' class='showtransactions'><span class='icon-eye'></span> Show transactions</a></li>\
+                "<li><div class='editaddress'> <span class='icon-pencil'></span> Edit address</div></li>\
+					<li><div class='removeaddress'><span class='icon-bin'></span> Remove address</div></li>\
+					<li><div class='showtransactions'><span class='icon-eye'></span> Show transactions</div></li>\
 				</ul>").data(ad);
         showoptions(content);
         return false;
@@ -1996,7 +1998,7 @@ function newrequest_alias() {
                 content = "<ul id='alias_currencylist' class='currencylist'>" + currencylist.html() + "</ul>"
                 showoptions(content);
             } else {
-                var active_currency_trigger = active_currencies.find("a").first();
+                var active_currency_trigger = active_currencies.find(".rq_icon").first();
                 triggertxfunction(active_currency_trigger);
             }
         }
@@ -2006,8 +2008,7 @@ function newrequest_alias() {
 }
 
 function newrequest() {
-    $(document).on("click touch", ".newrequest", function(e) {
-        e.preventDefault();
+    $(document).on("click touch", ".newrequest", function() {
         var thislink = $(this),
             ad = thislink.closest("#optionslist").data(),
             thishref = "?p=" + geturlparameters().p + "&payment=" + ad.currency + "&uoa=" + ad.ccsymbol + "&amount=0&address=" + ad.address,
@@ -2916,9 +2917,9 @@ function buildpage(cd, init) {
         init = (cc_li.length === 0 && init === true);
     if (init === true || erc20 === true) {
         var new_li = $("<li class='iconright' data-currency='" + currency + "' data-checked='" + checked + "'>\
-			<a href='?p=" + currency + "' class='liwrap addcurrency'>\
+			<div data-rel='?p=" + currency + "' class='liwrap addcurrency'>\
 				<h2>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + "\</h2>\
-			</a>\
+			</div>\
 			<div class='iconbox togglecurrency'>\
 				<span class='checkbox'></span>\
 			</div>\
@@ -2926,9 +2927,9 @@ function buildpage(cd, init) {
         new_li.data(cd).appendTo(currencylist);
         // append currencies homepage
         var new_homeli = $("<li class='" + visibility + "' data-currency='" + currency + "'>\
-			<a href='?p=home&payment=" + currency + "&uoa=' data-title='create " + currency + " request' data-currency='" + currency + "'>" +
+			<div class='rq_icon' data-rel='?p=home&payment=" + currency + "&uoa=' data-title='create " + currency + " request' data-currency='" + currency + "'>" +
             getcc_icon(cmcid, cpid, erc20) + "\
-			</a>\
+			</div>\
 		</li>");
         new_homeli.data(cd).appendTo(home_currencylist);
         var settingspage = (has_settings === true) ? "\
@@ -2941,7 +2942,7 @@ function buildpage(cd, init) {
 				</div>\
 			</div>\
 		</div>" : "";
-        var settingsbutton = (has_settings === true) ? "<a href='?p=" + currency + "_settings' class='self icon-cog'></a>" : "";
+        var settingsbutton = (has_settings === true) ? "<div data-rel='?p=" + currency + "_settings' class='self icon-cog'></div>" : "";
         var currency_page = $("<div class='page' id='" + currency + "'>\
 			<div class='content'>\
 				<h2 class='heading'>" + currency + settingsbutton + "</h2>\
@@ -2963,9 +2964,9 @@ function buildpage(cd, init) {
         home_cc_li.data(cd).removeClass("hide").addClass(visibility);
     }
     $("ul#allcurrencies").append("<li class='start_cli choose_currency' data-currency='" + currency + "' data-checked='" + checked + "'>\
-		<a href='?p=" + currency + "' class='liwrap'>\
+		<div data-rel='?p=" + currency + "' class='liwrap'>\
 			<h2>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + "\</h2>\
-		</a>\
+		</div>\
 	</li>");
 }
 
@@ -3125,13 +3126,13 @@ function appendrequest(rd) {
 				</div>\
 				<p class='rq_date' title='" + requestdateformatted + "'>" + timeformat + "</p><br/>\
 				<div class='pmetastatus' data-count='0'>+ 0</div>\
-				<div data-href='" + paymenturl + "' class='payrequest button" + iscryptoclass + "'>\
+				<div data-rel='" + paymenturl + "' class='payrequest button" + iscryptoclass + "'>\
 					<span class='icon-qrcode'>Pay</span>\
 				</div>\
 			</div>\
 			<div class='moreinfo'>\
 				<div class='req_actions'>\
-					<div data-href='" + paymenturl + "' class='icon-qrcode" + iscryptoclass + "'></div>\
+					<div data-rel='" + paymenturl + "' class='icon-qrcode" + iscryptoclass + "'></div>\
 					<div class='icon-bin' title='delete'></div>" +
             archivebutton +
             "<div class='icon-undo2' title='unarchive request'></div>\

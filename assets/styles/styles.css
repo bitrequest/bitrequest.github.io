@@ -295,6 +295,12 @@ body.haschanges #header h1 {
     transform: translate(1em, 0);
 }
 
+/* Nav */
+
+.self {
+	cursor:pointer;
+}
+
 #homenav {
     position: relative;
     float: right;
@@ -389,7 +395,7 @@ html.showmain .nav {
     width: 15%;
 }
 
-.nav li a {
+.nav li .self {
     float: left;
     width: 100%;
     padding: 1.2em 1em;
@@ -399,24 +405,24 @@ html.showmain .nav {
     background-color: rgba(255, 255, 255, 0);
 }
 
-.nav li a>span {
+.nav li .self>span {
     display: inline-block;
     padding: 0;
     width: auto;
 }
 
-.nav li a:before {
+.nav li .self:before {
     font-size: 120%;
     vertical-align: baseline;
     margin-right: 0.25em;
 }
 
-.nav li.settingsbttn a {
+.nav li.settingsbttn .self {
     text-align: center;
     padding: 1.4em 1em;
 }
 
-.nav li.settingsbttn a>span {
+.nav li.settingsbttn .self>span {
     -webkit-transform: scale(1.3, 1.3);
     -ms-transform: scale(1.3, 1.3);
     transform: scale(1.3, 1.3);
@@ -512,12 +518,12 @@ html.showmain .nav {
     margin: 0 0 0.5em 0;
 }
 
-.currencylist li a {
+.currencylist li > .rq_icon {
     position: relative;
     text-align: center;
 }
 
-.currencylist li a:after {
+.currencylist li > .rq_icon:after {
     display: inline-block;
     width: 100%;
     clear: both;
@@ -758,7 +764,9 @@ html.showmain #newrequest_alias {
 
 #usedcurrencies .liwrap h2,
 .pobox h2 {
+	width:auto;
     text-transform: capitalize;
+    cursor:pointer;
 }
 
 li[data-checked="true"] .checkbox:before,
@@ -2172,11 +2180,12 @@ html.inframe #request_back {
     float: none;
 }
 
-.actionbar a {
+.actionbar > div {
     color: #009788;
     text-transform: uppercase;
     font-weight: 700;
     border-bottom: 0.15em solid rgba(0, 151, 136, 0.2);
+    cursor:pointer;
 }
 
 .actionbar .abl {
@@ -2804,6 +2813,7 @@ html.inframe #request_back {
     text-align: left;
     padding: 1em 0;
     font-weight: 600;
+    cursor:pointer;
 }
 
 #optionslist.ed_options li {
@@ -2859,7 +2869,7 @@ html.inframe #request_back {
     content: attr(title);
 }
 
-#sharelist li a {
+#sharelist li > div {
     display: block;
     width: 1.5em;
     padding: 0.2em 0;
@@ -2868,6 +2878,7 @@ html.inframe #request_back {
     text-align: center;
     text-decoration: none;
     color: #FFF;
+    cursor:pointer;
 }
 
 #whatsappshare {
@@ -3918,7 +3929,7 @@ body.themepu #popup.active #dialog {
         font-size: 1.25rem;
     }
 
-    .nav li a {
+    .nav li .self {
         font-size: 115%;
     }
 
@@ -3982,7 +3993,7 @@ body.themepu #popup.active #dialog {
         font-size: 260%;
     }
 
-    .nav li a {
+    .nav li .self {
         font-size: 120%;
     }
 
@@ -4001,7 +4012,7 @@ body.themepu #popup.active #dialog {
 /* Nav padding */
 
 @media only screen and (min-width:520px) {
-    .nav li a {
+    .nav li .self {
         font-size: 100%;
         padding: 1.2em 1em;
     }
@@ -4053,7 +4064,7 @@ body.themepu #popup.active #dialog {
         font-size: 2rem;
     }
 
-    .nav li a {
+    .nav li .self {
         padding: 1.2em 1em;
     }
 
