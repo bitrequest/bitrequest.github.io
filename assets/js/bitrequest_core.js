@@ -613,7 +613,7 @@ function enterapp(pinval) {
         } else if (pinfloat.hasClass("admin")) {
             localStorage.setItem("bitrequest_locktime", $.now());
             loadpage("?p=currencies");
-            $(".currenciesbttn a").addClass("activemenu");
+            $(".currenciesbttn .self").addClass("activemenu");
             playsound(waterdrop);
             canceloptions();
         } else if (pinfloat.hasClass("reset")) {
@@ -903,7 +903,7 @@ function togglenav() {
     $(document).on("click touch", "#header", function() {
 	   	if (html.hasClass("showmain")) {
             loadpage("?p=home");
-            $(".navstyle li a").removeClass("activemenu");
+            $(".navstyle li .self").removeClass("activemenu");
         } else {
             if (islocked() === true) {
                 var content = pinpanel(" pinwall admin");
@@ -911,7 +911,7 @@ function togglenav() {
                 return false;
             } else {
                 loadpage("?p=currencies");
-                $(".currenciesbttn a").addClass("activemenu");
+                $(".currenciesbttn .self").addClass("activemenu");
             }
         }
     });
@@ -1446,10 +1446,10 @@ function escapeandback() {
 }
 
 function activemenu() {
-    $(document).on("click touch", ".nav li a", function() {
+    $(document).on("click touch", ".nav li .self", function() {
         var thisitem = $(this);
         thisitem.addClass("activemenu");
-        $(".nav li a").not(thisitem).removeClass("activemenu");
+        $(".nav li .self").not(thisitem).removeClass("activemenu");
         return false
     })
 }
