@@ -47,7 +47,7 @@ $(document).ready(function() {
 // ** Fetch incoming transactions **
 
 function updaterequeststatestrigger() {
-    $(document).on("click touch", ".requestsbttn a", function() {
+    $(document).on("click touch", ".requestsbttn .self", function() {
         trigger_requeststates(true);
     })
 }
