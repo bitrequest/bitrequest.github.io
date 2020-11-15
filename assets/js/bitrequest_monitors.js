@@ -606,10 +606,12 @@ function get_rpc_inputs(rd, rpc_data) {
                             })
                         }
                     }).done(function(e) {
-                        var data = br_result(e).result,
+	                    var data = br_result(e).result,
                             nano_data = data.data,
-                            pending_array = nano_data[0].pending,
-                            history_array = nano_data[1].history,
+                            pending_array_node = nano_data[0].pending,
+                            pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
+                            history_array_node = nano_data[1].history,
+                            history_array = $.isEmptyObject(history_array_node) ? [] : history_array_node,
                             merged_array = pending_array.concat(history_array).sort(function(x, y) { // merge and sort arrays
                                 return y.local_timestamp - x.local_timestamp;
                             });

@@ -46,18 +46,18 @@ function gapi_load() {
 
 function Drive_Backup_trigger() {
     $(document).on("click touch", "#gdtrigger .switchpanel", function() {
-        if (GD_auth() === true) {
-            var thistrigger = $(this);
-            var changelog = $("#changelog");
-            if (thistrigger.hasClass("true")) {
-                thistrigger.removeClass("true");
-                changelog.slideDown(300);
-                html.removeClass("gdauth");
-            } else {
-                thistrigger.addClass("true");
-                changelog.slideUp(300);
-                html.addClass("gdauth");
-            }
+	    if (GD_auth() === true) {
+            var thistrigger = $(this),
+	            changelog = $("#changelog");
+	        if (thistrigger.hasClass("true")) {
+	            thistrigger.removeClass("true");
+	            changelog.slideDown(300);
+	            html.removeClass("gdauth");
+	        } else {
+	            thistrigger.addClass("true");
+	            changelog.slideUp(300);
+	            html.addClass("gdauth");
+	        }
         } else {
             authenticate().then(loadClient);
         }
@@ -72,6 +72,9 @@ function authenticate() {
             $("#gdtrigger .switchpanel").addClass("true");
             setTimeout(function() {
                 $("#listappdata .switchpanel").trigger("click");
+                if (GD_auth() === true) {
+		            updateappdata();
+		        }
             }, 500);
         },
         function(err) {
@@ -108,7 +111,6 @@ function updateappdata() {
         updatemeta();
     },
     function(err) {
-        console.log(err);
         if (err = 404) { // file does not exist
             createfile() // create file
         }

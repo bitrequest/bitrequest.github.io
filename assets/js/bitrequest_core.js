@@ -37,12 +37,14 @@ $(document).ready(function() {
     $.ajaxSetup({
         cache: false
     });
-    stored_currencies = localStorage.getItem("bitrequest_currencies"),
-        init = localStorage.getItem("bitrequest_init"),
-        io = (init) ? JSON.parse(init) : {};
    
 	set_icon_boolean();
 	buildsettings(); // build settings first
+	
+	stored_currencies = localStorage.getItem("bitrequest_currencies"),
+        init = localStorage.getItem("bitrequest_init"),
+        io = (init) ? JSON.parse(init) : {};
+
     if (hostlocation != "local") { // don't add service worker on desktop
         add_serviceworker();
     }
@@ -76,7 +78,7 @@ $(document).ready(function() {
                 phpsupportglobal = (phpsupport == "yes") ? true : false;
                 setsymbols();
             } else {
-                checkphp();
+	            checkphp();
             }
         } else {
             var content = "<h2 class='icon-bin'>Sorry!</h2><p>No Web Storage support..</p>";
@@ -1518,7 +1520,10 @@ function popnotify(result, message) {
 }
 
 //dialogs
-function popdialog(content, type, functionname, trigger) {
+function popdialog(content, type, functionname, trigger, custom) {
+	if (custom) {
+		$("#popup #actions").addClass("custom");
+	}
     $("#dialogbody").append(content);
     body.addClass("blurmain");
     $("#popup").addClass("active showpu");
@@ -1849,6 +1854,7 @@ function canceldialog(pass) {
     var timeout = setTimeout(function() {
         popup.removeClass("showpu");
         $("#dialogbody").html("");
+        $("#actions").removeClass("custom");
         $(document).off("click touch", "#execute");
         // reset Globals
         s_id = undefined;
@@ -3407,10 +3413,10 @@ function get_requestli(datakey, dataval) {
 }
 
 function gk() {
-    var k = io.k;
+	var k = io.k;
 	if (k) {
 	    var pk = JSON.parse(atob(k));
-	    if (pk.if_id == "" || pk.ad_id == "" || pk.ga_id == "") {
+	    if (pk.if_id == "" || pk.ad_id == "" || pk.ga_id == "" || pk.bc_id == "") {
 		    fk();
 		} else {
 	         init_keys(k, true);
@@ -3426,9 +3432,9 @@ function fk() {
         "proxy": true,
         "localhost": false,
         "custom": "gk",
-        "api_url": "none"
+        "api_url": true
     }).done(function(e) {
-        var ko = e.k;
+	    var ko = e.k;
         if (ko) {
             init_keys(ko, false);
         }

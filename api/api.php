@@ -1,23 +1,25 @@
 <?php
 // API
-function api($url, $data, $headers, $ct, $cf, $meta) {
+function api($url, $data, $headers, $ct, $cf, $meta, $fn) {
     $cache_refresh = ($cf == "1w") ? 604800 : ($cf == "1d") ? 86400 : ($cf == "1h") ? 3600 : 3600;
     $cache_folder = "cache/" . $cf . "/";
-    $cache_file = $cache_folder . md5($data . $url);
+    $filename = ($fn) ? $fn : md5($data . $url);
+    $cache_file = $cache_folder . $filename;
     $cache_monitor = $cache_folder . "cachemonitor";
     $time = time();
     $cache_content = json_encode(array(
         "br_cached" => $time
     ));
     $cached_time = filemtime($cache_file);
-    $time_in_cache = $time - $cached_time;
+    $time_in_cache = ($cached_time) ? $time - $cached_time : 0;
+    $cache_object = array(
+        "filename" => $filename,
+        "title" => $time_in_cache . " of " . $ct . " seconds in cache",
+        "unix_timestamp" => $time,
+        "unix_timestamp_of_cached_file" => $cached_time,
+        "time_in_cache" => $time_in_cache
+    );
     if (file_exists($cache_file) && $time_in_cache < $ct) {
-        $cache_object = array(
-            "Title" => $time_in_cache . " of " . $ct . " seconds in cache",
-            "Unix timestamp" => $time,
-            "Unix timestamp of cached file" => $cached_time,
-            "Time in cache" => $time_in_cache
-        );
         $cache_contents = file_get_contents($cache_file);
         $meta_contents = array(
             "br_cache" => $cache_object,
@@ -40,7 +42,7 @@ function api($url, $data, $headers, $ct, $cf, $meta) {
         exit();
     }
     else {
-        $apiresult = curl_get($url, $data, $headers);
+        $apiresult = ($url) ? curl_get($url, $data, $headers) : $data;
         if ($apiresult) {
             if (!is_dir($cache_folder)) {
                 mkdir($cache_folder, 0777, true);
@@ -53,7 +55,12 @@ function api($url, $data, $headers, $ct, $cf, $meta) {
                     "br_cached" => $time
                 )));
             }
-            return json_decode($apiresult, true);
+            $meta_contents = array(
+	            "br_cache" => $cache_object,
+	            "br_result" => json_decode($apiresult, true)
+	        );
+			$result = ($meta === false) ? json_decode($apiresult, true) : $meta_contents;
+            return $result;
         }
         else {
             if (file_exists($cache_file)) {

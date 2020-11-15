@@ -111,7 +111,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
         var ping_event = JSON.stringify({
             event: "tx-confirmation",
             address: thisaddress,
-            token: "fed1cc815bd245f79d02f04e4f39befe",
+            token: to.bc_id,
             confirmations: 10
         });
         websocket.send(ping_event);

@@ -12,7 +12,8 @@ var txid,
     // Global helpers
     sa_timer,
     tx_list,
-    payment;
+    payment,
+    request;
 
 $(document).ready(function() {
     swipestart();
@@ -88,6 +89,7 @@ $(document).ready(function() {
     outlookshare();
     //getshareinfo
     //sharecallback
+    //open_share_url
     trigger_open_tx();
     view_tx();
     //open_tx
@@ -1605,7 +1607,6 @@ function sharebutton() {
 function share(thisbutton) {
     if (thisbutton.hasClass("sbactive")) {
         loader(true);
-        loadertext("Generating link");
         var gets = geturlparameters(),
             payment = gets.payment,
             thiscurrency = gets.uoa,
@@ -1630,101 +1631,8 @@ function share(thisbutton) {
             paymentupper = payment.substr(0, 1).toUpperCase() + payment.substr(1),
             sharedtitle = (thisdata === true) ? thisrequestname_uppercase + " sent you a " + paymentupper + " payment request of " + thisamount + " " + thiscurrency.toUpperCase() + " for '" + thisrequesttitle + "'" : "You have a " + paymentupper + " payment request of " + thisamount + " " + thiscurrency,
             encodedurl = encodeURIComponent(sharedurl),
-            firebase_dynamiclink = firebase_shortlink + "?link=" + encodedurl + "&apn=" + androidpackagename + "&afl=" + encodedurl,
-            us_settings = $("#url_shorten_settings"),
-            us_active = (us_settings.data("us_active") == "active");
-        if (us_active === true) {
-            var us_service = us_settings.data("selected");
-            var getcache = sessionStorage.getItem("bitrequest_" + us_service + "_shorturl_" + hashcode(sharedurl));
-            if (getcache) { // get existing shorturl from cache
-                sharerequest(getcache, sharedtitle);
-            } else {
-                if (us_service == "firebase") {
-                    api_proxy({
-                        "api": "firebase",
-                        "search": "shortLinks",
-                        "cachetime": 84600,
-                        "cachefolder": "1d",
-                        "params": {
-                            "method": "POST",
-                            "cache": false,
-                            "dataType": "json",
-                            "contentType": "application/json",
-                            "method": "POST",
-                            "data": JSON.stringify({
-                                "dynamicLinkInfo": {
-                                    "domainUriPrefix": firebase_dynamic_link_domain,
-                                    "link": sharedurl,
-                                    "androidInfo": {
-                                        "androidPackageName": androidpackagename
-                                    },
-                                    "iosInfo": {
-                                        "iosBundleId": androidpackagename,
-                                        "iosAppStoreId": "1484815377"
-                                    },
-                                    "navigationInfo": {
-                                        "enableForcedRedirect": "1"
-                                    },
-                                    "socialMetaTagInfo": {
-                                        "socialTitle": "Bitrequest",
-                                        "socialDescription": "Accept crypto anywhere",
-                                        "socialImageLink": "https://s2.coinmarketcap.com/static/img/coins/200x200/" + cmcid + ".png"
-                                    }
-                                },
-                                "suffix": {
-                                    "option": "SHORT"
-                                }
-                            })
-                        }
-                    }).done(function(e) {
-                        var data = br_result(e).result;
-                        console.log(data);
-                        if (data.error) {
-	                        sharerequest(sharedurl, sharedtitle);
-                        }
-                        else {
-	                        var shorturl = data.shortLink;
-	                        sharerequest(shorturl, sharedtitle);
-	                        sessionStorage.setItem("bitrequest_firebase_shorturl_" + hashcode(sharedurl), shorturl);
-                        }
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        sharerequest(sharedurl, sharedtitle);
-                    });
-                } else if (us_service == "bitly") {
-                    api_proxy({
-                        "api": "bitly",
-                        "search": "bitlinks",
-                        "cachetime": 84600,
-                        "cachefolder": "1d",
-                        "bearer": true,
-                        "params": {
-                            "method": "POST",
-                            "contentType": "application/json",
-                            "data": JSON.stringify({
-                                "long_url": sharedurl
-                            })
-                        }
-                    }).done(function(e) {
-                        var data = br_result(e).result;
-                        if (data.id) {
-	                        var linkid = data.id.split("/").pop(),
-                            	shorturl = "https://app.bitrequest.io/" + linkid + "4bR";
-	                        sharerequest(shorturl, sharedtitle);
-	                        sessionStorage.setItem("bitrequest_bitly_shorturl_" + hashcode(sharedurl), shorturl);
-                        }
-                        else {
-	                         sharerequest(sharedurl, sharedtitle);
-                        }
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        sharerequest(sharedurl, sharedtitle);
-                    });
-                } else {
-                    sharerequest(sharedurl, sharedtitle);
-                }
-            }
-        } else {
-            sharerequest(sharedurl, sharedtitle);
-        }
+            firebase_dynamiclink = firebase_shortlink + "?link=" + encodedurl + "&apn=" + androidpackagename + "&afl=" + encodedurl;
+        shorten_url(sharedtitle, sharedurl, "https://s2.coinmarketcap.com/static/img/coins/200x200/" + cmcid + ".png");
         setlocales();
     } else {
         var requestname = $("#requestname");
@@ -1743,16 +1651,119 @@ function share(thisbutton) {
     }
 }
 
+function shorten_url(sharedtitle, sharedurl, sitethumb) {
+	loadertext("Generating link");
+	var us_settings = $("#url_shorten_settings"),
+        us_active = (us_settings.data("us_active") == "active");
+    if (us_active === true) {
+        var us_service = us_settings.data("selected"),
+        	getcache = sessionStorage.getItem("bitrequest_" + us_service + "_shorturl_" + hashcode(sharedurl));
+        if (getcache) { // get existing shorturl from cache
+	        sharerequest(getcache, sharedtitle);
+        } else {
+            if (us_service == "firebase") {
+                api_proxy({
+                    "api": "firebase",
+                    "search": "shortLinks",
+                    "cachetime": 84600,
+                    "cachefolder": "1d",
+                    "params": {
+                        "method": "POST",
+                        "cache": false,
+                        "dataType": "json",
+                        "contentType": "application/json",
+                        "method": "POST",
+                        "data": JSON.stringify({
+                            "dynamicLinkInfo": {
+                                "domainUriPrefix": firebase_dynamic_link_domain,
+                                "link": sharedurl,
+                                "androidInfo": {
+                                    "androidPackageName": androidpackagename
+                                },
+                                "iosInfo": {
+                                    "iosBundleId": androidpackagename,
+                                    "iosAppStoreId": "1484815377"
+                                },
+                                "navigationInfo": {
+                                    "enableForcedRedirect": "1"
+                                },
+                                "socialMetaTagInfo": {
+                                    "socialTitle": "Bitrequest",
+                                    "socialDescription": "Accept crypto anywhere",
+                                    "socialImageLink": sitethumb
+                                }
+                            },
+                            "suffix": {
+                                "option": "SHORT"
+                            }
+                        })
+                    }
+                }).done(function(e) {
+                    var data = br_result(e).result;
+                    console.log(data);
+                    if (data.error) {
+                        sharerequest(sharedurl, sharedtitle);
+                    }
+                    else {
+                        var shorturl = data.shortLink;
+                        sharerequest(shorturl, sharedtitle);
+                        sessionStorage.setItem("bitrequest_firebase_shorturl_" + hashcode(sharedurl), shorturl);
+                    }
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    sharerequest(sharedurl, sharedtitle);
+                });
+            } else if (us_service == "bitly") {
+                api_proxy({
+                    "api": "bitly",
+                    "search": "bitlinks",
+                    "cachetime": 84600,
+                    "cachefolder": "1d",
+                    "bearer": true,
+                    "params": {
+                        "method": "POST",
+                        "contentType": "application/json",
+                        "data": JSON.stringify({
+                            "long_url": sharedurl
+                        })
+                    }
+                }).done(function(e) {
+                    var data = br_result(e).result;
+                    if (data.id) {
+                        var linkid = data.id.split("/").pop(),
+                        	shorturl = "https://app.bitrequest.io/" + linkid + "4bR";
+                        sharerequest(shorturl, sharedtitle);
+                        sessionStorage.setItem("bitrequest_bitly_shorturl_" + hashcode(sharedurl), shorturl);
+                    }
+                    else {
+                         sharerequest(sharedurl, sharedtitle);
+                    }
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    sharerequest(sharedurl, sharedtitle);
+                });
+            } else {
+                sharerequest(sharedurl, sharedtitle);
+            }
+        }
+    } else {
+        sharerequest(sharedurl, sharedtitle);
+    }
+}
+
 function sharerequest(sharedurl, sharedtitle) {
     closeloader();
-    if (navigator.share) {
-        navigator.share({
-            title: sharedtitle + " | " + apptitle,
-            text: sharedtitle + ": \n",
-            url: sharedurl
-        }).then(() => sharecallback()).catch(err => sharefallback(sharedurl, sharedtitle));
-    } else {
-        sharefallback(sharedurl, sharedtitle);
+    if (is_ios_app === true) {
+	    sharefallback(sharedurl, sharedtitle);
+    }
+    else {
+	    if (supportsTouch === true && navigator.canShare) {
+	        navigator.share({
+	            title: sharedtitle + " | " + apptitle,
+	            text: sharedtitle + ": \n",
+	            url: sharedurl
+	        }).then(() => sharecallback()).catch(err => sharefallback(sharedurl, sharedtitle));
+	    } else {
+	        sharefallback(sharedurl, sharedtitle);
+	    }
     }
 }
 
@@ -1768,7 +1779,9 @@ function sharefallback(sharedurl, sharedtitle) {
 function whatsappshare() {
     $(document).on("click touch", "#whatsappshare", function() {
         sharecallback();
-        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(getshareinfo().body));
+        var shareinfo = getshareinfo(),
+        	share_url = "https://api.whatsapp.com/send?text=" + encodeURIComponent(shareinfo.body);
+        open_share_url("open", share_url);
     });
 }
 
@@ -1776,8 +1789,8 @@ function mailto() {
     $(document).on("click touch", "#mailto", function() {
         sharecallback();
         var shareinfo = getshareinfo(),
-            mailto = "mailto:?subject=" + encodeURIComponent(shareinfo.title) + "&body=" + encodeURIComponent(shareinfo.body);
-        window.location.href = mailto;
+        	share_url = "mailto:?subject=" + encodeURIComponent(shareinfo.title) + "&body=" + encodeURIComponent(shareinfo.body);
+		open_share_url("location", share_url);
     });
 }
 
@@ -1792,24 +1805,26 @@ function gmailshare() {
     $(document).on("click touch", "#gmailshare", function() {
         sharecallback();
         var shareinfo = getshareinfo(),
-            mailto = "https://mail.google.com/mail/?view=cm&fs=1&su=" + encodeURIComponent(shareinfo.title) + "&body=" + encodeURIComponent(shareinfo.body);
-        window.location.href = mailto;
+            share_url = "https://mail.google.com/mail/?view=cm&fs=1&su=" + encodeURIComponent(shareinfo.title) + "&body=" + encodeURIComponent(shareinfo.body);
+        open_share_url("open", share_url);
     });
 }
 
 function telegramshare() {
     $(document).on("click touch", "#telegramshare", function() {
         sharecallback();
-        var shareinfo = getshareinfo();
-        window.location.href = "https://telegram.me/share/url?url=" + shareinfo.url + "&text=" + encodeURIComponent(shareinfo.body);
+        var shareinfo = getshareinfo(),
+	        share_url = "https://telegram.me/share/url?url=" + shareinfo.url + "&text=" + encodeURIComponent(shareinfo.body);
+        open_share_url("open", share_url);
     });
 }
 
 function outlookshare() {
     $(document).on("click touch", "#outlookshare", function() {
         sharecallback();
-        var shareinfo = getshareinfo();
-        window.location.href = "ms-outlook://compose?subject=" + encodeURIComponent(shareinfo.title) + "&body=" + encodeURIComponent(shareinfo.body);
+        var shareinfo = getshareinfo(),
+        	share_url = "ms-outlook://compose?subject=" + encodeURIComponent(shareinfo.title) + "&body=" + encodeURIComponent(shareinfo.body);
+        open_share_url("location", share_url);
     });
 }
 
@@ -1825,15 +1840,36 @@ function getshareinfo() {
 }
 
 function sharecallback() {
-    request.requesttype = "outgoing",
-        request.status = "new",
-        request.pending = (request.monitored === false) ? "unknown" : "scanning";
-    saverequest();
+	if (request) {
+		request.requesttype = "outgoing",
+	        request.status = "new",
+	        request.pending = (request.monitored === false) ? "unknown" : "scanning";
+	    saverequest();
+	    loadpage("?p=requests");
+	    helper.currencylistitem.removeData("url"); // remove saved url
+	    cancelpaymentdialog();
+	}
+	else {
+		canceldialog();
+	}
     cancelsharedialog();
-    loadpage("?p=requests");
-    helper.currencylistitem.removeData("url"); // remove saved url
-    cancelpaymentdialog();
     notify("Successful share! 🎉");
+}
+
+function open_share_url(type, url) {
+	loader(true);
+	setTimeout(function() {
+		closeloader();
+        if (type == "open") {
+		    window.open(url);
+	    }
+	    else if (type == "location") {
+		    window.location.href = url;
+	    }
+	    else {
+		    
+	    }
+    }, 500);
 }
 
 function trigger_open_tx() {

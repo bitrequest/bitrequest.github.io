@@ -1597,6 +1597,10 @@ html.dragmode .currentpage .applist li.dragging {
     font-size: 140%;
 }
 
+#actions.custom {
+    opacity:0;
+}
+
 #actions div {
     float: right;
     color: #009788;
@@ -2276,6 +2280,7 @@ html.inframe #request_back {
 
 #shareccinputmirror input {
     color: #b7b7b7;
+    margin-left:0.2em;
 }
 
 #labelbttn {
@@ -3583,17 +3588,24 @@ html.flipmode #paymentdialog {
     transition: all 270ms linear;
 }
 
-
 /* changes */
+
+#custom_actions {
+	float:left;
+	width: 100%;
+    padding: 0 0 0 0.3em;
+}
 
 #backupactions {
     position: absolute;
     right: 0;
     bottom: 0;
     padding: 0 1em;
+    width:100%;
     font-size: 100%;
     background-color: #FFF;
     border-radius: 1.5em;
+    z-index:2;
     overflow: hidden;
 }
 
@@ -3611,10 +3623,27 @@ html.flipmode #paymentdialog {
     transition: all 300ms linear;
 }
 
-html.gdauth #triggerdownload {
-    color: rgba(255, 255, 255, 0);
-    pointer-events: none;
-    margin-right: -100%;
+#share_bu {
+	float:left;
+	font-size:160%;
+	padding:0.5em;
+	margin:0 0 0 -0.5em;
+	color: #009788;
+	cursor:pointer;
+	-webkit-transition: opacity 300ms linear;
+    -ms-transition: opacity 300ms linear;
+    transition: opacity 300ms linear;
+}
+
+html.gdauth #share_bu {
+    opacity:0;
+    pointer-events:none;
+}
+
+#custom_actions .button {
+	float:left;
+	clear:both;
+	margin:1em 1em 0.5em 0;
 }
 
 #show_backup {
@@ -3622,14 +3651,15 @@ html.gdauth #triggerdownload {
 }
 
 #changelog {
+	float:left;
     width: 100%;
-    padding: 1em 0 1em 0.3em;
+    padding: 0 0 1em 0.3em;
     font-weight: 700;
 }
 
 #changelog p {
     font-size: 115%;
-    padding: 1em 0;
+    padding: 1em 0 0 0;
     color: #b7b7b7;
 }
 

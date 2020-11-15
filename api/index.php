@@ -61,7 +61,8 @@ if ($custom) {
         $key_array = base64_encode(json_encode(array(
             "ad_id" => $keys["amberdata"],
             "if_id" => $keys["infura"],
-            "ga_id" => $keys["googleauth"]
+            "ga_id" => $keys["googleauth"],
+            "bc_id" => $keys["blockcypher"]
         )));
         echo json_encode(array(
             "k" => $key_array
@@ -69,14 +70,30 @@ if ($custom) {
     }
     else if ($custom == "nano_txd") {
         include ("custom/rpcs/nano/index.php");
-        $result = nano($apiurl, $search, $data_var, $postheaders, $cache_time, $cache_folder);
+        $result = nano($apiurl, $search, $data_var, $postheaders, $cache_time, $cache_folder, null, null);
+        echo json_encode(array(
+	        "ping" => $result
+	    ));
+    }
+    else if ($custom == "system_bu") {
+	    $bu_data = json_encode(array(
+	        "base64" => $params["url"],
+	        "account" => $params["account"]
+	    ) , true);
+		$result = api(null, $bu_data, $postheaders, 604800, "1w", null, null);
+        echo json_encode(array(
+	        "ping" => $result
+	    ));
+    }
+    else if ($custom == "get_system_bu") {
+	    $result = api(null, null, null, 604800, "1w", null, $params);
         echo json_encode(array(
 	        "ping" => $result
 	    ));
     }
 }
 else {
-    $result = api($new_url, $data_var, $postheaders, $cache_time, $cache_folder, true);
+    $result = api($new_url, $data_var, $postheaders, $cache_time, $cache_folder, null, null);
     echo json_encode(array(
         "ping" => $result
     ));

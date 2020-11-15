@@ -1,5 +1,6 @@
 //globals
-var deviceid = hashcode(getdevicetype() + navigator.appName + navigator.appCodeName);
+var deviceid = hashcode(getdevicetype() + navigator.appName + navigator.appCodeName),
+	caches;
 
 $(document).ready(function() {
 
@@ -29,6 +30,10 @@ $(document).ready(function() {
     // Back up
     backupdatabasetrigger();
     //backupdatabase
+    sharebu();
+    check_systembu();
+    //systembu_expired
+    restore_systembu();
     backupcd();
     //complilebackup
     //complilefilename
@@ -39,6 +44,7 @@ $(document).ready(function() {
     //trigger_restore
     restorebackup();
     submitrestore();
+    //restore
     submit_GD_restore();
     //restorestorage
 
@@ -478,14 +484,129 @@ function backupdatabase() {
 				<div id='changelog' style='" + showhidechangelog + "'>\
 					" + changenotification + "\
 					<ul>" + changespush.join("") + "</ul>\
+					<div id='custom_actions'>\
+						<br/>\
+						<a href='data:text/json;charset=utf-16le;base64," + jsonencode + "' download='" + filename + "' title='" + filename + "' id='triggerdownload' class='button icon-download' data-date='" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_') + "' data-lastbackup='" + filename + "' download>DOWNLOAD BACKUP</a>\
+					</div>\
 				</div>\
 			</div>\
 		</div>\
 		<div id='backupactions'>\
-			<a href='data:text/json;charset=utf-16le;base64," + jsonencode + "' download='" + filename + "' id='triggerdownload' class='customtrigger icon-download' data-date='" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_') + "' data-lastbackup='" + filename + "' download>DOWNLOAD BACKUP</a>\
+			<div id='share_bu' data-url='" + jsonencode + "' class='icon-share2'></div>\
 			<div id='backupcd'>CANCEL</div>\
 		</div>";
-    popdialog(content, "alert", "triggersubmit");
+	popdialog(content, "alert", "triggersubmit", null, true);
+}
+
+function sharebu() {
+    $(document).on("click touch", "#share_bu", function() {
+	    var result = confirm("Share system backup ?");
+		if (result === true) {
+			loader(true);
+			loadertext("generate system backup");
+			var accountname = $("#accountsettings").data("selected");
+		    api_proxy({
+			    "custom": "system_bu",
+	            "api_url": true,
+	            "proxy": true,
+	            "proxy_url": approot,
+	            "params": {
+		            "url": $(this).attr("data-url"),
+		            "account": btoa(accountname)
+		        }
+			}).done(function(e) {
+				var br_cache = e.ping.br_cache,
+					filetime = br_cache.unix_timestamp_of_cached_file,
+					filetimesec = (filetime) ? filetime * 1000 : $.now(),
+					filetime_format = new Date(filetimesec).toLocaleString(language),
+					sharedtitle = "System Backup " + accountname + " (" + filetime_format + ")";
+				shorten_url(sharedtitle, approot + "?p=settings&sbu=" + br_cache.filename, approot + "/img/system_backup.png");
+		    }).fail(function(jqXHR, textStatus, errorThrown) {
+		        console.log(jqXHR);
+		        console.log(textStatus);
+		        console.log(errorThrown);
+		        closeloader();
+		    });
+		}
+    })
+}
+
+function check_systembu() {
+    var url_params = geturlparameters();
+    if (url_params.p == "settings") {
+	    var sbu = url_params.sbu;
+	    if (sbu) {
+		    api_proxy({
+			    "custom": "get_system_bu",
+	            "api_url": true,
+	            "proxy": true,
+	            "proxy_url": approot,
+	            "params": sbu
+			}).done(function(e) {
+				var ping = e.ping;
+				if (ping) {
+					var br_cache = e.ping.br_cache,
+						filetime = br_cache.unix_timestamp_of_cached_file,
+						filetimesec = (filetime) ? filetime * 1000 : $.now(),
+						filetime_format = new Date(filetimesec).toLocaleString(language),
+						br_result = e.ping.br_result,
+						base64 = br_result.base64,
+						account = atob(br_result.account),
+						sharedtitle = "System Backup " + account + " (" + filetime_format + ")",
+						bu_date = filetime_format.replace(/\s+/g, '_').replace(/\:/g, '_'),
+						filename = "bitrequest_system_backup_" + encodeURIComponent(account) + "_" + bu_date + ".json";;
+						content = "\
+						<div class='formbox' id='system_backupformbox'>\
+							<h2 class='icon-download'>System Backup</h2>\
+							<div class='popnotify'></div>\
+							<div id='dialogcontent'>\
+								<h1>" + sharedtitle +"</h1>\
+								<div id='changelog'>\
+									<div id='custom_actions'>\
+										<br/>\
+										<a href='data:text/json;charset=utf-16le;base64," + base64 + "' download='" + filename + "' title='" + filename + "' id='triggerdownload' class='button icon-download' data-date='" + bu_date + "' data-lastbackup='" + filename + "' download>DOWNLOAD BACKUP</a>\
+									<div id='restore_bu' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-share2'>INSTALL SYSTEM BACKUP</div>\
+									</div>\
+								</div>\
+							</div>\
+						</div>\
+						<div id='backupactions'>\
+							<div id='backupcd'>CANCEL</div>\
+						</div>";
+						popdialog(content, "alert", "triggersubmit", null, true);
+				}
+				else {
+					systembu_expired();
+				}		
+		    }).fail(function(jqXHR, textStatus, errorThrown) {
+		        systembu_expired();
+		    });
+		}    
+    }
+}
+
+function systembu_expired() {
+    var content = "\
+		<div class='formbox' id='system_backupformbox'>\
+			<h2 class='icon-download'>File Expired</h2>\
+		</div>\
+		<div id='backupactions'>\
+			<div id='backupcd'>CANCEL</div>\
+		</div>";
+		popdialog(content, "alert", "triggersubmit", null, true);
+}
+
+function restore_systembu() {
+    $(document).on("click touch", "#system_backupformbox #restore_bu", function() {
+	    var result = confirm("INSTALL SYSTEM BACKUP? ALL YOUR PREVIOUES APP DATA WILL BE REPLACED");
+		if (result === true) {
+	        var this_bttn = $(this),
+	        	bu_dat = this_bttn.attr("data-base64"),
+	        	j_filename = this_bttn.attr("data-filename"),
+	        	j_object = JSON.parse(atob(bu_dat));
+			restore(j_object, j_filename)
+		}
+    })
 }
 
 function backupcd() {
@@ -517,7 +638,14 @@ function submitbackup() {
 	        return false;
         }
         var thisnode = $(this),
-            lastsaved = "last backup: <span class='icon-folder-open'>" + thisnode.attr("data-date") + "</span>",
+        	href = thisnode.attr("href"),
+        	title = thisnode.attr("title"),
+        	result = confirm("Download: " + title + "?");
+		if (result === false) {
+			e.preventDefault();
+		    return false;
+	    }
+		var lastsaved = "last backup: <span class='icon-folder-open'>" + thisnode.attr("data-date") + "</span>",
             lastbackup = thisnode.attr("data-lastbackup");
         $("#backup").data({
             "titlebackup": lastsaved,
@@ -613,27 +741,31 @@ function submitrestore() {
         }
         else {
 	        if (backup_active === true) {
-		        var jsonobject = JSON.parse(atob(backup_result.substr(backup_result.indexOf(",") + 1))),
-					result = confirm("Restore " + backup_filename + "?");
-	            if (result === true) {
-	                restorestorage(jsonobject);
-	                rendersettings(["restore", "backup"]); // exclude restore and backup settings
-	                var lastrestore = "last restore: <span class='icon-folder-open'>" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_') + "</span>";
-	                $("#restore").data({
-	                    "titlerestore": lastrestore,
-	                    "fileused": backup_filename,
-	                    "device": "folder-open"
-	                }).find("p").html(lastrestore);
-	                savesettings();
-	                notify("file restored");
-	                canceldialog();
-	                location.reload(true);
-	            }
+		        var jsonobject = JSON.parse(atob(backup_result.substr(backup_result.indexOf(",") + 1)));
+				restore(jsonobject, backup_filename)
 	        } else {
 	            topnotify("Select a Backup file");
 	        }
         }
     })
+}
+
+function restore(jsonobject, bu_filename) {
+	var result = confirm("Restore " + bu_filename + "?");
+    if (result === true) {
+        restorestorage(jsonobject);
+        rendersettings(["restore", "backup"]); // exclude restore and backup settings
+        var lastrestore = "last restore: <span class='icon-folder-open'>" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_') + "</span>";
+        $("#restore").data({
+            "titlerestore": lastrestore,
+            "fileused": bu_filename,
+            "device": "folder-open"
+        }).find("p").html(lastrestore);
+        savesettings();
+        notify("file restored");
+        canceldialog();
+        window.location.href = window.location.pathname + "?p=settings";
+    }
 }
 
 function submit_GD_restore() {
@@ -714,13 +846,13 @@ function clearcache() {
     $(document).on("click touch", "#clearcache", function() {
         var result = confirm("Clear app cache?");
         if (result === true) {
-            if (caches) {
+            if (caches !== undefined) {
                 caches.keys().then(function(names) {
                     if (names) {
                         $.each(names, function(i, value) {
                             caches.delete(value);
                         });
-                        location.reload(true);
+                        window.location.href = window.location.pathname + "?p=settings";
                     }
                 });
             } else {
@@ -1566,10 +1698,18 @@ function submit_proxy() {
 	        return false;
 	    }
 	    else {
-		    $("#api_proxy").data("selected", selectval).find("p").html(selectval);
-	        canceldialog();
-	        notify("Data saved");
-	        savesettings();
+		    var set_proxy = $("#api_proxy").data("selected");
+		    if (selectval == set_proxy) {
+			    canceldialog();
+		    }
+		    else {
+			   	$("#api_proxy").data("selected", selectval).find("p").html(selectval);
+		        canceldialog();
+		        notify("Data saved");
+		        savesettings();
+		        // Re init app
+		        localStorage.removeItem("bitrequest_init");
+		    }  
 	    }
     })
 }
@@ -1632,6 +1772,8 @@ function test_custom_proxy(value) { // make test api call
 						canceldialog();
 				        notify("Data saved");
 				        savesettings();
+				        // Re init app
+						localStorage.removeItem("bitrequest_init");
 				        setTimeout(function() {
 					        $("#apikeys").trigger("click");
 					    }, 800);

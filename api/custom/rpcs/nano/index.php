@@ -9,7 +9,7 @@ function nano($node, $endpoint, $payload, $headers, $cache_time, $cache_folder) 
         "Content-Type: application/json"
     );
     $apibuild = array();
-    $pending_data = api($node, $payload, $sheaders, $cache_time, $cache_folder, false);
+    $pending_data = api($node, $payload, $sheaders, $cache_time, $cache_folder, false, null);
     if ($pending_data && empty($pending_data["error"])) {
         $blocks = $pending_data["blocks"][$account];
         $pendingobject = array();
@@ -19,7 +19,7 @@ function nano($node, $endpoint, $payload, $headers, $cache_time, $cache_folder) 
                 "json_block" => "true",
                 "hash" => $key,
             ) , true);
-            $block_info_data = api($node, $block_info_payload, $sheaders, 86400, $cache_folder, false);
+            $block_info_data = api($node, $block_info_payload, $sheaders, 86400, $cache_folder, false, null);
             if ($block_info_data && empty($block_info_data["error"])) {
                 $block_info_data["hash"] = $key;
                 $pendingobject["pending"][] = $block_info_data;
@@ -32,7 +32,7 @@ function nano($node, $endpoint, $payload, $headers, $cache_time, $cache_folder) 
         "account" => $account,
         "count" => 10,
     ) , true);
-    $history_data = api($node, $history_payload, $sheaders, $cache_time, $cache_folder, false);
+    $history_data = api($node, $history_payload, $sheaders, $cache_time, $cache_folder, false, null);
     if ($history_data && empty($history_data["error"])) {
         $apibuild[] = $history_data;
     }
