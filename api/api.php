@@ -10,8 +10,9 @@ function api($url, $data, $headers, $ct, $cf, $meta, $fn) {
     $cache_content = json_encode(array(
         "br_cached" => $time
     ));
-    $cached_time = filemtime($cache_file);
-    $time_in_cache = ($cached_time) ? $time - $cached_time : 0;
+    $file_time = filemtime($cache_file);
+    $cached_time = ($file_time) ? $file_time : 0;
+    $time_in_cache = $time - $cached_time;
     $cache_object = array(
         "filename" => $filename,
         "title" => $time_in_cache . " of " . $ct . " seconds in cache",
@@ -26,19 +27,16 @@ function api($url, $data, $headers, $ct, $cf, $meta, $fn) {
             "br_result" => json_decode($cache_contents, true)
         );
         $cache_result = ($meta === false) ? json_decode($cache_contents, true) : $meta_contents;
-        if (file_exists($cache_monitor) && $time - $cache_refresh < filemtime($cache_monitor)) { // return cached contents
-            return $cache_result;
+        if (file_exists($cache_monitor) && $time - $cache_refresh < filemtime($cache_monitor)) { // continues
         }
         else {
             $files = glob($cache_folder . "*"); // empty cache folder
             foreach ($files as $file) {
                 unlink($file);
             }
-            file_put_contents($cache_monitor, json_encode(array(
-                "br_cached" => $time
-            )));
-            return $cache_result;
+            file_put_contents($cache_monitor, $cache_content);
         }
+        return $cache_result;
         exit();
     }
     else {
@@ -51,9 +49,7 @@ function api($url, $data, $headers, $ct, $cf, $meta, $fn) {
             if (file_exists($cache_monitor)) {
             }
             else { // create cache monitor if not exists
-                file_put_contents($cache_monitor, json_encode(array(
-                    "br_cached" => $time
-                )));
+                file_put_contents($cache_monitor, $cache_content);
             }
             $meta_contents = array(
 	            "br_cache" => $cache_object,
