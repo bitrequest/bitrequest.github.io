@@ -99,6 +99,8 @@ $(document).ready(function() {
     //adjust_paymentdialog
     openwallet();
     openwalleturl();
+    dw_trigger();
+    //download_wallet
     //updaterequest
 });
 
@@ -1285,12 +1287,12 @@ function renderqr(payment, address, amount) {
     var number = Number(amount),
         this_iszero = (number === 0 || isNaN(number)),
         urlscheme;
-	if (request.erc20 === true) {
+    if (request.erc20 === true) {
         var raw_amount = amount * Math.pow(10, request.decimals);
         urlscheme = "ethereum:" + request.token_contract + "/transfer?address=" + address + "&uint256=" + raw_amount.toFixedSpecial(0);
         //urlscheme = "ethereum:" + request.token_contract + "/transfer?address=" + address + "&uint256=" + raw_amount + "&gas=43855";
     } else {
-        urlscheme = getcoindata(payment).urlscheme(payment, address, amount, this_iszero);
+        urlscheme = request.coindata.urlscheme(payment, address, amount, this_iszero);
     }
     $("#qrcode").html("").qrcode(urlscheme);
     $(".openwallet").attr("data-rel", urlscheme);
@@ -2123,7 +2125,8 @@ function openwallet() {
     $(document).on("click touch", ".openwallet", function(e) {
         e.preventDefault();
         var thisnode = $(this),
-            content = "<div class='formbox' id='backupformbox'><h2 class='icon-folder-open'>Do you have a " + thisnode.attr("data-currency") + " wallet on this device?</h2><div class='popnotify'></div><div id='backupactions'><div data-rel='" + thisnode.attr("data-rel") + "' class='customtrigger' id='openwalleturl'>Yes</div><div id='backupcd'>No</div></div>";
+        	thiscurrency = thisnode.attr("data-currency"),
+            content = "<div class='formbox' id='backupformbox'><h2 class='icon-folder-open'>Do you have a " + thiscurrency + " wallet on this device?</h2><div class='popnotify'></div><div id='backupactions'><div data-rel='" + thisnode.attr("data-rel") + "' class='customtrigger' id='openwalleturl'>Yes</div><div id='dw_trigger' class='customtrigger' data-currency='" + thiscurrency + "'>No</div></div>";
         popdialog(content, "alert", "triggersubmit");
     });
 }
@@ -2134,6 +2137,54 @@ function openwalleturl() {
         canceldialog();
         window.location.href = $(this).attr("data-rel");
     });
+}
+
+function dw_trigger() {
+    $(document).on("click touch", "#dw_trigger", function() {
+	    var this_currency = $(this).attr("data-currency");
+        canceldialog();
+        setTimeout(function() {
+	    	download_wallet(request.coindata);
+	    }, 800);
+    })
+}
+
+function download_wallet(coindata) {
+    var currency = coindata.currency;
+    var wdp = coindata.wallet_download_page,
+    	wallets = coindata.wallets;
+    if (wdp || wallets) {
+	    var wallet_ul = (wallets) ? "<ul id='formbox_ul'></ul>" : "",
+	    	fmw = (wdp) ? "<a href='" + wdp + "' target='_blank' class='formbox_href'>Find more wallets</a>" : "",
+			content = "\
+			<div class='formbox' id='wdl_formbox'>\
+				<h2 class='icon-download'>Download " + currency + " wallet</h2>\
+				<div class='popnotify'></div>\
+				<div id='dialogcontent'>" + wallet_ul + fmw + "</div>\
+			</div>";
+	    popdialog(content, "alert", "canceldialog");
+	    if (wallets) {
+		    var walletlist = $("#formbox_ul");
+		    	device = getdevicetype(),
+		    	platform = (supportsTouch === true) ?
+		    		(is_android_app === true || device == "Android" || device == "Windows") ? "playstore" :
+		    		(device == "iPhone" || device == "iPad" || device == "Macintosh" || is_ios_app === true) ? "appstore" : "unknown" :
+		    		(device == "Windows") ? "desktop" :
+		    		(device == "Macintosh") ? "desktop" : "unknown",
+		    	store_icon = (platform == "playstore") ? "button-playstore-v2.svg" :
+		    		(platform == "appstore") ? "button-appstore.svg" : "button-desktop_app.svg",
+		    	store_tag = (store_icon) ? "<img src='img/" + store_icon + "'/>" : "<span class='icon-download'></span> ";
+		    $.each(wallets, function(key, value) {
+			    var device_url = value[platform];
+			    if (device_url) {
+				    var walletname = value.name,
+				    	website = value.website,
+				    	wallet_icon = "<img src='img/icons/wallet-icons/" + walletname + ".png' class='wallet_icon'/>";
+				    walletlist.append("<li><a href='" + website + "' target='_blank' class='app_dll'>" + wallet_icon + walletname + "</a><a href='" + device_url + "' target='_blank' class='store_tag'>" + store_tag + "</a></li>");
+			    }
+		    });
+	    }
+    }
 }
 
 function updaterequest(ua, save) {

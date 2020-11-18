@@ -546,6 +546,7 @@ function check_systembu() {
 				var ping = e.ping;
 				if (ping) {
 					var br_cache = e.ping.br_cache,
+						server_time = br_cache.unix_timestamp,
 						filetime = br_cache.unix_timestamp_of_cached_file,
 						filetimesec = (filetime) ? filetime * 1000 : $.now(),
 						filetime_format = new Date(filetimesec).toLocaleString(language),
@@ -554,13 +555,20 @@ function check_systembu() {
 						account = atob(br_result.account),
 						sharedtitle = "System Backup " + account + " (" + filetime_format + ")",
 						bu_date = filetime_format.replace(/\s+/g, '_').replace(/\:/g, '_'),
-						filename = "bitrequest_system_backup_" + encodeURIComponent(account) + "_" + bu_date + ".json";;
+						cache_time = br_cache.cache_time,
+						expires_in = (filetime + cache_time) - server_time,
+						ei_divide = expires_in / 1,
+						filename = "bitrequest_system_backup_" + encodeURIComponent(account) + "_" + bu_date + ".json",
+						cd = countdown(ei_divide * 1000),
+						cd_format = countdown_format(cd),
+						cf_string = (cd_format) ? "Expires in " + cd_format : "File expired",
 						content = "\
 						<div class='formbox' id='system_backupformbox'>\
 							<h2 class='icon-download'>System Backup</h2>\
 							<div class='popnotify'></div>\
 							<div id='dialogcontent'>\
 								<h1>" + sharedtitle +"</h1>\
+								<p><span class='warning' style='padding:0.3em 1em'>" + cf_string + "</span></p>\
 								<div id='changelog'>\
 									<div id='custom_actions'>\
 										<br/>\
@@ -2483,6 +2491,5 @@ function submit_apikey() {
         } else {
             popnotify("error", "Enter a valid API key");
         }
-
     })
 }

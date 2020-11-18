@@ -32,7 +32,45 @@ var bitrequest_coin_data = [{
             "urlscheme": function(payment, address, amount, iszero) {
 		    	return btc_urlscheme(payment, address, amount, iszero);
 		    },
-            "address_regex": "^([13][a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[ac-hj-np-zAC-HJ-NP-Z02-9]{11,71})$"
+            "address_regex": "^([13][a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[ac-hj-np-zAC-HJ-NP-Z02-9]{11,71})$",
+            "wallet_download_page": "https://bitcoin.org/en/choose-your-wallet",
+            "wallets": [
+	            {
+		            "name": "electrum",
+		            "website": "https://electrum.org",
+		            "appstore": null,
+		            "playstore": "https://play.google.com/store/apps/details?id=org.electrum.electrum",
+		            "desktop": "https://electrum.org"
+	            },
+	            {
+		            "name": "mycelium",
+		            "website": "https://wallet.mycelium.com",
+		            "appstore": null,
+		            "playstore": "https://play.google.com/store/apps/details?id=com.mycelium.wallet",
+		            "desktop": null
+	            },
+	            {
+		            "name": "eclair",
+		            "website": "https://acinq.co",
+		            "appstore": null,
+		            "playstore": "https://play.google.com/store/apps/details?id=fr.acinq.eclair.wallet.mainnet2",
+		            "desktop": null
+	            },
+	            {
+		            "name": "bread",
+		            "website": "https://brd.com",
+		            "appstore": "https://apps.apple.com/app/id885251393",
+		            "playstore": "https://play.google.com/store/apps/details?id=com.breadwallet",
+		            "desktop": null
+	            },
+	            {
+		            "name": "edge",
+		            "website": "https://edge.app",
+		            "appstore": "https://apps.apple.com/app/id1344400091",
+		            "playstore": "https://play.google.com/store/apps/details?id=co.edgesecure.app",
+		            "desktop": null
+	            }
+	        ]
         },
         "settings": {
             "confirmations": {
@@ -113,7 +151,24 @@ var bitrequest_coin_data = [{
             "urlscheme": function(payment, address, amount, iszero) {
 		    	return payment + ":" + address + ((iszero === true) ? "" : "?tx_amount=" + amount);
 		    },
-            "address_regex": "^[48](?:[0-9AB]|[1-9A-HJ-NP-Za-km-z]{12}(?:[1-9A-HJ-NP-Za-km-z]{30})?)[1-9A-HJ-NP-Za-km-z]{93}$"
+            "address_regex": "^[48](?:[0-9AB]|[1-9A-HJ-NP-Za-km-z]{12}(?:[1-9A-HJ-NP-Za-km-z]{30})?)[1-9A-HJ-NP-Za-km-z]{93}$",
+            "wallet_download_page": "https://www.getmonero.org/downloads/",
+            "wallets": [
+            	{
+		            "name": "monerujo",
+		            "website": "https://www.monerujo.io",
+		            "appstore": null,
+		            "playstore": "https://play.google.com/store/apps/details?id=com.m2049r.xmrwallet",
+		            "desktop": null
+	            },
+	            {
+		            "name": "mymonero",
+		            "website": "https://mymonero.com",
+		            "appstore": "https://apps.apple.com/app/id1372508199",
+		            "playstore": null,
+		            "desktop": "https://github.com/mymonero/mymonero-app-js/releases"
+	            }
+	        ]
         },
         "settings": {
             "Use random address": {
@@ -132,7 +187,24 @@ var bitrequest_coin_data = [{
             "urlscheme": function(payment, address, amount, iszero) {
 		    	return btc_urlscheme(payment, address, amount, iszero);
 		    },
-            "address_regex": "^([LM][a-km-zA-HJ-NP-Z1-9]{26,33}|ltc1[a-zA-HJ-NP-Z0-9]{26,39})$"
+            "address_regex": "^([LM][a-km-zA-HJ-NP-Z1-9]{26,33}|ltc1[a-zA-HJ-NP-Z0-9]{26,39})$",
+            "wallet_download_page": "https://litecoin.org",
+            "wallets": [
+            	{
+		            "name": "electrum",
+		            "website": "https://electrum-ltc.org",
+		            "appstore": null,
+		            "playstore": null,
+		            "desktop": "https://electrum-ltc.org"
+	            },
+	            {
+		            "name": "litewallet",
+		            "website": "https://lite-wallet.org",
+		            "appstore": "https://apps.apple.com/app/id1119332592",
+		            "playstore": "https://play.google.com/store/apps/details?id=com.loafwallet",
+		            "desktop": null
+	            }
+	        ]
         },
         "settings": {
             "confirmations": {
@@ -193,7 +265,24 @@ var bitrequest_coin_data = [{
             "urlscheme": function(payment, address, amount, iszero) {
 		    	return btc_urlscheme(payment, address, amount, iszero);
 		    },
-            "address_regex": "^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$"
+            "address_regex": "^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$",
+            "wallet_download_page": "https://dogecoin.com/getting-started/",
+            "wallets": [
+            	{
+		            "name": "multidoge",
+		            "website": "https://multidoge.org",
+		            "appstore": null,
+		            "playstore": null,
+		            "desktop": "https://multidoge.org"
+	            },
+	            {
+		            "name": "dogecoin",
+		            "website": "http://langerhans.github.io/dogecoin-wallet-new",
+		            "appstore": null,
+		            "playstore": "https://play.google.com/store/apps/details?id=de.langerhans.wallet",
+		            "desktop": null
+	            }
+	        ]
         },
         "settings": {
             "confirmations": {
@@ -254,7 +343,24 @@ var bitrequest_coin_data = [{
             "urlscheme": function(payment, address, amount, iszero) {
 	            return "nano:" + address + ((iszero === true) ? "" : "?amount=" + (parseFloat(amount) * "1000000000000000000000000000000").toFixedSpecial(0));
 		    },
-            "address_regex": "^(xrb|nano)_([a-z1-9]{60})$"
+            "address_regex": "^(xrb|nano)_([a-z1-9]{60})$",
+            "wallet_download_page": "https://nanowallets.guide",
+            "wallets": [
+            	{
+		            "name": "natrium",
+		            "website": "https://natrium.io",
+		            "appstore": "https://apps.apple.com/app/id1451425707",
+		            "playstore": "https://play.google.com/store/apps/details?id=co.banano.natriumwallet",
+		            "desktop": null
+	            },
+	            {
+		            "name": "nault",
+		            "website": "https://nault.cc",
+		            "appstore": null,
+		            "playstore": null,
+		            "desktop": "https://nault.cc"
+	            }
+	        ]
         },
         "settings": {
 	        "Use random address": {
@@ -318,7 +424,17 @@ var bitrequest_coin_data = [{
             "urlscheme": function(payment, address, amount, iszero) {
 	            return payment + ":" + address + ((iszero === true) ? "" : "?value=" + (parseFloat(amount) * "1000000000000000000").toFixedSpecial(0));
 		    },
-            "address_regex": "web3"
+            "address_regex": "web3",
+            "wallet_download_page": "https://ethereum.org/en/wallets/",
+            "wallets": [
+            	{
+		            "name": "myetherwallet",
+		            "website": "https://www.mewwallet.com",
+		            "appstore": "https://apps.apple.com/app/id1464614025",
+		            "playstore": "https://play.google.com/store/apps/details?id=com.myetherwallet.mewwallet",
+		            "desktop": "https://www.myetherwallet.com"
+	            }
+	        ]
         },
         "settings": {
             "confirmations": {
@@ -391,6 +507,30 @@ var bitrequest_coin_data = [{
         }
     }
 ]
+
+var erc20_data = {
+    "monitored": "jaap",
+    "url-scheme": "",
+    "regex": "web3",
+    "erc20": true,
+    "wallet_download_page": "https://ethereum.org/en/wallets/",
+    "wallets": [
+    	{
+            "name": "myetherwallet",
+            "website": "https://www.mewwallet.com",
+            "appstore": "https://apps.apple.com/app/id1464614025",
+            "playstore": "https://play.google.com/store/apps/details?id=com.myetherwallet.mewwallet",
+            "desktop": "https://www.myetherwallet.com"
+        },
+        {
+            "name": "enjin",
+            "website": "https://enjin.io/software/wallet",
+            "appstore": "https://apps.apple.com/app/id1349078375",
+            "playstore": "http://enj.in/google-play",
+            "desktop": null
+        }
+    ]
+}
 
 var erc20_settings = {
     "confirmations": {

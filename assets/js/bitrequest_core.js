@@ -364,6 +364,7 @@ function finishfunctions() {
     //addcurrency
     addaddresstrigger();
     //addaddress
+    get_wallet();
     submitaddresstrigger();
     add_erc20();
     autocomplete_erc20token();
@@ -450,6 +451,8 @@ function finishfunctions() {
     //getcoinsettings
     //try_next_api
     //trimdecimals
+    //countdown
+    //countdown_format
 
     // ** Page rendering **
 
@@ -1029,8 +1032,7 @@ function triggertx() {
 }
 
 function triggertxfunction(thislink) {
-	console.log(thislink.data());
-    var currency = thislink.data("currency"),
+	var currency = thislink.data("currency"),
     	pick_random = $("#" + currency + "_settings .cc_settinglist li[data-id='Use random address']").data("selected"),
     	addresslist = $("#" + currency + ".page ul.pobox li[data-checked='true']"),
     	addresscount = addresslist.length,
@@ -1557,25 +1559,26 @@ function addcurrency(cd) {
     if ($("main #" + currency + " .content ul.pobox[data-currency='" + currency + "'] li").length) {
         loadpage(thiscurrencylink);
     } else {
-        addaddress(cd, false);
+        addaddress(cd, false, true);
     }
 }
 
 function addaddresstrigger() {
     $(document).on("click touch", ".addaddress", function() {
-        addaddress($("#" + $(this).attr("data-currency")).data(), false);
+        addaddress($("#" + $(this).attr("data-currency")).data(), false, false);
     })
 }
 
-function addaddress(ad, edit) {
+function addaddress(ad, edit, first) {
     var currency = ad.currency,
         cpid = ad.ccsymbol + "-" + currency,
         address = (ad.address) ? ad.address : "",
         label = (ad.label) ? ad.label : "",
+        popnotify = (first === true) ? "<div class='popnotify' style='display:block'><span id='get_wallet' data-currency='" + currency + "'>I don't have a " + currency + " address yet</span></div>" : "<div class='popnotify'></div>",
         title = (edit === true) ? "<h2 class='icon-pencil'>Edit label</h2>" : "<h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " Add " + currency + " address</h2>",
         pk_checkbox = (edit === true) ? "" : "<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / private key of this address</span></div>",
         addeditclass = (edit === true) ? "edit" : "add",
-        content = $("<div class='formbox form" + addeditclass + "' id='addressformbox'>" + title + "<div class='popnotify'></div><form class='addressform popform'><input type='text' class='address' value='" + address + "' placeholder='Enter a " + currency + " address'><input type='text' class='addresslabel' value='" + label + "' placeholder='label'>" + pk_checkbox + "<input type='submit' class='submit' value='OK'></form>").data(ad);
+        content = $("<div class='formbox form" + addeditclass + "' id='addressformbox'>" + title + popnotify + "<form class='addressform popform'><input type='text' class='address' value='" + address + "' placeholder='Enter a " + currency + " address'><input type='text' class='addresslabel' value='" + label + "' placeholder='label'>" + pk_checkbox + "<input type='submit' class='submit' value='OK'></form>").data(ad);
     popdialog(content, "alert", "triggersubmit");
     if (supportsTouch === true) {} else {
         if (edit === true) {
@@ -1584,6 +1587,19 @@ function addaddress(ad, edit) {
             $("#popup input.address").focus();
         }
     }
+}
+
+function get_wallet() {
+    $(document).on("click touch", "#get_wallet", function() {
+	    var this_currency = $(this).attr("data-currency"),
+	    	coindata = getcoindata(this_currency);
+	    if (coindata) {
+		    canceldialog();
+	        setTimeout(function() {
+		    	download_wallet(coindata);
+		    }, 800);
+	    }
+    })
 }
 
 function submitaddresstrigger() {
@@ -2037,7 +2053,7 @@ function showrequests() {
 function editaddresstrigger() {
     $(document).on("click touch", ".editaddress", function(e) {
         e.preventDefault();
-        addaddress($(this).closest("ul").data(), true);
+        addaddress($(this).closest("ul").data(), true, false);
     })
 }
 
@@ -2712,13 +2728,15 @@ function getcoindata(currency) {
                 "urlscheme": coindata.urlscheme,
                 "settings": has_settings,
                 "regex": coindata.address_regex,
+                "wallet_download_page": coindata.wallet_download_page,
+                "wallets": coindata.wallets,
                 "erc20": false
             };
         return cd_object;
     } else { // if not it's probably erc20 token
-        var currencyref = $("#usedcurrencies li[data-currency='" + currency + "']"); // check if erc20 token is added
+	    var currencyref = $("#usedcurrencies li[data-currency='" + currency + "']"); // check if erc20 token is added
         if (currencyref.length > 0) {
-            return currencyref.data();
+	        return $.extend(currencyref.data(), erc20_data);
         } else { // else lookup erc20 data
             var tokenobject = JSON.parse(localStorage.getItem("bitrequest_erc20tokens"));
             if (tokenobject) {
@@ -2726,16 +2744,13 @@ function getcoindata(currency) {
                     return filter.name == currency;
                 })[0];
                 if (erc20data) {
-                    return {
+	                var fetched_data = {
                         "currency": erc20data.name,
                         "ccsymbol": erc20data.symbol,
                         "cmcid": erc20data.cmcid.toString(),
-                        "contract": erc20data.contract,
-                        "monitored": true,
-                        "url-scheme": "",
-                        "regex": "web3",
-                        "erc20": true
+                        "contract": erc20data.contract
                     }
+                    return $.extend(fetched_data, erc20_data);
                 } else {
                     return false;
                 }
@@ -2772,6 +2787,42 @@ function try_next_api(apilistitem, current_apiname) {
 function trimdecimals(amount, decimals) {
     var round_amount = parseFloat(amount).toFixed(decimals);
     return parseFloat(round_amount.toString());
+}
+
+// Countdown format
+
+function countdown(timestamp) {
+	var uts = timestamp / 1000,
+		days = Math.floor(uts / 86400);
+	uts -= days * 86400;
+	var hours = Math.floor(uts / 3600) % 24;
+	uts -= hours * 3600;
+	var minutes = Math.floor(uts / 60) % 60;
+	uts -= minutes * 60;
+	var seconds = uts % 60,
+		cd_object = {
+			"days": days,
+			"hours": hours,
+			"minutes": minutes,
+			"seconds": Math.round(seconds)
+		}
+	return cd_object;
+}
+
+function countdown_format(cd) {
+	var days = cd.days,
+		hours = cd.hours,
+		minutes = cd.minutes,
+		seconds = cd.seconds,
+		daynode = (days) ? (days < 2) ? days + " day" : days + " days" : "",
+		hs = (days) ? ", " : "",
+		hournode = (hours) ? (hours < 2) ? hs + hours + " hour" : hs + hours + " hours" : "",
+		ms = (hours) ? ", " : "",
+		minutenode = (minutes) ? (minutes < 2) ? ms + minutes + " minute" : ms + minutes + " minutes" : "",
+		ss = (minutes) ? " and " : "",
+		secondnode = (seconds) ? ss + seconds + " seconds" : ""
+		result = (cd) ? daynode + hournode + minutenode + secondnode : false;
+	return result;
 }
 
 // ** Page rendering **

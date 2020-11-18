@@ -1712,7 +1712,6 @@ input[type=submit] {
     margin: 1em 0;
 }
 
-
 /* Firefox remove red border on inputfield */
 
 input:-moz-placeholder,
@@ -1742,6 +1741,13 @@ input:invalid {
 
 #pk_confirm>span {
     font-weight: 700;
+}
+
+#get_wallet {
+	color: #009788;
+	font-weight:700;
+	text-decoration: underline;
+	cursor:pointer;
 }
 
 #contactformbox .cf_inputwrap {
@@ -3667,7 +3673,68 @@ html.gdauth #share_bu {
     width: 100%;
     list-style-type: none;
     font-size: 125%;
-    color: #b2b2b2;
+}
+
+#formbox_ul {
+	float:left;
+    width: 100%;
+    list-style-type: none;
+}
+
+#formbox_ul li {
+	position:relative;
+	float:left;
+    width: 100%;
+    padding:0.8em 0em 1em 0;
+    border-bottom:1px solid #CCC;
+}
+
+#formbox_ul li a {
+	display:inline-block;
+	font-weight: 700;
+}
+
+#formbox_ul li a.app_dll {
+	float:left;
+	color: #a6a6a6;
+	font-size: 150%;
+	text-transform: capitalize;
+}
+
+#dialogbody .store_tag {
+	float:right;
+}
+
+#dialogbody .store_tag img {
+	display:inline-block;
+	height:2.5em;
+	margin:0.5em 0.5em 0 0;
+	padding:0.3em;
+	background-color: #4c4c4c;
+	border-radius:0.5em;
+}
+
+#dialogbody .wallet_icon {
+	display:inline-block;
+	height:2.5em;
+	vertical-align:middle;
+	margin:0 0 0 0;
+	padding:0.3em;
+}
+
+#dialogbody .formbox_href {
+	display:inline-block;
+	margin:1em 0 0 0.8em;
+	color: #009788;
+	font-weight: 700;
+	font-size: 120%;
+	text-decoration: underline;
+}
+
+#system_backupformbox .countdown {
+	padding:0.3em 1em;
+	background-color: #B33A3A;
+	color:#FFF;
 }
 
 /* switchpanel */
@@ -4244,4 +4311,4 @@ html.inframe body {
 #proxy_info a {
 	color: #3498db;
 	font-weight: 700;
-}z
+}

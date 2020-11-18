@@ -11,13 +11,14 @@ function api($url, $data, $headers, $ct, $cf, $meta, $fn) {
         "br_cached" => $time
     ));
     $file_time = filemtime($cache_file);
-    $cached_time = ($file_time) ? $file_time : 0;
+    $cached_time = ($file_time) ? $file_time : $time;
     $time_in_cache = $time - $cached_time;
     $cache_object = array(
         "filename" => $filename,
         "title" => $time_in_cache . " of " . $ct . " seconds in cache",
         "unix_timestamp" => $time,
         "unix_timestamp_of_cached_file" => $cached_time,
+        "cache_time" => $ct,
         "time_in_cache" => $time_in_cache
     );
     if (file_exists($cache_file) && $time_in_cache < $ct) {
@@ -27,14 +28,19 @@ function api($url, $data, $headers, $ct, $cf, $meta, $fn) {
             "br_result" => json_decode($cache_contents, true)
         );
         $cache_result = ($meta === false) ? json_decode($cache_contents, true) : $meta_contents;
-        if (file_exists($cache_monitor) && $time - $cache_refresh < filemtime($cache_monitor)) { // continues
-        }
-        else {
-            $files = glob($cache_folder . "*"); // empty cache folder
+        $cm_time = filemtime($cache_monitor);
+        $folder_time = ($cm_time) ? $cm_time : $time;
+        if ($time - $cache_refresh > $folder_time) {
+	        $files = glob($cache_folder . "*");
+	         // clear all expired cache
             foreach ($files as $file) {
-                unlink($file);
+	            if ($time - filemtime($file) > $cache_refresh) {
+		            unlink($file);
+	            }
             }
-            file_put_contents($cache_monitor, $cache_content);
+            if (!file_exists($cache_monitor)) {
+                file_put_contents($cache_monitor, $cache_content);
+            }
         }
         return $cache_result;
         exit();
@@ -46,10 +52,8 @@ function api($url, $data, $headers, $ct, $cf, $meta, $fn) {
                 mkdir($cache_folder, 0777, true);
             }
             file_put_contents($cache_file, $apiresult);
-            if (file_exists($cache_monitor)) {
-            }
-            else { // create cache monitor if not exists
-                file_put_contents($cache_monitor, $cache_content);
+            if (!file_exists($cache_monitor)) { // create cache monitor if not exists
+	            file_put_contents($cache_monitor, $cache_content);
             }
             $meta_contents = array(
 	            "br_cache" => $cache_object,

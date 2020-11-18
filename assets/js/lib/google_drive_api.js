@@ -65,7 +65,6 @@ function Drive_Backup_trigger() {
 }
 
 function authenticate() {
-    console.log(GoogleAuth);
     if (GoogleAuth) {
         return GoogleAuth.signIn().then(function() {
             html.addClass("gdauth");
