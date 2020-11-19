@@ -606,7 +606,7 @@ function systembu_expired() {
 
 function restore_systembu() {
     $(document).on("click touch", "#system_backupformbox #restore_bu", function() {
-	    var result = confirm("INSTALL SYSTEM BACKUP? ALL YOUR PREVIOUES APP DATA WILL BE REPLACED");
+	    var result = confirm("INSTALL SYSTEM BACKUP? ALL YOUR PREVIOUS APP DATA WILL BE REPLACED");
 		if (result === true) {
 	        var this_bttn = $(this),
 	        	bu_dat = this_bttn.attr("data-base64"),
@@ -831,7 +831,7 @@ function cachecontrol() {
             appstorelink = "https://itunes.apple.com/us/app/bitrequest/id1484815377?ls=1&mt=8",
             appstore_url = (is_android_app === true) ? playstorelink :
             (body.hasClass("ios")) ? appstorelink : playstorelink,
-            lfu = (offline === true) ? "" : (supportsTouch === true) ? "<br/><a href='" + appstore_url + "' class='button'>Look for updates</a>" : "",
+            lfu = (offline === true) ? "" : (supportsTouch === true) ? "<br/><a href='" + appstore_url + "' class='exit button'>Look for updates</a>" : "",
             content = "\
 				<div class='formbox' id='cacheformbox'>\
 					<h2 class='icon-database'>Cache control</h2>\
@@ -1612,7 +1612,7 @@ function pick_api_proxy() {
 						<h3 class='icon-plus'>Add API Proxy</h3>\
 						<div id='proxy_info'>\
 							Control your own keys and request limits:<br/><br/>\
-							<strong>1.</strong> Host the <a href='https://github.com/bitrequest/bitrequest.github.io/tree/master/api' target='blank'>API proxy folder</a> on your server (php required).<br/>\
+							<strong>1.</strong> Host the <a href='https://github.com/bitrequest/bitrequest.github.io/tree/master/api' target='blank' class='exit'>API proxy folder</a> on your server (php required).<br/>\
 							<strong>2.</strong> Enter your API keys in 'keys.php'.<br/>\
 							<strong>3.</strong> Enter your server address below.<br/><br/>\
 						</div>\
@@ -2454,7 +2454,7 @@ function add_apikey(api) {
         api_key = (get_key) ? get_key : "",
         apidata = get_api_data(api),
         sign_up = apidata.sign_up,
-        get_apikey_url = (!sign_up) ? "" : "<div id='api_signin'>Get your " + api + " API key <a href='" + sign_up + "' target='blank'>here</a></div>",
+        get_apikey_url = (!sign_up) ? "" : "<div id='api_signin'>Get your " + api + " API key <a href='" + sign_up + "' target='blank' class='exit'>here</a></div>",
         content = "\
 		<div class='formbox' id='add_apikey'>\
 			<h2 class='icon-key'>Set " + api + " API key</h2>\

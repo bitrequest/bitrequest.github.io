@@ -2155,7 +2155,7 @@ function download_wallet(coindata) {
     	wallets = coindata.wallets;
     if (wdp || wallets) {
 	    var wallet_ul = (wallets) ? "<ul id='formbox_ul'></ul>" : "",
-	    	fmw = (wdp) ? "<a href='" + wdp + "' target='_blank' class='formbox_href'>Find more wallets</a>" : "",
+	    	fmw = (wdp) ? "<a href='" + wdp + "' target='_blank' class='exit formbox_href'>Find more wallets</a>" : "",
 			content = "\
 			<div class='formbox' id='wdl_formbox'>\
 				<h2 class='icon-download'>Download " + currency + " wallet</h2>\
@@ -2180,7 +2180,7 @@ function download_wallet(coindata) {
 				    var walletname = value.name,
 				    	website = value.website,
 				    	wallet_icon = "<img src='img/icons/wallet-icons/" + walletname + ".png' class='wallet_icon'/>";
-				    walletlist.append("<li><a href='" + website + "' target='_blank' class='app_dll'>" + wallet_icon + walletname + "</a><a href='" + device_url + "' target='_blank' class='store_tag'>" + store_tag + "</a></li>");
+				    walletlist.append("<li><a href='" + website + "' target='_blank' class='exit app_dll'>" + wallet_icon + walletname + "</a><a href='" + device_url + "' target='_blank' class='exit store_tag'>" + store_tag + "</a></li>");
 			    }
 		    });
 	    }

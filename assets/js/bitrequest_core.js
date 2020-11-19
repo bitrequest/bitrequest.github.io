@@ -414,7 +414,8 @@ function finishfunctions() {
     //removerequestfunction
 
     // ** Helpers **
-
+	
+	open_url();
     //get_amberdata_apikey
     //get_infura_apikey
     //api_proxy
@@ -2351,6 +2352,26 @@ function removerequestfunction() {
 
 // ** Helpers **
 
+function open_url() {
+	$(document).on("click touch", "a.exit", function(e) {
+		e.preventDefault();
+		var this_href = $(this),
+            target = this_href.attr("target"),
+            url = this_href.attr("href");
+        loader(true);
+        loadertext("Loading " + url);
+		setTimeout(function() {
+			closeloader();
+	        if (target == "_blank") {
+			    window.open(url);
+		    }
+		    else {
+			    window.location.href = url;
+		    }
+	    }, 500);
+    })
+}
+
 function get_amberdata_apikey() {
     var savedkey = $("#apikeys").data("amberdata"),
         keyselect = (savedkey) ? savedkey : to.ad_id;
@@ -3144,9 +3165,9 @@ function appendrequest(rd) {
         ispendingclass = (isexpired === true) ? "expired" : pending,
         localtimeobject = new Date(localtime),
         requestdateformatted = fulldateformat(localtimeobject, "en-us"),
-        timeformat = localtimeobject.toLocaleString('en-us', {
+        timeformat = "<span class='rq_month'>" + localtimeobject.toLocaleString('en-us', {
             month: 'short'
-        }) + " " + localtimeobject.getUTCDate(),
+        }) + "</span> <span class='rq_day'>" + localtimeobject.getUTCDate() + "</span>",
         ptsformatted = fulldateformatmarkup(new Date(paymenttimestamp - timezone), "en-us"),
         amount_short_rounded = amountshort(amount, receivedamount, fiatvalue, iscrypto),
         amount_short_span = (insufficient === true) ? " (" + amount_short_rounded + " " + uoa_upper + " short)" : "",
@@ -3437,7 +3458,7 @@ function getapp(type) {
         button = (android === true) ? "button-playstore-v2.svg" : "button-appstore.svg",
         url = (android === true) ? "https://play.google.com/store/apps/details?id=" + androidpackagename + "&pcampaignid=fdl_long&url=" + approot + encodeURIComponent(window.location.search) : "https://apps.apple.com/app/id1484815377?mt=8",
         panelcontent = "<h2>Download the app</h2>\
-			<a href='" + url + "' class='store_bttn'><img src='img/" + button + "'></a><br/>\
+			<a href='" + url + "' class='exit store_bttn'><img src='img/" + button + "'></a><br/>\
 			<div id='not_now'>Not now</div>";
     app_panel.html(panelcontent);
     setTimeout(function() {
