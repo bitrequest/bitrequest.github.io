@@ -655,7 +655,7 @@ html.showmain #newrequest_alias {
 
 .applist div.endli {
     display: list-item;
-    padding: 1em 0.5em 0 0;
+    padding: 0 0.5em 0 0;
     border-bottom: none;
 }
 
@@ -705,7 +705,7 @@ html.showmain #newrequest_alias {
 #addaddress,
 .reset_cc_settings {
     float: left;
-    margin: 1em 0 1em 1em;
+    margin: 2.4em 0 2em 1em;
 }
 
 .listyle2 .liwrap>span:before {
@@ -1024,6 +1024,23 @@ html.dragmode .currentpage .applist li.dragging {
     color: #808080;
     letter-spacing: 0.06em;
     font-weight: 700;
+}
+
+.requestlist .rq_date .rq_day {
+	display:block;
+	float:left;
+	clear:both;
+    font-size:200%;
+    padding:0;
+    line-height:1em;
+}
+
+.requestlist .rq_date .rq_month {
+	display:block;
+	float:left;
+	width:100%;
+	padding:0;
+	text-align: center;
 }
 
 .requestlist .pmetastatus {
@@ -3313,7 +3330,7 @@ ul.conf_options li .conf_emoji {
 
 #app_info {
     float: left;
-    padding: 0.7em 1.5em;
+    padding: 2em 1.5em;
     font-size: 90%;
 }
 
