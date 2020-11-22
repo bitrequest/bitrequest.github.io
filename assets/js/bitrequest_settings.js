@@ -557,9 +557,8 @@ function check_systembu() {
 						bu_date = filetime_format.replace(/\s+/g, '_').replace(/\:/g, '_'),
 						cache_time = br_cache.cache_time,
 						expires_in = (filetime + cache_time) - server_time,
-						ei_divide = expires_in / 1,
 						filename = "bitrequest_system_backup_" + encodeURIComponent(account) + "_" + bu_date + ".json",
-						cd = countdown(ei_divide * 1000),
+						cd = countdown(expires_in * 1000),
 						cd_format = countdown_format(cd),
 						cf_string = (cd_format) ? "Expires in " + cd_format : "File expired",
 						content = "\

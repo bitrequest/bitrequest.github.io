@@ -22,12 +22,12 @@ function api($url, $data, $headers, $ct, $cf, $meta, $fn) {
         "time_in_cache" => $time_in_cache
     );
     if (file_exists($cache_file) && $time_in_cache < $ct) {
-        $cache_contents = file_get_contents($cache_file);
+        $cache_contents = json_decode(file_get_contents($cache_file), true);
         $meta_contents = array(
             "br_cache" => $cache_object,
-            "br_result" => json_decode($cache_contents, true)
+            "br_result" => $cache_contents
         );
-        $cache_result = ($meta === false) ? json_decode($cache_contents, true) : $meta_contents;
+        $cache_result = ($meta === false) ? $cache_contents : $meta_contents;
         $cm_time = filemtime($cache_monitor);
         $folder_time = ($cm_time) ? $cm_time : $time;
         if ($time - $cache_refresh > $folder_time) {
@@ -55,17 +55,13 @@ function api($url, $data, $headers, $ct, $cf, $meta, $fn) {
             if (!file_exists($cache_monitor)) { // create cache monitor if not exists
 	            file_put_contents($cache_monitor, $cache_content);
             }
+            $api_contents = json_decode($apiresult, true);
             $meta_contents = array(
 	            "br_cache" => $cache_object,
-	            "br_result" => json_decode($apiresult, true)
+	            "br_result" => $api_contents
 	        );
-			$result = ($meta === false) ? json_decode($apiresult, true) : $meta_contents;
+			$result = ($meta === false) ? $api_contents : $meta_contents;
             return $result;
-        }
-        else {
-            if (file_exists($cache_file)) {
-                unlink($cache_file);
-            }
         }
     }
 }

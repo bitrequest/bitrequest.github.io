@@ -30,6 +30,7 @@ var language = navigator.language || navigator.userLanguage,
     (thishostname == localhostname) ? "selfhosted" :
     (thishostname == "") ? "local" : "unknown",
     symbolcache,
+    hascam,
     cp_timer,
     local;
 
@@ -323,6 +324,7 @@ function finishfunctions() {
     //openpage
     popstate();
     //loadfunction
+    //cancel_url_dialogs
     //loadpageevent
     //shownav
 
@@ -968,11 +970,11 @@ function openpage(href, pagename, event) {
 function popstate() {
     window.onpopstate = function(e) {
         var statemeta = e.state;
-        if (statemeta.pagename) { //check for history
+        console.log(statemeta);
+        if (statemeta && statemeta.pagename) { //check for history
             loadfunction(statemeta.pagename, statemeta.event);
         } else {
-            cancelpaymentdialog();
-            e.preventDefault();
+            cancel_url_dialogs();
             return false;
         }
     }
@@ -990,9 +992,16 @@ function loadfunction(pagename, thisevent) {
         loadpageevent(pagename);
         var title = pagename + " | " + apptitle;
         settitle(title);
-        if (paymentpopup.hasClass("active")) {
-            cancelpaymentdialog();
-        }
+        cancel_url_dialogs();
+    }
+}
+
+function cancel_url_dialogs() {
+    if (paymentpopup.hasClass("active")) {
+        cancelpaymentdialog();
+    }
+    if (body.hasClass("showcam")) {
+        $("#closecam").trigger("click");
     }
 }
 
@@ -1405,6 +1414,10 @@ function keyup() {
 }
 
 function escapeandback() {
+	if (body.hasClass("showcam")) {
+        window.history.back();
+        return false;
+    }
     if ($("#loader").hasClass("active")) {
         closeloader();
         return false;
@@ -1571,15 +1584,16 @@ function addaddresstrigger() {
 }
 
 function addaddress(ad, edit, first) {
-    var currency = ad.currency,
+	var currency = ad.currency,
         cpid = ad.ccsymbol + "-" + currency,
         address = (ad.address) ? ad.address : "",
         label = (ad.label) ? ad.label : "",
         popnotify = (first === true) ? "<div class='popnotify' style='display:block'><span id='get_wallet' data-currency='" + currency + "'>I don't have a " + currency + " address yet</span></div>" : "<div class='popnotify'></div>",
+        scanqr = (hascam === true) ? "<div id='qrscanner' data-currency='" + currency + "' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
         title = (edit === true) ? "<h2 class='icon-pencil'>Edit label</h2>" : "<h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " Add " + currency + " address</h2>",
         pk_checkbox = (edit === true) ? "" : "<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / private key of this address</span></div>",
         addeditclass = (edit === true) ? "edit" : "add",
-        content = $("<div class='formbox form" + addeditclass + "' id='addressformbox'>" + title + popnotify + "<form class='addressform popform'><input type='text' class='address' value='" + address + "' placeholder='Enter a " + currency + " address'><input type='text' class='addresslabel' value='" + label + "' placeholder='label'>" + pk_checkbox + "<input type='submit' class='submit' value='OK'></form>").data(ad);
+        content = $("<div class='formbox form" + addeditclass + "' id='addressformbox'>" + title + popnotify + "<form class='addressform popform'><input type='text' class='address' value='" + address + "' placeholder='Enter a " + currency + " address'><input type='text' class='addresslabel' value='" + label + "' placeholder='label'>" + pk_checkbox + "<input type='submit' class='submit' value='OK'></form>" + scanqr).data(ad);
     popdialog(content, "alert", "triggersubmit");
     if (supportsTouch === true) {} else {
         if (edit === true) {
@@ -2360,6 +2374,9 @@ function open_url() {
             url = this_href.attr("href");
         loader(true);
         loadertext("Loading " + url);
+        if (is_ios_app === true) {
+        	cancelpaymentdialog();
+        }
 		setTimeout(function() {
 			closeloader();
 	        if (target == "_blank") {
