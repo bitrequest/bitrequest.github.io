@@ -4350,9 +4350,9 @@ html.inframe body {
 	height:100vh;
 	background-color: black;
 	z-index:1;
-	-webkit-transform: translate(0, 100%);
-    -ms-transform: translate(0, 100%);
-    transform: translate(0, 100%);
+	-webkit-transform: translate(0, 100vh);
+    -ms-transform: translate(0, 100vh);
+    transform: translate(0, 100vh);
     -webkit-transition: -webkit-transform 200ms linear;
     -ms-transition: -ms-transform 200ms linear;
     transition: transform 200ms linear;
@@ -4360,9 +4360,9 @@ html.inframe body {
 }
 
 body.showcam #scanner {
-	-webkit-transform: translate(0, 0%);
-    -ms-transform: translate(0, 0%);
-    transform: translate(0, 0%);
+	-webkit-transform: translate(0, 0vh);
+    -ms-transform: translate(0, 0vh);
+    transform: translate(0, 0vh);
     pointer-events:all;
 }
 	
