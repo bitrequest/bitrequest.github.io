@@ -30,11 +30,11 @@ function api($url, $data, $headers, $ct, $cf, $meta, $fn) {
         $cache_result = ($meta === false) ? $cache_contents : $meta_contents;
         $cm_time = filemtime($cache_monitor);
         $folder_time = ($cm_time) ? $cm_time : $time;
-        if ($time - $cache_refresh > $folder_time) {
+        if (($time - $cache_refresh) > $folder_time) {
 	        $files = glob($cache_folder . "*");
 	         // clear all expired cache
             foreach ($files as $file) {
-	            if ($time - filemtime($file) > $cache_refresh) {
+	            if (($time - filemtime($file)) > $cache_refresh) {
 		            unlink($file);
 	            }
             }
@@ -62,6 +62,11 @@ function api($url, $data, $headers, $ct, $cf, $meta, $fn) {
 	        );
 			$result = ($meta === false) ? $api_contents : $meta_contents;
             return $result;
+        }
+        else {
+            if (file_exists($cache_file)) {
+                unlink($cache_file);
+            }
         }
     }
 }
