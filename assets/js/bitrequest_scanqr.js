@@ -75,7 +75,8 @@ function setResult(result) {
 		end_result = (result.indexOf("?") >= 0) ? mid_result.split("?")[0] : mid_result,
 		validate = check_address(end_result, payment);
 	if (validate === true) {
-		$("#addressformbox input.address").val(end_result);
+		$("#popup .formbox input.address").val(end_result);
+		$("#popup .formbox input.addresslabel").focus();
 		
 	}
 	else {

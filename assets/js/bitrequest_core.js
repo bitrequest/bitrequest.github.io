@@ -1593,7 +1593,7 @@ function addaddress(ad, edit, first) {
         title = (edit === true) ? "<h2 class='icon-pencil'>Edit label</h2>" : "<h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " Add " + currency + " address</h2>",
         pk_checkbox = (edit === true) ? "" : "<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / private key of this address</span></div>",
         addeditclass = (edit === true) ? "edit" : "add",
-        content = $("<div class='formbox form" + addeditclass + "' id='addressformbox'>" + title + popnotify + "<form class='addressform popform'><input type='text' class='address' value='" + address + "' placeholder='Enter a " + currency + " address'><input type='text' class='addresslabel' value='" + label + "' placeholder='label'>" + pk_checkbox + "<input type='submit' class='submit' value='OK'></form>" + scanqr).data(ad);
+        content = $("<div class='formbox form" + addeditclass + "' id='addressformbox'>" + title + popnotify + "<form class='addressform popform'><div class='inputwrap'><input type='text' class='address' value='" + address + "' placeholder='Enter a " + currency + " address'>" + scanqr + "</div><input type='text' class='addresslabel' value='" + label + "' placeholder='label'>" + pk_checkbox + "<input type='submit' class='submit' value='OK'></form>").data(ad);
     popdialog(content, "alert", "triggersubmit");
     if (supportsTouch === true) {} else {
         if (edit === true) {
@@ -1637,6 +1637,7 @@ function add_erc20() {
                 "monitored": true,
                 "checked": true
             },
+            scanqr = (hascam === true) ? "<div id='qrscanner' data-currency='ethereum' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
             content = $("\
 			<div class='formbox' id='erc20formbox'>\
 				<h2 class='icon-coin-dollar'>Add erc20 token</h2>\
@@ -1648,7 +1649,7 @@ function add_erc20() {
 						<div id='ac_options' class='options'>" + tokenlist + "</div>\
 					</div>\
 					<div id='erc20_inputs'>\
-					<input type='text' class='address' value='' placeholder='Enter a address'/>\
+					<div class='inputwrap'><input type='text' class='address' value='' placeholder='Enter a address'/>" + scanqr + "</div>\
 					<input type='text' class='addresslabel' value='' placeholder='label'/>\
 					<div id='pk_confirm' class='noselect'>\
 						<div id='pk_confirmwrap' data-checked='false'>\
