@@ -726,7 +726,8 @@ function get_rpc_inputs(rd, rpc_data) {
                 } else {
                     if (web3) {
                         var current_provider = web3.currentProvider.host,
-                        	current_url = url + to.if_id;
+                        	if_id = get_infura_apikey(url),
+                        	current_url = url + if_id;
                         if (current_provider == current_url) {} else {
                             web3.setProvider(current_url);
                         }
@@ -796,7 +797,8 @@ function get_rpc_inputs(rd, rpc_data) {
                     if (web3) {
                         var current_provider = web3.currentProvider.host,
                         	set_url = (url) ? url : main_eth_node,
-                        	current_url = set_url + to.if_id;
+                        	if_id = get_infura_apikey(set_url),
+                        	current_url = set_url + if_id;
                         if (current_provider == current_url) {} else {
                             web3.setProvider(current_url);
                         }
