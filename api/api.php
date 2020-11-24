@@ -7,21 +7,25 @@ function api($url, $data, $headers, $ct, $cf, $meta, $fn) {
     $cache_file = $cache_folder . $filename;
     $cache_monitor = $cache_folder . "cachemonitor";
     $time = time();
+    $timeformat = gmdate("Y-m-d h:i:sa", $time);
     $cache_content = json_encode(array(
-        "br_cached" => $time
+	    "created" => $timeformat,
+	    "created_utc" => $time,
     ));
     $file_time = filemtime($cache_file);
-    $cached_time = ($file_time) ? $file_time : $time;
-    $time_in_cache = $time - $cached_time;
-    $cache_object = array(
-        "filename" => $filename,
-        "title" => $time_in_cache . " of " . $ct . " seconds in cache",
-        "unix_timestamp" => $time,
-        "unix_timestamp_of_cached_file" => $cached_time,
-        "cache_time" => $ct,
-        "time_in_cache" => $time_in_cache
-    );
+    $created_utc = ($file_time) ? $file_time : $time;
+    $created = gmdate("Y-m-d h:i:sa", $created_utc);
+    $time_in_cache = $time - $created_utc;
     if (file_exists($cache_file) && $time_in_cache < $ct) {
+	    $cache_object = array(
+	        "filename" => $filename,
+	        "title" => $time_in_cache . " of " . $ct . " seconds in cache",
+	        "created" => $created,
+	        "created_utc" => $created_utc,
+	        "cache_time" => $ct,
+	        "time_in_cache" => $time_in_cache,
+	        "utc_timestamp" => $time
+	    );
         $cache_contents = json_decode(file_get_contents($cache_file), true);
         $meta_contents = array(
             "br_cache" => $cache_object,
@@ -39,7 +43,7 @@ function api($url, $data, $headers, $ct, $cf, $meta, $fn) {
 	            }
             }
             if (!file_exists($cache_monitor)) {
-                file_put_contents($cache_monitor, $cache_content);
+	            file_put_contents($cache_monitor, $cache_content);
             }
         }
         return $cache_result;
@@ -47,7 +51,7 @@ function api($url, $data, $headers, $ct, $cf, $meta, $fn) {
     }
     else {
         $apiresult = ($url) ? curl_get($url, $data, $headers) : $data;
-        if ($apiresult) {
+        if (!empty($apiresult)) {
             if (!is_dir($cache_folder)) {
                 mkdir($cache_folder, 0777, true);
             }
@@ -55,6 +59,15 @@ function api($url, $data, $headers, $ct, $cf, $meta, $fn) {
             if (!file_exists($cache_monitor)) { // create cache monitor if not exists
 	            file_put_contents($cache_monitor, $cache_content);
             }
+            $cache_object = array(
+		        "filename" => $filename,
+		        "title" => "0 of " . $ct . " seconds in cache",
+		        "created" => $timeformat,
+		        "created_utc" => $time,
+		        "cache_time" => $ct,
+		        "time_in_cache" => "0",
+		        "utc_timestamp" => $time
+		    );
             $api_contents = json_decode($apiresult, true);
             $meta_contents = array(
 	            "br_cache" => $cache_object,
@@ -105,5 +118,4 @@ function error_object($code, $message) {
         )
     ));
 }
-
 ?>

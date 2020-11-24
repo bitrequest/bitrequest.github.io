@@ -516,7 +516,7 @@ function sharebu() {
 		        }
 			}).done(function(e) {
 				var br_cache = e.ping.br_cache,
-					filetime = br_cache.unix_timestamp_of_cached_file,
+					filetime = br_cache.created_utc,
 					filetimesec = (filetime) ? filetime * 1000 : $.now(),
 					filetime_format = new Date(filetimesec).toLocaleString(language),
 					sharedtitle = "System Backup " + accountname + " (" + filetime_format + ")";
@@ -546,8 +546,8 @@ function check_systembu() {
 				var ping = e.ping;
 				if (ping) {
 					var br_cache = e.ping.br_cache,
-						server_time = br_cache.unix_timestamp,
-						filetime = br_cache.unix_timestamp_of_cached_file,
+						server_time = br_cache.utc_timestamp,
+						filetime = br_cache.created_utc,
 						filetimesec = (filetime) ? filetime * 1000 : $.now(),
 						filetime_format = new Date(filetimesec).toLocaleString(language),
 						br_result = e.ping.br_result,
@@ -567,12 +567,12 @@ function check_systembu() {
 							<div class='popnotify'></div>\
 							<div id='dialogcontent'>\
 								<h1>" + sharedtitle +"</h1>\
-								<p><span class='warning' style='padding:0.3em 1em'>" + cf_string + "</span></p>\
+								<div class='error' style='margin-top:1em;padding:0.3em 1em'>" + cf_string + "</div>\
 								<div id='changelog'>\
 									<div id='custom_actions'>\
 										<br/>\
 										<a href='data:text/json;charset=utf-16le;base64," + base64 + "' download='" + filename + "' title='" + filename + "' id='triggerdownload' class='button icon-download' data-date='" + bu_date + "' data-lastbackup='" + filename + "' download>DOWNLOAD BACKUP</a>\
-									<div id='restore_bu' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-share2'>INSTALL SYSTEM BACKUP</div>\
+									<div id='restore_bu' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-share2'>INSTALL BACKUP</div>\
 									</div>\
 								</div>\
 							</div>\
