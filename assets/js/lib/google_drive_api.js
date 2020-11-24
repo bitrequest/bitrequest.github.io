@@ -73,6 +73,7 @@ function authenticate() {
                 $("#listappdata .switchpanel").trigger("click");
                 if (GD_auth() === true) {
 		            updateappdata();
+		            body.removeClass("haschanges");
 		        }
             }, 500);
         },
