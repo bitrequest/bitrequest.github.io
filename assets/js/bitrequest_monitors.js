@@ -553,13 +553,13 @@ function tx_count(statuspanel, count) {
 }
 
 function get_rpc_inputs_init(rd, api_data) {
-    rpc_attempts[api_data.url] = undefined; // reset api attempts
+	rpc_attempts[api_data.url] = undefined; // reset api attempts
     get_rpc_inputs(rd, api_data);
 }
 
 function get_rpc_inputs(rd, rpc_data) {
-    var thislist = $("#" + rd.requestid);
-    if (thislist.hasClass("scan")) {
+	var thislist = $("#" + rd.requestid);
+	if (thislist.hasClass("scan")) {
         rpc_attempts[rpc_data.url] = true;
         var payment = rd.payment,
             address = rd.address,
@@ -795,10 +795,12 @@ function get_rpc_inputs(rd, rpc_data) {
                 } else {
                     if (web3) {
                         var current_provider = web3.currentProvider.host,
-                        	current_url = url + to.if_id;
+                        	set_url = (url) ? url : main_eth_node,
+                        	current_url = set_url + to.if_id;
                         if (current_provider == current_url) {} else {
                             web3.setProvider(current_url);
                         }
+                        console.log(current_url);
                         web3.eth.getBlockNumber(function(err_1, data_1) {
 	                        if (err_1) {
                                 console.log(err_1);

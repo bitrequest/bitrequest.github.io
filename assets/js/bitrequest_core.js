@@ -418,6 +418,7 @@ function finishfunctions() {
     // ** Helpers **
 	
 	open_url();
+	//get_blockcypher_apikey
     //get_amberdata_apikey
     //get_infura_apikey
     //api_proxy
@@ -2390,10 +2391,14 @@ function open_url() {
     })
 }
 
+function get_blockcypher_apikey() {
+    var savedkey = $("#apikeys").data("blockcypher");
+    return (savedkey) ? savedkey : to.bc_id;
+}
+
 function get_amberdata_apikey() {
-    var savedkey = $("#apikeys").data("amberdata"),
-        keyselect = (savedkey) ? savedkey : to.ad_id;
-    return "?x-api-key=" + keyselect;
+    var savedkey = $("#apikeys").data("amberdata");
+    return (savedkey) ? savedkey : to.ad_id;
 }
 
 function get_infura_apikey(rpcurl) {
