@@ -51,7 +51,7 @@ function api($url, $data, $headers, $ct, $cf, $meta, $fn) {
     }
     else {
         $apiresult = ($url) ? curl_get($url, $data, $headers) : $data;
-        if (!empty($apiresult)) {
+        if ($apiresult) {
             if (!is_dir($cache_folder)) {
                 mkdir($cache_folder, 0777, true);
             }

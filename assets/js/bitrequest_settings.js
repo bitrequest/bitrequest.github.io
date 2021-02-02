@@ -1,6 +1,7 @@
 //globals
 var deviceid = hashcode(getdevicetype() + navigator.appName + navigator.appCodeName),
-	caches;
+    caches,
+    resd = {};
 
 $(document).ready(function() {
 
@@ -22,6 +23,11 @@ $(document).ready(function() {
     autocompletecurrency();
     submitcurrency();
 
+    // Bip32 passphrase
+    trigger_bip32();
+    hide_seed_panel_trigger();
+    //hide_seed_panel
+
     // Pincode
     editpin();
     locktime();
@@ -30,6 +36,7 @@ $(document).ready(function() {
     // Back up
     backupdatabasetrigger();
     //backupdatabase
+    sbu_switch();
     sharebu();
     check_systembu();
     //systembu_expired
@@ -40,12 +47,30 @@ $(document).ready(function() {
     submitbackup();
 
     // Restore backup
+
     restorefrombackup();
     //trigger_restore
     restorebackup();
     submitrestore();
     //restore
     submit_GD_restore();
+    //scan_restore
+    //restore_algo
+    //restore_callback
+    //s_decode
+    //pin_dialog
+    submit_pin_dialog();
+    //restore_cb_init_addresses
+    //restore_callback_file
+    //restore_callback_gd
+    //dphrase_dialog
+    submit_dphrase();
+    //keep_current_seed
+    //restore_bu_seed
+    //bu_oldseed
+    compare_seeds();
+    //cs_callback
+    //compare_seeds_callback
     //restorestorage
 
     // Cache control
@@ -70,7 +95,6 @@ $(document).ready(function() {
     togglebl();
     pick_urlshortener_select();
     submit_urlshortener_select();
-    select_bitly();
 
     // Cryptocurrency price api
     editccapi();
@@ -91,44 +115,16 @@ $(document).ready(function() {
     //api_fail
     //update_api_attr
     //complement_apisettings
-    
+
     // API Proxy
     pick_api_proxy();
     //test_append_proxy
-	//proxy_option_li
-	submit_proxy();
-	hide_custom_proxy_field();
-	//test_custom_proxy
-	remove_proxy();
-	//complete_url
-
-    // ** Currency Settings **
-
-    // Confirmations
-    edit_confirmations();
-    submit_confirmations();
-    cc_switch();
-
-    // Blockexplorer
-    edit_blockexplorer();
-    submit_blockexplorer();
-
-    // RPC settings
-    edit_rpcnode();
-    //get_rpc_placeholder
-    //test_append_rpc
-    //rpc_option_li
-    test_rpcnode();
-    submit_rpcnode();
-    //test_rpc
-    //pass_rpc_submit
-    remove_rpcnode();
-    //get_rpc_url
-
-    // Add apikey
-    trigger_apikey();
-    //add_apikey;
-    submit_apikey();
+    //proxy_option_li
+    submit_proxy();
+    hide_custom_proxy_field();
+    //test_custom_proxy
+    remove_proxy();
+    //complete_url
 });
 
 // ** Settings **
@@ -159,7 +155,9 @@ function submitaccount() {
             thisinput.focus();
             return false;
         }
-        $("#accountsettings").data("selected", thisvalue).find("p").html(thisvalue);
+        set_setting("accountsettings", {
+            "selected": thisvalue
+        }, thisvalue);
         canceldialog();
         notify("Data saved");
         savesettings();
@@ -297,7 +295,7 @@ function submit_contactform() {
             emailinput.focus().parent(".cf_inputwrap").addClass("empty");
             return false;
         }
-        $("#contactform").data(cf_data);
+        set_setting("contactform", cf_data);
         canceldialog(true);
         savesettings();
         if (geturlparameters().contactform !== undefined) { // test for contactform param 
@@ -343,7 +341,7 @@ function editcurrency() {
 }
 
 function toggle_defaultcurrency() {
-    $(document).on("click touch", "#toggle_defaultcurrency .switchpanel", function(e) {
+    $(document).on("mouseup touchend", "#toggle_defaultcurrency .switchpanel", function(e) {
         $(this).addClass("dc_changed");
     })
 }
@@ -373,9 +371,8 @@ function autocompletecurrency() {
 function submitcurrency() {
     $(document).on("click touch", "#currencyformbox input.submit", function(e) {
         e.preventDefault();
-        var thisssettingli = $("#currencysettings"),
-            localcurrency = thisssettingli.data("currencysymbol"),
-            thisform = $(this).closest(".popform"),
+        var localcurrency = get_setting("currencysettings", "currencysymbol");
+        thisform = $(this).closest(".popform"),
             thisinput = thisform.find("input:first"),
             thisinputvalue = thisinput.val();
         $("#currencyformbox .options > span").each(function() {
@@ -394,11 +391,11 @@ function submitcurrency() {
                 canceldialog();
             } else {
                 var dc_output = (defaultcurrency_switch.hasClass("true")) ? true : false;
-                thisssettingli.data({
+                set_setting("currencysettings", {
                     "currencysymbol": currencysymbollc,
                     "selected": thisinputvalue,
                     "default": dc_output
-                }).find("p").html(thisinputvalue);
+                }, thisinputvalue);
                 canceldialog();
                 notify("Currency saved");
                 savesettings();
@@ -409,6 +406,31 @@ function submitcurrency() {
         }
         return false;
     });
+}
+
+// Bip32 passphrase
+
+function trigger_bip32() {
+    $(document).on("click touch", "#bip39_passphrase", function() {
+        if (hasbip === true) {
+            all_pinpanel({
+                "func": manage_bip32
+            })
+        } else {
+            manage_bip32();
+        }
+    })
+}
+
+function hide_seed_panel_trigger() {
+    $(document).on("click touch", "#seed_steps .seed_step .ss_header .icon-cross", function() {
+        hide_seed_panel();
+    })
+}
+
+function hide_seed_panel() {
+    body.removeClass("seed_dialog");
+    $("#seed_panel").attr("class", "");
 }
 
 // Pincode
@@ -425,8 +447,8 @@ function editpin() {
 }
 
 function locktime() {
-    $(document).on("click touch", "#locktime", function() {
-        var locktime = $("#pinsettings").data("locktime"),
+    $(document).on("click touch", "#locktime, #lock_time", function() {
+        var locktime = get_setting("pinsettings", "locktime"),
             thiscurrency = "eur",
             content = "<div class='formbox' id='locktime_formbox'><h2 class='icon-clock'>Pin lock time</h2><div class='popnotify'></div><ul class='conf_options noselect'><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>0</span> 0 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>60000</span> 1 minute</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>300000</span> 5 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>600000</span> 10 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>900000</span> 15 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>1800000</span> 30 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>never</span> never</div></li></ul><div class='popform'><input value='" + locktime + "' type='hidden'><input type='submit' class='submit' value='OK' data-currency='" + thiscurrency + "'></div>";
         popdialog(content, "alert", "triggersubmit");
@@ -444,11 +466,12 @@ function submit_locktime() {
             thiscurrency = thistrigger.attr("data-currency"),
             thisvalue = thistrigger.prev("input").val(),
             titlepin = (thisvalue == "never") ? "pincode disabled" : "pincode activated";
-        $("#pinsettings").data({
+        set_setting("pinsettings", {
             "locktime": thisvalue,
             "selected": titlepin
-        }).find("p").html(titlepin);
+        }, titlepin);
         canceldialog();
+        canceloptions();
         savesettings();
     })
 }
@@ -480,10 +503,14 @@ function backupdatabase() {
 			" + backupheader + "\
 			<div class='popnotify'></div>\
 			<div id='dialogcontent'>\
-				" + gdtrigger + "\
-				<div id='changelog' style='" + showhidechangelog + "'>\
-					" + changenotification + "\
-					<ul>" + changespush.join("") + "</ul>\
+				<div id='ad_info_wrap'>\
+					<ul>\
+						<li class='clearfix pad'><strong><span class='icon-googledrive'></span> Backup with Google Drive: </strong><div id='gdtrigger' class='ait'>" + switchpanel(gd_active, " custom") + "</div></li>" +
+        "</ul>\
+				</div>\
+				<div id='changelog' style='" + showhidechangelog + "'>" +
+        changenotification +
+        "<ul>" + changespush.join("") + "</ul>\
 					<div id='custom_actions'>\
 						<br/>\
 						<a href='data:text/json;charset=utf-16le;base64," + jsonencode + "' download='" + filename + "' title='" + filename + "' id='triggerdownload' class='button icon-download' data-date='" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_') + "' data-lastbackup='" + filename + "' download>DOWNLOAD BACKUP</a>\
@@ -495,78 +522,97 @@ function backupdatabase() {
 			<div id='share_bu' data-url='" + jsonencode + "' class='icon-share2'></div>\
 			<div id='backupcd'>CANCEL</div>\
 		</div>";
-	popdialog(content, "alert", "triggersubmit", null, true);
+    popdialog(content, "alert", "triggersubmit", null, true);
+}
+
+function sbu_switch() {
+    $(document).on("mouseup touchend", "#toggle_sbu_span .switchpanel", function() {
+        var thistrigger = $(this);
+        thisvalue = (thistrigger.hasClass("true")) ? true : false;
+        if (thisvalue === true) {
+            var result = confirm("Include encrypted seed in backup? Make sure you keep track of your backup files!");
+            if (result === false) {
+                thistrigger.removeClass("true").addClass("false");
+                return false;
+            }
+        }
+        set_setting("backup", {
+            "sbu": thisvalue
+        });
+        savesettings();
+        //canceldialog();
+    })
 }
 
 function sharebu() {
     $(document).on("click touch", "#share_bu", function() {
-	    var result = confirm("Share system backup ?");
-		if (result === true) {
-			loader(true);
-			loadertext("generate system backup");
-			var accountname = $("#accountsettings").data("selected");
-		    api_proxy({
-			    "custom": "system_bu",
-	            "api_url": true,
-	            "proxy": true,
-	            "proxy_url": approot,
-	            "params": {
-		            "url": $(this).attr("data-url"),
-		            "account": btoa(accountname)
-		        }
-			}).done(function(e) {
-				var br_cache = e.ping.br_cache,
-					filetime = br_cache.created_utc,
-					filetimesec = (filetime) ? filetime * 1000 : $.now(),
-					filetime_format = new Date(filetimesec).toLocaleString(language),
-					sharedtitle = "System Backup " + accountname + " (" + filetime_format + ")";
-				shorten_url(sharedtitle, approot + "?p=settings&sbu=" + br_cache.filename, approot + "/img/system_backup.png");
-		    }).fail(function(jqXHR, textStatus, errorThrown) {
-		        console.log(jqXHR);
-		        console.log(textStatus);
-		        console.log(errorThrown);
-		        closeloader();
-		    });
-		}
+        var result = confirm("Share system backup ?");
+        if (result === true) {
+            loader(true);
+            loadertext("generate system backup");
+            var accountname = $("#accountsettings").data("selected");
+            api_proxy({
+                "custom": "system_bu",
+                "api_url": true,
+                "proxy": true,
+                "proxy_url": approot,
+                "params": {
+                    "url": $(this).attr("data-url"),
+                    "account": btoa(accountname)
+                }
+            }).done(function(e) {
+                var br_cache = e.ping.br_cache,
+                    filetime = br_cache.created_utc,
+                    filetimesec = (filetime) ? filetime * 1000 : $.now(),
+                    filetime_format = new Date(filetimesec).toLocaleString(language),
+                    sharedtitle = "System Backup " + accountname + " (" + filetime_format + ")";
+                shorten_url(sharedtitle, approot + "?p=settings&sbu=" + br_cache.filename, approot + "/img/system_backup.png");
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
+                closeloader();
+            });
+        }
     })
 }
 
 function check_systembu() {
     var url_params = geturlparameters();
     if (url_params.p == "settings") {
-	    var sbu = url_params.sbu;
-	    if (sbu) {
-		    api_proxy({
-			    "custom": "get_system_bu",
-	            "api_url": true,
-	            "proxy": true,
-	            "proxy_url": approot,
-	            "params": sbu
-			}).done(function(e) {
-				var ping = e.ping;
-				if (ping) {
-					var br_cache = e.ping.br_cache,
-						server_time = br_cache.utc_timestamp,
-						filetime = br_cache.created_utc,
-						filetimesec = (filetime) ? filetime * 1000 : $.now(),
-						filetime_format = new Date(filetimesec).toLocaleString(language),
-						br_result = e.ping.br_result,
-						base64 = br_result.base64,
-						account = atob(br_result.account),
-						sharedtitle = "System Backup " + account + " (" + filetime_format + ")",
-						bu_date = filetime_format.replace(/\s+/g, '_').replace(/\:/g, '_'),
-						cache_time = br_cache.cache_time,
-						expires_in = (filetime + cache_time) - server_time,
-						filename = "bitrequest_system_backup_" + encodeURIComponent(account) + "_" + bu_date + ".json",
-						cd = countdown(expires_in * 1000),
-						cd_format = countdown_format(cd),
-						cf_string = (cd_format) ? "Expires in " + cd_format : "File expired",
-						content = "\
+        var sbu = url_params.sbu;
+        if (sbu) {
+            api_proxy({
+                "custom": "get_system_bu",
+                "api_url": true,
+                "proxy": true,
+                "proxy_url": approot,
+                "params": sbu
+            }).done(function(e) {
+                var ping = e.ping;
+                if (ping) {
+                    var br_cache = e.ping.br_cache,
+                        server_time = br_cache.utc_timestamp,
+                        filetime = br_cache.created_utc,
+                        filetimesec = (filetime) ? filetime * 1000 : $.now(),
+                        filetime_format = new Date(filetimesec).toLocaleString(language),
+                        br_result = e.ping.br_result,
+                        base64 = br_result.base64,
+                        account = atob(br_result.account),
+                        sharedtitle = "System Backup " + account + " (" + filetime_format + ")",
+                        bu_date = filetime_format.replace(/\s+/g, '_').replace(/\:/g, '_'),
+                        cache_time = br_cache.cache_time,
+                        expires_in = (filetime + cache_time) - server_time,
+                        filename = "bitrequest_system_backup_" + encodeURIComponent(account) + "_" + bu_date + ".json",
+                        cd = countdown(expires_in * 1000),
+                        cd_format = countdown_format(cd),
+                        cf_string = (cd_format) ? "Expires in " + cd_format : "File expired",
+                        content = "\
 						<div class='formbox' id='system_backupformbox'>\
 							<h2 class='icon-download'>System Backup</h2>\
 							<div class='popnotify'></div>\
 							<div id='dialogcontent'>\
-								<h1>" + sharedtitle +"</h1>\
+								<h1>" + sharedtitle + "</h1>\
 								<div class='error' style='margin-top:1em;padding:0.3em 1em'>" + cf_string + "</div>\
 								<div id='changelog'>\
 									<div id='custom_actions'>\
@@ -580,15 +626,14 @@ function check_systembu() {
 						<div id='backupactions'>\
 							<div id='backupcd'>CANCEL</div>\
 						</div>";
-						popdialog(content, "alert", "triggersubmit", null, true);
-				}
-				else {
-					systembu_expired();
-				}		
-		    }).fail(function(jqXHR, textStatus, errorThrown) {
-		        systembu_expired();
-		    });
-		}    
+                    popdialog(content, "alert", "triggersubmit", null, true);
+                } else {
+                    systembu_expired();
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                systembu_expired();
+            });
+        }
     }
 }
 
@@ -600,19 +645,19 @@ function systembu_expired() {
 		<div id='backupactions'>\
 			<div id='backupcd'>CANCEL</div>\
 		</div>";
-		popdialog(content, "alert", "triggersubmit", null, true);
+    popdialog(content, "alert", "triggersubmit", null, true);
 }
 
 function restore_systembu() {
     $(document).on("click touch", "#system_backupformbox #restore_bu", function() {
-	    var result = confirm("INSTALL SYSTEM BACKUP? ALL YOUR PREVIOUS APP DATA WILL BE REPLACED");
-		if (result === true) {
-	        var this_bttn = $(this),
-	        	bu_dat = this_bttn.attr("data-base64"),
-	        	j_filename = this_bttn.attr("data-filename"),
-	        	j_object = JSON.parse(atob(bu_dat));
-			restore(j_object, j_filename)
-		}
+        var result = confirm("INSTALL SYSTEM BACKUP? ALL YOUR PREVIOUS APP DATA WILL BE REPLACED");
+        if (result === true) {
+            var this_bttn = $(this),
+                bu_dat = this_bttn.attr("data-base64"),
+                j_filename = this_bttn.attr("data-filename"),
+                j_object = JSON.parse(atob(bu_dat));
+            restore(j_object, j_filename)
+        }
     })
 }
 
@@ -626,7 +671,25 @@ function complilebackup() {
     var jsonfile = [];
     for (var key in localStorage) {
         var value = localStorage.getItem(key);
-        if (value !== null && key != "bitrequest_symbols" && key != "bitrequest_changes" && key != "bitrequest_erc20tokens" && key != "bitrequest_editurl" && key != "bitrequest_backupfile_id" && key != "bitrequest_init" && key != "bitrequest_k") {
+        if (value === null ||
+            key == "bitrequest_symbols" ||
+            key == "bitrequest_changes" ||
+            key == "bitrequest_erc20tokens" ||
+            key == "bitrequest_editurl" ||
+            key == "bitrequest_backupfile_id" ||
+            key == "bitrequest_init" ||
+            key == "bitrequest_k" ||
+            key == "bitrequest_awl" ||
+            key == "bitrequest_tp") {} else if (key == "bitrequest_bpdat") { // only backup ecrypted seed
+            if (test_derive === true && get_setting("backup", "sbu") === true) {
+                val_obj = JSON.parse(value),
+                    datenc = val_obj.datenc;
+                if (datenc) {
+                    delete val_obj.dat;
+                    jsonfile.push('"' + key + '":' + JSON.stringify(datenc));
+                }
+            }
+        } else {
             jsonfile.push('"' + key + '":' + value);
         }
     }
@@ -639,26 +702,26 @@ function complilefilename() {
 
 function submitbackup() {
     $(document).on("click touch", "#triggerdownload", function(e) {
-	    if (body.hasClass("ios")) {
-		    e.preventDefault();
-	        notify("Downloads for IOS App unavailable at the moment");
-	        return false;
+        if (body.hasClass("ios")) {
+            e.preventDefault();
+            notify("Downloads for IOS App unavailable at the moment");
+            return false;
         }
         var thisnode = $(this),
-        	href = thisnode.attr("href"),
-        	title = thisnode.attr("title"),
-        	result = confirm("Download: " + title + "?");
-		if (result === false) {
-			e.preventDefault();
-		    return false;
-	    }
-		var lastsaved = "last backup: <span class='icon-folder-open'>" + thisnode.attr("data-date") + "</span>",
+            href = thisnode.attr("href"),
+            title = thisnode.attr("title"),
+            result = confirm("Download: " + title + "?");
+        if (result === false) {
+            e.preventDefault();
+            return false;
+        }
+        var lastsaved = "last backup: <span class='icon-folder-open'>" + thisnode.attr("data-date") + "</span>",
             lastbackup = thisnode.attr("data-lastbackup");
-        $("#backup").data({
+        set_setting("backup", {
             "titlebackup": lastsaved,
             "lastbackup": lastbackup,
             "device": "folder-open"
-        }).find("p").html(lastsaved);
+        }, lastsaved);
         canceldialog();
         savesettings();
         resetchanges();
@@ -674,7 +737,7 @@ function restorefrombackup() {
 }
 
 function trigger_restore() {
-	backup_active = false;
+    backup_active = false;
     var restorenode = $("#restore"),
         backupnode = $("#backup"),
         lastfileused = restorenode.data("fileused"),
@@ -711,8 +774,8 @@ function trigger_restore() {
 
 function restorebackup() {
     $(document).on("change", "#fileupload", function(n) {
-	    backup_result = null,
-	    backup_filename = null;
+        backup_result = null,
+            backup_filename = null;
         var file = this.files[0],
             filesize = file.size,
             filetype = file.type;
@@ -723,11 +786,11 @@ function restorebackup() {
             popnotify(filesizewarningtext);
             return false;
         } else {
-	        if (filetype == "application/json") {
+            if (filetype == "application/json") {
                 var reader = new FileReader();
                 reader.onload = function(e) {
-	                backup_result = e.target.result,
-	                backup_active = true;
+                    backup_result = e.target.result,
+                        backup_active = true;
                 };
                 reader.readAsDataURL(file);
             } else {
@@ -744,71 +807,54 @@ function submitrestore() {
         e.preventDefault();
         var switchpanel = $("#popup #listappdata .switchpanel");
         if (switchpanel.hasClass("true")) {
-	         topnotify("Select a Backup file");
-        }
-        else {
-	        if (backup_active === true) {
-		        var jsonobject = JSON.parse(atob(backup_result.substr(backup_result.indexOf(",") + 1)));
-				restore(jsonobject, backup_filename)
-	        } else {
-	            topnotify("Select a Backup file");
-	        }
+            topnotify("Select a Backup file");
+        } else {
+            if (backup_active === true) {
+                var jsonobject = JSON.parse(atob(backup_result.substr(backup_result.indexOf(",") + 1)));
+                restore(jsonobject, backup_filename)
+            } else {
+                topnotify("Select a Backup file");
+            }
         }
     })
 }
 
 function restore(jsonobject, bu_filename) {
-	var result = confirm("Restore " + bu_filename + "?");
+    var result = confirm("Restore " + bu_filename + "?");
     if (result === true) {
-        restorestorage(jsonobject);
-        rendersettings(["restore", "backup"]); // exclude restore and backup settings
-        var lastrestore = "last restore: <span class='icon-folder-open'>" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_') + "</span>";
-        $("#restore").data({
-            "titlerestore": lastrestore,
-            "fileused": bu_filename,
-            "device": "folder-open"
-        }).find("p").html(lastrestore);
-        savesettings();
-        notify("file restored");
-        canceldialog();
-        window.location.href = window.location.pathname + "?p=settings";
+        scan_restore(jsonobject);
+        var pass_dat = {
+            "jasobj": jsonobject,
+            "filename": bu_filename,
+            "type": "file"
+        };
+        restore_algo(pass_dat);
     }
 }
 
 function submit_GD_restore() {
     $(document).on("click touch", "#gd_backuplist .restorefile", function() {
         var thisfield = $(this).parent("li"),
-            thisfileid = thisfield.attr("data-gdbu_id"),
             thisdevice = thisfield.attr("data-device"),
-            thisdeviceid = thisfield.attr("data-device-id"),
-            thisfilename = thisfield.text(),
             result = confirm("Restore " + thisfield.text() + " from " + thisdevice + " device?");
         if (result === true) {
+            var thisfileid = thisfield.attr("data-gdbu_id");
             return gapi.client.drive.files.get({
                     "fileId": thisfileid,
                     "alt": "media"
                 })
                 .then(function(response) {
-                        var jsonobject = JSON.parse(atob(response.body)),
-                            lastrestore = "last restore: <span class='icon-googledrive'>" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_') + "</span>";
-                        restorestorage(jsonobject);
-                        rendersettings(["restore", "backup"]); // exclude restore and backup settings
-                        $("#restore").data({
-                            "titlerestore": lastrestore,
-                            "fileused": thisfilename,
-                            "device": thisdevice
-                        }).find("p").html(lastrestore);
-                        setTimeout(function() {
-                            savesettings();
-                            createfile(); // create new file from backup
-                            if (thisdeviceid == deviceid) {
-                                deletefile(thisfileid) // delete old backup file
-                            }
-                            canceldialog();
-                            setTimeout(function() {
-                                location.href = approot + "?p=requests";
-                            }, 300);
-                        }, 300);
+                        var jsonobject = JSON.parse(atob(response.body));
+                        scan_restore(jsonobject);
+                        var pass_dat = {
+                            "jasobj": jsonobject,
+                            "filename": thisfield.text(),
+                            "thisfileid": thisfileid,
+                            "thisdevice": thisdevice,
+                            "thisdeviceid": thisfield.attr("data-device-id"),
+                            "type": "gd"
+                        };
+                        restore_algo(pass_dat);
                     },
                     function(err) {
                         console.log(err)
@@ -817,10 +863,350 @@ function submit_GD_restore() {
     })
 }
 
-function restorestorage(jsonobject) {
-    $.each(jsonobject, function(key, value) {
-        localStorage.setItem(key, JSON.stringify(value));
+function scan_restore(jsonobject) {
+    resd = {
+        "pcnt": 0
+    }
+    var bpdat = jsonobject.bitrequest_bpdat,
+        isbpdat = (bpdat) ? true : false;
+    if (isbpdat) {
+        resd.sbu = true;
+        var can_dec = s_decode(bpdat);
+        resd.samebip = (bpdat.id == bipid);
+        resd.bpdat = can_dec;
+    }
+}
+
+
+function restore_algo(pass_dat) {
+    if (resd.sbu) { // has seed backup
+        if (resd.samebip === true) {
+            // keep existing phrase
+            restore_callback(pass_dat, false);
+        } else {
+            if (hasbip === true) {
+                dphrase_dialog(pass_dat);
+            } else {
+                // import and check decode
+                if (resd.bpdat) {
+                    restore_callback(pass_dat, true);
+                } else {
+                    pin_dialog(pass_dat, "restore_callback");
+                }
+            }
+        }
+    } else {
+        restore_callback(pass_dat, false);
+    }
+}
+
+function restore_callback(pass_dat, newphrase) {
+    var type = pass_dat.type;
+    if (type) {
+        if (type == "gd") {
+            restore_callback_gd(pass_dat, newphrase);
+        } else if (type == "file") {
+            restore_callback_file(pass_dat, newphrase);
+        } else {}
+    }
+}
+
+function s_decode(pdat, phash) {
+    var pinhash = (phash) ? phash : $("#pinsettings").data("pinhash");
+    if (pinhash) {
+        var keystring = ptokey(pinhash, pdat.id),
+            decrypt = aes_dec(pdat.dat, keystring);
+        if (decrypt) {
+            var unquote = decrypt.replace(/['"]+/g, ""),
+                dec = JSON.parse(atob(unquote)),
+                pid = dec.pid;
+            if (pid) {
+                var dec_obj = {
+                    "dat": unquote,
+                    "id": pid
+                }
+                return dec_obj;
+            }
+        }
+    }
+    return false;
+}
+
+function pin_dialog(pass_dat, cb) {
+    canceldialog();
+    var content = $("<div class='formbox' id='pindialog'>\
+		<h2><span class='icon-lock'></span>Enter your 4 digit pin</h2>\
+		<div class='popnotify'></div>\
+		<div class='popform'>\
+			<input type='password' value=''/>\
+			<input type='submit' class='submit' value='OK'/>\
+		</div>\
+	</div>").data({
+        "pass_dat": pass_dat,
+        "cb": cb
     });
+    setTimeout(function() {
+        popdialog(content, "alert", "triggersubmit");
+    }, 700);
+}
+
+function submit_pin_dialog() {
+    $(document).on("click touch", "#pindialog input.submit", function(e) {
+        e.preventDefault();
+        var thisinput = $(this).prev("input"),
+            thisvalue = thisinput.val();
+        if (thisvalue.length) {
+            var dialog = $("#dialog"),
+                pdat = $("#pindialog").data(),
+                pass_dat = pdat.pass_dat
+            jasobj = pass_dat.jasobj;
+            if (jasobj) {
+                var pbdat = jasobj.bitrequest_bpdat,
+                    can_dec = s_decode(pbdat, hashcode(thisvalue));
+                if (can_dec) {
+                    resd.pcnt = 0;
+                    var callback = pdat.cb;
+                    if (callback) {
+                        resd.bpdat = can_dec;
+                        if (callback == "restore_callback") {
+                            restore_callback(pass_dat, true);
+                        } else if (callback == "bu_oldseed") {
+                            bu_oldseed(pass_dat);
+                        } else if (callback == "cs_callback") {
+                            cs_callback(pass_dat);
+                        }
+                    }
+                    notify("Succes!");
+                } else {
+                    if (resd.pcnt > 1) {
+                        topnotify("Max attempts exeeded");
+                        var result = confirm("Restore without seed?");
+                        if (result === true) {
+                            restore_callback(pass_dat, false);
+                        } else {
+
+                        }
+                        resd.pcnt = 0;
+                        canceldialog();
+                    } else {
+                        resd.pcnt = resd.pcnt + 1;
+                    }
+                    shake(dialog);
+                    thisinput.val("");
+                }
+            }
+        } else {
+            popnotify("error", "Enter your 4 digit pin");
+        }
+        return false;
+    })
+}
+
+function restore_cb_init_addresses() {
+    localStorage.setItem("bitrequest_tp", $.now());
+    var initdat = localStorage.getItem("bitrequest_init"),
+        iodat = (initdat) ? JSON.parse(initdat) : {};
+    delete iodat.bipv;
+    localStorage.setItem("bitrequest_init", JSON.stringify(iodat));
+}
+
+function restore_callback_file(pass_dat, np) {
+    var newphrase = (hasbip === true) ? np : true;
+    restorestorage(pass_dat.jasobj, newphrase);
+    rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
+    var lastrestore = "last restore: <span class='icon-folder-open'>" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_') + "</span>";
+    set_setting("restore", {
+        "titlerestore": lastrestore,
+        "fileused": pass_dat.filename,
+        "device": "folder-open"
+    }, lastrestore);
+    savesettings();
+    if (newphrase === true) {
+        restore_cb_init_addresses();
+    }
+    notify("file restored");
+    canceldialog();
+    window.location.href = window.location.pathname + "?p=settings";
+}
+
+function restore_callback_gd(pass_dat, np) {
+    var newphrase = (hasbip === true) ? np : true;
+    restorestorage(pass_dat.jasobj, newphrase);
+    rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
+    var lastrestore = "last restore: <span class='icon-googledrive'>" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_') + "</span>";
+    set_setting("restore", {
+        "titlerestore": lastrestore,
+        "fileused": pass_dat.filename,
+        "device": pass_dat.thisdevice
+    }, lastrestore);
+    setTimeout(function() {
+        savesettings();
+        createfile(); // create new file from backup
+        if (pass_dat.thisdeviceid == deviceid) {
+            deletefile(pass_dat.thisfileid) // delete old backup file
+        }
+        if (newphrase === true) {
+            restore_cb_init_addresses();
+        }
+        canceldialog();
+        setTimeout(function() {
+            location.href = approot + "?p=requests";
+        }, 300);
+    }, 300);
+}
+
+function dphrase_dialog(pass_dat) {
+    canceldialog();
+    var content = $("<div class='formbox' id='importseedbox'>\
+		<h2><span class='icon-warning' style='color:#B33A3A'></span>Warning. Backup contains different seed</h2>\
+		<div class='popnotify'></div><br/>\
+		<ul class='conf_options noselect'>\
+			<li><div class='pick_conf'><div class='radio icon-radio-checked2'></div><span>Use seed from Backup</span></div></li>\
+			<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>Keep current seed</span></div></li>\
+		</ul>\
+		<div id='compare_seeds' class='ref'>Compare seeds</div>\
+		<div id='compare_box'>\
+			<div id='bu_sbox' class='swrap'>\
+				<strong>Backup Seed</strong>\
+				<div class='sbox'></div>\
+			</div>\
+			<div id='ext_sbox' class='swrap'>\
+				<strong>Current Seed</strong>\
+				<div class='sbox'></div>\
+			</div>\
+		</div>\
+		<div class='popform'>\
+			<input type='hidden' value='Use seed from Backup'/>\
+			<input type='submit' class='submit' value='OK'/>\
+		</div>\
+	</div>").data(pass_dat);
+    setTimeout(function() {
+        popdialog(content, "alert", "triggersubmit");
+    }, 700);
+}
+
+function submit_dphrase() {
+    $(document).on("click touch", "#importseedbox input.submit", function(e) {
+        e.preventDefault();
+        var thistrigger = $(this),
+            thisvalue = thistrigger.prev("input").val();
+        if (thisvalue == "Use seed from Backup") {
+            restore_bu_seed();
+        } else if (thisvalue == "Keep current seed") {
+            keep_current_seed();
+        }
+        return false;
+    })
+}
+
+function keep_current_seed() {
+    var result = confirm("Are you sure you want to keep your existing seed?");
+    if (result === true) {
+        var is_dialog = $("#importseedbox"),
+            bu_dat = is_dialog.data();
+        restore_callback(bu_dat, false);
+    }
+}
+
+function restore_bu_seed() {
+    var is_dialog = $("#importseedbox"),
+        bu_dat = is_dialog.data();
+    if (resd.bpdat) {} else {
+        if (is_dialog.hasClass("verified")) {} else {
+            pin_dialog(bu_dat, "bu_oldseed")
+            return false;
+        }
+    }
+    bu_oldseed(bu_dat);
+}
+
+function bu_oldseed(bu_dat) {
+    canceldialog();
+    manage_bip32({
+        "type": "restore",
+        "dat": bu_dat
+    });
+    var phrase = ls_phrase_obj(),
+        words = phrase.pob;
+    verify_phrase(words, 4);
+    $("#seed_steps").removeClass("checked");
+    $("#seed_step3").addClass("replace");
+    seed_nav(3);
+}
+
+function compare_seeds() {
+    $(document).on("click touch", "#compare_seeds", function() {
+        var comparebox = $("#compare_box");
+        if (comparebox.is(":visible")) {
+            comparebox.slideUp(200);
+        } else {
+            var checktext = $("#ext_sbox .sbox").text();
+            if (checktext.length < 20) {
+                var is_dialog = $("#importseedbox"),
+                    bu_dat = is_dialog.data(),
+                    jasobj = bu_dat.jasobj;
+                if (jasobj) {
+                    var pbdat = jasobj.bitrequest_bpdat;
+                    if (pbdat) {
+                        if (resd.bpdat) {} else {
+                            var enterpin = prompt("Enter your 4 digit pin"),
+                                can_dec = s_decode(pbdat, hashcode(enterpin));
+                            if (can_dec) {
+                                resd.bpdat = can_dec;
+                                is_dialog.addClass("verified");
+                                cs_callback(true)
+                            } else {
+                                popnotify("error", "wrong pin");
+                                shake(is_dialog);
+                            }
+                            return false;
+                        }
+                    }
+                }
+                cs_callback()
+            } else {
+                comparebox.slideDown(200);
+            }
+        }
+    })
+}
+
+function cs_callback(pass) {
+    var existing_so = ls_phrase_obj(),
+        backup_so = ls_phrase_obj_parsed(resd.bpdat),
+        compare = {
+            "s1": existing_so.pob.slice(0, 3),
+            "s2": backup_so.pob.slice(0, 3)
+        };
+    if (pass === true) {
+        compare_seeds_callback(compare);
+    } else {
+        all_pinpanel({
+            "func": compare_seeds_callback,
+            "args": compare
+        }, true)
+    }
+}
+
+function compare_seeds_callback(compare) {
+    $("#ext_sbox .sbox").text(compare.s1.join(" ") + " ...");
+    $("#bu_sbox .sbox").text(compare.s2.join(" ") + " ...");
+    $("#compare_box").slideDown(200);
+}
+
+function restorestorage(jsonobject, newphrase) {
+    $.each(jsonobject, function(key, value) {
+        if (key == "bitrequest_bpdat") {
+            if (test_derive === true && newphrase === true) {
+                if (resd.bpdat) {
+                    localStorage.setItem(key, JSON.stringify(resd.bpdat));
+                }
+            }
+        } else {
+            localStorage.setItem(key, JSON.stringify(value));
+        }
+    });
+    resd = {};
 }
 
 // Cache control
@@ -892,9 +1278,10 @@ function reset_coinsettings_function(trigger) {
 
 function reset_settings() {
     $(document).on("click touch", "#reset_settings", function() {
-        var content = pinpanel(" pinwall reset_app");
         canceldialog();
-        showoptions(content, "pin");
+        all_pinpanel({
+            "func": reset_settings_popup
+        })
     })
 }
 
@@ -981,7 +1368,9 @@ function canceltheme() {
 function submittheme() {
     $(document).on("click touch", "#submittheme", function() {
         var thisvalue = $("#themeformbox").find("input:first").val();
-        $("#themesettings").data("selected", thisvalue).find("p").html(thisvalue);
+        set_setting("themesettings", {
+            "selected": thisvalue
+        }, thisvalue);
         canceldialog();
         notify("Data saved");
         savesettings();
@@ -1029,7 +1418,7 @@ function urlshortener() {
 }
 
 function togglebl() {
-    $(document).on("click touch", "#toggle_urlshortener .switchpanel", function(e) {
+    $(document).on("mouseup touchend", "#toggle_urlshortener .switchpanel", function(e) {
         var thispanel = $(this),
             thisform = $("#usformbox .popform");
         if (thispanel.hasClass("true")) {
@@ -1071,8 +1460,7 @@ function pick_urlshortener_select() {
 function submit_urlshortener_select() {
     $(document).on("click touch", "#usformbox input.submit", function(e) {
         e.preventDefault();
-        var us_settings = $("#url_shorten_settings"),
-            thisform = $(this).closest(".popform"),
+        var thisform = $(this).closest(".popform"),
             currentapi = thisform.attr("data-currentapi"),
             thisinput = thisform.find("input:first"),
             thisvalue = thisinput.val(),
@@ -1091,10 +1479,10 @@ function submit_urlshortener_select() {
             if (thisvalue != currentapi || toggle_urlshortener.hasClass("us_changed")) {
                 var us_state = (us_active === true) ? "active" : "inactive",
                     us_title = (us_active === true) ? thisvalue : "inactive";
-                us_settings.data({
+                set_setting("url_shorten_settings", {
                     "selected": us_title,
                     "us_active": us_state
-                }).find("p").html(us_title);
+                }, us_title);
             }
             if (us_active === true) {
                 var current_firebase_key = firebase_api_input.attr("data-apikey"),
@@ -1124,19 +1512,6 @@ function submit_urlshortener_select() {
                 savesettings();
             }
         }
-    })
-}
-
-function select_bitly() {
-    $(document).on("click touch", "#select_bitly", function() {
-        var us_settings = $("#url_shorten_settings"),
-            us_data = us_settings.data(),
-            us_active = (us_data.us_active === "active");
-        us_settings.data("selected", "bitly").find("p").html("bitly");
-        canceldialog();
-        notify("Data saved");
-        savesettings();
-        $("#sharebutton").trigger("click");
     })
 }
 
@@ -1196,7 +1571,9 @@ function submitccapi() {
             return false;
         } else {
             if (thisvalue != currentapi) {
-                $("#cmcapisettings").data("selected", thisvalue).find("p").html(thisvalue);
+                set_setting("cmcapisettingss", {
+                    "selected": thisvalue
+                }, thisvalue);
             }
             if (apival !== api_input.attr("data-apikey")) {
                 if (checkchange == apival) {
@@ -1269,7 +1646,9 @@ function submitfiatxrapi() {
             return false;
         } else {
             if (thisvalue != currentapi) {
-                $("#fiatapisettings").data("selected", thisvalue).find("p").html(thisvalue);
+                set_setting("fiatapisettings", {
+                    "selected": thisvalue
+                }, thisvalue);
             }
             if (apival !== api_input.attr("data-apikey")) {
                 if (checkchange == apival) {
@@ -1412,13 +1791,13 @@ function checkapikey(thisref, apikeyval, lastinput) {
 function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
     if (apikeyval.length > keylength) {
         if (thisref == "infura") {
-	        var infura_testurl = main_eth_node + apikeyval;
+            var infura_testurl = main_eth_node + apikeyval;
             if (web3 === undefined) {
-	            web3 = new Web3(Web3.givenProvider || infura_testurl);
-	        }
-	        if (web3) {
-		        if (web3.currentProvider.host == infura_testurl) {} else {
-	                web3.setProvider(infura_testurl);
+                web3 = new Web3(Web3.givenProvider || infura_testurl);
+            }
+            if (web3) {
+                if (web3.currentProvider.host == infura_testurl) {} else {
+                    web3.setProvider(infura_testurl);
                 }
                 web3.eth.getTransaction("0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", function(err_1, data_1) { // random tx
                     if (err_1) {
@@ -1577,24 +1956,34 @@ function update_api_attr(thisref, thisvalue, lastinput) {
 }
 
 function complement_apisettings(thisref, thisvalue) {
-    $("#apikeys").data(thisref, thisvalue);
+    set_setting("apikeys", {
+        thisref: thisvalue
+    });
     if (thisref == "bitly") {
-        $("#url_shorten_settings").data("bitly_at", thisvalue);
+        set_setting("url_shorten_settings", {
+            "bitly_at": thisvalue
+        });
     } else if (thisref == "firebase") {
-        $("#url_shorten_settings").data("fbapikey", thisvalue);
+        set_setting("url_shorten_settings", {
+            "fbapikey": thisvalue
+        });
     } else if (thisref == "coinmarketcap") {
-        $("#cmcapisettings").data("cmcapikey", thisvalue);
+        set_setting("cmcapisettings", {
+            "cmcapikey": thisvalue
+        });
     } else if (thisref == "fixer") {
-        $("#fiatapisettings").data("fxapikey", thisvalue);
+        set_setting("fiatapisettings", {
+            "fxapikey": thisvalue
+        });
     }
 }
 
 // Api Proxy
 function pick_api_proxy() {
     $(document).on("click touch", "#api_proxy", function() {
-	    var thisnode = $(this),
-	   		thisdata = thisnode.data(),
-	   		proxies = proxy_list, // (bitrequest_config.js)
+        var thisnode = $(this),
+            thisdata = thisnode.data(),
+            proxies = proxy_list, // (bitrequest_config.js)
             current_proxy = thisdata.selected,
             custom_proxies = thisdata.custom_proxies,
             content = "\
@@ -1626,19 +2015,18 @@ function pick_api_proxy() {
 			</div>";
         popdialog(content, "alert", "triggersubmit");
         if (phpsupportglobal === true) {
-	        var fixed_url = complete_url(thishostname + location.pathname);
-	        if ($.inArray(fixed_url, proxies) === -1) {
-	        	proxies.push(fixed_url);
-	        }
+            var fixed_url = complete_url(thishostname + location.pathname);
+            if ($.inArray(fixed_url, proxies) === -1) {
+                proxies.push(fixed_url);
+            }
         }
         if ($.inArray("https://app.bitrequest.io/", proxies) === -1) { // always keey default proxy
-        	proxies.push("https://app.bitrequest.io/");
+            proxies.push("https://app.bitrequest.io/");
         }
         var optionlist = $("#proxyformbox").find(".options"),
-	        api_info = check_api("nano"),
-	        selected = api_info.data,
-	        nano_node = selected.url;
-			console.log(nano_node);
+            api_info = check_api("nano"),
+            selected = api_info.data,
+            nano_node = selected.url;
         $.each(proxies, function(key, value) {
             var selected = (value == current_proxy);
             test_append_proxy(optionlist, key, value, selected, true, nano_node);
@@ -1651,8 +2039,8 @@ function pick_api_proxy() {
 }
 
 function test_append_proxy(optionlist, key, value, selected, dfault, nano_node) { // make test api call
-	api_proxy({
-	    "cachetime": 25,
+    api_proxy({
+        "cachetime": 25,
         "cachefolder": "1h",
         "proxy": true,
         "proxy_url": value,
@@ -1665,15 +2053,14 @@ function test_append_proxy(optionlist, key, value, selected, dfault, nano_node) 
             })
         }
     }).done(function(e) {
-	    var api_result = br_result(e);
+        var api_result = br_result(e);
         if (api_result.proxy === true) {
-	        var result = api_result.result;
-	        if (result && result.rpc_version) {
-	        	proxy_option_li(optionlist, true, key, value, selected, dfault);
-			}
-			else {
-				proxy_option_li(optionlist, false, key, value, selected, dfault);
-			}
+            var result = api_result.result;
+            if (result && result.rpc_version) {
+                proxy_option_li(optionlist, true, key, value, selected, dfault);
+            } else {
+                proxy_option_li(optionlist, false, key, value, selected, dfault);
+            }
         } else {
             proxy_option_li(optionlist, false, key, value, selected, dfault);
         }
@@ -1696,122 +2083,118 @@ function proxy_option_li(optionlist, live, key, value, selected, dfault) {
 
 function submit_proxy() {
     $(document).on("click touch", "#proxyformbox input.submit", function(e) {
-	    e.preventDefault();
+        e.preventDefault();
         var proxyformbox = $("#proxyformbox"),
-        	selectval = proxyformbox.find("#proxy_select_input").val(),
-        	customval = proxyformbox.find("#proxy_url_input").val();
+            selectval = proxyformbox.find("#proxy_select_input").val(),
+            customval = proxyformbox.find("#proxy_url_input").val();
         if (customval.length > 0) {
-	        test_custom_proxy(customval);
-	        return false;
-	    }
-	    else {
-		    var set_proxy = $("#api_proxy").data("selected");
-		    if (selectval == set_proxy) {
-			    canceldialog();
-		    }
-		    else {
-			   	$("#api_proxy").data("selected", selectval).find("p").html(selectval);
-		        canceldialog();
-		        notify("Data saved");
-		        savesettings();
-		        // Re init app
-		        localStorage.removeItem("bitrequest_init");
-		    }  
-	    }
+            test_custom_proxy(customval);
+            return false;
+        } else {
+            var set_proxy = $("#api_proxy").data("selected");
+            if (selectval == set_proxy) {
+                canceldialog();
+            } else {
+                set_setting("api_proxy", {
+                    "selected": selectval
+                }, selectval);
+                canceldialog();
+                notify("Data saved");
+                savesettings();
+                // Re init app
+                localStorage.removeItem("bitrequest_init");
+            }
+        }
     })
 }
 
 function hide_custom_proxy_field() {
     $(document).on("click touch", "#proxyformbox .selectarrows", function() {
         var proxyformbox = $("#proxyformbox"),
-        	options = $("#proxyformbox").find(".options .optionwrap"),
-        	select_inputval = proxyformbox.find("#proxy_select_input").val();
-        	custom_input = proxyformbox.find("#proxy_url_input");
+            options = $("#proxyformbox").find(".options .optionwrap"),
+            select_inputval = proxyformbox.find("#proxy_select_input").val();
+        custom_input = proxyformbox.find("#proxy_url_input");
         options.each(function() {
-	        var this_option = $(this),
-	        	to_val = this_option.find("> span").attr("data-value");
-	        if (to_val == select_inputval) {
-		        this_option.hide();
-	        }
-	        else {
-		         this_option.show();
-	        }
-	    });
+            var this_option = $(this),
+                to_val = this_option.find("> span").attr("data-value");
+            if (to_val == select_inputval) {
+                this_option.hide();
+            } else {
+                this_option.show();
+            }
+        });
         custom_input.val("");
     });
 }
 
 function test_custom_proxy(value) { // make test api call
-	var proxy_node = $("#api_proxy"),
-		proxy_node_data = proxy_node.data(),
-		default_proxies = proxy_node_data.proxies,
-		custom_proxies = proxy_node_data.custom_proxies,
-		fixed_url = complete_url(value);
-	if ($.inArray(fixed_url, custom_proxies) !== -1 || $.inArray(fixed_url, default_proxies) !== -1) {
-		popnotify("error", "Proxy already added");
-		return false;
-	}
-	else {
-		if (value.indexOf("http") > -1) {
-			api_proxy({
-		        "cachetime": 25,
-		        "cachefolder": "1h",
-		        "proxy": true,
-		        "proxy_url": fixed_url,
-		        "api_url": "https://www.bitrequest.app:8020",
-		        "params": {
-		            "method": "POST",
-		            "cache": true,
-		            "data": JSON.stringify({
-		                "action": "version"
-		            })
-		        }
-		    }).done(function(e) {
-			    var api_result = br_result(e);
-		        if (api_result.proxy === true) {
-			        var result = api_result.result;
-			        if (result && result.rpc_version) {
-			        	custom_proxies.push(fixed_url);
-			            $("#api_proxy").data({
-				            "selected": fixed_url,
-				            "custom_proxies": custom_proxies
-						}).find("p").html(fixed_url);
-						canceldialog();
-				        notify("Data saved");
-				        savesettings();
-				        // Re init app
-						localStorage.removeItem("bitrequest_init");
-				        setTimeout(function() {
-					        $("#apikeys").trigger("click");
-					    }, 800);
-					}
-					else {
-						popnotify("error", "Unable to send Post request from " + fixed_url);
-					}
-		        } else {
-		        	popnotify("error", "Unable to connect");
-		        }
-		    }).fail(function(jqXHR, textStatus, errorThrown) {
-		        console.log(jqXHR);
-		        console.log(textStatus);
-		        console.log(errorThrown);
-		        popnotify("error", "Unable to connect");
-		    });
-		}
-		else {
-			 popnotify("error", "Invalid url");
-		}
-	}
-	return false;
+    var proxy_node = $("#api_proxy"),
+        proxy_node_data = proxy_node.data(),
+        default_proxies = proxy_node_data.proxies,
+        custom_proxies = proxy_node_data.custom_proxies,
+        fixed_url = complete_url(value);
+    if ($.inArray(fixed_url, custom_proxies) !== -1 || $.inArray(fixed_url, default_proxies) !== -1) {
+        popnotify("error", "Proxy already added");
+        return false;
+    } else {
+        if (value.indexOf("http") > -1) {
+            api_proxy({
+                "cachetime": 25,
+                "cachefolder": "1h",
+                "proxy": true,
+                "proxy_url": fixed_url,
+                "api_url": "https://www.bitrequest.app:8020",
+                "params": {
+                    "method": "POST",
+                    "cache": true,
+                    "data": JSON.stringify({
+                        "action": "version"
+                    })
+                }
+            }).done(function(e) {
+                var api_result = br_result(e);
+                if (api_result.proxy === true) {
+                    var result = api_result.result;
+                    if (result && result.rpc_version) {
+                        custom_proxies.push(fixed_url);
+                        set_setting("api_proxy", {
+                            "selected": fixed_url,
+                            "custom_proxies": custom_proxies
+                        }, fixed_url);
+                        canceldialog();
+                        notify("Data saved");
+                        savesettings();
+                        // Re init app
+                        localStorage.removeItem("bitrequest_init");
+                        setTimeout(function() {
+                            $("#apikeys").trigger("click");
+                        }, 800);
+                    } else {
+                        popnotify("error", "Unable to send Post request from " + fixed_url);
+                    }
+                } else {
+                    popnotify("error", "Unable to connect");
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
+                popnotify("error", "Unable to connect");
+            });
+        } else {
+            popnotify("error", "Invalid url");
+        }
+    }
+    return false;
 }
 
 function remove_proxy() {
     $(document).on("click touch", "#proxyformbox .options .opt_icon_box .icon-bin", function(e) {
         e.preventDefault();
-        var proxy_node = $("#api_proxy"),
-			custom_proxies = proxy_node.data("custom_proxies");
+        var proxy_node = "api_proxy",
+            custom_proxies = get_setting(proxy_node, "custom_proxies");
         if (custom_proxies.length > 0) {
-            var thisoption =  $(this).closest(".optionwrap"),
+            var thisoption = $(this).closest(".optionwrap"),
                 default_node = (thisoption.hasClass("default")),
                 thisval = thisoption.find("> span").attr("data-value");
             if (default_node === true) {
@@ -1821,12 +2204,14 @@ function remove_proxy() {
                 var result = confirm("Are you sure you want to delete '" + thisval + "'");
                 if (result === true) {
                     var new_array = $.grep(custom_proxies, function(value) {
-						return value != thisval;
-					});
+                        return value != thisval;
+                    });
                     thisoption.slideUp(500, function() {
                         $(this).remove();
                     });
-                    proxy_node.data("custom_proxies", new_array);
+                    set_setting(proxy_node, {
+                        "custom_proxies": new_array
+                    });
                     notify("Proxy removed");
                     savesettings();
                 }
@@ -1838,657 +2223,6 @@ function remove_proxy() {
 
 function complete_url(url) {
     var cv1 = (url.indexOf("http") > -1) ? url.split("://").pop() : url,
-		cv2 = "https://" + cv1;
-	return (cv2.substr(-1) != "/") ? cv2 + "/" : cv2;
-}
-
-// ** Currency Settings **
-
-// Confirmations
-function edit_confirmations() {
-    $(document).on("click touch", ".cc_settinglist li[data-id='confirmations'] .edit_trigger", function() {
-        var thistrigger = $(this),
-            thiscurrency = thistrigger.attr("data-currency"),
-            thisli = thistrigger.closest("li"),
-            confsrc = thisli.data("selected"),
-            content = "<div class='formbox' id='conf_formbox'>\
-			<h2 class='icon-clock'>Confirmations</h2>\
-			<div class='popnotify'></div>\
-			<ul class='conf_options noselect'>\
-				<li>\
-					<div class='pick_conf'>\
-						<div class='radio icon-radio-unchecked'></div>\
-						<span>0</span>\
-						<div class='conf_emoji'>☕</div>\
-					</div>\
-				</li>\
-				<li>\
-					<div class='pick_conf'>\
-						<div class='radio icon-radio-unchecked'></div>\
-						<span>1</span>\
-						<div class='conf_emoji'>🍷 🍽</div>\
-					</div>\
-				</li>\
-				<li>\
-					<div class='pick_conf'>\
-						<div class='radio icon-radio-unchecked'></div>\
-						<span>2</span>\
-						<div class='conf_emoji'>📱</div>\
-					</div>\
-				</li>\
-				<li>\
-					<div class='pick_conf'>\
-						<div class='radio icon-radio-unchecked'></div>\
-						<span>3</span>\
-						<div class='conf_emoji'>🖥</div>\
-					</div>\
-				</li>\
-				<li>\
-					<div class='pick_conf'>\
-						<div class='radio icon-radio-unchecked'></div>\
-						<span>4</span>\
-						<div class='conf_emoji'>🚗</div>\
-					</div>\
-				</li>\
-				<li>\
-					<div class='pick_conf'>\
-						<div class='radio icon-radio-unchecked'></div>\
-						<span>5</span>\
-						<div class='conf_emoji'>🏠</div>\
-					</div>\
-				</li>\
-				<li>\
-					<div class='pick_conf'>\
-						<div class='radio icon-radio-unchecked'></div>\
-						<span>6</span>\
-						<div class='conf_emoji'>🛥 💎</div>\
-					</div>\
-				</li>\
-			</ul>\
-			<div class='popform'>\
-				<input type='hidden' value='" + confsrc + "'/>\
-				<input type='submit' class='submit' value='OK' data-currency='" + thiscurrency + "'/>\
-			</div>";
-        popdialog(content, "alert", "triggersubmit");
-        var currentli = $("#conf_formbox ul.conf_options li").filter(function() {
-            return $(this).find("span").text() == confsrc;
-        });
-        currentli.find(".radio").removeClass("icon-radio-unchecked").addClass("icon-radio-checked2");
-    })
-}
-
-function submit_confirmations() {
-    $(document).on("click touch", "#conf_formbox input.submit", function(e) {
-        e.preventDefault();
-        var thistrigger = $(this),
-            thiscurrency = thistrigger.attr("data-currency"),
-            thisvalue = thistrigger.prev("input").val();
-        $("#" + thiscurrency + "_settings .cc_settinglist li[data-id='confirmations']").data("selected", thisvalue).find("p").html(thisvalue);
-        canceldialog();
-        notify("Data saved");
-        save_cc_settings(thiscurrency);
-    })
-}
-
-function cc_switch() {
-    $(document).on("click touch", ".cc_settinglist li .switchpanel", function() {
-        var thistrigger = $(this),
-            thislist = thistrigger.closest("li"),
-            thisliwrap = thistrigger.closest(".liwrap"),
-            thiscurrency = thisliwrap.attr("data-currency"),
-            thisvalue = (thistrigger.hasClass("true")) ? true : false;
-        thislist.data("selected", thisvalue).find("p").html(thisvalue.toString());
-        save_cc_settings(thiscurrency);
-    })
-}
-
-// Choose blockexplorer
-function edit_blockexplorer() {
-    $(document).on("click touch", ".cc_settinglist li[data-id='blockexplorers']", function() {
-        var current_li = $(this),
-            this_data = current_li.data(),
-            options = this_data.options;
-        if (options === undefined) {
-            return false;
-        } else {
-            var thiscurrency = current_li.children(".liwrap").attr("data-currency"),
-                selected = this_data.selected,
-                content = "\
-				<div class='formbox' id='be_formbox'>\
-					<h2 class='icon-key'>Choose Blockexplorer</h2>\
-					<div class='popnotify'></div>\
-					<div class='popform'>\
-						<div class='selectbox'>\
-							<input type='text' value='" + selected + "' placeholder='Choose Blockexplorer' readonly='readonly'/>\
-							<div class='selectarrows icon-menu2' data-pe='none'></div>\
-							<div class='options'>\
-							</div>\
-						</div>\
-						<input type='submit' class='submit' value='OK' data-currency='" + thiscurrency + "'/>\
-					</div>\
-				</div>";
-            popdialog(content, "alert", "triggersubmit");
-            var optionlist = $("#be_formbox").find(".options");
-            $.each(options, function(key, value) {
-                optionlist.append("<span data-pe='none'>" + value + "</span>");
-            });
-        }
-    })
-}
-
-function submit_blockexplorer() {
-    $(document).on("click touch", "#be_formbox input.submit", function(e) {
-        e.preventDefault();
-        var thiscurrency = $(this).attr("data-currency"),
-            thisvalue = $("#be_formbox").find("input:first").val();
-        $("#" + thiscurrency + "_settings .cc_settinglist li[data-id='blockexplorers']").data("selected", thisvalue).find("p").html(thisvalue);
-        canceldialog();
-        notify("Data saved");
-        save_cc_settings(thiscurrency);
-    })
-}
-
-// RPC node / Websockets
-function edit_rpcnode() {
-    $(document).on("click touch", ".cc_settinglist li[data-id='apis'], .cc_settinglist li[data-id='websockets']", function() {
-        var current_li = $(this),
-            this_data = current_li.data(),
-            options = this_data.options,
-            api_list = this_data.apis,
-            sockets = this_data.websockets;
-        s_id = current_li.attr("data-id");
-        if (options === undefined && api_list === undefined) {
-            return false;
-        } else {
-            test_rpc_call = this_data.rpc_test_command;
-            var thiscurrency = current_li.children(".liwrap").attr("data-currency");
-            is_erc20t = ($("#" + thiscurrency + "_settings").attr("data-erc20") == "true");
-            var header_text = (s_id === "websockets") ? "Add websocket" : "Add RPC node",
-                currencycode = (thiscurrency == "bitcoin" || thiscurrency == "litecoin" || thiscurrency == "dogecoin") ? "btc" :
-                (thiscurrency == "ethereum" || is_erc20t === true) ? "eth" :
-                thiscurrency,
-                placeholder_id = s_id + currencycode + getrandomnumber(1, 3),
-                getplaceholder = get_rpc_placeholder(thiscurrency)[placeholder_id],
-                placeholder = (getplaceholder) ? getplaceholder : "eg: some.local-or-remote.node:port",
-                api_form = (options) ? "<div id='rpc_input_box' data-currency='" + thiscurrency + "' data-erc20='" + is_erc20t + "'>\
-						<h3 class='icon-plus'>" + header_text + "</h3>\
-						<div id='rpc_input'>\
-							<input type='text' value='' placeholder='" + placeholder + "' id='rpc_url_input'/>\
-							<div class='c_stat icon-wifi-off'></div>\
-							<div class='c_stat icon-connection'></div>\
-						</div>\
-						<input type='text' value='' placeholder='Username (optional)' id='rpc_username_input'/>\
-						<input type='password' value='' placeholder='Password (optional)' id='rpc_password_input'/>\
-					</div>" : "",
-                selected = this_data.selected,
-                selected_title = (selected.name) ? selected.name : selected.url,
-                content = "\
-				<div class='formbox' id='settingsbox' data-id='" + s_id + "'>\
-					<h2 class='icon-sphere'>Choose " + thiscurrency + " " + s_id + "</h2>\
-					<div class='popnotify'></div>\
-					<div class='popform'>\
-						<div class='selectbox'>\
-							<input type='text' value='" + selected_title + "' placeholder='Choose RPC node' readonly='readonly' id='rpc_main_input'/>\
-							<div class='selectarrows icon-menu2' data-pe='none'></div>\
-							<div class='options'>\
-							</div>\
-						</div>" +
-                api_form +
-                "<input type='submit' class='submit' value='OK' data-currency='" + thiscurrency + "'/>\
-					</div>\
-				</div>";
-            popdialog(content, "alert", "triggersubmit");
-            var optionlist = $("#settingsbox").find(".options");
-            $.each(api_list, function(key, value) {
-                if (value.display === true) {
-                    var selected = (value.url == selected_title || value.name == selected_title);
-                    rpc_option_li(optionlist, true, key, value, selected, false);
-                }
-            });
-            $.each(options, function(key, value) {
-                var selected = (value.url == selected_title || value.name == selected_title);
-                test_append_rpc(thiscurrency, optionlist, key, value, selected);
-            });
-            $("#rpc_main_input").data(selected);
-        }
-    })
-}
-
-function get_rpc_placeholder(currency) {
-    var btc_port = (currency == "bitcoin") ? "8332" :
-        (currency == "litecoin") ? "9332" :
-        (currency == "dogecoin") ? "22555" : "port";
-    return {
-        apisnano1: "eg: http://127.0.0.1:7076",
-        apisnano2: "eg: http://some.local-or-remote.node:7076",
-        apisnano3: "eg: http://localhost:7076",
-        websocketsnano1: "eg: ws://127.0.0.1:7078",
-        websocketsnano2: "eg: ws://some.local-or-remote.node:7078",
-        websocketsnano3: "eg: ws://localhost:7078",
-        apisbtc1: "eg: http://127.0.0.1:" + btc_port,
-        apisbtc2: "eg: http://some.local-or-remote.node:" + btc_port,
-        apisbtc3: "eg: http://localhost:" + btc_port,
-        apiseth1: "eg: http://localhost:8545",
-        apiseth2: "eg: http://some.local-or-remote.node:8546",
-        apiseth3: "eg: https://mainnet.infura.io/v3/YOUR-PROJECT-ID",
-        websocketseth1: "eg: ws://localhost:8545",
-        websocketseth2: "eg: ws://some.local-or-remote.node:8546",
-        websocketseth3: "eg: wss://mainnet.infura.io/ws/v3/YOUR-PROJECT-ID",
-    }
-}
-
-function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
-    if (s_id == "apis") {
-        if (thiscurrency == "ethereum") {
-            if (web3) {
-                web3.setProvider(value.url);
-                web3.eth.getTransaction("0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", function(err_1, data_1) { // random tx
-                    if (err_1) {
-                        console.log(err_1);
-                        rpc_option_li(optionlist, false, key, value, selected, true);
-                    } else {
-                        if (data_1) {
-                            rpc_option_li(optionlist, true, key, value, selected, true);
-                        }
-                    }
-                });
-            } else {
-                rpc_option_li(optionlist, false, key, value, selected, true);
-            }
-        } else {
-            var rpc = (thiscurrency == "bitcoin" || thiscurrency == "litecoin" || thiscurrency == "dogecoin") ? "bitcoin" : thiscurrency,
-                rpcurl = get_rpc_url({
-                    "url": value.url,
-                    "username": value.username,
-                    "password": value.password
-                });
-            api_proxy({
-                "api": rpc,
-                "search": "test",
-                "cachetime": 25,
-                "cachefolder": "1h",
-                "api_url": rpcurl,
-                "params": {
-                    "method": "POST",
-                    "data": JSON.stringify(test_rpc_call),
-                    "headers": {
-                        "Content-Type": "text/plain"
-                    }
-                }
-            }).done(function(e) {
-                var data = br_result(e).result,
-                    rpc_result = data.result;
-                if (rpc_result) {
-                    rpc_option_li(optionlist, true, key, value, selected, true);
-                } else {
-                    rpc_option_li(optionlist, false, key, value, selected, true);
-                }
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                console.log(jqXHR);
-                console.log(textStatus);
-                console.log(errorThrown);
-                rpc_option_li(optionlist, false, key, value, selected, true);
-            });
-        }
-    } else if (s_id == "websockets") {
-        var provider = value.url,
-            ping_event;
-        if (thiscurrency == "bitcoin") {
-            var ping_event = JSON.stringify({
-                op: "ping"
-            });
-        } else if (thiscurrency == "nano") {
-            var ping_event = JSON.stringify({
-                action: "subscribe",
-                topic: "confirmation",
-                ack: true,
-                id: 1
-            });
-        } else if (is_erc20t === true) {
-            var ping_event = JSON.stringify({
-                jsonrpc: "2.0",
-                id: 1,
-                method: "eth_subscribe",
-                params: ["logs", {
-                    address: "0x56ba2Ee7890461f463F7be02aAC3099f6d5811A8",
-                    topics: []
-                }]
-            });
-        }
-        var web_socket = new WebSocket(provider);
-        web_socket.onopen = function(e) {
-            web_socket.send(ping_event);
-            console.log(ping_event);
-            console.log("Connected: " + provider);
-        };
-        web_socket.onmessage = function(e) {
-            console.log(e);
-            rpc_option_li(optionlist, true, key, value, selected, true);
-            console.log("socket test success");
-            web_socket.close();
-            web_socket = undefined;
-        };
-        web_socket.onclose = function(e) {
-            console.log("End socket test");
-        };
-        web_socket.onerror = function(e) {
-            console.log(e);
-            rpc_option_li(optionlist, false, key, value, selected, true);
-            console.log("socket test failed");
-            web_socket.close();
-            web_socket = undefined;
-        };
-    }
-}
-
-function rpc_option_li(optionlist, live, key, value, selected, checked) {
-    var liveclass = (live === true) ? " live" : " offline",
-        selected_class = (selected === true) ? " rpc_selected" : "",
-        icon = (live === true) ? "connection" : "wifi-off",
-        datakey = (checked === true) ? " data-key='" + key + "'" : "",
-        default_class = (value.default !== false) ? " default" : "",
-        node_name = (value.name) ? value.name : value.url,
-        option = $("<div class='optionwrap" + liveclass + selected_class + default_class + "' style='display:none' data-pe='none'><span" + datakey + " data-value='" + value.url + "' data-pe='none'>" + node_name + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon c_stat icon-" + icon + "' data-pe='none'></div><div class='opt_icon icon-bin' data-pe='none'></div></div>");
-    option.data(value).appendTo(optionlist);
-    option.slideDown(500);
-}
-
-function test_rpcnode() {
-    $(document).on("click touch", "#settingsbox .selectbox .options > div", function() {
-        var thisoption = $(this),
-            thisdata = thisoption.data();
-        if (thisoption.hasClass("offline")) {
-            playsound(funk);
-            topnotify("Unable to connect");
-        } else {
-            var settingsbox = $("#settingsbox"),
-                rpc_main_input = settingsbox.find("#rpc_main_input");
-            settingsbox.find("#rpc_main_input").removeData().data(thisdata);
-            settingsbox.find(".options .optionwrap").removeClass("rpc_selected");
-            thisoption.addClass("rpc_selected");
-        }
-        return false;
-    })
-}
-
-function submit_rpcnode() {
-    $(document).on("click touch", "#settingsbox input.submit", function(e) {
-        e.preventDefault();
-        var settingsbox = $("#settingsbox"),
-            thiscurrency = $(this).attr("data-currency"),
-            rpc_main_input = settingsbox.find("#rpc_main_input"),
-            setvalue = rpc_main_input.data(),
-            rpc_input_box = settingsbox.find("#rpc_input_box");
-        if (rpc_input_box.length > 0) {
-            var rpc_url_input_val = rpc_input_box.find("#rpc_url_input").val();
-            if (rpc_url_input_val.length > 5) {
-                var optionsbox = settingsbox.find(".options"),
-                    duplicates = optionsbox.find("span[data-value='" + rpc_url_input_val + "']"),
-                    indexed = (duplicates.length > 0);
-                if (indexed === true) {
-                    popnotify("error", "Node already added");
-                    return false;
-                } else {
-                    var rpc_username_input_val = rpc_input_box.find("#rpc_username_input").val(),
-                        rpc_password_input_val = rpc_input_box.find("#rpc_password_input").val(),
-                        rpc_data = {
-                            "url": rpc_url_input_val,
-                            "username": rpc_username_input_val,
-                            "password": rpc_password_input_val,
-                            "default": false
-                        };
-                    test_rpc(rpc_input_box, rpc_data, thiscurrency);
-                }
-            } else {
-                pass_rpc_submit(thiscurrency, setvalue, false)
-            }
-        } else {
-            pass_rpc_submit(thiscurrency, setvalue, false)
-        }
-    })
-}
-
-function test_rpc(rpc_input_box, rpc_data, currency) {
-    if (s_id == "apis") {
-	    console.log(currency);
-        if (currency == "ethereum") {
-            if (web3) {
-                if (web3.currentProvider.host == rpc_data.url) {} else {
-                    web3.setProvider(rpc_data.url);
-                }
-                web3.eth.getTransaction("0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", function(err_1, data_1) { // random tx
-                    if (err_1) {
-                        rpc_input_box.addClass("offline").removeClass("live");
-                        popnotify("error", err_1);
-                    } else {
-                        if (data_1) {
-                            rpc_input_box.addClass("live").removeClass("offline");
-                            pass_rpc_submit(currency, rpc_data, true);
-                        } else {
-                            rpc_input_box.addClass("offline").removeClass("live");
-                            popnotify("error", "unable to connect");
-                        }
-                    }
-                });
-            } else {
-                rpc_input_box.addClass("offline").removeClass("live");
-                popnotify("error", "Unable to connect");
-            }
-        } else {
-            var rpc = (currency == "bitcoin" || currency == "litecoin" || currency == "dogecoin") ? "bitcoin" : currency,
-                rpcurl = get_rpc_url(rpc_data);
-            api_proxy({
-                "api": rpc,
-                "search": "test",
-                "cachetime": 25,
-                "cachefolder": "1h",
-                //"custom": "btc_rpc_test",
-                "api_url": rpcurl,
-                "params": {
-                    "method": "POST",
-                    "data": JSON.stringify(test_rpc_call),
-                    "headers": {
-                        "Content-Type": "text/plain"
-                    }
-                }
-            }).done(function(e) {
-                var data = br_result(e).result,
-                    rpc_result = data.result;
-                if (rpc_result) {
-                    rpc_input_box.addClass("live").removeClass("offline");
-                    pass_rpc_submit(currency, rpc_data, true);
-                } else {
-                    var error = data.error;
-                    if (error) {
-                        rpc_input_box.addClass("offline").removeClass("live");
-                        topnotify("Unable to connect");
-                        var error_message = error.error_message;
-                        if (error_message) {
-                            popnotify("error", error_message);
-                        }
-                    }
-                }
-            }).fail(function(data) {
-                console.log(data);
-                rpc_input_box.addClass("offline").removeClass("live");
-                topnotify("Unable to connect");
-                if (data.status === 0) {
-                    popnotify("error", "Try disabeling Cross Origin Limitations in your browser");
-                }
-            });
-        }
-    } else if (s_id == "websockets") {
-        var provider = rpc_data.url,
-            ping_event;
-        if (currency == "bitcoin") {
-            var ping_event = JSON.stringify({
-                op: "ping"
-            });
-        } else if (currency == "nano") {
-            var ping_event = JSON.stringify({
-                action: "subscribe",
-                topic: "confirmation",
-                ack: true,
-                id: 1
-            });
-        } else if (currency == "ethereum" || is_erc20t === true) {
-            var ping_event = JSON.stringify({
-                jsonrpc: "2.0",
-                id: 1,
-                method: "eth_subscribe",
-                params: ["logs", {
-                    address: "",
-                    topics: []
-                }]
-            });
-        }
-        var web_socket = new WebSocket(provider);
-        web_socket.onopen = function(e) {
-            web_socket.send(ping_event);
-            console.log("Connected: " + provider);
-        };
-        web_socket.onmessage = function(e) {
-            rpc_input_box.addClass("live").removeClass("offline");
-            pass_rpc_submit(currency, rpc_data, true);
-            console.log("socket test success");
-            web_socket.close();
-            web_socket = undefined;
-        };
-        web_socket.onclose = function(e) {
-            console.log("End socket test");
-        };
-        web_socket.onerror = function(e) {
-            console.log(e);
-            rpc_input_box.addClass("offline").removeClass("live");
-            popnotify("error", "Unable to connect");
-            console.log("socket test failed");
-            web_socket.close();
-            web_socket = undefined;
-        };
-    }
-}
-
-function pass_rpc_submit(thiscurrency, thisvalue, newnode) {
-    var rpc_setting_li = $("#" + thiscurrency + "_settings .cc_settinglist li[data-id='" + s_id + "']"),
-        options = rpc_setting_li.data("options"),
-        node_name = (thisvalue.name) ? thisvalue.name : thisvalue.url;
-    rpc_setting_li.data("selected", thisvalue).find("p").html(node_name);
-    if (options === undefined) {
-        if (newnode === true) {
-            rpc_setting_li.data("options", thisvalue);
-        }
-    } else {
-        if (newnode === true) {
-            options.push(thisvalue);
-        }
-    }
-    canceldialog();
-    notify("Data saved");
-    save_cc_settings(thiscurrency);
-}
-
-function remove_rpcnode() {
-    $(document).on("click touch", "#settingsbox .options .opt_icon_box .icon-bin", function(e) {
-        e.preventDefault();
-        var thistrigger = $(this),
-            settingsbox = $("#settingsbox"),
-            thiscurrency = settingsbox.find("#rpc_input_box").attr("data-currency"),
-            rpc_setting_li = $("#" + thiscurrency + "_settings .cc_settinglist li[data-id='" + s_id + "']"),
-            options = rpc_setting_li.data("options");
-        if (options.length > 0) {
-            var thisoption = thistrigger.closest(".optionwrap"),
-                thisdata = thisoption.data(),
-                thisurl = thisdata.url,
-                default_node = (thisdata.default !== false),
-                optionsbox = settingsbox.find(".options"),
-                duplicates = optionsbox.find("span[data-value='" + thisurl + "']"),
-                is_duplicate = (duplicates.length > 1);
-            if (default_node === true && is_duplicate === false) {
-                playsound(funk);
-                topnotify("Cannot delete default node");
-            } else {
-                var thisname = (thisdata.name) ? thisdata.name : thisurl,
-                    result = confirm("Are you sure you want to delete '" + thisname + "'");
-                if (result === true) {
-                    var new_array = $.grep(options, function(option) {
-                        return option.url != thisurl;
-                    });
-                    thisoption.slideUp(500, function() {
-                        $(this).remove();
-                    });
-                    rpc_setting_li.data("options", new_array);
-                    notify("RPC node removed");
-                    save_cc_settings(thiscurrency);
-                }
-            }
-        }
-        return false;
-    })
-}
-
-function get_rpc_url(rpc_data) {
-    if (rpc_data === false) {
-        return false;
-    } else {
-        var url = rpc_data.url,
-            username = rpc_data.username,
-            password = rpc_data.password,
-            login_param = (username && password) ? username + ":" + password + "@" : "",
-            hasprefix = (url.indexOf("http") > -1),
-            urlsplit = (hasprefix === true) ? url.split("://") : url;
-        return (hasprefix === true) ? urlsplit[0] + "://" + login_param + urlsplit[1] : url;
-    }
-}
-
-// Add api key
-
-function trigger_apikey() {
-    $(document).on("click touch", "#add_api", function() {
-        add_apikey($(this).attr("data-api"));
-    })
-}
-
-function add_apikey(api) {
-    var get_key = $("#apikeys").data(api),
-        api_key = (get_key) ? get_key : "",
-        apidata = get_api_data(api),
-        sign_up = apidata.sign_up,
-        get_apikey_url = (!sign_up) ? "" : "<div id='api_signin'>Get your " + api + " API key <a href='" + sign_up + "' target='blank' class='exit'>here</a></div>",
-        content = "\
-		<div class='formbox' id='add_apikey'>\
-			<h2 class='icon-key'>Set " + api + " API key</h2>\
-			<div class='popnotify'></div>\
-			<div class='popform' data-api='" + api + "'>\
-				<input type='text' value='" + api_key + "' placeholder='API key' data-apikey='" + api_key + "' data-checkchange='" + api_key + "'>\
-				<input type='submit' class='submit' value='OK'/>\
-			</div>" + get_apikey_url +
-        "</div>";
-    canceldialog();
-    setTimeout(function() {
-        popdialog(content, "alert", "triggersubmit");
-    }, 800);
-}
-
-function submit_apikey() {
-    $(document).on("click touch", "#add_apikey input.submit", function(e) {
-        e.preventDefault();
-        var thisform = $(this).closest(".popform"),
-            thisinput = thisform.find("input:first"),
-            thisvalue = thisinput.val(),
-            currentkey = thisinput.attr("data-apikey");
-        if (thisvalue) {
-            if (thisvalue === currentkey) {
-                canceldialog();
-            } else {
-                if (thisinput.attr("data-checkchange") == thisvalue) {
-                    popnotify("error", "Enter a valid API key");
-                } else {
-                    thisinput.attr("data-checkchange", thisvalue);
-                    checkapikey(thisform.attr("data-api"), thisvalue, true);
-                }
-            }
-        } else {
-            popnotify("error", "Enter a valid API key");
-        }
-    })
+        cv2 = "https://" + cv1;
+    return (cv2.substr(-1) != "/") ? cv2 + "/" : cv2;
 }

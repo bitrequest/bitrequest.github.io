@@ -32,39 +32,42 @@ var language = navigator.language || navigator.userLanguage,
     symbolcache,
     hascam,
     cp_timer,
-    local;
+    local,
+    bipv,
+    bipobj = localStorage.getItem("bitrequest_bpdat"),
+    hasbip = (bipobj) ? true : false,
+    bipid = (hasbip) ? JSON.parse(atob(JSON.parse(bipobj).dat)).pid : false;
 
 $(document).ready(function() {
     $.ajaxSetup({
         cache: false
     });
-   
-	set_icon_boolean();
-	buildsettings(); // build settings first
-	
-	stored_currencies = localStorage.getItem("bitrequest_currencies"),
+
+    set_icon_boolean();
+    buildsettings(); // build settings first
+
+    stored_currencies = localStorage.getItem("bitrequest_currencies"),
         init = localStorage.getItem("bitrequest_init"),
         io = (init) ? JSON.parse(init) : {};
 
     if (hostlocation != "local") { // don't add service worker on desktop
         add_serviceworker();
     }
-    
+
     //close potential websockets and pings
     forceclosesocket();
     clearpingtx("close");
-    
+
     //Set classname for ios app	
-	if(is_ios_app === true) {
-		body.addClass("ios");
-	}
+    if (is_ios_app === true) {
+        body.addClass("ios");
+    }
 
     //Set classname for iframe	
     if (inframe === true) {
         html.addClass("inframe hide_app");
-    }
-    else {
-	    html.addClass("noframe");
+    } else {
+        html.addClass("noframe");
     }
 
     //some api tests first
@@ -74,12 +77,16 @@ $(document).ready(function() {
             if (!stored_currencies) { //show startpage if no addresses are added
                 body.addClass("showstartpage");
             }
-            var phpsupport = io.phpsupport;
+            var bipverified = io.bipv,
+                phpsupport = io.phpsupport;
+            if (bipverified && hasbip === true) {
+                bipv = true;
+            }
             if (phpsupport) {
                 phpsupportglobal = (phpsupport == "yes") ? true : false;
                 setsymbols();
             } else {
-	            checkphp();
+                checkphp();
             }
         } else {
             var content = "<h2 class='icon-bin'>Sorry!</h2><p>No Web Storage support..</p>";
@@ -110,7 +117,7 @@ function set_icon_boolean() {
 }
 
 function checkphp() { //check for php support by fetching fiat currencies from local api php file
-	api_proxy({
+    api_proxy({
         "api": "fixer",
         "search": "symbols",
         "cachetime": 86400,
@@ -118,33 +125,32 @@ function checkphp() { //check for php support by fetching fiat currencies from l
         "proxy": true,
         "localhost": true,
         "params": {
-	        "method": "GET"
+            "method": "GET"
         }
     }).done(function(e) {
-	    var result = br_result(e);
-	    if (result.proxy === true) {
-	        var data = result.result;
-	        if (data) {
-		        var symbols = data.symbols;
-	            if (symbols) {
-	                if (symbols.USD) {
-	                    localStorage.setItem("bitrequest_symbols", JSON.stringify(symbols));
-	                } else {
-	                    var this_error = (data.error) ? data.error : "Unable to get API data";
-						fail_dialogs("fixer", this_error);
-	                }
-	            }
-	        }
-	        io.phpsupport = "yes";
+        var result = br_result(e);
+        if (result.proxy === true) {
+            var data = result.result;
+            if (data) {
+                var symbols = data.symbols;
+                if (symbols) {
+                    if (symbols.USD) {
+                        localStorage.setItem("bitrequest_symbols", JSON.stringify(symbols));
+                    } else {
+                        var this_error = (data.error) ? data.error : "Unable to get API data";
+                        fail_dialogs("fixer", this_error);
+                    }
+                }
+            }
+            io.phpsupport = "yes";
             localStorage.setItem("bitrequest_init", JSON.stringify(io));
             phpsupportglobal = true;
             setsymbols();
-        }
-        else {
-	        io.phpsupport = "no";
-	        localStorage.setItem("bitrequest_init", JSON.stringify(io));
-	        phpsupportglobal = false;
-	        setsymbols();
+        } else {
+            io.phpsupport = "no";
+            localStorage.setItem("bitrequest_init", JSON.stringify(io));
+            phpsupportglobal = false;
+            setsymbols();
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         io.phpsupport = "no";
@@ -169,16 +175,16 @@ function setsymbols() { //fetch fiat currencies from fixer.io api
                 "method": "GET"
             }
         }).done(function(e) {
-	        var data = br_result(e).result;
+            var data = br_result(e).result;
             if (data) {
-		        var symbols = data.symbols;
-	            if (symbols && symbols.USD) {
-	                localStorage.setItem("bitrequest_symbols", JSON.stringify(symbols));
-	            } else {
-		            var this_error = (data.error) ? data.error : "Unable to get API data";
-		            fail_dialogs("fixer", this_error);
-	            }
-	        }
+                var symbols = data.symbols;
+                if (symbols && symbols.USD) {
+                    localStorage.setItem("bitrequest_symbols", JSON.stringify(symbols));
+                } else {
+                    var this_error = (data.error) ? data.error : "Unable to get API data";
+                    fail_dialogs("fixer", this_error);
+                }
+            }
             geterc20tokens();
         }).fail(function(jqXHR, textStatus, errorThrown) {
             var content = "<h2 class='icon-bin'>Api call failed</h2><p class='doselect'>" + textStatus + "<br/>api did not respond</p>";
@@ -279,6 +285,7 @@ function setfunctions() {
     pinpresstrigger();
     //pinpress
     pinvalidatetrigger();
+    pin_admin_reset();
     //pinvalidate
     pinbacktrigger();
     pinbackvalidatetrigger();
@@ -301,7 +308,7 @@ function finishfunctions() {
 
     // ** IOS functions **
 
-	//ios_init
+    //ios_init
     //ios_redirections
     //ios_redirect_bitly
 
@@ -332,6 +339,7 @@ function finishfunctions() {
 
     triggertx();
     //triggertxfunction
+    confirm_missing_seed();
     //clear_savedurl
     payrequest();
 
@@ -339,6 +347,13 @@ function finishfunctions() {
 
     togglecurrency();
     toggleaddress();
+    confirm_missing_seed_toggle();
+    //cmst_callback
+    //cmst_callback
+    //add_seed_whitelist
+    //seed_whitelist
+    //add_address_whitelist
+    //address_whitelist
     check_pk();
     toggleswitch();
     showselect();
@@ -364,8 +379,10 @@ function finishfunctions() {
     //execute
     addcurrencytrigger();
     //addcurrency
+    //derive_first_check
     addaddresstrigger();
     //addaddress
+    //active_derives
     get_wallet();
     submitaddresstrigger();
     add_erc20();
@@ -389,12 +406,17 @@ function finishfunctions() {
     //showoptions
     newrequest_alias();
     newrequest();
+    confirm_ms_newrequest();
+    //newrequest_cb
     showrequests();
+    showrequests_inlne();
     editaddresstrigger();
     removeaddress();
     //removeaddressfunction
     showtransaction_trigger();
     showtransactions();
+    addressinfo();
+    show_pk();
     //open_blockexplorer_url
     //blockexplorer_url
     apisrc_shortcut();
@@ -416,9 +438,9 @@ function finishfunctions() {
     //removerequestfunction
 
     // ** Helpers **
-	
-	open_url();
-	//get_blockcypher_apikey
+
+    open_url();
+    //get_blockcypher_apikey
     //get_amberdata_apikey
     //get_infura_apikey
     //api_proxy
@@ -440,6 +462,7 @@ function finishfunctions() {
     //settitle
     //getcc_icon
     //getdevicetype
+    //getplatform
     //makedatestring
     //returntimestamp
     //weekdays
@@ -453,6 +476,8 @@ function finishfunctions() {
     //switchpanel
     //getcoindata
     //getcoinsettings
+    //getbip32dat
+    //getcoinconfig
     //try_next_api
     //trimdecimals
     //countdown
@@ -494,16 +519,28 @@ function finishfunctions() {
 
     // ** Get_app **
 
-	setTimeout(function() { // wait for ios app detection
+    setTimeout(function() { // wait for ios app detection
         detectapp();
     }, 700);
-    
+
     //getapp
     close_app_panel();
 
-    // ** Query helpers **
+    // Query helpers
 
+    //get_setting
+    //set_setting
     //get_requestli
+    //get_addresslist
+    //filter_addressli
+    //filter_all_addressli
+    //filter_list
+    //dom_to_array
+    //get_latest_index
+    //check_currency
+    //currency_check
+    //currency_uncheck
+
     gk();
 }
 
@@ -628,17 +665,18 @@ function enterapp(pinval) {
         } else if (pinfloat.hasClass("reset")) {
             localStorage.setItem("bitrequest_locktime", $.now());
             $("#pintext").text("Enter new pin");
-            pinfloat.removeClass("pinwall reset");
+            pinfloat.addClass("p_admin").removeClass("pinwall reset");
             playsound(waterdrop);
             setTimeout(function() {
                 $("#pininput").val("");
             }, 200);
-        } else if (pinfloat.hasClass("reset_app")) {
-            reset_settings_popup();
-            playsound(waterdrop);
-            canceloptions();
         } else {
-            localStorage.setItem("bitrequest_locktime", $.now());
+            var callback = pinfloat.data("pincb");
+            if (callback) {
+                callback.func(callback.args);
+            } else {
+                localStorage.setItem("bitrequest_locktime", $.now());
+            }
             playsound(waterdrop);
             canceloptions();
         }
@@ -646,13 +684,17 @@ function enterapp(pinval) {
         if (navigator.vibrate) {} else {
             playsound(funk);
         }
-        pinfloat.addClass("wrongpin");
+        shake(pinfloat);
         setTimeout(function() {
-            pinfloat.removeClass("wrongpin");
             $("#pininput").val("");
-            vibrate();
-        }, 100);
+        }, 10);
     }
+}
+
+function pin_admin_reset() {
+    $(document).on("click touch", "#reset_pin", function() {
+        $("#pinfloat").removeClass("p_admin");
+    });
 }
 
 function pinvalidatetrigger() {
@@ -662,7 +704,8 @@ function pinvalidatetrigger() {
 }
 
 function pinvalidate(thispad) {
-    var thisval = thispad.text(),
+    var pinfloat = $("#pinfloat"),
+        thisval = thispad.text(),
         pininput = $("#validatepin"),
         pinval = pininput.val(),
         newval = pinval + thisval;
@@ -677,23 +720,24 @@ function pinvalidate(thispad) {
                 "locktime": locktime,
                 "selected": titlepin
             }).find("p").html(titlepin);
-            canceldialog();
-            notify("Data saved");
+            //canceldialog();
             savesettings();
             playsound(waterdrop);
             canceloptions();
+            var callback = pinfloat.data("pincb");
+            if (callback) {
+                callback.func(callback.args);
+            }
+            notify("Data saved");
+            enc_s();
         } else {
             var pinfloat = $("#pinfloat");
             topnotify("pincode does not match");
             if (navigator.vibrate) {} else {
                 playsound(funk);
             }
-            pinfloat.addClass("wrongpin");
-            setTimeout(function() {
-                pinfloat.removeClass("wrongpin");
-                pininput.val("");
-                vibrate();
-            }, 200);
+            shake(pinfloat);
+            pininput.val("");
         }
     }
     if (newval.length > 4) {
@@ -733,8 +777,8 @@ function pinback(pininput) {
 //Set classname for ios app
 
 function ios_init() {
-	is_ios_app = true,
-	body.addClass("ios"); // ios app fingerprint
+    is_ios_app = true,
+        body.addClass("ios"); // ios app fingerprint
 }
 
 function ios_redirections(url) {
@@ -910,7 +954,7 @@ function choosecurrency() {
 
 function togglenav() {
     $(document).on("click touch", "#header", function() {
-	   	if (html.hasClass("showmain")) {
+        if (html.hasClass("showmain")) {
             loadpage("?p=home");
             $(".navstyle li .self").removeClass("activemenu");
         } else {
@@ -971,7 +1015,6 @@ function openpage(href, pagename, event) {
 function popstate() {
     window.onpopstate = function(e) {
         var statemeta = e.state;
-        console.log(statemeta);
         if (statemeta && statemeta.pagename) { //check for history
             loadfunction(statemeta.pagename, statemeta.event);
         } else {
@@ -1037,36 +1080,114 @@ function shownav(pagename) { // show / hide navigation
 
 function triggertx() {
     $(document).on("click touch", ".currencylist li > .rq_icon", function() {
-	    triggertxfunction($(this));
+        triggertxfunction($(this));
         canceloptions();
     });
 }
 
 function triggertxfunction(thislink) {
-	var currency = thislink.data("currency"),
-    	pick_random = $("#" + currency + "_settings .cc_settinglist li[data-id='Use random address']").data("selected"),
-    	addresslist = $("#" + currency + ".page ul.pobox li[data-checked='true']"),
-    	addresscount = addresslist.length,
-    	random = getrandomnumber(1, addresscount) - 1,
-		pick_address = (pick_random === true) ? addresslist.eq(random) : addresslist,
-		thisaddress = pick_address.data("address"),
-		cd = getcoindata(currency),
-        currencysettings = $("#currencysettings").data(),
-        c_default = currencysettings.default;
-    currencysymbol = (c_default === true && offline === false) ? currencysettings.currencysymbol : cd.ccsymbol,
+    var currency = thislink.data("currency"),
+        can_derive = derive_first_check(currency);
+    if (can_derive === false) {} else {
+        triggertxfunction(thislink);
+        return false;
+    }
+    var pick_random = $("#" + currency + "_settings .cc_settinglist li[data-id='Use random address']").data("selected"),
+        derives = check_derivations(currency),
+        addresslist = filter_addressli(currency, "checked", true),
+        firstlist = addresslist.first(),
+        manualist = addresslist.not(".seed"),
+        addresscount = manualist.length,
+        randomlist = (addresscount > 1) ? manualist : firstlist,
+        random = getrandomnumber(1, addresscount) - 1,
+        pick_address = (pick_random === true) ? (firstlist.hasClass("seed")) ? firstlist : manualist.eq(random) : firstlist,
+        a_data = pick_address.data(),
+        thisaddress = a_data.address,
         title = thislink.attr("title"),
         savedurl = thislink.data("url"),
+        seedid = a_data.seedid;
+    if (seedid) {
+        if (seedid != bipid) {
+            if (address_whitelist(thisaddress) === true) {} else {
+                var pass_dat = {
+                        "currency": currency,
+                        "address": thisaddress,
+                        "url": savedurl,
+                        "title": title,
+                        "seedid": seedid
+                    },
+                    content = get_address_warning("addresswarning", thisaddress, pass_dat);
+                popdialog(content, "alert", "triggersubmit");
+                return false;
+            }
+        } else {
+            if (bipv_pass() === false) {
+                return false;
+            }
+        }
+    }
+    finishtxfunction(currency, thisaddress, savedurl, title)
+}
+
+function confirm_missing_seed() {
+    $(document).on("click touch", "#addresswarning .submit", function(e) {
+        e.preventDefault();
+        var thisdialog = $("#addresswarning"),
+            d_dat = thisdialog.data(),
+            pk_checkbox = thisdialog.find("#pk_confirmwrap"),
+            pk_checked = pk_checkbox.data("checked"),
+            ds_checkbox = thisdialog.find("#dontshowwrap"),
+            ds_checked = ds_checkbox.data("checked");
+        if (pk_checked == true) {} else {
+            popnotify("error", "Confirm privatekey ownership");
+            return false
+        }
+        if (ds_checked == true) { // whitlist seed id
+            add_address_whitelist(d_dat.address);
+        }
+        canceldialog();
+        finishtxfunction(d_dat.currency, d_dat.address, d_dat.url, d_dat.title);
+        return false;
+    })
+}
+
+function get_address_warning(id, address, pass_dat) {
+    var seedstr = (pass_dat.xpubid) ? "Xpub" : "Seed",
+        rest_str = (seedstr == "Seed") ? (hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + pass_dat.seedid + "'>Restore seed</div>" : "";
+    return $("<div class='formbox addwarning' id='" + id + "'>\
+		<h2 class='icon-warning'>Warning!</h2>\
+		<div class='popnotify'></div>\
+		<p><strong>" + seedstr + " for '<span class='adspan'>" + address + "</span>' is missing.<br/>Are you sure you want to use this address?</strong></p>\
+		<form class='addressform popform'>\
+			<div class='inputwrap'>\
+				<div class='pk_wrap noselect'>\
+					<div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
+					<span>I own the seed / private key of this address</span>\
+				</div>\
+				<div class='pk_wrap noselect'>\
+					<div id='dontshowwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
+					<span>Don't show again</span>\
+				</div>" + rest_str +
+        "</div>\
+			<input type='submit' class='submit' value='OK'>\
+		</form>\
+	</div>").data(pass_dat);
+}
+
+function finishtxfunction(currency, thisaddress, savedurl, title) {
+    var cd = getcoindata(currency),
+        currencysettings = $("#currencysettings").data(),
+        c_default = currencysettings.default,
+        currencysymbol = (c_default === true && offline === false) ? currencysettings.currencysymbol : cd.ccsymbol,
         currentpage = geturlparameters().p,
-        currentpage_correct = (currentpage) ? "?p=" + currentpage + "&payment=" : "?payment=";
-    prefix = currentpage_correct + currency + "&uoa=",
+        currentpage_correct = (currentpage) ? "?p=" + currentpage + "&payment=" : "?payment=",
+        prefix = currentpage_correct + currency + "&uoa=",
         newlink = prefix + currencysymbol + "&amount=0" + "&address=" + thisaddress,
-        href = (!savedurl || offline !== false) ? newlink : savedurl; //load saved url if exists
-    //console.log(savedurl);
-    //console.log(newlink);
-    //console.log(href);
+        href = (!savedurl || offline !== false) ? newlink : savedurl, //load saved url if exists
+        thistitle = (title) ? title : "bitrequest";
     localStorage.setItem("bitrequest_editurl", href); // to check if request is being edited
     remove_flip(); // reset request card facing front
-    openpage(href, title, "payment");
+    openpage(href, thistitle, "payment");
 }
 
 function clear_savedurl() {
@@ -1119,7 +1240,7 @@ function togglecurrency() {
         } else {
             var lscurrency = localStorage.getItem("bitrequest_cc_" + currency);
             if (lscurrency) {
-                var addresslist = $("main #" + currency + " .content ul.pobox[data-currency='" + currency + "']"),
+                var addresslist = get_addresslist(currency),
                     addresscount = addresslist.find("li[data-checked='true']").length;
                 if (addresscount == 0) {
                     addresslist.find("li[data-checked='false']").first().find(".toggleaddress").trigger("click");
@@ -1137,35 +1258,116 @@ function togglecurrency() {
 
 function toggleaddress() {
     $(document).on("click touch", ".toggleaddress", function() {
-        var parentlistitem = $(this).closest("li"),
-            checked = parentlistitem.data("checked"),
+        var parentlistitem = $(this).closest("li");
+        checked = parentlistitem.data("checked"),
             parentlist = parentlistitem.closest("ul.pobox"),
             addresscount = parentlist.find("li[data-checked='true']").length,
-            currency = parentlist.attr("data-currency"),
-            currencylistitem = $("#currencylist > li[data-currency='" + currency + "']"),
-            parentcheckbox = $("#usedcurrencies li[data-currency='" + currency + "']");
+            currency = parentlist.attr("data-currency");
         if (checked === true || checked == "true") {
             parentlistitem.attr("data-checked", "false").data("checked", false);
-            if (addresscount === 1) {
-                currencylistitem.addClass("hide");
-                parentcheckbox.attr("data-checked", "false").data("checked", false);
-                savecurrencies(false);
-            }
         } else {
-            parentlistitem.attr("data-checked", "true").data("checked", true);
-            if (addresscount == 0) {
-                currencylistitem.removeClass("hide");
-                parentcheckbox.attr("data-checked", "true").data("checked", true);
-                savecurrencies(false);
+            var a_dat = parentlistitem.data();
+            if (parentlistitem.hasClass("seedu")) {
+                var address = a_dat.address,
+                    seedid = a_dat.seedid;
+                if (address_whitelist(address) === true) {} else {
+                    var pass_dat = {
+                            "address": address,
+                            "pli": parentlistitem,
+                            "seedid": seedid
+                        },
+                        content = get_address_warning("addresswarningcheck", address, pass_dat);
+                    popdialog(content, "alert", "triggersubmit");
+                    return false;
+                }
+            } else if (parentlistitem.hasClass("xpubu")) {
+                var address = a_dat.address;
+                if (address_whitelist(address) === true) {} else {
+                    var haspub = has_xpub(currency),
+                        xpubid = a_dat.xpubid;
+                    if (haspub === false || (haspub && haspub.key_id != xpubid)) {
+                        var pass_dat = {
+                                "address": address,
+                                "pli": parentlistitem,
+                                "xpubid": xpubid
+                            },
+                            content = get_address_warning("addresswarningcheck", address, pass_dat);
+                        popdialog(content, "alert", "triggersubmit");
+                        return false;
+                    }
+                }
             }
+            parentlistitem.attr("data-checked", "true").data("checked", true);
         }
         saveaddresses(currency, false);
+        check_currency(currency);
         clear_savedurl();
     });
 }
 
+function confirm_missing_seed_toggle() {
+    $(document).on("click touch", "#addresswarningcheck .submit", function(e) {
+        e.preventDefault();
+        var thisdialog = $("#addresswarningcheck"),
+            d_dat = thisdialog.data(),
+            pk_checkbox = thisdialog.find("#pk_confirmwrap"),
+            pk_checked = pk_checkbox.data("checked"),
+            ds_checkbox = thisdialog.find("#dontshowwrap"),
+            ds_checked = ds_checkbox.data("checked");
+        if (pk_checked == true) {} else {
+            popnotify("error", "Confirm privatekey ownership");
+            return false
+        }
+        if (ds_checked == true) { // whitlist seed id
+            add_address_whitelist(d_dat.address);
+        }
+        canceldialog();
+        cmst_callback(d_dat.pli);
+        return false;
+    })
+}
+
+function cmst_callback(parentlistitem) {
+    var parentlist = parentlistitem.closest("ul.pobox"),
+        currency = parentlist.attr("data-currency");
+    parentlistitem.attr("data-checked", "true").data("checked", true);
+    check_currency(currency);
+    saveaddresses(currency, false);
+    clear_savedurl();
+}
+
+function add_seed_whitelist(seedid) {
+    var stored_whitelist = localStorage.getItem("bitrequest_swl"),
+        seed_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
+    if ($.inArray(seedid, seed_whitelist) === -1) {
+        seed_whitelist.push(seedid);
+    }
+    localStorage.setItem("bitrequest_swl", JSON.stringify(seed_whitelist));
+}
+
+function seed_whitelist(seedid) {
+    var stored_whitelist = localStorage.getItem("bitrequest_swl"),
+        seed_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
+    return ($.inArray(seedid, seed_whitelist) === -1) ? false : true;
+}
+
+function add_address_whitelist(address) {
+    var stored_whitelist = localStorage.getItem("bitrequest_awl"),
+        address_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
+    if ($.inArray(address, address_whitelist) === -1) {
+        address_whitelist.push(address);
+    }
+    localStorage.setItem("bitrequest_awl", JSON.stringify(address_whitelist));
+}
+
+function address_whitelist(address) {
+    var stored_whitelist = localStorage.getItem("bitrequest_awl"),
+        address_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
+    return ($.inArray(address, address_whitelist) === -1) ? false : true;
+}
+
 function check_pk() {
-    $(document).on("click touch", "#pk_confirmwrap", function() {
+    $(document).on("click touch", "#popup .cb_wrap", function() {
         var thisnode = $(this),
             checked = thisnode.data("checked");
         if (checked == true) {
@@ -1177,7 +1379,7 @@ function check_pk() {
 }
 
 function toggleswitch() {
-    $(document).on("click touch", ".switchpanel.global", function() {
+    $(document).on("mousedown touchstart", ".switchpanel.global", function() {
         var thistoggle = $(this);
         if (thistoggle.hasClass("true")) {
             thistoggle.removeClass("true").addClass("false");
@@ -1253,16 +1455,15 @@ function dragstart() {
     $(document).on("mousedown touchstart", ".currentpage .applist li .popoptions", function(e) {
         e.preventDefault();
         var this_drag = $(this),
-        	addresses = this_drag.closest(".applist").find("li");
+            addresses = this_drag.closest(".applist").find("li");
         if (addresses.length < 2) {
-	        return false;
-	    }
-	    else {
-		    var thisli = this_drag.closest("li"),
-				dialogheight = thisli.height(),
-				startheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
-	        drag(thisli, dialogheight, startheight, thisli.index());
-	    }
+            return false;
+        } else {
+            var thisli = this_drag.closest("li"),
+                dialogheight = thisli.height(),
+                startheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
+            drag(thisli, dialogheight, startheight, thisli.index());
+        }
     })
 }
 
@@ -1272,7 +1473,7 @@ function drag(thisli, dialogheight, startheight, thisindex) {
         thisli.addClass("dragging");
         html.addClass("dragmode");
         var currentheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY,
-        	dragdistance = currentheight - startheight;
+            dragdistance = currentheight - startheight;
         thisli.addClass("dragging").css({
             "-webkit-transform": "translate(0, " + dragdistance + "px)"
         });
@@ -1311,22 +1512,20 @@ function drag(thisli, dialogheight, startheight, thisindex) {
 
 function dragend() {
     $(document).on("mouseup mouseleave touchend", ".currentpage .applist li", function() {
-        if (html.hasClass("dragmode")) {
-            $(document).off("mousemove touchmove", ".currentpage .applist li");
-            var thisunit = $(this).closest("li");
-            if (thisunit.hasClass("dragging")) {
-                if (thisunit.hasClass("before")) {
-                    thisunit.insertBefore(".hovered:first");
-                    saveaddresses(geturlparameters().p, false);
-                } else if (thisunit.hasClass("after")) {
-                    thisunit.insertAfter(".hovered:last");
-                    saveaddresses(geturlparameters().p, false);
-                }
-                thisunit.removeClass("before after dragging").attr("style", "");
-                $(".currentpage .applist li").removeClass("hovered").attr("style", "");
-                html.removeClass("dragmode");
-                clear_savedurl();
+        $(document).off("mousemove touchmove", ".currentpage .applist li");
+        var thisunit = $(this).closest("li");
+        if (thisunit.hasClass("dragging")) {
+            if (thisunit.hasClass("before")) {
+                thisunit.insertBefore(".hovered:first");
+                saveaddresses(geturlparameters().p, false);
+            } else if (thisunit.hasClass("after")) {
+                thisunit.insertAfter(".hovered:last");
+                saveaddresses(geturlparameters().p, false);
             }
+            thisunit.removeClass("before after dragging").attr("style", "");
+            $(".currentpage .applist li").removeClass("hovered").attr("style", "");
+            html.removeClass("dragmode");
+            clear_savedurl();
         }
     })
 }
@@ -1337,70 +1536,62 @@ function keyup() {
             if (body.hasClass("showstartpage")) {
                 e.preventDefault();
                 startnext($(".panelactive"));
-            }
-            else {
-	            if (paymentdialogbox.find("input").is(":focus")) {
-		            playsound(funk);
-		        }
-		        else {
-			        var timelapsed = $.now() - sa_timer;
-			        if (timelapsed < 500) { // prevent clicking too fast
-			            playsound(funk);
-			        } else {
-			            paymentpopup.removeClass("flipping");
-			            if (paymentdialogbox.hasClass("flipped")) {
-				            flip_right2();
-		                    setTimeout(function() {
-			                    paymentpopup.addClass("flipping");
-			                    paymentdialogbox.css("-webkit-transform", "");
-			                }, 400);
-			            }
-			            else {
-				            if (paymentdialogbox.hasClass("norequest") && (paymentdialogbox.attr("data-pending") == "ispending" || (offline === true))) {
-					            playsound(funk);
-					        }
-					        else {
-						        flip_right1();
-					        }
-			            }
-			            sa_timer = $.now();
-			        }
-		        }
+            } else {
+                if (paymentdialogbox.find("input").is(":focus")) {
+                    playsound(funk);
+                } else {
+                    var timelapsed = $.now() - sa_timer;
+                    if (timelapsed < 500) { // prevent clicking too fast
+                        playsound(funk);
+                    } else {
+                        paymentpopup.removeClass("flipping");
+                        if (paymentdialogbox.hasClass("flipped")) {
+                            flip_right2();
+                            setTimeout(function() {
+                                paymentpopup.addClass("flipping");
+                                paymentdialogbox.css("-webkit-transform", "");
+                            }, 400);
+                        } else {
+                            if (paymentdialogbox.hasClass("norequest") && (paymentdialogbox.attr("data-pending") == "ispending" || (offline === true))) {
+                                playsound(funk);
+                            } else {
+                                flip_right1();
+                            }
+                        }
+                        sa_timer = $.now();
+                    }
+                }
             }
         }
         if (e.keyCode == 37) {
             if (body.hasClass("showstartpage")) {
                 e.preventDefault();
                 startprev($(".panelactive"));
-            }
-            else {
-	            if (paymentdialogbox.find("input").is(":focus")) {
-		            playsound(funk);
-		        }
-		        else {
-		            var timelapsed = $.now() - sa_timer;
-			        if (timelapsed < 500) { // prevent clicking too fast
-			            playsound(funk);
-			        } else {
-			            paymentpopup.removeClass("flipping");
-			            if (paymentdialogbox.hasClass("flipped")) {
-				            flip_left2();
-			            }
-			            else {
-				            if (paymentdialogbox.hasClass("norequest") && (paymentdialogbox.attr("data-pending") == "ispending" || (offline === true))) {
-					            playsound(funk);
-					        }
-					        else {
-						        flip_left1();
-			                    setTimeout(function() {
-				                    paymentpopup.addClass("flipping");
-				                    paymentdialogbox.css("-webkit-transform", "rotateY(180deg)");
-				                }, 400);
-					        }
-			            }
-			            sa_timer = $.now();
-			        }
-			    }
+            } else {
+                if (paymentdialogbox.find("input").is(":focus")) {
+                    playsound(funk);
+                } else {
+                    var timelapsed = $.now() - sa_timer;
+                    if (timelapsed < 500) { // prevent clicking too fast
+                        playsound(funk);
+                    } else {
+                        paymentpopup.removeClass("flipping");
+                        if (paymentdialogbox.hasClass("flipped")) {
+                            flip_left2();
+                        } else {
+                            if (paymentdialogbox.hasClass("norequest") && (paymentdialogbox.attr("data-pending") == "ispending" || (offline === true))) {
+                                playsound(funk);
+                            } else {
+                                flip_left1();
+                                setTimeout(function() {
+                                    paymentpopup.addClass("flipping");
+                                    paymentdialogbox.css("-webkit-transform", "rotateY(180deg)");
+                                }, 400);
+                            }
+                        }
+                        sa_timer = $.now();
+                    }
+                }
             }
         }
         if (e.keyCode == 27) {
@@ -1415,7 +1606,7 @@ function keyup() {
 }
 
 function escapeandback() {
-	if (body.hasClass("showcam")) {
+    if (body.hasClass("showcam")) {
         window.history.back();
         return false;
     }
@@ -1441,6 +1632,10 @@ function escapeandback() {
     }
     if ($("#optionspop").hasClass("active")) {
         canceloptions();
+        return false;
+    }
+    if (body.hasClass("seed_dialog")) {
+        hide_seed_panel();
         return false;
     }
     if (body.hasClass("showstartpage")) {
@@ -1538,9 +1733,9 @@ function popnotify(result, message) {
 
 //dialogs
 function popdialog(content, type, functionname, trigger, custom) {
-	if (custom) {
-		$("#popup #actions").addClass("custom");
-	}
+    if (custom) {
+        $("#popup #actions").addClass("custom");
+    }
     $("#dialogbody").append(content);
     body.addClass("blurmain");
     $("#popup").addClass("active showpu");
@@ -1569,32 +1764,62 @@ function addcurrencytrigger() {
 }
 
 function addcurrency(cd) {
-    var currency = cd.currency,
-        thiscurrencylink = "?p=" + cd.currency;
-    if ($("main #" + currency + " .content ul.pobox[data-currency='" + currency + "'] li").length) {
-        loadpage(thiscurrencylink);
+    var currency = cd.currency;
+    if (get_addresslist(currency).children("li").length) {
+        derive_first_check(currency);
+        loadpage("?p=" + currency);
     } else {
-        addaddress(cd, false, true);
+        var can_derive = derive_first_check(currency);
+        if (can_derive === false) {
+            addaddress(cd, false);
+        } else {
+            loadpage("?p=" + currency);
+        }
+    }
+}
+
+function derive_first_check(currency) {
+    if (hasbip32(currency) === true) {
+        var derives = check_derivations(currency);
+        if (derives) {
+            var has_derives = active_derives(currency, derives);
+            if (has_derives === false) {
+                derive_addone(currency);
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    } else {
+        return false;
     }
 }
 
 function addaddresstrigger() {
     $(document).on("click touch", ".addaddress", function() {
-        addaddress($("#" + $(this).attr("data-currency")).data(), false, false);
+        addaddress($("#" + $(this).attr("data-currency")).data(), false);
     })
 }
 
-function addaddress(ad, edit, first) {
-	var currency = ad.currency,
+function addaddress(ad, edit) {
+    var currency = ad.currency,
         cpid = ad.ccsymbol + "-" + currency,
         address = (ad.address) ? ad.address : "",
         label = (ad.label) ? ad.label : "",
-        popnotify = (first === true) ? "<div class='popnotify' style='display:block'><span id='get_wallet' data-currency='" + currency + "'>I don't have a " + currency + " address yet</span></div>" : "<div class='popnotify'></div>",
-        scanqr = (hascam === true) ? "<div id='qrscanner' data-currency='" + currency + "' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+        nopub = (is_xpub(currency) === false || has_xpub(currency) !== false),
+        choose_wallet_str = "<span id='get_wallet' class='address_option' data-currency='" + currency + "'>I don't have a " + currency + " address yet</span>",
+        derive_seed_str = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>Generate address from seed</span>",
+        options = (hasbip === true) ? choose_wallet_str : (test_derive === true) ? (hasbip32(currency) === true) ? derive_seed_str : choose_wallet_str : choose_wallet_str,
+        pnotify = (body.hasClass("showstartpage")) ? "<div class='popnotify' style='display:block'>" + options + "</div>" : "<div class='popnotify'></div>",
+        scanqr = (hascam === true && edit === false) ? "<div id='qrscanner' data-currency='" + currency + "' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
         title = (edit === true) ? "<h2 class='icon-pencil'>Edit label</h2>" : "<h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " Add " + currency + " address</h2>",
-        pk_checkbox = (edit === true) ? "" : "<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / private key of this address</span></div>",
+        pk_checkbox = (edit === true) ? "" : "<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / private key of this address</span></div>",
         addeditclass = (edit === true) ? "edit" : "add",
-        content = $("<div class='formbox form" + addeditclass + "' id='addressformbox'>" + title + popnotify + "<form class='addressform popform'><div class='inputwrap'><input type='text' class='address' value='" + address + "' placeholder='Enter a " + currency + " address'>" + scanqr + "</div><input type='text' class='addresslabel' value='" + label + "' placeholder='label'>" + pk_checkbox + "<input type='submit' class='submit' value='OK'></form>").data(ad);
+        xpubclass = (nopub) ? " hasxpub" : "",
+        xpubph = (nopub) ? "" : " or Xpub",
+        content = $("<div class='formbox form" + addeditclass + xpubclass + "' id='addressformbox'>" + title + pnotify + "<form class='addressform popform'><div class='inputwrap'><input type='text' class='address' value='" + address + "' placeholder='Enter a " + currency + " address" + xpubph + "'>" + scanqr + "</div><input type='text' class='addresslabel' value='" + label + "' placeholder='label'>" + pk_checkbox + "<input type='submit' class='submit' value='OK'></form>").data(ad);
     popdialog(content, "alert", "triggersubmit");
     if (supportsTouch === true) {} else {
         if (edit === true) {
@@ -1605,23 +1830,56 @@ function addaddress(ad, edit, first) {
     }
 }
 
+function active_derives(currency, derive) {
+    if (derive == "seed") {
+        var active_sder = filter_addressli(currency, "seedid", bipid).not(".used");
+        if (active_sder.length > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    } else if (derive == "xpub") {
+        var activepub = active_xpub(currency),
+            xpubid = activepub.key_id,
+            active_xder = filter_addressli(currency, "xpubid", xpubid).not(".used");
+        if (active_xder.length > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        return true
+    }
+}
+
 function get_wallet() {
     $(document).on("click touch", "#get_wallet", function() {
-	    var this_currency = $(this).attr("data-currency"),
-	    	coindata = getcoindata(this_currency);
-	    if (coindata) {
-		    canceldialog();
-	        setTimeout(function() {
-		    	download_wallet(coindata);
-		    }, 800);
-	    }
+        var this_currency = $(this).attr("data-currency"),
+            coindata = getcoindata(this_currency);
+        if (coindata) {
+            canceldialog();
+            setTimeout(function() {
+                download_wallet(coindata);
+            }, 800);
+        }
     })
 }
 
 function submitaddresstrigger() {
     $(document).on("click touch", "#addressformbox input.submit", function(e) {
         e.preventDefault();
-        validateaddress($(this).closest("#addressformbox"));
+        var thisform = $(this).closest("#addressformbox");
+        if (thisform.hasClass("hasxpub")) {
+            validateaddress(thisform);
+        } else {
+            var addressinput = thisform.find(".address"),
+                ad_val = addressinput.val();
+            if (ad_val.length > 103) {
+                validate_xpub(thisform);
+            } else {
+                validateaddress(thisform);
+            }
+        }
     })
 }
 
@@ -1653,7 +1911,7 @@ function add_erc20() {
 					<div class='inputwrap'><input type='text' class='address' value='' placeholder='Enter a address'/>" + scanqr + "</div>\
 					<input type='text' class='addresslabel' value='' placeholder='label'/>\
 					<div id='pk_confirm' class='noselect'>\
-						<div id='pk_confirmwrap' data-checked='false'>\
+						<div id='pk_confirmwrap' class='cb_wrap' data-checked='false'>\
 							<span class='checkbox'></span>\
 						</div>\
 						<span>I own the seed / private key of this address</span>\
@@ -1738,7 +1996,7 @@ function validateaddress(thisnode) {
         ccsymbol = this_data.ccsymbol,
         addressfield = thisnode.find(".address"),
         addressinputval = addressfield.val(),
-        currentaddresslist = $("main #" + currency + " .content ul.pobox[data-currency='" + currency + "']"),
+        currentaddresslist = get_addresslist(currency),
         getindex = currentaddresslist.children("li").length + 1,
         index = (getindex > 1) ? getindex : "new",
         labelfield = thisnode.find(".addresslabel"),
@@ -1753,17 +2011,17 @@ function validateaddress(thisnode) {
                 popnotify("error", "address already exists");
                 addressfield.select();
             } else {
-	            var valid = check_address(addressinputval, currencycheck);
+                var valid = check_address(addressinputval, currencycheck);
                 if (valid === "no_web3") {
-	                canceldialog();
-	                setTimeout(function() {
-				        api_eror_msg("infura", {
-				            errormessage: "Missing API key",
-				            errorcode: "300"
-				        }, true);
-				    }, 800);
-	                return false;
-	            }
+                    canceldialog();
+                    setTimeout(function() {
+                        api_eror_msg("infura", {
+                            errormessage: "Missing API key",
+                            errorcode: "300"
+                        }, true);
+                    }, 800);
+                    return false;
+                }
                 if (valid === true) {
                     var validlabel = check_address(labelinputval, currencycheck);
                     if (validlabel === true) {
@@ -1801,15 +2059,13 @@ function validateaddress(thisnode) {
                                     } else {
                                         loadpage("?p=" + currency);
                                     }
-                                    $("#usedcurrencies > li[data-currency='" + currency + "']").attr("data-checked", "true").data("checked", true);
-                                    $("#currencylist > li[data-currency='" + currency + "']").removeClass("hide");
-                                    savecurrencies(true);
                                 }
                                 this_data.address = addressinputval,
                                     this_data.label = labelinputval,
                                     this_data.checked = true,
                                     appendaddress(currency, this_data);
                                 saveaddresses(currency, true);
+                                currency_check(currency);
                                 canceldialog();
                                 canceloptions();
                                 clear_savedurl();
@@ -1838,9 +2094,9 @@ function validateaddress(thisnode) {
 }
 
 function check_address(address, currency) {
-	if (currency == "ethereum" && web3 === undefined) {
-		return "no_web3";
-	}
+    if (currency == "ethereum" && web3 === undefined) {
+        return "no_web3";
+    }
     var regex = getcoindata(currency).regex;
     return (currency == "ethereum" || regex == "web3") ? (web3) ? web3.utils.isAddress(address) : false :
         (regex) ? new RegExp(regex).test(address) : false;
@@ -1854,21 +2110,19 @@ function canceldialog_click() {
 
 function canceldialogtrigger() {
     $(document).on("click", "#popup", function(e) {
-	    var target = e.target,
-			jtarget = $(target),
-			target_id = jtarget.attr("id"),
-			options = $("#dialog").find(".options");
+        var target = e.target,
+            jtarget = $(target),
+            target_id = jtarget.attr("id"),
+            options = $("#dialog").find(".options");
         if (options.length > 0 && options.hasClass("showoptions")) {
-	        var pointerevent = jtarget.attr("data-pe");
-	        if (pointerevent == "none") {
-	        }
-	        else {
-		        options.removeClass("showoptions");
-	        }
+            var pointerevent = jtarget.attr("data-pe");
+            if (pointerevent == "none") {} else {
+                options.removeClass("showoptions");
+            }
         } else {
-	        if (target == this || target_id == "canceldialog") {
-	            canceldialog();
-	        }
+            if (target == this || target_id == "canceldialog") {
+                canceldialog();
+            }
         }
     });
 }
@@ -1899,10 +2153,10 @@ function canceldialog(pass) {
 
 function cancelpaymentdialogtrigger() {
     $(document).on("click touch", "#payment", function(e) {
-	    if (html.hasClass("flipmode")) { // prevent closing request when flipping
-	        return false;
-	    }
-	    var timelapsed = $.now() - cp_timer;
+        if (html.hasClass("flipmode")) { // prevent closing request when flipping
+            return false;
+        }
+        var timelapsed = $.now() - cp_timer;
         if (timelapsed < 1500) { // prevent clicking too fast
             playsound(funk);
             console.log("clicking too fast");
@@ -1933,6 +2187,7 @@ function cancelpaymentdialog() {
     closesocket();
     clearpingtx("close");
     closenotify();
+    sleep();
 }
 
 function closesocket() {
@@ -2002,23 +2257,22 @@ function showoptionstrigger() {
         var ad = $(this).closest("li").data(),
             savedrequest = $("#requestlist li[data-address='" + ad.address + "']"),
             showrequests = (savedrequest.length > 0) ? "<li><div class='showrequests'><span class='icon-qrcode'></span> Show requests</div></li>" : "",
+            newrequest = (ad.checked === true) ? "<li>\
+				<div data-rel='' class='newrequest' title='create request'>\
+					<span class='icon-plus'></span> New request</div>\
+			</li>" : "",
             content = $("\
-				<ul id='optionslist''>\
-					<li>\
-						<div data-rel='' class='newrequest' title='create request'>\
-							<span class='icon-plus'></span> New request</div>\
-					</li>" +
-                showrequests +
+				<ul id='optionslist''>" + newrequest + showrequests +
                 "<li><div class='editaddress'> <span class='icon-pencil'></span> Edit address</div></li>\
 					<li><div class='removeaddress'><span class='icon-bin'></span> Remove address</div></li>\
-					<li><div class='showtransactions'><span class='icon-eye'></span> Show transactions</div></li>\
+					<li><div class='address_info'><span class='icon-info'></span> Address info</div></li>\
 				</ul>").data(ad);
         showoptions(content);
         return false;
     });
 }
 
-function showoptions(content, addclass) {
+function showoptions(content, addclass, callback) {
     var plusclass = (addclass) ? " " + addclass : "";
     $("#optionspop").addClass("showpu active" + plusclass);
     $("#optionsbox").append(content);
@@ -2050,13 +2304,65 @@ function newrequest() {
     $(document).on("click touch", ".newrequest", function() {
         var thislink = $(this),
             ad = thislink.closest("#optionslist").data(),
-            thishref = "?p=" + geturlparameters().p + "&payment=" + ad.currency + "&uoa=" + ad.ccsymbol + "&amount=0&address=" + ad.address,
-            title = thislink.attr("title");
-        localStorage.setItem("bitrequest_editurl", thishref); // to check if request is being edited
-        canceloptions();
-        remove_flip(); // reset request card facing front
-        openpage(thishref, title, "payment");
+            currency = ad.currency,
+            address = ad.address,
+            ccsymbol = ad.ccsymbol,
+            title = thislink.attr("title"),
+            seedid = ad.seedid;
+        if (seedid) {
+            if (seedid != bipid) {
+                if (address_whitelist(address) === true) {} else {
+                    var pass_dat = {
+                            "currency": currency,
+                            "address": address,
+                            "ccsymbol": ccsymbol,
+                            "title": title,
+                            "seedid": seedid
+                        },
+                        content = get_address_warning("address_newrequest", address, pass_dat);
+                    popdialog(content, "alert", "triggersubmit");
+                    return false;
+                }
+            } else {
+                if (bipv_pass() === false) {
+                    canceloptions();
+                    return false;
+                }
+            }
+        }
+        newrequest_cb(currency, ccsymbol, address, title);
     });
+}
+
+function confirm_ms_newrequest() {
+    $(document).on("click touch", "#address_newrequest .submit", function(e) {
+        e.preventDefault();
+        var thisdialog = $("#address_newrequest"),
+            d_dat = thisdialog.data(),
+            pk_checkbox = thisdialog.find("#pk_confirmwrap"),
+            pk_checked = pk_checkbox.data("checked"),
+            ds_checkbox = thisdialog.find("#dontshowwrap"),
+            ds_checked = ds_checkbox.data("checked");
+        if (pk_checked == true) {} else {
+            popnotify("error", "Confirm privatekey ownership");
+            return false
+        }
+        if (ds_checked == true) { // whitlist seed id
+            add_address_whitelist(d_dat.address);
+        }
+        canceloptions();
+        canceldialog();
+        newrequest_cb(d_dat.currency, d_dat.ccsymbol, d_dat.address, d_dat.title);
+        return false;
+    })
+}
+
+function newrequest_cb(currency, ccsymbol, address, title) {
+    var thishref = "?p=" + geturlparameters().p + "&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0&address=" + address;
+    localStorage.setItem("bitrequest_editurl", thishref); // to check if request is being edited
+    canceloptions();
+    remove_flip(); // reset request card facing front
+    openpage(thishref, title, "payment");
 }
 
 function showrequests() {
@@ -2067,10 +2373,20 @@ function showrequests() {
     });
 }
 
+function showrequests_inlne() {
+    $(document).on("click touch", ".applist.pobox li .usedicon", function() {
+        var address = $(this).prev("span").text(),
+            result = confirm("Show requests for " + address + "?");
+        if (result === true) {
+            loadpage("?p=requests&filteraddress=" + address);
+        }
+    });
+}
+
 function editaddresstrigger() {
     $(document).on("click touch", ".editaddress", function(e) {
         e.preventDefault();
-        addaddress($(this).closest("ul").data(), true, false);
+        addaddress($(this).closest("ul").data(), true);
     })
 }
 
@@ -2089,7 +2405,7 @@ function removeaddressfunction(trigger) {
             currency = ad.currency,
             address = ad.address,
             erc20 = ad.erc20,
-            currentaddresslist = $("main #" + currency + " .content ul.pobox[data-currency='" + currency + "']");
+            currentaddresslist = get_addresslist(currency);
         currentaddresslist.children("li[data-address='" + address + "']").remove();
         if (currentaddresslist.children("li").length) {} else {
             loadpage("?p=currencies");
@@ -2130,12 +2446,90 @@ function showtransaction_trigger() {
 function showtransactions() {
     $(document).on("click touch", ".showtransactions", function(e) {
         e.preventDefault();
-        var ad = $(this).closest("ul").data(),
+        var ad = $("#ad_info_wrap").data(),
             blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20);
         if (blockchainurl === undefined) {} else {
             open_blockexplorer_url(blockchainurl + ad.address);
         }
     })
+}
+
+function addressinfo() {
+    $(document).on("click touch", ".address_info", function() {
+        var dialogwrap = $(this).closest("ul"),
+            dd = dialogwrap.data();
+        currency = dd.currency,
+            isbip = hasbip32(currency),
+            bip32dat = (isbip) ? getbip32dat(currency) : null,
+            seedid = dd.seedid,
+            xpubid = dd.xpubid,
+            source = (seedid) ? "seed" : (xpubid) ? "xpub" : false,
+            isseed = (source == "seed"),
+            isxpub = (source == "xpub"),
+            activepub = active_xpub(currency),
+            active_src = (isseed) ? (seedid == bipid) :
+            (isxpub) ? (activepub && xpubid == activepub.key_id) : false,
+            address = dd.address,
+            a_wl = address_whitelist(address),
+            restore = (isseed) ? (hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + seedid + "'>Restore</div>" : "",
+            srcval = (source) ? (active_src) ? source + " <span class='icon-checkmark'>" :
+            source + " (Unavailable)" + restore : "external",
+            d_index = dd.derive_index,
+            dpath = (bip32dat) ? bip32dat.root_path + d_index : "";
+        dd.dpath = dpath,
+            dd.bip32dat = bip32dat;
+        var cc_icon = getcc_icon(dd.cmcid, dd.ccsymbol + "-" + currency, dd.erc20),
+            dpath_str = (isseed) ? "<li><strong>Derivation path:</strong> " + dpath + "</li>" : "",
+            pk_verified = "Unknown <span class='icon-checkmark'></span>",
+            pk_str = (isseed) ? (isseed && active_src) ? "<span id='show_pk' class='ref'>Show</span>" : (a_wl === true) ? pk_verified : "Unknown" : pk_verified,
+            content = $("<div id='ad_info_wrap'><h2>" + cc_icon + " <span>" + dd.label + "</span></h2><ul>\
+	    		<li><strong>Address: </strong><span class='adbox adboxl'>" + address + "</span></li>\
+	    		<li><strong>Source: </strong>" + srcval + "</li>" +
+                dpath_str +
+                "<li><strong>Private key: </strong>" + pk_str +
+                "<div id='pk_span'>\
+					<div id='qrwrap' class='flex'>\
+						<div id='qrcode'></div>" + cc_icon + "</div>\
+						<p id='pkspan' class='adbox adboxl select'></p>\
+				</div>\
+				</li>\
+				<li><div class='showtransactions ref'><span class='icon-eye'></span> Show transactions</div></li>\
+				</ul>\
+	    	</div>").data(dd);
+        popdialog(content, "alert", "canceldialog");
+        return false;
+    })
+}
+
+function show_pk() {
+    $(document).on("click touch", "#show_pk", function() {
+        var pkspan = $("#pk_span");
+        if (pkspan.is(":visible")) {
+            pkspan.slideUp(200);
+        } else {
+            if (pkspan.hasClass("shwpk")) {
+                pkspan.slideDown(200);
+            } else {
+                $("#optionsbox").html("");
+                var addat = $("#ad_info_wrap").data(),
+                    currency = addat.currency;
+                keycc = key_cc(currency),
+                    x_keys_dat = derive_x(addat.dpath, keycc.key, keycc.cc),
+                    key_object = format_keys(keycc.seed, x_keys_dat, addat.bip32dat, addat.derive_index, currency),
+                    privkey = key_object.privkey;
+                all_pinpanel({
+                    "func": show_pk_cb,
+                    "args": privkey
+                }, true)
+            }
+        }
+    })
+}
+
+function show_pk_cb(pk) {
+    $("#pkspan").text(pk);
+    $("#qrcode").qrcode(pk);
+    $("#pk_span").addClass("shwpk").slideDown(200);
 }
 
 function open_blockexplorer_url(be_link) {
@@ -2188,7 +2582,7 @@ function canceloptions() {
     optionspop.removeClass("active");
     body.removeClass("blurmain_options");
     var timeout = setTimeout(function() {
-        optionspop.removeClass("showpu pin fadebg");
+        optionspop.removeClass("showpu pin fadebg ontop");
         $("#optionsbox").html("");
     }, 600, function() {
         clearTimeout(timeout);
@@ -2369,25 +2763,24 @@ function removerequestfunction() {
 // ** Helpers **
 
 function open_url() {
-	$(document).on("click touch", "a.exit", function(e) {
-		e.preventDefault();
-		var this_href = $(this),
+    $(document).on("click touch", "a.exit", function(e) {
+        e.preventDefault();
+        var this_href = $(this),
             target = this_href.attr("target"),
             url = this_href.attr("href");
         loader(true);
         loadertext("Loading " + url);
         if (is_ios_app === true) {
-        	cancelpaymentdialog();
+            cancelpaymentdialog();
         }
-		setTimeout(function() {
-			closeloader();
-	        if (target == "_blank") {
-			    window.open(url);
-		    }
-		    else {
-			    window.location.href = url;
-		    }
-	    }, 500);
+        setTimeout(function() {
+            closeloader();
+            if (target == "_blank") {
+                window.open(url);
+            } else {
+                window.location.href = url;
+            }
+        }, 500);
     })
 }
 
@@ -2409,15 +2802,15 @@ function get_infura_apikey(rpcurl) {
 
 function api_proxy(ad) { // callback function from bitrequest.js
     var set_proxy = $("#api_proxy").data("selected"),
-    	custom_url = ad.api_url,
+        custom_url = ad.api_url,
         aud = (custom_url) ? {} :
         get_api_url({
             "api": ad.api,
             "search": ad.search
         });
     if (aud === false) {
-	    return false;
-	}
+        return false;
+    }
     var params = ad.params,
         proxy = ad.proxy,
         forced_proxy = ad.proxy_url,
@@ -2457,35 +2850,34 @@ function api_proxy(ad) { // callback function from bitrequest.js
 }
 
 function br_result(e) {
-	var ping = e.ping,
-		proxy = (ping) ? true : false,
-		root = (proxy === true) ? ping : e,
-    	result = root.br_result;
+    var ping = e.ping,
+        proxy = (ping) ? true : false,
+        root = (proxy === true) ? ping : e,
+        result = root.br_result;
     return {
-	    "proxy": proxy,
-	    "result": (result) ? result : root
-	}
+        "proxy": proxy,
+        "result": (result) ? result : root
+    }
 }
 
 function get_api_url(get) {
-	var api = get.api,
+    var api = get.api,
         search = get.search,
         ad = get_api_data(api);
     if (ad) {
-	    var base_url = ad.base_url,
-	        key_param = ad.key_param,
-	        saved_key = $("#apikeys").data(api),
-	        ampersand = (search.indexOf("?") > -1 || search.indexOf("&") > -1) ? "&" : "?",
-	        api_param = (key_param && key_param != "bearer" && saved_key) ? ampersand + key_param + saved_key : "";
-	    return {
-	        "api_url": base_url + search + api_param,
-	        "api_key": saved_key,
-	        "ampersand": ampersand,
-	        "key_param": key_param
-	    }
-    }
-    else {
-	    return false;
+        var base_url = ad.base_url,
+            key_param = ad.key_param,
+            saved_key = $("#apikeys").data(api),
+            ampersand = (search.indexOf("?") > -1 || search.indexOf("&") > -1) ? "&" : "?",
+            api_param = (key_param && key_param != "bearer" && saved_key) ? ampersand + key_param + saved_key : "";
+        return {
+            "api_url": base_url + search + api_param,
+            "api_key": saved_key,
+            "ampersand": ampersand,
+            "key_param": key_param
+        }
+    } else {
+        return false;
     }
 }
 
@@ -2540,6 +2932,12 @@ function triggersubmit(trigger) {
 }
 
 function copytoclipboard(content, type) {
+    var copy_api = navigator.clipboard;
+    if (copy_api) {
+        navigator.clipboard.writeText(content);
+        notify(type + " copied to clipboard", 2500, "no");
+        return false;
+    }
     var copyinputfield = $("#copyinput");
     copyinputfield.val(content);
     copyinputfield[0].setSelectionRange(0, 999);
@@ -2612,10 +3010,8 @@ function settitle(title) {
 }
 
 function getcc_icon(cmcid, cpid, erc20) {
-    var icon_boolean = sessionStorage.getItem("bitrequest_icon_boolean"),
-        img_url = (erc20 === true) ? (offline === true) ? "img/qrplaceholder.png" :
-        (icon_boolean == "true" || icon_boolean === true) ? "https://s2.coinmarketcap.com/static/img/coins/200x200/" + cmcid + ".png" :
-        "https://static2.coinpaprika.com/coin/" + cpid + "/logo.png" :
+    var img_url = (erc20 === true) ? (offline === true) ? "img/qrplaceholder.png" :
+        "https://s2.coinmarketcap.com/static/img/coins/200x200/" + cmcid + ".png" :
         "img/logos/" + cpid + ".png";
     return "<img src='" + img_url + "' class='cmc_icon'/>";
 }
@@ -2631,6 +3027,14 @@ function getdevicetype() {
         (/Windows/.test(ua)) ? "Windows" :
         "unknown";
 };
+
+function getplatform(device) {
+    return (supportsTouch === true) ?
+        (is_android_app === true || device == "Android" || device == "Windows") ? "playstore" :
+        (device == "iPhone" || device == "iPad" || device == "Macintosh" || is_ios_app === true) ? "appstore" : "unknown" :
+        (device == "Windows") ? "desktop" :
+        (device == "Macintosh") ? "desktop" : "unknown";
+}
 
 function makedatestring(datetimeparts) {
     var split = (datetimeparts.indexOf(".") > -1) ? "." : "Z";
@@ -2702,12 +3106,23 @@ function get_api_data(api_id) {
     return apipath[0];
 }
 
-function pinpanel(pinclass) {
-    var makeclass = (pinclass === undefined) ? "" : pinclass;
-    return "\
-		<div id='pinfloat' class='enterpin" + makeclass + "'>\
-			<p id='pintext'>Please enter your pin</p>\
-			<p id='confirmpin'>Confirm new pin</p>\
+function all_pinpanel(cb, top) {
+    var topclass = (top) ? " ontop" : "";
+    if (haspin() === true) {
+        var content = pinpanel(" pinwall", cb);
+        showoptions(content, "pin" + topclass);
+    } else {
+        var content = pinpanel("", cb);
+        showoptions(content, "pin" + topclass);
+    }
+}
+
+function pinpanel(pinclass, pincb) {
+    var makeclass = (pinclass === undefined) ? "" : pinclass,
+        headertext = (haspin() === true) ? "Please enter your pin" : "Create a 4-digit pin";
+    return $("<div id='pinfloat' class='enterpin" + makeclass + "'>\
+			<p id='pintext'>" + headertext + "</p>\
+			<p id='confirmpin'>Confirm your pin</p>\
 			<input id='pininput' type='password' readonly='readonly'/>\
 			<input id='validatepin' type='password' readonly='readonly'/>\
 			<div id='pinkeypad'>\
@@ -2748,7 +3163,13 @@ function pinpanel(pinclass) {
 					<span class='icomoon'></span>\
 				</div>\
 			</div>\
-		</div>";
+			<div id='pin_admin' class='flex'>\
+				<div id='pin_admin_float'>\
+					<div id='lock_time'><span class='icomoon'></span> Lock time</div>\
+					<div id='reset_pin'>Reset pin</div>\
+				</div>\
+			</div>\
+		</div>").data("pincb", pincb);
 }
 
 function switchpanel(switchmode, mode) {
@@ -2756,9 +3177,7 @@ function switchpanel(switchmode, mode) {
 }
 
 function getcoindata(currency) {
-    var coindata_object = bitrequest_coin_data.filter(function(val) {
-        return val.currency == currency;
-    });
+    var coindata_object = getcoinconfig(currency);
     if (coindata_object.length > 0) {
         var coindata = coindata_object[0].data,
             settings = coindata_object[0].settings,
@@ -2778,9 +3197,9 @@ function getcoindata(currency) {
             };
         return cd_object;
     } else { // if not it's probably erc20 token
-	    var currencyref = $("#usedcurrencies li[data-currency='" + currency + "']"); // check if erc20 token is added
+        var currencyref = $("#usedcurrencies li[data-currency='" + currency + "']"); // check if erc20 token is added
         if (currencyref.length > 0) {
-	        return $.extend(currencyref.data(), erc20_data);
+            return $.extend(currencyref.data(), erc20_data);
         } else { // else lookup erc20 data
             var tokenobject = JSON.parse(localStorage.getItem("bitrequest_erc20tokens"));
             if (tokenobject) {
@@ -2788,7 +3207,7 @@ function getcoindata(currency) {
                     return filter.name == currency;
                 })[0];
                 if (erc20data) {
-	                var fetched_data = {
+                    var fetched_data = {
                         "currency": erc20data.name,
                         "ccsymbol": erc20data.symbol,
                         "cmcid": erc20data.cmcid.toString(),
@@ -2806,14 +3225,42 @@ function getcoindata(currency) {
 }
 
 function getcoinsettings(currency) {
-    var coindata = $.grep(bitrequest_coin_data, function(filter) { //filter pending requests	
-        return filter.currency == currency;
-    })[0];
+    var coindata = getcoinconfig(currency)[0];
     if (coindata) {
         return coindata.settings;
     } else { // return erc20 settings
         return erc20_settings;
     }
+}
+
+function getbip32dat(currency) {
+    var coindata = getcoinconfig(currency)[0];
+    if (coindata) {
+        return coindata.settings.Xpub;
+    }
+}
+
+function hasbip32(currency) {
+    var coindata = getcoinconfig(currency)[0];
+    if (coindata) {
+        if (coindata.settings.Xpub) {
+            if (coindata.settings.Xpub.active) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
+function getcoinconfig(currency) {
+    return $.grep(bitrequest_coin_data, function(filter) {
+        return filter.currency == currency;
+    });
 }
 
 function try_next_api(apilistitem, current_apiname) {
@@ -2836,37 +3283,37 @@ function trimdecimals(amount, decimals) {
 // Countdown format
 
 function countdown(timestamp) {
-	var uts = timestamp / 1000,
-		days = Math.floor(uts / 86400);
-	uts -= days * 86400;
-	var hours = Math.floor(uts / 3600) % 24;
-	uts -= hours * 3600;
-	var minutes = Math.floor(uts / 60) % 60;
-	uts -= minutes * 60;
-	var seconds = uts % 60,
-		cd_object = {
-			"days": days,
-			"hours": hours,
-			"minutes": minutes,
-			"seconds": Math.round(seconds)
-		}
-	return cd_object;
+    var uts = timestamp / 1000,
+        days = Math.floor(uts / 86400);
+    uts -= days * 86400;
+    var hours = Math.floor(uts / 3600) % 24;
+    uts -= hours * 3600;
+    var minutes = Math.floor(uts / 60) % 60;
+    uts -= minutes * 60;
+    var seconds = uts % 60,
+        cd_object = {
+            "days": days,
+            "hours": hours,
+            "minutes": minutes,
+            "seconds": Math.round(seconds)
+        }
+    return cd_object;
 }
 
 function countdown_format(cd) {
-	var days = cd.days,
-		hours = cd.hours,
-		minutes = cd.minutes,
-		seconds = cd.seconds,
-		daynode = (days) ? (days < 2) ? days + " day" : days + " days" : "",
-		hs = (days) ? ", " : "",
-		hournode = (hours) ? (hours < 2) ? hs + hours + " hour" : hs + hours + " hours" : "",
-		ms = (hours) ? ", " : "",
-		minutenode = (minutes) ? (minutes < 2) ? ms + minutes + " minute" : ms + minutes + " minutes" : "",
-		ss = (minutes) ? " and " : "",
-		secondnode = (seconds) ? ss + seconds + " seconds" : ""
-		result = (cd) ? daynode + hournode + minutenode + secondnode : false;
-	return result;
+    var days = cd.days,
+        hours = cd.hours,
+        minutes = cd.minutes,
+        seconds = cd.seconds,
+        daynode = (days) ? (days < 2) ? days + " day" : days + " days" : "",
+        hs = (days) ? ", " : "",
+        hournode = (hours) ? (hours < 2) ? hs + hours + " hour" : hs + hours + " hours" : "",
+        ms = (hours) ? ", " : "",
+        minutenode = (minutes) ? (minutes < 2) ? ms + minutes + " minute" : ms + minutes + " minutes" : "",
+        ss = (minutes) ? " and " : "",
+        secondnode = (seconds) ? ss + seconds + " seconds" : ""
+    result = (cd) ? daynode + hournode + minutenode + secondnode : false;
+    return result;
 }
 
 // ** Page rendering **
@@ -2904,11 +3351,11 @@ function render_currencysettings(thiscurrency) {
 function buildsettings() {
     var appsettingslist = $("#appsettings");
     $.each(app_settings, function(i, value) {
-	   	var setting_id = value.id,
-        	setting_li = (setting_id == "heading") ? $("<li class='set_heading'>\
+        var setting_id = value.id,
+            setting_li = (setting_id == "heading") ? $("<li class='set_heading'>\
 		  	<h2>" + value.heading + "</h2>\
 		</li>") :
-		$("<li class='render' id='" + setting_id + "'>\
+            $("<li class='render' id='" + setting_id + "'>\
 		  	<div class='liwrap iconright'>\
 		     	<span class='" + value.icon + "'></span>\
 		         <div class='atext'>\
@@ -3007,7 +3454,7 @@ function buildpage(cd, init) {
         checked = cd.checked,
         cmcid = cd.cmcid,
         cpid = ccsymbol + "-" + currency,
-		erc20 = cd.erc20,
+        erc20 = cd.erc20,
         // append currencies
         currencylist = $("ul#usedcurrencies"),
         cc_li = currencylist.children("li[data-currency='" + currency + "']"),
@@ -3049,6 +3496,7 @@ function buildpage(cd, init) {
 				<h2 class='heading'>" + currency + settingsbutton + "</h2>\
 				<ul class='applist listyle2 pobox' data-currency='" + currency + "'>\
 					<div class='endli'><div class='button addaddress' data-currency='" + currency + "'><span class='icon-plus'>Add address</span></div></div>\
+					<div class='addone' data-currency='" + currency + "'>Add one</div>\
 				</ul>\
 			</div>\
 		</div>" +
@@ -3074,28 +3522,31 @@ function buildpage(cd, init) {
 function append_coinsetting(currency, settings, init) {
     var coinsettings_list = $("#" + currency + "_settings ul.cc_settinglist");
     $.each(settings, function(dat, val) {
-        var selected = val.selected,
-            selected_val = (selected.name) ? selected.name : (selected.url) ? selected.url : selected;
-        if (selected_val !== undefined) {
-            var selected_string = selected_val.toString(),
-                check_setting_li = coinsettings_list.children("li[data-id='" + dat + "']");
-            if (check_setting_li.length === 0) {
-                var trigger = (val.switch === true) ? switchpanel(selected_string, " global") : "<span class='icon-pencil'></span>";
-                var coinsettings_li = $("<li data-id='" + dat + "'>\
-					<div class='liwrap edit_trigger iconright' data-currency='" + currency + "'>\
-						<span class='icon-" + val.icon + "'></span>\
-						<div class='atext'>\
-							<h2>" + dat + "</h2>\
-							<p>" + selected_string + "</p>\
-						</div>\
-						<div class='iconbox'>" + trigger + "</div>\
-						</div>\
-				</li>");
-                coinsettings_li.data(val).appendTo(coinsettings_list);
-            } else {
-                check_setting_li.data(val).find("p").html(selected_string);
-                if (val.switch === true) {
-                    check_setting_li.find(".switchpanel").removeClass("true false").addClass(selected_string);
+        if (val.xpub === false) {} else {
+            var selected = val.selected,
+                selected_val = (selected.name) ? selected.name : (selected.url) ? selected.url : selected;
+            if (selected_val !== undefined) {
+                var selected_string = selected_val.toString(),
+                    check_setting_li = coinsettings_list.children("li[data-id='" + dat + "']");
+                if (check_setting_li.length === 0) {
+                    var switchclass = (val.custom_switch) ? " custom" : " global bool",
+                        trigger = (val.switch === true) ? switchpanel(selected_string, switchclass) : "<span class='icon-pencil'></span>",
+                        coinsettings_li = $("<li data-id='" + dat + "'>\
+							<div class='liwrap edit_trigger iconright' data-currency='" + currency + "'>\
+								<span class='icon-" + val.icon + "'></span>\
+								<div class='atext'>\
+									<h2>" + dat + "</h2>\
+									<p>" + selected_string + "</p>\
+								</div>\
+								<div class='iconbox'>" + trigger + "</div>\
+								</div>\
+						</li>");
+                    coinsettings_li.data(val).appendTo(coinsettings_list);
+                } else {
+                    check_setting_li.data(val).find("p").html(selected_string);
+                    if (val.switch === true) {
+                        check_setting_li.find(".switchpanel").removeClass("true false").addClass(selected_string);
+                    }
                 }
             }
         }
@@ -3104,13 +3555,22 @@ function append_coinsetting(currency, settings, init) {
 
 function appendaddress(currency, ad) {
     var address = ad.address,
-        pobox = $("main #" + currency + " .content ul.pobox[data-currency='" + currency + "']"),
+        pobox = get_addresslist(currency),
         index = pobox.children("li").length + 1,
-        address_li = $("<li data-index='" + index + "' data-address='" + address + "' data-checked='" + ad.checked + "'>\
+        seedid = ad.seedid,
+        xpubid = ad.xpubid,
+        source = (seedid) ? "seed" : (xpubid) ? "xpub" : "",
+        used = ad.used;
+    var ad_icon = (source) ? (source == "seed") ? "<span title='seed_ID: " + seedid + "' class='srcicon' data-seedid='" + seedid + "'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 888 899' class='srcseed'><path d='M852.9 26.3c.5-3.5-28.7 14.8-28.2 14.1-.9 1.1-25.3 23.4-195.1 46-71.4 9.5-120.3 37.2-145.3 82.4-40.3 72.6-1.1 161 .6 164.7l1.6 3.5c-7.8 16.8-14.1 34.2-19.3 51.9-11.6-27.1-26.5-50.9-44.8-71.4 4.8-20.2 5-45.5-3.8-77.1-21.1-76.1-73.8-104.4-114.2-114.7-42.3-10.8-79.6-4.1-81.2-3.9l-.7.1c-1.8.4-44.8 10-90.8 38.1C69.2 198.3 31 252.7 21.3 317.2L16 353.5l35-11.1c2.7-.8 66.4-20.2 150.4 29.6 32.6 19.3 68.6 29 102 29 30.8 0 59.4-8.2 81.1-24.8 5.4-4.1 11.5-9.6 17.3-16.8 24.5 33 40.5 75.2 47.9 126.3-.8 9.5-1.3 19-1.7 28.4-70.6 10.5-187.2 47.6-280.8 173 0 0 59.9 179.7 264.3 183.3 204.4 3.5 194.6 0 194.6 0s137.6-7 126.6-183.3-241.3-176.6-241.3-176.6-5.9-.5-16.3-.4c-.2-2.7-.4-5.4-.7-8.1 3.2-52.1 13.1-97.9 29.5-136.7 38.8 24.8 75.7 37.3 110.6 37.3 18.5 0 36.4-3.5 53.7-10.5C824 336.9 862.7 78.4 866.5 50.6c.3-1.6-6.6 14.4.5-4.9s-14.1-19.4-14.1-19.4zM356.8 339.8C326.5 363 271 360 224.9 332.6c-54.8-32.5-103.6-40.3-137.8-40.3-4.4 0-8.6.1-12.5.4 34.8-95.2 149.9-124.1 157.2-125.8 8.8-1.5 114.1-16.6 142.6 85.9 2.3 8.3 4.2 17.5 4.9 26.9-93-63.9-206.9-45.3-210.2-45-31.7 13.8-17.6 42 7.1 41.7 24.4-.4 113.8-18 193.8 49.1-3.4 5.3-7.7 10.1-13.2 14.3zm314.2 9.9c-36 14.6-78.2 6.2-125.6-25 8.2-12.9 17.4-24.7 27.6-35.3 40.2-41.9 84-53.8 96.3-56.4.9-.1 2-.2 3.3-.6h.2c17-5.6 25.1-43.8-6-45.4-.6-2-66.2 9.2-124.4 68.3-9.2 9.4-17.6 19.3-25.2 29.6-6.1-25.6-9.9-63 7.3-94 17.7-31.7 55.1-51.6 111.2-59 79.7-10.6 138.5-23.2 176.8-37.9-18.8 88.1-63.2 223.8-141.5 255.7z' fill='#B33A3A'/></svg></span>" : "<span class='srcicon icon-key' title='derived from Xpub: #" + xpubid + "'></span>" : "",
+        activepub = active_xpub(currency),
+        clasv = (source) ? (source == "seed") ? (seedid == bipid) ? " seed seedv" : " seed seedu" :
+        (source == "xpub") ? (activepub && xpubid == activepub.key_id) ? " xpub xpubv" : " xpub xpubu" : "" : "",
+        usedcl = (used) ? " used" : "",
+        address_li = $("<li class='adli" + clasv + usedcl + "' data-index='" + index + "' data-address='" + address + "' data-checked='" + ad.checked + "'>\
 			<div class='addressinfo liwrap iconright2'>\
 				<div class='atext'>\
 					<h2>" + getcc_icon(ad.cmcid, ad.ccsymbol + "-" + currency, ad.erc20) + " <span>" + ad.label + "</span></h2>\
-					<p class='address'>" + address + "</p>\
+					<p class='address'>" + ad_icon + "<span class='select'>" + address + "</span><span class='usedicon icon-arrow-up-right2' title='Used'></span></p>\
 				</div>\
 				<div class='iconbox'>\
 					<span class='checkbox toggleaddress'></span>\
@@ -3122,7 +3582,7 @@ function appendaddress(currency, ad) {
 }
 
 function appendrequest(rd) {
-	var payment = rd.payment,
+    var payment = rd.payment,
         erc20 = rd.erc20,
         uoa = rd.uoa,
         amount = rd.amount,
@@ -3246,7 +3706,7 @@ function appendrequest(rd) {
 					<li class='meta_status' data-conf='" + confirmations + "'><strong>Status:</strong><span class='status'> " + statustext + "</span> " + conf_box + "</li>\
 					<li><strong>Type:</strong> " + typetext + ismonitoredspan + "</li>" +
             timestampbox +
-            "<li><p class='address'><strong>Address:</strong> <span class='requestaddress'>" + address + "</span>" + requestlabel + "</p></li>" +
+            "<li><p class='address'><strong>Address:</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>" +
             paymentdetails +
             view_tx + "\
 				</ul>\
@@ -3334,7 +3794,7 @@ function savecurrencies(add) {
 
 //update addresses in localstorage
 function saveaddresses(currency, add) {
-    var pobox = $("main #" + currency + " .content ul.pobox[data-currency='" + currency + "']"),
+    var pobox = get_addresslist(currency),
         addresses = pobox.find("li");
     if (addresses.length) {
         var addressboxpush = [];
@@ -3501,25 +3961,104 @@ function close_app_panel() {
 
 // Query helpers
 
+function shake(node) {
+    node.addClass("shake");
+    setTimeout(function() {
+        node.removeClass("shake");
+        vibrate();
+    }, 200);
+}
+
+function get_setting(setting, dat) {
+    return $("#" + setting).data(dat);
+}
+
+function set_setting(setting, keypairs, title) {
+    var set_node = $("#" + setting);
+    set_node.data(keypairs);
+    if (title) {
+        set_node.find("p").html(title);
+    }
+}
+
 function get_requestli(datakey, dataval) {
     return $("#requestlist li.rqli").filter(function() {
         return $(this).data(datakey) == dataval;
     })
 }
 
+function get_addresslist(currency) {
+    return $("main #" + currency + " .content ul.pobox[data-currency='" + currency + "']");
+}
+
+function filter_addressli(currency, datakey, dataval) {
+    var addressli = get_addresslist(currency).children("li");
+    return addressli.filter(function() {
+        return $(this).data(datakey) == dataval;
+    })
+}
+
+function filter_all_addressli(datakey, dataval) {
+    var all_addressli = $(".adli");
+    return all_addressli.filter(function() {
+        return $(this).data(datakey) == dataval;
+    })
+}
+
+function filter_list(list, datakey, dataval) {
+    return list.filter(function() {
+        return $(this).data(datakey) == dataval;
+    })
+}
+
+function dom_to_array(dom, dat) {
+    return dom.map(function() {
+        return $(this).data(dat);
+    }).get();
+}
+
+function get_latest_index(alist) {
+    var index = dom_to_array(alist, "derive_index");
+    return Math.max.apply(Math, index);
+}
+
+function check_currency(currency) {
+    var addresscount = filter_addressli(currency, "checked", true).length;
+    if (addresscount > 0) {
+        currency_check(currency);
+    } else {
+        currency_uncheck(currency);
+    }
+}
+
+function currency_check(currency) {
+    var currencylistitem = $("#currencylist > li[data-currency='" + currency + "']"),
+        parentcheckbox = $("#usedcurrencies li[data-currency='" + currency + "']");
+    currencylistitem.removeClass("hide");
+    parentcheckbox.attr("data-checked", "true").data("checked", true);
+    savecurrencies(false);
+}
+
+function currency_uncheck(currency) {
+    var currencylistitem = $("#currencylist > li[data-currency='" + currency + "']"),
+        parentcheckbox = $("#usedcurrencies li[data-currency='" + currency + "']");
+    currencylistitem.addClass("hide");
+    parentcheckbox.attr("data-checked", "false").data("checked", false);
+    savecurrencies(false);
+}
+
 function gk() {
-	var k = io.k;
-	if (k) {
-	    var pk = JSON.parse(atob(k));
-	    if (pk.if_id == "" || pk.ad_id == "" || pk.ga_id == "" || pk.bc_id == "") {
-		    fk();
-		} else {
-	         init_keys(k, true);
-	    }
-	}
-	else {
-		fk();
-	}
+    var k = io.k;
+    if (k) {
+        var pk = JSON.parse(atob(k));
+        if (pk.if_id == "" || pk.ad_id == "" || pk.ga_id == "" || pk.bc_id == "") {
+            fk();
+        } else {
+            init_keys(k, true);
+        }
+    } else {
+        fk();
+    }
 }
 
 function fk() {
@@ -3529,7 +4068,7 @@ function fk() {
         "custom": "gk",
         "api_url": true
     }).done(function(e) {
-	    var ko = e.k;
+        var ko = e.k;
         if (ko) {
             init_keys(ko, false);
         }
@@ -3539,23 +4078,23 @@ function fk() {
 }
 
 function init_keys(ko, set) { // set required keys
-	var k = JSON.parse(atob(ko));
-	to = k;
-	var if_id = k.if_id,
-		if_set = (if_id != ""),
-		ga_set = (k.ga_id != ""),
-		api_data = $("#apikeys").data(),
-		if_saved_key = api_data.infura,
-		if_set_key = (if_set === true) ? if_id : null,
-		if_key = (if_saved_key) ? if_saved_key : if_set_key;
-	if (if_key) {
-		web3 = new Web3(Web3.givenProvider || main_eth_node + if_id);
+    var k = JSON.parse(atob(ko));
+    to = k;
+    var if_id = k.if_id,
+        if_set = (if_id != ""),
+        ga_set = (k.ga_id != ""),
+        api_data = $("#apikeys").data(),
+        if_saved_key = api_data.infura,
+        if_set_key = (if_set === true) ? if_id : null,
+        if_key = (if_saved_key) ? if_saved_key : if_set_key;
+    if (if_key) {
+        web3 = new Web3(Web3.givenProvider || main_eth_node + if_id);
     }
     if (ga_set === true) {
         gapi_load();
     }
     io.k = ko;
-	if (set === false) {
-		localStorage.setItem("bitrequest_init", JSON.stringify(io));
-	}
+    if (set === false) {
+        localStorage.setItem("bitrequest_init", JSON.stringify(io));
+    }
 }

@@ -87,7 +87,7 @@ function get_requeststates(trigger) {
                     if (trigger === true) {} else { // only update on page refresh
                         // parse cached transaction data
                         $.each(requeststates, function(i, value) {
-	                        var thislist = $("#" + value.requestid),
+                            var thislist = $("#" + value.requestid),
                                 thisdata = thislist.data(),
                                 pendingstatus = thisdata.pending;
                             if (pendingstatus == "scanning" || pendingstatus == "polling") {
@@ -224,7 +224,7 @@ function get_api_inputs(rd, api_data, api_name) {
                         "method": "GET"
                     }
                 }).done(function(e) {
-	                var data = br_result(e).result;
+                    var data = br_result(e).result;
                     if (data) {
                         if (data.error) {
                             tx_api_fail(thislist, statuspanel);
@@ -481,9 +481,9 @@ function get_api_error_data(error) {
 
 function get_next_api(this_payment, this_api_name) {
     var apilist = $.grep(getcoinsettings(this_payment).apis.apis, function(obj) { // filter out rpc's
-	    return obj.api === true;
-	});
-	var next_scan = apilist[apilist.findIndex(option => option.name == this_api_name) + 1],
+        return obj.api === true;
+    });
+    var next_scan = apilist[apilist.findIndex(option => option.name == this_api_name) + 1],
         next_api = (next_scan) ? next_scan : apilist[0];
     if (api_attempts[next_api.name] === true) {
         return false;
@@ -553,13 +553,13 @@ function tx_count(statuspanel, count) {
 }
 
 function get_rpc_inputs_init(rd, api_data) {
-	rpc_attempts[api_data.url] = undefined; // reset api attempts
+    rpc_attempts[api_data.url] = undefined; // reset api attempts
     get_rpc_inputs(rd, api_data);
 }
 
 function get_rpc_inputs(rd, rpc_data) {
-	var thislist = $("#" + rd.requestid);
-	if (thislist.hasClass("scan")) {
+    var thislist = $("#" + rd.requestid);
+    if (thislist.hasClass("scan")) {
         rpc_attempts[rpc_data.url] = true;
         var payment = rd.payment,
             address = rd.address,
@@ -606,7 +606,7 @@ function get_rpc_inputs(rd, rpc_data) {
                             })
                         }
                     }).done(function(e) {
-	                    var data = br_result(e).result,
+                        var data = br_result(e).result,
                             nano_data = data.data,
                             pending_array_node = nano_data[0].pending,
                             pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
@@ -617,7 +617,7 @@ function get_rpc_inputs(rd, rpc_data) {
                             });
                         $.each(merged_array, function(data, value) {
                             var txd = nano_scan_data(value, setconfirmations, ccsymbol);
-							if ((txd.transactiontime > request_timestamp) && txd.ccval && (value.type === undefined || value.type == "receive")) {
+                            if ((txd.transactiontime > request_timestamp) && txd.ccval && (value.type === undefined || value.type == "receive")) {
                                 var tx_listitem = append_tx_li(txd, thislist);
                                 if (tx_listitem) {
                                     transactionlist.append(tx_listitem.data(txd));
@@ -721,13 +721,13 @@ function get_rpc_inputs(rd, rpc_data) {
                     });
                 }
             } else if (payment == "ethereum") {
-	            if (pending == "scanning") { // scan incomming transactions on address
+                if (pending == "scanning") { // scan incomming transactions on address
                     handle_rpc_fails(rd, false, payment, rpc_data); // use api instead
                 } else {
                     if (web3) {
                         var current_provider = web3.currentProvider.host,
-                        	if_id = get_infura_apikey(url),
-                        	current_url = url + if_id;
+                            if_id = get_infura_apikey(url),
+                            current_url = url + if_id;
                         if (current_provider == current_url) {} else {
                             web3.setProvider(current_url);
                         }
@@ -796,15 +796,15 @@ function get_rpc_inputs(rd, rpc_data) {
                 } else {
                     if (web3) {
                         var current_provider = web3.currentProvider.host,
-                        	set_url = (url) ? url : main_eth_node,
-                        	if_id = get_infura_apikey(set_url),
-                        	current_url = set_url + if_id;
+                            set_url = (url) ? url : main_eth_node,
+                            if_id = get_infura_apikey(set_url),
+                            current_url = set_url + if_id;
                         if (current_provider == current_url) {} else {
                             web3.setProvider(current_url);
                         }
                         console.log(current_url);
                         web3.eth.getBlockNumber(function(err_1, data_1) {
-	                        if (err_1) {
+                            if (err_1) {
                                 console.log(err_1);
                                 tx_api_fail(thislist, statuspanel);
                                 handle_rpc_fails(rd, err_1, payment, rpc_data);
@@ -812,7 +812,7 @@ function get_rpc_inputs(rd, rpc_data) {
                                 if (data_1) {
                                     var current_blocknumber = data_1;
                                     web3.eth.getTransaction(transactionhash, function(err_2, data_2) {
-	                                    if (err_2) {
+                                        if (err_2) {
                                             console.log(err_2);
                                             tx_api_fail(thislist, statuspanel);
                                             handle_rpc_fails(rd, err_2, payment, rpc_data);
@@ -820,7 +820,7 @@ function get_rpc_inputs(rd, rpc_data) {
                                             if (data_2) {
                                                 var this_blocknumber = data_2.blockNumber;
                                                 web3.eth.getBlock(this_blocknumber, function(err_3, data_3) {
-	                                                if (err_3) {
+                                                    if (err_3) {
                                                         console.log(err_3);
                                                         tx_api_fail(thislist, statuspanel);
                                                         handle_rpc_fails(rd, err_3, payment, rpc_data);
@@ -888,7 +888,7 @@ function handle_rpc_fails(rd, error, thispayment, rpc_data) {
     var this_coinsettings = getcoinsettings(thispayment),
         api_data = this_coinsettings.apis.selected; // get api source
     if (api_data.url == rpc_data.url) {
-	    var error_object = (error === false) ? false : get_rpc_error_data(error);
+        var error_object = (error === false) ? false : get_rpc_error_data(error);
         rpc_eror_msg(rpc_data.url, error_object, false);
         api_callback(rd.requestid, true);
     } else {
@@ -905,20 +905,19 @@ function get_next_rpc(this_payment, this_rpc_url) {
     var rpc_settings_li = $("#" + this_payment + "_settings .cc_settinglist li[data-id='apis']");
     if (rpc_settings_li) {
         var rpc_settings = rpc_settings_li.data(),
-			rpclist = rpc_settings.options;
-		if (rpclist) {
-	        if ($.isEmptyObject(rpclist)) {
-		        return false;
-	        }
-	        else {
-		       var next_scan = rpclist[rpclist.findIndex(option => option.url == this_rpc_url) + 1],
-	               next_rpc = (next_scan) ? next_scan : rpclist[0];
-	            if (rpc_attempts[next_rpc.url] === true) {
-	                return false;
-	            } else {
-	                return next_rpc;
-	            } 
-	        }
+            rpclist = rpc_settings.options;
+        if (rpclist) {
+            if ($.isEmptyObject(rpclist)) {
+                return false;
+            } else {
+                var next_scan = rpclist[rpclist.findIndex(option => option.url == this_rpc_url) + 1],
+                    next_rpc = (next_scan) ? next_scan : rpclist[0];
+                if (rpc_attempts[next_rpc.url] === true) {
+                    return false;
+                } else {
+                    return next_rpc;
+                }
+            }
         } else {
             return false;
         }
@@ -991,18 +990,18 @@ function append_tx_li(txd, this_request) {
                 tx_indexed = ($.inArray(txhash, tx_index) !== -1),
                 on_tx_list = ($.inArray(txhash, tx_list) !== -1);
             if (on_tx_list === true || tx_indexed === true) { // check for indexed transaction id's
-	            if (tx_indexed === false) { // add to 'blacklist'
-	                tx_index.push(txhash);
+                if (tx_indexed === false) { // add to 'blacklist'
+                    tx_index.push(txhash);
                     this_request.data("tx_index", tx_index);
                 }
                 if (on_tx_list === false) {
                     tx_list.push(txhash);
                 }
-				return null;
+                return null;
             } else {
-	            if (on_tx_list === false) {
+                if (on_tx_list === false) {
                     tx_list.push(txhash);
-                }	
+                }
                 return tx_listitem;
             }
         }
@@ -1203,7 +1202,7 @@ function get_historic_fiatprice_api_payload(fiatapi, lcsymbol, latestinput) {
 }
 
 function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, lcsymbol) {
-	api_attempt[apilist][api] = true;
+    api_attempt[apilist][api] = true;
     var thisrequestid = rd.requestid,
         thispayment = rd.payment,
         ccsymbol = rd.currencysymbol,

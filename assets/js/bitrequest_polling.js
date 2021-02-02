@@ -10,9 +10,8 @@
 //ping_eth_node_erc20
 //handle_rpc_monitor_fails
 //confirmations
-    
-// pick API / RPC
 
+// pick API / RPC
 function pick_monitor(txhash, tx_data) {
     var api_info = check_api(request.payment);
     if (api_info.api === true) {
@@ -68,7 +67,7 @@ function api_monitor(api_data, txhash, tx_data) {
         }
 
         function api_result(result) {
-	        var data = result.result;
+            var data = result.result;
             if (data.error) {
                 clearpingtx();
                 handle_api_fails(false, data.error, api_name, payment, txhash);
@@ -139,7 +138,7 @@ function rpc_monitor(rpcdata, txhash, tx_data) {
         }
 
         function rpc_result(result) {
-	        var data = result.result;
+            var data = result.result;
             if (data.error) {
                 clearpingtx();
                 handle_rpc_monitor_fails(rpcdata, data.error, txhash);
@@ -268,7 +267,7 @@ function ping_eth_node(rpcdata, txhash) {
 }
 
 function ping_eth_node_erc20(rpcdata, txhash) {
-	if (web3) {
+    if (web3) {
         var rpcurl = rpcdata.url + get_infura_apikey(rpcdata.url);
         if (web3.currentProvider.host == rpcurl) {} else {
             web3.setProvider(rpcurl);
@@ -346,7 +345,7 @@ function handle_rpc_monitor_fails(rpcdata, error, txhash) {
 }
 
 function confirmations(tx_data, direct) {
-	if (tx_data === false || tx_data.ccval === undefined) {
+    if (tx_data === false || tx_data.ccval === undefined) {
         return false;
     }
     var brstatuspanel = $("#paymentdialogbox .brstatuspanel"),

@@ -387,3 +387,9 @@
 .icon-file-text:before {
 	content: "\e922";
 }
+.icon-warning:before {
+  content: "\ea07";
+}
+.icon-notification:before {
+  content: "\ea08";
+}

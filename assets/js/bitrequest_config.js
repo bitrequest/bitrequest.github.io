@@ -23,499 +23,689 @@ var apptitle = "Bitrequest",
     rpc_attempts = {},
     changes = {};
 
-var bitrequest_coin_data = [{
-        "currency": "bitcoin",
-        "data": {
-            "currency": "bitcoin",
-            "ccsymbol": "btc",
-            "cmcid": 1,
-            "urlscheme": function(payment, address, amount, iszero) {
-		    	return btc_urlscheme(payment, address, amount, iszero);
-		    },
-            "address_regex": "^([13][a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[ac-hj-np-zAC-HJ-NP-Z02-9]{11,71})$",
-            "wallet_download_page": "https://bitcoin.org/en/choose-your-wallet",
-            "wallets": [
-	            {
-		            "name": "electrum",
-		            "website": "https://electrum.org",
-		            "appstore": null,
-		            "playstore": "https://play.google.com/store/apps/details?id=org.electrum.electrum",
-		            "desktop": "https://electrum.org"
-	            },
-	            {
-		            "name": "mycelium",
-		            "website": "https://wallet.mycelium.com",
-		            "appstore": null,
-		            "playstore": "https://play.google.com/store/apps/details?id=com.mycelium.wallet",
-		            "desktop": null
-	            },
-	            {
-		            "name": "eclair",
-		            "website": "https://acinq.co",
-		            "appstore": null,
-		            "playstore": "https://play.google.com/store/apps/details?id=fr.acinq.eclair.wallet.mainnet2",
-		            "desktop": null
-	            },
-	            {
-		            "name": "bread",
-		            "website": "https://brd.com",
-		            "appstore": "https://apps.apple.com/app/id885251393",
-		            "playstore": "https://play.google.com/store/apps/details?id=com.breadwallet",
-		            "desktop": null
-	            },
-	            {
-		            "name": "edge",
-		            "website": "https://edge.app",
-		            "appstore": "https://apps.apple.com/app/id1344400091",
-		            "playstore": "https://play.google.com/store/apps/details?id=co.edgesecure.app",
-		            "desktop": null
-	            }
-	        ]
+var multi_wallets = {
+        "exodus": {
+            "name": "exodus",
+            "website": "https://www.exodus.io",
+            "appstore": "https://apps.apple.com/app/id1414384820",
+            "playstore": "https://play.google.com/store/apps/details?id=exodusmovement.exodus",
+            "desktop": "https://www.exodus.io/desktop",
+            "seed": true
         },
-        "settings": {
-            "confirmations": {
-                "icon": "clock",
-                "selected": 0
-            },
-            "showsatoshis": {
-                "icon": "eye",
-                "selected": false,
-                "switch": true,
-            },
-            "Use random address": {
-                "icon": "dice",
-                "selected": false,
-                "switch": true,
-            },
-            "blockexplorers": {
-                "icon": "eye",
-                "selected": "blockchain.com",
-                "options": {
-                    "key1": "blockchain.com",
-                    "key2": "blockchair.com"
-                }
-            },
-            "apis": {
-                "icon": "sphere",
-                "selected": {
-                    "name": "blockcypher",
-                    "url": "blockcypher.com",
-                    "api": true,
-                    "display": true
+        "coinomi": {
+            "name": "coinomi",
+            "website": "https://www.coinomi.com",
+            "appstore": "https://itunes.apple.com/app/id1333588809",
+            "playstore": "https://play.google.com/store/apps/details?id=com.coinomi.wallet",
+            "desktop": "https://www.coinomi.com/en/downloads/",
+            "seed": true
+        },
+        "trezor": {
+            "name": "trezor",
+            "website": "https://trezor.io",
+            "appstore": "https://trezor.io",
+            "playstore": "https://trezor.io",
+            "desktop": "https://trezor.io",
+            "seed": true
+        },
+        "atomic": {
+            "name": "atomic",
+            "website": "https://atomicwallet.io",
+            "appstore": "https://apps.apple.com/app/id1478257827",
+            "playstore": "https://play.google.com/store/apps/details?id=io.atomicwallet",
+            "desktop": "https://atomicwallet.io/#download-block",
+            "seed": true
+        },
+        "trustwallet": {
+            "name": "trustwallet",
+            "website": "https://trustwallet.com",
+            "appstore": "https://apps.apple.com/app/id1288339409",
+            "playstore": "https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp",
+            "desktop": "https://trustwallet.com",
+            "seed": true
+        }
+
+    },
+    bitrequest_coin_data = [{
+            "currency": "bitcoin",
+            "data": {
+                "currency": "bitcoin",
+                "ccsymbol": "btc",
+                "cmcid": 1,
+                "urlscheme": function(payment, address, amount, iszero) {
+                    return btc_urlscheme(payment, address, amount, iszero);
                 },
-                "apis": [{
+                "address_regex": "^([13][a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[ac-hj-np-zAC-HJ-NP-Z02-9]{11,71})$",
+                "wallet_download_page": "https://bitcoin.org/en/choose-your-wallet",
+                "wallets": [
+                    multi_wallets.exodus,
+                    multi_wallets.coinomi,
+                    multi_wallets.trezor,
+                    multi_wallets.trustwallet,
+                    {
+                        "name": "electrum",
+                        "website": "https://electrum.org",
+                        "appstore": null,
+                        "playstore": "https://play.google.com/store/apps/details?id=org.electrum.electrum",
+                        "desktop": "https://electrum.org",
+                        "seed": true
+                    },
+                    {
+                        "name": "mycelium",
+                        "website": "https://wallet.mycelium.com",
+                        "appstore": null,
+                        "playstore": "https://play.google.com/store/apps/details?id=com.mycelium.wallet",
+                        "desktop": null,
+                        "seed": true
+                    },
+                    {
+                        "name": "eclair",
+                        "website": "https://acinq.co",
+                        "appstore": null,
+                        "playstore": "https://play.google.com/store/apps/details?id=fr.acinq.eclair.wallet.mainnet2",
+                        "desktop": null
+                    },
+                    {
+                        "name": "bread",
+                        "website": "https://brd.com",
+                        "appstore": "https://apps.apple.com/app/id885251393",
+                        "playstore": "https://play.google.com/store/apps/details?id=com.breadwallet",
+                        "desktop": null
+                    },
+                    {
+                        "name": "edge",
+                        "website": "https://edge.app",
+                        "appstore": "https://apps.apple.com/app/id1344400091",
+                        "playstore": "https://play.google.com/store/apps/details?id=co.edgesecure.app",
+                        "desktop": null
+                    }
+                ]
+            },
+            "settings": {
+                "confirmations": {
+                    "icon": "clock",
+                    "selected": 0
+                },
+                "showsatoshis": {
+                    "icon": "eye",
+                    "selected": false,
+                    "switch": true,
+                },
+                "Use random address": {
+                    "icon": "dice",
+                    "selected": false,
+                    "switch": true,
+                },
+                "blockexplorers": {
+                    "icon": "eye",
+                    "selected": "blockchain.com",
+                    "options": {
+                        "key1": "blockchain.com",
+                        "key2": "blockchair.com"
+                    }
+                },
+                "apis": {
+                    "icon": "sphere",
+                    "selected": {
                         "name": "blockcypher",
                         "url": "blockcypher.com",
                         "api": true,
                         "display": true
                     },
-                    {
-                        "name": "blockchair",
-                        "url": "blockchair.com",
-                        "api": true,
-                        "display": false
+                    "apis": [{
+                            "name": "blockcypher",
+                            "url": "blockcypher.com",
+                            "api": true,
+                            "display": true
+                        },
+                        {
+                            "name": "blockchair",
+                            "url": "blockchair.com",
+                            "api": true,
+                            "display": false
+                        }
+                    ],
+                    "options": [],
+                    "rpc_test_command": {
+                        "method": "getblockchaininfo"
                     }
-                ],
-                "options": [],
-                "rpc_test_command": {
-                    "method": "getblockchaininfo"
-                }
-            },
-            "websockets": {
-                "icon": "tab",
-                "selected": {
-                    "name": "blockcypher websocket",
-                    "url": "wss://socket.blockcypher.com/v1/",
-                    "display": true
                 },
-                "apis": [{
+                "websockets": {
+                    "icon": "tab",
+                    "selected": {
                         "name": "blockcypher websocket",
                         "url": "wss://socket.blockcypher.com/v1/",
                         "display": true
                     },
+                    "apis": [{
+                            "name": "blockcypher websocket",
+                            "url": "wss://socket.blockcypher.com/v1/",
+                            "display": true
+                        },
+                        {
+                            "name": "blockchain.info websocket",
+                            "url": "wss://ws.blockchain.info/inv/",
+                            "display": false
+                        }
+                    ]
+                },
+                "Xpub": {
+                    "active": true,
+                    "xpub": true,
+                    "icon": "key",
+                    "switch": true,
+                    "custom_switch": true,
+                    "selected": false,
+                    "key": null,
+                    "root_path": "m/84'/0'/0'/0/",
+                    "prefix": {
+                        "pub": 0,
+                        "pubx": 76067358,
+                        "privx": 76066276
+                    },
+                    "pk_vbytes": {
+                        "wif": 128
+                    }
+                },
+                "Key derivations": {
+                    "icon": "cog",
+                    "selected": "BIP32 key generation",
+                }
+            }
+        },
+        {
+            "currency": "monero",
+            "data": {
+                "currency": "monero",
+                "ccsymbol": "xmr",
+                "cmcid": "328",
+                "urlscheme": function(payment, address, amount, iszero) {
+                    return payment + ":" + address + ((iszero === true) ? "" : "?tx_amount=" + amount);
+                },
+                "address_regex": "^[48](?:[0-9AB]|[1-9A-HJ-NP-Za-km-z]{12}(?:[1-9A-HJ-NP-Za-km-z]{30})?)[1-9A-HJ-NP-Za-km-z]{93}$",
+                "wallet_download_page": "https://www.getmonero.org/downloads/",
+                "wallets": [{
+                        "name": "monerujo",
+                        "website": "https://www.monerujo.io",
+                        "appstore": null,
+                        "playstore": "https://play.google.com/store/apps/details?id=com.m2049r.xmrwallet",
+                        "desktop": null
+                    },
                     {
-                        "name": "blockchain.info websocket",
-                        "url": "wss://ws.blockchain.info/inv/",
-                        "display": false
+                        "name": "mymonero",
+                        "website": "https://mymonero.com",
+                        "appstore": "https://apps.apple.com/app/id1372508199",
+                        "playstore": null,
+                        "desktop": "https://github.com/mymonero/mymonero-app-js/releases"
                     }
                 ]
+            },
+            "settings": {
+                "Use random address": {
+                    "icon": "dice",
+                    "selected": false,
+                    "switch": true,
+                },
+                "Xpub": {
+                    "active": false,
+                    "xpub": false,
+                    "selected": false,
+                    "key": null,
+                    "icon": "key",
+                    "switch": true,
+                    "custom_switch": true,
+                    "prefix": null
+                }
             }
-        }
-    },
-    {
-        "currency": "monero",
-        "data": {
-            "currency": "monero",
-            "ccsymbol": "xmr",
-            "cmcid": "328",
-            "urlscheme": function(payment, address, amount, iszero) {
-		    	return payment + ":" + address + ((iszero === true) ? "" : "?tx_amount=" + amount);
-		    },
-            "address_regex": "^[48](?:[0-9AB]|[1-9A-HJ-NP-Za-km-z]{12}(?:[1-9A-HJ-NP-Za-km-z]{30})?)[1-9A-HJ-NP-Za-km-z]{93}$",
-            "wallet_download_page": "https://www.getmonero.org/downloads/",
-            "wallets": [
-            	{
-		            "name": "monerujo",
-		            "website": "https://www.monerujo.io",
-		            "appstore": null,
-		            "playstore": "https://play.google.com/store/apps/details?id=com.m2049r.xmrwallet",
-		            "desktop": null
-	            },
-	            {
-		            "name": "mymonero",
-		            "website": "https://mymonero.com",
-		            "appstore": "https://apps.apple.com/app/id1372508199",
-		            "playstore": null,
-		            "desktop": "https://github.com/mymonero/mymonero-app-js/releases"
-	            }
-	        ]
         },
-        "settings": {
-            "Use random address": {
-                "icon": "dice",
-                "selected": false,
-                "switch": true,
-            }
-        }
-    },
-    {
-        "currency": "litecoin",
-        "data": {
+        {
             "currency": "litecoin",
-            "ccsymbol": "ltc",
-            "cmcid": 2,
-            "urlscheme": function(payment, address, amount, iszero) {
-		    	return btc_urlscheme(payment, address, amount, iszero);
-		    },
-            "address_regex": "^([LM][a-km-zA-HJ-NP-Z1-9]{26,33}|ltc1[a-zA-HJ-NP-Z0-9]{26,39})$",
-            "wallet_download_page": "https://litecoin.org",
-            "wallets": [
-            	{
-		            "name": "electrum",
-		            "website": "https://electrum-ltc.org",
-		            "appstore": null,
-		            "playstore": null,
-		            "desktop": "https://electrum-ltc.org"
-	            },
-	            {
-		            "name": "litewallet",
-		            "website": "https://lite-wallet.org",
-		            "appstore": "https://apps.apple.com/app/id1119332592",
-		            "playstore": "https://play.google.com/store/apps/details?id=com.loafwallet",
-		            "desktop": null
-	            }
-	        ]
-        },
-        "settings": {
-            "confirmations": {
-                "icon": "clock",
-                "selected": 0
-            },
-            "Use random address": {
-                "icon": "dice",
-                "selected": false,
-                "switch": true,
-            },
-            "blockexplorers": {
-                "icon": "eye",
-                "selected": "blockchair.com"
-            },
-            "apis": {
-                "icon": "sphere",
-                "selected": {
-                    "name": "blockcypher",
-                    "url": "blockcypher.com",
-                    "api": true,
-                    "display": true
+            "data": {
+                "currency": "litecoin",
+                "ccsymbol": "ltc",
+                "cmcid": 2,
+                "urlscheme": function(payment, address, amount, iszero) {
+                    return btc_urlscheme(payment, address, amount, iszero);
                 },
-                "apis": [{
+                "address_regex": "^([LM][a-km-zA-HJ-NP-Z1-9]{26,33}|ltc1[a-zA-HJ-NP-Z0-9]{26,39})$",
+                "wallet_download_page": "https://litecoin.org",
+                "wallets": [
+                    multi_wallets.exodus,
+                    multi_wallets.coinomi,
+                    multi_wallets.trezor,
+                    {
+                        "name": "electrum",
+                        "website": "https://electrum-ltc.org",
+                        "appstore": null,
+                        "playstore": null,
+                        "desktop": "https://electrum-ltc.org",
+                        "seed": true
+                    },
+                    {
+                        "name": "litewallet",
+                        "website": "https://lite-wallet.org",
+                        "appstore": "https://apps.apple.com/app/id1119332592",
+                        "playstore": "https://play.google.com/store/apps/details?id=com.loafwallet",
+                        "desktop": null
+                    }
+                ]
+            },
+            "settings": {
+                "confirmations": {
+                    "icon": "clock",
+                    "selected": 0
+                },
+                "Use random address": {
+                    "icon": "dice",
+                    "selected": false,
+                    "switch": true,
+                },
+                "blockexplorers": {
+                    "icon": "eye",
+                    "selected": "blockchair.com"
+                },
+                "apis": {
+                    "icon": "sphere",
+                    "selected": {
                         "name": "blockcypher",
                         "url": "blockcypher.com",
                         "api": true,
                         "display": true
                     },
-                    {
-                        "name": "blockchair",
-                        "url": "blockchair.com",
-                        "api": true,
-                        "display": false
+                    "apis": [{
+                            "name": "blockcypher",
+                            "url": "blockcypher.com",
+                            "api": true,
+                            "display": true
+                        },
+                        {
+                            "name": "blockchair",
+                            "url": "blockchair.com",
+                            "api": true,
+                            "display": false
+                        }
+                    ],
+                    "options": [],
+                    "rpc_test_command": {
+                        "method": "getblockchaininfo"
                     }
-                ],
-                "options": [],
-                "rpc_test_command": {
-                    "method": "getblockchaininfo"
-                }
-            },
-            "websockets": {
-                "icon": "tab",
-                "selected": {
-                    "name": "blockcypher websocket",
-                    "url": "wss://socket.blockcypher.com/v1/",
-                    "display": true
+                },
+                "websockets": {
+                    "icon": "tab",
+                    "selected": {
+                        "name": "blockcypher websocket",
+                        "url": "wss://socket.blockcypher.com/v1/",
+                        "display": true
+                    }
+                },
+                "Xpub": {
+                    "active": true,
+                    "xpub": true,
+                    "icon": "key",
+                    "switch": true,
+                    "custom_switch": true,
+                    "selected": false,
+                    "key": null,
+                    "root_path": "m/44'/2'/0'/0/",
+                    "prefix": {
+                        "pub": 48,
+                        "pubx": 27108450,
+                        "privx": 27106558
+                    },
+                    "pk_vbytes": {
+                        "wif": 176
+                    }
+                },
+                "Key derivations": {
+                    "icon": "cog",
+                    "selected": "BIP32 key generation",
                 }
             }
-        }
-    },
-    {
-        "currency": "dogecoin",
-        "data": {
+        },
+        {
             "currency": "dogecoin",
-            "ccsymbol": "doge",
-            "cmcid": 74,
-            "urlscheme": function(payment, address, amount, iszero) {
-		    	return btc_urlscheme(payment, address, amount, iszero);
-		    },
-            "address_regex": "^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$",
-            "wallet_download_page": "https://dogecoin.com/getting-started/",
-            "wallets": [
-            	{
-		            "name": "multidoge",
-		            "website": "https://multidoge.org",
-		            "appstore": null,
-		            "playstore": null,
-		            "desktop": "https://multidoge.org"
-	            },
-	            {
-		            "name": "dogecoin",
-		            "website": "http://langerhans.github.io/dogecoin-wallet-new",
-		            "appstore": null,
-		            "playstore": "https://play.google.com/store/apps/details?id=de.langerhans.wallet",
-		            "desktop": null
-	            }
-	        ]
-        },
-        "settings": {
-            "confirmations": {
-                "icon": "clock",
-                "selected": 0
-            },
-            "Use random address": {
-                "icon": "dice",
-                "selected": false,
-                "switch": true,
-            },
-            "blockexplorers": {
-                "icon": "eye",
-                "selected": "blockchair.com"
-            },
-            "apis": {
-                "icon": "sphere",
-                "selected": {
-                    "name": "blockcypher",
-                    "url": "blockcypher.com",
-                    "api": true,
-                    "display": true
+            "data": {
+                "currency": "dogecoin",
+                "ccsymbol": "doge",
+                "cmcid": 74,
+                "urlscheme": function(payment, address, amount, iszero) {
+                    return btc_urlscheme(payment, address, amount, iszero);
                 },
-                "apis": [{
+                "address_regex": "^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$",
+                "wallet_download_page": "https://dogecoin.com/getting-started/",
+                "wallets": [
+                    multi_wallets.exodus,
+                    multi_wallets.coinomi,
+                    multi_wallets.atomic,
+                    multi_wallets.trezor,
+                    multi_wallets.trustwallet,
+                    {
+                        "name": "multidoge",
+                        "website": "https://multidoge.org",
+                        "appstore": null,
+                        "playstore": null,
+                        "desktop": "https://multidoge.org"
+                    },
+                    {
+                        "name": "dogecoin",
+                        "website": "http://langerhans.github.io/dogecoin-wallet-new",
+                        "appstore": null,
+                        "playstore": "https://play.google.com/store/apps/details?id=de.langerhans.wallet",
+                        "desktop": null
+                    }
+                ]
+            },
+            "settings": {
+                "confirmations": {
+                    "icon": "clock",
+                    "selected": 0
+                },
+                "Use random address": {
+                    "icon": "dice",
+                    "selected": false,
+                    "switch": true,
+                },
+                "blockexplorers": {
+                    "icon": "eye",
+                    "selected": "blockchair.com"
+                },
+                "apis": {
+                    "icon": "sphere",
+                    "selected": {
                         "name": "blockcypher",
                         "url": "blockcypher.com",
                         "api": true,
                         "display": true
                     },
-                    {
-                        "name": "blockchair",
-                        "url": "blockchair.com",
-                        "api": true,
-                        "display": false
+                    "apis": [{
+                            "name": "blockcypher",
+                            "url": "blockcypher.com",
+                            "api": true,
+                            "display": true
+                        },
+                        {
+                            "name": "blockchair",
+                            "url": "blockchair.com",
+                            "api": true,
+                            "display": false
+                        }
+                    ],
+                    "options": [],
+                    "rpc_test_command": {
+                        "method": "getblockchaininfo"
                     }
-                ],
-                "options": [],
-                "rpc_test_command": {
-                    "method": "getblockchaininfo"
-                }
-            },
-            "websockets": {
-                "icon": "tab",
-                "selected": {
-                    "name": "blockcypher websocket",
-                    "url": "wss://socket.blockcypher.com/v1/",
-                    "display": true
+                },
+                "websockets": {
+                    "icon": "tab",
+                    "selected": {
+                        "name": "blockcypher websocket",
+                        "url": "wss://socket.blockcypher.com/v1/",
+                        "display": true
+                    }
+                },
+                "Xpub": {
+                    "active": true,
+                    "xpub": true,
+                    "icon": "key",
+                    "switch": true,
+                    "custom_switch": true,
+                    "selected": false,
+                    "key": null,
+                    "root_path": "m/44'/3'/0'/0/",
+                    "prefix": {
+                        "pub": 30,
+                        "pubx": 49990397,
+                        "privx": 49988504
+                    },
+                    "pk_vbytes": {
+                        "wif": 158
+                    }
+                },
+                "Key derivations": {
+                    "icon": "cog",
+                    "selected": "BIP32 key generation",
                 }
             }
-        }
-    },
-    {
-        "currency": "nano",
-        "data": {
-            "currency": "nano",
-            "ccsymbol": "nano",
-            "cmcid": 1567,
-            "urlscheme": function(payment, address, amount, iszero) {
-	            return "nano:" + address + ((iszero === true) ? "" : "?amount=" + (parseFloat(amount) * "1000000000000000000000000000000").toFixedSpecial(0));
-		    },
-            "address_regex": "^(xrb|nano)_([a-z1-9]{60})$",
-            "wallet_download_page": "https://nanowallets.guide",
-            "wallets": [
-            	{
-		            "name": "natrium",
-		            "website": "https://natrium.io",
-		            "appstore": "https://apps.apple.com/app/id1451425707",
-		            "playstore": "https://play.google.com/store/apps/details?id=co.banano.natriumwallet",
-		            "desktop": null
-	            },
-	            {
-		            "name": "nault",
-		            "website": "https://nault.cc",
-		            "appstore": null,
-		            "playstore": null,
-		            "desktop": "https://nault.cc"
-	            }
-	        ]
         },
-        "settings": {
-	        "Use random address": {
-                "icon": "dice",
-                "selected": false,
-                "switch": true,
-            },
-            "blockexplorers": {
-                "icon": "eye",
-                "selected": "nanocrawler.cc"
-            },
-            "apis": {
-                "icon": "sphere",
-                "selected": {
-                    "name": "nano node",
-                    "url": "https://www.bitrequest.app:8020",
-                    "username": "",
-                    "password": "",
-                    "display": true
+        {
+            "currency": "nano",
+            "data": {
+                "currency": "nano",
+                "ccsymbol": "nano",
+                "cmcid": 1567,
+                "urlscheme": function(payment, address, amount, iszero) {
+                    return "nano:" + address + ((iszero === true) ? "" : "?amount=" + (parseFloat(amount) * "1000000000000000000000000000000").toFixedSpecial(0));
                 },
-                "apis": [{
-                    "name": "nano node",
-                    "url": "https://www.bitrequest.app:8020",
-                    "username": "",
-                    "password": "",
-                    "display": true
-                }],
-                "options": [],
-                "rpc_test_command": {
-                    "action": "version"
-                }
+                "address_regex": "^(xrb|nano)_([a-z1-9]{60})$",
+                "wallet_download_page": "https://nanowallets.guide",
+                "wallets": [
+                    multi_wallets.trustwallet,
+                    {
+                        "name": "nalli",
+                        "website": "https://nalli.app",
+                        "appstore": "https://apps.apple.com/app/id1515601975",
+                        "playstore": "https://play.google.com/store/apps/details?id=fi.heimo.nalli",
+                        "desktop": "https://nalli.app",
+                        "seed": true
+                    },
+                    {
+                        "name": "kaiak",
+                        "website": "https://kaiak.cc",
+                        "appstore": null,
+                        "playstore": null,
+                        "desktop": "https://kaiak.cc",
+                        "seed": true
+                    },
+                    {
+                        "name": "nault",
+                        "website": "https://nault.cc",
+                        "appstore": null,
+                        "playstore": null,
+                        "desktop": "https://nault.cc"
+                    }
+                ]
             },
-            "websockets": {
-                "icon": "tab",
-                "selected": {
-                    "name": "nano socket",
-                    "url": "wss://bitrequest.app:8010",
-                    "display": true
+            "settings": {
+                "Use random address": {
+                    "icon": "dice",
+                    "selected": false,
+                    "switch": true,
                 },
-                "apis": [{
+                "blockexplorers": {
+                    "icon": "eye",
+                    "selected": "nanocrawler.cc"
+                },
+                "apis": {
+                    "icon": "sphere",
+                    "selected": {
+                        "name": "nano node",
+                        "url": "https://www.bitrequest.app:8020",
+                        "username": "",
+                        "password": "",
+                        "display": true
+                    },
+                    "apis": [{
+                        "name": "nano node",
+                        "url": "https://www.bitrequest.app:8020",
+                        "username": "",
+                        "password": "",
+                        "display": true
+                    }],
+                    "options": [],
+                    "rpc_test_command": {
+                        "action": "version"
+                    }
+                },
+                "websockets": {
+                    "icon": "tab",
+                    "selected": {
                         "name": "nano socket",
                         "url": "wss://bitrequest.app:8010",
                         "display": true
                     },
-                    {
-                        "name": "nano.cc websocket",
-                        "url": "wss://socket.nanos.cc",
-                        "display": true
-                    }
-                ],
-                "options": []
-            }
-        }
-    },
-    {
-        "currency": "ethereum",
-        "data": {
-            "currency": "ethereum",
-            "ccsymbol": "eth",
-            "cmcid": 1027,
-            "urlscheme": function(payment, address, amount, iszero) {
-	            return payment + ":" + address + ((iszero === true) ? "" : "?value=" + (parseFloat(amount) * "1000000000000000000").toFixedSpecial(0));
-		    },
-            "address_regex": "web3",
-            "wallet_download_page": "https://ethereum.org/en/wallets/",
-            "wallets": [
-            	{
-		            "name": "myetherwallet",
-		            "website": "https://www.mewwallet.com",
-		            "appstore": "https://apps.apple.com/app/id1464614025",
-		            "playstore": "https://play.google.com/store/apps/details?id=com.myetherwallet.mewwallet",
-		            "desktop": "https://www.myetherwallet.com"
-	            }
-	        ]
-        },
-        "settings": {
-            "confirmations": {
-                "icon": "clock",
-                "selected": 0
-            },
-            "Use random address": {
-                "icon": "dice",
-                "selected": false,
-                "switch": true,
-            },
-            "blockexplorers": {
-                "icon": "eye",
-                "selected": "blockchain.com",
-                "options": {
-                    "blockchain": "blockchain.com",
-                    "blockchair": "blockchair.com"
-                }
-            },
-            "apis": {
-                "icon": "sphere",
-                "selected": {
-                    "name": "blockcypher",
-                    "url": "blockcypher.com",
-                    "api": true,
-                    "display": true
+                    "apis": [{
+                            "name": "nano socket",
+                            "url": "wss://bitrequest.app:8010",
+                            "display": true
+                        },
+                        {
+                            "name": "nano.cc websocket",
+                            "url": "wss://socket.nanos.cc",
+                            "display": true
+                        }
+                    ],
+                    "options": []
                 },
-                "apis": [{
+                "Xpub": {
+                    "active": true,
+                    "xpub": false,
+                    "icon": "key",
+                    "switch": true,
+                    "custom_switch": true,
+                    "selected": false,
+                    "key": null,
+                    "root_path": "m/44'/165'/0'/0/",
+                    "prefix": {
+                        "pub": 0,
+                        "pubx": "00000000",
+                        "privx": "00000000"
+                    },
+                    "pk_vbytes": {
+                        "wif": 0
+                    }
+                },
+                "Key derivations": {
+                    "icon": "cog",
+                    "selected": "BIP32 key generation",
+                }
+            }
+        },
+        {
+            "currency": "ethereum",
+            "data": {
+                "currency": "ethereum",
+                "ccsymbol": "eth",
+                "cmcid": 1027,
+                "urlscheme": function(payment, address, amount, iszero) {
+                    return payment + ":" + address + ((iszero === true) ? "" : "?value=" + (parseFloat(amount) * "1000000000000000000").toFixedSpecial(0));
+                },
+                "address_regex": "web3",
+                "wallet_download_page": "https://ethereum.org/en/wallets/",
+                "wallets": [
+                    multi_wallets.exodus,
+                    multi_wallets.trezor,
+                    multi_wallets.trustwallet,
+                    {
+                        "name": "myetherwallet",
+                        "website": "https://www.mewwallet.com",
+                        "appstore": "https://apps.apple.com/app/id1464614025",
+                        "playstore": "https://play.google.com/store/apps/details?id=com.myetherwallet.mewwallet",
+                        "desktop": "https://www.myetherwallet.com",
+                        "seed": true
+                    }
+                ]
+            },
+            "settings": {
+                "confirmations": {
+                    "icon": "clock",
+                    "selected": 0
+                },
+                "Use random address": {
+                    "icon": "dice",
+                    "selected": false,
+                    "switch": true,
+                },
+                "blockexplorers": {
+                    "icon": "eye",
+                    "selected": "blockchain.com",
+                    "options": {
+                        "blockchain": "blockchain.com",
+                        "blockchair": "blockchair.com"
+                    }
+                },
+                "apis": {
+                    "icon": "sphere",
+                    "selected": {
                         "name": "blockcypher",
                         "url": "blockcypher.com",
                         "api": true,
                         "display": true
                     },
-                    {
-                        "name": "blockchair",
-                        "url": "blockchair.com",
-                        "api": true,
-                        "display": false
-                    },
-                    {
-                        "name": main_eth_node,
-                        "url": main_eth_node,
-                        "display": true
-                    },
-                    {
-                        "name": eth_node2,
-                        "url": eth_node2,
-                        "display": true
+                    "apis": [{
+                            "name": "blockcypher",
+                            "url": "blockcypher.com",
+                            "api": true,
+                            "display": true
+                        },
+                        {
+                            "name": "blockchair",
+                            "url": "blockchair.com",
+                            "api": true,
+                            "display": false
+                        },
+                        {
+                            "name": main_eth_node,
+                            "url": main_eth_node,
+                            "display": true
+                        },
+                        {
+                            "name": eth_node2,
+                            "url": eth_node2,
+                            "display": true
+                        }
+                    ],
+                    "options": [],
+                    "rpc_test_command": {
+                        "method": null
                     }
-                ],
-                "options": [],
-                "rpc_test_command": {
-                    "method": null
-                }
-            },
-            "websockets": {
-                "icon": "tab",
-                "selected": {
-                    "name": main_ad_socket,
-                    "url": main_ad_socket,
-                    "display": true
                 },
-                "apis": [{
-                    "name": main_ad_socket,
-                    "url": main_ad_socket,
-                    "display": true
-                }],
-                "options": []
+                "websockets": {
+                    "icon": "tab",
+                    "selected": {
+                        "name": main_ad_socket,
+                        "url": main_ad_socket,
+                        "display": true
+                    },
+                    "apis": [{
+                        "name": main_ad_socket,
+                        "url": main_ad_socket,
+                        "display": true
+                    }],
+                    "options": []
+                },
+                "Xpub": {
+                    "active": true,
+                    "xpub": false,
+                    "icon": "key",
+                    "switch": true,
+                    "custom_switch": true,
+                    "selected": false,
+                    "key": null,
+                    "root_path": "m/44'/60'/0'/0/",
+                    "prefix": {
+                        "pub": 0,
+                        "pubx": 76067358,
+                        "privx": 76066276
+                    },
+                    "pk_vbytes": {
+                        "wif": 128
+                    }
+                },
+                "Key derivations": {
+                    "icon": "cog",
+                    "selected": "BIP32 key generation",
+                }
             }
         }
-    }
-]
+    ]
 
 var erc20_data = {
-    "monitored": "jaap",
+    "monitored": true,
     "url-scheme": "",
     "regex": "web3",
     "erc20": true,
     "wallet_download_page": "https://ethereum.org/en/wallets/",
-    "wallets": [
-    	{
+    "wallets": [{
             "name": "myetherwallet",
             "website": "https://www.mewwallet.com",
             "appstore": "https://apps.apple.com/app/id1464614025",
@@ -667,6 +857,12 @@ var app_settings = [{
         "heading": "Security"
     },
     {
+        "id": "bip39_passphrase",
+        "heading": "Bip39 passphrase",
+        "selected": "",
+        "icon": "icon-eye"
+    },
+    {
         "id": "pinsettings",
         "heading": "Passcode Lock",
         "selected": "pincode disabled",
@@ -677,14 +873,15 @@ var app_settings = [{
     {
         "id": "backup",
         "heading": "Backup",
-        "selected": null,
+        "selected": "",
         "icon": "icon-download",
+        "sbu": false,
         "lastbackup": null
     },
     {
         "id": "restore",
         "heading": "Restore from backup",
-        "selected": null,
+        "selected": "",
         "icon": "icon-upload",
         "fileused": null,
         "device": null
