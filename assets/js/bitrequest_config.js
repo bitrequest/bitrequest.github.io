@@ -48,6 +48,14 @@ var multi_wallets = {
             "desktop": "https://trezor.io",
             "seed": true
         },
+        "ledger": {
+            "name": "ledger",
+            "website": "https://www.ledger.com",
+            "appstore": "https://itunes.apple.com/app/id1361671700",
+            "playstore": "https://play.google.com/store/apps/details?id=com.ledger.live",
+            "desktop": "https://www.ledger.com/ledger-live/download",
+            "seed": true
+        },
         "atomic": {
             "name": "atomic",
             "website": "https://atomicwallet.io",
@@ -81,6 +89,7 @@ var multi_wallets = {
                     multi_wallets.exodus,
                     multi_wallets.coinomi,
                     multi_wallets.trezor,
+                    multi_wallets.ledger,
                     multi_wallets.trustwallet,
                     {
                         "name": "electrum",
@@ -273,6 +282,7 @@ var multi_wallets = {
                     multi_wallets.exodus,
                     multi_wallets.coinomi,
                     multi_wallets.trezor,
+                    multi_wallets.ledger,
                     {
                         "name": "electrum",
                         "website": "https://electrum-ltc.org",
@@ -378,6 +388,7 @@ var multi_wallets = {
                     multi_wallets.coinomi,
                     multi_wallets.atomic,
                     multi_wallets.trezor,
+                    multi_wallets.ledger,
                     multi_wallets.trustwallet,
                     {
                         "name": "multidoge",
@@ -594,6 +605,7 @@ var multi_wallets = {
                 "wallets": [
                     multi_wallets.exodus,
                     multi_wallets.trezor,
+                    multi_wallets.ledger,
                     multi_wallets.trustwallet,
                     {
                         "name": "myetherwallet",
