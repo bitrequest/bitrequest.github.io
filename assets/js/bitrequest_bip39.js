@@ -93,7 +93,6 @@ $(document).ready(function() {
     test_derive_prev();
     //test_derive_function
     phrase_moreinfo();
-    console.log(navigator);
 });
 
 function istrial() {

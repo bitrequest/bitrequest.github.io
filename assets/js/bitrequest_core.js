@@ -1804,11 +1804,13 @@ function addaddresstrigger() {
 }
 
 function addaddress(ad, edit) {
-    var currency = ad.currency,
+	var currency = ad.currency,
         cpid = ad.ccsymbol + "-" + currency,
         address = (ad.address) ? ad.address : "",
         label = (ad.label) ? ad.label : "",
-        nopub = (is_xpub(currency) === false || has_xpub(currency) !== false),
+        derived = (ad.seedid || ad.xpubid),
+        readonly = (derived) ? " readonly" : "",
+		nopub = (is_xpub(currency) === false || has_xpub(currency) !== false),
         choose_wallet_str = "<span id='get_wallet' class='address_option' data-currency='" + currency + "'>I don't have a " + currency + " address yet</span>",
         derive_seed_str = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>Generate address from seed</span>",
         options = (hasbip === true) ? choose_wallet_str : (test_derive === true) ? (hasbip32(currency) === true) ? derive_seed_str : choose_wallet_str : choose_wallet_str,
@@ -1819,7 +1821,7 @@ function addaddress(ad, edit) {
         addeditclass = (edit === true) ? "edit" : "add",
         xpubclass = (nopub) ? " hasxpub" : "",
         xpubph = (nopub) ? "" : " or Xpub",
-        content = $("<div class='formbox form" + addeditclass + xpubclass + "' id='addressformbox'>" + title + pnotify + "<form class='addressform popform'><div class='inputwrap'><input type='text' class='address' value='" + address + "' placeholder='Enter a " + currency + " address" + xpubph + "'>" + scanqr + "</div><input type='text' class='addresslabel' value='" + label + "' placeholder='label'>" + pk_checkbox + "<input type='submit' class='submit' value='OK'></form>").data(ad);
+        content = $("<div class='formbox form" + addeditclass + xpubclass + "' id='addressformbox'>" + title + pnotify + "<form class='addressform popform'><div class='inputwrap'><input type='text' class='address' value='" + address + "' placeholder='Enter a " + currency + " address" + xpubph + "'" + readonly + ">" + scanqr + "</div><input type='text' class='addresslabel' value='" + label + "' placeholder='label'>" + pk_checkbox + "<input type='submit' class='submit' value='OK'></form>").data(ad);
     popdialog(content, "alert", "triggersubmit");
     if (supportsTouch === true) {} else {
         if (edit === true) {
