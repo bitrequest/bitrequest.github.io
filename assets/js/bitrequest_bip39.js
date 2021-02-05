@@ -1,9 +1,11 @@
 var test_phrase = "army van defense carry jealous true garbage claim echo media make crunch", // random phrase used for test derive
     expected_seed = "5b56c417303faa3fcba7e57400e120a0ca83ec5a4fc9ffba757fbe63fbd77a89a1a3be4c67196f57c39a88b76373733891bfaba16ed27a813ceed498804c0570", // expected seed used for test derive
     expected_address = "1HQ3rb7nyLPrjnuW85MUknPekwkn7poAUm", // expected addres used for test derive
+    has_bigint,
     test_derive;
 
 $(document).ready(function() {
+	hasbigint();
     //istrial
     //bipv_pass
     test_bip39();
@@ -95,6 +97,23 @@ $(document).ready(function() {
     phrase_moreinfo();
 });
 
+function hasbigint() {
+	try {
+        if (typeof BigInt("1") == "bigint") { 
+	        has_bigint = true;
+        	return true;
+    	}
+    	else {
+	    	has_bigint = false;
+	    	return false;
+    	}
+    } catch (err) {
+        console.log(err.message);
+        has_bigint = false;
+        return false;
+    }
+}
+
 function istrial() {
     var trialp = localStorage.getItem("bitrequest_tp");
     if (trialp) {
@@ -136,12 +155,12 @@ function bipv_pass() {
 }
 
 function test_bip39() {
-    if (crypto === undefined) { // test for window.crypto
+	if (crypto === undefined) { // test for window.crypto
         bip39_fail();
         test_derive = false;
         return false;
     }
-    if (typeof 1n != "bigint") { // test for js BigInt
+    if (has_bigint === false) { // test for js BigInt
         bip39_fail();
         test_derive = false;
         return false;
@@ -410,6 +429,7 @@ function manage_bip32(dat) {
     if (step === 3) {
         verify_phrase(seed.split(" "), 3);
     }
+    wake();
 }
 
 // Seed select

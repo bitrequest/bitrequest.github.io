@@ -9,9 +9,8 @@ var txid,
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     })).toFixed(2),
-    wl = navigator.wakeLock,
-    wakelock,
     // Global helpers
+    block_swipe,
     sa_timer,
     tx_list,
     payment,
@@ -104,22 +103,31 @@ $(document).ready(function() {
     dw_trigger();
     //download_wallet
     //updaterequest
-    //wake
-    //sleep
 });
 
 // ** Swipe payment dialog **
 
 function swipestart() {
     $(document).on("mousedown touchstart", "#paymentdialog", function(e) {
-        var startheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
+	    blockswipe = false;
+	    var thisdialog = $(this),
+	    	inputs = thisdialog.find("input");
+	    if (inputs.is(":focus")) {
+		    blockswipe = true;
+	    }
+	    var startheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
         startswipetime = $.now();
-        swipe($(this).height(), startheight);
+        swipe(thisdialog.height(), startheight);
     })
 }
 
 function swipe(dialogheight, startheight) {
     $(document).on("mousemove touchmove", "#payment", function(e) {
+   		if (blockswipe === true) {
+	   		var inputs = paymentdialogbox.find("input");
+	   		inputs.blur();
+	    	return false;
+    	}
         var currentheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY,
             dragdistance = currentheight - startheight;
         if (dragdistance > 3 || dragdistance < -3) { // margin to activate swipe
@@ -143,7 +151,7 @@ function swipeend() {
         if (thisunit.hasClass("swiping")) {
             var paymentdialog = $("#paymentdialog"),
                 swipetime = $.now() - startswipetime,
-                largeswipe = (percent > 60 || percent < -60),
+                largeswipe = (percent > 90 || percent < -90),
                 smallswipe = (percent > 25 || percent < -25);
             if (largeswipe === true || (smallswipe === true && swipetime < 500)) {
                 thisunit.removeClass("swiping");
@@ -198,7 +206,7 @@ function flipend() {
         var thisunit = $(this);
         $(document).off("mousemove touchmove", paymentpopup);
         if (thisunit.hasClass("flipping")) {
-            if (paymentdialogbox.hasClass("flipped")) {
+	        if (paymentdialogbox.hasClass("flipped")) {
                 if (angle > 250) {
                     flip_right2();
                 } else if (angle < 110) {
@@ -246,12 +254,12 @@ function flip_left2() {
 
 function flip_reset1() {
     paymentdialogbox.css("-webkit-transform", "");
-    face_back();
+    //face_back();
 }
 
 function flip_reset2() {
     paymentdialogbox.css("-webkit-transform", "rotateY(0deg)");
-    face_front();
+    //face_front();
 }
 
 function add_flip() {
@@ -263,8 +271,8 @@ function remove_flip() {
 }
 
 function face_front() {
-    if (request) {
-        if (request.isrequest === false) {
+	if (request) {
+	    if (request.isrequest === false) {
             var sharebutton = $("#sharebutton"),
                 requesttitle = $("#requesttitle"),
                 requestname = $("#requestname"),
@@ -296,8 +304,8 @@ function face_front() {
 }
 
 function face_back() {
-    if (request) {
-        if (request.isrequest === false) {
+	if (request) {
+	    if (request.isrequest === false) {
             var requesttitle = $("#requesttitle"),
                 requestname = $("#requestname");
             if (requestname.val().length < 3) {
@@ -477,7 +485,7 @@ function continue_paymentfunction(payment) {
         set_confirmations = (dataobject && dataobject.c) ? parseFloat(dataobject.c) : (no_conf === true) ? 0 : current_conf.selected,
         instant = (!set_confirmations),
         pagenameccparam = (iscrypto === true) ? "" : payment + " ",
-        pagename = (requestname) ? requestname + " sent you a " + pagenameccparam + "payment request of " + amount + " " + uoa + " for " + requesttitle : pagenameccparam + "payment request for " + amount + " " + uoa,
+        pagename = (requestname) ? requestname + " sent a " + pagenameccparam + "payment request of " + amount + " " + uoa + " for " + requesttitle : pagenameccparam + "payment request for " + amount + " " + uoa,
         requestclass = (isrequest === true) ? "request" : "norequest"; //set classnames for request
     iszero = (amount === 0 || isNaN(amount)),
         iszero_request = (isrequest === true && iszero === true),
@@ -1650,7 +1658,7 @@ function share(thisbutton) {
             sharedurl = "https://app.bitrequest.io/?p=requests&payment=" + payment + "&uoa=" + thiscurrency + "&amount=" + thisamount + "&address=" + thisaddress + newdatastring,
             thisrequestname_uppercase = thisrequestname.substr(0, 1).toUpperCase() + thisrequestname.substr(1), // capitalize requestname
             paymentupper = payment.substr(0, 1).toUpperCase() + payment.substr(1),
-            sharedtitle = (thisdata === true) ? thisrequestname_uppercase + " sent you a " + paymentupper + " payment request of " + thisamount + " " + thiscurrency.toUpperCase() + " for '" + thisrequesttitle + "'" : "You have a " + paymentupper + " payment request of " + thisamount + " " + thiscurrency,
+            sharedtitle = (thisdata === true) ? thisrequestname_uppercase + " sent a " + paymentupper + " payment request of " + thisamount + " " + thiscurrency.toUpperCase() + " for '" + thisrequesttitle + "'" : "You have a " + paymentupper + " payment request of " + thisamount + " " + thiscurrency,
             encodedurl = encodeURIComponent(sharedurl),
             firebase_dynamiclink = firebase_shortlink + "?link=" + encodedurl + "&apn=" + androidpackagename + "&afl=" + encodedurl;
         shorten_url(sharedtitle, sharedurl, "https://s2.coinmarketcap.com/static/img/coins/200x200/" + cmcid + ".png");
@@ -1772,7 +1780,7 @@ function sharerequest(sharedurl, sharedtitle) {
     if (is_ios_app === true) {
         sharefallback(sharedurl, sharedtitle);
     } else {
-        if (supportsTouch === true && navigator.canShare) {
+	    if (supportsTouch === true && navigator.canShare) {
             navigator.share({
                 title: sharedtitle + " | " + apptitle,
                 text: sharedtitle + ": \n",
@@ -1797,8 +1805,9 @@ function whatsappshare() {
     $(document).on("click touch", "#whatsappshare", function() {
         sharecallback();
         var shareinfo = getshareinfo(),
-            share_url = "https://wa.me/?text=" + encodeURIComponent(shareinfo.body);
-        open_share_url("open", share_url);
+        	sharetext = encodeURIComponent(shareinfo.body),
+        	share_url = (supportsTouch === true) ? "https://wa.me/?text=" + sharetext : "whatsapp://send?text=" + sharetext;
+        open_share_url("location", share_url);
     });
 }
 
@@ -2285,28 +2294,5 @@ function updaterequest(ua, save) {
         setTimeout(function() {
             saverequests();
         }, 1000);
-    }
-}
-
-function wake() {
-    if (wl) {
-        const requestwakelock = async () => {
-            try {
-                wakelock = await wl.request("screen");
-                wakelock.addEventListener("release", (e) => {
-                    console.log(e);
-                });
-            } catch (e) {
-                console.error(e.name, e.message);
-            }
-        };
-        requestwakelock();
-    }
-}
-
-function sleep() {
-    if (wl) {
-        wakelock.release();
-        wakelock = null;
     }
 }

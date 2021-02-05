@@ -21,7 +21,7 @@ var language = navigator.language || navigator.userLanguage,
     referrer,
     referrer = document.referrer,
     isrefferer = (referrer.length > 0),
-    is_android_app = (window.matchMedia("(display-mode: standalone)").matches || referrer == "android-app://" + androidpackagename), // android app fingerprint
+    is_android_app = (window.matchMedia("(display-mode: standalone)").matches || referrer == "android-app://" + androidpackagename || navigator.standalone), // android app fingerprint
     is_ios_app = (userAgent == "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0_1 like Mac OS X) AppleWebKit/604.2.10 (KHTML, like Gecko) Version/13.0.3 Safari/605.1.15"), // ios app fingerprint
     inframe = (self !== top),
     offline = (navigator.onLine === false),
@@ -33,13 +33,15 @@ var language = navigator.language || navigator.userLanguage,
     hascam,
     cp_timer,
     local,
+    wl = navigator.wakeLock,
+    wakelock,
     bipv,
     bipobj = localStorage.getItem("bitrequest_bpdat"),
     hasbip = (bipobj) ? true : false,
     bipid = (hasbip) ? JSON.parse(atob(JSON.parse(bipobj).dat)).pid : false;
 
 $(document).ready(function() {
-    $.ajaxSetup({
+	$.ajaxSetup({
         cache: false
     });
 
@@ -479,6 +481,8 @@ function finishfunctions() {
     //getbip32dat
     //getcoinconfig
     //try_next_api
+    //wake
+    //sleep
     //trimdecimals
     //countdown
     //countdown_format
@@ -939,7 +943,7 @@ function choosecurrency() {
     $(document).on("click touch", "#allcurrencies li.choose_currency", function() {
         var currency = $(this).attr("data-currency"),
             cd = getcoindata(currency);
-        addcurrency({
+        addaddress({
             "currency": currency,
             "ccsymbol": cd.ccsymbol,
             "cmcid": cd.cmcid,
@@ -1810,8 +1814,8 @@ function addaddress(ad, edit) {
         label = (ad.label) ? ad.label : "",
         derived = (ad.seedid || ad.xpubid),
         readonly = (derived) ? " readonly" : "",
-		nopub = (is_xpub(currency) === false || has_xpub(currency) !== false),
-        choose_wallet_str = "<span id='get_wallet' class='address_option' data-currency='" + currency + "'>I don't have a " + currency + " address yet</span>",
+		nopub = (test_derive === false) ? true : (is_xpub(currency) === false || has_xpub(currency) !== false),
+		choose_wallet_str = "<span id='get_wallet' class='address_option' data-currency='" + currency + "'>I don't have a " + currency + " address yet</span>",
         derive_seed_str = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>Generate address from seed</span>",
         options = (hasbip === true) ? choose_wallet_str : (test_derive === true) ? (hasbip32(currency) === true) ? derive_seed_str : choose_wallet_str : choose_wallet_str,
         pnotify = (body.hasClass("showstartpage")) ? "<div class='popnotify' style='display:block'>" + options + "</div>" : "<div class='popnotify'></div>",
@@ -3273,6 +3277,29 @@ function try_next_api(apilistitem, current_apiname) {
         return false;
     } else {
         return next_api;
+    }
+}
+
+function wake() {
+    if (wl) {
+        const requestwakelock = async () => {
+            try {
+                wakelock = await wl.request("screen");
+                wakelock.addEventListener("release", (e) => {
+                    console.log(e);
+                });
+            } catch (e) {
+                console.error(e.name, e.message);
+            }
+        };
+        requestwakelock();
+    }
+}
+
+function sleep() {
+    if (wl) {
+        wakelock.release();
+        wakelock = null;
     }
 }
 

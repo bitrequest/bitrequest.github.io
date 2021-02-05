@@ -431,6 +431,7 @@ function hide_seed_panel_trigger() {
 function hide_seed_panel() {
     body.removeClass("seed_dialog");
     $("#seed_panel").attr("class", "");
+    sleep();
 }
 
 // Pincode
