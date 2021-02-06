@@ -1,10 +1,12 @@
 var test_phrase = "army van defense carry jealous true garbage claim echo media make crunch", // random phrase used for test derive
     expected_seed = "5b56c417303faa3fcba7e57400e120a0ca83ec5a4fc9ffba757fbe63fbd77a89a1a3be4c67196f57c39a88b76373733891bfaba16ed27a813ceed498804c0570", // expected seed used for test derive
     expected_address = "1HQ3rb7nyLPrjnuW85MUknPekwkn7poAUm", // expected addres used for test derive
-    has_bigint,
+    has_bigint = false,
+    can_xpub = false,
     test_derive;
 
 $(document).ready(function() {
+	xpub_check();
 	hasbigint();
     //istrial
     //bipv_pass
@@ -101,24 +103,16 @@ function hasbigint() {
 	try {
         if (typeof BigInt("1") == "bigint") { 
 	        has_bigint = true;
-        	return true;
-    	}
-    	else {
-	    	has_bigint = false;
-	    	return false;
     	}
     } catch (err) {
         console.log(err.message);
-        has_bigint = false;
-        return false;
     }
 }
 
 function istrial() {
     var trialp = localStorage.getItem("bitrequest_tp");
     if (trialp) {
-        //var twelvehours = 43200000;
-        var twelvehours = 60000;
+        var twelvehours = 43200000;
         if (($.now() - parseFloat(trialp)) < twelvehours) {
             return true;
         }
@@ -154,6 +148,8 @@ function bipv_pass() {
     return true;
 }
 
+// dependencies check
+
 function test_bip39() {
 	if (crypto === undefined) { // test for window.crypto
         bip39_fail();
@@ -186,8 +182,10 @@ function test_bip39() {
 }
 
 function bip39_fail() {
-    $("#bip39_passphrase").add(".cc_settinglist li[data-id='Xpub']").add(".cc_settinglist li[data-id='Key derivations']").hide();
+	body.addClass("nobip");
 }
+
+// test derivations
 
 function test_derivation() {
     var currency = "bitcoin",
@@ -224,23 +222,32 @@ function nano_check() {
     return false;
 }
 
+function xpub_check() {
+	var currency = "bitcoin",
+    	xpub_keycc = key_cc_xpub("xpub6EdHrjLe1JdwRR6W5romAvmVzk7bfXQWV2N9SuTWP1ebszkLVQMev6KWTNtb2D9mQpocUfAsPQGkE6wtVe8Kug3dYyA9yCJTnHRPJAbgEAF"),
+    	x_keys_dat = derive_x("M/0", xpub_keycc.key, xpub_keycc.cc),
+    	bip32dat = getbip32dat(currency),
+    	key_object = format_keys(null, x_keys_dat, bip32dat, 0, currency),
+    	xpub_address = key_object.address;
+    if (expected_address == key_object.address) {
+	    can_xpub = true;
+    }
+}
+
 // Check derivationsn
 
 function check_derivations(currency) {
     if (test_derive === true) {
         var activepub = active_xpub(currency);
-        if (activepub) {
+        if (can_xpub && activepub) {
             return "xpub";
         } else {
             if (hasbip === true) {
                 return "seed";
-            } else {
-                return false;
             }
         }
-    } else {
-        return false;
     }
+    return false;
 }
 
 function active_xpub(currency) {
@@ -248,12 +255,9 @@ function active_xpub(currency) {
     if (haspub) {
         if (haspub.selected === true) {
             return haspub;
-        } else {
-            return false;
         }
-    } else {
-        return false;
     }
+    return false;
 }
 
 function has_xpub(currency) {
@@ -261,26 +265,22 @@ function has_xpub(currency) {
     if (ispub) {
         if (ispub.key) {
             return ispub;
-        } else {
-            return false;
         }
-    } else {
-        return false;
     }
+    return false;
 }
 
 function is_xpub(currency) {
-    var xpubli = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']");
-    if (xpubli) {
-        var xpubli_dat = xpubli.data();
-        if (xpubli_dat) {
-            return xpubli_dat;
-        } else {
-            return false;
-        }
-    } else {
-        return false;
-    }
+	if (can_xpub) {
+		var xpubli = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']");
+	    if (xpubli) {
+	        var xpubli_dat = xpubli.data();
+	        if (xpubli_dat) {
+	            return xpubli_dat;
+	        }
+	    }
+	}
+	return false;
 }
 
 // Bip 39 seed generation
@@ -908,40 +908,40 @@ function derive_add_address(source, seed, key, cc, coindat, bip32, seedid, add) 
         deriveli = filter_list(addressli, id_key, seedid),
         actives = deriveli.not(".used");
     if (actives.length > 0 && add !== true) {
-        playsound(funk);
-        return false;
     }
-    var allength = deriveli.length,
-        index = (allength > 1) ? get_latest_index(deriveli) + 1 : allength,
-        root_path = (source == "xpub") ? "M/" : (source == "seed") ? bip32.root_path : "",
-        path = root_path + index,
-        x_keys_dat = derive_x(path, key, cc),
-        key_object = format_keys(seed, x_keys_dat, bip32, index, currency),
-        address = key_object.address,
-        ccsymbol = coindat.ccsymbol,
-        index_str = (index > 0) ? index : "new",
-        checkname = addressli.filter(".seed");
-    checkname_array = dom_to_array(checkname, id_key),
-        get_unique = get_uniques(checkname_array),
-        uniques = ($.inArray(seedid, checkname_array) === -1) ? get_unique : get_unique - 1,
-        alpha_prefixes = "abcdefghijklmnopqrstuvwxyz",
-        prefix = alpha_prefixes.charAt(uniques),
-        label = source + "_" + prefix + index_str,
-        this_data = {
-            "derive_index": index,
-            "currency": currency,
-            "address": address,
-            "ccsymbol": ccsymbol,
-            "cmcid": coindat.cmcid,
-            "erc20": false,
-            "checked": true,
-            "label": label
-        };
-    this_data[source + "id"] = seedid;
-    appendaddress(currency, this_data);
-    saveaddresses(currency, true);
-    $("#usedcurrencies > li[data-currency='" + currency + "']").attr("data-checked", "true").data("checked", true); // each
-    $("#currencylist > li[data-currency='" + currency + "']").removeClass("hide"); // each
+    else {
+	    var allength = deriveli.length,
+	        index = (allength > 1) ? get_latest_index(deriveli) + 1 : allength,
+	        root_path = (source == "xpub") ? "M/" : (source == "seed") ? bip32.root_path : "",
+	        path = root_path + index,
+	        x_keys_dat = derive_x(path, key, cc),
+	        key_object = format_keys(seed, x_keys_dat, bip32, index, currency),
+	        address = key_object.address,
+	        ccsymbol = coindat.ccsymbol,
+	        index_str = (index > 0) ? index : "new",
+	        checkname = addressli.filter(".seed"),
+			checkname_array = dom_to_array(checkname, id_key),
+	        get_unique = get_uniques(checkname_array),
+	        uniques = ($.inArray(seedid, checkname_array) === -1) ? get_unique : get_unique - 1,
+	        alpha_prefixes = "abcdefghijklmnopqrstuvwxyz",
+	        prefix = alpha_prefixes.charAt(uniques),
+	        label = source + "_" + prefix + index_str,
+	        this_data = {
+	            "derive_index": index,
+	            "currency": currency,
+	            "address": address,
+	            "ccsymbol": ccsymbol,
+	            "cmcid": coindat.cmcid,
+	            "erc20": false,
+	            "checked": true,
+	            "label": label
+	        };
+	    this_data[source + "id"] = seedid;
+	    appendaddress(currency, this_data);
+	    saveaddresses(currency, true);
+	    $("#usedcurrencies > li[data-currency='" + currency + "']").attr("data-checked", "true").data("checked", true); // each
+	    $("#currencylist > li[data-currency='" + currency + "']").removeClass("hide"); // each
+    }
 }
 
 function get_uniques(arr) {

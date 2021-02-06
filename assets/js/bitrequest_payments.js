@@ -1785,7 +1785,7 @@ function sharerequest(sharedurl, sharedtitle) {
                 title: sharedtitle + " | " + apptitle,
                 text: sharedtitle + ": \n",
                 url: sharedurl
-            }).then(() => sharecallback()).catch(err => sharefallback(sharedurl, sharedtitle));
+            }).then(() => sharecallback()).catch(err => console.log(err));
         } else {
             sharefallback(sharedurl, sharedtitle);
         }
@@ -1806,7 +1806,7 @@ function whatsappshare() {
         sharecallback();
         var shareinfo = getshareinfo(),
         	sharetext = encodeURIComponent(shareinfo.body),
-        	share_url = (supportsTouch === true) ? "https://wa.me/?text=" + sharetext : "whatsapp://send?text=" + sharetext;
+        	share_url = (supportsTouch === true) ? "whatsapp://send?text=" + sharetext : "https://api.whatsapp.com/send?text=" + sharetext;
         open_share_url("location", share_url);
     });
 }

@@ -47,6 +47,12 @@ html.inframe body.showstartpage #fixednav {
     display: none !important;
 }
 
+body.nobip #bip39_passphrase,
+body.nobip .cc_settinglist li[data-id='Xpub'],
+body.nobip .cc_settinglist li[data-id='Key derivations'] {
+	display:none;
+}
+
 #icon_placeholder {
     display: none;
 }

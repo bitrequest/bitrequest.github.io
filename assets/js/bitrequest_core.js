@@ -3298,7 +3298,9 @@ function wake() {
 
 function sleep() {
     if (wl) {
-        wakelock.release();
+	    if (wakelock.release) {
+		    wakelock.release();
+	    }
         wakelock = null;
     }
 }
