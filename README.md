@@ -22,13 +22,14 @@ Create and share payment requests for cryptocurrencies
 * __Manage requests__ (Monitor, View details, Archive)
 
 #### Addresses
-* __Bip39/44 / Xpub__ key derivations
+* __Bip44 / Xpub__ key derivations
 * __Manage multiple addresses__. (Arrange, View details)
 * Set preferred number of __confirmations__
 
 #### Settings
 * __Real-time exchange rates for 170 world currencies__, updated every 10 minutes.
 * __Real-time exchange rates for cryptocurrencies__, updated every 2 minutes.
+* __Bip39__ mnemonic seed
 * Set __pincode__
 * __Backup / Restore__ (Download Json file / Backup with Google Drive)
 * __Shorten__ your request URL's
