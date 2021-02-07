@@ -20,9 +20,9 @@ Create and share payment requests for cryptocurrencies
 * Get __instant payment feedback__
 * Supports __multiple cryptocurrencies__ (Bitcoin, Nano, Litecoin, Dogecoin, Ethereum and Erc20-tokens)
 * __Manage requests__ (Monitor, View details, Archive)
-* __Bip39/44 / Xpub__ key derivations
 
 #### Addresses
+* __Bip39/44 / Xpub__ key derivations
 * __Manage multiple addresses__. (Arrange, View details)
 * Set preferred number of __confirmations__
 
