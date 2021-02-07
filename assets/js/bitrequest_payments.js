@@ -1321,7 +1321,8 @@ function switchaddress() {
         } else {
             var gets = geturlparameters(),
                 payment = gets.payment,
-                thishasbip = (hasbip === true && (getbip32dat(payment).active === true));
+                bip32dat = getbip32dat(payment),
+                thishasbip = (hasbip === true && (bip32dat && bip32dat.active === true));
             if (thishasbip === true) {
                 playsound(funk);
                 //return false;
@@ -1806,7 +1807,7 @@ function whatsappshare() {
         sharecallback();
         var shareinfo = getshareinfo(),
         	sharetext = encodeURIComponent(shareinfo.body),
-        	share_url = (supportsTouch === true) ? "whatsapp://send?text=" + sharetext : "https://api.whatsapp.com/send?text=" + sharetext;
+        	share_url = "whatsapp://send?text=" + sharetext;
         open_share_url("location", share_url);
     });
 }

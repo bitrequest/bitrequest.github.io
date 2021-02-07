@@ -828,19 +828,21 @@ function derive_addone(currency, extra) {
         var coindat = getcoindata(currency),
             bip32 = getbip32dat(currency),
             activepub = active_xpub(currency);
-        if (activepub) {
-            var xpubkey = activepub.key,
-                xpub_id = activepub.key_id,
-                keycc = key_cc_xpub(xpubkey);
-            derive_add_address("xpub", false, keycc.key, keycc.cc, coindat, bip32, xpub_id, extra);
-        } else {
-            var keycc = key_cc(currency);
-            if (keycc) {
-                derive_add_address("seed", keycc.seed, keycc.key, keycc.cc, coindat, bip32, keycc.seedid, extra);
-            } else {
-                playsound(funk);
-            }
-        }
+        if (bip32) {
+	        if (activepub) {
+	            var xpubkey = activepub.key,
+	                xpub_id = activepub.key_id,
+	                keycc = key_cc_xpub(xpubkey);
+	            derive_add_address("xpub", false, keycc.key, keycc.cc, coindat, bip32, xpub_id, extra);
+	        } else {
+	            var keycc = key_cc(currency);
+	            if (keycc) {
+	                derive_add_address("seed", keycc.seed, keycc.key, keycc.cc, coindat, bip32, keycc.seedid, extra);
+	            } else {
+	                playsound(funk);
+	            }
+	        }
+	    }
     }
 }
 
