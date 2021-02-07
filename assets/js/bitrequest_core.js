@@ -3460,22 +3460,24 @@ function fetchrequests(cachename, archive) {
 //initiate page when there's no cache
 function initiate() {
     $.each(bitrequest_coin_data, function(dat, val) {
-        var settings = val.settings,
-            has_settings = (settings) ? true : false,
-            is_monitored = (settings) ? (settings.apis) ? true : false : false,
-            cd = val.data,
-            coindata = {
-                "currency": cd.currency,
-                "ccsymbol": cd.ccsymbol,
-                "checked": false,
-                "cmcid": cd.cmcid,
-                "erc20": false,
-                "monitored": is_monitored,
-                "settings": has_settings,
-                "urlscheme": cd.urlscheme
-            };
-        buildpage(coindata, true);
-        append_coinsetting(val.currency, settings, true);
+	    if (val.active === true) {
+		    var settings = val.settings,
+	            has_settings = (settings) ? true : false,
+	            is_monitored = (settings) ? (settings.apis) ? true : false : false,
+	            cd = val.data,
+	            coindata = {
+	                "currency": cd.currency,
+	                "ccsymbol": cd.ccsymbol,
+	                "checked": false,
+	                "cmcid": cd.cmcid,
+	                "erc20": false,
+	                "monitored": is_monitored,
+	                "settings": has_settings,
+	                "urlscheme": cd.urlscheme
+	            };
+	        buildpage(coindata, true);
+	        append_coinsetting(val.currency, settings, true);
+	    }
     });
 }
 

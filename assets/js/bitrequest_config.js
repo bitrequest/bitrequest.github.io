@@ -75,7 +75,8 @@ var multi_wallets = {
 
     },
     bitrequest_coin_data = [{
-            "currency": "bitcoin",
+	    	"currency": "bitcoin",
+	    	"active": true,
             "data": {
                 "currency": "bitcoin",
                 "ccsymbol": "btc",
@@ -224,6 +225,7 @@ var multi_wallets = {
         },
         {
             "currency": "monero",
+            "active": false,
             "data": {
                 "currency": "monero",
                 "ccsymbol": "xmr",
@@ -269,6 +271,7 @@ var multi_wallets = {
         },
         {
             "currency": "litecoin",
+            "active": true,
             "data": {
                 "currency": "litecoin",
                 "ccsymbol": "ltc",
@@ -374,6 +377,7 @@ var multi_wallets = {
         },
         {
             "currency": "dogecoin",
+            "active": true,
             "data": {
                 "currency": "dogecoin",
                 "ccsymbol": "doge",
@@ -480,6 +484,7 @@ var multi_wallets = {
         },
         {
             "currency": "nano",
+            "active": true,
             "data": {
                 "currency": "nano",
                 "ccsymbol": "nano",
@@ -593,6 +598,7 @@ var multi_wallets = {
         },
         {
             "currency": "ethereum",
+            "active": true,
             "data": {
                 "currency": "ethereum",
                 "ccsymbol": "eth",
