@@ -71,6 +71,14 @@ var multi_wallets = {
             "playstore": "https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp",
             "desktop": "https://trustwallet.com",
             "seed": true
+        },
+        "keepkey": {
+            "name": "keepkey",
+            "website": "https://shapeshift.com/keepkey",
+            "appstore": "https://beta.shapeshift.com",
+            "playstore": "https://beta.shapeshift.com",
+            "desktop": "https://beta.shapeshift.com",
+            "seed": true
         }
 
     },
@@ -286,6 +294,7 @@ var multi_wallets = {
                     multi_wallets.coinomi,
                     multi_wallets.trezor,
                     multi_wallets.ledger,
+                    multi_wallets.keepkey,
                     {
                         "name": "electrum",
                         "website": "https://electrum-ltc.org",
@@ -394,6 +403,7 @@ var multi_wallets = {
                     multi_wallets.trezor,
                     multi_wallets.ledger,
                     multi_wallets.trustwallet,
+                    multi_wallets.keepkey,
                     {
                         "name": "multidoge",
                         "website": "https://multidoge.org",
@@ -613,6 +623,7 @@ var multi_wallets = {
                     multi_wallets.trezor,
                     multi_wallets.ledger,
                     multi_wallets.trustwallet,
+                    multi_wallets.keepkey,
                     {
                         "name": "myetherwallet",
                         "website": "https://www.mewwallet.com",

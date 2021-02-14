@@ -2034,11 +2034,16 @@ function saverequest(direct) {
                 history.replaceState(null, null, window_location + request_params);
             }
             helper.currencylistitem.removeData("url"); // remove saved url
-            // Derive new address
-            var addressli = filter_addressli(thispayment, "address", thisaddress);
-            addressli.addClass("used").data("used", true);
-            saveaddresses(thispayment, false);
-            derive_addone(thispayment);
+            if (thispayment == "ethereum") {
+	            // No new addresses for Ethereum
+            }
+            else {
+	            // Derive new address
+	            var addressli = filter_addressli(thispayment, "address", thisaddress);
+	            addressli.addClass("used").data("used", true);
+	            saveaddresses(thispayment, false);
+	            derive_addone(thispayment);
+            }
         }
     }
     // post to parent
