@@ -14,9 +14,12 @@ var txid,
     sa_timer,
     tx_list,
     payment,
-    request;
+    request,
+    request_timer;
 
 $(document).ready(function() {
+	wake_panel();
+	//set_request_timer
     swipestart();
     //swipe
     swipeend();
@@ -75,6 +78,7 @@ $(document).ready(function() {
     pickaddressfromdialog();
     //set_edit
     addaddressfromdialog();
+    add_from_seed();
     scanqr();
     showapistats();
     hideapistats();
@@ -106,6 +110,22 @@ $(document).ready(function() {
 });
 
 // ** Swipe payment dialog **
+
+function wake_panel() {
+    $(document).on("mousedown touchstart", paymentdialogbox, function() {
+        set_request_timer();
+    })
+}
+
+function set_request_timer(timeout) {
+	// close request dialog after 3 minutes
+	clearTimeout(request_timer);
+	request_timer = setTimeout(function() {
+		cancelpaymentdialog();
+	}, 180000, function() {
+		clearTimeout(request_timer);
+	});
+}
 
 function swipestart() {
     $(document).on("mousedown touchstart", "#paymentdialog", function(e) {
@@ -451,6 +471,10 @@ function continue_paymentfunction(payment) {
         return false;
     }
     loader();
+    var viewkey = false;
+    if (payment == "monero") { // check for monero viewkey
+	    var viewkey = get_vk(address);
+    }
     var coindata = request.coindata,
         saved_coinsettings = JSON.parse(localStorage.getItem("bitrequest_" + payment + "_settings")),
         coinsettings = (saved_coinsettings) ? saved_coinsettings : getcoinsettings(payment),
@@ -471,7 +495,7 @@ function continue_paymentfunction(payment) {
         cmcid = coindata.cmcid,
         cpid = currencysymbol + "-" + payment,
         ispending = check_pending(address, cmcid),
-        monitored = coindata.monitored,
+        monitored = (viewkey) ? true : coindata.monitored,
         pendingparam = gets.pending,
         pending = (pendingparam) ? pendingparam : (monitored === true) ? "incoming" : "unknown",
         socket_list = (coinsettings) ? coinsettings.websockets : null,
@@ -486,8 +510,8 @@ function continue_paymentfunction(payment) {
         instant = (!set_confirmations),
         pagenameccparam = (iscrypto === true) ? "" : payment + " ",
         pagename = (requestname) ? requestname + " sent a " + pagenameccparam + "payment request of " + amount + " " + uoa + " for " + requesttitle : pagenameccparam + "payment request for " + amount + " " + uoa,
-        requestclass = (isrequest === true) ? "request" : "norequest"; //set classnames for request
-    iszero = (amount === 0 || isNaN(amount)),
+        requestclass = (isrequest === true) ? "request" : "norequest", //set classnames for request
+		iszero = (amount === 0 || isNaN(amount)),
         iszero_request = (isrequest === true && iszero === true),
         iszeroclass = (iszero_request === true) ? " iszero" : "",
         showclass = (iscrypto === true) ? (uoa == "btc") ? " showsat showlc showcc" : " showlc showcc" : (uoa == fiatcurrency) ? "" : " showlc",
@@ -519,6 +543,7 @@ function continue_paymentfunction(payment) {
             shared: (isrequest === true && requesttimestamp !== null), // check if request is from a shared source,
             iszero: iszero,
             iszero_request: iszero_request,
+            viewkey: viewkey,
             monitored: monitored
         },
         extend_helper_data = {
@@ -927,7 +952,7 @@ function continue_paymentfunction(payment) {
             "<div id='shareamount' class='inputbreak'>\
 						<span id='sharecryptowrap'>" + cryptologo +
             "<span id='sharemainccinputmirror' class='ccmirror mirrordiv'>\
-								<span>" + thiscurrencyvaluefixedplaceholder + "</span>\
+								<span class='select'>" + thiscurrencyvaluefixedplaceholder + "</span>\
 								<input value='" + thiscurrencyvaluefixedvar + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'/>\
 							</span>\
 						</span>\
@@ -1037,7 +1062,7 @@ function continue_paymentfunction(payment) {
 							<input value='" + fiatcurrencyvaluevar + "' data-xrate='" + fiatcurrencyrate + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'/>\
 						</span> " + fiatcurrency + ") \
 					</div>\
-					<div id='txibreak' class='inputbreak'> Send <span id='ccinputmirror' class='ccmirror mirrordiv'><span>" + thiscurrencyvaluefixedplaceholder + "</span><input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'/></span> " + currencysymbol + " to" + labelvalue + ": </div>\
+					<div id='txibreak' class='inputbreak'> Send <span id='ccinputmirror' class='ccmirror mirrordiv'><span class='select'>" + thiscurrencyvaluefixedplaceholder + "</span><input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'/></span> " + currencysymbol + " to" + labelvalue + ": </div>\
 				</div>\
 				<div id='paymentaddress' class='copyinput' data-type='address'>" + address + "</div>\
 			</div>\
@@ -1055,7 +1080,8 @@ function continue_paymentfunction(payment) {
         renderqr(payment, address, $("#paymentdialogbox .ccpool").attr("data-value"));
         if (isrequest === true) { // check for incoming requests
             if (helper.contactform === true) { // indicates if it's a online payment so not an incoming request
-            } else {
+            }
+            else {
                 if (iszero === true) {
                     main_input_focus();
                 }
@@ -1064,8 +1090,13 @@ function continue_paymentfunction(payment) {
         } else {
             main_input_focus();
         }
-        if (save_request == "nosocket") {} else {
+        if (save_request == "nosocket") {
+        }
+        else if (monitored === false) {
+	        notify("this currency is not monitored", 500000, "yes");
+	    } else {
             init_socket(selected_socket, address);
+            set_request_timer();
         }
         // close loading screen when in iframe
         if (inframe === true) {
@@ -1264,6 +1295,7 @@ function reflectinput() {
         } else {
             mirrordiv.text(thisvalue);
         }
+        set_request_timer();
     });
 }
 
@@ -1303,14 +1335,14 @@ function renderqr(payment, address, amount) {
         this_iszero = (number === 0 || isNaN(number)),
         urlscheme;
     if (request.erc20 === true) {
-        var raw_amount = amount * Math.pow(10, request.decimals);
-        urlscheme = "ethereum:" + request.token_contract + "/transfer?address=" + address + "&uint256=" + raw_amount.toFixedSpecial(0);
+        var raw_amount = bn_multi(parseFloat(amount),  parseFloat(Math.pow(10, request.decimals)));
+        urlscheme = "ethereum:" + request.token_contract + "/transfer?address=" + address + "&uint256=" + raw_amount;
         //urlscheme = "ethereum:" + request.token_contract + "/transfer?address=" + address + "&uint256=" + raw_amount + "&gas=43855";
     } else {
         urlscheme = request.coindata.urlscheme(payment, address, amount, this_iszero);
     }
     $("#qrcode").html("").qrcode(urlscheme);
-    $(".openwallet").attr("data-rel", urlscheme);
+    $(".openwallet").attr({"data-rel":urlscheme,"title":urlscheme});
 }
 
 function switchaddress() {
@@ -1321,13 +1353,7 @@ function switchaddress() {
         } else {
             var gets = geturlparameters(),
                 payment = gets.payment,
-                bip32dat = getbip32dat(payment),
-                thishasbip = (hasbip === true && (bip32dat && bip32dat.active === true));
-            if (thishasbip === true) {
-                playsound(funk);
-                //return false;
-            }
-            var data = (gets.d && gets.d.length > 5) ? "&d=" + gets.d : "",
+                data = (gets.d && gets.d.length > 5) ? "&d=" + gets.d : "",
                 currentaddress = gets.address,
                 nextaddress = newaddresli(payment, currentaddress);
             if (nextaddress) {
@@ -1421,6 +1447,7 @@ function validaterequestdata(requestname_val, requesttitle_val) {
 function inputrequestdata() {
     $(document).on("input", "#shareform input", function() {
         validaterequestdata($("input#requestname").val(), $("input#requesttitle").val());
+        set_request_timer();
     });
 }
 
@@ -1581,16 +1608,39 @@ function addaddressfromdialog() {
         var formbox = $(this).closest("#addresslock"),
             payment = request.payment,
             cmcid = request.cmcid,
-            erc20 = request.erc20
-        ad = {
+            erc20 = request.erc20,
+            dd = derive_data(payment, true);
+			ad = {
                 "currency": payment,
                 "ccsymbol": request.currencysymbol,
                 "cmcid": cmcid,
                 "checked": true,
-                "erc20": erc20
+                "erc20": erc20,
+                "dd": dd
             },
-            content = $("<div class='formbox form add' id='addressformbox'><h2>" + getcc_icon(cmcid, request.cpid, erc20) + " Add " + payment + " address</h2><div class='popnotify'></div><form class='addressform popform' data-checked='true'><input type='text' class='address' value='' placeholder='Enter a " + payment + " address'><input type='text' class='addresslabel' value='' placeholder='label'><div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / private key of this address</span></div><input type='submit' class='submit' value='OK'></form>").data(ad);
+            scanqr = (hascam === true) ? "<div class='qrscanner' data-currency='" + payment + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+            scanvk = (hascam === true) ? "<div class='qrscanner' data-currency='" + payment + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+            vk_box = (payment == "monero") ? "<div class='inputwrap'><input type='text' class='vk_input' value='' placeholder='View key'>" + scanvk + "</div>" : "",
+            seedstr = (payment == "ethereum" && dd) ? "<div class='popnotify' style='display:block'><span id='addfromseed' class='address_option'>Generate address from seed</span></div>" : "<div class='popnotify'></div>",
+            content = $("<div class='formbox form add' id='addressformbox'>\<h2>" + getcc_icon(cmcid, request.cpid, erc20) + " Add " + payment + " address</h2>" + seedstr + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' class='address' value='' placeholder='Enter a " + payment + " address'>" + scanqr + "</div>" + vk_box + "<input type='text' class='addresslabel' value='' placeholder='label'><div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / private key of this address</span></div><input type='submit' class='submit' value='OK'></form></div>").data(ad);
         formbox.parent("#dialogbody").html(content);
+    });
+}
+
+function add_from_seed() {
+    $(document).on("click touch", "#addfromseed", function() {
+	    var ad = $("#addressformbox").data(),
+	    	currency = ad.currency,
+	    	dd = ad.dd;
+	    if (currency && dd) {
+		    if (dd.address) {
+			    var result = confirm("Are you sure you want to generate a new " + currency + " address? It may not show up in some wallets");
+		        if (result === true) {
+		            derive_add_address(currency, dd);
+		            canceldialog();
+		        }
+		    }
+	    }
     });
 }
 
@@ -2108,7 +2158,8 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
         send_receive = (typestate == "incoming") ? "sent" : "received",
         brstatuspanel = paymentdialogbox.find(".brstatuspanel"),
         viewtx = brstatuspanel.find("#view_tx"),
-        pending = prdata.pending;
+        pending = prdata.pending,
+        thispayment = prdata.payment;
     viewtx.attr("data-txhash", smart_txhash);
     if (pendingrequest.hasClass("expired")) {
         if (status == "new" || status == "insufficient") {
@@ -2116,14 +2167,14 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
             paymentdialogbox.find("span#view_tx").hide();
         }
     } else {
-        if (prdata.payment == "nano") { // 0 confirmation so payment must be sent
+        if (thispayment == "nano") { // 0 confirmation so payment must be sent
             if (status == "insufficient") {
                 adjust_paymentdialog("insufficient", "scanning", "Insufficient amount");
             } else {
                 adjust_paymentdialog("paid", "no", "Payment " + send_receive);
             }
         } else {
-            if (smart_txhash) {
+	        if (smart_txhash) {
                 add_flip();
                 if (pending == "scanning") {
                     if (status == "insufficient") {
@@ -2132,8 +2183,25 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
                         adjust_paymentdialog("pending", "scanning", "Pending request");
                     }
                 } else {
-                    adjust_paymentdialog("pending", "polling", "Transaction broadcasted");
-                    pick_monitor(smart_txhash);
+	                adjust_paymentdialog("pending", "polling", "Transaction broadcasted");
+	                if (thispayment == "monero") {
+		                var address = prdata.address,
+		                	vk = get_vk(address);
+						if (vk) {
+							var starttime = $.now();
+				            closenotify();
+				            ping_xmr_node(34, starttime, address, vk, smart_txhash);
+				            pingtx = setInterval(function() {
+								ping_xmr_node(34, starttime, address, vk, smart_txhash);
+							}, 35000);
+			            }
+			            else {
+				            notify("this currency is not monitored", 500000, "yes");
+			            }
+		            }
+		            else {
+			            pick_monitor(smart_txhash);
+		            }
                 }
             }
         }

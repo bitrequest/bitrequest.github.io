@@ -345,7 +345,8 @@ function handle_rpc_monitor_fails(rpcdata, error, txhash) {
 }
 
 function confirmations(tx_data, direct) {
-    if (tx_data === false || tx_data.ccval === undefined) {
+	clearTimeout(request_timer);
+	if (tx_data === false || tx_data.ccval === undefined) {
         return false;
     }
     var brstatuspanel = $("#paymentdialogbox .brstatuspanel"),

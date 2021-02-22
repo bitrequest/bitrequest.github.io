@@ -314,6 +314,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                 "cachetime": 25,
                 "cachefolder": "1h",
                 "api_url": rpcurl,
+                "proxy": false,
                 "params": {
                     "method": "POST",
                     "data": JSON.stringify(test_rpc_call),
@@ -489,6 +490,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                 "cachefolder": "1h",
                 //"custom": "btc_rpc_test",
                 "api_url": rpcurl,
+                "proxy": false,
                 "params": {
                     "method": "POST",
                     "data": JSON.stringify(test_rpc_call),
@@ -764,7 +766,7 @@ function edit_xpub(ad) {
     var currency = ad.currency,
         cpid = ad.ccsymbol + "-" + currency,
         address = (ad.address) ? ad.address : "",
-        scanqr = (hascam === true) ? "<div id='qrscanner' data-currency='" + currency + "' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+        scanqr = (hascam === true) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
         content = $("<div class='formbox form add' id='xpubformbox'>\
         	<h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " Add " + currency + " Xpub key</h2>\
         	<div class='popnotify'></div>\

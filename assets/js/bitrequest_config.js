@@ -17,6 +17,7 @@ var apptitle = "Bitrequest",
     eth_socket2 = "wss://ropsten.infura.io/ws/v3/",
     main_ad_node = "https://web3api.io/api/v2/",
     main_ad_socket = "wss://ws.web3api.io/",
+    xmr_node = "https://api.mymonero.com:8443/",
     socket_attempt = {},
     api_attempt = {},
     api_attempts = {},
@@ -233,7 +234,7 @@ var multi_wallets = {
         },
         {
             "currency": "monero",
-            "active": false,
+            "active": true,
             "data": {
                 "currency": "monero",
                 "ccsymbol": "xmr",
@@ -260,10 +261,21 @@ var multi_wallets = {
                 ]
             },
             "settings": {
+	            "confirmations": {
+                    "icon": "clock",
+                    "selected": 0
+                },
                 "Use random address": {
                     "icon": "dice",
                     "selected": false,
                     "switch": true,
+                },
+                "blockexplorers": {
+                    "icon": "eye",
+                    "selected": "blockchair.com",
+                    "options": {
+                        "key1": "blockchair.com"
+                    }
                 },
                 "Xpub": {
                     "active": false,
@@ -500,7 +512,8 @@ var multi_wallets = {
                 "ccsymbol": "nano",
                 "cmcid": 1567,
                 "urlscheme": function(payment, address, amount, iszero) {
-                    return "nano:" + address + ((iszero === true) ? "" : "?amount=" + (parseFloat(amount) * "1000000000000000000000000000000").toFixedSpecial(0));
+	                var amount = (iszero === true) ? "" : "?amount=" + bn_multi(parseFloat(amount), "1000000000000000000000000000000");
+                    return "nano:" + address + amount;
                 },
                 "address_regex": "^(xrb|nano)_([a-z1-9]{60})$",
                 "wallet_download_page": "https://nanowallets.guide",

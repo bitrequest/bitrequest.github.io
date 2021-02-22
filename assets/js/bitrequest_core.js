@@ -392,8 +392,10 @@ function finishfunctions() {
     pickerc20select();
     //initaddressform
     submit_erc20();
+    //validateaddress_vk
     //validateaddress
     //check_address
+    //check_vk
     canceldialog_click();
     canceldialogtrigger();
     //canceldialog
@@ -449,6 +451,7 @@ function finishfunctions() {
     //result
     //get_api_url
     //fetchsymbol
+    //bn_multi
     //fixedcheck
     //geturlparameters
     //triggersubmit
@@ -544,6 +547,7 @@ function finishfunctions() {
     //check_currency
     //currency_check
     //currency_uncheck
+    //get_vk
 
     gk();
 }
@@ -949,7 +953,7 @@ function choosecurrency() {
             "cmcid": cd.cmcid,
             "erc20": false,
             "checked": true
-        });
+        }, false);
         return false;
     })
 }
@@ -1618,10 +1622,6 @@ function escapeandback() {
         closeloader();
         return false;
     }
-    if ($("#sharepopup").hasClass("active")) {
-        cancelsharedialog();
-        return false;
-    }
     if ($("#notify").hasClass("popup")) {
         closenotify();
         return false;
@@ -1632,6 +1632,10 @@ function escapeandback() {
     }
     if ($("#popup").hasClass("active")) {
         canceldialog();
+        return false;
+    }
+    if ($("#sharepopup").hasClass("active")) {
+        cancelsharedialog();
         return false;
     }
     if ($("#optionspop").hasClass("active")) {
@@ -1813,19 +1817,23 @@ function addaddress(ad, edit) {
         address = (ad.address) ? ad.address : "",
         label = (ad.label) ? ad.label : "",
         derived = (ad.seedid || ad.xpubid),
-        readonly = (derived) ? " readonly" : "",
+        readonly = (edit === true) ? " readonly" : "",
 		nopub = (test_derive === false) ? true : (is_xpub(currency) === false || has_xpub(currency) !== false),
 		choose_wallet_str = "<span id='get_wallet' class='address_option' data-currency='" + currency + "'>I don't have a " + currency + " address yet</span>",
         derive_seed_str = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>Generate address from seed</span>",
         options = (hasbip === true) ? choose_wallet_str : (test_derive === true) ? (hasbip32(currency) === true) ? derive_seed_str : choose_wallet_str : choose_wallet_str,
         pnotify = (body.hasClass("showstartpage")) ? "<div class='popnotify' style='display:block'>" + options + "</div>" : "<div class='popnotify'></div>",
-        scanqr = (hascam === true && edit === false) ? "<div id='qrscanner' data-currency='" + currency + "' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+        scanqr = (hascam === true && edit === false) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
         title = (edit === true) ? "<h2 class='icon-pencil'>Edit label</h2>" : "<h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " Add " + currency + " address</h2>",
         pk_checkbox = (edit === true) ? "" : "<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / private key of this address</span></div>",
         addeditclass = (edit === true) ? "edit" : "add",
         xpubclass = (nopub) ? " hasxpub" : "",
         xpubph = (nopub) ? "" : " or Xpub",
-        content = $("<div class='formbox form" + addeditclass + xpubclass + "' id='addressformbox'>" + title + pnotify + "<form class='addressform popform'><div class='inputwrap'><input type='text' class='address' value='" + address + "' placeholder='Enter a " + currency + " address" + xpubph + "'" + readonly + ">" + scanqr + "</div><input type='text' class='addresslabel' value='" + label + "' placeholder='label'>" + pk_checkbox + "<input type='submit' class='submit' value='OK'></form>").data(ad);
+        vk_val = (ad.vk) ? ad.vk : "",
+        has_vk = (vk_val != ""),
+        scanvk = (hascam === true) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+        vk_box = (currency == "monero") ? (has_vk) ? "" : "<div class='inputwrap'><input type='text' class='vk_input' value='" + vk_val + "' placeholder='View key'>" + scanvk + "</div>" : "",
+        content = $("<div class='formbox form" + addeditclass + xpubclass + "' id='addressformbox'>" + title + pnotify + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' class='address' value='" + address + "' placeholder='Enter a " + currency + " address" + xpubph + "'" + readonly + ">" + scanqr + "</div>" + vk_box + "<input type='text' class='addresslabel' value='" + label + "' placeholder='label'>" + pk_checkbox + "<input type='submit' class='submit' value='OK'></form>").data(ad);
     popdialog(content, "alert", "triggersubmit");
     if (supportsTouch === true) {} else {
         if (edit === true) {
@@ -1876,14 +1884,14 @@ function submitaddresstrigger() {
         e.preventDefault();
         var thisform = $(this).closest("#addressformbox");
         if (thisform.hasClass("hasxpub")) {
-            validateaddress(thisform);
+            validateaddress_vk(thisform.data());
         } else {
             var addressinput = thisform.find(".address"),
                 ad_val = addressinput.val();
             if (ad_val.length > 103) {
                 validate_xpub(thisform);
             } else {
-                validateaddress(thisform);
+                validateaddress_vk(thisform.data());
             }
         }
     })
@@ -1923,7 +1931,7 @@ function add_erc20() {
 						<span>I own the seed / private key of this address</span>\
 					</div></div>\
 					<input type='submit' class='submit' value='OK'/>\
-				</form>").data(nodedata);
+				</form></div>").data(nodedata);
         popdialog(content, "alert", "triggersubmit");
     })
 }
@@ -1974,7 +1982,7 @@ function pickerc20select() {
 }
 
 function initaddressform(coin_data) {
-    var erc20formbox = $("#erc20formbox"),
+	var erc20formbox = $("#erc20formbox"),
         erc20_inputs = erc20formbox.find("#erc20_inputs"),
         addressfield = erc20formbox.find("input.address"),
         labelfield = erc20formbox.find("input.addresslabel");
@@ -1990,112 +1998,186 @@ function initaddressform(coin_data) {
 function submit_erc20() {
     $(document).on("click touch", "#erc20formbox input.submit", function(e) {
         e.preventDefault();
-        validateaddress($(this).closest("#erc20formbox"));
+        validateaddress_vk($("#erc20formbox").data());
     });
 }
 
-function validateaddress(thisnode) {
-    var this_data = thisnode.data(),
-        iserc20 = (this_data.erc20 === true),
-        currency = this_data.currency,
+function validateaddress_vk(ad) {
+    var currency = ad.currency,
+    	addressfield = $("#addressform .address"),
+        addressinputval = addressfield.val();
+    if (addressinputval) {
+    } else {
+        var errormessage = "Enter a " + currency + " address";
+        popnotify("error", errormessage);
+        addressfield.focus();
+        return false;
+    }
+    if (currency) {
+		var vkfield = $("#addressform .vk_input"),
+        	vkinputval = (currency == "monero") ? (vkfield.length) ? vkfield.val() : 0 : 0,
+			vklength = vkinputval.length;
+		if (vklength) {
+		    if (vklength !== 64) {
+                popnotify("error", "Invalid Viewkey");
+                return false;
+            }
+            else {
+	            if (check_vk(vkinputval)) {
+	            }
+	            else {
+		            popnotify("error", "Invalid Viewkey");
+	                return false;
+	            }
+            }
+            var valid = check_address(addressinputval, currency);
+            if (valid === true) {
+	        }
+	        else {
+		        var errormessage = addressinputval + " is NOT a valid " + currency + " address";
+                popnotify("error", errormessage);
+	            return false;
+	        }
+            var payload = {
+		    	"address":addressinputval,
+		    	"view_key":vkinputval
+		    };
+		    api_proxy({
+		        "api": "mymonero",
+		        "cachetime": 25,
+		        "cachefolder": "1h",
+		        "api_url": xmr_node + "get_address_txs",
+		        "params": {
+		            "method": "POST",
+		            "data": JSON.stringify(payload),
+		            "headers": {
+		                "Content-Type": "text/plain"
+		            }
+		        }
+		    }).done(function(e) {
+		        var data = br_result(e).result;
+		        if (data.blockchain_height) { // success!
+			        validateaddress(ad, vkinputval);
+		        }
+		        else {
+			        popnotify("error", "Invalid Viewkey");
+		        }
+		        
+		    }).fail(function(jqXHR, textStatus, errorThrown) {
+		        console.log(jqXHR);
+		        console.log(textStatus);
+		        console.log(errorThrown);
+		        popnotify("error", "Error verifying Viewkey");
+		    });
+        }
+        else {
+	        validateaddress(ad, false);
+        }
+    } else {
+	    var errormessage = "Pick a currency";
+        popnotify("error", errormessage);
+    }
+}
+
+function validateaddress(ad, vk) {
+	var currency = ad.currency,
+		iserc20 = (ad.erc20 === true),
         currencycheck = (iserc20 === true) ? "ethereum" : currency,
-        ccsymbol = this_data.ccsymbol,
-        addressfield = thisnode.find(".address"),
+        ccsymbol = ad.ccsymbol,
+        addressfield = $("#addressform .address"),
         addressinputval = addressfield.val(),
         currentaddresslist = get_addresslist(currency),
         getindex = currentaddresslist.children("li").length + 1,
         index = (getindex > 1) ? getindex : "new",
-        labelfield = thisnode.find(".addresslabel"),
+        labelfield = $("#addressform .addresslabel"),
         labelinput = labelfield.val(),
         labelinputval = (labelinput) ? labelinput : ccsymbol + index;
-    if (currency) {
-        if (addressinputval) {
-            var addressduplicate = currentaddresslist.children("li[data-address=" + addressinputval + "]").length > 0,
-                address = this_data.address,
-                label = this_data.label;
-            if (addressduplicate === true && address !== addressinputval) {
-                popnotify("error", "address already exists");
-                addressfield.select();
-            } else {
-                var valid = check_address(addressinputval, currencycheck);
-                if (valid === "no_web3") {
-                    canceldialog();
-                    setTimeout(function() {
-                        api_eror_msg("infura", {
-                            errormessage: "Missing API key",
-                            errorcode: "300"
-                        }, true);
-                    }, 800);
-                    return false;
-                }
-                if (valid === true) {
-                    var validlabel = check_address(labelinputval, currencycheck);
-                    if (validlabel === true) {
-                        popnotify("error", "invalid label");
-                        labelfield.val(label).select();
+	if (addressinputval) {
+        var addressduplicate = currentaddresslist.children("li[data-address=" + addressinputval + "]").length > 0,
+            address = ad.address,
+            label = ad.label;
+        if (addressduplicate === true && address !== addressinputval) {
+            popnotify("error", "address already exists");
+            addressfield.select();
+        } else {
+            var valid = check_address(addressinputval, currencycheck);
+            if (valid === "no_web3") {
+                canceldialog();
+                setTimeout(function() {
+                    api_eror_msg("infura", {
+                        errormessage: "Missing API key",
+                        errorcode: "300"
+                    }, true);
+                }, 800);
+                return false;
+            }
+            if (valid === true) {
+                var validlabel = check_address(labelinputval, currencycheck);
+                if (validlabel === true) {
+                    popnotify("error", "invalid label");
+                    labelfield.val(label).select();
+                } else {
+                    if ($("#addressformbox").hasClass("formedit")) {
+                        var currentlistitem = currentaddresslist.children("li[data-address='" + address + "']"),
+                        	ed = {};
+                        ed.label = labelinputval;
+                        if (vk) {
+                            ed.vk = vk;
+                        }
+                        currentlistitem.data(ed).attr("data-address", addressinputval);
+                        currentlistitem.find(".atext h2 > span").text(labelinputval);
+                        currentlistitem.find(".atext p.address").text(addressinputval);
+                        saveaddresses(currency, true);
+                        canceldialog();
+                        canceloptions();
                     } else {
-                        if ($("#addressformbox").hasClass("formedit")) {
-                            var currentlistitem = currentaddresslist.children("li[data-address='" + address + "']");
-                            currentlistitem.data({
-                                "label": labelinputval,
-                                "address": addressinputval
-                            }).attr("data-address", addressinputval);
-                            currentlistitem.find(".atext h2 > span").text(labelinputval);
-                            currentlistitem.find(".atext p.address").text(addressinputval);
+                        var pk_checkbox = $("#pk_confirmwrap"),
+                            pk_checked = pk_checkbox.data("checked");
+                        if (pk_checked == true) {
+                            if (index == "new") {
+                                if (iserc20 === true) {
+                                    buildpage(ad, true);
+                                    append_coinsetting(currency, erc20_settings, false);
+                                }
+                                if (body.hasClass("showstartpage")) {
+                                    var acountname = $("#eninput").val();
+                                    $("#accountsettings").data("selected", acountname).find("p").html(acountname);
+                                    savesettings();
+                                    var href = "?p=home&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0" + "&address=" + addressinputval;
+                                    localStorage.setItem("bitrequest_editurl", href); // to check if request is being edited
+                                    openpage(href, "create " + currency + " request", "payment");
+                                    body.removeClass("showstartpage");
+                                } else {
+                                    loadpage("?p=" + currency);
+                                }
+                            }
+                            ad.address = addressinputval,
+                                ad.label = labelinputval,
+                                ad.vk = vk,
+                                ad.checked = true;
+                            appendaddress(currency, ad);
                             saveaddresses(currency, true);
+                            currency_check(currency);
                             canceldialog();
                             canceloptions();
+                            clear_savedurl();
                         } else {
-                            var pk_checkbox = thisnode.find("#pk_confirmwrap"),
-                                pk_checked = pk_checkbox.data("checked");
-                            if (pk_checked == true) {
-                                if (index == "new") {
-                                    if (iserc20 === true) {
-                                        buildpage(this_data, true);
-                                        append_coinsetting(currency, erc20_settings, false);
-                                    }
-                                    if (body.hasClass("showstartpage")) {
-                                        var acountname = $("#eninput").val();
-                                        $("#accountsettings").data("selected", acountname).find("p").html(acountname);
-                                        savesettings();
-                                        var href = "?p=home&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0" + "&address=" + addressinputval;
-                                        localStorage.setItem("bitrequest_editurl", href); // to check if request is being edited
-                                        openpage(href, "create " + currency + " request", "payment");
-                                        body.removeClass("showstartpage");
-                                    } else {
-                                        loadpage("?p=" + currency);
-                                    }
-                                }
-                                this_data.address = addressinputval,
-                                    this_data.label = labelinputval,
-                                    this_data.checked = true,
-                                    appendaddress(currency, this_data);
-                                saveaddresses(currency, true);
-                                currency_check(currency);
-                                canceldialog();
-                                canceloptions();
-                                clear_savedurl();
-                            } else {
-                                popnotify("error", "Confirm privatekey ownership");
-                            }
+                            popnotify("error", "Confirm privatekey ownership");
                         }
                     }
-                } else {
-                    var errormessage = addressinputval + " is NOT a valid " + currency + " address";
-                    popnotify("error", errormessage);
-                    setTimeout(function() {
-                        addressfield.select();
-                    }, 10);
                 }
+            } else {
+                var errormessage = addressinputval + " is NOT a valid " + currency + " address";
+                popnotify("error", errormessage);
+                setTimeout(function() {
+                    addressfield.select();
+                }, 10);
             }
-        } else {
-            var errormessage = "Enter a " + currency + " address";
-            popnotify("error", errormessage);
-            addressfield.focus();
         }
     } else {
-        var errormessage = "Pick a currency";
+        var errormessage = "Enter a " + currency + " address";
         popnotify("error", errormessage);
+        addressfield.focus();
     }
 }
 
@@ -2106,6 +2188,10 @@ function check_address(address, currency) {
     var regex = getcoindata(currency).regex;
     return (currency == "ethereum" || regex == "web3") ? (web3) ? web3.utils.isAddress(address) : false :
         (regex) ? new RegExp(regex).test(address) : false;
+}
+
+function check_vk(vk) {
+    return new RegExp("^[a-fA-F0-9]+$").test(vk);
 }
 
 function canceldialog_click() {
@@ -2190,6 +2276,7 @@ function cancelpaymentdialog() {
         paymentdialogbox.html(""); // remove html
         clearTimeout(timeout);
     }, 600);
+    clearTimeout(request_timer);
     closesocket();
     clearpingtx("close");
     closenotify();
@@ -2463,12 +2550,13 @@ function showtransactions() {
 function addressinfo() {
     $(document).on("click touch", ".address_info", function() {
         var dialogwrap = $(this).closest("ul"),
-            dd = dialogwrap.data();
-        currency = dd.currency,
+            dd = dialogwrap.data(),
+			currency = dd.currency,
             isbip = hasbip32(currency),
             bip32dat = (isbip) ? getbip32dat(currency) : null,
             seedid = dd.seedid,
             xpubid = dd.xpubid,
+            vk = dd.vk,
             source = (seedid) ? "seed" : (xpubid) ? "xpub" : false,
             isseed = (source == "seed"),
             isxpub = (source == "xpub"),
@@ -2486,12 +2574,13 @@ function addressinfo() {
             dd.bip32dat = bip32dat;
         var cc_icon = getcc_icon(dd.cmcid, dd.ccsymbol + "-" + currency, dd.erc20),
             dpath_str = (isseed) ? "<li><strong>Derivation path:</strong> " + dpath + "</li>" : "",
+            vkstring = (currency == "monero" && dd.vk) ? "<li><strong>View key: </strong><span class='adbox adboxl select'>" + dd.vk + "</span></li>" : "",
             pk_verified = "Unknown <span class='icon-checkmark'></span>",
             pk_str = (isseed) ? (isseed && active_src) ? "<span id='show_pk' class='ref'>Show</span>" : (a_wl === true) ? pk_verified : "Unknown" : pk_verified,
             content = $("<div id='ad_info_wrap'><h2>" + cc_icon + " <span>" + dd.label + "</span></h2><ul>\
-	    		<li><strong>Address: </strong><span class='adbox adboxl'>" + address + "</span></li>\
+	    		<li><strong>Address: </strong><span class='adbox adboxl select'>" + address + "</span></li>\
 	    		<li><strong>Source: </strong>" + srcval + "</li>" +
-                dpath_str +
+                dpath_str + vkstring +
                 "<li><strong>Private key: </strong>" + pk_str +
                 "<div id='pk_span'>\
 					<div id='qrwrap' class='flex'>\
@@ -2814,7 +2903,7 @@ function api_proxy(ad) { // callback function from bitrequest.js
             "api": ad.api,
             "search": ad.search
         });
-    if (aud === false) {
+	if (aud === false) {
         return false;
     }
     var params = ad.params,
@@ -2898,6 +2987,15 @@ function fetchsymbol(currencyname) {
         }
     });
     return ccsymbol;
+}
+
+function bn_multi(n1, n2) {
+	if (has_bigint === true) {
+		return BigInt(n1) * BigInt(n2);
+	}
+	else {
+		return (n1 * n2).toFixedSpecial(0);
+	}
 }
 
 Number.prototype.toFixedSpecial = function(n) { //Convert from Scientific Notation to Standard Notation
@@ -3242,8 +3340,12 @@ function getcoinsettings(currency) {
 function getbip32dat(currency) {
     var coindata = getcoinconfig(currency)[0];
     if (coindata) {
-        return coindata.settings.Xpub;
+	    var xpubdat = coindata.settings.Xpub;
+	    if (xpubdat && xpubdat.active === true) {
+		    return xpubdat;
+	    }
     }
+    return false;
 }
 
 function hasbip32(currency) {
@@ -3587,14 +3689,14 @@ function append_coinsetting(currency, settings, init) {
 }
 
 function appendaddress(currency, ad) {
-    var address = ad.address,
+	var address = ad.address,
         pobox = get_addresslist(currency),
         index = pobox.children("li").length + 1,
         seedid = ad.seedid,
         xpubid = ad.xpubid,
         source = (seedid) ? "seed" : (xpubid) ? "xpub" : "",
         used = ad.used;
-    var ad_icon = (source) ? (source == "seed") ? "<span title='seed_ID: " + seedid + "' class='srcicon' data-seedid='" + seedid + "'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 888 899' class='srcseed'><path d='M852.9 26.3c.5-3.5-28.7 14.8-28.2 14.1-.9 1.1-25.3 23.4-195.1 46-71.4 9.5-120.3 37.2-145.3 82.4-40.3 72.6-1.1 161 .6 164.7l1.6 3.5c-7.8 16.8-14.1 34.2-19.3 51.9-11.6-27.1-26.5-50.9-44.8-71.4 4.8-20.2 5-45.5-3.8-77.1-21.1-76.1-73.8-104.4-114.2-114.7-42.3-10.8-79.6-4.1-81.2-3.9l-.7.1c-1.8.4-44.8 10-90.8 38.1C69.2 198.3 31 252.7 21.3 317.2L16 353.5l35-11.1c2.7-.8 66.4-20.2 150.4 29.6 32.6 19.3 68.6 29 102 29 30.8 0 59.4-8.2 81.1-24.8 5.4-4.1 11.5-9.6 17.3-16.8 24.5 33 40.5 75.2 47.9 126.3-.8 9.5-1.3 19-1.7 28.4-70.6 10.5-187.2 47.6-280.8 173 0 0 59.9 179.7 264.3 183.3 204.4 3.5 194.6 0 194.6 0s137.6-7 126.6-183.3-241.3-176.6-241.3-176.6-5.9-.5-16.3-.4c-.2-2.7-.4-5.4-.7-8.1 3.2-52.1 13.1-97.9 29.5-136.7 38.8 24.8 75.7 37.3 110.6 37.3 18.5 0 36.4-3.5 53.7-10.5C824 336.9 862.7 78.4 866.5 50.6c.3-1.6-6.6 14.4.5-4.9s-14.1-19.4-14.1-19.4zM356.8 339.8C326.5 363 271 360 224.9 332.6c-54.8-32.5-103.6-40.3-137.8-40.3-4.4 0-8.6.1-12.5.4 34.8-95.2 149.9-124.1 157.2-125.8 8.8-1.5 114.1-16.6 142.6 85.9 2.3 8.3 4.2 17.5 4.9 26.9-93-63.9-206.9-45.3-210.2-45-31.7 13.8-17.6 42 7.1 41.7 24.4-.4 113.8-18 193.8 49.1-3.4 5.3-7.7 10.1-13.2 14.3zm314.2 9.9c-36 14.6-78.2 6.2-125.6-25 8.2-12.9 17.4-24.7 27.6-35.3 40.2-41.9 84-53.8 96.3-56.4.9-.1 2-.2 3.3-.6h.2c17-5.6 25.1-43.8-6-45.4-.6-2-66.2 9.2-124.4 68.3-9.2 9.4-17.6 19.3-25.2 29.6-6.1-25.6-9.9-63 7.3-94 17.7-31.7 55.1-51.6 111.2-59 79.7-10.6 138.5-23.2 176.8-37.9-18.8 88.1-63.2 223.8-141.5 255.7z' fill='#B33A3A'/></svg></span>" : "<span class='srcicon icon-key' title='derived from Xpub: #" + xpubid + "'></span>" : "",
+    var ad_icon = (source) ? (source == "seed") ? "<span title='seed_ID: " + seedid + "' class='srcicon' data-seedid='" + seedid + "'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 888 899' class='srcseed'><path d='M852.9 26.3c.5-3.5-28.7 14.8-28.2 14.1-.9 1.1-25.3 23.4-195.1 46-71.4 9.5-120.3 37.2-145.3 82.4-40.3 72.6-1.1 161 .6 164.7l1.6 3.5c-7.8 16.8-14.1 34.2-19.3 51.9-11.6-27.1-26.5-50.9-44.8-71.4 4.8-20.2 5-45.5-3.8-77.1-21.1-76.1-73.8-104.4-114.2-114.7-42.3-10.8-79.6-4.1-81.2-3.9l-.7.1c-1.8.4-44.8 10-90.8 38.1C69.2 198.3 31 252.7 21.3 317.2L16 353.5l35-11.1c2.7-.8 66.4-20.2 150.4 29.6 32.6 19.3 68.6 29 102 29 30.8 0 59.4-8.2 81.1-24.8 5.4-4.1 11.5-9.6 17.3-16.8 24.5 33 40.5 75.2 47.9 126.3-.8 9.5-1.3 19-1.7 28.4-70.6 10.5-187.2 47.6-280.8 173 0 0 59.9 179.7 264.3 183.3 204.4 3.5 194.6 0 194.6 0s137.6-7 126.6-183.3-241.3-176.6-241.3-176.6-5.9-.5-16.3-.4c-.2-2.7-.4-5.4-.7-8.1 3.2-52.1 13.1-97.9 29.5-136.7 38.8 24.8 75.7 37.3 110.6 37.3 18.5 0 36.4-3.5 53.7-10.5C824 336.9 862.7 78.4 866.5 50.6c.3-1.6-6.6 14.4.5-4.9s-14.1-19.4-14.1-19.4zM356.8 339.8C326.5 363 271 360 224.9 332.6c-54.8-32.5-103.6-40.3-137.8-40.3-4.4 0-8.6.1-12.5.4 34.8-95.2 149.9-124.1 157.2-125.8 8.8-1.5 114.1-16.6 142.6 85.9 2.3 8.3 4.2 17.5 4.9 26.9-93-63.9-206.9-45.3-210.2-45-31.7 13.8-17.6 42 7.1 41.7 24.4-.4 113.8-18 193.8 49.1-3.4 5.3-7.7 10.1-13.2 14.3zm314.2 9.9c-36 14.6-78.2 6.2-125.6-25 8.2-12.9 17.4-24.7 27.6-35.3 40.2-41.9 84-53.8 96.3-56.4.9-.1 2-.2 3.3-.6h.2c17-5.6 25.1-43.8-6-45.4-.6-2-66.2 9.2-124.4 68.3-9.2 9.4-17.6 19.3-25.2 29.6-6.1-25.6-9.9-63 7.3-94 17.7-31.7 55.1-51.6 111.2-59 79.7-10.6 138.5-23.2 176.8-37.9-18.8 88.1-63.2 223.8-141.5 255.7z' fill='#B33A3A'/></svg></span>" : "<span class='srcicon icon-key' title='derived from Xpub: #" + xpubid + "'></span>" : (currency == "monero") ? (ad.vk) ? "<span class='srcicon icon-eye' title='Monitored address'></span>" : "<span class='srcicon icon-eye-blocked' title='Unmonitored address'></span>" : "",
         activepub = active_xpub(currency),
         clasv = (source) ? (source == "seed") ? (seedid == bipid) ? " seed seedv" : " seed seedu" :
         (source == "xpub") ? (activepub && xpubid == activepub.key_id) ? " xpub xpubv" : " xpub xpubu" : "" : "",
@@ -3615,7 +3717,7 @@ function appendaddress(currency, ad) {
 }
 
 function appendrequest(rd) {
-    var payment = rd.payment,
+	var payment = rd.payment,
         erc20 = rd.erc20,
         uoa = rd.uoa,
         amount = rd.amount,
@@ -4078,6 +4180,14 @@ function currency_uncheck(currency) {
     currencylistitem.addClass("hide");
     parentcheckbox.attr("data-checked", "false").data("checked", false);
     savecurrencies(false);
+}
+
+function get_vk(address) {
+	var ad_li = filter_addressli("monero", "address", address),
+		ad_dat = (ad_li.length) ? ad_li.data() : {},
+		ad_vk = ad_dat.vk,
+		vk = (ad_vk && ad_vk != "") ? ad_vk : false;
+	return vk;
 }
 
 function gk() {

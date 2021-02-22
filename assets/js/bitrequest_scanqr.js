@@ -5,7 +5,8 @@ var video = $("#qr-video")[0],
     scanner = new QrScanner(video, result => setResult(result), error => {
         console.log(error);
     }),
-    currencyscan = null;
+    currencyscan = null,
+    scantype = null;
 
 $(document).ready(function() {
     init_scan();
@@ -21,13 +22,14 @@ function detect_cam(result) {
     hascam = result;
 }
 
-function start_scan(currency) {
+function start_scan(currency, type) {
     scanner.start().then(() => {
-        currencyscan = currency;
+        currencyscan = currency,
+        scantype = type;
         var currentpage = geturlparameters().p,
             currentpage_correct = (currentpage) ? "?p=" + currentpage + "&scan=" : "?scan=",
             url = currentpage_correct + currency,
-            title = "scanning " + currency + " address";
+            title = "scanning " + currency + " " + type;
         openpage(url, title, "scan");
         show_cam();
         closeloader();
@@ -40,10 +42,13 @@ function abort_cam(reason) {
 }
 
 function cam_trigger() {
-    $(document).on("click", "#qrscanner", function() {
+    $(document).on("click", ".qrscanner", function() {
         loader(true);
         loadertext("Loading camera");
-        start_scan($(this).attr("data-currency"));
+        var thisqr = $(this),
+        	currency = thisqr.attr("data-currency"),
+        	type = thisqr.attr("data-id");
+        start_scan(currency, type);
     });
 }
 
@@ -70,17 +75,29 @@ function close_cam() {
 function setResult(result) {
     scanner.stop();
     var payment = currencyscan,
-        prefix = payment + ":",
-        mid_result = (result.indexOf(prefix) >= 0) ? result.split(prefix).pop() : result,
-        end_result = (result.indexOf("?") >= 0) ? mid_result.split("?")[0] : mid_result,
-        validate = (end_result.length > 103) ? check_xpub(end_result, xpub_prefix(payment)) :
-        check_address(end_result, payment);
-    if (validate === true) {
-        $("#popup .formbox input.address").val(end_result);
-        $("#popup .formbox input.addresslabel").focus();
-    } else {
-        popnotify("error", "invalid " + payment + " address");
+    	thistype = scantype;
+    if (thistype == "address") {
+	    var prefix = payment + ":",
+	        mid_result = (result.indexOf(prefix) >= 0) ? result.split(prefix).pop() : result,
+	        end_result = (result.indexOf("?") >= 0) ? mid_result.split("?")[0] : mid_result,
+	        validate = (end_result.length > 103) ? check_xpub(end_result, xpub_prefix(payment)) :
+	        check_address(end_result, payment);
+	    if (validate === true) {
+	        $("#popup .formbox input.address").val(end_result);
+	        $("#popup .formbox input.addresslabel").focus();
+	    } else {
+	        popnotify("error", "invalid " + payment + " address");
+	    }
+    }
+    else if (thistype == "viewkey") {
+	    var validate = (result.length === 64) ? check_vk(result) : false;
+	    if (validate === true) {
+	        $("#popup .formbox input.vk_input").val(result);
+	        $("#popup .formbox input.addresslabel").focus();
+	    } else {
+	        popnotify("error", "invalid " + payment + " viewkey");
+	    }
     }
     window.history.back();
-    return false;
+	return false;
 }

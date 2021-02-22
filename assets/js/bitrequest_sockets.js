@@ -13,7 +13,7 @@ $(document).ready(function() {
 // Websockets / Pollfunctions
 
 function init_socket(socket_node, address) {
-    if (offline === true) {
+	if (offline === true) {
         notify("You are currently offline, request is not monitored");
     } else {
         var payment = request.payment;
@@ -39,6 +39,23 @@ function init_socket(socket_node, address) {
         } else if (payment == "ethereum") {
             closesocket();
             amberdata_eth_websocket(socket_node, address);
+        } else if (payment == "monero") {
+	        clearpingtx("close");
+	        var vk = get_vk(address);
+			if (vk) {
+				request.monitored = true;
+				request.viewkey = vk;
+				var starttime = $.now();
+	            closenotify();
+	            pingtx = setInterval(function() {
+					ping_xmr_node(9, starttime, address, vk);	
+				}, 10000);
+            }
+            else {
+	            request.monitored = false;
+	            request.viewkey = false;
+	            notify("this address is not monitored", 500000, "yes");
+            }
         } else if (request.erc20 === true) {
             clearpingtx("close");
             web3_erc20_websocket(socket_node, address);
@@ -46,6 +63,65 @@ function init_socket(socket_node, address) {
             notify("this currency is not monitored", 500000, "yes")
         }
     }
+}
+
+function ping_xmr_node(cachetime, starttime, address, vk, txhash) {
+	var starttime_utc = starttime + timezone,
+		payload = {
+    	"address":address,
+    	"view_key":vk
+    };
+    api_proxy({
+        "api": "xmr_node",
+        "cachetime": cachetime,
+        "cachefolder": "1h",
+        "api_url": xmr_node + "get_address_txs",
+        "params": {
+            "method": "POST",
+            "data": JSON.stringify(payload),
+            "headers": {
+                "Content-Type": "text/plain"
+            }
+        }
+    }).done(function(e) {
+        var data = br_result(e).result,
+	        transactions = data.transactions;
+	    if (transactions) {
+			$.each(data.transactions, function(dat, value) {
+                var setconf = request.set_confirmations,
+                	txd = xmr_scan_data(value, setconf, "xmr", data.blockchain_height);
+                if (txd) {
+	                if (txd.ccval) {
+		                if (txhash) {
+			                if (txhash == txd.txhash) {
+				                confirmations(txd);
+								return false;
+			            	}
+			            }
+			            else {
+				            if (txd.transactiontime > starttime_utc && txd.ccval) {
+					            clearpingtx();
+					            if (setconf > 0) {
+						            confirmations(txd);
+						            pingtx = setInterval(function() {
+										ping_xmr_node(34, starttime, address, vk, txd.txhash);	
+									}, 35000);
+					            }
+					            confirmations(txd, true);
+								return false;
+							}
+			            }
+                    }
+                }
+            });
+        }
+   	}).fail(function(jqXHR, textStatus, errorThrown) {
+        clearpingtx();
+        var error_object = (errorThrown) ? errorThrown : jqXHR,
+        	payment = request.payment;
+        handle_api_fails(false, error_object, payment, payment, txhash);
+        return false;
+    });
 }
 
 // Websockets

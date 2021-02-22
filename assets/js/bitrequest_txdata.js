@@ -196,8 +196,8 @@ function ethplorer_scan_data(data, setconfirmations, ccsymbol) { // scan
     if (data) {
         var transactiontime = (data.timestamp) ? data.timestamp * 1000 : null,
             transactiontimeutc = (transactiontime) ? transactiontime + timezone : null,
-            erc20value = (data.value) ? parseFloat((data.value / Math.pow(10, data.tokenInfo.decimals)).toFixed(8)) : null;
-        txhash = (data.transactionHash) ? data.transactionHash : null;
+            erc20value = (data.value) ? parseFloat((data.value / Math.pow(10, data.tokenInfo.decimals)).toFixed(8)) : null,
+			txhash = (data.transactionHash) ? data.transactionHash : null;
         return {
             "ccval": erc20value,
             "transactiontime": transactiontimeutc,
@@ -336,6 +336,33 @@ function infura_erc20_poll_data(data, setconfirmations, ccsymbol) { // poll
             "setconfirmations": setconfirmations,
             "ccsymbol": ccsymbol
         };
+    } else {
+        return default_tx_data();
+    }
+}
+
+function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
+    if (data) {
+	    var recieved = data.total_received;
+	    if (recieved && recieved != 0) {
+		    var datetimeparts = (data.timestamp) ? data.timestamp.split("T") : null,
+	            transactiontime = (datetimeparts) ? returntimestamp(makedatestring(datetimeparts)).getTime() : null,
+	            transactiontimeutc = (transactiontime) ? transactiontime : null,
+	            height = (data.height) ? data.height : latestblock,
+	            blocks = latestblock - height,
+	            confirmations = (blocks < 0) ? 0 : blocks;
+	        return {
+	            "ccval": recieved / 1000000000000,
+	            "transactiontime": transactiontimeutc,
+	            "txhash": data.hash,
+	            "confirmations": confirmations,
+	            "setconfirmations": setconfirmations,
+	            "ccsymbol": ccsymbol
+	        };
+	    }
+	    else {
+		    return false;
+	    }
     } else {
         return default_tx_data();
     }

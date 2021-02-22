@@ -152,7 +152,7 @@ ul.conf_options li .conf_emoji {
 }
 
 .selectarrows,
-#qrscanner {
+.qrscanner {
     position: absolute;
     top: 1px;
     right: 1px;
@@ -645,6 +645,12 @@ body.seed_dialog #seed_panel {
 
 .ss_footer .button {
 	pointer-events: all;
+}
+
+#cfbu3_w {
+	width:100%;
+	text-align:center;
+	padding-top:1em;
 }
 
 #cfbu3 {

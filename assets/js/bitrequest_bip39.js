@@ -26,10 +26,6 @@ $(document).ready(function() {
     restore_seed_verify();
     //manage_bip32
 
-    // Seed select
-    //seed_select_12;
-    //seed_select_24;
-
     // Seed panel nav
     got_it();
     seed_back1();
@@ -62,6 +58,8 @@ $(document).ready(function() {
     //derive_all_init
     //derive_all
     //derive_add_address
+    //derive_data
+    //derive_obj
     //get_uniques
     copy_phrase();
     show_phrase();
@@ -416,10 +414,12 @@ function manage_bip32(dat) {
 				<div class='ss_content_box'><h2>" + verifyheader + "</h2><p id='reminder_seed_backup'>Congratulations. You are now your own bank!<br/></p>\
 				<p id='gpp'>With great power comes great responsibility.<br/><strong>Remember to backup your <span id='toseed'>Secret phrase</span>.</strong></p>" + remindp + "<div id='seed_verify_box'>\
 					</div>\
+					<div id='cfbu3_w'>\
+						<div id='cfbu3' class='button'>I do this later</div>\
+					</div>\
 				</div>\
 			</div>\
 			<div class='ss_footer'>\
-				<div id='cfbu3' class='button'>I do this later</div>\
 				<div id='continue_seed' class='button'>Continue</div>\
 			</div>\
 		</div>\
@@ -430,24 +430,6 @@ function manage_bip32(dat) {
         verify_phrase(seed.split(" "), 3);
     }
     wake();
-}
-
-// Seed select
-
-function seed_select_12() {
-    $(document).on("click touch", "#words12", function() {
-        $("#bip39phrase12").show();
-        $("#bip39phrase24").hide();
-        $("#words").attr("class", "show12");
-    })
-}
-
-function seed_select_24() {
-    $(document).on("click touch", "#words24", function() {
-        $("#bip39phrase24").show();
-        $("#bip39phrase12").hide();
-        $("#words").attr("class", "show24");
-    })
 }
 
 // Seed panel nav
@@ -766,7 +748,8 @@ function deactivate_xpubs() {
 // Test triggers
 
 function derive_test_trigger() {
-    $(document).on("click touch", "#testtrigger", function() {})
+    $(document).on("click touch", "#testtrigger", function() {
+    })
 }
 
 function enc_s() {
@@ -824,34 +807,18 @@ function derive_addone_trigger() {
 }
 
 function derive_addone(currency, extra) {
-    if (test_derive === true) {
-        var coindat = getcoindata(currency),
-            bip32 = getbip32dat(currency),
-            activepub = active_xpub(currency);
-        if (bip32) {
-	        if (activepub) {
-	            var xpubkey = activepub.key,
-	                xpub_id = activepub.key_id,
-	                keycc = key_cc_xpub(xpubkey);
-	            derive_add_address("xpub", false, keycc.key, keycc.cc, coindat, bip32, xpub_id, extra);
-	        } else {
-	            var keycc = key_cc(currency);
-	            if (keycc) {
-	                derive_add_address("seed", keycc.seed, keycc.key, keycc.cc, coindat, bip32, keycc.seedid, extra);
-	            } else {
-	                playsound(funk);
-	            }
-	        }
-	    }
+	var dd = derive_data(currency, extra);
+	if (dd) {
+		derive_add_address(currency, dd);
     }
 }
 
-function key_cc(currency) {
+function key_cc() {
     var seedobject = ls_phrase_obj();
     if (seedobject) {
-        seedid = seedobject.pid,
-            phrase = seedobject.pob.join(" ");
-        seed = toseed(phrase),
+        var seedid = seedobject.pid,
+            phrase = seedobject.pob.join(" "),
+			seed = toseed(phrase),
             rootkey = get_rootkey(seed),
             key = rootkey.slice(0, 64),
             cc = rootkey.slice(64)
@@ -898,20 +865,56 @@ function derive_all(phrase, seedid, extra) {
             coindat = coinconfig.data,
             bip32 = coinconfig.settings.Xpub;
         if (bip32.active === true) {
-            derive_add_address("seed", seed, master_key, master_chaincode, coindat, bip32, seedid, extra);
+	        var ad = derive_obj("seed", seed, master_key, master_chaincode, coindat, bip32, seedid, extra);
+	        if (ad) {
+		        derive_add_address(currency, ad);
+	        }
         }
     });
 }
 
-function derive_add_address(source, seed, key, cc, coindat, bip32, seedid, add) {
+function derive_add_address(currency, ad) {
+	appendaddress(currency, ad);
+    saveaddresses(currency, true);
+    $("#usedcurrencies > li[data-currency='" + currency + "']").attr("data-checked", "true").data("checked", true); // each
+    $("#currencylist > li[data-currency='" + currency + "']").removeClass("hide"); // each
+}
+
+function derive_data(currency, extra) {
+    if (test_derive === true) {
+        var coindat = getcoindata(currency),
+            bip32 = getbip32dat(currency),
+            activepub = active_xpub(currency);
+        if (bip32) {
+	        if (activepub) {
+	            var xpubkey = activepub.key,
+	                xpub_id = activepub.key_id,
+	                keycc = key_cc_xpub(xpubkey),
+					ad = derive_obj("xpub", false, keycc.key, keycc.cc, coindat, bip32, xpub_id, extra);
+		        if (ad) {
+			       return ad;
+		        }
+	        } else {
+	            var keycc = key_cc();
+	            if (keycc) {
+		            var ad = derive_obj("seed", keycc.seed, keycc.key, keycc.cc, coindat, bip32, keycc.seedid, extra);
+			        if (ad) {
+				        return ad;
+			        }
+	            }
+	        }
+	    }
+    }
+    return false;
+}
+
+function derive_obj(source, seed, key, cc, coindat, bip32, seedid, add) {
     var currency = coindat.currency,
         id_key = source + "id",
         addressli = get_addresslist(currency).children("li"),
         deriveli = filter_list(addressli, id_key, seedid),
         actives = deriveli.not(".used");
-    if (actives.length > 0 && add !== true) {
-    }
-    else {
+    if (!actives.length || add) {
 	    var allength = deriveli.length,
 	        index = (allength > 1) ? get_latest_index(deriveli) + 1 : allength,
 	        root_path = (source == "xpub") ? "M/" : (source == "seed") ? bip32.root_path : "",
@@ -939,11 +942,9 @@ function derive_add_address(source, seed, key, cc, coindat, bip32, seedid, add) 
 	            "label": label
 	        };
 	    this_data[source + "id"] = seedid;
-	    appendaddress(currency, this_data);
-	    saveaddresses(currency, true);
-	    $("#usedcurrencies > li[data-currency='" + currency + "']").attr("data-checked", "true").data("checked", true); // each
-	    $("#currencylist > li[data-currency='" + currency + "']").removeClass("hide"); // each
+	    return this_data;
     }
+    return false;
 }
 
 function get_uniques(arr) {
@@ -1099,8 +1100,8 @@ function objectify_extended(extended) {
 function derive_x(dpath, parent_key, parent_cc, from_x_priv) {
     var keydat = {},
         key = parent_key,
-        chaincode = parent_cc;
-    derive_array = dpath.split("/"),
+        chaincode = parent_cc,
+		derive_array = dpath.split("/"),
         levels = derive_array.length - 1,
         xpub = false,
         purpose = null,

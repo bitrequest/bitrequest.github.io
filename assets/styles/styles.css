@@ -693,6 +693,14 @@ html.showmain #newrequest_alias {
     padding:0.5em 0.9em 0.5em 0.2em;
 }
 
+.applist.pobox li .address .srcicon.icon-eye {
+	color:#008500;
+}
+
+.applist.pobox li .address .srcicon.icon-eye-blocked {
+	color:#eeac57;
+}
+
 .applist.pobox li.seedu .address .srcicon {
 	cursor:pointer;
 }
@@ -702,6 +710,10 @@ html.showmain #newrequest_alias {
 }
 
 .applist.pobox li.xpub .select {
+	padding-left:1.7em;
+}
+
+.applist.pobox[data-currency="monero"] li .select {
 	padding-left:1.7em;
 }
 
@@ -2782,7 +2794,7 @@ html.inframe body {
 
 /* qr scanner */
 
-#qrscanner {
+.qrscanner {
     
 }
 
