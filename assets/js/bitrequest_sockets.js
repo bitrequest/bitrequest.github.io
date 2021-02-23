@@ -73,9 +73,9 @@ function ping_xmr_node(cachetime, starttime, address, vk, txhash) {
     };
     api_proxy({
         "api": "xmr_node",
+        "search": "get_address_txs",
         "cachetime": cachetime,
         "cachefolder": "1h",
-        "api_url": xmr_node + "get_address_txs",
         "params": {
             "method": "POST",
             "data": JSON.stringify(payload),

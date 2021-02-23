@@ -17,7 +17,6 @@ var apptitle = "Bitrequest",
     eth_socket2 = "wss://ropsten.infura.io/ws/v3/",
     main_ad_node = "https://web3api.io/api/v2/",
     main_ad_socket = "wss://ws.web3api.io/",
-    xmr_node = "https://api.mymonero.com:8443/",
     socket_attempt = {},
     api_attempt = {},
     api_attempts = {},
@@ -276,6 +275,19 @@ var multi_wallets = {
                     "options": {
                         "key1": "blockchair.com"
                     }
+                },
+                "apis": {
+                    "icon": "sphere",
+                    "selected": {
+                        "name": "xmr_node",
+                        "api": true,
+                        "display": true
+                    },
+                    "apis": [{
+                        "name": "xmr_node",
+                        "api": true,
+                        "display": true
+                    }]
                 },
                 "Xpub": {
                     "active": false,
@@ -1047,6 +1059,13 @@ var apis = [{
         "key_param": "key=",
         "api_key": null,
         "sign_up": "https://firebase.google.com/"
+    },
+    {
+        "name": "xmr_node",
+        "base_url": "https://api.mymonero.com:8443/",
+        "key_param": null,
+        "api_key": null,
+        "sign_up": null
     },
     {
         "name": "infura",

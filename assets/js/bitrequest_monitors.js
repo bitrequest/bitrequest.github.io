@@ -176,7 +176,7 @@ function get_api_inputs_defaults(rd, api_data) {
     } else if (payment == "nano") {
         get_rpc_inputs_init(rd, api_data);
     } else if (payment == "monero") {
-        get_api_inputs_init(rd, api_data, "xmr_node");
+        get_api_inputs_init(rd, api_data, "xmr node");
     } else {
 	     get_api_inputs_init(rd, api_data);
     }
@@ -227,9 +227,9 @@ function get_api_inputs(rd, api_data, api_name) {
 				    };
 				    api_proxy({
 				        "api": api_name,
+				        "search": "get_address_txs",
 				        "cachetime": 25,
 				        "cachefolder": "1h",
-				        "api_url": xmr_node + "get_address_txs",
 				        "params": {
 				            "method": "POST",
 				            "data": JSON.stringify(payload),
@@ -270,10 +270,10 @@ function get_api_inputs(rd, api_data, api_name) {
 				    }).fail(function(jqXHR, textStatus, errorThrown) {
 	                    tx_api_fail(thislist, statuspanel);
 	                    var error_object = (errorThrown) ? errorThrown : jqXHR;
-	                    handle_api_fails(rd, error_object, payment, payment);
+	                    handle_api_fails(rd, error_object, api_name, payment);
 	                }).always(function() {
 	                    api_src(thislist, {
-		                    "name": "xmr_node"
+		                    "name": "xmr node"
 	                	});
 	                }); 
 	            }    

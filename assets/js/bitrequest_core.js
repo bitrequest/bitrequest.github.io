@@ -1895,7 +1895,7 @@ function submitaddresstrigger() {
             }
         }
     })
-}
+}   
 
 //Add erc20 token
 function add_erc20() {
@@ -1910,7 +1910,7 @@ function add_erc20() {
                 "monitored": true,
                 "checked": true
             },
-            scanqr = (hascam === true) ? "<div id='qrscanner' data-currency='ethereum' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+            scanqr = (hascam === true) ? "<div class='qrscanner' data-currency='ethereum' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
             content = $("\
 			<div class='formbox' id='erc20formbox'>\
 				<h2 class='icon-coin-dollar'>Add erc20 token</h2>\
@@ -2043,10 +2043,10 @@ function validateaddress_vk(ad) {
 		    	"view_key":vkinputval
 		    };
 		    api_proxy({
-		        "api": "mymonero",
+		        "api": "xmr_node",
+		        "search": "get_address_txs",
 		        "cachetime": 25,
 		        "cachefolder": "1h",
-		        "api_url": xmr_node + "get_address_txs",
 		        "params": {
 		            "method": "POST",
 		            "data": JSON.stringify(payload),
@@ -2903,6 +2903,7 @@ function api_proxy(ad) { // callback function from bitrequest.js
             "api": ad.api,
             "search": ad.search
         });
+    console.log(aud);
 	if (aud === false) {
         return false;
     }
