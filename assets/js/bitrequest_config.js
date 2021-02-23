@@ -56,6 +56,14 @@ var multi_wallets = {
             "desktop": "https://www.ledger.com/ledger-live/download",
             "seed": true
         },
+        "keepkey": {
+            "name": "keepkey",
+            "website": "https://shapeshift.com/keepkey",
+            "appstore": "https://beta.shapeshift.com",
+            "playstore": "https://beta.shapeshift.com",
+            "desktop": "https://beta.shapeshift.com",
+            "seed": true
+        },
         "atomic": {
             "name": "atomic",
             "website": "https://atomicwallet.io",
@@ -70,14 +78,6 @@ var multi_wallets = {
             "appstore": "https://apps.apple.com/app/id1288339409",
             "playstore": "https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp",
             "desktop": "https://trustwallet.com",
-            "seed": true
-        },
-        "keepkey": {
-            "name": "keepkey",
-            "website": "https://shapeshift.com/keepkey",
-            "appstore": "https://beta.shapeshift.com",
-            "playstore": "https://beta.shapeshift.com",
-            "desktop": "https://beta.shapeshift.com",
             "seed": true
         }
 
