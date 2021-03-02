@@ -532,7 +532,8 @@ var multi_wallets = {
                 "ccsymbol": "nano",
                 "cmcid": 1567,
                 "urlscheme": function(payment, address, amount, iszero) {
-	                var amount = (iszero === true) ? "" : "?amount=" + bn_multi(parseFloat(amount), "1000000000000000000000000000000");
+	                var amount = (iszero === true) ? "" : "?amount=" + NanocurrencyWeb.tools.convert(amount, "NANO", "RAW");
+	                console.log(amount);
                     return "nano:" + address + amount;
                 },
                 "address_regex": "^(xrb|nano)_([a-z1-9]{60})$"
@@ -649,7 +650,8 @@ var multi_wallets = {
                 "ccsymbol": "eth",
                 "cmcid": 1027,
                 "urlscheme": function(payment, address, amount, iszero) {
-                    return payment + ":" + address + ((iszero === true) ? "" : "?value=" + (parseFloat(amount) * "1000000000000000000").toFixedSpecial(0));
+	                var amount = (iszero === true) ? "" : "?value=" + (parseFloat(amount) * "1000000000000000000").toFixedSpecial(0);
+                    return payment + ":" + address + amount;
                 },
                 "address_regex": "web3"
             },

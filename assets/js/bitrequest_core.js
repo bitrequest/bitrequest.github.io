@@ -451,7 +451,6 @@ function finishfunctions() {
     //result
     //get_api_url
     //fetchsymbol
-    //bn_multi
     //fixedcheck
     //geturlparameters
     //triggersubmit
@@ -2137,7 +2136,7 @@ function validateaddress(ad, vk) {
                             if (index == "new") {
                                 if (iserc20 === true) {
                                     buildpage(ad, true);
-                                    append_coinsetting(currency, erc20_dat.erc20_settings, false);
+                                    append_coinsetting(currency, erc20_dat.settings, false);
                                 }
                                 if (body.hasClass("showstartpage")) {
                                     var acountname = $("#eninput").val();
@@ -2989,15 +2988,6 @@ function fetchsymbol(currencyname) {
     return ccsymbol;
 }
 
-function bn_multi(n1, n2) {
-	if (has_bigint === true) {
-		return BigInt(parseInt(n1)) * BigInt(parseInt(n2));
-	}
-	else {
-		return (n1 * n2).toFixedSpecial(0);
-	}
-}
-
 Number.prototype.toFixedSpecial = function(n) { //Convert from Scientific Notation to Standard Notation
     var str = this.toFixed(n);
     if (str.indexOf("e+") < 0) {
@@ -3329,9 +3319,9 @@ function getcoindata(currency) {
 function getcoinsettings(currency) {
     var coindata = getcoinconfig(currency);
     if (coindata) {
-        return coindata.settings;
+	    return coindata.settings;
     } else { // return erc20 settings
-        return erc20_dat.settings;
+	    return erc20_dat.settings;
     }
 }
 
@@ -3638,7 +3628,7 @@ function buildpage(cd, init) {
         if (erc20 === true) {
             var coin_settings_cache = localStorage.getItem("bitrequest_" + currency + "_settings");
             if (coin_settings_cache === null) {
-                localStorage.setItem("bitrequest_" + currency + "_settings", JSON.stringify(erc20_dat.erc20_settings));
+                localStorage.setItem("bitrequest_" + currency + "_settings", JSON.stringify(erc20_dat.settings));
             }
         }
     } else {

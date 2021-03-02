@@ -1335,7 +1335,7 @@ function renderqr(payment, address, amount) {
         this_iszero = (number === 0 || isNaN(number)),
         urlscheme;
     if (request.erc20 === true) {
-        var raw_amount = bn_multi(parseFloat(amount),  parseFloat(Math.pow(10, request.decimals)));
+        var raw_amount = (parseFloat(amount) * parseFloat(Math.pow(10, request.decimals))).toFixedSpecial(0);
         urlscheme = "ethereum:" + request.token_contract + "/transfer?address=" + address + "&uint256=" + raw_amount;
         //urlscheme = "ethereum:" + request.token_contract + "/transfer?address=" + address + "&uint256=" + raw_amount + "&gas=43855";
     } else {
