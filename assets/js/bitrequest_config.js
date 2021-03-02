@@ -92,8 +92,10 @@ var multi_wallets = {
                 "urlscheme": function(payment, address, amount, iszero) {
                     return btc_urlscheme(payment, address, amount, iszero);
                 },
-                "address_regex": "^([13][a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[ac-hj-np-zAC-HJ-NP-Z02-9]{11,71})$",
-                "wallet_download_page": "https://bitcoin.org/en/choose-your-wallet",
+                "address_regex": "^([13][a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[ac-hj-np-zAC-HJ-NP-Z02-9]{11,71})$"
+            },
+            "wallets": {
+	            "wallet_download_page": "https://bitcoin.org/en/choose-your-wallet",
                 "wallets": [
                     multi_wallets.exodus,
                     multi_wallets.coinomi,
@@ -241,8 +243,10 @@ var multi_wallets = {
                 "urlscheme": function(payment, address, amount, iszero) {
                     return payment + ":" + address + ((iszero === true) ? "" : "?tx_amount=" + amount);
                 },
-                "address_regex": "^[48](?:[0-9AB]|[1-9A-HJ-NP-Za-km-z]{12}(?:[1-9A-HJ-NP-Za-km-z]{30})?)[1-9A-HJ-NP-Za-km-z]{93}$",
-                "wallet_download_page": "https://www.getmonero.org/downloads/",
+                "address_regex": "^[48](?:[0-9AB]|[1-9A-HJ-NP-Za-km-z]{12}(?:[1-9A-HJ-NP-Za-km-z]{30})?)[1-9A-HJ-NP-Za-km-z]{93}$"
+            },
+            "wallets": {
+	            "wallet_download_page": "https://www.getmonero.org/downloads/",
                 "wallets": [{
                         "name": "monerujo",
                         "website": "https://www.monerujo.io",
@@ -311,8 +315,10 @@ var multi_wallets = {
                 "urlscheme": function(payment, address, amount, iszero) {
                     return btc_urlscheme(payment, address, amount, iszero);
                 },
-                "address_regex": "^([LM][a-km-zA-HJ-NP-Z1-9]{26,33}|ltc1[a-zA-HJ-NP-Z0-9]{26,39})$",
-                "wallet_download_page": "https://litecoin.org",
+                "address_regex": "^([LM][a-km-zA-HJ-NP-Z1-9]{26,33}|ltc1[a-zA-HJ-NP-Z0-9]{26,39})$"
+            },
+            "wallets": {
+	            "wallet_download_page": "https://litecoin.org",
                 "wallets": [
                     multi_wallets.exodus,
                     multi_wallets.coinomi,
@@ -418,8 +424,10 @@ var multi_wallets = {
                 "urlscheme": function(payment, address, amount, iszero) {
                     return btc_urlscheme(payment, address, amount, iszero);
                 },
-                "address_regex": "^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$",
-                "wallet_download_page": "https://dogecoin.com/getting-started/",
+                "address_regex": "^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$"
+            },
+            "wallets": {
+	            "wallet_download_page": "https://dogecoin.com/getting-started/",
                 "wallets": [
                     multi_wallets.exodus,
                     multi_wallets.coinomi,
@@ -527,8 +535,10 @@ var multi_wallets = {
 	                var amount = (iszero === true) ? "" : "?amount=" + bn_multi(parseFloat(amount), "1000000000000000000000000000000");
                     return "nano:" + address + amount;
                 },
-                "address_regex": "^(xrb|nano)_([a-z1-9]{60})$",
-                "wallet_download_page": "https://nanowallets.guide",
+                "address_regex": "^(xrb|nano)_([a-z1-9]{60})$"
+            },
+            "wallets": {
+	            "wallet_download_page": "https://nanowallets.guide",
                 "wallets": [
                     multi_wallets.trustwallet,
                     {
@@ -641,8 +651,10 @@ var multi_wallets = {
                 "urlscheme": function(payment, address, amount, iszero) {
                     return payment + ":" + address + ((iszero === true) ? "" : "?value=" + (parseFloat(amount) * "1000000000000000000").toFixedSpecial(0));
                 },
-                "address_regex": "web3",
-                "wallet_download_page": "https://ethereum.org/en/wallets/",
+                "address_regex": "web3"
+            },
+            "wallets": {
+	            "wallet_download_page": "https://ethereum.org/en/wallets/",
                 "wallets": [
                     multi_wallets.exodus,
                     multi_wallets.trezor,
@@ -752,101 +764,104 @@ var multi_wallets = {
             }
         }
     ]
-
-var erc20_data = {
-    "monitored": true,
-    "url-scheme": "",
-    "regex": "web3",
-    "erc20": true,
-    "wallet_download_page": "https://ethereum.org/en/wallets/",
-    "wallets": [{
-            "name": "myetherwallet",
-            "website": "https://www.mewwallet.com",
-            "appstore": "https://apps.apple.com/app/id1464614025",
-            "playstore": "https://play.google.com/store/apps/details?id=com.myetherwallet.mewwallet",
-            "desktop": "https://www.myetherwallet.com"
-        },
-        {
-            "name": "enjin",
-            "website": "https://enjin.io/software/wallet",
-            "appstore": "https://apps.apple.com/app/id1349078375",
-            "playstore": "http://enj.in/google-play",
-            "desktop": null
-        }
-    ]
-}
-
-var erc20_settings = {
-    "confirmations": {
-        "icon": "clock",
-        "selected": 0
-    },
-    "Use random address": {
-        "icon": "dice",
-        "selected": false,
-        "switch": true,
-    },
-    "blockexplorers": {
-        "icon": "eye",
-        "selected": "ethplorer.io",
-        "options": {}
-    },
-    "apis": {
-        "icon": "sphere",
-        "selected": {
-            "name": "ethplorer",
-            "url": "ethplorer.io",
-            "api": true,
-            "display": true
-        },
-        "apis": [{
-                "name": "ethplorer",
-                "url": "ethplorer.io",
-                "api": true,
-                "display": true
-            },
-            {
-                "name": "blockchair",
-                "url": "blockchair.com",
-                "api": true,
-                "display": true
-            },
-            {
-                "name": main_eth_node,
-                "url": main_eth_node,
-                "display": true
-            },
-            {
-                "name": eth_node2,
-                "url": eth_node2,
-                "display": true
-            }
-        ],
-        "options": [],
-        "rpc_test_command": {
-            "method": null
-        }
-    },
-    "websockets": {
-        "icon": "tab",
-        "selected": {
-            "name": main_eth_socket,
-            "url": main_eth_socket,
-            "display": true
-        },
-        "apis": [{
-                "name": main_eth_socket,
-                "url": main_eth_socket,
-                "display": true
-            },
-            {
-                "name": eth_socket2,
-                "url": eth_socket2,
-                "display": true
-            }
-        ],
-        "options": []
-    }
+    
+var erc20_dat = {
+	"data": {
+		"monitored": true,
+	    "url-scheme": "",
+	    "regex": "web3",
+	    "erc20": true
+	},
+	"wallets": {
+		"wallet_download_page": "https://ethereum.org/en/wallets/",
+	    "wallets": [{
+	            "name": "myetherwallet",
+	            "website": "https://www.mewwallet.com",
+	            "appstore": "https://apps.apple.com/app/id1464614025",
+	            "playstore": "https://play.google.com/store/apps/details?id=com.myetherwallet.mewwallet",
+	            "desktop": "https://www.myetherwallet.com"
+	        },
+	        {
+	            "name": "enjin",
+	            "website": "https://enjin.io/software/wallet",
+	            "appstore": "https://apps.apple.com/app/id1349078375",
+	            "playstore": "http://enj.in/google-play",
+	            "desktop": null
+	        }
+	    ]
+	},
+	"settings": {
+		"confirmations": {
+	        "icon": "clock",
+	        "selected": 0
+	    },
+	    "Use random address": {
+	        "icon": "dice",
+	        "selected": false,
+	        "switch": true,
+	    },
+	    "blockexplorers": {
+	        "icon": "eye",
+	        "selected": "ethplorer.io",
+	        "options": {}
+	    },
+	    "apis": {
+	        "icon": "sphere",
+	        "selected": {
+	            "name": "ethplorer",
+	            "url": "ethplorer.io",
+	            "api": true,
+	            "display": true
+	        },
+	        "apis": [{
+	                "name": "ethplorer",
+	                "url": "ethplorer.io",
+	                "api": true,
+	                "display": true
+	            },
+	            {
+	                "name": "blockchair",
+	                "url": "blockchair.com",
+	                "api": true,
+	                "display": true
+	            },
+	            {
+	                "name": main_eth_node,
+	                "url": main_eth_node,
+	                "display": true
+	            },
+	            {
+	                "name": eth_node2,
+	                "url": eth_node2,
+	                "display": true
+	            }
+	        ],
+	        "options": [],
+	        "rpc_test_command": {
+	            "method": null
+	        }
+	    },
+	    "websockets": {
+	        "icon": "tab",
+	        "selected": {
+	            "name": main_eth_socket,
+	            "url": main_eth_socket,
+	            "display": true
+	        },
+	        "apis": [{
+	                "name": main_eth_socket,
+	                "url": main_eth_socket,
+	                "display": true
+	            },
+	            {
+	                "name": eth_socket2,
+	                "url": eth_socket2,
+	                "display": true
+	            }
+	        ],
+	        "options": []
+	    }
+	}
 }
 
 var app_settings = [{

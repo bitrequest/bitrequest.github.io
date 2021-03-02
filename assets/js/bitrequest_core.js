@@ -480,7 +480,6 @@ function finishfunctions() {
     //pinpanel
     //switchpanel
     //getcoindata
-    //getcoinsettings
     //getbip32dat
     //getcoinconfig
     //try_next_api
@@ -1868,14 +1867,11 @@ function active_derives(currency, derive) {
 
 function get_wallet() {
     $(document).on("click touch", "#get_wallet", function() {
-        var this_currency = $(this).attr("data-currency"),
-            coindata = getcoindata(this_currency);
-        if (coindata) {
-            canceldialog();
-            setTimeout(function() {
-                download_wallet(coindata);
-            }, 800);
-        }
+        var this_currency = $(this).attr("data-currency");
+        canceldialog();
+        setTimeout(function() {
+            download_wallet(this_currency);
+        }, 800);
     })
 }
 
@@ -2040,11 +2036,13 @@ function validateaddress_vk(ad) {
 	        }
             var payload = {
 		    	"address":addressinputval,
-		    	"view_key":vkinputval
+		    	"view_key":vkinputval,
+		    	"create_account":true,
+		    	"generated_locally":false
 		    };
 		    api_proxy({
 		        "api": "xmr_node",
-		        "search": "get_address_txs",
+		        "search": "login",
 		        "cachetime": 25,
 		        "cachefolder": "1h",
 		        "params": {
@@ -2056,11 +2054,13 @@ function validateaddress_vk(ad) {
 		        }
 		    }).done(function(e) {
 		        var data = br_result(e).result;
-		        if (data.blockchain_height) { // success!
+		        if (data.start_height) { // success!
 			        validateaddress(ad, vkinputval);
 		        }
 		        else {
-			        popnotify("error", "Invalid Viewkey");
+			        var errormessage = data.Error,
+			        	error = (errormessage) ? errormessage : "Invalid Viewkey";
+			        popnotify("error", error);
 		        }
 		        
 		    }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -2069,7 +2069,7 @@ function validateaddress_vk(ad) {
 		        console.log(errorThrown);
 		        popnotify("error", "Error verifying Viewkey");
 		    });
-        }
+		}
         else {
 	        validateaddress(ad, false);
         }
@@ -2137,7 +2137,7 @@ function validateaddress(ad, vk) {
                             if (index == "new") {
                                 if (iserc20 === true) {
                                     buildpage(ad, true);
-                                    append_coinsetting(currency, erc20_settings, false);
+                                    append_coinsetting(currency, erc20_dat.erc20_settings, false);
                                 }
                                 if (body.hasClass("showstartpage")) {
                                     var acountname = $("#eninput").val();
@@ -2903,8 +2903,7 @@ function api_proxy(ad) { // callback function from bitrequest.js
             "api": ad.api,
             "search": ad.search
         });
-    console.log(aud);
-	if (aud === false) {
+    if (aud === false) {
         return false;
     }
     var params = ad.params,
@@ -2992,7 +2991,7 @@ function fetchsymbol(currencyname) {
 
 function bn_multi(n1, n2) {
 	if (has_bigint === true) {
-		return BigInt(n1) * BigInt(n2);
+		return BigInt(parseInt(n1)) * BigInt(parseInt(n2));
 	}
 	else {
 		return (n1 * n2).toFixedSpecial(0);
@@ -3283,9 +3282,9 @@ function switchpanel(switchmode, mode) {
 
 function getcoindata(currency) {
     var coindata_object = getcoinconfig(currency);
-    if (coindata_object.length > 0) {
-        var coindata = coindata_object[0].data,
-            settings = coindata_object[0].settings,
+    if (coindata_object) {
+        var coindata = coindata_object.data,
+            settings = coindata_object.settings,
             has_settings = (settings) ? true : false,
             is_monitored = (settings) ? (settings.apis) ? true : false : false,
             cd_object = {
@@ -3296,15 +3295,13 @@ function getcoindata(currency) {
                 "urlscheme": coindata.urlscheme,
                 "settings": has_settings,
                 "regex": coindata.address_regex,
-                "wallet_download_page": coindata.wallet_download_page,
-                "wallets": coindata.wallets,
                 "erc20": false
             };
         return cd_object;
     } else { // if not it's probably erc20 token
         var currencyref = $("#usedcurrencies li[data-currency='" + currency + "']"); // check if erc20 token is added
         if (currencyref.length > 0) {
-            return $.extend(currencyref.data(), erc20_data);
+            return $.extend(currencyref.data(), erc20_dat.data);
         } else { // else lookup erc20 data
             var tokenobject = JSON.parse(localStorage.getItem("bitrequest_erc20tokens"));
             if (tokenobject) {
@@ -3318,7 +3315,7 @@ function getcoindata(currency) {
                         "cmcid": erc20data.cmcid.toString(),
                         "contract": erc20data.contract
                     }
-                    return $.extend(fetched_data, erc20_data);
+                    return $.extend(fetched_data, erc20_dat.data);
                 } else {
                     return false;
                 }
@@ -3330,16 +3327,16 @@ function getcoindata(currency) {
 }
 
 function getcoinsettings(currency) {
-    var coindata = getcoinconfig(currency)[0];
+    var coindata = getcoinconfig(currency);
     if (coindata) {
         return coindata.settings;
     } else { // return erc20 settings
-        return erc20_settings;
+        return erc20_dat.settings;
     }
 }
 
 function getbip32dat(currency) {
-    var coindata = getcoinconfig(currency)[0];
+    var coindata = getcoinconfig(currency);
     if (coindata) {
 	    var xpubdat = coindata.settings.Xpub;
 	    if (xpubdat && xpubdat.active === true) {
@@ -3350,7 +3347,7 @@ function getbip32dat(currency) {
 }
 
 function hasbip32(currency) {
-    var coindata = getcoinconfig(currency)[0];
+    var coindata = getcoinconfig(currency);
     if (coindata) {
         if (coindata.settings.Xpub) {
             if (coindata.settings.Xpub.active) {
@@ -3367,9 +3364,9 @@ function hasbip32(currency) {
 }
 
 function getcoinconfig(currency) {
-    return $.grep(bitrequest_coin_data, function(filter) {
+	return $.grep(bitrequest_coin_data, function(filter) {
         return filter.currency == currency;
-    });
+    })[0];
 }
 
 function try_next_api(apilistitem, current_apiname) {
@@ -3641,7 +3638,7 @@ function buildpage(cd, init) {
         if (erc20 === true) {
             var coin_settings_cache = localStorage.getItem("bitrequest_" + currency + "_settings");
             if (coin_settings_cache === null) {
-                localStorage.setItem("bitrequest_" + currency + "_settings", JSON.stringify(erc20_settings));
+                localStorage.setItem("bitrequest_" + currency + "_settings", JSON.stringify(erc20_dat.erc20_settings));
             }
         }
     } else {

@@ -1,5 +1,7 @@
 $(document).ready(function() {
     //init_socket
+    //init_xmr_node
+    //ping_xmr_node
     //blockchain_btc_socket
     //blockcypher_websocket
     //nano_socket
@@ -47,9 +49,7 @@ function init_socket(socket_node, address) {
 				request.viewkey = vk;
 				var starttime = $.now();
 	            closenotify();
-	            pingtx = setInterval(function() {
-					ping_xmr_node(9, starttime, address, vk);	
-				}, 10000);
+	            init_xmr_node(9, starttime, address, vk);
             }
             else {
 	            request.monitored = false;
@@ -63,6 +63,49 @@ function init_socket(socket_node, address) {
             notify("this currency is not monitored", 500000, "yes")
         }
     }
+}
+
+function init_xmr_node(cachetime, starttime, address, vk, txhash, start) {
+	var payload = {
+    	"address":address,
+    	"view_key":vk,
+    	"create_account":true,
+    	"generated_locally":false
+    };
+    api_proxy({
+        "api": "xmr_node",
+        "search": "login",
+        "cachetime": 25,
+        "cachefolder": "1h",
+        "params": {
+            "method": "POST",
+            "data": JSON.stringify(payload),
+            "headers": {
+                "Content-Type": "text/plain"
+            }
+        }
+    }).done(function(e) {
+        var data = br_result(e).result;
+        if (data.start_height) { // success!
+	        if (start === true) {
+		        ping_xmr_node(cachetime, starttime, address, vk, txhash);
+	        }
+	        pingtx = setInterval(function() {
+				ping_xmr_node(cachetime, starttime, address, vk, txhash);
+			}, 10000);
+        }
+        else {
+	        var errormessage = data.Error,
+	        	error = (errormessage) ? errormessage : "Invalid Viewkey";
+	        notify("error", error);
+        }
+        
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        console.log(jqXHR);
+        console.log(textStatus);
+        console.log(errorThrown);
+        notify("error", "Error verifying Viewkey");
+    });
 }
 
 function ping_xmr_node(cachetime, starttime, address, vk, txhash) {

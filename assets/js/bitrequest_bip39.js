@@ -1335,7 +1335,7 @@ function phrase_info_pu(coin) {
     $.each(bitrequest_coin_data, function(i, coinconfig) {
         var currency = coinconfig.currency,
             ccsymbol = coinconfig.data.ccsymbol,
-            wallets = coinconfig.data.wallets,
+            walletdat = coinconfig.wallets,
             bip32dat = coinconfig.settings.Xpub;
         if (bip32dat.active === true) {
             var root_path = bip32dat.root_path,
@@ -1349,11 +1349,12 @@ function phrase_info_pu(coin) {
                 var index = startindex + i;
                 derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> " + lb + val.address + "</li>";
             });
-            if (wallets) {
+            if (walletdat) {
                 var platform = getplatform(getdevicetype()),
                     store_icon = (platform == "playstore") ? "button-playstore-v2.svg" :
                     (platform == "appstore") ? "button-appstore.svg" : "button-desktop_app.svg",
-                    store_tag = (store_icon) ? "<img src='img/" + store_icon + "'/>" : "<span class='icon-download'></span> ";
+                    store_tag = (store_icon) ? "<img src='img/" + store_icon + "'/>" : "<span class='icon-download'></span> ",
+                    wallets = walletdat.wallets;
                 $.each(wallets, function(key, value) {
                     var device_url = value[platform];
                     if (device_url && value.seed === true) {

@@ -2190,10 +2190,7 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
 						if (vk) {
 							var starttime = $.now();
 				            closenotify();
-				            ping_xmr_node(34, starttime, address, vk, smart_txhash);
-				            pingtx = setInterval(function() {
-								ping_xmr_node(34, starttime, address, vk, smart_txhash);
-							}, 35000);
+				            init_xmr_node(34, starttime, address, vk, smart_txhash, true);
 			            }
 			            else {
 				            notify("this currency is not monitored", 500000, "yes");
@@ -2244,17 +2241,18 @@ function dw_trigger() {
         var this_currency = $(this).attr("data-currency");
         canceldialog();
         setTimeout(function() {
-            download_wallet(request.coindata);
+            download_wallet(this_currency);
         }, 800);
     })
 }
 
-function download_wallet(coindata) {
-    var currency = coindata.currency;
-    var wdp = coindata.wallet_download_page,
-        wallets = coindata.wallets;
-    if (wdp || wallets) {
-        var wallet_ul = (wallets) ? "<ul id='formbox_ul'></ul>" : "",
+function download_wallet(currency) {
+	var coindata = getcoinconfig(currency),
+		wallets = coindata.wallets,
+		wdp = wallets.wallet_download_page,
+        wallets_arr = wallets.wallets;
+    if (wdp || wallets_arr) {
+        var wallet_ul = (wallets_arr) ? "<ul id='formbox_ul'></ul>" : "",
             fmw = (wdp) ? "<a href='" + wdp + "' target='_blank' class='exit formbox_href'>Find more wallets</a>" : "",
             content = "\
 			<div class='formbox' id='wdl_formbox'>\
@@ -2263,14 +2261,14 @@ function download_wallet(coindata) {
 				<div id='dialogcontent'>" + wallet_ul + fmw + "</div>\
 			</div>";
         popdialog(content, "alert", "canceldialog");
-        if (wallets) {
-            var walletlist = $("#formbox_ul");
-            device = getdevicetype(),
+        if (wallets_arr) {
+            var walletlist = $("#formbox_ul"),
+           	 	device = getdevicetype(),
                 platform = getplatform(device),
                 store_icon = (platform == "playstore") ? "button-playstore-v2.svg" :
                 (platform == "appstore") ? "button-appstore.svg" : "button-desktop_app.svg",
                 store_tag = (store_icon) ? "<img src='img/" + store_icon + "'/>" : "<span class='icon-download'></span> ";
-            $.each(wallets, function(key, value) {
+            $.each(wallets_arr, function(key, value) {
                 var device_url = value[platform];
                 if (device_url) {
                     var walletname = value.name,

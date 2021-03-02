@@ -221,13 +221,15 @@ function get_api_inputs(rd, api_data, api_name) {
             if (payment == "monero") {
 	            var vk = rd.viewkey;
 	            if (vk) {
-		           	var payload = {
+		            var payload = {
 				    	"address":address,
-				    	"view_key":vk
+				    	"view_key":vk,
+				    	"create_account":true,
+				    	"generated_locally":false
 				    };
 				    api_proxy({
 				        "api": api_name,
-				        "search": "get_address_txs",
+				        "search": "login",
 				        "cachetime": 25,
 				        "cachefolder": "1h",
 				        "params": {
@@ -238,45 +240,75 @@ function get_api_inputs(rd, api_data, api_name) {
 				            }
 				        }
 				    }).done(function(e) {
-				        var data = br_result(e).result,
-				            transactions = data.transactions;
-				        if (transactions) {
-				            $.each(data.transactions, function(dat, value) {
-				                var txd = xmr_scan_data(value, setconfirmations, "xmr", data.blockchain_height);
-				                if (txd) {
-					                if (txd.transactiontime > request_timestamp && txd.ccval) {
-						                if (pending == "scanning") {
-							                var tx_listitem = append_tx_li(txd, thislist);
-											if (tx_listitem) {
-	                                        	transactionlist.append(tx_listitem.data(txd));
-												counter++;
-											}
-                                        }
-                                        else if (pending == "polling") {
-	                                        if (txd.txhash == transactionhash) {
-		                                        var tx_listitem = append_tx_li(txd, thislist);
-												if (tx_listitem) {
-		                                        	transactionlist.append(tx_listitem.data(txd));
-													counter++;
+				        var data = br_result(e).result;
+				        if (data.start_height) { // success!
+					        var pl = {
+						    	"address":address,
+						    	"view_key":vk
+						    };
+						    api_proxy({
+						        "api": api_name,
+						        "search": "get_address_txs",
+						        "cachetime": 25,
+						        "cachefolder": "1h",
+						        "params": {
+						            "method": "POST",
+						            "data": JSON.stringify(pl),
+						            "headers": {
+						                "Content-Type": "text/plain"
+						            }
+						        }
+						    }).done(function(e) {
+						        var data = br_result(e).result,
+						            transactions = data.transactions;
+						        if (transactions) {
+						            $.each(data.transactions, function(dat, value) {
+						                var txd = xmr_scan_data(value, setconfirmations, "xmr", data.blockchain_height);
+						                if (txd) {
+							                if (txd.transactiontime > request_timestamp && txd.ccval) {
+								                if (pending == "scanning") {
+									                var tx_listitem = append_tx_li(txd, thislist);
+													if (tx_listitem) {
+			                                        	transactionlist.append(tx_listitem.data(txd));
+														counter++;
+													}
+		                                        }
+		                                        else if (pending == "polling") {
+			                                        if (txd.txhash == transactionhash) {
+				                                        var tx_listitem = append_tx_li(txd, thislist);
+														if (tx_listitem) {
+				                                        	transactionlist.append(tx_listitem.data(txd));
+															counter++;
+														}
+				                                    }
 												}
 		                                    }
-										}
-                                    }
-				                }
-				            });
-				            tx_count(statuspanel, counter);
-                            compareamounts(rd);
+						                }
+						            });
+						        }
+						        tx_count(statuspanel, counter);
+		                        compareamounts(rd);
+						    }).fail(function(jqXHR, textStatus, errorThrown) {
+			                    tx_api_fail(thislist, statuspanel);
+			                    var error_object = (errorThrown) ? errorThrown : jqXHR;
+			                    handle_api_fails(rd, error_object, api_name, payment);
+			                }).always(function() {
+			                    api_src(thislist, {
+				                    "name": "xmr node"
+			                	});
+			                }); 
 				        }
+				        else {
+					        var errormessage = data.Error,
+					        	error = (errormessage) ? errormessage : "Invalid Viewkey";
+					        console.log(error);
+				        }   
 				    }).fail(function(jqXHR, textStatus, errorThrown) {
-	                    tx_api_fail(thislist, statuspanel);
+				        tx_api_fail(thislist, statuspanel);
 	                    var error_object = (errorThrown) ? errorThrown : jqXHR;
 	                    handle_api_fails(rd, error_object, api_name, payment);
-	                }).always(function() {
-	                    api_src(thislist, {
-		                    "name": "xmr node"
-	                	});
-	                }); 
-	            }    
+				    });
+		        }    
 	        }
 	        else {
 		        if (pending == "scanning") { // scan incomming transactions on address
