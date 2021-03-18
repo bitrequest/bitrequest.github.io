@@ -476,8 +476,7 @@ function continue_paymentfunction(payment) {
 	    var viewkey = get_vk(address);
     }
     var coindata = request.coindata,
-        saved_coinsettings = JSON.parse(localStorage.getItem("bitrequest_" + payment + "_settings")),
-        coinsettings = (saved_coinsettings) ? saved_coinsettings : getcoinsettings(payment),
+        coinsettings = activecoinsettings(payment),
         uoa = gets.uoa,
         amount = Number(gets.amount),
         type = gets.type,
@@ -544,7 +543,8 @@ function continue_paymentfunction(payment) {
             iszero: iszero,
             iszero_request: iszero_request,
             viewkey: viewkey,
-            monitored: monitored
+            monitored: monitored,
+            coinsettings: coinsettings
         },
         extend_helper_data = {
             socket_list: socket_list,
@@ -2084,15 +2084,18 @@ function saverequest(direct) {
                 history.replaceState(null, null, window_location + request_params);
             }
             helper.currencylistitem.removeData("url"); // remove saved url
-            if (thispayment == "ethereum") {
-	            // No new addresses for Ethereum
-            }
-            else {
-	            // Derive new address
-	            var addressli = filter_addressli(thispayment, "address", thisaddress);
-	            addressli.addClass("used").data("used", true);
-	            saveaddresses(thispayment, false);
-	            derive_addone(thispayment);
+            var coinsettings = request.coinsettings;
+            if (coinsettings) {
+	            var reuse = coinsettings["Reuse address"];
+	            if (reuse) {
+		            var addressli = filter_addressli(thispayment, "address", thisaddress);
+			        addressli.addClass("used").data("used", true);
+		            if (reuse.selected === false) {
+			            // Derive new address
+			            saveaddresses(thispayment, false);
+			            derive_addone(thispayment);
+		            }
+	            }
             }
         }
     }
@@ -2188,9 +2191,11 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
 		                var address = prdata.address,
 		                	vk = get_vk(address);
 						if (vk) {
+							var account = (vk.account) ? vk.account : address,
+								viewkey = vk.vk;
 							var starttime = $.now();
 				            closenotify();
-				            init_xmr_node(34, starttime, address, vk, smart_txhash, true);
+				            init_xmr_node(34, starttime, account, viewkey, smart_txhash, true);
 			            }
 			            else {
 				            notify("this currency is not monitored", 500000, "yes");
@@ -2259,6 +2264,9 @@ function download_wallet(currency) {
 				<h2 class='icon-download'>Download " + currency + " wallet</h2>\
 				<div class='popnotify'></div>\
 				<div id='dialogcontent'>" + wallet_ul + fmw + "</div>\
+				<div id='backupactions'>\
+					<div class='cancel_dialog customtrigger'>CANCEL</div>\
+				</div>\
 			</div>";
         popdialog(content, "alert", "canceldialog");
         if (wallets_arr) {

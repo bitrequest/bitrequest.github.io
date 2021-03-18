@@ -49,7 +49,10 @@ html.inframe body.showstartpage #fixednav {
 
 body.nobip #bip39_passphrase,
 body.nobip .cc_settinglist li[data-id='Xpub'],
-body.nobip .cc_settinglist li[data-id='Key derivations'] {
+body.nobip .cc_settinglist li[data-id='Key derivations'],
+.no_derive .cc_settinglist li[data-id='Key derivations'],
+body.nobip .cc_settinglist li[data-id='Reuse address'],
+.no_derive .cc_settinglist li[data-id='Reuse address'] {
 	display:none;
 }
 
@@ -139,6 +142,10 @@ body.sharemode #payment {
     width: 100%;
     height: auto;
     min-height: 100%;
+}
+
+body.seed_dialog #mainwrap {
+	 display: none;
 }
 
 main {

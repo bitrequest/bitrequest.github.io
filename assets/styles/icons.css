@@ -345,6 +345,9 @@
 .icon-bubble2:before {
     content: "\e96e";
 }
+.icon-recycle:before {
+  content: "\e90b";
+}
 
 /* custom icons */
 

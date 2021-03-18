@@ -916,8 +916,9 @@ body.seed_dialog #seed_panel {
 
 #ad_info_wrap ul li {
 	position:relative;
-	padding:0.5em 0;
+	padding:0.5em 0 0.75em 0;
 	width:100%;
+	margin-bottom:0.5em;
 	border-bottom: 1px solid #d5d5d5;
 }
 
@@ -931,12 +932,15 @@ body.seed_dialog #seed_panel {
 }
 
 .adbox {
+	display:inline-block;
+	padding:0.5em 0;
 	max-width:100%;
 	word-wrap: break-word;
 }
 
 #pk_span {
 	display:none;
+	padding-bottom:1.5em;
 }
 
 #pkspan {
@@ -1016,7 +1020,7 @@ body.seed_dialog #seed_panel {
 	float:left;
 	width:100%;
 	margin-top:0em!important;
-	padding:0 0 1em 0.5em;
+	padding:0 0 1em 0;
 	opacity:0.5;
 	pointer-events:none;
 }
@@ -1031,7 +1035,7 @@ body.seed_dialog #seed_panel {
 }
 
 #bip_mibox {
-	display:none;
+	//display:none;
 }
 
 .si_li {

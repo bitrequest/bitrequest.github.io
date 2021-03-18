@@ -5,6 +5,9 @@ $(document).ready(function() {
     // Confirmations
     edit_confirmations();
     submit_confirmations();
+    
+    // Reuse addresses
+	reuse_address_trigger();
     cc_switch();
 
     // Blockexplorer
@@ -134,6 +137,28 @@ function submit_confirmations() {
         notify("Data saved");
         save_cc_settings(thiscurrency);
     })
+}
+
+// Reuse addresses
+function reuse_address_trigger() {
+	$(document).on("mouseup touchend", ".cc_settinglist li[data-id='Reuse address'] .switchpanel.custom", function() {
+        var this_switch = $(this),
+            thislist = this_switch.closest("li"),
+            thisliwrap = this_switch.closest(".liwrap"),
+            thiscurrency = thisliwrap.attr("data-currency");
+        if (this_switch.hasClass("true")) {
+	         thislist.data("selected", false).find("p").html("false");
+	         this_switch.removeClass("true").addClass("false");
+	         save_cc_settings(thiscurrency);
+        } else {
+            var result = confirm("Are you sure you want to reuse " + thiscurrency + " addresses?");
+            if (result === true) {
+                thislist.data("selected", true).find("p").html("true");
+                this_switch.removeClass("false").addClass("true");
+                save_cc_settings(thiscurrency);
+            }
+        }
+	})
 }
 
 function cc_switch() {
@@ -878,9 +903,25 @@ function key_management() {
         if (activepub) {
             xpub_info_pu(thiscurrency, activepub.key);
         } else {
-            phrase_info_pu(thiscurrency);
+	        if (hasbip === true) {
+		        if (thiscurrency == "monero") {
+		            all_pinpanel({
+			            "func": phrase_info_pu,
+			            "args": thiscurrency
+			        }, true)
+		        } else {
+		        	phrase_info_pu(thiscurrency);
+		        }
+	        }
+	        else {
+		        manage_bip32();
+	        }
         }
     })
+}
+
+function xmrphrase_sc() {
+    $("#monero_settings .cc_settinglist li[data-id='Key derivations'] .atext").trigger("click");
 }
 
 function xpub_info_pu(currency, xpub) {

@@ -45,11 +45,13 @@ function init_socket(socket_node, address) {
 	        clearpingtx("close");
 	        var vk = get_vk(address);
 			if (vk) {
+				var account = (vk.account) ? vk.account : address,
+					viewkey = vk.vk,
+					starttime = $.now();
 				request.monitored = true;
-				request.viewkey = vk;
-				var starttime = $.now();
-	            closenotify();
-	            init_xmr_node(9, starttime, address, vk);
+				request.viewkey = viewkey;
+				closenotify();
+	            init_xmr_node(9, starttime, account, viewkey);
             }
             else {
 	            request.monitored = false;

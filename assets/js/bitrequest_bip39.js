@@ -3,7 +3,15 @@ var test_phrase = "army van defense carry jealous true garbage claim echo media 
     expected_address = "1HQ3rb7nyLPrjnuW85MUknPekwkn7poAUm", // expected addres used for test derive
     has_bigint = false,
     can_xpub = false,
-    test_derive;
+    test_derive = true,
+    c_derive = {
+	    "bitcoin": true,
+	    "litecoin": true,
+	    "dogecoin": true,
+	    "nano": true,
+	    "monero": true,
+	    "ethereum": true
+    };
 
 $(document).ready(function() {
 	xpub_check();
@@ -12,6 +20,7 @@ $(document).ready(function() {
     //bipv_pass
     test_bip39();
     //bip39_fail
+    //derive_fail
     //test_derivation
 
     // Check derivationsn
@@ -60,6 +69,7 @@ $(document).ready(function() {
     //derive_add_address
     //derive_data
     //derive_obj
+    //ch_pending
     //get_uniques
     copy_phrase();
     show_phrase();
@@ -152,35 +162,42 @@ function test_bip39() {
 	if (crypto === undefined) { // test for window.crypto
         bip39_fail();
         test_derive = false;
-        return false;
     }
     if (has_bigint === false) { // test for js BigInt
         bip39_fail();
         test_derive = false;
-        return false;
+    }
+    if (toseed(test_phrase) != expected_seed || test_derivation() === false) {
+	    derive_fail(["bitcoin","litecoin","dogecoin","ethereum"]);
+	    c_derive.bitcoin = false,
+        c_derive.litecoin = false,
+        c_derive.dogecoin = false,
+        c_derive.ethereum = false;
     }
     if (bech32_check() === false) { // test for bech32 Derivation
-        bip39_fail();
-        test_derive = false;
-        return false;
+	    derive_fail(["bitcoin"]);
+        c_derive.bitcoin = false;
     }
     if (nano_check() === false) { // test for nano Derivation
-        bip39_fail();
-        test_derive = false;
-        return false;
+	    derive_fail(["nano"]);
+        c_derive.nano = false;
     }
-    if (toseed(test_phrase) == expected_seed) {
-        if (test_derivation() === true) {} else {
-            bip39_fail();
-            test_derive = false;
-            return false;
-        }
+    if (xmr_check() === false) { // test for xmr Derivation
+	    derive_fail(["monero"]);
+        c_derive.monero = false;
     }
-    test_derive = true;
 }
 
 function bip39_fail() {
 	body.addClass("nobip");
+}
+
+function derive_fail(arr) {
+	setTimeout(function() {
+		$.each(arr, function(i, val) { 
+			$("#" + val + "_settings").addClass("no_derive");
+		});
+    }, 500)
 }
 
 // test derivations
@@ -196,9 +213,8 @@ function test_derivation() {
         key_object = format_keys(expected_seed, x_keys_dat, bip32dat, 0, currency);
     if (key_object.address == expected_address) {
         return true;
-    } else {
-        return false;
     }
+    return false;
 }
 
 function bech32_check() {
@@ -220,6 +236,16 @@ function nano_check() {
     return false;
 }
 
+function xmr_check() { // https://coinomi.github.io/tools/bip39/
+    var expected_xmr_address = "477h3C6E6C4VLMR36bQL3yLcA8Aq3jts1AHLzm5QXipDdXVCYPnKEvUKykh2GTYqkkeQoTEhWpzvVQ4rMgLM1YpeD6qdHbS",
+    	ssk = get_ssk(expected_seed, true),
+	    xko = xmr_getpubs(ssk, 0);
+    if (xko.address == expected_xmr_address) {
+        return true;
+    }
+    return false;
+}
+
 function xpub_check() {
 	var currency = "bitcoin",
     	xpub_keycc = key_cc_xpub("xpub6EdHrjLe1JdwRR6W5romAvmVzk7bfXQWV2N9SuTWP1ebszkLVQMev6KWTNtb2D9mQpocUfAsPQGkE6wtVe8Kug3dYyA9yCJTnHRPJAbgEAF"),
@@ -235,7 +261,7 @@ function xpub_check() {
 // Check derivationsn
 
 function check_derivations(currency) {
-    if (test_derive === true) {
+    if (test_derive === true && c_derive[currency]) {
         var activepub = active_xpub(currency);
         if (can_xpub && activepub) {
             return "xpub";
@@ -334,8 +360,8 @@ function restore_seed_verify() {
             if (verify === true) {
                 var thistrigger = $(this),
                     seedid = thistrigger.attr("data-seedid"),
-                    words = phrase.split(" ");
-                seed_string = btoa(JSON.stringify(words)),
+                    words = phrase.split(" "),
+					seed_string = btoa(JSON.stringify(words)),
                     phraseid = hmacsha(seed_string, "sha256").slice(0, 8);
                 if (seedid == phraseid) {
                     phrasearray = words;
@@ -748,7 +774,11 @@ function deactivate_xpubs() {
 // Test triggers
 
 function derive_test_trigger() {
-    $(document).on("click touch", "#testtrigger", function() {
+    $(document).on("click touch", "#testtriggerxx", function() {
+	    var seedobject = ls_phrase_obj(),
+			seedid = seedobject.pid,
+			savedseed = seedobject.pob.join(" ");
+		derive_all(savedseed, seedid, true);
     })
 }
 
@@ -801,7 +831,7 @@ function ptokey(p, sid) {
 }
 
 function derive_addone_trigger() {
-    $(document).on("click touch", ".addone", function() {
+    $(document).on("click touch", ".addonexx", function() {
         derive_addone($(this).attr("data-currency"), true);
     })
 }
@@ -864,7 +894,7 @@ function derive_all(phrase, seedid, extra) {
         var currency = coinconfig.currency,
             coindat = coinconfig.data,
             bip32 = coinconfig.settings.Xpub;
-        if (bip32.active === true) {
+        if (bip32.active === true && c_derive[currency]) {
 	        var ad = derive_obj("seed", seed, master_key, master_chaincode, coindat, bip32, seedid, extra);
 	        if (ad) {
 		        derive_add_address(currency, ad);
@@ -881,7 +911,7 @@ function derive_add_address(currency, ad) {
 }
 
 function derive_data(currency, extra) {
-    if (test_derive === true) {
+    if (test_derive === true && c_derive[currency]) {
         var coindat = getcoindata(currency),
             bip32 = getbip32dat(currency),
             activepub = active_xpub(currency);
@@ -913,8 +943,9 @@ function derive_obj(source, seed, key, cc, coindat, bip32, seedid, add) {
         id_key = source + "id",
         addressli = get_addresslist(currency).children("li"),
         deriveli = filter_list(addressli, id_key, seedid),
-        actives = deriveli.not(".used");
-    if (!actives.length || add) {
+        actives = deriveli.not(".used"),
+        check_p = (actives.length) ? ch_pending(actives.first().data()) : false;
+    if (!actives.length || check_p === true || add) {
 	    var allength = deriveli.length,
 	        index = (allength > 1) ? get_latest_index(deriveli) + 1 : allength,
 	        root_path = (source == "xpub") ? "M/" : (source == "seed") ? bip32.root_path : "",
@@ -940,11 +971,19 @@ function derive_obj(source, seed, key, cc, coindat, bip32, seedid, add) {
 	            "erc20": false,
 	            "checked": true,
 	            "label": label
-	        };
+	        },
+	        vk = key_object.vk;
+	    if (vk) {
+		   this_data.vk = vk; 
+	    }
 	    this_data[source + "id"] = seedid;
 	    return this_data;
     }
     return false;
+}
+
+function ch_pending(dat) {
+    return $("#requestlist li[data-address='" + dat.address + "'][data-pending='scanning'][data-cmcid='" + dat.cmcid + "']").length > 0;
 }
 
 function get_uniques(arr) {
@@ -1229,7 +1268,19 @@ function format_keys(seed, key_object, bip32, index, coin) {
                 "privkey": nano_account.privateKey
             }
         }
-    } else {
+    }
+    else if (coin == "monero") {
+        if (seed) {
+	        var ssk = get_ssk(seed, true),
+	    		xko = xmr_getpubs(ssk, index);
+	    	ko = {
+                "index": index,
+                "address": xko.address,
+                "vk": xko.account + xko.svk
+            }
+        }
+    }
+    else {
         var purpose = key_object.purpose,
             xpub = key_object.xpub,
             prekey = key_object.key,
@@ -1309,7 +1360,6 @@ function phrase_info_pu(coin) {
         header_str = (coin) ? "<h2>" + getcc_icon(coindat.cmcid, coindat.ccsymbol + "-" + thiscurrency, coindat.erc20) + " <span>" + thiscurrency + " Key Derivation</span></h2>" : "",
         sbu_val = get_setting("backup", "sbu"),
         sbu_str = (has_datenc() === true) ? "<div class='si_li'><strong>Backup seed:</strong><div id='toggle_sbu_span' class='ait'>" + switchpanel(sbu_val, " global") + "</div></div>" : "",
-        wallet_display = (coin) ? "block" : "none",
         del_phr_str = (coin) ? "" : (hasbip === true) ? sbu_str + "<div class='si_li noline'><div id='deletephrase' class='icon-bin'></div></div>" : "",
         content = $("<div id='ad_info_wrap' class='" + singleclass + "' data-class='" + rootclass + "'>" + header_str + "<ul>" +
             sourceed_str +
@@ -1322,9 +1372,8 @@ function phrase_info_pu(coin) {
     		</div>\
     	</li>\
     	<li class='noline'>\
-    		<div id='bip_mi' class='ref'>more ...</div>\
-    		<div id='bip_mibox' style='display:" + wallet_display + "'>\
-    			<br/><strong>Compatible wallets:</strong>\
+    		<div id='bip_mi' class='ref'>Compatible wallets:</div>\
+    		<div id='bip_mibox'>\
     			<div id='supported_wallets'>\
 				</div>" + del_phr_str +
             "</div>\
@@ -1370,9 +1419,12 @@ function phrase_info_pu(coin) {
                     "bip32": bip32dat,
                     "currency": currency
                 },
+                xmr_phrase = (currency == "monero") ? secret_spend_key_to_words(get_ssk(seed, true)) : false,
+                xmr_phrase_box = (xmr_phrase) ? "<div><strong>XMR Seed words: </strong><br/><span class='adboxl adbox select'>" + xmr_phrase + "</span></div>" : "",
                 dp_node = $("<div class='d_path" + coinclass + "'>\
-				<div class='d_path_header'><strong>Derivation path: </strong><span class='ref'>" + root_path + "</span></div>\
-    				<div class='d_path_body clearfix'>\
+				<div class='d_path_header'><strong>Derivation path: </strong><span class='ref'>" + root_path + "</span></div>" +
+					xmr_phrase_box +
+    				"<div class='d_path_body clearfix'>\
     					<div class='td_bar'>\
 							<div class='td_next button'>Next</div><div class='td_prev button'>Prev</div>\
 						</div>\
@@ -1380,8 +1432,10 @@ function phrase_info_pu(coin) {
     				</div>\
     			</div>").data(dp_node_dat),
                 sw_node = $("<ul id='formbox_ul' class='clearfix" + coinclass + "'>" + walletlist + "</ul>");
-            $("#pi_icons").append(icon_node);
-            $("#d_paths").append(dp_node);
+            if (c_derive[currency]) {
+	            $("#pi_icons").append(icon_node);
+				$("#d_paths").append(dp_node);
+            }
             $("#supported_wallets").append(sw_node);
             pi_show();
         }
@@ -1430,39 +1484,44 @@ function test_derive_function(thisnode, prev) {
     var kd = $("#ad_info_wrap").data(),
         dp_node = thisnode.closest(".d_path"),
         dnd = dp_node.data(),
-        currency = dnd.currency,
-        test_derive_box = dp_node.find(".td_box"),
-        td_prev = dp_node.find(".td_prev"),
-        count = 5,
-        td_li = (prev === true) ? test_derive_box.find(".der_li").first() : test_derive_box.find(".der_li").last(),
-        der_index = (td_li.length) ? parseInt(td_li.attr("data-index")) : 0,
-        startindex = (der_index === 0) ? 0 : (prev === true) ? der_index - count : der_index + 1;
-    if (startindex > 1) {
-        td_prev.show();
-    } else {
-        td_prev.hide();
+        currency = dnd.currency;
+    if (c_derive[currency]) {
+	    var test_derive_box = dp_node.find(".td_box"),
+	        td_prev = dp_node.find(".td_prev"),
+	        count = 5,
+	        td_li = (prev === true) ? test_derive_box.find(".der_li").first() : test_derive_box.find(".der_li").last(),
+	        der_index = (td_li.length) ? parseInt(td_li.attr("data-index")) : 0,
+	        startindex = (der_index === 0) ? 0 : (prev === true) ? der_index - count : der_index + 1;
+	    if (startindex > 1) {
+	        td_prev.show();
+	    } else {
+	        td_prev.hide();
+	    }
+	    var bip32dat = dnd.bip32,
+	        key = kd.key,
+	        chaincode = kd.cc,
+	        lb = (currency == "nano") ? "<br/>" : " ",
+	        root_path = (kd.xpub === true) ? "M/" : bip32dat.root_path,
+	        derive_array = keypair_array(kd.seed, new Array(count), startindex, root_path, bip32dat, key, chaincode, currency);
+	    test_derive_box.html("");
+	    $.each(derive_array, function(i, val) {
+	        var index = startindex + i,
+	            tdb_li = "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> " + lb + val.address + "</li>";
+	        test_derive_box.append(tdb_li);
+	    });
     }
-    var bip32dat = dnd.bip32,
-        key = kd.key,
-        chaincode = kd.cc,
-        lb = (currency == "nano") ? "<br/>" : " ",
-        root_path = (kd.xpub === true) ? "M/" : bip32dat.root_path,
-        derive_array = keypair_array(kd.seed, new Array(count), startindex, root_path, bip32dat, key, chaincode, currency);
-    test_derive_box.html("");
-    $.each(derive_array, function(i, val) {
-        var index = startindex + i,
-            tdb_li = "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> " + lb + val.address + "</li>";
-        test_derive_box.append(tdb_li);
-    });
 }
 
 function phrase_moreinfo() {
     $(document).on("click touch", "#bip_mi", function() {
-        var bmb = $("#bip_mibox");
+        var thisbttn = $(this),
+        bmb = $("#bip_mibox");
         if (bmb.is(":visible")) {
             bmb.slideUp(200);
+            //thisbttn.text("Compatible wallets:");
         } else {
             bmb.slideDown(200);
+            //thisbttn.text("Hide");
         }
     })
 }

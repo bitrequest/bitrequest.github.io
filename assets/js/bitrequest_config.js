@@ -10,7 +10,7 @@ var apptitle = "Bitrequest",
     firebase_dynamic_link_domain = "bitrequest.page.link",
     firebase_shortlink = "https://" + firebase_dynamic_link_domain + "/",
     androidpackagename = "io.bitrequest.app",
-    web3,
+    web3 = new Web3(),
     main_eth_node = "https://mainnet.infura.io/v3/",
     eth_node2 = "https://ropsten.infura.io/v3/",
     main_eth_socket = "wss://mainnet.infura.io/ws/v3/",
@@ -156,6 +156,12 @@ var multi_wallets = {
                     "selected": false,
                     "switch": true,
                 },
+                "Reuse address": {
+                    "icon": "recycle",
+                    "selected": false,
+                    "switch": true,
+                    "custom_switch": true
+                },
                 "blockexplorers": {
                     "icon": "eye",
                     "selected": "blockchain.com",
@@ -247,19 +253,39 @@ var multi_wallets = {
             },
             "wallets": {
 	            "wallet_download_page": "https://www.getmonero.org/downloads/",
-                "wallets": [{
+                "wallets": [
+                	multi_wallets.coinomi,
+                	{
                         "name": "monerujo",
                         "website": "https://www.monerujo.io",
                         "appstore": null,
                         "playstore": "https://play.google.com/store/apps/details?id=com.m2049r.xmrwallet",
-                        "desktop": null
+                        "desktop": null,
+                        "seed": true
+                    },
+                    {
+                        "name": "cakewallet",
+                        "website": "https://cakewallet.com",
+                        "appstore": "https://apps.apple.com/app/id1334702542",
+                        "playstore": "https://play.google.com/store/apps/details?id=com.cakewallet.cake_wallet",
+                        "desktop": null,
+                        "seed": true
                     },
                     {
                         "name": "mymonero",
                         "website": "https://mymonero.com",
                         "appstore": "https://apps.apple.com/app/id1372508199",
                         "playstore": null,
-                        "desktop": "https://github.com/mymonero/mymonero-app-js/releases"
+                        "desktop": "https://github.com/mymonero/mymonero-app-js/releases",
+                        "seed": true
+                    },
+                    {
+                        "name": "guiwallet",
+                        "website": "https://www.getmonero.org",
+                        "appstore": null,
+                        "playstore": null,
+                        "desktop": "https://www.getmonero.org/downloads/#gui",
+                        "seed": true
                     }
                 ]
             },
@@ -294,14 +320,26 @@ var multi_wallets = {
                     }]
                 },
                 "Xpub": {
-                    "active": false,
+                    "active": true,
                     "xpub": false,
-                    "selected": false,
-                    "key": null,
                     "icon": "key",
                     "switch": true,
                     "custom_switch": true,
-                    "prefix": null
+                    "selected": false,
+                    "key": null,
+                    "root_path": "m/44'/128'/0'/0/",
+                    "prefix": {
+                        "pub": 0,
+                        "pubx": "00000000",
+                        "privx": "00000000"
+                    },
+                    "pk_vbytes": {
+                        "wif": 0
+                    }
+                },
+                "Key derivations": {
+                    "icon": "cog",
+                    "selected": "BIP32 key generation",
                 }
             }
         },
@@ -351,6 +389,12 @@ var multi_wallets = {
                     "icon": "dice",
                     "selected": false,
                     "switch": true,
+                },
+                "Reuse address": {
+                    "icon": "recycle",
+                    "selected": false,
+                    "switch": true,
+                    "custom_switch": true
                 },
                 "blockexplorers": {
                     "icon": "eye",
@@ -462,6 +506,12 @@ var multi_wallets = {
                     "selected": false,
                     "switch": true,
                 },
+                "Reuse address": {
+                    "icon": "recycle",
+                    "selected": false,
+                    "switch": true,
+                    "custom_switch": true
+                },
                 "blockexplorers": {
                     "icon": "eye",
                     "selected": "blockchair.com"
@@ -533,8 +583,7 @@ var multi_wallets = {
                 "cmcid": 1567,
                 "urlscheme": function(payment, address, amount, iszero) {
 	                var amount = (iszero === true) ? "" : "?amount=" + NanocurrencyWeb.tools.convert(amount, "NANO", "RAW");
-	                console.log(amount);
-                    return "nano:" + address + amount;
+	                return "nano:" + address + amount;
                 },
                 "address_regex": "^(xrb|nano)_([a-z1-9]{60})$"
             },
@@ -572,6 +621,12 @@ var multi_wallets = {
                     "icon": "dice",
                     "selected": false,
                     "switch": true,
+                },
+                "Reuse address": {
+                    "icon": "recycle",
+                    "selected": false,
+                    "switch": true,
+                    "custom_switch": true
                 },
                 "blockexplorers": {
                     "icon": "eye",

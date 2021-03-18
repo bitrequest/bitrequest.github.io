@@ -1228,7 +1228,6 @@ function cachecontrol() {
 						</div>\
 					</div>\
 					<div id='backupactions'>\
-						<div class='cancel_dialog customtrigger'>OK</div>\
 						<div class='cancel_dialog customtrigger'>CANCEL</div>\
 					</div>\
 				</div>";

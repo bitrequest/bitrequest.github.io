@@ -421,6 +421,7 @@ function finishfunctions() {
     showtransactions();
     addressinfo();
     show_pk();
+    show_vk();
     //open_blockexplorer_url
     //blockexplorer_url
     apisrc_shortcut();
@@ -479,6 +480,8 @@ function finishfunctions() {
     //pinpanel
     //switchpanel
     //getcoindata
+    //activecoinsettings
+    //getcoinsettings
     //getbip32dat
     //getcoinconfig
     //try_next_api
@@ -988,6 +991,12 @@ function loadurl() {
         loadpageevent("home");
     }
     shownav(page);
+    var shortcut = gets.sc;
+    if (shortcut) {
+	    if (shortcut == "xmrphrase") {
+		    xmrphrase_sc();
+	    }
+    }
 }
 
 function clicklink() {
@@ -1255,7 +1264,7 @@ function togglecurrency() {
                     currencylistitem.removeClass("hide");
                 }
             } else {
-                addcurrency(coindata);
+	            addcurrency(coindata);
             }
         }
         savecurrencies(false);
@@ -1819,7 +1828,7 @@ function addaddress(ad, edit) {
 		nopub = (test_derive === false) ? true : (is_xpub(currency) === false || has_xpub(currency) !== false),
 		choose_wallet_str = "<span id='get_wallet' class='address_option' data-currency='" + currency + "'>I don't have a " + currency + " address yet</span>",
         derive_seed_str = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>Generate address from seed</span>",
-        options = (hasbip === true) ? choose_wallet_str : (test_derive === true) ? (hasbip32(currency) === true) ? derive_seed_str : choose_wallet_str : choose_wallet_str,
+        options = (hasbip === true) ? choose_wallet_str : (test_derive === true && c_derive[currency]) ? (hasbip32(currency) === true) ? derive_seed_str : choose_wallet_str : choose_wallet_str,
         pnotify = (body.hasClass("showstartpage")) ? "<div class='popnotify' style='display:block'>" + options + "</div>" : "<div class='popnotify'></div>",
         scanqr = (hascam === true && edit === false) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
         title = (edit === true) ? "<h2 class='icon-pencil'>Edit label</h2>" : "<h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " Add " + currency + " address</h2>",
@@ -1843,25 +1852,44 @@ function addaddress(ad, edit) {
 }
 
 function active_derives(currency, derive) {
-    if (derive == "seed") {
-        var active_sder = filter_addressli(currency, "seedid", bipid).not(".used");
-        if (active_sder.length > 0) {
-            return true;
-        } else {
-            return false;
-        }
-    } else if (derive == "xpub") {
-        var activepub = active_xpub(currency),
-            xpubid = activepub.key_id,
-            active_xder = filter_addressli(currency, "xpubid", xpubid).not(".used");
-        if (active_xder.length > 0) {
-            return true;
-        } else {
-            return false;
-        }
-    } else {
-        return true
+	var addresslist = get_addresslist(currency).children("li");
+	if (addresslist.length < 1) {
+    	return false;
     }
+    var coinsettings = activecoinsettings(currency);
+	if (coinsettings) {
+        var reuse = coinsettings["Reuse address"];
+        if (reuse) {
+            if (reuse.selected === true) {
+	            return true;
+            }
+        }
+    }
+    if (derive == "seed") {
+	    var active_sder = filter_list(addresslist, "seedid", bipid).not(".used");
+        if (active_sder.length) {
+	        var check_p = ch_pending(active_sder.first().data());
+	        if (check_p === true) {
+		         return false;
+	        }
+        } else {
+            return false;
+        }
+    }
+    if (derive == "xpub") {
+	    var activepub = active_xpub(currency),
+            xpubid = activepub.key_id,
+            active_xder = filter_list(addresslist, "xpubid", xpubid).not(".used");
+        if (active_xder.length) {
+	        var check_p = ch_pending(active_xder.first().data());
+            if (check_p === true) {
+		         return false;
+	        }
+        } else {
+            return false;
+        }
+    }
+    return true
 }
 
 function get_wallet() {
@@ -2570,16 +2598,17 @@ function addressinfo() {
             d_index = dd.derive_index,
             dpath = (bip32dat) ? bip32dat.root_path + d_index : "";
         dd.dpath = dpath,
-            dd.bip32dat = bip32dat;
+        dd.bip32dat = bip32dat;
         var cc_icon = getcc_icon(dd.cmcid, dd.ccsymbol + "-" + currency, dd.erc20),
             dpath_str = (isseed) ? "<li><strong>Derivation path:</strong> " + dpath + "</li>" : "",
-            vkstring = (currency == "monero" && dd.vk) ? "<li><strong>View key: </strong><span class='adbox adboxl select'>" + dd.vk + "</span></li>" : "",
             pk_verified = "Unknown <span class='icon-checkmark'></span>",
-            pk_str = (isseed) ? (isseed && active_src) ? "<span id='show_pk' class='ref'>Show</span>" : (a_wl === true) ? pk_verified : "Unknown" : pk_verified,
+            vkobj = (dd.vk) ? vk_obj(dd.vk) : false,
+            vkdat = (vkobj) ? (isseed && active_src) ? "derive" : vkobj.vk : false;
+            pk_str = (vkdat) ? "<span id='show_vk' class='ref' data-vk='" + vkdat + "'>Show</span>" : (isseed) ? (active_src) ? "<span id='show_pk' class='ref'>Show</span>" : (a_wl === true) ? pk_verified : "Unknown" : pk_verified,
             content = $("<div id='ad_info_wrap'><h2>" + cc_icon + " <span>" + dd.label + "</span></h2><ul>\
 	    		<li><strong>Address: </strong><span class='adbox adboxl select'>" + address + "</span></li>\
 	    		<li><strong>Source: </strong>" + srcval + "</li>" +
-                dpath_str + vkstring +
+                dpath_str +
                 "<li><strong>Private key: </strong>" + pk_str +
                 "<div id='pk_span'>\
 					<div id='qrwrap' class='flex'>\
@@ -2597,17 +2626,20 @@ function addressinfo() {
 
 function show_pk() {
     $(document).on("click touch", "#show_pk", function() {
-        var pkspan = $("#pk_span");
+        var thisbttn = $(this),
+        	pkspan = $("#pk_span");
         if (pkspan.is(":visible")) {
             pkspan.slideUp(200);
+            thisbttn.text("show");
         } else {
             if (pkspan.hasClass("shwpk")) {
                 pkspan.slideDown(200);
+                thisbttn.text("hide");
             } else {
                 $("#optionsbox").html("");
                 var addat = $("#ad_info_wrap").data(),
-                    currency = addat.currency;
-                keycc = key_cc(currency),
+                    currency = addat.currency,
+					keycc = key_cc(),
                     x_keys_dat = derive_x(addat.dpath, keycc.key, keycc.cc),
                     key_object = format_keys(keycc.seed, x_keys_dat, addat.bip32dat, addat.derive_index, currency),
                     privkey = key_object.privkey;
@@ -2621,9 +2653,55 @@ function show_pk() {
 }
 
 function show_pk_cb(pk) {
+	$("#show_pk").text("hide");
     $("#pkspan").text(pk);
     $("#qrcode").qrcode(pk);
     $("#pk_span").addClass("shwpk").slideDown(200);
+}
+
+function show_vk() {
+    $(document).on("click touch", "#show_vk", function() {
+        var thisbttn = $(this),
+        	vk = thisbttn.attr("data-vk"),
+        	pkspan = $("#pk_span");
+        if (pkspan.is(":visible")) {
+            pkspan.slideUp(200);
+            thisbttn.text("show");
+        } else {
+            if (pkspan.hasClass("shwpk")) {
+                pkspan.slideDown(200);
+                thisbttn.text("hide");
+            } else {
+                $("#optionsbox").html("");
+                var x_ko = {};
+                if (vk == "derive") {
+	                var addat = $("#ad_info_wrap").data(),
+	                    keycc = key_cc(),
+	                    x_keys_dat = derive_x(addat.dpath, keycc.key, keycc.cc),
+						rootkey = x_keys_dat.key,
+						ssk = sc_reduce32(fasthash(rootkey));
+					x_ko = xmr_getpubs(ssk, addat.derive_index);
+                }
+                else {
+	                x_ko = {
+		                "stat": true,
+		                "svk": vk
+	                }
+                }
+				all_pinpanel({
+                    "func": show_vk_cb,
+                    "args": x_ko
+                }, true)
+            }
+        }
+    })
+}
+
+function show_vk_cb(kd) {
+	var stat = kd.stat,
+		ststr = (stat) ? "" : "<br/><strong style='color:#8d8d8d'>Spendkey</strong> <span class='adbox adboxl select'>" + kd.ssk + "</span><br/>";
+	$("#show_vk").text("hide");
+	$("#pk_span").html(ststr + "<br/><strong style='color:#8d8d8d'>Viewkey</strong> <span class='adbox adboxl select'>" + kd.svk + "</span>").addClass("shwpk").slideDown(200);
 }
 
 function open_blockexplorer_url(be_link) {
@@ -3316,6 +3394,11 @@ function getcoindata(currency) {
     }
 }
 
+function activecoinsettings(currency) {
+    var saved_coinsettings = JSON.parse(localStorage.getItem("bitrequest_" + currency + "_settings"));
+    return (saved_coinsettings) ? saved_coinsettings : getcoinsettings(currency);
+}
+
 function getcoinsettings(currency) {
     var coindata = getcoinconfig(currency);
     if (coindata) {
@@ -3339,18 +3422,17 @@ function getbip32dat(currency) {
 function hasbip32(currency) {
     var coindata = getcoinconfig(currency);
     if (coindata) {
-        if (coindata.settings.Xpub) {
-            if (coindata.settings.Xpub.active) {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    } else {
-        return false;
+	    var settings = coindata.settings;
+	    if (settings) {
+		    var xpub = settings.Xpub;
+		    if (xpub) {
+				if (xpub.active) {
+               		return true;
+            	} 
+			}
+	    }
     }
+    return false;
 }
 
 function getcoinconfig(currency) {
@@ -3496,18 +3578,18 @@ function buildsettings() {
 function add_serviceworker() {
     if ("serviceWorker" in navigator) {
         if (navigator.serviceWorker.controller) {
-            console.log("active service worker found, no need to register");
+        	// console.log("active service worker found, no need to register");
         } else {
             // Register the service worker
             navigator.serviceWorker.register(approot + "serviceworker.js", {
                     scope: "./"
                 })
                 .then(function(reg) {
-                    console.log("Service worker has been registered for scope: " + reg.scope);
+                	// console.log("Service worker has been registered for scope: " + reg.scope);
                 });
         }
     } else {
-        console.log("service worker is not supported");
+        // console.log("service worker is not supported");
     }
 }
 
@@ -3541,7 +3623,7 @@ function fetchrequests(cachename, archive) {
             showarchive = (archive === false && parsevalue.length > 6); // only show archive button when there are more then 6 requests
         $.each(parsevalue.reverse(), function(i, value) {
             value.archive = archive;
-            value.showarchive = showarchive;
+            value.showarchive = true;
             appendrequest(value);
         });
     }
@@ -4173,9 +4255,27 @@ function currency_uncheck(currency) {
 function get_vk(address) {
 	var ad_li = filter_addressli("monero", "address", address),
 		ad_dat = (ad_li.length) ? ad_li.data() : {},
-		ad_vk = ad_dat.vk,
-		vk = (ad_vk && ad_vk != "") ? ad_vk : false;
-	return vk;
+		ad_vk = ad_dat.vk;
+		if (ad_vk && ad_vk != "") {
+			return vk_obj(ad_vk);
+		}
+	return false;
+}
+
+function vk_obj(vk) {
+    if (vk.length === 64) {
+		return {
+			"account": false,
+			"vk": vk
+		}
+	}
+	else if (vk.length === 159) {
+		return {
+			"account": vk.slice(0,95),
+			"vk": vk.slice(95)
+		}
+	}
+	return false;
 }
 
 function gk() {
