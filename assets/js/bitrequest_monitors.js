@@ -710,27 +710,33 @@ function get_rpc_inputs(rd, rpc_data) {
                         }
                     }).done(function(e) {
                         var data = br_result(e).result,
-                            nano_data = data.data,
-                            pending_array_node = nano_data[0].pending,
-                            pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
-                            history_array_node = nano_data[1].history,
-                            history_array = $.isEmptyObject(history_array_node) ? [] : history_array_node,
-                            merged_array = pending_array.concat(history_array).sort(function(x, y) { // merge and sort arrays
-                                return y.local_timestamp - x.local_timestamp;
-                            });
-                        $.each(merged_array, function(data, value) {
-                            var txd = nano_scan_data(value, setconfirmations, ccsymbol);
-                            if ((txd.transactiontime > request_timestamp) && txd.ccval && (value.type === undefined || value.type == "receive")) {
-                                var tx_listitem = append_tx_li(txd, thislist);
-                                if (tx_listitem) {
-                                    transactionlist.append(tx_listitem.data(txd));
-                                    counter++;
-                                }
-                            }
-                        });
-                        tx_count(statuspanel, counter);
-                        api_src(thislist, rpc_data);
-                        compareamounts(rd);
+                        	nano_data = data.data;
+                        if ($.isEmptyObject(nano_data)) {
+	                        tx_api_fail(thislist, statuspanel);
+	                        handle_rpc_fails(rd, {"error":"nano node offline","console":true}, payment, rpc_data);
+                        }
+                        else {
+	                        var pending_array_node = nano_data[0].pending,
+	                        	pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
+	                            history_array_node = nano_data[1].history,
+	                            history_array = $.isEmptyObject(history_array_node) ? [] : history_array_node,
+	                            merged_array = pending_array.concat(history_array).sort(function(x, y) { // merge and sort arrays
+	                                return y.local_timestamp - x.local_timestamp;
+	                            });
+	                        $.each(merged_array, function(data, value) {
+	                            var txd = nano_scan_data(value, setconfirmations, ccsymbol);
+	                            if ((txd.transactiontime > request_timestamp) && txd.ccval && (value.type === undefined || value.type == "receive")) {
+	                                var tx_listitem = append_tx_li(txd, thislist);
+	                                if (tx_listitem) {
+	                                    transactionlist.append(tx_listitem.data(txd));
+	                                    counter++;
+	                                }
+	                            }
+	                        });
+	                        tx_count(statuspanel, counter);
+	                        api_src(thislist, rpc_data);
+	                        compareamounts(rd);
+                        }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -1033,14 +1039,16 @@ function get_rpc_error_data(error) {
     var errorcode = (error.code) ? error.code :
         (error.status) ? error.status :
         (error.error_code) ? error.error_code : "",
+        cons = error.console,
         errormessage = (error.error) ? error.error :
         (error.message) ? error.message :
         (error.type) ? error.type :
         (error.error_message) ? error.error_message :
         (error.statusText) ? error.statusText : error,
         error_object = {
-            errorcode: errorcode,
-            errormessage: errormessage
+            "errorcode": errorcode,
+            "errormessage": errormessage,
+            "console": cons
         };
     return error_object;
 }
@@ -1052,6 +1060,10 @@ function rpc_eror_msg(apisrc, error, monitor) {
         },
         errormessage = error_dat.errormessage,
         errorcode = error_dat.errorcode;
+    if (error.console) {
+	    console.log(error);
+	    return false;
+    }
     if ($("#dialogbody .doselect").length) {
         return false;
     } else {

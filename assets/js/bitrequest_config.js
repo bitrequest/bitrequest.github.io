@@ -585,7 +585,7 @@ var multi_wallets = {
 	                var amount = (iszero === true) ? "" : "?amount=" + NanocurrencyWeb.tools.convert(amount, "NANO", "RAW");
 	                return "nano:" + address + amount;
                 },
-                "address_regex": "^(xrb|nano)_([a-z1-9]{60})$"
+            "address_regex": "^(xrb|nano)_([a-z1-9]{60})$"
             },
             "wallets": {
 	            "wallet_download_page": "https://nanowallets.guide",
@@ -612,7 +612,8 @@ var multi_wallets = {
                         "website": "https://nault.cc",
                         "appstore": null,
                         "playstore": null,
-                        "desktop": "https://nault.cc"
+                        "desktop": "https://nault.cc",
+                        "seed": true
                     }
                 ]
             },
@@ -621,12 +622,6 @@ var multi_wallets = {
                     "icon": "dice",
                     "selected": false,
                     "switch": true,
-                },
-                "Reuse address": {
-                    "icon": "recycle",
-                    "selected": false,
-                    "switch": true,
-                    "custom_switch": true
                 },
                 "blockexplorers": {
                     "icon": "eye",

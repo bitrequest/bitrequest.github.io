@@ -471,12 +471,13 @@ function continue_paymentfunction(payment) {
         return false;
     }
     loader();
-    var viewkey = false;
+    var coindata = request.coindata,
+    	viewkey = false;
     if (payment == "monero") { // check for monero viewkey
+	    coindata.monitored = false;
 	    var viewkey = get_vk(address);
     }
-    var coindata = request.coindata,
-        coinsettings = activecoinsettings(payment),
+    var coinsettings = activecoinsettings(payment),
         uoa = gets.uoa,
         amount = Number(gets.amount),
         type = gets.type,
@@ -946,6 +947,7 @@ function continue_paymentfunction(payment) {
             requesttitle_short = (sharetitle_exceed === true) ? requesttitle.substring(0, 44) + "<span>...</span>" : requesttitle,
             requesttitle_quotes = (requesttitle && requesttitle.length > 1) ? "'" + requesttitle_short + "'" : "",
             backbttnandtitle = (isrequest === true) ? "<div id='sharetitle' title='" + requesttitle_string + "' data-shorttitle='" + requesttitle_short + "' class='" + exceedclass + "'>" + requesttitle_quotes + "</div>" : "",
+            save_request,
             requestinfo = "\
 				<div id='requestinfo'>" +
             backbttnandtitle +
@@ -1082,22 +1084,25 @@ function continue_paymentfunction(payment) {
             if (helper.contactform === true) { // indicates if it's a online payment so not an incoming request
             }
             else {
-                if (iszero === true) {
-                    main_input_focus();
-                }
-                var save_request = saverequest("init");
+	            if (monitored === true) {
+		            if (iszero === true) {
+	                    main_input_focus();
+	                }
+	                var save_request = saverequest("init");
+		        }
             }
         } else {
             main_input_focus();
         }
         if (save_request == "nosocket") {
         }
-        else if (monitored === false) {
-	        notify("this currency is not monitored", 500000, "yes");
-	    } else {
+        else {
             init_socket(selected_socket, address);
             set_request_timer();
         }
+        if (monitored === false) {
+	        notify("this currency is not monitored", 500000, "yes");
+	    }
         // close loading screen when in iframe
         if (inframe === true) {
             parent.postMessage("close_loader", "*");
@@ -1609,7 +1614,7 @@ function addaddressfromdialog() {
             payment = request.payment,
             cmcid = request.cmcid,
             erc20 = request.erc20,
-            dd = derive_data(payment, true);
+            dd = derive_data(payment, true),
 			ad = {
                 "currency": payment,
                 "ccsymbol": request.currencysymbol,
@@ -1621,7 +1626,7 @@ function addaddressfromdialog() {
             scanqr = (hascam === true) ? "<div class='qrscanner' data-currency='" + payment + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
             scanvk = (hascam === true) ? "<div class='qrscanner' data-currency='" + payment + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
             vk_box = (payment == "monero") ? "<div class='inputwrap'><input type='text' class='vk_input' value='' placeholder='View key'>" + scanvk + "</div>" : "",
-            seedstr = (payment == "ethereum" && dd) ? "<div class='popnotify' style='display:block'><span id='addfromseed' class='address_option'>Generate address from seed</span></div>" : "<div class='popnotify'></div>",
+            seedstr = (dd) ? "<div class='popnotify' style='display:block'><span id='addfromseed' class='address_option'>Generate address from seed</span></div>" : "<div class='popnotify'></div>",
             content = $("<div class='formbox form add' id='addressformbox'>\<h2>" + getcc_icon(cmcid, request.cpid, erc20) + " Add " + payment + " address</h2>" + seedstr + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' class='address' value='' placeholder='Enter a " + payment + " address'>" + scanqr + "</div>" + vk_box + "<input type='text' class='addresslabel' value='' placeholder='label'><div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / private key of this address</span></div><input type='submit' class='submit' value='OK'></form></div>").data(ad);
         formbox.parent("#dialogbody").html(content);
     });
@@ -1991,7 +1996,7 @@ function open_tx(tx_node) {
 // ** Save and update request **
 
 function saverequest(direct) {
-    var gets = geturlparameters(),
+	var gets = geturlparameters(),
         thispayment = gets.payment,
         thiscurrency = gets.uoa,
         thisamount = request.amount,

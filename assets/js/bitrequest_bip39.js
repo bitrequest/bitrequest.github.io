@@ -968,6 +968,7 @@ function derive_obj(source, seed, key, cc, coindat, bip32, seedid, add) {
 	            "address": address,
 	            "ccsymbol": ccsymbol,
 	            "cmcid": coindat.cmcid,
+	            "make": coindat.make,
 	            "erc20": false,
 	            "checked": true,
 	            "label": label

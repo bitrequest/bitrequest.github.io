@@ -1864,6 +1864,9 @@ function active_derives(currency, derive) {
 	            return true;
             }
         }
+        else {
+	        return true;
+        }
     }
     if (derive == "seed") {
 	    var active_sder = filter_list(addresslist, "seedid", bipid).not(".used");
