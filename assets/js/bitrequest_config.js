@@ -651,8 +651,8 @@ var multi_wallets = {
                 "websockets": {
                     "icon": "tab",
                     "selected": {
-                        "name": "nano socket",
-                        "url": "wss://bitrequest.app:8010",
+                        "name": "nano.cc websocket",
+                        "url": "wss://socket.nanos.cc",
                         "display": true
                     },
                     "apis": [{
