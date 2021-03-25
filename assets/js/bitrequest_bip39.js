@@ -21,7 +21,6 @@ var test_phrase = "army van defense carry jealous true garbage claim echo media 
     };
 
 $(document).ready(function() {
-	//xpub_check();
 	hasbigint();
     //istrial
     //bipv_pass
@@ -113,7 +112,6 @@ $(document).ready(function() {
     test_derive_prev();
     //test_derive_function
     phrase_moreinfo();
-    eth_xpub_check();
 });
 
 function hasbigint() {
@@ -1345,7 +1343,7 @@ function format_keys(seed, key_object, bip32, index, coin) {
             }
         } 
         else {
-            ko.address = ko.address = pub_to_address(vb, pubkey);
+            ko.address = pub_to_address(vb, pubkey);
         }
         ko.pubkey = (coin == "ethereum") ? "0x" + pubkey : pubkey;
         if (xpub === false) {
