@@ -2,7 +2,6 @@ var test_phrase = "army van defense carry jealous true garbage claim echo media 
     expected_seed = "5b56c417303faa3fcba7e57400e120a0ca83ec5a4fc9ffba757fbe63fbd77a89a1a3be4c67196f57c39a88b76373733891bfaba16ed27a813ceed498804c0570", // expected seed used for test derive
     expected_address = "1HQ3rb7nyLPrjnuW85MUknPekwkn7poAUm", // expected addres used for test derive
     has_bigint = false,
-    can_xpub = false,
     test_derive = true,
     c_derive = {
 	    "bitcoin": true,
@@ -11,16 +10,25 @@ var test_phrase = "army van defense carry jealous true garbage claim echo media 
 	    "nano": true,
 	    "monero": true,
 	    "ethereum": true
+    },
+    can_xpub = {
+	    "bitcoin": true,
+	    "litecoin": true,
+	    "dogecoin": true,
+	    "nano": false,
+	    "monero": false,
+	    "ethereum": true
     };
 
 $(document).ready(function() {
-	xpub_check();
+	//xpub_check();
 	hasbigint();
     //istrial
     //bipv_pass
     test_bip39();
     //bip39_fail
     //derive_fail
+    //derive_xpub_fail
     //test_derivation
 
     // Check derivationsn
@@ -105,6 +113,7 @@ $(document).ready(function() {
     test_derive_prev();
     //test_derive_function
     phrase_moreinfo();
+    eth_xpub_check();
 });
 
 function hasbigint() {
@@ -186,6 +195,17 @@ function test_bip39() {
 	    derive_fail(["monero"]);
         c_derive.monero = false;
     }
+    // check xpub derivation
+    if (xpub_check() === false) { // test for btc xpub derivation
+	    derive_xpub_fail(["bitcoin","litecoin","dogecoin"]);
+	    can_xpub.bitcoin = false,
+        can_xpub.litecoin = false,
+        can_xpub.dogecoin = false;
+    }
+    if (eth_xpub_check() === false) { // test for ethereum xpub derivation
+	    derive_xpub_fail(["ethereum"]);
+	    can_xpub.ethereum = false;
+    }
 }
 
 function bip39_fail() {
@@ -196,6 +216,14 @@ function derive_fail(arr) {
 	setTimeout(function() {
 		$.each(arr, function(i, val) { 
 			$("#" + val + "_settings").addClass("no_derive");
+		});
+    }, 500)
+}
+
+function derive_xpub_fail(arr) {
+	setTimeout(function() {
+		$.each(arr, function(i, val) { 
+			$("#" + val + "_settings").addClass("no_xpub");
 		});
     }, 500)
 }
@@ -254,7 +282,22 @@ function xpub_check() {
     	key_object = format_keys(null, x_keys_dat, bip32dat, 0, currency),
     	xpub_address = key_object.address;
     if (expected_address == key_object.address) {
-	    can_xpub = true;
+	    return true;
+    }
+    else {
+	    return false;
+    }
+}
+
+function eth_xpub_check() {
+	var expected_eth_address = "0x2161DedC3Be05B7Bb5aa16154BcbD254E9e9eb68",
+		eth_pub = "03c026c4b041059c84a187252682b6f80cbbe64eb81497111ab6914b050a8936fd",
+		eth_address = pub_to_eth_address(eth_pub);
+    if (expected_eth_address == eth_address) {
+	    return true;
+    }
+    else {
+	    return false;
     }
 }
 
@@ -263,7 +306,7 @@ function xpub_check() {
 function check_derivations(currency) {
     if (test_derive === true && c_derive[currency]) {
         var activepub = active_xpub(currency);
-        if (can_xpub && activepub) {
+        if (can_xpub[currency] && activepub) {
             return "xpub";
         } else {
             if (hasbip === true) {
@@ -295,7 +338,7 @@ function has_xpub(currency) {
 }
 
 function is_xpub(currency) {
-	if (can_xpub) {
+	if (can_xpub[currency]) {
 		var xpubli = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']");
 	    if (xpubli) {
 	        var xpubli_dat = xpubli.data();
@@ -1260,7 +1303,7 @@ function format_keys(seed, key_object, bip32, index, coin) {
     var ko = {};
     if (coin == "nano") {
         if (seed) {
-            var nano_account = NanocurrencyWeb.wallet.accounts(seed, index, index)[0];
+	        var nano_account = NanocurrencyWeb.wallet.accounts(seed, index, index)[0];
             ko = {
                 "index": nano_account.accountIndex,
                 "address": nano_account.address,
@@ -1284,25 +1327,25 @@ function format_keys(seed, key_object, bip32, index, coin) {
         var purpose = key_object.purpose,
             xpub = key_object.xpub,
             prekey = key_object.key,
-            pubkey = (xpub === true) ? prekey : secp.Point.fromPrivateKey(prekey).toHex(true);
+            pubkey = (xpub === true) ? prekey : secp.Point.fromPrivateKey(prekey).toHex(true),
+            vb = str_pad(dectohex(bip32.prefix.pub), 2);
         ko.index = index;
         if (coin == "ethereum") {
             if (xpub === true) {
-                ko.address = false;
+                ko.address = pub_to_eth_address(pubkey);
             } else {
                 ko.address = web3.eth.accounts.privateKeyToAccount("0x" + prekey).address;
             }
-        } else {
-            var vb = str_pad(dectohex(bip32.prefix.pub), 2);
-            if (coin == "bitcoin") {
-                if (purpose.indexOf("84") > -1) {
-                    ko.address = pub_to_address_bech32("bc", pubkey);
-                } else {
-                    ko.address = pub_to_address(vb, pubkey);
-                }
+        }
+        else if (coin == "bitcoin") {
+            if (purpose.indexOf("84") > -1) {
+                ko.address = pub_to_address_bech32("bc", pubkey);
             } else {
-                ko.address = ko.address = pub_to_address(vb, pubkey);
+                ko.address = pub_to_address(vb, pubkey);
             }
+        } 
+        else {
+            ko.address = ko.address = pub_to_address(vb, pubkey);
         }
         ko.pubkey = (coin == "ethereum") ? "0x" + pubkey : pubkey;
         if (xpub === false) {

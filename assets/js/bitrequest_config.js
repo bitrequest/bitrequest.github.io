@@ -64,14 +64,6 @@ var multi_wallets = {
             "desktop": "https://beta.shapeshift.com",
             "seed": true
         },
-        "atomic": {
-            "name": "atomic",
-            "website": "https://atomicwallet.io",
-            "appstore": "https://apps.apple.com/app/id1478257827",
-            "playstore": "https://play.google.com/store/apps/details?id=io.atomicwallet",
-            "desktop": "https://atomicwallet.io/#download-block",
-            "seed": true
-        },
         "trustwallet": {
             "name": "trustwallet",
             "website": "https://trustwallet.com",
@@ -475,7 +467,6 @@ var multi_wallets = {
                 "wallets": [
                     multi_wallets.exodus,
                     multi_wallets.coinomi,
-                    multi_wallets.atomic,
                     multi_wallets.trezor,
                     multi_wallets.ledger,
                     multi_wallets.trustwallet,
@@ -614,6 +605,13 @@ var multi_wallets = {
                         "playstore": null,
                         "desktop": "https://nault.cc",
                         "seed": true
+                    },
+                    {
+                        "name": "natrium",
+                        "website": "https://natrium.io",
+                        "appstore": "https://itunes.apple.com/app/id1451425707",
+                        "playstore": "https://play.google.com/store/apps/details?id=co.banano.natriumwallet",
+                        "desktop": null
                     }
                 ]
             },
@@ -793,7 +791,7 @@ var multi_wallets = {
                 },
                 "Xpub": {
                     "active": true,
-                    "xpub": false,
+                    "xpub": true,
                     "icon": "key",
                     "switch": true,
                     "custom_switch": true,
@@ -1024,6 +1022,12 @@ var app_settings = [{
         "custom_proxies": [],
         "icon": "icon-sphere"
     },
+    /*{
+        "id": "cachecontrol",
+        "heading": "Cache control / updates",
+        "selected": "",
+        "icon": "icon-database"
+    },*/
     {
         "id": "apikeys",
         "heading": "API Keys",
@@ -1039,12 +1043,6 @@ var app_settings = [{
         "currencylayer": null,
         "infura": null,
         "amberdata": null
-    },
-    {
-        "id": "cachecontrol",
-        "heading": "Cache control / updates",
-        "selected": "",
-        "icon": "icon-database"
     }
 ]
 

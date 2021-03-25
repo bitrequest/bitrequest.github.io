@@ -230,8 +230,21 @@ function priv_to_pub(priv) {
     return secp.getPublicKey(priv, true);
 }
 
+function expand_pub(pub) {
+    return secp.Point.fromHex(pub).toHex(false);
+}
+
 function pub_to_address(versionbytes, pub) {
     return hash160_to_address(versionbytes, hash160(pub));
+}
+
+function pub_to_eth_address(pub) {
+	console.log(pub);
+	var xp_pub = expand_pub(pub),
+		eth_hex_pub = "0x" + xp_pub.slice(2),
+		keccak = web3.utils.keccak256(eth_hex_pub),
+		addr = "0x" + keccak.slice(26);
+	return web3.utils.toChecksumAddress(addr);
 }
 
 function hash160(pub) {

@@ -851,8 +851,9 @@ function validate_xpub(thisnode) {
                 save_cc_settings(currency);
                 var keycc = key_cc_xpub(addressinputval),
                     coindat = getcoindata(currency),
-                    bip32 = getbip32dat(currency);
-                derive_add_address("xpub", false, keycc.key, keycc.cc, coindat, bip32, xpub_id);
+                    bip32 = getbip32dat(currency),
+                    ad = derive_obj("xpub", false, keycc.key, keycc.cc, coindat, bip32, xpub_id);
+                derive_add_address(currency, ad);
                 canceldialog();
                 clear_savedurl();
                 if (body.hasClass("showstartpage")) {
