@@ -1812,9 +1812,11 @@ function shorten_url(sharedtitle, sharedurl, sitethumb) {
                     }
                 }).done(function(e) {
                     var data = br_result(e).result;
+                    console.log(data);
                     if (data.id) {
                         var linkid = data.id.split("/").pop(),
-                            shorturl = "https://bitrequest.github.io/" + linkid + "4bR";
+                            //shorturl = "https://bitrequest.github.io/" + linkid + "4bR"; // can not be used on github pages, needs httaccess support. Use plain bitly link instead
+                            shorturl = data.link;
                         sharerequest(shorturl, sharedtitle);
                         sessionStorage.setItem("bitrequest_bitly_shorturl_" + hashcode(sharedurl), shorturl);
                     } else {
