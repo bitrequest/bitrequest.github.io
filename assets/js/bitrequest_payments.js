@@ -1712,7 +1712,7 @@ function share(thisbutton) {
             return false;
         }
         var newdatastring = (thisdata === true) ? "&d=" + dataparam : "", // construct data param if exists
-            sharedurl = "https://bitrequest.github.io/?p=requests&payment=" + payment + "&uoa=" + thiscurrency + "&amount=" + thisamount + "&address=" + thisaddress + newdatastring,
+            sharedurl = "https://app.bitrequest.io/?p=requests&payment=" + payment + "&uoa=" + thiscurrency + "&amount=" + thisamount + "&address=" + thisaddress + newdatastring,
             thisrequestname_uppercase = thisrequestname.substr(0, 1).toUpperCase() + thisrequestname.substr(1), // capitalize requestname
             paymentupper = payment.substr(0, 1).toUpperCase() + payment.substr(1),
             sharedtitle = (thisdata === true) ? thisrequestname_uppercase + " sent a " + paymentupper + " payment request of " + thisamount + " " + thiscurrency.toUpperCase() + " for '" + thisrequesttitle + "'" : "You have a " + paymentupper + " payment request of " + thisamount + " " + thiscurrency,
