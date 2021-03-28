@@ -2673,9 +2673,9 @@ html.gdauth #share_bu {
     -webkit-transform: translate(0%, 0%);
     -ms-transform: translate(0%, 0%);
     transform: translate(0%, 0%);
-    -webkit-transition: transform 200ms ease-out;
-    -ms-transition: transform 200ms ease-out;
-    transition: transform 200ms ease-out;
+    -webkit-transition: transform 100ms ease-out;
+    -ms-transition: transform 100ms ease-out;
+    transition: transform 100ms ease-out;
     pointer-events: none;
 }
 

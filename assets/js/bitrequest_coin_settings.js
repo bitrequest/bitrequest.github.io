@@ -135,13 +135,13 @@ function submit_confirmations() {
         $("#" + thiscurrency + "_settings .cc_settinglist li[data-id='confirmations']").data("selected", thisvalue).find("p").html(thisvalue);
         canceldialog();
         notify("Data saved");
-        save_cc_settings(thiscurrency);
+        save_cc_settings(thiscurrency, true);
     })
 }
 
 // Reuse addresses
 function reuse_address_trigger() {
-	$(document).on("mouseup touchend", ".cc_settinglist li[data-id='Reuse address'] .switchpanel.custom", function() {
+	$(document).on("mouseup", ".cc_settinglist li[data-id='Reuse address'] .switchpanel.custom", function() {
         var this_switch = $(this),
             thislist = this_switch.closest("li"),
             thisliwrap = this_switch.closest(".liwrap"),
@@ -149,27 +149,27 @@ function reuse_address_trigger() {
         if (this_switch.hasClass("true")) {
 	         thislist.data("selected", false).find("p").html("false");
 	         this_switch.removeClass("true").addClass("false");
-	         save_cc_settings(thiscurrency);
+	         save_cc_settings(thiscurrency, false);
         } else {
             var result = confirm("Are you sure you want to reuse " + thiscurrency + " addresses?");
             if (result === true) {
                 thislist.data("selected", true).find("p").html("true");
                 this_switch.removeClass("false").addClass("true");
-                save_cc_settings(thiscurrency);
+                save_cc_settings(thiscurrency, true);
             }
         }
 	})
 }
 
 function cc_switch() {
-    $(document).on("mouseup touchend", ".cc_settinglist li .switchpanel.bool", function() {
+    $(document).on("mouseup", ".cc_settinglist li .switchpanel.bool", function() {
         var thistrigger = $(this),
             thislist = thistrigger.closest("li"),
             thisliwrap = thistrigger.closest(".liwrap"),
             thiscurrency = thisliwrap.attr("data-currency"),
             thisvalue = (thistrigger.hasClass("true")) ? true : false;
         thislist.data("selected", thisvalue).find("p").html(thisvalue.toString());
-        save_cc_settings(thiscurrency);
+        save_cc_settings(thiscurrency, false);
     })
 }
 
@@ -215,7 +215,7 @@ function submit_blockexplorer() {
         $("#" + thiscurrency + "_settings .cc_settinglist li[data-id='blockexplorers']").data("selected", thisvalue).find("p").html(thisvalue);
         canceldialog();
         notify("Data saved");
-        save_cc_settings(thiscurrency);
+        save_cc_settings(thiscurrency, true);
     })
 }
 
@@ -616,7 +616,7 @@ function pass_rpc_submit(thiscurrency, thisvalue, newnode) {
     }
     canceldialog();
     notify("Data saved");
-    save_cc_settings(thiscurrency);
+    save_cc_settings(thiscurrency, true);
 }
 
 function remove_rpcnode() {
@@ -650,7 +650,7 @@ function remove_rpcnode() {
                     });
                     rpc_setting_li.data("options", new_array);
                     notify("RPC node removed");
-                    save_cc_settings(thiscurrency);
+                    save_cc_settings(thiscurrency, true);
                 }
             }
         }
@@ -722,7 +722,7 @@ function delete_xpub() {
                 "key_id": null
             }).find(".switchpanel").removeClass("true").addClass("false");
             xpubli.find("p").html("false");
-            save_cc_settings(currency);
+            save_cc_settings(currency, true);
             canceldialog();
         }
     })
@@ -747,7 +747,7 @@ function add_xpub_cb(currency, x_pubid) {
 }
 
 function xpub_cc_switch() {
-    $(document).on("mouseup touchend", ".cc_settinglist li[data-id='Xpub'] .switchpanel.custom", function() {
+    $(document).on("mouseup", ".cc_settinglist li[data-id='Xpub'] .switchpanel.custom", function() {
         if (test_derive === true) {
             var this_switch = $(this),
                 thislist = this_switch.closest("li"),
@@ -759,14 +759,14 @@ function xpub_cc_switch() {
                 if (result === true) {
                     thislist.data("selected", false).find("p").html("false");
                     this_switch.removeClass("true").addClass("false");
-                    save_cc_settings(thiscurrency);
+                    save_cc_settings(thiscurrency, true);
                     delete_xpub_cb(thiscurrency, thisdat.key_id);
                 }
             } else {
                 if (thisdat.key) {
                     thislist.data("selected", true).find("p").html("true");
                     this_switch.removeClass("false").addClass("true");
-                    save_cc_settings(thiscurrency);
+                    save_cc_settings(thiscurrency, true);
                     add_xpub_cb(thiscurrency, thisdat.key_id);
                     saveaddresses(thiscurrency, false);
                     currency_check(thiscurrency);
@@ -848,7 +848,7 @@ function validate_xpub(thisnode) {
                 savecurrencies(true);
                 var home_icon = $("#currencylist > li[data-currency='" + currency + "']");
                 home_icon.removeClass("hide");
-                save_cc_settings(currency);
+                save_cc_settings(currency, true);
                 var keycc = key_cc_xpub(addressinputval),
                     coindat = getcoindata(currency),
                     bip32 = getbip32dat(currency),

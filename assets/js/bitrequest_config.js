@@ -1,10 +1,11 @@
 var apptitle = "Bitrequest",
-    hostname = "app.bitrequest.io", // change if self hosted
+    hostname = "bitrequest.github.io", // change if self hosted
     root = "/",
     localhostname = (hostname.indexOf("http") > -1) ? hostname.split("://").pop() : hostname,
     approot = "https://" + localhostname + root,
+    hosted_proxy = "https://app.bitrequest.io/",
     proxy_list = [
-        approot,
+        hosted_proxy,
         "https://www.bitrequest.io/"
     ],
     firebase_dynamic_link_domain = "bitrequest.page.link",
@@ -654,13 +655,18 @@ var multi_wallets = {
                         "display": true
                     },
                     "apis": [{
-                            "name": "nano socket",
+                            "name": "bitrequest websocket",
                             "url": "wss://bitrequest.app:8010",
                             "display": true
                         },
                         {
                             "name": "nano.cc websocket",
                             "url": "wss://socket.nanos.cc",
+                            "display": true
+                        },
+                        {
+                            "name": "nanolooker.com websocket",
+                            "url": "wss://www.nanolooker.com/ws",
                             "display": true
                         }
                     ],
@@ -1018,7 +1024,7 @@ var app_settings = [{
     {
         "id": "api_proxy",
         "heading": "API Proxy",
-        "selected": approot,
+        "selected": hosted_proxy,
         "custom_proxies": [],
         "icon": "icon-sphere"
     },

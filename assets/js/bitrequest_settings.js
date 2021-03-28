@@ -341,7 +341,7 @@ function editcurrency() {
 }
 
 function toggle_defaultcurrency() {
-    $(document).on("mouseup touchend", "#toggle_defaultcurrency .switchpanel", function(e) {
+    $(document).on("mouseup", "#toggle_defaultcurrency .switchpanel", function(e) {
         $(this).addClass("dc_changed");
     })
 }
@@ -527,7 +527,7 @@ function backupdatabase() {
 }
 
 function sbu_switch() {
-    $(document).on("mouseup touchend", "#toggle_sbu_span .switchpanel", function() {
+    $(document).on("mouseup", "#toggle_sbu_span .switchpanel", function() {
         var thistrigger = $(this);
         thisvalue = (thistrigger.hasClass("true")) ? true : false;
         if (thisvalue === true) {
@@ -1418,7 +1418,7 @@ function urlshortener() {
 }
 
 function togglebl() {
-    $(document).on("mouseup touchend", "#toggle_urlshortener .switchpanel", function(e) {
+    $(document).on("mouseup", "#toggle_urlshortener .switchpanel", function(e) {
         var thispanel = $(this),
             thisform = $("#usformbox .popform");
         if (thispanel.hasClass("true")) {
@@ -1828,7 +1828,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                 base_url + search;
             if (thisref == "firebase") {
                 params.data = {
-                    "longDynamicLink": firebase_shortlink + "?link=https://app.bitrequest.io/?p=request"
+                    "longDynamicLink": firebase_shortlink + "?link=" + approot + "?p=request"
                 }
             } else if (thisref == "amberdata") {
                 params.headers = {
@@ -2020,8 +2020,8 @@ function pick_api_proxy() {
                 proxies.push(fixed_url);
             }
         }
-        if ($.inArray("https://app.bitrequest.io/", proxies) === -1) { // always keey default proxy
-            proxies.push("https://app.bitrequest.io/");
+        if ($.inArray(hosted_proxy, proxies) === -1) { // always keey default proxy
+            proxies.push(hosted_proxy);
         }
         var optionlist = $("#proxyformbox").find(".options"),
             api_info = check_api("nano"),

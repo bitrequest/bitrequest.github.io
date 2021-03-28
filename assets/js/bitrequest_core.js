@@ -26,7 +26,7 @@ var language = navigator.language || navigator.userLanguage,
     inframe = (self !== top),
     offline = (navigator.onLine === false),
     thishostname = location.hostname,
-    hostlocation = (thishostname == "app.bitrequest.io") ? "hosted" :
+    hostlocation = (thishostname == hostname) ? "hosted" :
     (thishostname == localhostname) ? "selfhosted" :
     (thishostname == "") ? "local" : "unknown",
     symbolcache,
@@ -1014,7 +1014,7 @@ function loadpage(href) {
         pagename = split.pop();
     openpage(href, pagename, "loadpage");
     if (body.hasClass("showsatedited")) {
-        save_cc_settings(body.data("currency"));
+        save_cc_settings(body.data("currency"), false);
         body.removeClass("showsatedited").data("currency", "");
     }
 }
@@ -1394,7 +1394,7 @@ function check_pk() {
 }
 
 function toggleswitch() {
-    $(document).on("mousedown touchstart", ".switchpanel.global", function() {
+    $(document).on("mousedown", ".switchpanel.global", function() {
         var thistoggle = $(this);
         if (thistoggle.hasClass("true")) {
             thistoggle.removeClass("true").addClass("false");
@@ -4046,14 +4046,14 @@ function savesettings() {
     updatechanges("settings", true);
 }
 
-function save_cc_settings(currency) {
+function save_cc_settings(currency, add) {
     var settingbox = {};
     $("#" + currency + "_settings ul.cc_settinglist > li").each(function() {
         var thisnode = $(this);
         settingbox[thisnode.attr("data-id")] = thisnode.data();
     });
     localStorage.setItem("bitrequest_" + currency + "_settings", JSON.stringify(settingbox));
-    updatechanges("currencysettings", true);
+    updatechanges("currencysettings", add);
 }
 
 function updatechanges(key, add) {
