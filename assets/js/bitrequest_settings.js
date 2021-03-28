@@ -1051,7 +1051,7 @@ function restore_callback_gd(pass_dat, np) {
         }
         canceldialog();
         setTimeout(function() {
-            location.href = approot + "?p=requests";
+            window.location.href = window.location.pathname + "?p=settings";
         }, 300);
     }, 300);
 }

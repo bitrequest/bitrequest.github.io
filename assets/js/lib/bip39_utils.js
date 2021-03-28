@@ -239,7 +239,6 @@ function pub_to_address(versionbytes, pub) {
 }
 
 function pub_to_eth_address(pub) {
-	console.log(pub);
 	var xp_pub = expand_pub(pub),
 		eth_hex_pub = "0x" + xp_pub.slice(2),
 		keccak = web3.utils.keccak256(eth_hex_pub),

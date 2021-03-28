@@ -25,7 +25,7 @@ var language = navigator.language || navigator.userLanguage,
     is_ios_app = (userAgent == "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0_1 like Mac OS X) AppleWebKit/604.2.10 (KHTML, like Gecko) Version/13.0.3 Safari/605.1.15"), // ios app fingerprint
     inframe = (self !== top),
     offline = (navigator.onLine === false),
-    thishostname = location.hostname,
+    thishostname = window.location.hostname,
     hostlocation = (thishostname == hostname) ? "hosted" :
     (thishostname == localhostname) ? "selfhosted" :
     (thishostname == "") ? "local" : "unknown",
