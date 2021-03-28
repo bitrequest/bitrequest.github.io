@@ -41,7 +41,6 @@ var language = navigator.language || navigator.userLanguage,
     bipid = (hasbip) ? JSON.parse(atob(JSON.parse(bipobj).dat)).pid : false;
 
 $(document).ready(function() {
-	console.log(window.location);
 	$.ajaxSetup({
         cache: false
     });
