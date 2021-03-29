@@ -302,12 +302,12 @@ var multi_wallets = {
                 "apis": {
                     "icon": "sphere",
                     "selected": {
-                        "name": "xmr_node",
+                        "name": "xmr node",
                         "api": true,
                         "display": true
                     },
                     "apis": [{
-                        "name": "xmr_node",
+                        "name": "xmr node",
                         "api": true,
                         "display": true
                     }]
@@ -631,6 +631,7 @@ var multi_wallets = {
                     "selected": {
                         "name": "nano node",
                         "url": "https://www.bitrequest.app:8020",
+                        "api": true,
                         "username": "",
                         "password": "",
                         "display": true
@@ -638,6 +639,15 @@ var multi_wallets = {
                     "apis": [{
                         "name": "nano node",
                         "url": "https://www.bitrequest.app:8020",
+                        "api": true,
+                        "username": "",
+                        "password": "",
+                        "display": true
+                    },
+                    {
+                        "name": "api.nano.cc",
+                        "url": "https://proxy.nanos.cc/proxy",
+                        "api": true,
                         "username": "",
                         "password": "",
                         "display": true
@@ -655,13 +665,13 @@ var multi_wallets = {
                         "display": true
                     },
                     "apis": [{
-                            "name": "bitrequest websocket",
-                            "url": "wss://bitrequest.app:8010",
+                            "name": "nano.cc websocket",
+                            "url": "wss://socket.nanos.cc",
                             "display": true
                         },
                         {
-                            "name": "nano.cc websocket",
-                            "url": "wss://socket.nanos.cc",
+                            "name": "bitrequest websocket",
+                            "url": "wss://bitrequest.app:8010",
                             "display": true
                         },
                         {
@@ -1132,7 +1142,7 @@ var apis = [{
         "sign_up": "https://firebase.google.com/"
     },
     {
-        "name": "xmr_node",
+        "name": "xmr node",
         "base_url": "https://api.mymonero.com:8443/",
         "key_param": null,
         "api_key": null,

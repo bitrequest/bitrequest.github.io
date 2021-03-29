@@ -58,6 +58,7 @@ function trigger_requeststates(trigger) {
         return false;
     } else {
         // reset cache and index
+        api_attempts = {},
         tx_list = []; // reset transaction index
         var active_requests = $("#requestlist .rqli").filter(function() {
             return $(this).data("pending") != "unknown";
@@ -138,24 +139,24 @@ function getinputs(rd) {
 
 function check_api(payment) {
     var api_data = $("#" + payment + "_settings .cc_settinglist li[data-id='apis']").data();
-    if (api_data === undefined) {
-        return {
-            api: false,
-            data: false
-        };
-    } else {
-        var selected = api_data.selected;
+    if (api_data) {
+	    var selected = api_data.selected;
         if (selected.api === true) {
             return {
-                api: true,
-                data: selected
+                "api": true,
+                "data": selected
             };
         } else {
             return {
-                api: false,
-                data: selected
+                "api": false,
+                "data": selected
             };
         }
+    } else {
+        return {
+            "api": false,
+            "data": false
+        };
     }
 }
 
@@ -173,12 +174,8 @@ function get_api_inputs_defaults(rd, api_data) {
         get_api_inputs_init(rd, api_data, "blockcypher");
     } else if (rd.erc20 === true) {
         get_api_inputs_init(rd, api_data, "ethplorer");
-    } else if (payment == "nano") {
-        get_rpc_inputs_init(rd, api_data);
-    } else if (payment == "monero") {
-        get_api_inputs_init(rd, api_data, "xmr node");
     } else {
-	     get_api_inputs_init(rd, api_data);
+	     get_api_inputs_init(rd, api_data, api_data.name);
     }
 }
 
@@ -315,6 +312,100 @@ function get_api_inputs(rd, api_data, api_name) {
 		            }
 		        }    
 	        }
+	        else if (payment == "nano") {
+                if (pending == "scanning") { // scan incomming transactions on address
+                    api_proxy({
+                        "api": "nano",
+                        "search": "account",
+                        "cachetime": 25,
+                        "cachefolder": "1h",
+                        "custom": "nano_txd",
+                        "api_url": api_data.url,
+                        "proxy": true,
+                        "params": {
+                            "method": "POST",
+                            "cache": true,
+                            "data": JSON.stringify({
+                                "action": "accounts_pending",
+                                "accounts": [address],
+                                "sorting": true,
+                                "include_active": true,
+                                "count": 100
+                            })
+                        }
+                    }).done(function(e) {
+                        var data = br_result(e).result,
+                        	nano_data = data.data;
+						if ($.isEmptyObject(nano_data)) {
+	                        tx_api_fail(thislist, statuspanel);
+	                        handle_api_fails(rd, {"error":"nano node offline","console":true}, api_name, payment);
+                        }
+                        else {
+	                        var pending_array_node = nano_data[0].pending,
+	                        	pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
+	                            history_array_node = nano_data[1].history,
+	                            history_array = $.isEmptyObject(history_array_node) ? [] : history_array_node,
+	                            merged_array = pending_array.concat(history_array).sort(function(x, y) { // merge and sort arrays
+	                                return y.local_timestamp - x.local_timestamp;
+	                            });
+	                        $.each(merged_array, function(data, value) {
+	                            var txd = nano_scan_data(value, setconfirmations, ccsymbol);
+	                            if ((txd.transactiontime > request_timestamp) && txd.ccval && (value.type === undefined || value.type == "receive")) {
+	                                var tx_listitem = append_tx_li(txd, thislist);
+	                                if (tx_listitem) {
+	                                    transactionlist.append(tx_listitem.data(txd));
+	                                    counter++;
+	                                }
+	                            }
+	                        });
+	                        tx_count(statuspanel, counter);
+	                        api_src(thislist, api_data);
+	                        compareamounts(rd);
+                        }
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        tx_api_fail(thislist, statuspanel);
+                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        handle_api_fails(rd, {"error":"nano node offline","console":true}, api_name, payment);
+                    }).always(function() {
+                        api_src(thislist, api_data);
+                    });
+                } else {
+                    api_proxy({
+                        "api": "nano",
+                        "search": "block",
+                        "cachetime": 25,
+                        "cachefolder": "1h",
+                        "api_url": api_data.url,
+                        "params": {
+                            "method": "POST",
+                            "cache": true,
+                            "data": JSON.stringify({
+                                "action": "block_info",
+                                "json_block": true,
+                                "hash": transactionhash
+                            })
+                        }
+                    }).done(function(e) {
+                        var data = br_result(e).result,
+                            txd = nano_scan_data(data, setconfirmations, ccsymbol, transactionhash);
+                        if (txd.ccval) {
+                            var tx_listitem = append_tx_li(txd, thislist);
+                            if (tx_listitem) {
+                                transactionlist.append(tx_listitem.data(txd));
+                            }
+                            tx_count(statuspanel, 1);
+                            api_src(thislist, api_data);
+                            compareamounts(rd);
+                        }
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        tx_api_fail(thislist, statuspanel);
+                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        handle_api_fails(rd, error_object, api_name, payment);
+                    }).always(function() {
+                        api_src(thislist, api_data);
+                    });
+                }
+            }
 	        else {
 		        if (pending == "scanning") { // scan incomming transactions on address
 		            api_proxy({
@@ -529,7 +620,7 @@ function fail_dialogs(apisrc, error) {
 }
 
 function handle_api_fails(rd, error, api_name, thispayment, txid) {
-    var monitor = (txid !== undefined),
+	var monitor = (txid !== undefined),
         error_data = get_api_error_data(error),
         key_fail = error_data.apikey;
     if (key_fail === true) { // show alert when apikey is missing
@@ -537,7 +628,7 @@ function handle_api_fails(rd, error, api_name, thispayment, txid) {
         api_callback(rd.requestid, true);
         return false;
     } else {
-        var nextapi = get_next_api(thispayment, api_name);
+	    var nextapi = get_next_api(thispayment, api_name);
         if (nextapi === false) { // only one api
             api_eror_msg(api_name, error_data, key_fail, monitor);
             api_callback(rd.requestid, true);
@@ -586,7 +677,8 @@ function get_next_api(this_payment, this_api_name) {
     var apilist = $.grep(getcoinsettings(this_payment).apis.apis, function(obj) { // filter out rpc's
         return obj.api === true;
     });
-    var next_scan = apilist[apilist.findIndex(option => option.name == this_api_name) + 1],
+    var this_index = apilist.findIndex(option => option.name == this_api_name),
+		next_scan = apilist[this_index + 1],
         next_api = (next_scan) ? next_scan : apilist[0];
     if (api_attempts[next_api.name] === true) {
         return false;
@@ -687,100 +779,7 @@ function get_rpc_inputs(rd, rpc_data) {
             api_callback(rd.requestid, true);
         } else if (pending == "scanning" || pending == "polling") {
             transactionlist.html("");
-            if (payment == "nano") {
-                if (pending == "scanning") { // scan incomming transactions on address
-                    api_proxy({
-                        "api": "nano",
-                        "search": "account",
-                        "cachetime": 25,
-                        "cachefolder": "1h",
-                        "custom": "nano_txd",
-                        "api_url": url,
-                        "proxy": true,
-                        "params": {
-                            "method": "POST",
-                            "cache": true,
-                            "data": JSON.stringify({
-                                "action": "accounts_pending",
-                                "accounts": [address],
-                                "sorting": true,
-                                "include_active": true,
-                                "count": 100
-                            })
-                        }
-                    }).done(function(e) {
-                        var data = br_result(e).result,
-                        	nano_data = data.data;
-                        if ($.isEmptyObject(nano_data)) {
-	                        tx_api_fail(thislist, statuspanel);
-	                        handle_rpc_fails(rd, {"error":"nano node offline","console":true}, payment, rpc_data);
-                        }
-                        else {
-	                        var pending_array_node = nano_data[0].pending,
-	                        	pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
-	                            history_array_node = nano_data[1].history,
-	                            history_array = $.isEmptyObject(history_array_node) ? [] : history_array_node,
-	                            merged_array = pending_array.concat(history_array).sort(function(x, y) { // merge and sort arrays
-	                                return y.local_timestamp - x.local_timestamp;
-	                            });
-	                        $.each(merged_array, function(data, value) {
-	                            var txd = nano_scan_data(value, setconfirmations, ccsymbol);
-	                            if ((txd.transactiontime > request_timestamp) && txd.ccval && (value.type === undefined || value.type == "receive")) {
-	                                var tx_listitem = append_tx_li(txd, thislist);
-	                                if (tx_listitem) {
-	                                    transactionlist.append(tx_listitem.data(txd));
-	                                    counter++;
-	                                }
-	                            }
-	                        });
-	                        tx_count(statuspanel, counter);
-	                        api_src(thislist, rpc_data);
-	                        compareamounts(rd);
-                        }
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        tx_api_fail(thislist, statuspanel);
-                        var error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_rpc_fails(rd, error_object, payment, rpc_data);
-                    }).always(function() {
-                        api_src(thislist, rpc_data);
-                    });
-                } else {
-                    api_proxy({
-                        "api": "nano",
-                        "search": "block",
-                        "cachetime": 25,
-                        "cachefolder": "1h",
-                        "api_url": url,
-                        "params": {
-                            "method": "POST",
-                            "cache": true,
-                            "data": JSON.stringify({
-                                "action": "block_info",
-                                "json_block": true,
-                                "hash": transactionhash
-                            })
-                        }
-                    }).done(function(e) {
-                        var data = br_result(e).result,
-                            txd = nano_scan_data(data, setconfirmations, ccsymbol, transactionhash);
-                        if (txd.ccval) {
-                            var tx_listitem = append_tx_li(txd, thislist);
-                            if (tx_listitem) {
-                                transactionlist.append(tx_listitem.data(txd));
-                            }
-                            tx_count(statuspanel, 1);
-                            api_src(thislist, rpc_data);
-                            compareamounts(rd);
-                        }
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        tx_api_fail(thislist, statuspanel);
-                        var error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_rpc_fails(rd, error_object, payment, rpc_data);
-                    }).always(function() {
-                        api_src(thislist, rpc_data);
-                    });
-                }
-            } else if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin") {
+			if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin") {
                 if (pending == "scanning") { // scan incomming transactions on address
                     handle_rpc_fails(rd, false, payment, rpc_data); // use api because rpc does not scan external addresses unfortunately
                 } else {
@@ -911,7 +910,6 @@ function get_rpc_inputs(rd, rpc_data) {
                         if (current_provider == current_url) {} else {
                             web3.setProvider(current_url);
                         }
-                        console.log(current_url);
                         web3.eth.getBlockNumber(function(err_1, data_1) {
                             if (err_1) {
                                 console.log(err_1);
@@ -1012,8 +1010,9 @@ function handle_rpc_fails(rd, error, thispayment, rpc_data) {
 
 function get_next_rpc(this_payment, this_rpc_url) {
     var rpc_settings_li = $("#" + this_payment + "_settings .cc_settinglist li[data-id='apis']");
-    if (rpc_settings_li) {
-        var rpc_settings = rpc_settings_li.data(),
+	if (rpc_settings_li) {
+	    var optionlist = getcoinsettings(this_payment).
+        	rpc_settings = rpc_settings_li.data(),
             rpclist = rpc_settings.options;
         if (rpclist) {
             if ($.isEmptyObject(rpclist)) {

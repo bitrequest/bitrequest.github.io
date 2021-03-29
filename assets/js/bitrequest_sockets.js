@@ -75,7 +75,7 @@ function init_xmr_node(cachetime, starttime, address, vk, txhash, start) {
     	"generated_locally":false
     };
     api_proxy({
-        "api": "xmr_node",
+        "api": "xmr node",
         "search": "login",
         "cachetime": 25,
         "cachefolder": "1h",
@@ -117,7 +117,7 @@ function ping_xmr_node(cachetime, starttime, address, vk, txhash) {
     	"view_key":vk
     };
     api_proxy({
-        "api": "xmr_node",
+        "api": "xmr node",
         "search": "get_address_txs",
         "cachetime": cachetime,
         "cachefolder": "1h",

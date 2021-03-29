@@ -524,13 +524,13 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                     }
                 }
             }).done(function(e) {
-                var data = br_result(e).result,
+                var data = br_result(e),
                     rpc_result = data.result;
                 if (rpc_result) {
                     rpc_input_box.addClass("live").removeClass("offline");
                     pass_rpc_submit(currency, rpc_data, true);
                 } else {
-                    var error = data.error;
+                    var error = data.error || rpc_result.error;
                     if (error) {
                         rpc_input_box.addClass("offline").removeClass("live");
                         topnotify("Unable to connect");
@@ -541,7 +541,6 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                     }
                 }
             }).fail(function(data) {
-                console.log(data);
                 rpc_input_box.addClass("offline").removeClass("live");
                 topnotify("Unable to connect");
                 if (data.status === 0) {
