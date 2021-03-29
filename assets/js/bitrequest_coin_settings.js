@@ -54,7 +54,7 @@ $(document).ready(function() {
 
 // Confirmations
 function edit_confirmations() {
-    $(document).on("click touch", ".cc_settinglist li[data-id='confirmations'] .edit_trigger", function() {
+    $(document).on("click", ".cc_settinglist li[data-id='confirmations'] .edit_trigger", function() {
         var thistrigger = $(this),
             thiscurrency = thistrigger.attr("data-currency"),
             thisli = thistrigger.closest("li"),
@@ -127,7 +127,7 @@ function edit_confirmations() {
 }
 
 function submit_confirmations() {
-    $(document).on("click touch", "#conf_formbox input.submit", function(e) {
+    $(document).on("click", "#conf_formbox input.submit", function(e) {
         e.preventDefault();
         var thistrigger = $(this),
             thiscurrency = thistrigger.attr("data-currency"),
@@ -175,7 +175,7 @@ function cc_switch() {
 
 // Choose blockexplorer
 function edit_blockexplorer() {
-    $(document).on("click touch", ".cc_settinglist li[data-id='blockexplorers']", function() {
+    $(document).on("click", ".cc_settinglist li[data-id='blockexplorers']", function() {
         var current_li = $(this),
             this_data = current_li.data(),
             options = this_data.options;
@@ -208,7 +208,7 @@ function edit_blockexplorer() {
 }
 
 function submit_blockexplorer() {
-    $(document).on("click touch", "#be_formbox input.submit", function(e) {
+    $(document).on("click", "#be_formbox input.submit", function(e) {
         e.preventDefault();
         var thiscurrency = $(this).attr("data-currency"),
             thisvalue = $("#be_formbox").find("input:first").val();
@@ -221,7 +221,7 @@ function submit_blockexplorer() {
 
 // RPC node / Websockets
 function edit_rpcnode() {
-    $(document).on("click touch", ".cc_settinglist li[data-id='apis'], .cc_settinglist li[data-id='websockets']", function() {
+    $(document).on("click", ".cc_settinglist li[data-id='apis'], .cc_settinglist li[data-id='websockets']", function() {
         var current_li = $(this),
             this_data = current_li.data(),
             options = this_data.options,
@@ -426,7 +426,7 @@ function rpc_option_li(optionlist, live, key, value, selected, checked) {
 }
 
 function test_rpcnode() {
-    $(document).on("click touch", "#settingsbox .selectbox .options > div", function() {
+    $(document).on("click", "#settingsbox .selectbox .options > div", function() {
         var thisoption = $(this),
             thisdata = thisoption.data();
         if (thisoption.hasClass("offline")) {
@@ -444,7 +444,7 @@ function test_rpcnode() {
 }
 
 function submit_rpcnode() {
-    $(document).on("click touch", "#settingsbox input.submit", function(e) {
+    $(document).on("click", "#settingsbox input.submit", function(e) {
         e.preventDefault();
         var settingsbox = $("#settingsbox"),
             thiscurrency = $(this).attr("data-currency"),
@@ -620,7 +620,7 @@ function pass_rpc_submit(thiscurrency, thisvalue, newnode) {
 }
 
 function remove_rpcnode() {
-    $(document).on("click touch", "#settingsbox .options .opt_icon_box .icon-bin", function(e) {
+    $(document).on("click", "#settingsbox .options .opt_icon_box .icon-bin", function(e) {
         e.preventDefault();
         var thistrigger = $(this),
             settingsbox = $("#settingsbox"),
@@ -674,7 +674,7 @@ function get_rpc_url(rpc_data) {
 
 // Xpub settings
 function edit_xpub_trigger() {
-    $(document).on("click touch", ".cc_settinglist li[data-id='Xpub'] .atext", function() {
+    $(document).on("click", ".cc_settinglist li[data-id='Xpub'] .atext", function() {
         if (test_derive === true) {
             var thisnode = $(this),
                 thislist = thisnode.closest("li"),
@@ -707,7 +707,7 @@ function edit_xpub_trigger() {
 }
 
 function delete_xpub() {
-    $(document).on("click touch", "#delete_xpub", function() {
+    $(document).on("click", "#delete_xpub", function() {
         var result = confirm("Delete BIP32 Extended public key?");
         if (result === true) {
             var currency = $(this).attr("data-currency"),
@@ -806,7 +806,7 @@ function edit_xpub(ad) {
 }
 
 function submit_xpub_strigger() {
-    $(document).on("click touch", "#xpubformbox input.submit", function(e) {
+    $(document).on("click", "#xpubformbox input.submit", function(e) {
         e.preventDefault();
         validate_xpub($(this).closest("#xpubformbox"));
     })
@@ -894,7 +894,7 @@ function check_xpub(address, prefix) {
 // Key Management
 
 function key_management() {
-    $(document).on("click touch", ".cc_settinglist li[data-id='Key derivations'] .atext", function() {
+    $(document).on("click", ".cc_settinglist li[data-id='Key derivations'] .atext", function() {
         var thisnode = $(this),
             thislist = thisnode.closest("li"),
             thisdat = thislist.data();
@@ -970,7 +970,7 @@ function xpub_info_pu(currency, xpub) {
 }
 
 function export_keys() {
-    $(document).on("click touch", "#export_keys", function() {
+    $(document).on("click", "#export_keys", function() {
         var pks_box = $("#pks_box");
         if (pks_box.is(":visible")) {
             pks_box.slideUp(200);
@@ -1010,7 +1010,7 @@ function export_keys_fallback(currency) {
 // Add api key
 
 function trigger_apikey() {
-    $(document).on("click touch", "#add_api", function() {
+    $(document).on("click", "#add_api", function() {
         add_apikey($(this).attr("data-api"));
     })
 }
@@ -1037,7 +1037,7 @@ function add_apikey(api) {
 }
 
 function submit_apikey() {
-    $(document).on("click touch", "#add_apikey input.submit", function(e) {
+    $(document).on("click", "#add_apikey input.submit", function(e) {
         e.preventDefault();
         var thisform = $(this).closest(".popform"),
             thisinput = thisform.find("input:first"),

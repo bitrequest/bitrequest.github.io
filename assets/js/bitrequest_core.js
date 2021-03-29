@@ -618,7 +618,7 @@ function pinpressselect(node) {
 }
 
 function pinpresstrigger() {
-    $(document).on("click touch", "#optionspop .enterpin .pinpad .pincell", function() {
+    $(document).on("click", "#optionspop .enterpin .pinpad .pincell", function() {
         pinpress($(this));
     });
 }
@@ -701,13 +701,13 @@ function enterapp(pinval) {
 }
 
 function pin_admin_reset() {
-    $(document).on("click touch", "#reset_pin", function() {
+    $(document).on("click", "#reset_pin", function() {
         $("#pinfloat").removeClass("p_admin");
     });
 }
 
 function pinvalidatetrigger() {
-    $(document).on("click touch", "#optionspop .validatepin .pinpad .pincell", function() {
+    $(document).on("click", "#optionspop .validatepin .pinpad .pincell", function() {
         pinvalidate($(this))
     });
 }
@@ -761,13 +761,13 @@ function pinvalidate(thispad) {
 }
 
 function pinbacktrigger() {
-    $(document).on("click touch", "#optionspop #pinfloat.enterpin #pinback", function() {
+    $(document).on("click", "#optionspop #pinfloat.enterpin #pinback", function() {
         pinback($("#pininput"));
     });
 }
 
 function pinbackvalidatetrigger() {
-    $(document).on("click touch", "#optionspop #pinfloat.validatepin #pinback", function() {
+    $(document).on("click", "#optionspop #pinfloat.validatepin #pinback", function() {
         pinback($("#validatepin"));
     });
 }
@@ -865,13 +865,13 @@ function ios_redirect_bitly(shorturl) {
 // ** Intropage **
 
 function starttrigger() {
-    $(document).on("click touch", "#intro", function() {
+    $(document).on("click", "#intro", function() {
         startnext($(this));
     });
 }
 
 function startnexttrigger() {
-    $(document).on("click touchend", "#entername .panelwrap", function(e) {
+    $(document).on("clickend", "#entername .panelwrap", function(e) {
         if (e.target == this) {
             startnext($("#entername"));
         }
@@ -945,7 +945,7 @@ function lettercountinput() { // Character count plus validation
 }
 
 function choosecurrency() {
-    $(document).on("click touch", "#allcurrencies li.choose_currency", function() {
+    $(document).on("click", "#allcurrencies li.choose_currency", function() {
         var currency = $(this).attr("data-currency"),
             cd = getcoindata(currency);
         addaddress({
@@ -962,7 +962,7 @@ function choosecurrency() {
 // ** Navigation **
 
 function togglenav() {
-    $(document).on("click touch", "#header", function() {
+    $(document).on("click", "#header", function() {
         if (html.hasClass("showmain")) {
             loadpage("?p=home");
             $(".navstyle li .self").removeClass("activemenu");
@@ -1000,7 +1000,7 @@ function loadurl() {
 }
 
 function clicklink() {
-    $(document).on("click touch", ".self", function(e) {
+    $(document).on("click", ".self", function(e) {
         e.preventDefault();
         loadpage($(this).attr("data-rel"));
         return false
@@ -1094,7 +1094,7 @@ function shownav(pagename) { // show / hide navigation
 // ** Triggerrequest **
 
 function triggertx() {
-    $(document).on("click touch", ".currencylist li > .rq_icon", function() {
+    $(document).on("click", ".currencylist li > .rq_icon", function() {
         triggertxfunction($(this));
         canceloptions();
     });
@@ -1145,7 +1145,7 @@ function triggertxfunction(thislink) {
 }
 
 function confirm_missing_seed() {
-    $(document).on("click touch", "#addresswarning .submit", function(e) {
+    $(document).on("click", "#addresswarning .submit", function(e) {
         e.preventDefault();
         var thisdialog = $("#addresswarning"),
             d_dat = thisdialog.data(),
@@ -1210,7 +1210,7 @@ function clear_savedurl() {
 }
 
 function payrequest() {
-    $(document).on("click touch", "#requestlist .req_actions .icon-qrcode, #requestlist .payrequest", function(e) {
+    $(document).on("click", "#requestlist .req_actions .icon-qrcode, #requestlist .payrequest", function(e) {
         e.preventDefault();
         var thisnode = $(this);
         if (offline === true && thisnode.hasClass("isfiat")) {
@@ -1243,7 +1243,7 @@ function payrequest() {
 // ** UX **
 
 function togglecurrency() {
-    $(document).on("click touch", ".togglecurrency", function() {
+    $(document).on("click", ".togglecurrency", function() {
         var parentlistitem = $(this).closest("li"),
             coindata = parentlistitem.data(),
             currency = coindata.currency,
@@ -1272,7 +1272,7 @@ function togglecurrency() {
 }
 
 function toggleaddress() {
-    $(document).on("click touch", ".toggleaddress", function() {
+    $(document).on("click", ".toggleaddress", function() {
         var parentlistitem = $(this).closest("li");
         checked = parentlistitem.data("checked"),
             parentlist = parentlistitem.closest("ul.pobox"),
@@ -1321,7 +1321,7 @@ function toggleaddress() {
 }
 
 function confirm_missing_seed_toggle() {
-    $(document).on("click touch", "#addresswarningcheck .submit", function(e) {
+    $(document).on("click", "#addresswarningcheck .submit", function(e) {
         e.preventDefault();
         var thisdialog = $("#addresswarningcheck"),
             d_dat = thisdialog.data(),
@@ -1382,7 +1382,7 @@ function address_whitelist(address) {
 }
 
 function check_pk() {
-    $(document).on("click touch", "#popup .cb_wrap", function() {
+    $(document).on("click", "#popup .cb_wrap", function() {
         var thisnode = $(this),
             checked = thisnode.data("checked");
         if (checked == true) {
@@ -1407,7 +1407,7 @@ function toggleswitch() {
 // ** Selectbox **
 
 function showselect() {
-    $(document).on("click touch", ".selectarrows", function() {
+    $(document).on("click", ".selectarrows", function() {
         var options = $(this).next(".options");
         if (options.hasClass("showoptions")) {
             options.removeClass("showoptions");
@@ -1418,7 +1418,7 @@ function showselect() {
 }
 
 function selectbox() {
-    $(document).on("click touch", ".selectbox > input:not([readonly])", function() {
+    $(document).on("click", ".selectbox > input:not([readonly])", function() {
         //return false;
         var thisselect = $(this),
             thisvalue = thisselect.val(),
@@ -1434,7 +1434,7 @@ function selectbox() {
 }
 
 function pickselect() {
-    $(document).on("click touch", ".selectbox > .options span", function() {
+    $(document).on("click", ".selectbox > .options span", function() {
         var thisselect = $(this),
             thisvalue = thisselect.text(),
             selectbox = thisselect.closest(".selectbox"),
@@ -1449,7 +1449,7 @@ function closeselectbox() {
 }
 
 function radio_select() {
-    $(document).on("click touch", ".formbox .pick_conf", function() {
+    $(document).on("click", ".formbox .pick_conf", function() {
         var thistrigger = $(this),
             thisradio = thistrigger.find(".radio");
         if (thisradio.hasClass("icon-radio-unchecked")) {
@@ -1675,7 +1675,7 @@ function escapeandback() {
 }
 
 function activemenu() {
-    $(document).on("click touch", ".nav li .self", function() {
+    $(document).on("click", ".nav li .self", function() {
         var thisitem = $(this);
         thisitem.addClass("activemenu");
         $(".nav li .self").not(thisitem).removeClass("activemenu");
@@ -1710,7 +1710,7 @@ function notify(message, time, showbutton) {
 }
 
 function closenotifytrigger() {
-    $(document).on("click touch", "#notify .icon-cross", function() {
+    $(document).on("click", "#notify .icon-cross", function() {
         closenotify()
     });
 }
@@ -1764,7 +1764,7 @@ function popdialog(content, type, functionname, trigger, custom) {
 }
 
 function execute(trigger, functionname) {
-    $(document).on("click touch", "#execute", function(e) {
+    $(document).on("click", "#execute", function(e) {
         e.preventDefault();
         eval(functionname + "(trigger)");
         return false
@@ -1772,7 +1772,7 @@ function execute(trigger, functionname) {
 }
 
 function addcurrencytrigger() {
-    $(document).on("click touch", ".addcurrency", function() {
+    $(document).on("click", ".addcurrency", function() {
         addcurrency($(this).closest("li").data());
         return false;
     })
@@ -1813,7 +1813,7 @@ function derive_first_check(currency) {
 }
 
 function addaddresstrigger() {
-    $(document).on("click touch", ".addaddress", function() {
+    $(document).on("click", ".addaddress", function() {
         addaddress($("#" + $(this).attr("data-currency")).data(), false);
     })
 }
@@ -1896,7 +1896,7 @@ function active_derives(currency, derive) {
 }
 
 function get_wallet() {
-    $(document).on("click touch", "#get_wallet", function() {
+    $(document).on("click", "#get_wallet", function() {
         var this_currency = $(this).attr("data-currency");
         canceldialog();
         setTimeout(function() {
@@ -1906,7 +1906,7 @@ function get_wallet() {
 }
 
 function submitaddresstrigger() {
-    $(document).on("click touch", "#addressformbox input.submit", function(e) {
+    $(document).on("click", "#addressformbox input.submit", function(e) {
         e.preventDefault();
         var thisform = $(this).closest("#addressformbox");
         if (thisform.hasClass("hasxpub")) {
@@ -1925,7 +1925,7 @@ function submitaddresstrigger() {
 
 //Add erc20 token
 function add_erc20() {
-    $(document).on("click touch", "#add_erc20, #choose_erc20", function() {
+    $(document).on("click", "#add_erc20, #choose_erc20", function() {
         var tokenobject = JSON.parse(localStorage.getItem("bitrequest_erc20tokens")),
             tokenlist = "";
         $.each(tokenobject, function(key, value) {
@@ -1995,7 +1995,7 @@ function autocomplete_erc20token() {
 }
 
 function pickerc20select() {
-    $(document).on("click touch", "#erc20formbox .selectbox > #ac_options span", function() {
+    $(document).on("click", "#erc20formbox .selectbox > #ac_options span", function() {
         var thisselect = $(this),
             coin_data = {
                 "cmcid": thisselect.attr("data-id"),
@@ -2022,7 +2022,7 @@ function initaddressform(coin_data) {
 }
 
 function submit_erc20() {
-    $(document).on("click touch", "#erc20formbox input.submit", function(e) {
+    $(document).on("click", "#erc20formbox input.submit", function(e) {
         e.preventDefault();
         validateaddress_vk($("#erc20formbox").data());
     });
@@ -2225,7 +2225,7 @@ function check_vk(vk) {
 }
 
 function canceldialog_click() {
-    $(document).on("click touch", ".cancel_dialog", function() {
+    $(document).on("click", ".cancel_dialog", function() {
         canceldialog();
     })
 }
@@ -2264,7 +2264,7 @@ function canceldialog(pass) {
         popup.removeClass("showpu");
         $("#dialogbody").html("");
         $("#actions").removeClass("custom");
-        $(document).off("click touch", "#execute");
+        $(document).off("click", "#execute");
         // reset Globals
         s_id = undefined;
         is_erc20t = undefined;
@@ -2274,7 +2274,7 @@ function canceldialog(pass) {
 }
 
 function cancelpaymentdialogtrigger() {
-    $(document).on("click touch", "#payment", function(e) {
+    $(document).on("click", "#payment", function(e) {
         if (html.hasClass("flipmode")) { // prevent closing request when flipping
             return false;
         }
@@ -2357,7 +2357,7 @@ function clearpingtx(close) {
 }
 
 function cancelsharedialogtrigger() {
-    $(document).on("click touchend", "#sharepopup", function(e) {
+    $(document).on("clickend", "#sharepopup", function(e) {
         if (e.target == this) {
             cancelsharedialog();
         }
@@ -2376,7 +2376,7 @@ function cancelsharedialog() {
 }
 
 function showoptionstrigger() {
-    $(document).on("click touch", ".popoptions", function(e) {
+    $(document).on("click", ".popoptions", function(e) {
         var ad = $(this).closest("li").data(),
             savedrequest = $("#requestlist li[data-address='" + ad.address + "']"),
             showrequests = (savedrequest.length > 0) ? "<li><div class='showrequests'><span class='icon-qrcode'></span> Show requests</div></li>" : "",
@@ -2403,7 +2403,7 @@ function showoptions(content, addclass, callback) {
 }
 
 function newrequest_alias() {
-    $(document).on("click touch", "#newrequest_alias", function() {
+    $(document).on("click", "#newrequest_alias", function() {
         var currencylist = $("#currencylist"),
             active_currencies = currencylist.find("li").not(".hide"),
             active_currency_count = active_currencies.length;
@@ -2424,7 +2424,7 @@ function newrequest_alias() {
 }
 
 function newrequest() {
-    $(document).on("click touch", ".newrequest", function() {
+    $(document).on("click", ".newrequest", function() {
         var thislink = $(this),
             ad = thislink.closest("#optionslist").data(),
             currency = ad.currency,
@@ -2458,7 +2458,7 @@ function newrequest() {
 }
 
 function confirm_ms_newrequest() {
-    $(document).on("click touch", "#address_newrequest .submit", function(e) {
+    $(document).on("click", "#address_newrequest .submit", function(e) {
         e.preventDefault();
         var thisdialog = $("#address_newrequest"),
             d_dat = thisdialog.data(),
@@ -2489,7 +2489,7 @@ function newrequest_cb(currency, ccsymbol, address, title) {
 }
 
 function showrequests() {
-    $(document).on("click touch", ".showrequests", function(e) {
+    $(document).on("click", ".showrequests", function(e) {
         e.preventDefault();
         loadpage("?p=requests&filteraddress=" + $(this).closest("ul").data("address"));
         canceloptions();
@@ -2497,7 +2497,7 @@ function showrequests() {
 }
 
 function showrequests_inlne() {
-    $(document).on("click touch", ".applist.pobox li .usedicon", function() {
+    $(document).on("click", ".applist.pobox li .usedicon", function() {
         var address = $(this).prev("span").text(),
             result = confirm("Show requests for " + address + "?");
         if (result === true) {
@@ -2507,14 +2507,14 @@ function showrequests_inlne() {
 }
 
 function editaddresstrigger() {
-    $(document).on("click touch", ".editaddress", function(e) {
+    $(document).on("click", ".editaddress", function(e) {
         e.preventDefault();
         addaddress($(this).closest("ul").data(), true);
     })
 }
 
 function removeaddress() {
-    $(document).on("click touch", ".removeaddress", function(e) {
+    $(document).on("click", ".removeaddress", function(e) {
         e.preventDefault();
         popdialog("<h2 class='icon-bin'>Remove address?</h2>", "alert", "removeaddressfunction", $(this));
     })
@@ -2552,7 +2552,7 @@ function removeaddressfunction(trigger) {
 }
 
 function showtransaction_trigger() {
-    $(document).on("click touch", ".metalist .show_tx, .transactionlist .tx_val", function() {
+    $(document).on("click", ".metalist .show_tx, .transactionlist .tx_val", function() {
         var thisnode = $(this),
             thislist = thisnode.closest("li"),
             rqli = thisnode.closest("li.rqli"),
@@ -2567,7 +2567,7 @@ function showtransaction_trigger() {
 }
 
 function showtransactions() {
-    $(document).on("click touch", ".showtransactions", function(e) {
+    $(document).on("click", ".showtransactions", function(e) {
         e.preventDefault();
         var ad = $("#ad_info_wrap").data(),
             blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20);
@@ -2578,7 +2578,7 @@ function showtransactions() {
 }
 
 function addressinfo() {
-    $(document).on("click touch", ".address_info", function() {
+    $(document).on("click", ".address_info", function() {
         var dialogwrap = $(this).closest("ul"),
             dd = dialogwrap.data(),
 			currency = dd.currency,
@@ -2628,7 +2628,7 @@ function addressinfo() {
 }
 
 function show_pk() {
-    $(document).on("click touch", "#show_pk", function() {
+    $(document).on("click", "#show_pk", function() {
         var thisbttn = $(this),
         	pkspan = $("#pk_span");
         if (pkspan.is(":visible")) {
@@ -2663,7 +2663,7 @@ function show_pk_cb(pk) {
 }
 
 function show_vk() {
-    $(document).on("click touch", "#show_vk", function() {
+    $(document).on("click", "#show_vk", function() {
         var thisbttn = $(this),
         	vk = thisbttn.attr("data-vk"),
         	pkspan = $("#pk_span");
@@ -2735,7 +2735,7 @@ function blockexplorer_url(currency, tx, erc20) {
 }
 
 function apisrc_shortcut() {
-    $(document).on("click touch", ".api_source", function() {
+    $(document).on("click", ".api_source", function() {
         var rpc_settings_li = $("#" + $(this).closest("li.rqli").data("payment") + "_settings .cc_settinglist li[data-id='apis']");
         if (rpc_settings_li.length > 0) {
             rpc_settings_li.trigger("click");
@@ -2744,7 +2744,7 @@ function apisrc_shortcut() {
 }
 
 function canceloptionstrigger() {
-    $(document).on("click touch", "#optionspop, #closeoptions", function(e) {
+    $(document).on("click", "#optionspop, #closeoptions", function(e) {
         if (e.target == this) {
             canceloptions();
         }
@@ -2767,7 +2767,7 @@ function canceloptions() {
 // ** Requestlist functions **
 
 function showrequestdetails() {
-    $(document).on("click touch", ".requestlist .liwrap", function() {
+    $(document).on("click", ".requestlist .liwrap", function() {
         var thisnode = $(this),
             thislist = thisnode.closest("li"),
             infopanel = thisnode.next(".moreinfo"),
@@ -2798,7 +2798,7 @@ function showrequestdetails() {
 }
 
 function toggle_request_meta() {
-    $(document).on("click touch", ".requestlist li .req_actions .icon-info", function() {
+    $(document).on("click", ".requestlist li .req_actions .icon-info", function() {
         var metalist = $(this).closest(".moreinfo").find(".metalist");
         if (metalist.is(":visible")) {
             metalist.slideUp(300);
@@ -2831,7 +2831,7 @@ function show_transaction_meta() {
 }
 
 function hide_transaction_meta() {
-    $(document).on("click touch", ".requestlist li .transactionlist li", function() {
+    $(document).on("click", ".requestlist li .transactionlist li", function() {
         var thisli = $(this),
             tx_meta = thisli.children(".historic_meta");
         if (tx_meta.is(":visible")) {
@@ -2853,7 +2853,7 @@ function animate_confbar(confbox, index) {
 }
 
 function archive() {
-    $(document).on("click touch", "#requestlist .req_actions .icon-folder-open", function() {
+    $(document).on("click", "#requestlist .req_actions .icon-folder-open", function() {
         popdialog("<h2 class='icon-folder-open'>Archive request?</h2>", "alert", "archivefunction", $(this));
         return false;
     })
@@ -2885,7 +2885,7 @@ function archivefunction() {
 }
 
 function unarchive() {
-    $(document).on("click touch", "#archivelist .req_actions .icon-undo2", function() {
+    $(document).on("click", "#archivelist .req_actions .icon-undo2", function() {
         popdialog("<h2 class='icon-undo2'>Unarchive request?</h2>", "alert", "unarchivefunction", $(this));
         return false;
     })
@@ -2914,7 +2914,7 @@ function unarchivefunction() {
 }
 
 function removerequest() {
-    $(document).on("click touch", ".req_actions .icon-bin", function() {
+    $(document).on("click", ".req_actions .icon-bin", function() {
         popdialog("<h2 class='icon-bin'>Delete request?</h2>", "alert", "removerequestfunction", $(this));
         return false;
     })
@@ -2938,7 +2938,7 @@ function removerequestfunction() {
 // ** Helpers **
 
 function open_url() {
-    $(document).on("click touch", "a.exit", function(e) {
+    $(document).on("click", "a.exit", function(e) {
         e.preventDefault();
         var this_href = $(this),
             target = this_href.attr("target"),
@@ -3151,7 +3151,7 @@ function loader(top) {
 }
 
 function closeloader_trigger() {
-    $(document).on("click touch", "#loader", function() {
+    $(document).on("click", "#loader", function() {
         closeloader();
     })
 }
@@ -3949,7 +3949,7 @@ function amountshort(amount, receivedamount, fiatvalue, iscrypto) {
 }
 
 function editrequest() {
-    $(document).on("click touch", ".editrequest", function() {
+    $(document).on("click", ".editrequest", function() {
         var thisnode = $(this),
             thisrequestid = thisnode.attr("data-requestid"),
             requestlist = $("#" + thisrequestid),
@@ -3970,7 +3970,7 @@ function editrequest() {
 }
 
 function submit_request_description() {
-    $(document).on("click touch", "#edit_request_formbox input.submit", function(e) {
+    $(document).on("click", "#edit_request_formbox input.submit", function(e) {
         var thisnode = $(this),
             this_requestid = thisnode.attr("data-requestid"),
             this_requesttitle = thisnode.prev("input").val(),
@@ -4158,7 +4158,7 @@ function getapp(type) {
 }
 
 function close_app_panel() {
-    $(document).on("click touch", "#not_now", function() {
+    $(document).on("click", "#not_now", function() {
         body.removeClass("getapp");
         setTimeout(function() {
             $("#app_panel").html("");

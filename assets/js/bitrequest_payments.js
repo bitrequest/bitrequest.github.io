@@ -1132,7 +1132,7 @@ function main_input_focus() {
 // ** Paymentdialog functions **
 
 function pickcurrency() {
-    $(document).on("click touch", "#paymentdialogbox #pickcurrency", function() {
+    $(document).on("click", "#paymentdialogbox #pickcurrency", function() {
         var thisnode = $(this),
             currencyarray = helper.currencyarray,
             payment = request.payment,
@@ -1351,7 +1351,7 @@ function renderqr(payment, address, amount) {
 }
 
 function switchaddress() {
-    $(document).on("click touch", "#paymentdialogbox.norequest #labelbttn", function() {
+    $(document).on("click", "#paymentdialogbox.norequest #labelbttn", function() {
         var timelapsed = $.now() - sa_timer;
         if (timelapsed < 1500) { // prevent clicking too fast
             playsound(funk);
@@ -1408,7 +1408,7 @@ function copyaddress_dblclick() {
 }
 
 function copyaddress() {
-    $(document).on("click touch", "#copyaddress", function() {
+    $(document).on("click", "#copyaddress", function() {
         var copycontent = $("#paymentaddress").text();
         copytoclipboard(copycontent, "address");
     });
@@ -1488,7 +1488,7 @@ function validatesteps() {
 }
 
 function fliprequest() {
-    $(document).on("click touch", "#paymentdialogbox.norequest #sharerequest", function(e) {
+    $(document).on("click", "#paymentdialogbox.norequest #sharerequest", function(e) {
         e.preventDefault();
         if (paymentdialogbox.attr("data-pending") == "ispending") {
             pendingrequest();
@@ -1501,7 +1501,7 @@ function fliprequest() {
 }
 
 function revealtitle() {
-    $(document).on("click touch", "#paymentdialogbox.request #sharetitle.title_exceed", function(e) {
+    $(document).on("click", "#paymentdialogbox.request #sharetitle.title_exceed", function(e) {
         var thisnode = $(this),
             longtext = thisnode.attr("title"),
             shorttext = thisnode.attr("data-shorttitle");
@@ -1554,7 +1554,7 @@ function pendingrequest() {
 }
 
 function view_pending_tx() {
-    $(document).on("click touch", "#view_pending_tx", function() {
+    $(document).on("click", "#view_pending_tx", function() {
         var result = confirm("View pending request?");
         if (result === true) {
             openpage("?p=requests", "requests", "loadpage");
@@ -1568,7 +1568,7 @@ function view_pending_tx() {
 }
 
 function pickaddressfromdialog() {
-    $(document).on("click touch", "#addresslock #pending_pick_address", function(e) {
+    $(document).on("click", "#addresslock #pending_pick_address", function(e) {
         e.preventDefault();
         var thisinput = $("#selec_address"),
             thisinputvalue = thisinput.val();
@@ -1608,7 +1608,7 @@ function set_edit(url) {
 }
 
 function addaddressfromdialog() {
-    $(document).on("click touch", "#addresslock #pending_add_address, #addaddress", function(e) {
+    $(document).on("click", "#addresslock #pending_add_address, #addaddress", function(e) {
         e.preventDefault();
         var formbox = $(this).closest("#addresslock"),
             payment = request.payment,
@@ -1634,7 +1634,7 @@ function addaddressfromdialog() {
 }
 
 function add_from_seed() {
-    $(document).on("click touch", "#addfromseed", function() {
+    $(document).on("click", "#addfromseed", function() {
 	    var ad = $("#addressformbox").data(),
 	    	currency = ad.currency,
 	    	dd = ad.dd;
@@ -1651,7 +1651,7 @@ function add_from_seed() {
 }
 
 function scanqr() {
-    $(document).on("click touch", "#scanqr", function() {
+    $(document).on("click", "#scanqr", function() {
         remove_flip();
         if (request.iszero_request === true) {
             $("#amountbreak input").focus();
@@ -1660,7 +1660,7 @@ function scanqr() {
 }
 
 function showapistats() {
-    $(document).on("click touch", "#apisrc", function() {
+    $(document).on("click", "#apisrc", function() {
         var xratestats = $("#xratestats");
         if (xratestats.hasClass("show")) {
             xratestats.removeClass("show");
@@ -1671,14 +1671,14 @@ function showapistats() {
 }
 
 function hideapistats() {
-    $(document).on("click touch", "#xratestats", function() {
+    $(document).on("click", "#xratestats", function() {
         $(this).removeClass("show");
     });
 }
 
 //share
 function sharebutton() {
-    $(document).on("click touch", "#sharebutton", function() {
+    $(document).on("click", "#sharebutton", function() {
         if (geturlparameters().d) {
             share($(this));
         } else {
@@ -1861,7 +1861,7 @@ function sharefallback(sharedurl, sharedtitle) {
 }
 
 function whatsappshare() {
-    $(document).on("click touch", "#whatsappshare", function() {
+    $(document).on("click", "#whatsappshare", function() {
         sharecallback();
         var shareinfo = getshareinfo(),
         	sharetext = encodeURIComponent(shareinfo.body),
@@ -1871,7 +1871,7 @@ function whatsappshare() {
 }
 
 function mailto() {
-    $(document).on("click touch", "#mailto", function() {
+    $(document).on("click", "#mailto", function() {
         sharecallback();
         var shareinfo = getshareinfo(),
             share_url = "mailto:?subject=" + encodeURIComponent(shareinfo.title) + "&body=" + encodeURIComponent(shareinfo.body);
@@ -1880,14 +1880,14 @@ function mailto() {
 }
 
 function copyurl() {
-    $(document).on("click touch", "#copyurl", function() {
+    $(document).on("click", "#copyurl", function() {
         copytoclipboard(getshareinfo().url, "Request url");
         sharecallback();
     });
 }
 
 function gmailshare() {
-    $(document).on("click touch", "#gmailshare", function() {
+    $(document).on("click", "#gmailshare", function() {
         sharecallback();
         var shareinfo = getshareinfo(),
             share_url = "https://mail.google.com/mail/?view=cm&fs=1&su=" + encodeURIComponent(shareinfo.title) + "&body=" + encodeURIComponent(shareinfo.body);
@@ -1896,7 +1896,7 @@ function gmailshare() {
 }
 
 function telegramshare() {
-    $(document).on("click touch", "#telegramshare", function() {
+    $(document).on("click", "#telegramshare", function() {
         sharecallback();
         var shareinfo = getshareinfo(),
             share_url = "https://telegram.me/share/url?url=" + shareinfo.url + "&text=" + encodeURIComponent(shareinfo.body);
@@ -1905,7 +1905,7 @@ function telegramshare() {
 }
 
 function outlookshare() {
-    $(document).on("click touch", "#outlookshare", function() {
+    $(document).on("click", "#outlookshare", function() {
         sharecallback();
         var shareinfo = getshareinfo(),
             share_url = "ms-outlook://compose?subject=" + encodeURIComponent(shareinfo.title) + "&body=" + encodeURIComponent(shareinfo.body);
@@ -1963,7 +1963,7 @@ function trigger_open_tx() {
 }
 
 function view_tx() {
-    $(document).on("click touch", "#view_tx", function() {
+    $(document).on("click", "#view_tx", function() {
         if (inframe === true) {
             html.removeClass("hide_app");
         }
@@ -2232,7 +2232,7 @@ function adjust_paymentdialog(status, pending, status_text) {
 
 //open wallet
 function openwallet() {
-    $(document).on("click touch", ".openwallet", function(e) {
+    $(document).on("click", ".openwallet", function(e) {
         e.preventDefault();
         var thisnode = $(this),
             thiscurrency = thisnode.attr("data-currency"),
@@ -2242,7 +2242,7 @@ function openwallet() {
 }
 
 function openwalleturl() {
-    $(document).on("click touch", "#openwalleturl", function(e) {
+    $(document).on("click", "#openwalleturl", function(e) {
         e.preventDefault();
         canceldialog();
         window.location.href = $(this).attr("data-rel");
@@ -2250,7 +2250,7 @@ function openwalleturl() {
 }
 
 function dw_trigger() {
-    $(document).on("click touch", "#dw_trigger", function() {
+    $(document).on("click", "#dw_trigger", function() {
         var this_currency = $(this).attr("data-currency");
         canceldialog();
         setTimeout(function() {

@@ -131,7 +131,7 @@ $(document).ready(function() {
 
 // Account name
 function editaccount() {
-    $(document).on("click touch", "#accountsettings", function() {
+    $(document).on("click", "#accountsettings", function() {
         var content = "\
 		<div class='formbox' id='accountformbox'>\
 			<h2 class='icon-user'>Account name</h2>\
@@ -146,7 +146,7 @@ function editaccount() {
 }
 
 function submitaccount() {
-    $(document).on("click touch", "#accountformbox input.submit", function(e) {
+    $(document).on("click", "#accountformbox input.submit", function(e) {
         e.preventDefault();
         var thisinput = $(this).prev("input"),
             thisvalue = thisinput.val();
@@ -167,7 +167,7 @@ function submitaccount() {
 // Contact form
 
 function edit_contactform_trigger() {
-    $(document).on("click touch", "#contactform", function() {
+    $(document).on("click", "#contactform", function() {
         edit_contactform()
     })
 }
@@ -235,7 +235,7 @@ function type_contactform() {
 }
 
 function submit_contactform() {
-    $(document).on("click touch", "#contactformbox input.submit", function(e) {
+    $(document).on("click", "#contactformbox input.submit", function(e) {
         e.preventDefault();
         var cfb = $("#contactformbox"),
             nameinput = cfb.find(".cf_nameinput"),
@@ -308,7 +308,7 @@ function submit_contactform() {
 
 // Standard fiat currency
 function editcurrency() {
-    $(document).on("click touch", "#currencysettings", function() {
+    $(document).on("click", "#currencysettings", function() {
         var currencysettings = $("#currencysettings"),
             switchmode = currencysettings.data("default"),
             currency = currencysettings.data("selected"),
@@ -369,7 +369,7 @@ function autocompletecurrency() {
 }
 
 function submitcurrency() {
-    $(document).on("click touch", "#currencyformbox input.submit", function(e) {
+    $(document).on("click", "#currencyformbox input.submit", function(e) {
         e.preventDefault();
         var localcurrency = get_setting("currencysettings", "currencysymbol");
         thisform = $(this).closest(".popform"),
@@ -411,7 +411,7 @@ function submitcurrency() {
 // Bip32 passphrase
 
 function trigger_bip32() {
-    $(document).on("click touch", "#bip39_passphrase", function() {
+    $(document).on("click", "#bip39_passphrase", function() {
         if (hasbip === true) {
             all_pinpanel({
                 "func": manage_bip32
@@ -423,7 +423,7 @@ function trigger_bip32() {
 }
 
 function hide_seed_panel_trigger() {
-    $(document).on("click touch", "#seed_steps .seed_step .ss_header .icon-cross", function() {
+    $(document).on("click", "#seed_steps .seed_step .ss_header .icon-cross", function() {
         hide_seed_panel();
     })
 }
@@ -436,7 +436,7 @@ function hide_seed_panel() {
 
 // Pincode
 function editpin() {
-    $(document).on("click touch", "#pinsettings", function() {
+    $(document).on("click", "#pinsettings", function() {
         if (haspin() === true) {
             var content = pinpanel(" pinwall reset");
             showoptions(content, "pin");
@@ -448,7 +448,7 @@ function editpin() {
 }
 
 function locktime() {
-    $(document).on("click touch", "#locktime, #lock_time", function() {
+    $(document).on("click", "#locktime, #lock_time", function() {
         var locktime = get_setting("pinsettings", "locktime"),
             thiscurrency = "eur",
             content = "<div class='formbox' id='locktime_formbox'><h2 class='icon-clock'>Pin lock time</h2><div class='popnotify'></div><ul class='conf_options noselect'><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>0</span> 0 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>60000</span> 1 minute</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>300000</span> 5 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>600000</span> 10 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>900000</span> 15 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>1800000</span> 30 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>never</span> never</div></li></ul><div class='popform'><input value='" + locktime + "' type='hidden'><input type='submit' class='submit' value='OK' data-currency='" + thiscurrency + "'></div>";
@@ -461,7 +461,7 @@ function locktime() {
 }
 
 function submit_locktime() {
-    $(document).on("click touch", "#locktime_formbox input.submit", function(e) {
+    $(document).on("click", "#locktime_formbox input.submit", function(e) {
         e.preventDefault();
         var thistrigger = $(this),
             thiscurrency = thistrigger.attr("data-currency"),
@@ -479,7 +479,7 @@ function submit_locktime() {
 
 // Back up
 function backupdatabasetrigger() {
-    $(document).on("click touch", "#backup, #alert", function() {
+    $(document).on("click", "#backup, #alert", function() {
         backupdatabase();
     })
 }
@@ -546,7 +546,7 @@ function sbu_switch() {
 }
 
 function sharebu() {
-    $(document).on("click touch", "#share_bu", function() {
+    $(document).on("click", "#share_bu", function() {
         var result = confirm("Share system backup ?");
         if (result === true) {
             loader(true);
@@ -650,7 +650,7 @@ function systembu_expired() {
 }
 
 function restore_systembu() {
-    $(document).on("click touch", "#system_backupformbox #restore_bu", function() {
+    $(document).on("click", "#system_backupformbox #restore_bu", function() {
         var result = confirm("INSTALL SYSTEM BACKUP? ALL YOUR PREVIOUS APP DATA WILL BE REPLACED");
         if (result === true) {
             var this_bttn = $(this),
@@ -663,7 +663,7 @@ function restore_systembu() {
 }
 
 function backupcd() {
-    $(document).on("click touch", "#backupcd", function() {
+    $(document).on("click", "#backupcd", function() {
         canceldialog();
     })
 }
@@ -702,7 +702,7 @@ function complilefilename() {
 }
 
 function submitbackup() {
-    $(document).on("click touch", "#triggerdownload", function(e) {
+    $(document).on("click", "#triggerdownload", function(e) {
         if (body.hasClass("ios")) {
             e.preventDefault();
             notify("Downloads for IOS App unavailable at the moment");
@@ -732,7 +732,7 @@ function submitbackup() {
 
 // Restore backup
 function restorefrombackup() {
-    $(document).on("click touch", "#restore, #rshome", function() {
+    $(document).on("click", "#restore, #rshome", function() {
         trigger_restore();
     })
 }
@@ -804,7 +804,7 @@ function restorebackup() {
 }
 
 function submitrestore() {
-    $(document).on("click touch", "#restoreformbox input.submit", function(e) {
+    $(document).on("click", "#restoreformbox input.submit", function(e) {
         e.preventDefault();
         var switchpanel = $("#popup #listappdata .switchpanel");
         if (switchpanel.hasClass("true")) {
@@ -834,7 +834,7 @@ function restore(jsonobject, bu_filename) {
 }
 
 function submit_GD_restore() {
-    $(document).on("click touch", "#gd_backuplist .restorefile", function() {
+    $(document).on("click", "#gd_backuplist .restorefile", function() {
         var thisfield = $(this).parent("li"),
             thisdevice = thisfield.attr("data-device"),
             result = confirm("Restore " + thisfield.text() + " from " + thisdevice + " device?");
@@ -952,7 +952,7 @@ function pin_dialog(pass_dat, cb) {
 }
 
 function submit_pin_dialog() {
-    $(document).on("click touch", "#pindialog input.submit", function(e) {
+    $(document).on("click", "#pindialog input.submit", function(e) {
         e.preventDefault();
         var thisinput = $(this).prev("input"),
             thisvalue = thisinput.val();
@@ -1087,7 +1087,7 @@ function dphrase_dialog(pass_dat) {
 }
 
 function submit_dphrase() {
-    $(document).on("click touch", "#importseedbox input.submit", function(e) {
+    $(document).on("click", "#importseedbox input.submit", function(e) {
         e.preventDefault();
         var thistrigger = $(this),
             thisvalue = thistrigger.prev("input").val();
@@ -1136,7 +1136,7 @@ function bu_oldseed(bu_dat) {
 }
 
 function compare_seeds() {
-    $(document).on("click touch", "#compare_seeds", function() {
+    $(document).on("click", "#compare_seeds", function() {
         var comparebox = $("#compare_box");
         if (comparebox.is(":visible")) {
             comparebox.slideUp(200);
@@ -1212,7 +1212,7 @@ function restorestorage(jsonobject, newphrase) {
 
 // Cache control
 function cachecontrol() {
-    $(document).on("click touch", "#cachecontrol", function() {
+    $(document).on("click", "#cachecontrol", function() {
         var playstorelink = "https://play.google.com/store/apps/details?id=io.bitrequest.app",
             appstorelink = "https://itunes.apple.com/us/app/bitrequest/id1484815377?ls=1&mt=8",
             appstore_url = (is_android_app === true) ? playstorelink :
@@ -1236,7 +1236,7 @@ function cachecontrol() {
 }
 
 function clearcache() {
-    $(document).on("click touch", "#clearcache", function() {
+    $(document).on("click", "#clearcache", function() {
         var result = confirm("Clear app cache?");
         if (result === true) {
             if (caches !== undefined) {
@@ -1257,7 +1257,7 @@ function clearcache() {
 }
 
 function reset_coinsettings() {
-    $(document).on("click touch", ".reset_cc_settings", function() {
+    $(document).on("click", ".reset_cc_settings", function() {
         var thistrigger = $(this),
             currency = thistrigger.attr("data-currency");
         popdialog("<h2 class='icon-bin'>Reset " + currency + " settings?</h2>", "alert", "reset_coinsettings_function", thistrigger);
@@ -1277,7 +1277,7 @@ function reset_coinsettings_function(trigger) {
 }
 
 function reset_settings() {
-    $(document).on("click touch", "#reset_settings", function() {
+    $(document).on("click", "#reset_settings", function() {
         canceldialog();
         all_pinpanel({
             "func": reset_settings_popup
@@ -1295,7 +1295,7 @@ function reset_settings_popup() {
 }
 
 function backupdatabasetrigger2() {
-    $(document).on("click touch", "#backup2", function() {
+    $(document).on("click", "#backup2", function() {
         $(this).remove();
         backupdatabase();
     })
@@ -1317,7 +1317,7 @@ function reset_settings_function(trigger) {
 
 // Choose theme
 function edittheme() {
-    $(document).on("click touch", "#themesettings", function() {
+    $(document).on("click", "#themesettings", function() {
         var theme = $("#themesettings").data("selected"),
             content = "\
 			<div class='formbox' id='themeformbox'>\
@@ -1353,20 +1353,20 @@ function popthemedialog(content) {
 }
 
 function pickthemeselect() {
-    $(document).on("click touch", "#themeformbox .selectbox > .options span", function() {
+    $(document).on("click", "#themeformbox .selectbox > .options span", function() {
         $("link#theme").attr("href", "assets/styles/themes/" + $(this).text());
     })
 }
 
 function canceltheme() {
-    $(document).on("click touch", "#canceltheme", function() {
+    $(document).on("click", "#canceltheme", function() {
         $("link#theme").attr("href", "assets/styles/themes/" + $("#themesettings").data("selected"));
         canceldialog();
     })
 }
 
 function submittheme() {
-    $(document).on("click touch", "#submittheme", function() {
+    $(document).on("click", "#submittheme", function() {
         var thisvalue = $("#themeformbox").find("input:first").val();
         set_setting("themesettings", {
             "selected": thisvalue
@@ -1379,7 +1379,7 @@ function submittheme() {
 
 // Url shortener
 function urlshortener() {
-    $(document).on("click touch", "#url_shorten_settings", function() {
+    $(document).on("click", "#url_shorten_settings", function() {
         var us_settings = $("#url_shorten_settings"),
             us_data = us_settings.data(),
             us_source = us_data.selected,
@@ -1438,7 +1438,7 @@ function togglebl() {
 }
 
 function pick_urlshortener_select() {
-    $(document).on("click touch", "#usformbox .selectbox > .options span", function() {
+    $(document).on("click", "#usformbox .selectbox > .options span", function() {
         var thisselect = $(this),
             thisvalue = thisselect.text(),
             thisform = thisselect.closest(".popform"),
@@ -1458,7 +1458,7 @@ function pick_urlshortener_select() {
 }
 
 function submit_urlshortener_select() {
-    $(document).on("click touch", "#usformbox input.submit", function(e) {
+    $(document).on("click", "#usformbox input.submit", function(e) {
         e.preventDefault();
         var thisform = $(this).closest(".popform"),
             currentapi = thisform.attr("data-currentapi"),
@@ -1517,7 +1517,7 @@ function submit_urlshortener_select() {
 
 // Cryptocurrency price api
 function editccapi() {
-    $(document).on("click touch", "#cmcapisettings", function() {
+    $(document).on("click", "#cmcapisettings", function() {
         var cc_apisettings = $("#cmcapisettings").data(),
             ccapisrc = cc_apisettings.selected,
             cmcapikey = cc_apisettings.cmcapikey,
@@ -1543,7 +1543,7 @@ function editccapi() {
 }
 
 function pickcmcapiselect() {
-    $(document).on("click touch", "#ccapiformbox .selectbox > .options span", function() {
+    $(document).on("click", "#ccapiformbox .selectbox > .options span", function() {
         var thisselect = $(this),
             thisvalue = thisselect.text(),
             thisform = thisselect.closest(".popform"),
@@ -1557,7 +1557,7 @@ function pickcmcapiselect() {
 }
 
 function submitccapi() {
-    $(document).on("click touch", "#ccapiformbox input.submit", function(e) {
+    $(document).on("click", "#ccapiformbox input.submit", function(e) {
         e.preventDefault();
         var thisform = $(this).closest(".popform"),
             currentapi = thisform.attr("data-currentapi"),
@@ -1593,7 +1593,7 @@ function submitccapi() {
 
 // Fiat price api
 function editfiatxrapi() {
-    $(document).on("click touch", "#fiatapisettings", function() {
+    $(document).on("click", "#fiatapisettings", function() {
         var thisdata = $(this).data(),
             fiatxrapisrc = thisdata.selected,
             fiatxrapikey = (thisdata.fxapikey) ? thisdata.fxapikey : "",
@@ -1618,7 +1618,7 @@ function editfiatxrapi() {
 }
 
 function pickfiatxrapiselect() {
-    $(document).on("click touch", "#fiatxrapiformbox .selectbox > .options span", function() {
+    $(document).on("click", "#fiatxrapiformbox .selectbox > .options span", function() {
         var thisselect = $(this),
             thisvalue = thisselect.text(),
             thisform = thisselect.closest(".popform"),
@@ -1632,7 +1632,7 @@ function pickfiatxrapiselect() {
 }
 
 function submitfiatxrapi() {
-    $(document).on("click touch", "#fiatxrapiformbox input.submit", function(e) {
+    $(document).on("click", "#fiatxrapiformbox input.submit", function(e) {
         e.preventDefault();
         var thisform = $(this).closest(".popform"),
             currentapi = thisform.attr("data-currentapi"),
@@ -1668,7 +1668,7 @@ function submitfiatxrapi() {
 
 // API keys
 function apikeys() {
-    $(document).on("click touch", "#apikeys", function() {
+    $(document).on("click", "#apikeys", function() {
         var ak_data = $(this).data(),
             bitlykey = (ak_data.bitly) ? ak_data.bitly : "",
             firebasekey = (ak_data.firebase) ? ak_data.firebase : "",
@@ -1719,7 +1719,7 @@ function api_input_change() {
 }
 
 function submitapi() {
-    $(document).on("click touch", "#apisubmit", function(e) {
+    $(document).on("click", "#apisubmit", function(e) {
         e.preventDefault();
         $("#apikeyformbox").addClass("pass");
         var allinputs = $("#apikeyformbox input.ak_input"),
@@ -1980,7 +1980,7 @@ function complement_apisettings(thisref, thisvalue) {
 
 // Api Proxy
 function pick_api_proxy() {
-    $(document).on("click touch", "#api_proxy", function() {
+    $(document).on("click", "#api_proxy", function() {
         var thisnode = $(this),
             thisdata = thisnode.data(),
             proxies = proxy_list, // (bitrequest_config.js)
@@ -2082,7 +2082,7 @@ function proxy_option_li(optionlist, live, key, value, selected, dfault) {
 }
 
 function submit_proxy() {
-    $(document).on("click touch", "#proxyformbox input.submit", function(e) {
+    $(document).on("click", "#proxyformbox input.submit", function(e) {
         e.preventDefault();
         var proxyformbox = $("#proxyformbox"),
             selectval = proxyformbox.find("#proxy_select_input").val(),
@@ -2109,7 +2109,7 @@ function submit_proxy() {
 }
 
 function hide_custom_proxy_field() {
-    $(document).on("click touch", "#proxyformbox .selectarrows", function() {
+    $(document).on("click", "#proxyformbox .selectarrows", function() {
         var proxyformbox = $("#proxyformbox"),
             options = $("#proxyformbox").find(".options .optionwrap"),
             select_inputval = proxyformbox.find("#proxy_select_input").val();
@@ -2189,7 +2189,7 @@ function test_custom_proxy(value) { // make test api call
 }
 
 function remove_proxy() {
-    $(document).on("click touch", "#proxyformbox .options .opt_icon_box .icon-bin", function(e) {
+    $(document).on("click", "#proxyformbox .options .opt_icon_box .icon-bin", function(e) {
         e.preventDefault();
         var proxy_node = "api_proxy",
             custom_proxies = get_setting(proxy_node, "custom_proxies");

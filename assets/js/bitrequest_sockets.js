@@ -495,7 +495,7 @@ function try_next_socket(current_socket_data) {
 }
 
 function reconnect() {
-    $(document).on("click touch", "#reconnect", function() {
+    $(document).on("click", "#reconnect", function() {
         var txhash = $(this).attr("data-txid");
         canceldialog();
         pick_monitor(txhash);

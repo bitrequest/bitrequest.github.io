@@ -45,7 +45,7 @@ function gapi_load() {
 }
 
 function Drive_Backup_trigger() {
-    $(document).on("click touch", "#gdtrigger .switchpanel", function() {
+    $(document).on("click", "#gdtrigger .switchpanel", function() {
 	    if (GD_auth() === true) {
             var thistrigger = $(this),
 	            changelog = $("#changelog");
@@ -170,7 +170,7 @@ function createfile() {
 }
 
 function listappdata() {
-    $(document).on("click touch", "#listappdata .switchpanel", function() {
+    $(document).on("click", "#listappdata .switchpanel", function() {
         if (GD_auth() === true) {
             var thistrigger = $(this),
                 backuplist = $("#gd_backuplist"),
@@ -229,7 +229,7 @@ function listappdata() {
 }
 
 function deletefiletrigger() {
-    $(document).on("click touch", ".purge_bu", function() {
+    $(document).on("click", ".purge_bu", function() {
         if (GD_auth() === true) {
             var thislist = $(this).parent("li"),
                 fileid = thislist.attr("data-gdbu_id"),

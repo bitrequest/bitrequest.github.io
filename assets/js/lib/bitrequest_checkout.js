@@ -7,7 +7,7 @@ $(document).ready(function() {
 });
 
 function checkout() {
-    $(document).on("click touch", ".br_checkout", function(e) {
+    $(document).on("click", ".br_checkout", function(e) {
         e.preventDefault();
         var checkout_url = $(this).attr("href"),
             br_frame = $("#br_framebox iframe");
@@ -56,7 +56,7 @@ function showframe() {
 }
 
 function closeframe_trigger() {
-    $(document).on("click touch", "#br_closeframe", function() {
+    $(document).on("click", "#br_closeframe", function() {
         closeframe_confirm();
     });
 }
@@ -84,7 +84,7 @@ function showloader() {
 }
 
 function closeloader_trigger() {
-    $(document).on("click touch", "#br_loadbox", function() {
+    $(document).on("click", "#br_loadbox", function() {
         closeloader();
     });
 }

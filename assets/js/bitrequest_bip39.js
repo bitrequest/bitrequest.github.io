@@ -351,7 +351,7 @@ function is_xpub(currency) {
 // Bip 39 seed generation
 
 function make_seed() {
-    $(document).on("click touch", "#option_makeseed", function() {
+    $(document).on("click", "#option_makeseed", function() {
         var currency = $(this).attr("data-currency");
         if (hasbip === true) {
             topnotify("You already have a seed");
@@ -366,7 +366,7 @@ function make_seed() {
 }
 
 function restore_seed() {
-    $(document).on("click touch", "#rest_seed, .applist.pobox li.seedu .address .srcicon", function() {
+    $(document).on("click", "#rest_seed, .applist.pobox li.seedu .address .srcicon", function() {
         if (hasbip === true) {
             return false;
         } else {
@@ -390,7 +390,7 @@ function restore_seed() {
 }
 
 function restore_seed_verify() {
-    $(document).on("click touch", "#restore_seed", function() {
+    $(document).on("click", "#restore_seed", function() {
         if (hasbip === true) {
             return false;
         } else {
@@ -502,19 +502,19 @@ function manage_bip32(dat) {
 // Seed panel nav
 
 function got_it() {
-    $(document).on("click touch", "#cfbu1", function() {
+    $(document).on("click", "#cfbu1", function() {
         seed_nav(2);
     })
 }
 
 function seed_back1() {
-    $(document).on("click touch", "#seed_steps #seed_step2 .ss_header .icon-arrow-left2", function() {
+    $(document).on("click", "#seed_steps #seed_step2 .ss_header .icon-arrow-left2", function() {
         seed_nav(1);
     })
 }
 
 function seed_back2() {
-    $(document).on("click touch", "#seed_steps #seed_step3 .ss_header .icon-arrow-left2, #seed_steps #seed_step3 #toseed", function() {
+    $(document).on("click", "#seed_steps #seed_step3 .ss_header .icon-arrow-left2, #seed_steps #seed_step3 #toseed", function() {
         seed_nav(2);
         $("#seed_step3").removeClass("delete verify");
     })
@@ -544,7 +544,7 @@ function ls_phrase_obj_parsed(obj) {
 }
 
 function backup_continue() {
-    $(document).on("click touch", "#cfbu2", function() {
+    $(document).on("click", "#cfbu2", function() {
         phrasearray = null,
             phraseverified = false;
         var phrase = get_phrase(),
@@ -722,13 +722,13 @@ function move_seed_cb() {
 }
 
 function continue_seed() {
-    $(document).on("click touch", "#continue_seed", function() {
+    $(document).on("click", "#continue_seed", function() {
         finish_seed();
     })
 }
 
 function skip_verify() {
-    $(document).on("click touch", "#cfbu3", function() {
+    $(document).on("click", "#cfbu3", function() {
         var content = "<h2><span class='icon-warning' style='color:#B33A3A'></span>Warning! Continue at your own risk.</h2><p><strong>If you lose your device, uninstall your application or clear your browserdata, you'll need your secret phrase to recover your funds!</strong></p>";
         popdialog(content, "alert", "finish_seed");
     })
@@ -815,7 +815,7 @@ function deactivate_xpubs() {
 // Test triggers
 
 function derive_test_trigger() {
-    $(document).on("click touch", "#testtriggerxx", function() {
+    $(document).on("click", "#testtriggerxx", function() {
 	    var seedobject = ls_phrase_obj(),
 			seedid = seedobject.pid,
 			savedseed = seedobject.pob.join(" ");
@@ -872,7 +872,7 @@ function ptokey(p, sid) {
 }
 
 function derive_addone_trigger() {
-    $(document).on("click touch", ".addonexx", function() {
+    $(document).on("click", ".addonexx", function() {
         derive_addone($(this).attr("data-currency"), true);
     })
 }
@@ -1051,7 +1051,7 @@ function copy_phrase() {
 }
 
 function show_phrase() {
-    $(document).on("click touch", "#showphrase, #phrase_cb.hidephrase #phraseblur", function() {
+    $(document).on("click", "#showphrase, #phrase_cb.hidephrase #phraseblur", function() {
         var phrase_cb = $("#phrase_cb");
         if (phrase_cb.hasClass("showphrase")) {
             phrase_cb.removeClass("showphrase").addClass("hidephrase");
@@ -1372,7 +1372,7 @@ function xpub_prefix(currency) {
 // Phrase info
 
 function phrase_info() {
-    $(document).on("click touch", "#phrase_info", function() {
+    $(document).on("click", "#phrase_info", function() {
         phrase_info_pu(null);
     })
 }
@@ -1484,14 +1484,14 @@ function phrase_info_pu(coin) {
 }
 
 function phrase_coin_info() {
-    $(document).on("click touch", "#pi_icons img", function() {
+    $(document).on("click", "#pi_icons img", function() {
         $("#ad_info_wrap").attr("data-class", $(this).attr("data-class"));
         pi_show();
     })
 }
 
 function toggle_dpaths() {
-    $(document).on("click touch", "#ad_info_wrap .d_path_header", function() {
+    $(document).on("click", "#ad_info_wrap .d_path_header", function() {
         var d_body = $(".d_path_body");
         if (d_body.is(":visible")) {
             d_body.slideUp(200);
@@ -1510,13 +1510,13 @@ function pi_show() {
 }
 
 function test_derive_next() {
-    $(document).on("click touch", ".td_next", function() {
+    $(document).on("click", ".td_next", function() {
         test_derive_function($(this));
     })
 }
 
 function test_derive_prev() {
-    $(document).on("click touch", ".td_prev", function() {
+    $(document).on("click", ".td_prev", function() {
         test_derive_function($(this), true);
     })
 }
@@ -1554,7 +1554,7 @@ function test_derive_function(thisnode, prev) {
 }
 
 function phrase_moreinfo() {
-    $(document).on("click touch", "#bip_mi", function() {
+    $(document).on("click", "#bip_mi", function() {
         var thisbttn = $(this),
         bmb = $("#bip_mibox");
         if (bmb.is(":visible")) {
