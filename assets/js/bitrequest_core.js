@@ -871,7 +871,7 @@ function starttrigger() {
 }
 
 function startnexttrigger() {
-    $(document).on("clickend", "#entername .panelwrap", function(e) {
+    $(document).on("click", "#entername .panelwrap", function(e) {
         if (e.target == this) {
             startnext($("#entername"));
         }
@@ -2357,7 +2357,7 @@ function clearpingtx(close) {
 }
 
 function cancelsharedialogtrigger() {
-    $(document).on("clickend", "#sharepopup", function(e) {
+    $(document).on("click", "#sharepopup", function(e) {
         if (e.target == this) {
             cancelsharedialog();
         }
