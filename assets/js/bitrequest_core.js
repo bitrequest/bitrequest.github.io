@@ -44,8 +44,7 @@ $(document).ready(function() {
 	$.ajaxSetup({
         cache: false
     });
-
-    set_icon_boolean();
+	set_icon_boolean();
     buildsettings(); // build settings first
 
     stored_currencies = localStorage.getItem("bitrequest_currencies"),
@@ -4120,7 +4119,7 @@ function detectapp() {
     if (inframe === true) {
         return false;
     } else {
-        var show_dialog = sessionStorage.getItem("bitrequest_appstore_dialog");
+        var show_dialog = sessionStorage.getItem("bitrequest_appstore_dialog") || localStorage.getItem("bitrequest_appstore_dialog");
         if (show_dialog) {
             return false;
         } else {
@@ -4163,7 +4162,10 @@ function close_app_panel() {
         setTimeout(function() {
             $("#app_panel").html("");
         }, 800);
-        sessionStorage.setItem("bitrequest_appstore_dialog", false); // to check if request is being edited
+        sessionStorage.setItem("bitrequest_appstore_dialog", true);
+        if (getdevicetype() == "Android") {
+            localStorage.setItem("bitrequest_appstore_dialog", true);
+        }
     });
 }
 

@@ -556,7 +556,6 @@ function sharebu() {
                 "custom": "system_bu",
                 "api_url": true,
                 "proxy": true,
-                "proxy_url": approot,
                 "params": {
                     "url": $(this).attr("data-url"),
                     "account": btoa(accountname)
@@ -587,7 +586,6 @@ function check_systembu() {
                 "custom": "get_system_bu",
                 "api_url": true,
                 "proxy": true,
-                "proxy_url": approot,
                 "params": sbu
             }).done(function(e) {
                 var ping = e.ping;
