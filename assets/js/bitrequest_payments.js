@@ -1737,7 +1737,7 @@ function share(thisbutton) {
     }
 }
 
-function shorten_url(sharedtitle, sharedurl, sitethumb) {
+function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
     loadertext("Generating link");
     var us_settings = $("#url_shorten_settings"),
         us_active = (us_settings.data("us_active") == "active");
@@ -1748,6 +1748,7 @@ function shorten_url(sharedtitle, sharedurl, sitethumb) {
             sharerequest(getcache, sharedtitle);
         } else {
             if (us_service == "firebase") {
+	            var security = (unguessable === true) ? "UNGUESSABLE" : "SHORT";
                 api_proxy({
                     "api": "firebase",
                     "search": "shortLinks",
@@ -1780,7 +1781,7 @@ function shorten_url(sharedtitle, sharedurl, sitethumb) {
                                 }
                             },
                             "suffix": {
-                                "option": "SHORT"
+                                "option": security
                             }
                         })
                     }

@@ -566,7 +566,7 @@ function sharebu() {
                     filetimesec = (filetime) ? filetime * 1000 : $.now(),
                     filetime_format = new Date(filetimesec).toLocaleString(language),
                     sharedtitle = "System Backup " + accountname + " (" + filetime_format + ")";
-                shorten_url(sharedtitle, approot + "?p=settings&sbu=" + br_cache.filename, approot + "/img/system_backup.png");
+                shorten_url(sharedtitle, approot + "?p=settings&sbu=" + br_cache.filename, approot + "/img/system_backup.png", true);
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 console.log(jqXHR);
                 console.log(textStatus);
@@ -676,6 +676,7 @@ function complilebackup() {
             key == "bitrequest_erc20tokens" ||
             key == "bitrequest_editurl" ||
             key == "bitrequest_backupfile_id" ||
+            key == "bitrequest_appstore_dialog" ||
             key == "bitrequest_init" ||
             key == "bitrequest_k" ||
             key == "bitrequest_awl" ||

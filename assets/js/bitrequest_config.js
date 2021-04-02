@@ -112,25 +112,20 @@ var multi_wallets = {
                         "seed": true
                     },
                     {
-                        "name": "eclair",
-                        "website": "https://acinq.co",
+                        "name": "blw",
+                        "website": "https://lightning-wallet.com",
                         "appstore": null,
-                        "playstore": "https://play.google.com/store/apps/details?id=fr.acinq.eclair.wallet.mainnet2",
-                        "desktop": null
+                        "playstore": "https://play.google.com/store/apps/details?id=com.lightning.walletapp",
+                        "desktop": null,
+                        "seed": true
                     },
                     {
-                        "name": "bread",
-                        "website": "https://brd.com",
-                        "appstore": "https://apps.apple.com/app/id885251393",
-                        "playstore": "https://play.google.com/store/apps/details?id=com.breadwallet",
-                        "desktop": null
-                    },
-                    {
-                        "name": "edge",
-                        "website": "https://edge.app",
-                        "appstore": "https://apps.apple.com/app/id1344400091",
-                        "playstore": "https://play.google.com/store/apps/details?id=co.edgesecure.app",
-                        "desktop": null
+                        "name": "bluewallet",
+                        "website": "https://bluewallet.io",
+                        "appstore": "https://apps.apple.com/app/id1376878040",
+                        "playstore": "https://play.google.com/store/apps/details?id=io.bluewallet.bluewallet",
+                        "desktop": "https://bluewallet.io/desktop-bitcoin-wallet/",
+                        "seed": true
                     }
                 ]
             },
@@ -363,13 +358,6 @@ var multi_wallets = {
                         "playstore": null,
                         "desktop": "https://electrum-ltc.org",
                         "seed": true
-                    },
-                    {
-                        "name": "litewallet",
-                        "website": "https://lite-wallet.org",
-                        "appstore": "https://apps.apple.com/app/id1119332592",
-                        "playstore": "https://play.google.com/store/apps/details?id=com.loafwallet",
-                        "desktop": null
                     }
                 ]
             },
@@ -471,21 +459,7 @@ var multi_wallets = {
                     multi_wallets.trezor,
                     multi_wallets.ledger,
                     multi_wallets.trustwallet,
-                    multi_wallets.keepkey,
-                    {
-                        "name": "multidoge",
-                        "website": "https://multidoge.org",
-                        "appstore": null,
-                        "playstore": null,
-                        "desktop": "https://multidoge.org"
-                    },
-                    {
-                        "name": "dogecoin",
-                        "website": "http://langerhans.github.io/dogecoin-wallet-new",
-                        "appstore": null,
-                        "playstore": "https://play.google.com/store/apps/details?id=de.langerhans.wallet",
-                        "desktop": null
-                    }
+                    multi_wallets.keepkey
                 ]
             },
             "settings": {
