@@ -2073,7 +2073,8 @@ function saverequest(direct) {
         if (direct == "init" && request.shared === false) { // when first opened only save shared requests
         } else if (this_iszero === true) { // don't save requests with zero value
         } else {
-            var append_object = $.extend(request, {
+            var coinsettings = request.coinsettings,
+            	append_object = $.extend(request, {
                 archive: false,
                 showarchive: false,
                 tx_index: [],
@@ -2083,6 +2084,7 @@ function saverequest(direct) {
                 rqmeta: rqmetahash,
                 online_purchase: online_purchase
             });
+            delete append_object.coinsettings; // don't save coinsettings in request
             appendrequest(append_object);
             setTimeout(function() {
                 saverequests();
@@ -2093,7 +2095,6 @@ function saverequest(direct) {
                 history.replaceState(null, null, window_location + request_params);
             }
             helper.currencylistitem.removeData("url"); // remove saved url
-            var coinsettings = request.coinsettings;
             if (coinsettings) {
 	            var reuse = coinsettings["Reuse address"];
 	            if (reuse) {
