@@ -906,12 +906,12 @@ function continue_paymentfunction(payment) {
         var currencypoolnode = $("#paymentdialog .cpool[data-currency='" + uoa + "']"),
             currencyname = currencypoolnode.attr("data-currencyname"),
             fiatcurrencypoolnode = $("#paymentdialog .cpool[data-currency='" + fiatcurrency + "']"),
-            fiatcurrencyname = fiatcurrencypoolnode.attr("data-currencyname");
-        localcurrencypoolnode = $("#paymentdialog .cpool[data-currency='" + localcurrency + "']"),
+            fiatcurrencyname = fiatcurrencypoolnode.attr("data-currencyname"),
+			localcurrencypoolnode = $("#paymentdialog .cpool[data-currency='" + localcurrency + "']"),
             localcurrencyname = localcurrencypoolnode.attr("data-currencyname");
         // extend global request object
-        request.currencyname = currencyname,
-            request.fiatcurrencyname = fiatcurrencyname;
+        request.currencyname = currencyname;
+        request.fiatcurrencyname = fiatcurrencyname;
         request.localcurrencyname = localcurrencyname;
         // continue vars
         var currencyxrate = currencypoolnode.attr("data-xrate"),
@@ -1391,8 +1391,8 @@ function switchaddress() {
 
 function newaddresli(currency, address) {
     var add_li = filter_addressli(currency, "checked", true),
-        c_adli = filter_addressli(currency, "address", address);
-    nextaddressli = c_adli.next(".adli[data-checked='true']"),
+        c_adli = filter_addressli(currency, "address", address),
+		nextaddressli = c_adli.next(".adli[data-checked='true']"),
         firstaddressli = add_li.not(".adli[data-address='" + address + "']").first();
     if (firstaddressli.length === 0) {
         return false;
@@ -1721,13 +1721,13 @@ function share(thisbutton) {
         shorten_url(sharedtitle, sharedurl, "https://s2.coinmarketcap.com/static/img/coins/200x200/" + cmcid + ".png");
         setlocales();
     } else {
-        var requestname = $("#requestname");
-        var requesttitle = $("#requesttitle");
-        var name_check = requestname.val().length;
-        var title_check = requesttitle.val().length;
-        var name_check_message = (name_check < 1) ? "Please enter your name" : (name_check < 3) ? "Name should have minimal 3 characters" : "Please check your form";
-        var title_check_message = (title_check < 1) ? "Please enter a description" : (title_check < 2) ? "Description should have minimal 2 characters" : "Please check your form";
-        var check_message = (name_check < 3) ? name_check_message : (title_check < 2) ? title_check_message : "Please fill in required fields";
+        var requestname = $("#requestname"),
+			requesttitle = $("#requesttitle"),
+			name_check = requestname.val().length,
+			title_check = requesttitle.val().length,
+			name_check_message = (name_check < 1) ? "Please enter your name" : (name_check < 3) ? "Name should have minimal 3 characters" : "Please check your form",
+			title_check_message = (title_check < 1) ? "Please enter a description" : (title_check < 2) ? "Description should have minimal 2 characters" : "Please check your form",
+			check_message = (name_check < 3) ? name_check_message : (title_check < 2) ? title_check_message : "Please fill in required fields";
         topnotify(check_message);
         if (name_check < 3) {
             requestname.focus();

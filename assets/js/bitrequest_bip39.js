@@ -41,6 +41,8 @@ $(document).ready(function() {
     restore_seed();
     restore_seed_verify();
     //manage_bip32
+    submit_disclaimer();
+    //bip39
 
     // Seed panel nav
     got_it();
@@ -376,7 +378,7 @@ function restore_seed() {
                     seedid = thistrigger.attr("data-seedid");
                 canceloptions();
                 canceldialog();
-                manage_bip32({
+                bip39({
                     "type": "restore",
                     "edit": true,
                     "seedid": seedid
@@ -421,6 +423,47 @@ function restore_seed_verify() {
 }
 
 function manage_bip32(dat) {
+    if (hasbip === true) {
+        bip39(dat);
+    } else {
+	    var data = (dat) ? dat : {},
+        	content = $("<div class='formbox' id='disclaimer_dialog'>\
+        	<h2><span class='icon-warning' style='color:#B33A3A'></span>Disclaimer!</h2>\
+        	<div class='popnotify'></div>\
+        	<form class='popform'>\
+        		<div class='inputwrap'><p>Funds recieved from addresses generated fom your Bip39 secret passphrase can not be spend by Bitrequest.<br/>To spend your funds you wil have to import your seed phrase in a <a href='https://www.bitrequest.io/compatible-wallets' target='_blank' class='ref'>Bip39 compatible wallet.</a></p></div>\
+        		<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I understand and am ok with this.</span></div>\
+        		<input type='submit' class='submit' value='OK'></form></div>").data(data);
+        if($("#option_makeseed").length) {
+		    canceldialog();
+		    setTimeout(function() {
+	            popdialog(content, "alert", "triggersubmit");
+	        }, 1000)
+	    }
+	    else {
+		    popdialog(content, "alert", "triggersubmit");
+	    }
+    }
+}
+
+function submit_disclaimer() {
+    $(document).on("click", "#disclaimer_dialog input.submit", function(e) {
+        e.preventDefault();
+        var disclaimer_dialog = $("#disclaimer_dialog"),
+        	data = disclaimer_dialog.data(),
+        	pk_checkbox = disclaimer_dialog.find("#pk_confirmwrap"),
+            pk_checked = pk_checkbox.data("checked");
+        if (pk_checked == true) {
+	      	canceldialog();
+	        bip39(data);
+	    }
+	    else {
+		    popnotify("error", "Please consent to continue.");
+	    }
+    })
+}
+
+function bip39(dat) {
     phraseverified = false;
     var data = (dat) ? dat : {},
         edit = (data && data.edit) ? true : false,
