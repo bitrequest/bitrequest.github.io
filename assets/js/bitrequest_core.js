@@ -2070,7 +2070,7 @@ function validateaddress_vk(ad) {
 		    	"generated_locally":false
 		    };
 		    api_proxy({
-		        "api": "xmr_node",
+		        "api": "xmr node",
 		        "search": "login",
 		        "cachetime": 25,
 		        "cachefolder": "1h",
