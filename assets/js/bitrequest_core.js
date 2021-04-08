@@ -864,8 +864,8 @@ function ios_redirect_bitly(shorturl) {
 // ** Intropage **
 
 function starttrigger() {
-    $(document).on("click touch", "#intro", function() {
-        startnext($(this));
+    $(document).on("click touchend", "#intro .panelwrap, #intro .proceeed", function() {
+        startnext($("#intro"));
     });
 }
 
