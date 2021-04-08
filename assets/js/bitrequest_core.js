@@ -864,13 +864,13 @@ function ios_redirect_bitly(shorturl) {
 // ** Intropage **
 
 function starttrigger() {
-    $(document).on("click", "#intro", function() {
+    $(document).on("click touch", "#intro", function() {
         startnext($(this));
     });
 }
 
 function startnexttrigger() {
-    $(document).on("click", "#entername .panelwrap", function(e) {
+    $(document).on("click touchend", "#entername .panelwrap", function(e) {
         if (e.target == this) {
             startnext($("#entername"));
         }
@@ -944,7 +944,7 @@ function lettercountinput() { // Character count plus validation
 }
 
 function choosecurrency() {
-    $(document).on("click", "#allcurrencies li.choose_currency", function() {
+    $(document).on("click touch", "#allcurrencies li.choose_currency", function() {
         var currency = $(this).attr("data-currency"),
             cd = getcoindata(currency);
         addaddress({
