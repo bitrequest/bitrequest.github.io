@@ -505,7 +505,7 @@ function bip39(dat) {
 					<h2 id='showphrase'><span class='icon-eye-blocked eye'></span><span class='icon-eye eye'></span>Secret Phrase:</h2>\
 					<p>" + save_str + "</p>\
 					<div id='phrasewrap'>\
-						<div id='bip39phrase' contenteditable='" + edit + "' class='noselect'>" + seed + "</div>\
+						<div id='bip39phrase' contenteditable='" + edit + "' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' lang='en' class='noselect'>" + seed + "</div>\
 						<div id='phrase_actions'>\
 							<div id='copyphrase' class='button'>Copy</div>\
 							<div id='phrase_info' title='seed info'><span class='icon-info'></span></div>\
