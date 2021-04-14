@@ -2285,7 +2285,7 @@ function blockcancelpaymentdialog() {
 }
 
 function cancelpaymentdialogtrigger() {
-    $(document).on("click", "#payment", function(e) {
+    $(document).on("mouseup touchend", "#payment", function(e) {
 	    if (blockswipe === true) {
 		    unfocus_inputs();
 	   		return false;
