@@ -2277,10 +2277,12 @@ function canceldialog(pass) {
 function blockcancelpaymentdialog() {
     $(document).on("mousedown touchstart", "#payment", function(e) {
 	    blockswipe = false;
-	    var inputs = paymentdialogbox.find("input");
-	    if (inputs.is(":focus")) {
-            blockswipe = true;
-	    }
+	    if (e.target == this) {
+            var inputs = paymentdialogbox.find("input");
+		    if (inputs.is(":focus")) {
+	            blockswipe = true;
+		    }
+        }
     })
 }
 
