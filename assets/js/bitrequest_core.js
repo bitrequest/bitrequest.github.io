@@ -2275,10 +2275,10 @@ function canceldialog(pass) {
 }
 
 function blockcancelpaymentdialog() {
-    $(document).on("mousedown touchstart", "#payment", function(e) {
+    $(document).on("mousedown", "#payment", function(e) {
 	    blockswipe = false;
 	    if (e.target == this) {
-            var inputs = paymentdialogbox.find("input");
+		    var inputs = paymentdialogbox.find("input");
 		    if (inputs.is(":focus")) {
 	            blockswipe = true;
 		    }
@@ -2287,7 +2287,7 @@ function blockcancelpaymentdialog() {
 }
 
 function cancelpaymentdialogtrigger() {
-    $(document).on("mouseup touchend", "#payment", function(e) {
+    $(document).on("mouseup", "#payment", function(e) {
 	    if (blockswipe === true) {
 		    unfocus_inputs();
 	   		return false;
