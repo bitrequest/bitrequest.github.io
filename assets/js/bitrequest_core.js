@@ -398,7 +398,9 @@ function finishfunctions() {
     canceldialog_click();
     canceldialogtrigger();
     //canceldialog
+    blockcancelpaymentdialog();
     cancelpaymentdialogtrigger();
+    //unfocus_inputs
     //cancelpaymentdialog
     //closesocket
     //forceclosesocket
@@ -2272,8 +2274,22 @@ function canceldialog(pass) {
     });
 }
 
+function blockcancelpaymentdialog() {
+    $(document).on("mousedown touchstart", "#payment", function(e) {
+	    blockswipe = false;
+	    var inputs = paymentdialogbox.find("input");
+	    if (inputs.is(":focus")) {
+            blockswipe = true;
+	    }
+    })
+}
+
 function cancelpaymentdialogtrigger() {
     $(document).on("click", "#payment", function(e) {
+	    if (blockswipe === true) {
+		    unfocus_inputs();
+	   		return false;
+    	}
         if (html.hasClass("flipmode")) { // prevent closing request when flipping
             return false;
         }
@@ -2288,6 +2304,11 @@ function cancelpaymentdialogtrigger() {
             }
         }
     });
+}
+
+function unfocus_inputs() {
+    var inputs = paymentdialogbox.find("input");
+	inputs.blur();
 }
 
 function cancelpaymentdialog() {

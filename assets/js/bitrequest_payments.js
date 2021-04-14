@@ -129,13 +129,8 @@ function set_request_timer(timeout) {
 
 function swipestart() {
     $(document).on("mousedown touchstart", "#paymentdialog", function(e) {
-	    blockswipe = false;
 	    var thisdialog = $(this),
-	    	inputs = thisdialog.find("input");
-	    if (inputs.is(":focus")) {
-		    blockswipe = true;
-	    }
-	    var startheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
+	    	startheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
         startswipetime = $.now();
         swipe(thisdialog.height(), startheight);
     })
@@ -144,8 +139,7 @@ function swipestart() {
 function swipe(dialogheight, startheight) {
     $(document).on("mousemove touchmove", "#payment", function(e) {
    		if (blockswipe === true) {
-	   		var inputs = paymentdialogbox.find("input");
-	   		inputs.blur();
+	   		unfocus_inputs();
 	    	return false;
     	}
         var currentheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY,
