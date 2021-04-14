@@ -129,6 +129,7 @@ function set_request_timer(timeout) {
 
 function swipestart() {
     $(document).on("mousedown touchstart", "#paymentdialog", function(e) {
+	    blockswipe = false;
 	    var thisdialog = $(this),
 	    	inputs = thisdialog.find("input");
 	    if (inputs.is(":focus")) {
