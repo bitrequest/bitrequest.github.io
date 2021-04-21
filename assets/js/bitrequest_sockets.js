@@ -332,10 +332,10 @@ function amberdata_eth_websocket(socket_node, thisaddress) {
         }, 3500);
         console.log("Connected: " + socket_url);
         var ping_event = JSON.stringify({
-            jsonrpc: "2.0",
-            id: 1,
-            method: "subscribe",
-            params: [
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "subscribe",
+            "params": [
                 "address:pending_transactions",
                 {
                     "address": thisaddress

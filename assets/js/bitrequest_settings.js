@@ -1520,7 +1520,7 @@ function editccapi() {
         var cc_apisettings = $("#cmcapisettings").data(),
             ccapisrc = cc_apisettings.selected,
             cmcapikey = cc_apisettings.cmcapikey,
-            cmcapikey = (cc_apisettings.cmcapikey) ? cc_apisettings.cmcapikey : "",
+            cmcapikeyval = (cc_apisettings.cmcapikey) ? cc_apisettings.cmcapikey : "",
             cmcapikeyclass = (ccapisrc == "coinmarketcap") ? "" : "hide",
             options = "<span data-pe='none'>" + apilists.crypto_price_apis.join("</span><span data-pe='none'>") + "</span>",
             content = "\
@@ -1533,7 +1533,7 @@ function editccapi() {
 						<div class='selectarrows icon-menu2' data-pe='none'></div>\
 						<div class='options'>" + options + "</div>\
 					</div>\
-					<input type='text' value='" + cmcapikey + "' placeholder='API key' class='" + cmcapikeyclass + "' data-apikey='" + cmcapikey + "' data-checkchange='" + cmcapikey + "'/>\
+					<input type='text' value='" + cmcapikeyval + "' placeholder='API key' class='" + cmcapikeyclass + "' data-apikey='" + cmcapikeyval + "' data-checkchange='" + cmcapikey + "'/>\
 					<input type='submit' class='submit' value='OK'/>\
 				</div>\
 			</div>";
@@ -1566,11 +1566,11 @@ function submitccapi() {
             apival = api_input.val(),
             checkchange = api_input.attr("data-checkchange");
         if (thisvalue == currentapi && checkchange == apival) {
-            canceldialog();
+	        canceldialog();
             return false;
         } else {
             if (thisvalue != currentapi) {
-                set_setting("cmcapisettingss", {
+	            set_setting("cmcapisettings", {
                     "selected": thisvalue
                 }, thisvalue);
             }
@@ -1578,11 +1578,11 @@ function submitccapi() {
                 if (checkchange == apival) {
                     popnotify("error", "Enter a valid API key");
                 } else {
-                    api_input.attr("data-checkchange", apival);
+	                api_input.attr("data-checkchange", apival);
                     checkapikey("coinmarketcap", apival, true)
                 }
             } else {
-                canceldialog();
+	            canceldialog();
                 notify("Data saved");
                 savesettings();
             }
@@ -1906,7 +1906,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                     api_fail(thisref, apikeyval);
                     return false;
                 } else {
-                    update_api_attr(thisref, apikeyval, lastinput);
+	                update_api_attr(thisref, apikeyval, lastinput);
                 }
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 api_fail(thisref, apikeyval);
@@ -1932,10 +1932,10 @@ function api_fail(thisref, thisvalue) {
 }
 
 function update_api_attr(thisref, thisvalue, lastinput) {
-    var apiformbox = $("#apikeyformbox"),
+	var apiformbox = $("#apikeyformbox"),
         changeval = (thisvalue) ? thisvalue : "";
     if (apiformbox && apiformbox.hasClass("pass")) {
-        complement_apisettings(thisref, thisvalue);
+	    complement_apisettings(thisref, thisvalue);
         apiformbox.find("input[data-ref=" + thisref + "]").attr("data-checkchange", changeval).removeClass("changed input_error");
         if (lastinput === true) {
             canceldialog();
@@ -1943,7 +1943,7 @@ function update_api_attr(thisref, thisvalue, lastinput) {
             savesettings();
         }
     } else {
-        complement_apisettings(thisref, thisvalue);
+	    complement_apisettings(thisref, thisvalue);
         canceldialog();
         notify("Data saved");
         savesettings();
@@ -1955,9 +1955,9 @@ function update_api_attr(thisref, thisvalue, lastinput) {
 }
 
 function complement_apisettings(thisref, thisvalue) {
-    set_setting("apikeys", {
-        thisref: thisvalue
-    });
+	var kpairs = {};
+	kpairs[thisref] = thisvalue;
+	set_setting("apikeys", kpairs);
     if (thisref == "bitly") {
         set_setting("url_shorten_settings", {
             "bitly_at": thisvalue
