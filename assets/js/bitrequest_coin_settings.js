@@ -920,8 +920,8 @@ function key_management() {
     })
 }
 
-function xmrphrase_sc() {
-    $("#monero_settings .cc_settinglist li[data-id='Key derivations'] .atext").trigger("click");
+function bip39_sc(coinsc) {
+    $("#" + coinsc + "_settings .cc_settinglist li[data-id='Key derivations'] .atext").trigger("click");
 }
 
 function xpub_info_pu(currency, xpub) {

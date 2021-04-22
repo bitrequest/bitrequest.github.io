@@ -550,7 +550,6 @@ function finishfunctions() {
     //currency_check
     //currency_uncheck
     //get_vk
-
     gk();
 }
 
@@ -992,11 +991,9 @@ function loadurl() {
         loadpageevent("home");
     }
     shownav(page);
-    var shortcut = gets.sc;
-    if (shortcut) {
-	    if (shortcut == "xmrphrase") {
-		    xmrphrase_sc();
-	    }
+    var bip39info = gets.bip39;
+    if (bip39info) {
+		bip39_sc(bip39info);
     }
 }
 
