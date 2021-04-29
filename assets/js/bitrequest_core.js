@@ -4149,7 +4149,7 @@ function detectapp() {
                 if (supportsTouch === true) {
                     var device = getdevicetype();
                     if (device == "Android") {
-                        getapp("android");
+                        //getapp("android");
                     } else if (device == "iPhone" || device == "iPad" || device == "Macintosh") {
                         getapp("apple");
                     } else {
