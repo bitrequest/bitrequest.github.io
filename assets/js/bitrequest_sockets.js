@@ -323,8 +323,8 @@ function nano_socket(socket_node, thisaddress) {
 
 function amberdata_eth_websocket(socket_node, thisaddress) {
     var socket_url = socket_node.url,
-        ak = get_amberdata_apikey();
-    var provider = socket_url + "?x-api-key=" + ak;
+        ak = get_amberdata_apikey(),
+		provider = socket_url + "?x-api-key=" + ak;
     websocket = new WebSocket(provider);
     websocket.onopen = function(e) {
         setTimeout(function() {

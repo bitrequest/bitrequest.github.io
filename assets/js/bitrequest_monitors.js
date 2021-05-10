@@ -425,8 +425,9 @@ function get_api_inputs(rd, api_data, api_name) {
 	                        } else {
 	                            if (api_name == "ethplorer") {
 	                                $.each(data.operations, function(dat, value) {
-	                                    var txd = ethplorer_scan_data(value, setconfirmations, ccsymbol);
-	                                    if ((value.to.toUpperCase() == address.toUpperCase()) && (txd.transactiontime > request_timestamp) && txd.ccval) {
+	                                    var txd = ethplorer_scan_data(value, setconfirmations, ccsymbol),
+	                                    	rt_compensate = (rd.inout == "local" && rd.status == "insufficient") ? request_timestamp - 30000 : request_timestamp; // substract extra 30 seconds (extra compensation)
+	                                    if ((value.to.toUpperCase() == address.toUpperCase()) && (txd.transactiontime > rt_compensate) && txd.ccval) {
 	                                        var tx_listitem = append_tx_li(txd, thislist);
 	                                        if (tx_listitem) {
 	                                            transactionlist.append(tx_listitem.data(txd));
@@ -1403,7 +1404,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 }
             } else {
                 status = "insufficient",
-                    pending = "scanning";
+                pending = "scanning";
             }
             updaterequest({
                 "requestid": thisrequestid,

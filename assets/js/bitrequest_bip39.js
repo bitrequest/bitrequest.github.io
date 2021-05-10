@@ -369,7 +369,7 @@ function make_seed() {
 
 function restore_seed() {
     $(document).on("click", "#rest_seed, .applist.pobox li.seedu .address .srcicon", function() {
-        if (hasbip === true) {
+	    if (hasbip === true) {
             return false;
         } else {
             var result = confirm("Restore seed?");

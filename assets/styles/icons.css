@@ -396,3 +396,6 @@
 .icon-notification:before {
   content: "\ea08";
 }
+.icon-file-pdf:before {
+  content: "\eadf";
+}

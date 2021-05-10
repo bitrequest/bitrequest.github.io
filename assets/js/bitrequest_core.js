@@ -507,6 +507,9 @@ function finishfunctions() {
     //append_coinsetting
     //appendaddress
     //appendrequest
+    invoice();
+    download_invoice();
+    share_invoice();
     //amountshort
     editrequest();
     submit_request_description();
@@ -537,6 +540,8 @@ function finishfunctions() {
 
     // Query helpers
 
+	//exists
+	//shake
     //get_setting
     //set_setting
     //get_requestli
@@ -3935,7 +3940,8 @@ function appendrequest(rd) {
             timestampbox +
             "<li><p class='address'><strong>Address:</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>" +
             paymentdetails +
-            view_tx + "\
+            view_tx + 
+            "<li class='invoice'><p><span class='icon-file-pdf' title='View invoice'/>Invoice</p></li>\
 				</ul>\
 				<ul class='transactionlist'>\
 					<h2>" + tl_text + "</h2>\
@@ -3959,6 +3965,127 @@ function appendrequest(rd) {
             }
         });
     }
+}
+
+function invoice() {
+    $(document).on("click", ".invoice > p", function() {
+        var thisnode = $(this),
+        	requestli = thisnode.closest(".rqli"),
+        	rqdat = requestli.data(),
+        	requestid = rqdat.requestid,
+        	currencyname = rqdat.currencyname,
+        	requestname = rqdat.requestname,
+        	requesttitle = rqdat.requesttitle,
+        	ismonitored = rqdat.monitored,
+        	status = rqdat.status,
+        	statustext = (status == "new") ? "Waiting for payment" : status,
+        	paymenttimestamp = rqdat.paymenttimestamp,
+			ptsformatted = fulldateformat(new Date(paymenttimestamp - timezone), "en-us"),
+        	amount = rqdat.amount,
+        	fiatvalue = rqdat.fiatvalue,
+        	receivedamount = rqdat.receivedamount,
+        	receivedamount_rounded = trimdecimals(receivedamount, 5),
+			fiatvalue_rounded = trimdecimals(fiatvalue, 2),
+        	requesttype = rqdat.requesttype,
+        	incoming = (requesttype == "incoming"),
+			outgoing = (requesttype == "outgoing"),
+			local = (requesttype == "local"),
+			online_purchase = rqdat.online_purchase,
+			typetext = (incoming === true) ? (online_purchase === true) ? "online purchase" : "incoming" : (local === true) ? "point of sale" : "outgoing",
+			direction = (incoming === true) ? "send" : "received",
+        	iscrypto = rqdat.iscrypto,
+			deter = (iscrypto === true) ? 5 : 2,
+        	amount_rounded = trimdecimals(amount, deter),
+        	uoa = rqdat.uoa,
+			uoa_upper = uoa.toUpperCase(),
+        	requestdate = rqdat.requestdate,
+			timestamp = rqdat.timestamp,
+			utc = timestamp - timezone,
+			localtime = (requestdate) ? requestdate - timezone : utc,
+			localtimeobject = new Date(localtime),
+			requestdateformatted = fulldateformat(localtimeobject, "en-us"),
+			created = (requestdate) ? requestdateformatted : "unknown",
+			utc_format = fulldateformat(new Date(utc)),
+			txhash = rqdat.txhash,
+        	invd = {};
+		invd["Request ID"] = requestid;
+        invd.Currency = rqdat.payment;
+        if (exists(requestname)) {
+		    invd.From = requestname;
+	    }
+        if (exists(requesttitle)) {
+		    invd.Title = "'" + requesttitle + "'";
+	    }
+        invd.Amount = amount_rounded + " " + uoa_upper,
+        invd.Status = statustext,
+        invd.Type = typetext;
+        if (incoming === true) {
+	        invd["Created"] = created;
+	        invd["First viewed"] = utc_format;
+        }
+        invd.Address = rqdat.address;
+        if (status === "paid") {
+        	invd["Paid on"] = ptsformatted,
+			invd["Amount received"] = receivedamount_rounded + " " + rqdat.payment;
+			if (iscrypto === true) {
+			}
+			else {
+				invd["Fiat value on " + ptsformatted] = fiatvalue_rounded + " " + currencyname;
+			}
+		}
+		if (exists(txhash)) {
+		    invd["TxID"] = txhash;
+	    }
+		var invd_encode = btoa(JSON.stringify(invd)),
+			set_proxy = $("#api_proxy").data("selected"),
+	        invoice_url = set_proxy + "api/invoice/?data=" + invd_encode,
+	        invoice_title = "bitrequest_invoice_" + requestid + ".pdf",
+			content = "<div class='formbox' id='cacheformbox'>\
+				<h2><span class='icon-file-pdf' style='color:#dc1d00'/>Invoice " + requestid + "</h2>\
+				<div class='popnotify'></div>\
+				<div class='popform'><br/>\
+					<a class='button' href='" + invoice_url + "' target='_blank' id='invoice_link'><span class='icon-new-tab'/> View invoice</a><br/><br/>\
+					<a class='button' href='" + invoice_url + "' target='_blank' id='dl_invoice' title='" + invoice_title + "' download='" + invoice_title + "'><span class='icon-download'/> Download invoice</a><br/><br/>\
+					<div class='button'id='share_invoice' data-invoicedat='" + invoice_url + "' data-requestid='" + requestid + "'><span class='icon-share2'/>Share invoice</div>\
+				</div>\
+				<div id='backupactions'>\
+					<div id='canceltheme' class='customtrigger'>OK</div>\
+					<div id='canceltheme' class='customtrigger'>CANCEL</div>\
+				</div>\
+			</div>";
+	    popdialog(content, "alert", "triggersubmit");
+    })
+}
+
+function download_invoice() {
+    $(document).on("click", "#dl_invoice", function(e) {
+        var thisbttn = $(this),
+		    href = thisbttn.attr("href"),
+		    title = thisbttn.attr("title"),
+		    result = confirm("Download: " + title + "?");
+		if (result === false) {
+			e.preventDefault();
+		    return false;
+	    }
+    })
+}
+
+function share_invoice() {
+    $(document).on("click", "#share_invoice", function() {
+	    var thisbttn = $(this),
+        	href = thisbttn.attr("data-invoicedat"),
+        	requestid = thisbttn.attr("data-requestid"),
+        	filename = "bitrequest_invoice_" + requestid + ".pdf",
+			result = confirm("Share " + filename + "?");
+        if (result === true) {
+            loader(true);
+            loadertext("generate invoice");
+            var accountname = $("#accountsettings").data("selected"),
+            	sharedtitle = "bitrequest_invoice_" + requestid + ".pdf";
+            shorten_url(sharedtitle, href, approot + "/img/invoice_icon.png", true);
+            closeloader();
+        }
+    })
 }
 
 function amountshort(amount, receivedamount, fiatvalue, iscrypto) {
@@ -4190,6 +4317,13 @@ function close_app_panel() {
 }
 
 // Query helpers
+
+function exists(val) {
+	if (val === undefined || val === null || !val.length) {
+	    return false;
+    }
+    return true;
+}
 
 function shake(node) {
     node.addClass("shake");

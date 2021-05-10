@@ -198,7 +198,7 @@ function ethplorer_scan_data(data, setconfirmations, ccsymbol) { // scan
             transactiontimeutc = (transactiontime) ? transactiontime + timezone : null,
             erc20value = (data.value) ? parseFloat((data.value / Math.pow(10, data.tokenInfo.decimals)).toFixed(8)) : null,
 			txhash = (data.transactionHash) ? data.transactionHash : null;
-        return {
+		return {
             "ccval": erc20value,
             "transactiontime": transactiontimeutc,
             "txhash": txhash,
