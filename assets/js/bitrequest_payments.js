@@ -921,7 +921,7 @@ function continue_paymentfunction(payment) {
             requesttitle_string = (rt_set === true) ? requesttitle : "",
             pobox = $("main #" + payment + " .content ul.pobox[data-currency='" + payment + "']"),
             savedaddressli = pobox.find("li[data-address='" + address + "']"),
-            labelvalue = (savedaddressli.length > 0) ? "<span id='labelbttn'>" + savedaddressli.data("label") + "</span>" : "", // check if address is saved
+			labelvalue = (savedaddressli.length > 0) ? (savedaddressli.data("label").length > 0) ? "<span id='labelbttn'>" + savedaddressli.data("label") + "</span>" : "" : "", // check if label is set
             thiscurrencyvalueraw = ((amount / currencyxrate) * ccrateeuro),
             thiscurrencyvaluefixed = parseFloat(thiscurrencyvalueraw.toFixed(5)),
             thiscurrencyvaluefixedplaceholder = (iszero === true) ? zeroplaceholder : thiscurrencyvaluefixed,

@@ -1038,7 +1038,7 @@ function derive_obj(source, seed, key, cc, coindat, bip32, seedid, add) {
 	        key_object = format_keys(seed, x_keys_dat, bip32, index, currency),
 	        address = key_object.address,
 	        ccsymbol = coindat.ccsymbol,
-	        index_str = (index > 0) ? index : "new",
+	        index_str = (index > 0) ? index : 0,
 	        checkname = addressli.filter(".seed"),
 			checkname_array = dom_to_array(checkname, id_key),
 	        get_unique = get_uniques(checkname_array),
@@ -1054,7 +1054,8 @@ function derive_obj(source, seed, key, cc, coindat, bip32, seedid, add) {
 	            "cmcid": coindat.cmcid,
 	            "erc20": false,
 	            "checked": true,
-	            "label": label
+	            "label": "",
+	            "a_id": label
 	        },
 	        vk = key_object.vk;
 	    if (vk) {
