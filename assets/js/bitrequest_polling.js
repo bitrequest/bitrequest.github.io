@@ -44,18 +44,13 @@ function api_monitor(api_data, txhash, tx_data) {
             (api_name == "blockchair") ? (request.erc20 === true) ? "ethereum/dashboards/transaction/" + txhash + "?erc_20=true" : payment + "/dashboards/transaction/" + txhash : "";
         if (direct === true) {
             confirmations(tx_data, true);
-            var zero_conf = (tx_data.confirmations === false || set_confirmations === 0 || set_confirmations == "undefined" || set_confirmations === undefined);
-            if (zero_conf === true) {
-            }
-            else {
-	            pingtx = setInterval(function() {
-	                api_proxy(ampl(api_name, poll_url)).done(function(e) {
-	                    api_result(br_result(e));
-	                }).fail(function(jqXHR, textStatus, errorThrown) {
-	                    api_error(jqXHR, textStatus, errorThrown);
-	                });
-	            }, 25000);
-            }
+            pingtx = setInterval(function() {
+                api_proxy(ampl(api_name, poll_url)).done(function(e) {
+                    api_result(br_result(e));
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    api_error(jqXHR, textStatus, errorThrown);
+                });
+            }, 25000);
         } else {
             api_proxy(ampl(api_name, poll_url)).done(function(e) {
                 api_result(br_result(e));
