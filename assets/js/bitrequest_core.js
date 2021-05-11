@@ -4040,16 +4040,15 @@ function invoice() {
 			set_proxy = $("#api_proxy").data("selected"),
 	        invoice_url = set_proxy + "api/invoice/?data=" + invd_encode,
 	        invoice_title = "bitrequest_invoice_" + requestid + ".pdf",
-			content = "<div class='formbox' id='cacheformbox'>\
-				<h2><span class='icon-file-pdf' style='color:#dc1d00'/>Invoice " + requestid + "</h2>\
+	        content = "<div class='formbox' id='cacheformbox'>\
+				<h2><span class='icon-file-pdf' style='color:#dc1d00'/>Open invoice_" + requestid + ".pdf?</h2>\
 				<div class='popnotify'></div>\
 				<div class='popform'><br/>\
-					<a class='button' href='" + invoice_url + "' target='_blank' id='invoice_link'><span class='icon-new-tab'/> View invoice</a><br/><br/>\
-					<a class='button' href='" + invoice_url + "' target='_blank' id='dl_invoice' title='" + invoice_title + "' download='" + invoice_title + "'><span class='icon-download'/> Download invoice</a><br/><br/>\
-					<div class='button'id='share_invoice' data-invoicedat='" + invoice_url + "' data-requestid='" + requestid + "'><span class='icon-share2'/>Share invoice</div>\
 				</div>\
 				<div id='backupactions'>\
-					<div id='canceltheme' class='customtrigger'>OK</div>\
+					<div id='share_invoice' data-invoicedat='" + invoice_url + "' data-requestid='" + requestid + "' class='util_icon icon-share2'></div>\
+					<a href='" + invoice_url + "&download' target='_blank' id='dl_invoice' class='util_icon icon-download' title='Download " + invoice_title + "' download='" + invoice_title + "'></a>\
+					<a class='customtrigger' href='" + invoice_url + "' target='_blank' id='invoice_link'>OK</a>\
 					<div id='canceltheme' class='customtrigger'>CANCEL</div>\
 				</div>\
 			</div>";
@@ -4062,7 +4061,7 @@ function download_invoice() {
         var thisbttn = $(this),
 		    href = thisbttn.attr("href"),
 		    title = thisbttn.attr("title"),
-		    result = confirm("Download: " + title + "?");
+		    result = confirm(title + "?");
 		if (result === false) {
 			e.preventDefault();
 		    return false;

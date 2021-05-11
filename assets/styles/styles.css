@@ -2533,8 +2533,7 @@ html.flipmode #paymentdialog {
     transition: all 300ms linear;
 }
 
-#share_bu,
-#delete_xpub {
+#backupactions .util_icon {
 	float:left;
 	font-size:160%;
 	padding:0.5em;

@@ -1787,7 +1787,6 @@ function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
                     }
                 }).done(function(e) {
                     var data = br_result(e).result;
-                    console.log(data);
                     if (data.error) {
                         sharerequest(sharedurl, sharedtitle);
                     } else {

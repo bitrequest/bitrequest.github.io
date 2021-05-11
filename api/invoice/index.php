@@ -1,13 +1,18 @@
 <?php
 	$data = "";
 	$output = "";
-
+	$requestid = "";
+	$download = "inline";
 	if (isset($_GET["data"])) {
 		$dataparam = $_GET["data"];
 		$data = json_decode(base64_decode($dataparam));
+		$requestid = $data->{"Request ID"};
 	}
 	else {
 		return false;
+	}
+	if (isset($_GET["download"])) {
+		$download = "attachment";
 	}
 	$index = 0; 
 	foreach ($data as $key => $value) {
@@ -63,7 +68,7 @@ startxref
 %%EOF";
 	header("Content-Type: application/pdf");
     header("Content-Length: " . strlen($content));
-    header("Content-Disposition: inline; filename='bitrequest_invoice_" . $ordernr . "'");
+    header("Content-Disposition: " . $download . "; filename=bitrequest_invoice_" . $requestid . ".pdf");
     header("Cache-Control: private, max-age=0, must-revalidate");
     header("Pragma: public");
     ini_set("zlib.output_compression","0");

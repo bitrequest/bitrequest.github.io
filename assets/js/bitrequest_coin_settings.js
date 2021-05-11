@@ -691,7 +691,7 @@ function edit_xpub_trigger() {
 				    		</ul>\
 				    	</div>\
 						<div id='backupactions'>\
-							<div id='delete_xpub' data-currency='" + thiscurrency + "' class='icon-bin'></div>\
+							<div id='delete_xpub' data-currency='" + thiscurrency + "' class='util_icon icon-bin'></div>\
 							<div id='backupcd'>CANCEL</div>\
 						</div>\
 			    	</div>");

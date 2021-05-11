@@ -520,7 +520,7 @@ function backupdatabase() {
 			</div>\
 		</div>\
 		<div id='backupactions'>\
-			<div id='share_bu' data-url='" + jsonencode + "' class='icon-share2'></div>\
+			<div id='share_bu' data-url='" + jsonencode + "' class='util_icon icon-share2'></div>\
 			<div id='backupcd'>CANCEL</div>\
 		</div>";
     popdialog(content, "alert", "triggersubmit", null, true);
