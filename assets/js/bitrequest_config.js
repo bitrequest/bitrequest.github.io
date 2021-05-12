@@ -596,9 +596,20 @@ var multi_wallets = {
                     "selected": false,
                     "switch": true,
                 },
+                "Reuse address": {
+                    "icon": "recycle",
+                    "selected": true,
+                    "switch": true,
+                    "custom_switch": true,
+                    "warning": true
+                },
                 "blockexplorers": {
                     "icon": "eye",
-                    "selected": "nanocrawler.cc"
+                    "selected": "nanocrawler.cc",
+                    "options": {
+                        "key1": "nanocrawler.cc",
+                        "key2": "nanolooker.com"
+                    }
                 },
                 "apis": {
                     "icon": "sphere",
@@ -720,6 +731,13 @@ var multi_wallets = {
                     "icon": "dice",
                     "selected": false,
                     "switch": true,
+                },
+                "Reuse address": {
+                    "icon": "recycle",
+                    "selected": true,
+                    "switch": true,
+                    "custom_switch": true,
+                    "warning": true
                 },
                 "blockexplorers": {
                     "icon": "eye",
@@ -1170,6 +1188,13 @@ var blockexplorers = [{
         "name": "nanocrawler.cc",
         "url": "https://nanocrawler.cc/",
         "prefix": "explorer",
+        "tx_prefix": "block/",
+        "address_prefix": "account/"
+    },
+    {
+        "name": "nanolooker.com",
+        "url": "https://nanolooker.com",
+        "prefix": "",
         "tx_prefix": "block/",
         "address_prefix": "account/"
     },

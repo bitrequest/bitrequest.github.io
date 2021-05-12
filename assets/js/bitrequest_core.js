@@ -470,6 +470,7 @@ function finishfunctions() {
     //getdevicetype
     //getplatform
     //makedatestring
+    //short_date
     //returntimestamp
     //weekdays
     //fulldateformat
@@ -3247,6 +3248,16 @@ function returntimestamp(datestring) {
         timeparts = datetimeparts[1].split(":"),
         dateparts = datetimeparts[0].split("-");
     return new Date(dateparts[0], parseInt(dateparts[1], 10) - 1, dateparts[2], timeparts[0], timeparts[1], timeparts[2]);
+}
+
+function short_date(txtime) {
+    return new Date(txtime - timezone).toLocaleString(language, {
+		day: "numeric", // numeric, 2-digit
+		month: "2-digit", // numeric, 2-digit, long, short, narrow
+		year: "2-digit", // numeric, 2-digit
+		hour: "numeric", // numeric, 2-digit
+		minute: "numeric"
+	})
 }
 
 function weekdays(day) {

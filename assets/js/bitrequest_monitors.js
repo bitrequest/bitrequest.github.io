@@ -1088,7 +1088,7 @@ function append_tx_li(txd, this_request) {
             setconfirmations = txd.setconfirmations,
             ccsymbol = txd.ccsymbol,
             set_ccsymbol = (ccsymbol) ? ccsymbol.toUpperCase() : "",
-            date_format = (transactiontime) ? new Date(transactiontime - timezone).toLocaleString(language) : "",
+            date_format = (transactiontime) ? short_date(transactiontime) : "",
             confspan = (confirmations === false) ? "" :
             (!confirmations || confirmations <= 0) ? "<div class='txli_conf' title='Unconfirmed transaction'><div class='confbar'></div><span>Unconfirmed transaction</div></div>" :
             (confirmations > 0) ? "<div class='txli_conf' title='" + confirmations + " confirmations'><div class='confbar'></div><span>" + confirmations + " / " + setconfirmations + " confirmations</span></div>" : "",

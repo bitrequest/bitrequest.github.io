@@ -145,11 +145,18 @@ function reuse_address_trigger() {
         var this_switch = $(this),
             thislist = this_switch.closest("li"),
             thisliwrap = this_switch.closest(".liwrap"),
-            thiscurrency = thisliwrap.attr("data-currency");
+            thiscurrency = thisliwrap.attr("data-currency"),
+            warning = thislist.data("warning");
         if (this_switch.hasClass("true")) {
-	         thislist.data("selected", false).find("p").html("false");
-	         this_switch.removeClass("true").addClass("false");
-	         save_cc_settings(thiscurrency, false);
+	        var xresult = true;
+	        if (warning) {
+	        	var xresult = confirm("Are you sure you want to generate new " + thiscurrency + " addresses? they may not show up in some wallets.");
+        	}
+        	if (xresult === true) {
+	        	thislist.data("selected", false).find("p").html("false");
+				this_switch.removeClass("true").addClass("false");
+				save_cc_settings(thiscurrency, false);
+			}
         } else {
             var result = confirm("Are you sure you want to reuse " + thiscurrency + " addresses?");
             if (result === true) {
