@@ -1386,6 +1386,7 @@ html.dragmode .currentpage .applist li.dragging {
 }
 
 .transactionlist li span.tx_val {
+	display:inline-block;
     float: right;
     font-weight: 700;
     cursor: pointer;
@@ -1411,6 +1412,7 @@ html.dragmode .currentpage .applist li.dragging {
 
 .txli_conf {
     position: relative;
+    display: inline-block;
     background-color: rgba(0, 0, 0, 0.4);
     font-size: 70%;
     font-weight: 700;
@@ -1418,9 +1420,9 @@ html.dragmode .currentpage .applist li.dragging {
     margin-left: 0.75em;
     color: #FFF;
     border-radius: 1em;
-    display: inline-block;
     overflow: hidden;
     -webkit-transform: translate3d(0, 0, 0);
+    vertical-align: top;
 }
 
 .txli_conf .confbar {
@@ -1442,7 +1444,7 @@ html.dragmode .currentpage .applist li.dragging {
     transition: transform 500ms ease-out;
 }
 
-.txli_conf>span {
+.txli_conf > span {
     position: relative;
     display: inline-block;
 }

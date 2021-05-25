@@ -72,6 +72,14 @@ var multi_wallets = {
             "playstore": "https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp",
             "desktop": "https://trustwallet.com",
             "seed": true
+        },
+        "atomicwallet": {
+            "name": "atomicwallet",
+            "website": "https://atomicwallet.io",
+            "appstore": "https://apps.apple.com/app/id1478257827",
+            "playstore": "https://play.google.com/store/apps/details?id=io.atomicwallet",
+            "desktop": "https://atomicwallet.io/#download-section-anchor",
+            "seed": true
         }
 
     },
@@ -198,8 +206,8 @@ var multi_wallets = {
                         },
                         {
                             "name": "blockchain.info websocket",
-                            "url": "wss://ws.blockchain.info/inv/",
-                            "display": false
+                            "url": "wss://ws.blockchain.info/inv",
+                            "display": true
                         }
                     ]
                 },
@@ -820,6 +828,112 @@ var multi_wallets = {
                     "selected": "BIP32 key generation",
                 }
             }
+        },
+        {
+        
+        	"currency": "bitcoin-cash",
+	    	"active": true,
+            "data": {
+                "currency": "bitcoin-cash",
+                "ccsymbol": "bch",
+                "cmcid": 1831,
+                "urlscheme": function(payment, address, amount, iszero) {
+                    return bch_urlscheme(payment, address, amount, iszero);
+                },
+                "address_regex": "(q|p)[a-z0-9]{41}"
+            },
+            "wallets": {
+	            "wallet_download_page": "https://bch.info/en/wallets",
+                "wallets": [
+                    multi_wallets.exodus,
+                    multi_wallets.coinomi,
+                    multi_wallets.trezor,
+                    multi_wallets.ledger,
+                    multi_wallets.trustwallet,
+                    multi_wallets.atomicwallet
+                ]
+            },
+            "settings": {
+                "confirmations": {
+                    "icon": "clock",
+                    "selected": 0
+                },
+                "Use random address": {
+                    "icon": "dice",
+                    "selected": false,
+                    "switch": true,
+                },
+                "Reuse address": {
+                    "icon": "recycle",
+                    "selected": false,
+                    "switch": true,
+                    "custom_switch": true
+                },
+                "blockexplorers": {
+                    "icon": "eye",
+                    "selected": "blockchain.com",
+                    "options": {
+                        "key1": "blockchain.com",
+                        "key2": "blockchair.com"
+                    }
+                },
+                "apis": {
+                    "icon": "sphere",
+                    "selected": {
+                        "name": "blockchair",
+                            "url": "blockchair.com",
+                            "api": true,
+                            "display": false
+                    },
+                    "apis": [{
+                            "name": "blockchair",
+                            "url": "blockchair.com",
+                            "api": true,
+                            "display": false
+                        }
+                    ],
+                    "options": [],
+                    "rpc_test_command": {
+                        "method": "getblockchaininfo"
+                    }
+                },
+                "websockets": {
+                    "icon": "tab",
+                    "selected": {
+                        "name": "blockchain.info websocket",
+                        "url": "wss://ws.blockchain.info/bch/inv",
+                        "display": true
+                    },
+                    "apis": [{
+                        "name": "blockchain.info websocket",
+                        "url": "wss://ws.blockchain.info/bch/inv",
+                        "display": true
+                    }],
+					"options": []
+                },
+                "Xpub": {
+                    "active": true,
+                    "xpub": true,
+                    "icon": "key",
+                    "switch": true,
+                    "custom_switch": true,
+                    "selected": false,
+                    "key": null,
+                    "root_path": "m/44'/145'/0'/0/",
+                    "prefix": {
+                        "pub": 0,
+                        "pubx": 76067358,
+                        "privx": 76066276
+                    },
+                    "pk_vbytes": {
+                        "wif": 128
+                    }
+                },
+                "Key derivations": {
+                    "icon": "cog",
+                    "selected": "BIP32 key generation",
+                }
+            }
         }
     ]
     
@@ -1258,4 +1372,8 @@ var abi_default = [{
 
 function btc_urlscheme(payment, address, amount, iszero) {
     return payment + ":" + address + ((iszero === true) ? "" : "?amount=" + amount);
+}
+
+function bch_urlscheme(payment, address, amount, iszero) {
+    return "bitcoincash:" + address + ((iszero === true) ? "" : "?amount=" + amount);
 }

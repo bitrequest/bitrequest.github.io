@@ -9,7 +9,8 @@ var test_phrase = "army van defense carry jealous true garbage claim echo media 
 	    "dogecoin": true,
 	    "nano": true,
 	    "monero": true,
-	    "ethereum": true
+	    "ethereum": true,
+	    "bitcoin-cash": true
     },
     can_xpub = {
 	    "bitcoin": true,
@@ -17,7 +18,8 @@ var test_phrase = "army van defense carry jealous true garbage claim echo media 
 	    "dogecoin": true,
 	    "nano": false,
 	    "monero": false,
-	    "ethereum": true
+	    "ethereum": true,
+	    "bitcoin-cash": true
     };
 
 $(document).ready(function() {
@@ -177,15 +179,20 @@ function test_bip39() {
         test_derive = false;
     }
     if (toseed(test_phrase) != expected_seed || test_derivation() === false) {
-	    derive_fail(["bitcoin","litecoin","dogecoin","ethereum"]);
+	    derive_fail(["bitcoin","litecoin","dogecoin","ethereum","bitcoin-cash"]);
 	    c_derive.bitcoin = false,
         c_derive.litecoin = false,
         c_derive.dogecoin = false,
-        c_derive.ethereum = false;
+        c_derive.ethereum = false,
+        c_derive["bitcoin-cash"] = false;
     }
     if (bech32_check() === false) { // test for bech32 Derivation
 	    derive_fail(["bitcoin"]);
         c_derive.bitcoin = false;
+    }
+    if (cashaddr_check() === false) { // test for BCH cashaddr Derivation
+	    derive_fail(["bitcoin-cash"]);
+        c_derive["bitcoin-cash"] = false;
     }
     if (nano_check() === false) { // test for nano Derivation
 	    derive_fail(["nano"]);
@@ -197,10 +204,11 @@ function test_bip39() {
     }
     // check xpub derivation
     if (xpub_check() === false) { // test for btc xpub derivation
-	    derive_xpub_fail(["bitcoin","litecoin","dogecoin"]);
+	    derive_xpub_fail(["bitcoin","litecoin","dogecoin","bitcoin-cash"]);
 	    can_xpub.bitcoin = false,
         can_xpub.litecoin = false,
-        can_xpub.dogecoin = false;
+        can_xpub.dogecoin = false,
+        can_xpub["bitcoin-cash"] = false;
     }
     if (eth_xpub_check() === false) { // test for ethereum xpub derivation
 	    derive_xpub_fail(["ethereum"]);
@@ -255,6 +263,16 @@ function bech32_check() {
     return false;
 }
 
+function cashaddr_check() {
+    var bch_legacy = "1AVPurYZinnctgGPiXziwU6PuyZKX5rYZU",
+        expected_bch_cashaddr = "qp5p0eur784pk8wxy2kzlz3ctnq5whfnuqqpp78u22",
+        bch_cashaddr = pub_to_cashaddr(bch_legacy);
+    if (expected_bch_cashaddr == bch_cashaddr) {
+        return true;
+    }
+    return false;
+}
+
 function nano_check() {
     var expected_nano_address = "nano_1mbtirc4x3kixfy5wufxaqakd3gbojpn6gpmk6kjiyngnjwgy6yty3txgztq",
         xnano_address = NanocurrencyWeb.wallet.accounts(expected_seed, 0, 0)[0].address;
@@ -304,7 +322,7 @@ function eth_xpub_check() {
 // Check derivationsn
 
 function check_derivations(currency) {
-    if (test_derive === true && c_derive[currency]) {
+	if (test_derive === true && c_derive[currency]) {
         var activepub = active_xpub(currency);
         if (can_xpub[currency] && activepub) {
             return "xpub";
@@ -1385,7 +1403,11 @@ function format_keys(seed, key_object, bip32, index, coin) {
             } else {
                 ko.address = pub_to_address(vb, pubkey);
             }
-        } 
+        }
+        else if (coin == "bitcoin-cash") {
+	        var legacybch = pub_to_address(vb, pubkey);
+            ko.address = pub_to_cashaddr(legacybch);
+        }
         else {
             ko.address = pub_to_address(vb, pubkey);
         }

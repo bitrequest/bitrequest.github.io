@@ -35,6 +35,9 @@ function init_socket(socket_node, address) {
         } else if (payment == "litecoin" || payment == "dogecoin") {
             closesocket();
             blockcypher_websocket(socket_node, address);
+        } else if (payment == "bitcoin-cash") {
+            closesocket();
+            blockchain_bch_socket(socket_node, address);
         } else if (payment == "nano") {
             closesocket();
             nano_socket(socket_node, address);
@@ -180,20 +183,17 @@ function blockchain_btc_socket(socket_node, thisaddress) {
         }, 3500);
         console.log("Connected: " + provider + "/" + thisaddress);
         var ping_event = JSON.stringify({
-            op: "addr_sub",
-            addr: thisaddress
+            "op": "addr_sub",
+            "addr": thisaddress
         });
-        console.log(ping_event);
         websocket.send(ping_event);
         ping = setInterval(function() {
             websocket.send(ping_event);
         }, 55000);
     };
     websocket.onmessage = function(e) {
-        console.log(e);
-        var json = JSON.parse(e.data).x
-        txhash = json.hash;
-        console.log(json);
+        var json = JSON.parse(e.data).x,
+        	txhash = json.hash;
         if (txhash) {
             if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
                 paymentdialogbox.removeClass("transacting");
@@ -202,13 +202,54 @@ function blockchain_btc_socket(socket_node, thisaddress) {
                 closesocket();
                 popdialog(content, "alert", "canceldialog");
             } else {
-                txid = txhash;
-                closesocket();
-                var txd = blockcypher_poll_data(json, request.set_confirmations, request.currencysymbol, thisaddress);
-                pick_monitor(txhash, txd);
+                var txd = blockchain_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress);
+                if (txd) {
+	                txid = txhash;
+		            closesocket();
+		            pick_monitor(txhash, txd);
+	            }
             }
         }
 
+    };
+    websocket.onclose = function(e) {
+        chainstate("Connection ended");
+        console.log("Disconnected");
+        txid = null;
+    };
+    websocket.onerror = function(e) {
+        handle_socket_fails(socket_node, "blockchain.info", thisaddress, e.data)
+        return false;
+    };
+}
+
+function blockchain_bch_socket(socket_node, thisaddress) {
+    var provider = socket_node.url,
+    	legacy = bchutils.toLegacyAddress(thisaddress);
+    websocket = new WebSocket(provider);
+    websocket.onopen = function(e) {
+        setTimeout(function() {
+            chainstate("Monitoring address");
+        }, 3500);
+        console.log("Connected: " + provider + "/" + legacy);
+        var ping_event = JSON.stringify({
+            "op": "unconfirmed_sub"
+        });
+        websocket.send(ping_event);
+        ping = setInterval(function() {
+        	websocket.send(ping_event);
+        }, 55000);
+    };
+    websocket.onmessage = function(e) {
+        var json = JSON.parse(e.data).x,
+        	txhash = json.hash;
+        if (txhash) {
+	        var txd = blockchain_ws_bch_data(json, request.set_confirmations, request.currencysymbol, legacy);
+            if (txd) {
+	            closesocket();
+	            pick_monitor(txhash, txd);
+            }
+        }
     };
     websocket.onclose = function(e) {
         chainstate("Connection ended");
@@ -281,13 +322,13 @@ function nano_socket(socket_node, thisaddress) {
         }, 3500);
         console.log("Connected: " + provider);
         var ping_event = JSON.stringify({
-            action: "subscribe",
-            topic: "confirmation",
-            all_local_accounts: true,
-            options: {
-                accounts: [address_mod]
+            "action": "subscribe",
+            "topic": "confirmation",
+            "all_local_accounts": true,
+            "options": {
+                "accounts": [address_mod]
             },
-            ack: true
+            "ack": true
         });
         websocket.send(ping_event);
         ping = setInterval(function() {
@@ -385,10 +426,10 @@ function web3_erc20_websocket(socket_node, thisaddress) {
         }, 3500);
         console.log("Connected: " + provider_url);
         var ping_event = JSON.stringify({
-            jsonrpc: "2.0",
-            id: 1,
-            method: "eth_subscribe",
-            params: [
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "eth_subscribe",
+            "params": [
                 "logs",
                 {
                     "address": request.token_contract,

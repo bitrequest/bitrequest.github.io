@@ -31,7 +31,7 @@ function api_monitor_init(api_data, txhash, tx_data) {
 }
 
 function api_monitor(api_data, txhash, tx_data) {
-    var direct = (tx_data !== undefined),
+	var direct = (tx_data !== undefined),
         payment = request.payment,
         api_name = api_data.name,
         currencysymbol = request.currencysymbol,
@@ -44,13 +44,20 @@ function api_monitor(api_data, txhash, tx_data) {
             (api_name == "blockchair") ? (request.erc20 === true) ? "ethereum/dashboards/transaction/" + txhash + "?erc_20=true" : payment + "/dashboards/transaction/" + txhash : "";
         if (direct === true) {
             confirmations(tx_data, true);
-            pingtx = setInterval(function() {
-                api_proxy(ampl(api_name, poll_url)).done(function(e) {
-                    api_result(br_result(e));
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    api_error(jqXHR, textStatus, errorThrown);
-                });
-            }, 25000);
+            var xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
+            	setconfirmations = tx_data.setconfirmations,
+				zero_conf = (xconf === false || setconfirmations == 0 || setconfirmations == "undefined" || setconfirmations === undefined);
+			if (zero_conf) {
+			}
+			else {
+				pingtx = setInterval(function() {
+	                api_proxy(ampl(api_name, poll_url)).done(function(e) {
+	                    api_result(br_result(e));
+	                }).fail(function(jqXHR, textStatus, errorThrown) {
+	                    api_error(jqXHR, textStatus, errorThrown);
+	                });
+	            }, 25000);
+			}
         } else {
             api_proxy(ampl(api_name, poll_url)).done(function(e) {
                 api_result(br_result(e));
@@ -350,14 +357,14 @@ function confirmations(tx_data, direct) {
         return false;
     }
     var brstatuspanel = $("#paymentdialogbox .brstatuspanel"),
-        setconfirmations = tx_data.setconfirmations,
+        setconfirmations = (tx_data.setconfirmations) ? parseInt(tx_data.setconfirmations) : null,
         conf_text = (setconfirmations) ? setconfirmations.toString() : "",
         confbox = brstatuspanel.find("span.confbox"),
         confboxspan = confbox.find("span"),
         currentconf = parseFloat(confboxspan.attr("data-conf")),
         xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
         txhash = tx_data.txhash,
-        zero_conf = (xconf === false || setconfirmations === 0 || setconfirmations == "undefined" || setconfirmations === undefined);
+        zero_conf = (xconf === false || setconfirmations == 0 || setconfirmations == "undefined" || setconfirmations === undefined);
     brstatuspanel.find("span#confnumber").text(conf_text);
     if (xconf > currentconf || zero_conf === true || direct === true) {
         sessionStorage.removeItem("bitrequest_txstatus"); // remove cached historical exchange rates
@@ -395,7 +402,12 @@ function confirmations(tx_data, direct) {
             if (xconf >= setconfirmations || zero_conf === true) {
                 clearpingtx();
                 closesocket();
-                playsound(cashier);
+                if (request.payment == "dogecoin") {
+	                playsound(howl);
+                }
+                else {
+	                playsound(cashier);
+                }
                 paymentdialogbox.addClass("transacting").attr("data-status", "paid");
                 var confirmationtext = (requesttype === "incoming") ? "Payment sent" : "Payment received";
                 brheader.text(confirmationtext);

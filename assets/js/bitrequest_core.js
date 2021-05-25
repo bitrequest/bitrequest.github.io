@@ -13,6 +13,7 @@ var language = navigator.language || navigator.userLanguage,
     cashier = $("#cashier"), // cashier sound effect
     blip = $("#blip"), // blip sound effect
     waterdrop = $("#waterdrop"), // waterdrop sound effect
+    howl = $("#howl"), // howl sound effect
     timezoneoffset = new Date().getTimezoneOffset(),
     timezone = timezoneoffset * 60000,
     scrollposition = 0,
@@ -1798,7 +1799,7 @@ function addcurrency(cd) {
 }
 
 function derive_first_check(currency) {
-    if (hasbip32(currency) === true) {
+	if (hasbip32(currency) === true) {
         var derives = check_derivations(currency);
         if (derives) {
             var has_derives = active_derives(currency, derives);
@@ -2220,9 +2221,15 @@ function check_address(address, currency) {
     if (currency == "ethereum" && web3 === undefined) {
         return "no_web3";
     }
-    var regex = getcoindata(currency).regex;
-    return (currency == "ethereum" || regex == "web3") ? (web3) ? web3.utils.isAddress(address) : false :
-        (regex) ? new RegExp(regex).test(address) : false;
+    var regex = getcoindata(currency).regex,
+    	check_result = false;
+    if (currency == "ethereum" || regex == "web3") {
+	    var check_result = (web3) ? web3.utils.isAddress(address) : false;
+    }
+    else {
+		var check_result = (regex) ? new RegExp(regex).test(address) : false;
+	}
+    return check_result;
 }
 
 function check_vk(vk) {
@@ -3799,7 +3806,6 @@ function append_coinsetting(currency, settings, init) {
 }
 
 function appendaddress(currency, ad) {
-	console.log(ad);
 	var address = ad.address,
         pobox = get_addresslist(currency),
         index = pobox.children("li").length + 1,

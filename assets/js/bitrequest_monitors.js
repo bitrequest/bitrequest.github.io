@@ -94,7 +94,8 @@ function get_requeststates(trigger) {
                             if (pendingstatus == "scanning" || pendingstatus == "polling") {
                                 var ccsymbol = thisdata.currencysymbol,
                                     getconfirmations = thisdata.set_confirmations,
-                                    setconfirmations = (getconfirmations) ? getconfirmations : 1, // set minimum confirmations to 1
+                                    getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
+									setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
                                     statuspanel = thislist.find(".pmetastatus"),
                                     transactionlist = thislist.find(".transactionlist");
                                 statuspanel.text(value.status);
@@ -195,7 +196,8 @@ function get_api_inputs(rd, api_data, api_name) {
             request_timestamp = requestdate - 30000, // 30 seconds compensation for unexpected results
             ccsymbol = rd.currencysymbol,
             getconfirmations = rd.set_confirmations,
-            setconfirmations = (getconfirmations) ? getconfirmations : 1, // set minimum confirmations to 1
+            getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
+			setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
             statuspanel = thislist.find(".pmetastatus"),
             transactionlist = thislist.find("ul.transactionlist"),
             transactionhash = rd.txhash,
@@ -566,14 +568,16 @@ function get_api_inputs(rd, api_data, api_name) {
 	                        var txd;
 	                        if (api_name == "blockchair") {
 	                            var context = data.context;
-	                            if (context.error) {
-	                                tx_api_fail(thislist, statuspanel);
-	                                handle_api_fails(rd, context, api_name, payment);
-	                            } else {
-	                                var latestblock = context.state;
-	                                var txd = (erc20 === true) ? blockchair_erc20_poll_data(data.data[transactionhash], setconfirmations, ccsymbol, latestblock) :
-	                                    (payment == "ethereum") ? blockchair_eth_scan_data(data.data[transactionhash].calls[0], setconfirmations, ccsymbol, latestblock) :
-	                                    blockchair_scan_data(data.data[transactionhash], setconfirmations, ccsymbol, address, latestblock);
+	                            if (context) {
+		                            if (context.error) {
+		                                tx_api_fail(thislist, statuspanel);
+		                                handle_api_fails(rd, context, api_name, payment);
+		                            } else {
+		                                var latestblock = context.state,
+		                                	txd = (erc20 === true) ? blockchair_erc20_poll_data(data.data[transactionhash], setconfirmations, ccsymbol, latestblock) :
+		                                    (payment == "ethereum") ? blockchair_eth_scan_data(data.data[transactionhash].calls[0], setconfirmations, ccsymbol, latestblock) :
+		                                    blockchair_scan_data(data.data[transactionhash], setconfirmations, ccsymbol, address, latestblock);
+		                            }
 	                            }
 	                        } else {
 	                            if (data.error) {
@@ -585,7 +589,7 @@ function get_api_inputs(rd, api_data, api_name) {
 	                            }
 	                        }
 	                        if (txd) {
-	                            if (txd.ccval !== undefined) {
+		                        if (txd.ccval !== undefined) {
 	                                var tx_listitem = append_tx_li(txd, thislist);
 	                                if (tx_listitem) {
 	                                    transactionlist.append(tx_listitem.data(txd));
@@ -763,8 +767,9 @@ function get_rpc_inputs(rd, rpc_data) {
             pending = rd.pending,
             request_timestamp = requestdate - 30000, // 30 seconds compensation for unexpected results
             ccsymbol = rd.currencysymbol,
-            getconfirmations = rd.set_confirmations,
-            setconfirmations = (getconfirmations) ? getconfirmations : 1, // set minimum confirmations to 1
+            getconfirmations = rd.set_confirmations
+            getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
+			setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
             statuspanel = thislist.find(".pmetastatus"),
             transactionlist = thislist.find("ul.transactionlist"),
             transactionhash = rd.txhash,
@@ -1090,7 +1095,7 @@ function append_tx_li(txd, this_request) {
             set_ccsymbol = (ccsymbol) ? ccsymbol.toUpperCase() : "",
             date_format = (transactiontime) ? short_date(transactiontime) : "",
             confspan = (confirmations === false) ? "" :
-            (!confirmations || confirmations <= 0) ? "<div class='txli_conf' title='Unconfirmed transaction'><div class='confbar'></div><span>Unconfirmed transaction</div></div>" :
+            (!confirmations || confirmations <= 0) ? "<div class='txli_conf' title='Unconfirmed transaction'><div class='confbar'></div><span>Unconfirmed transaction</span></div>" :
             (confirmations > 0) ? "<div class='txli_conf' title='" + confirmations + " confirmations'><div class='confbar'></div><span>" + confirmations + " / " + setconfirmations + " confirmations</span></div>" : "",
             tx_listitem = $("<li><div class='txli_content'>" + date_format + confspan + "<span class='tx_val'> + " + ccval_rounded + " " + set_ccsymbol + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>"),
             historic = txd.historic;
@@ -1151,7 +1156,8 @@ function compareamounts(rd) {
         ccsymbol = rd.currencysymbol,
         pendingstatus = rd.pending,
         getconfirmations = rd.set_confirmations,
-        setconfirmations = (getconfirmations) ? getconfirmations : 1, // set minimum confirmations to 1
+        getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
+        setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
         requestli = $("#" + thisrequestid),
         firstlist = requestli.find(".transactionlist li:first"),
         lastlist = requestli.find(".transactionlist li:last"),
@@ -1345,7 +1351,8 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
             var latestconf = rd.latestconf,
                 thisamount = rd.amount,
                 getconfirmations = rd.set_confirmations,
-                setconfirmations = (getconfirmations) ? getconfirmations : 1, // set minimum confirmations to 1
+                getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
+				setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
                 pending = rd.pending,
                 iserc20 = rd.erc20,
                 requestli = $("#" + thisrequestid),

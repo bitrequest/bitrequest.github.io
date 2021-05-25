@@ -393,3 +393,9 @@ function aes_dec(content, keyst) {
         return false;
     }
 }
+
+// CashAddr
+
+function pub_to_cashaddr(legacy) {
+	return bchutils.toCashAddress(legacy).split(":")[1];
+}
