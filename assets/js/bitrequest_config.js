@@ -163,30 +163,36 @@ var multi_wallets = {
                     "selected": "blockchain.com",
                     "options": {
                         "key1": "blockchain.com",
-                        "key2": "blockchair.com"
+                        "key2": "blockchair.com",
+                        "key3": "bitcoin.com"
                     }
                 },
                 "apis": {
                     "icon": "sphere",
                     "selected": {
+                        "name": "bitcoin.com",
+                        "url": "bitcoin.com",
+                        "api": true,
+                        "display": true
+                    },
+                    "apis": [{
+                        "name": "bitcoin.com",
+                        "url": "bitcoin.com",
+                        "api": true,
+                        "display": true
+                    },
+                    {
                         "name": "blockcypher",
                         "url": "blockcypher.com",
                         "api": true,
                         "display": true
                     },
-                    "apis": [{
-                            "name": "blockcypher",
-                            "url": "blockcypher.com",
-                            "api": true,
-                            "display": true
-                        },
-                        {
-                            "name": "blockchair",
-                            "url": "blockchair.com",
-                            "api": true,
-                            "display": false
-                        }
-                    ],
+                    {
+                        "name": "blockchair",
+                        "url": "blockchair.com",
+                        "api": true,
+                        "display": false
+                    }],
                     "options": [],
                     "rpc_test_command": {
                         "method": "getblockchaininfo"
@@ -874,24 +880,30 @@ var multi_wallets = {
                     "selected": "blockchain.com",
                     "options": {
                         "key1": "blockchain.com",
-                        "key2": "blockchair.com"
+                        "key2": "blockchair.com",
+                        "key3": "bitcoin.com"
                     }
                 },
                 "apis": {
                     "icon": "sphere",
                     "selected": {
-                        "name": "blockchair",
-                            "url": "blockchair.com",
+                        "name": "bitcoin.com",
+                            "url": "bitcoin.com",
                             "api": true,
                             "display": false
                     },
                     "apis": [{
-                            "name": "blockchair",
-                            "url": "blockchair.com",
-                            "api": true,
-                            "display": false
-                        }
-                    ],
+                        "name": "bitcoin.com",
+                        "url": "bitcoin.com",
+                        "api": true,
+                        "display": true
+                    },
+                    {
+                        "name": "blockchair",
+                        "url": "blockchair.com",
+                        "api": true,
+                        "display": false
+                    }],
                     "options": [],
                     "rpc_test_command": {
                         "method": "getblockchaininfo"
@@ -1192,6 +1204,15 @@ var apis = [{
         "sign_up": "https://blockchair.com/api"
     },
     {
+        "name": "bitcoin.com",
+        "base_url": "https://explorer.api.bitcoin.com/",
+        // for now no api key needed yet
+        // "key_param": "key=",
+        "key_param": null,
+        "api_key": null,
+        "sign_up": "https://explorer.api.bitcoin.com/docs/bch/v1/"
+    },
+    {
         "name": "coinmarketcap",
         "base_url": "https://pro-api.coinmarketcap.com/v1/",
         "key_param": "CMC_PRO_API_KEY=",
@@ -1296,6 +1317,13 @@ var blockexplorers = [{
         "url": "https://www.blockchair.com/",
         "prefix": "currency",
         "tx_prefix": "transaction/",
+        "address_prefix": "address/"
+    },
+    {
+        "name": "bitcoin.com",
+        "url": "https://explorer.bitcoin.com/",
+        "prefix": "currencysymbol",
+        "tx_prefix": "tx/",
         "address_prefix": "address/"
     },
     {

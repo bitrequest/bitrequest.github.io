@@ -233,7 +233,8 @@ function blockchain_bch_socket(socket_node, thisaddress) {
         }, 3500);
         console.log("Connected: " + provider + "/" + legacy);
         var ping_event = JSON.stringify({
-            "op": "unconfirmed_sub"
+            "op": "addr_sub",
+            "addr": legacy
         });
         websocket.send(ping_event);
         ping = setInterval(function() {
@@ -244,7 +245,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
         var json = JSON.parse(e.data).x,
         	txhash = json.hash;
         if (txhash) {
-	        var txd = blockchain_ws_bch_data(json, request.set_confirmations, request.currencysymbol, legacy);
+	        var txd = blockchain_ws_data(json, request.set_confirmations, request.currencysymbol, legacy);
             if (txd) {
 	            closesocket();
 	            pick_monitor(txhash, txd);

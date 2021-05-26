@@ -12,6 +12,8 @@ function default_tx_data() {
 
 // Collect transactiondata and return unified object
 
+// blockchain.info
+
 function blockchain_ws_data(data, setconfirmations, ccsymbol, address) { // poll blockchain.info websocket data
     if (data) {
         var outputs = data.out,
@@ -42,47 +44,7 @@ function blockchain_ws_data(data, setconfirmations, ccsymbol, address) { // poll
     }
 }
 
-function blockchain_ws_bch_data(data, setconfirmations, ccsymbol, address) { // poll blockchain.info websocket data
-    if (data) {
-        var outputs = data.out,
-            outputsum,
-            bch_detect = false;
-        if (outputs) {
-	        $.each(outputs, function(dat, value) {
-	            if (address == value.addr) {
-		            bch_detect = true;
-		            return false;
-	            }
-            });
-            if (bch_detect === true) {
-	        	var outputsum = 0;
-	            $.each(outputs, function(dat, value) {
-		            if (address == value.addr) {
-			            outputsum += value.value || 0; // sum of outputs
-		            }
-	            });
-	            var transactiontime = (data.time) ? data.time * 1000 : null,
-	            	transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
-		        return {
-		            "ccval": (outputsum) ? outputsum / 100000000 : null,
-		            "transactiontime": transactiontimeutc,
-		            "txhash": data.hash,
-		            "confirmations": (data.confirmations) ? data.confirmations : null,
-		            "setconfirmations": setconfirmations,
-		            "ccsymbol": ccsymbol
-		        };
-		    }
-		    else {
-		        return false;
-	        }
-        }
-        else {
-	        return false;
-        }
-    } else {
-        return default_tx_data();
-    }
-}
+// blockcypher
 
 function blockcypher_scan_data(data, setconfirmations, ccsymbol) { // scan
     if (data) {
@@ -139,6 +101,48 @@ function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) { // p
         return default_tx_data();
     }
 }
+
+
+//bitcoin.com
+
+function bitcoincom_scan_data(data, setconfirmations, ccsymbol, legacy, address) { // bitcoin.com api
+    if (data) {
+        var outputs = data.vout,
+        	outputsum;
+        if (outputs) {
+            var outputsum = 0;
+            $.each(outputs, function(dat, value) {
+	            var pubdat = value.scriptPubKey;
+	            if (pubdat) {
+		            var addr_arrr = pubdat.addresses;
+		            if (addr_arrr) {
+			            var addrstr = addr_arrr.toString();
+			            if (addrstr.indexOf(legacy) > -1 || addrstr.indexOf(address) > -1) {
+				            outputsum += value.value * 100000000 || 0; // sum of outputs
+			            }
+			        }
+	            }
+            });
+            var transactiontime = (data.time) ? data.time * 1000 : null,
+		    	transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
+	        return {
+	            "ccval": (outputsum) ? outputsum / 100000000 : null,
+	            "transactiontime": transactiontimeutc,
+	            "txhash": data.txid,
+	            "confirmations": (data.confirmations) ? data.confirmations : null,
+	            "setconfirmations": setconfirmations,
+	            "ccsymbol": ccsymbol
+	        };
+        }
+        else {
+		    return false;
+	    }   
+    } else {
+        return default_tx_data();
+    }
+}
+
+// blockchair
 
 function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestblock) { // scan/poll
 	if (data) {
@@ -237,6 +241,8 @@ function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latestbloc
         return default_tx_data();
     }
 }
+
+// ethplorer
 
 function ethplorer_scan_data(data, setconfirmations, ccsymbol) { // scan
     if (data) {

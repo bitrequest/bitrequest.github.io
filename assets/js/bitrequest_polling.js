@@ -36,12 +36,14 @@ function api_monitor(api_data, txhash, tx_data) {
         api_name = api_data.name,
         currencysymbol = request.currencysymbol,
         set_confirmations = request.set_confirmations;
+    console.log(api_name);
     if (api_name === false) {
         console.log("No API selected");
     } else {
         var poll_url = (api_name == "blockcypher") ? currencysymbol + "/main/txs/" + txhash :
             (api_name == "ethplorer") ? "getTxInfo/" + txhash :
-            (api_name == "blockchair") ? (request.erc20 === true) ? "ethereum/dashboards/transaction/" + txhash + "?erc_20=true" : payment + "/dashboards/transaction/" + txhash : "";
+            (api_name == "blockchair") ? (request.erc20 === true) ? "ethereum/dashboards/transaction/" + txhash + "?erc_20=true" : payment + "/dashboards/transaction/" + txhash :
+            (api_name == "bitcoin.com") ? currencysymbol + "/v1/tx/" + txhash : "";
         if (direct === true) {
             confirmations(tx_data, true);
             var xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
@@ -81,13 +83,13 @@ function api_monitor(api_data, txhash, tx_data) {
                 return false;
             } else {
                 var currentaddress = geturlparameters().address,
+                	legacy = (currencysymbol == "bch") ? bchutils.toLegacyAddress(currentaddress) : currentaddress;
                     txd = (api_name == "blockcypher") ? blockcypher_poll_data(data, set_confirmations, currencysymbol, currentaddress) :
                     (api_name == "ethplorer") ? ethplorer_poll_data(data, set_confirmations, currencysymbol) :
-                    (api_name == "blockchair") ?
-                    (request.erc20 === true) ? blockchair_erc20_poll_data(data.data[txhash], set_confirmations, currencysymbol, data.context.state) :
+                    (api_name == "bitcoin.com") ? bitcoincom_scan_data(data, set_confirmations, currencysymbol, legacy, currentaddress) :
+                    (api_name == "blockchair") ? (request.erc20 === true) ? blockchair_erc20_poll_data(data.data[txhash], set_confirmations, currencysymbol, data.context.state) :
                     (payment == "ethereum") ? blockchair_eth_scan_data(data.data[txhash].calls[0], set_confirmations, currencysymbol, data.context.state) :
-                    blockchair_scan_data(data.data[txhash], set_confirmations, currencysymbol, currentaddress, data.context.state) :
-                    false;
+                    blockchair_scan_data(data.data[txhash], set_confirmations, currencysymbol, currentaddress, data.context.state) : false;
                 confirmations(txd);
             }
         };
@@ -352,6 +354,7 @@ function handle_rpc_monitor_fails(rpcdata, error, txhash) {
 }
 
 function confirmations(tx_data, direct) {
+	console.log(tx_data);
 	clearTimeout(request_timer);
 	if (tx_data === false || tx_data.ccval === undefined) {
         return false;
