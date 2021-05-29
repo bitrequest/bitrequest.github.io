@@ -449,7 +449,7 @@ function manage_bip32(dat) {
         	<h2><span class='icon-warning' style='color:#B33A3A'></span>Disclaimer!</h2>\
         	<div class='popnotify'></div>\
         	<form class='popform'>\
-        		<div class='inputwrap'><p>Funds recieved from addresses generated fom your Bip39 secret passphrase can not be spend by Bitrequest.<br/>To spend your funds you wil have to import your seed phrase in a <a href='https://www.bitrequest.io/compatible-wallets' target='_blank' class='ref'>Bip39 compatible wallet.</a></p></div>\
+        		<div class='inputwrap'><p>Funds received from addresses generated fom your Bip39 secret passphrase can not be spend by Bitrequest.<br/>To spend your funds you wil have to import your seed phrase in a <a href='https://www.bitrequest.io/compatible-wallets' target='_blank' class='ref'>Bip39 compatible wallet.</a></p></div>\
         		<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I understand and am ok with this.</span></div>\
         		<input type='submit' class='submit' value='OK'></form></div>").data(data);
         if($("#option_makeseed").length) {
