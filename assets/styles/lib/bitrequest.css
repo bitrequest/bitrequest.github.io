@@ -40,21 +40,6 @@ html.zoomframe #br_framebox {
     backdrop-filter: blur(6px);
 }
 
-.br_close_overlay {
-    position: absolute;
-    top: 0;
-    right: 0;
-    font-family: inherit;
-    font-size: 25px;
-    font-weight: 400;
-    color: #FFF;
-    padding: 0.5em 0.8em;
-    background-color: rgba(0, 0, 0, 0.7);
-    border-left: 1px solid #474747;
-    border-bottom: 1px solid #474747;
-    cursor: pointer;
-}
-
 #br_loadbox {
     position: fixed;
     top: 0;

@@ -2364,6 +2364,7 @@ function cpd_pollcheck() {
 
 function cancelpaymentdialog() {
 	if (html.hasClass("hide_app")) {
+		closeloader();
 		parent.postMessage("close_request", "*");
         return false;
     }

@@ -22,7 +22,7 @@ function checkout() {
 }
 
 function append_iframe(framesrc) {
-    $("body").append("<div id='br_framebox'><iframe src='" + framesrc + "'></iframe><div id='br_closeframe' class='br_close_overlay'>Close</div></div><div id='br_loadbox'><div id='br_loadpanel'><div id='br_loader'></div><p>Loading request...</p></div></div>");
+    $("body").append("<div id='br_framebox'><iframe src='" + framesrc + "'></iframe></div><div id='br_loadbox'><div id='br_loadpanel'><div id='br_loader'></div><p>Loading request...</p></div></div>");
     iframe_loaded();
 }
 
@@ -57,12 +57,6 @@ function result_callback(post_data) {
 
 function showframe() {
     $("html").addClass("showframe zoomframe");
-}
-
-function closeframe_trigger() {
-    $(document).on("click", "#br_closeframe", function() {
-        closeframe_confirm();
-    });
 }
 
 function closeframe_confirm() {
