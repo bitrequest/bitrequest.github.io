@@ -890,7 +890,7 @@ var multi_wallets = {
                         "name": "bitcoin.com",
                             "url": "bitcoin.com",
                             "api": true,
-                            "display": false
+                            "display": true
                     },
                     "apis": [{
                         "name": "bitcoin.com",

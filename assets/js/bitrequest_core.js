@@ -39,7 +39,8 @@ var language = navigator.language || navigator.userLanguage,
     bipv,
     bipobj = localStorage.getItem("bitrequest_bpdat"),
     hasbip = (bipobj) ? true : false,
-    bipid = (hasbip) ? JSON.parse(atob(JSON.parse(bipobj).dat)).pid : false;
+    bipid = (hasbip) ? JSON.parse(atob(JSON.parse(bipobj).dat)).pid : false,
+    safety_poll_timeout = 15000;
 
 $(document).ready(function() {
 	$.ajaxSetup({
@@ -368,6 +369,7 @@ function finishfunctions() {
     dragend();
     keyup();
     //escapeandback
+    //close_paymentdialog
     activemenu();
     fixednav();
     //notifications
@@ -402,6 +404,7 @@ function finishfunctions() {
     blockcancelpaymentdialog();
     cancelpaymentdialogtrigger();
     //unfocus_inputs
+    //cpd_pollcheck
     //cancelpaymentdialog
     //closesocket
     //forceclosesocket
@@ -509,9 +512,9 @@ function finishfunctions() {
     //append_coinsetting
     //appendaddress
     //appendrequest
-    invoice();
-    download_invoice();
-    share_invoice();
+    receipt();
+    download_receipt();
+    share_receipt();
     //amountshort
     editrequest();
     submit_request_description();
@@ -1665,15 +1668,29 @@ function escapeandback() {
         if (paymentdialogbox.hasClass("flipped") && paymentdialogbox.hasClass("norequest")) {
             remove_flip();
         } else {
-            if (html.hasClass("firstload")) {
-                var pagename = geturlparameters().p,
-                    set_pagename = (pagename) ? pagename : "home";
-                openpage("?p=" + set_pagename, set_pagename, "loadpage");
-            } else {
-                window.history.back();
-            }
+	        if (request) {
+		        if (request.received === true) {
+			        close_paymentdialog();
+			    }
+			    else {
+				    cpd_pollcheck();
+			    }
+	        }
+	        else {
+		        close_paymentdialog();
+	        }
         }
         return false;
+    } else {
+        window.history.back();
+    }
+}
+
+function close_paymentdialog() {
+    if (html.hasClass("firstload")) {
+        var pagename = geturlparameters().p,
+            set_pagename = (pagename) ? pagename : "home";
+        openpage("?p=" + set_pagename, set_pagename, "loadpage");
     } else {
         window.history.back();
     }
@@ -2312,7 +2329,7 @@ function cancelpaymentdialogtrigger() {
             console.log("clicking too fast");
         } else {
             if (e.target == this) {
-                escapeandback();
+	            escapeandback();
                 cp_timer = $.now();
             }
         }
@@ -2324,8 +2341,30 @@ function unfocus_inputs() {
 	inputs.blur();
 }
 
+function cpd_pollcheck() {
+	console.log(request);
+    if (request) {
+	    if (request.received === true) {
+		    close_paymentdialog();
+		}
+		else {
+			var rq_init = request.rq_init,
+			    rq_time = $.now() - rq_init;
+		    if (rq_time > safety_poll_timeout) {
+			    after_poll(rq_init)
+		    }
+		    else {
+			    close_paymentdialog();
+		    }
+		}
+    }
+	else {
+		close_paymentdialog();
+	}
+}
+
 function cancelpaymentdialog() {
-    if (html.hasClass("hide_app")) {
+	if (html.hasClass("hide_app")) {
         return false;
     }
     paymentpopup.removeClass("active");
@@ -2339,6 +2378,7 @@ function cancelpaymentdialog() {
         paymentdialogbox.html(""); // remove html
         clearTimeout(timeout);
     }, 600);
+    closeloader();
     clearTimeout(request_timer);
     closesocket();
     clearpingtx("close");
@@ -3629,11 +3669,11 @@ function add_serviceworker() {
         } else {
             // Register the service worker
             navigator.serviceWorker.register(approot + "serviceworker.js", {
-                    scope: "./"
-                })
-                .then(function(reg) {
-                	// console.log("Service worker has been registered for scope: " + reg.scope);
-                });
+                "scope": "./"
+            })
+            .then(function(reg) {
+            	// console.log("Service worker has been registered for scope: " + reg.scope);
+            });
         }
     } else {
         // console.log("service worker is not supported");
@@ -3963,7 +4003,7 @@ function appendrequest(rd) {
             "<li><p class='address'><strong>Address:</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>" +
             paymentdetails +
             view_tx + 
-            "<li class='invoice'><p><span class='icon-file-pdf' title='View invoice'/>Invoice</p></li>\
+            "<li class='receipt'><p><span class='icon-file-pdf' title='View receipt'/>Receipt</p></li>\
 				</ul>\
 				<ul class='transactionlist'>\
 					<h2>" + tl_text + "</h2>\
@@ -3989,8 +4029,8 @@ function appendrequest(rd) {
     }
 }
 
-function invoice() {
-    $(document).on("click", ".invoice > p", function() {
+function receipt() {
+    $(document).on("click", ".receipt > p", function() {
         var thisnode = $(this),
         	requestli = thisnode.closest(".rqli"),
         	rqdat = requestli.data(),
@@ -4060,17 +4100,17 @@ function invoice() {
 	    }
 		var invd_encode = btoa(JSON.stringify(invd)),
 			set_proxy = $("#api_proxy").data("selected"),
-	        invoice_url = set_proxy + "api/invoice/?data=" + invd_encode,
-	        invoice_title = "bitrequest_invoice_" + requestid + ".pdf",
+	        receipt_url = set_proxy + "api/receipt/?data=" + invd_encode,
+	        receipt_title = "bitrequest_receipt_" + requestid + ".pdf",
 	        content = "<div class='formbox' id='cacheformbox'>\
-				<h2><span class='icon-file-pdf' style='color:#dc1d00'/>Open invoice_" + requestid + ".pdf?</h2>\
+				<h2><span class='icon-file-pdf' style='color:#dc1d00'/>Open receipt_" + requestid + ".pdf?</h2>\
 				<div class='popnotify'></div>\
 				<div class='popform'><br/>\
 				</div>\
 				<div id='backupactions'>\
-					<div id='share_invoice' data-invoicedat='" + invoice_url + "' data-requestid='" + requestid + "' class='util_icon icon-share2'></div>\
-					<a href='" + invoice_url + "&download' target='_blank' id='dl_invoice' class='util_icon icon-download' title='Download " + invoice_title + "' download='" + invoice_title + "'></a>\
-					<a class='customtrigger' href='" + invoice_url + "' target='_blank' id='invoice_link'>OK</a>\
+					<div id='share_receipt' data-receiptdat='" + receipt_url + "' data-requestid='" + requestid + "' class='util_icon icon-share2'></div>\
+					<a href='" + receipt_url + "&download' target='_blank' id='dl_receipt' class='util_icon icon-download' title='Download " + receipt_title + "' download='" + receipt_title + "'></a>\
+					<a class='customtrigger' href='" + receipt_url + "' target='_blank' id='receipt_link'>OK</a>\
 					<div id='canceltheme' class='customtrigger'>CANCEL</div>\
 				</div>\
 			</div>";
@@ -4078,8 +4118,8 @@ function invoice() {
     })
 }
 
-function download_invoice() {
-    $(document).on("click", "#dl_invoice", function(e) {
+function download_receipt() {
+    $(document).on("click", "#dl_receipt", function(e) {
         var thisbttn = $(this),
 		    href = thisbttn.attr("href"),
 		    title = thisbttn.attr("title"),
@@ -4091,19 +4131,19 @@ function download_invoice() {
     })
 }
 
-function share_invoice() {
-    $(document).on("click", "#share_invoice", function() {
+function share_receipt() {
+    $(document).on("click", "#share_receipt", function() {
 	    var thisbttn = $(this),
-        	href = thisbttn.attr("data-invoicedat"),
+        	href = thisbttn.attr("data-receiptdat"),
         	requestid = thisbttn.attr("data-requestid"),
-        	filename = "bitrequest_invoice_" + requestid + ".pdf",
+        	filename = "bitrequest_receipt_" + requestid + ".pdf",
 			result = confirm("Share " + filename + "?");
         if (result === true) {
             loader(true);
-            loadertext("generate invoice");
+            loadertext("generate receipt");
             var accountname = $("#accountsettings").data("selected"),
-            	sharedtitle = "bitrequest_invoice_" + requestid + ".pdf";
-            shorten_url(sharedtitle, href, approot + "/img/invoice_icon.png", true);
+            	sharedtitle = "bitrequest_receipt_" + requestid + ".pdf";
+            shorten_url(sharedtitle, href, approot + "/img/receipt_icon.png", true);
             closeloader();
         }
     })

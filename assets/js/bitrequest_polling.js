@@ -13,7 +13,7 @@
 
 // pick API / RPC
 function pick_monitor(txhash, tx_data) {
-    var api_info = check_api(request.payment);
+    var api_info = helper.api_info;
     if (api_info.api === true) {
         api_monitor_init(api_info.data, txhash, tx_data);
     } else {
@@ -36,7 +36,6 @@ function api_monitor(api_data, txhash, tx_data) {
         api_name = api_data.name,
         currencysymbol = request.currencysymbol,
         set_confirmations = request.set_confirmations;
-    console.log(api_name);
     if (api_name === false) {
         console.log("No API selected");
     } else {
@@ -354,7 +353,7 @@ function handle_rpc_monitor_fails(rpcdata, error, txhash) {
 }
 
 function confirmations(tx_data, direct) {
-	console.log(tx_data);
+	closeloader();
 	clearTimeout(request_timer);
 	if (tx_data === false || tx_data.ccval === undefined) {
         return false;
@@ -370,7 +369,7 @@ function confirmations(tx_data, direct) {
         zero_conf = (xconf === false || setconfirmations == 0 || setconfirmations == "undefined" || setconfirmations === undefined);
     brstatuspanel.find("span#confnumber").text(conf_text);
     if (xconf > currentconf || zero_conf === true || direct === true) {
-        sessionStorage.removeItem("bitrequest_txstatus"); // remove cached historical exchange rates
+	    sessionStorage.removeItem("bitrequest_txstatus"); // remove cached historical exchange rates
         playsound(blip);
         confbox.removeClass("blob");
         setTimeout(function() {
@@ -392,12 +391,13 @@ function confirmations(tx_data, direct) {
             receivedrounded = (iscrypto === true) ? receivedcc : fiatrounded;
         // extend global request object
         $.extend(request, {
-            inout: requesttype,
-            receivedamount: receivedcc,
-            fiatvalue: fiatvalue,
-            paymenttimestamp: receivedutc,
-            txhash: txhash,
-            confirmations: xconf
+	        "received": true,
+            "inout": requesttype,
+            "receivedamount": receivedcc,
+            "fiatvalue": fiatvalue,
+            "paymenttimestamp": receivedutc,
+            "txhash": txhash,
+            "confirmations": xconf
         });
         brstatuspanel.find("span.receivedfiat").text(" (" + receivedrounded + " " + thiscurrency + ")");
         brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), "en-us"));

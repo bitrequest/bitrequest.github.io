@@ -263,9 +263,10 @@ function get_api_inputs(rd, api_data, api_name) {
 							        }
 							    }).done(function(e) {
 							        var data = br_result(e).result,
-							            transactions = data.transactions;
+							            transactions = data.transactions,
+							            txflip = transactions.reverse();
 							        if (transactions) {
-							            $.each(data.transactions, function(dat, value) {
+							            $.each(txflip, function(dat, value) {
 							                var txd = xmr_scan_data(value, setconfirmations, "xmr", data.blockchain_height);
 							                if (txd) {
 								                if (txd.transactiontime > request_timestamp && txd.ccval) {
@@ -1418,11 +1419,11 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
         starttimesec = (firstinput - timezone) / 1000,
         endtimesec = (latestinput - timezone) / 1000,
         erc20_contract = rd.token_contract,
-        payload = (api == "coingecko") ? get_payload_historic_coingecko(coin_id, starttimesec, endtimesec, erc20_contract) :
+        search = (api == "coingecko") ? get_payload_historic_coingecko(coin_id, starttimesec, endtimesec, erc20_contract) :
         get_payload_historic_coinpaprika(coin_id, starttimesec, endtimesec);
     api_proxy({
         "api": api,
-        "search": payload,
+        "search": search,
         "cachetime": 86400,
         "cachefolder": "1d",
         "params": {

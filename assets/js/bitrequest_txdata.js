@@ -421,27 +421,22 @@ function infura_erc20_poll_data(data, setconfirmations, ccsymbol) { // poll
 }
 
 function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
-    if (data) {
-	    var recieved = data.total_received;
-	    if (recieved && recieved != 0) {
-		    var datetimeparts = (data.timestamp) ? data.timestamp.split("T") : null,
-	            transactiontime = (datetimeparts) ? returntimestamp(makedatestring(datetimeparts)).getTime() : null,
-	            transactiontimeutc = (transactiontime) ? transactiontime : null,
-	            height = (data.height) ? data.height : latestblock,
-	            blocks = latestblock - height,
-	            confirmations = (blocks < 0) ? 0 : blocks;
-	        return {
-	            "ccval": recieved / 1000000000000,
-	            "transactiontime": transactiontimeutc,
-	            "txhash": data.hash,
-	            "confirmations": confirmations,
-	            "setconfirmations": setconfirmations,
-	            "ccsymbol": ccsymbol
-	        };
-	    }
-	    else {
-		    return false;
-	    }
+	if (data) {
+	    var recieved = data.total_received,
+	    	datetimeparts = (data.timestamp) ? data.timestamp.split("T") : null,
+            transactiontime = (datetimeparts) ? returntimestamp(makedatestring(datetimeparts)).getTime() : null,
+            transactiontimeutc = (transactiontime) ? transactiontime : null,
+            height = (data.height) ? data.height : latestblock,
+            blocks = latestblock - height,
+            confirmations = (blocks < 0) ? 0 : blocks;
+        return {
+            "ccval": recieved / 1000000000000,
+            "transactiontime": transactiontimeutc,
+            "txhash": data.hash,
+            "confirmations": confirmations,
+            "setconfirmations": setconfirmations,
+            "ccsymbol": ccsymbol
+        };
     } else {
         return default_tx_data();
     }

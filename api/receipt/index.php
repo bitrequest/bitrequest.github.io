@@ -40,7 +40,7 @@ endobj
 5 0 obj
 << /Length 48 >>
 stream
-BT/F1 24 Tf 50 700 Td (INVOICE)Tj ET " . $output . " BT/F1 8 Tf 505 15 Td (Powered by bitrequest.io)Tj ET endstream
+BT/F1 24 Tf 50 700 Td (RECEIPT)Tj ET " . $output . " BT/F1 8 Tf 505 15 Td (Powered by bitrequest.io)Tj ET endstream
 endobj
 
 6 0 obj
@@ -68,7 +68,7 @@ startxref
 %%EOF";
 	header("Content-Type: application/pdf");
     header("Content-Length: " . strlen($content));
-    header("Content-Disposition: " . $download . "; filename=bitrequest_invoice_" . $requestid . ".pdf");
+    header("Content-Disposition: " . $download . "; filename=bitrequest_receipt_" . $requestid . ".pdf");
     header("Cache-Control: private, max-age=0, must-revalidate");
     header("Pragma: public");
     ini_set("zlib.output_compression","0");

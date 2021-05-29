@@ -1311,11 +1311,11 @@ html.dragmode .currentpage .applist li.dragging {
     opacity: 0.7;
 }
 
-.metalist li.invoice {
+.metalist li.receipt {
 	display:none;
 }
 
-.metalist li.invoice p {
+.metalist li.receipt p {
 	font-weight:700;
     color: #009788;
     margin-top: 0.5em;
@@ -1323,7 +1323,7 @@ html.dragmode .currentpage .applist li.dragging {
     pointer-events: all;
 }
 
-.requestlist li.rqli[data-status="paid"] .metalist li.invoice {
+.requestlist li.rqli[data-status="paid"] .metalist li.receipt {
 	display:block;
 }
 
