@@ -40,7 +40,7 @@ function crossframe(e) {
     if (data == "close_loader") {
         closeloader();
     }
-    else if (data.id == "close_request") {
+    else if (data == "close_request") {
         closeframe_confirm();
     }
     else if (data.id == "result") {
