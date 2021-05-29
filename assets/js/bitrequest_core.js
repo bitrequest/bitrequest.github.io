@@ -2342,8 +2342,7 @@ function unfocus_inputs() {
 }
 
 function cpd_pollcheck() {
-	console.log(request);
-    if (request) {
+	if (request) {
 	    if (request.received === true) {
 		    close_paymentdialog();
 		}
@@ -2365,6 +2364,7 @@ function cpd_pollcheck() {
 
 function cancelpaymentdialog() {
 	if (html.hasClass("hide_app")) {
+		parent.postMessage("close_request", "*");
         return false;
     }
     paymentpopup.removeClass("active");
