@@ -3708,7 +3708,7 @@ function fetchrequests(cachename, archive) {
     var requestcache = localStorage.getItem(cachename);
     if (requestcache) {
         var parsevalue = JSON.parse(requestcache),
-            showarchive = (archive === false && parsevalue.length > 6); // only show archive button when there are more then 6 requests
+            showarchive = (archive === false && parsevalue.length > 11); // only show archive button when there are more then 11 requests
         $.each(parsevalue.reverse(), function(i, value) {
             value.archive = archive;
             value.showarchive = true;

@@ -41,7 +41,9 @@ function crossframe(e) {
         closeloader();
     }
     else if (data == "close_request") {
-        closeframe_confirm();
+	    setTimeout(function() {
+            closeframe_confirm();
+        }, 200);
     }
     else if (data.id == "result") {
         result_callback(data.data);
