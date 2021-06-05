@@ -8,10 +8,12 @@ function sc_reduce32(hex) {
 
 function get_ssk(bip39, seed) {
     var p_rootkey = (seed === true) ? get_rootkey(bip39) : get_rootkey(toseed(bip39)),
-    	p_master_priv = p_rootkey.slice(0, 64),
-		p_master_chaincode = p_rootkey.slice(64),
-		dpath = "m/44'/128'/0'/0/0",
-		x_keys_dat = derive_x(dpath, p_master_priv, p_master_chaincode),
+    	dx_dat = {
+	        "dpath": "m/44'/128'/0'/0/0",
+	        "key": p_rootkey.slice(0, 64),
+	        "cc": p_rootkey.slice(64)
+        },
+		x_keys_dat = derive_x(dx_dat),
 		rootkey = x_keys_dat.key;
 	return sc_reduce32(fasthash(rootkey));
 }

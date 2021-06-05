@@ -1,6 +1,7 @@
 var test_phrase = "army van defense carry jealous true garbage claim echo media make crunch", // random phrase used for test derive
     expected_seed = "5b56c417303faa3fcba7e57400e120a0ca83ec5a4fc9ffba757fbe63fbd77a89a1a3be4c67196f57c39a88b76373733891bfaba16ed27a813ceed498804c0570", // expected seed used for test derive
     expected_address = "1HQ3rb7nyLPrjnuW85MUknPekwkn7poAUm", // expected addres used for test derive
+    expected_bech32 = "bc1qg0azlj4w2lrq8jssrrz6eprt2fe7f7edm4vpd5", // expected bech32 addres used for test derive
     has_bigint = false,
     test_derive = true,
     c_derive = {
@@ -241,11 +242,13 @@ function derive_xpub_fail(arr) {
 function test_derivation() {
     var currency = "bitcoin",
         test_rootkey = get_rootkey(expected_seed),
-        test_master_priv = test_rootkey.slice(0, 64),
-        test_master_chaincode = test_rootkey.slice(64),
-        dpath = "m/44'/0'/0'/0/0",
         bip32dat = getbip32dat(currency),
-        x_keys_dat = derive_x(dpath, test_master_priv, test_master_chaincode),
+        dx_dat = {
+	        "dpath": "m/44'/0'/0'/0/0",
+	        "key": test_rootkey.slice(0, 64),
+	        "cc": test_rootkey.slice(64)
+        },
+        x_keys_dat = derive_x(dx_dat),
         key_object = format_keys(expected_seed, x_keys_dat, bip32dat, 0, currency);
     if (key_object.address == expected_address) {
         return true;
@@ -255,7 +258,7 @@ function test_derivation() {
 
 function bech32_check() {
     var bip84_pub = "03bb4a626f63436a64d7cf1e441713cc964c0d53289a5b17acb1b9c262be57cb17",
-        expected_bip84_bech32 = "bc1qg0azlj4w2lrq8jssrrz6eprt2fe7f7edm4vpd5",
+        expected_bip84_bech32 = expected_bech32,
         bip84_bech32 = pub_to_address_bech32("bc", bip84_pub);
     if (expected_bip84_bech32 == bip84_bech32) {
         return true;
@@ -294,12 +297,19 @@ function xmr_check() { // https://coinomi.github.io/tools/bip39/
 
 function xpub_check() {
 	var currency = "bitcoin",
-    	xpub_keycc = key_cc_xpub("xpub6EdHrjLe1JdwRR6W5romAvmVzk7bfXQWV2N9SuTWP1ebszkLVQMev6KWTNtb2D9mQpocUfAsPQGkE6wtVe8Kug3dYyA9yCJTnHRPJAbgEAF"),
-    	x_keys_dat = derive_x("M/0", xpub_keycc.key, xpub_keycc.cc),
+    	xpub_keycc = key_cc_xpub("xpub6Cy7dUR4ZKF22HEuVq7epRgRsoXfL2MK1RE81CSvp1ZySySoYGXk5PUY9y9Cc5ExpnSwXyimQAsVhyyPDNDrfj4xjDsKZJNYgsHXoEPNCYQ"),
+    	dx_dat = {
+	        "dpath": "M/0/0",
+	        "key": xpub_keycc.key,
+	        "cc": xpub_keycc.cc,
+	        "vb": xpub_keycc.version
+        },
+    	x_keys_dat = derive_x(dx_dat),
     	bip32dat = getbip32dat(currency),
     	key_object = format_keys(null, x_keys_dat, bip32dat, 0, currency),
-    	xpub_address = key_object.address;
-    if (expected_address == key_object.address) {
+    	xpub_address = key_object.address,
+    	xpub_wildcard_address = "bc1qk0wlvl4xh3eqe5szqyrlcj4ws8633vz0vhhywl"; // wildcard for bech32 Xpubs (Zpub)
+    if (xpub_address == expected_address || xpub_address == xpub_wildcard_address) {
 	    return true;
     }
     else {
@@ -970,7 +980,8 @@ function key_cc_xpub(xpub) {
         extend_object = objectify_extended(ext_dec);
     return {
         "key": extend_object.key,
-        "cc": extend_object.chaincode
+        "cc": extend_object.chaincode,
+        "version": extend_object.version
     }
 }
 
@@ -997,7 +1008,13 @@ function derive_all(phrase, seedid, extra) {
             coindat = coinconfig.data,
             bip32 = coinconfig.settings.Xpub;
         if (bip32.active === true && c_derive[currency]) {
-	        var ad = derive_obj("seed", seed, master_key, master_chaincode, coindat, bip32, seedid, extra);
+	    	var keycc = {
+		        "seed": seed,
+		        "key": master_key,
+		        "cc": master_chaincode,
+		        "seedid": seedid
+	        }
+	        var ad = derive_obj("seed", keycc, coindat, bip32, extra);
 	        if (ad) {
 		        derive_add_address(currency, ad);
 	        }
@@ -1021,15 +1038,16 @@ function derive_data(currency, extra) {
 	        if (activepub) {
 	            var xpubkey = activepub.key,
 	                xpub_id = activepub.key_id,
-	                keycc = key_cc_xpub(xpubkey),
-					ad = derive_obj("xpub", false, keycc.key, keycc.cc, coindat, bip32, xpub_id, extra);
+	                keycc = key_cc_xpub(xpubkey);
+	            keycc.seedid = xpub_id;
+				var ad = derive_obj("xpub", keycc, coindat, bip32, extra);
 		        if (ad) {
 			       return ad;
 		        }
 	        } else {
 	            var keycc = key_cc();
 	            if (keycc) {
-		            var ad = derive_obj("seed", keycc.seed, keycc.key, keycc.cc, coindat, bip32, keycc.seedid, extra);
+		            var ad = derive_obj("seed", keycc, coindat, bip32, extra);
 			        if (ad) {
 				        return ad;
 			        }
@@ -1040,8 +1058,13 @@ function derive_data(currency, extra) {
     return false;
 }
 
-function derive_obj(source, seed, key, cc, coindat, bip32, seedid, add) {
-    var currency = coindat.currency,
+function derive_obj(source, keycc, coindat, bip32, add) {
+	var seed = keycc.seed,
+    	seedid = keycc.seedid,
+    	key = keycc.key,
+    	cc = keycc.cc,
+    	versionbytes = keycc.version,
+		currency = coindat.currency,
         id_key = source + "id",
         addressli = get_addresslist(currency).children("li"),
         deriveli = filter_list(addressli, id_key, seedid),
@@ -1050,9 +1073,15 @@ function derive_obj(source, seed, key, cc, coindat, bip32, seedid, add) {
     if (!actives.length || check_p === true || add) {
 	    var allength = deriveli.length,
 	        index = (allength > 1) ? get_latest_index(deriveli) + 1 : allength,
-	        root_path = (source == "xpub") ? "M/" : (source == "seed") ? bip32.root_path : "",
+	        root_path = (source == "xpub") ? "M/0/" : (source == "seed") ? bip32.root_path : "",
 	        path = root_path + index,
-	        x_keys_dat = derive_x(path, key, cc),
+	        dx_dat = {
+		        "dpath": path,
+		        "key": key,
+		        "cc": cc,
+		        "vb": versionbytes
+	        },
+	        x_keys_dat = derive_x(dx_dat),
 	        key_object = format_keys(seed, x_keys_dat, bip32, index, currency),
 	        address = key_object.address,
 	        ccsymbol = coindat.ccsymbol,
@@ -1239,11 +1268,12 @@ function objectify_extended(extended) {
     }
 }
 
-function derive_x(dpath, parent_key, parent_cc, from_x_priv) {
+function derive_x(dx_dat, from_x_priv) {
     var keydat = {},
-        key = parent_key,
-        chaincode = parent_cc,
-		derive_array = dpath.split("/"),
+    	dpath = dx_dat.dpath,
+        key = dx_dat.key,
+        chaincode = dx_dat.cc,
+        derive_array = dpath.split("/"),
         levels = derive_array.length - 1,
         xpub = false,
         purpose = null,
@@ -1283,6 +1313,9 @@ function derive_x(dpath, parent_key, parent_cc, from_x_priv) {
             }
         }
     });
+    if (xpub === true) {
+	    keydat.vb = dx_dat.vb;
+    }
     return keydat;
 }
 
@@ -1307,12 +1340,18 @@ function ckd(ckey, cc, index, xpub, hard) {
     return ckd;
 }
 
-function keypair_array(seed, arr, startindex, d_path, bip32dat, key, chaincode, currency) {
+function keypair_array(seed, arr, startindex, d_path, bip32dat, key, chaincode, currency, versionbytes) {
     var derive_array = [];
     $.each(arr, function(i) {
         var index = i + startindex,
             root_path = d_path + index,
-            ext_key_obj = derive_x(root_path, key, chaincode),
+            dx_dat = {
+		        "dpath": root_path,
+		        "key": key,
+		        "cc": chaincode,
+		        "vb": versionbytes
+	        },
+            ext_key_obj = derive_x(dx_dat),
             key_object = format_keys(seed, ext_key_obj, bip32dat, index, currency);
         derive_array.push(key_object);
     });
@@ -1360,7 +1399,7 @@ function b58c_x_payload(eo, currency) {
 }
 
 function format_keys(seed, key_object, bip32, index, coin) {
-    var ko = {};
+	var ko = {};
     if (coin == "nano") {
         if (seed) {
 	        var nano_account = NanocurrencyWeb.wallet.accounts(seed, index, index)[0];
@@ -1401,7 +1440,13 @@ function format_keys(seed, key_object, bip32, index, coin) {
             if (purpose.indexOf("84") > -1) {
                 ko.address = pub_to_address_bech32("bc", pubkey);
             } else {
-                ko.address = pub_to_address(vb, pubkey);
+	            var versionbytes = key_object.vb;
+	            if (versionbytes == "04b24746") {
+		            ko.address = pub_to_address_bech32("bc", pubkey);
+	            }
+	            else {
+		            ko.address = pub_to_address(vb, pubkey);
+	            }
             }
         }
         else if (coin == "bitcoin-cash") {
@@ -1427,10 +1472,12 @@ function format_keys(seed, key_object, bip32, index, coin) {
 
 function xpub_prefix(currency) {
     var test_rootkey = get_rootkey(expected_seed),
-        test_master_priv = test_rootkey.slice(0, 64),
-        test_master_chaincode = test_rootkey.slice(64),
-        dpath = "m/0",
-        x_keys_dat = derive_x(dpath, test_master_priv, test_master_chaincode),
+        dx_dat = {
+	        "dpath": "m/0",
+	        "key": test_rootkey.slice(0, 64),
+	        "cc": test_rootkey.slice(64),
+        },
+        x_keys_dat = derive_x(dx_dat),
         x_keys = ext_keys(x_keys_dat, currency);
     return x_keys.ext_pub.slice(0, 4);
 }
@@ -1607,9 +1654,10 @@ function test_derive_function(thisnode, prev) {
 	    var bip32dat = dnd.bip32,
 	        key = kd.key,
 	        chaincode = kd.cc,
+	        versionbytes = kd.versionbytes,
 	        lb = (currency == "nano") ? "<br/>" : " ",
-	        root_path = (kd.xpub === true) ? "M/" : bip32dat.root_path,
-	        derive_array = keypair_array(kd.seed, new Array(count), startindex, root_path, bip32dat, key, chaincode, currency);
+	        root_path = (kd.xpub === true) ? "M/0/" : bip32dat.root_path,
+	        derive_array = keypair_array(kd.seed, new Array(count), startindex, root_path, bip32dat, key, chaincode, currency, versionbytes);
 	    test_derive_box.html("");
 	    $.each(derive_array, function(i, val) {
 	        var index = startindex + i,

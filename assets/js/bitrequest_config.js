@@ -219,7 +219,7 @@ var multi_wallets = {
                 },
                 "Xpub": {
                     "active": true,
-                    "xpub": false,
+                    "xpub": true,
                     "icon": "key",
                     "switch": true,
                     "custom_switch": true,
@@ -229,7 +229,9 @@ var multi_wallets = {
                     "prefix": {
                         "pub": 0,
                         "pubx": 76067358,
-                        "privx": 76066276
+                        "privx": 76066276,
+                        "pubz": 78792518,
+                        "privz": 78791436
                     },
                     "pk_vbytes": {
                         "wif": 128
@@ -431,7 +433,7 @@ var multi_wallets = {
                 },
                 "Xpub": {
                     "active": true,
-                    "xpub": false,
+                    "xpub": true,
                     "icon": "key",
                     "switch": true,
                     "custom_switch": true,
@@ -532,7 +534,7 @@ var multi_wallets = {
                 },
                 "Xpub": {
                     "active": true,
-                    "xpub": false,
+                    "xpub": true,
                     "icon": "key",
                     "switch": true,
                     "custom_switch": true,
@@ -813,7 +815,7 @@ var multi_wallets = {
                 },
                 "Xpub": {
                     "active": true,
-                    "xpub": false,
+                    "xpub": true,
                     "icon": "key",
                     "switch": true,
                     "custom_switch": true,
@@ -925,7 +927,7 @@ var multi_wallets = {
                 },
                 "Xpub": {
                     "active": true,
-                    "xpub": false,
+                    "xpub": true,
                     "icon": "key",
                     "switch": true,
                     "custom_switch": true,

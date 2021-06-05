@@ -386,6 +386,7 @@ function finishfunctions() {
     //derive_first_check
     addaddresstrigger();
     //addaddress
+    address_xpub_change();
     //active_derives
     get_wallet();
     submitaddresstrigger();
@@ -1856,13 +1857,21 @@ function addaddress(ad, edit) {
         title = (edit === true) ? "<h2 class='icon-pencil'>Edit label</h2>" : "<h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " Add " + currency + " address</h2>",
         pk_checkbox = (edit === true) ? "" : "<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / private key of this address</span></div>",
         addeditclass = (edit === true) ? "edit" : "add",
-        xpubclass = (nopub) ? " hasxpub" : "",
+        xpubclass = (nopub) ? " hasxpub" : " noxpub",
         xpubph = (nopub) ? "Enter a " + currency + " address" : "Address / Xpub",
         vk_val = (ad.vk) ? ad.vk : "",
         has_vk = (vk_val != ""),
         scanvk = (hascam === true) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
         vk_box = (currency == "monero") ? (has_vk) ? "" : "<div class='inputwrap'><input type='text' class='vk_input' value='" + vk_val + "' placeholder='View key'>" + scanvk + "</div>" : "",
-        content = $("<div class='formbox form" + addeditclass + xpubclass + "' id='addressformbox'>" + title + pnotify + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' class='address' value='" + address + "' placeholder='" + xpubph + "'" + readonly + ">" + scanqr + "</div>" + vk_box + "<input type='text' class='addresslabel' value='" + label + "' placeholder='label'>" + pk_checkbox + "<input type='submit' class='submit' value='OK'></form>").data(ad);
+        content = $("<div class='formbox form" + addeditclass + xpubclass + "' id='addressformbox'>" + title + pnotify + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' id='address_xpub_input' class='address' value='" + address + "' data-currency='" + currency + "' placeholder='" + xpubph + "'" + readonly + ">" + scanqr + "</div>" + vk_box + "<input type='text' class='addresslabel' value='" + label + "' placeholder='label'>\
+        <div id='ad_info_wrap' style='display:none'>\
+			<ul class='td_box'>\
+			</ul>\
+			<div id='pk_confirm' class='noselect'>\
+				<div id='matchwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>The above addresses match those in my " + currency + " wallet</span>\
+			</div>\
+		</div>" + pk_checkbox + 
+		"<input type='submit' class='submit' value='OK'></form>").data(ad);
     popdialog(content, "alert", "triggersubmit");
     if (supportsTouch === true) {} else {
         if (edit === true) {
@@ -1871,6 +1880,26 @@ function addaddress(ad, edit) {
             $("#popup input.address").focus();
         }
     }
+}
+
+function address_xpub_change() {
+    $(document).on("input", "#addressformbox.noxpub #address_xpub_input", function(e) {
+		var thisnode = $(this),
+			addressinputval = thisnode.val(),
+			currency = thisnode.attr("data-currency");
+		if (addressinputval.length > 103) {
+			var valid = check_xpub(addressinputval, xpub_prefix(currency), currency);
+			if (valid === true) {
+				validate_xpub(thisnode.closest("#addressformbox"));
+			}
+			else {
+				xpub_fail(currency);
+			}
+        }
+        else {
+	        clear_xpub_inputs();
+        }
+    })
 }
 
 function active_derives(currency, derive) {
@@ -2718,7 +2747,12 @@ function show_pk() {
                 var addat = $("#ad_info_wrap").data(),
                     currency = addat.currency,
 					keycc = key_cc(),
-                    x_keys_dat = derive_x(addat.dpath, keycc.key, keycc.cc),
+					dx_dat = {
+				        "dpath": addat.dpath,
+				        "key": keycc.key,
+				        "cc": keycc.cc
+			        },
+                    x_keys_dat = derive_x(dx_dat),
                     key_object = format_keys(keycc.seed, x_keys_dat, addat.bip32dat, addat.derive_index, currency),
                     privkey = key_object.privkey;
                 all_pinpanel({
@@ -2755,7 +2789,12 @@ function show_vk() {
                 if (vk == "derive") {
 	                var addat = $("#ad_info_wrap").data(),
 	                    keycc = key_cc(),
-	                    x_keys_dat = derive_x(addat.dpath, keycc.key, keycc.cc),
+	                    dx_dat = {
+					        "dpath": addat.dpath,
+					        "key": keycc.key,
+					        "cc": keycc.cc
+				        },
+	                    x_keys_dat = derive_x(dx_dat),
 						rootkey = x_keys_dat.key,
 						ssk = sc_reduce32(fasthash(rootkey));
 					x_ko = xmr_getpubs(ssk, addat.derive_index);

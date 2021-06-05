@@ -34,8 +34,11 @@ $(document).ready(function() {
     //add_xpub_cb
     xpub_cc_switch();
     //edit_xpub
-    submit_xpub_strigger();
+    xpub_change();
+    submit_xpub_trigger();
     //validate_xpub
+    //xpub_fail
+    //clear_xpub_inputs
     //check_xpub
 
     // Key Management
@@ -297,21 +300,21 @@ function get_rpc_placeholder(currency) {
         (currency == "litecoin") ? "9332" :
         (currency == "dogecoin") ? "22555" : "port";
     return {
-        apisnano1: "eg: http://127.0.0.1:7076",
-        apisnano2: "eg: http://some.local-or-remote.node:7076",
-        apisnano3: "eg: http://localhost:7076",
-        websocketsnano1: "eg: ws://127.0.0.1:7078",
-        websocketsnano2: "eg: ws://some.local-or-remote.node:7078",
-        websocketsnano3: "eg: ws://localhost:7078",
-        apisbtc1: "eg: http://127.0.0.1:" + btc_port,
-        apisbtc2: "eg: http://some.local-or-remote.node:" + btc_port,
-        apisbtc3: "eg: http://localhost:" + btc_port,
-        apiseth1: "eg: http://localhost:8545",
-        apiseth2: "eg: http://some.local-or-remote.node:8546",
-        apiseth3: "eg: https://mainnet.infura.io/v3/YOUR-PROJECT-ID",
-        websocketseth1: "eg: ws://localhost:8545",
-        websocketseth2: "eg: ws://some.local-or-remote.node:8546",
-        websocketseth3: "eg: wss://mainnet.infura.io/ws/v3/YOUR-PROJECT-ID",
+        "apisnano1": "eg: http://127.0.0.1:7076",
+        "apisnano2": "eg: http://some.local-or-remote.node:7076",
+        "apisnano3": "eg: http://localhost:7076",
+        "websocketsnano1": "eg: ws://127.0.0.1:7078",
+        "websocketsnano2": "eg: ws://some.local-or-remote.node:7078",
+        "websocketsnano3": "eg: ws://localhost:7078",
+        "apisbtc1": "eg: http://127.0.0.1:" + btc_port,
+        "apisbtc2": "eg: http://some.local-or-remote.node:" + btc_port,
+        "apisbtc3": "eg: http://localhost:" + btc_port,
+        "apiseth1": "eg: http://localhost:8545",
+        "apiseth2": "eg: http://some.local-or-remote.node:8546",
+        "apiseth3": "eg: https://mainnet.infura.io/v3/YOUR-PROJECT-ID",
+        "websocketseth1": "eg: ws://localhost:8545",
+        "websocketseth2": "eg: ws://some.local-or-remote.node:8546",
+        "websocketseth3": "eg: wss://mainnet.infura.io/ws/v3/YOUR-PROJECT-ID",
     }
 }
 
@@ -334,7 +337,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                 rpc_option_li(optionlist, false, key, value, selected, true);
             }
         } else {
-            var rpc = (thiscurrency == "bitcoin" || thiscurrency == "litecoin" || thiscurrency == "dogecoin") ? "bitcoin" : thiscurrency,
+            var rpc = (thiscurrency == "bitcoin" || thiscurrency == "litecoin" || thiscurrency == "dogecoin" || thiscurrency == "bitcoin-cash") ? "bitcoin" : thiscurrency,
                 rpcurl = get_rpc_url({
                     "url": value.url,
                     "username": value.username,
@@ -513,7 +516,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                 popnotify("error", "Unable to connect");
             }
         } else {
-            var rpc = (currency == "bitcoin" || currency == "litecoin" || currency == "dogecoin") ? "bitcoin" : currency,
+            var rpc = (currency == "bitcoin" || currency == "litecoin" || currency == "dogecoin" || currency == "bitcoin-cash") ? "bitcoin" : currency,
                 rpcurl = get_rpc_url(rpc_data);
             api_proxy({
                 "api": rpc,
@@ -694,7 +697,7 @@ function edit_xpub_trigger() {
 						<div class='d_ulwrap'>\
 							<ul>\
 					    		<li><strong>Key: </strong><span class='adbox adboxl select'>" + xpub + "</span></li>\
-					    		<li><strong>Derivation path:</strong> M/</li>\
+					    		<li><strong>Derivation path:</strong> M/0/</li>\
 				    		</ul>\
 				    	</div>\
 						<div id='backupactions'>\
@@ -802,8 +805,15 @@ function edit_xpub(ad) {
         	<h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " Add " + currency + " Xpub key</h2>\
         	<div class='popnotify'></div>\
         	<form class='addressform popform'>\
-        		<div class='inputwrap'><input type='text' class='address' value='" + address + "' placeholder='Enter a " + currency + " Xpub key'>" + scanqr + "</div>\
-        		<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / Xpriv key</span></div>\
+        		<div class='inputwrap'><input type='text' id='xpub_input' class='address' value='" + address + "' placeholder='Enter a " + currency + " Xpub key' data-currency='" + currency + "'>" + scanqr + "</div>\
+        		<div id='ad_info_wrap' style='display:none'>\
+        			<ul class='td_box'>\
+					</ul>\
+					<div id='pk_confirm' class='noselect'>\
+						<div id='matchwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>The above addresses match those in my " + currency + " wallet</span><br/>\
+						<div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / Xpriv key</span>\
+					</div>\
+				</div>\
         		<input type='submit' class='submit' value='OK'></form>").data(ad);
     popdialog(content, "alert", "triggersubmit");
     if (supportsTouch === true) {} else {
@@ -811,7 +821,22 @@ function edit_xpub(ad) {
     }
 }
 
-function submit_xpub_strigger() {
+function xpub_change() {
+    $(document).on("input", "#xpub_input", function(e) {
+		var thisnode = $(this),
+			addressinputval = thisnode.val(),
+			currency = thisnode.attr("data-currency"),
+			valid = check_xpub(addressinputval, xpub_prefix(currency), currency);
+		if (valid === true) {
+			validate_xpub(thisnode.closest("#xpubformbox"));
+		}
+		else {
+			xpub_fail(currency);
+		}
+    })
+}
+
+function submit_xpub_trigger() {
     $(document).on("click", "#xpubformbox input.submit", function(e) {
         e.preventDefault();
         validate_xpub($(this).closest("#xpubformbox"));
@@ -819,17 +844,38 @@ function submit_xpub_strigger() {
 }
 
 function validate_xpub(thisnode) {
-    var this_data = thisnode.data(),
+	var this_data = thisnode.data(),
         currency = this_data.currency,
         ccsymbol = this_data.ccsymbol,
         addressfield = thisnode.find(".address"),
         addressinputval = addressfield.val();
     if (addressinputval) {
-        var valid = check_xpub(addressinputval, xpub_prefix(currency));
+        var valid = check_xpub(addressinputval, xpub_prefix(currency), currency),
+        	tdbox = $("#ad_info_wrap .td_box"),
+	        dp_body = $("#ad_info_wrap");
         if (valid === true) {
+	        var derive_list = xpub_derivelists(currency, addressinputval);
+	        if (derive_list) {
+		        tdbox.html(xpub_derivelists(currency, addressinputval));
+				dp_body.slideDown("500");
+	        }
+	        else {
+		        xpub_fail(currency);
+				return false;
+	        }
             var pk_checkbox = thisnode.find("#pk_confirmwrap"),
-                pk_checked = pk_checkbox.data("checked");
-            if (pk_checked == true) {
+                pk_checked = pk_checkbox.data("checked"),
+                matchwrap = thisnode.find("#matchwrap"),
+                mw_checked = matchwrap.data("checked");
+            if (mw_checked == false) {
+	            popnotify("error", "Confirm addresses are matching");
+	            return false;
+	        }
+	        if (pk_checked == false) {
+	            popnotify("error", "Confirm privatekey ownership");
+	            return false;
+	        }
+            if (pk_checked == true && mw_checked == true) {
                 var xpubli = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']"),
                     haskey = xpubli.data("key");
                 if (haskey) {
@@ -839,7 +885,7 @@ function validate_xpub(thisnode) {
                     } else {
                         var result = confirm("Replace Xpub?");
                         if (result === true) {} else {
-                            return false
+                            return false;
                         }
                     }
                 }
@@ -857,9 +903,12 @@ function validate_xpub(thisnode) {
                 save_cc_settings(currency, true);
                 var keycc = key_cc_xpub(addressinputval),
                     coindat = getcoindata(currency),
-                    bip32 = getbip32dat(currency),
-                    ad = derive_obj("xpub", false, keycc.key, keycc.cc, coindat, bip32, xpub_id);
-                derive_add_address(currency, ad);
+                    bip32 = getbip32dat(currency);
+                keycc.seedid = xpub_id;
+                var ad = derive_obj("xpub", keycc, coindat, bip32);
+				if (ad) {
+					derive_add_address(currency, ad);
+				}
                 canceldialog();
                 clear_savedurl();
                 if (body.hasClass("showstartpage")) {
@@ -879,21 +928,63 @@ function validate_xpub(thisnode) {
                 popnotify("error", "Confirm privatekey ownership");
             }
         } else {
-            var errormessage = "NOT a valid " + currency + " Xpub key";
+            var errormessage = "NOT a valid / supported " + currency + " Xpub key";
             popnotify("error", errormessage);
             setTimeout(function() {
                 addressfield.select();
             }, 10);
         }
     } else {
-        var errormessage = "Enter a " + currency + " Xpub key";
-        popnotify("error", errormessage);
+        xpub_fail(currency);
         addressfield.focus();
     }
 }
 
-function check_xpub(address, prefix) {
-    var regex = "(" + prefix + "[a-km-zA-HJ-NP-Z1-9]{100,108})(\\?c=\\d*&h=bip\\d{2,3})?";
+function xpub_fail(currency) {
+    var errormessage = "NOT a valid / supported " + currency + " Xpub key";
+	popnotify("error", errormessage);
+	clear_xpub_inputs();
+}
+
+function clear_xpub_inputs() {
+    $("#ad_info_wrap").slideUp(200, function() {
+		$("#ad_info_wrap .td_box").html("");
+	});
+	$("#pk_confirmwrap").attr("data-checked", "false").data("checked", false);
+	$("#matchwrap").attr("data-checked", "false").data("checked", false);
+}
+
+function xpub_derivelists(currency, xpub) {
+	try {
+        var coindat = getcoindata(currency),
+	        bip32dat = getbip32dat(currency),
+	        root_path = "M/0/",
+	        startindex = 0,
+	        keycc = key_cc_xpub(xpub),
+	        key = keycc.key,
+	        chaincode = keycc.cc,
+	        versionbytes = keycc.version,
+			root_dat = {
+	            "key": key,
+	            "cc": chaincode,
+	            "xpub": true,
+	            "versionbytes": versionbytes,
+	        },
+	        derivelist = "",
+	        derive_array = keypair_array(false, new Array(5), startindex, root_path, bip32dat, key, chaincode, currency, versionbytes);
+	    $.each(derive_array, function(i, val) {
+	        var index = startindex + i;
+	        derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> | " + val.address + "</li>";
+	    });
+		return derivelist;
+    } catch (err) {
+        return false;
+    }
+}
+
+function check_xpub(address, prefix, currency) {
+	var this_prefix = (currency == "bitcoin") ? "zpub|xpub" : prefix,
+		regex = "(" + this_prefix + ")([a-km-zA-HJ-NP-Z1-9]{107})(\\?c=\\d*&h=bip\\d{2,3})?";
     return new RegExp(regex).test(address);
 }
 
@@ -903,8 +994,8 @@ function key_management() {
     $(document).on("click", ".cc_settinglist li[data-id='Key derivations'] .atext", function() {
         var thisnode = $(this),
             thislist = thisnode.closest("li"),
-            thisdat = thislist.data();
-        thisliwrap = thislist.find(".liwrap"),
+            thisdat = thislist.data(),
+			thisliwrap = thislist.find(".liwrap"),
             thiscurrency = thisliwrap.attr("data-currency"),
             activepub = active_xpub(thiscurrency);
         if (activepub) {
@@ -934,18 +1025,20 @@ function bip39_sc(coinsc) {
 function xpub_info_pu(currency, xpub) {
     var coindat = getcoindata(currency),
         bip32dat = getbip32dat(currency),
-        root_path = "M/",
+        root_path = "M/0/",
         startindex = 0,
         keycc = key_cc_xpub(xpub),
         key = keycc.key,
-        chaincode = keycc.cc
-    root_dat = {
+        chaincode = keycc.cc,
+        versionbytes = keycc.version,
+		root_dat = {
             "key": key,
             "cc": chaincode,
             "xpub": true,
+            "versionbytes": versionbytes,
         },
         derivelist = "",
-        derive_array = keypair_array(false, new Array(5), startindex, root_path, bip32dat, key, chaincode, currency);
+        derive_array = keypair_array(false, new Array(5), startindex, root_path, bip32dat, key, chaincode, currency, versionbytes);
     $.each(derive_array, function(i, val) {
         var index = startindex + i;
         derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> | " + val.address + "</li>";
