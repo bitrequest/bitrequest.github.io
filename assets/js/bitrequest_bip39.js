@@ -1511,7 +1511,7 @@ function phrase_info_pu(coin) {
         sourceed_str = (coin) ? "<li><strong>Source: </strong> Seed</li>" : "<li><strong>BIP39 Seed: </strong><span class='adboxl adbox select'>" + seed + "</span></li>",
         pk_string = (coin) ? "<li class='clearfix'><span id='export_keys' class='ref' data-currency='" + coin + "'>Private keys</span><div id='pks_box'></div></li>" : "",
         coindat = (coin) ? getcoindata(coin) : null,
-        header_str = (coin) ? "<h2>" + getcc_icon(coindat.cmcid, coindat.ccsymbol + "-" + thiscurrency, coindat.erc20) + " <span>" + thiscurrency + " Key Derivation</span></h2>" : "",
+        header_str = (coin) ? "<h2>" + getcc_icon(coindat.cmcid, coindat.ccsymbol + "-" + coin, coindat.erc20) + " <span>" + coin + " Key Derivation</span></h2>" : "",
         sbu_val = get_setting("backup", "sbu"),
         sbu_str = (has_datenc() === true) ? "<div class='si_li'><strong>Backup seed:</strong><div id='toggle_sbu_span' class='ait'>" + switchpanel(sbu_val, " global") + "</div></div>" : "",
         del_phr_str = (coin) ? "" : (hasbip === true) ? sbu_str + "<div class='si_li noline'><div id='deletephrase' class='icon-bin'></div></div>" : "",
