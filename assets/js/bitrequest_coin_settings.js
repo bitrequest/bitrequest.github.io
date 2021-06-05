@@ -39,6 +39,7 @@ $(document).ready(function() {
     //validate_xpub
     //xpub_fail
     //clear_xpub_inputs
+    //clear_xpub_checkboxes
     //check_xpub
 
     // Key Management
@@ -828,6 +829,7 @@ function xpub_change() {
 			currency = thisnode.attr("data-currency"),
 			valid = check_xpub(addressinputval, xpub_prefix(currency), currency);
 		if (valid === true) {
+			clear_xpub_checkboxes();
 			validate_xpub(thisnode.closest("#xpubformbox"));
 		}
 		else {
@@ -950,7 +952,11 @@ function clear_xpub_inputs() {
     $("#ad_info_wrap").slideUp(200, function() {
 		$("#ad_info_wrap .td_box").html("");
 	});
-	$("#pk_confirmwrap").attr("data-checked", "false").data("checked", false);
+	clear_xpub_checkboxes();
+}
+
+function clear_xpub_checkboxes() {
+    $("#pk_confirmwrap").attr("data-checked", "false").data("checked", false);
 	$("#matchwrap").attr("data-checked", "false").data("checked", false);
 }
 
@@ -1043,7 +1049,7 @@ function xpub_info_pu(currency, xpub) {
         var index = startindex + i;
         derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> | " + val.address + "</li>";
     });
-    var content = $("<div id='ad_info_wrap'><h2>" + getcc_icon(coindat.cmcid, coindat.ccsymbol + "-" + thiscurrency, coindat.erc20) + " <span>" + thiscurrency + " Key Derivation</span></h2><ul>\
+    var content = $("<div id='ad_info_wrap'><h2>" + getcc_icon(coindat.cmcid, coindat.ccsymbol + "-" + currency, coindat.erc20) + " <span>" + currency + " Key Derivation</span></h2><ul>\
 	    <li><strong>Source: </strong>Xpub</li>\
 	    <li>\
 			<div id='d_paths'></div>\

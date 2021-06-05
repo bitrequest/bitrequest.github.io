@@ -1890,6 +1890,7 @@ function address_xpub_change() {
 		if (addressinputval.length > 103) {
 			var valid = check_xpub(addressinputval, xpub_prefix(currency), currency);
 			if (valid === true) {
+				clear_xpub_checkboxes();
 				validate_xpub(thisnode.closest("#addressformbox"));
 			}
 			else {
