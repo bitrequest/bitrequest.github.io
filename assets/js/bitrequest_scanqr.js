@@ -80,7 +80,7 @@ function setResult(result) {
 	    var prefix = payment + ":",
 	        mid_result = (result.indexOf(prefix) >= 0) ? result.split(prefix).pop() : result,
 	        end_result = (result.indexOf("?") >= 0) ? mid_result.split("?")[0] : mid_result,
-	        validate = (end_result.length > 103) ? check_xpub(end_result, xpub_prefix(payment)) :
+	        validate = (end_result.length > 103) ? check_xpub(end_result, xpub_prefix(payment), payment) :
 	        check_address(end_result, payment);
 	    if (validate === true) {
 	        $("#popup .formbox input.address").val(end_result);
