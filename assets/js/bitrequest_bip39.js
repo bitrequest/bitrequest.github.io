@@ -1508,7 +1508,7 @@ function phrase_info_pu(coin) {
         },
         singleclass = (coin) ? "single" : "",
         rootclass = (coin) ? "pd_" + coin : "pd_bitcoin",
-        sourceed_str = (coin) ? "<li><strong>Source: </strong> Seed</li>" : "<li><strong>BIP39 Seed: </strong><span class='adboxl adbox select'>" + seed + "</span></li>",
+        sourceed_str = (coin) ? "<li><strong>Source: </strong> Seed</li>" : "<li><strong>BIP39 Seed: </strong><span class='adboxl adbox select' data-type='BIP39 Seed'>" + seed + "</span></li>",
         pk_string = (coin) ? "<li class='clearfix'><span id='export_keys' class='ref' data-currency='" + coin + "'>Private keys</span><div id='pks_box'></div></li>" : "",
         coindat = (coin) ? getcoindata(coin) : null,
         header_str = (coin) ? "<h2>" + getcc_icon(coindat.cmcid, coindat.ccsymbol + "-" + coin, coindat.erc20) + " <span>" + coin + " Key Derivation</span></h2>" : "",
@@ -1574,7 +1574,7 @@ function phrase_info_pu(coin) {
                     "currency": currency
                 },
                 xmr_phrase = (currency == "monero") ? secret_spend_key_to_words(get_ssk(seed, true)) : false,
-                xmr_phrase_box = (xmr_phrase) ? "<div><strong>XMR Seed words: </strong><br/><span class='adboxl adbox select'>" + xmr_phrase + "</span></div>" : "",
+                xmr_phrase_box = (xmr_phrase) ? "<div><strong>XMR Seed words: </strong><br/><span class='adboxl adbox select' data-type='XMR Seed words'>" + xmr_phrase + "</span></div>" : "",
                 dp_node = $("<div class='d_path" + coinclass + "'>\
 				<div class='d_path_header'><strong>Derivation path: </strong><span class='ref'>" + root_path + "</span></div>" +
 					xmr_phrase_box +

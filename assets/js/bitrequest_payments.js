@@ -1411,15 +1411,20 @@ function newaddresli(currency, address) {
 }
 
 function copyaddress_dblclick() {
-    $(document).on("dblclick", "#paymentaddress", function() {
-        notify("<span id='copyaddress'>Copy address?</span>", 40000, "yes");
+    $(document).on("dblclick", "#paymentaddress, .select", function() {
+	    var thisnode = $(this),
+	    	type = thisnode.attr("data-type"),
+	    	typeval = (type) ? type : "address";
+	    copycontent.val(thisnode.text()).data({"type":typeval});
+        notify("<span id='copyaddress'>Copy " + typeval + "?</span>", 40000, "yes");
     });
 }
 
 function copyaddress() {
     $(document).on("click", "#copyaddress", function() {
-        var copycontent = $("#paymentaddress").text();
-        copytoclipboard(copycontent, "address");
+        var val = copycontent.val(),
+        	type = copycontent.data("type");
+        copytoclipboard(val, type);
     });
 }
 

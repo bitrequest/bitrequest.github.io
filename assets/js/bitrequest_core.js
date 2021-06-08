@@ -9,6 +9,7 @@ var language = navigator.language || navigator.userLanguage,
     main = $("main"),
     paymentpopup = $("#payment"),
     paymentdialogbox = $("#paymentdialogbox"),
+    copycontent = $("#copyinput"),
     funk = $("#funk"), // funk sound effect
     cashier = $("#cashier"), // cashier sound effect
     blip = $("#blip"), // blip sound effect
@@ -2721,7 +2722,7 @@ function addressinfo() {
                 "<div id='pk_span'>\
 					<div id='qrwrap' class='flex'>\
 						<div id='qrcode'></div>" + cc_icon + "</div>\
-						<p id='pkspan' class='adbox adboxl select'></p>\
+						<p id='pkspan' class='adbox adboxl select' data-type='private key'></p>\
 				</div>\
 				</li>\
 				<li><div class='showtransactions ref'><span class='icon-eye'></span> Show transactions</div></li>\
@@ -3228,9 +3229,8 @@ function copytoclipboard(content, type) {
         notify(type + " copied to clipboard", 2500, "no");
         return false;
     }
-    var copyinputfield = $("#copyinput");
-    copyinputfield.val(content);
-    copyinputfield[0].setSelectionRange(0, 999);
+    copycontent.val(content);
+    copycontent[0].setSelectionRange(0, 999);
     try {
         var success = document.execCommand("copy");
         if (success) {
@@ -3241,7 +3241,7 @@ function copytoclipboard(content, type) {
     } catch (err) {
         notify("Unable to copy " + type, 2500, "no");
     }
-    copyinputfield.val("").blur();
+    copycontent.val("").data({"type":false}).blur();
 }
 
 function getrandomnumber(min, max) {
