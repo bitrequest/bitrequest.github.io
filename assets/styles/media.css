@@ -11,7 +11,7 @@
         font-size: 1.1rem;
     }
 
-    #qrwrap #qrcode {
+    .qrwrap .qrcode {
         width: 85%;
     }
 
@@ -43,7 +43,7 @@
         font-size: 1.2rem;
     }
 
-    #qrwrap #qrcode {
+    .qrwrap .qrcode {
         width: 75%;
     }
 
@@ -85,7 +85,7 @@
         font-size: 1.2rem;
     }
 
-    #qrwrap #qrcode {
+    .qrwrap .qrcode {
         width: 65%;
     }
 
@@ -248,7 +248,7 @@
         font-size: 1.5rem;
     }
 
-    #qrcode {
+    .qrcode {
         max-width: 300px;
     }
 }

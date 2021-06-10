@@ -149,8 +149,8 @@ html.inframe #paymentdialogbox[data-pending="no"].transacting #view_tx {
 }
 
 #paymentdialogbox.transacting .actionbar,
-#paymentdialogbox.transacting #request_front #qrcode,
-#paymentdialogbox.transacting #request_front #qrwrap > .cmc_icon {
+#paymentdialogbox.transacting #request_front .qrcode,
+#paymentdialogbox.transacting #request_front .qrwrap > .cmc_icon {
     opacity: 0;
 }
 
