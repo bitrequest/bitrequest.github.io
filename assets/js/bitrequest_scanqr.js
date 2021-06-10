@@ -80,14 +80,24 @@ function setResult(result) {
 	    var prefix = payment + ":",
 	        mid_result = (result.indexOf(prefix) >= 0) ? result.split(prefix).pop() : result,
 	        end_result = (result.indexOf("?") >= 0) ? mid_result.split("?")[0] : mid_result,
-	        validate = (end_result.length > 103) ? check_xpub(end_result, xpub_prefix(payment), payment) :
+	        isxpub = (end_result.length > 103),
+	        validate = (isxpub) ? check_xpub(end_result, xpub_prefix(payment), payment) :
 	        check_address(end_result, payment);
 	    clear_xpub_inputs();
 	    if (validate === true) {
 	        $("#popup .formbox input.address").val(end_result);
 	        $("#popup .formbox input.addresslabel").focus();
+	        if (isxpub) {
+		        clear_xpub_checkboxes();
+				validate_xpub($("#addressformbox"));
+	        }
 	    } else {
-	        popnotify("error", "invalid " + payment + " address");
+		    if (isxpub) {
+		        xpub_fail(payment);
+	        }
+		    else {
+			    popnotify("error", "invalid " + payment + " address");
+		    }
 	    }
     }
     else if (thistype == "viewkey") {

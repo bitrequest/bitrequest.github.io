@@ -1039,8 +1039,8 @@ function continue_paymentfunction(payment) {
 			<div class='actionbar clearfix'>\
 				<div id='sharerequest' class='abl icon-share2 sbactive'>Share request</div><div class='openwallet abr icon-folder-open' data-currency='" + payment + "'>Open wallet</div>\
 			</div>\
-			<div id='qrwrap' class='flex'>\
-				<div id='qrcode'>\
+			<div class='qrwrap flex'>\
+				<div id='qrcode' class='qrcode'>\
 					<canvas width='256' height='256'></canvas>\
 				</div>" + cryptologo + brstatuspanel + "\
 			</div>\

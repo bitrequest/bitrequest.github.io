@@ -438,25 +438,25 @@ html.inframe #request_back {
 
 /* wqrcode */
 
-#qrwrap {
+.qrwrap {
     position: relative;
     margin: 1em 0 0.5em 0;
     overflow: visible;
 }
 
-#qrcode {
+.qrcode {
     position: relative;
     width: 100%;
     max-width: 450px;
     margin: auto;
 }
 
-#qrcode canvas {
+.qrcode canvas {
     width: 100%;
     margin: auto;
 }
 
-#qrwrap img.cmc_icon {
+.qrwrap img.cmc_icon {
     position: absolute;
     width: 20%;
     height: auto;

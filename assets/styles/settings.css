@@ -1039,7 +1039,6 @@ body.seed_dialog #seed_panel {
 }
 
 .si_li {
-	float:left;
 	position:relative;
 	padding:0.5em 0 0.8em 0;
 	width:100%;
@@ -1053,6 +1052,22 @@ body.seed_dialog #seed_panel {
 	font-size:140%;
 	color:#B33A3A;
 	cursor:pointer;
+}
+
+#xpub_box {
+	padding:0!important;
+	margin:0!important;
+	width:100%;
+}
+
+#xpub_box .xpub_ib {
+	padding:0.5em 0 0.75em 0;
+	margin:0 0 0.5em 0;
+	border-bottom: 1px solid #d5d5d5;
+}
+
+#xpub_box .xpub_ib .xp_span {
+	display:none;
 }
 
 #supported_wallets {

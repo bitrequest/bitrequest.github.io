@@ -117,6 +117,7 @@ $(document).ready(function() {
     test_derive_prev();
     //test_derive_function
     phrase_moreinfo();
+    phrase_showxp();
 });
 
 function hasbigint() {
@@ -309,7 +310,7 @@ function xpub_check() {
     	key_object = format_keys(null, x_keys_dat, bip32dat, 0, currency),
     	xpub_address = key_object.address,
     	xpub_wildcard_address = "bc1qk0wlvl4xh3eqe5szqyrlcj4ws8633vz0vhhywl"; // wildcard for bech32 Xpubs (Zpub)
-    if (xpub_address == expected_address || xpub_address == xpub_wildcard_address) {
+	if (xpub_address == expected_address || xpub_address == xpub_wildcard_address) {
 	    return true;
     }
     else {
@@ -1383,7 +1384,7 @@ function ext_keys(eo, currency) {
 function b58c_x_payload(eo, currency) {
     var xpubdat = getbip32dat(currency),
         xpub = eo.xpub,
-        version = (xpub) ? xpubdat.prefix.pubx : xpubdat.prefix.privx,
+        version = (currency == "bitcoin") ? (xpub) ? xpubdat.prefix.pubz : xpubdat.prefix.privz : (xpub) ? xpubdat.prefix.pubx : xpubdat.prefix.privx,
         v_hex = str_pad(dectohex(version), 8),
         depth = (eo.depth) ? str_pad(eo.depth, 2) : "00",
         fingerprint = (eo.fingerprint) ? eo.fingerprint : "00000000",
@@ -1511,13 +1512,14 @@ function phrase_info_pu(coin) {
         sourceed_str = (coin) ? "<li><strong>Source: </strong> Seed</li>" : "<li><strong>BIP39 Seed: </strong><span class='adboxl adbox select' data-type='BIP39 Seed'>" + seed + "</span></li>",
         pk_string = (coin) ? "<li class='clearfix'><span id='export_keys' class='ref' data-currency='" + coin + "'>Private keys</span><div id='pks_box'></div></li>" : "",
         coindat = (coin) ? getcoindata(coin) : null,
-        header_str = (coin) ? "<h2>" + getcc_icon(coindat.cmcid, coindat.ccsymbol + "-" + coin, coindat.erc20) + " <span>" + coin + " Key Derivation</span></h2>" : "",
+        cc_icon = (coin) ? getcc_icon(coindat.cmcid, coindat.ccsymbol + "-" + coin, coindat.erc20) : "",
+        header_str = (coin) ? "<h2>" + cc_icon + " <span>" + coin + " Key Derivation</span></h2>" : "",
         sbu_val = get_setting("backup", "sbu"),
-        sbu_str = (has_datenc() === true) ? "<div class='si_li'><strong>Backup seed:</strong><div id='toggle_sbu_span' class='ait'>" + switchpanel(sbu_val, " global") + "</div></div>" : "",
-        del_phr_str = (coin) ? "" : (hasbip === true) ? sbu_str + "<div class='si_li noline'><div id='deletephrase' class='icon-bin'></div></div>" : "",
+        sbu_str = (has_datenc() === true) ? "<li class='clearfix'><strong>Backup seed:</strong><div id='toggle_sbu_span' class='ait'>" + switchpanel(sbu_val, " global") + "</div></li>" : "",
+        del_phr_str = (coin) ? "" : (hasbip === true) ? sbu_str + "<li class='clearfix'><div id='deletephrase' class='icon-bin'></div></li>" : "",
         content = $("<div id='ad_info_wrap' class='" + singleclass + "' data-class='" + rootclass + "'>" + header_str + "<ul>" +
             sourceed_str +
-            "<li id='pi_li' class='noline'><strong>Key derivations: </strong>\
+            "<li id='pi_li' class='noline'>\
     		<div id='pi_icons'>\
     		</div>\
     	</li>\
@@ -1525,14 +1527,16 @@ function phrase_info_pu(coin) {
     		<div id='d_paths'>\
     		</div>\
     	</li>\
-    	<li class='noline'>\
-    		<div id='bip_mi' class='ref'>Compatible wallets:</div>\
-    		<div id='bip_mibox'>\
-    			<div id='supported_wallets'>\
-				</div>" + del_phr_str +
-            "</div>\
+    	<li id='xpub_box' class='clearfix noline'>\
     	</li>\
-    	</ul>\
+    	<li>\
+    		<div id='bip_mi'><strong>Compatible wallets: </strong><span class='xpref ref'>hide</span></div>\
+    		<div id='bip_mibox' class='clearfix drawer'>\
+    			<div id='supported_wallets'>\
+				</div>\
+            </div>\
+    	</li>" + del_phr_str +
+    	"</ul>\
 	</div>").data(root_dat);
     popdialog(content, "alert", "canceldialog");
     $.each(bitrequest_coin_data, function(i, coinconfig) {
@@ -1547,10 +1551,21 @@ function phrase_info_pu(coin) {
                 walletlist = "",
                 lb = (currency == "nano") ? "<br/>" : " ",
                 derive_array = keypair_array(seed, new Array(5), startindex, root_path, bip32dat, key, cc, currency),
-                coinclass = " pd_hide pd_" + currency;
+                coinclass = " pd_hide pd_" + currency,
+                x_pub;
+            if (bip32dat.xpub) {
+	            var dx_dat = {
+			        "dpath": root_path.slice(0, -3),
+			        "key": key,
+			        "cc": cc,
+		        },
+		        x_keys_dat = derive_x(dx_dat),
+		        x_keys = ext_keys(x_keys_dat, currency),
+		        x_pub = x_keys.ext_pub;
+            }
             $.each(derive_array, function(i, val) {
                 var index = startindex + i;
-                derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> " + lb + val.address + "</li>";
+                derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> <span class='mspace'>" + lb + val.address + "</span></li>";
             });
             if (walletdat) {
                 var platform = getplatform(getdevicetype()),
@@ -1578,18 +1593,31 @@ function phrase_info_pu(coin) {
                 dp_node = $("<div class='d_path" + coinclass + "'>\
 				<div class='d_path_header'><strong>Derivation path: </strong><span class='ref'>" + root_path + "</span></div>" +
 					xmr_phrase_box +
-    				"<div class='d_path_body clearfix'>\
+    				"<div class='d_path_body drawer clearfix'>\
     					<div class='td_bar'>\
 							<div class='td_next button'>Next</div><div class='td_prev button'>Prev</div>\
 						</div>\
 						<ul class='td_box'>" + derivelist + "</ul>\
     				</div>\
     			</div>").data(dp_node_dat),
-                sw_node = $("<ul id='formbox_ul' class='clearfix" + coinclass + "'>" + walletlist + "</ul>");
+    			sw_node = $("<ul id='formbox_ul' class='clearfix" + coinclass + "'>" + walletlist + "</ul>"),
+    			xp_node = "";
+    			if (x_pub) {
+	    			var xp_node = $("<div class='xpub_ib clearfix" + coinclass + "' data-xpub='" + x_pub + "'>\
+	    			<div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>show</span></div>\
+						<div class='xp_span drawer'>\
+							<div class='qrwrap flex'>\
+								<div class='qrcode'></div><img src='img/logos/" + ccsymbol + "-" + currency + ".png' class='cmc_icon'>\
+							</div>\
+							<p class='adbox adboxl select' data-type='Xpub'>" + x_pub + "</p>\
+						</div>\
+					</div>");
+				}
             if (c_derive[currency]) {
 	            $("#pi_icons").append(icon_node);
 				$("#d_paths").append(dp_node);
             }
+            $("#xpub_box").append(xp_node);
             $("#supported_wallets").append(sw_node);
             pi_show();
         }
@@ -1610,7 +1638,9 @@ function toggle_dpaths() {
             d_body.slideUp(200);
         } else {
             d_body.slideDown(200);
+            $(".drawer").not(d_body).slideUp(200);
         }
+        $(".xpref").text("show");
     })
 }
 
@@ -1661,7 +1691,7 @@ function test_derive_function(thisnode, prev) {
 	    test_derive_box.html("");
 	    $.each(derive_array, function(i, val) {
 	        var index = startindex + i,
-	            tdb_li = "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> " + lb + val.address + "</li>";
+	            tdb_li = "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> " + lb + "<span class='mspace'>" + val.address + "</span></li>";
 	        test_derive_box.append(tdb_li);
 	    });
     }
@@ -1670,13 +1700,46 @@ function test_derive_function(thisnode, prev) {
 function phrase_moreinfo() {
     $(document).on("click", "#bip_mi", function() {
         var thisbttn = $(this),
-        bmb = $("#bip_mibox");
+        	show_cp = thisbttn.find(".xpref"),
+			bmb = $("#bip_mibox");
         if (bmb.is(":visible")) {
+	        show_cp.text("show");
             bmb.slideUp(200);
-            //thisbttn.text("Compatible wallets:");
         } else {
+	        show_cp.text("hide");
             bmb.slideDown(200);
-            //thisbttn.text("Hide");
+            $(".drawer").not(bmb).slideUp(200);
         }
+        $(".xpref").not(show_cp).text("show");
+    })
+}
+
+function phrase_showxp() {
+    $(document).on("click", ".show_xpub", function() {
+        var thisbttn = $(this),
+        	xpub_box = $("#xpub_box"),
+        	xpub_ib = xpub_box.find(".xpub_ib"),
+        	show_cp = xpub_box.find(".xpref"),
+			bmb = $(".xp_span");
+        if (bmb.is(":visible")) {
+	        show_cp.text("show");
+            bmb.slideUp(200);
+        } else {
+	        if (xpub_box.hasClass("rendered")) {
+		    }
+		    else {
+			    xpub_ib.each(function() {
+                	var thisnode = $(this),
+                		xpub = thisnode.attr("data-xpub"),
+                		qrcode = thisnode.find(".qrcode");
+					qrcode.qrcode(xpub);
+                });
+                xpub_box.addClass("rendered");
+		    }
+	        show_cp.text("hide");
+            bmb.slideDown(200);
+            $(".drawer").not(bmb).slideUp(200);
+        }
+        $(".xpref").not(show_cp).text("show");
     })
 }

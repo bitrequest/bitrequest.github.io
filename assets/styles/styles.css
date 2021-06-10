@@ -192,6 +192,10 @@ main {
     pointer-events: all;
 }
 
+.mspace {
+	font-family: monospace;
+}
+
 .noselect {
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -2593,6 +2597,10 @@ html.gdauth #share_bu {
     width: 100%;
     padding:0.8em 0em 1em 0;
     border-bottom:1px solid #CCC;
+}
+
+#formbox_ul > li:last-child {
+	border-bottom:1px solid rgba(204, 204, 204, 0);
 }
 
 #formbox_ul li a {

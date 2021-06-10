@@ -2720,8 +2720,8 @@ function addressinfo() {
                 dpath_str +
                 "<li><strong>Private key: </strong>" + pk_str +
                 "<div id='pk_span'>\
-					<div id='qrwrap' class='flex'>\
-						<div id='qrcode'></div>" + cc_icon + "</div>\
+					<div class='qrwrap flex'>\
+						<div id='qrcode' class='qrcode'></div>" + cc_icon + "</div>\
 						<p id='pkspan' class='adbox adboxl select' data-type='private key'></p>\
 				</div>\
 				</li>\
@@ -2818,9 +2818,9 @@ function show_vk() {
 
 function show_vk_cb(kd) {
 	var stat = kd.stat,
-		ststr = (stat) ? "" : "<br/><strong style='color:#8d8d8d'>Spendkey</strong> <span class='adbox adboxl select'>" + kd.ssk + "</span><br/>";
+		ststr = (stat) ? "" : "<br/><strong style='color:#8d8d8d'>Spendkey</strong> <span class='adbox adboxl select' data-type='Spendkey'>" + kd.ssk + "</span><br/>";
 	$("#show_vk").text("hide");
-	$("#pk_span").html(ststr + "<br/><strong style='color:#8d8d8d'>Viewkey</strong> <span class='adbox adboxl select'>" + kd.svk + "</span>").addClass("shwpk").slideDown(200);
+	$("#pk_span").html(ststr + "<br/><strong style='color:#8d8d8d'>Viewkey</strong> <span class='adbox adboxl select' data-type='Viewkey'>" + kd.svk + "</span>").addClass("shwpk").slideDown(200);
 }
 
 function open_blockexplorer_url(be_link) {

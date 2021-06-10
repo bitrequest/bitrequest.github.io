@@ -980,7 +980,7 @@ function xpub_derivelists(currency, xpub) {
 	        derive_array = keypair_array(false, new Array(5), startindex, root_path, bip32dat, key, chaincode, currency, versionbytes);
 	    $.each(derive_array, function(i, val) {
 	        var index = startindex + i;
-	        derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> | " + val.address + "</li>";
+	        derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> | <span class='mspace'>" + val.address + "</span></li>";
 	    });
 		return derivelist;
     } catch (err) {
@@ -1047,7 +1047,7 @@ function xpub_info_pu(currency, xpub) {
         derive_array = keypair_array(false, new Array(5), startindex, root_path, bip32dat, key, chaincode, currency, versionbytes);
     $.each(derive_array, function(i, val) {
         var index = startindex + i;
-        derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> | " + val.address + "</li>";
+        derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> | <span class='mspace'>" + val.address + "</span></li>";
     });
     var content = $("<div id='ad_info_wrap'><h2>" + getcc_icon(coindat.cmcid, coindat.ccsymbol + "-" + currency, coindat.erc20) + " <span>" + currency + " Key Derivation</span></h2><ul>\
 	    <li><strong>Source: </strong>Xpub</li>\
