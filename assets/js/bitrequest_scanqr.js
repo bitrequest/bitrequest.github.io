@@ -91,7 +91,7 @@ function setResult(result) {
 		    }
 	        if (isxpub) {
 		        clear_xpub_checkboxes();
-				validate_xpub($("#xpubformbox"));
+				validate_xpub($(".formbox"));
 	        }
 	    } else {
 		    if (isxpub) {
