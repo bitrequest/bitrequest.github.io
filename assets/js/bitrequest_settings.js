@@ -2332,7 +2332,6 @@ function team_invite() {
 				This will install Bitrequest on your team member's device, pre-installed with your public keys and restricted access (cashier).<br/>\
 				Your team members are unable to access funds or make changes.</p>\
 				<div id='send_invite' data-url='" + jsonencode + "' class='button'><span class='icon-share2'/>Send invite</div>\
-				<a href='data:text/json;charset=utf-16le;base64," + jsonencode + "' download='" + filename + "' title='" + filename + "' id='triggerdownload' class='button icon-download' data-date='" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_') + "' data-lastbackup='" + filename + "' download>DOWNLOAD BACKUP</a>\
 			</div>\
 		</div>\
 		<div id='backupactions'>\
