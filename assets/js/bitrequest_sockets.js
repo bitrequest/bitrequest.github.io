@@ -9,7 +9,21 @@ $(document).ready(function() {
     //web3_erc20_websocket
     //handle_socket_fails
     //try_next_socket
+    //current_socket
     reconnect();
+    
+// Polling
+
+	//init_xmr_node
+	//ping_xmr_node
+	//after_poll
+	//ap_loader
+	//bitcoincom_scan_poll
+	//blockcypher_scan_poll
+	//nano_scan_poll
+	//erc20_scan_poll
+	//xmr_scan_poll_init
+	//xmr_scan_poll
 });
 
 // Websockets / Pollfunctions
@@ -29,12 +43,29 @@ function init_socket(socket_node, address) {
                 blockcypher_websocket(socket_node, address);
             } else if (socket_name == "blockchain.info websocket") {
                 blockchain_btc_socket(socket_node, address);
+            } else if (socket_name == main_ad_socket) {
+                amberdata_btc_websocket(socket_node, address, "408fa195a34b533de9ad9889f076045e");
             } else {
                 blockcypher_websocket(socket_node, address);
             }
-        } else if (payment == "litecoin" || payment == "dogecoin") {
+        } else if (payment == "litecoin") {
             closesocket();
-            blockcypher_websocket(socket_node, address);
+            if (socket_name == "blockcypher websocket") {
+                blockcypher_websocket(socket_node, address);
+            } else if (socket_name == main_ad_socket) {
+                amberdata_btc_websocket(socket_node, address, "f94be61fd9f4fa684f992ddfd4e92272");
+            } else {
+                blockcypher_websocket(socket_node, address);
+            }
+        } else if (payment == "dogecoin") {
+            closesocket();
+            if (socket_name == "blockcypher websocket") {
+                blockcypher_websocket(socket_node, address);
+            } else if (socket_name == "dogechain api") {
+                dogechain_info_socket(socket_node, address);
+            } else {
+                blockcypher_websocket(socket_node, address);
+            }
         } else if (payment == "bitcoin-cash") {
             closesocket();
             blockchain_bch_socket(socket_node, address);
@@ -75,13 +106,13 @@ function init_socket(socket_node, address) {
 // Websockets
 
 function blockchain_btc_socket(socket_node, thisaddress) {
-    var provider = socket_node.url;
+	var provider = socket_node.url;
     websocket = new WebSocket(provider);
     websocket.onopen = function(e) {
         setTimeout(function() {
             chainstate("Monitoring address");
         }, 3500);
-        console.log("Connected: " + provider + "/" + thisaddress);
+        socket_info(socket_node, live);
         var ping_event = JSON.stringify({
             "op": "addr_sub",
             "addr": thisaddress
@@ -118,20 +149,20 @@ function blockchain_btc_socket(socket_node, thisaddress) {
         txid = null;
     };
     websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, "blockchain.info", thisaddress, e.data)
+        handle_socket_fails(socket_node, thisaddress, e.data)
         return false;
     };
 }
 
 function blockchain_bch_socket(socket_node, thisaddress) {
-    var provider = socket_node.url,
+	var provider = socket_node.url,
     	legacy = bchutils.toLegacyAddress(thisaddress);
     websocket = new WebSocket(provider);
     websocket.onopen = function(e) {
         setTimeout(function() {
             chainstate("Monitoring address");
         }, 3500);
-        console.log("Connected: " + provider + "/" + legacy);
+        socket_info(socket_node, true);
         var ping_event = JSON.stringify({
             "op": "addr_sub",
             "addr": legacy
@@ -158,24 +189,74 @@ function blockchain_bch_socket(socket_node, thisaddress) {
         txid = null;
     };
     websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, "blockchain.info", thisaddress, e.data)
+        handle_socket_fails(socket_node, thisaddress, e.data)
         return false;
     };
 }
 
-function blockcypher_websocket(socket_node, thisaddress) {
-    var provider = socket_node.url + request.currencysymbol + "/main";
+function dogechain_info_socket(socket_node, thisaddress) {
+	var provider = socket_node.url;
     websocket = new WebSocket(provider);
     websocket.onopen = function(e) {
         setTimeout(function() {
             chainstate("Monitoring address");
         }, 3500);
-        console.log("Connected: " + provider + "/" + thisaddress);
+        socket_info(socket_node, true);
         var ping_event = JSON.stringify({
-            event: "tx-confirmation",
-            address: thisaddress,
-            token: get_blockcypher_apikey(),
-            confirmations: 10
+            "op": "addr_sub",
+            "addr": thisaddress
+        });
+        websocket.send(ping_event);
+        ping = setInterval(function() {
+            websocket.send(ping_event);
+        }, 55000);
+    };
+    websocket.onmessage = function(e) {
+        var json = JSON.parse(e.data).x,
+        	txhash = json.hash;
+		if (txhash) {
+            if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
+                paymentdialogbox.removeClass("transacting");
+                var reconnectbttn = (txid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + txid + "'>Reconnect</span></div></p>" : "",
+                    content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + reconnectbttn;
+                closesocket();
+                popdialog(content, "alert", "canceldialog");
+            } else {
+                var txd = dogechain_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress);
+                if (txd) {
+	                txid = txhash;
+		            closesocket();
+		            pick_monitor(txhash, txd);
+	            }
+            }
+        }
+
+    };
+    websocket.onclose = function(e) {
+        chainstate("Connection ended");
+        console.log("Disconnected");
+        txid = null;
+    };
+    websocket.onerror = function(e) {
+        handle_socket_fails(socket_node, thisaddress, e.data)
+        return false;
+    };
+}
+
+function blockcypher_websocket(socket_node, thisaddress) {
+	var bc_token = get_blockcypher_apikey(),
+		provider = socket_node.url + request.currencysymbol + "/main";
+	websocket = new WebSocket(provider);
+    websocket.onopen = function(e) {
+        setTimeout(function() {
+            chainstate("Monitoring address");
+        }, 3500);
+        socket_info(socket_node, true);
+        var ping_event = JSON.stringify({
+            "event": "tx-confirmation",
+            "address": thisaddress,
+            "token": get_blockcypher_apikey(),
+            "confirmations": 10
         });
         websocket.send(ping_event);
         ping = setInterval(function() {
@@ -208,20 +289,20 @@ function blockcypher_websocket(socket_node, thisaddress) {
         txid = null;
     };
     websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, "blockcypher", thisaddress, e.data)
+        handle_socket_fails(socket_node, thisaddress, e.data)
         return false;
     };
 }
 
 function nano_socket(socket_node, thisaddress) {
-    var address_mod = (thisaddress.match("^xrb")) ? "nano_" + thisaddress.split("_").pop() : thisaddress, // change nano address prefix xrb_ to nano untill websocket support
+	var address_mod = (thisaddress.match("^xrb")) ? "nano_" + thisaddress.split("_").pop() : thisaddress, // change nano address prefix xrb_ to nano untill websocket support
         provider = socket_node.url;
     websocket = new WebSocket(provider);
     websocket.onopen = function(e) {
         setTimeout(function() {
             chainstate("Monitoring address");
         }, 3500);
-        console.log("Connected: " + provider);
+        socket_info(socket_node, true);
         var ping_event = JSON.stringify({
             "action": "subscribe",
             "topic": "confirmation",
@@ -256,15 +337,62 @@ function nano_socket(socket_node, thisaddress) {
         txid = null;
     };
     websocket.onerror = function(e) {
-        var socketname = socket_node.name,
-            s_name = (socketname) ? socketname : "nano Node";
-        handle_socket_fails(socket_node, s_name, thisaddress, e.data);
+        handle_socket_fails(socket_node, thisaddress, e.data);
+        return false;
+    };
+}
+
+function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
+	var socket_url = socket_node.url,
+        ak = get_amberdata_apikey(),
+		provider = socket_url + "?x-api-key=" + ak + "&x-amberdata-blockchain-id=" + blockchainid;
+    websocket = new WebSocket(provider);
+    websocket.onopen = function(e) {
+        setTimeout(function() {
+            chainstate("Monitoring address");
+        }, 3500);
+        socket_info(socket_node, true);
+        var ping_event = JSON.stringify({
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "subscribe",
+            "params": [
+                "address:pending_transactions",
+                {
+                    "address": thisaddress
+                }
+            ]
+        });
+        websocket.send(ping_event);
+        ping = setInterval(function() {
+            websocket.send(ping_event);
+        }, 55000);
+    };
+    websocket.onmessage = function(e) {
+	    var data = JSON.parse(e.data),
+            params = (data.params);
+        if (params) {
+	        var result = params.result,
+	        	txhash = result.hash,
+                txd = amberdata_poll_btc_data(result, request.set_confirmations, request.currencysymbol, thisaddress);
+            closesocket();
+            pick_monitor(txhash, txd);
+            return false;
+        }
+    };
+    websocket.onclose = function(e) {
+        chainstate("Connection ended");
+        console.log("Disconnected");
+        txid = null;
+    };
+    websocket.onerror = function(e) {
+        handle_socket_fails(socket_node, thisaddress, e.data);
         return false;
     };
 }
 
 function amberdata_eth_websocket(socket_node, thisaddress) {
-    var socket_url = socket_node.url,
+	var socket_url = socket_node.url,
         ak = get_amberdata_apikey(),
 		provider = socket_url + "?x-api-key=" + ak;
     websocket = new WebSocket(provider);
@@ -272,7 +400,7 @@ function amberdata_eth_websocket(socket_node, thisaddress) {
         setTimeout(function() {
             chainstate("Monitoring address");
         }, 3500);
-        console.log("Connected: " + socket_url);
+        socket_info(socket_node, true);
         var ping_event = JSON.stringify({
             "jsonrpc": "2.0",
             "id": 1,
@@ -309,15 +437,13 @@ function amberdata_eth_websocket(socket_node, thisaddress) {
         txid = null;
     };
     websocket.onerror = function(e) {
-        var socketname = socket_node.name,
-            s_name = (socketname) ? socketname : "Amberdata";
-        handle_socket_fails(socket_node, s_name, thisaddress, e.data);
+        handle_socket_fails(socket_node, thisaddress, e.data);
         return false;
     };
 }
 
 function web3_erc20_websocket(socket_node, thisaddress) {
-    var provider_url = socket_node.url,
+	var provider_url = socket_node.url,
         if_id = get_infura_apikey(provider_url),
         provider = provider_url + if_id;
     websocket = new WebSocket(provider);
@@ -325,7 +451,7 @@ function web3_erc20_websocket(socket_node, thisaddress) {
         setTimeout(function() {
             chainstate("Monitoring address");
         }, 3500);
-        console.log("Connected: " + provider_url);
+        socket_info(socket_node, true);
         var ping_event = JSON.stringify({
             "jsonrpc": "2.0",
             "id": 1,
@@ -391,19 +517,20 @@ function web3_erc20_websocket(socket_node, thisaddress) {
         txid = null;
     };
     websocket.onerror = function(e) {
-        var socketname = socket_node.name,
-            s_name = (socketname) ? socketname : "infura.io";
-        handle_socket_fails(socket_node, s_name, thisaddress, e);
+        handle_socket_fails(socket_node, thisaddress, e);
         return false;
     };
 }
 
-function handle_socket_fails(socket_node, socketname, thisaddress, error) {
+function handle_socket_fails(socket_node, thisaddress, error) {
     var next_socket = try_next_socket(socket_node);
     if (next_socket === false) {
         console.log(error);
-        fail_dialogs(socketname, "unable to connect to " + socketname);
-        notify("this currency is not monitored", 500000, "yes");
+        var error_message = "unable to connect to " + socket_node.name;
+        //fail_dialogs(socketname, error_message);
+        console.log(error_message);
+        socket_info(socket_node, false);
+        notify("websocket offline", 500000, "yes");
     } else {
         closesocket();
         init_socket(next_socket, thisaddress);
@@ -427,11 +554,26 @@ function try_next_socket(current_socket_data) {
             if (socket_attempt[btoa(next_socket.url)] === true) {
                 return false;
             } else {
-                return next_socket;
+	            if (next_socket !== undefined) {
+		            return next_socket;
+	            }
+	            else {
+		            return false;
+	            }
             }
         }
+        return false;
     } else {
         return false;
+    }
+}
+
+function socket_info(snode, live) {
+	var islive = (live) ? " <span class='pulse'></span>" : " <span class='icon-wifi-off'></span>",
+		contents = "websocket: " + snode.url + islive; 
+    $("#current_socket").html(contents);
+    if (live) {
+	    console.log("Connected: " + snode.url);
     }
 }
 

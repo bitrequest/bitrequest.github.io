@@ -214,6 +214,11 @@ var multi_wallets = {
                             "name": "blockchain.info websocket",
                             "url": "wss://ws.blockchain.info/inv",
                             "display": true
+                        },
+                        {
+                            "name": main_ad_socket,
+							"url": main_ad_socket,
+							"display": true
                         }
                     ]
                 },
@@ -235,110 +240,6 @@ var multi_wallets = {
                     },
                     "pk_vbytes": {
                         "wif": 128
-                    }
-                },
-                "Key derivations": {
-                    "icon": "cog",
-                    "selected": "BIP32 key generation",
-                }
-            }
-        },
-        {
-            "currency": "monero",
-            "active": true,
-            "data": {
-                "currency": "monero",
-                "ccsymbol": "xmr",
-                "cmcid": "328",
-                "urlscheme": function(payment, address, amount, iszero) {
-                    return payment + ":" + address + ((iszero === true) ? "" : "?tx_amount=" + amount);
-                },
-                "address_regex": "^[48](?:[0-9AB]|[1-9A-HJ-NP-Za-km-z]{12}(?:[1-9A-HJ-NP-Za-km-z]{30})?)[1-9A-HJ-NP-Za-km-z]{93}$"
-            },
-            "wallets": {
-	            "wallet_download_page": "https://www.getmonero.org/downloads/",
-                "wallets": [
-                	multi_wallets.coinomi,
-                	{
-                        "name": "monerujo",
-                        "website": "https://www.monerujo.io",
-                        "appstore": null,
-                        "playstore": "https://play.google.com/store/apps/details?id=com.m2049r.xmrwallet",
-                        "desktop": null,
-                        "seed": true
-                    },
-                    {
-                        "name": "cakewallet",
-                        "website": "https://cakewallet.com",
-                        "appstore": "https://apps.apple.com/app/id1334702542",
-                        "playstore": "https://play.google.com/store/apps/details?id=com.cakewallet.cake_wallet",
-                        "desktop": null,
-                        "seed": true
-                    },
-                    {
-                        "name": "mymonero",
-                        "website": "https://mymonero.com",
-                        "appstore": "https://apps.apple.com/app/id1372508199",
-                        "playstore": null,
-                        "desktop": "https://github.com/mymonero/mymonero-app-js/releases",
-                        "seed": true
-                    },
-                    {
-                        "name": "guiwallet",
-                        "website": "https://www.getmonero.org",
-                        "appstore": null,
-                        "playstore": null,
-                        "desktop": "https://www.getmonero.org/downloads/#gui",
-                        "seed": true
-                    }
-                ]
-            },
-            "settings": {
-	            "confirmations": {
-                    "icon": "clock",
-                    "selected": 0
-                },
-                "Use random address": {
-                    "icon": "dice",
-                    "selected": false,
-                    "switch": true,
-                },
-                "blockexplorers": {
-                    "icon": "eye",
-                    "selected": "blockchair.com",
-                    "options": {
-                        "key1": "blockchair.com"
-                    }
-                },
-                "apis": {
-                    "icon": "sphere",
-                    "selected": {
-                        "name": "xmr node",
-                        "api": true,
-                        "display": true
-                    },
-                    "apis": [{
-                        "name": "xmr node",
-                        "api": true,
-                        "display": true
-                    }]
-                },
-                "Xpub": {
-                    "active": true,
-                    "xpub": false,
-                    "icon": "key",
-                    "switch": true,
-                    "custom_switch": true,
-                    "selected": false,
-                    "key": null,
-                    "root_path": "m/44'/128'/0'/0/",
-                    "prefix": {
-                        "pub": 0,
-                        "pubx": "00000000",
-                        "privx": "00000000"
-                    },
-                    "pk_vbytes": {
-                        "wif": 0
                     }
                 },
                 "Key derivations": {
@@ -429,7 +330,18 @@ var multi_wallets = {
                         "name": "blockcypher websocket",
                         "url": "wss://socket.blockcypher.com/v1/",
                         "display": true
-                    }
+                    },
+                    "apis": [{
+                            "name": "blockcypher websocket",
+                            "url": "wss://socket.blockcypher.com/v1/",
+                            "display": true
+                        },
+                        {
+                            "name": main_ad_socket,
+							"url": main_ad_socket,
+							"display": true
+                        }
+                    ]
                 },
                 "Xpub": {
                     "active": true,
@@ -508,9 +420,9 @@ var multi_wallets = {
                     },
                     "apis": [{
                             "name": "blockcypher",
-                            "url": "blockcypher.com",
-                            "api": true,
-                            "display": true
+	                        "url": "blockcypher.com",
+	                        "api": true,
+	                        "display": true
                         },
                         {
                             "name": "blockchair",
@@ -530,7 +442,18 @@ var multi_wallets = {
                         "name": "blockcypher websocket",
                         "url": "wss://socket.blockcypher.com/v1/",
                         "display": true
-                    }
+                    },
+                    "apis": [{
+                            "name": "blockcypher websocket",
+                            "url": "wss://socket.blockcypher.com/v1/",
+                            "display": true
+                        },
+                        {
+                            "name": "dogechain api",
+							"url": "wss://ws.dogechain.info/inv",
+							"display": true
+                        }
+                    ]
                 },
                 "Xpub": {
                     "active": true,
@@ -548,6 +471,247 @@ var multi_wallets = {
                     },
                     "pk_vbytes": {
                         "wif": 158
+                    }
+                },
+                "Key derivations": {
+                    "icon": "cog",
+                    "selected": "BIP32 key generation",
+                }
+            }
+        },
+        {
+        	"currency": "bitcoin-cash",
+	    	"active": true,
+            "data": {
+                "currency": "bitcoin-cash",
+                "ccsymbol": "bch",
+                "cmcid": 1831,
+                "urlscheme": function(payment, address, amount, iszero) {
+                    return bch_urlscheme(payment, address, amount, iszero);
+                },
+                "address_regex": "(q|p)[a-z0-9]{41}"
+            },
+            "wallets": {
+	            "wallet_download_page": "https://bch.info/en/wallets",
+                "wallets": [
+                    multi_wallets.exodus,
+                    multi_wallets.coinomi,
+                    multi_wallets.trezor,
+                    multi_wallets.ledger,
+                    multi_wallets.trustwallet,
+                    multi_wallets.atomicwallet
+                ]
+            },
+            "settings": {
+                "confirmations": {
+                    "icon": "clock",
+                    "selected": 0
+                },
+                "Use random address": {
+                    "icon": "dice",
+                    "selected": false,
+                    "switch": true,
+                },
+                "Reuse address": {
+                    "icon": "recycle",
+                    "selected": false,
+                    "switch": true,
+                    "custom_switch": true
+                },
+                "blockexplorers": {
+                    "icon": "eye",
+                    "selected": "blockchain.com",
+                    "options": {
+                        "key1": "blockchain.com",
+                        "key2": "blockchair.com",
+                        "key3": "bitcoin.com"
+                    }
+                },
+                "apis": {
+                    "icon": "sphere",
+                    "selected": {
+                        "name": "bitcoin.com",
+                            "url": "bitcoin.com",
+                            "api": true,
+                            "display": true
+                    },
+                    "apis": [{
+                        "name": "bitcoin.com",
+                        "url": "bitcoin.com",
+                        "api": true,
+                        "display": true
+                    },
+                    {
+                        "name": "blockchair",
+                        "url": "blockchair.com",
+                        "api": true,
+                        "display": false
+                    }],
+                    "options": [],
+                    "rpc_test_command": {
+                        "method": "getblockchaininfo"
+                    }
+                },
+                "websockets": {
+                    "icon": "tab",
+                    "selected": {
+                        "name": "blockchain.info websocket",
+                        "url": "wss://ws.blockchain.info/bch/inv",
+                        "display": true
+                    },
+                    "apis": [{
+                        "name": "blockchain.info websocket",
+                        "url": "wss://ws.blockchain.info/bch/inv",
+                        "display": true
+                    }],
+					"options": []
+                },
+                "Xpub": {
+                    "active": true,
+                    "xpub": true,
+                    "icon": "key",
+                    "switch": true,
+                    "custom_switch": true,
+                    "selected": false,
+                    "key": null,
+                    "root_path": "m/44'/145'/0'/0/",
+                    "prefix": {
+                        "pub": 0,
+                        "pubx": 76067358,
+                        "privx": 76066276
+                    },
+                    "pk_vbytes": {
+                        "wif": 128
+                    }
+                },
+                "Key derivations": {
+                    "icon": "cog",
+                    "selected": "BIP32 key generation",
+                }
+            }
+        },
+        {
+            "currency": "ethereum",
+            "active": true,
+            "data": {
+                "currency": "ethereum",
+                "ccsymbol": "eth",
+                "cmcid": 1027,
+                "urlscheme": function(payment, address, amount, iszero) {
+	                var amount = (iszero === true) ? "" : "?value=" + (parseFloat(amount) * "1000000000000000000").toFixedSpecial(0);
+                    return payment + ":" + address + amount;
+                },
+                "address_regex": "web3"
+            },
+            "wallets": {
+	            "wallet_download_page": "https://ethereum.org/en/wallets/",
+                "wallets": [
+                    multi_wallets.exodus,
+                    multi_wallets.trezor,
+                    multi_wallets.ledger,
+                    multi_wallets.trustwallet,
+                    multi_wallets.keepkey,
+                    {
+                        "name": "myetherwallet",
+                        "website": "https://www.mewwallet.com",
+                        "appstore": "https://apps.apple.com/app/id1464614025",
+                        "playstore": "https://play.google.com/store/apps/details?id=com.myetherwallet.mewwallet",
+                        "desktop": "https://www.myetherwallet.com",
+                        "seed": true
+                    }
+                ]
+            },
+            "settings": {
+                "confirmations": {
+                    "icon": "clock",
+                    "selected": 0
+                },
+                "Use random address": {
+                    "icon": "dice",
+                    "selected": false,
+                    "switch": true,
+                },
+                "Reuse address": {
+                    "icon": "recycle",
+                    "selected": true,
+                    "switch": true,
+                    "custom_switch": true,
+                    "warning": true
+                },
+                "blockexplorers": {
+                    "icon": "eye",
+                    "selected": "blockchain.com",
+                    "options": {
+                        "blockchain": "blockchain.com",
+                        "blockchair": "blockchair.com"
+                    }
+                },
+                "apis": {
+                    "icon": "sphere",
+                    "selected": {
+                        "name": "blockcypher",
+                        "url": "blockcypher.com",
+                        "api": true,
+                        "display": true
+                    },
+                    "apis": [{
+                            "name": "blockcypher",
+                            "url": "blockcypher.com",
+                            "api": true,
+                            "display": true
+                        },
+                        {
+                            "name": "blockchair",
+                            "url": "blockchair.com",
+                            "api": true,
+                            "display": false
+                        },
+                        {
+                            "name": main_eth_node,
+                            "url": main_eth_node,
+                            "display": true
+                        },
+                        {
+                            "name": eth_node2,
+                            "url": eth_node2,
+                            "display": true
+                        }
+                    ],
+                    "options": [],
+                    "rpc_test_command": {
+                        "method": null
+                    }
+                },
+                "websockets": {
+                    "icon": "tab",
+                    "selected": {
+                        "name": main_ad_socket,
+                        "url": main_ad_socket,
+                        "display": true
+                    },
+                    "apis": [{
+                        "name": main_ad_socket,
+                        "url": main_ad_socket,
+                        "display": true
+                    }],
+                    "options": []
+                },
+                "Xpub": {
+                    "active": true,
+                    "xpub": true,
+                    "icon": "key",
+                    "switch": true,
+                    "custom_switch": true,
+                    "selected": false,
+                    "key": null,
+                    "root_path": "m/44'/60'/0'/0/",
+                    "prefix": {
+                        "pub": 0,
+                        "pubx": 76067358,
+                        "privx": 76066276
+                    },
+                    "pk_vbytes": {
+                        "wif": 128
                     }
                 },
                 "Key derivations": {
@@ -708,38 +872,57 @@ var multi_wallets = {
             }
         },
         {
-            "currency": "ethereum",
+            "currency": "monero",
             "active": true,
             "data": {
-                "currency": "ethereum",
-                "ccsymbol": "eth",
-                "cmcid": 1027,
+                "currency": "monero",
+                "ccsymbol": "xmr",
+                "cmcid": "328",
                 "urlscheme": function(payment, address, amount, iszero) {
-	                var amount = (iszero === true) ? "" : "?value=" + (parseFloat(amount) * "1000000000000000000").toFixedSpecial(0);
-                    return payment + ":" + address + amount;
+                    return payment + ":" + address + ((iszero === true) ? "" : "?tx_amount=" + amount);
                 },
-                "address_regex": "web3"
+                "address_regex": "^[48](?:[0-9AB]|[1-9A-HJ-NP-Za-km-z]{12}(?:[1-9A-HJ-NP-Za-km-z]{30})?)[1-9A-HJ-NP-Za-km-z]{93}$"
             },
             "wallets": {
-	            "wallet_download_page": "https://ethereum.org/en/wallets/",
+	            "wallet_download_page": "https://www.getmonero.org/downloads/",
                 "wallets": [
-                    multi_wallets.exodus,
-                    multi_wallets.trezor,
-                    multi_wallets.ledger,
-                    multi_wallets.trustwallet,
-                    multi_wallets.keepkey,
+                	multi_wallets.coinomi,
+                	{
+                        "name": "monerujo",
+                        "website": "https://www.monerujo.io",
+                        "appstore": null,
+                        "playstore": "https://play.google.com/store/apps/details?id=com.m2049r.xmrwallet",
+                        "desktop": null,
+                        "seed": true
+                    },
                     {
-                        "name": "myetherwallet",
-                        "website": "https://www.mewwallet.com",
-                        "appstore": "https://apps.apple.com/app/id1464614025",
-                        "playstore": "https://play.google.com/store/apps/details?id=com.myetherwallet.mewwallet",
-                        "desktop": "https://www.myetherwallet.com",
+                        "name": "cakewallet",
+                        "website": "https://cakewallet.com",
+                        "appstore": "https://apps.apple.com/app/id1334702542",
+                        "playstore": "https://play.google.com/store/apps/details?id=com.cakewallet.cake_wallet",
+                        "desktop": null,
+                        "seed": true
+                    },
+                    {
+                        "name": "mymonero",
+                        "website": "https://mymonero.com",
+                        "appstore": "https://apps.apple.com/app/id1372508199",
+                        "playstore": null,
+                        "desktop": "https://github.com/mymonero/mymonero-app-js/releases",
+                        "seed": true
+                    },
+                    {
+                        "name": "guiwallet",
+                        "website": "https://www.getmonero.org",
+                        "appstore": null,
+                        "playstore": null,
+                        "desktop": "https://www.getmonero.org/downloads/#gui",
                         "seed": true
                     }
                 ]
             },
             "settings": {
-                "confirmations": {
+	            "confirmations": {
                     "icon": "clock",
                     "selected": 0
                 },
@@ -748,199 +931,42 @@ var multi_wallets = {
                     "selected": false,
                     "switch": true,
                 },
-                "Reuse address": {
-                    "icon": "recycle",
-                    "selected": true,
-                    "switch": true,
-                    "custom_switch": true,
-                    "warning": true
-                },
                 "blockexplorers": {
                     "icon": "eye",
-                    "selected": "blockchain.com",
+                    "selected": "blockchair.com",
                     "options": {
-                        "blockchain": "blockchain.com",
-                        "blockchair": "blockchair.com"
+                        "key1": "blockchair.com"
                     }
                 },
                 "apis": {
                     "icon": "sphere",
                     "selected": {
-                        "name": "blockcypher",
-                        "url": "blockcypher.com",
+                        "name": "xmr node",
                         "api": true,
                         "display": true
                     },
                     "apis": [{
-                            "name": "blockcypher",
-                            "url": "blockcypher.com",
-                            "api": true,
-                            "display": true
-                        },
-                        {
-                            "name": "blockchair",
-                            "url": "blockchair.com",
-                            "api": true,
-                            "display": false
-                        },
-                        {
-                            "name": main_eth_node,
-                            "url": main_eth_node,
-                            "display": true
-                        },
-                        {
-                            "name": eth_node2,
-                            "url": eth_node2,
-                            "display": true
-                        }
-                    ],
-                    "options": [],
-                    "rpc_test_command": {
-                        "method": null
-                    }
-                },
-                "websockets": {
-                    "icon": "tab",
-                    "selected": {
-                        "name": main_ad_socket,
-                        "url": main_ad_socket,
+                        "name": "xmr node",
+                        "api": true,
                         "display": true
-                    },
-                    "apis": [{
-                        "name": main_ad_socket,
-                        "url": main_ad_socket,
-                        "display": true
-                    }],
-                    "options": []
+                    }]
                 },
                 "Xpub": {
                     "active": true,
-                    "xpub": true,
+                    "xpub": false,
                     "icon": "key",
                     "switch": true,
                     "custom_switch": true,
                     "selected": false,
                     "key": null,
-                    "root_path": "m/44'/60'/0'/0/",
+                    "root_path": "m/44'/128'/0'/0/",
                     "prefix": {
                         "pub": 0,
-                        "pubx": 76067358,
-                        "privx": 76066276
+                        "pubx": "00000000",
+                        "privx": "00000000"
                     },
                     "pk_vbytes": {
-                        "wif": 128
-                    }
-                },
-                "Key derivations": {
-                    "icon": "cog",
-                    "selected": "BIP32 key generation",
-                }
-            }
-        },
-        {
-        
-        	"currency": "bitcoin-cash",
-	    	"active": true,
-            "data": {
-                "currency": "bitcoin-cash",
-                "ccsymbol": "bch",
-                "cmcid": 1831,
-                "urlscheme": function(payment, address, amount, iszero) {
-                    return bch_urlscheme(payment, address, amount, iszero);
-                },
-                "address_regex": "(q|p)[a-z0-9]{41}"
-            },
-            "wallets": {
-	            "wallet_download_page": "https://bch.info/en/wallets",
-                "wallets": [
-                    multi_wallets.exodus,
-                    multi_wallets.coinomi,
-                    multi_wallets.trezor,
-                    multi_wallets.ledger,
-                    multi_wallets.trustwallet,
-                    multi_wallets.atomicwallet
-                ]
-            },
-            "settings": {
-                "confirmations": {
-                    "icon": "clock",
-                    "selected": 0
-                },
-                "Use random address": {
-                    "icon": "dice",
-                    "selected": false,
-                    "switch": true,
-                },
-                "Reuse address": {
-                    "icon": "recycle",
-                    "selected": false,
-                    "switch": true,
-                    "custom_switch": true
-                },
-                "blockexplorers": {
-                    "icon": "eye",
-                    "selected": "blockchain.com",
-                    "options": {
-                        "key1": "blockchain.com",
-                        "key2": "blockchair.com",
-                        "key3": "bitcoin.com"
-                    }
-                },
-                "apis": {
-                    "icon": "sphere",
-                    "selected": {
-                        "name": "bitcoin.com",
-                            "url": "bitcoin.com",
-                            "api": true,
-                            "display": true
-                    },
-                    "apis": [{
-                        "name": "bitcoin.com",
-                        "url": "bitcoin.com",
-                        "api": true,
-                        "display": true
-                    },
-                    {
-                        "name": "blockchair",
-                        "url": "blockchair.com",
-                        "api": true,
-                        "display": false
-                    }],
-                    "options": [],
-                    "rpc_test_command": {
-                        "method": "getblockchaininfo"
-                    }
-                },
-                "websockets": {
-                    "icon": "tab",
-                    "selected": {
-                        "name": "blockchain.info websocket",
-                        "url": "wss://ws.blockchain.info/bch/inv",
-                        "display": true
-                    },
-                    "apis": [{
-                        "name": "blockchain.info websocket",
-                        "url": "wss://ws.blockchain.info/bch/inv",
-                        "display": true
-                    }],
-					"options": []
-                },
-                "Xpub": {
-                    "active": true,
-                    "xpub": true,
-                    "icon": "key",
-                    "switch": true,
-                    "custom_switch": true,
-                    "selected": false,
-                    "key": null,
-                    "root_path": "m/44'/145'/0'/0/",
-                    "prefix": {
-                        "pub": 0,
-                        "pubx": 76067358,
-                        "privx": 76066276
-                    },
-                    "pk_vbytes": {
-                        "wif": 128
+                        "wif": 0
                     }
                 },
                 "Key derivations": {
@@ -1123,7 +1149,9 @@ var app_settings = [{
         "selected": "pincode disabled",
         "icon": "icon-lock",
         "locktime": 0,
-        "pinhash": null
+        "pinhash": null,
+        "attempts": 0,
+        "timeout": null
     },
     {
         "id": "backup",
@@ -1179,6 +1207,18 @@ var app_settings = [{
         "currencylayer": null,
         "infura": null,
         "amberdata": null
+    },
+    {
+        "id": "permissions",
+        "heading": "Permissions",
+        "selected": "admin",
+        "icon": "icon-user"
+    },
+    {
+        "id": "teaminvite",
+        "heading": "Team invite",
+        "selected": "",
+        "icon": "icon-users"
     }
 ]
 

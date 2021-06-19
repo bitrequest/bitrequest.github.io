@@ -185,6 +185,7 @@ main {
 }
 
 .select {
+	font-family: monospace;
 	-webkit-user-select: all;
     -moz-user-select: all;
     -ms-user-select: all;
@@ -2213,7 +2214,6 @@ input:invalid {
     }
 }
 
-
 /* helpers */
 
 #copyinput {
@@ -2912,4 +2912,34 @@ body.showcam #scanner {
 	width:100%;
 	height:1px;
 	background-color: #F00;
+}
+
+/* Roles */
+
+html[data-role='cashier'] #accountsettings,
+html[data-role='cashier'] #contactform,
+html[data-role='cashier'] #cmcapisettings,
+html[data-role='cashier'] #fiatapisettings,
+html[data-role='cashier'] #bip39_passphrase,
+html[data-role='cashier'] #pinsettings,
+html[data-role='cashier'] #api_proxy,
+html[data-role='cashier'] #apikeys,
+html[data-role='cashier'] #teaminvite,
+html[data-role='cashier'] #add_erc20,
+html[data-role='cashier'] .addaddress,
+html[data-role='cashier'] .removeaddress,
+html[data-role='cashier'] .editaddress,
+html[data-role='cashier'] #rest_seed,
+html[data-role='cashier'] .cc_settinglist li[data-id='Xpub'],
+html[data-role='cashier'] .rqli:not(.requestoutgoing) .req_actions .icon-bin,
+html[data-role='cashier'] .reset_cc_settings {
+	opacity:0.3;
+	cursor:not-allowed;
+	pointer-events:none;
+}
+
+html[data-role='cashier'] #show_pk,
+html[data-role='cashier'] #show_vk {
+	opacity:0.5;
+	cursor:not-allowed;
 }

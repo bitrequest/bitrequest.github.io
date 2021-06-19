@@ -902,7 +902,7 @@ function continue_paymentfunction(payment) {
             });
         });
         helper.xrates = xrates_array;
-        $("#xratestats").append(xratedata1 + xratedata2.join(" | ") + "<div class='cachetime'> (" + (cachetimefiat / 60000).toFixed(1) + " of " + (cacheperiodfiat / 60000).toFixed(0) + " min. in cache)</div>");
+        $("#xratestats").append(xratedata1 + xratedata2.join(" | ") + "<div class='cachetime'> (" + (cachetimefiat / 60000).toFixed(1) + " of " + (cacheperiodfiat / 60000).toFixed(0) + " min. in cache)</div><br/><span id='current_socket'></span>");
         getpayment(ccrateeuro, ccapi);
     }
 
@@ -959,7 +959,7 @@ function continue_paymentfunction(payment) {
             "<div id='shareamount' class='inputbreak'>\
 						<span id='sharecryptowrap'>" + cryptologo +
             "<span id='sharemainccinputmirror' class='ccmirror mirrordiv'>\
-								<span class='select'>" + thiscurrencyvaluefixedplaceholder + "</span>\
+								<span>" + thiscurrencyvaluefixedplaceholder + "</span>\
 								<input value='" + thiscurrencyvaluefixedvar + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'/>\
 							</span>\
 						</span>\
@@ -1012,11 +1012,12 @@ function continue_paymentfunction(payment) {
 						<span id='view_tx'>View transaction</span>\
 					</p>\
 				</div>",
+			readonly_attr = (is_viewonly() === true) ? " readonly='readonly'" : "",
             shareform = "\
 				<div id='shareformbox'>\
 					<div id='shareformib' class='inputbreak'>\
 						<form id='shareform' disabled='' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off'>\
-							<label>What's your name?<input type='text' placeholder='Name' id='requestname' value='" + initrequestname + "' autocomplete='false'></label>\
+							<label>What's your name?<input type='text' placeholder='Name' id='requestname' value='" + initrequestname + "' autocomplete='false'" + readonly_attr + "></label>\
 							<label>What's it for?<input type='text' placeholder='eg:  lunch  🥪' id='requesttitle' value='" + requesttitle_string + "' data-ph1=' festival tickets' data-ph2=' coffee  ☕' data-ph3=' present  🎁' data-ph4=' snowboarding  🏂' data-ph5=' movie theater  📽️' data-ph6=' lunch  🥪' data-ph7=' shopping  🛒' data-ph8=' video game  🎮' data-ph9=' coke  🥤' data-ph10=' concert tickets  🎵' data-ph11=' camping  ⛺' data-ph12=' taxi  🚕' data-ph13=' zoo  🦒'></label>\
 						</form>\
 					</div>\
@@ -1069,7 +1070,7 @@ function continue_paymentfunction(payment) {
 							<input value='" + fiatcurrencyvaluevar + "' data-xrate='" + fiatcurrencyrate + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'/>\
 						</span> " + fiatcurrency + ") \
 					</div>\
-					<div id='txibreak' class='inputbreak'> Send <span id='ccinputmirror' class='ccmirror mirrordiv'><span class='select'>" + thiscurrencyvaluefixedplaceholder + "</span><input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'/></span> " + currencysymbol + " to" + labelvalue + ": </div>\
+					<div id='txibreak' class='inputbreak'> Send <span id='ccinputmirror' class='ccmirror mirrordiv'><span>" + thiscurrencyvaluefixedplaceholder + "</span><input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'/></span> " + currencysymbol + " to" + labelvalue + ": </div>\
 				</div>\
 				<div id='paymentaddress' class='copyinput' data-type='address'>" + address + "</div>\
 			</div>\

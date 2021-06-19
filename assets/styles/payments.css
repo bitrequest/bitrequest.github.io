@@ -619,6 +619,11 @@ html.inframe #request_back {
     display: inline;
 }
 
+#current_socket .pulse {
+	font-size: 60%;
+    vertical-align: text-bottom;
+}
+
 /* request_back */
 
 #request_back .actionbar {
@@ -682,7 +687,7 @@ html.inframe #request_back {
     word-break: break-word;
 }
 
-#sharetitle.title_exceed>span {
+#sharetitle.title_exceed > span {
     opacity: 0.6;
     cursor: pointer;
 }
@@ -702,7 +707,7 @@ html.inframe #request_back {
     padding-left: 0.8em;
 }
 
-#sharecryptowrap>img {
+#sharecryptowrap > img.cmc_icon {
     position: absolute;
     height: 0.8em;
     top: 0.333em;

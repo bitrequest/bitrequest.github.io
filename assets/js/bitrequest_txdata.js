@@ -44,6 +44,38 @@ function blockchain_ws_data(data, setconfirmations, ccsymbol, address) { // poll
     }
 }
 
+// dogechain
+
+function dogechain_ws_data(data, setconfirmations, ccsymbol, address) { // poll blockchain.info websocket data
+    if (data) {
+        var outputs = data.outputs,
+        	outputsum;
+        if (outputs) {
+            var outputsum = 0;
+            $.each(outputs, function(dat, value) {
+	            if (address == value.addr) {
+		            outputsum += value.value || 0; // sum of outputs
+	            }
+            });
+            var transactiontime = (data.time) ? data.time * 1000 : null,
+		    	transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
+	        return {
+	            "ccval": (outputsum) ? outputsum / 100000000 : null,
+	            "transactiontime": transactiontimeutc,
+	            "txhash": data.hash,
+	            "confirmations": (data.confirmations) ? data.confirmations : null,
+	            "setconfirmations": setconfirmations,
+	            "ccsymbol": ccsymbol
+	        };
+        }
+        else {
+		    return false;
+	    }   
+    } else {
+        return default_tx_data();
+    }
+}
+
 // blockcypher
 
 function blockcypher_scan_data(data, setconfirmations, ccsymbol) { // scan
@@ -354,15 +386,16 @@ function amberdata_poll_data(data, setconfirmations, ccsymbol) { // poll (websoc
 }
 
 function amberdata_poll_btc_data(data, setconfirmations, ccsymbol, address) { // poll (websocket)
-    if (data) {
-        var transactiontime = (data.timestamp) ? (data.timestamp) + timezone : null,
+	if (data) {
+        var transactiontime = (data.timestamp) ? data.timestamp + timezone : null,
             txhash = (data.hash) ? data.hash : null,
 			outputs = data.outputs,
 			outputsum;
         if (outputs) {
             var outputsum = 0;
             $.each(outputs, function(dat, value) {
-                var output = ($.inArray(address, value.addresses) !== -1) ? value.value : 0;
+	            var addrstr = value.addresses.toString(),
+	            	output = (addrstr.indexOf(address) > -1) ? value.value : 0;
                 outputsum += output || 0; // sum of outputs
             });
         }

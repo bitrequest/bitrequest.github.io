@@ -39,6 +39,9 @@ var language = navigator.language || navigator.userLanguage,
     wakelock,
     bipv,
     bipobj = localStorage.getItem("bitrequest_bpdat"),
+    cashier_dat = JSON.parse(localStorage.getItem("bitrequest_cashier")),
+    is_cashier = (cashier_dat && cashier_dat.cashier) ? true : false,
+    cashier_seedid = (is_cashier) ? cashier_dat.seedid : false,
     hasbip = (bipobj) ? true : false,
     bipid = (hasbip) ? JSON.parse(atob(JSON.parse(bipobj).dat)).pid : false,
     safety_poll_timeout = 15000;
@@ -281,6 +284,7 @@ function islocked() {
 function setfunctions() {
     setlocales(); //set meta attribute
     settheme();
+    setpermissions();
 
     // ** Pincode **
 
@@ -294,8 +298,17 @@ function setfunctions() {
     pinbacktrigger();
     pinbackvalidatetrigger();
     //pinback
-    var pagename = geturlparameters().p;
-    if (pagename === undefined || pagename == "home") {
+    canceloptionstrigger();
+    //canceloptions
+    seed_unlock_trigger();
+    phrase_login();
+    //remove_rqo
+    keyup();
+    if (is_viewonly() === true) {
+        finishfunctions();
+        return false;
+    }
+    if (ishome() === true) {
         finishfunctions();
     } else {
         if (islocked() === true) {
@@ -368,7 +381,6 @@ function finishfunctions() {
     dragstart(); // reorder addresses
     //drag
     dragend();
-    keyup();
     //escapeandback
     //close_paymentdialog
     activemenu();
@@ -415,6 +427,7 @@ function finishfunctions() {
     //cancelsharedialog
     showoptionstrigger();
     //showoptions
+    //lockscreen
     newrequest_alias();
     newrequest();
     confirm_ms_newrequest();
@@ -432,8 +445,6 @@ function finishfunctions() {
     //open_blockexplorer_url
     //blockexplorer_url
     apisrc_shortcut();
-    canceloptionstrigger();
-    //canceloptions
 
     // ** Requestlist functions **
 
@@ -461,6 +472,7 @@ function finishfunctions() {
     //fetchsymbol
     //fixedcheck
     //geturlparameters
+    //ishome
     //triggersubmit
     //copytoclipboard
     //getrandomnumber
@@ -495,9 +507,11 @@ function finishfunctions() {
     //try_next_api
     //wake
     //sleep
+    //vu_block
     //trimdecimals
     //countdown
     //countdown_format
+    //adjust_objectarray
 
     // ** Page rendering **
 
@@ -563,6 +577,7 @@ function finishfunctions() {
     //currency_uncheck
     //get_vk
     gk();
+    html.addClass("loaded");
 }
 
 //checks
@@ -581,6 +596,16 @@ function settheme() {
     if (theme_settings) {
         $("#theme").attr("href", "assets/styles/themes/" + theme_settings);
     }
+}
+
+function setpermissions() {
+	var permission = $("#permissions").data("selected");
+	html.attr("data-role", permission);
+}
+
+function is_viewonly() {
+	var permission = $("#permissions").data("selected");
+	return (permission == "cashier");
 }
 
 // ** Pincode **
@@ -667,24 +692,28 @@ function pinpress(thispad) {
 
 function enterapp(pinval) {
     var pinfloat = $("#pinfloat"),
-        savedpin = $("#pinsettings").data("pinhash"),
-        hashpin = hashcode(pinval);
+    	pinsettings = $("#pinsettings").data(),
+        savedpin = pinsettings.pinhash,
+        attempts = pinsettings.attempts,
+        hashpin = hashcode(pinval),
+        now = $.now(),
+        timeout;
     if (hashpin == savedpin) {
         if (pinfloat.hasClass("global")) {
-            localStorage.setItem("bitrequest_locktime", $.now());
+            localStorage.setItem("bitrequest_locktime", now);
             finishfunctions();
             setTimeout(function() {
                 playsound(waterdrop);
-                canceloptions();
+                canceloptions(true);
             }, 500);
         } else if (pinfloat.hasClass("admin")) {
-            localStorage.setItem("bitrequest_locktime", $.now());
+            localStorage.setItem("bitrequest_locktime", now);
             loadpage("?p=currencies");
             $(".currenciesbttn .self").addClass("activemenu");
             playsound(waterdrop);
-            canceloptions();
+            canceloptions(true);
         } else if (pinfloat.hasClass("reset")) {
-            localStorage.setItem("bitrequest_locktime", $.now());
+            localStorage.setItem("bitrequest_locktime", now);
             $("#pintext").text("Enter new pin");
             pinfloat.addClass("p_admin").removeClass("pinwall reset");
             playsound(waterdrop);
@@ -696,11 +725,14 @@ function enterapp(pinval) {
             if (callback) {
                 callback.func(callback.args);
             } else {
-                localStorage.setItem("bitrequest_locktime", $.now());
+                localStorage.setItem("bitrequest_locktime", now);
             }
             playsound(waterdrop);
-            canceloptions();
+            canceloptions(true);
         }
+        pinsettings.attempts = 0;
+        savesettings();
+        remove_cashier();
     } else {
         if (navigator.vibrate) {} else {
             playsound(funk);
@@ -709,7 +741,36 @@ function enterapp(pinval) {
         setTimeout(function() {
             $("#pininput").val("");
         }, 10);
+        if (attempts > 2) {
+	        if (attempts === 3) {
+		        var timeout = now + 300000; // 5 minutes
+		        pinsettings.timeout = timeout;
+		        lockscreen(timeout);
+	        }
+	        else if (attempts === 6) {
+		        var timeout = now + 1800000; // 30 minutes
+	            pinsettings.timeout = timeout;
+	            lockscreen(timeout);
+	        }
+	        else if (attempts === 9) {
+		        var timeout = now + 86400000; // 24 hours
+	            pinsettings.timeout = timeout;
+	            lockscreen(timeout);
+	        }
+	        else if (attempts > 9) {
+		        attempts = 1;
+	        }
+	    }
+        pinsettings.attempts = attempts + 1;
+        savesettings();
     }
+}
+
+function clearpinlock() {
+	var pinsettings = $("#pinsettings").data();
+    pinsettings.timeout = null;
+    pinsettings.attempts = 0;
+    savesettings();
 }
 
 function pin_admin_reset() {
@@ -744,7 +805,7 @@ function pinvalidate(thispad) {
             //canceldialog();
             savesettings();
             playsound(waterdrop);
-            canceloptions();
+            canceloptions(true);
             var callback = pinfloat.data("pincb");
             if (callback) {
                 callback.func(callback.args);
@@ -980,6 +1041,11 @@ function togglenav() {
             $(".navstyle li .self").removeClass("activemenu");
         } else {
             if (islocked() === true) {
+	            if (is_viewonly() === true) {
+			        loadpage("?p=currencies");
+					$(".currenciesbttn .self").addClass("activemenu");
+			        return false;
+			    }
                 var content = pinpanel(" pinwall admin");
                 showoptions(content, "pin");
                 return false;
@@ -1092,7 +1158,7 @@ function loadpageevent(pagename) {
 }
 
 function shownav(pagename) { // show / hide navigation
-    if (!pagename || pagename == "home") {
+    if (ishome(pagename) === true) {
         html.removeClass("showmain").addClass("hidemain");
         $("#relnav .nav").slideUp(300);
     } else {
@@ -1810,6 +1876,10 @@ function addcurrency(cd) {
     } else {
         var can_derive = derive_first_check(currency);
         if (can_derive === false) {
+	        if (is_viewonly() === true) {
+		        vu_block();
+		        return false;
+		    }
             addaddress(cd, false);
         } else {
             loadpage("?p=" + currency);
@@ -2491,9 +2561,9 @@ function showoptionstrigger() {
 			</li>" : "",
             content = $("\
 				<ul id='optionslist''>" + newrequest + showrequests +
-                "<li><div class='editaddress'> <span class='icon-pencil'></span> Edit address</div></li>\
+                "<li><div class='address_info'><span class='icon-info'></span> Address info</div></li>\
+                	<li><div class='editaddress'> <span class='icon-pencil'></span> Edit address</div></li>\
 					<li><div class='removeaddress'><span class='icon-bin'></span> Remove address</div></li>\
-					<li><div class='address_info'><span class='icon-info'></span> Address info</div></li>\
 				</ul>").data(ad);
         showoptions(content);
         return false;
@@ -2501,10 +2571,90 @@ function showoptionstrigger() {
 }
 
 function showoptions(content, addclass, callback) {
+	if (addclass) {
+		if (addclass.indexOf("pin") > -1) {
+			var pinsettings = $("#pinsettings").data(),
+				timeout = pinsettings.timeout;
+			if (timeout) {
+				if ($.now() > timeout) {
+			    	pinsettings.timeout = null;
+			    	savesettings();
+		    	}
+		    	else {
+			    	lockscreen(timeout);
+					return false;
+		    	}
+		    }
+		}
+	}
     var plusclass = (addclass) ? " " + addclass : "";
     $("#optionspop").addClass("showpu active" + plusclass);
-    $("#optionsbox").append(content);
+    $("#optionsbox").html(content);
     body.addClass("blurmain_options");
+}
+
+function lockscreen(timer) {
+	var timeleft = timer - $.now(),
+    	cd = countdown(timeleft),
+    	dstr = (cd.days) ? cd.days + " days<br/>" : "",
+    	hstr = (cd.hours) ? cd.hours + " hours<br/>" : "",
+    	mstr = (cd.minutes) ? cd.minutes + " minutes<br/>" : "",
+    	sstr = (cd.seconds) ? cd.seconds + " seconds" : "",
+    	cdown_str = dstr + hstr + mstr + sstr,
+    	attempts = $("#pinsettings").data("attempts"),
+    	has_seedid = (hasbip || cashier_seedid) ? true : false,
+    	us_string = (has_seedid === true && attempts > 5) ? "<p id='seed_unlock'>Unlock with seed</p>" : "",
+		content = "<h1 id='lock_heading'>Bitrequest</h1><div id='lockscreen'><h2><span class='icon-lock'/><br/>Too many unlock attempts</h2>\
+    	<p><br/>Please try again in:<br/>" + cdown_str + "</p>" + us_string +
+	    	"<div id='phrasewrap'>\
+	    	<p><br/>Enter your 12 word<br/>secret phrase:</p>\
+	    		<div id='bip39phrase' contenteditable='contenteditable' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' lang='en' class='noselect'></div>\
+	    		<div id='phrase_login' class='button'>Unlock</div>\
+			</div>\
+		</div>";
+	$("#optionspop").addClass("showpu active pin ontop");
+	$("#optionsbox").html(content);
+	body.addClass("blurmain_options");
+}
+
+function seed_unlock_trigger() {
+    $(document).on("click", "#lockscreen #seed_unlock", function() {
+		$("#lockscreen #phrasewrap").addClass("showph");
+    });
+}
+
+function phrase_login() {
+    $(document).on("click", "#phrase_login", function() {
+		var bip39phrase = $("#lockscreen #bip39phrase"),
+			b39txt = bip39phrase.text(),
+			seedobject = ls_phrase_obj(),
+            savedid = seedobject.pid,
+            phraseid = get_seedid(b39txt.split(" "));
+        if (phraseid == savedid || phraseid == cashier_seedid) {
+	        clearpinlock();
+	        if (html.hasClass("loaded")) {
+	    	}
+	    	else {
+		    	finishfunctions();
+	    	}
+	        var content = pinpanel(" reset");
+            	showoptions(content, "pin");
+			$("#pinfloat").removeClass("p_admin");
+			remove_cashier();
+        }
+        else {
+	        shake(bip39phrase);
+        }
+    });
+}
+
+function remove_cashier() {
+    if (is_cashier) {
+	    localStorage.removeItem("bitrequest_cashier");
+	    cashier_dat = false,
+		is_cashier = false,
+		cashier_seedid = false;
+    }
 }
 
 function newrequest_alias() {
@@ -2524,7 +2674,6 @@ function newrequest_alias() {
             }
         }
         return false;
-
     });
 }
 
@@ -2735,6 +2884,10 @@ function addressinfo() {
 
 function show_pk() {
     $(document).on("click", "#show_pk", function() {
+	    if (is_viewonly() === true) {
+	        vu_block();
+	        return false;
+        }
         var thisbttn = $(this),
         	pkspan = $("#pk_span");
         if (pkspan.is(":visible")) {
@@ -2775,6 +2928,10 @@ function show_pk_cb(pk) {
 
 function show_vk() {
     $(document).on("click", "#show_vk", function() {
+	    if (is_viewonly() === true) {
+	        vu_block();
+	        return false;
+        }
         var thisbttn = $(this),
         	vk = thisbttn.attr("data-vk"),
         	pkspan = $("#pk_span");
@@ -2861,15 +3018,41 @@ function apisrc_shortcut() {
 
 function canceloptionstrigger() {
     $(document).on("click", "#optionspop, #closeoptions", function(e) {
-        if (e.target == this) {
+	    if (e.target == this) {
             canceloptions();
         }
     });
 }
 
-function canceloptions() {
-    var optionspop = $("#optionspop");
-    optionspop.addClass("fadebg");
+function canceloptions(pass) {
+	if (pass === true) {
+	    clearoptions();
+	    return false;
+    }
+	var optionspop = $("#optionspop"),
+		thishaspin = (optionspop.hasClass("pin"));
+	if (thishaspin) {
+        var phrasewrap = $("#lockscreen #phrasewrap");
+        if (phrasewrap.hasClass("showph")) {
+       		phrasewrap.removeClass("showph");
+       		return false;
+    	}
+    	if (ishome() === true) {
+	    } else {
+		    if (html.hasClass("loaded")) {
+	    	}
+	    	else {
+		    	shake(optionspop);
+		    	return false;
+	    	}
+	    }
+    }
+	clearoptions();
+}
+
+function clearoptions() {
+	var optionspop = $("#optionspop");
+	optionspop.addClass("fadebg");
     optionspop.removeClass("active");
     body.removeClass("blurmain_options");
     var timeout = setTimeout(function() {
@@ -3031,7 +3214,7 @@ function unarchivefunction() {
 
 function removerequest() {
     $(document).on("click", ".req_actions .icon-bin", function() {
-        popdialog("<h2 class='icon-bin'>Delete request?</h2>", "alert", "removerequestfunction", $(this));
+	    popdialog("<h2 class='icon-bin'>Delete request?</h2>", "alert", "removerequestfunction", $(this));
         return false;
     })
 }
@@ -3216,6 +3399,11 @@ function geturlparameters() {
         get_object[keyval[0]] = keyval[1];
     });
     return get_object;
+}
+
+function ishome(pagename) {
+    var page = (pagename) ? pagename : geturlparameters().p;
+    return (!page || page == "home");
 }
 
 function triggersubmit(trigger) {
@@ -3605,6 +3793,11 @@ function sleep() {
     }
 }
 
+function vu_block() {
+	notify("Not allowed in cashier mode");
+	playsound(funk);
+}
+
 // Fix decimals
 function trimdecimals(amount, decimals) {
     var round_amount = parseFloat(amount).toFixed(decimals);
@@ -3645,6 +3838,15 @@ function countdown_format(cd) {
         secondnode = (seconds) ? ss + seconds + " seconds" : ""
     result = (cd) ? daynode + hournode + minutenode + secondnode : false;
     return result;
+}
+
+function adjust_objectarray(array, mods) {
+    var newarray = array;
+    $.each(mods, function(i, val) {
+        var index = array.findIndex((obj => obj.id == val.id));
+        newarray[index][val.change] = val.val;
+    });	
+    return newarray;
 }
 
 // ** Page rendering **
@@ -3751,7 +3953,7 @@ function fetchrequests(cachename, archive) {
             showarchive = (archive === false && parsevalue.length > 11); // only show archive button when there are more then 11 requests
         $.each(parsevalue.reverse(), function(i, value) {
             value.archive = archive;
-            value.showarchive = true;
+            value.showarchive = showarchive;
             appendrequest(value);
         });
     }

@@ -1018,6 +1018,10 @@ function key_management() {
 		        }
 	        }
 	        else {
+		        if (is_viewonly() === true) {
+			        vu_block();
+			        return false;
+		        }
 		        manage_bip32();
 	        }
         }

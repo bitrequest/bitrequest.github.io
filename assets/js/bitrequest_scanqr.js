@@ -86,7 +86,9 @@ function setResult(result) {
 	    clear_xpub_inputs();
 	    if (validate === true) {
 	        $("#popup .formbox input.address").val(end_result);
-	        $("#popup .formbox input.addresslabel").focus();
+	        if (supportsTouch === true) {} else {
+		        $("#popup .formbox input.addresslabel").focus();
+		    }
 	        if (isxpub) {
 		        clear_xpub_checkboxes();
 				validate_xpub($("#addressformbox"));
@@ -104,7 +106,9 @@ function setResult(result) {
 	    var validate = (result.length === 64) ? check_vk(result) : false;
 	    if (validate === true) {
 	        $("#popup .formbox input.vk_input").val(result);
-	        $("#popup .formbox input.addresslabel").focus();
+	        if (supportsTouch === true) {} else {
+		        $("#popup .formbox input.addresslabel").focus();
+		    }
 	    } else {
 	        popnotify("error", "invalid " + payment + " viewkey");
 	    }

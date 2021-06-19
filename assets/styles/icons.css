@@ -399,3 +399,6 @@
 .icon-file-pdf:before {
   content: "\eadf";
 }
+.icon-users:before {
+  content: "\e972";
+}

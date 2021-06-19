@@ -43,6 +43,7 @@ $(document).ready(function() {
     make_seed();
     restore_seed();
     restore_seed_verify();
+    //get_seedid
     //manage_bip32
     submit_disclaimer();
     //bip39
@@ -103,6 +104,7 @@ $(document).ready(function() {
     //ckd
     //keypair_array
     //ext_keys
+    //xpub_obj
     //b58c_x_payload
     //format_keys
     //xpub_prefix
@@ -398,6 +400,10 @@ function make_seed() {
 
 function restore_seed() {
     $(document).on("click", "#rest_seed, .applist.pobox li.seedu .address .srcicon", function() {
+	    if (is_viewonly() === true) {
+	        vu_block();
+	        return false;
+        }
 	    if (hasbip === true) {
             return false;
         } else {
@@ -433,8 +439,7 @@ function restore_seed_verify() {
                 var thistrigger = $(this),
                     seedid = thistrigger.attr("data-seedid"),
                     words = phrase.split(" "),
-					seed_string = btoa(JSON.stringify(words)),
-                    phraseid = hmacsha(seed_string, "sha256").slice(0, 8);
+					phraseid = get_seedid(words);
                 if (seedid == phraseid) {
                     phrasearray = words;
                     phraseverified = true,
@@ -449,6 +454,10 @@ function restore_seed_verify() {
             }
         }
     })
+}
+
+function get_seedid(words) {
+    return hmacsha(btoa(JSON.stringify(words)), "sha256").slice(0, 8);
 }
 
 function manage_bip32(dat) {
@@ -1381,6 +1390,23 @@ function ext_keys(eo, currency) {
     return eko;
 }
 
+function xpub_obj(currency, rootpath, cc, key) {
+	var dx_dat = {
+        "dpath": rootpath.slice(0, -3),
+        "key": key,
+        "cc": cc
+    },
+    x_keys_dat = derive_x(dx_dat),
+    x_keys = ext_keys(x_keys_dat, currency),
+    x_pubval = x_keys.ext_pub,
+    xpub_id = hmacsha(x_pubval, "sha256").slice(0, 8);
+    return {
+	    "xpub": x_pubval,
+	    "xpubid": xpub_id,
+	    "prefix": x_pubval.slice(0, 4)
+    }
+}
+
 function b58c_x_payload(eo, currency) {
     var xpubdat = getbip32dat(currency),
         xpub = eo.xpub,
@@ -1554,14 +1580,8 @@ function phrase_info_pu(coin) {
                 coinclass = " pd_hide pd_" + currency,
                 x_pub;
             if (bip32dat.xpub) {
-	            var dx_dat = {
-			        "dpath": root_path.slice(0, -3),
-			        "key": key,
-			        "cc": cc,
-		        },
-		        x_keys_dat = derive_x(dx_dat),
-		        x_keys = ext_keys(x_keys_dat, currency),
-		        x_pub = x_keys.ext_pub;
+	            var xpubdat = xpub_obj(currency, root_path, cc, key),
+	            	x_pub = xpubdat.xpub;
             }
             $.each(derive_array, function(i, val) {
                 var index = startindex + i;

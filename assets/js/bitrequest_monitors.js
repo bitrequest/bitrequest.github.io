@@ -186,6 +186,7 @@ function get_api_inputs_init(rd, api_data, api_name) {
 }
 
 function get_api_inputs(rd, api_data, api_name) {
+	console.log(api_data);
 	var thislist = $("#" + rd.requestid);
     if (thislist.hasClass("scan")) {
         api_attempts[api_name] = true;

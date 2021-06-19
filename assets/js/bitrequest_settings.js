@@ -125,6 +125,20 @@ $(document).ready(function() {
     //test_custom_proxy
     remove_proxy();
     //complete_url
+    
+    // PERMISSIONS
+    permissions();
+    submit_permissions();
+    
+    // TEAM INVITE
+    team_invite_trigger()
+	//team_invite
+	//complile_teaminvite
+	//adjust_object
+	share_teaminvite()
+	check_teaminvite();
+	install_teaminvite_trigger()
+	//install_teaminvite    
 });
 
 // ** Settings **
@@ -820,15 +834,26 @@ function submitrestore() {
 }
 
 function restore(jsonobject, bu_filename) {
+	var cashier_entry = jsonobject.bitrequest_cashier,
+    	is_team_invite = (cashier_entry && cashier_entry.cashier) ? true : false;
+    if (cashier_dat && cashier_dat.cashier && !is_team_invite) {
+	    notify("Backup type not allowed in cashier mode");
+	    return false
+    }
     var result = confirm("Restore " + bu_filename + "?");
     if (result === true) {
-        scan_restore(jsonobject);
-        var pass_dat = {
-            "jasobj": jsonobject,
-            "filename": bu_filename,
-            "type": "file"
-        };
-        restore_algo(pass_dat);
+	    if (is_team_invite === true) {
+		    install_teaminvite(jsonobject, bu_filename);
+		}
+	    else {
+		    scan_restore(jsonobject);
+	        var pass_dat = {
+	            "jasobj": jsonobject,
+	            "filename": bu_filename,
+	            "type": "file"
+	        };
+	        restore_algo(pass_dat);
+	    }
     }
 }
 
@@ -840,25 +865,24 @@ function submit_GD_restore() {
         if (result === true) {
             var thisfileid = thisfield.attr("data-gdbu_id");
             return gapi.client.drive.files.get({
-                    "fileId": thisfileid,
-                    "alt": "media"
-                })
-                .then(function(response) {
-                        var jsonobject = JSON.parse(atob(response.body));
-                        scan_restore(jsonobject);
-                        var pass_dat = {
-                            "jasobj": jsonobject,
-                            "filename": thisfield.text(),
-                            "thisfileid": thisfileid,
-                            "thisdevice": thisdevice,
-                            "thisdeviceid": thisfield.attr("data-device-id"),
-                            "type": "gd"
-                        };
-                        restore_algo(pass_dat);
-                    },
-                    function(err) {
-                        console.log(err)
-                    });
+                "fileId": thisfileid,
+                "alt": "media"
+            }).then(function(response) {
+                var jsonobject = JSON.parse(atob(response.body));
+                scan_restore(jsonobject);
+                var pass_dat = {
+                    "jasobj": jsonobject,
+                    "filename": thisfield.text(),
+                    "thisfileid": thisfileid,
+                    "thisdevice": thisdevice,
+                    "thisdeviceid": thisfield.attr("data-device-id"),
+                    "type": "gd"
+                };
+                restore_algo(pass_dat);
+            },
+            function(err) {
+                console.log(err)
+            });
         }
     })
 }
@@ -1206,6 +1230,7 @@ function restorestorage(jsonobject, newphrase) {
             localStorage.setItem(key, JSON.stringify(value));
         }
     });
+    localStorage.removeItem("bitrequest_cashier");
     resd = {};
 }
 
@@ -2224,4 +2249,336 @@ function complete_url(url) {
     var cv1 = (url.indexOf("http") > -1) ? url.split("://").pop() : url,
         cv2 = "https://" + cv1;
     return (cv2.substr(-1) != "/") ? cv2 + "/" : cv2;
+}
+
+// Permissions
+function permissions() {
+    $(document).on("click", "#permissions", function() {
+	    all_pinpanel({
+		    "func": permissions_callback
+		}, true)
+    })
+}
+
+function permissions_callback() {
+    var thisnode = $("#permissions"),
+    	thisdata = thisnode.data(),
+        selected = thisdata.selected,
+        content = "\
+		<div class='formbox' id='permissions_formbox'>\
+			<h2 class='icon-user'>Set permissions</h2>\
+			<div class='popnotify'></div>\
+			<div class='popform' data-current='" + selected + "'>\
+				<div class='selectbox'>\
+					<input type='text' value='" + selected + "' readonly='readonly'/>\
+					<div class='selectarrows icon-menu2' data-pe='none'></div>\
+					<div class='options'>\
+						<span data-pe='none'>admin</span>\
+						<span data-pe='none'>cashier</span>\
+					</div>\
+				</div>\
+				<input type='submit' class='submit' value='OK'/>\
+			</div>\
+		</div>";
+    popdialog(content, "alert", "triggersubmit");
+}
+
+function submit_permissions() {
+    $(document).on("click", "#permissions_formbox input.submit", function(e) {
+        e.preventDefault();
+        var thisform = $(this).closest(".popform"),
+            thisinput = thisform.find("input:first"),
+            thisvalue = thisinput.val(),
+            currentval = thisform.attr("data-current");
+        if (thisvalue == currentval) { // check for changes
+            canceldialog();
+            return false;
+        } else {
+	        set_setting("permissions", {
+                "selected": thisvalue
+            }, thisvalue);
+            html.attr("data-role", thisvalue);
+            canceldialog();
+            notify("Data saved");
+            savesettings();
+        }
+    })
+}
+
+// Team invite
+
+function team_invite_trigger() {
+    $(document).on("click", "#teaminvite", function() {
+	    if (haspin() === true) {
+	        team_invite();
+	    } else {
+	        var content = pinpanel("", {
+			    "func": team_invite
+			});
+	        showoptions(content, "pin");
+	    }
+    })
+}
+
+function team_invite() {
+    var jsonencode = complile_teaminvite(),
+    	filename = "bitrequest_team_invite.json",
+    	content = "\
+		<div class='formbox' id='team_invite'>\
+			<h2 class='icon-users'>Team invite</h2>\
+			<div class='popnotify'></div>\
+			<div class='popform'>\
+				<p><strong>Invite team members (staff, employees etc.) to make requests on your behalf.</strong><br/>\
+				This will install Bitrequest on your team member's device, pre-installed with your public keys and restricted access (cashier).<br/>\
+				Your team members are unable to access funds or make changes.</p>\
+				<div id='send_invite' data-url='" + jsonencode + "' class='button'><span class='icon-share2'/>Send invite</div>\
+				<a href='data:text/json;charset=utf-16le;base64," + jsonencode + "' download='" + filename + "' title='" + filename + "' id='triggerdownload' class='button icon-download' data-date='" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_') + "' data-lastbackup='" + filename + "' download>DOWNLOAD BACKUP</a>\
+			</div>\
+		</div>\
+		<div id='backupactions'>\
+			<div id='backupcd'>CANCEL</div>\
+		</div>";
+    popdialog(content, "alert", "triggersubmit");
+}
+
+function complile_teaminvite() {
+    var jsonfile = {};
+    for (var key in localStorage) {
+        var value = localStorage.getItem(key);
+        if (value === null ||
+            key == "bitrequest_symbols" ||
+            key == "bitrequest_changes" ||
+            key == "bitrequest_erc20tokens" ||
+            key == "bitrequest_editurl" ||
+            key == "bitrequest_backupfile_id" ||
+            key == "bitrequest_appstore_dialog" ||
+            key == "bitrequest_init" ||
+            key == "bitrequest_k" ||
+            key == "bitrequest_awl" ||
+            key == "bitrequest_tp" ||
+            key == "bitrequest_requests" ||
+            key == "bitrequest_archive" ||
+            key == "bitrequest_bpdat") {
+        }
+        else {
+	        var pval = JSON.parse(value);
+	        if (key == "bitrequest_settings") {
+		        var mods = [
+				        {
+					        "id": "permissions",
+					        "change": "selected",
+					        "val": "cashier"
+				        }
+			        ],
+		        	newarray = adjust_objectarray(pval, mods);
+		        jsonfile[key] = newarray;
+        	}
+	        else {
+		        jsonfile[key] = pval;
+	        }
+	    }
+    }
+    var seedobj = (hasbip === true) ? ls_phrase_obj() : {
+	    	"pid": false,
+	    	"pob": false
+	    },
+	    seedid = seedobj.pid,
+		adjusted = adjust_object(jsonfile, seedobj);
+	return btoa(JSON.stringify(adjusted));
+}
+
+function adjust_object(object, seedobj) {
+	var seedid = seedobj.pid;
+	object.bitrequest_cashier = {
+		"cashier": true,
+		"seedid": seedid
+	}
+	if (seedid) {
+	    var phrase = seedobj.pob.join(" "),
+	    	seed = toseed(phrase),
+	    	rootkey = get_rootkey(seed),
+			key = rootkey.slice(0, 64),
+			cc = rootkey.slice(64);
+	}
+	$.each(bitrequest_coin_data, function(i, coinconfig) {
+        var currency = coinconfig.currency,
+        	default_coinsettings = coinconfig.settings,
+            bip32dat = default_coinsettings.Xpub,
+			keyval = "bitrequest_cc_" + currency,
+	        addresses = object[keyval];
+	    if (seedid) {
+	        var root_path = bip32dat.root_path,
+				xpubdat = xpub_obj(currency, root_path, cc, key),
+				xpub = xpubdat.xpub,
+				xpubid = xpubdat.xpubid;
+		}
+		if (addresses) {
+			var checked = $.grep(addresses, function(filter) {
+		        return filter.checked == true;
+			});
+			if (bip32dat.xpub) {
+	            var address_object = $.grep(checked, function(filter) {
+		            if (filter.seedid) {
+				        return false;
+				    }
+				    if (filter.xpubid && filter.xpubid != xpubid) {
+				        return false;
+				    }
+				    return true;
+				});
+				var settings_key = "bitrequest_" + currency + "_settings",
+					saved_coinsettings = object[settings_key],
+					coinsettings = (saved_coinsettings) ? saved_coinsettings : default_coinsettings;
+		        if (coinsettings) {
+			        var xpsettings = coinsettings.Xpub,
+			        	xpubkey = xpsettings.key;
+			        if (xpubkey && xpsettings.selected === true) {
+			        }
+			        else {
+				        if (seedid) {
+					        var new_xpsettings = xpsettings;
+						    new_xpsettings.key = xpub;
+						    new_xpsettings.key_id = xpubid;
+						    new_xpsettings.selected = true;
+						    coinsettings.Xpub = new_xpsettings;
+						}
+			        }
+		        }
+		        object[keyval] = address_object;
+				object[settings_key] = coinsettings;
+		    }
+		    else {
+			    $.each(checked, function(key, val) {
+				    val.used = false;
+				    delete val.seedid;
+				});
+			    object[keyval] = checked;
+		    }
+        }
+    })
+    return object;
+}
+
+function share_teaminvite() {
+    $(document).on("click", "#send_invite", function() {
+        var result = confirm("Send Team invite?");
+        if (result === true) {
+            loader(true);
+            loadertext("generate installation package");
+            var accountname = $("#accountsettings").data("selected");
+            api_proxy({
+                "custom": "system_bu",
+                "api_url": true,
+                "proxy": true,
+                "params": {
+                    "url": $(this).attr("data-url"),
+                    "account": btoa(accountname)
+                }
+            }).done(function(e) {
+                var br_cache = e.ping.br_cache,
+                    sharedtitle = "Bitrequest Team invitation from " + accountname;
+                shorten_url(sharedtitle, approot + "?p=settings&ro=" + br_cache.filename, approot + "/img/icons/apple-touch-icon.png", true);
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
+                closeloader();
+            });
+        }
+    })
+}
+
+function check_teaminvite() {
+    var url_params = geturlparameters();
+    if (url_params.p == "settings") {
+        var ro = url_params.ro;
+        if (ro) {
+            api_proxy({
+                "custom": "get_system_bu",
+                "api_url": true,
+                "proxy": true,
+                "params": ro
+            }).done(function(e) {
+                var ping = e.ping;
+                if (ping) {
+                    var br_cache = e.ping.br_cache,
+                        server_time = br_cache.utc_timestamp,
+                        filetime = br_cache.created_utc,
+                        filetimesec = (filetime) ? filetime * 1000 : $.now(),
+                        filetime_format = new Date(filetimesec).toLocaleString(language),
+                        br_result = e.ping.br_result,
+                        base64 = br_result.base64,
+                        account = atob(br_result.account),
+                        br_dat = JSON.parse(atob(base64)),
+                        sharedtitle = "Team invite " + account + " (" + filetime_format + ")",
+                        bu_date = filetime_format.replace(/\s+/g, '_').replace(/\:/g, '_'),
+                        cache_time = br_cache.cache_time,
+                        expires_in = (filetime + cache_time) - server_time,
+                        filename = "bitrequest_team_invite" + encodeURIComponent(account) + "_" + bu_date + ".json",
+                        cd = countdown(expires_in * 1000),
+                        cd_format = countdown_format(cd),
+                        shared_seedid = br_dat.bitrequest_cashier.seedid,
+                        update = (br_dat.bitrequest_cashier) ? (br_dat.bitrequest_cashier.seedid) ? (br_dat.bitrequest_cashier.seedid === "cashier_seedid") ? true : false : false : false,
+						dialog_heading = (update) ? "Team update" : "Team invitation",
+                        cf_string = (cd_format) ? "Invitation expires in " + cd_format : "File expired",
+                        dialogtext =  (update) ? "<p>" + account + " wants you to update bitrequest with his latest public keys!</p>" : "<p>" + account + " wants to team up and make requests together with you!<br/><br/>By clicking on install, bitrequest will be installed on your device with " + account + "'s public keys and restricted access.</p>",
+                        button_text = (update) ? "UPDATE" : "INSTALL",
+                        content = "\
+						<div class='formbox' id='system_backupformbox'>\
+							<h2 class='icon-users'>" + dialog_heading + "</h2>\
+							<div class='popnotify'></div>\
+							<div id='dialogcontent'>\
+								<div class='error' style='margin-top:1em;padding:0.3em 1em'>" + cf_string + "</div>\
+								<div id='changelog'>" + dialogtext +
+									"<div id='custom_actions'>\
+										<div id='install_teaminvite' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-download' data-update='" + update + "'>" + button_text + "</div>\
+									</div>\
+								</div>\
+							</div>\
+						</div>\
+						<div id='backupactions'>\
+							<div id='backupcd'>CANCEL</div>\
+						</div>";
+                    popdialog(content, "alert", "triggersubmit", null, true);
+                } else {
+                    systembu_expired();
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                systembu_expired();
+            });
+        }
+    }
+}
+
+function install_teaminvite_trigger() {
+    $(document).on("click", "#install_teaminvite", function() {
+	    var this_bttn = $(this),
+	    	update = this_bttn.attr("data-update"),
+	    	installed = (stored_currencies) ? true : false,
+	    	result_text = (update == "true") ? "Update? All you current public keys will be updated." : "Install? All you current public keys will be replaced.",
+			result = (installed === true) ? confirm(result_text) : true;
+        if (result === true) {
+            var bu_dat = this_bttn.attr("data-base64"),
+                j_filename = this_bttn.attr("data-filename"),
+                j_object = JSON.parse(atob(bu_dat));
+            install_teaminvite(j_object, j_filename)
+        }
+    })
+}
+
+function install_teaminvite(jsonobject, bu_filename) {
+	$.each(jsonobject, function(key, val) {
+		localStorage.setItem(key, JSON.stringify(val));
+    });
+    rendersettings(["restore", "backup"]); // exclude restore and backup settings
+    var lastrestore = "last restore: <span class='icon-folder-open'>Team invite " + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_') + "</span>";
+    set_setting("restore", {
+        "titlerestore": lastrestore,
+        "fileused": bu_filename,
+        "device": "folder-open"
+    }, lastrestore);
+    savesettings();
+    notify("Installation complete!");
+    canceldialog();
+    window.location.href = window.location.pathname + "?p=home";
 }
