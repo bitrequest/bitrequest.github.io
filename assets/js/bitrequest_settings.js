@@ -2517,7 +2517,7 @@ function check_teaminvite() {
                         cd = countdown(expires_in * 1000),
                         cd_format = countdown_format(cd),
                         shared_seedid = br_dat.bitrequest_cashier.seedid,
-                        update = (br_dat.bitrequest_cashier) ? (br_dat.bitrequest_cashier.seedid) ? (br_dat.bitrequest_cashier.seedid === "cashier_seedid") ? true : false : false : false,
+                        update = (br_dat.bitrequest_cashier) ? (br_dat.bitrequest_cashier.seedid) ? (br_dat.bitrequest_cashier.seedid === cashier_seedid) ? true : false : false : false,
 						dialog_heading = (update) ? "Team update" : "Team invitation",
                         cf_string = (cd_format) ? "Invitation expires in " + cd_format : "File expired",
                         dialogtext =  (update) ? "<p>" + account + " wants you to update bitrequest with his latest public keys!</p>" : "<p>" + account + " wants to team up and make requests together with you!<br/><br/>By clicking on install, bitrequest will be installed on your device with " + account + "'s public keys and restricted access.</p>",
