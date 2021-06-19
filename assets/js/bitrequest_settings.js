@@ -2541,8 +2541,9 @@ function check_teaminvite() {
                         update = (bpdat_seedid == cashier_seedid) ? true : false,
                         master_account = (bpdat_seedid == bipid) ? true : false,
                         teamid = localStorage.getItem("bitrequest_teamid"),
-                        is_installed = (ro == teamid) ? true : false,
-						dialog_heading = (update) ? "Team update" : "Team invitation",
+                        teamid_arr = (teamid) ? JSON.parse(teamid) : [],
+                        is_installed = ($.inArray(ro, teamid_arr) > -1) ? true : false,
+                        dialog_heading = (update) ? "Team update" : "Team invitation",
                         cf_string = (cd_format) ? "Invitation expires in " + cd_format : "File expired",
                         dialogtext =  (is_installed) ? "<p>Installation already completed!</p>" : (update) ? "<p>" + account + " wants you to update bitrequest with his latest public keys!</p>" : "<p>" + account + " wants to team up and make requests together with you!<br/><br/>By clicking on install, bitrequest will be installed on your device with " + account + "'s public keys and restricted access.</p>",
                         button_text = (update) ? "UPDATE" : "INSTALL",
@@ -2599,7 +2600,10 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
 		localStorage.setItem(key, JSON.stringify(val));
     });
     if (iid) {
-	    localStorage.setItem("bitrequest_teamid", iid);
+	    var stored_teamids = localStorage.getItem("bitrequest_teamid"),
+	    	teamid_arr = (stored_teamids) ? JSON.parse(stored_teamids) : [];
+		teamid_arr.push(iid);
+	    localStorage.setItem("bitrequest_teamid", JSON.stringify(teamid_arr));
     }
     rendersettings(["restore", "backup"]); // exclude restore and backup settings
     var lastrestore = "last restore: <span class='icon-folder-open'>Team invite " + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_') + "</span>";
