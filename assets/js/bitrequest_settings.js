@@ -53,6 +53,8 @@ $(document).ready(function() {
     restorebackup();
     submitrestore();
     //restore
+    //check_backup
+    //isteaminvite
     submit_GD_restore();
     //scan_restore
     //restore_algo
@@ -834,16 +836,15 @@ function submitrestore() {
 }
 
 function restore(jsonobject, bu_filename) {
-	var cashier_entry = jsonobject.bitrequest_cashier,
-    	is_team_invite = (cashier_entry && cashier_entry.cashier) ? true : false;
-    if (cashier_dat && cashier_dat.cashier && !is_team_invite) {
-	    notify("Backup type not allowed in cashier mode");
+	var cbu = check_backup(jsonobject);
+	if (cbu === false) {
 	    return false
     }
     var result = confirm("Restore " + bu_filename + "?");
     if (result === true) {
+	    var is_team_invite = isteaminvite(jsonobject);
 	    if (is_team_invite === true) {
-		    install_teaminvite(jsonobject, bu_filename);
+		    install_teaminvite(jsonobject, bu_filename, false);
 		}
 	    else {
 		    scan_restore(jsonobject);
@@ -855,6 +856,21 @@ function restore(jsonobject, bu_filename) {
 	        restore_algo(pass_dat);
 	    }
     }
+}
+
+function check_backup(jsonobject) {
+	var cashier_entry = jsonobject.bitrequest_cashier,
+    	is_team_invite = (cashier_entry && cashier_entry.cashier) ? true : false;
+    if (cashier_dat && cashier_dat.cashier && !is_team_invite) {
+	    notify("Backup type not allowed in cashiers mode");
+	    return false;
+    }
+    return true;
+}
+
+function isteaminvite(jsonobject) {
+	var cashier_entry = jsonobject.bitrequest_cashier;
+	return (cashier_entry && cashier_entry.cashier) ? true : false;
 }
 
 function submit_GD_restore() {
@@ -903,6 +919,10 @@ function scan_restore(jsonobject) {
 
 
 function restore_algo(pass_dat) {
+	var cbu = check_backup(pass_dat);
+	if (cbu === false) {
+	    return false
+    }
     if (resd.sbu) { // has seed backup
         if (resd.samebip === true) {
             // keep existing phrase
@@ -1231,6 +1251,7 @@ function restorestorage(jsonobject, newphrase) {
         }
     });
     localStorage.removeItem("bitrequest_cashier");
+    localStorage.removeItem("bitrequest_teamid");
     resd = {};
 }
 
@@ -2516,12 +2537,16 @@ function check_teaminvite() {
                         filename = "bitrequest_team_invite" + encodeURIComponent(account) + "_" + bu_date + ".json",
                         cd = countdown(expires_in * 1000),
                         cd_format = countdown_format(cd),
-                        shared_seedid = br_dat.bitrequest_cashier.seedid,
-                        update = (br_dat.bitrequest_cashier) ? (br_dat.bitrequest_cashier.seedid) ? (br_dat.bitrequest_cashier.seedid === cashier_seedid) ? true : false : false : false,
+                        bpdat_seedid = (br_dat.bitrequest_cashier) ? (br_dat.bitrequest_cashier.seedid) ? br_dat.bitrequest_cashier.seedid : false : false,
+                        update = (bpdat_seedid == cashier_seedid) ? true : false,
+                        master_account = (bpdat_seedid == bipid) ? true : false,
+                        teamid = localStorage.getItem("bitrequest_teamid"),
+                        is_installed = (ro == teamid) ? true : false,
 						dialog_heading = (update) ? "Team update" : "Team invitation",
                         cf_string = (cd_format) ? "Invitation expires in " + cd_format : "File expired",
-                        dialogtext =  (update) ? "<p>" + account + " wants you to update bitrequest with his latest public keys!</p>" : "<p>" + account + " wants to team up and make requests together with you!<br/><br/>By clicking on install, bitrequest will be installed on your device with " + account + "'s public keys and restricted access.</p>",
+                        dialogtext =  (is_installed) ? "<p>Installation already completed!</p>" : (update) ? "<p>" + account + " wants you to update bitrequest with his latest public keys!</p>" : "<p>" + account + " wants to team up and make requests together with you!<br/><br/>By clicking on install, bitrequest will be installed on your device with " + account + "'s public keys and restricted access.</p>",
                         button_text = (update) ? "UPDATE" : "INSTALL",
+                        install_button = (is_installed) ? "" : "<div id='install_teaminvite' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-download' data-update='" + update + "' data-ismaster='" + master_account + "'data-installid='" + ro + "'>" + button_text + "</div>"
                         content = "\
 						<div class='formbox' id='system_backupformbox'>\
 							<h2 class='icon-users'>" + dialog_heading + "</h2>\
@@ -2529,9 +2554,7 @@ function check_teaminvite() {
 							<div id='dialogcontent'>\
 								<div class='error' style='margin-top:1em;padding:0.3em 1em'>" + cf_string + "</div>\
 								<div id='changelog'>" + dialogtext +
-									"<div id='custom_actions'>\
-										<div id='install_teaminvite' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-download' data-update='" + update + "'>" + button_text + "</div>\
-									</div>\
+									"<div id='custom_actions'>" + install_button +"</div>\
 								</div>\
 							</div>\
 						</div>\
@@ -2552,7 +2575,13 @@ function check_teaminvite() {
 function install_teaminvite_trigger() {
     $(document).on("click", "#install_teaminvite", function() {
 	    var this_bttn = $(this),
-	    	update = this_bttn.attr("data-update"),
+	    	ismaster = this_bttn.attr("data-ismaster");
+	    if (ismaster === "true") {
+		    notify("Can't install invite on own device	");
+		    return false;
+		}
+	    var update = this_bttn.attr("data-update"),
+	    	installid = this_bttn.attr("data-installid"),
 	    	installed = (stored_currencies) ? true : false,
 	    	result_text = (update == "true") ? "Update? All you current public keys will be updated." : "Install? All you current public keys will be replaced.",
 			result = (installed === true) ? confirm(result_text) : true;
@@ -2560,15 +2589,18 @@ function install_teaminvite_trigger() {
             var bu_dat = this_bttn.attr("data-base64"),
                 j_filename = this_bttn.attr("data-filename"),
                 j_object = JSON.parse(atob(bu_dat));
-            install_teaminvite(j_object, j_filename)
+            install_teaminvite(j_object, j_filename, installid);
         }
     })
 }
 
-function install_teaminvite(jsonobject, bu_filename) {
+function install_teaminvite(jsonobject, bu_filename, iid) {
 	$.each(jsonobject, function(key, val) {
 		localStorage.setItem(key, JSON.stringify(val));
     });
+    if (iid) {
+	    localStorage.setItem("bitrequest_teamid", iid);
+    }
     rendersettings(["restore", "backup"]); // exclude restore and backup settings
     var lastrestore = "last restore: <span class='icon-folder-open'>Team invite " + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_') + "</span>";
     set_setting("restore", {

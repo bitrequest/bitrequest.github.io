@@ -1183,3 +1183,7 @@ body.seed_dialog #seed_panel {
 	background-color: #f7f4f4;
 	color:#b5b5b5;
 }
+
+#install_teaminvite[data-ismaster="true"] {
+	opacity:0.5;
+}
