@@ -233,7 +233,7 @@ function submit_blockexplorer() {
 // RPC node / Websockets
 function edit_rpcnode() {
     $(document).on("click", ".cc_settinglist li[data-id='apis'], .cc_settinglist li[data-id='websockets']", function() {
-        var current_li = $(this),
+	    var current_li = $(this),
             this_data = current_li.data(),
             options = this_data.options,
             api_list = this_data.apis,
@@ -284,7 +284,8 @@ function edit_rpcnode() {
             $.each(api_list, function(key, value) {
                 if (value.display === true) {
                     var selected = (value.url == selected_title || value.name == selected_title);
-                    rpc_option_li(optionlist, true, key, value, selected, false);
+                    //rpc_option_li(optionlist, true, key, value, selected, false);
+                    test_append_rpc(thiscurrency, optionlist, key, value, selected);
                 }
             });
             $.each(options, function(key, value) {
@@ -320,7 +321,7 @@ function get_rpc_placeholder(currency) {
 }
 
 function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
-    if (s_id == "apis") {
+	if (s_id == "apis") {
         if (thiscurrency == "ethereum") {
             if (web3) {
                 web3.setProvider(value.url);
@@ -375,24 +376,30 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
         }
     } else if (s_id == "websockets") {
         var provider = value.url,
-            ping_event;
+        	provider_name = value.name,
+            ping_event = "heartbeat";
+        if (provider_name == "blockcypher websocket") {
+	        provider = provider + "btc/main";
+        }
         if (thiscurrency == "bitcoin") {
             var ping_event = JSON.stringify({
                 op: "ping"
             });
         } else if (thiscurrency == "nano") {
             var ping_event = JSON.stringify({
-                action: "subscribe",
-                topic: "confirmation",
-                ack: true,
-                id: 1
+                "action": "subscribe",
+                "topic": "confirmation",
+                "ack": true,
+                "id": 1
             });
         } else if (is_erc20t === true) {
+	        var if_id = get_infura_apikey(provider),
+	        	provider = provider + if_id;
             var ping_event = JSON.stringify({
-                jsonrpc: "2.0",
-                id: 1,
-                method: "eth_subscribe",
-                params: ["logs", {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "eth_subscribe",
+                "params": ["logs", {
                     address: "0x56ba2Ee7890461f463F7be02aAC3099f6d5811A8",
                     topics: []
                 }]
@@ -402,11 +409,11 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
         web_socket.onopen = function(e) {
             web_socket.send(ping_event);
             console.log(ping_event);
+            rpc_option_li(optionlist, true, key, value, selected, true);
             console.log("Connected: " + provider);
         };
         web_socket.onmessage = function(e) {
-            console.log(e);
-            rpc_option_li(optionlist, true, key, value, selected, true);
+            //console.log(e);
             console.log("socket test success");
             web_socket.close();
             web_socket = undefined;

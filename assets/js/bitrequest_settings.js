@@ -978,7 +978,16 @@ function s_decode(pdat, phash) {
 
 function pin_dialog(pass_dat, cb) {
     canceldialog();
-    var content = $("<div class='formbox' id='pindialog'>\
+    var pinsettings = $("#pinsettings").data(),
+		current_timeout = pinsettings.timeout;
+	if (current_timeout) {
+		var timeleft = current_timeout - $.now();
+		if (timeleft > 0) {
+			lockscreen(current_timeout);
+			return false;
+		}
+    }
+	var content = $("<div class='formbox' id='pindialog'>\
 		<h2><span class='icon-lock'></span>Enter your 4 digit pin</h2>\
 		<div class='popnotify'></div>\
 		<div class='popform'>\
@@ -1006,10 +1015,12 @@ function submit_pin_dialog() {
             jasobj = pass_dat.jasobj;
             if (jasobj) {
                 var pbdat = jasobj.bitrequest_bpdat,
-                    can_dec = s_decode(pbdat, hashcode(thisvalue));
+                    can_dec = s_decode(pbdat, hashcode(thisvalue)),
+                	pinsettings = $("#pinsettings").data();
                 if (can_dec) {
                     resd.pcnt = 0;
                     var callback = pdat.cb;
+                    clearpinlock();
                     if (callback) {
                         resd.bpdat = can_dec;
                         if (callback == "restore_callback") {
@@ -1022,19 +1033,20 @@ function submit_pin_dialog() {
                     }
                     notify("Succes!");
                 } else {
-                    if (resd.pcnt > 1) {
+	                if (resd.pcnt > 1) {
+	                    pinsettings.timeout = $.now() + 300000; // 5 minutes
                         topnotify("Max attempts exeeded");
                         var result = confirm("Restore without seed?");
                         if (result === true) {
                             restore_callback(pass_dat, false);
-                        } else {
-
+                        } else {	
                         }
                         resd.pcnt = 0;
                         canceldialog();
                     } else {
                         resd.pcnt = resd.pcnt + 1;
                     }
+                    savesettings();
                     shake(dialog);
                     thisinput.val("");
                 }
@@ -2330,6 +2342,11 @@ function submit_permissions() {
 
 function team_invite_trigger() {
     $(document).on("click", "#teaminvite", function() {
+	    if (!bipv) {
+		    bipv_pass();
+		    notify("please verify your secret phrase");
+		    return false;
+	    }
 	    if (haspin() === true) {
 	        team_invite();
 	    } else {

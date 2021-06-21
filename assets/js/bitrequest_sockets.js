@@ -112,7 +112,7 @@ function blockchain_btc_socket(socket_node, thisaddress) {
         setTimeout(function() {
             chainstate("Monitoring address");
         }, 3500);
-        socket_info(socket_node, live);
+        socket_info(socket_node, true);
         var ping_event = JSON.stringify({
             "op": "addr_sub",
             "addr": thisaddress

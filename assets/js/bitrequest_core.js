@@ -1096,7 +1096,7 @@ function loadpage(href) {
 }
 
 function openpage(href, pagename, event) {
-    history.pushState({
+	history.pushState({
         pagename: pagename,
         event: event
     }, "", href);
@@ -2246,14 +2246,15 @@ function validateaddress(ad, vk) {
         labelinput = labelfield.val(),
         labelinputval = (labelinput) ? labelinput : "";
 	if (addressinputval) {
-        var addressduplicate = currentaddresslist.children("li[data-address=" + addressinputval + "]").length > 0,
+		var addinputval = (addressinputval.indexOf(":") > -1) ? addressinputval.split(":").pop() : addressinputval,
+			addressduplicate = currentaddresslist.children("li[data-address=" + addinputval + "]").length > 0,
             address = ad.address,
             label = ad.label;
-        if (addressduplicate === true && address !== addressinputval) {
+        if (addressduplicate === true && address !== addinputval) {
             popnotify("error", "address already exists");
             addressfield.select();
         } else {
-            var valid = check_address(addressinputval, currencycheck);
+            var valid = check_address(addinputval, currencycheck);
             if (valid === "no_web3") {
                 canceldialog();
                 setTimeout(function() {
@@ -2277,9 +2278,9 @@ function validateaddress(ad, vk) {
                         if (vk) {
                             ed.vk = vk;
                         }
-                        currentlistitem.data(ed).attr("data-address", addressinputval);
+                        currentlistitem.data(ed).attr("data-address", addinputval);
                         currentlistitem.find(".atext h2 > span").text(labelinputval);
-                        currentlistitem.find(".atext p.address").text(addressinputval);
+                        currentlistitem.find(".atext p.address").text(addinputval);
                         saveaddresses(currency, true);
                         canceldialog();
                         canceloptions();
@@ -2296,7 +2297,7 @@ function validateaddress(ad, vk) {
                                     var acountname = $("#eninput").val();
                                     $("#accountsettings").data("selected", acountname).find("p").html(acountname);
                                     savesettings();
-                                    var href = "?p=home&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0" + "&address=" + addressinputval;
+                                    var href = "?p=home&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0" + "&address=" + addinputval;
                                     localStorage.setItem("bitrequest_editurl", href); // to check if request is being edited
                                     openpage(href, "create " + currency + " request", "payment");
                                     body.removeClass("showstartpage");
@@ -2304,7 +2305,7 @@ function validateaddress(ad, vk) {
                                     loadpage("?p=" + currency);
                                 }
                             }
-                            ad.address = addressinputval,
+                            ad.address = addinputval,
                             	ad.label = labelinputval,
                                 ad.a_id = ccsymbol + index,
                                 ad.vk = vk,
@@ -2336,7 +2337,7 @@ function validateaddress(ad, vk) {
 }
 
 function check_address(address, currency) {
-    if (currency == "ethereum" && web3 === undefined) {
+	if (currency == "ethereum" && web3 === undefined) {
         return "no_web3";
     }
     var regex = getcoindata(currency).regex,
