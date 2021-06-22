@@ -1029,7 +1029,7 @@ function continue_paymentfunction(payment) {
 					<p id='requestnamep'>" + requestnamestring + "</p>\
 					<div id='scanqrib' class='inputbreak'>\
 						<div class='button' id='scanqr'>\
-							<span class='icon-qrcode'>Scan qr-code</span>\
+							<span class='icon-qrcode'>Show qr-code</span>\
 						</div><br/>\
 						<div class='button openwallet' id='openwallet' data-currency='" + payment + "'><span class='icon-folder-open'>Open wallet</span></div>\
 					</div>\

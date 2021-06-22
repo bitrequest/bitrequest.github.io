@@ -1097,8 +1097,8 @@ function loadpage(href) {
 
 function openpage(href, pagename, event) {
 	history.pushState({
-        pagename: pagename,
-        event: event
+        "pagename": pagename,
+        "event": event
     }, "", href);
     loadfunction(pagename, event);
 }

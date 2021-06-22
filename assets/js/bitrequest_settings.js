@@ -2342,9 +2342,9 @@ function submit_permissions() {
 
 function team_invite_trigger() {
     $(document).on("click", "#teaminvite", function() {
-	    if (!bipv) {
+	    if (hasbip && !bipv) {
 		    bipv_pass();
-		    notify("please verify your secret phrase");
+		    notify("please verify your secret phrase first");
 		    return false;
 	    }
 	    if (haspin() === true) {
