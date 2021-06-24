@@ -499,7 +499,15 @@ var multi_wallets = {
                     multi_wallets.trezor,
                     multi_wallets.ledger,
                     multi_wallets.trustwallet,
-                    multi_wallets.atomicwallet
+                    multi_wallets.atomicwallet,
+                    {
+                        "name": "electron-cash",
+                        "website": "https://electroncash.org",
+                        "appstore": "https://itunes.apple.com/app/id1359700089",
+						"playstore": "https://play.google.com/store/apps/details?id=org.electroncash.wallet",
+                        "desktop": "https://electroncash.org",
+                        "seed": true
+                    }
                 ]
             },
             "settings": {
