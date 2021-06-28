@@ -122,7 +122,8 @@ function set_request_timer(timeout) {
 	// close request dialog after 3 minutes
 	clearTimeout(request_timer);
 	request_timer = setTimeout(function() {
-		cancelpaymentdialog();
+		//cancelpaymentdialog();
+		cpd_pollcheck();
 	}, 180000, function() {
 		clearTimeout(request_timer);
 	});

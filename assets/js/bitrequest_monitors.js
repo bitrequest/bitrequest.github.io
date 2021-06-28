@@ -390,16 +390,22 @@ function get_api_inputs(rd, api_data, api_name) {
                             })
                         }
                     }).done(function(e) {
-                        var data = br_result(e).result,
-                            txd = nano_scan_data(data, setconfirmations, ccsymbol, transactionhash);
-                        if (txd.ccval) {
-                            var tx_listitem = append_tx_li(txd, thislist);
-                            if (tx_listitem) {
-                                transactionlist.append(tx_listitem.data(txd));
-                            }
-                            tx_count(statuspanel, 1);
-                            api_src(thislist, api_data);
-                            compareamounts(rd);
+                        var data = br_result(e).result;
+                        if (data.error) {
+	                        tx_api_fail(thislist, statuspanel);
+							handle_api_fails(rd, data.error, api_name, payment);
+                        }
+                        else {
+	                        var txd = nano_scan_data(data, setconfirmations, ccsymbol, transactionhash);
+	                        if (txd.ccval) {
+	                            var tx_listitem = append_tx_li(txd, thislist);
+	                            if (tx_listitem) {
+	                                transactionlist.append(tx_listitem.data(txd));
+	                            }
+	                            tx_count(statuspanel, 1);
+	                            api_src(thislist, api_data);
+	                            compareamounts(rd);
+	                        }
                         }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
@@ -720,7 +726,7 @@ function handle_api_fails(rd, error, api_name, thispayment, txid) {
         return false;
     } else {
 	    var nextapi = get_next_api(thispayment, api_name);
-        if (nextapi === false) { // only one api
+	    if (nextapi === false) { // only one api
             api_eror_msg(api_name, error_data, key_fail, monitor);
             api_callback(rd.requestid, true);
             return false;
@@ -765,7 +771,7 @@ function get_api_error_data(error) {
 }
 
 function get_next_api(this_payment, this_api_name) {
-    var apilist = $.grep(getcoinsettings(this_payment).apis.apis, function(obj) { // filter out rpc's
+	var apilist = $.grep(getcoinsettings(this_payment).apis.apis, function(obj) { // filter out rpc's
         return obj.api === true;
     });
     var this_index = apilist.findIndex(option => option.name == this_api_name),

@@ -201,9 +201,9 @@ var multi_wallets = {
                 "websockets": {
                     "icon": "tab",
                     "selected": {
-                        "name": "blockcypher websocket",
-                        "url": "wss://socket.blockcypher.com/v1/",
-                        "display": true
+                        "name": main_ad_socket,
+						"url": main_ad_socket,
+						"display": true
                     },
                     "apis": [{
                             "name": "blockcypher websocket",
@@ -244,7 +244,7 @@ var multi_wallets = {
                 },
                 "Key derivations": {
                     "icon": "cog",
-                    "selected": "BIP32 key generation",
+                    "selected": "Compatible wallets",
                 }
             }
         },
@@ -363,7 +363,7 @@ var multi_wallets = {
                 },
                 "Key derivations": {
                     "icon": "cog",
-                    "selected": "BIP32 key generation",
+                    "selected": "Compatible wallets",
                 }
             }
         },
@@ -475,7 +475,7 @@ var multi_wallets = {
                 },
                 "Key derivations": {
                     "icon": "cog",
-                    "selected": "BIP32 key generation",
+                    "selected": "Compatible wallets",
                 }
             }
         },
@@ -594,7 +594,7 @@ var multi_wallets = {
                 },
                 "Key derivations": {
                     "icon": "cog",
-                    "selected": "BIP32 key generation",
+                    "selected": "Compatible wallets",
                 }
             }
         },
@@ -724,7 +724,7 @@ var multi_wallets = {
                 },
                 "Key derivations": {
                     "icon": "cog",
-                    "selected": "BIP32 key generation",
+                    "selected": "Compatible wallets",
                 }
             }
         },
@@ -875,7 +875,7 @@ var multi_wallets = {
                 },
                 "Key derivations": {
                     "icon": "cog",
-                    "selected": "BIP32 key generation",
+                    "selected": "Compatible wallets",
                 }
             }
         },
@@ -979,7 +979,7 @@ var multi_wallets = {
                 },
                 "Key derivations": {
                     "icon": "cog",
-                    "selected": "BIP32 key generation",
+                    "selected": "Compatible wallets",
                 }
             }
         }
@@ -1085,30 +1085,10 @@ var erc20_dat = {
 }
 
 var app_settings = [{
-        "id": "heading",
-        "heading": "Account"
-    },
-    {
         "id": "accountsettings",
         "heading": "Account name",
         "selected": "Bitrequest",
         "icon": "icon-user"
-    },
-    {
-        "id": "contactform",
-        "heading": "Contact form",
-        "selected": "Contact form",
-        "icon": "icon-file-text",
-        "name": "",
-        "address": "",
-        "zipcode": "",
-        "city": "",
-        "country": "",
-        "email": ""
-    },
-    {
-        "id": "heading",
-        "heading": "Currency Settings"
     },
     {
         "id": "currencysettings",
@@ -1119,35 +1099,12 @@ var app_settings = [{
         "default": false
     },
     {
-        "id": "cmcapisettings",
-        "heading": "Cryptocurrency price API",
-        "selected": "coinmarketcap",
-        "icon": "icon-stats-dots",
-        "cmcapikey": null
-    },
-    {
-        "id": "fiatapisettings",
-        "heading": "FIAT price API",
-        "selected": "fixer",
-        "icon": "icon-stats-bars",
-        "fxapikey": null
-    },
-    {
-        "id": "url_shorten_settings",
-        "heading": "Url shortener",
-        "selected": "firebase",
-        "icon": "icon-link",
-        "us_active": "active",
-        "bitly_at": null,
-        "fbapikey": null
-    },
-    {
         "id": "heading",
         "heading": "Security"
     },
     {
         "id": "bip39_passphrase",
-        "heading": "Bip39 passphrase",
+        "heading": "Secret Phrase",
         "selected": "",
         "icon": "icon-eye"
     },
@@ -1163,7 +1120,7 @@ var app_settings = [{
     },
     {
         "id": "backup",
-        "heading": "Backup",
+        "heading": "Backup App data",
         "selected": "",
         "icon": "icon-download",
         "sbu": false,
@@ -1171,7 +1128,7 @@ var app_settings = [{
     },
     {
         "id": "restore",
-        "heading": "Restore from backup",
+        "heading": "Restore App data",
         "selected": "",
         "icon": "icon-upload",
         "fileused": null,
@@ -1186,6 +1143,29 @@ var app_settings = [{
     {
         "id": "heading",
         "heading": "Advanced"
+    },
+    {
+        "id": "url_shorten_settings",
+        "heading": "Url shortener",
+        "selected": "firebase",
+        "icon": "icon-link",
+        "us_active": "active",
+        "bitly_at": null,
+        "fbapikey": null
+    },
+    {
+        "id": "cmcapisettings",
+        "heading": "Cryptocurrency price API",
+        "selected": "coinmarketcap",
+        "icon": "icon-stats-dots",
+        "cmcapikey": null
+    },
+    {
+        "id": "fiatapisettings",
+        "heading": "FIAT price API",
+        "selected": "fixer",
+        "icon": "icon-stats-bars",
+        "fxapikey": null
     },
     {
         "id": "api_proxy",
@@ -1215,6 +1195,18 @@ var app_settings = [{
         "currencylayer": null,
         "infura": null,
         "amberdata": null
+    },
+    {
+        "id": "contactform",
+        "heading": "Contact form",
+        "selected": "Contact form",
+        "icon": "icon-file-text",
+        "name": "",
+        "address": "",
+        "zipcode": "",
+        "city": "",
+        "country": "",
+        "email": ""
     },
     {
         "id": "permissions",

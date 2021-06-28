@@ -157,14 +157,14 @@ function reuse_address_trigger() {
 	        	var xresult = confirm("Are you sure you want to generate new " + thiscurrency + " addresses? they may not show up in some wallets.");
         	}
         	if (xresult === true) {
-	        	thislist.data("selected", false).find("p").html("false");
+	        	thislist.data("selected", false);
 				this_switch.removeClass("true").addClass("false");
 				save_cc_settings(thiscurrency, false);
 			}
         } else {
             var result = confirm("Are you sure you want to reuse " + thiscurrency + " addresses?");
             if (result === true) {
-                thislist.data("selected", true).find("p").html("true");
+                thislist.data("selected", true);
                 this_switch.removeClass("false").addClass("true");
                 save_cc_settings(thiscurrency, true);
             }
@@ -179,7 +179,7 @@ function cc_switch() {
             thisliwrap = thistrigger.closest(".liwrap"),
             thiscurrency = thisliwrap.attr("data-currency"),
             thisvalue = (thistrigger.hasClass("true")) ? true : false;
-        thislist.data("selected", thisvalue).find("p").html(thisvalue.toString());
+        thislist.data("selected", thisvalue);
         save_cc_settings(thiscurrency, false);
     })
 }
@@ -284,8 +284,12 @@ function edit_rpcnode() {
             $.each(api_list, function(key, value) {
                 if (value.display === true) {
                     var selected = (value.url == selected_title || value.name == selected_title);
-                    //rpc_option_li(optionlist, true, key, value, selected, false);
-                    test_append_rpc(thiscurrency, optionlist, key, value, selected);
+                    if (thiscurrency == "nano") {
+	                    test_append_rpc(thiscurrency, optionlist, key, value, selected);
+                    }
+                    else {
+	                    rpc_option_li(optionlist, true, key, value, selected, false);
+                    }
                 }
             });
             $.each(options, function(key, value) {
@@ -383,7 +387,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
         }
         if (thiscurrency == "bitcoin") {
             var ping_event = JSON.stringify({
-                op: "ping"
+                "op": "ping"
             });
         } else if (thiscurrency == "nano") {
             var ping_event = JSON.stringify({
@@ -1012,7 +1016,7 @@ function key_management() {
             thiscurrency = thisliwrap.attr("data-currency"),
             activepub = active_xpub(thiscurrency);
         if (activepub) {
-            xpub_info_pu(thiscurrency, activepub.key);
+	        xpub_info_pu(thiscurrency, activepub.key);
         } else {
 	        if (hasbip === true) {
 		        if (thiscurrency == "monero") {
@@ -1060,8 +1064,18 @@ function xpub_info_pu(currency, xpub) {
         var index = startindex + i;
         derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> | <span class='mspace'>" + val.address + "</span></li>";
     });
-    var content = $("<div id='ad_info_wrap'><h2>" + getcc_icon(coindat.cmcid, coindat.ccsymbol + "-" + currency, coindat.erc20) + " <span>" + currency + " Key Derivation</span></h2><ul>\
-	    <li><strong>Source: </strong>Xpub</li>\
+    var ccsymbol = coindat.ccsymbol,
+   		content = $("<div id='ad_info_wrap'><h2>" + getcc_icon(coindat.cmcid, ccsymbol + "-" + currency, coindat.erc20) + " <span>" + currency + " Key Derivation</span></h2><ul>\
+	    <li id='xpub_box' class='clearfix noline'>\
+	    	<div class='xpub_ib clearfix pd_" + currency + "' data-xpub='" + xpub + "'>\
+    			<div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>show</span></div>\
+					<div class='xp_span drawer'>\
+						<div class='qrwrap flex'>\
+							<div class='qrcode'></div><img src='img/logos/" + ccsymbol + "-" + currency + ".png' class='cmc_icon'>\
+						</div>\
+						<p class='adbox adboxl select' data-type='Xpub'>" + xpub + "</p>\
+					</div>\
+				</div>\
 	    <li>\
 			<div id='d_paths'></div>\
 		</li>\

@@ -212,24 +212,28 @@ function dogechain_info_socket(socket_node, thisaddress) {
         }, 55000);
     };
     websocket.onmessage = function(e) {
-        var json = JSON.parse(e.data).x,
-        	txhash = json.hash;
-		if (txhash) {
-            if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
-                paymentdialogbox.removeClass("transacting");
-                var reconnectbttn = (txid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + txid + "'>Reconnect</span></div></p>" : "",
-                    content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + reconnectbttn;
-                closesocket();
-                popdialog(content, "alert", "canceldialog");
-            } else {
-                var txd = dogechain_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress);
-                if (txd) {
-	                txid = txhash;
-		            closesocket();
-		            pick_monitor(txhash, txd);
+        var json = JSON.parse(e.data),
+        	data = json.x;
+		console.log(data);
+		if (data) {
+			var txhash = data.hash;
+			if (txhash) {
+	            if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
+	                paymentdialogbox.removeClass("transacting");
+	                var reconnectbttn = (txid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + txid + "'>Reconnect</span></div></p>" : "",
+	                    content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + reconnectbttn;
+	                closesocket();
+	                popdialog(content, "alert", "canceldialog");
+	            } else {
+	                var txd = dogechain_ws_data(data, request.set_confirmations, request.currencysymbol, thisaddress);
+	                if (txd) {
+		                txid = txhash;
+			            closesocket();
+			            pick_monitor(txhash, txd);
+		            }
 	            }
-            }
-        }
+	        }
+		}
 
     };
     websocket.onclose = function(e) {
@@ -244,8 +248,9 @@ function dogechain_info_socket(socket_node, thisaddress) {
 }
 
 function blockcypher_websocket(socket_node, thisaddress) {
-	var bc_token = get_blockcypher_apikey(),
-		provider = socket_node.url + request.currencysymbol + "/main";
+	// var bc_token = get_blockcypher_apikey(),
+	// provider = socket_node.url + request.currencysymbol + "/main?token=" + bc_token;
+	var provider = socket_node.url + request.currencysymbol + "/main";
 	websocket = new WebSocket(provider);
     websocket.onopen = function(e) {
         setTimeout(function() {
@@ -766,7 +771,7 @@ function ap_loader() {
 
 function bitcoincom_scan_poll(api_name, ccsymbol, set_confirmations, address, request_ts) {
     api_proxy({
-        "api": api_name,
+        "api": "bitcoin.com",
         "search": ccsymbol + "/v1/addrs/txs",
         "cachetime": 25,
         "cachefolder": "1h",
@@ -816,7 +821,7 @@ function bitcoincom_scan_poll(api_name, ccsymbol, set_confirmations, address, re
 
 function blockcypher_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts) {
     api_proxy({
-	    "api": api_name,
+	    "api": "blockcypher",
         "search": ccsymbol + "/main/addrs/" + address,
         "cachetime": 25,
         "cachefolder": "1h",

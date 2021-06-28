@@ -514,7 +514,7 @@ function backupdatabase() {
         showhidechangelog = (gd_active === true) ? "display:none" : "display:block",
         changenotification = (gd_active === false && body.hasClass("haschanges")) ? "<p>You have " + $("#alert > span").text() + " changes in your app. Please backup your data.</p>" : "",
         gdtrigger = "<div id='gdtrigger' class='clearfix'><h3 class='icon-googledrive'>Backup with Google Drive" + switchpanel(gd_active, " custom") + "</h3></div>",
-        backupheader = (GoogleAuth) ? "" : "<h2 class='icon-download'>Backup</h2>",
+        backupheader = (GoogleAuth) ? "" : "<h2 class='icon-download'>Backup App data</h2>",
         content = "\
 		<div class='formbox' id='backupformbox'>\
 			" + backupheader + "\
@@ -770,7 +770,7 @@ function trigger_restore() {
         showhidegd = (gd_active === true) ? "display:none" : "display:block",
         content = "\
 		<div class='formbox' id='restoreformbox'>\
-			<h2 class='icon-upload'>Restore from backup</h2>\
+			<h2 class='icon-upload'>Restore App data</h2>\
 			<div class='popnotify'></div>\
 			<div id='gd_meta'>" + lastfileusedstring + lastbackupstring + "</div>\
 			" + listappdata + "\
@@ -1477,19 +1477,32 @@ function urlshortener() {
 function togglebl() {
     $(document).on("mouseup", "#toggle_urlshortener .switchpanel", function(e) {
         var thispanel = $(this),
-            thisform = $("#usformbox .popform");
+            thisform = $("#usformbox .popform"),
+            us_state,
+            us_title;
         if (thispanel.hasClass("true")) {
+	        var thisinput = thisform.find("input:first"),
+				thisvalue = thisinput.val(),
+				us_state = "active",
+				us_title = thisvalue;
             thisform.slideDown(300);
         } else {
             var result = confirm("Are you sure you want to disable url shortening? This can affect the workflow of this app");
             if (result === true) {
-                thisform.slideUp(300);
+	            var us_state = "inactive",
+	            	us_title = "inactive";
+	            thisform.slideUp(300);
             } else {
                 thispanel.addClass("true").removeClass("false");
                 e.preventDefault();
                 return false;
             }
         }
+        set_setting("url_shorten_settings", {
+            "selected": us_title,
+            "us_active": us_state
+        }, us_title);
+        savesettings();
         thispanel.addClass("us_changed");
     })
 }

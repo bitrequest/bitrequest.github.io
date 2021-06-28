@@ -3775,7 +3775,7 @@ function wake() {
             try {
                 wakelock = await wl.request("screen");
                 wakelock.addEventListener("release", (e) => {
-                    console.log(e);
+                    //console.log(e);
                 });
             } catch (e) {
                 console.error(e.name, e.message);
@@ -3787,7 +3787,8 @@ function wake() {
 
 function sleep() {
     if (wl) {
-	    if (wakelock.release) {
+	    console.log(wakelock);
+	    if (wakelock) {
 		    wakelock.release();
 	    }
         wakelock = null;
@@ -4063,6 +4064,7 @@ function append_coinsetting(currency, settings, init) {
                 selected_val = (selected.name) ? selected.name : (selected.url) ? selected.url : selected;
             if (selected_val !== undefined) {
                 var selected_string = selected_val.toString(),
+                	ss_filter = (selected_string == "true" || selected_string == "false") ? "" : selected_string,
                     check_setting_li = coinsettings_list.children("li[data-id='" + dat + "']");
                 if (check_setting_li.length === 0) {
                     var switchclass = (val.custom_switch) ? " custom" : " global bool",
@@ -4072,14 +4074,14 @@ function append_coinsetting(currency, settings, init) {
 								<span class='icon-" + val.icon + "'></span>\
 								<div class='atext'>\
 									<h2>" + dat + "</h2>\
-									<p>" + selected_string + "</p>\
+									<p>" + ss_filter + "</p>\
 								</div>\
 								<div class='iconbox'>" + trigger + "</div>\
 								</div>\
 						</li>");
                     coinsettings_li.data(val).appendTo(coinsettings_list);
                 } else {
-                    check_setting_li.data(val).find("p").html(selected_string);
+                    check_setting_li.data(val).find("p").html(ss_filter);
                     if (val.switch === true) {
                         check_setting_li.find(".switchpanel").removeClass("true false").addClass(selected_string);
                     }
