@@ -1816,6 +1816,7 @@ function payment_lookup(recent_payments, sc) {
         currencysymbol = "btc",
         headertext = (sc) ? "Recent payments:" : "Payment missing?",
         subheadertext = (sc) ? "" : "Check for recent payments on the blockchain:",
+        buttontext = (sc) ? "CANCEL" : "DISMISS",
         content = "<div class='formbox' id='payment_lookup' data-currency='" + payment + "' data-currencysymbol='" + currencysymbol + "' data-cmcid='" + cmcid + "'>\
         <h2 class='icon-history'>" + headertext + "</h2>\
         <p><strong>" + subheadertext + "</strong></p>\
@@ -1823,7 +1824,7 @@ function payment_lookup(recent_payments, sc) {
 			<ul>" + addresslist + "</ul>\
 		</div>\
         <div id='backupactions'>\
-			<div id='dismiss' class='customtrigger'>DISMISS</div>\
+			<div id='dismiss' class='customtrigger'>" + buttontext + "</div>\
 		</div>\
         </div>";
     popdialog(content, "alert", "triggersubmit");
