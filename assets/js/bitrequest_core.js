@@ -1815,13 +1815,13 @@ function payment_lookup(recent_payments, sc) {
         cmcid = "1",
         currencysymbol = "btc",
         headertext = (sc) ? "Recent payments:" : "Payment missing?",
-        subheadertext = (sc) ? "" : "Check for recent payments on the blockchain:",
+        subheadertext = (sc) ? "" : "<p><strong>Check for recent payments on the blockchain:</strong></p>",
         buttontext = (sc) ? "CANCEL" : "DISMISS",
         content = "<div class='formbox' id='payment_lookup' data-currency='" + payment + "' data-currencysymbol='" + currencysymbol + "' data-cmcid='" + cmcid + "'>\
         <h2 class='icon-history'>" + headertext + "</h2>\
-        <p><strong>" + subheadertext + "</strong></p>\
-        <div id='ad_info_wrap'>\
-			<ul>" + addresslist + "</ul>\
+        <div id='ad_info_wrap'>" +
+        	subheadertext +
+			"<ul>" + addresslist + "</ul>\
 		</div>\
         <div id='backupactions'>\
 			<div id='dismiss' class='customtrigger'>" + buttontext + "</div>\
