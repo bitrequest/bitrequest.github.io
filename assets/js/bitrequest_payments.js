@@ -122,7 +122,6 @@ function set_request_timer(timeout) {
 	// close request dialog after 3 minutes
 	clearTimeout(request_timer);
 	request_timer = setTimeout(function() {
-		//cancelpaymentdialog();
 		cpd_pollcheck();
 	}, 180000, function() {
 		clearTimeout(request_timer);
@@ -378,15 +377,17 @@ function loadpaymentfunction(pass) {
             var payment = gets.payment,
                 coindata = getcoindata(payment);
             if (coindata) {
-                var iserc20 = (coindata.erc20 === true);
+                var iserc20 = (coindata.erc20 === true),
+                	request_start_time = $.now();
                 request = {
-	                	"received": false,
-	                	"rq_init": $.now(),
-                        "payment": payment,
-                        "coindata": coindata,
-                        "erc20": iserc20
-                    }, // global request object
-                    helper = {};
+                	"received": false,
+                	"rq_init": request_start_time,
+                	"rq_timer": request_start_time,
+                    "payment": payment,
+                    "coindata": coindata,
+                    "erc20": iserc20
+                }, // global request object
+                helper = {};
                 helper.contactform = contactform;
                 api_attempt["crypto_price_apis"] = {},
                     api_attempt["fiat_price_apis"] = {},

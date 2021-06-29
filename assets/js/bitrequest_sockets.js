@@ -714,7 +714,7 @@ function after_poll(rq_init) {
 		    bitcoincom_scan_poll(api_name, ccsymbol, set_confirmations, address, request_ts);
 		    return false;
 		}
-		else if (ccsymbol == "ltc" || ccsymbol == "doge") {
+		else if (ccsymbol == "ltc" || ccsymbol == "doge" || ccsymbol == "eth") {
 			ap_loader();
 			blockcypher_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts);
 			return false;
@@ -785,7 +785,7 @@ function bitcoincom_scan_poll(api_name, ccsymbol, set_confirmations, address, re
         if (data) {
             var items = data.items;
             if ($.isEmptyObject(items)) {
-	            close_paymentdialog();
+	            close_paymentdialog(true);
             }
             else {
 	            var legacy = (ccsymbol == "bch") ? bchutils.toLegacyAddress(address) : address,
@@ -808,14 +808,14 @@ function bitcoincom_scan_poll(api_name, ccsymbol, set_confirmations, address, re
 	                }
                 }
                 else {
-	                close_paymentdialog();
+	                close_paymentdialog(true);
                 }
             }
         } else {
-        	close_paymentdialog();
+        	close_paymentdialog(true);
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
-    	close_paymentdialog();
+    	close_paymentdialog(true);
     });
 }
 
@@ -832,11 +832,11 @@ function blockcypher_scan_poll(payment, api_name, ccsymbol, set_confirmations, a
         var data = br_result(e).result;
         if (data) {
             if (data.error) {
-                close_paymentdialog();
+                close_paymentdialog(true);
             } else {
 	            var items = data.txrefs;
 	            if ($.isEmptyObject(items)) {
-		            close_paymentdialog();
+		            close_paymentdialog(true);
 	            }
 	            else {
 		            var detect = false,
@@ -844,6 +844,7 @@ function blockcypher_scan_poll(payment, api_name, ccsymbol, set_confirmations, a
 		            if (payment == "ethereum") {
 	                    $.each(items, function(dat, value) {
 	                        var txd = blockcypher_scan_data(value, set_confirmations, ccsymbol, payment);
+	                        console.log(txd);
 	                        if (txd.transactiontime > request_ts && txd.ccval) {
 		                    	txdat = txd;
 		                        detect = true;
@@ -869,16 +870,16 @@ function blockcypher_scan_poll(payment, api_name, ccsymbol, set_confirmations, a
 		                }
 	                }
 	                else {
-		                close_paymentdialog();
+		                close_paymentdialog(true);
 	                }
 	            }
 	        }
         } 
         else {
-        	close_paymentdialog();
+        	close_paymentdialog(true);
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
-    	close_paymentdialog();
+    	close_paymentdialog(true);
     });
 }
 
@@ -907,7 +908,7 @@ function nano_scan_poll(api_name, api_url, ccsymbol, set_confirmations, address,
         if (data) {
         	var nano_data = data.data;
 			if ($.isEmptyObject(nano_data)) {
-	            close_paymentdialog();
+	            close_paymentdialog(true);
 	        }
 	        else {
 		        var detect = false,
@@ -934,15 +935,15 @@ function nano_scan_poll(api_name, api_url, ccsymbol, set_confirmations, address,
 	                }
                 }
                 else {
-	                close_paymentdialog();
+	                close_paymentdialog(true);
                 }
 	        }
 	    }
 	    else {
-		    close_paymentdialog();
+		    close_paymentdialog(true);
 	    }
     }).fail(function(jqXHR, textStatus, errorThrown) {
-    	close_paymentdialog();
+    	close_paymentdialog(true);
     });
 }
 
@@ -960,7 +961,7 @@ function erc20_scan_poll(api_name, ccsymbol, set_confirmations, address, request
         if (data) {
             var items = data.operations;
             if ($.isEmptyObject(items)) {
-	            close_paymentdialog();
+	            close_paymentdialog(true);
             }
             else {
 	            var detect = false,
@@ -980,14 +981,14 @@ function erc20_scan_poll(api_name, ccsymbol, set_confirmations, address, request
 	                }
                 }
                 else {
-	                close_paymentdialog();
+	                close_paymentdialog(true);
                 }
             }
         } else {
-        	close_paymentdialog();
+        	close_paymentdialog(true);
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
-    	close_paymentdialog();
+    	close_paymentdialog(true);
     });
 }
 
@@ -1016,10 +1017,10 @@ function xmr_scan_poll_init(address, vk, set_confirmations, request_ts) {
 	        xmr_scan_poll(address, vk, set_confirmations, request_ts);
         }
         else {
-	        close_paymentdialog();
+	        close_paymentdialog(true);
         }   
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        close_paymentdialog();
+        close_paymentdialog(true);
     });
 }
 
@@ -1045,7 +1046,7 @@ function xmr_scan_poll(address, vk, set_confirmations, request_ts) {
         if (data) {
 	        var items = data.transactions;
             if ($.isEmptyObject(items)) {
-	            close_paymentdialog();
+	            close_paymentdialog(true);
             }
             else {
 			    var detect = false,
@@ -1066,14 +1067,14 @@ function xmr_scan_poll(address, vk, set_confirmations, request_ts) {
 	                }
                 }
                 else {
-	                close_paymentdialog();
+	                close_paymentdialog(true);
                 }
 		    }
         }
         else {
-	        close_paymentdialog();
+	        close_paymentdialog(true);
         }
    	}).fail(function(jqXHR, textStatus, errorThrown) {
-        close_paymentdialog();
+        close_paymentdialog(true);
     });
 }

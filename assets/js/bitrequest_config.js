@@ -802,8 +802,8 @@ var multi_wallets = {
                 "apis": {
                     "icon": "sphere",
                     "selected": {
-                        "name": "nano node",
-                        "url": "https://www.bitrequest.app:8020",
+                        "name": "api.nanos.cc",
+                        "url": "https://proxy.nanos.cc/proxy",
                         "api": true,
                         "username": "",
                         "password": "",
@@ -818,7 +818,7 @@ var multi_wallets = {
                         "display": true
                     },
                     {
-                        "name": "api.nano.cc",
+                        "name": "api.nanos.cc",
                         "url": "https://proxy.nanos.cc/proxy",
                         "api": true,
                         "username": "",
@@ -833,12 +833,12 @@ var multi_wallets = {
                 "websockets": {
                     "icon": "tab",
                     "selected": {
-                        "name": "nano.cc websocket",
+                        "name": "nanos.cc websocket",
                         "url": "wss://socket.nanos.cc",
                         "display": true
                     },
                     "apis": [{
-                            "name": "nano.cc websocket",
+                            "name": "nanos.cc websocket",
                             "url": "wss://socket.nanos.cc",
                             "display": true
                         },
@@ -1103,12 +1103,6 @@ var app_settings = [{
         "heading": "Security"
     },
     {
-        "id": "bip39_passphrase",
-        "heading": "Secret Phrase",
-        "selected": "",
-        "icon": "icon-eye"
-    },
-    {
         "id": "pinsettings",
         "heading": "Passcode Lock",
         "selected": "pincode disabled",
@@ -1117,6 +1111,12 @@ var app_settings = [{
         "pinhash": null,
         "attempts": 0,
         "timeout": null
+    },
+    {
+        "id": "bip39_passphrase",
+        "heading": "Secret Phrase",
+        "selected": "",
+        "icon": "icon-eye"
     },
     {
         "id": "backup",

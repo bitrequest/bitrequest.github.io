@@ -691,6 +691,7 @@ function complilebackup() {
             key == "bitrequest_changes" ||
             key == "bitrequest_erc20tokens" ||
             key == "bitrequest_editurl" ||
+            key == "bitrequest_recent_requests" ||
             key == "bitrequest_backupfile_id" ||
             key == "bitrequest_appstore_dialog" ||
             key == "bitrequest_init" ||
@@ -2400,6 +2401,7 @@ function complile_teaminvite() {
             key == "bitrequest_changes" ||
             key == "bitrequest_erc20tokens" ||
             key == "bitrequest_editurl" ||
+            key == "bitrequest_recent_requests" ||
             key == "bitrequest_backupfile_id" ||
             key == "bitrequest_appstore_dialog" ||
             key == "bitrequest_init" ||

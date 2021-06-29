@@ -48,7 +48,7 @@ var language = navigator.language || navigator.userLanguage,
 
 $(document).ready(function() {
 	$.ajaxSetup({
-        cache: false
+        "cache": false
     });
 	set_icon_boolean();
     buildsettings(); // build settings first
@@ -383,6 +383,10 @@ function finishfunctions() {
     dragend();
     //escapeandback
     //close_paymentdialog
+    //payment_lookup
+    check_recent();
+    dismiss_payment_lookup();
+    request_history();
     activemenu();
     fixednav();
     //notifications
@@ -437,6 +441,7 @@ function finishfunctions() {
     editaddresstrigger();
     removeaddress();
     //removeaddressfunction
+    rec_payments();
     showtransaction_trigger();
     showtransactions();
     addressinfo();
@@ -578,6 +583,8 @@ function finishfunctions() {
     //get_vk
     gk();
     html.addClass("loaded");
+    check_rr();
+    //toggle_rr
 }
 
 //checks
@@ -1754,7 +1761,28 @@ function escapeandback() {
     }
 }
 
-function close_paymentdialog() {
+function close_paymentdialog(empty) {
+	if (request) {
+		if (empty === true) {
+			var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests"),
+				lsrr_arr = (ls_recentrequests) ? JSON.parse(ls_recentrequests) : {},
+				currency = request.payment,
+				rr_object = {},
+				request_dat = {
+					"currency": currency,
+					"cmcid": request.cmcid,
+					"ccsymbol": request.currencysymbol,
+					"address": request.address,
+					"erc20": request.erc20
+				};
+				rr_object[currency] = request_dat;
+				lsrr_arr[currency] = request_dat;
+			localStorage.setItem("bitrequest_recent_requests", JSON.stringify(lsrr_arr));
+			closeloader();
+			payment_lookup(rr_object);
+			return false;
+		}
+	}
     if (html.hasClass("firstload")) {
         var pagename = geturlparameters().p,
             set_pagename = (pagename) ? pagename : "home";
@@ -1762,6 +1790,72 @@ function close_paymentdialog() {
     } else {
         window.history.back();
     }
+}
+
+function payment_lookup(recent_payments) {
+	if ($("#dismiss").length) {
+		return false;
+	}
+	var addresslist = "";
+	$.each(recent_payments, function(key, val) {
+		if (val) {
+	        var currency = val.currency,
+		    	ccsymbol = val.ccsymbol,
+		    	address = val.address,
+		    	cmcid = val.cmcid,
+		    	erc20 = val.erc20,
+		    	blockchainurl = blockexplorer_url(currency, false, erc20) + address;
+			addresslist += "<li><a href='" + blockchainurl + "' target='_blank' class='ref check_recent'>" + getcc_icon(cmcid, ccsymbol + "-" + currency, erc20) + "<span class='select'>" + address + "</span> <span class='icon-new-tab'></a></li>";
+        }
+    });
+    if (!addresslist.length) {
+		return false;
+	}
+	var payment = "bitcoin",
+        cmcid = "1",
+        currencysymbol = "btc",
+        content = "<div class='formbox' id='payment_lookup' data-currency='" + payment + "' data-currencysymbol='" + currencysymbol + "' data-cmcid='" + cmcid + "'>\
+        <h2 class='icon-history'>Payment missing?</h2>\
+        <p><strong>Check for recent payments on the blockchain:</strong></p>\
+        <div id='ad_info_wrap'>\
+			<ul>" + addresslist + "</ul>\
+		</div>\
+        <div id='backupactions'>\
+			<div id='dismiss' class='customtrigger'>DISMISS</div>\
+		</div>\
+        </div>";
+    popdialog(content, "alert", "triggersubmit");
+    toggle_rr(true);
+}
+
+function check_recent() {
+    $(document).on("click", ".check_recent", function(e) {
+	    e.preventDefault();
+        var thisnode = $(this),
+        	thisurl = thisnode.attr("href"),
+        	result = confirm("Open " + thisurl + "?");
+		if (result === true) {
+            open_share_url("location", thisurl);
+        }
+        return false;
+    })
+}
+
+function dismiss_payment_lookup() {
+    $(document).on("click", "#dismiss", function() {
+        canceldialog();
+        close_paymentdialog();
+    })
+}
+
+function request_history() {
+    $(document).on("click", "#request_history", function() {
+        var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
+        if (ls_recentrequests) {
+	        var lsrr_arr = JSON.parse(ls_recentrequests);
+	        payment_lookup(lsrr_arr);
+	    }
+    })
 }
 
 function activemenu() {
@@ -2402,6 +2496,9 @@ function canceldialog(pass) {
     }, 600, function() {
         clearTimeout(timeout);
     });
+    if (request) { // reset after_poll
+	    request.rq_timer = $.now();
+    }
 }
 
 function blockcancelpaymentdialog() {
@@ -2450,7 +2547,8 @@ function cpd_pollcheck() {
 		}
 		else {
 			var rq_init = request.rq_init,
-			    rq_time = $.now() - rq_init;
+				rq_timer = request.rq_timer,
+			    rq_time = $.now() - rq_timer;
 		    if (rq_time > safety_poll_timeout) {
 			    after_poll(rq_init)
 		    }
@@ -2565,6 +2663,7 @@ function showoptionstrigger() {
                 "<li><div class='address_info'><span class='icon-info'></span> Address info</div></li>\
                 	<li><div class='editaddress'> <span class='icon-pencil'></span> Edit address</div></li>\
 					<li><div class='removeaddress'><span class='icon-bin'></span> Remove address</div></li>\
+					<li><div id='rpayments'><span class='icon-history'></span> Recent payments</div></li>\
 				</ul>").data(ad);
         showoptions(content);
         return false;
@@ -2804,6 +2903,16 @@ function removeaddressfunction(trigger) {
         notify("Address deleted 🗑");
         saveaddresses(currency, true);
     }
+}
+
+function rec_payments() {
+    $(document).on("click", "#rpayments", function() {
+        var ad = $(this).closest("ul").data(),
+            blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20);
+        if (blockchainurl === undefined) {} else {
+            open_blockexplorer_url(blockchainurl + ad.address);
+        }
+    })
 }
 
 function showtransaction_trigger() {
@@ -4794,4 +4903,29 @@ function init_keys(ko, set) { // set required keys
     if (set === false) {
         localStorage.setItem("bitrequest_init", JSON.stringify(io));
     }
+}
+
+function check_rr() {
+	var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
+	if (ls_recentrequests) {
+		var lsrr_arr = JSON.parse(ls_recentrequests);
+		if ($.isEmptyObject(lsrr_arr)) {
+            toggle_rr(false);
+        }
+        else {
+	        toggle_rr(true);
+        }
+	}
+	else {
+		toggle_rr(false);
+	}
+}
+
+function toggle_rr(bool) {
+	if (bool) {
+		main.addClass("show_rr");
+	}
+	else {
+		main.removeClass("show_rr");
+	}
 }
