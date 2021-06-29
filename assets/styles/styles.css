@@ -686,7 +686,7 @@ html.showmain ul#currencylist {
     opacity:0;
 }
 
-main.show_rr #request_history {
+html.show_rr #request_history {
 	pointer-events:all;
 	opacity:0.85;
 }

@@ -1792,7 +1792,7 @@ function close_paymentdialog(empty) {
     }
 }
 
-function payment_lookup(recent_payments) {
+function payment_lookup(recent_payments, sc) {
 	if ($("#dismiss").length) {
 		return false;
 	}
@@ -1814,9 +1814,11 @@ function payment_lookup(recent_payments) {
 	var payment = "bitcoin",
         cmcid = "1",
         currencysymbol = "btc",
+        headertext = (sc) ? "Recent payments:" : "Payment missing?",
+        subheadertext = (sc) ? "" : "Check for recent payments on the blockchain:",
         content = "<div class='formbox' id='payment_lookup' data-currency='" + payment + "' data-currencysymbol='" + currencysymbol + "' data-cmcid='" + cmcid + "'>\
-        <h2 class='icon-history'>Payment missing?</h2>\
-        <p><strong>Check for recent payments on the blockchain:</strong></p>\
+        <h2 class='icon-history'>" + headertext + "</h2>\
+        <p><strong>" + subheadertext + "</strong></p>\
         <div id='ad_info_wrap'>\
 			<ul>" + addresslist + "</ul>\
 		</div>\
@@ -1844,7 +1846,9 @@ function check_recent() {
 function dismiss_payment_lookup() {
     $(document).on("click", "#dismiss", function() {
         canceldialog();
-        close_paymentdialog();
+        if (paymentpopup.hasClass("active")) {
+        	close_paymentdialog();
+        }
     })
 }
 
@@ -1853,7 +1857,7 @@ function request_history() {
         var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
         if (ls_recentrequests) {
 	        var lsrr_arr = JSON.parse(ls_recentrequests);
-	        payment_lookup(lsrr_arr);
+	        payment_lookup(lsrr_arr, true);
 	    }
     })
 }
@@ -4923,9 +4927,9 @@ function check_rr() {
 
 function toggle_rr(bool) {
 	if (bool) {
-		main.addClass("show_rr");
+		html.addClass("show_rr");
 	}
 	else {
-		main.removeClass("show_rr");
+		html.removeClass("show_rr");
 	}
 }
