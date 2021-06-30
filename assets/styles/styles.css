@@ -636,6 +636,10 @@ html.showmain ul#currencylist {
     padding: 0.35em;
 }
 
+.heading .cmc_icon {
+	width:0.8em;
+}
+
 .alias {
 	font-size: 250%;
     width: 1.7em;
@@ -726,8 +730,6 @@ html.showmain #newrequest_alias {
 }
 
 .applist.pobox li .address .srcicon {
-	position:absolute;
-	top:-0.3em;
 	height:auto;
     opacity:0.8;
     padding:0.5em 0.9em 0.5em 0.2em;
@@ -746,15 +748,11 @@ html.showmain #newrequest_alias {
 }
 
 .applist.pobox li.seed .select {
-	padding-left:1.8em;
+	padding-left:0;
 }
 
 .applist.pobox li.xpub .select {
-	padding-left:1.7em;
-}
-
-.applist.pobox[data-currency="monero"] li .select {
-	padding-left:1.7em;
+	padding-left:0;
 }
 
 .applist.pobox li.xpubv .address .srcicon {

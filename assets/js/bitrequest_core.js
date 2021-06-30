@@ -387,6 +387,8 @@ function finishfunctions() {
     check_recent();
     dismiss_payment_lookup();
     request_history();
+    //recent_requests
+    //recent_requests_list
     activemenu();
     fixednav();
     //notifications
@@ -1763,7 +1765,7 @@ function escapeandback() {
 
 function close_paymentdialog(empty) {
 	if (request) {
-		if (empty === true) {
+		if (empty === true && inframe === false) {
 			var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests"),
 				lsrr_arr = (ls_recentrequests) ? JSON.parse(ls_recentrequests) : {},
 				currency = request.payment,
@@ -1792,39 +1794,23 @@ function close_paymentdialog(empty) {
     }
 }
 
-function payment_lookup(recent_payments, sc) {
+function payment_lookup(recent_payments) {
 	if ($("#dismiss").length) {
 		return false;
 	}
-	var addresslist = "";
-	$.each(recent_payments, function(key, val) {
-		if (val) {
-	        var currency = val.currency,
-		    	ccsymbol = val.ccsymbol,
-		    	address = val.address,
-		    	cmcid = val.cmcid,
-		    	erc20 = val.erc20,
-		    	blockchainurl = blockexplorer_url(currency, false, erc20) + address;
-			addresslist += "<li><a href='" + blockchainurl + "' target='_blank' class='ref check_recent'>" + getcc_icon(cmcid, ccsymbol + "-" + currency, erc20) + "<span class='select'>" + address + "</span> <span class='icon-new-tab'></a></li>";
-        }
-    });
+	var addresslist = recent_requests_list(recent_payments);
     if (!addresslist.length) {
 		return false;
 	}
-	var payment = "bitcoin",
-        cmcid = "1",
-        currencysymbol = "btc",
-        headertext = (sc) ? "Recent payments:" : "Payment missing?",
-        subheadertext = (sc) ? "" : "<p><strong>Check for recent payments on the blockchain:</strong></p>",
-        buttontext = (sc) ? "CANCEL" : "DISMISS",
-        content = "<div class='formbox' id='payment_lookup' data-currency='" + payment + "' data-currencysymbol='" + currencysymbol + "' data-cmcid='" + cmcid + "'>\
-        <h2 class='icon-history'>" + headertext + "</h2>\
-        <div id='ad_info_wrap'>" +
-        	subheadertext +
-			"<ul>" + addresslist + "</ul>\
+	var content = "<div class='formbox'>\
+        <h2 class='icon-history'>Missing payment?</h2>\
+        <div id='ad_info_wrap'>\
+        <p><strong>Look for incoming transactions on a blockexplorer:</strong>\
+        <ul>" + addresslist + "</ul>\
+        </p>\
 		</div>\
         <div id='backupactions'>\
-			<div id='dismiss' class='customtrigger'>" + buttontext + "</div>\
+			<div id='dismiss' class='customtrigger'>DISMISS</div>\
 		</div>\
         </div>";
     popdialog(content, "alert", "triggersubmit");
@@ -1858,9 +1844,42 @@ function request_history() {
         var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
         if (ls_recentrequests) {
 	        var lsrr_arr = JSON.parse(ls_recentrequests);
-	        payment_lookup(lsrr_arr, true);
+	        recent_requests(lsrr_arr);
 	    }
     })
+}
+
+function recent_requests(recent_payments) {
+	var addresslist = recent_requests_list(recent_payments);
+    if (!addresslist.length) {
+		return false;
+	}
+	var content = "<div class='formbox'>\
+        <h2 class='icon-history'>Recent requests:</h2>\
+        <div id='ad_info_wrap'>\
+        <ul>" + addresslist + "</ul>\
+		</div>\
+        <div id='backupactions'>\
+			<div id='dismiss' class='customtrigger'>CANCEL</div>\
+		</div>\
+        </div>";
+    popdialog(content, "alert", "triggersubmit");
+}
+
+function recent_requests_list(recent_payments) {
+    var addresslist = "";
+	$.each(recent_payments, function(key, val) {
+		if (val) {
+	        var currency = val.currency,
+		    	ccsymbol = val.ccsymbol,
+		    	address = val.address,
+		    	cmcid = val.cmcid,
+		    	erc20 = val.erc20,
+		    	blockchainurl = blockexplorer_url(currency, false, erc20) + address;
+			addresslist += "<li><a href='" + blockchainurl + "' target='_blank' class='ref check_recent'>" + getcc_icon(cmcid, ccsymbol + "-" + currency, erc20) + "<span class='select'>" + address + "</span> <span class='icon-new-tab'></a></li>";
+        }
+    });
+    return addresslist;
 }
 
 function activemenu() {
@@ -4134,7 +4153,7 @@ function buildpage(cd, init) {
         var settingspage = (has_settings === true) ? "\
 		<div class='page' id='" + currency + "_settings' data-erc20='" + erc20 + "'>\
 			<div class='content'>\
-				<h2 class='heading'>" + currency + " settings</h2>\
+				<h2 class='heading'>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + " settings</h2>\
 				<ul class='cc_settinglist settinglist applist listyle2'></ul>\
 				<div class='reset_cc_settings button' data-currency='" + currency + "'>\
 					<span>Reset</span>\
@@ -4144,7 +4163,7 @@ function buildpage(cd, init) {
         var settingsbutton = (has_settings === true) ? "<div data-rel='?p=" + currency + "_settings' class='self icon-cog'></div>" : "";
         var currency_page = $("<div class='page' id='" + currency + "'>\
 			<div class='content'>\
-				<h2 class='heading'>" + currency + settingsbutton + "</h2>\
+				<h2 class='heading'>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + settingsbutton + "</h2>\
 				<ul class='applist listyle2 pobox' data-currency='" + currency + "'>\
 					<div class='endli'><div class='button addaddress' data-currency='" + currency + "'><span class='icon-plus'>Add address</span></div></div>\
 					<div class='addone' data-currency='" + currency + "'>Add one</div>\
@@ -4223,7 +4242,7 @@ function appendaddress(currency, ad) {
         address_li = $("<li class='adli" + clasv + usedcl + "' data-index='" + index + "' data-address='" + address + "' data-checked='" + ad.checked + "'>\
 			<div class='addressinfo liwrap iconright2'>\
 				<div class='atext'>\
-					<h2>" + getcc_icon(ad.cmcid, ad.ccsymbol + "-" + currency, ad.erc20) + " <span>" + ad.label + "</span></h2>\
+					<h2><span>" + ad.label + "</span></h2>\
 					<p class='address'>" + ad_icon + "<span class='select'>" + address + "</span><span class='usedicon icon-arrow-up-right2' title='Used'></span></p>\
 				</div>\
 				<div class='iconbox'>\
