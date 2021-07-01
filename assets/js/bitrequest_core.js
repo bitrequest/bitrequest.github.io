@@ -1758,7 +1758,7 @@ function escapeandback() {
 
 function close_paymentdialog(empty) {
 	if (request) {
-		if (empty === true && inframe === false) {
+		if (empty === true && inframe === false && request.requesttype == "local") {
 			var currency = request.payment,
 				address = request.address,
 				ls_recentrequests = localStorage.getItem("bitrequest_recent_requests"),
@@ -1810,7 +1810,7 @@ function payment_lookup(request_dat) {
 		blockexplorer = get_blockexplorer(currency),
 		bu_url = blockexplorer_url(currency, false, request_dat.erc20) + request_dat.address,
 		content = "<div class='formbox'>\
-	        <h2 class='icon-history'>Missing payment?</h2>\
+	        <h2 class='icon-warning'><span class='icon-qrcode'/>No payment detected</h2>\
 	        <div id='ad_info_wrap'>\
 	        	<p><strong><a href='" + bu_url + "' target='_blank' class='ref check_recent'>Look for recent incoming " + currency + " payments on " + blockexplorer + " <span class='icon-new-tab'></a></strong></p>\
 		        <div class='pk_wrap noselect'>\
