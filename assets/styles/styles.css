@@ -690,6 +690,11 @@ html.showmain ul#currencylist {
     opacity:0;
 }
 
+#request_history.load {
+    animation: lds-ring 500ms normal forwards;
+    -webkit-animation: lds-ring 500ms normal forwards;
+}
+
 html.show_rr #request_history {
 	pointer-events:all;
 	opacity:0.85;
@@ -732,7 +737,7 @@ html.showmain #newrequest_alias {
 .applist.pobox li .address .srcicon {
 	height:auto;
     opacity:0.8;
-    padding:0.5em 0.9em 0.5em 0.2em;
+    padding:0.5em 0.2em 0.5em 0.2em;
 }
 
 .applist.pobox li .address .srcicon.icon-eye {
@@ -745,14 +750,6 @@ html.showmain #newrequest_alias {
 
 .applist.pobox li.seedu .address .srcicon {
 	cursor:pointer;
-}
-
-.applist.pobox li.seed .select {
-	padding-left:0;
-}
-
-.applist.pobox li.xpub .select {
-	padding-left:0;
 }
 
 .applist.pobox li.xpubv .address .srcicon {

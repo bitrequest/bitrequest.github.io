@@ -766,7 +766,7 @@ function after_poll(rq_init) {
 
 function ap_loader() {
 	loader(true);
-	loadertext("Closing request / scanning for incomming transactions");
+	loadertext("Closing request / scanning for incoming transactions");
 }
 
 function bitcoincom_scan_poll(api_name, ccsymbol, set_confirmations, address, request_ts) {

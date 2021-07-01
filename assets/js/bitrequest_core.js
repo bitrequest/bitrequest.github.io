@@ -50,8 +50,7 @@ $(document).ready(function() {
 	$.ajaxSetup({
         "cache": false
     });
-	set_icon_boolean();
-    buildsettings(); // build settings first
+	buildsettings(); // build settings first
 
     stored_currencies = localStorage.getItem("bitrequest_currencies"),
         init = localStorage.getItem("bitrequest_init"),
@@ -113,15 +112,6 @@ $(document).ready(function() {
         }, 600);
     }, 600);
 })
-
-function set_icon_boolean() {
-    var icon_boolean = sessionStorage.getItem("bitrequest_icon_boolean");
-    if (icon_boolean == "true" || icon_boolean === true) { //set boolean for random icon pic (getcc_icon);
-        sessionStorage.setItem("bitrequest_icon_boolean", false);
-    } else {
-        sessionStorage.setItem("bitrequest_icon_boolean", true);
-    }
-}
 
 function checkphp() { //check for php support by fetching fiat currencies from local api php file
     api_proxy({
@@ -383,9 +373,11 @@ function finishfunctions() {
     dragend();
     //escapeandback
     //close_paymentdialog
+    //continue_cpd
     //payment_lookup
     check_recent();
     dismiss_payment_lookup();
+    //block_payment_lookup
     request_history();
     //recent_requests
     //recent_requests_list
@@ -451,6 +443,7 @@ function finishfunctions() {
     show_vk();
     //open_blockexplorer_url
     //blockexplorer_url
+    //get_blockexplorer
     apisrc_shortcut();
 
     // ** Requestlist functions **
@@ -1766,26 +1759,41 @@ function escapeandback() {
 function close_paymentdialog(empty) {
 	if (request) {
 		if (empty === true && inframe === false) {
-			var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests"),
+			var currency = request.payment,
+				address = request.address,
+				ls_recentrequests = localStorage.getItem("bitrequest_recent_requests"),
 				lsrr_arr = (ls_recentrequests) ? JSON.parse(ls_recentrequests) : {},
-				currency = request.payment,
 				rr_object = {},
 				request_dat = {
 					"currency": currency,
 					"cmcid": request.cmcid,
 					"ccsymbol": request.currencysymbol,
-					"address": request.address,
-					"erc20": request.erc20
+					"address": address,
+					"erc20": request.erc20,
+					"rqtime": request.rq_init
 				};
 				rr_object[currency] = request_dat;
 				lsrr_arr[currency] = request_dat;
 			localStorage.setItem("bitrequest_recent_requests", JSON.stringify(lsrr_arr));
 			closeloader();
-			payment_lookup(rr_object);
+			toggle_rr(true);
+			var rr_whitelist = sessionStorage.getItem("bitrequest_rrwl");
+			if (rr_whitelist) {
+				var rrwl_obj = JSON.parse(rr_whitelist);
+				if (rrwl_obj && rrwl_obj[currency] == address) {
+					continue_cpd();
+					return false;
+				}
+			}
+			payment_lookup(request_dat);
 			return false;
 		}
 	}
-    if (html.hasClass("firstload")) {
+    continue_cpd();
+}
+
+function continue_cpd() {
+	if (html.hasClass("firstload")) {
         var pagename = geturlparameters().p,
             set_pagename = (pagename) ? pagename : "home";
         openpage("?p=" + set_pagename, set_pagename, "loadpage");
@@ -1794,27 +1802,27 @@ function close_paymentdialog(empty) {
     }
 }
 
-function payment_lookup(recent_payments) {
+function payment_lookup(request_dat) {
 	if ($("#dismiss").length) {
 		return false;
 	}
-	var addresslist = recent_requests_list(recent_payments);
-    if (!addresslist.length) {
-		return false;
-	}
-	var content = "<div class='formbox'>\
-        <h2 class='icon-history'>Missing payment?</h2>\
-        <div id='ad_info_wrap'>\
-        <p><strong>Look for incoming transactions on a blockexplorer:</strong>\
-        <ul>" + addresslist + "</ul>\
-        </p>\
-		</div>\
-        <div id='backupactions'>\
-			<div id='dismiss' class='customtrigger'>DISMISS</div>\
-		</div>\
-        </div>";
+	var currency = request.payment,
+		blockexplorer = get_blockexplorer(currency),
+		bu_url = blockexplorer_url(currency, false, request_dat.erc20) + request_dat.address,
+		content = "<div class='formbox'>\
+	        <h2 class='icon-history'>Missing payment?</h2>\
+	        <div id='ad_info_wrap'>\
+	        	<p><strong><a href='" + bu_url + "' target='_blank' class='ref check_recent'>Look for recent incoming " + currency + " payments on " + blockexplorer + " <span class='icon-new-tab'></a></strong></p>\
+		        <div class='pk_wrap noselect'>\
+					<div id='dontshowwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
+					<span>Don't show again</span>\
+				</div>\
+			</div>\
+	        <div id='backupactions'>\
+				<div id='dismiss' class='customtrigger'>DISMISS</div>\
+			</div>\
+	        </div>";
     popdialog(content, "alert", "triggersubmit");
-    toggle_rr(true);
 }
 
 function check_recent() {
@@ -1832,11 +1840,25 @@ function check_recent() {
 
 function dismiss_payment_lookup() {
     $(document).on("click", "#dismiss", function() {
+	    var ds_checkbox = $("#dontshowwrap"),
+            ds_checked = ds_checkbox.data("checked");
+        if (ds_checked == true) {
+            block_payment_lookup();
+        }
         canceldialog();
         if (paymentpopup.hasClass("active")) {
         	close_paymentdialog();
         }
     })
+}
+
+function block_payment_lookup() {
+	if (request) {
+		var rr_whitelist = sessionStorage.getItem("bitrequest_rrwl"),
+			rrwl_arr = (rr_whitelist) ? JSON.parse(rr_whitelist) : {};
+		rrwl_arr[request.payment] = request.address;
+		sessionStorage.setItem("bitrequest_rrwl", JSON.stringify(rrwl_arr));
+	}
 }
 
 function request_history() {
@@ -1867,16 +1889,28 @@ function recent_requests(recent_payments) {
 }
 
 function recent_requests_list(recent_payments) {
-    var addresslist = "";
-	$.each(recent_payments, function(key, val) {
+    var addresslist = "",
+    	rp_array = [];
+    $.each(recent_payments, function(key, val) {
+		if (val) {
+	        rp_array.push(val);
+        }
+    });
+    var sorted_array = rp_array.sort(function(x, y) {
+	    return y.rqtime - x.rqtime;
+    });
+    $.each(sorted_array, function(i, val) {
 		if (val) {
 	        var currency = val.currency,
 		    	ccsymbol = val.ccsymbol,
 		    	address = val.address,
 		    	cmcid = val.cmcid,
 		    	erc20 = val.erc20,
+		    	rq_time = val.rqtime,
 		    	blockchainurl = blockexplorer_url(currency, false, erc20) + address;
-			addresslist += "<li><a href='" + blockchainurl + "' target='_blank' class='ref check_recent'>" + getcc_icon(cmcid, ccsymbol + "-" + currency, erc20) + "<span class='select'>" + address + "</span> <span class='icon-new-tab'></a></li>";
+			addresslist += "<li class='rp_li'>" + getcc_icon(cmcid, ccsymbol + "-" + currency, erc20) + "<strong style='opacity:0.5'>" + short_date(rq_time + timezone) + "</strong><br/>\
+			<a href='" + blockchainurl + "' target='_blank' class='ref check_recent'>\
+			<span class='select'>" + address + "</span> <span class='icon-new-tab'></a></li>";
         }
     });
     return addresslist;
@@ -2685,7 +2719,7 @@ function showoptionstrigger() {
             content = $("\
 				<ul id='optionslist''>" + newrequest + showrequests +
                 "<li><div class='address_info'><span class='icon-info'></span> Address info</div></li>\
-                	<li><div class='editaddress'> <span class='icon-pencil'></span> Edit address</div></li>\
+                	<li><div class='editaddress'> <span class='icon-pencil'></span> Edit label</div></li>\
 					<li><div class='removeaddress'><span class='icon-bin'></span> Remove address</div></li>\
 					<li><div id='rpayments'><span class='icon-history'></span> Recent payments</div></li>\
 				</ul>").data(ad);
@@ -3126,8 +3160,7 @@ function blockexplorer_url(currency, tx, erc20) {
         var tx_prefix = (tx === true) ? "tx/" : "address/";
         return "https://ethplorer.io/" + tx_prefix;
     } else {
-        var be_settings_li = $("#" + currency + "_settings .cc_settinglist li[data-id='blockexplorers']"),
-            blockexplorer = be_settings_li.data("selected");
+        var blockexplorer = get_blockexplorer(currency);
         if (blockexplorer) {
             var blockdata = $.grep(blockexplorers, function(filter) { //filter pending requests	
                     return filter.name == blockexplorer;
@@ -3139,6 +3172,10 @@ function blockexplorer_url(currency, tx, erc20) {
             return blockdata.url + prefix + "/" + prefix_type;
         }
     }
+}
+
+function get_blockexplorer(currency) {
+    return $("#" + currency + "_settings .cc_settinglist li[data-id='blockexplorers']").data("selected");
 }
 
 function apisrc_shortcut() {
@@ -3662,11 +3699,11 @@ function returntimestamp(datestring) {
 
 function short_date(txtime) {
     return new Date(txtime - timezone).toLocaleString(language, {
-		day: "numeric", // numeric, 2-digit
-		month: "2-digit", // numeric, 2-digit, long, short, narrow
-		year: "2-digit", // numeric, 2-digit
-		hour: "numeric", // numeric, 2-digit
-		minute: "numeric"
+		"day": "2-digit", // numeric, 2-digit
+		"month": "2-digit", // numeric, 2-digit, long, short, narrow
+		"year": "2-digit", // numeric, 2-digit
+		"hour": "numeric", // numeric, 2-digit
+		"minute": "numeric"
 	})
 }
 
@@ -4948,6 +4985,11 @@ function check_rr() {
 function toggle_rr(bool) {
 	if (bool) {
 		html.addClass("show_rr");
+		var hist_bttn = $("#request_history");
+		hist_bttn.addClass("load");
+		setTimeout(function() {
+            hist_bttn.removeClass("load");
+        }, 500);
 	}
 	else {
 		html.removeClass("show_rr");

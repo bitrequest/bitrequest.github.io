@@ -985,10 +985,10 @@ body.seed_dialog #seed_panel {
 	color:green;
 }
 
-#ad_info_wrap ul li .cmc_icon {
+#ad_info_wrap ul li.rp_li .cmc_icon {
 	display:inline-block;
 	width: 1.7em;
-	margin:0 0.3em 0 0;
+	margin:0 0.5em 0 0;
 	vertical-align: bottom;
 }
 

@@ -1403,9 +1403,12 @@ function switchaddress() {
 
 function newaddresli(currency, address) {
     var add_li = filter_addressli(currency, "checked", true),
+	    label_li = add_li.filter(function() { // only pick addresses with label
+	        return $(this).data("label").length > 0;
+	    }),
         c_adli = filter_addressli(currency, "address", address),
 		nextaddressli = c_adli.next(".adli[data-checked='true']"),
-        firstaddressli = add_li.not(".adli[data-address='" + address + "']").first();
+        firstaddressli = label_li.not(".adli[data-address='" + address + "']").first();
     if (firstaddressli.length === 0) {
         return false;
     } else {

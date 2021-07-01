@@ -317,7 +317,7 @@ function get_api_inputs(rd, api_data, api_name) {
 		        }    
 	        }
 	        else if (payment == "nano") {
-                if (pending == "scanning") { // scan incomming transactions on address
+                if (pending == "scanning") { // scan incoming transactions on address
                     api_proxy({
                         "api": "nano",
                         "search": "account",
@@ -418,7 +418,7 @@ function get_api_inputs(rd, api_data, api_name) {
             }
 			else if (api_name == "bitcoin.com") {
 	            var legacy = (ccsymbol == "bch") ? bchutils.toLegacyAddress(address) : address;
-                if (pending == "scanning") { // scan incomming transactions on address
+                if (pending == "scanning") { // scan incoming transactions on address
 	                api_proxy({
                         "api": api_name,
                         "search": ccsymbol + "/v1/addrs/txs",
@@ -501,7 +501,7 @@ function get_api_inputs(rd, api_data, api_name) {
                 }
             }
 	        else {
-		        if (pending == "scanning") { // scan incomming transactions on address
+		        if (pending == "scanning") { // scan incoming transactions on address
 		            api_proxy({
 	                    "api": api_name,
 	                    "search": scan_url,
@@ -878,7 +878,7 @@ function get_rpc_inputs(rd, rpc_data) {
         } else if (pending == "scanning" || pending == "polling") {
             transactionlist.html("");
 			if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin") {
-                if (pending == "scanning") { // scan incomming transactions on address
+                if (pending == "scanning") { // scan incoming transactions on address
                     handle_rpc_fails(rd, false, payment, rpc_data); // use api because rpc does not scan external addresses unfortunately
                 } else {
                     api_proxy({
@@ -927,7 +927,7 @@ function get_rpc_inputs(rd, rpc_data) {
                     });
                 }
             } else if (payment == "ethereum") {
-                if (pending == "scanning") { // scan incomming transactions on address
+                if (pending == "scanning") { // scan incoming transactions on address
                     handle_rpc_fails(rd, false, payment, rpc_data); // use api instead
                 } else {
                     if (web3) {
@@ -997,7 +997,7 @@ function get_rpc_inputs(rd, rpc_data) {
                     api_src(thislist, rpc_data);
                 }
             } else if (erc20 === true) {
-                if (pending == "scanning") { // scan incomming transactions on address
+                if (pending == "scanning") { // scan incoming transactions on address
                     handle_rpc_fails(rd, false, payment, rpc_data); // use api instead
                 } else {
                     if (web3) {

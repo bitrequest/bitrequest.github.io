@@ -1,7 +1,6 @@
 // pick API / RPC
 
 //pick_monitor
-//reset_recent
 //api_monitor_init
 //api_monitor
 //ampl
@@ -11,6 +10,7 @@
 //ping_eth_node_erc20
 //handle_rpc_monitor_fails
 //confirmations
+//reset_recent
 
 // pick API / RPC
 function pick_monitor(txhash, tx_data) {
@@ -20,22 +20,6 @@ function pick_monitor(txhash, tx_data) {
     } else {
         rpc_monitor(api_info.data, txhash, tx_data);
     }
-    reset_recent();
-}
-
-function reset_recent() {
-	if (request) {
-		var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
-		if (ls_recentrequests) {
-			var lsrr_arr = JSON.parse(ls_recentrequests);
-			delete lsrr_arr[request.payment];
-			localStorage.setItem("bitrequest_recent_requests", JSON.stringify(lsrr_arr));
-			if ($.isEmptyObject(lsrr_arr)) {
-	            toggle_rr(false);
-	        }
-		}
-	}
-	canceldialog();
 }
 
 function api_monitor_init(api_data, txhash, tx_data) {
@@ -386,6 +370,7 @@ function confirmations(tx_data, direct) {
         zero_conf = (xconf === false || setconfirmations == 0 || setconfirmations == "undefined" || setconfirmations === undefined);
     brstatuspanel.find("span#confnumber").text(conf_text);
     if (xconf > currentconf || zero_conf === true || direct === true) {
+	    reset_recent();
 	    sessionStorage.removeItem("bitrequest_txstatus"); // remove cached historical exchange rates
         playsound(blip);
         confbox.removeClass("blob");
@@ -452,5 +437,20 @@ function confirmations(tx_data, direct) {
             saverequest(direct);
         }
         brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
-    } else {}
+    }
+}
+
+function reset_recent() {
+	if (request) {
+		var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
+		if (ls_recentrequests) {
+			var lsrr_arr = JSON.parse(ls_recentrequests);
+			delete lsrr_arr[request.payment];
+			localStorage.setItem("bitrequest_recent_requests", JSON.stringify(lsrr_arr));
+			if ($.isEmptyObject(lsrr_arr)) {
+	            toggle_rr(false);
+	        }
+		}
+	}
+	canceldialog();
 }
