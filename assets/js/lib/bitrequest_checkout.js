@@ -2,7 +2,6 @@ $(document).ready(function() {
     checkout();
     window.addEventListener("message", crossframe);
     keyup();
-    closeframe_trigger();
     closeloader_trigger();
 });
 

@@ -294,3 +294,12 @@
 .icon-recycle:before {
   content: "\e90b";
 }
+.icon-flag:before {
+  content: "\e9cc";
+}
+.icon-instagram:before {
+  content: "\ea92";
+}
+.icon-twitter:before {
+  content: "\ea96";
+}
