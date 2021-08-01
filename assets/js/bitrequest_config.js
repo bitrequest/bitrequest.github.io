@@ -802,15 +802,15 @@ var multi_wallets = {
                 "apis": {
                     "icon": "sphere",
                     "selected": {
-                        "name": "api.nanos.cc",
-                        "url": "https://proxy.nanos.cc/proxy",
+                        "name": "bitrequest.app",
+                        "url": "https://www.bitrequest.app:8020",
                         "api": true,
                         "username": "",
                         "password": "",
                         "display": true
                     },
                     "apis": [{
-                        "name": "nano node",
+                        "name": "bitrequest.app",
                         "url": "https://www.bitrequest.app:8020",
                         "api": true,
                         "username": "",
@@ -833,18 +833,18 @@ var multi_wallets = {
                 "websockets": {
                     "icon": "tab",
                     "selected": {
-                        "name": "nanos.cc websocket",
-                        "url": "wss://socket.nanos.cc",
+                        "name": "bitrequest.app",
+                        "url": "wss://bitrequest.app:8010",
                         "display": true
                     },
                     "apis": [{
-                            "name": "nanos.cc websocket",
-                            "url": "wss://socket.nanos.cc",
+	                    	"name": "bitrequest.app",
+                            "url": "wss://bitrequest.app:8010",
                             "display": true
                         },
                         {
-                            "name": "bitrequest websocket",
-                            "url": "wss://bitrequest.app:8010",
+                            "name": "nanos.cc websocket",
+                            "url": "wss://socket.nanos.cc",
                             "display": true
                         },
                         {

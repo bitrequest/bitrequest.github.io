@@ -544,8 +544,8 @@ function backupdatabase() {
 
 function sbu_switch() {
     $(document).on("mouseup", "#toggle_sbu_span .switchpanel", function() {
-        var thistrigger = $(this);
-        thisvalue = (thistrigger.hasClass("true")) ? true : false;
+        var thistrigger = $(this),
+        	thisvalue = (thistrigger.hasClass("true")) ? true : false;
         if (thisvalue === true) {
             var result = confirm("Include encrypted seed in backup? Make sure you keep track of your backup files!");
             if (result === false) {
@@ -699,12 +699,9 @@ function complilebackup() {
             key == "bitrequest_awl" ||
             key == "bitrequest_tp") {} else if (key == "bitrequest_bpdat") { // only backup ecrypted seed
             if (test_derive === true && get_setting("backup", "sbu") === true) {
-                val_obj = JSON.parse(value),
-                    datenc = val_obj.datenc;
-                if (datenc) {
-                    delete val_obj.dat;
-                    jsonfile.push('"' + key + '":' + JSON.stringify(datenc));
-                }
+                var val_obj = JSON.parse(value);
+                val_obj.dat = null;
+                jsonfile.push('"' + key + '":' + JSON.stringify(val_obj));
             }
         } else {
             jsonfile.push('"' + key + '":' + value);
@@ -908,11 +905,10 @@ function scan_restore(jsonobject) {
     resd = {
         "pcnt": 0
     }
-    var bpdat = jsonobject.bitrequest_bpdat,
-        isbpdat = (bpdat) ? true : false;
-    if (isbpdat) {
+    var bpdat = jsonobject.bitrequest_bpdat;
+    if (bpdat) {
         resd.sbu = true;
-        var can_dec = s_decode(bpdat);
+        var can_dec = (bpdat.dat) ? s_decode(bpdat) : s_decode(bpdat.datenc);
         resd.samebip = (bpdat.id == bipid);
         resd.bpdat = can_dec;
     }
@@ -957,7 +953,7 @@ function restore_callback(pass_dat, newphrase) {
 }
 
 function s_decode(pdat, phash) {
-    var pinhash = (phash) ? phash : $("#pinsettings").data("pinhash");
+	var pinhash = (phash) ? phash : $("#pinsettings").data("pinhash");
     if (pinhash) {
         var keystring = ptokey(pinhash, pdat.id),
             decrypt = aes_dec(pdat.dat, keystring);
@@ -1016,7 +1012,8 @@ function submit_pin_dialog() {
             jasobj = pass_dat.jasobj;
             if (jasobj) {
                 var pbdat = jasobj.bitrequest_bpdat,
-                    can_dec = s_decode(pbdat, hashcode(thisvalue)),
+                	pbdat_eq = (pbdat.dat) ? pbdat : pbdat.datenc,
+                    can_dec = s_decode(pbdat_eq, hashcode(thisvalue)),
                 	pinsettings = $("#pinsettings").data();
                 if (can_dec) {
                     resd.pcnt = 0;
@@ -1203,11 +1200,12 @@ function compare_seeds() {
                     bu_dat = is_dialog.data(),
                     jasobj = bu_dat.jasobj;
                 if (jasobj) {
-                    var pbdat = jasobj.bitrequest_bpdat;
-                    if (pbdat) {
+                    var pbdat = jasobj.bitrequest_bpdat,
+                    	pbdat_eq = (pbdat.dat) ? pbdat : pbdat.datenc;
+                    if (pbdat_eq) {
                         if (resd.bpdat) {} else {
                             var enterpin = prompt("Enter your 4 digit pin"),
-                                can_dec = s_decode(pbdat, hashcode(enterpin));
+                                can_dec = s_decode(pbdat_eq, hashcode(enterpin));
                             if (can_dec) {
                                 resd.bpdat = can_dec;
                                 is_dialog.addClass("verified");

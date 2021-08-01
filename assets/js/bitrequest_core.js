@@ -43,7 +43,7 @@ var language = navigator.language || navigator.userLanguage,
     is_cashier = (cashier_dat && cashier_dat.cashier) ? true : false,
     cashier_seedid = (is_cashier) ? cashier_dat.seedid : false,
     hasbip = (bipobj) ? true : false,
-    bipid = (hasbip) ? JSON.parse(atob(JSON.parse(bipobj).dat)).pid : false,
+    bipid = (hasbip) ? JSON.parse(bipobj).id : false,
     safety_poll_timeout = 15000;
 
 $(document).ready(function() {
@@ -795,7 +795,8 @@ function pinvalidate(thispad) {
         newval = pinval + thisval;
     if (newval.length > 3) {
         if (newval == $("#pininput").val()) {
-            var pinsettings = $("#pinsettings"),
+	        var current_pin = get_setting("pinsettings", "pinhash"),
+				pinsettings = $("#pinsettings"),
                 pinhash = hashcode(newval),
                 titlepin = "pincode activated",
                 locktime = pinsettings.data("locktime");
@@ -813,7 +814,7 @@ function pinvalidate(thispad) {
                 callback.func(callback.args);
             }
             notify("Data saved");
-            enc_s();
+            enc_s(seed_decrypt(current_pin));
         } else {
             var pinfloat = $("#pinfloat");
             topnotify("pincode does not match");

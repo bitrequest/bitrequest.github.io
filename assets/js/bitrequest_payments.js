@@ -1011,7 +1011,7 @@ function continue_paymentfunction(payment) {
 							<span class='wifi_off icon-wifi-off'></span>" +
             conf_section +
             "</span><br/>\
-						<span id='view_tx'>View transaction</span>\
+						<span id='view_tx'>View details</span>\
 					</p>\
 				</div>",
 			readonly_attr = (is_viewonly() === true) ? " readonly='readonly'" : "",

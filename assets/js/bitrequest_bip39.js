@@ -21,7 +21,10 @@ var test_phrase = "army van defense carry jealous true garbage claim echo media 
 	    "monero": false,
 	    "ethereum": true,
 	    "bitcoin-cash": true
-    };
+    },
+    k_str = expected_seed.slice(0, 32),
+    enc_test = aes_enc(test_phrase, k_str),
+    dec_test = aes_dec(enc_test, k_str);
 
 $(document).ready(function() {
 	hasbigint();
@@ -55,6 +58,7 @@ $(document).ready(function() {
     //seed_nav
     //ls_phrase_obj
     //ls_phrase_obj_parsed
+    //seed_decrypt
     backup_continue();
     //check_phrase
     //get_phrase
@@ -179,6 +183,10 @@ function test_bip39() {
         test_derive = false;
     }
     if (has_bigint === false) { // test for js BigInt
+        bip39_fail();
+        test_derive = false;
+    }
+    if (test_phrase != dec_test) { // test encryption
         bip39_fail();
         test_derive = false;
     }
@@ -469,7 +477,7 @@ function manage_bip32(dat) {
         	<h2><span class='icon-warning' style='color:#B33A3A'></span>Disclaimer!</h2>\
         	<div class='popnotify'></div>\
         	<form class='popform'>\
-        		<div class='inputwrap'><p>Funds received from addresses generated fom your Bip39 secret passphrase can not be spend by Bitrequest.<br/>To spend your funds you wil have to import your seed phrase in a <a href='https://www.bitrequest.io/compatible-wallets' target='_blank' class='ref'>Bip39 compatible wallet.</a></p></div>\
+        		<div class='inputwrap'><p>Funds received from addresses generated fom your seed can not be spend by Bitrequest.<br/>To spend your funds you wil have to import your seed phrase in a <a href='https://www.bitrequest.io/compatible-wallets' target='_blank' class='ref'>Bip39 compatible wallet.</a></p></div>\
         		<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I understand and am ok with this.</span></div>\
         		<input type='submit' class='submit' value='OK'></form></div>").data(data);
         if($("#option_makeseed").length) {
@@ -504,13 +512,14 @@ function submit_disclaimer() {
 function bip39(dat) {
     phraseverified = false;
     var data = (dat) ? dat : {},
+    	phrase_obj = ls_phrase_obj(),
         edit = (data && data.edit) ? true : false,
         dtype = (data && data.type) ? data.type : null,
         restore = (dtype == "restore" && edit === true),
         type = (hasbip === true) ? (bipv === true) ? "bipsavedbu" : "bipsaved" : "nobip",
         step = (type == "nobip") ? 1 : (type == "bipsavedbu") ? 2 : 3,
         spclass = (type == "nobip") ? " showphrase" : " hidephrase",
-        savedseed = (hasbip === true) ? ls_phrase_obj().pob.join(" ") : false,
+        savedseed = (hasbip === true) ? (phrase_obj) ? phrase_obj.pob.join(" ") : false : false,
         seed = (restore) ? "" : (savedseed) ? savedseed : newseed(12),
         remindp = (dtype == "restore") ? "<p>Make sure to backup your current <span id='toseed'>Secret phrase</span>. It will be overwritten.</p>" : "<p>Please verify your secret phrase.</p>",
         verifyheader = (dtype == "restore") ? "Verify Current seed phrase:" : "Verify Backup:",
@@ -606,7 +615,7 @@ function seed_nav(index) {
 }
 
 function ls_phrase_obj() {
-    if (bipobj) {
+	if (bipobj) {
         var savedat = JSON.parse(bipobj);
         return ls_phrase_obj_parsed(savedat);
     } else {
@@ -616,12 +625,44 @@ function ls_phrase_obj() {
 }
 
 function ls_phrase_obj_parsed(obj) {
-    var phrasedat = obj.dat,
-        datparse = JSON.parse(atob(phrasedat));
-    return {
-        "pid": datparse.pid,
-        "pob": JSON.parse(atob(datparse.pob))
+	var phrasedat = obj.dat,
+    	pdat_enc = obj.datenc;
+    if (pdat_enc) {
+	    var pdat_dec = s_decode(pdat_enc),
+	    	pdat_dec_dat = pdat_dec.dat;
+	    if (pdat_dec_dat) {
+		    var phrasedat = pdat_dec_dat;
+	    }
     }
+    if (phrasedat) {
+	    var datparse = JSON.parse(atob(phrasedat));
+	    return {
+	        "pid": datparse.pid,
+	        "pob": JSON.parse(atob(datparse.pob))
+	    }
+	}
+	return false;
+}
+
+function seed_decrypt(pin) {
+	if (bipobj) {
+		var pbdat = JSON.parse(bipobj),
+			pdat_enc = pbdat.datenc;
+        if (pdat_enc) {
+		    var pdat_dec = s_decode(pdat_enc, pin),
+		    	pdat_dec_dat = pdat_dec.dat;
+		    if (pdat_dec_dat) {
+			    return JSON.parse(atob(pdat_dec_dat));
+		    }
+	    }
+	    else {
+		    var pdat_dat = pbdat.dat;
+		    if (pdat_dat) {
+		    	return JSON.parse(atob(pdat_dat));
+		    }
+	    }
+	}
+	return false;
 }
 
 function backup_continue() {
@@ -835,20 +876,18 @@ function seed_callback() {
             phraseid = hmacsha(seed_string, "sha256").slice(0, 8);
         seed_object.pid = phraseid;
         seed_object.pob = seed_string;
-        seedenc = btoa(JSON.stringify(seed_object)),
-            savedat = JSON.stringify({
-                "id": phraseid,
-                "dat": seedenc,
-            });
+        var savedat = JSON.stringify({
+            "id": phraseid,
+            "dat": null,
+        });
         localStorage.setItem("bitrequest_bpdat", savedat);
         localStorage.setItem("bitrequest_tp", $.now());
-        bipobj = localStorage.getItem("bitrequest_bpdat"),
-            hasbip = true;
+        bipobj = savedat,
+        hasbip = true,
         bipid = phraseid;
         notify("🎉 Congratulations. You are now your own bank! 🎉");
-        var seedobject = ls_phrase_obj(),
-            seedid = seedobject.pid,
-            savedseed = seedobject.pob.join(" ");
+        var seedid = phraseid,
+            savedseed = phrasearray.join(" ");
         if (body.hasClass("showstartpage")) {
             derive_all_init(savedseed, seedid);
             openpage("?p=home", "home", "loadpage");
@@ -863,7 +902,7 @@ function seed_callback() {
             derive_all(savedseed, seedid);
             savecurrencies(true);
         }
-        enc_s();
+        enc_s(seed_object);
     }
     if (phraseverified === true) {
         // save as verified
@@ -904,21 +943,34 @@ function derive_test_trigger() {
     })
 }
 
-function enc_s() {
-    if (test_derive === true) {
-        if (hasbip === true) {
-            var p = get_setting("pinsettings", "pinhash");
-            if (p !== null) {
-                var s_obj = JSON.parse(bipobj),
-                    s_id = s_obj.id,
-                    keystring = ptokey(p, s_id);
-                encb = aes_enc(JSON.stringify(s_obj.dat), keystring);
+function enc_s(dat) {
+	if (hasbip && test_derive) {
+        var pn = get_setting("pinsettings", "pinhash");
+        if (pn) {
+	        var sdat;
+		   	if (dat) {
+		   		var sdat = dat;
+          	}
+		  	else {
+			  	var phrase_obj = seed_decrypt();
+			  	if (phrase_obj) {
+	           		var sdat = phrase_obj;
+           		}
+           	}
+           	if (sdat) {
+	           	var seedenc = btoa(JSON.stringify(sdat)),
+			   		s_obj = JSON.parse(bipobj),
+                	s_id = s_obj.id,
+					keystring = ptokey(pn, s_id),
+					encb = aes_enc(JSON.stringify(seedenc), keystring);
                 s_obj.datenc = {
                     "id": s_id,
                     "dat": encb
                 };
-                localStorage.setItem("bitrequest_bpdat", JSON.stringify(s_obj));
-                bipobj = localStorage.getItem("bitrequest_bpdat");
+                s_obj.dat = null;
+                var bpdat_val = JSON.stringify(s_obj);
+                localStorage.setItem("bitrequest_bpdat", bpdat_val);
+                bipobj = bpdat_val;
             }
         }
     }
@@ -926,7 +978,7 @@ function enc_s() {
 
 function has_datenc() {
     if (hasbip === true) {
-        var s_obj = JSON.parse(bipobj);
+	    var s_obj = JSON.parse(bipobj);
         if (s_obj.datenc) {
             return true;
         }
