@@ -308,6 +308,15 @@ function csvexport_trigger() {
 					<div id='ad_info_wrap'>\
 						<ul id='ecsv_options'>\
 							<li class='escv_heading'>\
+								<strong>Info</strong>\
+							</li>\
+							<li id='escv_from'>\
+								<span>From</span><div class='switchpanel true global'><div class='switch'></div></div>\
+							</li>\
+							<li id='escv_desc'>\
+								<span>Description</span><div class='switchpanel true global'><div class='switch'></div></div>\
+							</li>\
+							<li class='escv_heading'>\
 								<strong>Status</strong>\
 							</li>\
 							<li id='escv_paid'>\
@@ -393,6 +402,8 @@ function complile_csv() {
 		has_archive = (archive_arr && !$.isEmptyObject(archive_arr)),
 		csv_arr = [],
 		options_li = $("#exportcsvbox #ecsv_options"),
+		op_from = options_li.find("li#escv_from .switchpanel"),
+		op_desc = options_li.find("li#escv_desc .switchpanel"),
 		op_paid = options_li.find("li#escv_paid .switchpanel"),
 		op_ins = options_li.find("li#escv_ins .switchpanel"),
 		op_new = options_li.find("li#escv_new .switchpanel"),
@@ -402,6 +413,8 @@ function complile_csv() {
 		op_incoming = options_li.find("li#escv_incoming .switchpanel"),
 		op_receipt = options_li.find("li#escv_receipt .switchpanel"),
 		op_archive = options_li.find("li#escv_archive .switchpanel"),
+		incl_from = (op_from.hasClass("true")) ? true : false,
+		incl_desc = (op_desc.hasClass("true")) ? true : false,
 		incl_paid = (op_paid.hasClass("true")) ? true : false,
 		incl_ins = (op_ins.hasClass("true")) ? true : false,
 		incl_new = (op_new.hasClass("true")) ? true : false,
@@ -418,6 +431,8 @@ function complile_csv() {
 			amount = val.amount,
 			uoa = val.uoa,
 			status = val.status,
+			rqname = (val.requestname) ? val.requestname : "",
+			description = (val.requesttitle) ? val.requesttitle : "",
 			type = val.requesttype,
 			timestamp = val.timestamp,
 			receivedamount = val.receivedamount,
@@ -443,6 +458,12 @@ function complile_csv() {
 		else if (incl_incoming === false && type == "incoming") {
 		}
 		else {
+			if (incl_from) {
+				request["from"] = rqname;
+			}
+			if (incl_desc) {
+				request.description = description;
+			}
 			request.payment = payment;
 			request.status = status;
 			var rq_type = (type == "local") ? "point of sale" : type;
@@ -478,7 +499,8 @@ function render_csv(arr) {
 	$.each(arr, function(i, val) {
 		var inner_body_arr = [];
 		$.each(val, function(key, value) {
-			inner_body_arr.push(value);
+			var ctd = value.replace(/,/g, ".");
+			inner_body_arr.push(ctd);
 		});
 		body_arr.push(inner_body_arr.join(","));
 	});
