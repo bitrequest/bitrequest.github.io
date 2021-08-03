@@ -427,7 +427,7 @@ function complile_csv() {
 			pts = val.paymenttimestamp,
 			pdf_url = get_pdf_url(val),
 			received_ts = (pts) ? short_date(pts) : "",
-			txhash = val.txhash;
+			txhash = (val.txhash) ? val.txhash : "";
 		if (incl_paid === false && status == "paid") {	
 		}
 		else if (incl_ins === false && status == "insufficient") {	
