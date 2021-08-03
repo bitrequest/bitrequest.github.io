@@ -531,6 +531,7 @@ function finishfunctions() {
     receipt();
     download_receipt();
     share_receipt();
+    //get_pdf_url;
     //amountshort
     editrequest();
     submit_request_description();
@@ -4452,72 +4453,7 @@ function receipt() {
         	requestli = thisnode.closest(".rqli"),
         	rqdat = requestli.data(),
         	requestid = rqdat.requestid,
-        	currencyname = rqdat.currencyname,
-        	requestname = rqdat.requestname,
-        	requesttitle = rqdat.requesttitle,
-        	ismonitored = rqdat.monitored,
-        	status = rqdat.status,
-        	statustext = (status == "new") ? "Waiting for payment" : status,
-        	paymenttimestamp = rqdat.paymenttimestamp,
-			ptsformatted = fulldateformat(new Date(paymenttimestamp - timezone), "en-us"),
-        	amount = rqdat.amount,
-        	fiatvalue = rqdat.fiatvalue,
-        	receivedamount = rqdat.receivedamount,
-        	receivedamount_rounded = trimdecimals(receivedamount, 5),
-			fiatvalue_rounded = trimdecimals(fiatvalue, 2),
-        	requesttype = rqdat.requesttype,
-        	incoming = (requesttype == "incoming"),
-			outgoing = (requesttype == "outgoing"),
-			local = (requesttype == "local"),
-			online_purchase = rqdat.online_purchase,
-			typetext = (incoming === true) ? (online_purchase === true) ? "online purchase" : "incoming" : (local === true) ? "point of sale" : "outgoing",
-			direction = (incoming === true) ? "send" : "received",
-        	iscrypto = rqdat.iscrypto,
-			deter = (iscrypto === true) ? 5 : 2,
-        	amount_rounded = trimdecimals(amount, deter),
-        	uoa = rqdat.uoa,
-			uoa_upper = uoa.toUpperCase(),
-        	requestdate = rqdat.requestdate,
-			timestamp = rqdat.timestamp,
-			utc = timestamp - timezone,
-			localtime = (requestdate) ? requestdate - timezone : utc,
-			localtimeobject = new Date(localtime),
-			requestdateformatted = fulldateformat(localtimeobject, "en-us"),
-			created = (requestdate) ? requestdateformatted : "unknown",
-			utc_format = fulldateformat(new Date(utc)),
-			txhash = rqdat.txhash,
-        	invd = {};
-		invd["Request ID"] = requestid;
-        invd.Currency = rqdat.payment;
-        if (exists(requestname)) {
-		    invd.From = requestname;
-	    }
-        if (exists(requesttitle)) {
-		    invd.Title = "'" + requesttitle + "'";
-	    }
-        invd.Amount = amount_rounded + " " + uoa_upper,
-        invd.Status = statustext,
-        invd.Type = typetext;
-        if (incoming === true) {
-	        invd["Created"] = created;
-	        invd["First viewed"] = utc_format;
-        }
-        invd.Address = rqdat.address;
-        if (status === "paid") {
-        	invd["Paid on"] = ptsformatted,
-			invd["Amount received"] = receivedamount_rounded + " " + rqdat.payment;
-			if (iscrypto === true) {
-			}
-			else {
-				invd["Fiat value on " + ptsformatted] = fiatvalue_rounded + " " + currencyname;
-			}
-		}
-		if (exists(txhash)) {
-		    invd["TxID"] = txhash;
-	    }
-		var invd_encode = btoa(JSON.stringify(invd)),
-			set_proxy = $("#api_proxy").data("selected"),
-	        receipt_url = set_proxy + "api/receipt/?data=" + invd_encode,
+			receipt_url = get_pdf_url(rqdat),
 	        receipt_title = "bitrequest_receipt_" + requestid + ".pdf",
 	        content = "<div class='formbox' id='cacheformbox'>\
 				<h2><span class='icon-file-pdf' style='color:#dc1d00'/>Open receipt_" + requestid + ".pdf?</h2>\
@@ -4533,6 +4469,75 @@ function receipt() {
 			</div>";
 	    popdialog(content, "alert", "triggersubmit");
     })
+}
+
+function get_pdf_url(rqdat) {
+    var requestid = rqdat.requestid,
+    	currencyname = rqdat.currencyname,
+    	requestname = rqdat.requestname,
+    	requesttitle = rqdat.requesttitle,
+    	ismonitored = rqdat.monitored,
+    	status = rqdat.status,
+    	statustext = (status == "new") ? "Waiting for payment" : status,
+    	paymenttimestamp = rqdat.paymenttimestamp,
+		ptsformatted = fulldateformat(new Date(paymenttimestamp - timezone), "en-us"),
+    	amount = rqdat.amount,
+    	fiatvalue = rqdat.fiatvalue,
+    	receivedamount = rqdat.receivedamount,
+    	receivedamount_rounded = trimdecimals(receivedamount, 5),
+		fiatvalue_rounded = trimdecimals(fiatvalue, 2),
+    	requesttype = rqdat.requesttype,
+    	incoming = (requesttype == "incoming"),
+		outgoing = (requesttype == "outgoing"),
+		local = (requesttype == "local"),
+		online_purchase = rqdat.online_purchase,
+		typetext = (incoming === true) ? (online_purchase === true) ? "online purchase" : "incoming" : (local === true) ? "point of sale" : "outgoing",
+		direction = (incoming === true) ? "send" : "received",
+    	iscrypto = rqdat.iscrypto,
+		deter = (iscrypto === true) ? 5 : 2,
+    	amount_rounded = trimdecimals(amount, deter),
+    	uoa = rqdat.uoa,
+		uoa_upper = uoa.toUpperCase(),
+    	requestdate = rqdat.requestdate,
+		timestamp = rqdat.timestamp,
+		utc = timestamp - timezone,
+		localtime = (requestdate) ? requestdate - timezone : utc,
+		localtimeobject = new Date(localtime),
+		requestdateformatted = fulldateformat(localtimeobject, "en-us"),
+		created = (requestdate) ? requestdateformatted : "unknown",
+		utc_format = fulldateformat(new Date(utc)),
+		txhash = rqdat.txhash,
+    	invd = {};
+	invd["Request ID"] = requestid;
+    invd.Currency = rqdat.payment;
+    if (exists(requestname)) {
+	    invd.From = requestname;
+    }
+    if (exists(requesttitle)) {
+	    invd.Title = "'" + requesttitle + "'";
+    }
+    invd.Amount = amount_rounded + " " + uoa_upper,
+    invd.Status = statustext,
+    invd.Type = typetext;
+    if (incoming === true) {
+        invd["Created"] = created;
+        invd["First viewed"] = utc_format;
+    }
+    invd.Address = rqdat.address;
+    if (status === "paid") {
+    	invd["Paid on"] = ptsformatted,
+		invd["Amount received"] = receivedamount_rounded + " " + rqdat.payment;
+		if (iscrypto === true) {
+		}
+		else {
+			invd["Fiat value on " + ptsformatted] = fiatvalue_rounded + " " + currencyname;
+		}
+	}
+	if (exists(txhash)) {
+	    invd["TxID"] = txhash;
+    }
+    var set_proxy = $("#api_proxy").data("selected");
+	return set_proxy + "api/receipt/?data=" + btoa(JSON.stringify(invd));
 }
 
 function download_receipt() {

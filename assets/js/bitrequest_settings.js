@@ -22,6 +22,15 @@ $(document).ready(function() {
     toggle_defaultcurrency();
     autocompletecurrency();
     submitcurrency();
+    
+    // CSV Export
+    csvexport_trigger();
+	submit_csvexport();
+	//complile_csv
+	//render_csv
+	share_csv();
+	check_csvexport();
+	submit_csvdownload();
 
     // Bip32 passphrase
     trigger_bip32();
@@ -180,148 +189,6 @@ function submitaccount() {
     })
 }
 
-// Contact form
-
-function edit_contactform_trigger() {
-    $(document).on("click", "#contactform", function() {
-        edit_contactform()
-    })
-}
-
-function edit_contactform(checkout) {
-    var contactform = $("#contactform"),
-        thisdata = contactform.data(),
-        nameinput = thisdata.name,
-        addressinput = thisdata.address,
-        zipcodeinput = thisdata.zipcode,
-        cityinput = thisdata.city,
-        countryinput = thisdata.country,
-        emailinput = thisdata.email,
-        formheader = (checkout === true) ? "Contactform / shipping" : "Contactform",
-        form_subheader = (checkout === true) ? "" : "<p>Your details for online purchases.</p>",
-        content = "\
-	<div class='formbox' id='contactformbox'>\
-		<h2 class='icon-sphere'>" + formheader + "</h2>" + form_subheader +
-        "<div class='popnotify'></div>\
-		<div class='popform'>\
-			<div class='cf_inputwrap empty'><input type='text' value='" + nameinput + "' placeholder='Name' class='cf_nameinput'/><span class='required'>*</span></div>\
-			<div class='cf_inputwrap empty'><input type='text' value='" + addressinput + "' placeholder='Address' class='cf_addressinput'/><span class='required'>*</span></div>\
-			<div class='cf_inputwrap empty'><input type='text' value='" + zipcodeinput + "' placeholder='Zip/postal code' class='cf_zipcodeinput'/><span class='required'>*</span></div>\
-			<div class='cf_inputwrap empty'><input type='text' value='" + cityinput + "' placeholder='City' class='cf_cityinput'/><span class='required'>*</span></div>\
-			<div class='cf_inputwrap empty'><input type='text' value='" + countryinput + "' placeholder='country' class='cf_countryinput'/><span class='required'>*</span></div>\
-			<div class='cf_inputwrap empty'><input type='text' value='" + emailinput + "' placeholder='email' class='cf_emailinput'/><span class='required'>*</span></div>\
-			<input type='submit' class='submit' value='OK'/>\
-		</div>\
-	</div>";
-    popdialog(content, "alert", "triggersubmit");
-    check_contactform();
-    if (checkout === true) {
-        $("#popup #execute").text("CONTINUE");
-        $("#popup #canceldialog").hide();
-        if (inframe === true) {
-            parent.postMessage("close_loader", "*");
-        }
-    }
-}
-
-function check_contactform() {
-    $("#contactformbox .popform .cf_inputwrap").each(function() {
-        var cf_inputwrap = $(this),
-            thisinput = cf_inputwrap.children("input"),
-            inputval = thisinput.val();
-        if (inputval.length > 2) {
-            cf_inputwrap.removeClass("empty");
-        } else {
-            cf_inputwrap.addClass("empty");
-        }
-    });
-}
-
-function type_contactform() {
-    $(document).on("input", "#contactformbox .cf_inputwrap input", function() {
-        var thisinput = $(this),
-            thisvalue = thisinput.val(),
-            cf_inputwrap = thisinput.parent(".cf_inputwrap");
-        if (thisvalue.length > 2) {
-            cf_inputwrap.removeClass("empty");
-        } else {
-            cf_inputwrap.addClass("empty");
-        }
-    })
-}
-
-function submit_contactform() {
-    $(document).on("click", "#contactformbox input.submit", function(e) {
-        e.preventDefault();
-        var cfb = $("#contactformbox"),
-            nameinput = cfb.find(".cf_nameinput"),
-            nameinput_val = nameinput.val(),
-            addressinput = cfb.find(".cf_addressinput"),
-            addressinput_val = addressinput.val(),
-            zipcodeinput = cfb.find(".cf_zipcodeinput"),
-            zipcodeinput_val = zipcodeinput.val(),
-            cityinput = cfb.find(".cf_cityinput"),
-            cityinput_val = cityinput.val(),
-            countryinput = cfb.find(".cf_countryinput"),
-            countryinput_val = countryinput.val(),
-            emailinput = cfb.find(".cf_emailinput"),
-            emailinput_val = emailinput.val(),
-            cf_data = {
-                name: nameinput_val,
-                address: addressinput_val,
-                zipcode: zipcodeinput_val,
-                city: cityinput_val,
-                country: countryinput_val,
-                email: emailinput_val
-            },
-            email_regex = /^\w(?:\.?[\w%+-]+)*@\w(?:[\w-]*\.)+?[a-z]{2,}$/,
-            email_check = email_regex.test(emailinput_val);
-        if (nameinput_val.length < 4) {
-            popnotify("error", "Name is a required field");
-            nameinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return false;
-        }
-        if (addressinput_val.length < 10) {
-            popnotify("error", "Address is a required field");
-            addressinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return false;
-        }
-        if (zipcodeinput_val.length < 6) {
-            popnotify("error", "Zip/postal code is a required field");
-            zipcodeinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return false;
-        }
-        if (cityinput_val.length < 3) {
-            popnotify("error", "City is a required field");
-            cityinput.focus();
-            return false;
-        }
-        if (countryinput_val.length < 3) {
-            popnotify("error", "Country is a required field");
-            countryinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return false;
-        }
-        if (emailinput_val.length < 1) {
-            popnotify("error", "Email is a required field");
-            emailinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return false;
-        }
-        if (email_check === false) {
-            popnotify("error", "Email contains invalid characters");
-            emailinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return false;
-        }
-        set_setting("contactform", cf_data);
-        canceldialog(true);
-        savesettings();
-        if (geturlparameters().contactform !== undefined) { // test for contactform param 
-            loadpaymentfunction(true) // continue to paymentdialog
-        } else {
-            notify("Data saved");
-        }
-    })
-}
-
 // Standard fiat currency
 function editcurrency() {
     $(document).on("click", "#currencysettings", function() {
@@ -424,31 +291,313 @@ function submitcurrency() {
     });
 }
 
-// Bip32 passphrase
+// CSV Export
+function csvexport_trigger() {
+    $(document).on("click", "#csvexport", function() {
+	    var rq_arr = JSON.parse(localStorage.getItem("bitrequest_requests")),
+			archive_arr = JSON.parse(localStorage.getItem("bitrequest_archive")),
+			has_requests = (rq_arr && !$.isEmptyObject(rq_arr)),
+			has_archive = (archive_arr && !$.isEmptyObject(archive_arr));
+		if (has_requests === true || has_archive === true) {
+			var filename = "bitrequest_csv_export_" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_') + ".csv",
+				show_archive = (has_requests === true) ? "false" : "true";
+		        content = "\
+				<div class='formbox' id='exportcsvbox'>\
+					<h2 class='icon-table'>Export CSV</h2>\
+					<div class='popnotify'></div>\
+					<div id='ad_info_wrap'>\
+						<ul id='ecsv_options'>\
+							<li class='escv_heading'>\
+								<strong>Status</strong>\
+							</li>\
+							<li id='escv_paid'>\
+								<span>Paid</span><div class='switchpanel true global'><div class='switch'></div></div>\
+							</li>\
+							<li id='escv_ins'>\
+								<span>Insufficient</span><div class='switchpanel true global'><div class='switch'></div></div>\
+							</li>\
+							<li id='escv_new'>\
+								<span>New</span><div class='switchpanel false global'><div class='switch'></div></div>\
+							</li>\
+							<li id='escv_pending'>\
+								<span>Pending</span><div class='switchpanel false global'><div class='switch'></div></div>\
+							</li>\
+							<li class='escv_heading'>\
+								<strong>Type</strong>\
+							</li>\
+							<li id='escv_pos'>\
+								<span>Point of Sale</span><div class='switchpanel true global'><div class='switch'></div></div>\
+							</li>\
+							<li id='escv_outgoing'>\
+								<span>Outgoing</span><div class='switchpanel true global'><div class='switch'></div></div>\
+							</li>\
+							<li id='escv_incoming'>\
+								<span>Incoming</span><div class='switchpanel false global'><div class='switch'></div></div>\
+							</li>\
+							<li class='noline'>\
+								<strong></strong>\
+							</li>\
+							<li id='escv_archive'>\
+								<span>Include archive</span><div class='switchpanel global " + show_archive + "'><div class='switch'></div></div>\
+							</li>\
+							<li id='escv_receipt'>\
+								<span>Include receipt (PDF download)</span><div class='switchpanel false global'><div class='switch'></div></div>\
+							</li>\
+						</ul>\
+					</div>\
+					<div id='dialogcontent'>\
+						<div id='custom_actions'>\
+							<br/>\
+							<a href='' download='" + filename + "' title='" + filename + "' id='trigger_csvexport' class='button icon-download' download>DOWNLOAD</a>\
+						</div>\
+					</div>\
+				</div>\
+				<div id='backupactions'>\
+					<div id='share_csv' data-url='' class='util_icon icon-share2'></div>\
+					<div id='backupcd'>CANCEL</div>\
+				</div>";
+		    popdialog(content, "alert", "triggersubmit", null, true);
+		}
+		else {
+			playsound(funk);
+            notify("No requests to export");
+		}
+    })
+}
 
-function trigger_bip32() {
-    $(document).on("click", "#bip39_passphrase", function() {
-        if (hasbip === true) {
-            all_pinpanel({
-                "func": manage_bip32
-            })
-        } else {
-            manage_bip32();
+function submit_csvexport() {
+    $(document).on("click", "#trigger_csvexport", function(e) {
+        if (body.hasClass("ios")) {
+            e.preventDefault();
+            notify("Downloads for IOS App unavailable at the moment");
+            return false;
+        }
+        var thisnode = $(this),
+        	csv_encode = complile_csv(),
+        	d_url = "data:text/csv;charset=utf-16le;base64," + csv_encode;
+        thisnode.attr("href", d_url);
+        var title = thisnode.attr("title"),
+        	result = confirm("Download: " + title + "?");
+        if (result === false) {
+            e.preventDefault();
+            return false;
+        }
+        canceldialog();
+        notify("CSV Downloaded");
+    })
+}
+
+function complile_csv() {
+	var rq_arr = JSON.parse(localStorage.getItem("bitrequest_requests")),
+		archive_arr = JSON.parse(localStorage.getItem("bitrequest_archive")),
+		has_archive = (archive_arr && !$.isEmptyObject(archive_arr)),
+		csv_arr = [],
+		options_li = $("#exportcsvbox #ecsv_options"),
+		op_paid = options_li.find("li#escv_paid .switchpanel"),
+		op_ins = options_li.find("li#escv_ins .switchpanel"),
+		op_new = options_li.find("li#escv_new .switchpanel"),
+		op_pending = options_li.find("li#escv_pending .switchpanel"),
+		op_pos = options_li.find("li#escv_pos .switchpanel"),
+		op_outgoing = options_li.find("li#escv_outgoing .switchpanel"),
+		op_incoming = options_li.find("li#escv_incoming .switchpanel"),
+		op_receipt = options_li.find("li#escv_receipt .switchpanel"),
+		op_archive = options_li.find("li#escv_archive .switchpanel"),
+		incl_paid = (op_paid.hasClass("true")) ? true : false,
+		incl_ins = (op_ins.hasClass("true")) ? true : false,
+		incl_new = (op_new.hasClass("true")) ? true : false,
+		incl_pending = (op_pending.hasClass("true")) ? true : false,
+		incl_pos = (op_pos.hasClass("true")) ? true : false,
+		incl_outgoing = (op_outgoing.hasClass("true")) ? true : false,
+		incl_incoming = (op_incoming.hasClass("true")) ? true : false,
+		incl_receipt = (op_receipt.hasClass("true")) ? true : false,
+		incl_archive = (op_archive.hasClass("true")) ? true : false,
+		rq_obj = (has_archive === true && incl_archive) ? rq_arr.concat(archive_arr) : rq_arr;
+	$.each(rq_obj, function(i, val) {
+		var request = {},
+			payment = val.payment,
+			amount = val.amount,
+			uoa = val.uoa,
+			status = val.status,
+			type = val.requesttype,
+			timestamp = val.timestamp,
+			receivedamount = val.receivedamount,
+			ccsymbol = val.currencysymbol,
+			fiatvalue = val.fiatvalue,
+			fiatcurrency = val.fiatcurrency,
+			pts = val.paymenttimestamp,
+			pdf_url = get_pdf_url(val),
+			received_ts = (pts) ? short_date(pts) : "",
+			txhash = val.txhash;
+		if (incl_paid === false && status == "paid") {	
+		}
+		else if (incl_ins === false && status == "insufficient") {	
+		}
+		else if (incl_new === false && status == "new") {	
+		}
+		else if (incl_pending === false && status == "pending") {	
+		}
+		else if (incl_pos === false && type == "local") {	
+		}
+		else if (incl_outgoing === false && type == "outgoing") {
+		}
+		else if (incl_incoming === false && type == "incoming") {
+		}
+		else {
+			request.payment = payment;
+			request.status = status;
+			var rq_type = (type == "local") ? "point of sale" : type;
+		    request.type = rq_type;
+		    request.created = short_date(timestamp);
+			request["request amount"] = amount + " " + uoa;
+			var ra_val = (receivedamount) ? receivedamount + " " + ccsymbol : "";
+		    request["amount received"] = ra_val;
+			var fv = (fiatvalue) ?  fiatvalue.toFixed(2) + " " + fiatcurrency : "";
+			request["fiat value"] = fv;
+			request["received on"] = received_ts;
+			request.txhash = txhash;
+			if (incl_receipt) {
+				request["PDF download (receipt)"] = pdf_url;
+			}
+			csv_arr.push(request);
+		}
+    });
+    var csv_body = render_csv(csv_arr),
+    	b64_body = btoa(csv_body);
+    return b64_body;
+	
+}
+
+function render_csv(arr) {
+	var header_arr = [],
+		inner_header_arr = [],
+		body_arr = [];
+	$.each(arr[0], function(key, value) {
+		inner_header_arr.push(key);
+	});
+	header_arr.push(inner_header_arr.join(","));
+	$.each(arr, function(i, val) {
+		var inner_body_arr = [];
+		$.each(val, function(key, value) {
+			inner_body_arr.push(value);
+		});
+		body_arr.push(inner_body_arr.join(","));
+	});
+	var doc_arr = header_arr.concat(body_arr);
+	return doc_arr.join("\n");
+}
+
+function share_csv() {
+    $(document).on("click", "#share_csv", function() {
+	    var csv_encode = complile_csv(),
+        	result = confirm("Share csv export?");
+        if (result === true) {
+            loader(true);
+            loadertext("generate system backup");
+            var accountname = $("#accountsettings").data("selected");
+            api_proxy({
+                "custom": "system_bu",
+                "api_url": true,
+                "proxy": true,
+                "params": {
+                    "url": csv_encode,
+                    "account": btoa(accountname)
+                }
+            }).done(function(e) {
+                var br_cache = e.ping.br_cache,
+                    filetime = br_cache.created_utc,
+                    filetimesec = (filetime) ? filetime * 1000 : $.now(),
+                    filetime_format = new Date(filetimesec).toLocaleString(language),
+                    sharedtitle = "CSV Export " + accountname + " (" + filetime_format + ")";
+                shorten_url(sharedtitle, approot + "?p=settings&csv=" + br_cache.filename, approot + "/img/system_backup.png", true);
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
+                closeloader();
+            });
         }
     })
 }
 
-function hide_seed_panel_trigger() {
-    $(document).on("click", "#seed_steps .seed_step .ss_header .icon-cross", function() {
-        hide_seed_panel();
+function check_csvexport() {
+    var url_params = geturlparameters();
+    if (url_params.p == "settings") {
+        var csv = url_params.csv;
+        if (csv) {
+            api_proxy({
+                "custom": "get_system_bu",
+                "api_url": true,
+                "proxy": true,
+                "params": csv
+            }).done(function(e) {
+                var ping = e.ping;
+                if (ping) {
+                    var br_cache = e.ping.br_cache,
+                        server_time = br_cache.utc_timestamp,
+                        filetime = br_cache.created_utc,
+                        filetimesec = (filetime) ? filetime * 1000 : $.now(),
+                        filetime_format = new Date(filetimesec).toLocaleString(language),
+                        br_result = e.ping.br_result,
+                        base64 = br_result.base64,
+                        account = atob(br_result.account),
+                        sharedtitle = "CSV Export " + account + " (" + filetime_format + ")",
+                        bu_date = filetime_format.replace(/\s+/g, '_').replace(/\:/g, '_'),
+                        cache_time = br_cache.cache_time,
+                        expires_in = (filetime + cache_time) - server_time,
+                        filename = "bitrequest_csv_export_" + encodeURIComponent(account) + "_" + bu_date + ".csv",
+                        cd = countdown(expires_in * 1000),
+                        cd_format = countdown_format(cd),
+                        cf_string = (cd_format) ? "Expires in " + cd_format : "File expired",
+                        content = "\
+						<div class='formbox' id='system_backupformbox'>\
+							<h2 class='icon-download'>CSV Export</h2>\
+							<div class='popnotify'></div>\
+							<div id='dialogcontent'>\
+								<h1>" + sharedtitle + "</h1>\
+								<div class='error' style='margin-top:1em;padding:0.3em 1em'>" + cf_string + "</div>\
+								<div id='changelog'>\
+									<div id='custom_actions'>\
+										<br/>\
+										<a href='data:text/csv;charset=utf-16le;base64," + base64 + "' download='" + filename + "' title='" + filename + "' id='trigger_csvdownload' class='button icon-download' data-date='" + bu_date + "' data-lastbackup='" + filename + "' download>DOWNLOAD CSV</a>\
+									</div>\
+								</div>\
+							</div>\
+						</div>\
+						<div id='backupactions'>\
+							<div id='backupcd'>CANCEL</div>\
+						</div>";
+                    popdialog(content, "alert", "triggersubmit", null, true);
+                } else {
+                    systembu_expired();
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                systembu_expired();
+            });
+        }
+    }
+}
+
+function submit_csvdownload() {
+    $(document).on("click", "#trigger_csvdownload", function(e) {
+        if (body.hasClass("ios")) {
+            e.preventDefault();
+            notify("Downloads for IOS App unavailable at the moment");
+            return false;
+        }
+        var thisnode = $(this),
+            href = thisnode.attr("href"),
+            title = thisnode.attr("title"),
+            result = confirm("Download: " + title + "?");
+        if (result === false) {
+            e.preventDefault();
+            return false;
+        }
+        canceldialog();
+        notify("CSV Downloaded");
     })
 }
 
-function hide_seed_panel() {
-    body.removeClass("seed_dialog");
-    $("#seed_panel").attr("class", "");
-    sleep();
-}
+// SECURITY //
 
 // Pincode
 function editpin() {
@@ -491,6 +640,31 @@ function submit_locktime() {
         canceloptions();
         savesettings();
     })
+}
+
+// Bip32 passphrase
+function trigger_bip32() {
+    $(document).on("click", "#bip39_passphrase", function() {
+        if (hasbip === true) {
+            all_pinpanel({
+                "func": manage_bip32
+            })
+        } else {
+            manage_bip32();
+        }
+    })
+}
+
+function hide_seed_panel_trigger() {
+    $(document).on("click", "#seed_steps .seed_step .ss_header .icon-cross", function() {
+        hide_seed_panel();
+    })
+}
+
+function hide_seed_panel() {
+    body.removeClass("seed_dialog");
+    $("#seed_panel").attr("class", "");
+    sleep();
 }
 
 // Back up
@@ -1735,6 +1909,255 @@ function submitfiatxrapi() {
     })
 }
 
+// Api Proxy
+function pick_api_proxy() {
+    $(document).on("click", "#api_proxy", function() {
+        var thisnode = $(this),
+            thisdata = thisnode.data(),
+            proxies = proxy_list, // (bitrequest_config.js)
+            current_proxy = thisdata.selected,
+            custom_proxies = thisdata.custom_proxies,
+            content = "\
+			<div class='formbox' id='proxyformbox'>\
+				<h2 class='icon-sphere'>API Proxy</h2>\
+				<div class='popnotify'></div>\
+				<div class='popform validated'>\
+					<div class='selectbox'>\
+						<input type='text' value='" + current_proxy + "' placeholder='https://...' id='proxy_select_input' readonly='readonly'/>\
+						<div class='selectarrows icon-menu2' data-pe='none'></div>\
+						<div class='options'></div>\
+					</div>\
+					<div id='rpc_input_box'>\
+						<h3 class='icon-plus'>Add API Proxy</h3>\
+						<div id='proxy_info'>\
+							Control your own keys and request limits:<br/><br/>\
+							<strong>1.</strong> Host the <a href='https://github.com/bitrequest/bitrequest.github.io/tree/master/api' target='blank' class='exit'>API proxy folder</a> on your server (php required).<br/>\
+							<strong>2.</strong> Enter your API keys in 'keys.php'.<br/>\
+							<strong>3.</strong> Enter your server address below.<br/><br/>\
+						</div>\
+						<div id='rpc_input'>\
+							<input type='text' value='' placeholder='https://...' id='proxy_url_input'/>\
+							<div class='c_stat icon-wifi-off'></div>\
+							<div class='c_stat icon-connection'></div>\
+						</div>\
+					</div>\
+					<input type='submit' class='submit' value='OK'/>\
+				</div>\
+			</div>";
+        popdialog(content, "alert", "triggersubmit");
+        if (phpsupportglobal === true) {
+            var fixed_url = complete_url(thishostname + location.pathname);
+            if ($.inArray(fixed_url, proxies) === -1) {
+                proxies.push(fixed_url);
+            }
+        }
+        if ($.inArray(hosted_proxy, proxies) === -1) { // always keey default proxy
+            proxies.push(hosted_proxy);
+        }
+        var optionlist = $("#proxyformbox").find(".options"),
+            api_info = check_api("nano"),
+            selected = api_info.data,
+            nano_node = selected.url;
+        $.each(proxies, function(key, value) {
+            var selected = (value == current_proxy);
+            test_append_proxy(optionlist, key, value, selected, true, nano_node);
+        });
+        $.each(custom_proxies, function(key, value) {
+            var selected = (value == current_proxy);
+            test_append_proxy(optionlist, key, value, selected, false, nano_node);
+        });
+    })
+}
+
+function test_append_proxy(optionlist, key, value, selected, dfault, nano_node) { // make test api call
+    api_proxy({
+        "cachetime": 25,
+        "cachefolder": "1h",
+        "proxy": true,
+        "proxy_url": value,
+        "api_url": nano_node,
+        "params": {
+            "method": "POST",
+            "cache": true,
+            "data": JSON.stringify({
+                "action": "version"
+            })
+        }
+    }).done(function(e) {
+        var api_result = br_result(e);
+        if (api_result.proxy === true) {
+            var result = api_result.result;
+            if (result && result.rpc_version) {
+                proxy_option_li(optionlist, true, key, value, selected, dfault);
+            } else {
+                proxy_option_li(optionlist, false, key, value, selected, dfault);
+            }
+        } else {
+            proxy_option_li(optionlist, false, key, value, selected, dfault);
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        console.log(jqXHR);
+        console.log(textStatus);
+        console.log(errorThrown);
+        proxy_option_li(optionlist, false, key, value, selected, dfault);
+    });
+}
+
+function proxy_option_li(optionlist, live, key, value, selected, dfault) {
+    var liveclass = (live === true) ? " live" : " offline",
+        icon = (live === true) ? "connection" : "wifi-off",
+        default_class = (dfault === true) ? " default" : "",
+        option = $("<div class='optionwrap" + liveclass + default_class + "' style='display:none' data-pe='none'><span data-value='" + value + "' data-pe='none'>" + value + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon c_stat icon-" + icon + "' data-pe='none'></div><div class='opt_icon icon-bin' data-pe='none'></div></div>");
+    optionlist.append(option);
+    option.slideDown(500);
+}
+
+function submit_proxy() {
+    $(document).on("click", "#proxyformbox input.submit", function(e) {
+        e.preventDefault();
+        var proxyformbox = $("#proxyformbox"),
+            selectval = proxyformbox.find("#proxy_select_input").val(),
+            customval = proxyformbox.find("#proxy_url_input").val();
+        if (customval.length > 0) {
+            test_custom_proxy(customval);
+            return false;
+        } else {
+            var set_proxy = $("#api_proxy").data("selected");
+            if (selectval == set_proxy) {
+                canceldialog();
+            } else {
+                set_setting("api_proxy", {
+                    "selected": selectval
+                }, selectval);
+                canceldialog();
+                notify("Data saved");
+                savesettings();
+                // Re init app
+                localStorage.removeItem("bitrequest_init");
+            }
+        }
+    })
+}
+
+function hide_custom_proxy_field() {
+    $(document).on("click", "#proxyformbox .selectarrows", function() {
+        var proxyformbox = $("#proxyformbox"),
+            options = $("#proxyformbox").find(".options .optionwrap"),
+            select_inputval = proxyformbox.find("#proxy_select_input").val();
+        custom_input = proxyformbox.find("#proxy_url_input");
+        options.each(function() {
+            var this_option = $(this),
+                to_val = this_option.find("> span").attr("data-value");
+            if (to_val == select_inputval) {
+                this_option.hide();
+            } else {
+                this_option.show();
+            }
+        });
+        custom_input.val("");
+    });
+}
+
+function test_custom_proxy(value) { // make test api call
+    var proxy_node = $("#api_proxy"),
+        proxy_node_data = proxy_node.data(),
+        default_proxies = proxy_node_data.proxies,
+        custom_proxies = proxy_node_data.custom_proxies,
+        fixed_url = complete_url(value);
+    if ($.inArray(fixed_url, custom_proxies) !== -1 || $.inArray(fixed_url, default_proxies) !== -1) {
+        popnotify("error", "Proxy already added");
+        return false;
+    } else {
+        if (value.indexOf("http") > -1) {
+            api_proxy({
+                "cachetime": 25,
+                "cachefolder": "1h",
+                "proxy": true,
+                "proxy_url": fixed_url,
+                "api_url": "https://www.bitrequest.app:8020",
+                "params": {
+                    "method": "POST",
+                    "cache": true,
+                    "data": JSON.stringify({
+                        "action": "version"
+                    })
+                }
+            }).done(function(e) {
+                var api_result = br_result(e);
+                if (api_result.proxy === true) {
+                    var result = api_result.result;
+                    if (result && result.rpc_version) {
+                        custom_proxies.push(fixed_url);
+                        set_setting("api_proxy", {
+                            "selected": fixed_url,
+                            "custom_proxies": custom_proxies
+                        }, fixed_url);
+                        canceldialog();
+                        notify("Data saved");
+                        savesettings();
+                        // Re init app
+                        localStorage.removeItem("bitrequest_init");
+                        setTimeout(function() {
+                            $("#apikeys").trigger("click");
+                        }, 800);
+                    } else {
+                        popnotify("error", "Unable to send Post request from " + fixed_url);
+                    }
+                } else {
+                    popnotify("error", "Unable to connect");
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
+                popnotify("error", "Unable to connect");
+            });
+        } else {
+            popnotify("error", "Invalid url");
+        }
+    }
+    return false;
+}
+
+function remove_proxy() {
+    $(document).on("click", "#proxyformbox .options .opt_icon_box .icon-bin", function(e) {
+        e.preventDefault();
+        var proxy_node = "api_proxy",
+            custom_proxies = get_setting(proxy_node, "custom_proxies");
+        if (custom_proxies.length > 0) {
+            var thisoption = $(this).closest(".optionwrap"),
+                default_node = (thisoption.hasClass("default")),
+                thisval = thisoption.find("> span").attr("data-value");
+            if (default_node === true) {
+                playsound(funk);
+                topnotify("Cannot delete default node");
+            } else {
+                var result = confirm("Are you sure you want to delete '" + thisval + "'");
+                if (result === true) {
+                    var new_array = $.grep(custom_proxies, function(value) {
+                        return value != thisval;
+                    });
+                    thisoption.slideUp(500, function() {
+                        $(this).remove();
+                    });
+                    set_setting(proxy_node, {
+                        "custom_proxies": new_array
+                    });
+                    notify("Proxy removed");
+                    savesettings();
+                }
+            }
+        }
+        return false;
+    })
+}
+
+function complete_url(url) {
+    var cv1 = (url.indexOf("http") > -1) ? url.split("://").pop() : url,
+        cv2 = "https://" + cv1;
+    return (cv2.substr(-1) != "/") ? cv2 + "/" : cv2;
+}
+
 // API keys
 function apikeys() {
     $(document).on("click", "#apikeys", function() {
@@ -2047,253 +2470,145 @@ function complement_apisettings(thisref, thisvalue) {
     }
 }
 
-// Api Proxy
-function pick_api_proxy() {
-    $(document).on("click", "#api_proxy", function() {
-        var thisnode = $(this),
-            thisdata = thisnode.data(),
-            proxies = proxy_list, // (bitrequest_config.js)
-            current_proxy = thisdata.selected,
-            custom_proxies = thisdata.custom_proxies,
-            content = "\
-			<div class='formbox' id='proxyformbox'>\
-				<h2 class='icon-sphere'>API Proxy</h2>\
-				<div class='popnotify'></div>\
-				<div class='popform validated'>\
-					<div class='selectbox'>\
-						<input type='text' value='" + current_proxy + "' placeholder='https://...' id='proxy_select_input' readonly='readonly'/>\
-						<div class='selectarrows icon-menu2' data-pe='none'></div>\
-						<div class='options'></div>\
-					</div>\
-					<div id='rpc_input_box'>\
-						<h3 class='icon-plus'>Add API Proxy</h3>\
-						<div id='proxy_info'>\
-							Control your own keys and request limits:<br/><br/>\
-							<strong>1.</strong> Host the <a href='https://github.com/bitrequest/bitrequest.github.io/tree/master/api' target='blank' class='exit'>API proxy folder</a> on your server (php required).<br/>\
-							<strong>2.</strong> Enter your API keys in 'keys.php'.<br/>\
-							<strong>3.</strong> Enter your server address below.<br/><br/>\
-						</div>\
-						<div id='rpc_input'>\
-							<input type='text' value='' placeholder='https://...' id='proxy_url_input'/>\
-							<div class='c_stat icon-wifi-off'></div>\
-							<div class='c_stat icon-connection'></div>\
-						</div>\
-					</div>\
-					<input type='submit' class='submit' value='OK'/>\
-				</div>\
-			</div>";
-        popdialog(content, "alert", "triggersubmit");
-        if (phpsupportglobal === true) {
-            var fixed_url = complete_url(thishostname + location.pathname);
-            if ($.inArray(fixed_url, proxies) === -1) {
-                proxies.push(fixed_url);
-            }
-        }
-        if ($.inArray(hosted_proxy, proxies) === -1) { // always keey default proxy
-            proxies.push(hosted_proxy);
-        }
-        var optionlist = $("#proxyformbox").find(".options"),
-            api_info = check_api("nano"),
-            selected = api_info.data,
-            nano_node = selected.url;
-        $.each(proxies, function(key, value) {
-            var selected = (value == current_proxy);
-            test_append_proxy(optionlist, key, value, selected, true, nano_node);
-        });
-        $.each(custom_proxies, function(key, value) {
-            var selected = (value == current_proxy);
-            test_append_proxy(optionlist, key, value, selected, false, nano_node);
-        });
+// Contact form
+function edit_contactform_trigger() {
+    $(document).on("click", "#contactform", function() {
+        edit_contactform()
     })
 }
 
-function test_append_proxy(optionlist, key, value, selected, dfault, nano_node) { // make test api call
-    api_proxy({
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "proxy": true,
-        "proxy_url": value,
-        "api_url": nano_node,
-        "params": {
-            "method": "POST",
-            "cache": true,
-            "data": JSON.stringify({
-                "action": "version"
-            })
-        }
-    }).done(function(e) {
-        var api_result = br_result(e);
-        if (api_result.proxy === true) {
-            var result = api_result.result;
-            if (result && result.rpc_version) {
-                proxy_option_li(optionlist, true, key, value, selected, dfault);
-            } else {
-                proxy_option_li(optionlist, false, key, value, selected, dfault);
-            }
-        } else {
-            proxy_option_li(optionlist, false, key, value, selected, dfault);
-        }
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        console.log(jqXHR);
-        console.log(textStatus);
-        console.log(errorThrown);
-        proxy_option_li(optionlist, false, key, value, selected, dfault);
-    });
-}
-
-function proxy_option_li(optionlist, live, key, value, selected, dfault) {
-    var liveclass = (live === true) ? " live" : " offline",
-        icon = (live === true) ? "connection" : "wifi-off",
-        default_class = (dfault === true) ? " default" : "",
-        option = $("<div class='optionwrap" + liveclass + default_class + "' style='display:none' data-pe='none'><span data-value='" + value + "' data-pe='none'>" + value + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon c_stat icon-" + icon + "' data-pe='none'></div><div class='opt_icon icon-bin' data-pe='none'></div></div>");
-    optionlist.append(option);
-    option.slideDown(500);
-}
-
-function submit_proxy() {
-    $(document).on("click", "#proxyformbox input.submit", function(e) {
-        e.preventDefault();
-        var proxyformbox = $("#proxyformbox"),
-            selectval = proxyformbox.find("#proxy_select_input").val(),
-            customval = proxyformbox.find("#proxy_url_input").val();
-        if (customval.length > 0) {
-            test_custom_proxy(customval);
-            return false;
-        } else {
-            var set_proxy = $("#api_proxy").data("selected");
-            if (selectval == set_proxy) {
-                canceldialog();
-            } else {
-                set_setting("api_proxy", {
-                    "selected": selectval
-                }, selectval);
-                canceldialog();
-                notify("Data saved");
-                savesettings();
-                // Re init app
-                localStorage.removeItem("bitrequest_init");
-            }
-        }
-    })
-}
-
-function hide_custom_proxy_field() {
-    $(document).on("click", "#proxyformbox .selectarrows", function() {
-        var proxyformbox = $("#proxyformbox"),
-            options = $("#proxyformbox").find(".options .optionwrap"),
-            select_inputval = proxyformbox.find("#proxy_select_input").val();
-        custom_input = proxyformbox.find("#proxy_url_input");
-        options.each(function() {
-            var this_option = $(this),
-                to_val = this_option.find("> span").attr("data-value");
-            if (to_val == select_inputval) {
-                this_option.hide();
-            } else {
-                this_option.show();
-            }
-        });
-        custom_input.val("");
-    });
-}
-
-function test_custom_proxy(value) { // make test api call
-    var proxy_node = $("#api_proxy"),
-        proxy_node_data = proxy_node.data(),
-        default_proxies = proxy_node_data.proxies,
-        custom_proxies = proxy_node_data.custom_proxies,
-        fixed_url = complete_url(value);
-    if ($.inArray(fixed_url, custom_proxies) !== -1 || $.inArray(fixed_url, default_proxies) !== -1) {
-        popnotify("error", "Proxy already added");
-        return false;
-    } else {
-        if (value.indexOf("http") > -1) {
-            api_proxy({
-                "cachetime": 25,
-                "cachefolder": "1h",
-                "proxy": true,
-                "proxy_url": fixed_url,
-                "api_url": "https://www.bitrequest.app:8020",
-                "params": {
-                    "method": "POST",
-                    "cache": true,
-                    "data": JSON.stringify({
-                        "action": "version"
-                    })
-                }
-            }).done(function(e) {
-                var api_result = br_result(e);
-                if (api_result.proxy === true) {
-                    var result = api_result.result;
-                    if (result && result.rpc_version) {
-                        custom_proxies.push(fixed_url);
-                        set_setting("api_proxy", {
-                            "selected": fixed_url,
-                            "custom_proxies": custom_proxies
-                        }, fixed_url);
-                        canceldialog();
-                        notify("Data saved");
-                        savesettings();
-                        // Re init app
-                        localStorage.removeItem("bitrequest_init");
-                        setTimeout(function() {
-                            $("#apikeys").trigger("click");
-                        }, 800);
-                    } else {
-                        popnotify("error", "Unable to send Post request from " + fixed_url);
-                    }
-                } else {
-                    popnotify("error", "Unable to connect");
-                }
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                console.log(jqXHR);
-                console.log(textStatus);
-                console.log(errorThrown);
-                popnotify("error", "Unable to connect");
-            });
-        } else {
-            popnotify("error", "Invalid url");
+function edit_contactform(checkout) {
+    var contactform = $("#contactform"),
+        thisdata = contactform.data(),
+        nameinput = thisdata.name,
+        addressinput = thisdata.address,
+        zipcodeinput = thisdata.zipcode,
+        cityinput = thisdata.city,
+        countryinput = thisdata.country,
+        emailinput = thisdata.email,
+        formheader = (checkout === true) ? "Contactform / shipping" : "Contactform",
+        form_subheader = (checkout === true) ? "" : "<p>Your details for online purchases.</p>",
+        content = "\
+	<div class='formbox' id='contactformbox'>\
+		<h2 class='icon-sphere'>" + formheader + "</h2>" + form_subheader +
+        "<div class='popnotify'></div>\
+		<div class='popform'>\
+			<div class='cf_inputwrap empty'><input type='text' value='" + nameinput + "' placeholder='Name' class='cf_nameinput'/><span class='required'>*</span></div>\
+			<div class='cf_inputwrap empty'><input type='text' value='" + addressinput + "' placeholder='Address' class='cf_addressinput'/><span class='required'>*</span></div>\
+			<div class='cf_inputwrap empty'><input type='text' value='" + zipcodeinput + "' placeholder='Zip/postal code' class='cf_zipcodeinput'/><span class='required'>*</span></div>\
+			<div class='cf_inputwrap empty'><input type='text' value='" + cityinput + "' placeholder='City' class='cf_cityinput'/><span class='required'>*</span></div>\
+			<div class='cf_inputwrap empty'><input type='text' value='" + countryinput + "' placeholder='country' class='cf_countryinput'/><span class='required'>*</span></div>\
+			<div class='cf_inputwrap empty'><input type='text' value='" + emailinput + "' placeholder='email' class='cf_emailinput'/><span class='required'>*</span></div>\
+			<input type='submit' class='submit' value='OK'/>\
+		</div>\
+	</div>";
+    popdialog(content, "alert", "triggersubmit");
+    check_contactform();
+    if (checkout === true) {
+        $("#popup #execute").text("CONTINUE");
+        $("#popup #canceldialog").hide();
+        if (inframe === true) {
+            parent.postMessage("close_loader", "*");
         }
     }
-    return false;
 }
 
-function remove_proxy() {
-    $(document).on("click", "#proxyformbox .options .opt_icon_box .icon-bin", function(e) {
-        e.preventDefault();
-        var proxy_node = "api_proxy",
-            custom_proxies = get_setting(proxy_node, "custom_proxies");
-        if (custom_proxies.length > 0) {
-            var thisoption = $(this).closest(".optionwrap"),
-                default_node = (thisoption.hasClass("default")),
-                thisval = thisoption.find("> span").attr("data-value");
-            if (default_node === true) {
-                playsound(funk);
-                topnotify("Cannot delete default node");
-            } else {
-                var result = confirm("Are you sure you want to delete '" + thisval + "'");
-                if (result === true) {
-                    var new_array = $.grep(custom_proxies, function(value) {
-                        return value != thisval;
-                    });
-                    thisoption.slideUp(500, function() {
-                        $(this).remove();
-                    });
-                    set_setting(proxy_node, {
-                        "custom_proxies": new_array
-                    });
-                    notify("Proxy removed");
-                    savesettings();
-                }
-            }
+function check_contactform() {
+    $("#contactformbox .popform .cf_inputwrap").each(function() {
+        var cf_inputwrap = $(this),
+            thisinput = cf_inputwrap.children("input"),
+            inputval = thisinput.val();
+        if (inputval.length > 2) {
+            cf_inputwrap.removeClass("empty");
+        } else {
+            cf_inputwrap.addClass("empty");
         }
-        return false;
+    });
+}
+
+function type_contactform() {
+    $(document).on("input", "#contactformbox .cf_inputwrap input", function() {
+        var thisinput = $(this),
+            thisvalue = thisinput.val(),
+            cf_inputwrap = thisinput.parent(".cf_inputwrap");
+        if (thisvalue.length > 2) {
+            cf_inputwrap.removeClass("empty");
+        } else {
+            cf_inputwrap.addClass("empty");
+        }
     })
 }
 
-function complete_url(url) {
-    var cv1 = (url.indexOf("http") > -1) ? url.split("://").pop() : url,
-        cv2 = "https://" + cv1;
-    return (cv2.substr(-1) != "/") ? cv2 + "/" : cv2;
+function submit_contactform() {
+    $(document).on("click", "#contactformbox input.submit", function(e) {
+        e.preventDefault();
+        var cfb = $("#contactformbox"),
+            nameinput = cfb.find(".cf_nameinput"),
+            nameinput_val = nameinput.val(),
+            addressinput = cfb.find(".cf_addressinput"),
+            addressinput_val = addressinput.val(),
+            zipcodeinput = cfb.find(".cf_zipcodeinput"),
+            zipcodeinput_val = zipcodeinput.val(),
+            cityinput = cfb.find(".cf_cityinput"),
+            cityinput_val = cityinput.val(),
+            countryinput = cfb.find(".cf_countryinput"),
+            countryinput_val = countryinput.val(),
+            emailinput = cfb.find(".cf_emailinput"),
+            emailinput_val = emailinput.val(),
+            cf_data = {
+                name: nameinput_val,
+                address: addressinput_val,
+                zipcode: zipcodeinput_val,
+                city: cityinput_val,
+                country: countryinput_val,
+                email: emailinput_val
+            },
+            email_regex = /^\w(?:\.?[\w%+-]+)*@\w(?:[\w-]*\.)+?[a-z]{2,}$/,
+            email_check = email_regex.test(emailinput_val);
+        if (nameinput_val.length < 4) {
+            popnotify("error", "Name is a required field");
+            nameinput.focus().parent(".cf_inputwrap").addClass("empty");
+            return false;
+        }
+        if (addressinput_val.length < 10) {
+            popnotify("error", "Address is a required field");
+            addressinput.focus().parent(".cf_inputwrap").addClass("empty");
+            return false;
+        }
+        if (zipcodeinput_val.length < 6) {
+            popnotify("error", "Zip/postal code is a required field");
+            zipcodeinput.focus().parent(".cf_inputwrap").addClass("empty");
+            return false;
+        }
+        if (cityinput_val.length < 3) {
+            popnotify("error", "City is a required field");
+            cityinput.focus();
+            return false;
+        }
+        if (countryinput_val.length < 3) {
+            popnotify("error", "Country is a required field");
+            countryinput.focus().parent(".cf_inputwrap").addClass("empty");
+            return false;
+        }
+        if (emailinput_val.length < 1) {
+            popnotify("error", "Email is a required field");
+            emailinput.focus().parent(".cf_inputwrap").addClass("empty");
+            return false;
+        }
+        if (email_check === false) {
+            popnotify("error", "Email contains invalid characters");
+            emailinput.focus().parent(".cf_inputwrap").addClass("empty");
+            return false;
+        }
+        set_setting("contactform", cf_data);
+        canceldialog(true);
+        savesettings();
+        if (geturlparameters().contactform !== undefined) { // test for contactform param 
+            loadpaymentfunction(true) // continue to paymentdialog
+        } else {
+            notify("Data saved");
+        }
+    })
 }
 
 // Permissions

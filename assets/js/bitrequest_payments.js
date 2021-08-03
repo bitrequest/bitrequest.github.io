@@ -378,7 +378,8 @@ function loadpaymentfunction(pass) {
                 coindata = getcoindata(payment);
             if (coindata) {
                 var iserc20 = (coindata.erc20 === true),
-                	request_start_time = $.now();
+                	request_start_time = $.now(),
+                	exact = (gets.exact !== undefined);
                 request = {
                 	"received": false,
                 	"rq_init": request_start_time,
@@ -387,7 +388,9 @@ function loadpaymentfunction(pass) {
                     "coindata": coindata,
                     "erc20": iserc20
                 }, // global request object
+                
                 helper = {};
+                helper.exact = exact;
                 helper.contactform = contactform;
                 api_attempt["crypto_price_apis"] = {},
                     api_attempt["fiat_price_apis"] = {},
@@ -1018,7 +1021,7 @@ function continue_paymentfunction(payment) {
             shareform = "\
 				<div id='shareformbox'>\
 					<div id='shareformib' class='inputbreak'>\
-						<form id='shareform' disabled='' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='off'>\
+						<form id='shareform' disabled='' autocomplete='off' autocorrect='off' autocapitalize='sentences' spellcheck='off'>\
 							<label>What's your name?<input type='text' placeholder='Name' id='requestname' value='" + initrequestname + "' autocomplete='false'" + readonly_attr + "></label>\
 							<label>What's it for?<input type='text' placeholder='eg:  lunch  🥪' id='requesttitle' value='" + requesttitle_string + "' data-ph1=' festival tickets' data-ph2=' coffee  ☕' data-ph3=' present  🎁' data-ph4=' snowboarding  🏂' data-ph5=' movie theater  📽️' data-ph6=' lunch  🥪' data-ph7=' shopping  🛒' data-ph8=' video game  🎮' data-ph9=' coke  🥤' data-ph10=' concert tickets  🎵' data-ph11=' camping  ⛺' data-ph12=' taxi  🚕' data-ph13=' zoo  🦒'></label>\
 						</form>\
@@ -1040,7 +1043,7 @@ function continue_paymentfunction(payment) {
             bottomcard = (isrequest === true) ? paymethods : shareform;
         $("#request_front").prepend("<div id='cl_wrap'>" + cryptologo + "</div>\
 			<div class='actionbar clearfix'>\
-				<div id='sharerequest' class='abl icon-share2 sbactive'>Share request</div><div class='openwallet abr icon-folder-open' data-currency='" + payment + "'>Open wallet</div>\
+				<div id='sharerequest' class='abl icon-share2 sbactive'>Share request</div><div id='open_wallet' class='openwallet abr icon-folder-open' data-currency='" + payment + "'>Open wallet</div>\
 			</div>\
 			<div class='qrwrap flex'>\
 				<div id='qrcode' class='qrcode'>\
@@ -1359,7 +1362,7 @@ function renderqr(payment, address, amount) {
         urlscheme = request.coindata.urlscheme(payment, address, amount, this_iszero);
     }
     $("#qrcode").html("").qrcode(urlscheme);
-    $(".openwallet").attr({"data-rel":urlscheme,"title":urlscheme});
+    $(".openwallet").attr({"data-rel":amount,"title":urlscheme});
 }
 
 function switchaddress() {
@@ -2269,7 +2272,7 @@ function openwallet() {
         e.preventDefault();
         var thisnode = $(this),
             thiscurrency = thisnode.attr("data-currency"),
-            content = "<div class='formbox' id='backupformbox'><h2 class='icon-folder-open'>Do you have a " + thiscurrency + " wallet on this device?</h2><div class='popnotify'></div><div id='backupactions'><div data-rel='" + thisnode.attr("data-rel") + "' class='customtrigger' id='openwalleturl'>Yes</div><div id='dw_trigger' class='customtrigger' data-currency='" + thiscurrency + "'>No</div></div>";
+            content = "<div class='formbox' id='backupformbox'><h2 class='icon-folder-open'>Do you have a " + thiscurrency + " wallet on this device?</h2><div class='popnotify'></div><div id='backupactions'><div data-rel='" + thisnode.attr("title") + "' class='customtrigger' id='openwalleturl'>Yes</div><div id='dw_trigger' class='customtrigger' data-currency='" + thiscurrency + "'>No</div></div>";
         popdialog(content, "alert", "triggersubmit");
     });
 }

@@ -1198,3 +1198,26 @@ body.seed_dialog #seed_panel {
 #install_teaminvite[data-ismaster="true"] {
 	opacity:0.5;
 }
+
+/* Export CSV */
+
+#ecsv_options > li > span {
+	font-weight:400;
+	color:#868686;
+}
+
+#ecsv_options > li.escv_heading {
+	padding-top:1.6em;
+	padding-bottom:0;
+	border-bottom:none;
+}
+
+#ecsv_options > li.escv_heading > strong {
+	text-transform: uppercase;
+	font-size:120%;
+}
+
+#ecsv_options .switchpanel {
+	position:absolute;
+	top:0.5em;right:0;
+}

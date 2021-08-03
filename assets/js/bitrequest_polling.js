@@ -359,7 +359,8 @@ function confirmations(tx_data, direct) {
 	if (tx_data === false || tx_data.ccval === undefined) {
         return false;
     }
-    var brstatuspanel = $("#paymentdialogbox .brstatuspanel"),
+    var pmd = $("#paymentdialogbox"),
+    	brstatuspanel = pmd.find(".brstatuspanel"),
         setconfirmations = (tx_data.setconfirmations) ? parseInt(tx_data.setconfirmations) : null,
         conf_text = (setconfirmations) ? setconfirmations.toString() : "",
         confbox = brstatuspanel.find("span.confbox"),
@@ -372,38 +373,46 @@ function confirmations(tx_data, direct) {
     if (xconf > currentconf || zero_conf === true || direct === true) {
 	    reset_recent();
 	    sessionStorage.removeItem("bitrequest_txstatus"); // remove cached historical exchange rates
-        playsound(blip);
         confbox.removeClass("blob");
         setTimeout(function() {
             confbox.addClass("blob");
             confboxspan.text(xconf).attr("data-conf", xconf);
         }, 500);
-        var brheader = brstatuspanel.find("h2"),
+        var ow = pmd.find("#open_wallet"),
+        	cc_raw = ow.attr("data-rel"),
+			cc_rawf = parseFloat(cc_raw),
+        	brheader = brstatuspanel.find("h2"),
             receivedutc = tx_data.transactiontime,
             receivedtime = receivedutc - timezone,
             receivedcc = tx_data.ccval,
+            rccf = parseFloat(receivedcc),
             thiscurrency = request.uoa,
             currencysymbol = request.currencysymbol,
             requesttype = request.requesttype,
             iscrypto = (thiscurrency == currencysymbol),
-            fiatvalue = (iscrypto === true) ? null : parseFloat((receivedcc / $("#paymentdialogbox .ccpool").attr("data-xrate")) * $("#paymentdialog .cpool[data-currency='" + thiscurrency + "']").attr("data-xrate")), // calculate fiat value
+            fiatvalue = (iscrypto === true) ? null : (rccf / parseFloat($("#paymentdialogbox .ccpool").attr("data-xrate"))) * parseFloat($("#paymentdialog .cpool[data-currency='" + thiscurrency + "']").attr("data-xrate")), // calculate fiat value
             fiatrounded = (iscrypto === true) ? null : fiatvalue.toFixed(2),
-            requestamount = parseFloat(request.amount),
-            receivedamount = (iscrypto === true) ? receivedcc : fiatvalue,
             receivedrounded = (iscrypto === true) ? receivedcc : fiatrounded;
+        console.log(tx_data);
+        console.log(cc_rawf);
+        console.log(rccf);
+        console.log(fiatvalue);
         // extend global request object
         $.extend(request, {
 	        "received": true,
             "inout": requesttype,
-            "receivedamount": receivedcc,
+            "receivedamount": rccf,
             "fiatvalue": fiatvalue,
             "paymenttimestamp": receivedutc,
             "txhash": txhash,
             "confirmations": xconf
         });
         brstatuspanel.find("span.receivedfiat").text(" (" + receivedrounded + " " + thiscurrency + ")");
-        brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), "en-us"));
-        if (receivedamount >= requestamount * 0.95) {
+        brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), language));
+        var exact = helper.exact,
+        	pass = (exact) ? (rccf == cc_rawf) : (rccf >= cc_rawf * 0.99);
+        console.log(pass);
+        if (pass) {
             if (xconf >= setconfirmations || zero_conf === true) {
                 clearpingtx();
                 closesocket();
@@ -428,15 +437,23 @@ function confirmations(tx_data, direct) {
                     request.pending = "polling";
                 saverequest(direct);
             }
+            brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
         } else {
+	        if (exact) {    
+	        }
+	        else {
+		        brheader.text("Insufficient amount");
+	            paymentdialogbox.addClass("transacting").attr("data-status", "insufficient");
+	            request.status = "insufficient",
+	                request.pending = "scanning";
+	            saverequest(direct);
+	            brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
+	        }
             playsound(funk);
-            brheader.text("Insufficient amount");
-            paymentdialogbox.addClass("transacting").attr("data-status", "insufficient");
-            request.status = "insufficient",
-                request.pending = "scanning";
-            saverequest(direct);
         }
-        brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
+    }
+    else {
+	    playsound(blip);
     }
 }
 
