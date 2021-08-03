@@ -1099,12 +1099,6 @@ var app_settings = [{
         "default": false
     },
     {
-        "id": "csvexport",
-        "heading": "Export CSV",
-        "selected": "",
-        "icon": "icon-table"
-    },
-    {
         "id": "heading",
         "heading": "Security"
     },
@@ -1149,6 +1143,12 @@ var app_settings = [{
     {
         "id": "heading",
         "heading": "Advanced"
+    },
+    {
+        "id": "csvexport",
+        "heading": "Export CSV",
+        "selected": "",
+        "icon": "icon-table"
     },
     {
         "id": "url_shorten_settings",

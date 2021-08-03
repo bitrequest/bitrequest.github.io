@@ -291,334 +291,6 @@ function submitcurrency() {
     });
 }
 
-// CSV Export
-function csvexport_trigger() {
-    $(document).on("click", "#csvexport", function() {
-	    var rq_arr = JSON.parse(localStorage.getItem("bitrequest_requests")),
-			archive_arr = JSON.parse(localStorage.getItem("bitrequest_archive")),
-			has_requests = (rq_arr && !$.isEmptyObject(rq_arr)),
-			has_archive = (archive_arr && !$.isEmptyObject(archive_arr));
-		if (has_requests === true || has_archive === true) {
-			var filename = "bitrequest_csv_export_" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_') + ".csv",
-				show_archive = (has_requests === true) ? "false" : "true";
-		        content = "\
-				<div class='formbox' id='exportcsvbox'>\
-					<h2 class='icon-table'>Export CSV</h2>\
-					<div class='popnotify'></div>\
-					<div id='ad_info_wrap'>\
-						<ul id='ecsv_options'>\
-							<li class='escv_heading'>\
-								<strong>Info</strong>\
-							</li>\
-							<li id='escv_from'>\
-								<span>From</span><div class='switchpanel true global'><div class='switch'></div></div>\
-							</li>\
-							<li id='escv_desc'>\
-								<span>Description</span><div class='switchpanel true global'><div class='switch'></div></div>\
-							</li>\
-							<li class='escv_heading'>\
-								<strong>Status</strong>\
-							</li>\
-							<li id='escv_paid'>\
-								<span>Paid</span><div class='switchpanel true global'><div class='switch'></div></div>\
-							</li>\
-							<li id='escv_ins'>\
-								<span>Insufficient</span><div class='switchpanel true global'><div class='switch'></div></div>\
-							</li>\
-							<li id='escv_new'>\
-								<span>New</span><div class='switchpanel false global'><div class='switch'></div></div>\
-							</li>\
-							<li id='escv_pending'>\
-								<span>Pending</span><div class='switchpanel false global'><div class='switch'></div></div>\
-							</li>\
-							<li class='escv_heading'>\
-								<strong>Type</strong>\
-							</li>\
-							<li id='escv_pos'>\
-								<span>Point of Sale</span><div class='switchpanel true global'><div class='switch'></div></div>\
-							</li>\
-							<li id='escv_outgoing'>\
-								<span>Outgoing</span><div class='switchpanel true global'><div class='switch'></div></div>\
-							</li>\
-							<li id='escv_incoming'>\
-								<span>Incoming</span><div class='switchpanel false global'><div class='switch'></div></div>\
-							</li>\
-							<li class='noline'>\
-								<strong></strong>\
-							</li>\
-							<li id='escv_archive'>\
-								<span>Include archive</span><div class='switchpanel global " + show_archive + "'><div class='switch'></div></div>\
-							</li>\
-							<li id='escv_receipt'>\
-								<span>Include receipt (PDF download)</span><div class='switchpanel false global'><div class='switch'></div></div>\
-							</li>\
-						</ul>\
-					</div>\
-					<div id='dialogcontent'>\
-						<div id='custom_actions'>\
-							<br/>\
-							<a href='' download='" + filename + "' title='" + filename + "' id='trigger_csvexport' class='button icon-download' download>DOWNLOAD</a>\
-						</div>\
-					</div>\
-				</div>\
-				<div id='backupactions'>\
-					<div id='share_csv' data-url='' class='util_icon icon-share2'></div>\
-					<div id='backupcd'>CANCEL</div>\
-				</div>";
-		    popdialog(content, "alert", "triggersubmit", null, true);
-		}
-		else {
-			playsound(funk);
-            notify("No requests to export");
-		}
-    })
-}
-
-function submit_csvexport() {
-    $(document).on("click", "#trigger_csvexport", function(e) {
-        if (body.hasClass("ios")) {
-            e.preventDefault();
-            notify("Downloads for IOS App unavailable at the moment");
-            return false;
-        }
-        var thisnode = $(this),
-        	csv_encode = complile_csv(),
-        	d_url = "data:text/csv;charset=utf-16le;base64," + csv_encode;
-        thisnode.attr("href", d_url);
-        var title = thisnode.attr("title"),
-        	result = confirm("Download: " + title + "?");
-        if (result === false) {
-            e.preventDefault();
-            return false;
-        }
-        canceldialog();
-        notify("CSV Downloaded");
-    })
-}
-
-function complile_csv() {
-	var rq_arr = JSON.parse(localStorage.getItem("bitrequest_requests")),
-		archive_arr = JSON.parse(localStorage.getItem("bitrequest_archive")),
-		has_archive = (archive_arr && !$.isEmptyObject(archive_arr)),
-		csv_arr = [],
-		options_li = $("#exportcsvbox #ecsv_options"),
-		op_from = options_li.find("li#escv_from .switchpanel"),
-		op_desc = options_li.find("li#escv_desc .switchpanel"),
-		op_paid = options_li.find("li#escv_paid .switchpanel"),
-		op_ins = options_li.find("li#escv_ins .switchpanel"),
-		op_new = options_li.find("li#escv_new .switchpanel"),
-		op_pending = options_li.find("li#escv_pending .switchpanel"),
-		op_pos = options_li.find("li#escv_pos .switchpanel"),
-		op_outgoing = options_li.find("li#escv_outgoing .switchpanel"),
-		op_incoming = options_li.find("li#escv_incoming .switchpanel"),
-		op_receipt = options_li.find("li#escv_receipt .switchpanel"),
-		op_archive = options_li.find("li#escv_archive .switchpanel"),
-		incl_from = (op_from.hasClass("true")) ? true : false,
-		incl_desc = (op_desc.hasClass("true")) ? true : false,
-		incl_paid = (op_paid.hasClass("true")) ? true : false,
-		incl_ins = (op_ins.hasClass("true")) ? true : false,
-		incl_new = (op_new.hasClass("true")) ? true : false,
-		incl_pending = (op_pending.hasClass("true")) ? true : false,
-		incl_pos = (op_pos.hasClass("true")) ? true : false,
-		incl_outgoing = (op_outgoing.hasClass("true")) ? true : false,
-		incl_incoming = (op_incoming.hasClass("true")) ? true : false,
-		incl_receipt = (op_receipt.hasClass("true")) ? true : false,
-		incl_archive = (op_archive.hasClass("true")) ? true : false,
-		rq_obj = (has_archive === true && incl_archive) ? rq_arr.concat(archive_arr) : rq_arr;
-	$.each(rq_obj, function(i, val) {
-		var request = {},
-			payment = val.payment,
-			amount = val.amount,
-			uoa = val.uoa,
-			status = val.status,
-			rqname = (val.requestname) ? val.requestname : "",
-			description = (val.requesttitle) ? val.requesttitle : "",
-			type = val.requesttype,
-			timestamp = val.timestamp,
-			receivedamount = val.receivedamount,
-			ccsymbol = val.currencysymbol,
-			fiatvalue = val.fiatvalue,
-			fiatcurrency = val.fiatcurrency,
-			pts = val.paymenttimestamp,
-			pdf_url = get_pdf_url(val),
-			received_ts = (pts) ? short_date(pts) : "",
-			txhash = (val.txhash) ? val.txhash : "";
-		if (incl_paid === false && status == "paid") {	
-		}
-		else if (incl_ins === false && status == "insufficient") {	
-		}
-		else if (incl_new === false && status == "new") {	
-		}
-		else if (incl_pending === false && status == "pending") {	
-		}
-		else if (incl_pos === false && type == "local") {	
-		}
-		else if (incl_outgoing === false && type == "outgoing") {
-		}
-		else if (incl_incoming === false && type == "incoming") {
-		}
-		else {
-			if (incl_from) {
-				request["from"] = rqname;
-			}
-			if (incl_desc) {
-				request.description = description;
-			}
-			request.payment = payment;
-			request.status = status;
-			var rq_type = (type == "local") ? "point of sale" : type;
-		    request.type = rq_type;
-		    request.created = short_date(timestamp);
-			request["request amount"] = amount + " " + uoa;
-			var ra_val = (receivedamount) ? receivedamount + " " + ccsymbol : "";
-		    request["amount received"] = ra_val;
-			var fv = (fiatvalue) ?  fiatvalue.toFixed(2) + " " + fiatcurrency : "";
-			request["fiat value"] = fv;
-			request["received on"] = received_ts;
-			request.txhash = txhash;
-			if (incl_receipt) {
-				request["PDF download (receipt)"] = pdf_url;
-			}
-			csv_arr.push(request);
-		}
-    });
-    var csv_body = render_csv(csv_arr),
-    	b64_body = btoa(csv_body);
-    return b64_body;
-	
-}
-
-function render_csv(arr) {
-	var header_arr = [],
-		inner_header_arr = [],
-		body_arr = [];
-	$.each(arr[0], function(key, value) {
-		inner_header_arr.push(key);
-	});
-	header_arr.push(inner_header_arr.join(","));
-	$.each(arr, function(i, val) {
-		var inner_body_arr = [];
-		$.each(val, function(key, value) {
-			var ctd = value.replace(/,/g, ".");
-			inner_body_arr.push(ctd);
-		});
-		body_arr.push(inner_body_arr.join(","));
-	});
-	var doc_arr = header_arr.concat(body_arr);
-	return doc_arr.join("\n");
-}
-
-function share_csv() {
-    $(document).on("click", "#share_csv", function() {
-	    var csv_encode = complile_csv(),
-        	result = confirm("Share csv export?");
-        if (result === true) {
-            loader(true);
-            loadertext("generate system backup");
-            var accountname = $("#accountsettings").data("selected");
-            api_proxy({
-                "custom": "system_bu",
-                "api_url": true,
-                "proxy": true,
-                "params": {
-                    "url": csv_encode,
-                    "account": btoa(accountname)
-                }
-            }).done(function(e) {
-                var br_cache = e.ping.br_cache,
-                    filetime = br_cache.created_utc,
-                    filetimesec = (filetime) ? filetime * 1000 : $.now(),
-                    filetime_format = new Date(filetimesec).toLocaleString(language),
-                    sharedtitle = "CSV Export " + accountname + " (" + filetime_format + ")";
-                shorten_url(sharedtitle, approot + "?p=settings&csv=" + br_cache.filename, approot + "/img/system_backup.png", true);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                console.log(jqXHR);
-                console.log(textStatus);
-                console.log(errorThrown);
-                closeloader();
-            });
-        }
-    })
-}
-
-function check_csvexport() {
-    var url_params = geturlparameters();
-    if (url_params.p == "settings") {
-        var csv = url_params.csv;
-        if (csv) {
-            api_proxy({
-                "custom": "get_system_bu",
-                "api_url": true,
-                "proxy": true,
-                "params": csv
-            }).done(function(e) {
-                var ping = e.ping;
-                if (ping) {
-                    var br_cache = e.ping.br_cache,
-                        server_time = br_cache.utc_timestamp,
-                        filetime = br_cache.created_utc,
-                        filetimesec = (filetime) ? filetime * 1000 : $.now(),
-                        filetime_format = new Date(filetimesec).toLocaleString(language),
-                        br_result = e.ping.br_result,
-                        base64 = br_result.base64,
-                        account = atob(br_result.account),
-                        sharedtitle = "CSV Export " + account + " (" + filetime_format + ")",
-                        bu_date = filetime_format.replace(/\s+/g, '_').replace(/\:/g, '_'),
-                        cache_time = br_cache.cache_time,
-                        expires_in = (filetime + cache_time) - server_time,
-                        filename = "bitrequest_csv_export_" + encodeURIComponent(account) + "_" + bu_date + ".csv",
-                        cd = countdown(expires_in * 1000),
-                        cd_format = countdown_format(cd),
-                        cf_string = (cd_format) ? "Expires in " + cd_format : "File expired",
-                        content = "\
-						<div class='formbox' id='system_backupformbox'>\
-							<h2 class='icon-download'>CSV Export</h2>\
-							<div class='popnotify'></div>\
-							<div id='dialogcontent'>\
-								<h1>" + sharedtitle + "</h1>\
-								<div class='error' style='margin-top:1em;padding:0.3em 1em'>" + cf_string + "</div>\
-								<div id='changelog'>\
-									<div id='custom_actions'>\
-										<br/>\
-										<a href='data:text/csv;charset=utf-16le;base64," + base64 + "' download='" + filename + "' title='" + filename + "' id='trigger_csvdownload' class='button icon-download' data-date='" + bu_date + "' data-lastbackup='" + filename + "' download>DOWNLOAD CSV</a>\
-									</div>\
-								</div>\
-							</div>\
-						</div>\
-						<div id='backupactions'>\
-							<div id='backupcd'>CANCEL</div>\
-						</div>";
-                    popdialog(content, "alert", "triggersubmit", null, true);
-                } else {
-                    systembu_expired();
-                }
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                systembu_expired();
-            });
-        }
-    }
-}
-
-function submit_csvdownload() {
-    $(document).on("click", "#trigger_csvdownload", function(e) {
-        if (body.hasClass("ios")) {
-            e.preventDefault();
-            notify("Downloads for IOS App unavailable at the moment");
-            return false;
-        }
-        var thisnode = $(this),
-            href = thisnode.attr("href"),
-            title = thisnode.attr("title"),
-            result = confirm("Download: " + title + "?");
-        if (result === false) {
-            e.preventDefault();
-            return false;
-        }
-        canceldialog();
-        notify("CSV Downloaded");
-    })
-}
-
 // SECURITY //
 
 // Pincode
@@ -1626,6 +1298,334 @@ function submittheme() {
         canceldialog();
         notify("Data saved");
         savesettings();
+    })
+}
+
+// CSV Export
+function csvexport_trigger() {
+    $(document).on("click", "#csvexport", function() {
+	    var rq_arr = JSON.parse(localStorage.getItem("bitrequest_requests")),
+			archive_arr = JSON.parse(localStorage.getItem("bitrequest_archive")),
+			has_requests = (rq_arr && !$.isEmptyObject(rq_arr)),
+			has_archive = (archive_arr && !$.isEmptyObject(archive_arr));
+		if (has_requests === true || has_archive === true) {
+			var filename = "bitrequest_csv_export_" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_') + ".csv",
+				show_archive = (has_requests === true) ? "false" : "true";
+		        content = "\
+				<div class='formbox' id='exportcsvbox'>\
+					<h2 class='icon-table'>Export CSV</h2>\
+					<div class='popnotify'></div>\
+					<div id='ad_info_wrap'>\
+						<ul id='ecsv_options'>\
+							<li class='escv_heading'>\
+								<strong>Info</strong>\
+							</li>\
+							<li id='escv_from'>\
+								<span>From</span><div class='switchpanel true global'><div class='switch'></div></div>\
+							</li>\
+							<li id='escv_desc'>\
+								<span>Description</span><div class='switchpanel true global'><div class='switch'></div></div>\
+							</li>\
+							<li class='escv_heading'>\
+								<strong>Status</strong>\
+							</li>\
+							<li id='escv_paid'>\
+								<span>Paid</span><div class='switchpanel true global'><div class='switch'></div></div>\
+							</li>\
+							<li id='escv_ins'>\
+								<span>Insufficient</span><div class='switchpanel true global'><div class='switch'></div></div>\
+							</li>\
+							<li id='escv_new'>\
+								<span>New</span><div class='switchpanel false global'><div class='switch'></div></div>\
+							</li>\
+							<li id='escv_pending'>\
+								<span>Pending</span><div class='switchpanel false global'><div class='switch'></div></div>\
+							</li>\
+							<li class='escv_heading'>\
+								<strong>Type</strong>\
+							</li>\
+							<li id='escv_pos'>\
+								<span>Point of Sale</span><div class='switchpanel true global'><div class='switch'></div></div>\
+							</li>\
+							<li id='escv_outgoing'>\
+								<span>Outgoing</span><div class='switchpanel true global'><div class='switch'></div></div>\
+							</li>\
+							<li id='escv_incoming'>\
+								<span>Incoming</span><div class='switchpanel false global'><div class='switch'></div></div>\
+							</li>\
+							<li class='noline'>\
+								<strong></strong>\
+							</li>\
+							<li id='escv_archive'>\
+								<span>Include archive</span><div class='switchpanel global " + show_archive + "'><div class='switch'></div></div>\
+							</li>\
+							<li id='escv_receipt'>\
+								<span>Include receipt (PDF download)</span><div class='switchpanel false global'><div class='switch'></div></div>\
+							</li>\
+						</ul>\
+					</div>\
+					<div id='dialogcontent'>\
+						<div id='custom_actions'>\
+							<br/>\
+							<a href='' download='" + filename + "' title='" + filename + "' id='trigger_csvexport' class='button icon-download' download>DOWNLOAD</a>\
+						</div>\
+					</div>\
+				</div>\
+				<div id='backupactions'>\
+					<div id='share_csv' data-url='' class='util_icon icon-share2'></div>\
+					<div id='backupcd'>CANCEL</div>\
+				</div>";
+		    popdialog(content, "alert", "triggersubmit", null, true);
+		}
+		else {
+			playsound(funk);
+            notify("No requests to export");
+		}
+    })
+}
+
+function submit_csvexport() {
+    $(document).on("click", "#trigger_csvexport", function(e) {
+        if (body.hasClass("ios")) {
+            e.preventDefault();
+            notify("Downloads for IOS App unavailable at the moment");
+            return false;
+        }
+        var thisnode = $(this),
+        	csv_encode = complile_csv(),
+        	d_url = "data:text/csv;charset=utf-16le;base64," + csv_encode;
+        thisnode.attr("href", d_url);
+        var title = thisnode.attr("title"),
+        	result = confirm("Download: " + title + "?");
+        if (result === false) {
+            e.preventDefault();
+            return false;
+        }
+        canceldialog();
+        notify("CSV Downloaded");
+    })
+}
+
+function complile_csv() {
+	var rq_arr = JSON.parse(localStorage.getItem("bitrequest_requests")),
+		archive_arr = JSON.parse(localStorage.getItem("bitrequest_archive")),
+		has_archive = (archive_arr && !$.isEmptyObject(archive_arr)),
+		csv_arr = [],
+		options_li = $("#exportcsvbox #ecsv_options"),
+		op_from = options_li.find("li#escv_from .switchpanel"),
+		op_desc = options_li.find("li#escv_desc .switchpanel"),
+		op_paid = options_li.find("li#escv_paid .switchpanel"),
+		op_ins = options_li.find("li#escv_ins .switchpanel"),
+		op_new = options_li.find("li#escv_new .switchpanel"),
+		op_pending = options_li.find("li#escv_pending .switchpanel"),
+		op_pos = options_li.find("li#escv_pos .switchpanel"),
+		op_outgoing = options_li.find("li#escv_outgoing .switchpanel"),
+		op_incoming = options_li.find("li#escv_incoming .switchpanel"),
+		op_receipt = options_li.find("li#escv_receipt .switchpanel"),
+		op_archive = options_li.find("li#escv_archive .switchpanel"),
+		incl_from = (op_from.hasClass("true")) ? true : false,
+		incl_desc = (op_desc.hasClass("true")) ? true : false,
+		incl_paid = (op_paid.hasClass("true")) ? true : false,
+		incl_ins = (op_ins.hasClass("true")) ? true : false,
+		incl_new = (op_new.hasClass("true")) ? true : false,
+		incl_pending = (op_pending.hasClass("true")) ? true : false,
+		incl_pos = (op_pos.hasClass("true")) ? true : false,
+		incl_outgoing = (op_outgoing.hasClass("true")) ? true : false,
+		incl_incoming = (op_incoming.hasClass("true")) ? true : false,
+		incl_receipt = (op_receipt.hasClass("true")) ? true : false,
+		incl_archive = (op_archive.hasClass("true")) ? true : false,
+		rq_obj = (has_archive === true && incl_archive) ? rq_arr.concat(archive_arr) : rq_arr;
+	$.each(rq_obj, function(i, val) {
+		var request = {},
+			payment = val.payment,
+			amount = val.amount,
+			uoa = val.uoa,
+			status = val.status,
+			rqname = (val.requestname) ? val.requestname : "",
+			description = (val.requesttitle) ? val.requesttitle : "",
+			type = val.requesttype,
+			timestamp = val.timestamp,
+			receivedamount = val.receivedamount,
+			ccsymbol = val.currencysymbol,
+			fiatvalue = val.fiatvalue,
+			fiatcurrency = val.fiatcurrency,
+			pts = val.paymenttimestamp,
+			pdf_url = get_pdf_url(val),
+			received_ts = (pts) ? short_date(pts) : "",
+			txhash = (val.txhash) ? val.txhash : "";
+		if (incl_paid === false && status == "paid") {	
+		}
+		else if (incl_ins === false && status == "insufficient") {	
+		}
+		else if (incl_new === false && status == "new") {	
+		}
+		else if (incl_pending === false && status == "pending") {	
+		}
+		else if (incl_pos === false && type == "local") {	
+		}
+		else if (incl_outgoing === false && type == "outgoing") {
+		}
+		else if (incl_incoming === false && type == "incoming") {
+		}
+		else {
+			if (incl_from) {
+				request["from"] = rqname;
+			}
+			if (incl_desc) {
+				request.description = description;
+			}
+			request.payment = payment;
+			request.status = status;
+			var rq_type = (type == "local") ? "point of sale" : type;
+		    request.type = rq_type;
+		    request.created = short_date(timestamp);
+			request["request amount"] = amount + " " + uoa;
+			var ra_val = (receivedamount) ? receivedamount + " " + ccsymbol : "";
+		    request["amount received"] = ra_val;
+			var fv = (fiatvalue) ?  fiatvalue.toFixed(2) + " " + fiatcurrency : "";
+			request["fiat value"] = fv;
+			request["received on"] = received_ts;
+			request.txhash = txhash;
+			if (incl_receipt) {
+				request["PDF download (receipt)"] = pdf_url;
+			}
+			csv_arr.push(request);
+		}
+    });
+    var csv_body = render_csv(csv_arr),
+    	b64_body = btoa(csv_body);
+    return b64_body;
+	
+}
+
+function render_csv(arr) {
+	var header_arr = [],
+		inner_header_arr = [],
+		body_arr = [];
+	$.each(arr[0], function(key, value) {
+		inner_header_arr.push(key);
+	});
+	header_arr.push(inner_header_arr.join(","));
+	$.each(arr, function(i, val) {
+		var inner_body_arr = [];
+		$.each(val, function(key, value) {
+			var ctd = value.replace(/,/g, ".");
+			inner_body_arr.push(ctd);
+		});
+		body_arr.push(inner_body_arr.join(","));
+	});
+	var doc_arr = header_arr.concat(body_arr);
+	return doc_arr.join("\n");
+}
+
+function share_csv() {
+    $(document).on("click", "#share_csv", function() {
+	    var csv_encode = complile_csv(),
+        	result = confirm("Share csv export?");
+        if (result === true) {
+            loader(true);
+            loadertext("generate system backup");
+            var accountname = $("#accountsettings").data("selected");
+            api_proxy({
+                "custom": "system_bu",
+                "api_url": true,
+                "proxy": true,
+                "params": {
+                    "url": csv_encode,
+                    "account": btoa(accountname)
+                }
+            }).done(function(e) {
+                var br_cache = e.ping.br_cache,
+                    filetime = br_cache.created_utc,
+                    filetimesec = (filetime) ? filetime * 1000 : $.now(),
+                    filetime_format = new Date(filetimesec).toLocaleString(language),
+                    sharedtitle = "CSV Export " + accountname + " (" + filetime_format + ")";
+                shorten_url(sharedtitle, approot + "?p=settings&csv=" + br_cache.filename, approot + "/img/system_backup.png", true);
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
+                closeloader();
+            });
+        }
+    })
+}
+
+function check_csvexport() {
+    var url_params = geturlparameters();
+    if (url_params.p == "settings") {
+        var csv = url_params.csv;
+        if (csv) {
+            api_proxy({
+                "custom": "get_system_bu",
+                "api_url": true,
+                "proxy": true,
+                "params": csv
+            }).done(function(e) {
+                var ping = e.ping;
+                if (ping) {
+                    var br_cache = e.ping.br_cache,
+                        server_time = br_cache.utc_timestamp,
+                        filetime = br_cache.created_utc,
+                        filetimesec = (filetime) ? filetime * 1000 : $.now(),
+                        filetime_format = new Date(filetimesec).toLocaleString(language),
+                        br_result = e.ping.br_result,
+                        base64 = br_result.base64,
+                        account = atob(br_result.account),
+                        sharedtitle = "CSV Export " + account + " (" + filetime_format + ")",
+                        bu_date = filetime_format.replace(/\s+/g, '_').replace(/\:/g, '_'),
+                        cache_time = br_cache.cache_time,
+                        expires_in = (filetime + cache_time) - server_time,
+                        filename = "bitrequest_csv_export_" + encodeURIComponent(account) + "_" + bu_date + ".csv",
+                        cd = countdown(expires_in * 1000),
+                        cd_format = countdown_format(cd),
+                        cf_string = (cd_format) ? "Expires in " + cd_format : "File expired",
+                        content = "\
+						<div class='formbox' id='system_backupformbox'>\
+							<h2 class='icon-download'>CSV Export</h2>\
+							<div class='popnotify'></div>\
+							<div id='dialogcontent'>\
+								<h1>" + sharedtitle + "</h1>\
+								<div class='error' style='margin-top:1em;padding:0.3em 1em'>" + cf_string + "</div>\
+								<div id='changelog'>\
+									<div id='custom_actions'>\
+										<br/>\
+										<a href='data:text/csv;charset=utf-16le;base64," + base64 + "' download='" + filename + "' title='" + filename + "' id='trigger_csvdownload' class='button icon-download' data-date='" + bu_date + "' data-lastbackup='" + filename + "' download>DOWNLOAD CSV</a>\
+									</div>\
+								</div>\
+							</div>\
+						</div>\
+						<div id='backupactions'>\
+							<div id='backupcd'>CANCEL</div>\
+						</div>";
+                    popdialog(content, "alert", "triggersubmit", null, true);
+                } else {
+                    systembu_expired();
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                systembu_expired();
+            });
+        }
+    }
+}
+
+function submit_csvdownload() {
+    $(document).on("click", "#trigger_csvdownload", function(e) {
+        if (body.hasClass("ios")) {
+            e.preventDefault();
+            notify("Downloads for IOS App unavailable at the moment");
+            return false;
+        }
+        var thisnode = $(this),
+            href = thisnode.attr("href"),
+            title = thisnode.attr("title"),
+            result = confirm("Download: " + title + "?");
+        if (result === false) {
+            e.preventDefault();
+            return false;
+        }
+        canceldialog();
+        notify("CSV Downloaded");
     })
 }
 
