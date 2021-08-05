@@ -385,7 +385,7 @@ function confirmations(tx_data, direct) {
             receivedutc = tx_data.transactiontime,
             receivedtime = receivedutc - timezone,
             receivedcc = tx_data.ccval,
-            rccf = parseFloat(receivedcc),
+            rccf = parseFloat(receivedcc.toFixed(6)),
             thiscurrency = request.uoa,
             currencysymbol = request.currencysymbol,
             requesttype = request.requesttype,

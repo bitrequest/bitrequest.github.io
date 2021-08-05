@@ -933,7 +933,7 @@ function continue_paymentfunction(payment) {
             savedaddressli = pobox.find("li[data-address='" + address + "']"),
 			labelvalue = (savedaddressli.length > 0) ? (savedaddressli.data("label").length > 0) ? "<span id='labelbttn'>" + savedaddressli.data("label") + "</span>" : "" : "", // check if label is set
             thiscurrencyvalueraw = ((amount / currencyxrate) * ccrateeuro),
-            thiscurrencyvaluefixed = parseFloat(thiscurrencyvalueraw.toFixed(5)),
+            thiscurrencyvaluefixed = parseFloat(thiscurrencyvalueraw.toFixed(6)),
             thiscurrencyvaluefixedplaceholder = (iszero === true) ? zeroplaceholder : thiscurrencyvaluefixed,
             thiscurrencyvaluefixedvar = (iszero === true) ? "" : thiscurrencyvaluefixed,
             satamount = (thiscurrencyvalueraw * 100000000).toFixed(0),
@@ -1268,7 +1268,7 @@ function pushsatamount() {
 
 function reflectfiatvalue(thisamount, thisrate, fieldtype) { // reflect fiat values
     var amountinputrate = $("#amountinputmirror > input").attr("data-xrate"), //get fiat rate
-        deter = (paymentdialogbox.hasClass("showcc")) ? 5 : 2,
+        deter = (paymentdialogbox.hasClass("showcc")) ? 6 : 2,
         thisamountvalue = parseFloat(((thisamount / thisrate) * amountinputrate).toFixed(deter)),
         thisamountplaceholder = (thisamount.length === 0) ? zeroplaceholder : thisamountvalue,
         ccvalue = (thisamount.length === 0) ? zeroplaceholder : (fieldtype == "crypto") ? thisamount : cryptovalue(thisamount, thisrate);
@@ -1284,7 +1284,7 @@ function reflectlcvalue(thisamount, thisrate) { // reflect local currency value
 }
 
 function reflectccvalue(thisamount, thisrate, fieldtype) { // reflect crypto input
-    var ccvalue = (thisamount.length === 0) ? zeroplaceholder : (fieldtype == "crypto") ? thisamount.toFixed(5) : cryptovalue(thisamount, thisrate);
+    var ccvalue = (thisamount.length === 0) ? zeroplaceholder : (fieldtype == "crypto") ? thisamount.toFixed(6) : cryptovalue(thisamount, thisrate);
     reflectinputs($("#paymentdialogbox .ccmirror > input"), ccvalue, ccvalue);
 }
 
@@ -1301,7 +1301,7 @@ function reflectinputs(node, value, placeholder) {
 }
 
 function cryptovalue(thisamount, thisrate) { // get ccrate
-    return parseFloat(((thisamount / thisrate) * $("#paymentdialogbox .ccpool").attr("data-xrate")).toFixed(5));
+    return parseFloat(((thisamount / thisrate) * $("#paymentdialogbox .ccpool").attr("data-xrate")).toFixed(6));
 }
 
 function reflectinput() {
@@ -1355,11 +1355,11 @@ function renderqr(payment, address, amount) {
         this_iszero = (number === 0 || isNaN(number)),
         urlscheme;
     if (request.erc20 === true) {
-        var raw_amount = (parseFloat(amount) * parseFloat(Math.pow(10, request.decimals))).toFixedSpecial(0);
-        urlscheme = "ethereum:" + request.token_contract + "/transfer?address=" + address + "&uint256=" + raw_amount;
+        var raw_amount = (parseFloat(amount) * parseFloat(Math.pow(10, request.decimals))).toFixedSpecial(0),
+        	urlscheme = "ethereum:" + request.token_contract + "/transfer?address=" + address + "&uint256=" + raw_amount;
         //urlscheme = "ethereum:" + request.token_contract + "/transfer?address=" + address + "&uint256=" + raw_amount + "&gas=43855";
     } else {
-        urlscheme = request.coindata.urlscheme(payment, address, amount, this_iszero);
+        var urlscheme = request.coindata.urlscheme(payment, address, amount, this_iszero);
     }
     $("#qrcode").html("").qrcode(urlscheme);
     $(".openwallet").attr({"data-rel":amount,"title":urlscheme});

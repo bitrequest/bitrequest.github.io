@@ -12,6 +12,7 @@ var language = navigator.language || navigator.userLanguage,
     copycontent = $("#copyinput"),
     funk = $("#funk"), // funk sound effect
     cashier = $("#cashier"), // cashier sound effect
+    collect = $("#collect"), // collect sound effect
     blip = $("#blip"), // blip sound effect
     waterdrop = $("#waterdrop"), // waterdrop sound effect
     howl = $("#howl"), // howl sound effect
