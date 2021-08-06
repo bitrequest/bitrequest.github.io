@@ -481,18 +481,22 @@ function continue_paymentfunction(payment) {
     }
     loader();
     var coindata = request.coindata,
-    	viewkey = false;
-    if (payment == "monero") { // check for monero viewkey
-	    coindata.monitored = false;
-	    var viewkey = get_vk(address);
-    }
-    var coinsettings = activecoinsettings(payment),
+		coinsettings = activecoinsettings(payment),
         uoa = gets.uoa,
         amount = Number(gets.amount),
         type = gets.type,
         data = gets.d,
         isdata = (data && data.length > 5),
-        currencysymbol = coindata.ccsymbol,
+        dataobject = (isdata === true) ? JSON.parse(atob(data)) : null, // decode data param if exists;
+        viewkey = false;
+    if (payment == "monero") { // check for monero viewkey
+	    coindata.monitored = false;
+	    var viewkey = (dataobject && dataobject.vk) ? {
+			"account": address,
+			"vk": dataobject.vk
+		} : get_vk(address);
+    }
+    var currencysymbol = coindata.ccsymbol,
         isrequest = (localStorage.getItem("bitrequest_editurl") !== window.location.search), // check if url is a request
         requesttype = (isrequest === true) ? (type) ? type : "incoming" : "local",
         iscrypto = (uoa == currencysymbol),
@@ -509,7 +513,6 @@ function continue_paymentfunction(payment) {
         pending = (pendingparam) ? pendingparam : (monitored === true) ? "incoming" : "unknown",
         socket_list = (coinsettings) ? coinsettings.websockets : null,
         selected_socket = (socket_list) ? (socket_list.selected) ? socket_list.selected : null : null,
-        dataobject = (isdata === true) ? JSON.parse(atob(data)) : null, // decode data param if exists
         requesttimestamp = (dataobject && dataobject.ts) ? dataobject.ts : null,
         requestname = (dataobject && dataobject.n) ? dataobject.n : null,
         requesttitle = (dataobject && dataobject.t) ? dataobject.t : null,
@@ -1373,22 +1376,33 @@ function switchaddress() {
         } else {
             var gets = geturlparameters(),
                 payment = gets.payment,
-                data = (gets.d && gets.d.length > 5) ? "&d=" + gets.d : "",
-                currentaddress = gets.address,
+				currentaddress = gets.address,
                 nextaddress = newaddresli(payment, currentaddress);
             if (nextaddress) {
-                var newaddress = nextaddress.data("address"),
-                    newaddressid = nextaddress.data("cmcid"),
+	            var newaddress = nextaddress.data("address"),
+	            	selected_socket = helper.selected_socket;
+	            init_socket(selected_socket, newaddress, true);
+	            var dp = gets.d,
+                	has_dat = (dp && dp.length > 5);
+					if (payment == "monero") { // push new xmr viewkey
+						if (has_dat) {
+							if (request.viewkey) {
+								var dat_obj = JSON.parse(atob(dp));
+								dat_obj.vk = request.viewkey.vk;
+								var dp = btoa(JSON.stringify(dat_obj));
+							}
+						}
+					}
+				var new_dp = (has_dat) ? "&d=" + dp : "",
+                	ccvalue = $("#paymentdialogbox .ccpool").attr("data-value"),
+					newaddressid = nextaddress.data("cmcid"),
                     newaddresslabel = nextaddress.data("label"),
                     page = gets.p,
                     starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
-                    href = starturl + payment + "&uoa=" + gets.uoa + "&amount=" + gets.amount + "&address=" + newaddress + data,
-                    ccvalue = $("#paymentdialogbox .ccpool").attr("data-value"),
-                    selected_socket = helper.selected_socket;
+                    href = starturl + payment + "&uoa=" + gets.uoa + "&amount=" + gets.amount + "&address=" + newaddress + new_dp;
                 renderqr(payment, newaddress, ccvalue);
                 history.replaceState(null, null, href);
                 set_edit(href);
-                init_socket(selected_socket, newaddress);
                 $("#paymentaddress").text(newaddress);
                 $(this).text(newaddresslabel);
                 var ispending = check_pending(newaddress, newaddressid);
@@ -1452,12 +1466,18 @@ function validaterequestdata(requestname_val, requesttitle_val) {
     if (valid === true) {
         var utc = $.now() + timezone, // UTC
             no_conf = request.no_conf,
-            dataobject = {};
-        dataobject.ts = utc,
-            dataobject.n = requestname_val,
-            dataobject.t = requesttitle_val;
+            dataobject = {
+	            "ts": utc,
+	            "n": requestname_val,
+	            "t": requesttitle_val
+            };
         if (no_conf === false) {
             dataobject.c = request.set_confirmations;
+        }
+        if (payment == "monero") {
+	        if (request.viewkey) {
+            	dataobject.vk = request.viewkey.vk;
+        	}
         }
         var newurl = currenturl + "&d=" + btoa(JSON.stringify(dataobject));
         request.requestname = requestname_val,
@@ -1604,10 +1624,22 @@ function pickaddressfromdialog() {
                 page = gets.p,
                 payment = gets.payment,
                 currency = gets.uoa,
-                amount = gets.amount,
-                data = (gets.d && gets.d.length > 5) ? "&d=" + gets.d : "",
-                starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
-                href = starturl + payment + "&uoa=" + currency + "&amount=" + amount + "&address=" + picked_address + data,
+                amount = gets.amount;
+            init_socket(helper.selected_socket, picked_address, true);
+            var dp = gets.d,
+            	has_dat = (dp && dp.length > 5);
+				if (payment == "monero") { // push new xmr viewkey
+					if (has_dat) {
+						if (request.viewkey) {
+							var dat_obj = JSON.parse(atob(dp));
+							dat_obj.vk = request.viewkey.vk;
+							var dp = btoa(JSON.stringify(dat_obj));
+						}
+					}
+				}
+			var new_dp = (has_dat) ? "&d=" + dp : "",
+            	starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
+                href = starturl + payment + "&uoa=" + currency + "&amount=" + amount + "&address=" + picked_address + new_dp,
                 ccvalue = $("#paymentdialogbox .ccpool").attr("data-value");
             $("#paymentaddress").text(picked_address);
             $("#labelbttn").text(picked_label);
@@ -1616,7 +1648,6 @@ function pickaddressfromdialog() {
             history.replaceState(null, null, href);
             set_edit(href);
             paymentdialogbox.attr("data-pending", "");
-            init_socket(helper.selected_socket, picked_address);
             canceldialog();
         } else {
             return false;
@@ -2233,7 +2264,7 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
 	                adjust_paymentdialog("pending", "polling", "Transaction broadcasted");
 	                if (thispayment == "monero") {
 		                var address = prdata.address,
-		                	vk = get_vk(address);
+		                	vk = request.viewkey;
 						if (vk) {
 							var account = (vk.account) ? vk.account : address,
 								viewkey = vk.vk;

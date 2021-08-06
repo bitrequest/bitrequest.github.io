@@ -28,7 +28,7 @@ $(document).ready(function() {
 
 // Websockets / Pollfunctions
 
-function init_socket(socket_node, address) {
+function init_socket(socket_node, address, swtch) {
 	if (offline === true) {
         notify("You are currently offline, request is not monitored");
     } else {
@@ -77,17 +77,19 @@ function init_socket(socket_node, address) {
             amberdata_eth_websocket(socket_node, address);
         } else if (payment == "monero") {
 	        clearpingtx("close");
-	        var vk = get_vk(address);
-			if (vk) {
+	        var vk = (swtch) ? get_vk(address) : request.viewkey;
+	        if (vk) {
 				var account = (vk.account) ? vk.account : address,
 					viewkey = vk.vk,
 					rq_init = request.rq_init,
 					request_ts_utc = rq_init + timezone,
 					request_ts = request_ts_utc - 30000; // 30 seconds compensation for unexpected results
 				request.monitored = true;
-				request.viewkey = viewkey;
+				if (swtch) {
+					request.viewkey = vk;
+				}
 				closenotify();
-	            init_xmr_node(9, account, viewkey, request_ts);
+				init_xmr_node(9, account, viewkey, request_ts);
             }
             else {
 	            request.monitored = false;
@@ -214,7 +216,6 @@ function dogechain_info_socket(socket_node, thisaddress) {
     websocket.onmessage = function(e) {
         var json = JSON.parse(e.data),
         	data = json.x;
-		console.log(data);
 		if (data) {
 			var txhash = data.hash;
 			if (txhash) {
@@ -626,14 +627,14 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
         else {
 	        var errormessage = data.Error,
 	        	error = (errormessage) ? errormessage : "Invalid Viewkey";
-	        notify("error", error);
+			notify(error, 500000, "yes");
         }
         
     }).fail(function(jqXHR, textStatus, errorThrown) {
         console.log(jqXHR);
         console.log(textStatus);
         console.log(errorThrown);
-        notify("error", "Error verifying Viewkey");
+        notify("Error verifying Viewkey");
     });
 }
 
@@ -844,7 +845,6 @@ function blockcypher_scan_poll(payment, api_name, ccsymbol, set_confirmations, a
 		            if (payment == "ethereum") {
 	                    $.each(items, function(dat, value) {
 	                        var txd = blockcypher_scan_data(value, set_confirmations, ccsymbol, payment);
-	                        console.log(txd);
 	                        if (txd.transactiontime > request_ts && txd.ccval) {
 		                    	txdat = txd;
 		                        detect = true;
