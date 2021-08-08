@@ -615,21 +615,25 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
             }
         }
     }).done(function(e) {
-        var data = br_result(e).result;
-        if (data.start_height) { // success!
-	        if (start === true) {
-		        ping_xmr_node(cachetime, address, vk, request_ts, txhash);
-	        }
-	        pingtx = setInterval(function() {
-				ping_xmr_node(cachetime, address, vk, request_ts, txhash);
-			}, 10000);
+        var data = br_result(e).result,
+        	errormessage = data.Error;
+        if (errormessage) {
+	        var error = (errormessage) ? errormessage : "Invalid Viewkey";
+	        popnotify("error", error);
         }
         else {
-	        var errormessage = data.Error,
-	        	error = (errormessage) ? errormessage : "Invalid Viewkey";
-			notify(error, 500000, "yes");
-        }
-        
+	        var start_height = data.start_height;
+	        if (start_height > -1) { // success!
+		        if (start === true) {
+			        ping_xmr_node(cachetime, address, vk, request_ts, txhash);
+		        }
+		        pingtx = setInterval(function() {
+					ping_xmr_node(cachetime, address, vk, request_ts, txhash);
+				}, 10000);
+	        }
+	        else {
+	        }
+        }   
     }).fail(function(jqXHR, textStatus, errorThrown) {
         console.log(jqXHR);
         console.log(textStatus);
@@ -1012,13 +1016,20 @@ function xmr_scan_poll_init(address, vk, set_confirmations, request_ts) {
             }
         }
     }).done(function(e) {
-        var data = br_result(e).result;
-        if (data.start_height) { // success!
-	        xmr_scan_poll(address, vk, set_confirmations, request_ts);
+        var data = br_result(e).result,
+        	errormessage = data.Error;
+        if (errormessage) {
+	        close_paymentdialog(true);
         }
         else {
-	        close_paymentdialog(true);
-        }   
+	        var start_height = data.start_height;
+	        if (start_height > -1) { // success!
+		        xmr_scan_poll(address, vk, set_confirmations, request_ts);
+	        }
+	        else {
+		        close_paymentdialog(true);
+	        }
+        }  
     }).fail(function(jqXHR, textStatus, errorThrown) {
         close_paymentdialog(true);
     });

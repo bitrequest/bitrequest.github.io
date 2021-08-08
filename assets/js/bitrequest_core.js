@@ -268,8 +268,11 @@ function haspin() {
 
 function islocked() {
     var locktime = $("#pinsettings").data("locktime"),
-        lastlock = localStorage.getItem("bitrequest_locktime");
-    return (geturlparameters().payment) ? false : (haspin() === true && ($.now() - locktime) > lastlock) ? true : false;
+        lastlock = localStorage.getItem("bitrequest_locktime"),
+        now = $.now(),
+        tsll = now - lastlock,
+        pflt = parseFloat(locktime);
+    return (geturlparameters().payment) ? false : (haspin() === true && tsll > pflt) ? true : false;
 }
 
 function setfunctions() {
@@ -2361,16 +2364,20 @@ function validateaddress_vk(ad) {
 		            }
 		        }
 		    }).done(function(e) {
-		        var data = br_result(e).result;
-		        if (data.start_height) { // success!
-			        validateaddress(ad, vkinputval);
-		        }
-		        else {
-			        var errormessage = data.Error,
-			        	error = (errormessage) ? errormessage : "Invalid Viewkey";
+		        var data = br_result(e).result,
+		        	errormessage = data.Error;
+		        if (errormessage) {
+			        var error = (errormessage) ? errormessage : "Invalid Viewkey";
 			        popnotify("error", error);
 		        }
-		        
+		        else {
+			        var start_height = data.start_height;
+			        if (start_height > -1) { // success!
+				        validateaddress(ad, vkinputval);
+			        }
+			        else {
+			        }
+		        }
 		    }).fail(function(jqXHR, textStatus, errorThrown) {
 		        console.log(jqXHR);
 		        console.log(textStatus);
@@ -3771,6 +3778,13 @@ function get_api_data(api_id) {
 function all_pinpanel(cb, top) {
     var topclass = (top) ? " ontop" : "";
     if (haspin() === true) {
+	    var lastlock = localStorage.getItem("bitrequest_locktime"),
+        	tsll = $.now() - lastlock,
+        	pass = (tsll < 10000);
+        if (cb && pass) { // keep unlocked in 10 second time window
+            cb.func(cb.args);
+            return false;
+        }
         var content = pinpanel(" pinwall", cb);
         showoptions(content, "pin" + topclass);
     } else {
@@ -4719,9 +4733,7 @@ function renderchanges() {
     if (changescache) {
         changes = JSON.parse(changescache),
             setTimeout(function() { // wait for Googleauth to load
-                if (GoogleAuth) {} else {
-                    change_alert();
-                }
+                change_alert();
             }, 700);
     } else {
         changes = {};
@@ -4729,6 +4741,10 @@ function renderchanges() {
 }
 
 function change_alert() {
+	if (GoogleAuth) {
+		body.removeClass("haschanges");
+		return false;
+	}
     var total_changes = get_total_changes();
     if (total_changes > 0) {
         body.addClass("haschanges");
