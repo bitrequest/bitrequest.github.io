@@ -1326,6 +1326,9 @@ function csvexport_trigger() {
 							<li id='escv_desc'>\
 								<span>Description</span><div class='switchpanel true global'><div class='switch'></div></div>\
 							</li>\
+							<li id='escv_address'>\
+								<span>Receiving address</span><div class='switchpanel true global'><div class='switch'></div></div>\
+							</li>\
 							<li class='escv_heading'>\
 								<strong>Status</strong>\
 							</li>\
@@ -1414,6 +1417,7 @@ function complile_csv() {
 		options_li = $("#exportcsvbox #ecsv_options"),
 		op_from = options_li.find("li#escv_from .switchpanel"),
 		op_desc = options_li.find("li#escv_desc .switchpanel"),
+		op_address = options_li.find("li#escv_address .switchpanel"),
 		op_paid = options_li.find("li#escv_paid .switchpanel"),
 		op_ins = options_li.find("li#escv_ins .switchpanel"),
 		op_new = options_li.find("li#escv_new .switchpanel"),
@@ -1425,6 +1429,7 @@ function complile_csv() {
 		op_archive = options_li.find("li#escv_archive .switchpanel"),
 		incl_from = (op_from.hasClass("true")) ? true : false,
 		incl_desc = (op_desc.hasClass("true")) ? true : false,
+		incl_address = (op_address.hasClass("true")) ? true : false,
 		incl_paid = (op_paid.hasClass("true")) ? true : false,
 		incl_ins = (op_ins.hasClass("true")) ? true : false,
 		incl_new = (op_new.hasClass("true")) ? true : false,
@@ -1438,6 +1443,7 @@ function complile_csv() {
 	$.each(rq_obj, function(i, val) {
 		var request = {},
 			payment = val.payment,
+			address = val.address,
 			amount = val.amount,
 			uoa = val.uoa,
 			status = val.status,
@@ -1485,6 +1491,9 @@ function complile_csv() {
 			var fv = (fiatvalue) ?  fiatvalue.toFixed(2) + " " + fiatcurrency : "";
 			request["fiat value"] = fv;
 			request["received on"] = received_ts;
+			if (incl_address) {
+				request["receiving address"] = address;
+			}
 			request.txhash = txhash;
 			if (incl_receipt) {
 				request["PDF download (receipt)"] = pdf_url;
