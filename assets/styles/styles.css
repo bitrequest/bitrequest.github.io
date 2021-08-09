@@ -317,14 +317,18 @@ html.hidemain header {
     transition: all 400ms cubic-bezier(0.5, -0.5, 0.5, 1.5);
 }
 
-body.haschanges #alert {
+html.gdauth #alert {
+	display:none;
+}
+
+html:not(.gdauth) body.haschanges #alert {
     opacity: 1;
     -webkit-transform: translate(0%, 0);
     -ms-transform: translate(0%, 0);
     transform: translate(0%, 0);
 }
 
-body.haschanges #header h1 {
+html:not(.gdauth) body.haschanges #header h1 {
     -webkit-transform: translate(1em, 0);
     -ms-transform: translate(1em, 0);
     transform: translate(1em, 0);

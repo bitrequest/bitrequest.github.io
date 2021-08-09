@@ -4702,7 +4702,7 @@ function save_cc_settings(currency, add) {
 }
 
 function updatechanges(key, add) {
-    if (GD_auth() === true) {
+	if (GD_auth_class() === true) {
         updateappdata();
         body.removeClass("haschanges");
     } else {
