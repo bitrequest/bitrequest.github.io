@@ -31,6 +31,7 @@ Create and share payment requests for cryptocurrencies.
 * __Real-time exchange rates for cryptocurrencies__, updated every 2 minutes.
 * __Bip39__ mnemonic seed.
 * Set __pincode.__
+* Export CSV.
 * __Backup / Restore__ (Download Json file / Backup with Google Drive).
 * __Shorten__ your request URL's.
 * Use / Manage your __personal API keys.__
