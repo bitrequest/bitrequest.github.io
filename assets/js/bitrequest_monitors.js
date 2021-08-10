@@ -181,18 +181,18 @@ function get_api_inputs_defaults(rd, api_data) {
 }
 
 function get_api_inputs_init(rd, api_data, api_name) {
-    api_attempts[api_name] = undefined; // reset api attempts
+    api_attempts[rd.pending + api_name] = null; // reset api attempts
     get_api_inputs(rd, api_data, api_name);
 }
 
 function get_api_inputs(rd, api_data, api_name) {
 	var thislist = $("#" + rd.requestid);
     if (thislist.hasClass("scan")) {
-        api_attempts[api_name] = true;
+        var pending = rd.pending;
+        api_attempts[pending + api_name] = true;
         var payment = rd.payment,
             address = rd.address,
             requestdate = (rd.inout == "incoming") ? rd.timestamp : rd.requestdate,
-            pending = rd.pending,
             request_timestamp = requestdate - 30000, // 30 seconds compensation for unexpected results
             ccsymbol = rd.currencysymbol,
             getconfirmations = rd.set_confirmations,
@@ -733,7 +733,7 @@ function handle_api_fails(rd, error, api_name, thispayment, txid) {
         api_callback(rd.requestid, true);
         return false;
     } else {
-	    var nextapi = get_next_api(thispayment, api_name);
+	    var nextapi = get_next_api(thispayment, api_name, rd.pending);
 	    if (nextapi === false) { // only one api
             api_eror_msg(api_name, error_data, key_fail, monitor);
             api_callback(rd.requestid, true);
@@ -778,14 +778,14 @@ function get_api_error_data(error) {
     return error_object;
 }
 
-function get_next_api(this_payment, this_api_name) {
+function get_next_api(this_payment, this_api_name, pending) {
 	var apilist = $.grep(getcoinsettings(this_payment).apis.apis, function(obj) { // filter out rpc's
         return obj.api === true;
     });
     var this_index = apilist.findIndex(option => option.name == this_api_name),
 		next_scan = apilist[this_index + 1],
         next_api = (next_scan) ? next_scan : apilist[0];
-    if (api_attempts[next_api.name] === true) {
+    if (api_attempts[pending + next_api.name] === true) {
         return false;
     } else {
         return next_api;
@@ -1349,6 +1349,7 @@ function compareamounts(rd) {
 // get historic crypto rates
 
 function get_historical_fiat_data(rd, apilist, fiatapi) {
+	console.log(rd);
 	api_attempt[apilist][fiatapi] = true;
     var thisrequestid = rd.requestid,
         lcsymbol = rd.fiatcurrency.toUpperCase(),

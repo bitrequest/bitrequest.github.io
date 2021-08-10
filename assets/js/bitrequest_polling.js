@@ -23,7 +23,7 @@ function pick_monitor(txhash, tx_data) {
 }
 
 function api_monitor_init(api_data, txhash, tx_data) {
-    api_attempts[api_data.name] = undefined;
+    api_attempts["polling" + api_data.name] = null;
     api_monitor(api_data, txhash, tx_data);
     paymentdialogbox.addClass("transacting");
     setTimeout(function() {
