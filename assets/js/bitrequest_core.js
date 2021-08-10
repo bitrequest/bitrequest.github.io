@@ -3505,13 +3505,14 @@ function api_proxy(ad) { // callback function from bitrequest.js
 }
 
 function br_result(e) {
-    var ping = e.ping,
+	var ping = e.ping,
         proxy = (ping) ? true : false,
         root = (proxy === true) ? ping : e,
-        result = root.br_result;
+        result = root.br_result,
+        has_result = "br_result" in root;
     return {
         "proxy": proxy,
-        "result": (result) ? result : root
+        "result": (has_result) ? result : root
     }
 }
 

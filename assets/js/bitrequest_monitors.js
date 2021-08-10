@@ -334,34 +334,40 @@ function get_api_inputs(rd, api_data, api_name) {
                             })
                         }
                     }).done(function(e) {
-                        var data = br_result(e).result,
-                        	nano_data = data.data;
-						if ($.isEmptyObject(nano_data)) {
-	                        tx_api_fail(thislist, statuspanel);
-	                        handle_api_fails(rd, {"error":"nano node offline","console":true}, api_name, payment);
-                        }
-                        else {
-	                        var pending_array_node = (nano_data[0]) ? nano_data[0].pending : [],
-	                        	pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
-	                            history_array_node = (nano_data[1]) ? nano_data[1].history : [],
-	                            history_array = $.isEmptyObject(history_array_node) ? [] : history_array_node,
-	                            merged_array = pending_array.concat(history_array).sort(function(x, y) { // merge and sort arrays
-	                                return y.local_timestamp - x.local_timestamp;
-	                            });
-	                        $.each(merged_array, function(data, value) {
-	                            var txd = nano_scan_data(value, setconfirmations, ccsymbol);
-	                            if ((txd.transactiontime > request_timestamp) && txd.ccval && (value.type === undefined || value.type == "receive")) {
-	                                var tx_listitem = append_tx_li(txd, thislist);
-	                                if (tx_listitem) {
-	                                    transactionlist.append(tx_listitem.data(txd));
-	                                    counter++;
-	                                }
-	                            }
-	                        });
-	                        tx_count(statuspanel, counter);
-	                        api_src(thislist, api_data);
-	                        compareamounts(rd);
-                        }
+                        var data = br_result(e).result;
+                        if (data) {
+                        	var nano_data = data.data;
+							if ($.isEmptyObject(nano_data)) {
+		                        tx_api_fail(thislist, statuspanel);
+		                        handle_api_fails(rd, {"error":"nano node offline","console":true}, api_name, payment);
+	                        }
+	                        else {
+		                        var pending_array_node = (nano_data[0]) ? nano_data[0].pending : [],
+		                        	pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
+		                            history_array_node = (nano_data[1]) ? nano_data[1].history : [],
+		                            history_array = $.isEmptyObject(history_array_node) ? [] : history_array_node,
+		                            merged_array = pending_array.concat(history_array).sort(function(x, y) { // merge and sort arrays
+		                                return y.local_timestamp - x.local_timestamp;
+		                            });
+		                        $.each(merged_array, function(data, value) {
+		                            var txd = nano_scan_data(value, setconfirmations, ccsymbol);
+		                            if ((txd.transactiontime > request_timestamp) && txd.ccval && (value.type === undefined || value.type == "receive")) {
+		                                var tx_listitem = append_tx_li(txd, thislist);
+		                                if (tx_listitem) {
+		                                    transactionlist.append(tx_listitem.data(txd));
+		                                    counter++;
+		                                }
+		                            }
+		                        });
+		                        tx_count(statuspanel, counter);
+		                        api_src(thislist, api_data);
+		                        compareamounts(rd);
+	                        }
+	                    }
+	                    else {
+		                    tx_api_fail(thislist, statuspanel);
+		                    handle_api_fails(rd, {"error":"No results found","console":true}, api_name, payment);
+	                    }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -387,22 +393,28 @@ function get_api_inputs(rd, api_data, api_name) {
                         }
                     }).done(function(e) {
                         var data = br_result(e).result;
-                        if (data.error) {
-	                        tx_api_fail(thislist, statuspanel);
-							handle_api_fails(rd, data.error, api_name, payment);
-                        }
-                        else {
-	                        var txd = nano_scan_data(data, setconfirmations, ccsymbol, transactionhash);
-	                        if (txd.ccval) {
-	                            var tx_listitem = append_tx_li(txd, thislist);
-	                            if (tx_listitem) {
-	                                transactionlist.append(tx_listitem.data(txd));
-	                            }
-	                            tx_count(statuspanel, 1);
-	                            api_src(thislist, api_data);
-	                            compareamounts(rd);
+                        if (data) {
+	                        if (data.error) {
+		                        tx_api_fail(thislist, statuspanel);
+								handle_api_fails(rd, data.error, api_name, payment);
 	                        }
-                        }
+	                        else {
+		                        var txd = nano_scan_data(data, setconfirmations, ccsymbol, transactionhash);
+		                        if (txd.ccval) {
+		                            var tx_listitem = append_tx_li(txd, thislist);
+		                            if (tx_listitem) {
+		                                transactionlist.append(tx_listitem.data(txd));
+		                            }
+		                            tx_count(statuspanel, 1);
+		                            api_src(thislist, api_data);
+		                            compareamounts(rd);
+		                        }
+	                        }
+	                    }
+	                    else {
+		                    tx_api_fail(thislist, statuspanel);
+							handle_api_fails(rd, {"error":"No results found","console":true}, api_name, payment);
+	                    }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
