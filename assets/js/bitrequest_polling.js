@@ -393,10 +393,6 @@ function confirmations(tx_data, direct) {
             fiatvalue = (iscrypto === true) ? null : (rccf / parseFloat($("#paymentdialogbox .ccpool").attr("data-xrate"))) * parseFloat($("#paymentdialog .cpool[data-currency='" + thiscurrency + "']").attr("data-xrate")), // calculate fiat value
             fiatrounded = (iscrypto === true) ? null : fiatvalue.toFixed(2),
             receivedrounded = (iscrypto === true) ? receivedcc : fiatrounded;
-        console.log(tx_data);
-        console.log(cc_rawf);
-        console.log(rccf);
-        console.log(fiatvalue);
         // extend global request object
         $.extend(request, {
 	        "received": true,
@@ -411,7 +407,6 @@ function confirmations(tx_data, direct) {
         brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), language));
         var exact = helper.exact,
         	pass = (exact) ? (rccf == cc_rawf) : (rccf >= cc_rawf * 0.99);
-        console.log(pass);
         if (pass) {
             if (xconf >= setconfirmations || zero_conf === true) {
                 clearpingtx();
