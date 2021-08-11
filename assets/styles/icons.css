@@ -27,6 +27,38 @@
     text-decoration: none !important;
 }
 
+/* custom icons */
+
+.icon-Macintosh:before {
+    content: "\e956";
+}
+
+.icon-Ipad:before {
+    content: "\e95a";
+}
+
+.icon-Android:before {
+    content: "\e958";
+}
+
+.icon-Iphone:before {
+    content: "\e959";
+}
+
+.icon-Windows:before {
+    content: "\e959";
+}
+
+.icon-android-app:before {
+    content: "\eac0";
+}
+
+.icon-apple-app:before {
+    content: "\eabe";
+}
+
+/* icons */
+
 .icon-bitly:before {
   content: "\e906";
   color: #ee6123;
