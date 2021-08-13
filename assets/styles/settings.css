@@ -1221,3 +1221,9 @@ body.seed_dialog #seed_panel {
 	position:absolute;
 	top:0.5em;right:0;
 }
+
+#xmrsettings {
+    border-bottom: 0.07em solid #b1b1b1;
+    color:#009788;
+    cursor: pointer;
+}

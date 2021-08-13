@@ -461,14 +461,16 @@ function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
             transactiontimeutc = (transactiontime) ? transactiontime : null,
             height = (data.height) ? data.height : latestblock,
             blocks = latestblock - height,
-            confirmations = (blocks < 0) ? 0 : blocks;
+            confirmations = (blocks < 0) ? 0 : blocks,
+            payment_id = (data.payment_id) ? data.payment_id : false;
         return {
             "ccval": recieved / 1000000000000,
             "transactiontime": transactiontimeutc,
             "txhash": data.hash,
             "confirmations": confirmations,
             "setconfirmations": setconfirmations,
-            "ccsymbol": ccsymbol
+            "ccsymbol": ccsymbol,
+            "payment_id": payment_id
         };
     } else {
         return default_tx_data();

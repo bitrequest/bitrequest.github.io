@@ -1065,11 +1065,13 @@ function xmr_scan_poll(address, vk, set_confirmations, request_ts) {
 	            	txflip = items.reverse();
 				$.each(txflip, function(dat, value) {
 	                var txd = xmr_scan_data(value, set_confirmations, "xmr", data.blockchain_height);
-	                if (txd.transactiontime > request_ts && txd.ccval) {
-                        txdat = txd;
-                        detect = true;
-						return false;
-                    }
+	                if (txd) {
+	                	if (txd.transactiontime > request_ts && txd.ccval) {
+	                        txdat = txd;
+	                        detect = true;
+							return false;
+	                    }
+	                }
 	            });
 	            if (detect === true) {
 	                if (txdat) {

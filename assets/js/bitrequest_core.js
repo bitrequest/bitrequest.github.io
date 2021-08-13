@@ -1274,7 +1274,7 @@ function get_address_warning(id, address, pass_dat) {
 }
 
 function finishtxfunction(currency, thisaddress, savedurl, title) {
-    var cd = getcoindata(currency),
+	var cd = getcoindata(currency),
         currencysettings = $("#currencysettings").data(),
         c_default = currencysettings.default,
         currencysymbol = (c_default === true && offline === false) ? currencysettings.currencysymbol : cd.ccsymbol,

@@ -939,6 +939,11 @@ var multi_wallets = {
                     "selected": false,
                     "switch": true,
                 },
+                "Integrated addresses": {
+                    "icon": "cog",
+                    "selected": false,
+                    "switch": true,
+                },
                 "blockexplorers": {
                     "icon": "eye",
                     "selected": "blockchair.com",

@@ -386,6 +386,7 @@ function confirmations(tx_data, direct) {
             receivedtime = receivedutc - timezone,
             receivedcc = tx_data.ccval,
             rccf = parseFloat(receivedcc.toFixed(6)),
+            payment = request.payment,
             thiscurrency = request.uoa,
             currencysymbol = request.currencysymbol,
             requesttype = request.requesttype,
@@ -406,45 +407,51 @@ function confirmations(tx_data, direct) {
         brstatuspanel.find("span.receivedfiat").text(" (" + receivedrounded + " " + thiscurrency + ")");
         brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), language));
         var exact = helper.exact,
-        	pass = (exact) ? (rccf == cc_rawf) : (rccf >= cc_rawf * 0.99);
-        if (pass) {
-            if (xconf >= setconfirmations || zero_conf === true) {
-                clearpingtx();
-                closesocket();
-                if (request.payment == "dogecoin") {
-	                playsound(howl);
-                }
-                else {
-	                playsound(cashier);
-                }
-                paymentdialogbox.addClass("transacting").attr("data-status", "paid");
-                var confirmationtext = (requesttype === "incoming") ? "Payment sent" : "Payment received";
-                brheader.text(confirmationtext);
-                request.status = "paid",
-                    request.pending = "polling";
-                saverequest(direct);
-                $("span#ibstatus").fadeOut(500);
-            } else {
-                playsound(blip);
-                paymentdialogbox.addClass("transacting").attr("data-status", "pending");
-                brheader.text("Transaction broadcasted");
-                request.status = "pending",
-                    request.pending = "polling";
-                saverequest(direct);
-            }
-            brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
-        } else {
-	        if (exact) {    
-	        }
-	        else {
-		        brheader.text("Insufficient amount");
-	            paymentdialogbox.addClass("transacting").attr("data-status", "insufficient");
-	            request.status = "insufficient",
-	                request.pending = "scanning";
-	            saverequest(direct);
+        	xmr_pass = (payment == "monero") ? (rccf > cc_rawf * 0.95 && rccf < cc_rawf * 1.05) : true; // error margin for xmr integrated addresses
+        console.log(rccf);
+        console.log(cc_rawf);
+        console.log(xmr_pass);
+        if (xmr_pass) {
+	        var pass = (exact) ? (rccf == cc_rawf) : (rccf >= cc_rawf * 0.99);
+	        if (pass) {
+		        if (xconf >= setconfirmations || zero_conf === true) {
+	                clearpingtx();
+	                closesocket();
+	                if (payment == "dogecoin") {
+		                playsound(howl);
+	                }
+	                else {
+		                playsound(cashier);
+	                }
+	                paymentdialogbox.addClass("transacting").attr("data-status", "paid");
+	                var confirmationtext = (requesttype === "incoming") ? "Payment sent" : "Payment received";
+	                brheader.text(confirmationtext);
+	                request.status = "paid",
+	                    request.pending = "polling";
+	                saverequest(direct);
+	                $("span#ibstatus").fadeOut(500);
+	            } else {
+	                playsound(blip);
+	                paymentdialogbox.addClass("transacting").attr("data-status", "pending");
+	                brheader.text("Transaction broadcasted");
+	                request.status = "pending",
+	                    request.pending = "polling";
+	                saverequest(direct);
+	            }
 	            brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
+	        } else {
+		        if (exact) {    
+		        }
+		        else {
+			        brheader.text("Insufficient amount");
+		            paymentdialogbox.addClass("transacting").attr("data-status", "insufficient");
+		            request.status = "insufficient",
+		                request.pending = "scanning";
+		            saverequest(direct);
+		            brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
+		        }
+	            playsound(funk);
 	        }
-            playsound(funk);
         }
     }
     else {

@@ -14,6 +14,7 @@ $(document).ready(function() {
 
     //get_api_inputs_init
     //get_api_inputs
+    //match_xmr_pid
     //fail_dialogs
     //handle_api_fails
     //get_api_error_data
@@ -269,10 +270,13 @@ function get_api_inputs(rd, api_data, api_name) {
 						                if (txd) {
 							                if (txd.transactiontime > request_timestamp && txd.ccval) {
 								                if (pending == "scanning") {
-									                var tx_listitem = append_tx_li(txd, thislist);
-													if (tx_listitem) {
-			                                        	transactionlist.append(tx_listitem.data(txd));
-														counter++;
+									                var xid_match = match_xmr_pid(rd.xmria, rd.xmrpid, txd.payment_id); // match xmr payment_id if set
+									                if (xid_match === true) {
+										                var tx_listitem = append_tx_li(txd, thislist);
+														if (tx_listitem) {
+				                                        	transactionlist.append(tx_listitem.data(txd));
+															counter++;
+														}
 													}
 		                                        }
 		                                        else if (pending == "polling") {
@@ -714,6 +718,25 @@ function get_api_inputs(rd, api_data, api_name) {
         }
     }
     return false;
+}
+
+function match_xmr_pid(xmria, xmrpid, xmr_pid) {
+	if (xmria) {
+		if (xmrpid) {
+			if (xmr_pid) {
+				if (xmrpid == xmr_pid) {
+					return true;
+				}
+				else {
+					return false;
+				}
+			}
+			else {
+				return false;
+			}
+		}
+	}
+	return true;
 }
 
 // API error handling
@@ -1184,7 +1207,7 @@ function rpc_eror_msg(apisrc, error, monitor) {
 }
 
 function append_tx_li(txd, this_request) {
-    var txhash = txd.txhash;
+	var txhash = txd.txhash;
     if (txhash) {
         var ccval = txd.ccval,
             ccval_rounded = trimdecimals(ccval, 5),
@@ -1206,7 +1229,11 @@ function append_tx_li(txd, this_request) {
         if (this_request === false) {
             return tx_listitem;
         } else {
-            var tx_index = this_request.data("tx_index"),
+	        var tx_dat = this_request.data();
+	        if (tx_dat.xmria) { // xmr integrated adddresses are unique
+		        return tx_listitem;
+	        }
+            var tx_index = tx_dat.tx_index,
                 tx_indexed = ($.inArray(txhash, tx_index) !== -1),
                 on_tx_list = ($.inArray(txhash, tx_list) !== -1);
             if (on_tx_list === true || tx_indexed === true) { // check for indexed transaction id's
@@ -1349,7 +1376,6 @@ function compareamounts(rd) {
 // get historic crypto rates
 
 function get_historical_fiat_data(rd, apilist, fiatapi) {
-	console.log(rd);
 	api_attempt[apilist][fiatapi] = true;
     var thisrequestid = rd.requestid,
         lcsymbol = rd.fiatcurrency.toUpperCase(),

@@ -68,6 +68,7 @@ $(document).ready(function() {
     switchaddress();
     copyaddress_dblclick();
     copyaddress();
+    xmrsettings();
     //validaterequestdata
     inputrequestdata();
     validatesteps();
@@ -108,6 +109,7 @@ $(document).ready(function() {
     dw_trigger();
     //download_wallet
     //updaterequest
+    //xmr_integrated
 });
 
 // ** Swipe payment dialog **
@@ -366,6 +368,7 @@ function face_back() {
 //loadpayment (check for crypto rates)
 
 function loadpaymentfunction(pass) {
+	//xmr_integrated();
     symbolcache = localStorage.getItem("bitrequest_symbols");
     if (symbolcache) {
         var gets = geturlparameters(),
@@ -488,13 +491,17 @@ function continue_paymentfunction(payment) {
         data = gets.d,
         isdata = (data && data.length > 5),
         dataobject = (isdata === true) ? JSON.parse(atob(data)) : null, // decode data param if exists;
-        viewkey = false;
+        viewkey = false,
+        xmrpid = false,
+        xmria = false;
     if (payment == "monero") { // check for monero viewkey
 	    coindata.monitored = false;
 	    var viewkey = (dataobject && dataobject.vk) ? {
 			"account": address,
 			"vk": dataobject.vk
-		} : get_vk(address);
+		} : get_vk(address),
+		xmrpid = (dataobject && dataobject.xid) ? dataobject.xid : xmr_pid(),
+		xmria = (dataobject && dataobject.ia) ? dataobject.ia : xmr_integrated(xmrpid, address);
     }
     var currencysymbol = coindata.ccsymbol,
         isrequest = (localStorage.getItem("bitrequest_editurl") !== window.location.search), // check if url is a request
@@ -507,7 +514,8 @@ function continue_paymentfunction(payment) {
         paid = (status) ? (status == "paid") ? true : false : null,
         cmcid = coindata.cmcid,
         cpid = currencysymbol + "-" + payment,
-        ispending = check_pending(address, cmcid),
+        d_xmria = (xmria) ? xmria : address,
+        ispending = check_pending(d_xmria, cmcid),
         monitored = (viewkey) ? true : coindata.monitored,
         pendingparam = gets.pending,
         pending = (pendingparam) ? pendingparam : (monitored === true) ? "incoming" : "unknown",
@@ -556,6 +564,8 @@ function continue_paymentfunction(payment) {
             "iszero": iszero,
             "iszero_request": iszero_request,
             "viewkey": viewkey,
+            "xmrpid": xmrpid,
+            "xmria": xmria,
             "monitored": monitored,
             "coinsettings": coinsettings
         },
@@ -961,6 +971,7 @@ function continue_paymentfunction(payment) {
             requesttitle_quotes = (requesttitle && requesttitle.length > 1) ? "'" + requesttitle_short + "'" : "",
             backbttnandtitle = (isrequest === true) ? "<div id='sharetitle' title='" + requesttitle_string + "' data-shorttitle='" + requesttitle_short + "' class='" + exceedclass + "'>" + requesttitle_quotes + "</div>" : "",
             save_request,
+            address_xmria = (request.xmria) ? request.xmria : address;
             requestinfo = "\
 				<div id='requestinfo'>" +
             backbttnandtitle +
@@ -1080,7 +1091,7 @@ function continue_paymentfunction(payment) {
 					</div>\
 					<div id='txibreak' class='inputbreak'> Send <span id='ccinputmirror' class='ccmirror mirrordiv'><span>" + thiscurrencyvaluefixedplaceholder + "</span><input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'/></span> " + currencysymbol + " to" + labelvalue + ": </div>\
 				</div>\
-				<div id='paymentaddress' class='copyinput' data-type='address'>" + address + "</div>\
+				<div id='paymentaddress' class='copyinput' data-type='address'>" + address_xmria + "</div>\
 			</div>\
 			<div id='apisrc'>src: " + ccapi + "</div>" + poweredby);
         paymentdialogbox.find("#request_back").html("\
@@ -1089,7 +1100,7 @@ function continue_paymentfunction(payment) {
 			<div id='backwrapbottom' class='flex'>" + bottomcard + brstatuspanel + "</div>" + poweredby);
         show_paymentdialog();
         rendercpool(amount, currencyxrate);
-        renderqr(payment, address, $("#paymentdialogbox .ccpool").attr("data-value"));
+        renderqr(payment, address_xmria, $("#paymentdialogbox .ccpool").attr("data-value"));
         if (isrequest === true) { // check for incoming requests
             if (helper.contactform === true) { // indicates if it's a online payment so not an incoming request
             }
@@ -1329,12 +1340,13 @@ function updatecpool(thisamount, thisrate, ccvalue) {
         page = gets.p,
         currency = gets.uoa,
         address = gets.address,
+        address_xmria = (request.xmria) ? request.xmria : address,
         data = (gets.d) ? "&d=" + gets.d : "",
         starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
         href = starturl + payment + "&uoa=" + currency + "&amount=" + thisamount + "&address=" + address + data,
         pagename = payment + " request for " + thisamount + " " + currency,
         title = pagename + " | " + apptitle;
-    renderqr(payment, address, ccvalue);
+    renderqr(payment, address_xmria, ccvalue);
     if (request.iszero_request === true) {} else {
         history.replaceState(null, null, href);
         helper.currencylistitem.data("url", href);
@@ -1375,25 +1387,19 @@ function switchaddress() {
             playsound(funk);
         } else {
             var gets = geturlparameters(),
-                payment = gets.payment,
-				currentaddress = gets.address,
+                payment = gets.payment;
+            if (payment == "monero") {
+	            return false;
+            }
+			var currentaddress = gets.address,
                 nextaddress = newaddresli(payment, currentaddress);
             if (nextaddress) {
 	            var newaddress = nextaddress.data("address"),
 	            	selected_socket = helper.selected_socket;
 	            init_socket(selected_socket, newaddress, true);
 	            var dp = gets.d,
-                	has_dat = (dp && dp.length > 5);
-					if (payment == "monero") { // push new xmr viewkey
-						if (has_dat) {
-							if (request.viewkey) {
-								var dat_obj = JSON.parse(atob(dp));
-								dat_obj.vk = request.viewkey.vk;
-								var dp = btoa(JSON.stringify(dat_obj));
-							}
-						}
-					}
-				var new_dp = (has_dat) ? "&d=" + dp : "",
+                	has_dat = (dp && dp.length > 5),
+                	new_dp = (has_dat) ? "&d=" + dp : "",
                 	ccvalue = $("#paymentdialogbox .ccpool").attr("data-value"),
 					newaddressid = nextaddress.data("cmcid"),
                     newaddresslabel = nextaddress.data("label"),
@@ -1451,6 +1457,19 @@ function copyaddress() {
     });
 }
 
+function xmrsettings() {
+    $(document).on("click", "#xmrsettings", function() {
+        var result = confirm("Open XMR settings?");
+        if (result === true) {
+	        var page_title = "monero_settings";
+            openpage("?p=" + page_title, page_title, "loadpage");
+            cancelpaymentdialog();
+        } else {
+            return false;
+        }
+    });
+}
+
 function validaterequestdata(requestname_val, requesttitle_val) {
     var valid = (requestname_val === undefined) ? false : (requestname_val.length > 2 && requesttitle_val.length > 1) ? true : false,
         sharebutton = $("#sharebutton"),
@@ -1475,8 +1494,14 @@ function validaterequestdata(requestname_val, requesttitle_val) {
             dataobject.c = request.set_confirmations;
         }
         if (payment == "monero") {
-	        if (request.viewkey) {
-            	dataobject.vk = request.viewkey.vk;
+	        if (request.viewkey || request.xmria) {
+		        if (request.viewkey) {
+	            	dataobject.vk = request.viewkey.vk;
+	        	}
+	        	if (request.xmria) {
+	            	dataobject.ia = request.xmria;
+	            	dataobject.xid = request.xmrpid;
+	        	}
         	}
         }
         var newurl = currenturl + "&d=" + btoa(JSON.stringify(dataobject));
@@ -1534,12 +1559,22 @@ function fliprequest() {
     $(document).on("click", "#paymentdialogbox.norequest #sharerequest", function(e) {
         e.preventDefault();
         if (paymentdialogbox.attr("data-pending") == "ispending") {
-            pendingrequest();
-        } else if (offline === true) {
-            return false;
-        } else {
-            flip_right1();
+	        if (request.payment == "monero") {
+		        if (hasbip === true) {
+			        notify("Address in use. <span id='xmrsettings'>Activate integrated addresses?</span>", 40000, "yes");
+		        }
+		        else {
+			        notify("Temporarily unable to share request");
+		        }
+		        return false;
+	        }
+	        pendingrequest();
+			return false;
         }
+        if (offline === true) {
+            return false;
+        }
+        flip_right1();
     });
 }
 
@@ -1628,11 +1663,17 @@ function pickaddressfromdialog() {
             init_socket(helper.selected_socket, picked_address, true);
             var dp = gets.d,
             	has_dat = (dp && dp.length > 5);
-				if (payment == "monero") { // push new xmr viewkey
+				if (payment == "monero") { // push new xmr viewkey or PID
 					if (has_dat) {
-						if (request.viewkey) {
+						if (request.viewkey || request.xmria) {
 							var dat_obj = JSON.parse(atob(dp));
-							dat_obj.vk = request.viewkey.vk;
+							if (request.viewkey) {
+								dat_obj.vk = request.viewkey.vk;
+							}
+							if (request.xmria) {
+								dat_obj.ia = request.xmria;
+								dat_obj.xid = request.xmrpid;
+							}
 							var dp = btoa(JSON.stringify(dat_obj));
 						}
 					}
@@ -2450,4 +2491,29 @@ function updaterequest(ua, save) {
             saverequests();
         }, 1000);
     }
+}
+
+function xmr_integrated(pmid, address) {
+	var use_integrated = $("#monero_settings .cc_settinglist li[data-id='Integrated addresses']").data("selected");
+	if (use_integrated) {
+		var address_li = filter_addressli("monero", "address", address);
+		if (address_li.length) {
+			var addr_dat = address_li.data();
+			if (addr_dat) {
+				if (addr_dat.seedid) {
+					var savedseed = (hasbip === true) ? ls_phrase_obj().pob.join(" ") : false;
+				    if (savedseed) {
+					    	seed = toseed(savedseed),
+							ssk = get_ssk(seed, true),
+						    xko = xmr_getpubs(ssk, 0),
+						    bytes = "13" + xko.psk + xko.pvk + pmid,
+						    checksum = bytes + fasthash(bytes).slice(0,8),
+						    integrated = base58_encode(hextobin(checksum));
+						return integrated;
+				    }
+				}
+			}
+		}
+	}
+	return false;
 }

@@ -461,3 +461,36 @@ function point_multiply(hex) {
 function xmr_getPublicKey(privateKey) {
     return point_multiply(privateKey).toHex();
 }
+
+function xmr_pid() {
+    return mn_random(256).slice(0,16);
+}
+
+function mn_random(bits) {
+    'use strict';
+    if (bits % 32 !== 0) throw "Something weird went wrong: Invalid number of bits - " + bits;
+    var array = new Uint32Array(bits / 32);
+    if (!crypto) throw "Unfortunately MyMonero only runs on browsers that support the JavaScript Crypto API";
+    var i = 0;
+
+    function arr_is_zero() {
+        for (var j = 0; j < bits / 32; ++j) {
+            if (array[j] !== 0) return false;
+        }
+        return true;
+    }
+
+    do {
+        crypto.getRandomValues(array);
+        ++i;
+    } while (i < 5 && arr_is_zero());
+    if (arr_is_zero()) {
+        throw "Something went wrong and we could not securely generate random data for your account";
+    }
+    // Convert to hex
+    var out = '';
+    for (var j = 0; j < bits / 32; ++j) {
+        out += ('0000000' + array[j].toString(16)).slice(-8);
+    }
+    return out;
+}
