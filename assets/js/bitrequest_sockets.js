@@ -629,7 +629,7 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
 		        }
 		        pingtx = setInterval(function() {
 					ping_xmr_node(cachetime, address, vk, request_ts, txhash);
-				}, 10000);
+				}, 12000);
 	        }
 	        else {
 	        }

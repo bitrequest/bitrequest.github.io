@@ -407,7 +407,7 @@ function confirmations(tx_data, direct) {
         brstatuspanel.find("span.receivedfiat").text(" (" + receivedrounded + " " + thiscurrency + ")");
         brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), language));
         var exact = helper.exact,
-        	xmr_pass = (payment == "monero") ? (rccf > cc_rawf * 0.95 && rccf < cc_rawf * 1.05) : true; // error margin for xmr integrated addresses
+        	xmr_pass = (payment == "monero") ? (rccf > cc_rawf * 0.96 && rccf < cc_rawf * 1.04) : true; // error margin for xmr integrated addresses
         console.log(rccf);
         console.log(cc_rawf);
         console.log(xmr_pass);

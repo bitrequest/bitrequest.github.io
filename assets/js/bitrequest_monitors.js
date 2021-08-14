@@ -270,7 +270,7 @@ function get_api_inputs(rd, api_data, api_name) {
 						                if (txd) {
 							                if (txd.transactiontime > request_timestamp && txd.ccval) {
 								                if (pending == "scanning") {
-									                var xid_match = match_xmr_pid(rd.xmria, rd.xmrpid, txd.payment_id); // match xmr payment_id if set
+									                var xid_match = match_xmr_pid(rd.xmr_ia, rd.payment_id, txd.payment_id); // match xmr payment_id if set
 									                if (xid_match === true) {
 										                var tx_listitem = append_tx_li(txd, thislist);
 														if (tx_listitem) {
@@ -1230,7 +1230,7 @@ function append_tx_li(txd, this_request) {
             return tx_listitem;
         } else {
 	        var tx_dat = this_request.data();
-	        if (tx_dat.xmria) { // xmr integrated adddresses are unique
+	        if (tx_dat.xmr_ia) { // xmr integrated adddresses are unique
 		        return tx_listitem;
 	        }
             var tx_index = tx_dat.tx_index,
@@ -1378,61 +1378,67 @@ function compareamounts(rd) {
 function get_historical_fiat_data(rd, apilist, fiatapi) {
 	api_attempt[apilist][fiatapi] = true;
     var thisrequestid = rd.requestid,
-        lcsymbol = rd.fiatcurrency.toUpperCase(),
-        payload = get_historic_fiatprice_api_payload(fiatapi, lcsymbol, rd.latestinput);
-    api_proxy({
-        "api": fiatapi,
-        "search": payload,
-        "cachetime": 86400,
-        "cachefolder": "1d",
-        "params": {
-            "method": "GET"
-        }
-    }).done(function(e) {
-        var data = br_result(e).result;
-        var error = data.error;
-        if (error) {
-            fail_dialogs(fiatapi, error);
-            api_callback(thisrequestid);
-        } else {
-            var usdrate,
-                lcrate,
-                get_lcrate;
-            if (fiatapi == "currencylayer") {
-                var rates = data.quotes,
-                    usdrate = 1 / rates["USDEUR"],
-                    get_lcrate = rates["USD" + lcsymbol] * usdrate;
-            } else {
-                var rates = data.rates,
-                    usdrate = rates["USD"],
-                    get_lcrate = rates[lcsymbol];
-            }
-            var lcrate = (lcsymbol == "EUR") ? 1 : get_lcrate;
-            if (lcrate === undefined || usdrate === undefined) {
-                var next_historic = try_next_api(apilist, fiatapi);
-                if (next_historic === false) {
-                    fail_dialogs(fiatapi, "unable to fetch " + lcsymbol + " exchange rate");
-                    api_callback(thisrequestid);
-                } else {
-                    get_historical_fiat_data(rd, apilist, next_historic);
-                }
-            } else {
-                var historic_api = $("#cmcapisettings").data("selected"),
-                    picked_historic_api = (historic_api == "coinmarketcap") ? "coingecko" : historic_api; // default to "coingecko api"
-                api_attempt["historic_crypto_price_apis"] = {};
-                get_historical_crypto_data(rd, fiatapi, "historic_crypto_price_apis", picked_historic_api, lcrate, usdrate, lcsymbol);
-            }
-        }
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        var next_historic = try_next_api(apilist, fiatapi);
-        if (next_historic === false) {
-            var error_object = (errorThrown) ? errorThrown : jqXHR;
-            fail_dialogs(fiatapi, error_object);
-            api_callback(thisrequestid);
-        } else {
-            get_historical_fiat_data(rd, apilist, next_historic);
-        }
-    });
+    	fiatcurrency = rd.fiatcurrency;
+	if (fiatcurrency) {
+	    var lcsymbol = fiatcurrency.toUpperCase(),
+	        payload = get_historic_fiatprice_api_payload(fiatapi, lcsymbol, rd.latestinput);
+	    api_proxy({
+	        "api": fiatapi,
+	        "search": payload,
+	        "cachetime": 86400,
+	        "cachefolder": "1d",
+	        "params": {
+	            "method": "GET"
+	        }
+	    }).done(function(e) {
+	        var data = br_result(e).result;
+	        var error = data.error;
+	        if (error) {
+	            fail_dialogs(fiatapi, error);
+	            api_callback(thisrequestid);
+	        } else {
+	            var usdrate,
+	                lcrate,
+	                get_lcrate;
+	            if (fiatapi == "currencylayer") {
+	                var rates = data.quotes,
+	                    usdrate = 1 / rates["USDEUR"],
+	                    get_lcrate = rates["USD" + lcsymbol] * usdrate;
+	            } else {
+	                var rates = data.rates,
+	                    usdrate = rates["USD"],
+	                    get_lcrate = rates[lcsymbol];
+	            }
+	            var lcrate = (lcsymbol == "EUR") ? 1 : get_lcrate;
+	            if (lcrate === undefined || usdrate === undefined) {
+	                var next_historic = try_next_api(apilist, fiatapi);
+	                if (next_historic === false) {
+	                    fail_dialogs(fiatapi, "unable to fetch " + lcsymbol + " exchange rate");
+	                    api_callback(thisrequestid);
+	                } else {
+	                    get_historical_fiat_data(rd, apilist, next_historic);
+	                }
+	            } else {
+	                var historic_api = $("#cmcapisettings").data("selected"),
+	                    picked_historic_api = (historic_api == "coinmarketcap") ? "coingecko" : historic_api; // default to "coingecko api"
+	                api_attempt["historic_crypto_price_apis"] = {};
+	                get_historical_crypto_data(rd, fiatapi, "historic_crypto_price_apis", picked_historic_api, lcrate, usdrate, lcsymbol);
+	            }
+	        }
+	    }).fail(function(jqXHR, textStatus, errorThrown) {
+	        var next_historic = try_next_api(apilist, fiatapi);
+	        if (next_historic === false) {
+	            var error_object = (errorThrown) ? errorThrown : jqXHR;
+	            fail_dialogs(fiatapi, error_object);
+	            api_callback(thisrequestid);
+	        } else {
+	            get_historical_fiat_data(rd, apilist, next_historic);
+	        }
+	    });
+    }
+    else {
+	    api_callback(thisrequestid);
+    }
 }
 
 function get_historic_fiatprice_api_payload(fiatapi, lcsymbol, latestinput) {
