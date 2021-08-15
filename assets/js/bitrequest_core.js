@@ -4310,7 +4310,6 @@ function appendaddress(currency, ad) {
 }
 
 function appendrequest(rd) {
-	console.log(rd);
 	var payment = rd.payment,
         erc20 = rd.erc20,
         uoa = rd.uoa,

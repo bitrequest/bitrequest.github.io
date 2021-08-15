@@ -482,7 +482,8 @@ function continue_paymentfunction(payment) {
         return false;
     }
     loader();
-    var coindata = request.coindata,
+    var isrequest = (localStorage.getItem("bitrequest_editurl") !== window.location.search), // check if url is a request
+    	coindata = request.coindata,
 		coinsettings = activecoinsettings(payment),
         uoa = gets.uoa,
         amount = Number(gets.amount),
@@ -491,7 +492,7 @@ function continue_paymentfunction(payment) {
         isdata = (data && data.length > 5),
         dataobject = (isdata === true) ? JSON.parse(atob(data)) : null, // decode data param if exists;
         viewkey = false,
-        payment_id = (dataobject && dataobject.pid) ? dataobject.pid : xmr_pid(),
+        payment_id = (dataobject && dataobject.pid) ? dataobject.pid : false,
         xmr_ia = address;
     if (payment == "monero") { // check for monero viewkey
 	    coindata.monitored = false;
@@ -499,10 +500,10 @@ function continue_paymentfunction(payment) {
 			"account": address,
 			"vk": dataobject.vk
 		} : get_vk(address),
+		payment_id = (payment_id) ? payment_id : (isrequest) ? false : get_xmrpid();
 		xmr_ia = xmr_integrated(address, payment_id);
     }
     var currencysymbol = coindata.ccsymbol,
-        isrequest = (localStorage.getItem("bitrequest_editurl") !== window.location.search), // check if url is a request
         requesttype = (isrequest === true) ? (type) ? type : "incoming" : "local",
         iscrypto = (uoa == currencysymbol),
         localcurrency = $("#currencysettings").data("currencysymbol"), // can be changed in (settings)
@@ -1557,12 +1558,7 @@ function fliprequest() {
         e.preventDefault();
         if (paymentdialogbox.attr("data-pending") == "ispending") {
 	        if (request.payment == "monero") {
-		        if (hasbip === true) {
-			        notify("Address in use. <span id='xmrsettings'>Activate integrated addresses?</span>", 40000, "yes");
-		        }
-		        else {
-			        notify("Temporarily unable to share request");
-		        }
+		        notify("Address in use. <span id='xmrsettings'>Activate integrated addresses?</span>", 40000, "yes");
 		        return false;
 	        }
 	        pendingrequest();
@@ -2475,19 +2471,24 @@ function updaterequest(ua, save) {
     }
 }
 
-function xmr_integrated(xmr_address, pmid) {
+function get_xmrpid() {
 	var use_integrated = $("#monero_settings .cc_settinglist li[data-id='Integrated addresses']").data("selected");
 	if (use_integrated) {
-		var is_valid = check_pid(pmid);
-		if (is_valid) {
-			var pahx = cnBase58.decode(xmr_address),
-				psk = pahx.slice(2, 66),
-				pvk = pahx.slice(66, 130),
-				bytes = "13" + psk + pvk + pmid,
-				checksum = bytes + fasthash(bytes).slice(0,8);
-			return base58_encode(hextobin(checksum));
-		}
-		console.log("invalid xmr payment id");
+		return xmr_pid();
 	}
+	return false;
+}
+
+function xmr_integrated(xmr_address, pmid) {
+	var is_valid = check_pid(pmid);
+	if (is_valid) {
+		var pahx = cnBase58.decode(xmr_address),
+			psk = pahx.slice(2, 66),
+			pvk = pahx.slice(66, 130),
+			bytes = "13" + psk + pvk + pmid,
+			checksum = bytes + fasthash(bytes).slice(0,8);
+		return base58_encode(hextobin(checksum));
+	}
+	console.log("invalid xmr payment id");
 	return xmr_address;
 }
