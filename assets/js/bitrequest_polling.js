@@ -354,6 +354,7 @@ function handle_rpc_monitor_fails(rpcdata, error, txhash) {
 }
 
 function confirmations(tx_data, direct) {
+	console.log(tx_data);
 	closeloader();
 	clearTimeout(request_timer);
 	if (tx_data === false || tx_data.ccval === undefined) {
@@ -407,10 +408,7 @@ function confirmations(tx_data, direct) {
         brstatuspanel.find("span.receivedfiat").text(" (" + receivedrounded + " " + thiscurrency + ")");
         brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), language));
         var exact = helper.exact,
-        	xmr_pass = (payment == "monero") ? (rccf > cc_rawf * 0.96 && rccf < cc_rawf * 1.04) : true; // error margin for xmr integrated addresses
-        console.log(rccf);
-        console.log(cc_rawf);
-        console.log(xmr_pass);
+        	xmr_pass = (payment == "monero") ? (rccf > cc_rawf * 0.97 && rccf < cc_rawf * 1.03) : true; // error margin for xmr integrated addresses
         if (xmr_pass) {
 	        var pass = (exact) ? (rccf == cc_rawf) : (rccf >= cc_rawf * 0.99);
 	        if (pass) {

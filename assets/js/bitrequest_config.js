@@ -1166,14 +1166,14 @@ var app_settings = [{
     },
     {
         "id": "cmcapisettings",
-        "heading": "Cryptocurrency price API",
+        "heading": "Cryptocurrency price data",
         "selected": "coinmarketcap",
         "icon": "icon-stats-dots",
         "cmcapikey": null
     },
     {
         "id": "fiatapisettings",
-        "heading": "FIAT price API",
+        "heading": "FIAT price data",
         "selected": "fixer",
         "icon": "icon-stats-bars",
         "fxapikey": null

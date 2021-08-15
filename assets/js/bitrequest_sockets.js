@@ -624,12 +624,13 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
         else {
 	        var start_height = data.start_height;
 	        if (start_height > -1) { // success!
+		        var pingtime = (txhash) ? 35000 : 12000; // poll slower when we know txid
 		        if (start === true) {
 			        ping_xmr_node(cachetime, address, vk, request_ts, txhash);
 		        }
 		        pingtx = setInterval(function() {
 					ping_xmr_node(cachetime, address, vk, request_ts, txhash);
-				}, 12000);
+				}, pingtime);
 	        }
 	        else {
 	        }
