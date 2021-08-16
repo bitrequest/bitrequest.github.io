@@ -4315,6 +4315,8 @@ function appendrequest(rd) {
         uoa = rd.uoa,
         amount = rd.amount,
         address = rd.address,
+        payment_id = rd.payment_id,
+        xmr_ia = rd.xmr_ia,
         currencysymbol = rd.currencysymbol,
         cmcid = rd.cmcid,
         cpid = rd.cpid,
@@ -4406,6 +4408,8 @@ function appendrequest(rd) {
         render_archive = (txhistory && (pending == "no" || archive === true)),
         tl_text = (render_archive === true) ? (incoming === true) ? "Send transaction:" : "received transactions:" : "",
         edit_request = (local === true) ? "<div class='editrequest icon-pencil' title='edit request' data-requestid='" + requestid + "'></div>" : "",
+        pid_li = (payment_id) ? "<li><strong>Payment ID:</strong> " + payment_id + "</li>" : "",
+        ia_li = (xmr_ia) ? "<li><p class='address'><strong>Integrated Address:</strong> <span class='requestaddress select'>" + xmr_ia + "</span></p></li>" : "",
         new_requestli = $("<li class='rqli " + requesttypeclass + expiredclass + "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status + "' data-address='" + address + "' data-pending='" + ispendingclass + "' data-iscrypto='" + iscrypto + "' data-tx_index='" + tx_index + "'>\
 			<div class='liwrap iconright'>" +
             getcc_icon(cmcid, cpid, erc20) + getcc_icon(cmcid, cpid, erc20) +
@@ -4434,8 +4438,10 @@ function appendrequest(rd) {
 					<li class='meta_status' data-conf='" + confirmations + "'><strong>Status:</strong><span class='status'> " + statustext + "</span> " + conf_box + "</li>\
 					<li><strong>Type:</strong> " + typetext + ismonitoredspan + "</li>" +
             timestampbox +
-            "<li><p class='address'><strong>Address:</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>" +
             paymentdetails +
+            "<li><p class='address'><strong>Receiving Address:</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>" +
+            pid_li +
+            ia_li +
             view_tx + 
             "<li class='receipt'><p><span class='icon-file-pdf' title='View receipt'/>Receipt</p></li>\
 				</ul>\
