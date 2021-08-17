@@ -187,7 +187,8 @@ function get_api_inputs_init(rd, api_data, api_name) {
 }
 
 function get_api_inputs(rd, api_data, api_name) {
-	var thislist = $("#" + rd.requestid);
+	var requestid = rd.requestid,
+		thislist = $("#" + requestid);
     if (thislist.hasClass("scan")) {
         var pending = rd.pending;
         api_attempts[pending + api_name] = true;
@@ -215,7 +216,7 @@ function get_api_inputs(rd, api_data, api_name) {
             transactionlist.find("li").each(function(i) {
                 tx_list.push($(this).data("txhash"));
             });
-            api_callback(rd.requestid, true);
+            api_callback(requestid, true);
         } else if (pending == "scanning" || pending == "polling") {
             transactionlist.html("");
             if (payment == "monero") {
@@ -243,7 +244,7 @@ function get_api_inputs(rd, api_data, api_name) {
 				        }
 				    }).done(function(e) {
 				        var data = br_result(e).result;
-				        if (data.start_height) { // success!
+				        if (data.start_height > -1) { // success!
 					        var pl = {
 						    	"address":account,
 						    	"view_key":viewkey
@@ -262,9 +263,9 @@ function get_api_inputs(rd, api_data, api_name) {
 						        }
 						    }).done(function(e) {
 						        var data = br_result(e).result,
-						            transactions = data.transactions,
-						            txflip = transactions.reverse();
+						            transactions = data.transactions;
 						        if (transactions) {
+							        var txflip = transactions.reverse();
 						            $.each(txflip, function(dat, value) {
 						                var txd = xmr_scan_data(value, setconfirmations, "xmr", data.blockchain_height);
 						                if (txd) {
@@ -308,6 +309,8 @@ function get_api_inputs(rd, api_data, api_name) {
 					        var errormessage = data.Error,
 					        	error = (errormessage) ? errormessage : "Invalid Viewkey";
 					        console.log(error);
+					        api_callback(requestid);
+					        //handle_api_fails(rd, {"error":error,"console":true}, api_name, payment);
 				        }   
 				    }).fail(function(jqXHR, textStatus, errorThrown) {
 				        tx_api_fail(thislist, statuspanel);
@@ -856,8 +859,8 @@ function tx_api_fail(thislist, statuspanel) {
 
 function api_eror_msg(apisrc, error, apikey, monitor) {
     var error_dat = (error) ? error : {
-            errormessage: "errormessage",
-            errorcode: "errorcode"
+            "errormessage": "errormessage",
+            "errorcode": "errorcode"
         },
         errormessage = error_dat.errormessage,
         errorcode = error_dat.errorcode,
