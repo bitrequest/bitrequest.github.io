@@ -4385,7 +4385,7 @@ function appendrequest(rd) {
         iscryptoclass = (iscrypto === true) ? "" : " isfiat",
         archivebutton = (showarchive === true) ? "<div class='icon-folder-open' title='archive request'></div>" : "",
         render_archive = (txhistory && (pending == "no" || archive === true)),
-        tl_text = (render_archive === true) ? (incoming === true) ? "Send transaction:" : "received transactions:" : "",
+        tl_text = (render_archive === true) ? "transactions:" : "",
         edit_request = (local === true) ? "<div class='editrequest icon-pencil' title='edit request' data-requestid='" + requestid + "'></div>" : "",
         pid_li = (payment_id) ? "<li><strong>Payment ID:</strong> " + payment_id + "</li>" : "",
         ia_li = (xmr_ia) ? "<li><p class='address'><strong>Integrated Address:</strong> <span class='requestaddress select'>" + xmr_ia + "</span></p></li>" : "",

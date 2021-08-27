@@ -1186,8 +1186,8 @@ function get_rpc_error_data(error) {
 
 function rpc_eror_msg(apisrc, error, monitor) {
     var error_dat = (error !== false) ? error : {
-            errormessage: "errormessage",
-            errorcode: "errorcode"
+            "errormessage": "errormessage",
+            "errorcode": "errorcode"
         },
         errormessage = error_dat.errormessage,
         errorcode = error_dat.errorcode;
@@ -1221,8 +1221,8 @@ function append_tx_li(txd, this_request) {
             set_ccsymbol = (ccsymbol) ? ccsymbol.toUpperCase() : "",
             date_format = (transactiontime) ? short_date(transactiontime) : "",
             confspan = (confirmations === false) ? "" :
-            (!confirmations || confirmations <= 0) ? "<div class='txli_conf' title='Unconfirmed transaction'><div class='confbar'></div><span>Unconfirmed transaction</span></div>" :
-            (confirmations > 0) ? "<div class='txli_conf' title='" + confirmations + " confirmations'><div class='confbar'></div><span>" + confirmations + " / " + setconfirmations + " confirmations</span></div>" : "",
+            (!confirmations || confirmations <= 0) ? "<div class='txli_conf' title='Unconfirmed transaction'><div class='confbar'></div><span>unconfirmed</span></div>" :
+            (confirmations > 0) ? "<div class='txli_conf' title='" + confirmations + " confirmations'><div class='confbar'></div><span>" + confirmations + " / " + setconfirmations + " conf</span></div>" : "",
             tx_listitem = $("<li><div class='txli_content'>" + date_format + confspan + "<span class='tx_val'> + " + ccval_rounded + " " + set_ccsymbol + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>"),
             historic = txd.historic;
         if (historic) {
