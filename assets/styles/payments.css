@@ -1,5 +1,9 @@
 /* Payment dialog */
 
+#payment {
+    overflow-x: hidden;
+}
+
 #paymentdialogbox {
     width: 100%;
     transform-style: preserve-3d;
@@ -580,43 +584,6 @@ html.inframe #request_back {
 
 .cpool .ratesspan {
     text-transform: uppercase;
-}
-
-#chainstatus {
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    padding: 0.5em;
-    font-size: 1.2rem;
-    color: #aaaaaa;
-    font-weight: 400;
-    pointer-events: none;
-    opacity: 0.6;
-    display: none;
-    display: none !important;
-}
-
-#chainstatus>span {
-    display: inline-block;
-    margin-right: 0.3em;
-    vertical-align: middle;
-}
-
-#chainstatus div {
-    display: inline-block;
-    vertical-align: middle;
-}
-
-#chainstatus .icon-wifi-off {
-    display: none;
-}
-
-#chainstatus.offline .pulse {
-    display: none;
-}
-
-#chainstatus.offline .icon-wifi-off {
-    display: inline;
 }
 
 #current_socket .pulse {

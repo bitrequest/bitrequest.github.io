@@ -26,9 +26,6 @@ function api_monitor_init(api_data, txhash, tx_data) {
     api_attempts["polling" + api_data.name] = null;
     api_monitor(api_data, txhash, tx_data);
     paymentdialogbox.addClass("transacting");
-    setTimeout(function() {
-        chainstate("Monitoring transaction");
-    }, 3500);
 }
 
 function api_monitor(api_data, txhash, tx_data) {
@@ -354,7 +351,6 @@ function handle_rpc_monitor_fails(rpcdata, error, txhash) {
 }
 
 function confirmations(tx_data, direct) {
-	console.log(tx_data);
 	closeloader();
 	clearTimeout(request_timer);
 	if (tx_data === false || tx_data.ccval === undefined) {
@@ -422,8 +418,7 @@ function confirmations(tx_data, direct) {
 		                playsound(cashier);
 	                }
 	                paymentdialogbox.addClass("transacting").attr("data-status", "paid");
-	                var confirmationtext = (requesttype === "incoming") ? "Payment sent" : "Payment received";
-	                brheader.text(confirmationtext);
+	                brheader.text("Payment received");
 	                request.status = "paid",
 	                    request.pending = "polling";
 	                saverequest(direct);

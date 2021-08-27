@@ -911,17 +911,6 @@ body.seed_dialog #seed_panel {
 	pointer-events:all;
 }
 
-#testtrigger {
-	position:fixed;
-	bottom:0;
-	right:0;
-	color:#FFF;
-	background-color: red;
-	padding:1em;
-	cursor:pointer;
-	display:none;
-}
-
 .addone {
 	position:absolute;
 	top:0;

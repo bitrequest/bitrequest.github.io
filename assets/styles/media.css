@@ -290,3 +290,9 @@
 		font-size:100%;
 	}
 }
+
+@media only screen and (min-height:800px) {
+    #payment {
+		overflow-y: hidden;
+	}
+}

@@ -404,6 +404,10 @@ html.fixednav #relnav {
     visibility: hidden;
 }
 
+html.fixednav body.showstartpage #fixednav {
+    display: none !important;
+}
+
 .nav {
     position: relative;
     float: left;
@@ -914,7 +918,6 @@ li[data-checked="false"] .checkbox:before,
     padding:2.3em 0 0.5em 1em;
     min-height: 0em;
     border: 1px solid rgba(255, 255, 255, 0);
-    //background-color: rgba(0, 0, 0, 0.06);
 }
 
 #appsettings>li.set_heading:first-child { 
@@ -2867,10 +2870,11 @@ html.inframe body {
 	-webkit-transform: translate(0, 110vh);
     -ms-transform: translate(0, 110vh);
     transform: translate(0, 110vh);
-    -webkit-transition: -webkit-transform 200ms linear;
-    -ms-transition: -ms-transform 200ms linear;
-    transition: transform 200ms linear;
+    -webkit-transition: all 200ms linear;
+    -ms-transition: all 200ms linear;
+    transition: all 200ms linear;
     pointer-events:none;
+    opacity:0;
 }
 
 body.showcam #scanner {
@@ -2878,6 +2882,7 @@ body.showcam #scanner {
     -ms-transform: translate(0, 0vh);
     transform: translate(0, 0vh);
     pointer-events:all;
+    opacity:1;
 }
 	
 #qr-video {

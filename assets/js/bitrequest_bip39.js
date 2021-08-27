@@ -75,7 +75,6 @@ $(document).ready(function() {
     //deactivate_xpubs
 
     // Test triggers
-    //derive_test_trigger();
     //derive_addone_trigger();
     //derive_addone
     //key_cc
@@ -493,7 +492,7 @@ function manage_bip32(dat) {
 }
 
 function submit_disclaimer() {
-    $(document).on("click", "#disclaimer_dialog input.submit", function(e) {
+	    $(document).on("click", "#disclaimer_dialog input.submit", function(e) {
         e.preventDefault();
         var disclaimer_dialog = $("#disclaimer_dialog"),
         	data = disclaimer_dialog.data(),
@@ -932,17 +931,6 @@ function deactivate_xpubs() {
     });
 }
 
-// Test triggers
-
-function derive_test_trigger() {
-    $(document).on("click", "#testtriggerxx", function() {
-	    var seedobject = ls_phrase_obj(),
-			seedid = seedobject.pid,
-			savedseed = seedobject.pob.join(" ");
-		derive_all(savedseed, seedid, true);
-    })
-}
-
 function enc_s(dat) {
 	if (hasbip && test_derive) {
         var pn = get_setting("pinsettings", "pinhash");
@@ -1003,6 +991,8 @@ function ptokey(p, sid) {
     });
     return key = hmacsha(wordarr.join(" ") + sid, "sha256").slice(0, 32);
 }
+
+// Test triggers
 
 function derive_addone_trigger() {
     $(document).on("click", ".addonexx", function() {

@@ -485,8 +485,6 @@ function finishfunctions() {
     closeloader_trigger();
     //closeloader
     //loadertext
-    //chainstate	
-    //closechainstate
     //settitle
     //getcc_icon
     //getdevicetype
@@ -2691,11 +2689,6 @@ function forceclosesocket() {
 function clearpingtx(close) {
     clearInterval(pingtx);
     pingtx = null;
-    if (close) {
-        closechainstate();
-    } else {
-        chainstate("Connection stopped", "offline");
-    }
 }
 
 function cancelsharedialogtrigger() {
@@ -3648,20 +3641,6 @@ function closeloader() {
 
 function loadertext(text) {
     $("#loader #loadtext > span").text(text);
-}
-
-function chainstate(text, symbol) {
-    var csclass = (symbol) ? symbol : "",
-        chainstatus = $("#chainstatus");
-    chainstatus.attr("class", csclass).children("span").text(text);
-    chainstatus.fadeIn(500)
-}
-
-function closechainstate() {
-    chainstate("Closing conection");
-    setTimeout(function() {
-        $("#chainstatus").fadeOut(500)
-    }, 3000);
 }
 
 function settitle(title) {

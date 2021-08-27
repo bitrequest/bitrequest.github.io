@@ -111,9 +111,6 @@ function blockchain_btc_socket(socket_node, thisaddress) {
 	var provider = socket_node.url;
     websocket = new WebSocket(provider);
     websocket.onopen = function(e) {
-        setTimeout(function() {
-            chainstate("Monitoring address");
-        }, 3500);
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
             "op": "addr_sub",
@@ -146,7 +143,6 @@ function blockchain_btc_socket(socket_node, thisaddress) {
 
     };
     websocket.onclose = function(e) {
-        chainstate("Connection ended");
         console.log("Disconnected");
         txid = null;
     };
@@ -161,9 +157,6 @@ function blockchain_bch_socket(socket_node, thisaddress) {
     	legacy = bchutils.toLegacyAddress(thisaddress);
     websocket = new WebSocket(provider);
     websocket.onopen = function(e) {
-        setTimeout(function() {
-            chainstate("Monitoring address");
-        }, 3500);
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
             "op": "addr_sub",
@@ -186,7 +179,6 @@ function blockchain_bch_socket(socket_node, thisaddress) {
         }
     };
     websocket.onclose = function(e) {
-        chainstate("Connection ended");
         console.log("Disconnected");
         txid = null;
     };
@@ -200,9 +192,6 @@ function dogechain_info_socket(socket_node, thisaddress) {
 	var provider = socket_node.url;
     websocket = new WebSocket(provider);
     websocket.onopen = function(e) {
-        setTimeout(function() {
-            chainstate("Monitoring address");
-        }, 3500);
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
             "op": "addr_sub",
@@ -238,7 +227,6 @@ function dogechain_info_socket(socket_node, thisaddress) {
 
     };
     websocket.onclose = function(e) {
-        chainstate("Connection ended");
         console.log("Disconnected");
         txid = null;
     };
@@ -254,9 +242,6 @@ function blockcypher_websocket(socket_node, thisaddress) {
 	var provider = socket_node.url + request.currencysymbol + "/main";
 	websocket = new WebSocket(provider);
     websocket.onopen = function(e) {
-        setTimeout(function() {
-            chainstate("Monitoring address");
-        }, 3500);
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
             "event": "tx-confirmation",
@@ -290,7 +275,6 @@ function blockcypher_websocket(socket_node, thisaddress) {
         }
     };
     websocket.onclose = function(e) {
-        chainstate("Connection ended");
         console.log("Disconnected");
         txid = null;
     };
@@ -305,9 +289,6 @@ function nano_socket(socket_node, thisaddress) {
         provider = socket_node.url;
     websocket = new WebSocket(provider);
     websocket.onopen = function(e) {
-        setTimeout(function() {
-            chainstate("Monitoring address");
-        }, 3500);
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
             "action": "subscribe",
@@ -338,7 +319,6 @@ function nano_socket(socket_node, thisaddress) {
         }
     };
     websocket.onclose = function(e) {
-        chainstate("Connection ended", "offline");
         console.log("Disconnected");
         txid = null;
     };
@@ -354,9 +334,6 @@ function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
 		provider = socket_url + "?x-api-key=" + ak + "&x-amberdata-blockchain-id=" + blockchainid;
     websocket = new WebSocket(provider);
     websocket.onopen = function(e) {
-        setTimeout(function() {
-            chainstate("Monitoring address");
-        }, 3500);
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
             "jsonrpc": "2.0",
@@ -387,7 +364,6 @@ function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
         }
     };
     websocket.onclose = function(e) {
-        chainstate("Connection ended");
         console.log("Disconnected");
         txid = null;
     };
@@ -403,10 +379,7 @@ function amberdata_eth_websocket(socket_node, thisaddress) {
 		provider = socket_url + "?x-api-key=" + ak;
     websocket = new WebSocket(provider);
     websocket.onopen = function(e) {
-        setTimeout(function() {
-            chainstate("Monitoring address");
-        }, 3500);
-        socket_info(socket_node, true);
+       socket_info(socket_node, true);
         var ping_event = JSON.stringify({
             "jsonrpc": "2.0",
             "id": 1,
@@ -438,7 +411,6 @@ function amberdata_eth_websocket(socket_node, thisaddress) {
         }
     };
     websocket.onclose = function(e) {
-        chainstate("Connection ended");
         console.log("Disconnected");
         txid = null;
     };
@@ -454,10 +426,7 @@ function web3_erc20_websocket(socket_node, thisaddress) {
         provider = provider_url + if_id;
     websocket = new WebSocket(provider);
     websocket.onopen = function(e) {
-        setTimeout(function() {
-            chainstate("Monitoring address");
-        }, 3500);
-        socket_info(socket_node, true);
+       	socket_info(socket_node, true);
         var ping_event = JSON.stringify({
             "jsonrpc": "2.0",
             "id": 1,
@@ -518,7 +487,6 @@ function web3_erc20_websocket(socket_node, thisaddress) {
         }
     };
     websocket.onclose = function(e) {
-        chainstate("Connection ended");
         console.log("Disconnected");
         txid = null;
     };
