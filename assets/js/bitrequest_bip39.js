@@ -21,10 +21,7 @@ var test_phrase = "army van defense carry jealous true garbage claim echo media 
 	    "monero": false,
 	    "ethereum": true,
 	    "bitcoin-cash": true
-    },
-    k_str = expected_seed.slice(0, 32),
-    enc_test = aes_enc(test_phrase, k_str),
-    dec_test = aes_dec(enc_test, k_str);
+    };
 
 $(document).ready(function() {
 	hasbigint();
@@ -185,6 +182,9 @@ function test_bip39() {
         bip39_fail();
         test_derive = false;
     }
+    var k_str = expected_seed.slice(0, 32),
+    	enc_test = aes_enc(test_phrase, k_str),
+		dec_test = aes_dec(enc_test, k_str);
     if (test_phrase != dec_test) { // test encryption
         bip39_fail();
         test_derive = false;

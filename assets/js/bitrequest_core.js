@@ -4342,7 +4342,7 @@ function appendrequest(rd) {
         typetext = (incoming === true) ? (online_purchase === true) ? "online purchase" : "incoming" : (local === true) ? "point of sale" : "outgoing",
         requesticon = (incoming === true) ? (online_purchase === true) ? " typeicon icon-cart" : " typeicon icon-arrow-down-right2" : (local === true) ? " icon-qrcode" : " typeicon icon-arrow-up-right2",
         typeicon = "<span class='inout" + requesticon + "'></span> ",
-        statusicon = "<span class='icon-checkmark' title='confirmed transaction'></span>\
+        statusicon = "<span class='icon-checkmark' title='Confirmed transaction'></span>\
 			<span class='icon-clock' title='pending transaction'></span>\
 			<span class='icon-eye-blocked' title='unmonitored transaction'></span>\
 			<span class='icon-wifi-off' title='No network'></span>",
@@ -4385,7 +4385,7 @@ function appendrequest(rd) {
         iscryptoclass = (iscrypto === true) ? "" : " isfiat",
         archivebutton = (showarchive === true) ? "<div class='icon-folder-open' title='archive request'></div>" : "",
         render_archive = (txhistory && (pending == "no" || archive === true)),
-        tl_text = (render_archive === true) ? "transactions:" : "",
+        tl_text = (render_archive === true) ? "Transactions:" : "",
         edit_request = (local === true) ? "<div class='editrequest icon-pencil' title='edit request' data-requestid='" + requestid + "'></div>" : "",
         pid_li = (payment_id) ? "<li><strong>Payment ID:</strong> " + payment_id + "</li>" : "",
         ia_li = (xmr_ia) ? "<li><p class='address'><strong>Integrated Address:</strong> <span class='requestaddress select'>" + xmr_ia + "</span></p></li>" : "",

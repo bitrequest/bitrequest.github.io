@@ -1220,9 +1220,13 @@ function append_tx_li(txd, this_request) {
             ccsymbol = txd.ccsymbol,
             set_ccsymbol = (ccsymbol) ? ccsymbol.toUpperCase() : "",
             date_format = (transactiontime) ? short_date(transactiontime) : "",
-            confspan = (confirmations === false) ? "" :
-            (!confirmations || confirmations <= 0) ? "<div class='txli_conf' title='Unconfirmed transaction'><div class='confbar'></div><span>unconfirmed</span></div>" :
-            (confirmations > 0) ? "<div class='txli_conf' title='" + confirmations + " confirmations'><div class='confbar'></div><span>" + confirmations + " / " + setconfirmations + " conf</span></div>" : "",
+            confirmed = (confirmations && confirmations >= setconfirmations),
+            conftitle = (confirmations === false) ? "Confirmed transaction" : confirmations + " / " + setconfirmations + " confirmations",
+            checked_span = "<span class='icon-checkmark' title='" + conftitle + "'></span>",
+            confspan = (confirmations) ? (confirmed) ? checked_span :
+            "<div class='txli_conf' title='" + conftitle + "'><div class='confbar'></div><span>" + conftitle + "</span></div>" :
+            (confirmations === false) ? checked_span :
+            "<div class='txli_conf' title='Unconfirmed transaction'><div class='confbar'></div><span>Unconfirmed</span></div>",
             tx_listitem = $("<li><div class='txli_content'>" + date_format + confspan + "<span class='tx_val'> + " + ccval_rounded + " " + set_ccsymbol + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>"),
             historic = txd.historic;
         if (historic) {
