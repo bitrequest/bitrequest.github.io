@@ -2198,6 +2198,7 @@ function saverequest(direct) {
             meta_data_object = (rqmetahash) ? JSON.parse(atob(rqmetahash)) : undefined, // decode meta param if exists
             fiatvalue_rounded = trimdecimals(request.fiatvalue, 2),
             received_in_currency = (this_iscrypto === true) ? request.receivedamount : fiatvalue_rounded,
+            tpts = (thispaymenttimestamp) ? thispaymenttimestamp : timestamp,
             tx_data = {
                 "currencyname": request.currencyname,
                 "requestid": requestid,
@@ -2213,7 +2214,7 @@ function saverequest(direct) {
                 "txhash": savedtxhash,
                 "receiver": thisaddress,
                 "confirmations": request.confirmations,
-                "transactiontime": thispaymenttimestamp,
+                "transactiontime": tpts,
                 "pending": request.pending
             },
             contactdata;
