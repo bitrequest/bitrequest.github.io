@@ -835,10 +835,13 @@ function api_callback(requestid, nocache) {
             transactionlist.find("li").each(function() {
                 var thisnode = $(this),
                     thisdata = thisnode.data(),
-                    historic = thisdata.historic;
+                    historic = thisdata.historic,
+                    confirmations = thisdata.confirmations,
+					setconfirmations = thisdata.setconfirmations,
+					confirmed = (confirmations && confirmations >= setconfirmations);
                 transactionpush.push(thisdata);
-                if (historic === undefined || $.isEmptyObject(historic)) {} else {
-                    var h_string = historic_data_title(thisdata.ccsymbol, thisdata.ccval, historic, false);
+                if (!historic || $.isEmptyObject(historic)) {} else {
+                    var h_string = historic_data_title(thisdata.ccsymbol, thisdata.ccval, historic, setconfirmations, confirmations, false);
                     thisnode.append("<div class='historic_meta'>" + h_string.split("\n").join("<br/>") + "</div>").attr("title", h_string);
                 }
             });
@@ -1230,7 +1233,7 @@ function append_tx_li(txd, this_request) {
             tx_listitem = $("<li><div class='txli_content'>" + date_format + confspan + "<span class='tx_val'> + " + ccval_rounded + " " + set_ccsymbol + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>"),
             historic = txd.historic;
         if (historic) {
-            var h_string = historic_data_title(ccsymbol, ccval, historic, true);
+            var h_string = historic_data_title(ccsymbol, ccval, historic, setconfirmations, confirmations, true);
             tx_listitem.append("<div class='historic_meta'>" + h_string.split("\n").join("<br/>") + "</div>").attr("title", h_string);
         }
         if (this_request === false) {
@@ -1264,7 +1267,7 @@ function append_tx_li(txd, this_request) {
     }
 }
 
-function historic_data_title(ccsymbol, ccval, historic, fromcache) {
+function historic_data_title(ccsymbol, ccval, historic, setconfirmations, confirmations, fromcache) {
     var timestamp = historic.timestamp,
         price = historic.price,
         fiatsrc = historic.fiatapisrc,
@@ -1278,8 +1281,10 @@ function historic_data_title(ccsymbol, ccval, historic, fromcache) {
         lc_val = ccval * lc_ccrate,
         cc_upper = (ccsymbol) ? ccsymbol.toUpperCase() : ccsymbol,
         lc_upper = (lcsymbol) ? lcsymbol.toUpperCase() : lcsymbol,
-        localrate = (lc_upper == "USD") ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(2) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2);
-    return "Historic data (" + fulldateformat(new Date((timestamp - timezone)), "en-us") + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(2) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src;
+        localrate = (lc_upper == "USD") ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(2) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2),
+        conf_var = (confirmations === false) ? "Confirmed" : (confirmations && setconfirmations) ? confirmations + "/" + setconfirmations : "",
+        cf_info = "\nConfirmations: " + conf_var;
+    return "Historic data (" + fulldateformat(new Date((timestamp - timezone)), "en-us") + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(2) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src + cf_info;
 }
 
 function compareamounts(rd) {
