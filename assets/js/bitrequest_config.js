@@ -201,8 +201,8 @@ var multi_wallets = {
                 "websockets": {
                     "icon": "tab",
                     "selected": {
-                        "name": "blockchain.info websocket",
-                        "url": "wss://ws.blockchain.info/inv",
+                        "name": "blockcypher websocket",
+                        "url": "wss://socket.blockcypher.com/v1/",
                         "display": true
                     },
                     "apis": [{
@@ -218,7 +218,7 @@ var multi_wallets = {
                         {
                             "name": "blockcypher websocket",
                             "url": "wss://socket.blockcypher.com/v1/",
-                            "display": false
+                            "display": true
                         }
                     ]
                 },
