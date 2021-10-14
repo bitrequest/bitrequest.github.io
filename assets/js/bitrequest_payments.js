@@ -15,7 +15,8 @@ var txid,
     tx_list,
     payment,
     request,
-    request_timer;
+    request_timer,
+    blocktyping = false;
 
 $(document).ready(function() {
 	wake_panel();
@@ -1229,6 +1230,7 @@ function rendercpooltext(nextcurrency, newccrate) {
 
 function pushamount() {
     $(document).on("input", "#paymentdialogbox .fmirror > input", function() {
+	    blocktyping = true;
         var thisnode = $(this),
             thisamount = thisnode.val(),
             placeholder = (thisamount.length === 0) ? zeroplaceholder : thisamount,
@@ -1244,6 +1246,7 @@ function pushamount() {
 
 function pushlcamount() {
     $(document).on("input", "#paymentdialogbox .lcmirror > input", function() {
+	    blocktyping = true;
         var thisnode = $(this),
             thisamount = thisnode.val(),
             thisrate = $("#lcinputmirror > input").attr("data-xrate");
@@ -1256,6 +1259,7 @@ function pushlcamount() {
 
 function pushccamount() {
     $(document).on("input", "#paymentdialogbox .ccmirror > input", function() {
+	    blocktyping = true;
         var thisnode = $(this),
             thisamount = thisnode.val(),
             placeholder = (thisamount.length === 0) ? zeroplaceholder : thisamount,
@@ -1269,6 +1273,7 @@ function pushccamount() {
 
 function pushsatamount() {
     $(document).on("input", "#satinputmirror > input", function() {
+	    blocktyping = true;
         var thisnode = $(this),
             thisamountpre = thisnode.val(),
             thisamount = (thisamountpre.length === 0) ? thisamountpre : thisamountpre / 100000000,
@@ -1353,6 +1358,7 @@ function updatecpool(thisamount, thisrate, ccvalue) {
         set_edit(href);
         settitle(title);
     }
+    blocktyping = false;
 }
 
 function rendercpool(thisamount, thisrate) {
@@ -1524,6 +1530,11 @@ function inputrequestdata() {
 
 function validatesteps() {
     $(document).on("keydown", "#paymentdialogbox .mirrordiv input", function(e) {
+	    if (blocktyping === true) {
+		    playsound(funk);
+		    blocktyping = false;
+		    return false;
+	    }
         var thisnode = $(this),
             thisvalue = thisnode.val(),
             keycode = e.keyCode;
