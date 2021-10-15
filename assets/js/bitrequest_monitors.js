@@ -1244,9 +1244,10 @@ function append_tx_li(txd, this_request) {
 		        return tx_listitem;
 	        }
             var tx_index = tx_dat.tx_index,
-                tx_indexed = ($.inArray(txhash, tx_index) !== -1),
-                on_tx_list = ($.inArray(txhash, tx_list) !== -1);
-            if (on_tx_list === true || tx_indexed === true) { // check for indexed transaction id's
+           		tx_indexed = ($.inArray(txhash, tx_index) !== -1),
+                on_tx_list = ($.inArray(txhash, tx_list) !== -1),
+                cleared = (tx_indexed === true && on_tx_list === false);
+            if ((on_tx_list === true || tx_indexed === true) && cleared === false) { // check for indexed transaction id's
                 if (tx_indexed === false) { // add to 'blacklist'
                     tx_index.push(txhash);
                     this_request.data("tx_index", tx_index);
