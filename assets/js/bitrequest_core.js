@@ -3712,13 +3712,13 @@ function weekdays(day) {
 function fulldateformat(date, language) {
     return weekdays()[date.getDay()] + " " + date.toLocaleString(language, {
         "month": "long"
-    }) + " " + date.getUTCDate() + " | " + formattime(date);
+    }) + " " + date.getDate() + " | " + formattime(date);
 }
 
 function fulldateformatmarkup(date, language) {
     return weekdays()[date.getDay()] + " " + date.toLocaleString(language, {
         "month": "long"
-    }) + " " + date.getUTCDate() + " | <div class='fdtime'>" + formattime(date) + "</div>";
+    }) + " " + date.getDate() + " | <div class='fdtime'>" + formattime(date) + "</div>";
 }
 
 function formattime(date) {
@@ -4359,7 +4359,7 @@ function appendrequest(rd) {
         requestdateformatted = fulldateformat(localtimeobject, "en-us"),
         timeformat = "<span class='rq_month'>" + localtimeobject.toLocaleString('en-us', {
             month: 'short'
-        }) + "</span> <span class='rq_day'>" + localtimeobject.getUTCDate() + "</span>",
+        }) + "</span> <span class='rq_day'>" + localtimeobject.getDate() + "</span>",
         ptsformatted = fulldateformatmarkup(new Date(paymenttimestamp - timezone), "en-us"),
         amount_short_rounded = amountshort(amount, receivedamount, fiatvalue, iscrypto),
         amount_short_span = (insufficient === true) ? " (" + amount_short_rounded + " " + uoa_upper + " short)" : "",
