@@ -1240,7 +1240,6 @@ function append_tx_li(txd, this_request) {
             return tx_listitem;
         } else {
 	        var tx_dat = this_request.data();
-	        console.log(tx_dat);
 	        if (tx_dat.xmr_ia) { // xmr integrated adddresses are unique
 		        return tx_listitem;
 	        }
@@ -1248,7 +1247,7 @@ function append_tx_li(txd, this_request) {
            		tx_indexed = ($.inArray(txhash, tx_index) !== -1),
                 on_tx_list = ($.inArray(txhash, tx_list) !== -1),
                 requesttype = tx_dat.requesttype;
-            if ((on_tx_list === true || tx_indexed === true) && requesttype == "outgoing") { // check for indexed transaction id's
+            if (on_tx_list === true || tx_indexed === true) { // check for indexed transaction id's
                 if (tx_indexed === false) { // add to 'blacklist'
                     tx_index.push(txhash);
                     this_request.data("tx_index", tx_index);
@@ -1256,7 +1255,12 @@ function append_tx_li(txd, this_request) {
                 if (on_tx_list === false) {
                     tx_list.push(txhash);
                 }
-                return null;
+                if (requesttype == "outgoing") {
+                    return null;
+                }
+                else {
+	                return tx_listitem;
+                }
             } else {
                 if (on_tx_list === false) {
                     tx_list.push(txhash);
