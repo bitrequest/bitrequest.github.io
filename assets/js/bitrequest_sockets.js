@@ -307,7 +307,11 @@ function nano_socket(socket_node, thisaddress) {
     websocket.onmessage = function(e) {
         var now_utc = $.now() + timezone,
             json = JSON.parse(e.data),
-            data = json.message;
+            data = json.message,
+            account = data.account;
+        if (account == thisaddress) {
+	        return false; // block outgoing transactions
+        }
         if (data) {
             var txd = nano_scan_data(data, undefined, request.currencysymbol),
                 tx_timestamp = txd.transactiontime,
