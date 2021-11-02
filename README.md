@@ -1,3 +1,6 @@
+[<img src="https://developer.apple.com/app-store/marketing/guidelines/images/badge-download-on-the-app-store.svg" height="50">](https://apps.apple.com/app/id1484815377)
+[<img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" height="50">](https://play.google.com/store/apps/details?id=io.bitrequest.app)
+
 * [About](https://github.com/bitrequest/bitrequest.github.io/wiki)
 * [Privacy / Disclaimer](https://github.com/bitrequest/bitrequest.github.io/wiki/Privacy)
 * [Terms and conditions](https://github.com/bitrequest/bitrequest.github.io/wiki/Terms-and-conditions)
