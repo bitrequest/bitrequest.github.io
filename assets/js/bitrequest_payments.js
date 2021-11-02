@@ -493,6 +493,7 @@ function continue_paymentfunction(payment) {
         isdata = (data && data.length > 5),
         dataobject = (isdata === true) ? JSON.parse(atob(data)) : null, // decode data param if exists;
         viewkey = false,
+        sharevk = false,
         payment_id = (dataobject && dataobject.pid) ? dataobject.pid : false,
         xmr_ia = address;
     if (payment == "monero") { // check for monero viewkey
@@ -501,6 +502,7 @@ function continue_paymentfunction(payment) {
 			"account": address,
 			"vk": dataobject.vk
 		} : get_vk(address),
+		sharevk = share_vk(),
 		payment_id = (payment_id) ? payment_id : (isrequest) ? false : get_xmrpid();
 		xmr_ia = xmr_integrated(address, payment_id);
     }
@@ -564,6 +566,7 @@ function continue_paymentfunction(payment) {
             "iszero": iszero,
             "iszero_request": iszero_request,
             "viewkey": viewkey,
+            "share_vk": sharevk,
             "payment_id": payment_id,
             "xmr_ia": has_xmr_ia,
             "monitored": monitored,
@@ -1500,7 +1503,7 @@ function validaterequestdata(requestname_val, requesttitle_val) {
         }
         if (payment == "monero") {
 	        if (request.viewkey || request.xmr_ia) {
-		        if (request.viewkey) {
+		        if (request.viewkey && request.share_vk) {
 	            	dataobject.vk = request.viewkey.vk;
 	        	}
 	        	if (request.xmr_ia) {

@@ -4923,6 +4923,14 @@ function vk_obj(vk) {
 	return false;
 }
 
+function share_vk() {
+	var vkshare = $("#monero_settings .cc_settinglist li[data-id='Share viewkey']").data("selected");
+	if (vkshare === true) {
+		return true;
+	}
+	return false;
+}
+
 function gk() {
     var k = io.k;
     if (k) {

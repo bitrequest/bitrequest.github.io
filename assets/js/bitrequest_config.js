@@ -939,6 +939,11 @@ var multi_wallets = {
                     "selected": false,
                     "switch": true,
                 },
+                "Share viewkey": {
+                    "icon": "eye",
+                    "selected": false,
+                    "switch": true,
+                },
                 "Integrated addresses": {
                     "icon": "cog",
                     "selected": false,
