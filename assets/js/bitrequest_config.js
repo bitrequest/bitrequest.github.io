@@ -764,8 +764,8 @@ var multi_wallets = {
                     {
                         "name": "nault",
                         "website": "https://nault.cc",
-                        "appstore": null,
-                        "playstore": null,
+                        "appstore": "https://nault.cc",
+                        "playstore": "https://nault.cc",
                         "desktop": "https://nault.cc",
                         "seed": true
                     },

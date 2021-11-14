@@ -834,6 +834,8 @@ html.showmain #newrequest_alias {
 .send {
 	float: right;
     margin: 2.4em 0.6em 0 1em;
+    opacity:0.5;
+    cursor:not-allowed;
 }
 
 .listyle2 .liwrap>span:before {
