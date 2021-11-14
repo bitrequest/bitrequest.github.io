@@ -414,6 +414,8 @@ function finishfunctions() {
     //validateaddress
     //check_address
     //check_vk
+    send_trigger();
+    showbip39_trigger();
     canceldialog_click();
     canceldialogtrigger();
     //canceldialog
@@ -2077,7 +2079,7 @@ function addaddress(ad, edit) {
         readonly = (edit === true) ? " readonly" : "",
 		nopub = (test_derive === false) ? true : (is_xpub(currency) === false || has_xpub(currency) !== false),
 		choose_wallet_str = "<span id='get_wallet' class='address_option' data-currency='" + currency + "'>I don't have a " + currency + " address yet</span>",
-        derive_seed_str = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>Generate address from seed</span>",
+        derive_seed_str = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>Generate address from secret phrase</span>",
         options = (hasbip === true) ? choose_wallet_str : (test_derive === true && c_derive[currency]) ? (hasbip32(currency) === true) ? derive_seed_str : choose_wallet_str : choose_wallet_str,
         pnotify = (body.hasClass("showstartpage")) ? "<div class='popnotify' style='display:block'>" + options + "</div>" : "<div class='popnotify'></div>",
         scanqr = (hascam === true && edit === false) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
@@ -2513,6 +2515,26 @@ function check_address(address, currency) {
 
 function check_vk(vk) {
     return new RegExp("^[a-fA-F0-9]+$").test(vk);
+}
+
+function send_trigger() {
+    $(document).on("click", ".send", function() {
+	    if (hasbip === true) {
+        	compatible_wallets($(this).attr("data-currency"));
+        }
+        else {
+	        playsound(funk);
+        }
+    })
+}
+
+function showbip39_trigger() {
+    $(document).on("click", ".show_bip39", function() {
+        canceldialog();
+        all_pinpanel({
+            "func": manage_bip32
+        })
+    })
 }
 
 function canceldialog_click() {
@@ -4194,12 +4216,13 @@ function buildpage(cd, init) {
 				</div>\
 			</div>\
 		</div>" : "";
-        var settingsbutton = (has_settings === true) ? "<div data-rel='?p=" + currency + "_settings' class='self icon-cog'></div>" : "";
-        var currency_page = $("<div class='page' id='" + currency + "'>\
+        var settingsbutton = (has_settings === true) ? "<div data-rel='?p=" + currency + "_settings' class='self icon-cog'></div>" : "",
+        	sendbttn = (hasbip === true) ? "<div class='button send' data-currency='" + currency + "'><span class='icon-telegram'>Send</span></div>" : "",
+			currency_page = $("<div class='page' id='" + currency + "'>\
 			<div class='content'>\
 				<h2 class='heading'>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + settingsbutton + "</h2>\
 				<ul class='applist listyle2 pobox' data-currency='" + currency + "'>\
-					<div class='endli'><div class='button addaddress' data-currency='" + currency + "'><span class='icon-plus'>Add address</span></div></div>\
+					<div class='endli'><div class='button addaddress' data-currency='" + currency + "'><span class='icon-plus'>Add address</span></div>" + sendbttn + "</div>\
 					<div class='addone' data-currency='" + currency + "'>Add one</div>\
 				</ul>\
 			</div>\

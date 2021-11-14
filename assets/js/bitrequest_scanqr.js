@@ -15,7 +15,12 @@ $(document).ready(function() {
 });
 
 function init_scan() {
-    QrScanner.hasCamera().then(hasCamera => detect_cam(hasCamera));
+	if (inframe === true) {
+		hascam = false;
+        return false;
+    } else {
+    	QrScanner.hasCamera().then(hasCamera => detect_cam(hasCamera));
+    }
 }
 
 function detect_cam(result) {

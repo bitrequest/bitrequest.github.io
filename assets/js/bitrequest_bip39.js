@@ -476,7 +476,7 @@ function manage_bip32(dat) {
         	<h2><span class='icon-warning' style='color:#B33A3A'></span>Disclaimer!</h2>\
         	<div class='popnotify'></div>\
         	<form class='popform'>\
-        		<div class='inputwrap'><p>Funds received from addresses generated fom your seed can not be spend by Bitrequest.<br/>To spend your funds you wil have to import your seed phrase in a <a href='https://www.bitrequest.io/compatible-wallets' target='_blank' class='ref'>Bip39 compatible wallet.</a></p></div>\
+        		<div class='inputwrap'><p>Funds received by addresses generated from your secret phrase can not be spend by Bitrequest.<br/>To spend your funds you wil need to restore your secret phrase in a <a href='https://www.bitrequest.io/compatible-wallets' target='_blank' class='ref'>compatible wallet.</a></p></div>\
         		<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I understand and am ok with this.</span></div>\
         		<input type='submit' class='submit' value='OK'></form></div>").data(data);
         if($("#option_makeseed").length) {
@@ -1578,7 +1578,6 @@ function phrase_info_pu(coin) {
         singleclass = (coin) ? "single" : "",
         rootclass = (coin) ? "pd_" + coin : "pd_bitcoin",
         sourceed_str = (coin) ? "<li><strong>Source: </strong> Seed</li>" : "<li><strong>BIP39 Seed: </strong><span class='adboxl adbox select' data-type='BIP39 Seed'>" + seed + "</span></li>",
-        pk_string = (coin) ? "<li class='clearfix'><span id='export_keys' class='ref' data-currency='" + coin + "'>Private keys</span><div id='pks_box'></div></li>" : "",
         coindat = (coin) ? getcoindata(coin) : null,
         cc_icon = (coin) ? getcc_icon(coindat.cmcid, coindat.ccsymbol + "-" + coin, coindat.erc20) : "",
         header_str = (coin) ? "<h2>" + cc_icon + " <span>" + coin + " Key Derivation</span></h2>" : "",
@@ -1680,6 +1679,54 @@ function phrase_info_pu(coin) {
 				$("#d_paths").append(dp_node);
             }
             $("#xpub_box").append(xp_node);
+            $("#supported_wallets").append(sw_node);
+            pi_show();
+        }
+    });
+}
+
+function compatible_wallets(coin) {
+    var content = $("<div id='ad_info_wrap' class='' data-class='pd_" + coin + "'><h2><span class='icon-warning' style='color:#B33A3A'/>Bitrequest can not send funds!</span></h2><ul>\
+            <li class='noline'><strong>To send funds you need to restore your <span class='show_bip39 ref'>secret phrase</span> in a <a href='https://www.bitrequest.io/compatible-wallets/' target='_blank' class='exit ref'>bip39 compatible wallet:</a></strong></li>\
+            <li id='pi_li' class='noline'>\
+    			<div id='pi_icons'>\
+				</div>\
+			</li>\
+			<li>\
+	    		<div id='bip_mibox' class='clearfix drawer'>\
+	    			<div id='supported_wallets'>\
+					</div>\
+	            </div>\
+			</li>\
+		</ul>\
+	</div>");
+    popdialog(content, "alert", "canceldialog");
+    $.each(bitrequest_coin_data, function(i, coinconfig) {
+        var currency = coinconfig.currency,
+            ccsymbol = coinconfig.data.ccsymbol,
+            walletdat = coinconfig.wallets,
+            bip32dat = coinconfig.settings.Xpub;
+        if (bip32dat.active === true) {
+	        var walletlist = "";
+            if (walletdat) {
+                var platform = getplatform(getdevicetype()),
+                    store_icon = (platform == "playstore") ? "button-playstore-v2.svg" :
+                    (platform == "appstore") ? "button-appstore.svg" : "button-desktop_app.svg",
+                    store_tag = (store_icon) ? "<img src='img/" + store_icon + "'/>" : "<span class='icon-download'></span> ",
+                    wallets = walletdat.wallets;
+                $.each(wallets, function(key, value) {
+                    var device_url = value[platform];
+                    if (device_url && value.seed === true) {
+                        var walletname = value.name,
+                            website = value.website,
+                            wallet_icon = "<img src='img/icons/wallet-icons/" + walletname + ".png' class='wallet_icon'/>";
+                        walletlist += "<li><a href='" + website + "' target='_blank' class='exit app_dll'>" + wallet_icon + walletname + "</a><a href='" + device_url + "' target='_blank' class='exit store_tag'>" + store_tag + "</a></li>";
+                    }
+                });
+            }
+            var icon_node = $("<img src='img/logos/" + ccsymbol + "-" + currency + ".png' data-class='pd_" + currency + "'/>"),
+            	sw_node = $("<ul id='formbox_ul' class='clearfix pd_hide pd_" + currency + "'>" + walletlist + "</ul>");
+            $("#pi_icons").append(icon_node);
             $("#supported_wallets").append(sw_node);
             pi_show();
         }
