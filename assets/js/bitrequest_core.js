@@ -2530,10 +2530,10 @@ function send_trigger() {
 
 function showbip39_trigger() {
     $(document).on("click", ".show_bip39", function() {
-        canceldialog();
         all_pinpanel({
             "func": manage_bip32
-        })
+        });
+        canceldialog();
     })
 }
 

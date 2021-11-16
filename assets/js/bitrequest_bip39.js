@@ -1687,7 +1687,7 @@ function phrase_info_pu(coin) {
 
 function compatible_wallets(coin) {
     var content = $("<div id='ad_info_wrap' class='' data-class='pd_" + coin + "'><h2><span class='icon-warning' style='color:#B33A3A'/>Bitrequest can not send funds!</span></h2><ul>\
-            <li class='noline'><strong style='color:#8f8f8f'>To send funds you need to restore your <span class='show_bip39 ref'>secret phrase</span> in a bip39 compatible wallet:</strong></li>\
+            <li class='noline'><strong style='color:#6a6a6a'>To send funds you need to restore your <span class='show_bip39 ref'>12 word secret phrase</span> in a bip39 compatible wallet:</strong></li>\
             <li id='pi_li' class='noline'>\
     			<div id='pi_icons'>\
 				</div>\
