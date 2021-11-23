@@ -1376,15 +1376,8 @@ function rendercpool(thisamount, thisrate) {
 function renderqr(payment, address, amount) {
     var number = Number(amount),
         this_iszero = (number === 0 || isNaN(number)),
-        urlscheme;
-    if (request.erc20 === true) {
-        var raw_amount = (parseFloat(amount) * parseFloat(Math.pow(10, request.decimals))).toFixedSpecial(0),
-        	erc20val = (this_iszero === true) ? "" : "?value=" + raw_amount,
-        	urlscheme = "ethereum:" + address + erc20val;
-		//urlscheme = "ethereum:" + request.token_contract + "/transfer?address=" + address + "&uint256=" + raw_amount + "&gas=43855";
-    } else {
-        var urlscheme = request.coindata.urlscheme(payment, address, amount, this_iszero);
-    }
+        urlscheme = (request.erc20 === true) ? "ethereum:" + address :
+        request.coindata.urlscheme(payment, address, amount, this_iszero);
     $("#qrcode").html("").qrcode(urlscheme);
     $(".openwallet").attr({"data-rel":amount,"title":urlscheme});
 }
