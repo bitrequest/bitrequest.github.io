@@ -924,7 +924,7 @@ function nano_scan_poll(api_name, api_url, ccsymbol, set_confirmations, address,
 }
 
 function erc20_scan_poll(api_name, ccsymbol, set_confirmations, address, request_ts, token_contract) {
-    api_proxy({
+	api_proxy({
 	    "api": api_name,
         "search": "getAddressHistory/" + address + "?token=" + token_contract + "&type=transfer",
         "cachetime": 25,

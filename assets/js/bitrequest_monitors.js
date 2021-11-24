@@ -129,18 +129,19 @@ function get_requeststates(trigger) {
 
 function getinputs(rd) {
 	var thislist = $("#" + rd.requestid),
-        api_info = check_api(rd.payment),
+		iserc20 = rd.erc20,
+        api_info = check_api(rd.payment, iserc20),
         selected = api_info.data;
     thislist.removeClass("pmstatloaded");
-    if (api_info.api === true || rd.erc20) {
+    if (api_info.api === true || iserc20) {
         choose_api_inputs(rd, selected);
     } else {
         get_rpc_inputs_init(rd, selected);
     }
 }
 
-function check_api(payment) {
-    var api_data = $("#" + payment + "_settings .cc_settinglist li[data-id='apis']").data();
+function check_api(payment, iserc20) {
+	var api_data = $("#" + payment + "_settings .cc_settinglist li[data-id='apis']").data();
     if (api_data) {
 	    var selected = api_data.selected;
         if (selected.api === true) {
@@ -155,10 +156,23 @@ function check_api(payment) {
             };
         }
     } else {
-        return {
-            "api": false,
-            "data": false
-        };
+	    if (iserc20) {
+		    return {
+	            "api": true,
+	            "data": {
+		            "name": "ethplorer",
+					"url": "ethplorer.io",
+					"api": true,
+					"display": true
+	            }
+	        };
+	    }
+	    else {
+		    return {
+	            "api": false,
+	            "data": false
+	        };
+	    }
     }
 }
 

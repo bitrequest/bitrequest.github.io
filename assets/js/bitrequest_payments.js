@@ -474,7 +474,7 @@ function continue_paymentfunction(payment) {
         address = gets.address,
         currencycheck = (erc20 === true) ? "ethereum" : payment,
         valid = check_address(address, currencycheck), // validate address
-        api_info = check_api(payment);
+        api_info = check_api(payment, erc20);
     if (valid === false) {
         var error_message = (address == "undefined") ? "Undefined address, please ask for a new request" :
             "Invalid " + payment + " address",

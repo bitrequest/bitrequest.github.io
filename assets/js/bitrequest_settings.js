@@ -1986,7 +1986,7 @@ function pick_api_proxy() {
             proxies.push(hosted_proxy);
         }
         var optionlist = $("#proxyformbox").find(".options"),
-            api_info = check_api("nano"),
+            api_info = check_api("nano", false),
             selected = api_info.data,
             nano_node = selected.url;
         $.each(proxies, function(key, value) {
