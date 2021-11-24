@@ -6,7 +6,8 @@ var apptitle = "Bitrequest",
     hosted_proxy = "https://app.bitrequest.io/",
     proxy_list = [
         hosted_proxy,
-        "https://www.bitrequest.io/"
+        "https://www.bitrequest.io/",
+        "https://www.bitrequest.app/"
     ],
     firebase_dynamic_link_domain = "bitrequest.page.link",
     firebase_shortlink = "https://" + firebase_dynamic_link_domain + "/",
