@@ -22,15 +22,15 @@ $(document).ready(function() {
     toggle_defaultcurrency();
     autocompletecurrency();
     submitcurrency();
-    
+
     // CSV Export
     csvexport_trigger();
-	submit_csvexport();
-	//complile_csv
-	//render_csv
-	share_csv();
-	check_csvexport();
-	submit_csvdownload();
+    submit_csvexport();
+    //complile_csv
+    //render_csv
+    share_csv();
+    check_csvexport();
+    submit_csvdownload();
 
     // Bip32 passphrase
     trigger_bip32();
@@ -136,20 +136,20 @@ $(document).ready(function() {
     //test_custom_proxy
     remove_proxy();
     //complete_url
-    
+
     // PERMISSIONS
     permissions();
     submit_permissions();
-    
+
     // TEAM INVITE
     team_invite_trigger()
-	//team_invite
-	//complile_teaminvite
-	//adjust_object
-	share_teaminvite()
-	check_teaminvite();
-	install_teaminvite_trigger()
-	//install_teaminvite    
+    //team_invite
+    //complile_teaminvite
+    //adjust_object
+    share_teaminvite()
+    check_teaminvite();
+    install_teaminvite_trigger()
+    //install_teaminvite    
 });
 
 // ** Settings **
@@ -413,7 +413,7 @@ function backupdatabase() {
 function sbu_switch() {
     $(document).on("mouseup", "#toggle_sbu_span .switchpanel", function() {
         var thistrigger = $(this),
-        	thisvalue = (thistrigger.hasClass("true")) ? true : false;
+            thisvalue = (thistrigger.hasClass("true")) ? true : false;
         if (thisvalue === true) {
             var result = confirm("Include encrypted seed in backup? Make sure you keep track of your backup files!");
             if (result === false) {
@@ -702,41 +702,40 @@ function submitrestore() {
 }
 
 function restore(jsonobject, bu_filename) {
-	var cbu = check_backup(jsonobject);
-	if (cbu === false) {
-	    return false
+    var cbu = check_backup(jsonobject);
+    if (cbu === false) {
+        return false
     }
     var result = confirm("Restore " + bu_filename + "?");
     if (result === true) {
-	    var is_team_invite = isteaminvite(jsonobject);
-	    if (is_team_invite === true) {
-		    install_teaminvite(jsonobject, bu_filename, false);
-		}
-	    else {
-		    scan_restore(jsonobject);
-	        var pass_dat = {
-	            "jasobj": jsonobject,
-	            "filename": bu_filename,
-	            "type": "file"
-	        };
-	        restore_algo(pass_dat);
-	    }
+        var is_team_invite = isteaminvite(jsonobject);
+        if (is_team_invite === true) {
+            install_teaminvite(jsonobject, bu_filename, false);
+        } else {
+            scan_restore(jsonobject);
+            var pass_dat = {
+                "jasobj": jsonobject,
+                "filename": bu_filename,
+                "type": "file"
+            };
+            restore_algo(pass_dat);
+        }
     }
 }
 
 function check_backup(jsonobject) {
-	var cashier_entry = jsonobject.bitrequest_cashier,
-    	is_team_invite = (cashier_entry && cashier_entry.cashier) ? true : false;
+    var cashier_entry = jsonobject.bitrequest_cashier,
+        is_team_invite = (cashier_entry && cashier_entry.cashier) ? true : false;
     if (cashier_dat && cashier_dat.cashier && !is_team_invite) {
-	    notify("Backup type not allowed in cashiers mode");
-	    return false;
+        notify("Backup type not allowed in cashiers mode");
+        return false;
     }
     return true;
 }
 
 function isteaminvite(jsonobject) {
-	var cashier_entry = jsonobject.bitrequest_cashier;
-	return (cashier_entry && cashier_entry.cashier) ? true : false;
+    var cashier_entry = jsonobject.bitrequest_cashier;
+    return (cashier_entry && cashier_entry.cashier) ? true : false;
 }
 
 function submit_GD_restore() {
@@ -750,21 +749,21 @@ function submit_GD_restore() {
                 "fileId": thisfileid,
                 "alt": "media"
             }).then(function(response) {
-                var jsonobject = JSON.parse(atob(response.body));
-                scan_restore(jsonobject);
-                var pass_dat = {
-                    "jasobj": jsonobject,
-                    "filename": thisfield.text(),
-                    "thisfileid": thisfileid,
-                    "thisdevice": thisdevice,
-                    "thisdeviceid": thisfield.attr("data-device-id"),
-                    "type": "gd"
-                };
-                restore_algo(pass_dat);
-            },
-            function(err) {
-                console.log(err)
-            });
+                    var jsonobject = JSON.parse(atob(response.body));
+                    scan_restore(jsonobject);
+                    var pass_dat = {
+                        "jasobj": jsonobject,
+                        "filename": thisfield.text(),
+                        "thisfileid": thisfileid,
+                        "thisdevice": thisdevice,
+                        "thisdeviceid": thisfield.attr("data-device-id"),
+                        "type": "gd"
+                    };
+                    restore_algo(pass_dat);
+                },
+                function(err) {
+                    console.log(err)
+                });
         }
     })
 }
@@ -784,9 +783,9 @@ function scan_restore(jsonobject) {
 
 
 function restore_algo(pass_dat) {
-	var cbu = check_backup(pass_dat);
-	if (cbu === false) {
-	    return false
+    var cbu = check_backup(pass_dat);
+    if (cbu === false) {
+        return false
     }
     if (resd.sbu) { // has seed backup
         if (resd.samebip === true) {
@@ -821,7 +820,7 @@ function restore_callback(pass_dat, newphrase) {
 }
 
 function s_decode(pdat, phash) {
-	var pinhash = (phash) ? phash : $("#pinsettings").data("pinhash");
+    var pinhash = (phash) ? phash : $("#pinsettings").data("pinhash");
     if (pinhash) {
         var keystring = ptokey(pinhash, pdat.id),
             decrypt = aes_dec(pdat.dat, keystring);
@@ -844,15 +843,15 @@ function s_decode(pdat, phash) {
 function pin_dialog(pass_dat, cb) {
     canceldialog();
     var pinsettings = $("#pinsettings").data(),
-		current_timeout = pinsettings.timeout;
-	if (current_timeout) {
-		var timeleft = current_timeout - $.now();
-		if (timeleft > 0) {
-			lockscreen(current_timeout);
-			return false;
-		}
+        current_timeout = pinsettings.timeout;
+    if (current_timeout) {
+        var timeleft = current_timeout - $.now();
+        if (timeleft > 0) {
+            lockscreen(current_timeout);
+            return false;
+        }
     }
-	var content = $("<div class='formbox' id='pindialog'>\
+    var content = $("<div class='formbox' id='pindialog'>\
 		<h2><span class='icon-lock'></span>Enter your 4 digit pin</h2>\
 		<div class='popnotify'></div>\
 		<div class='popform'>\
@@ -880,9 +879,9 @@ function submit_pin_dialog() {
             jasobj = pass_dat.jasobj;
             if (jasobj) {
                 var pbdat = jasobj.bitrequest_bpdat,
-                	pbdat_eq = (pbdat.dat) ? pbdat : pbdat.datenc,
+                    pbdat_eq = (pbdat.dat) ? pbdat : pbdat.datenc,
                     can_dec = s_decode(pbdat_eq, hashcode(thisvalue)),
-                	pinsettings = $("#pinsettings").data();
+                    pinsettings = $("#pinsettings").data();
                 if (can_dec) {
                     resd.pcnt = 0;
                     var callback = pdat.cb;
@@ -899,14 +898,13 @@ function submit_pin_dialog() {
                     }
                     notify("Succes!");
                 } else {
-	                if (resd.pcnt > 1) {
-	                    pinsettings.timeout = $.now() + 300000; // 5 minutes
+                    if (resd.pcnt > 1) {
+                        pinsettings.timeout = $.now() + 300000; // 5 minutes
                         topnotify("Max attempts exeeded");
                         var result = confirm("Restore without seed?");
                         if (result === true) {
                             restore_callback(pass_dat, false);
-                        } else {	
-                        }
+                        } else {}
                         resd.pcnt = 0;
                         canceldialog();
                     } else {
@@ -1069,7 +1067,7 @@ function compare_seeds() {
                     jasobj = bu_dat.jasobj;
                 if (jasobj) {
                     var pbdat = jasobj.bitrequest_bpdat,
-                    	pbdat_eq = (pbdat.dat) ? pbdat : pbdat.datenc;
+                        pbdat_eq = (pbdat.dat) ? pbdat : pbdat.datenc;
                     if (pbdat_eq) {
                         if (resd.bpdat) {} else {
                             var enterpin = prompt("Enter your 4 digit pin"),
@@ -1304,14 +1302,14 @@ function submittheme() {
 // CSV Export
 function csvexport_trigger() {
     $(document).on("click", "#csvexport", function() {
-	    var rq_arr = JSON.parse(localStorage.getItem("bitrequest_requests")),
-			archive_arr = JSON.parse(localStorage.getItem("bitrequest_archive")),
-			has_requests = (rq_arr && !$.isEmptyObject(rq_arr)),
-			has_archive = (archive_arr && !$.isEmptyObject(archive_arr));
-		if (has_requests === true || has_archive === true) {
-			var filename = "bitrequest_csv_export_" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_') + ".csv",
-				show_archive = (has_requests === true) ? "false" : "true";
-		        content = "\
+        var rq_arr = JSON.parse(localStorage.getItem("bitrequest_requests")),
+            archive_arr = JSON.parse(localStorage.getItem("bitrequest_archive")),
+            has_requests = (rq_arr && !$.isEmptyObject(rq_arr)),
+            has_archive = (archive_arr && !$.isEmptyObject(archive_arr));
+        if (has_requests === true || has_archive === true) {
+            var filename = "bitrequest_csv_export_" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_') + ".csv",
+                show_archive = (has_requests === true) ? "false" : "true";
+            content = "\
 				<div class='formbox' id='exportcsvbox'>\
 					<h2 class='icon-table'>Export CSV</h2>\
 					<div class='popnotify'></div>\
@@ -1378,12 +1376,11 @@ function csvexport_trigger() {
 					<div id='share_csv' data-url='' class='util_icon icon-share2'></div>\
 					<div id='backupcd'>CANCEL</div>\
 				</div>";
-		    popdialog(content, "alert", "triggersubmit", null, true);
-		}
-		else {
-			playsound(funk);
+            popdialog(content, "alert", "triggersubmit", null, true);
+        } else {
+            playsound(funk);
             notify("No requests to export");
-		}
+        }
     })
 }
 
@@ -1395,11 +1392,11 @@ function submit_csvexport() {
             return false;
         }
         var thisnode = $(this),
-        	csv_encode = complile_csv(),
-        	d_url = "data:text/csv;charset=utf-16le;base64," + csv_encode;
+            csv_encode = complile_csv(),
+            d_url = "data:text/csv;charset=utf-16le;base64," + csv_encode;
         thisnode.attr("href", d_url);
         var title = thisnode.attr("title"),
-        	result = confirm("Download: " + title + "?");
+            result = confirm("Download: " + title + "?");
         if (result === false) {
             e.preventDefault();
             return false;
@@ -1410,127 +1407,113 @@ function submit_csvexport() {
 }
 
 function complile_csv() {
-	var rq_arr = JSON.parse(localStorage.getItem("bitrequest_requests")),
-		archive_arr = JSON.parse(localStorage.getItem("bitrequest_archive")),
-		has_archive = (archive_arr && !$.isEmptyObject(archive_arr)),
-		csv_arr = [],
-		options_li = $("#exportcsvbox #ecsv_options"),
-		op_from = options_li.find("li#escv_from .switchpanel"),
-		op_desc = options_li.find("li#escv_desc .switchpanel"),
-		op_address = options_li.find("li#escv_address .switchpanel"),
-		op_paid = options_li.find("li#escv_paid .switchpanel"),
-		op_ins = options_li.find("li#escv_ins .switchpanel"),
-		op_new = options_li.find("li#escv_new .switchpanel"),
-		op_pending = options_li.find("li#escv_pending .switchpanel"),
-		op_pos = options_li.find("li#escv_pos .switchpanel"),
-		op_outgoing = options_li.find("li#escv_outgoing .switchpanel"),
-		op_incoming = options_li.find("li#escv_incoming .switchpanel"),
-		op_receipt = options_li.find("li#escv_receipt .switchpanel"),
-		op_archive = options_li.find("li#escv_archive .switchpanel"),
-		incl_from = (op_from.hasClass("true")) ? true : false,
-		incl_desc = (op_desc.hasClass("true")) ? true : false,
-		incl_address = (op_address.hasClass("true")) ? true : false,
-		incl_paid = (op_paid.hasClass("true")) ? true : false,
-		incl_ins = (op_ins.hasClass("true")) ? true : false,
-		incl_new = (op_new.hasClass("true")) ? true : false,
-		incl_pending = (op_pending.hasClass("true")) ? true : false,
-		incl_pos = (op_pos.hasClass("true")) ? true : false,
-		incl_outgoing = (op_outgoing.hasClass("true")) ? true : false,
-		incl_incoming = (op_incoming.hasClass("true")) ? true : false,
-		incl_receipt = (op_receipt.hasClass("true")) ? true : false,
-		incl_archive = (op_archive.hasClass("true")) ? true : false,
-		rq_obj = (has_archive === true && incl_archive) ? rq_arr.concat(archive_arr) : rq_arr;
-	$.each(rq_obj, function(i, val) {
-		var request = {},
-			payment = val.payment,
-			address = val.address,
-			amount = val.amount,
-			uoa = val.uoa,
-			status = val.status,
-			rqname = (val.requestname) ? val.requestname : "",
-			description = (val.requesttitle) ? val.requesttitle : "",
-			type = val.requesttype,
-			timestamp = val.timestamp,
-			receivedamount = val.receivedamount,
-			ccsymbol = val.currencysymbol,
-			fiatvalue = val.fiatvalue,
-			fiatcurrency = val.fiatcurrency,
-			pts = val.paymenttimestamp,
-			pdf_url = get_pdf_url(val),
-			received_ts = (pts) ? short_date(pts) : "",
-			txhash = (val.txhash) ? val.txhash : "";
-		if (incl_paid === false && status == "paid") {	
-		}
-		else if (incl_ins === false && status == "insufficient") {	
-		}
-		else if (incl_new === false && status == "new") {	
-		}
-		else if (incl_pending === false && status == "pending") {	
-		}
-		else if (incl_pos === false && type == "local") {	
-		}
-		else if (incl_outgoing === false && type == "outgoing") {
-		}
-		else if (incl_incoming === false && type == "incoming") {
-		}
-		else {
-			if (incl_from) {
-				request["from"] = rqname;
-			}
-			if (incl_desc) {
-				request.description = description;
-			}
-			request.payment = payment;
-			request.status = status;
-			var rq_type = (type == "local") ? "point of sale" : type;
-		    request.type = rq_type;
-		    request.created = short_date(timestamp);
-			request["request amount"] = amount + " " + uoa;
-			var ra_val = (receivedamount) ? receivedamount + " " + ccsymbol : "";
-		    request["amount received"] = ra_val;
-			var fv = (fiatvalue) ?  fiatvalue.toFixed(2) + " " + fiatcurrency : "";
-			request["fiat value"] = fv;
-			request["received on"] = received_ts;
-			if (incl_address) {
-				request["receiving address"] = address;
-			}
-			request.txhash = txhash;
-			if (incl_receipt) {
-				request["PDF download (receipt)"] = pdf_url;
-			}
-			csv_arr.push(request);
-		}
+    var rq_arr = JSON.parse(localStorage.getItem("bitrequest_requests")),
+        archive_arr = JSON.parse(localStorage.getItem("bitrequest_archive")),
+        has_archive = (archive_arr && !$.isEmptyObject(archive_arr)),
+        csv_arr = [],
+        options_li = $("#exportcsvbox #ecsv_options"),
+        op_from = options_li.find("li#escv_from .switchpanel"),
+        op_desc = options_li.find("li#escv_desc .switchpanel"),
+        op_address = options_li.find("li#escv_address .switchpanel"),
+        op_paid = options_li.find("li#escv_paid .switchpanel"),
+        op_ins = options_li.find("li#escv_ins .switchpanel"),
+        op_new = options_li.find("li#escv_new .switchpanel"),
+        op_pending = options_li.find("li#escv_pending .switchpanel"),
+        op_pos = options_li.find("li#escv_pos .switchpanel"),
+        op_outgoing = options_li.find("li#escv_outgoing .switchpanel"),
+        op_incoming = options_li.find("li#escv_incoming .switchpanel"),
+        op_receipt = options_li.find("li#escv_receipt .switchpanel"),
+        op_archive = options_li.find("li#escv_archive .switchpanel"),
+        incl_from = (op_from.hasClass("true")) ? true : false,
+        incl_desc = (op_desc.hasClass("true")) ? true : false,
+        incl_address = (op_address.hasClass("true")) ? true : false,
+        incl_paid = (op_paid.hasClass("true")) ? true : false,
+        incl_ins = (op_ins.hasClass("true")) ? true : false,
+        incl_new = (op_new.hasClass("true")) ? true : false,
+        incl_pending = (op_pending.hasClass("true")) ? true : false,
+        incl_pos = (op_pos.hasClass("true")) ? true : false,
+        incl_outgoing = (op_outgoing.hasClass("true")) ? true : false,
+        incl_incoming = (op_incoming.hasClass("true")) ? true : false,
+        incl_receipt = (op_receipt.hasClass("true")) ? true : false,
+        incl_archive = (op_archive.hasClass("true")) ? true : false,
+        rq_obj = (has_archive === true && incl_archive) ? rq_arr.concat(archive_arr) : rq_arr;
+    $.each(rq_obj, function(i, val) {
+        var request = {},
+            payment = val.payment,
+            address = val.address,
+            amount = val.amount,
+            uoa = val.uoa,
+            status = val.status,
+            rqname = (val.requestname) ? val.requestname : "",
+            description = (val.requesttitle) ? val.requesttitle : "",
+            type = val.requesttype,
+            timestamp = val.timestamp,
+            receivedamount = val.receivedamount,
+            ccsymbol = val.currencysymbol,
+            fiatvalue = val.fiatvalue,
+            fiatcurrency = val.fiatcurrency,
+            pts = val.paymenttimestamp,
+            pdf_url = get_pdf_url(val),
+            received_ts = (pts) ? short_date(pts) : "",
+            txhash = (val.txhash) ? val.txhash : "";
+        if (incl_paid === false && status == "paid") {} else if (incl_ins === false && status == "insufficient") {} else if (incl_new === false && status == "new") {} else if (incl_pending === false && status == "pending") {} else if (incl_pos === false && type == "local") {} else if (incl_outgoing === false && type == "outgoing") {} else if (incl_incoming === false && type == "incoming") {} else {
+            if (incl_from) {
+                request["from"] = rqname;
+            }
+            if (incl_desc) {
+                request.description = description;
+            }
+            request.payment = payment;
+            request.status = status;
+            var rq_type = (type == "local") ? "point of sale" : type;
+            request.type = rq_type;
+            request.created = short_date(timestamp);
+            request["request amount"] = amount + " " + uoa;
+            var ra_val = (receivedamount) ? receivedamount + " " + ccsymbol : "";
+            request["amount received"] = ra_val;
+            var fv = (fiatvalue) ? fiatvalue.toFixed(2) + " " + fiatcurrency : "";
+            request["fiat value"] = fv;
+            request["received on"] = received_ts;
+            if (incl_address) {
+                request["receiving address"] = address;
+            }
+            request.txhash = txhash;
+            if (incl_receipt) {
+                request["PDF download (receipt)"] = pdf_url;
+            }
+            csv_arr.push(request);
+        }
     });
     var csv_body = render_csv(csv_arr),
-    	b64_body = btoa(csv_body);
+        b64_body = btoa(csv_body);
     return b64_body;
-	
+
 }
 
 function render_csv(arr) {
-	var header_arr = [],
-		inner_header_arr = [],
-		body_arr = [];
-	$.each(arr[0], function(key, value) {
-		inner_header_arr.push(key);
-	});
-	header_arr.push(inner_header_arr.join(","));
-	$.each(arr, function(i, val) {
-		var inner_body_arr = [];
-		$.each(val, function(key, value) {
-			var ctd = value.replace(/,/g, ".");
-			inner_body_arr.push(ctd);
-		});
-		body_arr.push(inner_body_arr.join(","));
-	});
-	var doc_arr = header_arr.concat(body_arr);
-	return doc_arr.join("\n");
+    var header_arr = [],
+        inner_header_arr = [],
+        body_arr = [];
+    $.each(arr[0], function(key, value) {
+        inner_header_arr.push(key);
+    });
+    header_arr.push(inner_header_arr.join(","));
+    $.each(arr, function(i, val) {
+        var inner_body_arr = [];
+        $.each(val, function(key, value) {
+            var ctd = value.replace(/,/g, ".");
+            inner_body_arr.push(ctd);
+        });
+        body_arr.push(inner_body_arr.join(","));
+    });
+    var doc_arr = header_arr.concat(body_arr);
+    return doc_arr.join("\n");
 }
 
 function share_csv() {
     $(document).on("click", "#share_csv", function() {
-	    var csv_encode = complile_csv(),
-        	result = confirm("Share csv export?");
+        var csv_encode = complile_csv(),
+            result = confirm("Share csv export?");
         if (result === true) {
             loader(true);
             loadertext("generate system backup");
@@ -1685,17 +1668,17 @@ function togglebl() {
             us_state,
             us_title;
         if (thispanel.hasClass("true")) {
-	        var thisinput = thisform.find("input:first"),
-				thisvalue = thisinput.val(),
-				us_state = "active",
-				us_title = thisvalue;
+            var thisinput = thisform.find("input:first"),
+                thisvalue = thisinput.val(),
+                us_state = "active",
+                us_title = thisvalue;
             thisform.slideDown(300);
         } else {
             var result = confirm("Are you sure you want to disable url shortening? This can affect the workflow of this app");
             if (result === true) {
-	            var us_state = "inactive",
-	            	us_title = "inactive";
-	            thisform.slideUp(300);
+                var us_state = "inactive",
+                    us_title = "inactive";
+                thisform.slideUp(300);
             } else {
                 thispanel.addClass("true").removeClass("false");
                 e.preventDefault();
@@ -1841,11 +1824,11 @@ function submitccapi() {
             apival = api_input.val(),
             checkchange = api_input.attr("data-checkchange");
         if (thisvalue == currentapi && checkchange == apival) {
-	        canceldialog();
+            canceldialog();
             return false;
         } else {
             if (thisvalue != currentapi) {
-	            set_setting("cmcapisettings", {
+                set_setting("cmcapisettings", {
                     "selected": thisvalue
                 }, thisvalue);
             }
@@ -1853,11 +1836,11 @@ function submitccapi() {
                 if (checkchange == apival) {
                     popnotify("error", "Enter a valid API key");
                 } else {
-	                api_input.attr("data-checkchange", apival);
+                    api_input.attr("data-checkchange", apival);
                     checkapikey("coinmarketcap", apival, true)
                 }
             } else {
-	            canceldialog();
+                canceldialog();
                 notify("Data saved");
                 savesettings();
             }
@@ -2430,7 +2413,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                     api_fail(thisref, apikeyval);
                     return false;
                 } else {
-	                update_api_attr(thisref, apikeyval, lastinput);
+                    update_api_attr(thisref, apikeyval, lastinput);
                 }
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 api_fail(thisref, apikeyval);
@@ -2456,10 +2439,10 @@ function api_fail(thisref, thisvalue) {
 }
 
 function update_api_attr(thisref, thisvalue, lastinput) {
-	var apiformbox = $("#apikeyformbox"),
+    var apiformbox = $("#apikeyformbox"),
         changeval = (thisvalue) ? thisvalue : "";
     if (apiformbox && apiformbox.hasClass("pass")) {
-	    complement_apisettings(thisref, thisvalue);
+        complement_apisettings(thisref, thisvalue);
         apiformbox.find("input[data-ref=" + thisref + "]").attr("data-checkchange", changeval).removeClass("changed input_error");
         if (lastinput === true) {
             canceldialog();
@@ -2467,7 +2450,7 @@ function update_api_attr(thisref, thisvalue, lastinput) {
             savesettings();
         }
     } else {
-	    complement_apisettings(thisref, thisvalue);
+        complement_apisettings(thisref, thisvalue);
         canceldialog();
         notify("Data saved");
         savesettings();
@@ -2479,9 +2462,9 @@ function update_api_attr(thisref, thisvalue, lastinput) {
 }
 
 function complement_apisettings(thisref, thisvalue) {
-	var kpairs = {};
-	kpairs[thisref] = thisvalue;
-	set_setting("apikeys", kpairs);
+    var kpairs = {};
+    kpairs[thisref] = thisvalue;
+    set_setting("apikeys", kpairs);
     if (thisref == "bitly") {
         set_setting("url_shorten_settings", {
             "bitly_at": thisvalue
@@ -2645,15 +2628,15 @@ function submit_contactform() {
 // Permissions
 function permissions() {
     $(document).on("click", "#permissions", function() {
-	    all_pinpanel({
-		    "func": permissions_callback
-		}, true)
+        all_pinpanel({
+            "func": permissions_callback
+        }, true)
     })
 }
 
 function permissions_callback() {
     var thisnode = $("#permissions"),
-    	thisdata = thisnode.data(),
+        thisdata = thisnode.data(),
         selected = thisdata.selected,
         content = "\
 		<div class='formbox' id='permissions_formbox'>\
@@ -2685,7 +2668,7 @@ function submit_permissions() {
             canceldialog();
             return false;
         } else {
-	        set_setting("permissions", {
+            set_setting("permissions", {
                 "selected": thisvalue
             }, thisvalue);
             html.attr("data-role", thisvalue);
@@ -2700,26 +2683,26 @@ function submit_permissions() {
 
 function team_invite_trigger() {
     $(document).on("click", "#teaminvite", function() {
-	    if (hasbip && !bipv) {
-		    bipv_pass();
-		    notify("please verify your secret phrase first");
-		    return false;
-	    }
-	    if (haspin() === true) {
-	        team_invite();
-	    } else {
-	        var content = pinpanel("", {
-			    "func": team_invite
-			});
-	        showoptions(content, "pin");
-	    }
+        if (hasbip && !bipv) {
+            bipv_pass();
+            notify("please verify your secret phrase first");
+            return false;
+        }
+        if (haspin() === true) {
+            team_invite();
+        } else {
+            var content = pinpanel("", {
+                "func": team_invite
+            });
+            showoptions(content, "pin");
+        }
     })
 }
 
 function team_invite() {
     var jsonencode = complile_teaminvite(),
-    	filename = "bitrequest_team_invite.json",
-    	content = "\
+        filename = "bitrequest_team_invite.json",
+        content = "\
 		<div class='formbox' id='team_invite'>\
 			<h2 class='icon-users'>Team invite</h2>\
 			<div class='popnotify'></div>\
@@ -2754,102 +2737,94 @@ function complile_teaminvite() {
             key == "bitrequest_tp" ||
             key == "bitrequest_requests" ||
             key == "bitrequest_archive" ||
-            key == "bitrequest_bpdat") {
+            key == "bitrequest_bpdat") {} else {
+            var pval = JSON.parse(value);
+            if (key == "bitrequest_settings") {
+                var mods = [{
+                        "id": "permissions",
+                        "change": "selected",
+                        "val": "cashier"
+                    }],
+                    newarray = adjust_objectarray(pval, mods);
+                jsonfile[key] = newarray;
+            } else {
+                jsonfile[key] = pval;
+            }
         }
-        else {
-	        var pval = JSON.parse(value);
-	        if (key == "bitrequest_settings") {
-		        var mods = [
-				        {
-					        "id": "permissions",
-					        "change": "selected",
-					        "val": "cashier"
-				        }
-			        ],
-		        	newarray = adjust_objectarray(pval, mods);
-		        jsonfile[key] = newarray;
-        	}
-	        else {
-		        jsonfile[key] = pval;
-	        }
-	    }
     }
     var seedobj = (hasbip === true) ? ls_phrase_obj() : {
-	    	"pid": false,
-	    	"pob": false
-	    },
-	    seedid = seedobj.pid,
-		adjusted = adjust_object(jsonfile, seedobj);
-	return btoa(JSON.stringify(adjusted));
+            "pid": false,
+            "pob": false
+        },
+        seedid = seedobj.pid,
+        adjusted = adjust_object(jsonfile, seedobj);
+    return btoa(JSON.stringify(adjusted));
 }
 
 function adjust_object(object, seedobj) {
-	var seedid = seedobj.pid;
-	object.bitrequest_cashier = {
-		"cashier": true,
-		"seedid": seedid
-	}
-	if (seedid) {
-	    var phrase = seedobj.pob.join(" "),
-	    	seed = toseed(phrase),
-	    	rootkey = get_rootkey(seed),
-			key = rootkey.slice(0, 64),
-			cc = rootkey.slice(64);
-	}
-	$.each(bitrequest_coin_data, function(i, coinconfig) {
+    var seedid = seedobj.pid;
+    object.bitrequest_cashier = {
+        "cashier": true,
+        "seedid": seedid
+    }
+    if (seedid) {
+        var phrase = seedobj.pob.join(" "),
+            seed = toseed(phrase),
+            rootkey = get_rootkey(seed),
+            key = rootkey.slice(0, 64),
+            cc = rootkey.slice(64);
+    }
+    $.each(bitrequest_coin_data, function(i, coinconfig) {
         var currency = coinconfig.currency,
-        	default_coinsettings = coinconfig.settings,
+            default_coinsettings = coinconfig.settings,
             bip32dat = default_coinsettings.Xpub,
-			keyval = "bitrequest_cc_" + currency,
-	        addresses = object[keyval];
-	    if (seedid) {
-	        var root_path = bip32dat.root_path,
-				xpubdat = xpub_obj(currency, root_path, cc, key),
-				xpub = xpubdat.xpub,
-				xpubid = xpubdat.xpubid;
-		}
-		if (addresses) {
-			var checked = $.grep(addresses, function(filter) {
-		        return filter.checked == true;
-			});
-			if (bip32dat.xpub) {
-	            var address_object = $.grep(checked, function(filter) {
-		            if (filter.seedid) {
-				        return false;
-				    }
-				    if (filter.xpubid && filter.xpubid != xpubid) {
-				        return false;
-				    }
-				    return true;
-				});
-				var settings_key = "bitrequest_" + currency + "_settings",
-					saved_coinsettings = object[settings_key],
-					coinsettings = (saved_coinsettings) ? saved_coinsettings : default_coinsettings;
-		        if (coinsettings) {
-			        var xpsettings = coinsettings.Xpub,
-			        	xpubkey = xpsettings.key;
-			        if (xpubkey && xpsettings.selected === true) {
-			        }
-			        else {
-				        if (seedid) {
-					        var new_xpsettings = xpsettings;
-						    new_xpsettings.key = xpub;
-						    new_xpsettings.key_id = xpubid;
-						    new_xpsettings.selected = true;
-						    coinsettings.Xpub = new_xpsettings;
-						}
-			        }
-		        }
-		        object[keyval] = address_object;
-				object[settings_key] = coinsettings;
-		    }
-		    else {
-			    $.each(checked, function(key, val) {
-				    val.used = false;
-				    delete val.seedid;
-				});
-			    object[keyval] = checked;
-		    }
+            keyval = "bitrequest_cc_" + currency,
+            addresses = object[keyval];
+        if (seedid) {
+            var root_path = bip32dat.root_path,
+                xpubdat = xpub_obj(currency, root_path, cc, key),
+                xpub = xpubdat.xpub,
+                xpubid = xpubdat.xpubid;
+        }
+        if (addresses) {
+            var checked = $.grep(addresses, function(filter) {
+                return filter.checked == true;
+            });
+            if (bip32dat.xpub) {
+                var address_object = $.grep(checked, function(filter) {
+                    if (filter.seedid) {
+                        return false;
+                    }
+                    if (filter.xpubid && filter.xpubid != xpubid) {
+                        return false;
+                    }
+                    return true;
+                });
+                var settings_key = "bitrequest_" + currency + "_settings",
+                    saved_coinsettings = object[settings_key],
+                    coinsettings = (saved_coinsettings) ? saved_coinsettings : default_coinsettings;
+                if (coinsettings) {
+                    var xpsettings = coinsettings.Xpub,
+                        xpubkey = xpsettings.key;
+                    if (xpubkey && xpsettings.selected === true) {} else {
+                        if (seedid) {
+                            var new_xpsettings = xpsettings;
+                            new_xpsettings.key = xpub;
+                            new_xpsettings.key_id = xpubid;
+                            new_xpsettings.selected = true;
+                            coinsettings.Xpub = new_xpsettings;
+                        }
+                    }
+                }
+                object[keyval] = address_object;
+                object[settings_key] = coinsettings;
+            } else {
+                $.each(checked, function(key, val) {
+                    val.used = false;
+                    delete val.seedid;
+                });
+                object[keyval] = checked;
+            }
         }
     })
     return object;
@@ -2921,17 +2896,17 @@ function check_teaminvite() {
                         is_installed = ($.inArray(ro, teamid_arr) > -1) ? true : false,
                         dialog_heading = (update) ? "Team update" : "Team invitation",
                         cf_string = (cd_format) ? "Invitation expires in " + cd_format : "File expired",
-                        dialogtext =  (is_installed) ? "<p>Installation already completed!</p>" : (update) ? "<p>" + account + " wants you to update bitrequest with his latest public keys!</p>" : "<p>" + account + " wants to team up and make requests together with you!<br/><br/>By clicking on install, bitrequest will be installed on your device with " + account + "'s public keys and restricted access.</p>",
+                        dialogtext = (is_installed) ? "<p>Installation already completed!</p>" : (update) ? "<p>" + account + " wants you to update bitrequest with his latest public keys!</p>" : "<p>" + account + " wants to team up and make requests together with you!<br/><br/>By clicking on install, bitrequest will be installed on your device with " + account + "'s public keys and restricted access.</p>",
                         button_text = (update) ? "UPDATE" : "INSTALL",
                         install_button = (is_installed) ? "" : "<div id='install_teaminvite' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-download' data-update='" + update + "' data-ismaster='" + master_account + "'data-installid='" + ro + "'>" + button_text + "</div>"
-                        content = "\
+                    content = "\
 						<div class='formbox' id='system_backupformbox'>\
 							<h2 class='icon-users'>" + dialog_heading + "</h2>\
 							<div class='popnotify'></div>\
 							<div id='dialogcontent'>\
 								<div class='error' style='margin-top:1em;padding:0.3em 1em'>" + cf_string + "</div>\
 								<div id='changelog'>" + dialogtext +
-									"<div id='custom_actions'>" + install_button +"</div>\
+                        "<div id='custom_actions'>" + install_button + "</div>\
 								</div>\
 							</div>\
 						</div>\
@@ -2951,17 +2926,17 @@ function check_teaminvite() {
 
 function install_teaminvite_trigger() {
     $(document).on("click", "#install_teaminvite", function() {
-	    var this_bttn = $(this),
-	    	ismaster = this_bttn.attr("data-ismaster");
-	    if (ismaster === "true") {
-		    notify("Can't install invite on own device	");
-		    return false;
-		}
-	    var update = this_bttn.attr("data-update"),
-	    	installid = this_bttn.attr("data-installid"),
-	    	installed = (stored_currencies) ? true : false,
-	    	result_text = (update == "true") ? "Update? All you current public keys will be updated." : "Install? All you current public keys will be replaced.",
-			result = (installed === true) ? confirm(result_text) : true;
+        var this_bttn = $(this),
+            ismaster = this_bttn.attr("data-ismaster");
+        if (ismaster === "true") {
+            notify("Can't install invite on own device	");
+            return false;
+        }
+        var update = this_bttn.attr("data-update"),
+            installid = this_bttn.attr("data-installid"),
+            installed = (stored_currencies) ? true : false,
+            result_text = (update == "true") ? "Update? All you current public keys will be updated." : "Install? All you current public keys will be replaced.",
+            result = (installed === true) ? confirm(result_text) : true;
         if (result === true) {
             var bu_dat = this_bttn.attr("data-base64"),
                 j_filename = this_bttn.attr("data-filename"),
@@ -2972,14 +2947,14 @@ function install_teaminvite_trigger() {
 }
 
 function install_teaminvite(jsonobject, bu_filename, iid) {
-	$.each(jsonobject, function(key, val) {
-		localStorage.setItem(key, JSON.stringify(val));
+    $.each(jsonobject, function(key, val) {
+        localStorage.setItem(key, JSON.stringify(val));
     });
     if (iid) {
-	    var stored_teamids = localStorage.getItem("bitrequest_teamid"),
-	    	teamid_arr = (stored_teamids) ? JSON.parse(stored_teamids) : [];
-		teamid_arr.push(iid);
-	    localStorage.setItem("bitrequest_teamid", JSON.stringify(teamid_arr));
+        var stored_teamids = localStorage.getItem("bitrequest_teamid"),
+            teamid_arr = (stored_teamids) ? JSON.parse(stored_teamids) : [];
+        teamid_arr.push(iid);
+        localStorage.setItem("bitrequest_teamid", JSON.stringify(teamid_arr));
     }
     rendersettings(["restore", "backup"]); // exclude restore and backup settings
     var lastrestore = "last restore: <span class='icon-folder-open'>Team invite " + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_') + "</span>";

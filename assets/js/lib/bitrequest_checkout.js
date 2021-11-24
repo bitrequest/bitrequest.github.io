@@ -38,13 +38,11 @@ function crossframe(e) {
     var data = e.data;
     if (data == "close_loader") {
         closeloader();
-    }
-    else if (data == "close_request") {
-	    setTimeout(function() {
+    } else if (data == "close_request") {
+        setTimeout(function() {
             closeframe_confirm();
         }, 200);
-    }
-    else if (data.id == "result") {
+    } else if (data.id == "result") {
         result_callback(data.data);
     }
 }
@@ -63,7 +61,7 @@ function showframe() {
 function closeframe_confirm() {
     var result = confirm("Close request?");
     if (result === true) {
-	    closeframe();
+        closeframe();
     }
 }
 

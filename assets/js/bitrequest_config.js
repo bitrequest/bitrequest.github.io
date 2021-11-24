@@ -85,8 +85,8 @@ var multi_wallets = {
 
     },
     bitrequest_coin_data = [{
-	    	"currency": "bitcoin",
-	    	"active": true,
+            "currency": "bitcoin",
+            "active": true,
             "data": {
                 "currency": "bitcoin",
                 "ccsymbol": "btc",
@@ -97,7 +97,7 @@ var multi_wallets = {
                 "address_regex": "^([13][a-km-zA-HJ-NP-Z1-9]{25,34}|bc1[ac-hj-np-zAC-HJ-NP-Z02-9]{11,71})$"
             },
             "wallets": {
-	            "wallet_download_page": "https://bitcoin.org/en/choose-your-wallet",
+                "wallet_download_page": "https://bitcoin.org/en/choose-your-wallet",
                 "wallets": [
                     multi_wallets.exodus,
                     multi_wallets.coinomi,
@@ -177,23 +177,24 @@ var multi_wallets = {
                         "display": true
                     },
                     "apis": [{
-                        "name": "bitcoin.com",
-                        "url": "bitcoin.com",
-                        "api": true,
-                        "display": true
-                    },
-                    {
-                        "name": "blockcypher",
-                        "url": "blockcypher.com",
-                        "api": true,
-                        "display": true
-                    },
-                    {
-                        "name": "blockchair",
-                        "url": "blockchair.com",
-                        "api": true,
-                        "display": false
-                    }],
+                            "name": "bitcoin.com",
+                            "url": "bitcoin.com",
+                            "api": true,
+                            "display": true
+                        },
+                        {
+                            "name": "blockcypher",
+                            "url": "blockcypher.com",
+                            "api": true,
+                            "display": true
+                        },
+                        {
+                            "name": "blockchair",
+                            "url": "blockchair.com",
+                            "api": true,
+                            "display": false
+                        }
+                    ],
                     "options": [],
                     "rpc_test_command": {
                         "method": "getblockchaininfo"
@@ -213,8 +214,8 @@ var multi_wallets = {
                         },
                         {
                             "name": main_ad_socket,
-							"url": main_ad_socket,
-							"display": true
+                            "url": main_ad_socket,
+                            "display": true
                         },
                         {
                             "name": "blockcypher websocket",
@@ -262,7 +263,7 @@ var multi_wallets = {
                 "address_regex": "^([LM][a-km-zA-HJ-NP-Z1-9]{26,33}|ltc1[a-zA-HJ-NP-Z0-9]{26,39})$"
             },
             "wallets": {
-	            "wallet_download_page": "https://litecoin.org",
+                "wallet_download_page": "https://litecoin.org",
                 "wallets": [
                     multi_wallets.exodus,
                     multi_wallets.coinomi,
@@ -339,8 +340,8 @@ var multi_wallets = {
                         },
                         {
                             "name": main_ad_socket,
-							"url": main_ad_socket,
-							"display": true
+                            "url": main_ad_socket,
+                            "display": true
                         }
                     ]
                 },
@@ -381,7 +382,7 @@ var multi_wallets = {
                 "address_regex": "^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$"
             },
             "wallets": {
-	            "wallet_download_page": "https://dogecoin.com/getting-started/",
+                "wallet_download_page": "https://dogecoin.com/getting-started/",
                 "wallets": [
                     multi_wallets.exodus,
                     multi_wallets.coinomi,
@@ -421,9 +422,9 @@ var multi_wallets = {
                     },
                     "apis": [{
                             "name": "blockcypher",
-	                        "url": "blockcypher.com",
-	                        "api": true,
-	                        "display": true
+                            "url": "blockcypher.com",
+                            "api": true,
+                            "display": true
                         },
                         {
                             "name": "blockchair",
@@ -451,8 +452,8 @@ var multi_wallets = {
                         },
                         {
                             "name": "dogechain api",
-							"url": "wss://ws.dogechain.info/inv",
-							"display": true
+                            "url": "wss://ws.dogechain.info/inv",
+                            "display": true
                         }
                     ]
                 },
@@ -481,8 +482,8 @@ var multi_wallets = {
             }
         },
         {
-        	"currency": "bitcoin-cash",
-	    	"active": true,
+            "currency": "bitcoin-cash",
+            "active": true,
             "data": {
                 "currency": "bitcoin-cash",
                 "ccsymbol": "bch",
@@ -493,7 +494,7 @@ var multi_wallets = {
                 "address_regex": "(q|p)[a-z0-9]{41}"
             },
             "wallets": {
-	            "wallet_download_page": "https://bch.info/en/wallets",
+                "wallet_download_page": "https://bch.info/en/wallets",
                 "wallets": [
                     multi_wallets.exodus,
                     multi_wallets.coinomi,
@@ -505,7 +506,7 @@ var multi_wallets = {
                         "name": "electron-cash",
                         "website": "https://electroncash.org",
                         "appstore": "https://itunes.apple.com/app/id1359700089",
-						"playstore": "https://play.google.com/store/apps/details?id=org.electroncash.wallet",
+                        "playstore": "https://play.google.com/store/apps/details?id=org.electroncash.wallet",
                         "desktop": "https://electroncash.org",
                         "seed": true
                     }
@@ -540,22 +541,23 @@ var multi_wallets = {
                     "icon": "sphere",
                     "selected": {
                         "name": "bitcoin.com",
-                            "url": "bitcoin.com",
-                            "api": true,
-                            "display": true
-                    },
-                    "apis": [{
-                        "name": "bitcoin.com",
                         "url": "bitcoin.com",
                         "api": true,
                         "display": true
                     },
-                    {
-                        "name": "blockchair",
-                        "url": "blockchair.com",
-                        "api": true,
-                        "display": false
-                    }],
+                    "apis": [{
+                            "name": "bitcoin.com",
+                            "url": "bitcoin.com",
+                            "api": true,
+                            "display": true
+                        },
+                        {
+                            "name": "blockchair",
+                            "url": "blockchair.com",
+                            "api": true,
+                            "display": false
+                        }
+                    ],
                     "options": [],
                     "rpc_test_command": {
                         "method": "getblockchaininfo"
@@ -573,7 +575,7 @@ var multi_wallets = {
                         "url": "wss://ws.blockchain.info/bch/inv",
                         "display": true
                     }],
-					"options": []
+                    "options": []
                 },
                 "Xpub": {
                     "active": true,
@@ -607,13 +609,13 @@ var multi_wallets = {
                 "ccsymbol": "eth",
                 "cmcid": 1027,
                 "urlscheme": function(payment, address, amount, iszero) {
-	                var amount = (iszero === true) ? "" : "?value=" + (parseFloat(amount) * "1000000000000000000").toFixedSpecial(0);
+                    var amount = (iszero === true) ? "" : "?value=" + (parseFloat(amount) * "1000000000000000000").toFixedSpecial(0);
                     return payment + ":" + address + amount;
                 },
                 "address_regex": "web3"
             },
             "wallets": {
-	            "wallet_download_page": "https://ethereum.org/en/wallets/",
+                "wallet_download_page": "https://ethereum.org/en/wallets/",
                 "wallets": [
                     multi_wallets.exodus,
                     multi_wallets.trezor,
@@ -737,13 +739,13 @@ var multi_wallets = {
                 "ccsymbol": "nano",
                 "cmcid": 1567,
                 "urlscheme": function(payment, address, amount, iszero) {
-	                var amount = (iszero === true) ? "" : "?amount=" + NanocurrencyWeb.tools.convert(amount, "NANO", "RAW");
-	                return "nano:" + address + amount;
+                    var amount = (iszero === true) ? "" : "?amount=" + NanocurrencyWeb.tools.convert(amount, "NANO", "RAW");
+                    return "nano:" + address + amount;
                 },
-            "address_regex": "^(xrb|nano)_([a-z1-9]{60})$"
+                "address_regex": "^(xrb|nano)_([a-z1-9]{60})$"
             },
             "wallets": {
-	            "wallet_download_page": "https://nanowallets.guide",
+                "wallet_download_page": "https://nanowallets.guide",
                 "wallets": [
                     multi_wallets.trustwallet,
                     {
@@ -811,21 +813,22 @@ var multi_wallets = {
                         "display": true
                     },
                     "apis": [{
-                        "name": "bitrequest.app",
-                        "url": "https://www.bitrequest.app:8020",
-                        "api": true,
-                        "username": "",
-                        "password": "",
-                        "display": true
-                    },
-                    {
-                        "name": "api.nanos.cc",
-                        "url": "https://proxy.nanos.cc/proxy",
-                        "api": true,
-                        "username": "",
-                        "password": "",
-                        "display": true
-                    }],
+                            "name": "bitrequest.app",
+                            "url": "https://www.bitrequest.app:8020",
+                            "api": true,
+                            "username": "",
+                            "password": "",
+                            "display": true
+                        },
+                        {
+                            "name": "api.nanos.cc",
+                            "url": "https://proxy.nanos.cc/proxy",
+                            "api": true,
+                            "username": "",
+                            "password": "",
+                            "display": true
+                        }
+                    ],
                     "options": [],
                     "rpc_test_command": {
                         "action": "version"
@@ -839,7 +842,7 @@ var multi_wallets = {
                         "display": true
                     },
                     "apis": [{
-	                    	"name": "bitrequest.app",
+                            "name": "bitrequest.app",
                             "url": "wss://bitrequest.app:8010",
                             "display": true
                         },
@@ -893,10 +896,10 @@ var multi_wallets = {
                 "address_regex": "^[48](?:[0-9AB]|[1-9A-HJ-NP-Za-km-z]{12}(?:[1-9A-HJ-NP-Za-km-z]{30})?)[1-9A-HJ-NP-Za-km-z]{93}$"
             },
             "wallets": {
-	            "wallet_download_page": "https://www.getmonero.org/downloads/",
+                "wallet_download_page": "https://www.getmonero.org/downloads/",
                 "wallets": [
-                	multi_wallets.coinomi,
-                	{
+                    multi_wallets.coinomi,
+                    {
                         "name": "monerujo",
                         "website": "https://www.monerujo.io",
                         "appstore": null,
@@ -931,7 +934,7 @@ var multi_wallets = {
                 ]
             },
             "settings": {
-	            "confirmations": {
+                "confirmations": {
                     "icon": "clock",
                     "selected": 0
                 },
@@ -995,104 +998,104 @@ var multi_wallets = {
             }
         }
     ]
-    
+
 var erc20_dat = {
-	"data": {
-		"monitored": true,
-	    "url-scheme": "",
-	    "regex": "web3",
-	    "erc20": true
-	},
-	"wallets": {
-		"wallet_download_page": "https://ethereum.org/en/wallets/",
-	    "wallets": [{
-	            "name": "myetherwallet",
-	            "website": "https://www.mewwallet.com",
-	            "appstore": "https://apps.apple.com/app/id1464614025",
-	            "playstore": "https://play.google.com/store/apps/details?id=com.myetherwallet.mewwallet",
-	            "desktop": "https://www.myetherwallet.com"
-	        },
-	        {
-	            "name": "enjin",
-	            "website": "https://enjin.io/software/wallet",
-	            "appstore": "https://apps.apple.com/app/id1349078375",
-	            "playstore": "http://enj.in/google-play",
-	            "desktop": null
-	        }
-	    ]
-	},
-	"settings": {
-		"confirmations": {
-	        "icon": "clock",
-	        "selected": 0
-	    },
-	    "Use random address": {
-	        "icon": "dice",
-	        "selected": false,
-	        "switch": true,
-	    },
-	    "blockexplorers": {
-	        "icon": "eye",
-	        "selected": "ethplorer.io",
-	        "options": {}
-	    },
-	    "apis": {
-	        "icon": "sphere",
-	        "selected": {
-	            "name": "ethplorer",
-	            "url": "ethplorer.io",
-	            "api": true,
-	            "display": true
-	        },
-	        "apis": [{
-	                "name": "ethplorer",
-	                "url": "ethplorer.io",
-	                "api": true,
-	                "display": true
-	            },
-	            {
-	                "name": "blockchair",
-	                "url": "blockchair.com",
-	                "api": true,
-	                "display": true
-	            },
-	            {
-	                "name": main_eth_node,
-	                "url": main_eth_node,
-	                "display": true
-	            },
-	            {
-	                "name": eth_node2,
-	                "url": eth_node2,
-	                "display": true
-	            }
-	        ],
-	        "options": [],
-	        "rpc_test_command": {
-	            "method": null
-	        }
-	    },
-	    "websockets": {
-	        "icon": "tab",
-	        "selected": {
-	            "name": main_eth_socket,
-	            "url": main_eth_socket,
-	            "display": true
-	        },
-	        "apis": [{
-	                "name": main_eth_socket,
-	                "url": main_eth_socket,
-	                "display": true
-	            },
-	            {
-	                "name": eth_socket2,
-	                "url": eth_socket2,
-	                "display": true
-	            }
-	        ],
-	        "options": []
-	    }
-	}
+    "data": {
+        "monitored": true,
+        "url-scheme": "",
+        "regex": "web3",
+        "erc20": true
+    },
+    "wallets": {
+        "wallet_download_page": "https://ethereum.org/en/wallets/",
+        "wallets": [{
+                "name": "myetherwallet",
+                "website": "https://www.mewwallet.com",
+                "appstore": "https://apps.apple.com/app/id1464614025",
+                "playstore": "https://play.google.com/store/apps/details?id=com.myetherwallet.mewwallet",
+                "desktop": "https://www.myetherwallet.com"
+            },
+            {
+                "name": "enjin",
+                "website": "https://enjin.io/software/wallet",
+                "appstore": "https://apps.apple.com/app/id1349078375",
+                "playstore": "http://enj.in/google-play",
+                "desktop": null
+            }
+        ]
+    },
+    "settings": {
+        "confirmations": {
+            "icon": "clock",
+            "selected": 0
+        },
+        "Use random address": {
+            "icon": "dice",
+            "selected": false,
+            "switch": true,
+        },
+        "blockexplorers": {
+            "icon": "eye",
+            "selected": "ethplorer.io",
+            "options": {}
+        },
+        "apis": {
+            "icon": "sphere",
+            "selected": {
+                "name": "ethplorer",
+                "url": "ethplorer.io",
+                "api": true,
+                "display": true
+            },
+            "apis": [{
+                    "name": "ethplorer",
+                    "url": "ethplorer.io",
+                    "api": true,
+                    "display": true
+                },
+                {
+                    "name": "blockchair",
+                    "url": "blockchair.com",
+                    "api": true,
+                    "display": true
+                },
+                {
+                    "name": main_eth_node,
+                    "url": main_eth_node,
+                    "display": true
+                },
+                {
+                    "name": eth_node2,
+                    "url": eth_node2,
+                    "display": true
+                }
+            ],
+            "options": [],
+            "rpc_test_command": {
+                "method": null
+            }
+        },
+        "websockets": {
+            "icon": "tab",
+            "selected": {
+                "name": main_eth_socket,
+                "url": main_eth_socket,
+                "display": true
+            },
+            "apis": [{
+                    "name": main_eth_socket,
+                    "url": main_eth_socket,
+                    "display": true
+                },
+                {
+                    "name": eth_socket2,
+                    "url": eth_socket2,
+                    "display": true
+                }
+            ],
+            "options": []
+        }
+    }
 }
 
 var app_settings = [{

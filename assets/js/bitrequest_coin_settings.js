@@ -5,9 +5,9 @@ $(document).ready(function() {
     // Confirmations
     edit_confirmations();
     submit_confirmations();
-    
+
     // Reuse addresses
-	reuse_address_trigger();
+    reuse_address_trigger();
     cc_switch();
 
     // Blockexplorer
@@ -145,22 +145,22 @@ function submit_confirmations() {
 
 // Reuse addresses
 function reuse_address_trigger() {
-	$(document).on("mouseup", ".cc_settinglist li[data-id='Reuse address'] .switchpanel.custom", function() {
+    $(document).on("mouseup", ".cc_settinglist li[data-id='Reuse address'] .switchpanel.custom", function() {
         var this_switch = $(this),
             thislist = this_switch.closest("li"),
             thisliwrap = this_switch.closest(".liwrap"),
             thiscurrency = thisliwrap.attr("data-currency"),
             warning = thislist.data("warning");
         if (this_switch.hasClass("true")) {
-	        var xresult = true;
-	        if (warning) {
-	        	var xresult = confirm("Are you sure you want to generate new " + thiscurrency + " addresses? they may not show up in some wallets.");
-        	}
-        	if (xresult === true) {
-	        	thislist.data("selected", false);
-				this_switch.removeClass("true").addClass("false");
-				save_cc_settings(thiscurrency, false);
-			}
+            var xresult = true;
+            if (warning) {
+                var xresult = confirm("Are you sure you want to generate new " + thiscurrency + " addresses? they may not show up in some wallets.");
+            }
+            if (xresult === true) {
+                thislist.data("selected", false);
+                this_switch.removeClass("true").addClass("false");
+                save_cc_settings(thiscurrency, false);
+            }
         } else {
             var result = confirm("Are you sure you want to reuse " + thiscurrency + " addresses?");
             if (result === true) {
@@ -169,7 +169,7 @@ function reuse_address_trigger() {
                 save_cc_settings(thiscurrency, true);
             }
         }
-	})
+    })
 }
 
 function cc_switch() {
@@ -233,7 +233,7 @@ function submit_blockexplorer() {
 // RPC node / Websockets
 function edit_rpcnode() {
     $(document).on("click", ".cc_settinglist li[data-id='apis'], .cc_settinglist li[data-id='websockets']", function() {
-	    var current_li = $(this),
+        var current_li = $(this),
             this_data = current_li.data(),
             options = this_data.options,
             api_list = this_data.apis,
@@ -285,10 +285,9 @@ function edit_rpcnode() {
                 if (value.display === true) {
                     var selected = (value.url == selected_title || value.name == selected_title);
                     if (thiscurrency == "nano") {
-	                    test_append_rpc(thiscurrency, optionlist, key, value, selected);
-                    }
-                    else {
-	                    rpc_option_li(optionlist, true, key, value, selected, false);
+                        test_append_rpc(thiscurrency, optionlist, key, value, selected);
+                    } else {
+                        rpc_option_li(optionlist, true, key, value, selected, false);
                     }
                 }
             });
@@ -325,7 +324,7 @@ function get_rpc_placeholder(currency) {
 }
 
 function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
-	if (s_id == "apis") {
+    if (s_id == "apis") {
         if (thiscurrency == "ethereum") {
             if (web3) {
                 web3.setProvider(value.url);
@@ -380,10 +379,10 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
         }
     } else if (s_id == "websockets") {
         var provider = value.url,
-        	provider_name = value.name,
+            provider_name = value.name,
             ping_event = "heartbeat";
         if (provider_name == "blockcypher websocket") {
-	        provider = provider + "btc/main";
+            provider = provider + "btc/main";
         }
         if (thiscurrency == "bitcoin") {
             var ping_event = JSON.stringify({
@@ -397,8 +396,8 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                 "id": 1
             });
         } else if (is_erc20t === true) {
-	        var if_id = get_infura_apikey(provider),
-	        	provider = provider + if_id;
+            var if_id = get_infura_apikey(provider),
+                provider = provider + if_id;
             var ping_event = JSON.stringify({
                 "jsonrpc": "2.0",
                 "id": 1,
@@ -835,17 +834,16 @@ function edit_xpub(ad) {
 
 function xpub_change() {
     $(document).on("input", "#xpub_input", function(e) {
-		var thisnode = $(this),
-			addressinputval = thisnode.val(),
-			currency = thisnode.attr("data-currency"),
-			valid = check_xpub(addressinputval, xpub_prefix(currency), currency);
-		if (valid === true) {
-			clear_xpub_checkboxes();
-			validate_xpub(thisnode.closest("#xpubformbox"));
-		}
-		else {
-			xpub_fail(currency);
-		}
+        var thisnode = $(this),
+            addressinputval = thisnode.val(),
+            currency = thisnode.attr("data-currency"),
+            valid = check_xpub(addressinputval, xpub_prefix(currency), currency);
+        if (valid === true) {
+            clear_xpub_checkboxes();
+            validate_xpub(thisnode.closest("#xpubformbox"));
+        } else {
+            xpub_fail(currency);
+        }
     })
 }
 
@@ -857,37 +855,36 @@ function submit_xpub_trigger() {
 }
 
 function validate_xpub(thisnode) {
-	var this_data = thisnode.data(),
+    var this_data = thisnode.data(),
         currency = this_data.currency,
         ccsymbol = this_data.ccsymbol,
         addressfield = thisnode.find(".address"),
         addressinputval = addressfield.val();
     if (addressinputval) {
         var valid = check_xpub(addressinputval, xpub_prefix(currency), currency),
-        	tdbox = $("#ad_info_wrap .td_box"),
-	        dp_body = $("#ad_info_wrap");
+            tdbox = $("#ad_info_wrap .td_box"),
+            dp_body = $("#ad_info_wrap");
         if (valid === true) {
-	        var derive_list = xpub_derivelists(currency, addressinputval);
-	        if (derive_list) {
-		        tdbox.html(xpub_derivelists(currency, addressinputval));
-				dp_body.slideDown("500");
-	        }
-	        else {
-		        xpub_fail(currency);
-				return false;
-	        }
+            var derive_list = xpub_derivelists(currency, addressinputval);
+            if (derive_list) {
+                tdbox.html(xpub_derivelists(currency, addressinputval));
+                dp_body.slideDown("500");
+            } else {
+                xpub_fail(currency);
+                return false;
+            }
             var pk_checkbox = thisnode.find("#pk_confirmwrap"),
                 pk_checked = pk_checkbox.data("checked"),
                 matchwrap = thisnode.find("#matchwrap"),
                 mw_checked = matchwrap.data("checked");
             if (mw_checked == false) {
-	            popnotify("error", "Confirm addresses are matching");
-	            return false;
-	        }
-	        if (pk_checked == false) {
-	            popnotify("error", "Confirm privatekey ownership");
-	            return false;
-	        }
+                popnotify("error", "Confirm addresses are matching");
+                return false;
+            }
+            if (pk_checked == false) {
+                popnotify("error", "Confirm privatekey ownership");
+                return false;
+            }
             if (pk_checked == true && mw_checked == true) {
                 var xpubli = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']"),
                     haskey = xpubli.data("key");
@@ -919,9 +916,9 @@ function validate_xpub(thisnode) {
                     bip32 = getbip32dat(currency);
                 keycc.seedid = xpub_id;
                 var ad = derive_obj("xpub", keycc, coindat, bip32);
-				if (ad) {
-					derive_add_address(currency, ad);
-				}
+                if (ad) {
+                    derive_add_address(currency, ad);
+                }
                 canceldialog();
                 clear_savedurl();
                 if (body.hasClass("showstartpage")) {
@@ -955,53 +952,53 @@ function validate_xpub(thisnode) {
 
 function xpub_fail(currency) {
     var errormessage = "NOT a valid / supported " + currency + " Xpub key";
-	popnotify("error", errormessage);
-	clear_xpub_inputs();
+    popnotify("error", errormessage);
+    clear_xpub_inputs();
 }
 
 function clear_xpub_inputs() {
     $("#ad_info_wrap").slideUp(200, function() {
-		$("#ad_info_wrap .td_box").html("");
-	});
-	clear_xpub_checkboxes();
+        $("#ad_info_wrap .td_box").html("");
+    });
+    clear_xpub_checkboxes();
 }
 
 function clear_xpub_checkboxes() {
     $("#pk_confirmwrap").attr("data-checked", "false").data("checked", false);
-	$("#matchwrap").attr("data-checked", "false").data("checked", false);
+    $("#matchwrap").attr("data-checked", "false").data("checked", false);
 }
 
 function xpub_derivelists(currency, xpub) {
-	try {
+    try {
         var coindat = getcoindata(currency),
-	        bip32dat = getbip32dat(currency),
-	        root_path = "M/0/",
-	        startindex = 0,
-	        keycc = key_cc_xpub(xpub),
-	        key = keycc.key,
-	        chaincode = keycc.cc,
-	        versionbytes = keycc.version,
-			root_dat = {
-	            "key": key,
-	            "cc": chaincode,
-	            "xpub": true,
-	            "versionbytes": versionbytes,
-	        },
-	        derivelist = "",
-	        derive_array = keypair_array(false, new Array(5), startindex, root_path, bip32dat, key, chaincode, currency, versionbytes);
-	    $.each(derive_array, function(i, val) {
-	        var index = startindex + i;
-	        derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> | <span class='mspace'>" + val.address + "</span></li>";
-	    });
-		return derivelist;
+            bip32dat = getbip32dat(currency),
+            root_path = "M/0/",
+            startindex = 0,
+            keycc = key_cc_xpub(xpub),
+            key = keycc.key,
+            chaincode = keycc.cc,
+            versionbytes = keycc.version,
+            root_dat = {
+                "key": key,
+                "cc": chaincode,
+                "xpub": true,
+                "versionbytes": versionbytes,
+            },
+            derivelist = "",
+            derive_array = keypair_array(false, new Array(5), startindex, root_path, bip32dat, key, chaincode, currency, versionbytes);
+        $.each(derive_array, function(i, val) {
+            var index = startindex + i;
+            derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> | <span class='mspace'>" + val.address + "</span></li>";
+        });
+        return derivelist;
     } catch (err) {
         return false;
     }
 }
 
 function check_xpub(address, prefix, currency) {
-	var this_prefix = (currency == "bitcoin") ? "zpub|xpub" : prefix,
-		regex = "(" + this_prefix + ")([a-km-zA-HJ-NP-Z1-9]{107})(\\?c=\\d*&h=bip\\d{2,3})?";
+    var this_prefix = (currency == "bitcoin") ? "zpub|xpub" : prefix,
+        regex = "(" + this_prefix + ")([a-km-zA-HJ-NP-Z1-9]{107})(\\?c=\\d*&h=bip\\d{2,3})?";
     return new RegExp(regex).test(address);
 }
 
@@ -1012,29 +1009,28 @@ function key_management() {
         var thisnode = $(this),
             thislist = thisnode.closest("li"),
             thisdat = thislist.data(),
-			thisliwrap = thislist.find(".liwrap"),
+            thisliwrap = thislist.find(".liwrap"),
             thiscurrency = thisliwrap.attr("data-currency"),
             activepub = active_xpub(thiscurrency);
         if (activepub) {
-	        xpub_info_pu(thiscurrency, activepub.key);
+            xpub_info_pu(thiscurrency, activepub.key);
         } else {
-	        if (hasbip === true) {
-		        if (thiscurrency == "monero") {
-		            all_pinpanel({
-			            "func": phrase_info_pu,
-			            "args": thiscurrency
-			        }, true)
-		        } else {
-		        	phrase_info_pu(thiscurrency);
-		        }
-	        }
-	        else {
-		        if (is_viewonly() === true) {
-			        vu_block();
-			        return false;
-		        }
-		        manage_bip32();
-	        }
+            if (hasbip === true) {
+                if (thiscurrency == "monero") {
+                    all_pinpanel({
+                        "func": phrase_info_pu,
+                        "args": thiscurrency
+                    }, true)
+                } else {
+                    phrase_info_pu(thiscurrency);
+                }
+            } else {
+                if (is_viewonly() === true) {
+                    vu_block();
+                    return false;
+                }
+                manage_bip32();
+            }
         }
     })
 }
@@ -1052,7 +1048,7 @@ function xpub_info_pu(currency, xpub) {
         key = keycc.key,
         chaincode = keycc.cc,
         versionbytes = keycc.version,
-		root_dat = {
+        root_dat = {
             "key": key,
             "cc": chaincode,
             "xpub": true,
@@ -1065,7 +1061,7 @@ function xpub_info_pu(currency, xpub) {
         derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> | <span class='mspace'>" + val.address + "</span></li>";
     });
     var ccsymbol = coindat.ccsymbol,
-   		content = $("<div id='ad_info_wrap'><h2>" + getcc_icon(coindat.cmcid, ccsymbol + "-" + currency, coindat.erc20) + " <span>" + currency + " Key Derivation</span></h2><ul>\
+        content = $("<div id='ad_info_wrap'><h2>" + getcc_icon(coindat.cmcid, ccsymbol + "-" + currency, coindat.erc20) + " <span>" + currency + " Key Derivation</span></h2><ul>\
 	    <li id='xpub_box' class='clearfix noline'>\
 	    	<div class='xpub_ib clearfix pd_" + currency + "' data-xpub='" + xpub + "'>\
     			<div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>show</span></div>\

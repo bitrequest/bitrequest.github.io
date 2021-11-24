@@ -48,10 +48,10 @@ var language = navigator.language || navigator.userLanguage,
     safety_poll_timeout = 15000;
 
 $(document).ready(function() {
-	$.ajaxSetup({
+    $.ajaxSetup({
         "cache": false
     });
-	buildsettings(); // build settings first
+    buildsettings(); // build settings first
 
     stored_currencies = localStorage.getItem("bitrequest_currencies"),
         init = localStorage.getItem("bitrequest_init"),
@@ -566,8 +566,8 @@ function finishfunctions() {
 
     // Query helpers
 
-	//exists
-	//shake
+    //exists
+    //shake
     //get_setting
     //set_setting
     //get_requestli
@@ -606,13 +606,13 @@ function settheme() {
 }
 
 function setpermissions() {
-	var permission = $("#permissions").data("selected");
-	html.attr("data-role", permission);
+    var permission = $("#permissions").data("selected");
+    html.attr("data-role", permission);
 }
 
 function is_viewonly() {
-	var permission = $("#permissions").data("selected");
-	return (permission == "cashier");
+    var permission = $("#permissions").data("selected");
+    return (permission == "cashier");
 }
 
 // ** Pincode **
@@ -699,7 +699,7 @@ function pinpress(thispad) {
 
 function enterapp(pinval) {
     var pinfloat = $("#pinfloat"),
-    	pinsettings = $("#pinsettings").data(),
+        pinsettings = $("#pinsettings").data(),
         savedpin = pinsettings.pinhash,
         attempts = pinsettings.attempts,
         hashpin = hashcode(pinval),
@@ -749,32 +749,29 @@ function enterapp(pinval) {
             $("#pininput").val("");
         }, 10);
         if (attempts > 2) {
-	        if (attempts === 3) {
-		        var timeout = now + 300000; // 5 minutes
-		        pinsettings.timeout = timeout;
-		        lockscreen(timeout);
-	        }
-	        else if (attempts === 6) {
-		        var timeout = now + 1800000; // 30 minutes
-	            pinsettings.timeout = timeout;
-	            lockscreen(timeout);
-	        }
-	        else if (attempts === 9) {
-		        var timeout = now + 86400000; // 24 hours
-	            pinsettings.timeout = timeout;
-	            lockscreen(timeout);
-	        }
-	        else if (attempts > 9) {
-		        attempts = 1;
-	        }
-	    }
+            if (attempts === 3) {
+                var timeout = now + 300000; // 5 minutes
+                pinsettings.timeout = timeout;
+                lockscreen(timeout);
+            } else if (attempts === 6) {
+                var timeout = now + 1800000; // 30 minutes
+                pinsettings.timeout = timeout;
+                lockscreen(timeout);
+            } else if (attempts === 9) {
+                var timeout = now + 86400000; // 24 hours
+                pinsettings.timeout = timeout;
+                lockscreen(timeout);
+            } else if (attempts > 9) {
+                attempts = 1;
+            }
+        }
         pinsettings.attempts = attempts + 1;
         savesettings();
     }
 }
 
 function clearpinlock() {
-	var pinsettings = $("#pinsettings").data();
+    var pinsettings = $("#pinsettings").data();
     pinsettings.timeout = null;
     pinsettings.attempts = 0;
     savesettings();
@@ -800,8 +797,8 @@ function pinvalidate(thispad) {
         newval = pinval + thisval;
     if (newval.length > 3) {
         if (newval == $("#pininput").val()) {
-	        var current_pin = get_setting("pinsettings", "pinhash"),
-				pinsettings = $("#pinsettings"),
+            var current_pin = get_setting("pinsettings", "pinhash"),
+                pinsettings = $("#pinsettings"),
                 pinhash = hashcode(newval),
                 titlepin = "pincode activated",
                 locktime = pinsettings.data("locktime");
@@ -1049,11 +1046,11 @@ function togglenav() {
             $(".navstyle li .self").removeClass("activemenu");
         } else {
             if (islocked() === true) {
-	            if (is_viewonly() === true) {
-			        loadpage("?p=currencies");
-					$(".currenciesbttn .self").addClass("activemenu");
-			        return false;
-			    }
+                if (is_viewonly() === true) {
+                    loadpage("?p=currencies");
+                    $(".currenciesbttn .self").addClass("activemenu");
+                    return false;
+                }
                 var content = pinpanel(" pinwall admin");
                 showoptions(content, "pin");
                 return false;
@@ -1079,7 +1076,7 @@ function loadurl() {
     shownav(page);
     var bip39info = gets.bip39;
     if (bip39info) {
-		bip39_sc(bip39info);
+        bip39_sc(bip39info);
     }
 }
 
@@ -1104,7 +1101,7 @@ function loadpage(href) {
 }
 
 function openpage(href, pagename, event) {
-	history.pushState({
+    history.pushState({
         "pagename": pagename,
         "event": event
     }, "", href);
@@ -1274,7 +1271,7 @@ function get_address_warning(id, address, pass_dat) {
 }
 
 function finishtxfunction(currency, thisaddress, savedurl, title) {
-	var cd = getcoindata(currency),
+    var cd = getcoindata(currency),
         currencysettings = $("#currencysettings").data(),
         c_default = currencysettings.default,
         currencysymbol = (c_default === true && offline === false) ? currencysettings.currencysymbol : cd.ccsymbol,
@@ -1348,7 +1345,7 @@ function togglecurrency() {
                     currencylistitem.removeClass("hide");
                 }
             } else {
-	            addcurrency(coindata);
+                addcurrency(coindata);
             }
         }
         savecurrencies(false);
@@ -1744,17 +1741,15 @@ function escapeandback() {
         if (paymentdialogbox.hasClass("flipped") && paymentdialogbox.hasClass("norequest")) {
             remove_flip();
         } else {
-	        if (request) {
-		        if (request.received === true) {
-			        close_paymentdialog();
-			    }
-			    else {
-				    cpd_pollcheck();
-			    }
-	        }
-	        else {
-		        close_paymentdialog();
-	        }
+            if (request) {
+                if (request.received === true) {
+                    close_paymentdialog();
+                } else {
+                    cpd_pollcheck();
+                }
+            } else {
+                close_paymentdialog();
+            }
         }
         return false;
     } else {
@@ -1763,43 +1758,43 @@ function escapeandback() {
 }
 
 function close_paymentdialog(empty) {
-	if (request) {
-		if (empty === true && inframe === false && request.requesttype == "local") {
-			var currency = request.payment,
-				address = request.address,
-				ls_recentrequests = localStorage.getItem("bitrequest_recent_requests"),
-				lsrr_arr = (ls_recentrequests) ? JSON.parse(ls_recentrequests) : {},
-				rr_object = {},
-				request_dat = {
-					"currency": currency,
-					"cmcid": request.cmcid,
-					"ccsymbol": request.currencysymbol,
-					"address": address,
-					"erc20": request.erc20,
-					"rqtime": request.rq_init
-				};
-				rr_object[currency] = request_dat;
-				lsrr_arr[currency] = request_dat;
-			localStorage.setItem("bitrequest_recent_requests", JSON.stringify(lsrr_arr));
-			closeloader();
-			toggle_rr(true);
-			var rr_whitelist = sessionStorage.getItem("bitrequest_rrwl");
-			if (rr_whitelist) {
-				var rrwl_obj = JSON.parse(rr_whitelist);
-				if (rrwl_obj && rrwl_obj[currency] == address) {
-					continue_cpd();
-					return false;
-				}
-			}
-			payment_lookup(request_dat);
-			return false;
-		}
-	}
+    if (request) {
+        if (empty === true && inframe === false && request.requesttype == "local") {
+            var currency = request.payment,
+                address = request.address,
+                ls_recentrequests = localStorage.getItem("bitrequest_recent_requests"),
+                lsrr_arr = (ls_recentrequests) ? JSON.parse(ls_recentrequests) : {},
+                rr_object = {},
+                request_dat = {
+                    "currency": currency,
+                    "cmcid": request.cmcid,
+                    "ccsymbol": request.currencysymbol,
+                    "address": address,
+                    "erc20": request.erc20,
+                    "rqtime": request.rq_init
+                };
+            rr_object[currency] = request_dat;
+            lsrr_arr[currency] = request_dat;
+            localStorage.setItem("bitrequest_recent_requests", JSON.stringify(lsrr_arr));
+            closeloader();
+            toggle_rr(true);
+            var rr_whitelist = sessionStorage.getItem("bitrequest_rrwl");
+            if (rr_whitelist) {
+                var rrwl_obj = JSON.parse(rr_whitelist);
+                if (rrwl_obj && rrwl_obj[currency] == address) {
+                    continue_cpd();
+                    return false;
+                }
+            }
+            payment_lookup(request_dat);
+            return false;
+        }
+    }
     continue_cpd();
 }
 
 function continue_cpd() {
-	if (html.hasClass("firstload")) {
+    if (html.hasClass("firstload")) {
         var pagename = geturlparameters().p,
             set_pagename = (pagename) ? pagename : "home";
         openpage("?p=" + set_pagename, set_pagename, "loadpage");
@@ -1809,13 +1804,13 @@ function continue_cpd() {
 }
 
 function payment_lookup(request_dat) {
-	if ($("#dismiss").length) {
-		return false;
-	}
-	var currency = request.payment,
-		blockexplorer = get_blockexplorer(currency),
-		bu_url = blockexplorer_url(currency, false, request_dat.erc20) + request_dat.address,
-		content = "<div class='formbox'>\
+    if ($("#dismiss").length) {
+        return false;
+    }
+    var currency = request.payment,
+        blockexplorer = get_blockexplorer(currency),
+        bu_url = blockexplorer_url(currency, false, request_dat.erc20) + request_dat.address,
+        content = "<div class='formbox'>\
 	        <h2 class='icon-warning'><span class='icon-qrcode'/>No payment detected</h2>\
 	        <div id='ad_info_wrap'>\
 	        	<p><strong><a href='" + bu_url + "' target='_blank' class='ref check_recent'>Look for recent incoming " + currency + " payments on " + blockexplorer + " <span class='icon-new-tab'></a></strong></p>\
@@ -1833,11 +1828,11 @@ function payment_lookup(request_dat) {
 
 function check_recent() {
     $(document).on("click", ".check_recent", function(e) {
-	    e.preventDefault();
+        e.preventDefault();
         var thisnode = $(this),
-        	thisurl = thisnode.attr("href"),
-        	result = confirm("Open " + thisurl + "?");
-		if (result === true) {
+            thisurl = thisnode.attr("href"),
+            result = confirm("Open " + thisurl + "?");
+        if (result === true) {
             open_share_url("location", thisurl);
         }
         return false;
@@ -1846,43 +1841,43 @@ function check_recent() {
 
 function dismiss_payment_lookup() {
     $(document).on("click", "#dismiss", function() {
-	    var ds_checkbox = $("#dontshowwrap"),
+        var ds_checkbox = $("#dontshowwrap"),
             ds_checked = ds_checkbox.data("checked");
         if (ds_checked == true) {
             block_payment_lookup();
         }
         canceldialog();
         if (paymentpopup.hasClass("active")) {
-        	close_paymentdialog();
+            close_paymentdialog();
         }
     })
 }
 
 function block_payment_lookup() {
-	if (request) {
-		var rr_whitelist = sessionStorage.getItem("bitrequest_rrwl"),
-			rrwl_arr = (rr_whitelist) ? JSON.parse(rr_whitelist) : {};
-		rrwl_arr[request.payment] = request.address;
-		sessionStorage.setItem("bitrequest_rrwl", JSON.stringify(rrwl_arr));
-	}
+    if (request) {
+        var rr_whitelist = sessionStorage.getItem("bitrequest_rrwl"),
+            rrwl_arr = (rr_whitelist) ? JSON.parse(rr_whitelist) : {};
+        rrwl_arr[request.payment] = request.address;
+        sessionStorage.setItem("bitrequest_rrwl", JSON.stringify(rrwl_arr));
+    }
 }
 
 function request_history() {
     $(document).on("click", "#request_history", function() {
         var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
         if (ls_recentrequests) {
-	        var lsrr_arr = JSON.parse(ls_recentrequests);
-	        recent_requests(lsrr_arr);
-	    }
+            var lsrr_arr = JSON.parse(ls_recentrequests);
+            recent_requests(lsrr_arr);
+        }
     })
 }
 
 function recent_requests(recent_payments) {
-	var addresslist = recent_requests_list(recent_payments);
+    var addresslist = recent_requests_list(recent_payments);
     if (!addresslist.length) {
-		return false;
-	}
-	var content = "<div class='formbox'>\
+        return false;
+    }
+    var content = "<div class='formbox'>\
         <h2 class='icon-history'>Recent requests:</h2>\
         <div id='ad_info_wrap'>\
         <ul>" + addresslist + "</ul>\
@@ -1896,25 +1891,25 @@ function recent_requests(recent_payments) {
 
 function recent_requests_list(recent_payments) {
     var addresslist = "",
-    	rp_array = [];
+        rp_array = [];
     $.each(recent_payments, function(key, val) {
-		if (val) {
-	        rp_array.push(val);
+        if (val) {
+            rp_array.push(val);
         }
     });
     var sorted_array = rp_array.sort(function(x, y) {
-	    return y.rqtime - x.rqtime;
+        return y.rqtime - x.rqtime;
     });
     $.each(sorted_array, function(i, val) {
-		if (val) {
-	        var currency = val.currency,
-		    	ccsymbol = val.ccsymbol,
-		    	address = val.address,
-		    	cmcid = val.cmcid,
-		    	erc20 = val.erc20,
-		    	rq_time = val.rqtime,
-		    	blockchainurl = blockexplorer_url(currency, false, erc20) + address;
-			addresslist += "<li class='rp_li'>" + getcc_icon(cmcid, ccsymbol + "-" + currency, erc20) + "<strong style='opacity:0.5'>" + short_date(rq_time + timezone) + "</strong><br/>\
+        if (val) {
+            var currency = val.currency,
+                ccsymbol = val.ccsymbol,
+                address = val.address,
+                cmcid = val.cmcid,
+                erc20 = val.erc20,
+                rq_time = val.rqtime,
+                blockchainurl = blockexplorer_url(currency, false, erc20) + address;
+            addresslist += "<li class='rp_li'>" + getcc_icon(cmcid, ccsymbol + "-" + currency, erc20) + "<strong style='opacity:0.5'>" + short_date(rq_time + timezone) + "</strong><br/>\
 			<a href='" + blockchainurl + "' target='_blank' class='ref check_recent'>\
 			<span class='select'>" + address + "</span> <span class='icon-new-tab'></a></li>";
         }
@@ -2034,10 +2029,10 @@ function addcurrency(cd) {
     } else {
         var can_derive = derive_first_check(currency);
         if (can_derive === false) {
-	        if (is_viewonly() === true) {
-		        vu_block();
-		        return false;
-		    }
+            if (is_viewonly() === true) {
+                vu_block();
+                return false;
+            }
             addaddress(cd, false);
         } else {
             loadpage("?p=" + currency);
@@ -2046,7 +2041,7 @@ function addcurrency(cd) {
 }
 
 function derive_first_check(currency) {
-	if (hasbip32(currency) === true) {
+    if (hasbip32(currency) === true) {
         var derives = check_derivations(currency);
         if (derives) {
             var has_derives = active_derives(currency, derives);
@@ -2071,14 +2066,14 @@ function addaddresstrigger() {
 }
 
 function addaddress(ad, edit) {
-	var currency = ad.currency,
+    var currency = ad.currency,
         cpid = ad.ccsymbol + "-" + currency,
         address = (ad.address) ? ad.address : "",
         label = (ad.label) ? ad.label : "",
         derived = (ad.seedid || ad.xpubid),
         readonly = (edit === true) ? " readonly" : "",
-		nopub = (test_derive === false) ? true : (is_xpub(currency) === false || has_xpub(currency) !== false),
-		choose_wallet_str = "<span id='get_wallet' class='address_option' data-currency='" + currency + "'>I don't have a " + currency + " address yet</span>",
+        nopub = (test_derive === false) ? true : (is_xpub(currency) === false || has_xpub(currency) !== false),
+        choose_wallet_str = "<span id='get_wallet' class='address_option' data-currency='" + currency + "'>I don't have a " + currency + " address yet</span>",
         derive_seed_str = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>Generate address from secret phrase</span>",
         options = (hasbip === true) ? choose_wallet_str : (test_derive === true && c_derive[currency]) ? (hasbip32(currency) === true) ? derive_seed_str : choose_wallet_str : choose_wallet_str,
         pnotify = (body.hasClass("showstartpage")) ? "<div class='popnotify' style='display:block'>" + options + "</div>" : "<div class='popnotify'></div>",
@@ -2099,8 +2094,8 @@ function addaddress(ad, edit) {
 			<div id='pk_confirm' class='noselect'>\
 				<div id='matchwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>The above addresses match those in my " + currency + " wallet</span>\
 			</div>\
-		</div>" + pk_checkbox + 
-		"<input type='submit' class='submit' value='OK'></form>").data(ad);
+		</div>" + pk_checkbox +
+            "<input type='submit' class='submit' value='OK'></form>").data(ad);
     popdialog(content, "alert", "triggersubmit");
     if (supportsTouch === true) {} else {
         if (edit === true) {
@@ -2113,62 +2108,59 @@ function addaddress(ad, edit) {
 
 function address_xpub_change() {
     $(document).on("input", "#addressformbox.noxpub #address_xpub_input", function(e) {
-		var thisnode = $(this),
-			addressinputval = thisnode.val(),
-			currency = thisnode.attr("data-currency");
-		if (addressinputval.length > 103) {
-			var valid = check_xpub(addressinputval, xpub_prefix(currency), currency);
-			if (valid === true) {
-				clear_xpub_checkboxes();
-				validate_xpub(thisnode.closest("#addressformbox"));
-			}
-			else {
-				xpub_fail(currency);
-			}
-        }
-        else {
-	        clear_xpub_inputs();
+        var thisnode = $(this),
+            addressinputval = thisnode.val(),
+            currency = thisnode.attr("data-currency");
+        if (addressinputval.length > 103) {
+            var valid = check_xpub(addressinputval, xpub_prefix(currency), currency);
+            if (valid === true) {
+                clear_xpub_checkboxes();
+                validate_xpub(thisnode.closest("#addressformbox"));
+            } else {
+                xpub_fail(currency);
+            }
+        } else {
+            clear_xpub_inputs();
         }
     })
 }
 
 function active_derives(currency, derive) {
-	var addresslist = get_addresslist(currency).children("li");
-	if (addresslist.length < 1) {
-    	return false;
+    var addresslist = get_addresslist(currency).children("li");
+    if (addresslist.length < 1) {
+        return false;
     }
     var coinsettings = activecoinsettings(currency);
-	if (coinsettings) {
+    if (coinsettings) {
         var reuse = coinsettings["Reuse address"];
         if (reuse) {
             if (reuse.selected === true) {
-	            return true;
+                return true;
             }
-        }
-        else {
-	        return true;
+        } else {
+            return true;
         }
     }
     if (derive == "seed") {
-	    var active_sder = filter_list(addresslist, "seedid", bipid).not(".used");
+        var active_sder = filter_list(addresslist, "seedid", bipid).not(".used");
         if (active_sder.length) {
-	        var check_p = ch_pending(active_sder.first().data());
-	        if (check_p === true) {
-		         return false;
-	        }
+            var check_p = ch_pending(active_sder.first().data());
+            if (check_p === true) {
+                return false;
+            }
         } else {
             return false;
         }
     }
     if (derive == "xpub") {
-	    var activepub = active_xpub(currency),
+        var activepub = active_xpub(currency),
             xpubid = activepub.key_id,
             active_xder = filter_list(addresslist, "xpubid", xpubid).not(".used");
         if (active_xder.length) {
-	        var check_p = ch_pending(active_xder.first().data());
+            var check_p = ch_pending(active_xder.first().data());
             if (check_p === true) {
-		         return false;
-	        }
+                return false;
+            }
         } else {
             return false;
         }
@@ -2202,7 +2194,7 @@ function submitaddresstrigger() {
             }
         }
     })
-}   
+}
 
 //Add erc20 token
 function add_erc20() {
@@ -2289,7 +2281,7 @@ function pickerc20select() {
 }
 
 function initaddressform(coin_data) {
-	var erc20formbox = $("#erc20formbox"),
+    var erc20formbox = $("#erc20formbox"),
         erc20_inputs = erc20formbox.find("#erc20_inputs"),
         addressfield = erc20formbox.find("input.address"),
         labelfield = erc20formbox.find("input.addresslabel");
@@ -2311,92 +2303,82 @@ function submit_erc20() {
 
 function validateaddress_vk(ad) {
     var currency = ad.currency,
-    	addressfield = $("#addressform .address"),
+        addressfield = $("#addressform .address"),
         addressinputval = addressfield.val();
-    if (addressinputval) {
-    } else {
+    if (addressinputval) {} else {
         var errormessage = "Enter a " + currency + " address";
         popnotify("error", errormessage);
         addressfield.focus();
         return false;
     }
     if (currency) {
-		var vkfield = $("#addressform .vk_input"),
-        	vkinputval = (currency == "monero") ? (vkfield.length) ? vkfield.val() : 0 : 0,
-			vklength = vkinputval.length;
-		if (vklength) {
-		    if (vklength !== 64) {
+        var vkfield = $("#addressform .vk_input"),
+            vkinputval = (currency == "monero") ? (vkfield.length) ? vkfield.val() : 0 : 0,
+            vklength = vkinputval.length;
+        if (vklength) {
+            if (vklength !== 64) {
                 popnotify("error", "Invalid Viewkey");
                 return false;
-            }
-            else {
-	            if (check_vk(vkinputval)) {
-	            }
-	            else {
-		            popnotify("error", "Invalid Viewkey");
-	                return false;
-	            }
+            } else {
+                if (check_vk(vkinputval)) {} else {
+                    popnotify("error", "Invalid Viewkey");
+                    return false;
+                }
             }
             var valid = check_address(addressinputval, currency);
-            if (valid === true) {
-	        }
-	        else {
-		        var errormessage = addressinputval + " is NOT a valid " + currency + " address";
+            if (valid === true) {} else {
+                var errormessage = addressinputval + " is NOT a valid " + currency + " address";
                 popnotify("error", errormessage);
-	            return false;
-	        }
+                return false;
+            }
             var payload = {
-		    	"address":addressinputval,
-		    	"view_key":vkinputval,
-		    	"create_account":true,
-		    	"generated_locally":false
-		    };
-		    api_proxy({
-		        "api": "xmr node",
-		        "search": "login",
-		        "cachetime": 25,
-		        "cachefolder": "1h",
-		        "params": {
-		            "method": "POST",
-		            "data": JSON.stringify(payload),
-		            "headers": {
-		                "Content-Type": "text/plain"
-		            }
-		        }
-		    }).done(function(e) {
-		        var data = br_result(e).result,
-		        	errormessage = data.Error;
-		        if (errormessage) {
-			        var error = (errormessage) ? errormessage : "Invalid Viewkey";
-			        popnotify("error", error);
-		        }
-		        else {
-			        var start_height = data.start_height;
-			        if (start_height > -1) { // success!
-				        validateaddress(ad, vkinputval);
-			        }
-			        else {
-			        }
-		        }
-		    }).fail(function(jqXHR, textStatus, errorThrown) {
-		        console.log(jqXHR);
-		        console.log(textStatus);
-		        console.log(errorThrown);
-		        popnotify("error", "Error verifying Viewkey");
-		    });
-		}
-        else {
-	        validateaddress(ad, false);
+                "address": addressinputval,
+                "view_key": vkinputval,
+                "create_account": true,
+                "generated_locally": false
+            };
+            api_proxy({
+                "api": "xmr node",
+                "search": "login",
+                "cachetime": 25,
+                "cachefolder": "1h",
+                "params": {
+                    "method": "POST",
+                    "data": JSON.stringify(payload),
+                    "headers": {
+                        "Content-Type": "text/plain"
+                    }
+                }
+            }).done(function(e) {
+                var data = br_result(e).result,
+                    errormessage = data.Error;
+                if (errormessage) {
+                    var error = (errormessage) ? errormessage : "Invalid Viewkey";
+                    popnotify("error", error);
+                } else {
+                    var start_height = data.start_height;
+                    if (start_height > -1) { // success!
+                        validateaddress(ad, vkinputval);
+                    } else {}
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
+                popnotify("error", "Error verifying Viewkey");
+            });
+        } else {
+            validateaddress(ad, false);
         }
     } else {
-	    var errormessage = "Pick a currency";
+        var errormessage = "Pick a currency";
         popnotify("error", errormessage);
     }
 }
 
 function validateaddress(ad, vk) {
-	var currency = ad.currency,
-		iserc20 = (ad.erc20 === true),
+    var currency = ad.currency,
+        iserc20 = (ad.erc20 === true),
         currencycheck = (iserc20 === true) ? "ethereum" : currency,
         ccsymbol = ad.ccsymbol,
         addressfield = $("#addressform .address"),
@@ -2407,9 +2389,9 @@ function validateaddress(ad, vk) {
         labelfield = $("#addressform .addresslabel"),
         labelinput = labelfield.val(),
         labelinputval = (labelinput) ? labelinput : "";
-	if (addressinputval) {
-		var addinputval = (addressinputval.indexOf(":") > -1) ? addressinputval.split(":").pop() : addressinputval,
-			addressduplicate = currentaddresslist.children("li[data-address=" + addinputval + "]").length > 0,
+    if (addressinputval) {
+        var addinputval = (addressinputval.indexOf(":") > -1) ? addressinputval.split(":").pop() : addressinputval,
+            addressduplicate = currentaddresslist.children("li[data-address=" + addinputval + "]").length > 0,
             address = ad.address,
             label = ad.label;
         if (addressduplicate === true && address !== addinputval) {
@@ -2435,7 +2417,7 @@ function validateaddress(ad, vk) {
                 } else {
                     if ($("#addressformbox").hasClass("formedit")) {
                         var currentlistitem = currentaddresslist.children("li[data-address='" + address + "']"),
-                        	ed = {};
+                            ed = {};
                         ed.label = labelinputval;
                         if (vk) {
                             ed.vk = vk;
@@ -2468,7 +2450,7 @@ function validateaddress(ad, vk) {
                                 }
                             }
                             ad.address = addinputval,
-                            	ad.label = labelinputval,
+                                ad.label = labelinputval,
                                 ad.a_id = ccsymbol + index,
                                 ad.vk = vk,
                                 ad.checked = true;
@@ -2499,17 +2481,16 @@ function validateaddress(ad, vk) {
 }
 
 function check_address(address, currency) {
-	if (currency == "ethereum" && web3 === undefined) {
+    if (currency == "ethereum" && web3 === undefined) {
         return "no_web3";
     }
     var regex = getcoindata(currency).regex,
-    	check_result = false;
+        check_result = false;
     if (currency == "ethereum" || regex == "web3") {
-	    var check_result = (web3) ? web3.utils.isAddress(address) : false;
+        var check_result = (web3) ? web3.utils.isAddress(address) : false;
+    } else {
+        var check_result = (regex) ? new RegExp(regex).test(address) : false;
     }
-    else {
-		var check_result = (regex) ? new RegExp(regex).test(address) : false;
-	}
     return check_result;
 }
 
@@ -2519,11 +2500,10 @@ function check_vk(vk) {
 
 function send_trigger() {
     $(document).on("click", ".send", function() {
-	    if (hasbip === true) {
-        	compatible_wallets($(this).attr("data-currency"));
-        }
-        else {
-	        playsound(funk);
+        if (hasbip === true) {
+            compatible_wallets($(this).attr("data-currency"));
+        } else {
+            playsound(funk);
         }
     })
 }
@@ -2585,28 +2565,28 @@ function canceldialog(pass) {
         clearTimeout(timeout);
     });
     if (request) { // reset after_poll
-	    request.rq_timer = $.now();
+        request.rq_timer = $.now();
     }
 }
 
 function blockcancelpaymentdialog() {
     $(document).on("mousedown", "#payment", function(e) {
-	    blockswipe = false;
-	    if (e.target == this) {
-		    var inputs = paymentdialogbox.find("input");
-		    if (inputs.is(":focus")) {
-	            blockswipe = true;
-		    }
+        blockswipe = false;
+        if (e.target == this) {
+            var inputs = paymentdialogbox.find("input");
+            if (inputs.is(":focus")) {
+                blockswipe = true;
+            }
         }
     })
 }
 
 function cancelpaymentdialogtrigger() {
     $(document).on("mouseup", "#payment", function(e) {
-	    if (blockswipe === true) {
-		    unfocus_inputs();
-	   		return false;
-    	}
+        if (blockswipe === true) {
+            unfocus_inputs();
+            return false;
+        }
         if (html.hasClass("flipmode")) { // prevent closing request when flipping
             return false;
         }
@@ -2616,7 +2596,7 @@ function cancelpaymentdialogtrigger() {
             console.log("clicking too fast");
         } else {
             if (e.target == this) {
-	            escapeandback();
+                escapeandback();
                 cp_timer = $.now();
             }
         }
@@ -2625,35 +2605,32 @@ function cancelpaymentdialogtrigger() {
 
 function unfocus_inputs() {
     var inputs = paymentdialogbox.find("input");
-	inputs.blur();
+    inputs.blur();
 }
 
 function cpd_pollcheck() {
-	if (request) {
-	    if (request.received === true) {
-		    close_paymentdialog();
-		}
-		else {
-			var rq_init = request.rq_init,
-				rq_timer = request.rq_timer,
-			    rq_time = $.now() - rq_timer;
-		    if (rq_time > safety_poll_timeout) {
-			    after_poll(rq_init)
-		    }
-		    else {
-			    close_paymentdialog();
-		    }
-		}
+    if (request) {
+        if (request.received === true) {
+            close_paymentdialog();
+        } else {
+            var rq_init = request.rq_init,
+                rq_timer = request.rq_timer,
+                rq_time = $.now() - rq_timer;
+            if (rq_time > safety_poll_timeout) {
+                after_poll(rq_init)
+            } else {
+                close_paymentdialog();
+            }
+        }
+    } else {
+        close_paymentdialog();
     }
-	else {
-		close_paymentdialog();
-	}
 }
 
 function cancelpaymentdialog() {
-	if (html.hasClass("hide_app")) {
-		closeloader();
-		parent.postMessage("close_request", "*");
+    if (html.hasClass("hide_app")) {
+        closeloader();
+        parent.postMessage("close_request", "*");
         return false;
     }
     paymentpopup.removeClass("active");
@@ -2754,22 +2731,21 @@ function showoptionstrigger() {
 }
 
 function showoptions(content, addclass, callback) {
-	if (addclass) {
-		if (addclass.indexOf("pin") > -1) {
-			var pinsettings = $("#pinsettings").data(),
-				timeout = pinsettings.timeout;
-			if (timeout) {
-				if ($.now() > timeout) {
-			    	pinsettings.timeout = null;
-			    	savesettings();
-		    	}
-		    	else {
-			    	lockscreen(timeout);
-					return false;
-		    	}
-		    }
-		}
-	}
+    if (addclass) {
+        if (addclass.indexOf("pin") > -1) {
+            var pinsettings = $("#pinsettings").data(),
+                timeout = pinsettings.timeout;
+            if (timeout) {
+                if ($.now() > timeout) {
+                    pinsettings.timeout = null;
+                    savesettings();
+                } else {
+                    lockscreen(timeout);
+                    return false;
+                }
+            }
+        }
+    }
     var plusclass = (addclass) ? " " + addclass : "";
     $("#optionspop").addClass("showpu active" + plusclass);
     $("#optionsbox").html(content);
@@ -2777,66 +2753,63 @@ function showoptions(content, addclass, callback) {
 }
 
 function lockscreen(timer) {
-	var timeleft = timer - $.now(),
-    	cd = countdown(timeleft),
-    	dstr = (cd.days) ? cd.days + " days<br/>" : "",
-    	hstr = (cd.hours) ? cd.hours + " hours<br/>" : "",
-    	mstr = (cd.minutes) ? cd.minutes + " minutes<br/>" : "",
-    	sstr = (cd.seconds) ? cd.seconds + " seconds" : "",
-    	cdown_str = dstr + hstr + mstr + sstr,
-    	attempts = $("#pinsettings").data("attempts"),
-    	has_seedid = (hasbip || cashier_seedid) ? true : false,
-    	us_string = (has_seedid === true && attempts > 5) ? "<p id='seed_unlock'>Unlock with seed</p>" : "",
-		content = "<h1 id='lock_heading'>Bitrequest</h1><div id='lockscreen'><h2><span class='icon-lock'/><br/>Too many unlock attempts</h2>\
+    var timeleft = timer - $.now(),
+        cd = countdown(timeleft),
+        dstr = (cd.days) ? cd.days + " days<br/>" : "",
+        hstr = (cd.hours) ? cd.hours + " hours<br/>" : "",
+        mstr = (cd.minutes) ? cd.minutes + " minutes<br/>" : "",
+        sstr = (cd.seconds) ? cd.seconds + " seconds" : "",
+        cdown_str = dstr + hstr + mstr + sstr,
+        attempts = $("#pinsettings").data("attempts"),
+        has_seedid = (hasbip || cashier_seedid) ? true : false,
+        us_string = (has_seedid === true && attempts > 5) ? "<p id='seed_unlock'>Unlock with seed</p>" : "",
+        content = "<h1 id='lock_heading'>Bitrequest</h1><div id='lockscreen'><h2><span class='icon-lock'/><br/>Too many unlock attempts</h2>\
     	<p><br/>Please try again in:<br/>" + cdown_str + "</p>" + us_string +
-	    	"<div id='phrasewrap'>\
+        "<div id='phrasewrap'>\
 	    	<p><br/>Enter your 12 word<br/>secret phrase:</p>\
 	    		<div id='bip39phrase' contenteditable='contenteditable' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' lang='en' class='noselect'></div>\
 	    		<div id='phrase_login' class='button'>Unlock</div>\
 			</div>\
 		</div>";
-	$("#optionspop").addClass("showpu active pin ontop");
-	$("#optionsbox").html(content);
-	body.addClass("blurmain_options");
+    $("#optionspop").addClass("showpu active pin ontop");
+    $("#optionsbox").html(content);
+    body.addClass("blurmain_options");
 }
 
 function seed_unlock_trigger() {
     $(document).on("click", "#lockscreen #seed_unlock", function() {
-		$("#lockscreen #phrasewrap").addClass("showph");
+        $("#lockscreen #phrasewrap").addClass("showph");
     });
 }
 
 function phrase_login() {
     $(document).on("click", "#phrase_login", function() {
-		var bip39phrase = $("#lockscreen #bip39phrase"),
-			b39txt = bip39phrase.text(),
-			seedobject = ls_phrase_obj(),
+        var bip39phrase = $("#lockscreen #bip39phrase"),
+            b39txt = bip39phrase.text(),
+            seedobject = ls_phrase_obj(),
             savedid = seedobject.pid,
             phraseid = get_seedid(b39txt.split(" "));
         if (phraseid == savedid || phraseid == cashier_seedid) {
-	        clearpinlock();
-	        if (html.hasClass("loaded")) {
-	    	}
-	    	else {
-		    	finishfunctions();
-	    	}
-	        var content = pinpanel(" reset");
-            	showoptions(content, "pin");
-			$("#pinfloat").removeClass("p_admin");
-			remove_cashier();
-        }
-        else {
-	        shake(bip39phrase);
+            clearpinlock();
+            if (html.hasClass("loaded")) {} else {
+                finishfunctions();
+            }
+            var content = pinpanel(" reset");
+            showoptions(content, "pin");
+            $("#pinfloat").removeClass("p_admin");
+            remove_cashier();
+        } else {
+            shake(bip39phrase);
         }
     });
 }
 
 function remove_cashier() {
     if (is_cashier) {
-	    localStorage.removeItem("bitrequest_cashier");
-	    cashier_dat = false,
-		is_cashier = false,
-		cashier_seedid = false;
+        localStorage.removeItem("bitrequest_cashier");
+        cashier_dat = false,
+            is_cashier = false,
+            cashier_seedid = false;
     }
 }
 
@@ -3029,7 +3002,7 @@ function addressinfo() {
         var dialogwrap = $(this).closest("ul"),
             dd = dialogwrap.data(),
             label = (dd.label) ? dd.label : (dd.a_id) ? dd.a_id : "",
-			currency = dd.currency,
+            currency = dd.currency,
             isbip = hasbip32(currency),
             bip32dat = (isbip) ? getbip32dat(currency) : null,
             seedid = dd.seedid,
@@ -3049,13 +3022,13 @@ function addressinfo() {
             d_index = dd.derive_index,
             dpath = (bip32dat) ? bip32dat.root_path + d_index : "";
         dd.dpath = dpath,
-        dd.bip32dat = bip32dat;
+            dd.bip32dat = bip32dat;
         var cc_icon = getcc_icon(dd.cmcid, dd.ccsymbol + "-" + currency, dd.erc20),
             dpath_str = (isseed) ? "<li><strong>Derivation path:</strong> " + dpath + "</li>" : "",
             pk_verified = "Unknown <span class='icon-checkmark'></span>",
             vkobj = (dd.vk) ? vk_obj(dd.vk) : false,
             vkdat = (vkobj) ? (isseed && active_src) ? "derive" : vkobj.vk : false;
-            pk_str = (vkdat) ? "<span id='show_vk' class='ref' data-vk='" + vkdat + "'>Show</span>" : (isseed) ? (active_src) ? "<span id='show_pk' class='ref'>Show</span>" : (a_wl === true) ? pk_verified : "Unknown" : pk_verified,
+        pk_str = (vkdat) ? "<span id='show_vk' class='ref' data-vk='" + vkdat + "'>Show</span>" : (isseed) ? (active_src) ? "<span id='show_pk' class='ref'>Show</span>" : (a_wl === true) ? pk_verified : "Unknown" : pk_verified,
             content = $("<div id='ad_info_wrap'><h2>" + cc_icon + " <span>" + label + "</span></h2><ul>\
 	    		<li><strong>Address: </strong><span class='adbox adboxl select'>" + address + "</span></li>\
 	    		<li><strong>Source: </strong>" + srcval + "</li>" +
@@ -3077,12 +3050,12 @@ function addressinfo() {
 
 function show_pk() {
     $(document).on("click", "#show_pk", function() {
-	    if (is_viewonly() === true) {
-	        vu_block();
-	        return false;
+        if (is_viewonly() === true) {
+            vu_block();
+            return false;
         }
         var thisbttn = $(this),
-        	pkspan = $("#pk_span");
+            pkspan = $("#pk_span");
         if (pkspan.is(":visible")) {
             pkspan.slideUp(200);
             thisbttn.text("show");
@@ -3094,12 +3067,12 @@ function show_pk() {
                 $("#optionsbox").html("");
                 var addat = $("#ad_info_wrap").data(),
                     currency = addat.currency,
-					keycc = key_cc(),
-					dx_dat = {
-				        "dpath": addat.dpath,
-				        "key": keycc.key,
-				        "cc": keycc.cc
-			        },
+                    keycc = key_cc(),
+                    dx_dat = {
+                        "dpath": addat.dpath,
+                        "key": keycc.key,
+                        "cc": keycc.cc
+                    },
                     x_keys_dat = derive_x(dx_dat),
                     key_object = format_keys(keycc.seed, x_keys_dat, addat.bip32dat, addat.derive_index, currency),
                     privkey = key_object.privkey;
@@ -3113,7 +3086,7 @@ function show_pk() {
 }
 
 function show_pk_cb(pk) {
-	$("#show_pk").text("hide");
+    $("#show_pk").text("hide");
     $("#pkspan").text(pk);
     $("#qrcode").qrcode(pk);
     $("#pk_span").addClass("shwpk").slideDown(200);
@@ -3121,13 +3094,13 @@ function show_pk_cb(pk) {
 
 function show_vk() {
     $(document).on("click", "#show_vk", function() {
-	    if (is_viewonly() === true) {
-	        vu_block();
-	        return false;
+        if (is_viewonly() === true) {
+            vu_block();
+            return false;
         }
         var thisbttn = $(this),
-        	vk = thisbttn.attr("data-vk"),
-        	pkspan = $("#pk_span");
+            vk = thisbttn.attr("data-vk"),
+            pkspan = $("#pk_span");
         if (pkspan.is(":visible")) {
             pkspan.slideUp(200);
             thisbttn.text("show");
@@ -3139,25 +3112,24 @@ function show_vk() {
                 $("#optionsbox").html("");
                 var x_ko = {};
                 if (vk == "derive") {
-	                var addat = $("#ad_info_wrap").data(),
-	                    keycc = key_cc(),
-	                    dx_dat = {
-					        "dpath": addat.dpath,
-					        "key": keycc.key,
-					        "cc": keycc.cc
-				        },
-	                    x_keys_dat = derive_x(dx_dat),
-						rootkey = x_keys_dat.key,
-						ssk = sc_reduce32(fasthash(rootkey));
-					x_ko = xmr_getpubs(ssk, addat.derive_index);
+                    var addat = $("#ad_info_wrap").data(),
+                        keycc = key_cc(),
+                        dx_dat = {
+                            "dpath": addat.dpath,
+                            "key": keycc.key,
+                            "cc": keycc.cc
+                        },
+                        x_keys_dat = derive_x(dx_dat),
+                        rootkey = x_keys_dat.key,
+                        ssk = sc_reduce32(fasthash(rootkey));
+                    x_ko = xmr_getpubs(ssk, addat.derive_index);
+                } else {
+                    x_ko = {
+                        "stat": true,
+                        "svk": vk
+                    }
                 }
-                else {
-	                x_ko = {
-		                "stat": true,
-		                "svk": vk
-	                }
-                }
-				all_pinpanel({
+                all_pinpanel({
                     "func": show_vk_cb,
                     "args": x_ko
                 }, true)
@@ -3167,10 +3139,10 @@ function show_vk() {
 }
 
 function show_vk_cb(kd) {
-	var stat = kd.stat,
-		ststr = (stat) ? "" : "<br/><strong style='color:#8d8d8d'>Spendkey</strong> <span class='adbox adboxl select' data-type='Spendkey'>" + kd.ssk + "</span><br/>";
-	$("#show_vk").text("hide");
-	$("#pk_span").html(ststr + "<br/><strong style='color:#8d8d8d'>Viewkey</strong> <span class='adbox adboxl select' data-type='Viewkey'>" + kd.svk + "</span>").addClass("shwpk").slideDown(200);
+    var stat = kd.stat,
+        ststr = (stat) ? "" : "<br/><strong style='color:#8d8d8d'>Spendkey</strong> <span class='adbox adboxl select' data-type='Spendkey'>" + kd.ssk + "</span><br/>";
+    $("#show_vk").text("hide");
+    $("#pk_span").html(ststr + "<br/><strong style='color:#8d8d8d'>Viewkey</strong> <span class='adbox adboxl select' data-type='Viewkey'>" + kd.svk + "</span>").addClass("shwpk").slideDown(200);
 }
 
 function open_blockexplorer_url(be_link) {
@@ -3214,41 +3186,38 @@ function apisrc_shortcut() {
 
 function canceloptionstrigger() {
     $(document).on("click", "#optionspop, #closeoptions", function(e) {
-	    if (e.target == this) {
+        if (e.target == this) {
             canceloptions();
         }
     });
 }
 
 function canceloptions(pass) {
-	if (pass === true) {
-	    clearoptions();
-	    return false;
+    if (pass === true) {
+        clearoptions();
+        return false;
     }
-	var optionspop = $("#optionspop"),
-		thishaspin = (optionspop.hasClass("pin"));
-	if (thishaspin) {
+    var optionspop = $("#optionspop"),
+        thishaspin = (optionspop.hasClass("pin"));
+    if (thishaspin) {
         var phrasewrap = $("#lockscreen #phrasewrap");
         if (phrasewrap.hasClass("showph")) {
-       		phrasewrap.removeClass("showph");
-       		return false;
-    	}
-    	if (ishome() === true) {
-	    } else {
-		    if (html.hasClass("loaded")) {
-	    	}
-	    	else {
-		    	shake(optionspop);
-		    	return false;
-	    	}
-	    }
+            phrasewrap.removeClass("showph");
+            return false;
+        }
+        if (ishome() === true) {} else {
+            if (html.hasClass("loaded")) {} else {
+                shake(optionspop);
+                return false;
+            }
+        }
     }
-	clearoptions();
+    clearoptions();
 }
 
 function clearoptions() {
-	var optionspop = $("#optionspop");
-	optionspop.addClass("fadebg");
+    var optionspop = $("#optionspop");
+    optionspop.addClass("fadebg");
     optionspop.removeClass("active");
     body.removeClass("blurmain_options");
     var timeout = setTimeout(function() {
@@ -3410,7 +3379,7 @@ function unarchivefunction() {
 
 function removerequest() {
     $(document).on("click", ".req_actions .icon-bin", function() {
-	    popdialog("<h2 class='icon-bin'>Delete request?</h2>", "alert", "removerequestfunction", $(this));
+        popdialog("<h2 class='icon-bin'>Delete request?</h2>", "alert", "removerequestfunction", $(this));
         return false;
     })
 }
@@ -3520,7 +3489,7 @@ function api_proxy(ad) { // callback function from bitrequest.js
 }
 
 function br_result(e) {
-	var ping = e.ping,
+    var ping = e.ping,
         proxy = (ping) ? true : false,
         root = (proxy === true) ? ping : e,
         result = root.br_result,
@@ -3626,7 +3595,9 @@ function copytoclipboard(content, type) {
     } catch (err) {
         notify("Unable to copy " + type, 2500, "no");
     }
-    copycontent.val("").data({"type":false}).blur();
+    copycontent.val("").data({
+        "type": false
+    }).blur();
 }
 
 function getrandomnumber(min, max) {
@@ -3711,12 +3682,12 @@ function returntimestamp(datestring) {
 
 function short_date(txtime) {
     return new Date(txtime - timezone).toLocaleString(language, {
-		"day": "2-digit", // numeric, 2-digit
-		"month": "2-digit", // numeric, 2-digit, long, short, narrow
-		"year": "2-digit", // numeric, 2-digit
-		"hour": "numeric", // numeric, 2-digit
-		"minute": "numeric"
-	})
+        "day": "2-digit", // numeric, 2-digit
+        "month": "2-digit", // numeric, 2-digit, long, short, narrow
+        "year": "2-digit", // numeric, 2-digit
+        "hour": "numeric", // numeric, 2-digit
+        "minute": "numeric"
+    })
 }
 
 function weekdays(day) {
@@ -3780,9 +3751,9 @@ function get_api_data(api_id) {
 function all_pinpanel(cb, top) {
     var topclass = (top) ? " ontop" : "";
     if (haspin() === true) {
-	    var lastlock = localStorage.getItem("bitrequest_locktime"),
-        	tsll = $.now() - lastlock,
-        	pass = (tsll < 10000);
+        var lastlock = localStorage.getItem("bitrequest_locktime"),
+            tsll = $.now() - lastlock,
+            pass = (tsll < 10000);
         if (cb && pass) { // keep unlocked in 10 second time window
             cb.func(cb.args);
             return false;
@@ -3908,19 +3879,19 @@ function activecoinsettings(currency) {
 function getcoinsettings(currency) {
     var coindata = getcoinconfig(currency);
     if (coindata) {
-	    return coindata.settings;
+        return coindata.settings;
     } else { // return erc20 settings
-	    return erc20_dat.settings;
+        return erc20_dat.settings;
     }
 }
 
 function getbip32dat(currency) {
     var coindata = getcoinconfig(currency);
     if (coindata) {
-	    var xpubdat = coindata.settings.Xpub;
-	    if (xpubdat && xpubdat.active === true) {
-		    return xpubdat;
-	    }
+        var xpubdat = coindata.settings.Xpub;
+        if (xpubdat && xpubdat.active === true) {
+            return xpubdat;
+        }
     }
     return false;
 }
@@ -3928,21 +3899,21 @@ function getbip32dat(currency) {
 function hasbip32(currency) {
     var coindata = getcoinconfig(currency);
     if (coindata) {
-	    var settings = coindata.settings;
-	    if (settings) {
-		    var xpub = settings.Xpub;
-		    if (xpub) {
-				if (xpub.active) {
-               		return true;
-            	} 
-			}
-	    }
+        var settings = coindata.settings;
+        if (settings) {
+            var xpub = settings.Xpub;
+            if (xpub) {
+                if (xpub.active) {
+                    return true;
+                }
+            }
+        }
     }
     return false;
 }
 
 function getcoinconfig(currency) {
-	return $.grep(bitrequest_coin_data, function(filter) {
+    return $.grep(bitrequest_coin_data, function(filter) {
         return filter.currency == currency;
     })[0];
 }
@@ -3976,17 +3947,17 @@ function wake() {
 
 function sleep() {
     if (wl) {
-	    console.log(wakelock);
-	    if (wakelock) {
-		    wakelock.release();
-	    }
+        console.log(wakelock);
+        if (wakelock) {
+            wakelock.release();
+        }
         wakelock = null;
     }
 }
 
 function vu_block() {
-	notify("Not allowed in cashier mode");
-	playsound(funk);
+    notify("Not allowed in cashier mode");
+    playsound(funk);
 }
 
 // Fix decimals
@@ -4036,7 +4007,7 @@ function adjust_objectarray(array, mods) {
     $.each(mods, function(i, val) {
         var index = array.findIndex((obj => obj.id == val.id));
         newarray[index][val.change] = val.val;
-    });	
+    });
     return newarray;
 }
 
@@ -4099,15 +4070,15 @@ function buildsettings() {
 function add_serviceworker() {
     if ("serviceWorker" in navigator) {
         if (navigator.serviceWorker.controller) {
-        	// console.log("active service worker found, no need to register");
+            // console.log("active service worker found, no need to register");
         } else {
             // Register the service worker
             navigator.serviceWorker.register(approot + "serviceworker.js", {
-                "scope": "./"
-            })
-            .then(function(reg) {
-            	// console.log("Service worker has been registered for scope: " + reg.scope);
-            });
+                    "scope": "./"
+                })
+                .then(function(reg) {
+                    // console.log("Service worker has been registered for scope: " + reg.scope);
+                });
         }
     } else {
         // console.log("service worker is not supported");
@@ -4153,24 +4124,24 @@ function fetchrequests(cachename, archive) {
 //initiate page when there's no cache
 function initiate() {
     $.each(bitrequest_coin_data, function(dat, val) {
-	    if (val.active === true) {
-		    var settings = val.settings,
-	            has_settings = (settings) ? true : false,
-	            is_monitored = (settings) ? (settings.apis) ? true : false : false,
-	            cd = val.data,
-	            coindata = {
-	                "currency": cd.currency,
-	                "ccsymbol": cd.ccsymbol,
-	                "checked": false,
-	                "cmcid": cd.cmcid,
-	                "erc20": false,
-	                "monitored": is_monitored,
-	                "settings": has_settings,
-	                "urlscheme": cd.urlscheme
-	            };
-	        buildpage(coindata, true);
-	        append_coinsetting(val.currency, settings, true);
-	    }
+        if (val.active === true) {
+            var settings = val.settings,
+                has_settings = (settings) ? true : false,
+                is_monitored = (settings) ? (settings.apis) ? true : false : false,
+                cd = val.data,
+                coindata = {
+                    "currency": cd.currency,
+                    "ccsymbol": cd.ccsymbol,
+                    "checked": false,
+                    "cmcid": cd.cmcid,
+                    "erc20": false,
+                    "monitored": is_monitored,
+                    "settings": has_settings,
+                    "urlscheme": cd.urlscheme
+                };
+            buildpage(coindata, true);
+            append_coinsetting(val.currency, settings, true);
+        }
     });
 }
 
@@ -4217,8 +4188,8 @@ function buildpage(cd, init) {
 			</div>\
 		</div>" : "";
         var settingsbutton = (has_settings === true) ? "<div data-rel='?p=" + currency + "_settings' class='self icon-cog'></div>" : "",
-        	sendbttn = (hasbip === true) ? "<div class='button send' data-currency='" + currency + "'><span class='icon-telegram'>Send</span></div>" : "",
-			currency_page = $("<div class='page' id='" + currency + "'>\
+            sendbttn = (hasbip === true) ? "<div class='button send' data-currency='" + currency + "'><span class='icon-telegram'>Send</span></div>" : "",
+            currency_page = $("<div class='page' id='" + currency + "'>\
 			<div class='content'>\
 				<h2 class='heading'>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + settingsbutton + "</h2>\
 				<ul class='applist listyle2 pobox' data-currency='" + currency + "'>\
@@ -4227,7 +4198,7 @@ function buildpage(cd, init) {
 				</ul>\
 			</div>\
 		</div>" +
-            settingspage);
+                settingspage);
         currency_page.data(cd).appendTo("main");
         if (erc20 === true) {
             var coin_settings_cache = localStorage.getItem("bitrequest_" + currency + "_settings");
@@ -4254,7 +4225,7 @@ function append_coinsetting(currency, settings, init) {
                 selected_val = (selected.name) ? selected.name : (selected.url) ? selected.url : selected;
             if (selected_val !== undefined) {
                 var selected_string = selected_val.toString(),
-                	ss_filter = (selected_string == "true" || selected_string == "false") ? "" : selected_string,
+                    ss_filter = (selected_string == "true" || selected_string == "false") ? "" : selected_string,
                     check_setting_li = coinsettings_list.children("li[data-id='" + dat + "']");
                 if (check_setting_li.length === 0) {
                     var switchclass = (val.custom_switch) ? " custom" : " global bool",
@@ -4282,7 +4253,7 @@ function append_coinsetting(currency, settings, init) {
 }
 
 function appendaddress(currency, ad) {
-	var address = ad.address,
+    var address = ad.address,
         pobox = get_addresslist(currency),
         index = pobox.children("li").length + 1,
         seedid = ad.seedid,
@@ -4308,11 +4279,11 @@ function appendaddress(currency, ad) {
 				</div>\
 			</div>\
 		</li>");
-	address_li.data(ad).prependTo(pobox);
+    address_li.data(ad).prependTo(pobox);
 }
 
 function appendrequest(rd) {
-	var payment = rd.payment,
+    var payment = rd.payment,
         erc20 = rd.erc20,
         uoa = rd.uoa,
         amount = rd.amount,
@@ -4444,7 +4415,7 @@ function appendrequest(rd) {
             "<li><p class='address'><strong>Receiving Address:</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>" +
             pid_li +
             ia_li +
-            view_tx + 
+            view_tx +
             "<li class='receipt'><p><span class='icon-file-pdf' title='View receipt'/>Receipt</p></li>\
 				</ul>\
 				<ul class='transactionlist'>\
@@ -4474,12 +4445,12 @@ function appendrequest(rd) {
 function receipt() {
     $(document).on("click", ".receipt > p", function() {
         var thisnode = $(this),
-        	requestli = thisnode.closest(".rqli"),
-        	rqdat = requestli.data(),
-        	requestid = rqdat.requestid,
-			receipt_url = get_pdf_url(rqdat),
-	        receipt_title = "bitrequest_receipt_" + requestid + ".pdf",
-	        content = "<div class='formbox' id='cacheformbox'>\
+            requestli = thisnode.closest(".rqli"),
+            rqdat = requestli.data(),
+            requestid = rqdat.requestid,
+            receipt_url = get_pdf_url(rqdat),
+            receipt_title = "bitrequest_receipt_" + requestid + ".pdf",
+            content = "<div class='formbox' id='cacheformbox'>\
 				<h2><span class='icon-file-pdf' style='color:#dc1d00'/>Open receipt_" + requestid + ".pdf?</h2>\
 				<div class='popnotify'></div>\
 				<div class='popform'><br/>\
@@ -4491,104 +4462,102 @@ function receipt() {
 					<div id='canceltheme' class='customtrigger'>CANCEL</div>\
 				</div>\
 			</div>";
-	    popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "alert", "triggersubmit");
     })
 }
 
 function get_pdf_url(rqdat) {
     var requestid = rqdat.requestid,
-    	currencyname = rqdat.currencyname,
-    	requestname = rqdat.requestname,
-    	requesttitle = rqdat.requesttitle,
-    	ismonitored = rqdat.monitored,
-    	status = rqdat.status,
-    	statustext = (status == "new") ? "Waiting for payment" : status,
-    	paymenttimestamp = rqdat.paymenttimestamp,
-		ptsformatted = fulldateformat(new Date(paymenttimestamp - timezone), "en-us"),
-    	amount = rqdat.amount,
-    	fiatvalue = rqdat.fiatvalue,
-    	receivedamount = rqdat.receivedamount,
-    	receivedamount_rounded = trimdecimals(receivedamount, 5),
-		fiatvalue_rounded = trimdecimals(fiatvalue, 2),
-    	requesttype = rqdat.requesttype,
-    	incoming = (requesttype == "incoming"),
-		outgoing = (requesttype == "outgoing"),
-		local = (requesttype == "local"),
-		online_purchase = rqdat.online_purchase,
-		typetext = (incoming === true) ? (online_purchase === true) ? "online purchase" : "incoming" : (local === true) ? "point of sale" : "outgoing",
-		direction = (incoming === true) ? "send" : "received",
-    	iscrypto = rqdat.iscrypto,
-		deter = (iscrypto === true) ? 5 : 2,
-    	amount_rounded = trimdecimals(amount, deter),
-    	uoa = rqdat.uoa,
-		uoa_upper = uoa.toUpperCase(),
-    	requestdate = rqdat.requestdate,
-		timestamp = rqdat.timestamp,
-		utc = timestamp - timezone,
-		localtime = (requestdate) ? requestdate - timezone : utc,
-		localtimeobject = new Date(localtime),
-		requestdateformatted = fulldateformat(localtimeobject, "en-us"),
-		created = (requestdate) ? requestdateformatted : "unknown",
-		utc_format = fulldateformat(new Date(utc)),
-		txhash = rqdat.txhash,
-    	invd = {};
-	invd["Request ID"] = requestid;
+        currencyname = rqdat.currencyname,
+        requestname = rqdat.requestname,
+        requesttitle = rqdat.requesttitle,
+        ismonitored = rqdat.monitored,
+        status = rqdat.status,
+        statustext = (status == "new") ? "Waiting for payment" : status,
+        paymenttimestamp = rqdat.paymenttimestamp,
+        ptsformatted = fulldateformat(new Date(paymenttimestamp - timezone), "en-us"),
+        amount = rqdat.amount,
+        fiatvalue = rqdat.fiatvalue,
+        receivedamount = rqdat.receivedamount,
+        receivedamount_rounded = trimdecimals(receivedamount, 5),
+        fiatvalue_rounded = trimdecimals(fiatvalue, 2),
+        requesttype = rqdat.requesttype,
+        incoming = (requesttype == "incoming"),
+        outgoing = (requesttype == "outgoing"),
+        local = (requesttype == "local"),
+        online_purchase = rqdat.online_purchase,
+        typetext = (incoming === true) ? (online_purchase === true) ? "online purchase" : "incoming" : (local === true) ? "point of sale" : "outgoing",
+        direction = (incoming === true) ? "send" : "received",
+        iscrypto = rqdat.iscrypto,
+        deter = (iscrypto === true) ? 5 : 2,
+        amount_rounded = trimdecimals(amount, deter),
+        uoa = rqdat.uoa,
+        uoa_upper = uoa.toUpperCase(),
+        requestdate = rqdat.requestdate,
+        timestamp = rqdat.timestamp,
+        utc = timestamp - timezone,
+        localtime = (requestdate) ? requestdate - timezone : utc,
+        localtimeobject = new Date(localtime),
+        requestdateformatted = fulldateformat(localtimeobject, "en-us"),
+        created = (requestdate) ? requestdateformatted : "unknown",
+        utc_format = fulldateformat(new Date(utc)),
+        txhash = rqdat.txhash,
+        invd = {};
+    invd["Request ID"] = requestid;
     invd.Currency = rqdat.payment;
     if (exists(requestname)) {
-	    invd.From = requestname;
+        invd.From = requestname;
     }
     if (exists(requesttitle)) {
-	    invd.Title = "'" + requesttitle + "'";
+        invd.Title = "'" + requesttitle + "'";
     }
     invd.Amount = amount_rounded + " " + uoa_upper,
-    invd.Status = statustext,
-    invd.Type = typetext;
+        invd.Status = statustext,
+        invd.Type = typetext;
     if (incoming === true) {
         invd["Created"] = created;
         invd["First viewed"] = utc_format;
     }
     invd.Address = rqdat.address;
     if (status === "paid") {
-    	invd["Paid on"] = ptsformatted,
-		invd["Amount received"] = receivedamount_rounded + " " + rqdat.payment;
-		if (iscrypto === true) {
-		}
-		else {
-			invd["Fiat value on " + ptsformatted] = fiatvalue_rounded + " " + currencyname;
-		}
-	}
-	if (exists(txhash)) {
-	    invd["TxID"] = txhash;
+        invd["Paid on"] = ptsformatted,
+            invd["Amount received"] = receivedamount_rounded + " " + rqdat.payment;
+        if (iscrypto === true) {} else {
+            invd["Fiat value on " + ptsformatted] = fiatvalue_rounded + " " + currencyname;
+        }
+    }
+    if (exists(txhash)) {
+        invd["TxID"] = txhash;
     }
     var set_proxy = $("#api_proxy").data("selected");
-	return set_proxy + "api/receipt/?data=" + btoa(JSON.stringify(invd));
+    return set_proxy + "api/receipt/?data=" + btoa(JSON.stringify(invd));
 }
 
 function download_receipt() {
     $(document).on("click", "#dl_receipt", function(e) {
         var thisbttn = $(this),
-		    href = thisbttn.attr("href"),
-		    title = thisbttn.attr("title"),
-		    result = confirm(title + "?");
-		if (result === false) {
-			e.preventDefault();
-		    return false;
-	    }
+            href = thisbttn.attr("href"),
+            title = thisbttn.attr("title"),
+            result = confirm(title + "?");
+        if (result === false) {
+            e.preventDefault();
+            return false;
+        }
     })
 }
 
 function share_receipt() {
     $(document).on("click", "#share_receipt", function() {
-	    var thisbttn = $(this),
-        	href = thisbttn.attr("data-receiptdat"),
-        	requestid = thisbttn.attr("data-requestid"),
-        	filename = "bitrequest_receipt_" + requestid + ".pdf",
-			result = confirm("Share " + filename + "?");
+        var thisbttn = $(this),
+            href = thisbttn.attr("data-receiptdat"),
+            requestid = thisbttn.attr("data-requestid"),
+            filename = "bitrequest_receipt_" + requestid + ".pdf",
+            result = confirm("Share " + filename + "?");
         if (result === true) {
             loader(true);
             loadertext("generate receipt");
             var accountname = $("#accountsettings").data("selected"),
-            	sharedtitle = "bitrequest_receipt_" + requestid + ".pdf";
+                sharedtitle = "bitrequest_receipt_" + requestid + ".pdf";
             shorten_url(sharedtitle, href, approot + "/img/receipt_icon.png", true);
             closeloader();
         }
@@ -4710,7 +4679,7 @@ function save_cc_settings(currency, add) {
 }
 
 function updatechanges(key, add) {
-	if (GD_auth_class() === true) {
+    if (GD_auth_class() === true) {
         updateappdata();
         body.removeClass("haschanges");
     } else {
@@ -4749,10 +4718,10 @@ function renderchanges() {
 }
 
 function change_alert() {
-	if (GoogleAuth) {
-		body.removeClass("haschanges");
-		return false;
-	}
+    if (GoogleAuth) {
+        body.removeClass("haschanges");
+        return false;
+    }
     var total_changes = get_total_changes();
     if (total_changes > 0) {
         body.addClass("haschanges");
@@ -4828,8 +4797,8 @@ function close_app_panel() {
 // Query helpers
 
 function exists(val) {
-	if (val === undefined || val === null || !val.length) {
-	    return false;
+    if (val === undefined || val === null || !val.length) {
+        return false;
     }
     return true;
 }
@@ -4921,37 +4890,36 @@ function currency_uncheck(currency) {
 }
 
 function get_vk(address) {
-	var ad_li = filter_addressli("monero", "address", address),
-		ad_dat = (ad_li.length) ? ad_li.data() : {},
-		ad_vk = ad_dat.vk;
-		if (ad_vk && ad_vk != "") {
-			return vk_obj(ad_vk);
-		}
-	return false;
+    var ad_li = filter_addressli("monero", "address", address),
+        ad_dat = (ad_li.length) ? ad_li.data() : {},
+        ad_vk = ad_dat.vk;
+    if (ad_vk && ad_vk != "") {
+        return vk_obj(ad_vk);
+    }
+    return false;
 }
 
 function vk_obj(vk) {
     if (vk.length === 64) {
-		return {
-			"account": false,
-			"vk": vk
-		}
-	}
-	else if (vk.length === 159) {
-		return {
-			"account": vk.slice(0,95),
-			"vk": vk.slice(95)
-		}
-	}
-	return false;
+        return {
+            "account": false,
+            "vk": vk
+        }
+    } else if (vk.length === 159) {
+        return {
+            "account": vk.slice(0, 95),
+            "vk": vk.slice(95)
+        }
+    }
+    return false;
 }
 
 function share_vk() {
-	var vkshare = $("#monero_settings .cc_settinglist li[data-id='Share viewkey']").data("selected");
-	if (vkshare === true) {
-		return true;
-	}
-	return false;
+    var vkshare = $("#monero_settings .cc_settinglist li[data-id='Share viewkey']").data("selected");
+    if (vkshare === true) {
+        return true;
+    }
+    return false;
 }
 
 function gk() {
@@ -5007,31 +4975,28 @@ function init_keys(ko, set) { // set required keys
 }
 
 function check_rr() {
-	var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
-	if (ls_recentrequests) {
-		var lsrr_arr = JSON.parse(ls_recentrequests);
-		if ($.isEmptyObject(lsrr_arr)) {
+    var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
+    if (ls_recentrequests) {
+        var lsrr_arr = JSON.parse(ls_recentrequests);
+        if ($.isEmptyObject(lsrr_arr)) {
             toggle_rr(false);
+        } else {
+            toggle_rr(true);
         }
-        else {
-	        toggle_rr(true);
-        }
-	}
-	else {
-		toggle_rr(false);
-	}
+    } else {
+        toggle_rr(false);
+    }
 }
 
 function toggle_rr(bool) {
-	if (bool) {
-		html.addClass("show_rr");
-		var hist_bttn = $("#request_history");
-		hist_bttn.addClass("load");
-		setTimeout(function() {
+    if (bool) {
+        html.addClass("show_rr");
+        var hist_bttn = $("#request_history");
+        hist_bttn.addClass("load");
+        setTimeout(function() {
             hist_bttn.removeClass("load");
         }, 500);
-	}
-	else {
-		html.removeClass("show_rr");
-	}
+    } else {
+        html.removeClass("show_rr");
+    }
 }

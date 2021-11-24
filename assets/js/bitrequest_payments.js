@@ -19,8 +19,8 @@ var txid,
     blocktyping = false;
 
 $(document).ready(function() {
-	wake_panel();
-	//set_request_timer
+    wake_panel();
+    //set_request_timer
     swipestart();
     //swipe
     swipeend();
@@ -122,25 +122,25 @@ function wake_panel() {
 }
 
 function set_request_timer(timeout) {
-	// close request dialog after 3 minutes
-	clearTimeout(request_timer);
-	request_timer = setTimeout(function() {
-		cpd_pollcheck();
-	}, 180000, function() {
-		clearTimeout(request_timer);
-	});
+    // close request dialog after 3 minutes
+    clearTimeout(request_timer);
+    request_timer = setTimeout(function() {
+        cpd_pollcheck();
+    }, 180000, function() {
+        clearTimeout(request_timer);
+    });
 }
 
 function swipestart() {
     $(document).on("mousedown touchstart", "#paymentdialog", function(e) {
-	    blockswipe = false;
-	    var thisdialog = $(this),
-	    	inputs = thisdialog.find("input");
-	    if (inputs.is(":focus")) {
+        blockswipe = false;
+        var thisdialog = $(this),
+            inputs = thisdialog.find("input");
+        if (inputs.is(":focus")) {
             blockswipe = true;
-	    }
-	    var thisdialog = $(this),
-	    	startheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
+        }
+        var thisdialog = $(this),
+            startheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
         startswipetime = $.now();
         swipe(thisdialog.height(), startheight);
     })
@@ -148,10 +148,10 @@ function swipestart() {
 
 function swipe(dialogheight, startheight) {
     $(document).on("mousemove touchmove", "#payment", function(e) {
-   		if (blockswipe === true) {
-	   		unfocus_inputs();
-	    	return false;
-    	}
+        if (blockswipe === true) {
+            unfocus_inputs();
+            return false;
+        }
         var currentheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY,
             dragdistance = currentheight - startheight;
         if (dragdistance > 3 || dragdistance < -3) { // margin to activate swipe
@@ -230,7 +230,7 @@ function flipend() {
         var thisunit = $(this);
         $(document).off("mousemove touchmove", paymentpopup);
         if (thisunit.hasClass("flipping")) {
-	        if (paymentdialogbox.hasClass("flipped")) {
+            if (paymentdialogbox.hasClass("flipped")) {
                 if (angle > 250) {
                     flip_right2();
                 } else if (angle < 110) {
@@ -295,8 +295,8 @@ function remove_flip() {
 }
 
 function face_front() {
-	if (request) {
-	    if (request.isrequest === false) {
+    if (request) {
+        if (request.isrequest === false) {
             var sharebutton = $("#sharebutton"),
                 requesttitle = $("#requesttitle"),
                 requestname = $("#requestname"),
@@ -328,8 +328,8 @@ function face_front() {
 }
 
 function face_back() {
-	if (request) {
-	    if (request.isrequest === false) {
+    if (request) {
+        if (request.isrequest === false) {
             var requesttitle = $("#requesttitle"),
                 requestname = $("#requestname");
             if (requestname.val().length < 3) {
@@ -369,7 +369,7 @@ function face_back() {
 //loadpayment (check for crypto rates)
 
 function loadpaymentfunction(pass) {
-	symbolcache = localStorage.getItem("bitrequest_symbols");
+    symbolcache = localStorage.getItem("bitrequest_symbols");
     if (symbolcache) {
         var gets = geturlparameters(),
             contactform = (gets.contactform !== undefined);
@@ -381,18 +381,18 @@ function loadpaymentfunction(pass) {
                 coindata = getcoindata(payment);
             if (coindata) {
                 var iserc20 = (coindata.erc20 === true),
-                	request_start_time = $.now(),
-                	exact = (gets.exact !== undefined);
+                    request_start_time = $.now(),
+                    exact = (gets.exact !== undefined);
                 request = {
-                	"received": false,
-                	"rq_init": request_start_time,
-                	"rq_timer": request_start_time,
-                    "payment": payment,
-                    "coindata": coindata,
-                    "erc20": iserc20
-                }, // global request object
-                
-                helper = {};
+                        "received": false,
+                        "rq_init": request_start_time,
+                        "rq_timer": request_start_time,
+                        "payment": payment,
+                        "coindata": coindata,
+                        "erc20": iserc20
+                    }, // global request object
+
+                    helper = {};
                 helper.exact = exact;
                 helper.contactform = contactform;
                 api_attempt["crypto_price_apis"] = {},
@@ -484,8 +484,8 @@ function continue_paymentfunction(payment) {
     }
     loader();
     var isrequest = (localStorage.getItem("bitrequest_editurl") !== window.location.search), // check if url is a request
-    	coindata = request.coindata,
-		coinsettings = activecoinsettings(payment),
+        coindata = request.coindata,
+        coinsettings = activecoinsettings(payment),
         uoa = gets.uoa,
         amount = Number(gets.amount),
         type = gets.type,
@@ -497,14 +497,14 @@ function continue_paymentfunction(payment) {
         payment_id = (dataobject && dataobject.pid) ? dataobject.pid : false,
         xmr_ia = address;
     if (payment == "monero") { // check for monero viewkey
-	    coindata.monitored = false;
-	    var viewkey = (dataobject && dataobject.vk) ? {
-			"account": address,
-			"vk": dataobject.vk
-		} : get_vk(address),
-		sharevk = share_vk(),
-		payment_id = (payment_id) ? payment_id : (isrequest) ? false : get_xmrpid();
-		xmr_ia = xmr_integrated(address, payment_id);
+        coindata.monitored = false;
+        var viewkey = (dataobject && dataobject.vk) ? {
+                "account": address,
+                "vk": dataobject.vk
+            } : get_vk(address),
+            sharevk = share_vk(),
+            payment_id = (payment_id) ? payment_id : (isrequest) ? false : get_xmrpid();
+        xmr_ia = xmr_integrated(address, payment_id);
     }
     var currencysymbol = coindata.ccsymbol,
         requesttype = (isrequest === true) ? (type) ? type : "incoming" : "local",
@@ -532,7 +532,7 @@ function continue_paymentfunction(payment) {
         pagenameccparam = (iscrypto === true) ? "" : payment + " ",
         pagename = (requestname) ? requestname + " sent a " + pagenameccparam + "payment request of " + amount + " " + uoa + " for " + requesttitle : pagenameccparam + "payment request for " + amount + " " + uoa,
         requestclass = (isrequest === true) ? "request" : "norequest", //set classnames for request
-		iszero = (amount === 0 || isNaN(amount)),
+        iszero = (amount === 0 || isNaN(amount)),
         iszero_request = (isrequest === true && iszero === true),
         iszeroclass = (iszero_request === true) ? " iszero" : "",
         showclass = (iscrypto === true) ? (uoa == "btc") ? " showsat showlc showcc" : " showlc showcc" : (uoa == fiatcurrency) ? "" : " showlc",
@@ -842,9 +842,9 @@ function continue_paymentfunction(payment) {
                         rendercurrencypool(rates, ccrate, ccapi, fiatapi, cachetime, "0"); // render exchangerates
                         // cache exchange rates
                         var xratestring = JSON.stringify({
-	                        "timestamp": $.now(),
-	                        "fiat_exchangerates": rates,
-	                        "api": fiatapi
+                            "timestamp": $.now(),
+                            "fiat_exchangerates": rates,
+                            "api": fiatapi
                         });
                         sessionStorage.setItem("bitrequest_exchangerates", xratestring);
                     } else {
@@ -933,7 +933,7 @@ function continue_paymentfunction(payment) {
             currencyname = currencypoolnode.attr("data-currencyname"),
             fiatcurrencypoolnode = $("#paymentdialog .cpool[data-currency='" + fiatcurrency + "']"),
             fiatcurrencyname = fiatcurrencypoolnode.attr("data-currencyname"),
-			localcurrencypoolnode = $("#paymentdialog .cpool[data-currency='" + localcurrency + "']"),
+            localcurrencypoolnode = $("#paymentdialog .cpool[data-currency='" + localcurrency + "']"),
             localcurrencyname = localcurrencypoolnode.attr("data-currencyname");
         // extend global request object
         request.currencyname = currencyname;
@@ -947,7 +947,7 @@ function continue_paymentfunction(payment) {
             requesttitle_string = (rt_set === true) ? requesttitle : "",
             pobox = $("main #" + payment + " .content ul.pobox[data-currency='" + payment + "']"),
             savedaddressli = pobox.find("li[data-address='" + address + "']"),
-			labelvalue = (savedaddressli.length > 0) ? (savedaddressli.data("label").length > 0) ? "<span id='labelbttn'>" + savedaddressli.data("label") + "</span>" : "" : "", // check if label is set
+            labelvalue = (savedaddressli.length > 0) ? (savedaddressli.data("label").length > 0) ? "<span id='labelbttn'>" + savedaddressli.data("label") + "</span>" : "" : "", // check if label is set
             thiscurrencyvalueraw = ((amount / currencyxrate) * ccrateeuro),
             thiscurrencyvaluefixed = parseFloat(thiscurrencyvalueraw.toFixed(6)),
             thiscurrencyvaluefixedplaceholder = (iszero === true) ? zeroplaceholder : thiscurrencyvaluefixed,
@@ -975,7 +975,7 @@ function continue_paymentfunction(payment) {
             backbttnandtitle = (isrequest === true) ? "<div id='sharetitle' title='" + requesttitle_string + "' data-shorttitle='" + requesttitle_short + "' class='" + exceedclass + "'>" + requesttitle_quotes + "</div>" : "",
             save_request,
             address_xmr_ia = (request.xmr_ia) ? request.xmr_ia : address;
-            requestinfo = "\
+        requestinfo = "\
 				<div id='requestinfo'>" +
             backbttnandtitle +
             "<div id='shareamount' class='inputbreak'>\
@@ -1034,7 +1034,7 @@ function continue_paymentfunction(payment) {
 						<span id='view_tx'>View details</span>\
 					</p>\
 				</div>",
-			readonly_attr = (is_viewonly() === true) ? " readonly='readonly'" : "",
+            readonly_attr = (is_viewonly() === true) ? " readonly='readonly'" : "",
             shareform = "\
 				<div id='shareformbox'>\
 					<div id='shareformib' class='inputbreak'>\
@@ -1106,27 +1106,24 @@ function continue_paymentfunction(payment) {
         renderqr(payment, address_xmr_ia, $("#paymentdialogbox .ccpool").attr("data-value"));
         if (isrequest === true) { // check for incoming requests
             if (helper.contactform === true) { // indicates if it's a online payment so not an incoming request
-            }
-            else {
-	            if (monitored === true) {
-		            if (iszero === true) {
-	                    main_input_focus();
-	                }
-	                var save_request = saverequest("init");
-		        }
+            } else {
+                if (monitored === true) {
+                    if (iszero === true) {
+                        main_input_focus();
+                    }
+                    var save_request = saverequest("init");
+                }
             }
         } else {
             main_input_focus();
         }
-        if (save_request == "nosocket") {
-        }
-        else {
+        if (save_request == "nosocket") {} else {
             init_socket(selected_socket, address);
             set_request_timer();
         }
         if (monitored === false) {
-	        notify("this currency is not monitored", 500000, "yes");
-	    }
+            notify("this currency is not monitored", 500000, "yes");
+        }
         // close loading screen when in iframe
         if (inframe === true) {
             parent.postMessage("close_loader", "*");
@@ -1233,7 +1230,7 @@ function rendercpooltext(nextcurrency, newccrate) {
 
 function pushamount() {
     $(document).on("input", "#paymentdialogbox .fmirror > input", function() {
-	    blocktyping = true;
+        blocktyping = true;
         var thisnode = $(this),
             thisamount = thisnode.val(),
             placeholder = (thisamount.length === 0) ? zeroplaceholder : thisamount,
@@ -1249,7 +1246,7 @@ function pushamount() {
 
 function pushlcamount() {
     $(document).on("input", "#paymentdialogbox .lcmirror > input", function() {
-	    blocktyping = true;
+        blocktyping = true;
         var thisnode = $(this),
             thisamount = thisnode.val(),
             thisrate = $("#lcinputmirror > input").attr("data-xrate");
@@ -1262,7 +1259,7 @@ function pushlcamount() {
 
 function pushccamount() {
     $(document).on("input", "#paymentdialogbox .ccmirror > input", function() {
-	    blocktyping = true;
+        blocktyping = true;
         var thisnode = $(this),
             thisamount = thisnode.val(),
             placeholder = (thisamount.length === 0) ? zeroplaceholder : thisamount,
@@ -1276,7 +1273,7 @@ function pushccamount() {
 
 function pushsatamount() {
     $(document).on("input", "#satinputmirror > input", function() {
-	    blocktyping = true;
+        blocktyping = true;
         var thisnode = $(this),
             thisamountpre = thisnode.val(),
             thisamount = (thisamountpre.length === 0) ? thisamountpre : thisamountpre / 100000000,
@@ -1379,7 +1376,10 @@ function renderqr(payment, address, amount) {
         urlscheme = (request.erc20 === true) ? "ethereum:" + address :
         request.coindata.urlscheme(payment, address, amount, this_iszero);
     $("#qrcode").html("").qrcode(urlscheme);
-    $(".openwallet").attr({"data-rel":amount,"title":urlscheme});
+    $(".openwallet").attr({
+        "data-rel": amount,
+        "title": urlscheme
+    });
 }
 
 function switchaddress() {
@@ -1391,19 +1391,19 @@ function switchaddress() {
             var gets = geturlparameters(),
                 payment = gets.payment;
             if (payment == "monero") {
-	            return false;
+                return false;
             }
-			var currentaddress = gets.address,
+            var currentaddress = gets.address,
                 nextaddress = newaddresli(payment, currentaddress);
             if (nextaddress) {
-	            var newaddress = nextaddress.data("address"),
-	            	selected_socket = helper.selected_socket;
-	            init_socket(selected_socket, newaddress, true);
-	            var dp = gets.d,
-                	has_dat = (dp && dp.length > 5),
-                	new_dp = (has_dat) ? "&d=" + dp : "",
-                	ccvalue = $("#paymentdialogbox .ccpool").attr("data-value"),
-					newaddressid = nextaddress.data("cmcid"),
+                var newaddress = nextaddress.data("address"),
+                    selected_socket = helper.selected_socket;
+                init_socket(selected_socket, newaddress, true);
+                var dp = gets.d,
+                    has_dat = (dp && dp.length > 5),
+                    new_dp = (has_dat) ? "&d=" + dp : "",
+                    ccvalue = $("#paymentdialogbox .ccpool").attr("data-value"),
+                    newaddressid = nextaddress.data("cmcid"),
                     newaddresslabel = nextaddress.data("label"),
                     page = gets.p,
                     starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
@@ -1428,11 +1428,11 @@ function switchaddress() {
 
 function newaddresli(currency, address) {
     var add_li = filter_addressli(currency, "checked", true),
-	    label_li = add_li.filter(function() { // only pick addresses with label
-	        return $(this).data("label").length > 0;
-	    }),
+        label_li = add_li.filter(function() { // only pick addresses with label
+            return $(this).data("label").length > 0;
+        }),
         c_adli = filter_addressli(currency, "address", address),
-		nextaddressli = c_adli.next(".adli[data-checked='true']"),
+        nextaddressli = c_adli.next(".adli[data-checked='true']"),
         firstaddressli = label_li.not(".adli[data-address='" + address + "']").first();
     if (firstaddressli.length === 0) {
         return false;
@@ -1443,10 +1443,12 @@ function newaddresli(currency, address) {
 
 function copyaddress_dblclick() {
     $(document).on("dblclick", "#paymentaddress, .select", function() {
-	    var thisnode = $(this),
-	    	type = thisnode.attr("data-type"),
-	    	typeval = (type) ? type : "address";
-	    copycontent.val(thisnode.text()).data({"type":typeval});
+        var thisnode = $(this),
+            type = thisnode.attr("data-type"),
+            typeval = (type) ? type : "address";
+        copycontent.val(thisnode.text()).data({
+            "type": typeval
+        });
         notify("<span id='copyaddress'>Copy " + typeval + "?</span>", 40000, "yes");
     });
 }
@@ -1454,7 +1456,7 @@ function copyaddress_dblclick() {
 function copyaddress() {
     $(document).on("click", "#copyaddress", function() {
         var val = copycontent.val(),
-        	type = copycontent.data("type");
+            type = copycontent.data("type");
         copytoclipboard(val, type);
     });
 }
@@ -1463,7 +1465,7 @@ function xmrsettings() {
     $(document).on("click", "#xmrsettings", function() {
         var result = confirm("Open XMR settings?");
         if (result === true) {
-	        var page_title = "monero_settings";
+            var page_title = "monero_settings";
             openpage("?p=" + page_title, page_title, "loadpage");
             cancelpaymentdialog();
         } else {
@@ -1488,22 +1490,22 @@ function validaterequestdata(requestname_val, requesttitle_val) {
         var utc = $.now() + timezone, // UTC
             no_conf = request.no_conf,
             dataobject = {
-	            "ts": utc,
-	            "n": requestname_val,
-	            "t": requesttitle_val
+                "ts": utc,
+                "n": requestname_val,
+                "t": requesttitle_val
             };
         if (no_conf === false) {
             dataobject.c = request.set_confirmations;
         }
         if (payment == "monero") {
-	        if (request.viewkey || request.xmr_ia) {
-		        if (request.viewkey && request.share_vk) {
-	            	dataobject.vk = request.viewkey.vk;
-	        	}
-	        	if (request.xmr_ia) {
-	            	dataobject.pid = request.payment_id;
-	        	}
-        	}
+            if (request.viewkey || request.xmr_ia) {
+                if (request.viewkey && request.share_vk) {
+                    dataobject.vk = request.viewkey.vk;
+                }
+                if (request.xmr_ia) {
+                    dataobject.pid = request.payment_id;
+                }
+            }
         }
         var newurl = currenturl + "&d=" + btoa(JSON.stringify(dataobject));
         request.requestname = requestname_val,
@@ -1527,11 +1529,11 @@ function inputrequestdata() {
 
 function validatesteps() {
     $(document).on("keydown", "#paymentdialogbox .mirrordiv input", function(e) {
-	    if (blocktyping === true) {
-		    playsound(funk);
-		    blocktyping = false;
-		    return false;
-	    }
+        if (blocktyping === true) {
+            playsound(funk);
+            blocktyping = false;
+            return false;
+        }
         var thisnode = $(this),
             thisvalue = thisnode.val(),
             keycode = e.keyCode;
@@ -1565,12 +1567,12 @@ function fliprequest() {
     $(document).on("click", "#paymentdialogbox.norequest #sharerequest", function(e) {
         e.preventDefault();
         if (paymentdialogbox.attr("data-pending") == "ispending") {
-	        if (request.payment == "monero") {
-		        notify("Address in use. <span id='xmrsettings'>Activate integrated addresses?</span>", 40000, "yes");
-		        return false;
-	        }
-	        pendingrequest();
-			return false;
+            if (request.payment == "monero") {
+                notify("Address in use. <span id='xmrsettings'>Activate integrated addresses?</span>", 40000, "yes");
+                return false;
+            }
+            pendingrequest();
+            return false;
         }
         if (offline === true) {
             return false;
@@ -1663,9 +1665,9 @@ function pickaddressfromdialog() {
                 amount = gets.amount;
             init_socket(helper.selected_socket, picked_address, true);
             var dp = gets.d,
-            	has_dat = (dp && dp.length > 5),
-				new_dp = (has_dat) ? "&d=" + dp : "",
-            	starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
+                has_dat = (dp && dp.length > 5),
+                new_dp = (has_dat) ? "&d=" + dp : "",
+                starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
                 href = starturl + payment + "&uoa=" + currency + "&amount=" + amount + "&address=" + picked_address + new_dp,
                 ccvalue = $("#paymentdialogbox .ccpool").attr("data-value");
             $("#paymentaddress").text(picked_address);
@@ -1696,7 +1698,7 @@ function addaddressfromdialog() {
             cmcid = request.cmcid,
             erc20 = request.erc20,
             dd = derive_data(payment, true),
-			ad = {
+            ad = {
                 "currency": payment,
                 "ccsymbol": request.currencysymbol,
                 "cmcid": cmcid,
@@ -1716,18 +1718,18 @@ function addaddressfromdialog() {
 
 function add_from_seed() {
     $(document).on("click", "#addfromseed", function() {
-	    var ad = $("#addressformbox").data(),
-	    	currency = ad.currency,
-	    	dd = ad.dd;
-	    if (currency && dd) {
-		    if (dd.address) {
-			    var result = confirm("Are you sure you want to generate a new " + currency + " address? It may not show up in some wallets");
-		        if (result === true) {
-		            derive_add_address(currency, dd);
-		            canceldialog();
-		        }
-		    }
-	    }
+        var ad = $("#addressformbox").data(),
+            currency = ad.currency,
+            dd = ad.dd;
+        if (currency && dd) {
+            if (dd.address) {
+                var result = confirm("Are you sure you want to generate a new " + currency + " address? It may not show up in some wallets");
+                if (result === true) {
+                    derive_add_address(currency, dd);
+                    canceldialog();
+                }
+            }
+        }
     });
 }
 
@@ -1803,12 +1805,12 @@ function share(thisbutton) {
         setlocales();
     } else {
         var requestname = $("#requestname"),
-			requesttitle = $("#requesttitle"),
-			name_check = requestname.val().length,
-			title_check = requesttitle.val().length,
-			name_check_message = (name_check < 1) ? "Please enter your name" : (name_check < 3) ? "Name should have minimal 3 characters" : "Please check your form",
-			title_check_message = (title_check < 1) ? "Please enter a description" : (title_check < 2) ? "Description should have minimal 2 characters" : "Please check your form",
-			check_message = (name_check < 3) ? name_check_message : (title_check < 2) ? title_check_message : "Please fill in required fields";
+            requesttitle = $("#requesttitle"),
+            name_check = requestname.val().length,
+            title_check = requesttitle.val().length,
+            name_check_message = (name_check < 1) ? "Please enter your name" : (name_check < 3) ? "Name should have minimal 3 characters" : "Please check your form",
+            title_check_message = (title_check < 1) ? "Please enter a description" : (title_check < 2) ? "Description should have minimal 2 characters" : "Please check your form",
+            check_message = (name_check < 3) ? name_check_message : (title_check < 2) ? title_check_message : "Please fill in required fields";
         topnotify(check_message);
         if (name_check < 3) {
             requestname.focus();
@@ -1829,7 +1831,7 @@ function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
             sharerequest(getcache, sharedtitle);
         } else {
             if (us_service == "firebase") {
-	            var security = (unguessable === true) ? "UNGUESSABLE" : "SHORT";
+                var security = (unguessable === true) ? "UNGUESSABLE" : "SHORT";
                 api_proxy({
                     "api": "firebase",
                     "search": "shortLinks",
@@ -1920,7 +1922,7 @@ function sharerequest(sharedurl, sharedtitle) {
     if (is_ios_app === true) {
         sharefallback(sharedurl, sharedtitle);
     } else {
-	    if (supportsTouch === true && navigator.canShare) {
+        if (supportsTouch === true && navigator.canShare) {
             navigator.share({
                 title: sharedtitle + " | " + apptitle,
                 text: sharedtitle + ": \n",
@@ -1945,8 +1947,8 @@ function whatsappshare() {
     $(document).on("click", "#whatsappshare", function() {
         sharecallback();
         var shareinfo = getshareinfo(),
-        	sharetext = encodeURIComponent(shareinfo.body),
-        	share_url = "whatsapp://send?text=" + sharetext;
+            sharetext = encodeURIComponent(shareinfo.body),
+            share_url = "whatsapp://send?text=" + sharetext;
         open_share_url("location", share_url);
     });
 }
@@ -2007,8 +2009,8 @@ function getshareinfo() {
 
 function sharecallback() {
     if (request) {
-	    request.received = true,
-			request.requesttype = "outgoing",
+        request.received = true,
+            request.requesttype = "outgoing",
             request.status = "new",
             request.pending = (request.monitored === false) ? "unknown" : "scanning";
         saverequest();
@@ -2081,7 +2083,7 @@ function open_tx(tx_node) {
 // ** Save and update request **
 
 function saverequest(direct) {
-	var gets = geturlparameters(),
+    var gets = geturlparameters(),
         thispayment = gets.payment,
         thiscurrency = gets.uoa,
         thisamount = request.amount,
@@ -2118,7 +2120,7 @@ function saverequest(direct) {
             requestli = $("#" + smart_id),
             pendingstate = requestli.data("pending");
         if (savedtxhash) { // check if request is opened or updated
-	        request.received = true;
+            request.received = true;
             if (pendingstate == "paid") {} else {
                 updaterequest({
                     "requestid": requestid,
@@ -2134,22 +2136,20 @@ function saverequest(direct) {
         } else {
             if (pendingstate == "scanning") { // do nothing
                 return false;
+            } else {
+                if (pendingstate == "polling" || requestli.hasClass("expired")) {
+                    pendingdialog(requestli);
+                    return "nosocket";
+                } else if (pendingstate == "no") {
+                    request.received = true;
+                    var txhash_state = requestli.data("txhash"),
+                        typestate = requestli.data("requesttype"),
+                        send_receive = (typestate == "incoming") ? "sent" : "received";
+                    adjust_paymentdialog("paid", "no", "Payment " + send_receive);
+                    paymentdialogbox.find("span#view_tx").attr("data-txhash", txhash_state);
+                    return "nosocket";
+                }
             }
-            else {
-	            if (pendingstate == "polling" || requestli.hasClass("expired")) {
-		            pendingdialog(requestli);
-	                return "nosocket";
-	            } 
-	            else if (pendingstate == "no") {
-		            request.received = true;
-	                var txhash_state = requestli.data("txhash"),
-	                    typestate = requestli.data("requesttype"),
-	                    send_receive = (typestate == "incoming") ? "sent" : "received";
-	                adjust_paymentdialog("paid", "no", "Payment " + send_receive);
-	                paymentdialogbox.find("span#view_tx").attr("data-txhash", txhash_state);
-	                return "nosocket";
-	            }
-	        }
         }
     } else {
         //overwrite global request object
@@ -2160,21 +2160,19 @@ function saverequest(direct) {
         var numberamount = Number(thisamount),
             this_iszero = (numberamount === 0 || isNaN(numberamount));
         if (direct == "init" && request.shared === false) { // when first opened only save shared requests
-        } 
-        else if (this_iszero === true) { // don't save requests with zero value
-        }
-        else {
+        } else if (this_iszero === true) { // don't save requests with zero value
+        } else {
             var coinsettings = request.coinsettings,
-            	append_object = $.extend(request, {
-		            "archive": false,
-	                "showarchive": false,
-	                "tx_index": [],
-	                "timestamp": timestamp,
-	                "requestdate": requesttimestamp,
-	                "rqdata": rqdatahash,
-	                "rqmeta": rqmetahash,
-	                "online_purchase": online_purchase
-	            });
+                append_object = $.extend(request, {
+                    "archive": false,
+                    "showarchive": false,
+                    "tx_index": [],
+                    "timestamp": timestamp,
+                    "requestdate": requesttimestamp,
+                    "rqdata": rqdatahash,
+                    "rqmeta": rqmetahash,
+                    "online_purchase": online_purchase
+                });
             delete append_object.coinsettings; // don't save coinsettings in request
             appendrequest(append_object);
             setTimeout(function() {
@@ -2187,16 +2185,16 @@ function saverequest(direct) {
             }
             helper.currencylistitem.removeData("url"); // remove saved url
             if (coinsettings) {
-	            var reuse = coinsettings["Reuse address"];
-	            if (reuse) {
-		            var addressli = filter_addressli(thispayment, "address", thisaddress);
-			        addressli.addClass("used").data("used", true);
-		            if (reuse.selected === false) {
-			            // Derive new address
-			            saveaddresses(thispayment, false);
-			            derive_addone(thispayment);
-		            }
-	            }
+                var reuse = coinsettings["Reuse address"];
+                if (reuse) {
+                    var addressli = filter_addressli(thispayment, "address", thisaddress);
+                    addressli.addClass("used").data("used", true);
+                    if (reuse.selected === false) {
+                        // Derive new address
+                        saveaddresses(thispayment, false);
+                        derive_addone(thispayment);
+                    }
+                }
             }
         }
     }
@@ -2254,8 +2252,8 @@ function saverequest(direct) {
 }
 
 function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
-	request.received = true;
-	var prdata = pendingrequest.data(),
+    request.received = true;
+    var prdata = pendingrequest.data(),
         txhash = prdata.txhash,
         tl_txhash = pendingrequest.find(".transactionlist li:first").data("txhash"),
         smart_txhash = (txhash) ? txhash : tl_txhash,
@@ -2268,45 +2266,43 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
         thispayment = prdata.payment;
     viewtx.attr("data-txhash", smart_txhash);
     if (pendingrequest.hasClass("expired")) {
-	    if (status == "new" || status == "insufficient") {
-	        adjust_paymentdialog("expired", "no", "<span class='icon-clock'></span>Request expired");
+        if (status == "new" || status == "insufficient") {
+            adjust_paymentdialog("expired", "no", "<span class='icon-clock'></span>Request expired");
             paymentdialogbox.find("span#view_tx").hide();
         }
     } else {
         if (thispayment == "nano") { // 0 confirmation so payment must be sent
-	        if (status == "insufficient") {
+            if (status == "insufficient") {
                 adjust_paymentdialog("insufficient", "scanning", "Insufficient amount");
             } else {
-	           adjust_paymentdialog("paid", "no", "Payment " + send_receive);
+                adjust_paymentdialog("paid", "no", "Payment " + send_receive);
             }
         } else {
-	        if (smart_txhash) {
+            if (smart_txhash) {
                 add_flip();
                 if (pending == "scanning") {
                     if (status == "insufficient") {
-	                    adjust_paymentdialog("insufficient", "scanning", "Insufficient amount");
+                        adjust_paymentdialog("insufficient", "scanning", "Insufficient amount");
                     } else {
-	                    adjust_paymentdialog("pending", "scanning", "Pending request");
+                        adjust_paymentdialog("pending", "scanning", "Pending request");
                     }
                 } else {
-	                adjust_paymentdialog("pending", "polling", "Transaction broadcasted");
-	                if (thispayment == "monero") {
-		                var address = prdata.address,
-		                	vk = request.viewkey;
-						if (vk) {
-							var account = (vk.account) ? vk.account : address,
-								viewkey = vk.vk;
-							var starttime = $.now();
-				            closenotify();
-				            init_xmr_node(34, account, viewkey, starttime, smart_txhash, true);
-			            }
-			            else {
-				            notify("this currency is not monitored", 500000, "yes");
-			            }
-		            }
-		            else {
-			            pick_monitor(smart_txhash);
-		            }
+                    adjust_paymentdialog("pending", "polling", "Transaction broadcasted");
+                    if (thispayment == "monero") {
+                        var address = prdata.address,
+                            vk = request.viewkey;
+                        if (vk) {
+                            var account = (vk.account) ? vk.account : address,
+                                viewkey = vk.vk;
+                            var starttime = $.now();
+                            closenotify();
+                            init_xmr_node(34, account, viewkey, starttime, smart_txhash, true);
+                        } else {
+                            notify("this currency is not monitored", 500000, "yes");
+                        }
+                    } else {
+                        pick_monitor(smart_txhash);
+                    }
                 }
             }
         }
@@ -2355,9 +2351,9 @@ function dw_trigger() {
 }
 
 function download_wallet(currency) {
-	var coindata = getcoinconfig(currency),
-		wallets = coindata.wallets,
-		wdp = wallets.wallet_download_page,
+    var coindata = getcoinconfig(currency),
+        wallets = coindata.wallets,
+        wdp = wallets.wallet_download_page,
         wallets_arr = wallets.wallets;
     if (wdp || wallets_arr) {
         var wallet_ul = (wallets_arr) ? "<ul id='formbox_ul'></ul>" : "",
@@ -2374,7 +2370,7 @@ function download_wallet(currency) {
         popdialog(content, "alert", "canceldialog");
         if (wallets_arr) {
             var walletlist = $("#formbox_ul"),
-           	 	device = getdevicetype(),
+                device = getdevicetype(),
                 platform = getplatform(device),
                 store_icon = (platform == "playstore") ? "button-playstore-v2.svg" :
                 (platform == "appstore") ? "button-appstore.svg" : "button-desktop_app.svg",
@@ -2481,23 +2477,23 @@ function updaterequest(ua, save) {
 }
 
 function get_xmrpid() {
-	var use_integrated = $("#monero_settings .cc_settinglist li[data-id='Integrated addresses']").data("selected");
-	if (use_integrated) {
-		return xmr_pid();
-	}
-	return false;
+    var use_integrated = $("#monero_settings .cc_settinglist li[data-id='Integrated addresses']").data("selected");
+    if (use_integrated) {
+        return xmr_pid();
+    }
+    return false;
 }
 
 function xmr_integrated(xmr_address, pmid) {
-	var is_valid = check_pid(pmid);
-	if (is_valid) {
-		var pahx = cnBase58.decode(xmr_address),
-			psk = pahx.slice(2, 66),
-			pvk = pahx.slice(66, 130),
-			bytes = "13" + psk + pvk + pmid,
-			checksum = bytes + fasthash(bytes).slice(0,8);
-		return base58_encode(hextobin(checksum));
-	}
-	console.log("invalid xmr payment id");
-	return xmr_address;
+    var is_valid = check_pid(pmid);
+    if (is_valid) {
+        var pahx = cnBase58.decode(xmr_address),
+            psk = pahx.slice(2, 66),
+            pvk = pahx.slice(66, 130),
+            bytes = "13" + psk + pvk + pmid,
+            checksum = bytes + fasthash(bytes).slice(0, 8);
+        return base58_encode(hextobin(checksum));
+    }
+    console.log("invalid xmr payment id");
+    return xmr_address;
 }

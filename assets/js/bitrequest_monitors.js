@@ -60,7 +60,7 @@ function trigger_requeststates(trigger) {
     } else {
         // reset cache and index
         api_attempts = {},
-        tx_list = []; // reset transaction index
+            tx_list = []; // reset transaction index
         var active_requests = $("#requestlist .rqli").filter(function() {
             return $(this).data("pending") != "unknown";
         });
@@ -96,7 +96,7 @@ function get_requeststates(trigger) {
                                 var ccsymbol = thisdata.currencysymbol,
                                     getconfirmations = thisdata.set_confirmations,
                                     getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
-									setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
+                                    setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
                                     statuspanel = thislist.find(".pmetastatus"),
                                     transactionlist = thislist.find(".transactionlist");
                                 statuspanel.text(value.status);
@@ -128,8 +128,8 @@ function get_requeststates(trigger) {
 }
 
 function getinputs(rd) {
-	var thislist = $("#" + rd.requestid),
-		iserc20 = rd.erc20,
+    var thislist = $("#" + rd.requestid),
+        iserc20 = rd.erc20,
         api_info = check_api(rd.payment, iserc20),
         selected = api_info.data;
     thislist.removeClass("pmstatloaded");
@@ -141,9 +141,9 @@ function getinputs(rd) {
 }
 
 function check_api(payment, iserc20) {
-	var api_data = $("#" + payment + "_settings .cc_settinglist li[data-id='apis']").data();
+    var api_data = $("#" + payment + "_settings .cc_settinglist li[data-id='apis']").data();
     if (api_data) {
-	    var selected = api_data.selected;
+        var selected = api_data.selected;
         if (selected.api === true) {
             return {
                 "api": true,
@@ -156,23 +156,22 @@ function check_api(payment, iserc20) {
             };
         }
     } else {
-	    if (iserc20) {
-		    return {
-	            "api": true,
-	            "data": {
-		            "name": "ethplorer",
-					"url": "ethplorer.io",
-					"api": true,
-					"display": true
-	            }
-	        };
-	    }
-	    else {
-		    return {
-	            "api": false,
-	            "data": false
-	        };
-	    }
+        if (iserc20) {
+            return {
+                "api": true,
+                "data": {
+                    "name": "ethplorer",
+                    "url": "ethplorer.io",
+                    "api": true,
+                    "display": true
+                }
+            };
+        } else {
+            return {
+                "api": false,
+                "data": false
+            };
+        }
     }
 }
 
@@ -191,7 +190,7 @@ function get_api_inputs_defaults(rd, api_data) {
     } else if (rd.erc20 === true) {
         get_api_inputs_init(rd, api_data, "ethplorer");
     } else {
-	     get_api_inputs_init(rd, api_data, api_data.name);
+        get_api_inputs_init(rd, api_data, api_data.name);
     }
 }
 
@@ -201,8 +200,8 @@ function get_api_inputs_init(rd, api_data, api_name) {
 }
 
 function get_api_inputs(rd, api_data, api_name) {
-	var requestid = rd.requestid,
-		thislist = $("#" + requestid);
+    var requestid = rd.requestid,
+        thislist = $("#" + requestid);
     if (thislist.hasClass("scan")) {
         var pending = rd.pending;
         api_attempts[pending + api_name] = true;
@@ -213,7 +212,7 @@ function get_api_inputs(rd, api_data, api_name) {
             ccsymbol = rd.currencysymbol,
             getconfirmations = rd.set_confirmations,
             getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
-			setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
+            setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
             statuspanel = thislist.find(".pmetastatus"),
             transactionlist = thislist.find("ul.transactionlist"),
             transactionhash = rd.txhash,
@@ -234,106 +233,103 @@ function get_api_inputs(rd, api_data, api_name) {
         } else if (pending == "scanning" || pending == "polling") {
             transactionlist.html("");
             if (payment == "monero") {
-	            var vk = rd.viewkey;
-	            if (vk) {
-		            var account = (vk.account) ? vk.account : address,
-						viewkey = vk.vk;
-		            var payload = {
-				    	"address":account,
-				    	"view_key":viewkey,
-				    	"create_account":true,
-				    	"generated_locally":false
-				    };
-				    api_proxy({
-				        "api": api_name,
-				        "search": "login",
-				        "cachetime": 25,
-				        "cachefolder": "1h",
-				        "params": {
-				            "method": "POST",
-				            "data": JSON.stringify(payload),
-				            "headers": {
-				                "Content-Type": "text/plain"
-				            }
-				        }
-				    }).done(function(e) {
-				        var data = br_result(e).result;
-				        if (data.start_height > -1) { // success!
-					        var pl = {
-						    	"address":account,
-						    	"view_key":viewkey
-						    };
-						    api_proxy({
-						        "api": api_name,
-						        "search": "get_address_txs",
-						        "cachetime": 25,
-						        "cachefolder": "1h",
-						        "params": {
-						            "method": "POST",
-						            "data": JSON.stringify(pl),
-						            "headers": {
-						                "Content-Type": "text/plain"
-						            }
-						        }
-						    }).done(function(e) {
-						        var data = br_result(e).result,
-						            transactions = data.transactions;
-						        if (transactions) {
-							        var txflip = transactions.reverse();
-						            $.each(txflip, function(dat, value) {
-						                var txd = xmr_scan_data(value, setconfirmations, "xmr", data.blockchain_height);
-						                if (txd) {
-							                if (txd.transactiontime > request_timestamp && txd.ccval) {
-								                if (pending == "scanning") {
-									                var xid_match = match_xmr_pid(rd.xmr_ia, rd.payment_id, txd.payment_id); // match xmr payment_id if set
-									                if (xid_match === true) {
-										                var tx_listitem = append_tx_li(txd, thislist);
-														if (tx_listitem) {
-				                                        	transactionlist.append(tx_listitem.data(txd));
-															counter++;
-														}
-													}
-		                                        }
-		                                        else if (pending == "polling") {
-			                                        if (txd.txhash == transactionhash) {
-				                                        var tx_listitem = append_tx_li(txd, thislist);
-														if (tx_listitem) {
-				                                        	transactionlist.append(tx_listitem.data(txd));
-															counter++;
-														}
-				                                    }
-												}
-		                                    }
-						                }
-						            });
-						        }
-						        tx_count(statuspanel, counter);
-		                        compareamounts(rd);
-						    }).fail(function(jqXHR, textStatus, errorThrown) {
-			                    tx_api_fail(thislist, statuspanel);
-			                    var error_object = (errorThrown) ? errorThrown : jqXHR;
-			                    handle_api_fails(rd, error_object, api_name, payment);
-			                }).always(function() {
-			                    api_src(thislist, {
-				                    "name": "xmr node"
-			                	});
-			                }); 
-				        }
-				        else {
-					        var errormessage = data.Error,
-					        	error = (errormessage) ? errormessage : "Invalid Viewkey";
-					        console.log(error);
-					        api_callback(requestid);
-					        //handle_api_fails(rd, {"error":error,"console":true}, api_name, payment);
-				        }   
-				    }).fail(function(jqXHR, textStatus, errorThrown) {
-				        tx_api_fail(thislist, statuspanel);
-	                    var error_object = (errorThrown) ? errorThrown : jqXHR;
-	                    handle_api_fails(rd, error_object, api_name, payment);
-				    });
-	            }
-	        }
-	        else if (payment == "nano") {
+                var vk = rd.viewkey;
+                if (vk) {
+                    var account = (vk.account) ? vk.account : address,
+                        viewkey = vk.vk;
+                    var payload = {
+                        "address": account,
+                        "view_key": viewkey,
+                        "create_account": true,
+                        "generated_locally": false
+                    };
+                    api_proxy({
+                        "api": api_name,
+                        "search": "login",
+                        "cachetime": 25,
+                        "cachefolder": "1h",
+                        "params": {
+                            "method": "POST",
+                            "data": JSON.stringify(payload),
+                            "headers": {
+                                "Content-Type": "text/plain"
+                            }
+                        }
+                    }).done(function(e) {
+                        var data = br_result(e).result;
+                        if (data.start_height > -1) { // success!
+                            var pl = {
+                                "address": account,
+                                "view_key": viewkey
+                            };
+                            api_proxy({
+                                "api": api_name,
+                                "search": "get_address_txs",
+                                "cachetime": 25,
+                                "cachefolder": "1h",
+                                "params": {
+                                    "method": "POST",
+                                    "data": JSON.stringify(pl),
+                                    "headers": {
+                                        "Content-Type": "text/plain"
+                                    }
+                                }
+                            }).done(function(e) {
+                                var data = br_result(e).result,
+                                    transactions = data.transactions;
+                                if (transactions) {
+                                    var txflip = transactions.reverse();
+                                    $.each(txflip, function(dat, value) {
+                                        var txd = xmr_scan_data(value, setconfirmations, "xmr", data.blockchain_height);
+                                        if (txd) {
+                                            if (txd.transactiontime > request_timestamp && txd.ccval) {
+                                                if (pending == "scanning") {
+                                                    var xid_match = match_xmr_pid(rd.xmr_ia, rd.payment_id, txd.payment_id); // match xmr payment_id if set
+                                                    if (xid_match === true) {
+                                                        var tx_listitem = append_tx_li(txd, thislist);
+                                                        if (tx_listitem) {
+                                                            transactionlist.append(tx_listitem.data(txd));
+                                                            counter++;
+                                                        }
+                                                    }
+                                                } else if (pending == "polling") {
+                                                    if (txd.txhash == transactionhash) {
+                                                        var tx_listitem = append_tx_li(txd, thislist);
+                                                        if (tx_listitem) {
+                                                            transactionlist.append(tx_listitem.data(txd));
+                                                            counter++;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    });
+                                }
+                                tx_count(statuspanel, counter);
+                                compareamounts(rd);
+                            }).fail(function(jqXHR, textStatus, errorThrown) {
+                                tx_api_fail(thislist, statuspanel);
+                                var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                handle_api_fails(rd, error_object, api_name, payment);
+                            }).always(function() {
+                                api_src(thislist, {
+                                    "name": "xmr node"
+                                });
+                            });
+                        } else {
+                            var errormessage = data.Error,
+                                error = (errormessage) ? errormessage : "Invalid Viewkey";
+                            console.log(error);
+                            api_callback(requestid);
+                            //handle_api_fails(rd, {"error":error,"console":true}, api_name, payment);
+                        }
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        tx_api_fail(thislist, statuspanel);
+                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        handle_api_fails(rd, error_object, api_name, payment);
+                    });
+                }
+            } else if (payment == "nano") {
                 if (pending == "scanning") { // scan incoming transactions on address
                     api_proxy({
                         "api": "nano",
@@ -357,42 +353,49 @@ function get_api_inputs(rd, api_data, api_name) {
                     }).done(function(e) {
                         var data = br_result(e).result;
                         if (data) {
-                        	var nano_data = data.data;
-							if ($.isEmptyObject(nano_data)) {
-		                        tx_api_fail(thislist, statuspanel);
-		                        handle_api_fails(rd, {"error":"nano node offline","console":true}, api_name, payment);
-	                        }
-	                        else {
-		                        var pending_array_node = (nano_data[0]) ? nano_data[0].pending : [],
-		                        	pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
-		                            history_array_node = (nano_data[1]) ? nano_data[1].history : [],
-		                            history_array = $.isEmptyObject(history_array_node) ? [] : history_array_node,
-		                            merged_array = pending_array.concat(history_array).sort(function(x, y) { // merge and sort arrays
-		                                return y.local_timestamp - x.local_timestamp;
-		                            });
-		                        $.each(merged_array, function(data, value) {
-		                            var txd = nano_scan_data(value, setconfirmations, ccsymbol);
-		                            if ((txd.transactiontime > request_timestamp) && txd.ccval && (value.type === undefined || value.type == "receive")) {
-		                                var tx_listitem = append_tx_li(txd, thislist);
-		                                if (tx_listitem) {
-		                                    transactionlist.append(tx_listitem.data(txd));
-		                                    counter++;
-		                                }
-		                            }
-		                        });
-		                        tx_count(statuspanel, counter);
-		                        api_src(thislist, api_data);
-		                        compareamounts(rd);
-	                        }
-	                    }
-	                    else {
-		                    tx_api_fail(thislist, statuspanel);
-		                    handle_api_fails(rd, {"error":"No results found","console":true}, api_name, payment);
-	                    }
+                            var nano_data = data.data;
+                            if ($.isEmptyObject(nano_data)) {
+                                tx_api_fail(thislist, statuspanel);
+                                handle_api_fails(rd, {
+                                    "error": "nano node offline",
+                                    "console": true
+                                }, api_name, payment);
+                            } else {
+                                var pending_array_node = (nano_data[0]) ? nano_data[0].pending : [],
+                                    pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
+                                    history_array_node = (nano_data[1]) ? nano_data[1].history : [],
+                                    history_array = $.isEmptyObject(history_array_node) ? [] : history_array_node,
+                                    merged_array = pending_array.concat(history_array).sort(function(x, y) { // merge and sort arrays
+                                        return y.local_timestamp - x.local_timestamp;
+                                    });
+                                $.each(merged_array, function(data, value) {
+                                    var txd = nano_scan_data(value, setconfirmations, ccsymbol);
+                                    if ((txd.transactiontime > request_timestamp) && txd.ccval && (value.type === undefined || value.type == "receive")) {
+                                        var tx_listitem = append_tx_li(txd, thislist);
+                                        if (tx_listitem) {
+                                            transactionlist.append(tx_listitem.data(txd));
+                                            counter++;
+                                        }
+                                    }
+                                });
+                                tx_count(statuspanel, counter);
+                                api_src(thislist, api_data);
+                                compareamounts(rd);
+                            }
+                        } else {
+                            tx_api_fail(thislist, statuspanel);
+                            handle_api_fails(rd, {
+                                "error": "No results found",
+                                "console": true
+                            }, api_name, payment);
+                        }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails(rd, {"error":"nano node offline","console":true}, api_name, payment);
+                        handle_api_fails(rd, {
+                            "error": "nano node offline",
+                            "console": true
+                        }, api_name, payment);
                     }).always(function() {
                         api_src(thislist, api_data);
                     });
@@ -415,27 +418,311 @@ function get_api_inputs(rd, api_data, api_name) {
                     }).done(function(e) {
                         var data = br_result(e).result;
                         if (data) {
-	                        if (data.error) {
-		                        tx_api_fail(thislist, statuspanel);
-								handle_api_fails(rd, data.error, api_name, payment);
-	                        }
-	                        else {
-		                        var txd = nano_scan_data(data, setconfirmations, ccsymbol, transactionhash);
-		                        if (txd.ccval) {
-		                            var tx_listitem = append_tx_li(txd, thislist);
-		                            if (tx_listitem) {
-		                                transactionlist.append(tx_listitem.data(txd));
-		                            }
-		                            tx_count(statuspanel, 1);
-		                            api_src(thislist, api_data);
-		                            compareamounts(rd);
-		                        }
-	                        }
-	                    }
-	                    else {
-		                    tx_api_fail(thislist, statuspanel);
-							handle_api_fails(rd, {"error":"No results found","console":true}, api_name, payment);
-	                    }
+                            if (data.error) {
+                                tx_api_fail(thislist, statuspanel);
+                                handle_api_fails(rd, data.error, api_name, payment);
+                            } else {
+                                var txd = nano_scan_data(data, setconfirmations, ccsymbol, transactionhash);
+                                if (txd.ccval) {
+                                    var tx_listitem = append_tx_li(txd, thislist);
+                                    if (tx_listitem) {
+                                        transactionlist.append(tx_listitem.data(txd));
+                                    }
+                                    tx_count(statuspanel, 1);
+                                    api_src(thislist, api_data);
+                                    compareamounts(rd);
+                                }
+                            }
+                        } else {
+                            tx_api_fail(thislist, statuspanel);
+                            handle_api_fails(rd, {
+                                "error": "No results found",
+                                "console": true
+                            }, api_name, payment);
+                        }
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        tx_api_fail(thislist, statuspanel);
+                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        handle_api_fails(rd, error_object, api_name, payment);
+                    }).always(function() {
+                        api_src(thislist, api_data);
+                    });
+                }
+            } else if (api_name == "bitcoin.com") {
+                var legacy = (ccsymbol == "bch") ? bchutils.toLegacyAddress(address) : address;
+                if (pending == "scanning") { // scan incoming transactions on address
+                    api_proxy({
+                        "api": api_name,
+                        "search": ccsymbol + "/v1/addrs/txs",
+                        "cachetime": 25,
+                        "cachefolder": "1h",
+                        "proxy": true,
+                        "params": {
+                            "method": "POST",
+                            "data": JSON.stringify({
+                                "addrs": address
+                            }),
+                        }
+                    }).done(function(e) {
+                        var data = br_result(e).result;
+                        if (data) {
+                            var items = data.items;
+                            if ($.isEmptyObject(items)) {} else {
+                                $.each(items, function(dat, value) {
+                                    if (value.txid) { // filter outgoing transactions
+                                        var txd = bitcoincom_scan_data(value, setconfirmations, ccsymbol, legacy, address);
+                                        if (txd.transactiontime > request_timestamp && txd.ccval) {
+                                            var tx_listitem = append_tx_li(txd, thislist);
+                                            if (tx_listitem) {
+                                                transactionlist.append(tx_listitem.data(txd));
+                                                counter++;
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        } else {
+                            tx_api_fail(thislist, statuspanel);
+                            handle_api_fails(rd, "unknown error", api_name, payment);
+                        }
+                        tx_count(statuspanel, counter);
+                        compareamounts(rd);
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        tx_api_fail(thislist, statuspanel);
+                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        handle_api_fails(rd, error_object, api_name, payment);
+                    }).always(function() {
+                        api_src(thislist, api_data);
+                    });
+                } else { // poll bitcoin.com transaction id
+                    api_proxy({
+                        "api": api_name,
+                        "search": ccsymbol + "/v1/tx/" + transactionhash,
+                        "cachetime": 25,
+                        "cachefolder": "1h",
+                        "params": {
+                            "method": "GET"
+                        }
+                    }).done(function(e) {
+                        var data = br_result(e).result;
+                        if (data) {
+                            var txd = bitcoincom_scan_data(data, setconfirmations, ccsymbol, legacy, address);
+                            if (txd) {
+                                if (txd.ccval !== undefined) {
+                                    var tx_listitem = append_tx_li(txd, thislist);
+                                    if (tx_listitem) {
+                                        transactionlist.append(tx_listitem.data(txd));
+                                    }
+                                    tx_count(statuspanel, 1);
+                                    compareamounts(rd);
+                                }
+                            }
+                        } else {
+                            tx_api_fail(thislist, statuspanel);
+                            handle_api_fails(rd, "unknown error", api_name, payment);
+                        }
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        tx_api_fail(thislist, statuspanel);
+                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        handle_api_fails(rd, error_object, api_name, payment);
+                    }).always(function() {
+                        api_src(thislist, api_data);
+                    });
+                }
+            } else {
+                if (pending == "scanning") { // scan incoming transactions on address
+                    api_proxy({
+                        "api": api_name,
+                        "search": scan_url,
+                        "cachetime": 25,
+                        "cachefolder": "1h",
+                        "params": {
+                            "method": "GET"
+                        }
+                    }).done(function(e) {
+                        var data = br_result(e).result;
+                        if (data) {
+                            if (data.error) {
+                                tx_api_fail(thislist, statuspanel);
+                                handle_api_fails(rd, data.error, api_name, payment);
+                            } else {
+                                if (api_name == "ethplorer") {
+                                    $.each(data.operations, function(dat, value) {
+                                        var txd = ethplorer_scan_data(value, setconfirmations, ccsymbol),
+                                            rt_compensate = (rd.inout == "local" && rd.status == "insufficient") ? request_timestamp - 30000 : request_timestamp; // substract extra 30 seconds (extra compensation)
+                                        if ((value.to.toUpperCase() == address.toUpperCase()) && (txd.transactiontime > rt_compensate) && txd.ccval) {
+                                            var tx_listitem = append_tx_li(txd, thislist);
+                                            if (tx_listitem) {
+                                                transactionlist.append(tx_listitem.data(txd));
+                                                counter++;
+                                            }
+                                        }
+                                    });
+                                    tx_count(statuspanel, counter);
+                                    compareamounts(rd);
+                                } else if (api_name == "blockcypher") {
+                                    if (payment == "ethereum") {
+                                        $.each(data.txrefs, function(dat, value) {
+                                            var txd = blockcypher_scan_data(value, setconfirmations, ccsymbol, payment);
+                                            if (txd.transactiontime > request_timestamp && txd.ccval) {
+                                                var tx_listitem = append_tx_li(txd, thislist);
+                                                if (tx_listitem) {
+                                                    transactionlist.append(tx_listitem.data(txd));
+                                                    counter++;
+                                                }
+                                            }
+                                        });
+                                    } else {
+                                        $.each(data.txrefs, function(dat, value) {
+                                            if (value.spent !== undefined) { // filter outgoing transactions
+                                                var txd = blockcypher_scan_data(value, setconfirmations, ccsymbol, payment);
+                                                if (txd.transactiontime > request_timestamp && txd.ccval) {
+                                                    var tx_listitem = append_tx_li(txd, thislist);
+                                                    if (tx_listitem) {
+                                                        transactionlist.append(tx_listitem.data(txd));
+                                                        counter++;
+                                                    }
+                                                }
+                                            }
+                                        });
+                                    }
+                                    tx_count(statuspanel, counter);
+                                    compareamounts(rd);
+                                } else if (api_name == "blockchair") {
+                                    var context = data.context;
+                                    if (context.error) {
+                                        tx_api_fail(thislist, statuspanel);
+                                        handle_api_fails(rd, context, api_name, payment);
+                                    } else {
+                                        var latestblock = context.state;
+                                        if (erc20 === true) {
+                                            $.each(data.data, function(dat, value) {
+                                                $.each(value.transactions, function(dt, val) {
+                                                    var txd = blockchair_erc20_scan_data(val, setconfirmations, ccsymbol, latestblock);
+                                                    if ((txd.transactiontime > request_timestamp) && (txd.recipient.toUpperCase() == address.toUpperCase()) && (txd.token_symbol.toUpperCase() == ccsymbol.toUpperCase()) && txd.ccval) {
+                                                        var tx_listitem = append_tx_li(txd, thislist);
+                                                        if (tx_listitem) {
+                                                            transactionlist.append(tx_listitem.data(txd));
+                                                            counter++;
+                                                        }
+                                                    }
+                                                });
+                                                return false;
+                                            });
+                                            tx_count(statuspanel, counter);
+                                            compareamounts(rd);
+                                        } else {
+                                            if (payment == "ethereum") {
+                                                $.each(data.data, function(dat, value) {
+                                                    $.each(value.calls, function(dt, val) {
+                                                        var txd = blockchair_eth_scan_data(val, setconfirmations, ccsymbol, latestblock);
+                                                        if (txd.transactiontime > request_timestamp && txd.recipient.toUpperCase() == address.toUpperCase() && txd.ccval) {
+                                                            var tx_listitem = append_tx_li(txd, thislist);
+                                                            if (tx_listitem) {
+                                                                transactionlist.append(tx_listitem.data(txd));
+                                                                counter++;
+                                                            }
+                                                        }
+                                                    });
+                                                    return false;
+                                                });
+                                                tx_count(statuspanel, counter);
+                                                compareamounts(rd);
+                                            } else {
+                                                var txarray = data.data[address].transactions; // get transactions
+                                                api_proxy({
+                                                    "api": api_name,
+                                                    "search": payment + "/dashboards/transactions/" + txarray.slice(0, 6), // get last 5 transactions
+                                                    "cachetime": 25,
+                                                    "cachefolder": "1h",
+                                                    "params": {
+                                                        "method": "GET"
+                                                    }
+                                                }).done(function(e) {
+                                                    var dat = br_result(e).result;
+                                                    $.each(dat.data, function(dt, val) {
+                                                        var txd = blockchair_scan_data(val, setconfirmations, ccsymbol, address, latestblock);
+                                                        if (txd.transactiontime > request_timestamp && txd.ccval) { // get all transactions after requestdate
+                                                            var tx_listitem = append_tx_li(txd, thislist);
+                                                            if (tx_listitem) {
+                                                                transactionlist.append(tx_listitem.data(txd));
+                                                                counter++;
+                                                            }
+                                                        }
+                                                    });
+                                                    statuspanel.attr("data-count", counter).text("+ " + counter);
+                                                    tx_count(statuspanel, counter);
+                                                    compareamounts(rd);
+                                                }).fail(function(jqXHR, textStatus, errorThrown) {
+                                                    tx_api_fail(thislist, statuspanel);
+                                                    var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                                    handle_api_fails(rd, error_object, api_name, payment);
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            tx_api_fail(thislist, statuspanel);
+                            handle_api_fails();
+                        }
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        tx_api_fail(thislist, statuspanel);
+                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        handle_api_fails(rd, error_object, api_name, payment);
+                    }).always(function() {
+                        api_src(thislist, api_data);
+                    });
+                } else { // poll transaction id
+                    api_proxy({
+                        "api": api_name,
+                        "search": poll_url,
+                        "cachetime": 25,
+                        "cachefolder": "1h",
+                        "params": {
+                            "method": "GET"
+                        }
+                    }).done(function(e) {
+                        var data = br_result(e).result;
+                        if (data) {
+                            var txd;
+                            if (api_name == "blockchair") {
+                                var context = data.context;
+                                if (context) {
+                                    if (context.error) {
+                                        tx_api_fail(thislist, statuspanel);
+                                        handle_api_fails(rd, context, api_name, payment);
+                                    } else {
+                                        var latestblock = context.state,
+                                            txd = (erc20 === true) ? blockchair_erc20_poll_data(data.data[transactionhash], setconfirmations, ccsymbol, latestblock) :
+                                            (payment == "ethereum") ? blockchair_eth_scan_data(data.data[transactionhash].calls[0], setconfirmations, ccsymbol, latestblock) :
+                                            blockchair_scan_data(data.data[transactionhash], setconfirmations, ccsymbol, address, latestblock);
+                                    }
+                                }
+                            } else {
+                                if (data.error) {
+                                    tx_api_fail(thislist, statuspanel);
+                                    handle_api_fails(rd, data.error, api_name, payment);
+                                } else {
+                                    var txd = (api_name == "ethplorer") ? ethplorer_poll_data(data, setconfirmations, ccsymbol) :
+                                        (api_name == "blockcypher") ? blockcypher_poll_data(data, setconfirmations, ccsymbol, address) : undefined;
+                                }
+                            }
+                            if (txd) {
+                                if (txd.ccval !== undefined) {
+                                    var tx_listitem = append_tx_li(txd, thislist);
+                                    if (tx_listitem) {
+                                        transactionlist.append(tx_listitem.data(txd));
+                                    }
+                                    tx_count(statuspanel, 1);
+                                    compareamounts(rd);
+                                }
+                            }
+                        } else {
+                            tx_api_fail(thislist, statuspanel);
+                            handle_api_fails();
+                        }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -445,315 +732,26 @@ function get_api_inputs(rd, api_data, api_name) {
                     });
                 }
             }
-			else if (api_name == "bitcoin.com") {
-	            var legacy = (ccsymbol == "bch") ? bchutils.toLegacyAddress(address) : address;
-                if (pending == "scanning") { // scan incoming transactions on address
-	                api_proxy({
-                        "api": api_name,
-                        "search": ccsymbol + "/v1/addrs/txs",
-                        "cachetime": 25,
-                        "cachefolder": "1h",
-                        "proxy": true,
-                        "params": {
-                            "method": "POST",
-                            "data": JSON.stringify({"addrs": address}),
-                        }
-                    }).done(function(e) {
-	                    var data = br_result(e).result;
-	                    if (data) {
-		                    var items = data.items;
-		                    if ($.isEmptyObject(items)) {
-	                        }
-	                        else {
-			                    $.each(items, function(dat, value) {
-	                                if (value.txid) { // filter outgoing transactions
-	                                    var txd = bitcoincom_scan_data(value, setconfirmations, ccsymbol, legacy, address);
-	                                    if (txd.transactiontime > request_timestamp && txd.ccval) {
-	                                        var tx_listitem = append_tx_li(txd, thislist);
-	                                        if (tx_listitem) {
-	                                            transactionlist.append(tx_listitem.data(txd));
-	                                            counter++;
-	                                        }
-	                                    }
-	                                }
-	                            });
-	                        }
-                        } else {
-	                    	tx_api_fail(thislist, statuspanel);
-                            handle_api_fails(rd, "unknown error", api_name, payment);
-                        }
-                        tx_count(statuspanel, counter);
-                        compareamounts(rd);
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                       tx_api_fail(thislist, statuspanel);
-                        var error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails(rd, error_object, api_name, payment);    
-                    }).always(function() {
-                        api_src(thislist, api_data);
-                    });
-                }
-                else {  // poll bitcoin.com transaction id
-		            api_proxy({
-	                    "api": api_name,
-	                    "search": ccsymbol + "/v1/tx/" + transactionhash,
-	                    "cachetime": 25,
-	                    "cachefolder": "1h",
-	                    "params": {
-	                        "method": "GET"
-	                    }
-	                }).done(function(e) {
-	                    var data = br_result(e).result;
-	                    if (data) {
-		                    var txd = bitcoincom_scan_data(data, setconfirmations, ccsymbol, legacy, address);
-		                    if (txd) {
-		                        if (txd.ccval !== undefined) {
-	                                var tx_listitem = append_tx_li(txd, thislist);
-	                                if (tx_listitem) {
-	                                    transactionlist.append(tx_listitem.data(txd));
-	                                }
-	                                tx_count(statuspanel, 1);
-	                                compareamounts(rd);
-	                            }
-	                        }
-	                    }
-	                    else {
-	                    	tx_api_fail(thislist, statuspanel);
-                            handle_api_fails(rd, "unknown error", api_name, payment);
-                        }  
-	                }).fail(function(jqXHR, textStatus, errorThrown) {
-	                    tx_api_fail(thislist, statuspanel);
-	                    var error_object = (errorThrown) ? errorThrown : jqXHR;
-	                    handle_api_fails(rd, error_object, api_name, payment);
-	                }).always(function() {
-	                    api_src(thislist, api_data);
-	                });   	
-                }
-            }
-	        else {
-		        if (pending == "scanning") { // scan incoming transactions on address
-		            api_proxy({
-	                    "api": api_name,
-	                    "search": scan_url,
-	                    "cachetime": 25,
-	                    "cachefolder": "1h",
-	                    "params": {
-	                        "method": "GET"
-	                    }
-	                }).done(function(e) {
-	                    var data = br_result(e).result;
-	                    if (data) {
-	                        if (data.error) {
-	                            tx_api_fail(thislist, statuspanel);
-	                            handle_api_fails(rd, data.error, api_name, payment);
-	                        } else {
-	                            if (api_name == "ethplorer") {
-	                                $.each(data.operations, function(dat, value) {
-	                                    var txd = ethplorer_scan_data(value, setconfirmations, ccsymbol),
-	                                    	rt_compensate = (rd.inout == "local" && rd.status == "insufficient") ? request_timestamp - 30000 : request_timestamp; // substract extra 30 seconds (extra compensation)
-	                                    if ((value.to.toUpperCase() == address.toUpperCase()) && (txd.transactiontime > rt_compensate) && txd.ccval) {
-	                                        var tx_listitem = append_tx_li(txd, thislist);
-	                                        if (tx_listitem) {
-	                                            transactionlist.append(tx_listitem.data(txd));
-	                                            counter++;
-	                                        }
-	                                    }
-	                                });
-	                                tx_count(statuspanel, counter);
-	                                compareamounts(rd);
-	                            } else if (api_name == "blockcypher") {
-	                                if (payment == "ethereum") {
-	                                    $.each(data.txrefs, function(dat, value) {
-	                                        var txd = blockcypher_scan_data(value, setconfirmations, ccsymbol, payment);
-	                                        if (txd.transactiontime > request_timestamp && txd.ccval) {
-	                                            var tx_listitem = append_tx_li(txd, thislist);
-	                                            if (tx_listitem) {
-	                                                transactionlist.append(tx_listitem.data(txd));
-	                                                counter++;
-	                                            }
-	                                        }
-	                                    });
-	                                } else {
-	                                    $.each(data.txrefs, function(dat, value) {
-	                                        if (value.spent !== undefined) { // filter outgoing transactions
-	                                            var txd = blockcypher_scan_data(value, setconfirmations, ccsymbol, payment);
-	                                            if (txd.transactiontime > request_timestamp && txd.ccval) {
-	                                                var tx_listitem = append_tx_li(txd, thislist);
-	                                                if (tx_listitem) {
-	                                                    transactionlist.append(tx_listitem.data(txd));
-	                                                    counter++;
-	                                                }
-	                                            }
-	                                        }
-	                                    });
-	                                }
-	                                tx_count(statuspanel, counter);
-	                                compareamounts(rd);
-	                            } else if (api_name == "blockchair") {
-	                                var context = data.context;
-	                                if (context.error) {
-	                                    tx_api_fail(thislist, statuspanel);
-	                                    handle_api_fails(rd, context, api_name, payment);
-	                                } else {
-	                                    var latestblock = context.state;
-	                                    if (erc20 === true) {
-	                                        $.each(data.data, function(dat, value) {
-	                                            $.each(value.transactions, function(dt, val) {
-	                                                var txd = blockchair_erc20_scan_data(val, setconfirmations, ccsymbol, latestblock);
-	                                                if ((txd.transactiontime > request_timestamp) && (txd.recipient.toUpperCase() == address.toUpperCase()) && (txd.token_symbol.toUpperCase() == ccsymbol.toUpperCase()) && txd.ccval) {
-	                                                    var tx_listitem = append_tx_li(txd, thislist);
-	                                                    if (tx_listitem) {
-	                                                        transactionlist.append(tx_listitem.data(txd));
-	                                                        counter++;
-	                                                    }
-	                                                }
-	                                            });
-	                                            return false;
-	                                        });
-	                                        tx_count(statuspanel, counter);
-	                                        compareamounts(rd);
-	                                    } else {
-	                                        if (payment == "ethereum") {
-	                                            $.each(data.data, function(dat, value) {
-	                                                $.each(value.calls, function(dt, val) {
-	                                                    var txd = blockchair_eth_scan_data(val, setconfirmations, ccsymbol, latestblock);
-	                                                    if (txd.transactiontime > request_timestamp && txd.recipient.toUpperCase() == address.toUpperCase() && txd.ccval) {
-	                                                        var tx_listitem = append_tx_li(txd, thislist);
-	                                                        if (tx_listitem) {
-	                                                            transactionlist.append(tx_listitem.data(txd));
-	                                                            counter++;
-	                                                        }
-	                                                    }
-	                                                });
-	                                                return false;
-	                                            });
-	                                            tx_count(statuspanel, counter);
-	                                            compareamounts(rd);
-	                                        } else {
-	                                            var txarray = data.data[address].transactions; // get transactions
-	                                            api_proxy({
-	                                                "api": api_name,
-	                                                "search": payment + "/dashboards/transactions/" + txarray.slice(0, 6), // get last 5 transactions
-	                                                "cachetime": 25,
-	                                                "cachefolder": "1h",
-	                                                "params": {
-	                                                    "method": "GET"
-	                                                }
-	                                            }).done(function(e) {
-	                                                var dat = br_result(e).result;
-	                                                $.each(dat.data, function(dt, val) {
-	                                                    var txd = blockchair_scan_data(val, setconfirmations, ccsymbol, address, latestblock);
-	                                                    if (txd.transactiontime > request_timestamp && txd.ccval) { // get all transactions after requestdate
-	                                                        var tx_listitem = append_tx_li(txd, thislist);
-	                                                        if (tx_listitem) {
-	                                                            transactionlist.append(tx_listitem.data(txd));
-	                                                            counter++;
-	                                                        }
-	                                                    }
-	                                                });
-	                                                statuspanel.attr("data-count", counter).text("+ " + counter);
-	                                                tx_count(statuspanel, counter);
-	                                                compareamounts(rd);
-	                                            }).fail(function(jqXHR, textStatus, errorThrown) {
-	                                                tx_api_fail(thislist, statuspanel);
-	                                                var error_object = (errorThrown) ? errorThrown : jqXHR;
-	                                                handle_api_fails(rd, error_object, api_name, payment);
-	                                            });
-	                                        }
-	                                    }
-	                                }
-	                            }
-	                        }
-	                    } else {
-	                        tx_api_fail(thislist, statuspanel);
-	                        handle_api_fails();
-	                    }
-	                }).fail(function(jqXHR, textStatus, errorThrown) {
-	                    tx_api_fail(thislist, statuspanel);
-	                    var error_object = (errorThrown) ? errorThrown : jqXHR;
-	                    handle_api_fails(rd, error_object, api_name, payment);
-	                }).always(function() {
-	                    api_src(thislist, api_data);
-	                });
-	            } else { // poll transaction id
-		            api_proxy({
-	                    "api": api_name,
-	                    "search": poll_url,
-	                    "cachetime": 25,
-	                    "cachefolder": "1h",
-	                    "params": {
-	                        "method": "GET"
-	                    }
-	                }).done(function(e) {
-	                    var data = br_result(e).result;
-	                    if (data) {
-	                        var txd;
-	                        if (api_name == "blockchair") {
-	                            var context = data.context;
-	                            if (context) {
-		                            if (context.error) {
-		                                tx_api_fail(thislist, statuspanel);
-		                                handle_api_fails(rd, context, api_name, payment);
-		                            } else {
-		                                var latestblock = context.state,
-		                                	txd = (erc20 === true) ? blockchair_erc20_poll_data(data.data[transactionhash], setconfirmations, ccsymbol, latestblock) :
-		                                    (payment == "ethereum") ? blockchair_eth_scan_data(data.data[transactionhash].calls[0], setconfirmations, ccsymbol, latestblock) :
-		                                    blockchair_scan_data(data.data[transactionhash], setconfirmations, ccsymbol, address, latestblock);
-		                            }
-	                            }
-	                        } else {
-	                            if (data.error) {
-	                                tx_api_fail(thislist, statuspanel);
-	                                handle_api_fails(rd, data.error, api_name, payment);
-	                            } else {
-	                                var txd = (api_name == "ethplorer") ? ethplorer_poll_data(data, setconfirmations, ccsymbol) :
-	                                    (api_name == "blockcypher") ? blockcypher_poll_data(data, setconfirmations, ccsymbol, address) : undefined;
-	                            }
-	                        }
-	                        if (txd) {
-		                        if (txd.ccval !== undefined) {
-	                                var tx_listitem = append_tx_li(txd, thislist);
-	                                if (tx_listitem) {
-	                                    transactionlist.append(tx_listitem.data(txd));
-	                                }
-	                                tx_count(statuspanel, 1);
-	                                compareamounts(rd);
-	                            }
-	                        }
-	                    } else {
-	                        tx_api_fail(thislist, statuspanel);
-	                        handle_api_fails();
-	                    }
-	                }).fail(function(jqXHR, textStatus, errorThrown) {
-	                    tx_api_fail(thislist, statuspanel);
-	                    var error_object = (errorThrown) ? errorThrown : jqXHR;
-	                    handle_api_fails(rd, error_object, api_name, payment);
-	                }).always(function() {
-	                    api_src(thislist, api_data);
-	                });
-	            }
-	        }
         }
     }
     return false;
 }
 
 function match_xmr_pid(xmria, xmrpid, xmr_pid) {
-	if (xmria) {
-		if (xmrpid) {
-			if (xmr_pid) {
-				if (xmrpid == xmr_pid) {
-					return true;
-				}
-				else {
-					return false;
-				}
-			}
-			else {
-				return false;
-			}
-		}
-	}
-	return true;
+    if (xmria) {
+        if (xmrpid) {
+            if (xmr_pid) {
+                if (xmrpid == xmr_pid) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 // API error handling
@@ -765,7 +763,7 @@ function fail_dialogs(apisrc, error) {
 }
 
 function handle_api_fails(rd, error, api_name, thispayment, txid) {
-	var monitor = (txid !== undefined),
+    var monitor = (txid !== undefined),
         error_data = get_api_error_data(error),
         key_fail = error_data.apikey;
     if (key_fail === true) { // show alert when apikey is missing
@@ -773,8 +771,8 @@ function handle_api_fails(rd, error, api_name, thispayment, txid) {
         api_callback(rd.requestid, true);
         return false;
     } else {
-	    var nextapi = get_next_api(thispayment, api_name, rd.pending);
-	    if (nextapi === false) { // only one api
+        var nextapi = get_next_api(thispayment, api_name, rd.pending);
+        if (nextapi === false) { // only one api
             api_eror_msg(api_name, error_data, key_fail, monitor);
             api_callback(rd.requestid, true);
             return false;
@@ -819,11 +817,11 @@ function get_api_error_data(error) {
 }
 
 function get_next_api(this_payment, this_api_name, pending) {
-	var apilist = $.grep(getcoinsettings(this_payment).apis.apis, function(obj) { // filter out rpc's
+    var apilist = $.grep(getcoinsettings(this_payment).apis.apis, function(obj) { // filter out rpc's
         return obj.api === true;
     });
     var this_index = apilist.findIndex(option => option.name == this_api_name),
-		next_scan = apilist[this_index + 1],
+        next_scan = apilist[this_index + 1],
         next_api = (next_scan) ? next_scan : apilist[0];
     if (api_attempts[pending + next_api.name] === true) {
         return false;
@@ -851,8 +849,8 @@ function api_callback(requestid, nocache) {
                     thisdata = thisnode.data(),
                     historic = thisdata.historic,
                     confirmations = thisdata.confirmations,
-					setconfirmations = thisdata.setconfirmations,
-					confirmed = (confirmations && confirmations >= setconfirmations);
+                    setconfirmations = thisdata.setconfirmations,
+                    confirmed = (confirmations && confirmations >= setconfirmations);
                 transactionpush.push(thisdata);
                 if (!historic || $.isEmptyObject(historic)) {} else {
                     var h_string = historic_data_title(thisdata.ccsymbol, thisdata.ccval, historic, setconfirmations, confirmations, false);
@@ -911,8 +909,8 @@ function get_rpc_inputs(rd, rpc_data) {
             request_timestamp = requestdate - 30000, // 30 seconds compensation for unexpected results
             ccsymbol = rd.currencysymbol,
             getconfirmations = rd.set_confirmations
-            getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
-			setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
+        getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
+            setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
             statuspanel = thislist.find(".pmetastatus"),
             transactionlist = thislist.find("ul.transactionlist"),
             transactionhash = rd.txhash,
@@ -928,7 +926,7 @@ function get_rpc_inputs(rd, rpc_data) {
             api_callback(rd.requestid, true);
         } else if (pending == "scanning" || pending == "polling") {
             transactionlist.html("");
-			if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin") {
+            if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin") {
                 if (pending == "scanning") { // scan incoming transactions on address
                     handle_rpc_fails(rd, false, payment, rpc_data); // use api because rpc does not scan external addresses unfortunately
                 } else {
@@ -1159,9 +1157,9 @@ function handle_rpc_fails(rd, error, thispayment, rpc_data) {
 
 function get_next_rpc(this_payment, this_rpc_url) {
     var rpc_settings_li = $("#" + this_payment + "_settings .cc_settinglist li[data-id='apis']");
-	if (rpc_settings_li) {
-	    var optionlist = getcoinsettings(this_payment).
-        	rpc_settings = rpc_settings_li.data(),
+    if (rpc_settings_li) {
+        var optionlist = getcoinsettings(this_payment).
+        rpc_settings = rpc_settings_li.data(),
             rpclist = rpc_settings.options;
         if (rpclist) {
             if ($.isEmptyObject(rpclist)) {
@@ -1209,8 +1207,8 @@ function rpc_eror_msg(apisrc, error, monitor) {
         errormessage = error_dat.errormessage,
         errorcode = error_dat.errorcode;
     if (error.console) {
-	    console.log(error);
-	    return false;
+        console.log(error);
+        return false;
     }
     if ($("#dialogbody .doselect").length) {
         return false;
@@ -1227,7 +1225,7 @@ function rpc_eror_msg(apisrc, error, monitor) {
 }
 
 function append_tx_li(txd, this_request) {
-	var txhash = txd.txhash;
+    var txhash = txd.txhash;
     if (txhash) {
         var ccval = txd.ccval,
             ccval_rounded = trimdecimals(ccval, 5),
@@ -1253,12 +1251,12 @@ function append_tx_li(txd, this_request) {
         if (this_request === false) {
             return tx_listitem;
         } else {
-	        var tx_dat = this_request.data();
-	        if (tx_dat.xmr_ia) { // xmr integrated adddresses are unique
-		        return tx_listitem;
-	        }
+            var tx_dat = this_request.data();
+            if (tx_dat.xmr_ia) { // xmr integrated adddresses are unique
+                return tx_listitem;
+            }
             var tx_index = tx_dat.tx_index,
-           		tx_indexed = ($.inArray(txhash, tx_index) !== -1),
+                tx_indexed = ($.inArray(txhash, tx_index) !== -1),
                 on_tx_list = ($.inArray(txhash, tx_list) !== -1),
                 requesttype = tx_dat.requesttype;
             if (on_tx_list === true || tx_indexed === true) { // check for indexed transaction id's
@@ -1271,9 +1269,8 @@ function append_tx_li(txd, this_request) {
                 }
                 if (requesttype == "outgoing") {
                     return null;
-                }
-                else {
-	                return tx_listitem;
+                } else {
+                    return tx_listitem;
                 }
             } else {
                 if (on_tx_list === false) {
@@ -1308,7 +1305,7 @@ function historic_data_title(ccsymbol, ccval, historic, setconfirmations, confir
 }
 
 function compareamounts(rd) {
-	var thisrequestid = rd.requestid,
+    var thisrequestid = rd.requestid,
         thisamount = rd.amount,
         iscrypto = rd.iscrypto,
         thispayment = rd.payment,
@@ -1408,68 +1405,67 @@ function compareamounts(rd) {
 // get historic crypto rates
 
 function get_historical_fiat_data(rd, apilist, fiatapi) {
-	api_attempt[apilist][fiatapi] = true;
+    api_attempt[apilist][fiatapi] = true;
     var thisrequestid = rd.requestid,
-    	fiatcurrency = rd.fiatcurrency;
-	if (fiatcurrency) {
-	    var lcsymbol = fiatcurrency.toUpperCase(),
-	        payload = get_historic_fiatprice_api_payload(fiatapi, lcsymbol, rd.latestinput);
-	    api_proxy({
-	        "api": fiatapi,
-	        "search": payload,
-	        "cachetime": 86400,
-	        "cachefolder": "1d",
-	        "params": {
-	            "method": "GET"
-	        }
-	    }).done(function(e) {
-	        var data = br_result(e).result;
-	        var error = data.error;
-	        if (error) {
-	            fail_dialogs(fiatapi, error);
-	            api_callback(thisrequestid);
-	        } else {
-	            var usdrate,
-	                lcrate,
-	                get_lcrate;
-	            if (fiatapi == "currencylayer") {
-	                var rates = data.quotes,
-	                    usdrate = 1 / rates["USDEUR"],
-	                    get_lcrate = rates["USD" + lcsymbol] * usdrate;
-	            } else {
-	                var rates = data.rates,
-	                    usdrate = rates["USD"],
-	                    get_lcrate = rates[lcsymbol];
-	            }
-	            var lcrate = (lcsymbol == "EUR") ? 1 : get_lcrate;
-	            if (lcrate === undefined || usdrate === undefined) {
-	                var next_historic = try_next_api(apilist, fiatapi);
-	                if (next_historic === false) {
-	                    fail_dialogs(fiatapi, "unable to fetch " + lcsymbol + " exchange rate");
-	                    api_callback(thisrequestid);
-	                } else {
-	                    get_historical_fiat_data(rd, apilist, next_historic);
-	                }
-	            } else {
-	                var historic_api = $("#cmcapisettings").data("selected"),
-	                    picked_historic_api = (historic_api == "coinmarketcap") ? "coingecko" : historic_api; // default to "coingecko api"
-	                api_attempt["historic_crypto_price_apis"] = {};
-	                get_historical_crypto_data(rd, fiatapi, "historic_crypto_price_apis", picked_historic_api, lcrate, usdrate, lcsymbol);
-	            }
-	        }
-	    }).fail(function(jqXHR, textStatus, errorThrown) {
-	        var next_historic = try_next_api(apilist, fiatapi);
-	        if (next_historic === false) {
-	            var error_object = (errorThrown) ? errorThrown : jqXHR;
-	            fail_dialogs(fiatapi, error_object);
-	            api_callback(thisrequestid);
-	        } else {
-	            get_historical_fiat_data(rd, apilist, next_historic);
-	        }
-	    });
-    }
-    else {
-	    api_callback(thisrequestid);
+        fiatcurrency = rd.fiatcurrency;
+    if (fiatcurrency) {
+        var lcsymbol = fiatcurrency.toUpperCase(),
+            payload = get_historic_fiatprice_api_payload(fiatapi, lcsymbol, rd.latestinput);
+        api_proxy({
+            "api": fiatapi,
+            "search": payload,
+            "cachetime": 86400,
+            "cachefolder": "1d",
+            "params": {
+                "method": "GET"
+            }
+        }).done(function(e) {
+            var data = br_result(e).result;
+            var error = data.error;
+            if (error) {
+                fail_dialogs(fiatapi, error);
+                api_callback(thisrequestid);
+            } else {
+                var usdrate,
+                    lcrate,
+                    get_lcrate;
+                if (fiatapi == "currencylayer") {
+                    var rates = data.quotes,
+                        usdrate = 1 / rates["USDEUR"],
+                        get_lcrate = rates["USD" + lcsymbol] * usdrate;
+                } else {
+                    var rates = data.rates,
+                        usdrate = rates["USD"],
+                        get_lcrate = rates[lcsymbol];
+                }
+                var lcrate = (lcsymbol == "EUR") ? 1 : get_lcrate;
+                if (lcrate === undefined || usdrate === undefined) {
+                    var next_historic = try_next_api(apilist, fiatapi);
+                    if (next_historic === false) {
+                        fail_dialogs(fiatapi, "unable to fetch " + lcsymbol + " exchange rate");
+                        api_callback(thisrequestid);
+                    } else {
+                        get_historical_fiat_data(rd, apilist, next_historic);
+                    }
+                } else {
+                    var historic_api = $("#cmcapisettings").data("selected"),
+                        picked_historic_api = (historic_api == "coinmarketcap") ? "coingecko" : historic_api; // default to "coingecko api"
+                    api_attempt["historic_crypto_price_apis"] = {};
+                    get_historical_crypto_data(rd, fiatapi, "historic_crypto_price_apis", picked_historic_api, lcrate, usdrate, lcsymbol);
+                }
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            var next_historic = try_next_api(apilist, fiatapi);
+            if (next_historic === false) {
+                var error_object = (errorThrown) ? errorThrown : jqXHR;
+                fail_dialogs(fiatapi, error_object);
+                api_callback(thisrequestid);
+            } else {
+                get_historical_fiat_data(rd, apilist, next_historic);
+            }
+        });
+    } else {
+        api_callback(thisrequestid);
     }
 }
 
@@ -1517,7 +1513,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 thisamount = rd.amount,
                 getconfirmations = rd.set_confirmations,
                 getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
-				setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
+                setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
                 pending = rd.pending,
                 iserc20 = rd.erc20,
                 requestli = $("#" + thisrequestid),
@@ -1576,7 +1572,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 }
             } else {
                 status = "insufficient",
-                pending = "scanning";
+                    pending = "scanning";
             }
             updaterequest({
                 "requestid": thisrequestid,

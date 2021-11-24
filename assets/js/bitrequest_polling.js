@@ -29,7 +29,7 @@ function api_monitor_init(api_data, txhash, tx_data) {
 }
 
 function api_monitor(api_data, txhash, tx_data) {
-	var direct = (tx_data !== undefined),
+    var direct = (tx_data !== undefined),
         payment = request.payment,
         api_name = api_data.name,
         currencysymbol = request.currencysymbol,
@@ -44,19 +44,17 @@ function api_monitor(api_data, txhash, tx_data) {
         if (direct === true) {
             confirmations(tx_data, true);
             var xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
-            	setconfirmations = tx_data.setconfirmations,
-				zero_conf = (xconf === false || setconfirmations == 0 || setconfirmations == "undefined" || setconfirmations === undefined);
-			if (zero_conf) {
-			}
-			else {
-				pingtx = setInterval(function() {
-	                api_proxy(ampl(api_name, poll_url)).done(function(e) {
-	                    api_result(br_result(e));
-	                }).fail(function(jqXHR, textStatus, errorThrown) {
-	                    api_error(jqXHR, textStatus, errorThrown);
-	                });
-	            }, 25000);
-			}
+                setconfirmations = tx_data.setconfirmations,
+                zero_conf = (xconf === false || setconfirmations == 0 || setconfirmations == "undefined" || setconfirmations === undefined);
+            if (zero_conf) {} else {
+                pingtx = setInterval(function() {
+                    api_proxy(ampl(api_name, poll_url)).done(function(e) {
+                        api_result(br_result(e));
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        api_error(jqXHR, textStatus, errorThrown);
+                    });
+                }, 25000);
+            }
         } else {
             api_proxy(ampl(api_name, poll_url)).done(function(e) {
                 api_result(br_result(e));
@@ -80,8 +78,8 @@ function api_monitor(api_data, txhash, tx_data) {
                 return false;
             } else {
                 var currentaddress = geturlparameters().address,
-                	legacy = (currencysymbol == "bch") ? bchutils.toLegacyAddress(currentaddress) : currentaddress;
-                    txd = (api_name == "blockcypher") ? blockcypher_poll_data(data, set_confirmations, currencysymbol, currentaddress) :
+                    legacy = (currencysymbol == "bch") ? bchutils.toLegacyAddress(currentaddress) : currentaddress;
+                txd = (api_name == "blockcypher") ? blockcypher_poll_data(data, set_confirmations, currencysymbol, currentaddress) :
                     (api_name == "ethplorer") ? ethplorer_poll_data(data, set_confirmations, currencysymbol) :
                     (api_name == "bitcoin.com") ? bitcoincom_scan_data(data, set_confirmations, currencysymbol, legacy, currentaddress) :
                     (api_name == "blockchair") ? (request.erc20 === true) ? blockchair_erc20_poll_data(data.data[txhash], set_confirmations, currencysymbol, data.context.state) :
@@ -351,13 +349,13 @@ function handle_rpc_monitor_fails(rpcdata, error, txhash) {
 }
 
 function confirmations(tx_data, direct) {
-	closeloader();
-	clearTimeout(request_timer);
-	if (tx_data === false || tx_data.ccval === undefined) {
+    closeloader();
+    clearTimeout(request_timer);
+    if (tx_data === false || tx_data.ccval === undefined) {
         return false;
     }
     var pmd = $("#paymentdialogbox"),
-    	brstatuspanel = pmd.find(".brstatuspanel"),
+        brstatuspanel = pmd.find(".brstatuspanel"),
         setconfirmations = (tx_data.setconfirmations) ? parseInt(tx_data.setconfirmations) : null,
         conf_text = (setconfirmations) ? setconfirmations.toString() : "",
         confbox = brstatuspanel.find("span.confbox"),
@@ -368,17 +366,17 @@ function confirmations(tx_data, direct) {
         zero_conf = (xconf === false || setconfirmations == 0 || setconfirmations == "undefined" || setconfirmations === undefined);
     brstatuspanel.find("span#confnumber").text(conf_text);
     if (xconf > currentconf || zero_conf === true || direct === true) {
-	    reset_recent();
-	    sessionStorage.removeItem("bitrequest_txstatus"); // remove cached historical exchange rates
+        reset_recent();
+        sessionStorage.removeItem("bitrequest_txstatus"); // remove cached historical exchange rates
         confbox.removeClass("blob");
         setTimeout(function() {
             confbox.addClass("blob");
             confboxspan.text(xconf).attr("data-conf", xconf);
         }, 500);
         var ow = pmd.find("#open_wallet"),
-        	cc_raw = ow.attr("data-rel"),
-			cc_rawf = parseFloat(cc_raw),
-        	brheader = brstatuspanel.find("h2"),
+            cc_raw = ow.attr("data-rel"),
+            cc_rawf = parseFloat(cc_raw),
+            brheader = brstatuspanel.find("h2"),
             receivedutc = tx_data.transactiontime,
             receivedtime = receivedutc - timezone,
             receivedcc = tx_data.ccval,
@@ -393,7 +391,7 @@ function confirmations(tx_data, direct) {
             receivedrounded = (iscrypto === true) ? receivedcc : fiatrounded;
         // extend global request object
         $.extend(request, {
-	        "received": true,
+            "received": true,
             "inout": requesttype,
             "receivedamount": rccf,
             "fiatvalue": fiatvalue,
@@ -404,65 +402,61 @@ function confirmations(tx_data, direct) {
         brstatuspanel.find("span.receivedfiat").text(" (" + receivedrounded + " " + thiscurrency + ")");
         brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), language));
         var exact = helper.exact,
-        	xmr_pass = (payment == "monero") ? (rccf > cc_rawf * 0.97 && rccf < cc_rawf * 1.03) : true; // error margin for xmr integrated addresses
+            xmr_pass = (payment == "monero") ? (rccf > cc_rawf * 0.97 && rccf < cc_rawf * 1.03) : true; // error margin for xmr integrated addresses
         if (xmr_pass) {
-	        var pass = (exact) ? (rccf == cc_rawf) : (rccf >= cc_rawf * 0.99);
-	        if (pass) {
-		        if (xconf >= setconfirmations || zero_conf === true) {
-	                clearpingtx();
-	                closesocket();
-	                if (payment == "dogecoin") {
-		                playsound(howl);
-	                }
-	                else {
-		                playsound(cashier);
-	                }
-	                paymentdialogbox.addClass("transacting").attr("data-status", "paid");
-	                brheader.text("Payment received");
-	                request.status = "paid",
-	                    request.pending = "polling";
-	                saverequest(direct);
-	                $("span#ibstatus").fadeOut(500);
-	            } else {
-	                playsound(blip);
-	                paymentdialogbox.addClass("transacting").attr("data-status", "pending");
-	                brheader.text("Transaction broadcasted");
-	                request.status = "pending",
-	                    request.pending = "polling";
-	                saverequest(direct);
-	            }
-	            brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
-	        } else {
-		        if (exact) {    
-		        }
-		        else {
-			        brheader.text("Insufficient amount");
-		            paymentdialogbox.addClass("transacting").attr("data-status", "insufficient");
-		            request.status = "insufficient",
-		                request.pending = "scanning";
-		            saverequest(direct);
-		            brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
-		        }
-	            playsound(funk);
-	        }
+            var pass = (exact) ? (rccf == cc_rawf) : (rccf >= cc_rawf * 0.99);
+            if (pass) {
+                if (xconf >= setconfirmations || zero_conf === true) {
+                    clearpingtx();
+                    closesocket();
+                    if (payment == "dogecoin") {
+                        playsound(howl);
+                    } else {
+                        playsound(cashier);
+                    }
+                    paymentdialogbox.addClass("transacting").attr("data-status", "paid");
+                    brheader.text("Payment received");
+                    request.status = "paid",
+                        request.pending = "polling";
+                    saverequest(direct);
+                    $("span#ibstatus").fadeOut(500);
+                } else {
+                    playsound(blip);
+                    paymentdialogbox.addClass("transacting").attr("data-status", "pending");
+                    brheader.text("Transaction broadcasted");
+                    request.status = "pending",
+                        request.pending = "polling";
+                    saverequest(direct);
+                }
+                brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
+            } else {
+                if (exact) {} else {
+                    brheader.text("Insufficient amount");
+                    paymentdialogbox.addClass("transacting").attr("data-status", "insufficient");
+                    request.status = "insufficient",
+                        request.pending = "scanning";
+                    saverequest(direct);
+                    brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
+                }
+                playsound(funk);
+            }
         }
-    }
-    else {
-	    playsound(blip);
+    } else {
+        playsound(blip);
     }
 }
 
 function reset_recent() {
-	if (request) {
-		var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
-		if (ls_recentrequests) {
-			var lsrr_arr = JSON.parse(ls_recentrequests);
-			delete lsrr_arr[request.payment];
-			localStorage.setItem("bitrequest_recent_requests", JSON.stringify(lsrr_arr));
-			if ($.isEmptyObject(lsrr_arr)) {
-	            toggle_rr(false);
-	        }
-		}
-	}
-	canceldialog();
+    if (request) {
+        var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
+        if (ls_recentrequests) {
+            var lsrr_arr = JSON.parse(ls_recentrequests);
+            delete lsrr_arr[request.payment];
+            localStorage.setItem("bitrequest_recent_requests", JSON.stringify(lsrr_arr));
+            if ($.isEmptyObject(lsrr_arr)) {
+                toggle_rr(false);
+            }
+        }
+    }
+    canceldialog();
 }

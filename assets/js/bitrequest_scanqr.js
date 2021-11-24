@@ -15,11 +15,11 @@ $(document).ready(function() {
 });
 
 function init_scan() {
-	if (inframe === true) {
-		hascam = false;
+    if (inframe === true) {
+        hascam = false;
         return false;
     } else {
-    	QrScanner.hasCamera().then(hasCamera => detect_cam(hasCamera));
+        QrScanner.hasCamera().then(hasCamera => detect_cam(hasCamera));
     }
 }
 
@@ -30,7 +30,7 @@ function detect_cam(result) {
 function start_scan(currency, type) {
     scanner.start().then(() => {
         currencyscan = currency,
-        scantype = type;
+            scantype = type;
         var currentpage = geturlparameters().p,
             currentpage_correct = (currentpage) ? "?p=" + currentpage + "&scan=" : "?scan=",
             url = currentpage_correct + currency,
@@ -51,8 +51,8 @@ function cam_trigger() {
         loader(true);
         loadertext("Loading camera");
         var thisqr = $(this),
-        	currency = thisqr.attr("data-currency"),
-        	type = thisqr.attr("data-id");
+            currency = thisqr.attr("data-currency"),
+            type = thisqr.attr("data-id");
         start_scan(currency, type);
     });
 }
@@ -80,44 +80,42 @@ function close_cam() {
 function setResult(result) {
     scanner.stop();
     var payment = currencyscan,
-    	thistype = scantype;
+        thistype = scantype;
     if (thistype == "address") {
-	    var prefix = payment + ":",
-	        mid_result = (result.indexOf(prefix) >= 0) ? result.split(prefix).pop() : result,
-	        end_result = (result.indexOf("?") >= 0) ? mid_result.split("?")[0] : mid_result,
-	        isxpub = (end_result.length > 103),
-	        validate = (isxpub) ? check_xpub(end_result, xpub_prefix(payment), payment) :
-	        check_address(end_result, payment);
-	    clear_xpub_inputs();
-	    if (validate === true) {
-	        $("#popup .formbox input.address").val(end_result);
-	        if (supportsTouch === true) {} else {
-		        $("#popup .formbox input.addresslabel").focus();
-		    }
-	        if (isxpub) {
-		        clear_xpub_checkboxes();
-				validate_xpub($(".formbox"));
-	        }
-	    } else {
-		    if (isxpub) {
-		        xpub_fail(payment);
-	        }
-		    else {
-			    popnotify("error", "invalid " + payment + " address");
-		    }
-	    }
-    }
-    else if (thistype == "viewkey") {
-	    var validate = (result.length === 64) ? check_vk(result) : false;
-	    if (validate === true) {
-	        $("#popup .formbox input.vk_input").val(result);
-	        if (supportsTouch === true) {} else {
-		        $("#popup .formbox input.addresslabel").focus();
-		    }
-	    } else {
-	        popnotify("error", "invalid " + payment + " viewkey");
-	    }
+        var prefix = payment + ":",
+            mid_result = (result.indexOf(prefix) >= 0) ? result.split(prefix).pop() : result,
+            end_result = (result.indexOf("?") >= 0) ? mid_result.split("?")[0] : mid_result,
+            isxpub = (end_result.length > 103),
+            validate = (isxpub) ? check_xpub(end_result, xpub_prefix(payment), payment) :
+            check_address(end_result, payment);
+        clear_xpub_inputs();
+        if (validate === true) {
+            $("#popup .formbox input.address").val(end_result);
+            if (supportsTouch === true) {} else {
+                $("#popup .formbox input.addresslabel").focus();
+            }
+            if (isxpub) {
+                clear_xpub_checkboxes();
+                validate_xpub($(".formbox"));
+            }
+        } else {
+            if (isxpub) {
+                xpub_fail(payment);
+            } else {
+                popnotify("error", "invalid " + payment + " address");
+            }
+        }
+    } else if (thistype == "viewkey") {
+        var validate = (result.length === 64) ? check_vk(result) : false;
+        if (validate === true) {
+            $("#popup .formbox input.vk_input").val(result);
+            if (supportsTouch === true) {} else {
+                $("#popup .formbox input.addresslabel").focus();
+            }
+        } else {
+            popnotify("error", "invalid " + payment + " viewkey");
+        }
     }
     window.history.back();
-	return false;
+    return false;
 }
