@@ -884,7 +884,7 @@ function api_eror_msg(apisrc, error, apikey, monitor) {
         return false;
     } else {
         var api_bttn = (keyfail === true) ? "<div id='add_api' data-api='" + apisrc + "' class='button' data-type='" + monitor + "'>Add " + apisrc + " Api key</div>" : "",
-            content = "<h2 class='icon-blocked'>Error " + errorcode + "</h2><p class='doselect'><strong>Error: " + errorcode + " " + errormessage + "</p>" + api_bttn;
+            content = "<h2 class='icon-blocked'>Error " + errorcode + "</h2><p class='doselect'><strong>Error: " + errorcode + " " + errormessage + "<br/><br/><span id='proxy_dialog' class='ref'>Try other proxy</span></p>" + api_bttn;
         popdialog(content, "alert", "canceldialog");
     }
 }
@@ -908,8 +908,8 @@ function get_rpc_inputs(rd, rpc_data) {
             pending = rd.pending,
             request_timestamp = requestdate - 30000, // 30 seconds compensation for unexpected results
             ccsymbol = rd.currencysymbol,
-            getconfirmations = rd.set_confirmations
-        getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
+            getconfirmations = rd.set_confirmations,
+			getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
             setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
             statuspanel = thislist.find(".pmetastatus"),
             transactionlist = thislist.find("ul.transactionlist"),

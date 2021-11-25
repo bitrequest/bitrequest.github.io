@@ -128,6 +128,7 @@ $(document).ready(function() {
     //complement_apisettings
 
     // API Proxy
+    trigger_proxy_dialog();
     pick_api_proxy();
     //test_append_proxy
     //proxy_option_li
@@ -1923,6 +1924,15 @@ function submitfiatxrapi() {
     })
 }
 
+function trigger_proxy_dialog() {
+    $(document).on("click", "#proxy_dialog", function() {
+	    canceldialog();
+	    setTimeout(function() {
+	        $("#api_proxy").trigger("click");
+	    }, 700);
+    })
+}
+
 // Api Proxy
 function pick_api_proxy() {
     $(document).on("click", "#api_proxy", function() {
@@ -1984,12 +1994,13 @@ function pick_api_proxy() {
 }
 
 function test_append_proxy(optionlist, key, value, selected, dfault, nano_node) { // make test api call
+	var n_node = (nano_node) ? nano_node : main_nano_node;
     api_proxy({
         "cachetime": 25,
         "cachefolder": "1h",
         "proxy": true,
         "proxy_url": value,
-        "api_url": nano_node,
+        "api_url": n_node,
         "params": {
             "method": "POST",
             "cache": true,
@@ -2018,7 +2029,7 @@ function test_append_proxy(optionlist, key, value, selected, dfault, nano_node) 
 }
 
 function proxy_option_li(optionlist, live, key, value, selected, dfault) {
-    var liveclass = (live === true) ? " live" : " offline",
+	var liveclass = (live === true) ? " live" : " offline",
         icon = (live === true) ? "connection" : "wifi-off",
         default_class = (dfault === true) ? " default" : "",
         option = $("<div class='optionwrap" + liveclass + default_class + "' style='display:none' data-pe='none'><span data-value='" + value + "' data-pe='none'>" + value + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon c_stat icon-" + icon + "' data-pe='none'></div><div class='opt_icon icon-bin' data-pe='none'></div></div>");

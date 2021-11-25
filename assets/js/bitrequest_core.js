@@ -112,6 +112,9 @@ $(document).ready(function() {
             startscreen.remove();
         }, 600);
     }, 600);
+    showselect();
+    selectbox();
+    pickselect();
 })
 
 function checkphp() { //check for php support by fetching fiat currencies from local api php file
@@ -185,7 +188,7 @@ function setsymbols() { //fetch fiat currencies from fixer.io api
             }
             geterc20tokens();
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            var content = "<h2 class='icon-bin'>Api call failed</h2><p class='doselect'>" + textStatus + "<br/>api did not respond</p>";
+            var content = "<h2 class='icon-bin'>Api call failed</h2><p class='doselect'>" + textStatus + "<br/>api did not respond<br/><br/><span id='proxy_dialog' class='ref'>Try other proxy</span></p>";
             popdialog(content, "alert", "canceldialog");
         })
     }
@@ -367,9 +370,6 @@ function finishfunctions() {
     //address_whitelist
     check_pk();
     toggleswitch();
-    showselect();
-    selectbox();
-    pickselect();
     closeselectbox();
     radio_select();
     dragstart(); // reorder addresses
