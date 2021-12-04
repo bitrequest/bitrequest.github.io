@@ -737,7 +737,7 @@ var multi_wallets = {
             "active": true,
             "data": {
                 "currency": "nano",
-                "ccsymbol": "nano",
+                "ccsymbol": "xno",
                 "cmcid": 1567,
                 "urlscheme": function(payment, address, amount, iszero) {
                     var amount = (iszero === true) ? "" : "?amount=" + NanocurrencyWeb.tools.convert(amount, "NANO", "RAW");
