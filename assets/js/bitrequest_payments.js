@@ -16,6 +16,7 @@ var txid,
     payment,
     request,
     request_timer,
+    uri_timer,
     blocktyping = false;
 
 $(document).ready(function() {
@@ -66,6 +67,7 @@ $(document).ready(function() {
     //updatecpool
     //rendercpool
     //renderqr
+    //set_uris
     switchaddress();
     copyaddress_dblclick();
     copyaddress();
@@ -1376,9 +1378,18 @@ function renderqr(payment, address, amount) {
         urlscheme = (request.erc20 === true) ? "ethereum:" + address :
         request.coindata.urlscheme(payment, address, amount, this_iszero);
     $("#qrcode").html("").qrcode(urlscheme);
-    $(".openwallet").attr({
-        "data-rel": amount,
-        "title": urlscheme
+    set_uris(urlscheme, amount);
+}
+
+function set_uris(urlscheme, amount) {
+    clearTimeout(uri_timer);
+    uri_timer = setTimeout(function() {
+        $(".openwallet").attr({
+	        "data-rel": amount,
+	        "title": urlscheme
+	    });
+    }, 1500, function() {
+        clearTimeout(uri_timer);
     });
 }
 
