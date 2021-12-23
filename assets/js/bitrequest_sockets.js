@@ -79,6 +79,7 @@ function init_socket(socket_node, address, swtch) {
             clearpingtx("close");
             var vk = (swtch) ? get_vk(address) : request.viewkey;
             if (vk) {
+	            trigger_requeststates(); // update outgoing
                 var account = (vk.account) ? vk.account : address,
                     viewkey = vk.vk,
                     rq_init = request.rq_init,
@@ -643,15 +644,21 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
                             }
                         } else {
                             if (txd.transactiontime > request_ts && txd.ccval) {
-                                clearpingtx();
-                                if (setconf > 0) {
-                                    confirmations(txd);
-                                    pingtx = setInterval(function() {
-                                        ping_xmr_node(34, address, vk, request_ts, txd.txhash);
-                                    }, 35000);
-                                }
-                                confirmations(txd, true);
-                                return false;
+	                            var requestlist = $("#requestlist > li.rqli"),
+	                            	txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
+	                            if (txid_match.length) {
+						        }
+						        else {
+						            clearpingtx();
+	                                if (setconf > 0) {
+	                                    confirmations(txd);
+	                                    pingtx = setInterval(function() {
+	                                        ping_xmr_node(34, address, vk, request_ts, txd.txhash);
+	                                    }, 35000);
+	                                }
+	                                confirmations(txd, true);
+	                                return false;
+						        }
                             }
                         }
                     }
@@ -1013,9 +1020,15 @@ function xmr_scan_poll(address, vk, set_confirmations, request_ts) {
                     var txd = xmr_scan_data(value, set_confirmations, "xmr", data.blockchain_height);
                     if (txd) {
                         if (txd.transactiontime > request_ts && txd.ccval) {
-                            txdat = txd;
-                            detect = true;
-                            return false;
+	                        var requestlist = $("#requestlist > li.rqli"),
+                            	txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
+                            if (txid_match.length) {
+					        }
+					        else {
+					            txdat = txd;
+								detect = true;
+								return false;
+					        }
                         }
                     }
                 });
