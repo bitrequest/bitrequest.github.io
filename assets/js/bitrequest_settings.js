@@ -48,6 +48,7 @@ $(document).ready(function() {
     sbu_switch();
     sharebu();
     check_systembu();
+    //stripb64
     //systembu_expired
     restore_systembu();
     backupcd();
@@ -472,7 +473,7 @@ function check_systembu() {
     if (url_params.p == "settings") {
         var sbu = url_params.sbu;
         if (sbu) {
-	        var ro_dat = JSON.parse(atob(sbu)),
+	        var ro_dat = stripb64(sbu),
 	        	ro_id = ro_dat.ro,
 	        	ro_proxy = ro_dat.proxy;
             api_proxy({
@@ -527,6 +528,11 @@ function check_systembu() {
             });
         }
     }
+}
+
+function stripb64(ab) {
+	var b64 = (ab.indexOf("%") > -1) ? ab.substr(0, ab.indexOf("%")) : ab;
+	return JSON.parse(atob(b64));
 }
 
 function systembu_expired() {
@@ -1562,7 +1568,7 @@ function check_csvexport() {
     if (url_params.p == "settings") {
         var csv = url_params.csv;
         if (csv) {
-	        var ro_dat = JSON.parse(atob(csv)),
+	        var ro_dat = stripb64(csv),
 	        	ro_id = ro_dat.ro,
 	        	ro_proxy = ro_dat.proxy;
 	        api_proxy({
@@ -2896,7 +2902,7 @@ function check_teaminvite() {
     if (url_params.p == "settings") {
         var ro = url_params.ro;
         if (ro) {
-	        var ro_dat = JSON.parse(atob(ro)),
+	        var ro_dat = stripb64(ro),
 	        	ro_id = ro_dat.ro,
 	        	ro_proxy = ro_dat.proxy;
             api_proxy({

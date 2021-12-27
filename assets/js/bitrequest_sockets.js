@@ -365,7 +365,6 @@ function dogechain_info_socket(socket_node, thisaddress) {
                 }
             }
         }
-
     };
     websocket.onclose = function(e) {
         console.log("Disconnected");

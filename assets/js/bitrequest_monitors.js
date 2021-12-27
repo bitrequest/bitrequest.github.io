@@ -217,12 +217,6 @@ function get_api_inputs(rd, api_data, api_name) {
             transactionlist = thislist.find("ul.transactionlist"),
             transactionhash = rd.txhash,
             erc20 = (rd.erc20 === true),
-            scan_url = (api_name == "blockcypher") ? ccsymbol + "/main/addrs/" + address :
-            (api_name == "ethplorer") ? "getAddressHistory/" + address + "?token=" + rd.token_contract + "&type=transfer" :
-            (api_name == "blockchair") ? (erc20 === true) ? "ethereum/erc-20/" + rd.token_contract + "/dashboards/address/" + address : payment + "/dashboards/address/" + address : "",
-            poll_url = (api_name == "blockcypher") ? ccsymbol + "/main/txs/" + transactionhash :
-            (api_name == "ethplorer") ? "getTxInfo/" + transactionhash :
-            (api_name == "blockchair") ? (erc20 === true) ? "ethereum/dashboards/transaction/" + transactionhash + "?erc_20=true" : payment + "/dashboards/transaction/" + transactionhash : "",
             counter = 0;
         thislist.removeClass("no_network");
         if (pending == "no" || pending == "incoming") {
@@ -586,7 +580,6 @@ function get_api_inputs(rd, api_data, api_name) {
                         var data = br_result(e).result;
                         if (data) {
                             var txd = mempoolspace_scan_data(data, setconfirmations, ccsymbol, address);
-                            console.log(txd);
                             if (txd) {
                                 if (txd.ccval !== undefined) {
                                     var tx_listitem = append_tx_li(txd, thislist);
@@ -611,6 +604,9 @@ function get_api_inputs(rd, api_data, api_name) {
                 }
             } else {
                 if (pending == "scanning") { // scan incoming transactions on address
+	                var scan_url = (api_name == "blockcypher") ? ccsymbol + "/main/addrs/" + address :
+						(api_name == "ethplorer") ? "getAddressHistory/" + address + "?token=" + rd.token_contract + "&type=transfer" :
+						(api_name == "blockchair") ? (erc20 === true) ? "ethereum/erc-20/" + rd.token_contract + "/dashboards/address/" + address : payment + "/dashboards/address/" + address : "";
                     api_proxy({
                         "api": api_name,
                         "search": scan_url,
@@ -755,6 +751,9 @@ function get_api_inputs(rd, api_data, api_name) {
                         api_src(thislist, api_data);
                     });
                 } else { // poll transaction id
+	                var poll_url = (api_name == "blockcypher") ? ccsymbol + "/main/txs/" + transactionhash :
+						(api_name == "ethplorer") ? "getTxInfo/" + transactionhash :
+						(api_name == "blockchair") ? (erc20 === true) ? "ethereum/dashboards/transaction/" + transactionhash + "?erc_20=true" : payment + "/dashboards/transaction/" + transactionhash : "";
                     api_proxy({
                         "api": api_name,
                         "search": poll_url,
