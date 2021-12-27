@@ -450,8 +450,13 @@ function sharebu() {
                     filetime = br_cache.created_utc,
                     filetimesec = (filetime) ? filetime * 1000 : $.now(),
                     filetime_format = new Date(filetimesec).toLocaleString(language),
-                    sharedtitle = "System Backup " + accountname + " (" + filetime_format + ")";
-                shorten_url(sharedtitle, approot + "?p=settings&sbu=" + br_cache.filename, approot + "/img/system_backup.png", true);
+                    sharedtitle = "System Backup " + accountname + " (" + filetime_format + ")",
+                    set_proxy = $("#api_proxy").data("selected"),
+                    r_dat = btoa(JSON.stringify({
+						"ro": br_cache.filename,
+	                    "proxy": set_proxy
+					}));
+                shorten_url(sharedtitle, approot + "?p=settings&sbu=" + r_dat, approot + "/img/system_backup.png", true);
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 console.log(jqXHR);
                 console.log(textStatus);
@@ -467,12 +472,15 @@ function check_systembu() {
     if (url_params.p == "settings") {
         var sbu = url_params.sbu;
         if (sbu) {
+	        var ro_dat = JSON.parse(atob(sbu)),
+	        	ro_id = ro_dat.ro,
+	        	ro_proxy = ro_dat.proxy;
             api_proxy({
                 "custom": "get_system_bu",
                 "api_url": true,
                 "proxy": true,
-                "params": sbu
-            }).done(function(e) {
+                "params": ro_id
+            }, ro_proxy).done(function(e) {
                 var ping = e.ping;
                 if (ping) {
                     var br_cache = e.ping.br_cache,
@@ -1532,8 +1540,13 @@ function share_csv() {
                     filetime = br_cache.created_utc,
                     filetimesec = (filetime) ? filetime * 1000 : $.now(),
                     filetime_format = new Date(filetimesec).toLocaleString(language),
-                    sharedtitle = "CSV Export " + accountname + " (" + filetime_format + ")";
-                shorten_url(sharedtitle, approot + "?p=settings&csv=" + br_cache.filename, approot + "/img/system_backup.png", true);
+                    sharedtitle = "CSV Export " + accountname + " (" + filetime_format + ")",
+                    set_proxy = $("#api_proxy").data("selected"),
+                    r_dat = btoa(JSON.stringify({
+						"ro": br_cache.filename,
+	                    "proxy": set_proxy
+					}));
+                shorten_url(sharedtitle, approot + "?p=settings&csv=" + r_dat, approot + "/img/system_backup.png", true);
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 console.log(jqXHR);
                 console.log(textStatus);
@@ -1549,12 +1562,15 @@ function check_csvexport() {
     if (url_params.p == "settings") {
         var csv = url_params.csv;
         if (csv) {
-            api_proxy({
+	        var ro_dat = JSON.parse(atob(csv)),
+	        	ro_id = ro_dat.ro,
+	        	ro_proxy = ro_dat.proxy;
+	        api_proxy({
                 "custom": "get_system_bu",
                 "api_url": true,
                 "proxy": true,
-                "params": csv
-            }).done(function(e) {
+                "params": ro_id
+            }, ro_proxy).done(function(e) {
                 var ping = e.ping;
                 if (ping) {
                     var br_cache = e.ping.br_cache,
@@ -2694,7 +2710,7 @@ function submit_permissions() {
 
 function team_invite_trigger() {
     $(document).on("click", "#teaminvite", function() {
-        if (hasbip && !bipv) {
+	    if (hasbip && !bipv) {
             bipv_pass();
             notify("please verify your secret phrase first");
             return false;
@@ -2858,8 +2874,13 @@ function share_teaminvite() {
                 }
             }).done(function(e) {
                 var br_cache = e.ping.br_cache,
-                    sharedtitle = "Bitrequest Team invitation from " + accountname;
-                shorten_url(sharedtitle, approot + "?p=settings&ro=" + br_cache.filename, approot + "/img/icons/apple-touch-icon.png", true);
+                    sharedtitle = "Bitrequest Team invitation from " + accountname,
+                    set_proxy = $("#api_proxy").data("selected"),
+                    r_dat = btoa(JSON.stringify({
+						"ro": br_cache.filename,
+	                    "proxy": set_proxy
+					}));
+				shorten_url(sharedtitle, approot + "?p=settings&ro=" + r_dat, approot + "/img/icons/apple-touch-icon.png", true);
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 console.log(jqXHR);
                 console.log(textStatus);
@@ -2875,12 +2896,15 @@ function check_teaminvite() {
     if (url_params.p == "settings") {
         var ro = url_params.ro;
         if (ro) {
+	        var ro_dat = JSON.parse(atob(ro)),
+	        	ro_id = ro_dat.ro,
+	        	ro_proxy = ro_dat.proxy;
             api_proxy({
                 "custom": "get_system_bu",
                 "api_url": true,
                 "proxy": true,
-                "params": ro
-            }).done(function(e) {
+                "params": ro_id
+            }, ro_proxy).done(function(e) {
                 var ping = e.ping;
                 if (ping) {
                     var br_cache = e.ping.br_cache,
