@@ -190,6 +190,12 @@ var multi_wallets = {
                             "display": true
                         },
                         {
+                            "name": "mempool.space",
+                            "url": "memppol.space",
+                            "api": true,
+                            "display": true
+                        },
+                        {
                             "name": "blockchair",
                             "url": "blockchair.com",
                             "api": true,
@@ -221,6 +227,11 @@ var multi_wallets = {
                         {
                             "name": "blockcypher websocket",
                             "url": "wss://socket.blockcypher.com/v1/",
+                            "display": true
+                        },
+                        {
+                            "name": "mempool.space websocket",
+                            "url": "wss://mempool.space/api/v1/ws",
                             "display": true
                         }
                     ]
@@ -814,21 +825,38 @@ var multi_wallets = {
                         "display": true
                     },
                     "apis": [{
-                            "name": "bitrequest.app",
-                            "url": "https://www.bitrequest.app:8020",
-                            "api": true,
-                            "username": "",
-                            "password": "",
-                            "display": true
-                        },
-                        {
                             "name": "api.nanos.cc",
                             "url": main_nano_node,
                             "api": true,
                             "username": "",
                             "password": "",
                             "display": true
+                        },
+                        {
+                            "name": "rainstorm.city",
+                            "url": "https://rainstorm.city/api",
+                            "api": true,
+                            "username": "",
+                            "password": "",
+                            "display": true
+                        },
+                        {
+                            "name": "proxy.powernode.cc",
+                            "url": "https://proxy.powernode.cc/proxy",
+                            "api": true,
+                            "username": "",
+                            "password": "",
+                            "display": true
+                        },
+                        {
+                            "name": "bitrequest.app",
+                            "url": "https://www.bitrequest.app:8020",
+                            "api": true,
+                            "username": "",
+                            "password": "",
+                            "display": true
                         }
+
                     ],
                     "options": [],
                     "rpc_test_command": {
@@ -843,18 +871,28 @@ var multi_wallets = {
                         "display": true
                     },
                     "apis": [{
-                            "name": "bitrequest.app",
-                            "url": "wss://bitrequest.app:8010",
-                            "display": true
-                        },
-                        {
                             "name": "nanos.cc websocket",
                             "url": "wss://socket.nanos.cc",
                             "display": true
                         },
                         {
+                            "name": "rainstorm.city websocket",
+                            "url": "wss://rainstorm.city/websocket",
+                            "display": true
+                        },
+                        {
                             "name": "nanolooker.com websocket",
                             "url": "wss://www.nanolooker.com/ws",
+                            "display": true
+                        },
+                        {
+                            "name": "powernode.cc websocket",
+                            "url": "wss://ws.powernode.cc",
+                            "display": true
+                        },
+                        {
+                            "name": "bitrequest.app",
+                            "url": "wss://bitrequest.app:8010",
                             "display": true
                         }
                     ],
@@ -1274,6 +1312,15 @@ var apis = [{
         "key_param": null,
         "api_key": null,
         "sign_up": "https://explorer.api.bitcoin.com/docs/bch/v1/"
+    },
+    {
+        "name": "mempool.space",
+        "base_url": "https://mempool.space/api/",
+        // for now no api key needed yet
+        // "key_param": "key=",
+        "key_param": null,
+        "api_key": null,
+        "sign_up": "https://mempool.space/nl/docs/api/rest"
     },
     {
         "name": "coinmarketcap",

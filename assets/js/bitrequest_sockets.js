@@ -2,8 +2,10 @@ $(document).ready(function() {
     //init_socket
     //init_xmr_node
     //ping_xmr_node
-    //blockchain_btc_socket
     //blockcypher_websocket
+    //blockchain_btc_socket
+    //amberdata_btc_websocket
+    //mempoolspace_btc_socket
     //nano_socket
     //amberdata_eth_websocket
     //web3_erc20_websocket
@@ -45,6 +47,8 @@ function init_socket(socket_node, address, swtch) {
                 blockchain_btc_socket(socket_node, address);
             } else if (socket_name == main_ad_socket) {
                 amberdata_btc_websocket(socket_node, address, "408fa195a34b533de9ad9889f076045e");
+            } else if (socket_name == "mempool.space websocket") {
+                mempoolspace_btc_socket(socket_node, address);
             } else {
                 blockcypher_websocket(socket_node, address);
             }
@@ -79,7 +83,7 @@ function init_socket(socket_node, address, swtch) {
             clearpingtx("close");
             var vk = (swtch) ? get_vk(address) : request.viewkey;
             if (vk) {
-	            trigger_requeststates(); // update outgoing
+                trigger_requeststates(); // update outgoing
                 var account = (vk.account) ? vk.account : address,
                     viewkey = vk.vk,
                     rq_init = request.rq_init,
@@ -106,6 +110,54 @@ function init_socket(socket_node, address, swtch) {
 }
 
 // Websockets
+
+function blockcypher_websocket(socket_node, thisaddress) {
+    // var bc_token = get_blockcypher_apikey(),
+    // provider = socket_node.url + request.currencysymbol + "/main?token=" + bc_token;
+    var provider = socket_node.url + request.currencysymbol + "/main";
+    websocket = new WebSocket(provider);
+    websocket.onopen = function(e) {
+        socket_info(socket_node, true);
+        var ping_event = JSON.stringify({
+            "event": "tx-confirmation",
+            "address": thisaddress,
+            "token": get_blockcypher_apikey(),
+            "confirmations": 10
+        });
+        websocket.send(ping_event);
+        ping = setInterval(function() {
+            websocket.send(ping_event);
+        }, 55000);
+    };
+    websocket.onmessage = function(e) {
+        var data = JSON.parse(e.data);
+        if (data.event == "pong") {} else {
+            var txhash = data.hash;
+            if (txhash) {
+                if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
+                    paymentdialogbox.removeClass("transacting");
+                    var reconnectbttn = (txid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + txid + "'>Reconnect</span></div></p>" : "",
+                        content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + reconnectbttn;
+                    closesocket();
+                    popdialog(content, "alert", "canceldialog");
+                } else {
+                    txid = txhash;
+                    closesocket();
+                    var txd = blockcypher_poll_data(data, request.set_confirmations, request.currencysymbol, thisaddress);
+                    pick_monitor(txhash, txd);
+                }
+            }
+        }
+    };
+    websocket.onclose = function(e) {
+        console.log("Disconnected");
+        txid = null;
+    };
+    websocket.onerror = function(e) {
+        handle_socket_fails(socket_node, thisaddress, e.data)
+        return false;
+    };
+}
 
 function blockchain_btc_socket(socket_node, thisaddress) {
     var provider = socket_node.url;
@@ -141,6 +193,95 @@ function blockchain_btc_socket(socket_node, thisaddress) {
             }
         }
 
+    };
+    websocket.onclose = function(e) {
+        console.log("Disconnected");
+        txid = null;
+    };
+    websocket.onerror = function(e) {
+        handle_socket_fails(socket_node, thisaddress, e.data)
+        return false;
+    };
+}
+
+function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
+    var socket_url = socket_node.url,
+        ak = get_amberdata_apikey(),
+        provider = socket_url + "?x-api-key=" + ak + "&x-amberdata-blockchain-id=" + blockchainid;
+    websocket = new WebSocket(provider);
+    websocket.onopen = function(e) {
+        socket_info(socket_node, true);
+        var ping_event = JSON.stringify({
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "subscribe",
+            "params": [
+                "address:pending_transactions",
+                {
+                    "address": thisaddress
+                }
+            ]
+        });
+        websocket.send(ping_event);
+        ping = setInterval(function() {
+            websocket.send(ping_event);
+        }, 55000);
+    };
+    websocket.onmessage = function(e) {
+        var data = JSON.parse(e.data),
+            params = (data.params);
+        if (params) {
+            var result = params.result,
+                txhash = result.hash,
+                txd = amberdata_poll_btc_data(result, request.set_confirmations, request.currencysymbol, thisaddress);
+            closesocket();
+            pick_monitor(txhash, txd);
+            return false;
+        }
+    };
+    websocket.onclose = function(e) {
+        console.log("Disconnected");
+        txid = null;
+    };
+    websocket.onerror = function(e) {
+        handle_socket_fails(socket_node, thisaddress, e.data);
+        return false;
+    };
+}
+
+function mempoolspace_btc_socket(socket_node, thisaddress) {
+    var provider = socket_node.url;
+    websocket = new WebSocket(provider);
+    websocket.onopen = function(e) {
+        socket_info(socket_node, true);
+        var ping_event = JSON.stringify({
+            "track-address": thisaddress
+        });
+        websocket.send(ping_event);
+        ping = setInterval(function() {
+            websocket.send(ping_event);
+        }, 55000);
+    };
+    websocket.onmessage = function(e) {
+        var result = JSON.parse(e.data),
+            json = result["address-transactions"][0],
+            txhash = json.txid;
+        if (txhash) {
+            if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
+                paymentdialogbox.removeClass("transacting");
+                var reconnectbttn = (txid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + txid + "'>Reconnect</span></div></p>" : "",
+                    content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + reconnectbttn;
+                closesocket();
+                popdialog(content, "alert", "canceldialog");
+            } else {
+                var txd = mempoolspace_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress);
+                if (txd) {
+                    txid = txhash;
+                    closesocket();
+                    pick_monitor(txhash, txd);
+                }
+            }
+        }
     };
     websocket.onclose = function(e) {
         console.log("Disconnected");
@@ -236,54 +377,6 @@ function dogechain_info_socket(socket_node, thisaddress) {
     };
 }
 
-function blockcypher_websocket(socket_node, thisaddress) {
-    // var bc_token = get_blockcypher_apikey(),
-    // provider = socket_node.url + request.currencysymbol + "/main?token=" + bc_token;
-    var provider = socket_node.url + request.currencysymbol + "/main";
-    websocket = new WebSocket(provider);
-    websocket.onopen = function(e) {
-        socket_info(socket_node, true);
-        var ping_event = JSON.stringify({
-            "event": "tx-confirmation",
-            "address": thisaddress,
-            "token": get_blockcypher_apikey(),
-            "confirmations": 10
-        });
-        websocket.send(ping_event);
-        ping = setInterval(function() {
-            websocket.send(ping_event);
-        }, 55000);
-    };
-    websocket.onmessage = function(e) {
-        var data = JSON.parse(e.data);
-        if (data.event == "pong") {} else {
-            var txhash = data.hash;
-            if (txhash) {
-                if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
-                    paymentdialogbox.removeClass("transacting");
-                    var reconnectbttn = (txid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + txid + "'>Reconnect</span></div></p>" : "",
-                        content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + reconnectbttn;
-                    closesocket();
-                    popdialog(content, "alert", "canceldialog");
-                } else {
-                    txid = txhash;
-                    closesocket();
-                    var txd = blockcypher_poll_data(data, request.set_confirmations, request.currencysymbol, thisaddress);
-                    pick_monitor(txhash, txd);
-                }
-            }
-        }
-    };
-    websocket.onclose = function(e) {
-        console.log("Disconnected");
-        txid = null;
-    };
-    websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress, e.data)
-        return false;
-    };
-}
-
 function nano_socket(socket_node, thisaddress) {
     var address_mod = (thisaddress.match("^xrb")) ? "nano_" + thisaddress.split("_").pop() : thisaddress, // change nano address prefix xrb_ to nano untill websocket support
         provider = socket_node.url;
@@ -319,51 +412,6 @@ function nano_socket(socket_node, thisaddress) {
                 closesocket();
                 pick_monitor(data.hash, txd);
             }
-        }
-    };
-    websocket.onclose = function(e) {
-        console.log("Disconnected");
-        txid = null;
-    };
-    websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress, e.data);
-        return false;
-    };
-}
-
-function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
-    var socket_url = socket_node.url,
-        ak = get_amberdata_apikey(),
-        provider = socket_url + "?x-api-key=" + ak + "&x-amberdata-blockchain-id=" + blockchainid;
-    websocket = new WebSocket(provider);
-    websocket.onopen = function(e) {
-        socket_info(socket_node, true);
-        var ping_event = JSON.stringify({
-            "jsonrpc": "2.0",
-            "id": 2,
-            "method": "subscribe",
-            "params": [
-                "address:pending_transactions",
-                {
-                    "address": thisaddress
-                }
-            ]
-        });
-        websocket.send(ping_event);
-        ping = setInterval(function() {
-            websocket.send(ping_event);
-        }, 55000);
-    };
-    websocket.onmessage = function(e) {
-        var data = JSON.parse(e.data),
-            params = (data.params);
-        if (params) {
-            var result = params.result,
-                txhash = result.hash,
-                txd = amberdata_poll_btc_data(result, request.set_confirmations, request.currencysymbol, thisaddress);
-            closesocket();
-            pick_monitor(txhash, txd);
-            return false;
         }
     };
     websocket.onclose = function(e) {
@@ -644,21 +692,19 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
                             }
                         } else {
                             if (txd.transactiontime > request_ts && txd.ccval) {
-	                            var requestlist = $("#requestlist > li.rqli"),
-	                            	txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
-	                            if (txid_match.length) {
-						        }
-						        else {
-						            clearpingtx();
-	                                if (setconf > 0) {
-	                                    confirmations(txd);
-	                                    pingtx = setInterval(function() {
-	                                        ping_xmr_node(34, address, vk, request_ts, txd.txhash);
-	                                    }, 35000);
-	                                }
-	                                confirmations(txd, true);
-	                                return false;
-						        }
+                                var requestlist = $("#requestlist > li.rqli"),
+                                    txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
+                                if (txid_match.length) {} else {
+                                    clearpingtx();
+                                    if (setconf > 0) {
+                                        confirmations(txd);
+                                        pingtx = setInterval(function() {
+                                            ping_xmr_node(34, address, vk, request_ts, txd.txhash);
+                                        }, 35000);
+                                    }
+                                    confirmations(txd, true);
+                                    return false;
+                                }
                             }
                         }
                     }
@@ -1020,15 +1066,13 @@ function xmr_scan_poll(address, vk, set_confirmations, request_ts) {
                     var txd = xmr_scan_data(value, set_confirmations, "xmr", data.blockchain_height);
                     if (txd) {
                         if (txd.transactiontime > request_ts && txd.ccval) {
-	                        var requestlist = $("#requestlist > li.rqli"),
-                            	txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
-                            if (txid_match.length) {
-					        }
-					        else {
-					            txdat = txd;
-								detect = true;
-								return false;
-					        }
+                            var requestlist = $("#requestlist > li.rqli"),
+                                txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
+                            if (txid_match.length) {} else {
+                                txdat = txd;
+                                detect = true;
+                                return false;
+                            }
                         }
                     }
                 });

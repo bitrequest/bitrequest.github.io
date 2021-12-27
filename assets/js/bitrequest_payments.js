@@ -1385,9 +1385,9 @@ function set_uris(urlscheme, amount) {
     clearTimeout(uri_timer);
     uri_timer = setTimeout(function() {
         $(".openwallet").attr({
-	        "data-rel": amount,
-	        "title": urlscheme
-	    });
+            "data-rel": amount,
+            "title": urlscheme
+        });
     }, 1500, function() {
         clearTimeout(uri_timer);
     });

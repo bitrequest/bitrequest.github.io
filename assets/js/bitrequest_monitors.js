@@ -236,13 +236,13 @@ function get_api_inputs(rd, api_data, api_name) {
                 var vk = rd.viewkey;
                 if (vk) {
                     var account = (vk.account) ? vk.account : address,
-                        viewkey = vk.vk;
-                    var payload = {
-                        "address": account,
-                        "view_key": viewkey,
-                        "create_account": true,
-                        "generated_locally": false
-                    };
+                        viewkey = vk.vk,
+                        payload = {
+                            "address": account,
+                            "view_key": viewkey,
+                            "create_account": true,
+                            "generated_locally": false
+                        };
                     api_proxy({
                         "api": api_name,
                         "search": "login",
@@ -461,7 +461,7 @@ function get_api_inputs(rd, api_data, api_name) {
                             "method": "POST",
                             "data": JSON.stringify({
                                 "addrs": address
-                            }),
+                            })
                         }
                     }).done(function(e) {
                         var data = br_result(e).result;
@@ -507,6 +507,86 @@ function get_api_inputs(rd, api_data, api_name) {
                         var data = br_result(e).result;
                         if (data) {
                             var txd = bitcoincom_scan_data(data, setconfirmations, ccsymbol, legacy, address);
+                            if (txd) {
+                                if (txd.ccval !== undefined) {
+                                    var tx_listitem = append_tx_li(txd, thislist);
+                                    if (tx_listitem) {
+                                        transactionlist.append(tx_listitem.data(txd));
+                                    }
+                                    tx_count(statuspanel, 1);
+                                    compareamounts(rd);
+                                }
+                            }
+                        } else {
+                            tx_api_fail(thislist, statuspanel);
+                            handle_api_fails(rd, "unknown error", api_name, payment);
+                        }
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        tx_api_fail(thislist, statuspanel);
+                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        handle_api_fails(rd, error_object, api_name, payment);
+                    }).always(function() {
+                        api_src(thislist, api_data);
+                    });
+                }
+            } else if (api_name == "mempool.space") {
+                if (pending == "scanning") { // scan incoming transactions on address
+                    api_proxy({
+                        "api": api_name,
+                        "search": "address/" + address + "/txs",
+                        "cachetime": 25,
+                        "cachefolder": "1h",
+                        "proxy": true,
+                        "params": {
+                            "method": "GET"
+                        }
+                    }).done(function(e) {
+                        var data = br_result(e).result;
+                        console.log(data);
+                        if (data) {
+                            if ($.isEmptyObject(data)) {} else {
+                                $.each(data, function(dat, value) {
+                                    console.log(value);
+                                    if (value.txid) { // filter outgoing transactions
+                                        var txd = mempoolspace_scan_data(value, setconfirmations, ccsymbol, address);
+                                        console.log(txd);
+                                        if (txd.transactiontime > request_timestamp && txd.ccval) {
+                                            var tx_listitem = append_tx_li(txd, thislist);
+                                            if (tx_listitem) {
+                                                transactionlist.append(tx_listitem.data(txd));
+                                                counter++;
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        } else {
+                            tx_api_fail(thislist, statuspanel);
+                            handle_api_fails(rd, "unknown error", api_name, payment);
+                        }
+                        tx_count(statuspanel, counter);
+                        compareamounts(rd);
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        tx_api_fail(thislist, statuspanel);
+                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        handle_api_fails(rd, error_object, api_name, payment);
+                    }).always(function() {
+                        api_src(thislist, api_data);
+                    });
+                } else { // poll mempool.space transaction id
+                    api_proxy({
+                        "api": api_name,
+                        "search": "tx/" + transactionhash,
+                        "cachetime": 25,
+                        "cachefolder": "1h",
+                        "params": {
+                            "method": "GET"
+                        }
+                    }).done(function(e) {
+                        var data = br_result(e).result;
+                        if (data) {
+                            var txd = mempoolspace_scan_data(data, setconfirmations, ccsymbol, address);
+                            console.log(txd);
                             if (txd) {
                                 if (txd.ccval !== undefined) {
                                     var tx_listitem = append_tx_li(txd, thislist);
@@ -909,7 +989,7 @@ function get_rpc_inputs(rd, rpc_data) {
             request_timestamp = requestdate - 30000, // 30 seconds compensation for unexpected results
             ccsymbol = rd.currencysymbol,
             getconfirmations = rd.set_confirmations,
-			getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
+            getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
             setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
             statuspanel = thislist.find(".pmetastatus"),
             transactionlist = thislist.find("ul.transactionlist"),

@@ -43,6 +43,67 @@ function blockchain_ws_data(data, setconfirmations, ccsymbol, address) { // poll
     }
 }
 
+// mempool.space
+
+function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) { // poll mempool.space websocket data
+    if (data) {
+        var outputs = data.vout,
+            outputsum;
+        if (outputs) {
+            var outputsum = 0;
+            $.each(outputs, function(dat, value) {
+                if (address == value.scriptpubkey_address) {
+                    outputsum += value.value || 0; // sum of outputs
+                }
+            });
+            var transactiontime = (data.firstSeen) ? data.firstSeen * 1000 : null,
+                transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
+            return {
+                "ccval": (outputsum) ? outputsum / 100000000 : null,
+                "transactiontime": transactiontimeutc,
+                "txhash": data.txid,
+                "confirmations": (data.confirmations) ? data.confirmations : null,
+                "setconfirmations": setconfirmations,
+                "ccsymbol": ccsymbol
+            };
+        } else {
+            return false;
+        }
+    } else {
+        return default_tx_data();
+    }
+}
+
+function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address) { // poll mempool.space websocket data
+    if (data) {
+        var status = data.status,
+            outputs = data.vout,
+            outputsum;
+        if (outputs) {
+            var outputsum = 0;
+            $.each(outputs, function(dat, value) {
+                if (address == value.scriptpubkey_address) {
+                    outputsum += value.value || 0; // sum of outputs
+                }
+            });
+            var transactiontime = (status.block_time) ? status.block_time * 1000 : $.now(),
+                transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
+            return {
+                "ccval": (outputsum) ? outputsum / 100000000 : null,
+                "transactiontime": transactiontimeutc,
+                "txhash": data.txid,
+                "confirmations": (status.confirmed === true) ? setconfirmations : null,
+                "setconfirmations": setconfirmations,
+                "ccsymbol": ccsymbol
+            };
+        } else {
+            return false;
+        }
+    } else {
+        return default_tx_data();
+    }
+}
+
 // dogechain
 
 function dogechain_ws_data(data, setconfirmations, ccsymbol, address) { // poll blockchain.info websocket data
