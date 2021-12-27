@@ -1548,18 +1548,18 @@ function validatesteps() {
         var thisnode = $(this),
             thisvalue = thisnode.val(),
             keycode = e.keyCode;
-        if ((thisvalue.indexOf(",") > -1 || thisvalue.indexOf(".") > -1) && (keycode === 188 || keycode === 190)) { // prevent double commas and dots
+        if ((thisvalue.indexOf(",") > -1 || thisvalue.indexOf(".") > -1) && (keycode === 188 || keycode === 190 || keycode === 110)) { // prevent double commas and dots
             e.preventDefault();
             return false;
         } else {
-            if (keycode === 8 || keycode === 188 || keycode === 190 || keycode === 39 || keycode === 37 || keycode === 91 || keycode === 17 || e.metaKey || e.ctrlKey) { //alow backspace, comma and period, arrowright, arrowleft, command, ctrl
+            if (keycode === 8 || keycode === 188 || keycode === 190 || keycode === 110 || keycode === 39 || keycode === 37 || keycode === 91 || keycode === 17 || e.metaKey || e.ctrlKey) { //alow backspace, comma and period, arrowright, arrowleft, command, ctrl
                 if (thisnode.hasClass("satinput")) {
-                    if (keycode === 188 || keycode === 190) { //disallow period and comma
+                    if (keycode === 188 || keycode === 190 || keycode === 110) { //disallow period and comma
                         e.preventDefault();
                     }
                 }
             } else {
-                if (keycode > 47 && keycode < 58) { //only allow numbers
+                if ((keycode > 47 && keycode < 58) || keycode > 96 && keycode < 106) { //only allow numbers
                     if (e.target.validity.valid) { //test input patern and steps attribustes
                     } else {
                         if (document.getSelection().toString().replace(",", ".") !== thisvalue.replace(",", ".")) {
