@@ -3492,11 +3492,10 @@ function br_result(e) {
     var ping = e.ping,
         proxy = (ping) ? true : false,
         root = (proxy === true) ? ping : e,
-        result = root.br_result,
-        has_result = "br_result" in root;
+        result = root.br_result;
     return {
         "proxy": proxy,
-        "result": (has_result) ? result : root
+        "result": (result) ? result : root
     }
 }
 
