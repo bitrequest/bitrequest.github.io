@@ -1,8 +1,7 @@
 var gapi,
     GoogleAuth,
     user,
-    scope = "https://www.googleapis.com/auth/drive.appdata",
-    redirect = (is_ios_app === true) ? "redirect" : ""; // useragent of ios app
+    scope = "https://www.googleapis.com/auth/drive.appdata"; // useragent of ios app
 $(document).ready(function() {
     if (gapi) {
         if (geturlparameters().rd) { // Ios app workaround
@@ -27,13 +26,14 @@ $(document).ready(function() {
 
 // ** Google api **
 
-function gapi_load() {
+function gapi_load(redirect) {
 	if (gapi) {
 		gapi.load("client:auth2", function() {
+			var rdirect = (redirect === true) ? "redirect" : "";
 	        gapi.client.init({
 	            "client_id": to.ga_id,
 	            "scope": scope,
-	            "ux_mode": redirect,
+	            "ux_mode": rdirect,
 	            "redirect_uri": "https://" + window.location.hostname + "/?p=settings&rd=1"
 	        }).then(function() {
 	            GoogleAuth = gapi.auth2.getAuthInstance();

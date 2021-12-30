@@ -4966,7 +4966,9 @@ function init_keys(ko, set) { // set required keys
         web3 = new Web3(Web3.givenProvider || main_eth_node + if_id);
     }
     if (ga_set === true) {
-        gapi_load();
+	    setTimeout(function() {
+		    gapi_load(is_ios_app);
+        }, 1000);
     }
     io.k = ko;
     if (set === false) {
