@@ -46,6 +46,10 @@ function gapi_load(redirect) {
 
 function Drive_Backup_trigger() {
     $(document).on("click", "#gdtrigger .switchpanel", function() {
+	    if (body.hasClass("ios")) {
+            notify("GoogleAuth unavailable for IOS App at the moment");
+            return false;
+        }
 	    if (GD_auth() === true) {
             var thistrigger = $(this),
 	            changelog = $("#changelog");
@@ -171,6 +175,10 @@ function createfile() {
 
 function listappdata() {
     $(document).on("click", "#listappdata .switchpanel", function() {
+	    if (body.hasClass("ios")) {
+            notify("GoogleAuth unavailable for IOS App at the moment");
+            return false;
+        }
         if (GD_auth() === true) {
             var thistrigger = $(this),
                 backuplist = $("#gd_backuplist"),

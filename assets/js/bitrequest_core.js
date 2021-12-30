@@ -115,6 +115,7 @@ $(document).ready(function() {
     showselect();
     selectbox();
     pickselect();
+    canceldialogtrigger();
 })
 
 function checkphp() { //check for php support by fetching fiat currencies from local api php file
@@ -417,7 +418,6 @@ function finishfunctions() {
     send_trigger();
     showbip39_trigger();
     canceldialog_click();
-    canceldialogtrigger();
     //canceldialog
     blockcancelpaymentdialog();
     cancelpaymentdialogtrigger();
