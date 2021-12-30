@@ -25,7 +25,7 @@ var language = navigator.language || navigator.userLanguage,
     referrer = document.referrer,
     isrefferer = (referrer.length > 0),
     is_android_app = (window.matchMedia("(display-mode: standalone)").matches || referrer == "android-app://" + androidpackagename || navigator.standalone), // android app fingerprint
-    is_ios_app = (userAgent == "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0_1 like Mac OS X) AppleWebKit/604.2.10 (KHTML, like Gecko) Version/13.0.3 Safari/605.1.15"), // ios app fingerprint
+    is_ios_app, // ios app fingerprint
     inframe = (self !== top),
     offline = (navigator.onLine === false),
     thishostname = window.location.hostname,
@@ -864,8 +864,8 @@ function pinback(pininput) {
 //Set classname for ios app
 
 function ios_init() {
-    is_ios_app = true,
-        body.addClass("ios"); // ios app fingerprint
+    is_ios_app = true;
+    body.addClass("ios"); // ios app fingerprint
 }
 
 function ios_redirections(url) {
