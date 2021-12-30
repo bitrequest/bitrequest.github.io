@@ -4,6 +4,7 @@ $(document).ready(function() {
     //ping_xmr_node
     //blockcypher_websocket
     //blockchain_btc_socket
+    //blockchain_bch_socket
     //amberdata_btc_websocket
     //mempoolspace_btc_socket
     //nano_socket
@@ -204,6 +205,50 @@ function blockchain_btc_socket(socket_node, thisaddress) {
     };
 }
 
+function blockchain_bch_socket(socket_node, thisaddress) {
+    var provider = socket_node.url,
+        legacy = bchutils.toLegacyAddress(thisaddress);
+    websocket = new WebSocket(provider);
+    websocket.onopen = function(e) {
+        socket_info(socket_node, true);
+        var ping_event = JSON.stringify({
+            "op": "addr_sub",
+            "addr": legacy
+        });
+        websocket.send(ping_event);
+        ping = setInterval(function() {
+            websocket.send(ping_event);
+        }, 55000);
+    };
+    websocket.onmessage = function(e) {
+        var json = JSON.parse(e.data).x,
+            txhash = json.hash;
+        if (txhash) {
+            if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
+                paymentdialogbox.removeClass("transacting");
+                var reconnectbttn = (txid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + txid + "'>Reconnect</span></div></p>" : "",
+                    content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + reconnectbttn;
+                closesocket();
+                popdialog(content, "alert", "canceldialog");
+            } else {
+                var txd = blockchain_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress, legacy);
+                if (txd) {
+                    closesocket();
+                    pick_monitor(txhash, txd);
+                }
+            }
+        }
+    };
+    websocket.onclose = function(e) {
+        console.log("Disconnected");
+        txid = null;
+    };
+    websocket.onerror = function(e) {
+        handle_socket_fails(socket_node, thisaddress, e.data)
+        return false;
+    };
+}
+
 function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
     var socket_url = socket_node.url,
         ak = get_amberdata_apikey(),
@@ -280,42 +325,6 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
                     closesocket();
                     pick_monitor(txhash, txd);
                 }
-            }
-        }
-    };
-    websocket.onclose = function(e) {
-        console.log("Disconnected");
-        txid = null;
-    };
-    websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress, e.data)
-        return false;
-    };
-}
-
-function blockchain_bch_socket(socket_node, thisaddress) {
-    var provider = socket_node.url,
-        legacy = bchutils.toLegacyAddress(thisaddress);
-    websocket = new WebSocket(provider);
-    websocket.onopen = function(e) {
-        socket_info(socket_node, true);
-        var ping_event = JSON.stringify({
-            "op": "addr_sub",
-            "addr": legacy
-        });
-        websocket.send(ping_event);
-        ping = setInterval(function() {
-            websocket.send(ping_event);
-        }, 55000);
-    };
-    websocket.onmessage = function(e) {
-        var json = JSON.parse(e.data).x,
-            txhash = json.hash;
-        if (txhash) {
-            var txd = blockchain_ws_data(json, request.set_confirmations, request.currencysymbol, legacy);
-            if (txd) {
-                closesocket();
-                pick_monitor(txhash, txd);
             }
         }
     };
@@ -547,6 +556,10 @@ function web3_erc20_websocket(socket_node, thisaddress) {
 }
 
 function handle_socket_fails(socket_node, thisaddress, error) {
+    if (socket_node.url.indexOf("blockchain.info") > -1) {
+        // blockchain.info drops error when closing websocket (websocket is working)
+        return false;
+    }
     var next_socket = try_next_socket(socket_node);
     if (next_socket === false) {
         console.log(error);

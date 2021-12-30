@@ -71,6 +71,7 @@ $(document).ready(function() {
     switchaddress();
     copyaddress_dblclick();
     copyaddress();
+    copyinputs();
     xmrsettings();
     //validaterequestdata
     inputrequestdata();
@@ -976,7 +977,8 @@ function continue_paymentfunction(payment) {
             requesttitle_quotes = (requesttitle && requesttitle.length > 1) ? "'" + requesttitle_short + "'" : "",
             backbttnandtitle = (isrequest === true) ? "<div id='sharetitle' title='" + requesttitle_string + "' data-shorttitle='" + requesttitle_short + "' class='" + exceedclass + "'>" + requesttitle_quotes + "</div>" : "",
             save_request,
-            address_xmr_ia = (request.xmr_ia) ? request.xmr_ia : address;
+            address_xmr_ia = (request.xmr_ia) ? request.xmr_ia : address,
+            ro_attr = (isrequest === true) ? " readonly='readonly'" : "";
         requestinfo = "\
 				<div id='requestinfo'>" +
             backbttnandtitle +
@@ -984,12 +986,12 @@ function continue_paymentfunction(payment) {
 						<span id='sharecryptowrap'>" + cryptologo +
             "<span id='sharemainccinputmirror' class='ccmirror mirrordiv'>\
 								<span>" + thiscurrencyvaluefixedplaceholder + "</span>\
-								<input value='" + thiscurrencyvaluefixedvar + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'/>\
+								<input value='" + thiscurrencyvaluefixedvar + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
 							</span>\
 						</span>\
 						<span id='shareinputmirror' class='fmirror mirrordiv'>\
 							<span>" + placeholder + "</span>\
-							<input value='" + valueplaceholder + "' step='" + steps + "' type='number' placeholder='" + zeroplaceholder + "'/>\
+							<input value='" + valueplaceholder + "' step='" + steps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
 						</span>\
 						<span id='sharecurrency'>" + uoa + "</span>\
 					</div>\
@@ -998,7 +1000,7 @@ function continue_paymentfunction(payment) {
 							<span class='quote'>(</span>\
 							<span id='sharelcinputmirror' class='lcmirror mirrordiv'>\
 							<span>" + fiatcurrencyvalue + "</span>\
-							<input value='" + fiatcurrencyvaluevar + "' step='" + steps + "' type='number' placeholder='" + zeroplaceholder + "'/>\
+							<input value='" + fiatcurrencyvaluevar + "' step='" + steps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
 						</span>\
 						<span id='sharelcname'>" + currencynamestring + "</span>\
 						<span class='quote'>)</span>\
@@ -1010,7 +1012,7 @@ function continue_paymentfunction(payment) {
 								<span>" +
             thiscurrencyvaluefixedplaceholder +
             "</span>\
-								<input value='" + thiscurrencyvaluefixedvar + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'/>\
+								<input value='" + thiscurrencyvaluefixedvar + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
 							</span> " +
             payment + ")\
 						</span>\
@@ -1074,27 +1076,27 @@ function continue_paymentfunction(payment) {
 					<div id='amountbreak' class='inputbreak'>\
 						<span id='mainccinputmirror' class='ccmirror mirrordiv'>\
 							<span>" + thiscurrencyvaluefixedplaceholder + "</span>\
-							<input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'>\
+							<input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + ">\
 						</span>\
 						<span id='amountinputmirror' class='fmirror mirrordiv'>\
 							<span>" + placeholder + "</span>\
-							<input value='" + valueplaceholder + "' data-xrate='" + currencyxrate + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'>\
+							<input value='" + valueplaceholder + "' data-xrate='" + currencyxrate + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + ">\
 						</span>\
 						<span id='pickcurrency'>" + uoa + "</span>\
 					</div>\
 					<div id='ibsat' class='inputbreak'>\
 						<span id='satinputmirror' class='mirrordiv'>\
 							<span>" + satplaceholder + "</span>\
-							<input class='satinput' value='" + satamountvar + "' data-xrate='" + ccrateeuro + "' max='10000000000000' type='number' placeholder='000000000'/>\
+							<input class='satinput' value='" + satamountvar + "' data-xrate='" + ccrateeuro + "' max='10000000000000' type='number' placeholder='000000000'" + ro_attr + "/>\
 						</span> satoshis\
 					</div>\
 					<div id='iblc' class='inputbreak'>\
 						(<span id='lcinputmirror' class='lcmirror mirrordiv'>\
 							<span>" + fiatcurrencyvalue + "</span>\
-							<input value='" + fiatcurrencyvaluevar + "' data-xrate='" + fiatcurrencyrate + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'/>\
+							<input value='" + fiatcurrencyvaluevar + "' data-xrate='" + fiatcurrencyrate + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
 						</span> " + fiatcurrency + ") \
 					</div>\
-					<div id='txibreak' class='inputbreak'> Send <span id='ccinputmirror' class='ccmirror mirrordiv'><span>" + thiscurrencyvaluefixedplaceholder + "</span><input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'/></span> " + currencysymbol + " to" + labelvalue + ": </div>\
+					<div id='txibreak' class='inputbreak'> Send <span id='ccinputmirror' class='ccmirror mirrordiv'><span>" + thiscurrencyvaluefixedplaceholder + "</span><input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/></span> " + currencysymbol + " to" + labelvalue + ": </div>\
 				</div>\
 				<div id='paymentaddress' class='copyinput' data-type='address'>" + address_xmr_ia + "</div>\
 			</div>\
@@ -1469,6 +1471,17 @@ function copyaddress() {
         var val = copycontent.val(),
             type = copycontent.data("type");
         copytoclipboard(val, type);
+    });
+}
+
+function copyinputs() {
+    $(document).on("dblclick", "#paymentdialogbox.request .mirrordiv input", function() {
+        var thisval = $(this).val(),
+            typeval = "amount";
+        copycontent.val(thisval).data({
+            "type": typeval
+        });
+        notify("<span id='copyaddress'>Copy " + typeval + "?</span>", 40000, "yes");
     });
 }
 

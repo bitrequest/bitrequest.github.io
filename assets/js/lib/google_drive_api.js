@@ -27,41 +27,41 @@ $(document).ready(function() {
 // ** Google api **
 
 function gapi_load(redirect) {
-	if (gapi) {
-		gapi.load("client:auth2", function() {
-			var rdirect = (redirect === true) ? "redirect" : "";
-	        gapi.client.init({
-	            "client_id": to.ga_id,
-	            "scope": scope,
-	            "ux_mode": rdirect,
-	            "redirect_uri": "https://" + window.location.hostname + "/?p=settings&rd=1"
-	        }).then(function() {
-	            GoogleAuth = gapi.auth2.getAuthInstance();
-	            user = GoogleAuth.currentUser.get();
-	            loadClient();
-	        });
-	    });
-	}
+    if (gapi) {
+        gapi.load("client:auth2", function() {
+            var rdirect = (redirect === true) ? "redirect" : "";
+            gapi.client.init({
+                "client_id": to.ga_id,
+                "scope": scope,
+                "ux_mode": rdirect,
+                "redirect_uri": "https://" + window.location.hostname + "/?p=settings&rd=1"
+            }).then(function() {
+                GoogleAuth = gapi.auth2.getAuthInstance();
+                user = GoogleAuth.currentUser.get();
+                loadClient();
+            });
+        });
+    }
 }
 
 function Drive_Backup_trigger() {
     $(document).on("click", "#gdtrigger .switchpanel", function() {
-	    if (body.hasClass("ios")) {
+        if (body.hasClass("ios")) {
             notify("GoogleAuth unavailable for IOS App at the moment");
             return false;
         }
-	    if (GD_auth() === true) {
+        if (GD_auth() === true) {
             var thistrigger = $(this),
-	            changelog = $("#changelog");
-	        if (thistrigger.hasClass("true")) {
-	            thistrigger.removeClass("true");
-	            changelog.slideDown(300);
-	            html.removeClass("gdauth");
-	        } else {
-	            thistrigger.addClass("true");
-	            changelog.slideUp(300);
-	            html.addClass("gdauth");
-	        }
+                changelog = $("#changelog");
+            if (thistrigger.hasClass("true")) {
+                thistrigger.removeClass("true");
+                changelog.slideDown(300);
+                html.removeClass("gdauth");
+            } else {
+                thistrigger.addClass("true");
+                changelog.slideUp(300);
+                html.addClass("gdauth");
+            }
         } else {
             authenticate().then(loadClient);
         }
@@ -71,35 +71,35 @@ function Drive_Backup_trigger() {
 function authenticate() {
     if (GoogleAuth) {
         return GoogleAuth.signIn().then(function() {
-            html.addClass("gdauth");
-            $("#gdtrigger .switchpanel").addClass("true");
-            setTimeout(function() {
-                $("#listappdata .switchpanel").trigger("click");
-                if (GD_auth() === true) {
-		            updateappdata();
-		            body.removeClass("haschanges");
-		        }
-            }, 500);
-        },
-        function(err) {
-            //console.error("Error signing in", err);
-        });
+                html.addClass("gdauth");
+                $("#gdtrigger .switchpanel").addClass("true");
+                setTimeout(function() {
+                    $("#listappdata .switchpanel").trigger("click");
+                    if (GD_auth() === true) {
+                        updateappdata();
+                        body.removeClass("haschanges");
+                    }
+                }, 500);
+            },
+            function(err) {
+                //console.error("Error signing in", err);
+            });
     } else {
-	    var content = "<h2 class='icon-bin'>Sorry!</h2><p>Google drive access not allowed from this domain</p><div id='api_signin'>Please apply for google OAuth token <a href='https://console.developers.google.com/apis/credentials' target='_blank'>here</a></div>";
-	    canceldialog();
+        var content = "<h2 class='icon-bin'>Sorry!</h2><p>Google drive access not allowed from this domain</p><div id='api_signin'>Please apply for google OAuth token <a href='https://console.developers.google.com/apis/credentials' target='_blank'>here</a></div>";
+        canceldialog();
         setTimeout(function() {
-	        popdialog(content, "alert", "canceldialog");
-	    }, 800);
+            popdialog(content, "alert", "canceldialog");
+        }, 800);
     }
 }
 
 function loadClient() {
     return gapi.client.load("https://content.googleapis.com/discovery/v1/apis/drive/v3/rest").then(function() {
-        console.log("GAPI client loaded for API");
-    },
-    function(err) {
-        console.error("Error loading GAPI client for API", err);
-    });
+            console.log("GAPI client loaded for API");
+        },
+        function(err) {
+            console.error("Error loading GAPI client for API", err);
+        });
 }
 
 function updateappdata() {
@@ -112,13 +112,13 @@ function updateappdata() {
         "body": complilebackup()
     }
     return gapi.client.request(requestdata).then(function(response) {
-        updatemeta();
-    },
-    function(err) {
-        if (err = 404) { // file does not exist
-            createfile() // create file
-        }
-    });
+            updatemeta();
+        },
+        function(err) {
+            if (err = 404) { // file does not exist
+                createfile() // create file
+            }
+        });
 }
 
 function updatemeta() {
@@ -128,17 +128,17 @@ function updatemeta() {
         "deviceid": deviceid
     }
     return gapi.client.drive.files.update({
-        "fileId": localStorage.getItem("bitrequest_backupfile_id"),
-        "resource": {
-            "description": JSON.stringify(description)
-        }
-    })
-    .then(function(response) {
-        //console.log("Response", response);
-    },
-    function(err) {
-        console.error("Execute error", err);
-    });
+            "fileId": localStorage.getItem("bitrequest_backupfile_id"),
+            "resource": {
+                "description": JSON.stringify(description)
+            }
+        })
+        .then(function(response) {
+                //console.log("Response", response);
+            },
+            function(err) {
+                console.error("Execute error", err);
+            });
 }
 
 function createfile() {
@@ -175,7 +175,7 @@ function createfile() {
 
 function listappdata() {
     $(document).on("click", "#listappdata .switchpanel", function() {
-	    if (body.hasClass("ios")) {
+        if (body.hasClass("ios")) {
             notify("GoogleAuth unavailable for IOS App at the moment");
             return false;
         }
@@ -201,34 +201,34 @@ function listappdata() {
                     "pageSize": 10,
                     "fields": "*"
                 }).then(function(response) {
-                    // Handle the results here (response.result has the parsed body).
-                    var filelist = response.result.files,
-                        sorted_filelist = filelist.sort(function(a, b) { // sort array by timestamp
-                            var d1 = JSON.parse(a.description).modified,
-                                d2 = JSON.parse(b.description).modified;
-                            return d2 - d1; // d2-d1 for descending order
-                        }),
-                        gdbackuppush = [];
-                    $.each(sorted_filelist, function(i, value) {
-                        var description = JSON.parse(value.description),
-                            device = description.device,
-                            device_id = description.deviceid,
-                            trash = (device_id == deviceid) ? "<div class='purge_bu icon-bin'></div>" : "",
-                            gdbackups = "<li data-gdbu_id='" + value.id + "' data-device-id='" + device_id + "' data-device='" + device + "'><div class='restorefile icon-" + device + "' title='" + device + "'>" + new Date(description.modified - timezone).toLocaleString(language) + "<span class='lmodified'> (" + (value.size / 1000).toFixed(0) + " KB)</div>" + trash + "</li>";
-                        gdbackuppush.push(gdbackups);
+                        // Handle the results here (response.result has the parsed body).
+                        var filelist = response.result.files,
+                            sorted_filelist = filelist.sort(function(a, b) { // sort array by timestamp
+                                var d1 = JSON.parse(a.description).modified,
+                                    d2 = JSON.parse(b.description).modified;
+                                return d2 - d1; // d2-d1 for descending order
+                            }),
+                            gdbackuppush = [];
+                        $.each(sorted_filelist, function(i, value) {
+                            var description = JSON.parse(value.description),
+                                device = description.device,
+                                device_id = description.deviceid,
+                                trash = (device_id == deviceid) ? "<div class='purge_bu icon-bin'></div>" : "",
+                                gdbackups = "<li data-gdbu_id='" + value.id + "' data-device-id='" + device_id + "' data-device='" + device + "'><div class='restorefile icon-" + device + "' title='" + device + "'>" + new Date(description.modified - timezone).toLocaleString(language) + "<span class='lmodified'> (" + (value.size / 1000).toFixed(0) + " KB)</div>" + trash + "</li>";
+                            gdbackuppush.push(gdbackups);
+                        });
+                        if (filelist.length > 0) {
+                            backuplist.prepend(gdbackuppush.join("")).slideDown(300);
+                        } else {
+                            backuplist.prepend("<li>No files found</li>").slideDown(300);
+                        }
+                        importjsonlist.slideUp(300);
+                        thistrigger.addClass("true");
+                        html.addClass("gdauth");
+                    },
+                    function(err) {
+                        console.log(err);
                     });
-                    if (filelist.length > 0) {
-                        backuplist.prepend(gdbackuppush.join("")).slideDown(300);
-                    } else {
-                        backuplist.prepend("<li>No files found</li>").slideDown(300);
-                    }
-                    importjsonlist.slideUp(300);
-                    thistrigger.addClass("true");
-                    html.addClass("gdauth");
-                },
-                function(err) {
-                    console.log(err);
-                });
             }
         } else {
             authenticate().then(loadClient);
@@ -253,16 +253,16 @@ function deletefiletrigger() {
 
 function deletefile(fileId, thislist) {
     return gapi.client.drive.files.delete({
-        "fileId": fileId
-    })
-    .then(function(response) {
-        console.log("Response", response);
-        thislist.slideUp(300);
-        notify("File deleted");
-    },
-    function(err) {
-        console.error("Execute error", err);
-    });
+            "fileId": fileId
+        })
+        .then(function(response) {
+                console.log("Response", response);
+                thislist.slideUp(300);
+                notify("File deleted");
+            },
+            function(err) {
+                console.error("Execute error", err);
+            });
 }
 
 function GD_auth() {

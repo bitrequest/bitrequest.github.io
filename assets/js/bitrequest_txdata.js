@@ -14,14 +14,14 @@ function default_tx_data() {
 
 // blockchain.info
 
-function blockchain_ws_data(data, setconfirmations, ccsymbol, address) { // poll blockchain.info websocket data
+function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) { // poll blockchain.info websocket data
     if (data) {
         var outputs = data.out,
             outputsum;
         if (outputs) {
             var outputsum = 0;
             $.each(outputs, function(dat, value) {
-                if (address == value.addr) {
+                if (address == value.addr || legacy == value.addr) {
                     outputsum += value.value || 0; // sum of outputs
                 }
             });

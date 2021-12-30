@@ -862,7 +862,6 @@ html.inframe #request_back {
 
 /* block inputs */
 
-#paymentdialogbox.request input,
 #paymentdialogbox.request #pickcurrency {
 	pointer-events: none;
 }
