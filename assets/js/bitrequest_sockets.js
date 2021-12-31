@@ -32,7 +32,7 @@ $(document).ready(function() {
 // Websockets / Pollfunctions
 
 function init_socket(socket_node, address, swtch) {
-	if (offline === true) {
+    if (offline === true) {
         notify("You are currently offline, request is not monitored");
     } else {
         var payment = request.payment;
@@ -556,20 +556,20 @@ function web3_erc20_websocket(socket_node, thisaddress) {
 }
 
 function handle_socket_fails(socket_node, thisaddress, error) {
-	if (paymentpopup.hasClass("active")) { // only when request is visible
-		var next_socket = try_next_socket(socket_node);
-		if (next_socket === false) {
-	        console.log(error);
-	        var error_message = "unable to connect to " + socket_node.name;
-	        //fail_dialogs(socketname, error_message);
-	        console.log(error_message);
-	        socket_info(socket_node, false);
-	        notify("websocket offline", 500000, "yes");
-	    } else {
-	        closesocket();
-	        init_socket(next_socket, thisaddress);
-	    }
-	}
+    if (paymentpopup.hasClass("active")) { // only when request is visible
+        var next_socket = try_next_socket(socket_node);
+        if (next_socket === false) {
+            console.log(error);
+            var error_message = "unable to connect to " + socket_node.name;
+            //fail_dialogs(socketname, error_message);
+            console.log(error_message);
+            socket_info(socket_node, false);
+            notify("websocket offline", 500000, "yes");
+        } else {
+            closesocket();
+            init_socket(next_socket, thisaddress);
+        }
+    }
 }
 
 function try_next_socket(current_socket_data) {

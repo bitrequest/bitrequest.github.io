@@ -662,13 +662,13 @@ function continue_paymentfunction(payment) {
                 var data = br_result(e).result,
                     status = data.status,
                     ddat = data.data;
-                    has_error = (
-	                    data === false ||
-                        data.statusCode == 404 ||
-                        data.error ||
-                        (status && status.error_message));
+                has_error = (
+                    data === false ||
+                    data.statusCode == 404 ||
+                    data.error ||
+                    (status && status.error_message));
                 if (has_error) {
-	                var nextccapi = try_next_api(apilist, api);
+                    var nextccapi = try_next_api(apilist, api);
                     if (nextccapi === false) {
                         var error_val = (data.error) ? data.error : "Unable to get " + payment + " Exchangerate";
                         loadertext("api error");
@@ -980,7 +980,7 @@ function continue_paymentfunction(payment) {
             save_request,
             address_xmr_ia = (request.xmr_ia) ? request.xmr_ia : address,
             ro_attr = (isrequest === true && !iszero) ? " readonly='readonly'" : "",
-			requestinfo = "\
+            requestinfo = "\
 				<div id='requestinfo'>" +
             backbttnandtitle +
             "<div id='shareamount' class='inputbreak'>\
