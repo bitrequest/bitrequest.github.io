@@ -661,25 +661,26 @@ function continue_paymentfunction(payment) {
             }).done(function(e) {
                 var data = br_result(e).result,
                     status = data.status,
+                    ddat = data.data;
                     has_error = (
-                        (data.statusCode == 404) ||
-                        (data.error) ||
-                        (status && status.error_message)
-                    );
+	                    data === false ||
+                        data.statusCode == 404 ||
+                        data.error ||
+                        (status && status.error_message));
                 if (has_error) {
-                    var nextccapi = try_next_api(apilist, api);
+	                var nextccapi = try_next_api(apilist, api);
                     if (nextccapi === false) {
                         var error_val = (data.error) ? data.error : "Unable to get " + payment + " Exchangerate";
                         loadertext("api error");
                         closeloader();
                         cancelpaymentdialog();
-                        fail_dialogs(api, data.error);
+                        fail_dialogs(api, error_val);
                     } else {
                         getccexchangerates(apilist, nextccapi);
                     }
                     return false;
                 } else {
-                    var ccrate = (api == "coinmarketcap") ? data.data[cmcid].quote.USD.price :
+                    var ccrate = (api == "coinmarketcap") ? ddat[cmcid].quote.USD.price :
                         (api == "coinpaprika") ? data.quotes.USD.price :
                         (api == "coingecko") ? data[Object.keys(data)[0]].usd :
                         null;
