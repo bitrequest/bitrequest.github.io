@@ -978,8 +978,8 @@ function continue_paymentfunction(payment) {
             backbttnandtitle = (isrequest === true) ? "<div id='sharetitle' title='" + requesttitle_string + "' data-shorttitle='" + requesttitle_short + "' class='" + exceedclass + "'>" + requesttitle_quotes + "</div>" : "",
             save_request,
             address_xmr_ia = (request.xmr_ia) ? request.xmr_ia : address,
-            ro_attr = (isrequest === true) ? " readonly='readonly'" : "";
-        requestinfo = "\
+            ro_attr = (isrequest === true && !iszero) ? " readonly='readonly'" : "",
+			requestinfo = "\
 				<div id='requestinfo'>" +
             backbttnandtitle +
             "<div id='shareamount' class='inputbreak'>\
