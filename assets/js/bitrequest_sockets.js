@@ -206,6 +206,7 @@ function blockchain_btc_socket(socket_node, thisaddress) {
 }
 
 function blockchain_bch_socket(socket_node, thisaddress) {
+	console.log(thisaddress);
     var provider = socket_node.url,
         legacy = bchutils.toLegacyAddress(thisaddress);
     websocket = new WebSocket(provider);
@@ -213,7 +214,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
             "op": "addr_sub",
-            "addr": legacy
+            "addr": "bitcoincash:" + thisaddress
         });
         websocket.send(ping_event);
         ping = setInterval(function() {

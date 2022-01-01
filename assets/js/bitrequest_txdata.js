@@ -21,7 +21,7 @@ function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) {
         if (outputs) {
             var outputsum = 0;
             $.each(outputs, function(dat, value) {
-                if (address == value.addr || legacy == value.addr) {
+                if (address == value.addr || "bitcoincash:" + address == value.addr || legacy == value.addr) {
                     outputsum += value.value || 0; // sum of outputs
                 }
             });
