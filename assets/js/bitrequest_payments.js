@@ -49,6 +49,7 @@ $(document).ready(function() {
     //get_fiat_exchangerate
     //rendercurrencypool
     //getpayment
+    //cc_fail
     //show_paymentdialog
     //main_input_focus
     pickcurrency();
@@ -394,7 +395,6 @@ function loadpaymentfunction(pass) {
                         "coindata": coindata,
                         "erc20": iserc20
                     }, // global request object
-
                     helper = {};
                 helper.exact = exact;
                 helper.contactform = contactform;
@@ -659,65 +659,45 @@ function continue_paymentfunction(payment) {
                     "cache": true
                 },
             }).done(function(e) {
-                var data = br_result(e).result,
-                    status = data.status,
-                    ddat = data.data;
-                has_error = (
-                    data === false ||
-                    data.statusCode == 404 ||
-                    data.error ||
-                    (status && status.error_message));
-                if (has_error) {
-                    var nextccapi = try_next_api(apilist, api);
-                    if (nextccapi === false) {
+                var data = br_result(e).result;
+                if (data) {
+                    var status = data.status,
+                        has_error = (data.statusCode == 404 ||
+                            (data.error) ||
+                            (status && status.error_message));
+                    if (has_error) {
                         var error_val = (data.error) ? data.error : "Unable to get " + payment + " Exchangerate";
-                        loadertext("api error");
-                        closeloader();
-                        cancelpaymentdialog();
-                        fail_dialogs(api, error_val);
-                    } else {
-                        getccexchangerates(apilist, nextccapi);
-                    }
-                    return false;
-                } else {
-                    var ccrate = (api == "coinmarketcap") ? ddat[cmcid].quote.USD.price :
-                        (api == "coinpaprika") ? data.quotes.USD.price :
-                        (api == "coingecko") ? data[Object.keys(data)[0]].usd :
-                        null;
-                    if (ccrate) {
-                        loadertext("success");
-                        var timestamp = $.now(),
-                            ccratearray = {};
-                        ccratearray.timestamp = timestamp;
-                        ccratearray.ccrate = ccrate;
-                        ccratearray.apisrc = api;
-                        var storeccratestring = JSON.stringify(ccratearray);
-                        sessionStorage.setItem("bitrequest_xrates_" + currencysymbol, storeccratestring); //cache crypto rates in sessionstorage
-                        initexchangerate(ccrate, api, 0); //pass usd amount, check for fiat rates
-                    } else {
-                        var nextccapi = try_next_api(apilist, api);
-                        if (nextccapi === false) {
-                            loadertext("api error");
-                            closeloader();
-                            cancelpaymentdialog();
-                            fail_dialogs(api, "unable to get " + payment + " rate");
-                        } else {
-                            getccexchangerates(apilist, nextccapi);
-                        }
+                        cc_fail(apilist, api, error_val);
                         return false;
+                    } else {
+                        var ccrate = (api == "coinmarketcap") ? data.data[cmcid].quote.USD.price :
+                            (api == "coinpaprika") ? data.quotes.USD.price :
+                            (api == "coingecko") ? data[Object.keys(data)[0]].usd :
+                            null;
+                        if (ccrate) {
+                            loadertext("success");
+                            var timestamp = $.now(),
+                                ccratearray = {};
+                            ccratearray.timestamp = timestamp;
+                            ccratearray.ccrate = ccrate;
+                            ccratearray.apisrc = api;
+                            var storeccratestring = JSON.stringify(ccratearray);
+                            sessionStorage.setItem("bitrequest_xrates_" + currencysymbol, storeccratestring); //cache crypto rates in sessionstorage
+                            initexchangerate(ccrate, api, 0); //pass usd amount, check for fiat rates
+                        } else {
+                            var error_val = "unable to get " + payment + " rate";
+                            cc_fail(apilist, api, error_val);
+                            return false;
+                        }
                     }
+                } else {
+                    var error_val = "unable to get " + payment + " rate";
+                    cc_fail(apilist, api, error_val);
+                    return false;
                 }
             }).fail(function(jqXHR, textStatus, errorThrown) {
-                var nextccapi = try_next_api(apilist, api);
-                if (nextccapi === false) {
-                    loadertext("failed");
-                    closeloader();
-                    cancelpaymentdialog();
-                    var error_object = (errorThrown) ? errorThrown : jqXHR;
-                    fail_dialogs(api, error_object);
-                } else {
-                    getccexchangerates(apilist, nextccapi);
-                }
+                var error_object = (errorThrown) ? errorThrown : jqXHR;
+                cc_fail(apilist, api, error_object);
                 return false;
             });
         }
@@ -1142,6 +1122,18 @@ function continue_paymentfunction(payment) {
             "helper": helper
         });
         wake();
+    }
+
+    function cc_fail(apilist, api, error_val) {
+        var nextccapi = try_next_api(apilist, api);
+        if (nextccapi === false) {
+            loadertext("api error");
+            closeloader();
+            cancelpaymentdialog();
+            fail_dialogs(api, error_val);
+        } else {
+            getccexchangerates(apilist, nextccapi);
+        }
     }
 }
 
