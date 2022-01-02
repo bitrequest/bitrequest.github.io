@@ -557,6 +557,9 @@ function web3_erc20_websocket(socket_node, thisaddress) {
 }
 
 function handle_socket_fails(socket_node, thisaddress, error) {
+	if (paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
+		return false;
+	}
     if (paymentpopup.hasClass("active")) { // only when request is visible
         var next_socket = try_next_socket(socket_node);
         if (next_socket === false) {

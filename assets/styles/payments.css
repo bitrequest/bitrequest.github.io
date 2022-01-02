@@ -61,6 +61,7 @@
 .brstatuspanel span.receivedcrypto {
 	text-transform: uppercase;
 	font-size: 120%;
+	color: #707070;;
 }
 
 .brstatuspanel span.receivedfiat {
