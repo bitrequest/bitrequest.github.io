@@ -1565,7 +1565,7 @@ function validatesteps() {
                     }
                 }
             } else {
-                if ((keycode > 47 && keycode < 58) || keycode > 96 && keycode < 106) { //only allow numbers
+                if ((keycode > 47 && keycode < 58) || (keycode > 96 && keycode < 106)) { //only allow numbers
                     if (e.target.validity.valid) { //test input patern and steps attribustes
                     } else {
                         if (document.getSelection().toString().replace(",", ".") !== thisvalue.replace(",", ".")) {

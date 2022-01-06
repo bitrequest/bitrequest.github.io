@@ -47,8 +47,13 @@ if (isset($proxyheaders) || $method == "POST" || $bearer) {
 }
 
 // Add Authorization header if needed
-if ($bearer && $auth_token) {
-    $postheaders[] = "Authorization: Bearer " . $auth_token;
+if ($bearer) {
+	if ($auth_token) {
+    	$postheaders[] = "Authorization: Bearer " . $auth_token;
+	}
+	if ($bearer == "tls_wildcard") {
+    	$postheaders["tls_wildcard"] = true;
+	}
 }
 
 // Construct url

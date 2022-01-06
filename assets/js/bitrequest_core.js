@@ -3439,7 +3439,7 @@ function get_infura_apikey(rpcurl) {
         (savedkey) ? savedkey : to.if_id;
 }
 
-function api_proxy(ad, p_proxy) { // callback function from bitrequest.js
+function api_proxy(ad, p_proxy) {
     var set_proxy = (p_proxy) ? p_proxy : $("#api_proxy").data("selected"),
         custom_url = ad.api_url,
         aud = (custom_url) ? {} :

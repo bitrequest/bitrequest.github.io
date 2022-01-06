@@ -2115,7 +2115,7 @@ function test_custom_proxy(value) { // make test api call
         popnotify("error", "Proxy already added");
         return false;
     } else {
-        if (value.indexOf("http") > -1) {
+        if (fixed_url.indexOf("http") > -1) {
             api_proxy({
                 "cachetime": 25,
                 "cachefolder": "1h",
@@ -2200,9 +2200,8 @@ function remove_proxy() {
 }
 
 function complete_url(url) {
-    var cv1 = (url.indexOf("http") > -1) ? url.split("://").pop() : url,
-        cv2 = "https://" + cv1;
-    return (cv2.substr(-1) != "/") ? cv2 + "/" : cv2;
+    var cv1 = (url.indexOf("://") > -1) ? url : "https://" + url;
+    return (cv1.substr(-1) != "/") ? cv1 + "/" : cv1;
 }
 
 // API keys

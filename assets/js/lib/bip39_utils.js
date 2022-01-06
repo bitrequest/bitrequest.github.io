@@ -324,7 +324,7 @@ function bech32_encode(hrp, data) {
     return ret;
 }
 
-function bech32_decode(bechString) {
+function bech32_decode(bechString) { // unused
     var p,
         has_lower = false,
         has_upper = false;
