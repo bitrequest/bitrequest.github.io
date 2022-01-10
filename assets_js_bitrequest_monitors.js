@@ -1237,7 +1237,7 @@ function get_next_rpc(this_payment, this_rpc_url) {
     var rpc_settings_li = $("#" + this_payment + "_settings .cc_settinglist li[data-id='apis']");
     if (rpc_settings_li) {
         var optionlist = getcoinsettings(this_payment),
-        	rpc_settings = rpc_settings_li.data(),
+            rpc_settings = rpc_settings_li.data(),
             rpclist = rpc_settings.options;
         if (rpclist) {
             if ($.isEmptyObject(rpclist)) {

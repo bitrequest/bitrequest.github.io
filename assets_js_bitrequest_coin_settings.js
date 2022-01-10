@@ -52,6 +52,9 @@ $(document).ready(function() {
     trigger_apikey();
     //add_apikey;
     submit_apikey();
+
+    reset_coinsettings();
+    //reset_coinsettings_function
 });
 
 // ** Currency Settings **
@@ -63,65 +66,46 @@ function edit_confirmations() {
             thiscurrency = thistrigger.attr("data-currency"),
             thisli = thistrigger.closest("li"),
             confsrc = thisli.data("selected"),
-            content = "<div class='formbox' id='conf_formbox'>\
-			<h2 class='icon-clock'>Confirmations</h2>\
-			<div class='popnotify'></div>\
-			<ul class='conf_options noselect'>\
-				<li>\
-					<div class='pick_conf'>\
-						<div class='radio icon-radio-unchecked'></div>\
-						<span>0</span>\
-						<div class='conf_emoji'>☕</div>\
-					</div>\
-				</li>\
-				<li>\
-					<div class='pick_conf'>\
-						<div class='radio icon-radio-unchecked'></div>\
-						<span>1</span>\
-						<div class='conf_emoji'>🍷 🍽</div>\
-					</div>\
-				</li>\
-				<li>\
-					<div class='pick_conf'>\
-						<div class='radio icon-radio-unchecked'></div>\
-						<span>2</span>\
-						<div class='conf_emoji'>📱</div>\
-					</div>\
-				</li>\
-				<li>\
-					<div class='pick_conf'>\
-						<div class='radio icon-radio-unchecked'></div>\
-						<span>3</span>\
-						<div class='conf_emoji'>🖥</div>\
-					</div>\
-				</li>\
-				<li>\
-					<div class='pick_conf'>\
-						<div class='radio icon-radio-unchecked'></div>\
-						<span>4</span>\
-						<div class='conf_emoji'>🚗</div>\
-					</div>\
-				</li>\
-				<li>\
-					<div class='pick_conf'>\
-						<div class='radio icon-radio-unchecked'></div>\
-						<span>5</span>\
-						<div class='conf_emoji'>🏠</div>\
-					</div>\
-				</li>\
-				<li>\
-					<div class='pick_conf'>\
-						<div class='radio icon-radio-unchecked'></div>\
-						<span>6</span>\
-						<div class='conf_emoji'>🛥 💎</div>\
-					</div>\
-				</li>\
-			</ul>\
-			<div class='popform'>\
-				<input type='hidden' value='" + confsrc + "'/>\
-				<input type='submit' class='submit' value='OK' data-currency='" + thiscurrency + "'/>\
-			</div>\
-		</div>";
+            ddat = [{
+                "ul": {
+                    "class": "conf_options noselect",
+                    "content": "<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>0</span><div class='conf_emoji'>☕</div></div></li>\
+				<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>1</span><div class='conf_emoji'>🍷 🍽</div></div></li>\
+				<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>2</span><div class='conf_emoji'>📱</div></div></li>\
+				<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>3</span><div class='conf_emoji'>🖥</div></div></li>\
+				<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>4</span><div class='conf_emoji'>🚗</div></div></li>\
+				<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>5</span><div class='conf_emoji'>🏠</div></div></li>\
+				<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>6</span><div class='conf_emoji'>🛥 💎</div></div></li>"
+                },
+                "div": {
+                    "class": "popform",
+                    "content": [{
+                            "input": {
+                                "attr": {
+                                    "type": "hidden",
+                                    "value": confsrc
+                                }
+                            }
+                        },
+                        {
+                            "input": {
+                                "class": "submit",
+                                "attr": {
+                                    "type": "submit",
+                                    "value": "OK",
+                                    "data-currency": thiscurrency
+                                }
+                            }
+                        }
+                    ]
+                }
+            }],
+            content = template_dialog({
+                "id": "conf_formbox",
+                "icon": "icon-clock",
+                "title": "Confirmations",
+                "elements": ddat
+            });
         popdialog(content, "alert", "triggersubmit");
         var currentli = $("#conf_formbox ul.conf_options li").filter(function() {
             return $(this).find("span").text() == confsrc;
@@ -195,20 +179,53 @@ function edit_blockexplorer() {
         } else {
             var thiscurrency = current_li.children(".liwrap").attr("data-currency"),
                 selected = this_data.selected,
-                content = "\
-				<div class='formbox' id='be_formbox'>\
-					<h2 class='icon-key'>Choose Blockexplorer</h2>\
-					<div class='popnotify'></div>\
-					<div class='popform'>\
-						<div class='selectbox'>\
-							<input type='text' value='" + selected + "' placeholder='Choose Blockexplorer' readonly='readonly'/>\
-							<div class='selectarrows icon-menu2' data-pe='none'></div>\
-							<div class='options'>\
-							</div>\
-						</div>\
-						<input type='submit' class='submit' value='OK' data-currency='" + thiscurrency + "'/>\
-					</div>\
-				</div>";
+                ddat = [{
+                    "div": {
+                        "class": "popform",
+                        "content": [{
+                            "div": {
+                                "class": "selectbox",
+                                "content": [{
+                                        "input": {
+                                            "attr": {
+                                                "type": "text",
+                                                "value": selected,
+                                                "placeholder": "Choose Blockexplorer",
+                                                "readonly": "readonly"
+                                            },
+                                            "close": true
+                                        },
+                                        "div": {
+                                            "class": "selectarrows icon-menu2",
+                                            "attr": {
+                                                "data-pe": "none"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "div": {
+                                            "class": "options"
+                                        }
+                                    }
+                                ]
+                            },
+                            "input": {
+                                "class": "submit",
+                                "attr": {
+                                    "type": "submit",
+                                    "value": "OK",
+                                    "data-currency": thiscurrency
+                                }
+                            }
+                        }]
+                    }
+                }],
+                content = template_dialog({
+                    "id": "be_formbox",
+                    "icon": "icon-key",
+                    "title": "Choose Blockexplorer",
+                    "elements": ddat
+                });
             popdialog(content, "alert", "triggersubmit");
             var optionlist = $("#be_formbox").find(".options");
             $.each(options, function(key, value) {
@@ -1067,7 +1084,7 @@ function xpub_info_pu(currency, xpub) {
     			<div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>show</span></div>\
 					<div class='xp_span drawer'>\
 						<div class='qrwrap flex'>\
-							<div class='qrcode'></div><img src='img/logos/" + ccsymbol + "-" + currency + ".png' class='cmc_icon'>\
+							<div class='qrcode'></div><img src='img_logos_" + ccsymbol + "-" + currency + ".png' class='cmc_icon'>\
 						</div>\
 						<p class='adbox adboxl select' data-type='Xpub'>" + xpub + "</p>\
 					</div>\
@@ -1184,4 +1201,24 @@ function submit_apikey() {
             popnotify("error", "Enter a valid API key");
         }
     })
+}
+
+function reset_coinsettings() {
+    $(document).on("click", ".reset_cc_settings", function() {
+        var thistrigger = $(this),
+            currency = thistrigger.attr("data-currency");
+        popdialog("<h2 class='icon-bin'>Reset " + currency + " settings?</h2>", "alert", "reset_coinsettings_function", thistrigger);
+    })
+}
+
+function reset_coinsettings_function(trigger) {
+    var currency = trigger.attr("data-currency"),
+        result = confirm("Are you sure you want to reset " + currency + " settings?");
+    if (result === true) {
+        var coinsettings = getcoinsettings(currency);
+        localStorage.setItem("bitrequest_" + currency + "_settings", JSON.stringify(coinsettings));
+        append_coinsetting(currency, coinsettings, false);
+        canceldialog();
+        notify(currency + " settings reset to default");
+    }
 }

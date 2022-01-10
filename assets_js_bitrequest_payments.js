@@ -1003,7 +1003,7 @@ function continue_paymentfunction(payment) {
             conf_section = (instant === true) ? "" : "<span id='statusbox'>Waiting for <span id='confnumber'></span> confirmations </span><span class='confbox'><span data-conf='0'>0</span> confirmations</span>",
             brstatuspanel = "\
 				<div class='brstatuspanel'>\
-					<img src='img/confirmed.png'/>\
+					<img src='img_confirmed.png'/>\
 					<div id='mainpulse' class='pulse'></div>\
 					<div class='main_wifi_off icon-wifi-off'></div>\
 					<h2>" + status_text + "</h2>\
@@ -1728,7 +1728,7 @@ function addaddressfromdialog() {
             vk_box = (payment == "monero") ? "<div class='inputwrap'><input type='text' class='vk_input' value='' placeholder='View key'>" + scanvk + "</div>" : "",
             der_src = (dd) ? (dd.xpubid) ? " from Xpub" : " from seed" : "",
             seedstr = (dd) ? "<div class='popnotify' style='display:block'><span id='addfromseed' class='address_option'>Generate address" + der_src + "</span></div>" : "<div class='popnotify'></div>",
-            content = $("<div class='formbox form add' id='addressformbox'>\<h2>" + getcc_icon(cmcid, request.cpid, erc20) + " Add " + payment + " address</h2>" + seedstr + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' class='address' value='' placeholder='Enter a " + payment + " address'>" + scanqr + "</div>" + vk_box + "<input type='text' class='addresslabel' value='' placeholder='label'><div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / private key of this address</span></div><input type='submit' class='submit' value='OK'></form></div>").data(ad);
+            content = $("<div class='formbox form add' id='addressformbox'><h2>" + getcc_icon(cmcid, request.cpid, erc20) + " Add " + payment + " address</h2>" + seedstr + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' class='address' value='' placeholder='Enter a " + payment + " address'>" + scanqr + "</div>" + vk_box + "<input type='text' class='addresslabel' value='' placeholder='label'><div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / private key of this address</span></div><input type='submit' class='submit' value='OK'></form></div>").data(ad);
         formbox.parent("#dialogbody").html(content);
     });
 }
@@ -2391,13 +2391,13 @@ function download_wallet(currency) {
                 platform = getplatform(device),
                 store_icon = (platform == "playstore") ? "button-playstore-v2.svg" :
                 (platform == "appstore") ? "button-appstore.svg" : "button-desktop_app.svg",
-                store_tag = (store_icon) ? "<img src='img/" + store_icon + "'/>" : "<span class='icon-download'></span> ";
+                store_tag = (store_icon) ? "<img src='img_" + store_icon + "'/>" : "<span class='icon-download'></span> ";
             $.each(wallets_arr, function(key, value) {
                 var device_url = value[platform];
                 if (device_url) {
                     var walletname = value.name,
                         website = value.website,
-                        wallet_icon = "<img src='img/icons/wallet-icons/" + walletname + ".png' class='wallet_icon'/>";
+                        wallet_icon = "<img src='img_icons_wallet-icons_" + walletname + ".png' class='wallet_icon'/>";
                     walletlist.append("<li><a href='" + website + "' target='_blank' class='exit app_dll'>" + wallet_icon + walletname + "</a><a href='" + device_url + "' target='_blank' class='exit store_tag'>" + store_tag + "</a></li>");
                 }
             });

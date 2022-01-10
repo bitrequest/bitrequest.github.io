@@ -85,23 +85,6 @@ $(document).ready(function() {
     //compare_seeds_callback
     //restorestorage
 
-    // Cache control
-    cachecontrol();
-    clearcache();
-    reset_coinsettings();
-    //reset_coinsettings_function
-    reset_settings();
-    //reset_settings_popup
-    backupdatabasetrigger2();
-    //reset_settings_function
-
-    // Choose theme
-    edittheme();
-    //popthemedialog
-    pickthemeselect();
-    canceltheme();
-    submittheme();
-
     // Url shortener
     urlshortener();
     togglebl();
@@ -159,15 +142,35 @@ $(document).ready(function() {
 // Account name
 function editaccount() {
     $(document).on("click", "#accountsettings", function() {
-        var content = "\
-		<div class='formbox' id='accountformbox'>\
-			<h2 class='icon-user'>Account name</h2>\
-			<div class='popnotify'></div>\
-			<div class='popform'>\
-				<input type='text' value='" + $(this).data("selected") + "'/>\
-				<input type='submit' class='submit' value='OK'/>\
-			</div>\
-		</div>";
+        var ddat = [{
+                "div": {
+                    "class": "popform",
+                    "content": [{
+                            "input": {
+                                "attr": {
+                                    "type": "text",
+                                    "value": $(this).data("selected")
+                                }
+                            }
+                        },
+                        {
+                            "input": {
+                                "class": "submit",
+                                "attr": {
+                                    "type": "submit",
+                                    "value": "OK"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }],
+            content = template_dialog({
+                "id": "accountformbox",
+                "icon": "icon-user",
+                "title": "Account name",
+                "elements": ddat
+            });
         popdialog(content, "alert", "triggersubmit");
     })
 }
@@ -205,22 +208,62 @@ function editcurrency() {
                 symbollist += "<span data-id='1' data-pe='none'>" + key + " | " + value + "</span>";
             }
         });
-        var content = "\
-		<div class='formbox' id='currencyformbox'>\
-			<h2 class='icon-coin-dollar'>Enter currency</h2>\
-			<div class='popnotify'></div>\
-			<div class='popform validated'>\
-				<div class='selectbox'>\
-					<input type='text' value='" + currency + "' placeholder='Pick currency'/>\
-					<div class='selectarrows icon-menu2' data-pe='none'></div>\
-					<div class='options'>" + symbollist + "</div>\
-				</div>\
-				<input type='submit' class='submit' value='OK'/>\
-			</div>\
-			<div id='toggle_defaultcurrency' class='clearfix'>\
-				<h3>Set as default" + switchpanel(switchmode, " global") + "</h3>\
-			</div>\
-		</div>";
+        var ddat = [{
+                "div": {
+                    "class": "popform validated",
+                    "content": [{
+                            "div": {
+                                "class": "selectbox",
+                                "content": [{
+                                        "input": {
+                                            "attr": {
+                                                "type": "text",
+                                                "value": currency,
+                                                "placeholder": "Pick currency"
+                                            },
+                                            "close": true
+                                        },
+                                        "div": {
+                                            "class": "selectarrows icon-menu2",
+                                            "attr": {
+                                                "data-pe": "none"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "div": {
+                                            "class": "options",
+                                            "content": symbollist
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "div": {
+                                "id": "toggle_defaultcurrency",
+                                "class": "clearfix",
+                                "content": "<h3>Set as default" + switchpanel(switchmode, " global") + "</h3>"
+                            }
+                        },
+                        {
+                            "input": {
+                                "class": "submit",
+                                "attr": {
+                                    "type": "submit",
+                                    "value": "OK"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }],
+            content = template_dialog({
+                "id": "currencyformbox",
+                "icon": "icon-dollar",
+                "title": "Enter currency",
+                "elements": ddat
+            });
         popdialog(content, "alert", "triggersubmit");
     })
 }
@@ -311,8 +354,39 @@ function editpin() {
 function locktime() {
     $(document).on("click", "#locktime, #lock_time", function() {
         var locktime = get_setting("pinsettings", "locktime"),
-            thiscurrency = "eur",
-            content = "<div class='formbox' id='locktime_formbox'><h2 class='icon-clock'>Pin lock time</h2><div class='popnotify'></div><ul class='conf_options noselect'><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>0</span> 0 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>60000</span> 1 minute</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>300000</span> 5 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>600000</span> 10 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>900000</span> 15 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>1800000</span> 30 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>never</span> never</div></li></ul><div class='popform'><input value='" + locktime + "' type='hidden'><input type='submit' class='submit' value='OK' data-currency='" + thiscurrency + "'></div>";
+            ddat = [{
+                "div": {
+                    "class": "popform",
+                    "content": [{
+                            "ul": {
+                                "class": "conf_options noselect",
+                                "content": "<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>0</span> 0 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>60000</span> 1 minute</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>300000</span> 5 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>600000</span> 10 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>900000</span> 15 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>1800000</span> 30 minutes</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>never</span> never</div></li>"
+                            },
+                            "input": {
+                                "attr": {
+                                    "value": locktime,
+                                    "type": "hidden"
+                                }
+                            },
+                        },
+                        {
+                            "input": {
+                                "class": "submit",
+                                "attr": {
+                                    "type": "submit",
+                                    "value": "OK"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }],
+            content = template_dialog({
+                "id": "locktime_formbox",
+                "icon": "icon-clock",
+                "title": "Pin lock time",
+                "elements": ddat
+            });
         popdialog(content, "alert", "triggersubmit");
         var currentli = $("#locktime_formbox ul.conf_options li").filter(function() {
             return $(this).find("span").text() == locktime
@@ -325,7 +399,6 @@ function submit_locktime() {
     $(document).on("click", "#locktime_formbox input.submit", function(e) {
         e.preventDefault();
         var thistrigger = $(this),
-            thiscurrency = thistrigger.attr("data-currency"),
             thisvalue = thistrigger.prev("input").val(),
             titlepin = (thisvalue == "never") ? "pincode disabled" : "pincode activated";
         set_setting("pinsettings", {
@@ -383,32 +456,95 @@ function backupdatabase() {
     var gd_active = (GD_auth_class() === true),
         showhidechangelog = (gd_active === true) ? "display:none" : "display:block",
         changenotification = (gd_active === false && body.hasClass("haschanges")) ? "<p>You have " + $("#alert > span").text() + " changes in your app. Please backup your data.</p>" : "",
-        gdtrigger = "<div id='gdtrigger' class='clearfix'><h3 class='icon-googledrive'>Backup with Google Drive" + switchpanel(gd_active, " custom") + "</h3></div>",
-        backupheader = (GoogleAuth) ? "" : "<h2 class='icon-download'>Backup App data</h2>",
-        content = "\
-		<div class='formbox' id='backupformbox'>\
-			" + backupheader + "\
-			<div class='popnotify'></div>\
-			<div id='dialogcontent'>\
-				<div id='ad_info_wrap'>\
-					<ul>\
-						<li class='clearfix pad'><strong><span class='icon-googledrive'></span> Backup with Google Drive: </strong><div id='gdtrigger' class='ait'>" + switchpanel(gd_active, " custom") + "</div></li>" +
-        "</ul>\
-				</div>\
-				<div id='changelog' style='" + showhidechangelog + "'>" +
-        changenotification +
-        "<ul>" + changespush.join("") + "</ul>\
-					<div id='custom_actions'>\
-						<br/>\
-						<a href='data:text/json;charset=utf-16le;base64," + jsonencode + "' download='" + filename + "' title='" + filename + "' id='triggerdownload' class='button icon-download' data-date='" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_') + "' data-lastbackup='" + filename + "' download>DOWNLOAD BACKUP</a>\
-					</div>\
-				</div>\
-			</div>\
-		</div>\
-		<div id='backupactions'>\
-			<div id='share_bu' data-url='" + jsonencode + "' class='util_icon icon-share2'></div>\
-			<div id='backupcd'>CANCEL</div>\
-		</div>";
+        ddat = [{
+                "div": {
+                    "id": "dialogcontent",
+                    "content": [{
+                            "div": {
+                                "id": "ad_info_wrap",
+                                "content": [{
+                                    "ul": {
+                                        "content": [{
+                                            "li": {
+                                                "class": "clearfix pad",
+                                                "content": [{
+                                                    "strong": {
+                                                        "content": "<span class='icon-googledrive'></span> Backup with Google Drive: "
+                                                    },
+                                                    "div": {
+                                                        "id": "gdtrigger",
+                                                        "class": "ait",
+                                                        "content": switchpanel(gd_active, " custom")
+                                                    }
+                                                }]
+                                            }
+                                        }]
+                                    }
+                                }]
+                            }
+                        },
+                        {
+                            "div": {
+                                "id": "changelog",
+                                "attr": {
+                                    "style": showhidechangelog
+                                },
+                                "content": changenotification + "<ul>" + changespush.join("") + "</ul>"
+                            }
+                        },
+                        {
+                            "div": {
+                                "id": "custom_actions",
+                                "content": [{
+                                    "br": {
+                                        "close": true
+                                    },
+                                    "a": {
+                                        "id": "triggerdownload",
+                                        "class": "button icon-download",
+                                        "attr": {
+                                            "href": "data:text/json;charset=utf-16le;base64," + jsonencode + "' download='" + filename,
+                                            "title": filename,
+                                            "data-date": new Date($.now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_'),
+                                            "data-lastbackup": filename,
+                                            "download": "download"
+                                        },
+                                        "content": "DOWNLOAD BACKUP"
+                                    }
+                                }]
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "div": {
+                    "id": "backupactions",
+                    "content": [{
+                            "div": {
+                                "id": "share_bu",
+                                "class": "util_icon icon-share2",
+                                "attr": {
+                                    "data-url": jsonencode
+                                }
+                            }
+                        },
+                        {
+                            "div": {
+                                "id": "backupcd",
+                                "content": "CANCEL"
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        content = template_dialog({
+            "id": "backupformbox",
+            "icon": "icon-download",
+            "title": "Backup App data",
+            "elements": ddat
+        });
     popdialog(content, "alert", "triggersubmit", null, true);
 }
 
@@ -427,7 +563,6 @@ function sbu_switch() {
             "sbu": thisvalue
         });
         savesettings();
-        //canceldialog();
     })
 }
 
@@ -454,10 +589,10 @@ function sharebu() {
                     sharedtitle = "System Backup " + accountname + " (" + filetime_format + ")",
                     set_proxy = $("#api_proxy").data("selected"),
                     r_dat = btoa(JSON.stringify({
-						"ro": br_cache.filename,
-	                    "proxy": set_proxy
-					}));
-                shorten_url(sharedtitle, approot + "?p=settings&sbu=" + r_dat, approot + "/img/system_backup.png", true);
+                        "ro": br_cache.filename,
+                        "proxy": set_proxy
+                    }));
+                shorten_url(sharedtitle, approot + "?p=settings&sbu=" + r_dat, approot + "/img_system_backup.png", true);
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 console.log(jqXHR);
                 console.log(textStatus);
@@ -473,9 +608,9 @@ function check_systembu() {
     if (url_params.p == "settings") {
         var sbu = url_params.sbu;
         if (sbu) {
-	        var ro_dat = stripb64(sbu),
-	        	ro_id = ro_dat.ro,
-	        	ro_proxy = ro_dat.proxy;
+            var ro_dat = stripb64(sbu),
+                ro_id = ro_dat.ro,
+                ro_proxy = ro_dat.proxy;
             api_proxy({
                 "custom": "get_system_bu",
                 "api_url": true,
@@ -500,25 +635,66 @@ function check_systembu() {
                         cd = countdown(expires_in * 1000),
                         cd_format = countdown_format(cd),
                         cf_string = (cd_format) ? "Expires in " + cd_format : "File expired",
-                        content = "\
-						<div class='formbox' id='system_backupformbox'>\
-							<h2 class='icon-download'>System Backup</h2>\
-							<div class='popnotify'></div>\
-							<div id='dialogcontent'>\
-								<h1>" + sharedtitle + "</h1>\
-								<div class='error' style='margin-top:1em;padding:0.3em 1em'>" + cf_string + "</div>\
-								<div id='changelog'>\
-									<div id='custom_actions'>\
-										<br/>\
-										<a href='data:text/json;charset=utf-16le;base64," + base64 + "' download='" + filename + "' title='" + filename + "' id='triggerdownload' class='button icon-download' data-date='" + bu_date + "' data-lastbackup='" + filename + "' download>DOWNLOAD BACKUP</a>\
-									<div id='restore_bu' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-share2'>INSTALL BACKUP</div>\
-									</div>\
-								</div>\
-							</div>\
-						</div>\
-						<div id='backupactions'>\
-							<div id='backupcd'>CANCEL</div>\
-						</div>";
+                        ddat = [{
+                            "div": {
+                                "id": "dialogcontent",
+                                "content": [{
+                                        "h1": {
+                                            "content": sharedtitle
+                                        },
+                                        "div": {
+                                            "class": "error",
+                                            "attr": {
+                                                "style": "margin-top:1em;padding:0.3em 1em"
+                                            },
+                                            "content": cf_string
+                                        }
+                                    },
+                                    {
+                                        "div": {
+                                            "id": "changelog",
+                                            "content": [{
+                                                "div": {
+                                                    "id": "custom_actions",
+                                                    "content": [{
+                                                        "br": {
+                                                            "close": true
+                                                        },
+                                                        "a": {
+                                                            "id": "triggerdownload",
+                                                            "class": "button icon-download",
+                                                            "attr": {
+                                                                "href": "data:text/json;charset=utf-16le;base64," + base64,
+                                                                "download": filename,
+                                                                "title": filename,
+                                                                "data-date": bu_date,
+                                                                "data-lastbackup": filename
+                                                            },
+                                                            "content": "DOWNLOAD BACKUP"
+                                                        },
+                                                        "div": {
+                                                            "id": "restore_bu",
+                                                            "class": "button icon-share2",
+                                                            "attr": {
+                                                                "data-base64": base64,
+                                                                "data-filename": filename
+                                                            },
+                                                            "content": "INSTALL BACKUP"
+                                                        }
+                                                    }]
+                                                }
+                                            }]
+                                        }
+                                    }
+                                ]
+                            }
+                        }],
+                        content = template_dialog({
+                            "id": "system_backupformbox",
+                            "icon": "icon-download",
+                            "title": "System Backup",
+                            "elements": ddat
+                        }) + "<div id='backupactions'><div id='backupcd'>CANCEL</div></div>";
                     popdialog(content, "alert", "triggersubmit", null, true);
                 } else {
                     systembu_expired();
@@ -531,18 +707,25 @@ function check_systembu() {
 }
 
 function stripb64(ab) {
-	var b64 = (ab.indexOf("%") > -1) ? ab.substr(0, ab.indexOf("%")) : ab;
-	return JSON.parse(atob(b64));
+    var b64 = (ab.indexOf("%") > -1) ? ab.substr(0, ab.indexOf("%")) : ab;
+    return JSON.parse(atob(b64));
 }
 
 function systembu_expired() {
-    var content = "\
-		<div class='formbox' id='system_backupformbox'>\
-			<h2 class='icon-download'>File Expired</h2>\
-		</div>\
-		<div id='backupactions'>\
-			<div id='backupcd'>CANCEL</div>\
-		</div>";
+    var content = render_html([{
+            "div": {
+                "id": "system_backupformbox",
+                "class": "formbox",
+                "content": "<h2 class='icon-download'>File Expired</h2>"
+            }
+        },
+        {
+            "div": {
+                "id": "backupactions",
+                "content": "<div id='backupcd'>CANCEL</div>"
+            }
+        }
+    ]);
     popdialog(content, "alert", "triggersubmit", null, true);
 }
 
@@ -646,23 +829,43 @@ function trigger_restore() {
         lastbackupdevice = (lastbudevice == "folder-open") ? "" : "google-drive",
         lastbackupstring = (lastbackup) ? "<p class='icon-" + lastbackupdevice + "'>Last backup: <span class='icon-" + lastbudevice + "'>" + lastbackup + "</span></p>" : "",
         gd_active = (GD_auth_class() === true),
-        switchmode = (gd_active === true) ? " true" : "",
-        listappdata = "<div id='listappdata'><h3 class='icon-googledrive'>Restore from Google drive:" + switchpanel(gd_active, " custom") + "</h3></div>",
         showhidegd = (gd_active === true) ? "display:none" : "display:block",
-        content = "\
-		<div class='formbox' id='restoreformbox'>\
-			<h2 class='icon-upload'>Restore App data</h2>\
-			<div class='popnotify'></div>\
-			<div id='gd_meta'>" + lastfileusedstring + lastbackupstring + "</div>\
-			" + listappdata + "\
-			<div id='backupswrap'>\
-				<ul id='gd_backuplist'></ul>\
-				<div id='importjson' style='" + showhidegd + "'>\
-					<h3 class='icon-folder-open'>Restore from file</h3>\
-					<input type='file' id='fileupload'/>\
-					<input type='submit' class='submit' value='OK'/>\
-				</div>\
-			</div>";
+        ddat = [{
+                "div": {
+                    "id": "gd_meta",
+                    "content": lastfileusedstring + lastbackupstring
+                }
+            },
+            {
+                "div": {
+                    "id": "listappdata",
+                    "content": "<h3 class='icon-googledrive'>Restore from Google drive:" + switchpanel(gd_active, " custom") + "</h3>"
+                }
+            },
+            {
+                "div": {
+                    "id": "backupswrap",
+                    "content": [{
+                        "ul": {
+                            "id": "gd_backuplist"
+                        },
+                        "div": {
+                            "id": "importjson",
+                            "attr": {
+                                "style": showhidegd
+                            },
+                            "content": "<h3 class='icon-folder-open'>Restore from file</h3><input type='file' id='fileupload'/><input type='submit' class='submit' value='OK'/>"
+                        }
+                    }]
+                }
+            }
+        ],
+        content = template_dialog({
+            "id": "restoreformbox",
+            "icon": "icon-upload",
+            "title": "Restore App data",
+            "elements": ddat
+        });
     popdialog(content, "alert", "triggersubmit");
     if (gd_active === true) {
         $("#listappdata .switchpanel").trigger("click");
@@ -866,17 +1069,38 @@ function pin_dialog(pass_dat, cb) {
             return false;
         }
     }
-    var content = $("<div class='formbox' id='pindialog'>\
-		<h2><span class='icon-lock'></span>Enter your 4 digit pin</h2>\
-		<div class='popnotify'></div>\
-		<div class='popform'>\
-			<input type='password' value=''/>\
-			<input type='submit' class='submit' value='OK'/>\
-		</div>\
-	</div>").data({
-        "pass_dat": pass_dat,
-        "cb": cb
-    });
+    var ddat = [{
+            "div": {
+                "class": "popform",
+                "content": [{
+                        "input": {
+                            "attr": {
+                                "type": "password",
+                                "value": ""
+                            }
+                        }
+                    },
+                    {
+                        "input": {
+                            "class": "submit",
+                            "attr": {
+                                "type": "submit",
+                                "value": "OK"
+                            }
+                        }
+                    }
+                ]
+            }
+        }],
+        content = $(template_dialog({
+            "id": "pindialog",
+            "icon": "icon-lock",
+            "title": "Enter your 4 digit pin",
+            "elements": ddat
+        })).data({
+            "pass_dat": pass_dat,
+            "cb": cb
+        });
     setTimeout(function() {
         popdialog(content, "alert", "triggersubmit");
     }, 700);
@@ -890,8 +1114,8 @@ function submit_pin_dialog() {
         if (thisvalue.length) {
             var dialog = $("#dialog"),
                 pdat = $("#pindialog").data(),
-                pass_dat = pdat.pass_dat
-            jasobj = pass_dat.jasobj;
+                pass_dat = pdat.pass_dat,
+                jasobj = pass_dat.jasobj;
             if (jasobj) {
                 var pbdat = jasobj.bitrequest_bpdat,
                     pbdat_eq = (pbdat.dat) ? pbdat : pbdat.datenc,
@@ -992,29 +1216,67 @@ function restore_callback_gd(pass_dat, np) {
 
 function dphrase_dialog(pass_dat) {
     canceldialog();
-    var content = $("<div class='formbox' id='importseedbox'>\
-		<h2><span class='icon-warning' style='color:#B33A3A'></span>Warning. Backup contains different seed</h2>\
-		<div class='popnotify'></div><br/>\
-		<ul class='conf_options noselect'>\
-			<li><div class='pick_conf'><div class='radio icon-radio-checked2'></div><span>Use seed from Backup</span></div></li>\
-			<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>Keep current seed</span></div></li>\
-		</ul>\
-		<div id='compare_seeds' class='ref'>Compare seeds</div>\
-		<div id='compare_box'>\
-			<div id='bu_sbox' class='swrap'>\
-				<strong>Backup Seed</strong>\
-				<div class='sbox'></div>\
-			</div>\
-			<div id='ext_sbox' class='swrap'>\
-				<strong>Current Seed</strong>\
-				<div class='sbox'></div>\
-			</div>\
-		</div>\
-		<div class='popform'>\
-			<input type='hidden' value='Use seed from Backup'/>\
-			<input type='submit' class='submit' value='OK'/>\
-		</div>\
-	</div>").data(pass_dat);
+    ddat = [{
+                "ul": {
+                    "class": "conf_options noselect",
+                    "content": "<li><div class='pick_conf'><div class='radio icon-radio-checked2'></div><span>Use seed from Backup</span></div></li>\
+			<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>Keep current seed</span></div></li>"
+                },
+                "div": {
+                    "id": "compare_seeds",
+                    "class": "ref",
+                    "content": "Compare seeds"
+                }
+            },
+            {
+                "div": {
+                    "id": "compare_box",
+                    "content": [{
+                            "div": {
+                                "id": "bu_sbox",
+                                "class": "swrap",
+                                "content": "<strong>Backup Seed</strong><div class='sbox'></div>"
+                            }
+                        },
+                        {
+                            "div": {
+                                "id": "ext_sbox",
+                                "class": "swrap",
+                                "content": "<strong>Current Seed</strong><div class='sbox'></div>"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "div": {
+                    "class": "popform",
+                    "content": [{
+                            "input": {
+                                "attr": {
+                                    "type": "hidden",
+                                    "value": "Use seed from Backup"
+                                }
+                            }
+                        },
+                        {
+                            "input": {
+                                "class": "submit",
+                                "attr": {
+                                    "type": "submit",
+                                    "value": "OK"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        content = $(template_dialog({
+            "id": "importseedbox",
+            "title": "<span class='icon-warning' style='color:#B33A3A'></span>Warning. Backup contains different seed",
+            "elements": ddat
+        })).data(pass_dat);
     setTimeout(function() {
         popdialog(content, "alert", "triggersubmit");
     }, 700);
@@ -1147,173 +1409,6 @@ function restorestorage(jsonobject, newphrase) {
     resd = {};
 }
 
-// Cache control
-function cachecontrol() {
-    $(document).on("click", "#cachecontrol", function() {
-        var playstorelink = "https://play.google.com/store/apps/details?id=io.bitrequest.app",
-            appstorelink = "https://itunes.apple.com/us/app/bitrequest/id1484815377?ls=1&mt=8",
-            appstore_url = (is_android_app === true) ? playstorelink :
-            (body.hasClass("ios")) ? appstorelink : playstorelink,
-            lfu = (offline === true) ? "" : (supportsTouch === true) ? "<br/><a href='" + appstore_url + "' class='exit button'>Look for updates</a>" : "",
-            content = "\
-				<div class='formbox' id='cacheformbox'>\
-					<h2 class='icon-database'>Cache control</h2>\
-					<div class='popnotify'></div>\
-					<div class='popform'>" + lfu + "<br/><br/><div class='button' id='clearcache'>Clear cache</div>\
-						<br/><br/><div id='reset_settings' class='button'>\
-							<span>Reset app data</span>\
-						</div>\
-					</div>\
-					<div id='backupactions'>\
-						<div class='cancel_dialog customtrigger'>CANCEL</div>\
-					</div>\
-				</div>";
-        popdialog(content);
-    })
-}
-
-function clearcache() {
-    $(document).on("click", "#clearcache", function() {
-        var result = confirm("Clear app cache?");
-        if (result === true) {
-            if (caches !== undefined) {
-                caches.keys().then(function(names) {
-                    if (names) {
-                        $.each(names, function(i, value) {
-                            caches.delete(value);
-                        });
-                        window.location.href = window.location.pathname + "?p=settings";
-                    }
-                });
-            } else {
-                topnotify("Unable to clear cache");
-            }
-            localStorage.removeItem("bitrequest_init");
-        }
-    })
-}
-
-function reset_coinsettings() {
-    $(document).on("click", ".reset_cc_settings", function() {
-        var thistrigger = $(this),
-            currency = thistrigger.attr("data-currency");
-        popdialog("<h2 class='icon-bin'>Reset " + currency + " settings?</h2>", "alert", "reset_coinsettings_function", thistrigger);
-    })
-}
-
-function reset_coinsettings_function(trigger) {
-    var currency = trigger.attr("data-currency"),
-        result = confirm("Are you sure you want to reset " + currency + " settings?");
-    if (result === true) {
-        var coinsettings = getcoinsettings(currency);
-        localStorage.setItem("bitrequest_" + currency + "_settings", JSON.stringify(coinsettings));
-        append_coinsetting(currency, coinsettings, false);
-        canceldialog();
-        notify(currency + " settings reset to default");
-    }
-}
-
-function reset_settings() {
-    $(document).on("click", "#reset_settings", function() {
-        canceldialog();
-        all_pinpanel({
-            "func": reset_settings_popup
-        })
-    })
-}
-
-function reset_settings_popup() {
-    var content = "<h2 class='icon-bin'>Reset app data?</h2>\
-	<p class='warning'>!! All data will be deleted. Make sure you have a backup.</p>\
-	<div class='button' id='backup2'><span>Backup app data</span></div>";
-    setTimeout(function() {
-        popdialog(content, "alert", "reset_settings_function", $("#reset_settings"));
-    }, 250);
-}
-
-function backupdatabasetrigger2() {
-    $(document).on("click", "#backup2", function() {
-        $(this).remove();
-        backupdatabase();
-    })
-}
-
-function reset_settings_function(trigger) {
-    var result = confirm("Are you sure you want to reset? All data will be lost! Make sure you have a backup.");
-    if (result === true) {
-        for (key in localStorage) {
-            if (key != "bitrequest_active" && key != "bitrequest_erc20tokens" && key != "bitrequest_symbols") {
-                localStorage.removeItem(key);
-            }
-        }
-        canceldialog();
-        notify("App data deleted");
-        location.reload(true);
-    }
-}
-
-// Choose theme
-function edittheme() {
-    $(document).on("click", "#themesettings", function() {
-        var theme = $("#themesettings").data("selected"),
-            content = "\
-			<div class='formbox' id='themeformbox'>\
-				<h2 class='icon-paint-format'>Choose a theme</h2>\
-				<div class='popnotify'></div>\
-				<div class='popform'>\
-					<div class='selectbox'>\
-						<input type='text' value='" + theme + "' placeholder='Pick a theme' readonly='readonly' autofocus/>\
-						<div class='selectarrows icon-menu2' data-pe='none'></div>\
-						<div class='options'></div>\
-					</div>\
-					<input type='submit' class='submit' value='OK'/>\
-				</div>\
-				<div id='backupactions'>\
-					<div id='submittheme' class='customtrigger'>CHOOSE THEME</div>\
-					<div id='canceltheme' class='customtrigger'>CANCEL</div>\
-				</div>\
-			</div>";
-        popthemedialog(content);
-        $.getJSON(approot + "api/custom/?themes", function(data) {
-            var options = $("#themeformbox").find(".options");
-            $.each(data, function(key, value) {
-                options.append("<span data-pe='none'>" + value + "</span>");
-            });
-        });
-    })
-}
-
-function popthemedialog(content) {
-    $("#dialogbody").append(content);
-    body.addClass("themepu");
-    $("#popup").addClass("active showpu");
-}
-
-function pickthemeselect() {
-    $(document).on("click", "#themeformbox .selectbox > .options span", function() {
-        $("link#theme").attr("href", "assets/styles/themes/" + $(this).text());
-    })
-}
-
-function canceltheme() {
-    $(document).on("click", "#canceltheme", function() {
-        $("link#theme").attr("href", "assets/styles/themes/" + $("#themesettings").data("selected"));
-        canceldialog();
-    })
-}
-
-function submittheme() {
-    $(document).on("click", "#submittheme", function() {
-        var thisvalue = $("#themeformbox").find("input:first").val();
-        set_setting("themesettings", {
-            "selected": thisvalue
-        }, thisvalue);
-        canceldialog();
-        notify("Data saved");
-        savesettings();
-    })
-}
-
 // CSV Export
 function csvexport_trigger() {
     $(document).on("click", "#csvexport", function() {
@@ -1323,9 +1418,8 @@ function csvexport_trigger() {
             has_archive = (archive_arr && !$.isEmptyObject(archive_arr));
         if (has_requests === true || has_archive === true) {
             var filename = "bitrequest_csv_export_" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_') + ".csv",
-                show_archive = (has_requests === true) ? "false" : "true";
-            content = "\
-				<div class='formbox' id='exportcsvbox'>\
+                show_archive = (has_requests === true) ? "false" : "true",
+                content = "<div class='formbox' id='exportcsvbox'>\
 					<h2 class='icon-table'>Export CSV</h2>\
 					<div class='popnotify'></div>\
 					<div id='ad_info_wrap'>\
@@ -1549,10 +1643,10 @@ function share_csv() {
                     sharedtitle = "CSV Export " + accountname + " (" + filetime_format + ")",
                     set_proxy = $("#api_proxy").data("selected"),
                     r_dat = btoa(JSON.stringify({
-						"ro": br_cache.filename,
-	                    "proxy": set_proxy
-					}));
-                shorten_url(sharedtitle, approot + "?p=settings&csv=" + r_dat, approot + "/img/system_backup.png", true);
+                        "ro": br_cache.filename,
+                        "proxy": set_proxy
+                    }));
+                shorten_url(sharedtitle, approot + "?p=settings&csv=" + r_dat, approot + "/img_system_backup.png", true);
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 console.log(jqXHR);
                 console.log(textStatus);
@@ -1568,10 +1662,10 @@ function check_csvexport() {
     if (url_params.p == "settings") {
         var csv = url_params.csv;
         if (csv) {
-	        var ro_dat = stripb64(csv),
-	        	ro_id = ro_dat.ro,
-	        	ro_proxy = ro_dat.proxy;
-	        api_proxy({
+            var ro_dat = stripb64(csv),
+                ro_id = ro_dat.ro,
+                ro_proxy = ro_dat.proxy;
+            api_proxy({
                 "custom": "get_system_bu",
                 "api_url": true,
                 "proxy": true,
@@ -1595,24 +1689,57 @@ function check_csvexport() {
                         cd = countdown(expires_in * 1000),
                         cd_format = countdown_format(cd),
                         cf_string = (cd_format) ? "Expires in " + cd_format : "File expired",
-                        content = "\
-						<div class='formbox' id='system_backupformbox'>\
-							<h2 class='icon-download'>CSV Export</h2>\
-							<div class='popnotify'></div>\
-							<div id='dialogcontent'>\
-								<h1>" + sharedtitle + "</h1>\
-								<div class='error' style='margin-top:1em;padding:0.3em 1em'>" + cf_string + "</div>\
-								<div id='changelog'>\
-									<div id='custom_actions'>\
-										<br/>\
-										<a href='data:text/csv;charset=utf-16le;base64," + base64 + "' download='" + filename + "' title='" + filename + "' id='trigger_csvdownload' class='button icon-download' data-date='" + bu_date + "' data-lastbackup='" + filename + "' download>DOWNLOAD CSV</a>\
-									</div>\
-								</div>\
-							</div>\
-						</div>\
-						<div id='backupactions'>\
-							<div id='backupcd'>CANCEL</div>\
-						</div>";
+                        ddat = [{
+                            "div": {
+                                "id": "dialogcontent",
+                                "content": [{
+                                        "h1": {
+                                            "content": sharedtitle
+                                        },
+                                        "div": {
+                                            "class": "error",
+                                            "attr": {
+                                                "style": "margin-top:1em;padding:0.3em 1em"
+                                            },
+                                            "content": cf_string
+                                        }
+                                    },
+                                    {
+                                        "div": {
+                                            "id": "changelog",
+                                            "content": [{
+                                                "div": {
+                                                    "id": "custom_actions",
+                                                    "content": [{
+                                                        "br": {
+                                                            "close": true
+                                                        },
+                                                        "a": {
+                                                            "id": "trigger_csvdownload",
+                                                            "class": "button icon-download",
+                                                            "attr": {
+                                                                "href": "data:text/json;charset=utf-16le;base64," + base64,
+                                                                "download": filename,
+                                                                "title": filename,
+                                                                "data-date": bu_date,
+                                                                "data-lastbackup": filename
+                                                            },
+                                                            "content": "DOWNLOAD CSV"
+                                                        }
+                                                    }]
+                                                }
+                                            }]
+                                        }
+                                    }
+                                ]
+                            }
+                        }],
+                        content = template_dialog({
+                            "id": "system_backupformbox",
+                            "icon": "icon-download",
+                            "title": "CSV Export",
+                            "elements": ddat
+                        }) + "<div id='backupactions'><div id='backupcd'>CANCEL</div></div>";
                     popdialog(content, "alert", "triggersubmit", null, true);
                 } else {
                     systembu_expired();
@@ -1659,27 +1786,91 @@ function urlshortener() {
             firebase_class = (us_val == "bitly") ? " hide" : "",
             bitly_class = (us_val == "firebase") ? " hide" : "",
             headericon = (us_val == "firebase") ? "icon-firebase" : "icon-bitly",
-            content = "\
-			<div class='formbox' id='usformbox'>\
-				<h2 class='icon-link'>Choose URL shortener</h2>\
-				<div class='popnotify'></div>\
-				<div id='toggle_urlshortener' class='clearfix'>\
-					<h3 class='" + headericon + "'>Enable url shortener" + switchpanel(us_is_active, " global") + "</h3>\
-				</div>\
-				<div class='popform" + shformclass + "' data-currentapi='" + us_val + "'>\
-					<div class='selectbox'>\
-						<input type='text' value='" + us_val + "' placeholder='Choose URL shortener' readonly='readonly'/>\
-						<div class='selectarrows icon-menu2' data-pe='none'></div>\
-						<div class='options'>\
-							<span data-pe='none'>firebase</span>\
-							<span data-pe='none'>bitly</span>\
-						</div>\
-					</div>\
-					<input type='text' value='" + firebase_apikey + "' placeholder='Firebase API key' class='firebase_api_input" + firebase_class + "'data-apikey='" + firebase_apikey + "' data-checkchange='" + firebase_apikey + "'/>\
-					<input type='text' value='" + bitly_accestoken + "' placeholder='Bitly API key' class='bitly_api_input" + bitly_class + "'data-apikey='" + bitly_accestoken + "' data-checkchange='" + bitly_accestoken + "'/>\
-					<input type='submit' class='submit' value='OK'/>\
-				</div>\
-			</div>";
+            ddat = [{
+                    "div": {
+                        "id": "toggle_urlshortener",
+                        "class": "clearfix",
+                        "content": "<h3 class='" + headericon + "'>Enable url shortener" + switchpanel(us_is_active, " global") + "</h3>"
+                    }
+                },
+                {
+                    "div": {
+                        "class": "popform" + shformclass,
+                        "attr": {
+                            "data-currentapi": us_val
+                        },
+                        "content": [{
+                                "div": {
+                                    "class": "selectbox",
+                                    "content": [{
+                                            "input": {
+                                                "attr": {
+                                                    "type": "text",
+                                                    "value": us_val,
+                                                    "placeholder": "Choose URL shortener",
+                                                    "readonly": "readonly"
+                                                },
+                                                "close": true
+                                            },
+                                            "div": {
+                                                "class": "selectarrows icon-menu2",
+                                                "attr": {
+                                                    "data-pe": "none"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "div": {
+                                                "class": "options",
+                                                "content": "<span data-pe='none'>firebase</span><span data-pe='none'>bitly</span>"
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "input": {
+                                    "class": "firebase_api_input" + firebase_class,
+                                    "attr": {
+                                        "type": "text",
+                                        "value": firebase_apikey,
+                                        "placeholder": "Firebase API key",
+                                        "data-apikey": firebase_apikey,
+                                        "data-checkchange": firebase_apikey
+                                    }
+                                }
+                            },
+                            {
+                                "input": {
+                                    "class": "bitly_api_input" + bitly_class,
+                                    "attr": {
+                                        "type": "text",
+                                        "value": bitly_accestoken,
+                                        "placeholder": "Bitly API key",
+                                        "data-apikey": bitly_accestoken,
+                                        "data-checkchange": bitly_accestoken
+                                    }
+                                }
+                            },
+                            {
+                                "input": {
+                                    "class": "submit",
+                                    "attr": {
+                                        "type": "submit",
+                                        "value": "OK"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            ],
+            content = template_dialog({
+                "id": "usformbox",
+                "icon": "icon-link",
+                "title": "Choose URL shortener",
+                "elements": ddat
+            });
         popdialog(content, "alert", "triggersubmit");
     })
 }
@@ -1804,20 +1995,71 @@ function editccapi() {
             cmcapikeyval = (cc_apisettings.cmcapikey) ? cc_apisettings.cmcapikey : "",
             cmcapikeyclass = (ccapisrc == "coinmarketcap") ? "" : "hide",
             options = "<span data-pe='none'>" + apilists.crypto_price_apis.join("</span><span data-pe='none'>") + "</span>",
-            content = "\
-			<div class='formbox' id='ccapiformbox'>\
-				<h2 class='icon-key'>Choose API</h2>\
-				<div class='popnotify'></div>\
-				<div class='popform' data-currentapi='" + ccapisrc + "'>\
-					<div class='selectbox'>\
-						<input type='text' value='" + ccapisrc + "' placeholder='Choose API' readonly='readonly'/>\
-						<div class='selectarrows icon-menu2' data-pe='none'></div>\
-						<div class='options'>" + options + "</div>\
-					</div>\
-					<input type='text' value='" + cmcapikeyval + "' placeholder='API key' class='" + cmcapikeyclass + "' data-apikey='" + cmcapikeyval + "' data-checkchange='" + cmcapikey + "'/>\
-					<input type='submit' class='submit' value='OK'/>\
-				</div>\
-			</div>";
+            ddat = [{
+                "div": {
+                    "class": "popform",
+                    "attr": {
+                        "data-currentapi": ccapisrc
+                    },
+                    "content": [{
+                            "div": {
+                                "class": "selectbox",
+                                "content": [{
+                                        "input": {
+                                            "attr": {
+                                                "type": "text",
+                                                "value": ccapisrc,
+                                                "placeholder": "Choose API",
+                                                "readonly": "readonly"
+                                            },
+                                            "close": true
+                                        },
+                                        "div": {
+                                            "class": "selectarrows icon-menu2",
+                                            "attr": {
+                                                "data-pe": "none"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "div": {
+                                            "class": "options",
+                                            "content": options
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "input": {
+                                "class": cmcapikeyclass,
+                                "attr": {
+                                    "type": "text",
+                                    "value": cmcapikeyval,
+                                    "placeholder": "API key",
+                                    "data-apikey": cmcapikeyval,
+                                    "data-checkchange": cmcapikey
+                                }
+                            }
+                        },
+                        {
+                            "input": {
+                                "class": "submit",
+                                "attr": {
+                                    "type": "submit",
+                                    "value": "OK"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }],
+            content = template_dialog({
+                "id": "ccapiformbox",
+                "icon": "icon-key",
+                "title": "Choose API",
+                "elements": ddat
+            });
         popdialog(content, "alert", "triggersubmit");
     })
 }
@@ -1879,20 +2121,71 @@ function editfiatxrapi() {
             fiatxrapikey = (thisdata.fxapikey) ? thisdata.fxapikey : "",
             options = "<span data-pe='none'>" + apilists.fiat_price_apis.join("</span><span data-pe='none'>") + "</span>",
             fiatxrapikeyclass = (fiatxrapisrc == "fixer") ? "" : "hide",
-            content = "\
-			<div class='formbox' id='fiatxrapiformbox'>\
-				<h2 class='icon-key'>Choose API</h2>\
-				<div class='popnotify'></div>\
-				<div class='popform' data-currentapi='" + fiatxrapisrc + "'>\
-					<div class='selectbox'>\
-						<input type='text' value='" + fiatxrapisrc + "' placeholder='Choose API' readonly='readonly'/>\
-						<div class='selectarrows icon-menu2' data-pe='none'></div>\
-						<div class='options'>" + options + "</div>\
-					</div>\
-					<input type='text' value='" + fiatxrapikey + "' placeholder='API key' class='" + fiatxrapikeyclass + "' data-apikey='" + fiatxrapikey + "' data-checkchange='" + fiatxrapikey + "'/>\
-					<input type='submit' class='submit' value='OK'/>\
-				</div>\
-			</div>";
+            ddat = [{
+                "div": {
+                    "class": "popform",
+                    "attr": {
+                        "data-currentapi": fiatxrapisrc
+                    },
+                    "content": [{
+                            "div": {
+                                "class": "selectbox",
+                                "content": [{
+                                        "input": {
+                                            "attr": {
+                                                "type": "text",
+                                                "value": fiatxrapisrc,
+                                                "placeholder": "Choose API",
+                                                "readonly": "readonly"
+                                            },
+                                            "close": true
+                                        },
+                                        "div": {
+                                            "class": "selectarrows icon-menu2",
+                                            "attr": {
+                                                "data-pe": "none"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "div": {
+                                            "class": "options",
+                                            "content": options
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "input": {
+                                "class": fiatxrapikeyclass,
+                                "attr": {
+                                    "type": "text",
+                                    "value": fiatxrapikey,
+                                    "placeholder": "API key",
+                                    "data-apikey": fiatxrapikey,
+                                    "data-checkchange": fiatxrapikey
+                                }
+                            }
+                        },
+                        {
+                            "input": {
+                                "class": "submit",
+                                "attr": {
+                                    "type": "submit",
+                                    "value": "OK"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }],
+            content = template_dialog({
+                "id": "fiatxrapiformbox",
+                "icon": "icon-key",
+                "title": "Choose API",
+                "elements": ddat
+            });
         popdialog(content, "alert", "triggersubmit");
     })
 }
@@ -1948,10 +2241,10 @@ function submitfiatxrapi() {
 
 function trigger_proxy_dialog() {
     $(document).on("click", "#proxy_dialog", function() {
-	    canceldialog();
-	    setTimeout(function() {
-	        $("#api_proxy").trigger("click");
-	    }, 700);
+        canceldialog();
+        setTimeout(function() {
+            $("#api_proxy").trigger("click");
+        }, 700);
     })
 }
 
@@ -2016,13 +2309,14 @@ function pick_api_proxy() {
 }
 
 function test_append_proxy(optionlist, key, value, selected, dfault, nano_node) { // make test api call
-	var n_node = (nano_node) ? nano_node : main_nano_node;
+    var n_node = (nano_node) ? nano_node : main_nano_node;
     api_proxy({
         "cachetime": 25,
         "cachefolder": "1h",
         "proxy": true,
         "proxy_url": value,
         "api_url": n_node,
+        "bearer": "tls_wildcard",
         "params": {
             "method": "POST",
             "cache": true,
@@ -2051,7 +2345,7 @@ function test_append_proxy(optionlist, key, value, selected, dfault, nano_node) 
 }
 
 function proxy_option_li(optionlist, live, key, value, selected, dfault) {
-	var liveclass = (live === true) ? " live" : " offline",
+    var liveclass = (live === true) ? " live" : " offline",
         icon = (live === true) ? "connection" : "wifi-off",
         default_class = (dfault === true) ? " default" : "",
         option = $("<div class='optionwrap" + liveclass + default_class + "' style='display:none' data-pe='none'><span data-value='" + value + "' data-pe='none'>" + value + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon c_stat icon-" + icon + "' data-pe='none'></div><div class='opt_icon icon-bin' data-pe='none'></div></div>");
@@ -2122,6 +2416,7 @@ function test_custom_proxy(value) { // make test api call
                 "proxy": true,
                 "proxy_url": fixed_url,
                 "api_url": "https://www.bitrequest.app:8020",
+                "bearer": "tls_wildcard",
                 "params": {
                     "method": "POST",
                     "cache": true,
@@ -2670,22 +2965,58 @@ function permissions_callback() {
     var thisnode = $("#permissions"),
         thisdata = thisnode.data(),
         selected = thisdata.selected,
-        content = "\
-		<div class='formbox' id='permissions_formbox'>\
-			<h2 class='icon-user'>Set permissions</h2>\
-			<div class='popnotify'></div>\
-			<div class='popform' data-current='" + selected + "'>\
-				<div class='selectbox'>\
-					<input type='text' value='" + selected + "' readonly='readonly'/>\
-					<div class='selectarrows icon-menu2' data-pe='none'></div>\
-					<div class='options'>\
-						<span data-pe='none'>admin</span>\
-						<span data-pe='none'>cashier</span>\
-					</div>\
-				</div>\
-				<input type='submit' class='submit' value='OK'/>\
-			</div>\
-		</div>";
+        ddat = [{
+            "div": {
+                "class": "popform",
+                "attr": {
+                    "data-current": selected
+                },
+                "content": [{
+                        "div": {
+                            "class": "selectbox",
+                            "content": [{
+                                    "input": {
+                                        "attr": {
+                                            "type": "text",
+                                            "value": selected,
+                                            "readonly": "readonly"
+                                        },
+                                        "close": true
+                                    },
+                                    "div": {
+                                        "class": "selectarrows icon-menu2",
+                                        "attr": {
+                                            "data-pe": "none"
+                                        }
+                                    }
+                                },
+                                {
+                                    "div": {
+                                        "class": "options",
+                                        "content": "<span data-pe='none'>admin</span><span data-pe='none'>cashier</span>"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "input": {
+                            "class": "submit",
+                            "attr": {
+                                "type": "submit",
+                                "value": "OK"
+                            }
+                        }
+                    }
+                ]
+            }
+        }],
+        content = template_dialog({
+            "id": "permissions_formbox",
+            "icon": "icon-user",
+            "title": "Set permissions",
+            "elements": ddat
+        });
     popdialog(content, "alert", "triggersubmit");
 }
 
@@ -2715,7 +3046,7 @@ function submit_permissions() {
 
 function team_invite_trigger() {
     $(document).on("click", "#teaminvite", function() {
-	    if (hasbip && !bipv) {
+        if (hasbip && !bipv) {
             bipv_pass();
             notify("please verify your secret phrase first");
             return false;
@@ -2734,20 +3065,21 @@ function team_invite_trigger() {
 function team_invite() {
     var jsonencode = complile_teaminvite(),
         filename = "bitrequest_team_invite.json",
-        content = "\
-		<div class='formbox' id='team_invite'>\
-			<h2 class='icon-users'>Team invite</h2>\
-			<div class='popnotify'></div>\
-			<div class='popform'>\
-				<p><strong>Invite team members (staff, employees etc.) to make requests on your behalf.</strong><br/>\
+        ddat = [{
+            "div": {
+                "class": "popform",
+                "content": "<p><strong>Invite team members (staff, employees etc.) to make requests on your behalf.</strong><br/>\
 				This will install Bitrequest on your team member's device, pre-installed with your public keys and restricted access (cashier).<br/>\
 				Your team members are unable to access funds or make changes.</p>\
-				<div id='send_invite' data-url='" + jsonencode + "' class='button'><span class='icon-share2'/>Send invite</div>\
-			</div>\
-		</div>\
-		<div id='backupactions'>\
-			<div id='backupcd'>CANCEL</div>\
-		</div>";
+				<div id='send_invite' data-url='" + jsonencode + "' class='button'><span class='icon-share2'/>Send invite</div>"
+            }
+        }],
+        content = template_dialog({
+            "id": "team_invite",
+            "icon": "icon-users",
+            "title": "Team invite",
+            "elements": ddat
+        }) + "<div id='backupactions'><div id='backupcd'>CANCEL</div></div>";
     popdialog(content, "alert", "triggersubmit");
 }
 
@@ -2882,10 +3214,10 @@ function share_teaminvite() {
                     sharedtitle = "Bitrequest Team invitation from " + accountname,
                     set_proxy = $("#api_proxy").data("selected"),
                     r_dat = btoa(JSON.stringify({
-						"ro": br_cache.filename,
-	                    "proxy": set_proxy
-					}));
-				shorten_url(sharedtitle, approot + "?p=settings&ro=" + r_dat, approot + "/img/icons/apple-touch-icon.png", true);
+                        "ro": br_cache.filename,
+                        "proxy": set_proxy
+                    }));
+                shorten_url(sharedtitle, approot + "?p=settings&ro=" + r_dat, approot + "/img_icons_apple-touch-icon.png", true);
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 console.log(jqXHR);
                 console.log(textStatus);
@@ -2901,9 +3233,9 @@ function check_teaminvite() {
     if (url_params.p == "settings") {
         var ro = url_params.ro;
         if (ro) {
-	        var ro_dat = stripb64(ro),
-	        	ro_id = ro_dat.ro,
-	        	ro_proxy = ro_dat.proxy;
+            var ro_dat = stripb64(ro),
+                ro_id = ro_dat.ro,
+                ro_proxy = ro_dat.proxy;
             api_proxy({
                 "custom": "get_system_bu",
                 "api_url": true,
@@ -2938,21 +3270,34 @@ function check_teaminvite() {
                         cf_string = (cd_format) ? "Invitation expires in " + cd_format : "File expired",
                         dialogtext = (is_installed) ? "<p>Installation already completed!</p>" : (update) ? "<p>" + account + " wants you to update bitrequest with his latest public keys!</p>" : "<p>" + account + " wants to team up and make requests together with you!<br/><br/>By clicking on install, bitrequest will be installed on your device with " + account + "'s public keys and restricted access.</p>",
                         button_text = (update) ? "UPDATE" : "INSTALL",
-                        install_button = (is_installed) ? "" : "<div id='install_teaminvite' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-download' data-update='" + update + "' data-ismaster='" + master_account + "'data-installid='" + ro + "'>" + button_text + "</div>"
-                    content = "\
-						<div class='formbox' id='system_backupformbox'>\
-							<h2 class='icon-users'>" + dialog_heading + "</h2>\
-							<div class='popnotify'></div>\
-							<div id='dialogcontent'>\
-								<div class='error' style='margin-top:1em;padding:0.3em 1em'>" + cf_string + "</div>\
-								<div id='changelog'>" + dialogtext +
-                        "<div id='custom_actions'>" + install_button + "</div>\
-								</div>\
-							</div>\
-						</div>\
-						<div id='backupactions'>\
-							<div id='backupcd'>CANCEL</div>\
-						</div>";
+                        install_button = (is_installed) ? "" : "<div id='install_teaminvite' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-download' data-update='" + update + "' data-ismaster='" + master_account + "'data-installid='" + ro + "'>" + button_text + "</div>",
+                        ddat = [{
+                            "div": {
+                                "id": "dialogcontent",
+                                "content": [{
+                                        "div": {
+                                            "class": "error",
+                                            "attr": {
+                                                "style": "margin-top:1em;padding:0.3em 1em"
+                                            },
+                                            "content": cf_string
+                                        }
+                                    },
+                                    {
+                                        "div": {
+                                            "id": "changelog",
+                                            "content": dialogtext + "<div id='custom_actions'>" + install_button + "</div>"
+                                        }
+                                    }
+                                ]
+                            }
+                        }],
+                        content = template_dialog({
+                            "id": "system_backupformbox",
+                            "icon": "icon-users",
+                            "title": dialog_heading,
+                            "elements": ddat
+                        }) + "<div id='backupactions'><div id='backupcd'>CANCEL</div></div>";
                     popdialog(content, "alert", "triggersubmit", null, true);
                 } else {
                     systembu_expired();

@@ -228,7 +228,7 @@ function geterc20tokens() {
 }
 
 function geterc20tokens_local() {
-    var apiurl = "assets/data/erc20.json";
+    var apiurl = "assets_data_erc20.json";
     $.getJSON(apiurl, function(data) { // get top 600 tokens from coinmarketcap
         if (data) {
             storecoindata(data);
@@ -563,6 +563,15 @@ function finishfunctions() {
 
     //getapp
     close_app_panel();
+
+    // ** HTML rendering **
+
+    //render_html
+    //render_attributes
+
+    // ** HTML templates **
+
+    //template_dialog
 
     // Query helpers
 
@@ -3639,9 +3648,9 @@ function settitle(title) {
 }
 
 function getcc_icon(cmcid, cpid, erc20) {
-    var img_url = (erc20 === true) ? (offline === true) ? "img/qrplaceholder.png" :
+    var img_url = (erc20 === true) ? (offline === true) ? "img_qrplaceholder.png" :
         "https://s2.coinmarketcap.com/static/img/coins/200x200/" + cmcid + ".png" :
-        "img/logos/" + cpid + ".png";
+        "img_logos_" + cpid + ".png";
     return "<img src='" + img_url + "' class='cmc_icon'/>";
 }
 
@@ -4027,7 +4036,7 @@ function rendercurrencies() {
             }
         });
     }
-    $("ul#allcurrencies").append("<li id='choose_erc20' data-currency='erc20 token' class='start_cli' data-currency='erc20 token'><div class='liwrap'><h2><img src='img/erc20.png'/>erc20 token</h2></div></li>\
+    $("ul#allcurrencies").append("<li id='choose_erc20' data-currency='erc20 token' class='start_cli' data-currency='erc20 token'><div class='liwrap'><h2><img src='img_erc20.png'/>erc20 token</h2></div></li>\
 	<li id='rshome' class='restore start_cli' data-currency='erc20 token'><div class='liwrap'><h2><span class='icon-upload'> Restore from backup</h2></div></li><li id='start_cli_margin' class='start_cli'><div class='liwrap'><h2></h2></div></li>");
 }
 
@@ -4421,7 +4430,7 @@ function appendrequest(rd) {
 				<div class='api_source'>" + src_html + "</div>\
 			</div>\
 			<div class='brstatuspanel flex'>\
-				<img src='img/confirmed.png'>\
+				<img src='img_confirmed.png'>\
 				<h2>Payment received</h2>\
 			</div>\
 			<div class='brmarker'></div>\
@@ -4555,7 +4564,7 @@ function share_receipt() {
             loadertext("generate receipt");
             var accountname = $("#accountsettings").data("selected"),
                 sharedtitle = "bitrequest_receipt_" + requestid + ".pdf";
-            shorten_url(sharedtitle, href, approot + "/img/receipt_icon.png", true);
+            shorten_url(sharedtitle, href, approot + "/img_receipt_icon.png", true);
             closeloader();
         }
     })
@@ -4770,7 +4779,7 @@ function getapp(type) {
         button = (android === true) ? "button-playstore-v2.svg" : "button-appstore.svg",
         url = (android === true) ? "https://play.google.com/store/apps/details?id=" + androidpackagename + "&pcampaignid=fdl_long&url=" + approot + encodeURIComponent(window.location.search) : "https://apps.apple.com/app/id1484815377?mt=8",
         panelcontent = "<h2>Download the app</h2>\
-			<a href='" + url + "' class='exit store_bttn'><img src='img/" + button + "'></a><br/>\
+			<a href='" + url + "' class='exit store_bttn'><img src='img_" + button + "'></a><br/>\
 			<div id='not_now'>Not now</div>";
     app_panel.html(panelcontent);
     setTimeout(function() {
@@ -4789,6 +4798,63 @@ function close_app_panel() {
             localStorage.setItem("bitrequest_appstore_dialog", true);
         }
     });
+}
+
+// HTML rendering
+
+function render_html(dat) {
+    var result = "";
+    $.each(dat, function(i, value) {
+        $.each(value, function(key, val) {
+            var id = (val.id) ? " id='" + val.id + "'" : "",
+                clas = (val.class) ? " class='" + val.class + "'" : "",
+                attr = (val.attr) ? render_attributes(val.attr) : "",
+                cval = val.content,
+                content = (cval) ? (typeof cval == "object") ? render_html(cval) : cval : "";
+            close = (val.close) ? "/>" : ">" + content + "</" + key + ">",
+                result += "<" + key + id + clas + attr + close;
+        });
+    });
+    return result;
+}
+
+function render_attributes(attr) {
+    var attributes = "";
+    $.each(attr, function(key, value) {
+        attributes += " " + key + "='" + value + "'";
+    });
+    return attributes;
+}
+
+// HTML templates
+
+function template_dialog(ddat) {
+    var validated_class = (ddat.validated) ? " validated" : "",
+        dialog_object = [{
+            "div": {
+                "id": ddat.id,
+                "class": "formbox",
+                "content": [{
+                        "h2": {
+                            "class": ddat.icon,
+                            "content": ddat.title
+                        }
+                    },
+                    {
+                        "div": {
+                            "class": "popnotify"
+                        }
+                    },
+                    {
+                        "div": {
+                            "class": "pfwrap",
+                            "content": render_html(ddat.elements)
+                        }
+                    }
+                ]
+            }
+        }]
+    return render_html(dialog_object);
 }
 
 // Query helpers

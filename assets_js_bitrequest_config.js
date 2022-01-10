@@ -1233,12 +1233,6 @@ var app_settings = [{
         "custom_proxies": [],
         "icon": "icon-sphere"
     },
-    /*{
-        "id": "cachecontrol",
-        "heading": "Cache control / updates",
-        "selected": "",
-        "icon": "icon-database"
-    },*/
     {
         "id": "apikeys",
         "heading": "API Keys",

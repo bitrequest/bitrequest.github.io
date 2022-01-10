@@ -206,7 +206,7 @@ function blockchain_btc_socket(socket_node, thisaddress) {
 }
 
 function blockchain_bch_socket(socket_node, thisaddress) {
-	console.log(thisaddress);
+    console.log(thisaddress);
     var provider = socket_node.url,
         legacy = bchutils.toLegacyAddress(thisaddress);
     websocket = new WebSocket(provider);
@@ -557,9 +557,9 @@ function web3_erc20_websocket(socket_node, thisaddress) {
 }
 
 function handle_socket_fails(socket_node, thisaddress, error) {
-	if (paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
-		return false;
-	}
+    if (paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
+        return false;
+    }
     if (paymentpopup.hasClass("active")) { // only when request is visible
         var next_socket = try_next_socket(socket_node);
         if (next_socket === false) {

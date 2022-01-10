@@ -402,11 +402,9 @@ function confirmations(tx_data, direct) {
             "confirmations": xconf
         });
         brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), language));
-        if (iscrypto) {
-	    }
-	    else {
-		    brstatuspanel.find("span.receivedcrypto").text(rccf + " " + currencysymbol);
-	    }
+        if (iscrypto) {} else {
+            brstatuspanel.find("span.receivedcrypto").text(rccf + " " + currencysymbol);
+        }
         brstatuspanel.find("span.receivedfiat").text(" (" + receivedrounded + " " + thiscurrency + ")");
         var exact = helper.exact,
             xmr_pass = (payment == "monero") ? (rccf > cc_rawf * 0.97 && rccf < cc_rawf * 1.03) : true; // error margin for xmr integrated addresses

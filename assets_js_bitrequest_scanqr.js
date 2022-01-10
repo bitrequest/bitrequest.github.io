@@ -1,5 +1,5 @@
-import QrScanner from "./lib/qr-scanner.js";
-QrScanner.WORKER_PATH = "./assets/js/lib/qr-scanner-worker.min.js";
+import QrScanner from "./assets_js_lib_qr-scanner.js";
+QrScanner.WORKER_PATH = "./assets_js_lib_qr-scanner-worker.min.js";
 
 var video = $("#qr-video")[0],
     scanner = new QrScanner(video, result => setResult(result), error => {

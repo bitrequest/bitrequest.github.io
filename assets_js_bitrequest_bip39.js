@@ -1620,19 +1620,19 @@ function phrase_info_pu(coin) {
                 var platform = getplatform(getdevicetype()),
                     store_icon = (platform == "playstore") ? "button-playstore-v2.svg" :
                     (platform == "appstore") ? "button-appstore.svg" : "button-desktop_app.svg",
-                    store_tag = (store_icon) ? "<img src='img/" + store_icon + "'/>" : "<span class='icon-download'></span> ",
+                    store_tag = (store_icon) ? "<img src='img_" + store_icon + "'/>" : "<span class='icon-download'></span> ",
                     wallets = walletdat.wallets;
                 $.each(wallets, function(key, value) {
                     var device_url = value[platform];
                     if (device_url && value.seed === true) {
                         var walletname = value.name,
                             website = value.website,
-                            wallet_icon = "<img src='img/icons/wallet-icons/" + walletname + ".png' class='wallet_icon'/>";
+                            wallet_icon = "<img src='img_icons_wallet-icons_" + walletname + ".png' class='wallet_icon'/>";
                         walletlist += "<li><a href='" + website + "' target='_blank' class='exit app_dll'>" + wallet_icon + walletname + "</a><a href='" + device_url + "' target='_blank' class='exit store_tag'>" + store_tag + "</a></li>";
                     }
                 });
             }
-            var icon_node = $("<img src='img/logos/" + ccsymbol + "-" + currency + ".png' data-class='pd_" + currency + "'/>"),
+            var icon_node = $("<img src='img_logos_" + ccsymbol + "-" + currency + ".png' data-class='pd_" + currency + "'/>"),
                 dp_node_dat = {
                     "bip32": bip32dat,
                     "currency": currency
@@ -1656,7 +1656,7 @@ function phrase_info_pu(coin) {
 	    			<div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>show</span></div>\
 						<div class='xp_span drawer'>\
 							<div class='qrwrap flex'>\
-								<div class='qrcode'></div><img src='img/logos/" + ccsymbol + "-" + currency + ".png' class='cmc_icon'>\
+								<div class='qrcode'></div><img src='img_logos_" + ccsymbol + "-" + currency + ".png' class='cmc_icon'>\
 							</div>\
 							<p class='adbox adboxl select' data-type='Xpub'>" + x_pub + "</p>\
 						</div>\
@@ -1700,19 +1700,19 @@ function compatible_wallets(coin) {
                 var platform = getplatform(getdevicetype()),
                     store_icon = (platform == "playstore") ? "button-playstore-v2.svg" :
                     (platform == "appstore") ? "button-appstore.svg" : "button-desktop_app.svg",
-                    store_tag = (store_icon) ? "<img src='img/" + store_icon + "'/>" : "<span class='icon-download'></span> ",
+                    store_tag = (store_icon) ? "<img src='img_" + store_icon + "'/>" : "<span class='icon-download'></span> ",
                     wallets = walletdat.wallets;
                 $.each(wallets, function(key, value) {
                     var device_url = value[platform];
                     if (device_url && value.seed === true) {
                         var walletname = value.name,
                             website = value.website,
-                            wallet_icon = "<img src='img/icons/wallet-icons/" + walletname + ".png' class='wallet_icon'/>";
+                            wallet_icon = "<img src='img_icons_wallet-icons_" + walletname + ".png' class='wallet_icon'/>";
                         walletlist += "<li><a href='" + website + "' target='_blank' class='exit app_dll'>" + wallet_icon + walletname + "</a><a href='" + device_url + "' target='_blank' class='exit store_tag'>" + store_tag + "</a></li>";
                     }
                 });
             }
-            var icon_node = $("<img src='img/logos/" + ccsymbol + "-" + currency + ".png' data-class='pd_" + currency + "'/>"),
+            var icon_node = $("<img src='img_logos_" + ccsymbol + "-" + currency + ".png' data-class='pd_" + currency + "'/>"),
                 sw_node = $("<ul id='formbox_ul' class='clearfix pd_hide pd_" + currency + "'>" + walletlist + "</ul>");
             $("#pi_icons").append(icon_node);
             $("#supported_wallets").append(sw_node);
