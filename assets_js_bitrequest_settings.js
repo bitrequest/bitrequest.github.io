@@ -142,7 +142,7 @@ $(document).ready(function() {
 // Account name
 function editaccount() {
     $(document).on("click", "#accountsettings", function() {
-        var ddat = [{
+	    var ddat = [{
                 "div": {
                     "class": "popform",
                     "content": [{

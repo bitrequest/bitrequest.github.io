@@ -63,7 +63,7 @@ $(document).ready(function() {
 
     //close potential websockets and pings
     forceclosesocket();
-    clearpingtx("close");
+    clearpinging();
 
     //Set classname for ios app	
     if (is_ios_app === true) {
@@ -426,7 +426,7 @@ function finishfunctions() {
     //cancelpaymentdialog
     //closesocket
     //forceclosesocket
-    //clearpingtx
+    //clearpinging
     cancelsharedialogtrigger();
     //cancelsharedialog
     showoptionstrigger();
@@ -2656,28 +2656,31 @@ function cancelpaymentdialog() {
     closeloader();
     clearTimeout(request_timer);
     closesocket();
-    clearpingtx("close");
     closenotify();
     sleep();
 }
 
-function closesocket() {
-    clearInterval(ping);
-    ping = null;
-    if (websocket) {
-        websocket.close();
-        websocket = null;
+function closesocket(s_id) {
+    if (s_id) { // close this socket
+	    sockets[s_id].close();
+	    delete sockets[s_id]
     }
+    else { // close all sockets
+	    $.each(sockets, function(key, value) {
+	        value.close();
+	    });
+		sockets = {};
+    }
+    clearpinging(s_id);
     txid = null;
 }
 
 function forceclosesocket() {
-    clearInterval(ping);
-    ping = null;
-    if (websocket) {
-        websocket.close();
-        websocket.terminate();
-        websocket.forEach((socket) => {
+    clearpinging();
+    $.each(sockets, function(key, value) {
+        value.close();
+        value.terminate();
+        value.forEach((socket) => {
             // Soft close
             socket.close();
             socket.terminate();
@@ -2688,15 +2691,23 @@ function forceclosesocket() {
                 }
             });
         });
-        websocket = null;
-    }
+    });
+	sockets = {};
     txid = null;
     closesocket();
 }
 
-function clearpingtx(close) {
-    clearInterval(pingtx);
-    pingtx = null;
+function clearpinging(s_id) {
+	if (s_id) { // close this interval
+		clearInterval(pinging[s_id]);
+	    delete pinging[s_id]
+    }
+    else { // close all intervals
+	    $.each(pinging, function(key, value) {
+	        clearInterval(value);
+	    });
+	    pinging = {};
+    }
 }
 
 function cancelsharedialogtrigger() {

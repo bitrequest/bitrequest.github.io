@@ -48,7 +48,7 @@ function api_monitor(api_data, txhash, tx_data) {
                 setconfirmations = tx_data.setconfirmations,
                 zero_conf = (xconf === false || setconfirmations == 0 || setconfirmations == "undefined" || setconfirmations === undefined);
             if (zero_conf) {} else {
-                pingtx = setInterval(function() {
+                pinging[txhash] = setInterval(function() {
                     api_proxy(ampl(api_name, poll_url)).done(function(e) {
                         api_result(br_result(e));
                     }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -59,7 +59,7 @@ function api_monitor(api_data, txhash, tx_data) {
         } else {
             api_proxy(ampl(api_name, poll_url)).done(function(e) {
                 api_result(br_result(e));
-                pingtx = setInterval(function() {
+                pinging[txhash] = setInterval(function() {
                     api_proxy(ampl(api_name, poll_url)).done(function(e) {
                         api_result(br_result(e));
                     }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -74,7 +74,7 @@ function api_monitor(api_data, txhash, tx_data) {
         function api_result(result) {
             var data = result.result;
             if (data.error) {
-                clearpingtx();
+                clearpinging();
                 handle_api_fails(false, data.error, api_name, payment, txhash);
                 return false;
             } else {
@@ -92,7 +92,7 @@ function api_monitor(api_data, txhash, tx_data) {
         };
 
         function api_error(jqXHR, textStatus, errorThrown) {
-            clearpingtx();
+            clearpinging();
             var error_object = (errorThrown) ? errorThrown : jqXHR;
             handle_api_fails(false, error_object, api_name, payment, txhash);
             return false;
@@ -121,7 +121,7 @@ function rpc_monitor(rpcdata, txhash, tx_data) {
     if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin") {
         if (direct === true) {
             confirmations(tx_data, true);
-            pingtx = setInterval(function() {
+            pinging[txhash] = setInterval(function() {
                 api_proxy(rmpl(payment, rpcurl, txhash)).done(function(e) {
                     rpc_result(br_result(e));
                 }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -131,7 +131,7 @@ function rpc_monitor(rpcdata, txhash, tx_data) {
         } else {
             api_proxy(rmpl(payment, rpcurl, txhash)).done(function(e) {
                 rpc_result(br_result(e));
-                pingtx = setInterval(function() {
+                pinging[txhash] = setInterval(function() {
                     api_proxy(rmpl(payment, rpcurl, txhash)).done(function(e) {
                         rpc_result(br_result(e));
                     }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -146,7 +146,7 @@ function rpc_monitor(rpcdata, txhash, tx_data) {
         function rpc_result(result) {
             var data = result.result;
             if (data.error) {
-                clearpingtx();
+                clearpinging();
                 handle_rpc_monitor_fails(rpcdata, data.error, txhash);
                 return false;
             } else {
@@ -159,7 +159,7 @@ function rpc_monitor(rpcdata, txhash, tx_data) {
         };
 
         function rpc_error(jqXHR, textStatus, errorThrown) {
-            clearpingtx();
+            clearpinging();
             var error_object = (errorThrown) ? errorThrown : jqXHR;
             handle_rpc_monitor_fails(rpcdata, error_object, txhash);
             return false;
@@ -170,7 +170,7 @@ function rpc_monitor(rpcdata, txhash, tx_data) {
         } else {
             ping_eth_node(rpcdata, txhash);
         }
-        pingtx = setInterval(function() {
+        pinging[txhash] = setInterval(function() {
             ping_eth_node(rpcdata, txhash);
         }, 25000);
     } else if (request.erc20 === true) {
@@ -179,7 +179,7 @@ function rpc_monitor(rpcdata, txhash, tx_data) {
         } else {
             ping_eth_node_erc20(rpcdata, txhash);
         }
-        pingtx = setInterval(function() {
+        pinging[txhash] = setInterval(function() {
             ping_eth_node_erc20(rpcdata, txhash);
         }, 25000);
     } else if (payment == "nano") {
@@ -221,7 +221,7 @@ function ping_eth_node(rpcdata, txhash) {
         web3.eth.getBlockNumber(function(err_1, data_1) {
             if (err_1) {
                 console.log(err_1);
-                clearpingtx();
+                clearpinging();
                 handle_rpc_monitor_fails(rpcdata, err_1, txhash);
                 return false;
             } else {
@@ -230,7 +230,7 @@ function ping_eth_node(rpcdata, txhash) {
                     web3.eth.getTransaction(txhash, function(err_2, data_2) {
                         if (err_2) {
                             console.log(err_2);
-                            clearpingtx();
+                            clearpinging();
                             handle_rpc_monitor_fails(rpcdata, err_2, txhash);
                             return false;
                         } else {
@@ -239,7 +239,7 @@ function ping_eth_node(rpcdata, txhash) {
                                 web3.eth.getBlock(this_blocknumber, function(err_3, data_3) {
                                     if (err_3) {
                                         console.log(err_3);
-                                        clearpingtx();
+                                        clearpinging();
                                         handle_rpc_monitor_fails(rpcdata, err_3, txhash);
                                         return false;
                                     } else {
@@ -260,7 +260,7 @@ function ping_eth_node(rpcdata, txhash) {
                         }
                     });
                 } else {
-                    clearpingtx();
+                    clearpinging();
                     handle_rpc_monitor_fails(rpcdata, false, txhash);
                     return false;
                 }
@@ -281,7 +281,7 @@ function ping_eth_node_erc20(rpcdata, txhash) {
         web3.eth.getBlockNumber(function(err_1, data_1) {
             if (err_1) {
                 console.log(err_1);
-                clearpingtx();
+                clearpinging();
                 handle_rpc_monitor_fails(rpcdata, err_1, txhash);
                 return false;
             } else {
@@ -290,7 +290,7 @@ function ping_eth_node_erc20(rpcdata, txhash) {
                     web3.eth.getTransaction(txhash, function(err_2, data_2) {
                         if (err_2) {
                             console.log(err_2);
-                            clearpingtx();
+                            clearpinging();
                             handle_rpc_monitor_fails(rpcdata, err_2, txhash);
                             return false;
                         } else {
@@ -299,7 +299,7 @@ function ping_eth_node_erc20(rpcdata, txhash) {
                                 web3.eth.getBlock(this_blocknumber, function(err_3, data_3) {
                                     if (err_3) {
                                         console.log(err_3);
-                                        clearpingtx();
+                                        clearpinging();
                                         handle_rpc_monitor_fails(rpcdata, err_3, txhash);
                                         return false;
                                     } else {
@@ -325,14 +325,14 @@ function ping_eth_node_erc20(rpcdata, txhash) {
                         }
                     });
                 } else {
-                    clearpingtx();
+                    clearpinging();
                     handle_rpc_monitor_fails(rpcdata, false, txhash);
                     return false;
                 }
             }
         });
     } else {
-        clearpingtx();
+        clearpinging();
         handle_rpc_monitor_fails(rpcdata, false, txhash);
         return false;
     }
@@ -412,7 +412,6 @@ function confirmations(tx_data, direct) {
             var pass = (exact) ? (rccf == cc_rawf) : (rccf >= cc_rawf * 0.99);
             if (pass) {
                 if (xconf >= setconfirmations || zero_conf === true) {
-                    clearpingtx();
                     closesocket();
                     if (payment == "dogecoin") {
                         playsound(howl);

@@ -1,3 +1,6 @@
+var sockets = {},
+	pinging = {};
+
 $(document).ready(function() {
     //init_socket
     //init_xmr_node
@@ -81,7 +84,7 @@ function init_socket(socket_node, address, swtch) {
             closesocket();
             amberdata_eth_websocket(socket_node, address);
         } else if (payment == "monero") {
-            clearpingtx("close");
+            clearpinging();
             var vk = (swtch) ? get_vk(address) : request.viewkey;
             if (vk) {
                 trigger_requeststates(); // update outgoing
@@ -102,12 +105,18 @@ function init_socket(socket_node, address, swtch) {
                 notify("this address is not monitored", 500000, "yes");
             }
         } else if (request.erc20 === true) {
-            clearpingtx("close");
+            clearpinging();
             web3_erc20_websocket(socket_node, address);
         } else {
             notify("this currency is not monitored", 500000, "yes")
         }
     }
+    var timeout = setTimeout(function() {
+        console.log(sockets);
+		console.log(pinging);
+    }, 1500, function() {
+        clearTimeout(timeout);
+    });
 }
 
 // Websockets
@@ -115,8 +124,8 @@ function init_socket(socket_node, address, swtch) {
 function blockcypher_websocket(socket_node, thisaddress) {
     // var bc_token = get_blockcypher_apikey(),
     // provider = socket_node.url + request.currencysymbol + "/main?token=" + bc_token;
-    var provider = socket_node.url + request.currencysymbol + "/main";
-    websocket = new WebSocket(provider);
+    var provider = socket_node.url + request.currencysymbol + "/main",
+    	websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
@@ -126,7 +135,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
             "confirmations": 10
         });
         websocket.send(ping_event);
-        ping = setInterval(function() {
+        pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
         }, 55000);
     };
@@ -161,8 +170,8 @@ function blockcypher_websocket(socket_node, thisaddress) {
 }
 
 function blockchain_btc_socket(socket_node, thisaddress) {
-    var provider = socket_node.url;
-    websocket = new WebSocket(provider);
+    var provider = socket_node.url,
+    	websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
@@ -170,7 +179,7 @@ function blockchain_btc_socket(socket_node, thisaddress) {
             "addr": thisaddress
         });
         websocket.send(ping_event);
-        ping = setInterval(function() {
+        pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
         }, 55000);
     };
@@ -206,10 +215,9 @@ function blockchain_btc_socket(socket_node, thisaddress) {
 }
 
 function blockchain_bch_socket(socket_node, thisaddress) {
-    console.log(thisaddress);
     var provider = socket_node.url,
-        legacy = bchutils.toLegacyAddress(thisaddress);
-    websocket = new WebSocket(provider);
+        legacy = bchutils.toLegacyAddress(thisaddress),
+        websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
@@ -217,7 +225,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
             "addr": "bitcoincash:" + thisaddress
         });
         websocket.send(ping_event);
-        ping = setInterval(function() {
+        pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
         }, 55000);
     };
@@ -253,8 +261,8 @@ function blockchain_bch_socket(socket_node, thisaddress) {
 function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
     var socket_url = socket_node.url,
         ak = get_amberdata_apikey(),
-        provider = socket_url + "?x-api-key=" + ak + "&x-amberdata-blockchain-id=" + blockchainid;
-    websocket = new WebSocket(provider);
+        provider = socket_url + "?x-api-key=" + ak + "&x-amberdata-blockchain-id=" + blockchainid,
+        websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
@@ -269,7 +277,7 @@ function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
             ]
         });
         websocket.send(ping_event);
-        ping = setInterval(function() {
+        pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
         }, 55000);
     };
@@ -296,15 +304,15 @@ function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
 }
 
 function mempoolspace_btc_socket(socket_node, thisaddress) {
-    var provider = socket_node.url;
-    websocket = new WebSocket(provider);
+    var provider = socket_node.url,
+    	websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
             "track-address": thisaddress
         });
         websocket.send(ping_event);
-        ping = setInterval(function() {
+        pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
         }, 55000);
     };
@@ -340,8 +348,8 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
 }
 
 function dogechain_info_socket(socket_node, thisaddress) {
-    var provider = socket_node.url;
-    websocket = new WebSocket(provider);
+    var provider = socket_node.url,
+    	websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
@@ -349,7 +357,7 @@ function dogechain_info_socket(socket_node, thisaddress) {
             "addr": thisaddress
         });
         websocket.send(ping_event);
-        ping = setInterval(function() {
+        pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
         }, 55000);
     };
@@ -388,8 +396,8 @@ function dogechain_info_socket(socket_node, thisaddress) {
 
 function nano_socket(socket_node, thisaddress) {
     var address_mod = (thisaddress.match("^xrb")) ? "nano_" + thisaddress.split("_").pop() : thisaddress, // change nano address prefix xrb_ to nano untill websocket support
-        provider = socket_node.url;
-    websocket = new WebSocket(provider);
+        provider = socket_node.url,
+        websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
@@ -402,7 +410,7 @@ function nano_socket(socket_node, thisaddress) {
             "ack": true
         });
         websocket.send(ping_event);
-        ping = setInterval(function() {
+        pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
         }, 55000);
     };
@@ -436,8 +444,8 @@ function nano_socket(socket_node, thisaddress) {
 function amberdata_eth_websocket(socket_node, thisaddress) {
     var socket_url = socket_node.url,
         ak = get_amberdata_apikey(),
-        provider = socket_url + "?x-api-key=" + ak;
-    websocket = new WebSocket(provider);
+        provider = socket_url + "?x-api-key=" + ak,
+        websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
@@ -452,7 +460,7 @@ function amberdata_eth_websocket(socket_node, thisaddress) {
             ]
         });
         websocket.send(ping_event);
-        ping = setInterval(function() {
+        pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
         }, 55000);
     };
@@ -483,8 +491,8 @@ function amberdata_eth_websocket(socket_node, thisaddress) {
 function web3_erc20_websocket(socket_node, thisaddress) {
     var provider_url = socket_node.url,
         if_id = get_infura_apikey(provider_url),
-        provider = provider_url + if_id;
-    websocket = new WebSocket(provider);
+        provider = provider_url + if_id,
+        websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
@@ -659,7 +667,7 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
                 if (start === true) {
                     ping_xmr_node(cachetime, address, vk, request_ts, txhash);
                 }
-                pingtx = setInterval(function() {
+                pinging[address] = setInterval(function() {
                     ping_xmr_node(cachetime, address, vk, request_ts, txhash);
                 }, pingtime);
             } else {}
@@ -709,10 +717,10 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
                                 var requestlist = $("#requestlist > li.rqli"),
                                     txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
                                 if (txid_match.length) {} else {
-                                    clearpingtx();
+                                    clearpinging();
                                     if (setconf > 0) {
                                         confirmations(txd);
-                                        pingtx = setInterval(function() {
+                                        pinging[address] = setInterval(function() {
                                             ping_xmr_node(34, address, vk, request_ts, txd.txhash);
                                         }, 35000);
                                     }
@@ -726,7 +734,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
             });
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        clearpingtx();
+        clearpinging();
         var error_object = (errorThrown) ? errorThrown : jqXHR,
             payment = request.payment;
         handle_api_fails(false, error_object, payment, payment, txhash);
