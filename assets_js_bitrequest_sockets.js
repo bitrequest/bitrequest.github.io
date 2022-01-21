@@ -220,7 +220,8 @@ function blockchain_bch_socket(socket_node, thisaddress) {
         websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
-        var ping_event = JSON.stringify({
+        var c_address = (thisaddress.indexOf("bitcoincash:") > -1) ? thisaddress.split("bitcoincash:").pop() : thisaddress,
+        ping_event = JSON.stringify({
             "op": "addr_sub",
             "addr": "bitcoincash:" + thisaddress
         });
