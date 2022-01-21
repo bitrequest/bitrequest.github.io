@@ -19,7 +19,7 @@ var apptitle = "Bitrequest",
     eth_socket2 = "wss://ropsten.infura.io/ws/v3/",
     main_ad_node = "https://web3api.io/api/v2/",
     main_ad_socket = "wss://ws.web3api.io/",
-    main_nano_node = "https://proxy.nanos.cc/proxy",
+    main_nano_node = "https://www.bitrequest.app:8020",
     socket_attempt = {},
     api_attempt = {},
     api_attempts = {},
@@ -817,7 +817,7 @@ var multi_wallets = {
                 "apis": {
                     "icon": "sphere",
                     "selected": {
-                        "name": "api.nanos.cc",
+                        "name": "bitrequest.app",
                         "url": main_nano_node,
                         "api": true,
                         "username": "",
@@ -825,8 +825,16 @@ var multi_wallets = {
                         "display": true
                     },
                     "apis": [{
-                            "name": "api.nanos.cc",
+                            "name": "bitrequest.app",
                             "url": main_nano_node,
+                            "api": true,
+                            "username": "",
+                            "password": "",
+                            "display": true
+                        },
+                        {
+                            "name": "api.nanos.cc",
+                            "url": "https://proxy.nanos.cc/proxy",
                             "api": true,
                             "username": "",
                             "password": "",
@@ -847,14 +855,6 @@ var multi_wallets = {
                             "username": "",
                             "password": "",
                             "display": true
-                        },
-                        {
-                            "name": "bitrequest.app",
-                            "url": "https://www.bitrequest.app:8020",
-                            "api": true,
-                            "username": "",
-                            "password": "",
-                            "display": true
                         }
 
                     ],
@@ -866,11 +866,16 @@ var multi_wallets = {
                 "websockets": {
                     "icon": "tab",
                     "selected": {
-                        "name": "nanos.cc websocket",
-                        "url": "wss://socket.nanos.cc",
+                        "name": "bitrequest.app",
+                        "url": "wss://bitrequest.app:8010",
                         "display": true
                     },
                     "apis": [{
+                            "name": "bitrequest.app",
+                            "url": "wss://bitrequest.app:8010",
+                            "display": true
+                        },
+                        {
                             "name": "nanos.cc websocket",
                             "url": "wss://socket.nanos.cc",
                             "display": true
@@ -888,11 +893,6 @@ var multi_wallets = {
                         {
                             "name": "powernode.cc websocket",
                             "url": "wss://ws.powernode.cc",
-                            "display": true
-                        },
-                        {
-                            "name": "bitrequest.app",
-                            "url": "wss://bitrequest.app:8010",
                             "display": true
                         }
                     ],
