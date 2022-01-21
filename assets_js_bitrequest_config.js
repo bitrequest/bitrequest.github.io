@@ -1507,5 +1507,6 @@ function btc_urlscheme(payment, address, amount, iszero) {
 }
 
 function bch_urlscheme(payment, address, amount, iszero) {
-    return "bitcoincash:" + address + ((iszero === true) ? "" : "?amount=" + amount);
+	var c_address = (address.indexOf("bitcoincash:") > -1) ? address.split("bitcoincash:").pop() : address,
+    return "bitcoincash:" + c_address + ((iszero === true) ? "" : "?amount=" + amount);
 }

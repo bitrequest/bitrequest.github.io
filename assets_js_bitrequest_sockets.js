@@ -223,7 +223,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
         var c_address = (thisaddress.indexOf("bitcoincash:") > -1) ? thisaddress.split("bitcoincash:").pop() : thisaddress,
         ping_event = JSON.stringify({
             "op": "addr_sub",
-            "addr": "bitcoincash:" + thisaddress
+            "addr": "bitcoincash:" + c_address
         });
         websocket.send(ping_event);
         pinging[thisaddress] = setInterval(function() {
