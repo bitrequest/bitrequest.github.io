@@ -3,7 +3,7 @@ header("Content-Type: application/json");
 header("Access-Control-Allow-Headers: Cache-Control, Pragma");
 //header("Access-Control-Allow-Origin: *"); // uncomment for nginx
 
-include ("keys.php");
+include ("../keys.php");
 include ("api.php");
 
 $postdata = $_POST;
