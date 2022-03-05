@@ -2271,7 +2271,7 @@ function pick_api_proxy() {
 						<div id='proxy_info'>\
 							Control your own keys and request limits:<br/><br/>\
 							<strong>1.</strong> Host the <a href='https://github.com/bitrequest/bitrequest.github.io/tree/master/api' target='blank' class='exit'>API proxy folder</a> on your server (php required).<br/>\
-							<strong>2.</strong> Enter your API keys in 'keys.php'.<br/>\
+							<strong>2.</strong> Enter your API keys in 'config.php'.<br/>\
 							<strong>3.</strong> Enter your server address below.<br/><br/>\
 						</div>\
 						<div id='rpc_input'>\
