@@ -2270,7 +2270,7 @@ function pick_api_proxy() {
 						<h3 class='icon-plus'>Add API Proxy</h3>\
 						<div id='proxy_info'>\
 							Control your own keys and request limits:<br/><br/>\
-							<strong>1.</strong> Host the <a href='https://github.com/bitrequest/bitrequest.github.io/tree/master/api' target='blank' class='exit'>API proxy folder</a> on your server (php required).<br/>\
+							<strong>1.</strong> Host the <a href='https://github.com/bitrequest/bitrequest.github.io/tree/master/proxy' target='blank' class='exit'>API proxy folder</a> on your server (php required).<br/>\
 							<strong>2.</strong> Enter your API keys in 'config.php'.<br/>\
 							<strong>3.</strong> Enter your server address below.<br/><br/>\
 						</div>\

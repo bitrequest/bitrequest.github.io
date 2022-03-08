@@ -3489,7 +3489,7 @@ function api_proxy(ad, p_proxy) {
         }
         return $.ajax(params);
     } else { // use api proxy
-        var api_location = "api/v1/",
+        var api_location = "proxy/v1/",
             localhost = ad.localhost,
             app_root = (forced_proxy) ? forced_proxy :
             (localhost === false) ? set_proxy :
@@ -4547,7 +4547,7 @@ function get_pdf_url(rqdat) {
         invd["TxID"] = txhash;
     }
     var set_proxy = $("#api_proxy").data("selected");
-    return set_proxy + "api/v1/receipt/?data=" + btoa(JSON.stringify(invd));
+    return set_proxy + "proxy/v1/receipt/?data=" + btoa(JSON.stringify(invd));
 }
 
 function download_receipt() {
