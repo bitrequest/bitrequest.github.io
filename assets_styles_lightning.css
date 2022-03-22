@@ -1,0 +1,205 @@
+/* lightning */
+
+.d_trigger {
+	
+}
+
+.drawer2 {
+	display:none;
+}
+
+#adln_drawer {
+	margin-top:1em;
+}
+
+.noln {
+}
+
+#select_ln_node {
+	z-index:3;
+}
+
+.noln #select_ln_node {
+	display:none;
+}
+
+.noln .noln_ref {
+	display:none!important;
+}
+
+.noln #adln_drawer {
+	display:block;
+}
+
+.noln #ad_info_wrap > ul > li {
+	border-bottom:1px solid rgba(204, 204, 204, 0);
+}
+
+.drawer2 {
+	
+}
+
+.drawer2 p {
+	font-size:16px!important;
+	color:#535353;
+}
+
+.invoice_list {
+	padding-top:1em;
+}
+
+.ivli {
+	border-bottom:1px solid #e2e1e1;
+}
+
+.ivli:last-child {
+  	border-bottom:1px solid rgba(204, 204, 204, 0);
+}
+
+.invoice_memo {
+	padding:0.5em;
+}
+
+.invoice_memo .iv_title {
+	float:left;
+	cursor:pointer;
+	font-weight:600;
+	color:#708484
+}
+
+.invoice_memo .iv_date {
+	float:right;
+	font-weight:600;
+	color:#96a4a4;
+	font-size:18px;
+	font-style: italic;
+	cursor:pointer;
+}
+
+.invoice_body {
+	display:none;
+}
+
+#invoiceformbox .invoice_body {
+	display:block;
+}
+
+#invoiceformbox .icon-power:before {
+	color:#f5c243;
+}
+
+pre {
+	outline: 1px solid #ccc;
+	padding: 10px 5px;
+	margin: 0;
+	width:100%;
+	overflow:hidden;
+	background: #393838;
+	border-right:15px solid #393838;
+	color: #FFF;
+	-webkit-user-select: text;
+	-moz-user-select: text;
+	-ms-user-select: text;
+	-khtml-user-select: text;
+}
+
+pre .string {
+	color: #b9c97e;
+	display: inline;
+	word-wrap: break-word;
+	white-space: pre;
+}
+
+pre .number {color: #88a8c5;}
+pre .boolean {color: #88a8c5;}
+pre .null {color: #88a8c5;}
+pre .key {color: #b9c97e;}
+
+.lnd_icon {
+	width: 1em; 
+}
+
+.inv_pb {
+	display:inline-block;
+	padding:1em 0 0 0;
+	color:#979797;
+	font-style: italic;
+	font-size:0.7em;
+}
+
+#lnsettingsbox .switch_wrap {
+	display:inline-block;
+	width:100%;
+	text-align:right;
+	padding:0 0.5em 0.7em 0;
+	font-size:1.1em;
+	font-weight:800;
+	color:#8d8d8d;
+}
+
+#lnsettingsbox #lnurl_proxy_drawer .switch_wrap {
+	text-align:left;
+}
+
+#lnsettingsbox .ln_info_wrap {
+	padding:0.6em 0 0 1em;
+}
+
+#lnsettingsbox .ln_info_wrap .lni_dat {
+	float:left;
+	font-size:16px!important;
+	color:#535353;
+}
+
+#lnsettingsbox .ln_info_wrap .lnurl_p {
+	float:right;
+	font-size:1em;
+	font-weight:800;
+	padding-right:0.3em;
+	color:#8d8d8d;
+}
+
+#lnsettingsbox .noln_ref.lnurlclass .ln_info_wrap .lnurl_p {
+	display:none;
+}
+
+#lnsettingsbox .ln_info_wrap .lni_dat .locked_stat,
+#lnsettingsbox .ln_info_wrap .lni_dat .online_stat {
+	display:none;
+}
+
+#lnsettingsbox .ln_info_wrap.live .lni_dat .online_stat {
+	display:inline;
+}
+
+#lnsettingsbox .ln_info_wrap.locked .lni_dat .locked_stat {
+	display:inline;
+}
+
+#lnsettingsbox .ln_info_wrap.live .lni_dat .offline_stat,
+#lnsettingsbox .ln_info_wrap.locked .lni_dat .offline_stat {
+	display:none;
+}
+
+#add_proxy_drawer {
+	padding:1em 0;
+	margin:0;
+}
+
+#lnsettingsbox .popform.haslnurls #lnd_credentials, 
+#lnsettingsbox .popform.haslnurls #lnurl_proxy_drawer {
+	display:none;
+}
+
+#lnsettingsbox #lnd_credentials .lndcd {
+	display:none;
+}
+
+#add_proxy {
+	text-align: right;
+	padding-right:1em;
+}
+
+#proxy_pw_input {
+	display:none;
+}
