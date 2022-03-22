@@ -83,8 +83,7 @@ function init_socket(socket_node, address, swtch) {
             blockchain_bch_socket(socket_node, address);
         } else if (payment == "nano") {
             closesocket();
-            //nano_socket(socket_node, address);
-            nano_socket_test();
+            nano_socket(socket_node, address);
         } else if (payment == "ethereum") {
             closesocket();
             amberdata_eth_websocket(socket_node, address);
@@ -581,30 +580,6 @@ function nano_socket(socket_node, thisaddress) {
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress, e.data);
-        return false;
-    };
-}
-
-function nano_socket_test() {
-    var websocket = sockets["bella"] = new WebSocket("wss://bitrequest.app:8030");
-    websocket.onopen = function(e) {
-        var ping_event = JSON.stringify({
-            "id": "bella_socketdera"
-        });
-        websocket.send(ping_event);
-        pinging["bella_ping"] = setInterval(function() {
-            websocket.send(ping_event);
-        }, 55000);
-    };
-    websocket.onmessage = function(e) {
-        console.log(e);
-    };
-    websocket.onclose = function(e) {
-        console.log("Disconnected");
-        txid = null;
-    };
-    websocket.onerror = function(e) {
-        //handle_socket_fails(socket_node, thisaddress, e.data);
         return false;
     };
 }
