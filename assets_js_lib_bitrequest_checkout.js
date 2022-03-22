@@ -48,10 +48,9 @@ function crossframe(e) {
 }
 
 function result_callback(post_data) {
-    // put you callback function here
-    console.log("put you callback function here");
+    // overwrite this function for your callback
+    console.log("overwrite this function for your callback");
     console.log(post_data);
-    closeframe();
 }
 
 function showframe() {

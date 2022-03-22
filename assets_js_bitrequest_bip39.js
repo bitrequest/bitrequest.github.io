@@ -146,7 +146,7 @@ function istrial() {
 // Reminder to write down secret phrase
 
 function bipv_pass() {
-    if (hasbip === true) {
+	if (hasbip === true) {
         if (bipv === true) {} else {
             var used_addresses = filter_all_addressli("seedid", bipid).filter(".used");
             if (istrial() === true) {
@@ -1161,7 +1161,7 @@ function derive_obj(source, keycc, coindat, bip32, add) {
 }
 
 function ch_pending(dat) {
-    return $("#requestlist li[data-address='" + dat.address + "'][data-pending='scanning'][data-cmcid='" + dat.cmcid + "']").length > 0;
+    return ($("#requestlist li[data-address='" + dat.address + "'][data-pending='scanning'][data-cmcid='" + dat.cmcid + "']").length > 0) ? true : false;
 }
 
 function get_uniques(arr) {
@@ -1256,7 +1256,7 @@ function parse_seed(mnemonic, passphrase) {
 
 function newseed(numWords) {
     var strength = numWords / 3 * 32,
-        buffer = new Uint8Array(strength / 8),
+        buffer = uint_8Array(strength / 8),
         data = crypto.getRandomValues(buffer);
     return to_mnemonic(data);
 }

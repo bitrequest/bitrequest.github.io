@@ -193,6 +193,10 @@ html.inframe #paymentdialogbox[data-pending="no"].transacting #view_tx {
 	display: none;
 }
 
+#paymentdialogbox[data-status="canceled"] #mainpulse {
+	opacity:0;
+}
+
 #statusbox {
 	display: inline-block;
 	color: #424242;
@@ -423,6 +427,15 @@ html.inframe #request_back {
 	float: none;
 }
 
+#paymentdialogbox.request .actionbar .openwallet_lnd {
+	display: none;
+	float: none;
+}
+
+#paymentdialogbox[data-lswitch="lnd_ao"].request .actionbar .openwallet_lnd {
+	display:inline-block;
+}
+
 .actionbar>div {
 	color: #009788;
 	text-transform: uppercase;
@@ -534,6 +547,10 @@ html.inframe #request_back {
 	pointer-events: none;
 }
 
+#paymentdialogbox[data-lswitch="lnd_ao"] #labelbttn {
+	display:none;
+}
+
 #pickcurrency {
 	color: #009788;
 	font-weight: 700;
@@ -542,11 +559,11 @@ html.inframe #request_back {
 	margin: 0;
 }
 
-#paymentaddress {
+#paymentaddress,
+#paymentaddress_lnd {
 	text-align: center;
 	font-weight: 700;
 	width: 100%;
-	word-wrap: break-word;
 	padding: 0;
 	margin: 0;
 	color: #6a6a6a;
@@ -556,6 +573,16 @@ html.inframe #request_back {
 	-ms-user-select: all !important;
 	-khtml-user-select: all !important;
 	pointer-events: all;
+}
+
+#paymentaddress {
+	word-wrap: break-word;
+}
+
+#paymentaddress_lnd {
+	width:80%;
+	padding-left:20%;
+	overflow:hidden;
 }
 
 #apisrc {
@@ -593,6 +620,119 @@ html.inframe #request_back {
 	vertical-align: text-bottom;
 }
 
+#rq_errlog {
+	display:inline-block;
+	width:100%;
+	margin:1em 0 0 0;
+	width:100%;
+}
+
+#rq_errlog .rq_err {
+	display:inline-block;
+	width:100%;
+	color:#bb282b;
+	background-color:#f8e5e4;
+	border:1px solid #f5caca;
+	padding:0.2em 0.5em;
+}
+
+#lightning_switch {
+	position:absolute;
+	bottom:0;
+	right:0;
+	padding:0 0 1em 0;
+	cursor:pointer;
+	color:#CCC;
+}
+
+#lightning_switch span.icon-power {
+	font-size:200%;
+}
+
+#paymentdialogbox[data-lswitch="lnd_ao"] #lightning_switch {
+	color:#f5c243;
+}
+
+#paymentdialogbox #lnd_icon {
+	width:10%;
+}
+
+#paymentdialogbox #qrcode_lnd,
+#paymentdialogbox #lnd_icon,
+#paymentdialogbox .openwallet_lnd,
+#paymentdialogbox #paymentaddress_lnd,
+#paymentdialogbox #sharecryptowrap > img.cmc_icon.icon_lnd,
+#paymentdialogbox #ccamount > img.cmc_icon.icon_lnd {
+	display:none;
+}
+
+#paymentdialogbox #current_lndnode {
+	display:none;
+}
+
+#paymentdialogbox #current_lndnode #lnd_nodeinfo_trigger {
+	text-decoration: underline;
+	cursor:pointer;
+}
+
+#paymentdialogbox[data-lswitch="lnd_ao"] #qrcode_lnd {
+	display:flex;
+}
+
+#paymentdialogbox[data-lswitch="lnd_ao"] #lnd_icon {
+	display:block;
+}
+
+#paymentdialogbox[data-lswitch="lnd_ao"] #qrcode,
+#paymentdialogbox[data-lswitch="lnd_ao"] #paymentaddress,
+#paymentdialogbox[data-lswitch="lnd_ao"] #ccamount > img.cmc_icon {
+	display:none;
+}
+
+#paymentdialogbox[data-lswitch="lnd_ao"] .openwallet_lnd {
+	display:inline-block;
+}
+
+#paymentdialogbox[data-lswitch="lnd_ao"] #paymentaddress_lnd,
+#paymentdialogbox[data-lswitch="lnd_ao"] #sharecryptowrap > img.cmc_icon.icon_lnd {
+	display:block;
+}
+
+#paymentdialogbox[data-lswitch="lnd_ao"] .openwallet {
+	display:none!important;
+}
+
+#paymentdialogbox[data-lswitch="lnd_ao"] #current_lndnode,
+#paymentdialogbox[data-lswitch="lnd_active"] #current_lndnode,
+#paymentdialogbox[data-lswitch="lnd_ao"] #ccamount > img.cmc_icon.icon_lnd {
+	display:inline;
+}
+
+#paymentdialogbox #phone_icon {
+	display:none;
+}
+
+#paymentdialogbox[data-lswitch="lnd_ao"].accept_lnd #qrcode_lnd {
+	opacity:0.1;
+}
+
+#paymentdialogbox[data-lswitch="lnd_ao"].transacting.accept_lnd #request_front #qrcode_lnd {
+	opacity:0;
+}
+
+#paymentdialogbox[data-lswitch="lnd_ao"].accept_lnd #phone_icon {
+	display:block;
+}
+
+#lnd_offline {
+	text-decoration: underline;
+	cursor:pointer;
+}
+
+#paymentdialogbox #current_lndnode .lnd_icon {
+	width: 1.5em;
+	vertical-align:bottom;
+}
 
 /* request_back */
 
@@ -615,11 +755,11 @@ html.inframe #request_back {
 }
 
 .norequest #backwraptop {
-	height: 45%;
+	height: 35%;
 }
 
 .norequest #backwrapbottom {
-	height: 55%;
+	height: 65%;
 }
 
 .request #backwraptop {
@@ -758,6 +898,26 @@ html.inframe #request_back {
 	cursor: pointer;
 }
 
+#fallback_address {
+	display:none;
+	font-weight: 700;
+	color:#939393;
+	font-size:0.9em;
+}
+
+#fallback_address #fb_addr {
+	color:#a8a8a8;
+	font-weight: 700;
+	font-size:0.9em;
+}
+
+#paymentdialogbox[data-lswitch="lnd_ao"] #fallback_address {
+	display:block;
+}
+
+#paymentdialogbox[data-pending="ispending"] #fallback_address {
+	display:none;
+}
 
 /* request_back request */
 
@@ -790,12 +950,12 @@ html.inframe #request_back {
 	margin: 1em 0 0 0;
 }
 
-#openwallet {
+#openwallet,
+#openwallet_lnd {
 	display: inline-block;
 	margin: 1em 0 0 0;
 	text-decoration: none;
 }
-
 
 /* show/hide elements */
 
@@ -851,7 +1011,8 @@ html.inframe #request_back {
 	display: none;
 }
 
-#paymentdialogbox.br_offline .actionbar .openwallet {
+#paymentdialogbox.br_offline .actionbar .openwallet,
+#paymentdialogbox.br_offline .actionbar .openwallet_lnd {
 	display: inline-block;
 	float: none;
 }

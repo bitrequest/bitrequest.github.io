@@ -182,7 +182,7 @@ ul.conf_options li .conf_emoji {
 	-webkit-overflow-scrolling: touch;
 }
 
-.selectbox .options>div {
+.selectbox .options > div {
 	width: 100%;
 	position: relative;
 }
@@ -203,7 +203,8 @@ ul.conf_options li .conf_emoji {
 	color: rgba(0, 0, 0, 0.5);
 }
 
-.selectbox .options .opt_icon_box .icon-bin {
+.selectbox .options .opt_icon_box .icon-bin,
+.selectbox .options .opt_icon_box .icon-lock {
 	cursor: pointer;
 	pointer-events: all;
 }
@@ -223,15 +224,21 @@ ul.conf_options li .conf_emoji {
 	display: none;
 }
 
-.selectbox .options>.optionwrap.offline span {
+.selectbox .options > .optionwrap.show > span,
+.selectbox .options > .optionwrap.show > .opt_icon_box {
+	background-color: #ced4e1;
+	cursor:default;
+}
+
+.selectbox .options > .optionwrap.offline span {
 	pointer-events: none;
 }
 
-.selectbox .options>.optionwrap.rpc_selected {
+.selectbox .options > .optionwrap.rpc_selected {
 	display: none !important;
 }
 
-.selectbox .options>.optionwrap.default .opt_icon_box .icon-bin {
+.selectbox .options > .optionwrap.default .opt_icon_box .icon-bin {
 	display: none;
 }
 

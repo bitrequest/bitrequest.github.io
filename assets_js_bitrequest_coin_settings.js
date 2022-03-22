@@ -1215,7 +1215,13 @@ function reset_coinsettings_function(trigger) {
     var currency = trigger.attr("data-currency"),
         result = confirm("Are you sure you want to reset " + currency + " settings?");
     if (result === true) {
-        var coinsettings = getcoinsettings(currency);
+        var current_settings = localStorage.getItem("bitrequest_" + currency + "_settings"),
+            cs_object = JSON.parse(current_settings),
+            ln_settings = (currency == "bitcoin") ? cs_object["Lightning network"] : false,
+            coinsettings = getcoinsettings(currency);
+        if (ln_settings) {
+            coinsettings["Lightning network"] = ln_settings; // don't reset lightning settings
+        }
         localStorage.setItem("bitrequest_" + currency + "_settings", JSON.stringify(coinsettings));
         append_coinsetting(currency, coinsettings, false);
         canceldialog();

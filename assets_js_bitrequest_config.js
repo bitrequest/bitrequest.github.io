@@ -4,11 +4,13 @@ var apptitle = "Bitrequest",
     localhostname = (hostname.indexOf("http") > -1) ? hostname.split("://").pop() : hostname,
     approot = "https://" + localhostname + root,
     hosted_proxy = "https://app.bitrequest.io/",
+    ln_socket = "wss://bitrequest.app:8030",
     proxy_list = [
         hosted_proxy,
         "https://www.bitrequest.io/",
         "https://www.bitrequest.app/"
     ],
+    proxy_version = "0.001",
     firebase_dynamic_link_domain = "bitrequest.page.link",
     firebase_shortlink = "https://" + firebase_dynamic_link_domain + "/",
     androidpackagename = "io.bitrequest.app",
@@ -139,6 +141,34 @@ var multi_wallets = {
                     }
                 ]
             },
+            "lightning_wallets": {
+                "wallet_download_page": "https://bitcoin.org/en/choose-your-wallet",
+                "wallets": [{
+                        "name": "lnbits",
+                        "website": "https://lnbits.com/",
+                        "appstore": null,
+                        "playstore": null,
+                        "desktop": "https://legend.lnbits.com/",
+                        "seed": false
+                    },
+                    {
+                        "name": "breeze",
+                        "website": "https://breez.technology",
+                        "appstore": "https://testflight.apple.com/join/wPju2Du7",
+                        "playstore": "https://play.google.com/apps/testing/com.breez.client",
+                        "desktop": null,
+                        "seed": false
+                    },
+                    {
+                        "name": "phoenix",
+                        "website": "https://phoenix.acinq.co",
+                        "appstore": "https://apps.apple.com/app/id1544097028",
+                        "playstore": "https://play.google.com/store/apps/details?id=fr.acinq.phoenix.mainnet",
+                        "desktop": null,
+                        "seed": true
+                    }
+                ]
+            },
             "settings": {
                 "confirmations": {
                     "icon": "clock",
@@ -160,6 +190,16 @@ var multi_wallets = {
                     "switch": true,
                     "custom_switch": true
                 },
+                "Lightning network": {
+                    "icon": "power",
+                    "selected": false,
+                    "switch": true,
+                    "custom_switch": true,
+                    "selected_proxy": false,
+                    "proxies": [],
+                    "selected_service": false,
+                    "services": []
+                },
                 "blockexplorers": {
                     "icon": "eye",
                     "selected": "blockchain.com",
@@ -172,18 +212,12 @@ var multi_wallets = {
                 "apis": {
                     "icon": "sphere",
                     "selected": {
-                        "name": "bitcoin.com",
-                        "url": "bitcoin.com",
+                        "name": "blockcypher",
+                        "url": "blockcypher.com",
                         "api": true,
                         "display": true
                     },
                     "apis": [{
-                            "name": "bitcoin.com",
-                            "url": "bitcoin.com",
-                            "api": true,
-                            "display": true
-                        },
-                        {
                             "name": "blockcypher",
                             "url": "blockcypher.com",
                             "api": true,
@@ -1507,6 +1541,6 @@ function btc_urlscheme(payment, address, amount, iszero) {
 }
 
 function bch_urlscheme(payment, address, amount, iszero) {
-	var c_address = (address.indexOf("bitcoincash:") > -1) ? address.split("bitcoincash:").pop() : address;
+    var c_address = (address.indexOf("bitcoincash:") > -1) ? address.split("bitcoincash:").pop() : address;
     return "bitcoincash:" + c_address + ((iszero === true) ? "" : "?amount=" + amount);
 }

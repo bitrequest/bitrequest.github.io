@@ -73,22 +73,27 @@ function api_monitor(api_data, txhash, tx_data) {
 
         function api_result(result) {
             var data = result.result;
-            if (data.error) {
-                clearpinging();
-                handle_api_fails(false, data.error, api_name, payment, txhash);
-                return false;
-            } else {
-                var currentaddress = geturlparameters().address,
-                    legacy = (currencysymbol == "bch") ? bchutils.toLegacyAddress(currentaddress) : currentaddress;
-                txd = (api_name == "blockcypher") ? blockcypher_poll_data(data, set_confirmations, currencysymbol, currentaddress) :
-                    (api_name == "ethplorer") ? ethplorer_poll_data(data, set_confirmations, currencysymbol) :
-                    (api_name == "bitcoin.com") ? bitcoincom_scan_data(data, set_confirmations, currencysymbol, legacy, currentaddress) :
-                    (api_name == "mempool.space") ? mempoolspace_scan_data(data, set_confirmations, currencysymbol, currentaddress) :
-                    (api_name == "blockchair") ? (request.erc20 === true) ? blockchair_erc20_poll_data(data.data[txhash], set_confirmations, currencysymbol, data.context.state) :
-                    (payment == "ethereum") ? blockchair_eth_scan_data(data.data[txhash].calls[0], set_confirmations, currencysymbol, data.context.state) :
-                    blockchair_scan_data(data.data[txhash], set_confirmations, currencysymbol, currentaddress, data.context.state) : false;
-                confirmations(txd);
+            if (data) {
+                if (data.error) {
+                    clearpinging();
+                    handle_api_fails(false, data.error, api_name, payment, txhash);
+                    return false;
+                } else {
+                    var currentaddress = geturlparameters().address,
+                        legacy = (currencysymbol == "bch") ? bchutils.toLegacyAddress(currentaddress) : currentaddress;
+                    txd = (api_name == "blockcypher") ? blockcypher_poll_data(data, set_confirmations, currencysymbol, currentaddress) :
+                        (api_name == "ethplorer") ? ethplorer_poll_data(data, set_confirmations, currencysymbol) :
+                        (api_name == "bitcoin.com") ? bitcoincom_scan_data(data, set_confirmations, currencysymbol, legacy, currentaddress) :
+                        (api_name == "mempool.space") ? mempoolspace_scan_data(data, set_confirmations, currencysymbol, currentaddress) :
+                        (api_name == "blockchair") ? (request.erc20 === true) ? blockchair_erc20_poll_data(data.data[txhash], set_confirmations, currencysymbol, data.context.state) :
+                        (payment == "ethereum") ? blockchair_eth_scan_data(data.data[txhash].calls[0], set_confirmations, currencysymbol, data.context.state) :
+                        blockchair_scan_data(data.data[txhash], set_confirmations, currencysymbol, currentaddress, data.context.state) : false;
+                    confirmations(txd);
+                }
+                return
             }
+            clearpinging();
+            handle_api_fails(false, "error", api_name, payment, txhash);
         };
 
         function api_error(jqXHR, textStatus, errorThrown) {
@@ -350,7 +355,7 @@ function handle_rpc_monitor_fails(rpcdata, error, txhash) {
     }
 }
 
-function confirmations(tx_data, direct) {
+function confirmations(tx_data, direct, ln) {
     closeloader();
     clearTimeout(request_timer);
     if (tx_data === false || tx_data.ccval === undefined) {
@@ -358,7 +363,21 @@ function confirmations(tx_data, direct) {
     }
     var pmd = $("#paymentdialogbox"),
         brstatuspanel = pmd.find(".brstatuspanel"),
-        setconfirmations = (tx_data.setconfirmations) ? parseInt(tx_data.setconfirmations) : null,
+        brheader = brstatuspanel.find("h2"),
+        status = tx_data.status;
+    if (status && status == "canceled") {
+        brheader.html("<span class='icon-blocked'></span>Invoice cancelled");
+        pmd.attr("data-status", "canceled");
+        updaterequest({
+            "requestid": request.requestid,
+            "status": "canceled",
+            "confirmations": 0
+        }, true);
+        notify("Invoice canceled", 500000);
+        forceclosesocket();
+        return
+    }
+    var setconfirmations = (ln) ? 1 : (tx_data.setconfirmations) ? parseInt(tx_data.setconfirmations) : null,
         conf_text = (setconfirmations) ? setconfirmations.toString() : "",
         confbox = brstatuspanel.find("span.confbox"),
         confboxspan = confbox.find("span"),
@@ -375,10 +394,8 @@ function confirmations(tx_data, direct) {
             confbox.addClass("blob");
             confboxspan.text(xconf).attr("data-conf", xconf);
         }, 500);
-        var ow = pmd.find("#open_wallet"),
-            cc_raw = ow.attr("data-rel"),
+        var cc_raw = $("#open_wallet").attr("data-rel"),
             cc_rawf = parseFloat(cc_raw),
-            brheader = brstatuspanel.find("h2"),
             receivedutc = tx_data.transactiontime,
             receivedtime = receivedutc - timezone,
             receivedcc = tx_data.ccval,
@@ -399,9 +416,10 @@ function confirmations(tx_data, direct) {
             "fiatvalue": fiatvalue,
             "paymenttimestamp": receivedutc,
             "txhash": txhash,
-            "confirmations": xconf
+            "confirmations": xconf,
+            "setconfirmations": setconfirmations
         });
-        brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), language));
+        brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), "en-us"));
         if (iscrypto) {} else {
             brstatuspanel.find("span.receivedcrypto").text(rccf + " " + currencysymbol);
         }
@@ -409,7 +427,7 @@ function confirmations(tx_data, direct) {
         var exact = helper.exact,
             xmr_pass = (payment == "monero") ? (rccf > cc_rawf * 0.97 && rccf < cc_rawf * 1.03) : true; // error margin for xmr integrated addresses
         if (xmr_pass) {
-            var pass = (exact) ? (rccf == cc_rawf) : (rccf >= cc_rawf * 0.99);
+            var pass = (exact) ? (rccf == cc_rawf) : (rccf >= cc_rawf * 0.97);
             if (pass) {
                 if (xconf >= setconfirmations || zero_conf === true) {
                     closesocket();
@@ -418,16 +436,20 @@ function confirmations(tx_data, direct) {
                     } else {
                         playsound(cashier);
                     }
-                    paymentdialogbox.addClass("transacting").attr("data-status", "paid");
+                    pmd.addClass("transacting").attr("data-status", "paid");
                     brheader.text("Payment received");
                     request.status = "paid",
                         request.pending = "polling";
                     saverequest(direct);
                     $("span#ibstatus").fadeOut(500);
+                    closenotify();
                 } else {
-                    playsound(blip);
-                    paymentdialogbox.addClass("transacting").attr("data-status", "pending");
-                    brheader.text("Transaction broadcasted");
+                    if (ln) {} else {
+                        playsound(blip);
+                    }
+                    pmd.addClass("transacting").attr("data-status", "pending");
+                    var bctext = (ln) ? "Waiting for payment" : "Transaction broadcasted";
+                    brheader.text(bctext);
                     request.status = "pending",
                         request.pending = "polling";
                     saverequest(direct);
@@ -436,7 +458,7 @@ function confirmations(tx_data, direct) {
             } else {
                 if (exact) {} else {
                     brheader.text("Insufficient amount");
-                    paymentdialogbox.addClass("transacting").attr("data-status", "insufficient");
+                    pmd.addClass("transacting").attr("data-status", "insufficient");
                     request.status = "insufficient",
                         request.pending = "scanning";
                     saverequest(direct);

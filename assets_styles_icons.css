@@ -431,3 +431,7 @@
 .icon-table:before {
 	content: "\ea70";
 }
+
+.icon-power:before {
+  content: "\e9b5";
+}

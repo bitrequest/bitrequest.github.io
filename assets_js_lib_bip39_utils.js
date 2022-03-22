@@ -10,6 +10,10 @@ var crypto = window.crypto,
 
 // helpers
 
+function uint_8Array(bytes) {
+    return new Uint8Array(bytes);
+}
+
 function buffer(enc) {
     return utf8Encoder.encode(enc);
 }
@@ -55,11 +59,11 @@ function hexarray(str) {
     for (var i = 0; i < str.length; i += 2) {
         a.push("0x" + str.substr(i, 2));
     }
-    return new Uint8Array(a);
+    return uint_8Array(a);
 }
 
 function buf2hex(buffer) { // buffer is an ArrayBuffer
-    return Array.prototype.map.call(new Uint8Array(buffer), x => ("00" + x.toString(16)).slice(-2)).join("");
+    return Array.prototype.map.call(uint_8Array(buffer), x => ("00" + x.toString(16)).slice(-2)).join("");
 }
 
 // mnemonic helpers
@@ -191,7 +195,7 @@ function b58dec_uint_array(dec) {
         }
     }
     while (j--) b.push(d[j]);
-    return new Uint8Array(b);
+    return uint_8Array(b);
 }
 
 // base58check
@@ -204,6 +208,52 @@ function b58check_decode(val) {
     var full_bytes = b58dec(val, "hex"),
         bytes = full_bytes.substring(0, full_bytes.length - 8);
     return bytes;
+}
+
+//LNurl
+
+function toWords(bytes) {
+    var res = convert(bytes, 8, 5, true);
+    if (Array.isArray(res)) {
+	    return res
+	}
+    throw new Error(res)
+}
+
+function fromWords(bytes) {
+    var res = convert(bytes, 5, 8, true);
+    if (Array.isArray(res)) {
+	    return res
+	}
+    throw new Error(res)
+}
+  
+function convert(data, inBits, outBits, pad) {
+    var value = 0,
+    	bits = 0,
+		maxV = (1 << outBits) - 1,
+		result = [];
+    for (var i = 0; i < data.length; ++i) {
+    	value = (value << inBits) | data[i];
+		bits += inBits;
+		while (bits >= outBits) {
+        	bits -= outBits;
+			result.push((value >> bits) & maxV);
+      	}
+    }
+	if (pad) {
+    	if (bits > 0) {
+        	result.push((value << (outBits - bits)) & maxV);
+      	}
+    } else {
+    	if (bits >= inBits) {
+	    	return "Excess padding"
+	    }
+		if ((value << (outBits - bits)) & maxV) {
+			return "Non-zero padding"
+		}
+    }
+	return result
 }
 
 //hashing
@@ -254,6 +304,10 @@ function hash160(pub) {
 
 function hash160_to_address(versionbytes, h160) {
     return b58check_encode(versionbytes + h160);
+}
+
+function sha_sub(val, lim) {
+    return hmacsha(val, "sha256").slice(0, lim);
 }
 
 // Bech 32
@@ -318,7 +372,7 @@ function createChecksum(hrp, data) {
 }
 
 function bech32_encode(hrp, data) {
-    var combined = data.concat(createChecksum(hrp, data)),
+	var combined = data.concat(createChecksum(hrp, data)),
         ret = hrp + "1";
     for (var p = 0; p < combined.length; ++p) {
         ret += b32ab.charAt(combined[p]);
@@ -367,8 +421,46 @@ function bech32_decode(bechString) { // unused
     };
 }
 
+function lnurl_decodeb32(lnurl) {
+    var p,
+        has_lower = false,
+        has_upper = false;
+    for (p = 0; p < lnurl.length; ++p) {
+        if (lnurl.charCodeAt(p) < 33 || lnurl.charCodeAt(p) > 126) {
+            return null;
+        }
+        if (lnurl.charCodeAt(p) >= 97 && lnurl.charCodeAt(p) <= 122) {
+            has_lower = true;
+        }
+        if (lnurl.charCodeAt(p) >= 65 && lnurl.charCodeAt(p) <= 90) {
+            has_upper = true;
+        }
+    }
+    if (has_lower && has_upper) {
+        return null;
+    }
+    var lnurl = lnurl.toLowerCase(),
+    	pos = lnurl.lastIndexOf("1"),
+		hrp = lnurl.substring(0, pos),
+        data = [];
+    for (p = pos + 1; p < lnurl.length; ++p) {
+        var d = b32ab.indexOf(lnurl.charAt(p));
+        if (d === -1) {
+            return null;
+        }
+        data.push(d);
+    }
+    if (!verifyChecksum(hrp, data)) {
+        return null;
+    }
+    return {
+        "hrp": hrp,
+        "data": data.slice(0, data.length - 6)
+    };
+}
+
 function aes_enc(params, keyString) {
-    var buffer = new Uint8Array(16),
+    var buffer = uint_8Array(16),
         iv = byteArrayToWordArray(crypto.getRandomValues(buffer)),
         key = sjcl.codec.base64.toBits(keyString),
         cipher = new sjcl.cipher.aes(key),
@@ -378,7 +470,6 @@ function aes_enc(params, keyString) {
         conString = sjcl.codec.base64.fromBits(concatbitArray);
     return conString;
 }
-
 
 function aes_dec(content, keyst) {
     var bitArray = sjcl.codec.base64.toBits(content),

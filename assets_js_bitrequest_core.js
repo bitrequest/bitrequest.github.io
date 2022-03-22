@@ -28,14 +28,17 @@ var language = navigator.language || navigator.userLanguage,
     is_ios_app, // ios app fingerprint
     inframe = (self !== top),
     offline = (navigator.onLine === false),
-    thishostname = window.location.hostname,
-    hostlocation = (thishostname == hostname) ? "hosted" :
-    (thishostname == localhostname) ? "selfhosted" :
-    (thishostname == "") ? "local" : "unknown",
+    w_loc = window.location,
+    c_host = w_loc.origin + w_loc.pathname,
+    thishostname = w_loc.hostname,
+    hostlocation = (thishostname == "" || thishostname == "localhost" || thishostname === "127.0.0.1") ? "local" :
+    (thishostname == "bitrequest.github.io") ? "hosted" :
+    (thishostname == localhostname) ? "selfhosted" : "unknown",
     symbolcache,
     hascam,
     cp_timer,
     local,
+    localserver,
     wl = navigator.wakeLock,
     wakelock,
     bipv,
@@ -164,7 +167,8 @@ function checkphp() { //check for php support by fetching fiat currencies from l
 
 function setsymbols() { //fetch fiat currencies from fixer.io api
     //set globals
-    local = (hostlocation == "local" && phpsupportglobal === false);
+    local = (hostlocation == "local" && phpsupportglobal === false),
+        localserver = (hostlocation == "local" && phpsupportglobal === true);
     if (localStorage.getItem("bitrequest_symbols")) {
         geterc20tokens();
     } else {
@@ -373,6 +377,7 @@ function finishfunctions() {
     toggleswitch();
     closeselectbox();
     radio_select();
+    dialog_drawer();
     dragstart(); // reorder addresses
     //drag
     dragend();
@@ -589,6 +594,7 @@ function finishfunctions() {
     //check_currency
     //currency_check
     //currency_uncheck
+    //d_proxy
     //get_vk
     gk();
     html.addClass("loaded");
@@ -601,7 +607,7 @@ function finishfunctions() {
 function setlocales() {
     html.attr("lang", language);
     $("meta[property='og:locale']").attr("content", language);
-    $("meta[property='og:url']").attr("content", window.location.href);
+    $("meta[property='og:url']").attr("content", w_loc.href);
     var coindata = getcoindata(geturlparameters().payment),
         imgid = (coindata) ? coindata.cmcid : "1";
     $("meta[property='og:image']").attr("content", "https://s2.coinmarketcap.com/static/img/coins/200x200/" + imgid + ".png");
@@ -881,7 +887,7 @@ function ios_redirections(url) {
     if (url.endsWith("4bR")) { // handle bitly shortlink
         ios_redirect_bitly(url);
     } else {
-        var currenturlvar = window.location.href,
+        var currenturlvar = w_loc.href,
             currenturl = currenturlvar.toUpperCase(),
             newpage = url.toUpperCase();
         if (currenturl == newpage) {
@@ -938,12 +944,12 @@ function ios_redirect_bitly(shorturl) {
                             ios_redirections(longurl);
                             sessionStorage.setItem("bitrequest_longurl_" + bitly_id, longurl); //cache token decimals
                         } else {
-                            window.location.href = "http://bit.ly/" + bitly_id;
+                            w_loc.href = "http://bit.ly/" + bitly_id;
                         }
                     }
                 }
             }).fail(function(jqXHR, textStatus, errorThrown) {
-                window.location.href = "http://bit.ly/" + bitly_id;
+                w_loc.href = "http://bit.ly/" + bitly_id;
             });
         }
     }
@@ -1075,7 +1081,7 @@ function loadurl() {
     var gets = geturlparameters(),
         page = gets.p,
         payment = gets.payment,
-        url = window.location.search,
+        url = w_loc.search,
         event = (payment) ? "both" : "loadpage";
     if (url) {
         openpage(url, page, event);
@@ -1323,7 +1329,16 @@ function payrequest() {
                 endstring = "&status=" + rl_status + "&type=" + rl_requesttype,
                 amount_short_rounded = amountshort(rl_amount, rl_receivedamount, rl_fiatvalue, rl_iscrypto),
                 paymenturl_amount = (insufficient === true) ? amount_short_rounded : rl_amount,
-                paymenturl = "?p=requests&payment=" + rl_payment + "&uoa=" + rl_uoa + "&amount=" + paymenturl_amount + midstring + endstring;
+                lightning = rldata.lightning,
+                d = (lightning && lightning.invoice) ? "&d=" + btoa(JSON.stringify({
+                    "imp": lightning.imp,
+                    "proxy": lightning.proxy_host,
+                    "nid": lightning.nid,
+                    "lid": lightning.pid
+                })) : "";
+            paymenturl = "?p=requests&payment=" + rl_payment + "&uoa=" + rl_uoa + "&amount=" + paymenturl_amount + midstring + endstring + d;
+
+
             openpage(paymenturl, "", "payment");
         }
         return false;
@@ -1527,9 +1542,10 @@ function pickselect() {
     $(document).on("click", ".selectbox > .options span", function() {
         var thisselect = $(this),
             thisvalue = thisselect.text(),
+            thisdata = thisselect.data(),
             selectbox = thisselect.closest(".selectbox"),
             thisinput = selectbox.children("input");
-        thisinput.val(thisvalue);
+        thisinput.val(thisvalue).data(thisdata);
         selectbox.find(".options").removeClass("showoptions").children("span").removeClass("show");
     })
 }
@@ -1551,6 +1567,19 @@ function radio_select() {
         var thisvalue = thistrigger.children("span").text(),
             thisinput = $(".formbox input:first");
         thisinput.val(thisvalue);
+    })
+}
+
+function dialog_drawer() {
+    $(document).on("click", "#ad_info_wrap .d_trigger", function() {
+        var thistrigger = $(this),
+            drawer = thistrigger.next(".drawer2");
+        if (drawer.is(":visible")) {
+            drawer.slideUp(200);
+        } else {
+            drawer.slideDown(200);
+            $(".drawer2").not(drawer).slideUp(200);
+        }
     })
 }
 
@@ -1999,11 +2028,15 @@ function popnotify(result, message) {
 }
 
 //dialogs
-function popdialog(content, type, functionname, trigger, custom) {
+function popdialog(content, type, functionname, trigger, custom, replace) {
     if (custom) {
         $("#popup #actions").addClass("custom");
     }
-    $("#dialogbody").append(content);
+    if (replace) {
+        $("#dialogbody").html(content);
+    } else {
+        $("#dialogbody").append(content);
+    }
     body.addClass("blurmain");
     $("#popup").addClass("active showpu");
     var thistrigger = (trigger) ? trigger : $("#popup #execute");
@@ -2618,6 +2651,10 @@ function unfocus_inputs() {
 }
 
 function cpd_pollcheck() {
+    if (paymentdialogbox.attr("data-lswitch") == "lnd_ao") {
+        close_paymentdialog();
+        return
+    }
     if (request) {
         if (request.received === true) {
             close_paymentdialog();
@@ -2656,57 +2693,39 @@ function cancelpaymentdialog() {
     closeloader();
     clearTimeout(request_timer);
     closesocket();
+    clearpinging();
     closenotify();
     sleep();
+    lnd_ph = false;
 }
 
 function closesocket(s_id) {
     if (s_id) { // close this socket
-	    sockets[s_id].close();
-	    delete sockets[s_id]
+        sockets[s_id].close();
+        delete sockets[s_id]
+    } else { // close all sockets
+        $.each(sockets, function(key, value) {
+            value.close();
+        });
+        sockets = {};
     }
-    else { // close all sockets
-	    $.each(sockets, function(key, value) {
-	        value.close();
-	    });
-		sockets = {};
-    }
-    clearpinging(s_id);
     txid = null;
 }
 
 function forceclosesocket() {
     clearpinging();
-    $.each(sockets, function(key, value) {
-        value.close();
-        value.terminate();
-        value.forEach((socket) => {
-            // Soft close
-            socket.close();
-            socket.terminate();
-            process.nextTick(() => {
-                if ([socket.OPEN, socket.CLOSING].includes(socket.readyState)) {
-                    // Socket still hangs, hard close
-                    socket.terminate();
-                }
-            });
-        });
-    });
-	sockets = {};
-    txid = null;
     closesocket();
 }
 
 function clearpinging(s_id) {
-	if (s_id) { // close this interval
-		clearInterval(pinging[s_id]);
-	    delete pinging[s_id]
-    }
-    else { // close all intervals
-	    $.each(pinging, function(key, value) {
-	        clearInterval(value);
-	    });
-	    pinging = {};
+    if (s_id) { // close this interval
+        clearInterval(pinging[s_id]);
+        delete pinging[s_id]
+    } else { // close all intervals
+        $.each(pinging, function(key, value) {
+            clearInterval(value);
+        });
+        pinging = {};
     }
 }
 
@@ -2996,14 +3015,106 @@ function showtransaction_trigger() {
         var thisnode = $(this),
             thislist = thisnode.closest("li"),
             rqli = thisnode.closest("li.rqli"),
-            txhash = (thisnode.hasClass("tx_val")) ? thislist.data("txhash") : rqli.data("txhash"),
-            currency = rqli.data("payment"),
+            rqldat = rqli.data(),
+            txhash = (thisnode.hasClass("tx_val")) ? thislist.data("txhash") : rqldat.txhash,
+            lnhash = (txhash && txhash.slice(0, 9) == "lightning") ? true : false;
+        if (lnhash) {
+            var lightning = rqldat.lightning,
+                imp = lightning.imp;
+            invoice = lightning.invoice;
+            if (invoice) {
+                var hash = invoice.hash;
+                if (hash) {
+                    var result = confirm("Open invoice: " + hash + "?");
+                    if (result === true) {
+                        var proxy = lightning.proxy_host,
+                            nid = lightning.nid,
+                            pid = lightning.pid,
+                            pw = lightning.pw;
+                        lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw);
+                        return;
+                    }
+                }
+            }
+            playsound(funk);
+            return
+        }
+        var currency = rqli.data("payment"),
             erc20 = rqli.data("erc20");
         blockchainurl = blockexplorer_url(currency, true, erc20);
         if (blockchainurl === undefined || txhash === undefined) {} else {
             open_blockexplorer_url(blockchainurl + txhash);
         }
     })
+}
+
+function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
+    var p_arr = lnurl_deform(proxy),
+        proxy_host = p_arr.url,
+        pk = (pw) ? pw : p_arr.k,
+        proxy_url = proxy_host + "proxy/v1/ln/api/",
+        postdata = {
+            "method": "POST",
+            "cache": false,
+            "timeout": 5000,
+            "url": proxy_url,
+            "data": {
+                "fn": "ln-invoice-decode",
+                "imp": imp,
+                "hash": hash,
+                "nid": nid,
+                "callback": "no",
+                "id": pid,
+                "x-api": pk
+            }
+        };
+    loader(true);
+    loadertext("connecting to " + lnurl_encode("lnurl", proxy_host));
+    $.ajax(postdata).done(function(e) {
+        if (e) {
+            var error = e.error;
+            if (error) {
+                popdialog("<h2 class='icon-blocked'>" + error.message + "</h2>", "alert", "canceldialog");
+                closeloader();
+                return;
+            }
+            var ddat = [{
+                "div": {
+                    "class": "popform",
+                    "content": [{
+                            "div": {
+                                "class": "invoice_body",
+                                "content": "<pre>" + syntaxHighlight(e) + "</pre><div class='inv_pb'><img src='img_icons_lnd-icons_" + imp + ".png' class='lnd_icon' title='" + imp + "'/> Powered by " + imp + "</div>"
+                            }
+                        },
+                        {
+                            "input": {
+                                "class": "submit",
+                                "attr": {
+                                    "type": "submit",
+                                    "value": "OK"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }],
+            content = template_dialog({
+                "id": "invoiceformbox",
+                "icon": "icon-power",
+                "title": "Invoice",
+                "elements": ddat
+            });
+        popdialog(content, "alert", "canceldialog");
+        closeloader();
+        return
+        }
+        notify("Unable to fetch invoice");
+        closeloader();
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        notify("Unable to fetch invoice");
+        closeloader();
+    });
 }
 
 function showtransactions() {
@@ -3168,7 +3279,7 @@ function show_vk_cb(kd) {
 function open_blockexplorer_url(be_link) {
     var result = confirm("Open " + be_link + "?");
     if (result === true) {
-        window.location.href = be_link;
+        w_loc.href = be_link;
     }
 }
 
@@ -3437,7 +3548,7 @@ function open_url() {
             if (target == "_blank") {
                 window.open(url);
             } else {
-                window.location.href = url;
+                w_loc.href = url;
             }
         }, 500);
     })
@@ -3460,7 +3571,7 @@ function get_infura_apikey(rpcurl) {
 }
 
 function api_proxy(ad, p_proxy) {
-    var set_proxy = (p_proxy) ? p_proxy : $("#api_proxy").data("selected"),
+    var set_proxy = (p_proxy) ? p_proxy : d_proxy(),
         custom_url = ad.api_url,
         aud = (custom_url) ? {} :
         get_api_url({
@@ -3511,9 +3622,22 @@ function api_proxy(ad, p_proxy) {
 function br_result(e) {
     var ping = e.ping,
         proxy = (ping) ? true : false;
+    if (proxy && ping.br_cache) {
+        var version = ping.br_cache.version;
+        if (version != proxy_version) {
+            proxy_alert(version);
+        }
+    }
     return {
         "proxy": proxy,
         "result": (proxy) ? (ping.br_cache) ? ping.br_result : ping : e
+    }
+}
+
+function proxy_alert(version) {
+	if (version) {
+        body.addClass("haschanges");
+        $("#alert > span").text("!").attr("title", "Please update your proxy server " + version + " > " + proxy_version);
     }
 }
 
@@ -3574,7 +3698,7 @@ function fixedcheck(livetop) {
 }
 
 function geturlparameters() {
-    var qstring = window.location.search.substring(1),
+    var qstring = w_loc.search.substring(1),
         getvalues = qstring.split("&"),
         get_object = {};
     $.each(getvalues, function(i, val) {
@@ -3719,14 +3843,14 @@ function weekdays(day) {
     };
 }
 
-function fulldateformat(date, language) {
-    return weekdays()[date.getDay()] + " " + date.toLocaleString(language, {
+function fulldateformat(date, lng) {
+    return weekdays()[date.getDay()] + " " + date.toLocaleString(lng, {
         "month": "long"
     }) + " " + date.getDate() + " | " + formattime(date);
 }
 
-function fulldateformatmarkup(date, language) {
-    return weekdays()[date.getDay()] + " " + date.toLocaleString(language, {
+function fulldateformatmarkup(date, lng) {
+    return weekdays()[date.getDay()] + " " + date.toLocaleString(lng, {
         "month": "long"
     }) + " " + date.getDate() + " | <div class='fdtime'>" + formattime(date) + "</div>";
 }
@@ -4320,7 +4444,10 @@ function appendrequest(rd) {
         fiatvalue = rd.fiatvalue,
         paymenttimestamp = rd.paymenttimestamp,
         txhash = rd.txhash,
-        confirmations = rd.confirmations,
+        lnhash = (txhash && txhash.slice(0, 9) == "lightning") ? true : false,
+        lightning = rd.lightning,
+        hybrid = (lightning && lightning.hybrid === true),
+        conf = (rd.confirmations) ? rd.confirmations : 0,
         status = rd.status,
         pending = rd.pending,
         requestid = rd.requestid,
@@ -4332,26 +4459,26 @@ function appendrequest(rd) {
         rqdata = rd.rqdata,
         rqmeta = rd.rqmeta,
         ismonitored = rd.monitored,
-        online_purchase = rd.online_purchase,
         source = rd.source,
         txhistory = rd.txhistory,
         uoa_upper = uoa.toUpperCase(),
-        deter = (iscrypto === true) ? 5 : 2,
+        deter = (iscrypto === true) ? 6 : 2,
         insufficient = (status == "insufficient"),
         requesttitle_short = (requesttitle && requesttitle.length > 85) ? "<span title='" + requesttitle + "'>" + requesttitle.substring(0, 64) + "...</span>" : requesttitle,
         // Fix decimal rounding:
         amount_rounded = trimdecimals(amount, deter),
-        receivedamount_rounded = trimdecimals(receivedamount, 5),
+        receivedamount_rounded = trimdecimals(receivedamount, 6),
         fiatvalue_rounded = trimdecimals(fiatvalue, 2),
         requestlist = (archive === true) ? $("#archivelist") : $("#requestlist"),
         utc = timestamp - timezone,
         localtime = (requestdate) ? requestdate - timezone : utc, // timezone correction
         incoming = (requesttype == "incoming"),
-        outgoing = (requesttype == "outgoing"),
         local = (requesttype == "local"),
+        checkout = (requesttype == "checkout"),
+        outgoing = (requesttype == "outgoing"),
         direction = (incoming === true) ? "send" : "received",
-        typetext = (incoming === true) ? (online_purchase === true) ? "online purchase" : "incoming" : (local === true) ? "point of sale" : "outgoing",
-        requesticon = (incoming === true) ? (online_purchase === true) ? " typeicon icon-cart" : " typeicon icon-arrow-down-right2" : (local === true) ? " icon-qrcode" : " typeicon icon-arrow-up-right2",
+        typetext = (checkout) ? "online purchase" : (local) ? "point of sale" : requesttype,
+        requesticon = (checkout) ? " typeicon icon-cart" : (local) ? " icon-qrcode" : (incoming === true) ? " typeicon icon-arrow-down-right2" : " typeicon icon-arrow-up-right2",
         typeicon = "<span class='inout" + requesticon + "'></span> ",
         statusicon = "<span class='icon-checkmark' title='Confirmed transaction'></span>\
 			<span class='icon-clock' title='pending transaction'></span>\
@@ -4362,35 +4489,38 @@ function appendrequest(rd) {
         rqdataparam = (rqdata) ? "&d=" + rqdata : "",
         rqmetaparam = (rqmeta) ? "&m=" + rqmeta : "",
         requesttypeclass = "request" + requesttype,
-        expirytime = (iscrypto === true) ? 25920000000 : 6048000000, // expirydate crypto: 300 days / fiat: 70 days
-        isexpired = (($.now() - localtime) >= expirytime && (status == "new" || insufficient === true)),
+        lnclass = (lightning) ? " lightning" : "",
+        lnd_expire = (lightning && hybrid === false || lnhash) ? true : false,
+        expirytime = (lnd_expire) ? 604800000 : (iscrypto === true) ? 25920000000 : 6048000000, // expirydate crypto: 300 days / fiat: 70 days / lightning: 7 days
+        isexpired = (($.now() - localtime) >= expirytime && (lnd_expire || status == "new" || insufficient === true)),
         expiredclass = (isexpired === true) ? " expired" : "",
         ispendingclass = (isexpired === true) ? "expired" : pending,
         localtimeobject = new Date(localtime),
         requestdateformatted = fulldateformat(localtimeobject, "en-us"),
         timeformat = "<span class='rq_month'>" + localtimeobject.toLocaleString('en-us', {
-            month: 'short'
+            "month": "short"
         }) + "</span> <span class='rq_day'>" + localtimeobject.getDate() + "</span>",
         ptsformatted = fulldateformatmarkup(new Date(paymenttimestamp - timezone), "en-us"),
         amount_short_rounded = amountshort(amount, receivedamount, fiatvalue, iscrypto),
         amount_short_span = (insufficient === true) ? " (" + amount_short_rounded + " " + uoa_upper + " short)" : "",
         amount_short_cc_span = (iscrypto === true) ? amount_short_span : "",
         created = (requestdate) ? requestdateformatted : "<strong>unknown</strong>",
-        fiatvaluebox = (iscrypto === true) ? "" : "<li class='payday pd_fiat'><strong>Fiat value on<span class='pd_fiat'> " + ptsformatted + "</span> :</strong><span class='fiatvalue'> " + fiatvalue_rounded + "</span> " + currencyname + "<div class='show_as amountshort'>" + amount_short_span + "</div></li>",
+        fiatvaluebox = (iscrypto === true || !fiatvalue) ? "" : "<li class='payday pd_fiat'><strong>Fiat value on<span class='pd_fiat'> " + ptsformatted + "</span> :</strong><span class='fiatvalue'> " + fiatvalue_rounded + "</span> " + currencyname + "<div class='show_as amountshort'>" + amount_short_span + "</div></li>",
         paymentdetails = "<li class='payday pd_paydate'><strong>Paid on:</strong><span class='paydate'> " + ptsformatted + "</span></li><li class='receivedamount'><strong>Amount " + direction + ":</strong><span> " + receivedamount_rounded + "</span> " + payment + "<div class='show_as amountshort'>" + amount_short_cc_span + "</div></li>" + fiatvaluebox,
         requestnamebox = (incoming === true) ? (rqdata) ? "<li><strong>From:</strong> " + requestname + "</li>" : "<li><strong>From: unknown</strong></li>" : "",
         requesttitlebox = (requesttitle) ? "<li><strong>Title:</strong> '<span class='requesttitlebox'>" + requesttitle + "</span>'</li>" : "",
         ismonitoredspan = (ismonitored === false) ? " (unmonitored transaction)" : "",
         timestampbox = (incoming === true) ? "<li><strong>Created:</strong> " + created + "</li><li><strong>First viewed:</strong> " + fulldateformat(new Date(utc), "en-us") + "</li>" :
-        (outgoing === true) ? "<li><strong>Send on:</strong> " + requestdateformatted + "</li>" :
+        (outgoing === true) ? "<li><strong>Request send on:</strong> " + requestdateformatted + "</li>" :
         (local === true) ? "<li><strong>Created:</strong> " + requestdateformatted + "</li>" : "",
         paymenturl = "&address=" + address + rqdataparam + rqmetaparam + "&requestid=" + requestid,
         islabel = $("main #" + payment + " li[data-address='" + address + "']").data("label"),
         requestlabel = (islabel) ? " <span class='requestlabel'>(" + islabel + ")</span>" : "",
         conf_box = (ismonitored === false) ? "<div class='txli_conf' data-conf='0'><span>Unmonitored transaction</span></div>" :
-        (confirmations > 0) ? "<div class='txli_conf'><div class='confbar'></div><span>" + confirmations + " / " + set_confirmations + " confirmations</span></div>" :
-        (confirmations === 0) ? "<div class='txli_conf' data-conf='0'><div class='confbar'></div><span>Unconfirmed transaction<span></div>" : "",
-        view_tx = (txhash) ? "<li><strong class='show_tx'><span class='icon-eye'></span>View on blockchain</strong></li>" : "",
+        (conf > 0) ? "<div class='txli_conf'><div class='confbar'></div><span>" + conf + " / " + set_confirmations + " confirmations</span></div>" :
+        (conf === 0) ? "<div class='txli_conf' data-conf='0'><div class='confbar'></div><span>Unconfirmed transaction<span></div>" : "",
+        view_tx_text =
+        view_tx_markup = (lnhash) ? "<li><strong class='show_tx'><span class='icon-power'></span><span class='ref'>View invoice</span></strong></li>" : (txhash) ? "<li><strong class='show_tx'><span class='icon-eye'></span>View on blockchain</strong></li>" : "",
         statustext = (ismonitored === false) ? "" : (status == "new") ? "Waiting for payment" : status,
         src_html = (source) ? "<span class='src_txt'>source: " + source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>" : "",
         iscryptoclass = (iscrypto === true) ? "" : " isfiat",
@@ -4400,9 +4530,14 @@ function appendrequest(rd) {
         edit_request = (local === true) ? "<div class='editrequest icon-pencil' title='edit request' data-requestid='" + requestid + "'></div>" : "",
         pid_li = (payment_id) ? "<li><strong>Payment ID:</strong> " + payment_id + "</li>" : "",
         ia_li = (xmr_ia) ? "<li><p class='address'><strong>Integrated Address:</strong> <span class='requestaddress select'>" + xmr_ia + "</span></p></li>" : "",
-        new_requestli = $("<li class='rqli " + requesttypeclass + expiredclass + "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status + "' data-address='" + address + "' data-pending='" + ispendingclass + "' data-iscrypto='" + iscrypto + "' data-tx_index='" + tx_index + "'>\
-			<div class='liwrap iconright'>" +
-            getcc_icon(cmcid, cpid, erc20) + getcc_icon(cmcid, cpid, erc20) +
+        ln_emoji = (lnhash) ? " <span class='icon-power'></span>" : "",
+        ln_logo = "<img src='img_logos_btc-lnd.png' class='cmc_icon'><img src='img_logos_btc-lnd.png' class='cmc_icon'>",
+        cclogo = getcc_icon(cmcid, cpid, erc20) + getcc_icon(cmcid, cpid, erc20),
+        cc_logo = (lightning) ? (txhash && !lnhash) ? cclogo : ln_logo : cclogo,
+        rc_address_title = (hybrid) ? "Fallback address" : "Receiving Address",
+        address_markup = (lnhash || hybrid === false) ? "" : "<li><p class='address'><strong>" + rc_address_title + ":</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>",
+        new_requestli = $("<li class='rqli " + requesttypeclass + expiredclass + lnclass + "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status + "' data-address='" + address + "' data-pending='" + ispendingclass + "' data-iscrypto='" + iscrypto + "' data-tx_index='" + tx_index + "'>\
+			<div class='liwrap iconright'>" + cc_logo +
             "<div class='atext'>\
 					<h2>" + requesttitlestring + "</h2>\
 					<p class='rq_subject'>" + typeicon + requestnamestring + "</p>\
@@ -4421,20 +4556,19 @@ function appendrequest(rd) {
             "<div class='icon-undo2' title='unarchive request'></div>\
 					<div class='icon-info' title='show info'></div>" + edit_request + "</div>\
 				<ul class='metalist'>\
-					<li class='cnamemeta'><strong>Currency:</strong> " + payment + "</li>" +
+					<li class='cnamemeta'><strong>Currency:</strong> " + payment + ln_emoji + "</li>" +
             requestnamebox +
             requesttitlebox +
             "<li><strong>Amount:</strong> " + amount_rounded + " " + uoa_upper + "</li>\
-					<li class='meta_status' data-conf='" + confirmations + "'><strong>Status:</strong><span class='status'> " + statustext + "</span> " + conf_box + "</li>\
+					<li class='meta_status' data-conf='" + conf + "'><strong>Status:</strong><span class='status'> " + statustext + "</span> " + conf_box + "</li>\
 					<li><strong>Type:</strong> " + typetext + ismonitoredspan + "</li>" +
             timestampbox +
             paymentdetails +
-            "<li><p class='address'><strong>Receiving Address:</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>" +
+            address_markup +
             pid_li +
             ia_li +
-            view_tx +
-            "<li class='receipt'><p><span class='icon-file-pdf' title='View receipt'/>Receipt</p></li>\
-				</ul>\
+            "<li class='receipt'><p><span class='icon-file-pdf' title='View receipt'/>Receipt</p></li>" + view_tx_markup +
+            "</ul>\
 				<ul class='transactionlist'>\
 					<h2>" + tl_text + "</h2>\
 				</ul>\
@@ -4451,7 +4585,9 @@ function appendrequest(rd) {
     if (render_archive === true) {
         var transactionlist = requestlist.find("#" + requestid).find(".transactionlist");
         $.each(txhistory, function(dat, val) {
-            var tx_listitem = append_tx_li(val, false);
+            var txh = val.txhash,
+                lnh = (txh && txh.slice(0, 9) == "lightning") ? true : false,
+                tx_listitem = append_tx_li(val, false, lnh);
             if (tx_listitem.length > 0) {
                 transactionlist.append(tx_listitem.data(val));
             }
@@ -4467,18 +4603,62 @@ function receipt() {
             requestid = rqdat.requestid,
             receipt_url = get_pdf_url(rqdat),
             receipt_title = "bitrequest_receipt_" + requestid + ".pdf",
-            content = "<div class='formbox' id='cacheformbox'>\
-				<h2><span class='icon-file-pdf' style='color:#dc1d00'/>Open receipt_" + requestid + ".pdf?</h2>\
-				<div class='popnotify'></div>\
-				<div class='popform'><br/>\
-				</div>\
-				<div id='backupactions'>\
-					<div id='share_receipt' data-receiptdat='" + receipt_url + "' data-requestid='" + requestid + "' class='util_icon icon-share2'></div>\
-					<a href='" + receipt_url + "&download' target='_blank' id='dl_receipt' class='util_icon icon-download' title='Download " + receipt_title + "' download='" + receipt_title + "'></a>\
-					<a class='customtrigger' href='" + receipt_url + "' target='_blank' id='receipt_link'>OK</a>\
-					<div id='canceltheme' class='customtrigger'>CANCEL</div>\
-				</div>\
-			</div>";
+            ddat = [{
+                "div": {
+                    "class": "popform"
+                },
+                "div": {
+                    "id": "backupactions",
+                    "content": [{
+                            "div": {
+                                "id": "share_receipt",
+                                "class": "util_icon icon-share2",
+                                "attr": {
+                                    "data-receiptdat": receipt_url,
+                                    "data-requestid": requestid
+                                }
+                            }
+                        },
+                        {
+                            "a": {
+                                "id": "dl_receipt",
+                                "class": "util_icon icon-download",
+                                "attr": {
+                                    "href": receipt_url,
+                                    "target": "_blank",
+                                    "title": "Download " + receipt_title,
+                                    "download": receipt_title
+                                }
+                            }
+                        },
+                        {
+                            "a": {
+                                "id": "receipt_link",
+                                "class": "customtrigger",
+                                "attr": {
+                                    "href": receipt_url,
+                                    "target": "_blank",
+                                    "download": receipt_title
+                                },
+                                "content": "OK"
+                            }
+                        },
+                        {
+                            "div": {
+                                "id": "canceldialog",
+                                "class": "customtrigger",
+                                "content": "CANCEL"
+                            }
+                        }
+                    ]
+                }
+            }],
+            content = template_dialog({
+                "id": "invoiceformbox",
+                "icon": "icon-file-pdf",
+                "title": "bitrequest_receipt_" + requestid + ".pdf",
+                "elements": ddat
+            });
         popdialog(content, "alert", "triggersubmit");
     })
 }
@@ -4491,22 +4671,26 @@ function get_pdf_url(rqdat) {
         ismonitored = rqdat.monitored,
         status = rqdat.status,
         statustext = (status == "new") ? "Waiting for payment" : status,
+        txhash = rqdat.txhash,
+        lnhash = (txhash && txhash.slice(0, 9) == "lightning") ? true : false,
+        lightning = rqdat.lightning,
+        hybrid = (lightning && lightning.hybrid === true),
         paymenttimestamp = rqdat.paymenttimestamp,
         ptsformatted = fulldateformat(new Date(paymenttimestamp - timezone), "en-us"),
         amount = rqdat.amount,
         fiatvalue = rqdat.fiatvalue,
         receivedamount = rqdat.receivedamount,
-        receivedamount_rounded = trimdecimals(receivedamount, 5),
+        receivedamount_rounded = trimdecimals(receivedamount, 6),
         fiatvalue_rounded = trimdecimals(fiatvalue, 2),
         requesttype = rqdat.requesttype,
         incoming = (requesttype == "incoming"),
         outgoing = (requesttype == "outgoing"),
         local = (requesttype == "local"),
-        online_purchase = rqdat.online_purchase,
-        typetext = (incoming === true) ? (online_purchase === true) ? "online purchase" : "incoming" : (local === true) ? "point of sale" : "outgoing",
+        checkout = (requesttype == "checkout"),
+        typetext = (incoming === true) ? (checkout) ? "online purchase" : "incoming" : (local === true) ? "point of sale" : "outgoing",
         direction = (incoming === true) ? "send" : "received",
         iscrypto = rqdat.iscrypto,
-        deter = (iscrypto === true) ? 5 : 2,
+        deter = (iscrypto === true) ? 6 : 2,
         amount_rounded = trimdecimals(amount, deter),
         uoa = rqdat.uoa,
         uoa_upper = uoa.toUpperCase(),
@@ -4518,10 +4702,10 @@ function get_pdf_url(rqdat) {
         requestdateformatted = fulldateformat(localtimeobject, "en-us"),
         created = (requestdate) ? requestdateformatted : "unknown",
         utc_format = fulldateformat(new Date(utc)),
-        txhash = rqdat.txhash,
-        invd = {};
+        invd = {},
+        lnd_string = (lnhash) ? " (lightning)" : "";
     invd["Request ID"] = requestid;
-    invd.Currency = rqdat.payment;
+    invd.Currency = rqdat.payment + lnd_string;
     if (exists(requestname)) {
         invd.From = requestname;
     }
@@ -4546,7 +4730,7 @@ function get_pdf_url(rqdat) {
     if (exists(txhash)) {
         invd["TxID"] = txhash;
     }
-    var set_proxy = $("#api_proxy").data("selected");
+    var set_proxy = d_proxy();
     return set_proxy + "proxy/v1/receipt/?data=" + btoa(JSON.stringify(invd));
 }
 
@@ -4788,7 +4972,7 @@ function getapp(type) {
     app_panel.html("");
     var android = (type == "android"),
         button = (android === true) ? "button-playstore-v2.svg" : "button-appstore.svg",
-        url = (android === true) ? "https://play.google.com/store/apps/details?id=" + androidpackagename + "&pcampaignid=fdl_long&url=" + approot + encodeURIComponent(window.location.search) : "https://apps.apple.com/app/id1484815377?mt=8",
+        url = (android === true) ? "https://play.google.com/store/apps/details?id=" + androidpackagename + "&pcampaignid=fdl_long&url=" + approot + encodeURIComponent(w_loc.search) : "https://apps.apple.com/app/id1484815377?mt=8",
         panelcontent = "<h2>Download the app</h2>\
 			<a href='" + url + "' class='exit store_bttn'><img src='img_" + button + "'></a><br/>\
 			<div id='not_now'>Not now</div>";
@@ -4961,6 +5145,10 @@ function currency_uncheck(currency) {
     currencylistitem.addClass("hide");
     parentcheckbox.attr("data-checked", "false").data("checked", false);
     savecurrencies(false);
+}
+
+function d_proxy() {
+    return $("#api_proxy").data("selected");
 }
 
 function get_vk(address) {

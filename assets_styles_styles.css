@@ -1243,7 +1243,8 @@ html.dragmode .currentpage .applist li.dragging {
 	display: none;
 }
 
-.requestlist li.requestincoming[data-pending="incoming"] .payrequest {
+.requestlist li.requestincoming[data-pending="incoming"] .payrequest,
+.requestlist li.requestincoming[data-status="canceled"] .payrequest  {
 	display: block;
 }
 
@@ -1262,6 +1263,10 @@ html.dragmode .currentpage .applist li.dragging {
 	display: none;
 	padding: 0 0 1em 1em;
 	font-size: 100%;
+}
+
+.moreinfo .icon-power {
+	color:#f5c243;
 }
 
 .moreinfo h2 {
@@ -1283,6 +1288,7 @@ html.dragmode .currentpage .applist li.dragging {
 }
 
 .requestlist li.requestincoming[data-pending="incoming"] .req_actions .icon-qrcode,
+.requestlist li.requestoutgoing .req_actions .icon-qrcode,
 .requestlist li.rqli[data-status="paid"] .req_actions .icon-qrcode,
 .requestlist li.rqli.expired .req_actions .icon-qrcode {
 	display: none;
@@ -1305,6 +1311,18 @@ html.dragmode .currentpage .applist li.dragging {
 .requestlist li[data-status="new"] .metalist li.receivedamount,
 .requestlist li[data-status="new"] .metalist li.payday {
 	display: none;
+}
+
+.requestlist li.rqli.lightning .metalist li.receivedamount,
+.requestlist li.rqli.lightning .metalist li.payday {
+	display:none;
+}
+
+.requestlist li.rqli.lightning[data-status="paid"] .metalist li.receivedamount,
+.requestlist li.rqli.lightning[data-status="paid"] .metalist li.receivedamount,
+.requestlist li.rqli.lightning[data-status="insufficient"] .metalist li.payday,
+.requestlist li.rqli.lightning[data-status="insufficient"] .metalist li.payday {
+	display:block;
 }
 
 .metalist {
@@ -1373,7 +1391,7 @@ html.dragmode .currentpage .applist li.dragging {
 }
 
 .metalist li .show_tx {
-	display: none;
+	display: inline-block;
 	margin-top: 1em;
 	cursor: pointer;
 	pointer-events: all;
@@ -1381,10 +1399,6 @@ html.dragmode .currentpage .applist li.dragging {
 
 .metalist li .show_tx span.icon-eye {
 	color: #009788;
-}
-
-#requestlist li.requestincoming .metalist li .show_tx {
-	display: inline-block;
 }
 
 .metalist li .fdtime {
@@ -1440,6 +1454,10 @@ html.dragmode .currentpage .applist li.dragging {
 .transactionlist li .txli_content {
 	float: left;
 	width: 100%;
+}
+
+.transactionlist li .txli_content .icon-power {
+	color:#f5c243;
 }
 
 .transactionlist li .historic_meta {
@@ -1526,6 +1544,20 @@ html.dragmode .currentpage .applist li.dragging {
 
 #requestlist li.rqli .metalist .txli_conf {
 	display: none;
+}
+
+.requestlist li.rqli[data-status="canceled"] .transactionlist li .txli_conf {
+	display:none;
+}
+
+.requestlist li.rqli .transactionlist li .txli_conf.txl_cancelled {
+	display:none;
+	color:#eeac57;
+	opacity:1;
+}
+
+.requestlist li.rqli[data-status="canceled"] .transactionlist li .txli_conf.txl_cancelled {
+	display:inline-block;
 }
 
 .requestlist li[data-confirmations="0"] .metalist .txli_conf,
@@ -2968,7 +3000,6 @@ body.showcam #scanner {
 	height: 1px;
 	background-color: #F00;
 }
-
 
 /* Roles */
 

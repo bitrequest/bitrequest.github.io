@@ -121,6 +121,7 @@ $(document).ready(function() {
     //test_custom_proxy
     remove_proxy();
     //complete_url
+    //c_proxy
 
     // PERMISSIONS
     permissions();
@@ -142,7 +143,7 @@ $(document).ready(function() {
 // Account name
 function editaccount() {
     $(document).on("click", "#accountsettings", function() {
-	    var ddat = [{
+        var ddat = [{
                 "div": {
                     "class": "popform",
                     "content": [{
@@ -454,8 +455,12 @@ function backupdatabase() {
         changespush.push(changekey);
     });
     var gd_active = (GD_auth_class() === true),
+        alert_icon = $("#alert > span"),
+        nr_changes = alert_icon.text(),
+        alert_title = alert_icon.attr("title"),
+        alert_txt = (nr_changes == "!") ? "<span class='warning'>! " + alert_title + " </span>" : "<p>You have " + nr_changes + " changes in your app. Please backup your data.</p>",
         showhidechangelog = (gd_active === true) ? "display:none" : "display:block",
-        changenotification = (gd_active === false && body.hasClass("haschanges")) ? "<p>You have " + $("#alert > span").text() + " changes in your app. Please backup your data.</p>" : "",
+        changenotification = (gd_active === false && body.hasClass("haschanges")) ? alert_txt : "",
         ddat = [{
                 "div": {
                     "id": "dialogcontent",
@@ -587,7 +592,7 @@ function sharebu() {
                     filetimesec = (filetime) ? filetime * 1000 : $.now(),
                     filetime_format = new Date(filetimesec).toLocaleString(language),
                     sharedtitle = "System Backup " + accountname + " (" + filetime_format + ")",
-                    set_proxy = $("#api_proxy").data("selected"),
+                    set_proxy = c_proxy(),
                     r_dat = btoa(JSON.stringify({
                         "ro": br_cache.filename,
                         "proxy": set_proxy
@@ -1417,7 +1422,7 @@ function csvexport_trigger() {
             has_requests = (rq_arr && !$.isEmptyObject(rq_arr)),
             has_archive = (archive_arr && !$.isEmptyObject(archive_arr));
         if (has_requests === true || has_archive === true) {
-            var filename = "bitrequest_csv_export_" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_') + ".csv",
+            var filename = "bitrequest_csv_export_" + new Date($.now()).toLocaleString(language).replace(/\s+/g, "_").replace(/\:/g, "_") + ".csv",
                 show_archive = (has_requests === true) ? "false" : "true",
                 content = "<div class='formbox' id='exportcsvbox'>\
 					<h2 class='icon-table'>Export CSV</h2>\
@@ -1547,13 +1552,18 @@ function complile_csv() {
         incl_archive = (op_archive.hasClass("true")) ? true : false,
         rq_obj = (has_archive === true && incl_archive) ? rq_arr.concat(archive_arr) : rq_arr;
     $.each(rq_obj, function(i, val) {
-        var request = {},
+        var csv_request = {},
             payment = val.payment,
             address = val.address,
             amount = val.amount,
             uoa = val.uoa,
             status = val.status,
-            rqname = (val.requestname) ? val.requestname : "",
+            txhash = (val.txhash) ? val.txhash : "",
+            lnhash = (txhash && txhash.slice(0, 9) == "lightning") ? true : false,
+            lightning = val.lightning,
+            hybrid = (lightning && lightning.hybrid === true),
+            lnd_string = (lnhash) ? " (lightning)" : "";
+        rqname = (val.requestname) ? val.requestname : "",
             description = (val.requesttitle) ? val.requesttitle : "",
             type = val.requesttype,
             timestamp = val.timestamp,
@@ -1563,40 +1573,38 @@ function complile_csv() {
             fiatcurrency = val.fiatcurrency,
             pts = val.paymenttimestamp,
             pdf_url = get_pdf_url(val),
-            received_ts = (pts) ? short_date(pts) : "",
-            txhash = (val.txhash) ? val.txhash : "";
+            received_ts = (pts) ? short_date(pts) : "";
         if (incl_paid === false && status == "paid") {} else if (incl_ins === false && status == "insufficient") {} else if (incl_new === false && status == "new") {} else if (incl_pending === false && status == "pending") {} else if (incl_pos === false && type == "local") {} else if (incl_outgoing === false && type == "outgoing") {} else if (incl_incoming === false && type == "incoming") {} else {
             if (incl_from) {
-                request["from"] = rqname;
+                csv_request["from"] = rqname;
             }
             if (incl_desc) {
-                request.description = description;
+                csv_request.description = description;
             }
-            request.payment = payment;
-            request.status = status;
+            csv_request.payment = payment + lnd_string;
+            csv_request.status = status;
             var rq_type = (type == "local") ? "point of sale" : type;
-            request.type = rq_type;
-            request.created = short_date(timestamp);
-            request["request amount"] = amount + " " + uoa;
+            csv_request.type = rq_type;
+            csv_request.created = short_date(timestamp);
+            csv_request["request amount"] = amount + " " + uoa;
             var ra_val = (receivedamount) ? receivedamount + " " + ccsymbol : "";
-            request["amount received"] = ra_val;
+            csv_request["amount received"] = ra_val;
             var fv = (fiatvalue) ? fiatvalue.toFixed(2) + " " + fiatcurrency : "";
-            request["fiat value"] = fv;
-            request["received on"] = received_ts;
+            csv_request["fiat value"] = fv;
+            csv_request["received on"] = received_ts;
             if (incl_address) {
-                request["receiving address"] = address;
+                csv_request["receiving address"] = address;
             }
-            request.txhash = txhash;
+            csv_request.txhash = txhash;
             if (incl_receipt) {
-                request["PDF download (receipt)"] = pdf_url;
+                csv_request["PDF download (receipt)"] = pdf_url;
             }
-            csv_arr.push(request);
+            csv_arr.push(csv_request);
         }
     });
     var csv_body = render_csv(csv_arr),
         b64_body = btoa(csv_body);
     return b64_body;
-
 }
 
 function render_csv(arr) {
@@ -1641,7 +1649,7 @@ function share_csv() {
                     filetimesec = (filetime) ? filetime * 1000 : $.now(),
                     filetime_format = new Date(filetimesec).toLocaleString(language),
                     sharedtitle = "CSV Export " + accountname + " (" + filetime_format + ")",
-                    set_proxy = $("#api_proxy").data("selected"),
+                    set_proxy = c_proxy(),
                     r_dat = btoa(JSON.stringify({
                         "ro": br_cache.filename,
                         "proxy": set_proxy
@@ -2285,7 +2293,10 @@ function pick_api_proxy() {
 			</div>";
         popdialog(content, "alert", "triggersubmit");
         if (phpsupportglobal === true) {
-            var fixed_url = complete_url(thishostname + location.pathname);
+            var protocol = (localserver) ? w_loc.protocol + "//" : "",
+                port = w_loc.port,
+                pval = (port.length) ? ":" + port : "",
+                fixed_url = complete_url(protocol + thishostname + pval + location.pathname);
             if ($.inArray(fixed_url, proxies) === -1) {
                 proxies.push(fixed_url);
             }
@@ -2293,54 +2304,39 @@ function pick_api_proxy() {
         if ($.inArray(hosted_proxy, proxies) === -1) { // always keey default proxy
             proxies.push(hosted_proxy);
         }
-        var optionlist = $("#proxyformbox").find(".options"),
-            api_info = check_api("nano", false),
-            selected = api_info.data,
-            nano_node = selected.url;
+        var optionlist = $("#proxyformbox").find(".options");
         $.each(proxies, function(key, value) {
             var selected = (value == current_proxy);
-            test_append_proxy(optionlist, key, value, selected, true, nano_node);
+            test_append_proxy(optionlist, key, value, selected, true);
         });
         $.each(custom_proxies, function(key, value) {
             var selected = (value == current_proxy);
-            test_append_proxy(optionlist, key, value, selected, false, nano_node);
+            test_append_proxy(optionlist, key, value, selected, false);
         });
     })
 }
 
-function test_append_proxy(optionlist, key, value, selected, dfault, nano_node) { // make test api call
-    var n_node = (nano_node) ? nano_node : main_nano_node;
-    api_proxy({
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "proxy": true,
-        "proxy_url": value,
-        "api_url": n_node,
-        "bearer": "tls_wildcard",
-        "params": {
-            "method": "POST",
-            "cache": true,
-            "data": JSON.stringify({
-                "action": "version"
-            })
+function test_append_proxy(optionlist, key, value, selected, dfault) { // make test api call
+    $.ajax({
+        "method": "POST",
+        "cache": false,
+        "timeout": 5000,
+        "url": value + "proxy/v1/ln/api/",
+        "data": {
+            "ping": true
         }
     }).done(function(e) {
         var api_result = br_result(e);
-        if (api_result.proxy === true) {
-            var result = api_result.result;
-            if (result && result.rpc_version) {
-                proxy_option_li(optionlist, true, key, value, selected, dfault);
-            } else {
-                proxy_option_li(optionlist, false, key, value, selected, dfault);
-            }
-        } else {
-            proxy_option_li(optionlist, false, key, value, selected, dfault);
+        if (api_result.result == "pong") {
+            proxy_option_li(optionlist, true, key, value, selected, dfault);
+            return
         }
+        proxy_option_li(optionlist, false, key, value, selected, dfault);
     }).fail(function(jqXHR, textStatus, errorThrown) {
+        proxy_option_li(optionlist, false, key, value, selected, dfault);
         console.log(jqXHR);
         console.log(textStatus);
         console.log(errorThrown);
-        proxy_option_li(optionlist, false, key, value, selected, dfault);
     });
 }
 
@@ -2361,9 +2357,9 @@ function submit_proxy() {
             customval = proxyformbox.find("#proxy_url_input").val();
         if (customval.length > 0) {
             test_custom_proxy(customval);
-            return false;
+            return
         } else {
-            var set_proxy = $("#api_proxy").data("selected");
+            var set_proxy = c_proxy();
             if (selectval == set_proxy) {
                 canceldialog();
             } else {
@@ -2373,8 +2369,6 @@ function submit_proxy() {
                 canceldialog();
                 notify("Data saved");
                 savesettings();
-                // Re init app
-                localStorage.removeItem("bitrequest_init");
             }
         }
     })
@@ -2384,8 +2378,8 @@ function hide_custom_proxy_field() {
     $(document).on("click", "#proxyformbox .selectarrows", function() {
         var proxyformbox = $("#proxyformbox"),
             options = $("#proxyformbox").find(".options .optionwrap"),
-            select_inputval = proxyformbox.find("#proxy_select_input").val();
-        custom_input = proxyformbox.find("#proxy_url_input");
+            select_inputval = proxyformbox.find("#proxy_select_input").val(),
+            custom_input = proxyformbox.find("#proxy_url_input");
         options.each(function() {
             var this_option = $(this),
                 to_val = this_option.find("> span").attr("data-value");
@@ -2402,33 +2396,34 @@ function hide_custom_proxy_field() {
 function test_custom_proxy(value) { // make test api call
     var proxy_node = $("#api_proxy"),
         proxy_node_data = proxy_node.data(),
-        default_proxies = proxy_node_data.proxies,
         custom_proxies = proxy_node_data.custom_proxies,
         fixed_url = complete_url(value);
-    if ($.inArray(fixed_url, custom_proxies) !== -1 || $.inArray(fixed_url, default_proxies) !== -1) {
+    if ($.inArray(fixed_url, custom_proxies) !== -1 || $.inArray(fixed_url, proxy_list) !== -1) {
         popnotify("error", "Proxy already added");
         return false;
     } else {
         if (fixed_url.indexOf("http") > -1) {
-            api_proxy({
-                "cachetime": 25,
-                "cachefolder": "1h",
-                "proxy": true,
-                "proxy_url": fixed_url,
-                "api_url": "https://www.bitrequest.app:8020",
-                "bearer": "tls_wildcard",
-                "params": {
-                    "method": "POST",
-                    "cache": true,
-                    "data": JSON.stringify({
-                        "action": "version"
-                    })
+            $.ajax({
+                "method": "POST",
+                "cache": false,
+                "timeout": 5000,
+                "url": fixed_url + "proxy/v1/",
+                "data": {
+                    "custom": "add"
                 }
             }).done(function(e) {
-                var api_result = br_result(e);
-                if (api_result.proxy === true) {
-                    var result = api_result.result;
-                    if (result && result.rpc_version) {
+                var api_result = br_result(e),
+                    result = api_result.result;
+                if (result) {
+                    var error = result.error;
+                    if (error) {
+                        var message = error.message;
+                        if (message && message == "no write acces") {
+                            popnotify("error", "Unable to write to cache, please check your folder permissions.");
+                            return
+                        }
+                    }
+                    if (result.custom) {
                         custom_proxies.push(fixed_url);
                         set_setting("api_proxy", {
                             "selected": fixed_url,
@@ -2437,28 +2432,23 @@ function test_custom_proxy(value) { // make test api call
                         canceldialog();
                         notify("Data saved");
                         savesettings();
-                        // Re init app
-                        localStorage.removeItem("bitrequest_init");
                         setTimeout(function() {
                             $("#apikeys").trigger("click");
                         }, 800);
-                    } else {
-                        popnotify("error", "Unable to send Post request from " + fixed_url);
+                        return
                     }
-                } else {
-                    popnotify("error", "Unable to connect");
                 }
+                popnotify("error", "Unable to send Post request from " + fixed_url);
             }).fail(function(jqXHR, textStatus, errorThrown) {
+                popnotify("error", "Unable to connect");
                 console.log(jqXHR);
                 console.log(textStatus);
                 console.log(errorThrown);
-                popnotify("error", "Unable to connect");
             });
         } else {
             popnotify("error", "Invalid url");
         }
     }
-    return false;
 }
 
 function remove_proxy() {
@@ -2496,7 +2486,11 @@ function remove_proxy() {
 
 function complete_url(url) {
     var cv1 = (url.indexOf("://") > -1) ? url : "https://" + url;
-    return (cv1.substr(-1) != "/") ? cv1 + "/" : cv1;
+    return (cv1.slice(-1) == "/") ? cv1 : cv1 + "/";
+}
+
+function c_proxy() {
+    return $("#api_proxy").data("selected");
 }
 
 // API keys
@@ -3212,7 +3206,7 @@ function share_teaminvite() {
             }).done(function(e) {
                 var br_cache = e.ping.br_cache,
                     sharedtitle = "Bitrequest Team invitation from " + accountname,
-                    set_proxy = $("#api_proxy").data("selected"),
+                    set_proxy = c_proxy(),
                     r_dat = btoa(JSON.stringify({
                         "ro": br_cache.filename,
                         "proxy": set_proxy

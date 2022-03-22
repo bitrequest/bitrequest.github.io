@@ -57,7 +57,7 @@ cnBase58 = (function () {
             throw "Invalid encoded length";
         }
         var data_size = full_block_count * full_block_size + last_block_decoded_size;
-        var data = new Uint8Array(data_size);
+        var data = uint_8Array(data_size);
         for (var i = 0; i < full_block_count; i++) {
             data = b58.decode_block(enc.subarray(i * full_encoded_block_size, i * full_encoded_block_size + full_encoded_block_size), data, i * full_block_size);
         }
@@ -178,7 +178,7 @@ function secret_spend_key_to_words(ssk) {
 
 function hextobin(hex) {
     if (hex.length % 2 !== 0) throw "Hex string has invalid length!";
-    var res = new Uint8Array(hex.length / 2);
+    var res = uint_8Array(hex.length / 2);
     for (var i = 0; i < hex.length / 2; ++i) {
         res[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
     }
@@ -201,7 +201,7 @@ function uint32hex(value) {
 }
 
 function strtobin(str) {
-    var res = new Uint8Array(str.length);
+    var res = uint_8Array(str.length);
     for (var i = 0; i < str.length; i++) {
         res[i] = str.charCodeAt(i);
     }
@@ -209,7 +209,7 @@ function strtobin(str) {
 }
 
 function uint64_to_8be(num, size) {
-    var res = new Uint8Array(size);
+    var res = uint_8Array(size);
     if (size < 1 || size > 8) {
         throw "Invalid input length";
     }
@@ -419,7 +419,7 @@ class xPoint {
     }
     toRawBytes() {
         const hex = xmr_numberToHex(this.y),
-        	u8 = new Uint8Array(ENCODING_LENGTH);
+        	u8 = uint_8Array(ENCODING_LENGTH);
         for (let i = hex.length - 2, j = 0; j < ENCODING_LENGTH && i >= 0; i -= 2, j++) {
             u8[j] = parseInt(hex[i] + hex[i + 1], 16);
         }
@@ -454,7 +454,7 @@ function xmr_bytesToHex(uint8a) {
 
 function xmr_hexToBytes(hex) {
     hex = hex.length & 1 ? `0${hex}` : hex;
-    const array = new Uint8Array(hex.length / 2);
+    const array = uint_8Array(hex.length / 2);
     for (let i = 0; i < array.length; i++) {
         let j = i * 2;
         array[i] = Number.parseInt(hex.slice(j, j + 2), 16);

@@ -1,5 +1,6 @@
 var sockets = {},
-	pinging = {};
+    pinging = {},
+    lnd_confirm = false;
 
 $(document).ready(function() {
     //init_socket
@@ -56,6 +57,9 @@ function init_socket(socket_node, address, swtch) {
             } else {
                 blockcypher_websocket(socket_node, address);
             }
+            if (helper.lnd_status) {
+                lightning_socket(helper.lnd);
+            }
         } else if (payment == "litecoin") {
             closesocket();
             if (socket_name == "blockcypher websocket") {
@@ -79,7 +83,8 @@ function init_socket(socket_node, address, swtch) {
             blockchain_bch_socket(socket_node, address);
         } else if (payment == "nano") {
             closesocket();
-            nano_socket(socket_node, address);
+            //nano_socket(socket_node, address);
+            nano_socket_test();
         } else if (payment == "ethereum") {
             closesocket();
             amberdata_eth_websocket(socket_node, address);
@@ -108,15 +113,153 @@ function init_socket(socket_node, address, swtch) {
             clearpinging();
             web3_erc20_websocket(socket_node, address);
         } else {
-            notify("this currency is not monitored", 500000, "yes")
+            notify("this request is not monitored", 500000, "yes")
         }
     }
-    var timeout = setTimeout(function() {
-        console.log(sockets);
-		console.log(pinging);
-    }, 1500, function() {
-        clearTimeout(timeout);
+}
+
+function lightning_socket(lnd) {
+    lnd_confirm = false;
+    var p_arr = lnurl_deform(lnd.proxy_host),
+        proxy_host = p_arr.url,
+        pk = (lnd.pw) ? lnd.pw : p_arr.k,
+        pid = lnd.pid,
+        nid = lnd.nid,
+        imp = lnd.imp,
+        socket = sockets[pid] = new WebSocket(ln_socket);
+    socket.onopen = function(e) {
+        console.log("Connected: " + ln_socket);
+        var ping_event = JSON.stringify({
+            "id": pid
+        });
+        socket.send(ping_event);
+        pinging[pid] = setInterval(function() {
+            socket.send(ping_event);
+        }, 55000);
+    };
+    socket.onmessage = function(e) {
+        var result = JSON.parse(e.data);
+        if (result.pid == pid) {
+            if (result.status == "pending" && result.bolt11) {
+                clearpinging(pid);
+                closesocket(pid);
+                lnd_poll_invoice(proxy_host, pk, imp, result, pid, nid);
+                pinging[result.hash] = setInterval(function() {
+                    lnd_poll_invoice(proxy_host, pk, imp, result, pid, nid);
+                }, 5000);
+            }
+            if (result.status == "confirm" && !lnd_confirm) {
+                lnd_confirm = true;
+                paymentdialogbox.addClass("accept_lnd");
+                notify("Accept the payment in your lightning app...", 500000);
+                playsound(blip);
+            }
+            set_request_timer();
+            return
+        }
+    };
+    socket.onclose = function(e) {
+        console.log("Disconnected");
+    };
+    socket.onerror = function(e) {
+        clearpinging(pid);
+        closesocket(pid);
+        lnd_confirm = false;
+        pinging[pid] = setInterval(function() {
+            lnd_poll_data(proxy_host, pk, pid, nid, imp);
+        }, 5000);
+    };
+}
+
+function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
+    var default_error = "unable to connect";
+    $.ajax({
+        "method": "POST",
+        "cache": false,
+        "timeout": 5000,
+        "url": proxy_host + "proxy/v1/ln/api/",
+        "data": {
+            "fn": "ln-request-status",
+            "id": pid,
+            "x-api": pk
+        }
+    }).done(function(e) {
+        var error = inv.error;
+        if (error) {
+            var message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
+            console.log(message);
+        }
+        var version = e.version;
+        if (version != proxy_version) {
+            proxy_alert(version);
+        }
+        if (e.pid == pid) {
+            if (e.status == "pending" && e.bolt11) {
+                clearpinging(pid);
+                set_request_timer();
+                pinging[e.hash] = setInterval(function() {
+                    lnd_poll_invoice(proxy_host, pk, imp, e, pid, nid);
+                }, 5000);
+                return
+            }
+            if (e.status == "confirm" && !lnd_confirm) {
+                lnd_confirm = true;
+                paymentdialogbox.addClass("accept_lnd");
+                notify("Accept the payment in your lightning app...", 500000);
+                playsound(blip);
+            }
+            return
+        }
+        lnd_poll_data_fail(pid);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        lnd_poll_data_fail(pid);
     });
+}
+
+function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
+    var default_error = "unable to connect";
+    $.ajax({
+        "method": "POST",
+        "cache": false,
+        "timeout": 5000,
+        "url": proxy_host + "proxy/v1/ln/api/",
+        "data": {
+            "fn": "ln-invoice-status",
+            "imp": imp,
+            "hash": inv.hash,
+            "id": pid,
+            "nid": nid,
+            "callback": "yes",
+            "type": request.requesttype,
+            "x-api": pk
+        }
+    }).done(function(e) {
+        var status = e.status;
+        if (status) { // leave because false must also pass
+            request.address = "lnurl"; // make it a lightning request
+            notify("Waiting for payment", 500000);
+            helper.lnd.invoice = inv;
+            var txd = lnd_tx_data(e);
+            confirmations(txd, true, true);
+            if (status == "paid") {
+                clearpinging(inv.hash);
+                helper.currencylistitem.removeData("url");
+                localStorage.removeItem("bitrequest_editurl");
+                sessionStorage.removeItem("bitrequest_lndpid");
+                closenotify();
+                return
+            }
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        console.log(jqXHR);
+        console.log(textStatus);
+        console.log(errorThrown);
+    });
+}
+
+function lnd_poll_data_fail(pid) {
+    clearpinging(pid);
+    notify("this request is not monitored", 500000, "yes");
 }
 
 // Websockets
@@ -125,7 +268,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
     // var bc_token = get_blockcypher_apikey(),
     // provider = socket_node.url + request.currencysymbol + "/main?token=" + bc_token;
     var provider = socket_node.url + request.currencysymbol + "/main",
-    	websocket = sockets[thisaddress] = new WebSocket(provider);
+        websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
@@ -171,7 +314,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
 
 function blockchain_btc_socket(socket_node, thisaddress) {
     var provider = socket_node.url,
-    	websocket = sockets[thisaddress] = new WebSocket(provider);
+        websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
@@ -221,10 +364,10 @@ function blockchain_bch_socket(socket_node, thisaddress) {
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var c_address = (thisaddress.indexOf("bitcoincash:") > -1) ? thisaddress.split("bitcoincash:").pop() : thisaddress,
-        ping_event = JSON.stringify({
-            "op": "addr_sub",
-            "addr": "bitcoincash:" + c_address
-        });
+            ping_event = JSON.stringify({
+                "op": "addr_sub",
+                "addr": "bitcoincash:" + c_address
+            });
         websocket.send(ping_event);
         pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
@@ -306,7 +449,7 @@ function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
 
 function mempoolspace_btc_socket(socket_node, thisaddress) {
     var provider = socket_node.url,
-    	websocket = sockets[thisaddress] = new WebSocket(provider);
+        websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
@@ -350,7 +493,7 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
 
 function dogechain_info_socket(socket_node, thisaddress) {
     var provider = socket_node.url,
-    	websocket = sockets[thisaddress] = new WebSocket(provider);
+        websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
@@ -438,6 +581,30 @@ function nano_socket(socket_node, thisaddress) {
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress, e.data);
+        return false;
+    };
+}
+
+function nano_socket_test() {
+    var websocket = sockets["bella"] = new WebSocket("wss://bitrequest.app:8030");
+    websocket.onopen = function(e) {
+        var ping_event = JSON.stringify({
+            "id": "bella_socketdera"
+        });
+        websocket.send(ping_event);
+        pinging["bella_ping"] = setInterval(function() {
+            websocket.send(ping_event);
+        }, 55000);
+    };
+    websocket.onmessage = function(e) {
+        console.log(e);
+    };
+    websocket.onclose = function(e) {
+        console.log("Disconnected");
+        txid = null;
+    };
+    websocket.onerror = function(e) {
+        //handle_socket_fails(socket_node, thisaddress, e.data);
         return false;
     };
 }
@@ -572,7 +739,6 @@ function handle_socket_fails(socket_node, thisaddress, error) {
     if (paymentpopup.hasClass("active")) { // only when request is visible
         var next_socket = try_next_socket(socket_node);
         if (next_socket === false) {
-            console.log(error);
             var error_message = "unable to connect to " + socket_node.name;
             //fail_dialogs(socketname, error_message);
             console.log(error_message);
