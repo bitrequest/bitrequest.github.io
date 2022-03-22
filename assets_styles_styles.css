@@ -3020,6 +3020,7 @@ html[data-role='cashier'] .removeaddress,
 html[data-role='cashier'] .editaddress,
 html[data-role='cashier'] #rest_seed,
 html[data-role='cashier'] .cc_settinglist li[data-id='Xpub'],
+html[data-role='cashier'] .cc_settinglist li[data-id='Lightning network'],
 html[data-role='cashier'] .rqli:not(.requestoutgoing) .req_actions .icon-bin,
 html[data-role='cashier'] .reset_cc_settings {
 	opacity: 0.3;
