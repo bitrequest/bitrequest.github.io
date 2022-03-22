@@ -1,95 +1,106 @@
 <?php
 // API
+$version = "0.001";
 function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
 	$version = "0.001";
-	$cf = (isset($cfd)) ? $cfd : false;
-	if (!$cf) {
-		$curl_result = curl_get($url, $data, $headers);
-		$m_contents = array(
+    $cf = isset($cfd) ? $cfd : false;
+    if (!$cf) {
+        $curl_result = curl_get($url, $data, $headers);
+        $m_contents = [
             "br_cache" => "no caching",
             "br_result" => json_decode($curl_result, true)
-        );
-		return $m_contents;
-	}
-    $cache_refresh = ($cf == "1w") ? 604800 : (($cf == "1d") ? 86400 : (($cf == "1h") ? 3600 : 3600));
-    $ctime = ($ct) ? $ct : (($ct == 0) ? 0 : $cache_refresh);
+        ];
+        return $m_contents;
+    }
+    $cache_refresh = ($cf == "1w" || $cf == "tx") ? 604800 : ($cf == "1d" ? 86400 : ($cf == "1h" ? 3600 : 3600));
+    $ctime = $ct ? $ct : ($ct == 0 ? 0 : $cache_refresh);
     $cache_folder = "cache/" . $cf . "/";
-    $filename = ($fn) ? $fn : md5($data . $url);
+    $filename = $fn ? $fn : md5($data . $url);
     $cache_file = $cache_folder . $filename;
     $cache_monitor = $cache_folder . "cachemonitor";
     $time = time();
     $timeformat = gmdate("Y-m-d h:i:sa", $time) . " (UTC)";
-    $cache_content = json_encode(array(
-	    "created" => $timeformat,
-	    "created_utc" => $time,
-    ));
+    $cache_content = json_encode([
+        "created" => $timeformat,
+        "created_utc" => $time
+    ]);
     if (file_exists($cache_file)) {
-	    $file_time = filemtime($cache_file);
-		$time_in_cache = $time - $file_time;
-	    if ($time_in_cache < $ctime) {
-		    $created = gmdate("Y-m-d h:i:sa", $file_time) . " (UTC)";
-		    $cache_object = array(
-		        "filename" => $filename,
-		        "title" => $time_in_cache . " of " . $ctime . " seconds in cache",
-		        "created" => $created,
-		        "created_utc" => $file_time,
-		        "cache_time" => $ctime,
-		        "time_in_cache" => $time_in_cache,
-		        "utc_timestamp" => $time,
-		        "version" => $version
-		    );
-	        $cache_contents = json_decode(file_get_contents($cache_file), true);
-	        $meta_contents = array(
-	            "br_cache" => $cache_object,
-	            "br_result" => $cache_contents
-	        );
-	        $cache_result = ($meta === false) ? $cache_contents : $meta_contents;
-	        if (file_exists($cache_monitor)) {
-	        	if (($time - filemtime($cache_monitor)) > $cache_refresh) {
-			        $files = glob($cache_folder . "*");
-			         // clear all expired cache
-		            foreach ($files as $file) {
-			            if (($time - filemtime($file)) > $cache_refresh) {
-				            unlink($file);
-			            }
-		            }
-		            file_put_contents($cache_monitor, $cache_content);
-		        }
-		    }
-		    else {
-			    file_put_contents($cache_monitor, $cache_content);
-		    }
-	        return $cache_result;
-	    }
+        $file_time = filemtime($cache_file);
+        $time_in_cache = $time - $file_time;
+        if ($time_in_cache < $ctime) {
+            $created = gmdate("Y-m-d h:i:sa", $file_time) . " (UTC)";
+            $cache_object = [
+                "filename" => $filename,
+                "title" => $time_in_cache . " of " . $ctime . " seconds in cache",
+                "created" => $created,
+                "created_utc" => $file_time,
+                "cache_time" => $ctime,
+                "time_in_cache" => $time_in_cache,
+                "utc_timestamp" => $time,
+                "version" => $version
+            ];
+            $cache_contents = json_decode(file_get_contents($cache_file), true);
+            $meta_contents = [
+                "br_cache" => $cache_object,
+                "br_result" => $cache_contents
+            ];
+            $cache_result = $meta === false ? $cache_contents : $meta_contents;
+            if (file_exists($cache_monitor)) {
+                if ($time - filemtime($cache_monitor) > $cache_refresh) {
+                    $files = glob($cache_folder . "*");
+                    // clear all expired cache
+                    foreach ($files as $file) {
+                        if ($time - filemtime($file) > $cache_refresh) {
+                            unlink($file);
+                        }
+                    }
+                    file_put_contents($cache_monitor, $cache_content);
+                }
+            } else {
+                file_put_contents($cache_monitor, $cache_content);
+            }
+            return $cache_result;
+        }
     }
-    $apiresult = ($url) ? curl_get($url, $data, $headers) : $data;
+    $apiresult = $url ? curl_get($url, $data, $headers) : $data;
     if ($apiresult) {
         if (!is_dir($cache_folder)) {
-            mkdir($cache_folder, 0777, true);
+	        mkdir($cache_folder, 0777, true);
+        }
+        if (!is_dir($cache_folder)) { // check if folder is created
+	        $no_access = [
+	            "br_cache" => "no caching",
+	            "br_result" => [
+			        "error" => [
+			            "message" => "no write acces"
+			        ]
+			    ]
+	        ];
+			return $no_access;
         }
         file_put_contents($cache_file, $apiresult);
-        if (!file_exists($cache_monitor)) { // create cache monitor if not exists
+        if (!file_exists($cache_monitor)) {
+            // create cache file if not exists
             file_put_contents($cache_monitor, $cache_content);
         }
-        $cache_object = array(
-	        "filename" => $filename,
-	        "title" => "0 of " . $ctime . " seconds in cache",
-	        "created" => $timeformat,
-	        "created_utc" => $time,
-	        "cache_time" => $ctime,
-	        "time_in_cache" => "0",
-	        "utc_timestamp" => $time,
-	        "version" => $version
-	    );
+        $cache_object = [
+            "filename" => $filename,
+            "title" => "0 of " . $ctime . " seconds in cache",
+            "created" => $timeformat,
+            "created_utc" => $time,
+            "cache_time" => $ctime,
+            "time_in_cache" => "0",
+            "utc_timestamp" => $time,
+            "version" => $version
+        ];
         $api_contents = json_decode($apiresult, true);
-        $meta_contents = array(
+        $meta_contents = [
             "br_cache" => $cache_object,
             "br_result" => $api_contents
-        );
-		$result = ($meta === false) ? $api_contents : $meta_contents;
+        ];
+        $result = $meta === false ? $api_contents : $meta_contents;
         return $result;
-    }
-    else {
+    } else {
         if (file_exists($cache_file)) {
             unlink($cache_file);
         }
@@ -101,10 +112,10 @@ function curl_get($url, $data, $headers) {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     if (!empty($headers)) {
-	    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         if (isset($headers["tls_wildcard"])) {
-	        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-    	}
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        }
     }
     if (!empty($data)) {
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
@@ -119,18 +130,18 @@ function curl_get($url, $data, $headers) {
     curl_close($ch);
     if ($result) {
         return $result;
-    }
-    else {
+    } else {
         return error_object("411", "no result");
     }
 }
 
 function error_object($code, $message) {
-    return json_encode(array(
-        "error" => array(
+    return json_encode([
+        "error" => [
             "code" => $code,
             "message" => $message
-        )
-    ));
+        ],
+    ]);
 }
+
 ?>
