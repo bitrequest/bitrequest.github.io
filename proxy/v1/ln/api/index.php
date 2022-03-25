@@ -261,7 +261,7 @@ if ($imp == "lnd" || $imp == "eclair" || $imp == "c-lightning" || $imp == "lnbit
 	            $lndecode = invoice_lookup($imp, $p_pid, $host, $key, $hash, $ttype, $p_expiry, true);
 	            echo json_encode($lndecode);
 	            if ($callback_url && strlen($callback_url) > 10) {
-		            $callback = isset($pdat["callback"]) ? $pdat["callback"] == "yes" : "no";
+		            $callback = (isset($pdat["callback"]) && $pdat["callback"] == "yes") ? "yes" : "no";
 		            if ($callback == "yes") {
 			            if ($ttype) {
 				           	$inv_status = $lndecode["status"];
@@ -303,6 +303,8 @@ if ($imp == "lnd" || $imp == "eclair" || $imp == "c-lightning" || $imp == "lnbit
                 return;
             }
             $path = "cache/tx/" . $g_pid;
+            $successmessage = isset($setup["successAction"]) ? $setup["successAction"] : false;
+            $routes = isset($cred["routes"]) ? $cred["routes"] : [];
             if (file_exists($path)) {
 	            $g_content = file_get_contents($path); // cache invoice
 	            if ($g_content) {
@@ -311,9 +313,12 @@ if ($imp == "lnd" || $imp == "eclair" || $imp == "c-lightning" || $imp == "lnbit
 		            if ($timestamp) {
 			            $now = time() * 1000;
 						if (($now - $timestamp) < 90000) {
-							$saved_inv = isset($g_dec["invoice"]) ? $g_dec["invoice"] : false;
+							$saved_inv = isset($g_dec["bolt11"]) ? $g_dec["bolt11"] : false;
 							if ($saved_inv) {
-								echo json_encode(["pr" => $saved_inv]);
+								echo json_encode([
+									"pr" => $saved_inv,
+									"routes" => $routes
+								]);
 								return;
 							}
 				        }
@@ -341,9 +346,10 @@ if ($imp == "lnd" || $imp == "eclair" || $imp == "c-lightning" || $imp == "lnbit
                     $hash = $result["hash"];
                     $s_content = [];
                     if ($pr && $hash) {
-                        $inv_arr = ["pr" => $pr];
-                        $successmessage = isset($setup["successAction"]) ? $setup["successAction"] : false;
-                        $inv_arr["routes"] = $cred["routes"];
+                        $inv_arr = [
+                        	"pr" => $pr,
+                        	"routes" => $routes
+                        ];
                         if ($successmessage && strlen($successmessage) > 2) {
                             $succsessobject = [
                                 "tag" => "message",
@@ -385,7 +391,8 @@ if ($imp == "lnd" || $imp == "eclair" || $imp == "c-lightning" || $imp == "lnbit
 				    if ($callback_url && strlen($callback_url) > 10) {
 					    if ($type_txt) {
 				           	if ($remote_tracking == "yes" && $local_tracking == "yes") {
-					            curl_get($callback_url, $s_content, null); // track all
+					            $jaja = curl_get($callback_url, $s_content, null); // track all
+					            echo $jaja;
 				            	return;
 			            	}
 				            if ($remote_tracking == "yes" && $local_tracking != "yes") {
@@ -803,7 +810,7 @@ function invoice_status($imp, $dat, $pid, $type, $expiry) {
                 "bolt11" => $dat["payment_request"],
                 "hash" => $inv_hash,
                 "amount" => $inv_amount,
-                "amount_paid" => $inv_amount_paid,
+                "amount_paid" => ($br_state == "paid") ? $inv_amount_paid : null,
                 "timestamp" => $inv_txcreated,
                 "txtime" => $inv_txtime,
                 "conf" => $conf,
@@ -835,7 +842,7 @@ function invoice_status($imp, $dat, $pid, $type, $expiry) {
                 "bolt11" => $dat["bolt11"],
                 "hash" => $inv_hash,
                 "amount" => $inv_amount,
-                "amount_paid" => $inv_amount_paid,
+                "amount_paid" => ($br_state == "paid") ? $inv_amount_paid : null,
                 "timestamp" => $inv_txcreated,
                 "txtime" => $inv_txtime,
                 "conf" => $conf,
@@ -869,7 +876,7 @@ function invoice_status($imp, $dat, $pid, $type, $expiry) {
                 "bolt11" => $request["serialized"],
                 "hash" => $inv_hash,
                 "amount" => $inv_amount,
-                "amount_paid" => $inv_amount_paid,
+                "amount_paid" => ($br_state == "paid") ? $inv_amount_paid : null,
                 "timestamp" => $inv_txcreated,
                 "txtime" => $inv_txtime,
                 "conf" => $conf,
@@ -899,7 +906,7 @@ function invoice_status($imp, $dat, $pid, $type, $expiry) {
                 "bolt11" => $details["bolt11"],
                 "hash" => $details["payment_hash"],
                 "amount" => $inv_amount,
-                "amount_paid" => $inv_amount,
+                "amount_paid" => ($br_state == "paid") ? $inv_amount : null,
                 "timestamp" => $inv_txtime * 1000,
                 "txtime" => $inv_txtime * 1000,
                 "conf" => $conf,

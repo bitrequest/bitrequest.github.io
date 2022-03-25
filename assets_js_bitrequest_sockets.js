@@ -237,7 +237,7 @@ function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
         if (status) { // leave because false must also pass
             request.address = "lnurl"; // make it a lightning request
             notify("Waiting for payment", 500000);
-            helper.lnd.invoice = inv;
+            helper.lnd.invoice = e;
             var txd = lnd_tx_data(e);
             confirmations(txd, true, true);
             if (status == "paid") {

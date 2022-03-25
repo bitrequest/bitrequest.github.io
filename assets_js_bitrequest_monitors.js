@@ -291,7 +291,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                 }).done(function(e) {
                                     var status = e.status;
                                     if (status) {
-                                        lnd.invoice = r;
+                                        lnd.invoice = e;
                                         status_field.text(" " + status);
                                         rd.lightning = lnd; // push invoice
                                         var txd = lnd_tx_data(e);
@@ -360,7 +360,9 @@ function get_api_inputs(rd, api_data, api_name) {
                             }).done(function(e) {
                                 var status = e.status;
                                 if (status) {
+                                    lnd.invoice = e;
                                     status_field.text(" " + status);
+                                    rd.lightning = lnd; // push invoice
                                     var txd = lnd_tx_data(e);
                                     if (txd.ccval) {
                                         var tx_listitem = append_tx_li(txd, thislist, true);

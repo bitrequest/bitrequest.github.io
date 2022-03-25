@@ -2679,7 +2679,7 @@ function saverequest(direct) {
                 "txhash": savedtxhash,
                 "receiver": thisaddress,
                 "confirmations": request.confirmations,
-                "setfirmations": request.setconfirmations,
+                "set_confirmations": request.set_confirmations,
                 "transactiontime": tpts,
                 "pending": request.pending,
                 "lightning": lightning

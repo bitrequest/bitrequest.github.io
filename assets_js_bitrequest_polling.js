@@ -417,7 +417,7 @@ function confirmations(tx_data, direct, ln) {
             "paymenttimestamp": receivedutc,
             "txhash": txhash,
             "confirmations": xconf,
-            "setconfirmations": setconfirmations
+            "set_confirmations": setconfirmations
         });
         brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), "en-us"));
         if (iscrypto) {} else {
