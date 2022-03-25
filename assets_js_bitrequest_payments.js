@@ -2520,7 +2520,7 @@ function saverequest(direct) {
         thisrequesttype = request.requesttype,
         thispaymenttimestamp = request.paymenttimestamp,
         set_confirmations = request.set_confirmations,
-        sc_string = set_confirmations.toString(),
+        sc_string = (set_confirmations) ? set_confirmations.toString() : "0",
         ln_info = helper.lnd,
         ln_id = (ln_info) ? ln_info.pid : "",
         thisaddress = (request.address == "lnurl") ? "lnurl" : gets.address, // if lightning payment, overwrite address 

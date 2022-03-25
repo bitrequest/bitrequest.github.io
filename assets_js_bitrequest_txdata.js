@@ -199,6 +199,16 @@ function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) { // p
 
 function bitcoincom_scan_data(data, setconfirmations, ccsymbol, legacy, address) { // bitcoin.com api
     if (data) {
+	    var inputs = data.vin,
+	    	doublespend = null;
+	    if (inputs) {
+		    $.each(inputs, function(dat, value) {
+			    var dstxid = value.doubleSpentTxID;
+	            if (dstxid) {
+	                var doublespend = dstxid;
+	            }
+	        });
+	    }
         var outputs = data.vout,
             outputsum;
         if (outputs) {
@@ -223,7 +233,8 @@ function bitcoincom_scan_data(data, setconfirmations, ccsymbol, legacy, address)
                 "txhash": data.txid,
                 "confirmations": (data.confirmations) ? data.confirmations : null,
                 "setconfirmations": setconfirmations,
-                "ccsymbol": ccsymbol
+                "ccsymbol": ccsymbol,
+                "doublespend": doublespend
             };
         } else {
             return false;
