@@ -30,7 +30,7 @@ Replace the 'v1' folder, make sure you leave the config.php file.
 
 * **API key:**  Secure your for your lightning proxy calls with your personal key. (optional)  
 * **successAction:**  Display a personal message in your clients wallet after a succesfull payment. (optional)  
-* **callback:**  Status updates get posted to this url. [Documentation and sample templates](https://github.com/bitrequest/webshop-integration/). (optional)  
+* **callback:**  Set callback url to receive status updates. [Documentation and sample templates](https://github.com/bitrequest/webshop-integration/). (optional)  
 * **local_tracking:**  receive callbacks for point of sale requests.
 * **remote_tracking:** receive callbacks for shared requests.  
 * **logo:** Display your logo on lnurl enabled lightning wallets. (512x512px / base-64 encoded) 
