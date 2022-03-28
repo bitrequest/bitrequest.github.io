@@ -1,10 +1,6 @@
 $(document).ready(function() {
     updaterequeststatestrigger();
-    if (geturlparameters().p == "requests") { // only trigger on "requests page"
-        setTimeout(function() {
-            trigger_requeststates();
-        }, 300);
-    }
+    updaterequeststatesrefresh();
     //trigger_requeststates
     //get_requeststates
     //getinputs
@@ -51,6 +47,14 @@ function updaterequeststatestrigger() {
     $(document).on("click", ".requestsbttn .self", function() {
         trigger_requeststates(true);
     })
+}
+
+function updaterequeststatesrefresh() {
+    if (geturlparameters().p == "requests") { // only trigger on "requests page"
+        setTimeout(function() {
+            trigger_requeststates();
+        }, 300);
+    }
 }
 
 function trigger_requeststates(trigger) {

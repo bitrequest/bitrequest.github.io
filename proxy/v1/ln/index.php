@@ -25,7 +25,7 @@ if (file_exists($path)) {
 		"callback" => $callback,
 		"minSendable" => $sats,
 		"maxSendable" => $maxsend,
-		"metadata" => json_encode($meta_arr),
+		"metadata" => json_encode($meta_arr)
 	];
 	echo json_encode($lnurl_obj, JSON_UNESCAPED_SLASHES);
 	$status = json_encode(

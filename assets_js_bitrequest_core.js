@@ -911,6 +911,7 @@ function ios_redirections(url) {
             }
         }
     }
+    updaterequeststatesrefresh();
 }
 
 function ios_redirect_bitly(shorturl) {
