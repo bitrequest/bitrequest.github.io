@@ -166,6 +166,30 @@ var multi_wallets = {
                         "playstore": "https://play.google.com/store/apps/details?id=fr.acinq.phoenix.mainnet",
                         "desktop": null,
                         "seed": true
+                    },
+                    {
+                        "name": "walletofsatoshi",
+                        "website": "https://www.walletofsatoshi.com",
+                        "appstore": "https://apps.apple.com/app/id1438599608",
+                        "playstore": "https://play.google.com/store/apps/details?id=com.livingroomofsatoshi.wallet",
+                        "desktop": null,
+                        "seed": false
+                    },
+                    {
+                        "name": "zap",
+                        "website": "https://www.walletofsatoshi.com",
+                        "appstore": "https://apps.apple.com/app/id1406311960",
+                        "playstore": "https://play.google.com/store/apps/details?id=zapsolutions.zap",
+                        "desktop": "https://zaphq.io/download",
+                        "seed": false
+                    },
+                    {
+                        "name": "zeus",
+                        "website": "https://zeusln.app",
+                        "appstore": "https://apps.apple.com/app/id1456038895",
+                        "playstore": "https://play.google.com/store/apps/details?id=app.zeusln.zeus",
+                        "desktop": null,
+                        "seed": false
                     }
                 ]
             },
