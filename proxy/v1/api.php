@@ -2,13 +2,13 @@
 // API
 $version = "0.001";
 function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
-	$version = "0.001";
+    $version = "0.001";
     $cf = isset($cfd) ? $cfd : false;
     if (!$cf) {
         $curl_result = curl_get($url, $data, $headers);
         $m_contents = [
             "br_cache" => "no caching",
-            "br_result" => json_decode($curl_result, true)
+            "br_result" => json_decode($curl_result, true),
         ];
         return $m_contents;
     }
@@ -45,42 +45,38 @@ function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
                 "br_result" => $cache_contents
             ];
             $cache_result = $meta === false ? $cache_contents : $meta_contents;
-            if (file_exists($cache_monitor)) {
-                if ($time - filemtime($cache_monitor) > $cache_refresh) {
-                    $files = glob($cache_folder . "*");
-                    // clear all expired cache
-                    foreach ($files as $file) {
-                        if ($time - filemtime($file) > $cache_refresh) {
-                            unlink($file);
-                        }
-                    }
-                    file_put_contents($cache_monitor, $cache_content);
-                }
-            } else {
-                file_put_contents($cache_monitor, $cache_content);
-            }
             return $cache_result;
         }
     }
     $apiresult = $url ? curl_get($url, $data, $headers) : $data;
     if ($apiresult) {
         if (!is_dir($cache_folder)) {
-	        mkdir($cache_folder, 0777, true);
+            mkdir($cache_folder, 0777, true);
         }
-        if (!is_dir($cache_folder)) { // check if folder is created
-	        $no_access = [
-	            "br_cache" => "no caching",
-	            "br_result" => [
-			        "error" => [
-			            "message" => "no write acces"
-			        ]
-			    ]
-	        ];
-			return $no_access;
+        if (!is_dir($cache_folder)) {
+            // check if folder is created
+            $no_access = [
+                "br_cache" => "no caching",
+                "br_result" => [
+                    "error" => [
+                        "message" => "no write acces"
+                    ]
+                ]
+            ];
+            return $no_access;
         }
         file_put_contents($cache_file, $apiresult);
-        if (!file_exists($cache_monitor)) {
-            // create cache file if not exists
+        if (file_exists($cache_monitor)) {
+            if ($time - filemtime($cache_monitor) > $cache_refresh) {
+                $files = glob($cache_folder . "*");
+                foreach ($files as $file) {
+                    if ($time - filemtime($file) > $cache_refresh) {
+                        unlink($file);
+                    }
+                }
+                file_put_contents($cache_monitor, $cache_content);
+            }
+        } else {
             file_put_contents($cache_monitor, $cache_content);
         }
         $cache_object = [
@@ -140,7 +136,7 @@ function error_object($code, $message) {
         "error" => [
             "code" => $code,
             "message" => $message
-        ],
+        ]
     ]);
 }
 

@@ -3079,35 +3079,35 @@ function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
                 return;
             }
             var ddat = [{
-                "div": {
-                    "class": "popform",
-                    "content": [{
-                            "div": {
-                                "class": "invoice_body",
-                                "content": "<pre>" + syntaxHighlight(e) + "</pre><div class='inv_pb'><img src='img_icons_lnd-icons_" + imp + ".png' class='lnd_icon' title='" + imp + "'/> Powered by " + imp + "</div>"
-                            }
-                        },
-                        {
-                            "input": {
-                                "class": "submit",
-                                "attr": {
-                                    "type": "submit",
-                                    "value": "OK"
+                    "div": {
+                        "class": "popform",
+                        "content": [{
+                                "div": {
+                                    "class": "invoice_body",
+                                    "content": "<pre>" + syntaxHighlight(e) + "</pre><div class='inv_pb'><img src='img_icons_lnd-icons_" + imp + ".png' class='lnd_icon' title='" + imp + "'/> Powered by " + imp + "</div>"
+                                }
+                            },
+                            {
+                                "input": {
+                                    "class": "submit",
+                                    "attr": {
+                                        "type": "submit",
+                                        "value": "OK"
+                                    }
                                 }
                             }
-                        }
-                    ]
-                }
-            }],
-            content = template_dialog({
-                "id": "invoiceformbox",
-                "icon": "icon-power",
-                "title": "Invoice",
-                "elements": ddat
-            });
-        popdialog(content, "alert", "canceldialog");
-        closeloader();
-        return
+                        ]
+                    }
+                }],
+                content = template_dialog({
+                    "id": "invoiceformbox",
+                    "icon": "icon-power",
+                    "title": "Invoice",
+                    "elements": ddat
+                });
+            popdialog(content, "alert", "canceldialog");
+            closeloader();
+            return
         }
         notify("Unable to fetch invoice");
         closeloader();
@@ -3635,7 +3635,7 @@ function br_result(e) {
 }
 
 function proxy_alert(version) {
-	if (version) {
+    if (version) {
         body.addClass("haschanges");
         $("#alert > span").text("!").attr("title", "Please update your proxy server " + version + " > " + proxy_version);
     }
@@ -4492,9 +4492,8 @@ function appendrequest(rd) {
         lnclass = (lightning) ? " lightning" : "",
         lnd_expire = (lightning && hybrid === false || lnhash) ? true : false,
         expirytime = (lnd_expire) ? 604800000 : (iscrypto === true) ? 25920000000 : 6048000000, // expirydate crypto: 300 days / fiat: 70 days / lightning: 7 days
-        isexpired = (($.now() - localtime) >= expirytime && (lnd_expire || status == "new" || insufficient === true)),
+        isexpired = (status == "expired" || ($.now() - localtime) >= expirytime && (lnd_expire || status == "new" || insufficient === true)),
         expiredclass = (isexpired === true) ? " expired" : "",
-        ispendingclass = (isexpired === true) ? "expired" : pending,
         localtimeobject = new Date(localtime),
         requestdateformatted = fulldateformat(localtimeobject, "en-us"),
         timeformat = "<span class='rq_month'>" + localtimeobject.toLocaleString('en-us', {
@@ -4536,7 +4535,7 @@ function appendrequest(rd) {
         cc_logo = (lightning) ? (txhash && !lnhash) ? cclogo : ln_logo : cclogo,
         rc_address_title = (hybrid) ? "Fallback address" : "Receiving Address",
         address_markup = (lnhash || hybrid === false) ? "" : "<li><p class='address'><strong>" + rc_address_title + ":</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>",
-        new_requestli = $("<li class='rqli " + requesttypeclass + expiredclass + lnclass + "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status + "' data-address='" + address + "' data-pending='" + ispendingclass + "' data-iscrypto='" + iscrypto + "' data-tx_index='" + tx_index + "'>\
+        new_requestli = $("<li class='rqli " + requesttypeclass + expiredclass + lnclass + "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status + "' data-address='" + address + "' data-pending='" + pending + "' data-iscrypto='" + iscrypto + "' data-tx_index='" + tx_index + "'>\
 			<div class='liwrap iconright'>" + cc_logo +
             "<div class='atext'>\
 					<h2>" + requesttitlestring + "</h2>\

@@ -256,7 +256,7 @@ function get_api_inputs(rd, api_data, api_name) {
                             "x-api": pk
                         }
                     }).done(function(r) {
-	                    var error = r.error;
+                        var error = r.error;
                         if (error) {
                             var message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
                             tx_api_fail(thislist, statuspanel);
@@ -265,66 +265,80 @@ function get_api_inputs(rd, api_data, api_name) {
                                 "console": true
                             }, false, payment);
                             status_field.text(" " + message);
-                            if (ln_only) {
-                                return
-                            }
-                        }
-                        if (r.pid == lnd.pid) {
+                        } else {
                             var inv_status = r.status;
                             status_field.text(" " + inv_status);
-                            if (r.bolt11) {
-                                $.ajax({
-                                    "method": "POST",
-                                    "cache": false,
-                                    "timeout": 5000,
-                                    "url": proxy_host + "proxy/v1/ln/api/",
-                                    "data": {
-                                        "fn": "ln-invoice-status",
-                                        "imp": imp,
-                                        "hash": r.hash,
-                                        "id": pid,
-                                        "nid": nid,
-                                        "callback": "no",
-                                        "type": rqtype,
-                                        "x-api": pk
-                                    }
-                                }).done(function(e) {
-                                    var status = e.status;
-                                    if (status) {
-                                        lnd.invoice = e;
-                                        status_field.text(" " + status);
-                                        rd.lightning = lnd; // push invoice
-                                        var txd = lnd_tx_data(e);
-                                        if (txd.ccval) {
-                                            var tx_listitem = append_tx_li(txd, thislist, true);
-                                            if (tx_listitem) {
-                                                transactionlist.append(tx_listitem.data(txd));
-                                                tx_count(statuspanel, txd.confirmations);
-                                                compareamounts(rd);
-                                                if (status == "canceled") {
-                                                    updaterequest({
-                                                        "requestid": requestid,
-                                                        "status": "canceled",
-                                                        "confirmations": 0
-                                                    }, false);
+                            if (r.pid == lnd.pid) {
+                                if (r.bolt11) {
+                                    $.ajax({
+                                        "method": "POST",
+                                        "cache": false,
+                                        "timeout": 5000,
+                                        "url": proxy_host + "proxy/v1/ln/api/",
+                                        "data": {
+                                            "fn": "ln-invoice-status",
+                                            "imp": imp,
+                                            "hash": r.hash,
+                                            "id": pid,
+                                            "nid": nid,
+                                            "callback": "no",
+                                            "type": rqtype,
+                                            "x-api": pk
+                                        }
+                                    }).done(function(e) {
+                                        var status = e.status;
+                                        if (status) {
+                                            lnd.invoice = e;
+                                            status_field.text(" " + status);
+                                            rd.lightning = lnd; // push invoice
+                                            var txd = lnd_tx_data(e);
+                                            if (txd.ccval) {
+                                                var tx_listitem = append_tx_li(txd, thislist, true);
+                                                if (tx_listitem) {
+                                                    transactionlist.append(tx_listitem.data(txd));
+                                                    tx_count(statuspanel, txd.confirmations);
+                                                    if (status == "canceled") {
+                                                        updaterequest({
+                                                            "requestid": requestid,
+                                                            "status": "canceled",
+                                                            "confirmations": 0
+                                                        }, false);
+                                                    }
+                                                    compareamounts(rd);
                                                 }
                                             }
                                         }
-                                    }
-                                }).fail(function(jqXHR, textStatus, errorThrown) {
-                                    tx_api_fail(thislist, statuspanel);
-                                    var error_object = (errorThrown) ? errorThrown : jqXHR;
-                                    handle_api_fails(rd, error_object, false, payment);
-                                });
+                                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                                        tx_api_fail(thislist, statuspanel);
+                                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                        handle_api_fails(rd, error_object, false, payment);
+                                    });
+                                } else {
+                                    tx_count(statuspanel, 0);
+                                    handle_api_fails(rd, {
+                                        "error": "invoice not found",
+                                        "console": true
+                                    }, false, payment);
+                                }
                             } else {
-                                tx_count(statuspanel, 0);
-                                compareamounts(rd);
+                                if (inv_status == "not found") {
+                                    updaterequest({
+                                        "requestid": requestid,
+                                        "status": "expired",
+                                        "pending": "no",
+                                        "confirmations": 0
+                                    }, true);
+                                }
+                                handle_api_fails(rd, {
+                                    "error": "payment id not found",
+                                    "console": true
+                                }, false, payment);
                             }
                         }
                         var version = r.version;
                         if (version != proxy_version) {
-				            proxy_alert(version);
-				        }
+                            proxy_alert(version);
+                        }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -369,7 +383,6 @@ function get_api_inputs(rd, api_data, api_name) {
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
                                             tx_count(statuspanel, txd.confirmations);
-                                            compareamounts(rd);
                                             if (status == "canceled") {
                                                 updaterequest({
                                                     "requestid": requestid,
@@ -377,6 +390,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                                     "confirmations": 0
                                                 }, true);
                                             }
+                                            compareamounts(rd);
                                         }
                                     }
                                 }
@@ -389,8 +403,17 @@ function get_api_inputs(rd, api_data, api_name) {
                                     "name": "proxy"
                                 });
                             });
-                            return
+                        } else {
+                            handle_api_fails(rd, {
+                                "error": "Transaction not found",
+                                "console": true
+                            }, false, payment);
                         }
+                    } else {
+                        handle_api_fails(rd, {
+                            "error": "invoice not found",
+                            "console": true
+                        }, false, payment);
                     }
                     return
                 }

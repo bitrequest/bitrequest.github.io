@@ -151,8 +151,8 @@ function lm_function(replace) {
             "<div id='lnurl_proxy_drawer' class='lpd'>\
 									<p id='lnurls_info'>\
 										Control your own lightning node and keys:<br/><br/>\
-										<strong>1.</strong> Host the <a href='https://github.com/bitrequest/bitrequest.github.io/tree/master/proxy' target='blank' class='exit ref'>proxy folder</a> in your host root (php required).<br/>\
-										<strong>2.</strong> Enter your REST host and keys in 'config.php'.<br/>\
+										<strong>1.</strong> Host the <a href='https://github.com/bitrequest/bitrequest.github.io/tree/master/proxy' target='blank' class='exit ref'>proxy folder</a> on your webserver.<br/>\
+										<strong>2.</strong> Enter your lightning node's REST host and keys in 'config.php'.<br/>\
 										<strong>3.</strong> Enter your server address below.<br/><br/>\
 									</p>\
 									<input type='text' value='' placeholder='https://...' id='lnd_proxy_url_input'/>\
@@ -495,7 +495,7 @@ function tconnectcb(add) {
 }
 
 function lightning_option_li(live, value, selected, invoices, proxy) {
-	var has_invoices = (invoices && invoices != "locked") ? true : false,
+    var has_invoices = (invoices && invoices != "locked") ? true : false,
         locked = (invoices && invoices == "locked") ? true : false,
         invoiceslist = "",
         liveclass = (locked) ? " locked" : (live === true) ? " live" : "",
@@ -637,14 +637,14 @@ function lnd_proxy_option_li(optionlist, live, key, value, selected, proxy_name,
 function toggle_ln_proxy() {
     $(document).on("click", "#lnsettingsbox #toggle_lnd", function() {
         var lpd = $("#add_proxy_drawer");
-        	lpd_input = $("#lnd_proxy_url_input");
-	    if (lpd.is(":visible")) {
-		    lpd_input.blur();
-	        lpd.slideUp(200);
-	    } else {
-	        lpd.slideDown(200);
-	        lpd_input.focus();
-	    }
+        lpd_input = $("#lnd_proxy_url_input");
+        if (lpd.is(":visible")) {
+            lpd_input.blur();
+            lpd.slideUp(200);
+        } else {
+            lpd.slideDown(200);
+            lpd_input.focus();
+        }
     })
 }
 
@@ -657,11 +657,9 @@ function proxy_switch() {
             lnd_imp_input = $("#lnd_select_input"),
             imp = lnd_imp_input.data("value");
         if (this_switch.hasClass("true")) {
-	        if (imp == "lnd" || imp == "eclair" || imp == "c-lightning") {
-		    }
-		    else {
-			     ldc.slideDown(200);
-		    }
+            if (imp == "lnd" || imp == "eclair" || imp == "c-lightning") {} else {
+                ldc.slideDown(200);
+            }
             this_switch.removeClass("true").addClass("false");
         } else {
             ldc.slideUp(200);
@@ -803,26 +801,26 @@ function lnd_select_proxy() {
 
 function lnd_select_implementation() {
     $(document).on("click", "#implements .imp_select", function() {
-	    var thisnode = $(this),
-	    	this_data = lndli().data();
-			lnd_proxy_list = this_data.proxies,
+        var thisnode = $(this),
+            this_data = lndli().data();
+        lnd_proxy_list = this_data.proxies,
             has_proxies = ($.isEmptyObject(lnd_proxy_list)) ? false : true,
-			imp = thisnode.attr("data-value"),
+            imp = thisnode.attr("data-value"),
             cs_boxes = $("#lnd_credentials .lndcd"),
             cd_box_select = $("#lnd_credentials .cs_" + imp),
-			proxy_switch = $("#lnsettingsbox #lnurl_s .switchpanel.custom"),
+            proxy_switch = $("#lnsettingsbox #lnurl_s .switchpanel.custom"),
             hasproxy = (proxy_switch.hasClass("true")) ? true : false;
         if (imp == "lnd" || imp == "eclair" || imp == "c-lightning") {
-	        if (hasproxy === false || has_proxies === false) {
-		        popnotify("error", imp + " requires a proxy server");
-				$("#add_proxy_drawer").slideDown(200);
-				//$("#lnd_proxy_url_input").focus();
-				cs_boxes.hide();
-		        return
-	        }
+            if (hasproxy === false || has_proxies === false) {
+                popnotify("error", imp + " requires a proxy server");
+                $("#add_proxy_drawer").slideDown(200);
+                //$("#lnd_proxy_url_input").focus();
+                cs_boxes.hide();
+                return
+            }
         }
         $("#add_proxy_drawer").slideUp(200);
-		$("#lnd_proxy_url_input").blur();
+        $("#lnd_proxy_url_input").blur();
         cs_boxes.not(cd_box_select).hide();
         cd_box_select.show();
     })
@@ -903,7 +901,7 @@ function trigger_ln() {
         return
     }
     if ($("#adln_drawer").is(":visible")) {
-	    var lnd_select = $("#lnd_select_input"),
+        var lnd_select = $("#lnd_select_input"),
             lnd_imp = lnd_select.data(),
             imp = lnd_imp.value;
         if (!imp) {
@@ -919,10 +917,10 @@ function trigger_ln() {
         }
         var lndcd = $("#lnd_credentials");
         if (lndcd.is(":visible")) {
-	        if (imp == "lnd" || imp == "eclair" || imp == "c-lightning") {
-		        popnotify("error", imp + " requires a proxy server");
-		        return
-		    }
+            if (imp == "lnd" || imp == "eclair" || imp == "c-lightning") {
+                popnotify("error", imp + " requires a proxy server");
+                return
+            }
             var lnd_host_input = $("#lnd_credentials .cs_" + imp + ":visible .lnd_host"),
                 lnd_key_input = $("#lnd_credentials .cs_" + imp + ":visible .invoice_macaroon"),
                 lnd_host_val = lnd_host_input.val(),
@@ -1698,7 +1696,7 @@ function test_lnurl_status(lnd) {
             var message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
             if (request.isrequest) {
                 if (helper.lnd_only) {
-	                topnotify(message);
+                    topnotify(message);
                     notify("this request is not monitored", 500000, "yes");
                 }
             } else {

@@ -896,6 +896,10 @@ html.showmain #newrequest_alias {
 	display: block;
 }
 
+.requestlist li.rqli[data-status="paid"].expired .expired_panel {
+	display: none;
+}
+
 #usedcurrencies>li[data-currency="monero"] {
 	//display:none;
 }
