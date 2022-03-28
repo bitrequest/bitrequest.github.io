@@ -2521,6 +2521,7 @@ function saverequest(direct) {
         thispaymenttimestamp = request.paymenttimestamp,
         set_confirmations = request.set_confirmations,
         sc_string = (set_confirmations) ? set_confirmations.toString() : "0",
+        amount_string = (thisamount) ? thisamount.toString() : "0",
         ln_info = helper.lnd,
         ln_id = (ln_info) ? ln_info.pid : "",
         thisaddress = (request.address == "lnurl") ? "lnurl" : gets.address, // if lightning payment, overwrite address 
@@ -2531,7 +2532,7 @@ function saverequest(direct) {
         rqmetahash = (thismeta && thismeta.length > 5) ? thismeta : null, // check if meta param exists
         dataobject = (rqdatahash) ? JSON.parse(atob(rqdatahash)) : null, // decode data param if exists
         requesttimestamp = (thispaymenttimestamp) ? thispaymenttimestamp : (dataobject && dataobject.ts) ? dataobject.ts : (thisrequesttype == "incoming") ? null : timestamp, // null is unknown timestamp
-        unhashed = thispayment + thiscurrency + thisamount.toString() + thisaddress + request.requestname + request.requesttitle + sc_string + ln_id,
+        unhashed = thispayment + thiscurrency + amount_string + thisaddress + request.requestname + request.requesttitle + sc_string + ln_id,
         savedtxhash = request.txhash,
         requestid = (thisrequesttype == "local" && savedtxhash) ? hashcode(savedtxhash) : hashcode(unhashed),
         this_requestid,
