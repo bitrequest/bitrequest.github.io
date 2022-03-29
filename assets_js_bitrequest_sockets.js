@@ -35,7 +35,7 @@ $(document).ready(function() {
 
 // Websockets / Pollfunctions
 
-function init_socket(socket_node, address, swtch) {
+function init_socket(socket_node, address, swtch, retry) {
     if (offline === true) {
         notify("You are currently offline, request is not monitored");
     } else {
@@ -44,8 +44,8 @@ function init_socket(socket_node, address, swtch) {
             var socket_name = socket_node.name;
             socket_attempt[btoa(socket_node.url)] = true;
         }
+        closesocket(address);
         if (payment == "bitcoin") {
-            closesocket();
             if (socket_name == "blockcypher websocket") {
                 blockcypher_websocket(socket_node, address);
             } else if (socket_name == "blockchain.info websocket") {
@@ -58,10 +58,12 @@ function init_socket(socket_node, address, swtch) {
                 blockcypher_websocket(socket_node, address);
             }
             if (helper.lnd_status) {
+	            if (retry) {
+		            return;
+	            }
                 lightning_socket(helper.lnd);
             }
         } else if (payment == "litecoin") {
-            closesocket();
             if (socket_name == "blockcypher websocket") {
                 blockcypher_websocket(socket_node, address);
             } else if (socket_name == main_ad_socket) {
@@ -70,7 +72,6 @@ function init_socket(socket_node, address, swtch) {
                 blockcypher_websocket(socket_node, address);
             }
         } else if (payment == "dogecoin") {
-            closesocket();
             if (socket_name == "blockcypher websocket") {
                 blockcypher_websocket(socket_node, address);
             } else if (socket_name == "dogechain api") {
@@ -79,13 +80,10 @@ function init_socket(socket_node, address, swtch) {
                 blockcypher_websocket(socket_node, address);
             }
         } else if (payment == "bitcoin-cash") {
-            closesocket();
             blockchain_bch_socket(socket_node, address);
         } else if (payment == "nano") {
-            closesocket();
             nano_socket(socket_node, address);
         } else if (payment == "ethereum") {
-            closesocket();
             amberdata_eth_websocket(socket_node, address);
         } else if (payment == "monero") {
             clearpinging();
@@ -118,8 +116,7 @@ function init_socket(socket_node, address, swtch) {
 }
 
 function lightning_socket(lnd) {
-	console.log(lnd);
-    lnd_confirm = false;
+	lnd_confirm = false;
     var p_arr = lnurl_deform(lnd.proxy_host),
         proxy_host = p_arr.url,
         pk = (lnd.pw) ? lnd.pw : p_arr.k,
@@ -162,9 +159,7 @@ function lightning_socket(lnd) {
         console.log("Disconnected");
     };
     socket.onerror = function(e) {
-	    clearpinging(pid);
-        closesocket(pid);
-        lnd_confirm = false;
+	    lnd_confirm = false;
         pinging[pid] = setInterval(function() {
             lnd_poll_data(proxy_host, pk, pid, nid, imp);
         }, 5000);
@@ -721,8 +716,8 @@ function handle_socket_fails(socket_node, thisaddress, error) {
             socket_info(socket_node, false);
             notify("websocket offline", 500000, "yes");
         } else {
-            closesocket();
-            init_socket(next_socket, thisaddress);
+            closesocket(thisaddress);
+            init_socket(next_socket, thisaddress, null, true);
         }
     }
 }

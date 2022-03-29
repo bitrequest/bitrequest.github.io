@@ -2708,7 +2708,7 @@ function closesocket(s_id) {
 	    }
     } else { // close all sockets
         $.each(sockets, function(key, value) {
-            value.close();
+	        value.close();
         });
         sockets = {};
     }
