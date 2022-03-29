@@ -1,5 +1,5 @@
 <?php
-// API
+// PROXY
 $version = "0.001";
 function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
     $version = "0.001";

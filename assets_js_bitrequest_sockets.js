@@ -118,6 +118,7 @@ function init_socket(socket_node, address, swtch) {
 }
 
 function lightning_socket(lnd) {
+	console.log(lnd);
     lnd_confirm = false;
     var p_arr = lnurl_deform(lnd.proxy_host),
         proxy_host = p_arr.url,
@@ -125,7 +126,7 @@ function lightning_socket(lnd) {
         pid = lnd.pid,
         nid = lnd.nid,
         imp = lnd.imp,
-        socket = sockets[pid] = new WebSocket(ln_socket);
+		socket = sockets[pid] = new WebSocket(ln_socket);
     socket.onopen = function(e) {
         console.log("Connected: " + ln_socket);
         var ping_event = JSON.stringify({
@@ -161,7 +162,7 @@ function lightning_socket(lnd) {
         console.log("Disconnected");
     };
     socket.onerror = function(e) {
-        clearpinging(pid);
+	    clearpinging(pid);
         closesocket(pid);
         lnd_confirm = false;
         pinging[pid] = setInterval(function() {
@@ -183,7 +184,7 @@ function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
             "x-api": pk
         }
     }).done(function(e) {
-        var error = inv.error;
+        var error = e.error;
         if (error) {
             var message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
             console.log(message);

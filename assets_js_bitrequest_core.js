@@ -2702,8 +2702,10 @@ function cancelpaymentdialog() {
 
 function closesocket(s_id) {
     if (s_id) { // close this socket
-        sockets[s_id].close();
-        delete sockets[s_id]
+	    if (sockets[s_id]) {
+		    sockets[s_id].close();
+			delete sockets[s_id];
+	    }
     } else { // close all sockets
         $.each(sockets, function(key, value) {
             value.close();
@@ -2720,8 +2722,10 @@ function forceclosesocket() {
 
 function clearpinging(s_id) {
     if (s_id) { // close this interval
-        clearInterval(pinging[s_id]);
-        delete pinging[s_id]
+	    if (pinging[s_id]) {
+		    clearInterval(pinging[s_id]);
+			delete pinging[s_id]
+	    }
     } else { // close all intervals
         $.each(pinging, function(key, value) {
             clearInterval(value);
