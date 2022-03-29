@@ -806,7 +806,7 @@ function lnd_put(proxy, key, pl, lnurl) {
             var message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
             if (request.isrequest) {
                 if (helper.lnd_only) {
-	                topnotify(message);
+                    topnotify(message);
                     notify("this request is not monitored");
                 }
             } else {
@@ -1385,6 +1385,7 @@ function getpayment(ccrateeuro, ccapi) {
         main_input_focus();
     }
     if (save_request == "nosocket") {} else {
+        closesocket();
         init_socket(helper.selected_socket, request.address);
         set_request_timer();
     }
@@ -1785,6 +1786,7 @@ function switchaddress() {
             if (nextaddress) {
                 var newaddress = nextaddress.data("address"),
                     selected_socket = helper.selected_socket;
+                closesocket(currentaddress);
                 init_socket(selected_socket, newaddress, true);
                 var dp = gets.d,
                     has_dat = (dp && dp.length > 5),
@@ -2079,7 +2081,9 @@ function pickaddressfromdialog() {
                 page = gets.p,
                 payment = gets.payment,
                 currency = gets.uoa,
-                amount = gets.amount;
+                amount = gets.amount,
+                currentaddress = gets.address;
+            closesocket(currentaddress);
             init_socket(helper.selected_socket, picked_address, true);
             var dp = gets.d,
                 has_dat = (dp && dp.length > 5),

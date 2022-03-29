@@ -44,7 +44,6 @@ function init_socket(socket_node, address, swtch, retry) {
             var socket_name = socket_node.name;
             socket_attempt[btoa(socket_node.url)] = true;
         }
-        closesocket(address);
         if (payment == "bitcoin") {
             if (socket_name == "blockcypher websocket") {
                 blockcypher_websocket(socket_node, address);
@@ -58,9 +57,9 @@ function init_socket(socket_node, address, swtch, retry) {
                 blockcypher_websocket(socket_node, address);
             }
             if (helper.lnd_status) {
-	            if (retry) {
-		            return;
-	            }
+                if (retry) {
+                    return;
+                }
                 lightning_socket(helper.lnd);
             }
         } else if (payment == "litecoin") {
@@ -116,14 +115,14 @@ function init_socket(socket_node, address, swtch, retry) {
 }
 
 function lightning_socket(lnd) {
-	lnd_confirm = false;
+    lnd_confirm = false;
     var p_arr = lnurl_deform(lnd.proxy_host),
         proxy_host = p_arr.url,
         pk = (lnd.pw) ? lnd.pw : p_arr.k,
         pid = lnd.pid,
         nid = lnd.nid,
         imp = lnd.imp,
-		socket = sockets[pid] = new WebSocket(ln_socket);
+        socket = sockets[pid] = new WebSocket(ln_socket);
     socket.onopen = function(e) {
         console.log("Connected: " + ln_socket);
         var ping_event = JSON.stringify({
@@ -159,7 +158,7 @@ function lightning_socket(lnd) {
         console.log("Disconnected");
     };
     socket.onerror = function(e) {
-	    lnd_confirm = false;
+        lnd_confirm = false;
         pinging[pid] = setInterval(function() {
             lnd_poll_data(proxy_host, pk, pid, nid, imp);
         }, 5000);
