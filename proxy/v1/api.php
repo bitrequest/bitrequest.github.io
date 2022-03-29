@@ -54,8 +54,7 @@ function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
             mkdir($cache_folder, 0777, true);
         }
         if (!is_dir($cache_folder)) {
-            // check if folder is created
-            $no_access = [
+            return [
                 "br_cache" => "no caching",
                 "br_result" => [
                     "error" => [
@@ -63,11 +62,10 @@ function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
                     ]
                 ]
             ];
-            return $no_access;
         }
         file_put_contents($cache_file, $apiresult);
         if (file_exists($cache_monitor)) {
-            if ($time - filemtime($cache_monitor) > $cache_refresh) {
+            if ($time - filemtime($cache_monitor) > 3600) {
                 $files = glob($cache_folder . "*");
                 foreach ($files as $file) {
                     if ($time - filemtime($file) > $cache_refresh) {
