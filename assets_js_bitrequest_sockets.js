@@ -443,43 +443,48 @@ function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
 
 function mempoolspace_btc_socket(socket_node, thisaddress) {
     var provider = socket_node.url,
-        websocket = sockets[thisaddress] = new WebSocket(provider);
-    websocket.onopen = function(e) {
+        mps_websocket = sockets[thisaddress] = new WebSocket(provider);
+    mps_websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
             "track-address": thisaddress
         });
-        websocket.send(ping_event);
+        mps_websocket.send(ping_event);
         pinging[thisaddress] = setInterval(function() {
-            websocket.send(ping_event);
+            mps_websocket.send(ping_event);
         }, 55000);
     };
-    websocket.onmessage = function(e) {
+    mps_websocket.onmessage = function(e) {
         var result = JSON.parse(e.data),
-            json = result["address-transactions"][0],
-            txhash = json.txid;
-        if (txhash) {
-            if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
-                paymentdialogbox.removeClass("transacting");
-                var reconnectbttn = (txid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + txid + "'>Reconnect</span></div></p>" : "",
-                    content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + reconnectbttn;
-                closesocket();
-                popdialog(content, "alert", "canceldialog");
-            } else {
-                var txd = mempoolspace_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress);
-                if (txd) {
-                    txid = txhash;
-                    closesocket();
-                    pick_monitor(txhash, txd);
+            result2 = result["address-transactions"];
+        if (result2) {
+            var json = result2[0];
+            if json {
+                var txhash = json.txid;
+                if (txhash) {
+                    if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
+                        paymentdialogbox.removeClass("transacting");
+                        var reconnectbttn = (txid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + txid + "'>Reconnect</span></div></p>" : "",
+                            content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + reconnectbttn;
+                        closesocket();
+                        popdialog(content, "alert", "canceldialog");
+                    } else {
+                        var txd = mempoolspace_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress);
+                        if (txd) {
+                            txid = txhash;
+                            closesocket();
+                            pick_monitor(txhash, txd);
+                        }
+                    }
                 }
             }
         }
     };
-    websocket.onclose = function(e) {
+    mps_websocket.onclose = function(e) {
         console.log("Disconnected");
         txid = null;
     };
-    websocket.onerror = function(e) {
+    mps_websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress, e.data)
         return false;
     };
