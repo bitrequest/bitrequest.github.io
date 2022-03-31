@@ -517,7 +517,7 @@ function lightning_option_li(live, value, selected, invoices, proxy) {
                 inv_title = (value.memo) ? value.memo : (value.description) ? value.description : "invoice" + inv_id,
                 timestamp = (value.creation_date) ? value.creation_date : (value.timestamp) ? value.timestamp : false,
                 inv_date = (timestamp) ? short_date(parseInt((timestamp) * 1000) + timezone) : "",
-                settle_icon = (value.settled === true) ? "icon-checkmark" : (value.settled === false) ? "icon-clock" : false,
+                settle_icon = (value.settled === true || value.status == "paid") ? "icon-checkmark" : (value.settled === false || value.status == "expired") ? "icon-clock" : false,
                 icon_span = (settle_icon) ? "<span class='" + settle_icon + "'></span>" : "<img src='img_icons_lnd-icons_" + imp + ".png' class='lnd_icon'>";
             invoiceslist += "<div class='ivli'><div class='invoice_memo clearfix'><div class='iv_title'>" + icon_span + " " + inv_title + "</div><div class='iv_date'>" + inv_date + "</div></div><div class='invoice_body'><pre>" + syntaxHighlight(value) + "</pre></div></div>";
         });
