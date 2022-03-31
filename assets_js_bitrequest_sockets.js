@@ -459,7 +459,7 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
             result2 = result["address-transactions"];
         if (result2) {
             var json = result2[0];
-            if json {
+            if (json) {
                 var txhash = json.txid;
                 if (txhash) {
                     if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
