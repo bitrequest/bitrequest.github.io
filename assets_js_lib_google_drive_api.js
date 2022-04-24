@@ -48,7 +48,7 @@ function Drive_Backup_trigger() {
     $(document).on("click", "#gdtrigger .switchpanel", function() {
         if (body.hasClass("ios")) {
             notify("GoogleAuth unavailable for IOS App at the moment");
-            return false;
+            return
         }
         if (GD_auth() === true) {
             var thistrigger = $(this),
@@ -71,20 +71,20 @@ function Drive_Backup_trigger() {
 function authenticate() {
     if (GoogleAuth) {
         return GoogleAuth.signIn().then(function() {
-                html.addClass("gdauth");
-                $("#gdtrigger .switchpanel").addClass("true");
-                setTimeout(function() {
-                    $("#listappdata .switchpanel").trigger("click");
-                    if (GD_auth() === true) {
-                        updateappdata();
-                        body.removeClass("haschanges");
-                        html.addClass("gdauth");
-                    }
-                }, 500);
-            },
-            function(err) {
-                //console.error("Error signing in", err);
-            });
+            html.addClass("gdauth");
+            $("#gdtrigger .switchpanel").addClass("true");
+            setTimeout(function() {
+                $("#listappdata .switchpanel").trigger("click");
+                if (GD_auth() === true) {
+                    updateappdata();
+                    body.removeClass("haschanges");
+                    html.addClass("gdauth");
+                }
+            }, 500);
+        },
+        function(err) {
+            //console.error("Error signing in", err);
+        });
     } else {
         var content = "<h2 class='icon-bin'>Sorry!</h2><p>Google drive access not allowed from this domain</p><div id='api_signin'>Please apply for google OAuth token <a href='https://console.developers.google.com/apis/credentials' target='_blank'>here</a></div>";
         canceldialog();
@@ -96,12 +96,14 @@ function authenticate() {
 
 function loadClient() {
     return gapi.client.load("https://content.googleapis.com/discovery/v1/apis/drive/v3/rest").then(function() {
-            console.log("GAPI client loaded for API");
-            html.addClass("gdauth");
-        },
-        function(err) {
-            console.error("Error loading GAPI client for API", err);
-        });
+        console.log("GAPI client loaded for API");
+        if (user) {
+	        html.addClass("gdauth");
+        }
+    },
+    function(err) {
+        console.error("Error loading GAPI client for API", err);
+    });
 }
 
 function updateappdata() {
