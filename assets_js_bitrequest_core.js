@@ -910,8 +910,8 @@ function ios_redirections(url) {
                 openpage(url, pagename, "page");
             }
         }
+        trigger_requeststates();
     }
-    updaterequeststatesrefresh();
 }
 
 function ios_redirect_bitly(shorturl) {
@@ -1379,8 +1379,8 @@ function togglecurrency() {
 
 function toggleaddress() {
     $(document).on("click", ".toggleaddress", function() {
-        var parentlistitem = $(this).closest("li");
-        checked = parentlistitem.data("checked"),
+        var parentlistitem = $(this).closest("li"),
+            checked = parentlistitem.data("checked"),
             parentlist = parentlistitem.closest("ul.pobox"),
             addresscount = parentlist.find("li[data-checked='true']").length,
             currency = parentlist.attr("data-currency");
@@ -1399,7 +1399,7 @@ function toggleaddress() {
                         },
                         content = get_address_warning("addresswarningcheck", address, pass_dat);
                     popdialog(content, "alert", "triggersubmit");
-                    return false;
+                    return
                 }
             } else if (parentlistitem.hasClass("xpubu")) {
                 var address = a_dat.address;
@@ -1414,7 +1414,7 @@ function toggleaddress() {
                             },
                             content = get_address_warning("addresswarningcheck", address, pass_dat);
                         popdialog(content, "alert", "triggersubmit");
-                        return false;
+                        return
                     }
                 }
             }
@@ -1437,14 +1437,14 @@ function confirm_missing_seed_toggle() {
             ds_checked = ds_checkbox.data("checked");
         if (pk_checked == true) {} else {
             popnotify("error", "Confirm privatekey ownership");
-            return false
+            return
         }
         if (ds_checked == true) { // whitlist seed id
             add_address_whitelist(d_dat.address);
         }
         canceldialog();
         cmst_callback(d_dat.pli);
-        return false;
+        return
     })
 }
 
@@ -1592,7 +1592,7 @@ function dragstart() {
         var this_drag = $(this),
             addresses = this_drag.closest(".applist").find("li");
         if (addresses.length < 2) {
-            return false;
+            return
         } else {
             var thisli = this_drag.closest("li"),
                 dialogheight = thisli.height(),
@@ -1743,35 +1743,35 @@ function keyup() {
 function escapeandback() {
     if (body.hasClass("showcam")) {
         window.history.back();
-        return false;
+        return
     }
     if ($("#loader").hasClass("active")) {
         closeloader();
-        return false;
+        return
     }
     if ($("#notify").hasClass("popup")) {
         closenotify();
-        return false;
+        return
     }
     if ($("#popup .selectbox .options").hasClass("showoptions")) {
         closeselectbox();
-        return false;
+        return
     }
     if ($("#popup").hasClass("active")) {
         canceldialog();
-        return false;
+        return
     }
     if ($("#sharepopup").hasClass("active")) {
         cancelsharedialog();
-        return false;
+        return
     }
     if ($("#optionspop").hasClass("active")) {
         canceloptions();
-        return false;
+        return
     }
     if (body.hasClass("seed_dialog")) {
         hide_seed_panel();
-        return false;
+        return
     }
     if (body.hasClass("showstartpage")) {
         startprev($(".panelactive"));
@@ -1790,7 +1790,7 @@ function escapeandback() {
                 close_paymentdialog();
             }
         }
-        return false;
+        return
     } else {
         window.history.back();
     }
@@ -1822,11 +1822,11 @@ function close_paymentdialog(empty) {
                 var rrwl_obj = JSON.parse(rr_whitelist);
                 if (rrwl_obj && rrwl_obj[currency] == address) {
                     continue_cpd();
-                    return false;
+                    return
                 }
             }
             payment_lookup(request_dat);
-            return false;
+            return
         }
     }
     continue_cpd();
@@ -1969,10 +1969,9 @@ function fixednav() {
     $(document).scroll(function(e) {
         if (html.hasClass("paymode")) {
             e.preventDefault();
-            return false
-        } else {
-            fixedcheck($(document).scrollTop());
+            return
         }
+        fixedcheck($(document).scrollTop());
     });
 }
 
@@ -2053,14 +2052,13 @@ function execute(trigger, functionname) {
     $(document).on("click", "#execute", function(e) {
         e.preventDefault();
         eval(functionname + "(trigger)");
-        return false
+        return
     })
 }
 
 function addcurrencytrigger() {
     $(document).on("click", ".addcurrency", function() {
         addcurrency($(this).closest("li").data());
-        return false;
     })
 }
 
@@ -2074,7 +2072,7 @@ function addcurrency(cd) {
         if (can_derive === false) {
             if (is_viewonly() === true) {
                 vu_block();
-                return false;
+                return
             }
             addaddress(cd, false);
         } else {
@@ -2602,8 +2600,7 @@ function canceldialog(pass) {
         $("#actions").removeClass("custom");
         $(document).off("click", "#execute");
         // reset Globals
-        s_id = undefined;
-        is_erc20t = undefined;
+        s_id = null;
     }, 600, function() {
         clearTimeout(timeout);
     });
@@ -2628,10 +2625,10 @@ function cancelpaymentdialogtrigger() {
     $(document).on("mouseup", "#payment", function(e) {
         if (blockswipe === true) {
             unfocus_inputs();
-            return false;
+            return
         }
         if (html.hasClass("flipmode")) { // prevent closing request when flipping
-            return false;
+            return
         }
         var timelapsed = $.now() - cp_timer;
         if (timelapsed < 1500) { // prevent clicking too fast
@@ -2678,7 +2675,7 @@ function cancelpaymentdialog() {
     if (html.hasClass("hide_app")) {
         closeloader();
         parent.postMessage("close_request", "*");
-        return false;
+        return
     }
     paymentpopup.removeClass("active");
     html.removeClass("blurmain_payment");
@@ -2702,13 +2699,13 @@ function cancelpaymentdialog() {
 
 function closesocket(s_id) {
     if (s_id) { // close this socket
-	    if (sockets[s_id]) {
-		    sockets[s_id].close();
-			delete sockets[s_id];
-	    }
+        if (sockets[s_id]) {
+            sockets[s_id].close();
+            delete sockets[s_id];
+        }
     } else { // close all sockets
         $.each(sockets, function(key, value) {
-	        value.close();
+            value.close();
         });
         sockets = {};
     }
@@ -2722,10 +2719,10 @@ function forceclosesocket() {
 
 function clearpinging(s_id) {
     if (s_id) { // close this interval
-	    if (pinging[s_id]) {
-		    clearInterval(pinging[s_id]);
-			delete pinging[s_id]
-	    }
+        if (pinging[s_id]) {
+            clearInterval(pinging[s_id]);
+            delete pinging[s_id]
+        }
     } else { // close all intervals
         $.each(pinging, function(key, value) {
             clearInterval(value);
@@ -2873,7 +2870,6 @@ function newrequest_alias() {
                 triggertxfunction(active_currency_trigger);
             }
         }
-        return false;
     });
 }
 
@@ -2898,12 +2894,12 @@ function newrequest() {
                         },
                         content = get_address_warning("address_newrequest", address, pass_dat);
                     popdialog(content, "alert", "triggersubmit");
-                    return false;
+                    return
                 }
             } else {
                 if (bipv_pass() === false) {
                     canceloptions();
-                    return false;
+                    return
                 }
             }
         }
@@ -2922,7 +2918,7 @@ function confirm_ms_newrequest() {
             ds_checked = ds_checkbox.data("checked");
         if (pk_checked == true) {} else {
             popnotify("error", "Confirm privatekey ownership");
-            return false
+            return
         }
         if (ds_checked == true) { // whitlist seed id
             add_address_whitelist(d_dat.address);
@@ -2930,7 +2926,7 @@ function confirm_ms_newrequest() {
         canceloptions();
         canceldialog();
         newrequest_cb(d_dat.currency, d_dat.ccsymbol, d_dat.address, d_dat.title);
-        return false;
+        return
     })
 }
 
@@ -3025,8 +3021,8 @@ function showtransaction_trigger() {
             lnhash = (txhash && txhash.slice(0, 9) == "lightning") ? true : false;
         if (lnhash) {
             var lightning = rqldat.lightning,
-                imp = lightning.imp;
-            invoice = lightning.invoice;
+                imp = lightning.imp,
+                invoice = lightning.invoice;
             if (invoice) {
                 var hash = invoice.hash;
                 if (hash) {
@@ -3045,8 +3041,8 @@ function showtransaction_trigger() {
             return
         }
         var currency = rqli.data("payment"),
-            erc20 = rqli.data("erc20");
-        blockchainurl = blockexplorer_url(currency, true, erc20);
+            erc20 = rqli.data("erc20"),
+            blockchainurl = blockexplorer_url(currency, true, erc20);
         if (blockchainurl === undefined || txhash === undefined) {} else {
             open_blockexplorer_url(blockchainurl + txhash);
         }
@@ -3163,8 +3159,8 @@ function addressinfo() {
             dpath_str = (isseed) ? "<li><strong>Derivation path:</strong> " + dpath + "</li>" : "",
             pk_verified = "Unknown <span class='icon-checkmark'></span>",
             vkobj = (dd.vk) ? vk_obj(dd.vk) : false,
-            vkdat = (vkobj) ? (isseed && active_src) ? "derive" : vkobj.vk : false;
-        pk_str = (vkdat) ? "<span id='show_vk' class='ref' data-vk='" + vkdat + "'>Show</span>" : (isseed) ? (active_src) ? "<span id='show_pk' class='ref'>Show</span>" : (a_wl === true) ? pk_verified : "Unknown" : pk_verified,
+            vkdat = (vkobj) ? (isseed && active_src) ? "derive" : vkobj.vk : false,
+            pk_str = (vkdat) ? "<span id='show_vk' class='ref' data-vk='" + vkdat + "'>Show</span>" : (isseed) ? (active_src) ? "<span id='show_pk' class='ref'>Show</span>" : (a_wl === true) ? pk_verified : "Unknown" : pk_verified,
             content = $("<div id='ad_info_wrap'><h2>" + cc_icon + " <span>" + label + "</span></h2><ul>\
 	    		<li><strong>Address: </strong><span class='adbox adboxl select'>" + address + "</span></li>\
 	    		<li><strong>Source: </strong>" + srcval + "</li>" +
@@ -3188,7 +3184,7 @@ function show_pk() {
     $(document).on("click", "#show_pk", function() {
         if (is_viewonly() === true) {
             vu_block();
-            return false;
+            return
         }
         var thisbttn = $(this),
             pkspan = $("#pk_span");
@@ -3232,7 +3228,7 @@ function show_vk() {
     $(document).on("click", "#show_vk", function() {
         if (is_viewonly() === true) {
             vu_block();
-            return false;
+            return
         }
         var thisbttn = $(this),
             vk = thisbttn.attr("data-vk"),
@@ -3257,8 +3253,8 @@ function show_vk() {
                         },
                         x_keys_dat = derive_x(dx_dat),
                         rootkey = x_keys_dat.key,
-                        ssk = sc_reduce32(fasthash(rootkey));
-                    x_ko = xmr_getpubs(ssk, addat.derive_index);
+                        ssk = sc_reduce32(fasthash(rootkey)),
+                        x_ko = xmr_getpubs(ssk, addat.derive_index);
                 } else {
                     x_ko = {
                         "stat": true,
@@ -3331,7 +3327,7 @@ function canceloptionstrigger() {
 function canceloptions(pass) {
     if (pass === true) {
         clearoptions();
-        return false;
+        return
     }
     var optionspop = $("#optionspop"),
         thishaspin = (optionspop.hasClass("pin"));
@@ -3339,12 +3335,12 @@ function canceloptions(pass) {
         var phrasewrap = $("#lockscreen #phrasewrap");
         if (phrasewrap.hasClass("showph")) {
             phrasewrap.removeClass("showph");
-            return false;
+            return
         }
         if (ishome() === true) {} else {
             if (html.hasClass("loaded")) {} else {
                 shake(optionspop);
-                return false;
+                return
             }
         }
     }
@@ -3381,7 +3377,7 @@ function showrequestdetails() {
             $(".moreinfo").add(".metalist").not(infopanel).slideUp(200);
             setTimeout(function() {
                 $("html, body").animate({
-                    scrollTop: thislist.offset().top - fixednavheight
+                    "scrollTop": thislist.offset().top - fixednavheight
                 }, 200);
                 infopanel.slideDown(200);
                 thislist.addClass("visible_request");
@@ -3460,8 +3456,8 @@ function archive() {
 }
 
 function archivefunction() {
-    var thisreguest = $("#requestlist > li.visible_request")
-    requestdata = thisreguest.data(),
+    var thisreguest = $("#requestlist > li.visible_request"),
+        requestdata = thisreguest.data(),
         requestcopy = thisreguest.clone();
     if (thisreguest.data("status") == "insufficient") {
         updaterequest({
@@ -3662,19 +3658,17 @@ function get_api_url(get) {
             "ampersand": ampersand,
             "key_param": key_param
         }
-    } else {
-        return false;
     }
+    return false
 }
 
 function fetchsymbol(currencyname) {
     var ccsymbol = {};
     $.each(JSON.parse(localStorage.getItem("bitrequest_erc20tokens")), function(key, value) {
         if (value.name == currencyname) {
-            return ccsymbol = {
-                symbol: value.symbol,
-                id: value.cmcid
-            };
+            ccsymbol.symbol = value.symbol;
+            ccsymbol.id = value.cmcid;
+            return
         }
     });
     return ccsymbol;
@@ -4343,8 +4337,7 @@ function buildpage(cd, init) {
 					<div class='addone' data-currency='" + currency + "'>Add one</div>\
 				</ul>\
 			</div>\
-		</div>" +
-                settingspage);
+		</div>" + settingspage);
         currency_page.data(cd).appendTo("main");
         if (erc20 === true) {
             var coin_settings_cache = localStorage.getItem("bitrequest_" + currency + "_settings");
@@ -4447,7 +4440,6 @@ function appendrequest(rd) {
         currencyname = rd.currencyname,
         receivedamount = rd.receivedamount,
         fiatvalue = rd.fiatvalue,
-        paymenttimestamp = rd.paymenttimestamp,
         txhash = rd.txhash,
         lnhash = (txhash && txhash.slice(0, 9) == "lightning") ? true : false,
         lightning = rd.lightning,
@@ -4477,6 +4469,7 @@ function appendrequest(rd) {
         requestlist = (archive === true) ? $("#archivelist") : $("#requestlist"),
         utc = timestamp - timezone,
         localtime = (requestdate) ? requestdate - timezone : utc, // timezone correction
+        paymenttimestamp = (rd.paymenttimestamp) ? rd.paymenttimestamp : requestdate,
         incoming = (requesttype == "incoming"),
         local = (requesttype == "local"),
         checkout = (requesttype == "checkout"),
@@ -4523,7 +4516,6 @@ function appendrequest(rd) {
         conf_box = (ismonitored === false) ? "<div class='txli_conf' data-conf='0'><span>Unmonitored transaction</span></div>" :
         (conf > 0) ? "<div class='txli_conf'><div class='confbar'></div><span>" + conf + " / " + set_confirmations + " confirmations</span></div>" :
         (conf === 0) ? "<div class='txli_conf' data-conf='0'><div class='confbar'></div><span>Unconfirmed transaction<span></div>" : "",
-        view_tx_text =
         view_tx_markup = (lnhash) ? "<li><strong class='show_tx'><span class='icon-power'></span><span class='ref'>View invoice</span></strong></li>" : (txhash) ? "<li><strong class='show_tx'><span class='icon-eye'></span>View on blockchain</strong></li>" : "",
         statustext = (ismonitored === false) ? "" : (status == "new") ? "Waiting for payment" : status,
         src_html = (source) ? "<span class='src_txt'>source: " + source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>" : "",
@@ -4539,7 +4531,7 @@ function appendrequest(rd) {
         cclogo = getcc_icon(cmcid, cpid, erc20) + getcc_icon(cmcid, cpid, erc20),
         cc_logo = (lightning) ? (txhash && !lnhash) ? cclogo : ln_logo : cclogo,
         rc_address_title = (hybrid) ? "Fallback address" : "Receiving Address",
-        address_markup = (lnhash || hybrid === false) ? "" : "<li><p class='address'><strong>" + rc_address_title + ":</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>",
+        address_markup = (lightning && (lnhash || hybrid === false)) ? "" : "<li><p class='address'><strong>" + rc_address_title + ":</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>",
         new_requestli = $("<li class='rqli " + requesttypeclass + expiredclass + lnclass + "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status + "' data-address='" + address + "' data-pending='" + pending + "' data-iscrypto='" + iscrypto + "' data-tx_index='" + tx_index + "'>\
 			<div class='liwrap iconright'>" + cc_logo +
             "<div class='atext'>\

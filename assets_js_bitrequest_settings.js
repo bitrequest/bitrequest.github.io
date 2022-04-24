@@ -2579,36 +2579,36 @@ function submitapi() {
 
 function checkapikey(thisref, apikeyval, lastinput) {
     var token_data = (thisref == "firebase") ? {
-            keylength: 20,
-            payload: "shortLinks?key="
+            "keylength": 20,
+            "payload": "shortLinks?key="
         } :
         (thisref == "coinmarketcap") ? {
-            keylength: 20,
-            payload: "cryptocurrency/quotes/latest?id=1&CMC_PRO_API_KEY="
+            "keylength": 20,
+            "payload": "cryptocurrency/quotes/latest?id=1&CMC_PRO_API_KEY="
         } :
         (thisref == "fixer") ? {
-            keylength: 20,
-            payload: "symbols?access_key="
+            "keylength": 20,
+            "payload": "symbols?access_key="
         } :
         (thisref == "blockcypher") ? {
-            keylength: 6,
-            payload: "btc/main/addrs/1rundZJCMJhUiWQNFS5uT3BvisBuLxkAp/meta?token="
+            "keylength": 6,
+            "payload": "btc/main/addrs/1rundZJCMJhUiWQNFS5uT3BvisBuLxkAp/balance?token="
         } :
         (thisref == "ethplorer") ? {
-            keylength: 6,
-            payload: "getTop?apiKey="
+            "keylength": 6,
+            "payload": "getTop?apiKey="
         } :
         (thisref == "blockchair") ? {
-            keylength: 6,
-            payload: "stats?key="
+            "keylength": 6,
+            "payload": "stats?key="
         } :
         (thisref == "currencylayer") ? {
-            keylength: 6,
-            payload: "live?access_key="
+            "keylength": 6,
+            "payload": "live?access_key="
         } :
         (thisref == "amberdata") ? {
-            keylength: 6,
-            payload: "blockchains/metrics/latest"
+            "keylength": 6,
+            "payload": "blockchains/metrics/latest"
         } : null,
         keylength = (token_data) ? token_data.keylength : 6,
         payload = (token_data) ? token_data.payload : null;
@@ -2676,11 +2676,13 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                 var data = br_result(e).result;
                 if (thisref == "bitly" && data.status_code === 500) {
                     api_fail(thisref, apikeyval);
-                    return false;
-                } else if (thisref == "coinmarketcap" && data.status.error_code === 1001) {
+                    return
+                }
+                if (thisref == "coinmarketcap" && data.status.error_code === 1001) {
                     api_fail(thisref, apikeyval);
-                    return false;
-                } else if (thisref == "fixer" && data.success === false) {
+                    return
+                }
+                if (thisref == "fixer" && data.success === false) {
                     if (data.error.code === 101) {
                         api_fail(thisref, apikeyval);
                     } else {
@@ -2688,15 +2690,17 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                         var content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "alert", "canceldialog");
                     }
-                    return false;
-                } else if (thisref == "blockcypher") {
-                    if (data.data) {
+                    return
+                }
+                if (thisref == "blockcypher") {
+                    if (data.address) {
                         update_api_attr(thisref, apikeyval, lastinput);
                     } else {
                         api_fail(thisref, apikeyval);
                     }
-                    return false;
-                } else if (thisref == "ethplorer") {
+                    return
+                }
+                if (thisref == "ethplorer") {
                     if (data.tokens) {
                         update_api_attr(thisref, apikeyval, lastinput);
                     } else {
@@ -2708,8 +2712,9 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                             popdialog(content, "alert", "canceldialog");
                         }
                     }
-                    return false;
-                } else if (thisref == "blockchair") {
+                    return
+                }
+                if (thisref == "blockchair") {
                     var context_code = data.context.code;
                     if (context_code === 200) {
                         update_api_attr(thisref, apikeyval, lastinput);
@@ -2720,8 +2725,9 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                         var content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "alert", "canceldialog");
                     }
-                    return false;
-                } else if (thisref == "currencylayer" && data.success === false) {
+                    return
+                }
+                if (thisref == "currencylayer" && data.success === false) {
                     if (data.error.code === 101) {
                         api_fail(thisref, apikeyval);
                     } else {
@@ -2729,13 +2735,13 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                         var content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "alert", "canceldialog");
                     }
-                    return false;
-                } else if (thisref == "amberdata" && data.status === 401) {
-                    api_fail(thisref, apikeyval);
-                    return false;
-                } else {
-                    update_api_attr(thisref, apikeyval, lastinput);
+                    return
                 }
+                if (thisref == "amberdata" && data.status === 401) {
+                    api_fail(thisref, apikeyval);
+                    return
+                }
+                update_api_attr(thisref, apikeyval, lastinput);
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 api_fail(thisref, apikeyval);
             });
@@ -2756,7 +2762,7 @@ function api_fail(thisref, thisvalue) {
     apiformbox.removeClass("pass");
     apiformbox.find("input[data-ref=" + thisref + "]").attr("data-checkchange", thisvalue).removeClass("changed").addClass("input_error").select();
     notify(errormsg);
-    return false;
+    return
 }
 
 function update_api_attr(thisref, thisvalue, lastinput) {
@@ -2790,15 +2796,21 @@ function complement_apisettings(thisref, thisvalue) {
         set_setting("url_shorten_settings", {
             "bitly_at": thisvalue
         });
-    } else if (thisref == "firebase") {
+        return
+    }
+    if (thisref == "firebase") {
         set_setting("url_shorten_settings", {
             "fbapikey": thisvalue
         });
-    } else if (thisref == "coinmarketcap") {
+        return
+    }
+    if (thisref == "coinmarketcap") {
         set_setting("cmcapisettings", {
             "cmcapikey": thisvalue
         });
-    } else if (thisref == "fixer") {
+        return
+    }
+    if (thisref == "fixer") {
         set_setting("fiatapisettings", {
             "fxapikey": thisvalue
         });

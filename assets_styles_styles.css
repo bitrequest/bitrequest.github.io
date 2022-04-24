@@ -1139,10 +1139,6 @@ html.dragmode .currentpage .applist li.dragging {
 	padding: 0 0 0 0.3em;
 }
 
-.requestlist .atext .rq_subject .icon-qrcode {
-	//display:none;
-}
-
 .requestlist .icon-checkmark {
 	color: #419641;
 	padding: 0 0 0 0.28em;
@@ -1292,7 +1288,7 @@ html.dragmode .currentpage .applist li.dragging {
 }
 
 .requestlist li.requestincoming[data-pending="incoming"] .req_actions .icon-qrcode,
-.requestlist li.requestoutgoing .req_actions .icon-qrcode,
+.requestlist li.lightning.requestoutgoing .req_actions .icon-qrcode,
 .requestlist li.rqli[data-status="paid"] .req_actions .icon-qrcode,
 .requestlist li.rqli.expired .req_actions .icon-qrcode {
 	display: none;

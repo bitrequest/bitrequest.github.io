@@ -248,7 +248,7 @@ function node_option_li(value, selected, fn, proxy, pw) {
                     popnotify("error", message);
                 }
             }
-            return;
+            return
         }
         var mdat = e.mdat,
             connected = mdat.connected;
@@ -666,7 +666,7 @@ function proxy_switch() {
             this_switch.removeClass("false").addClass("true");
         }
         if (lpd.hasClass("haslnurls")) {
-            return;
+            return
         }
         if (lpd.is(":visible")) {} else {
             lpd.slideDown(200);
@@ -701,7 +701,7 @@ function lnd_proxy_switch() {
             current_node = fetch_node(nodelist, this_id);
         if (!current_node) {
             popnotify("error", "Node not found");
-            return;
+            return
         }
         var lnd_proxy_list = ln_dat.proxies,
             this_pid = this_li.data("pid"),
@@ -713,7 +713,7 @@ function lnd_proxy_switch() {
             p_text = "";
         if (!set_proxy_val) {
             popnotify("error", "Proxy not found");
-            return;
+            return
         }
         var filtered_nodelist = fetch_other_nodes(nodelist, this_id);
         if (this_switch.hasClass("true")) {
@@ -876,7 +876,7 @@ function trigger_ln() {
             is_default = ($.inArray(fixed_url, proxy_list) === -1) ? false : true;
         if (is_default) {
             popnotify("error", fixed_url + " is a default proxy");
-            return;
+            return
         }
         var proxy_id = sha_sub(fixed_url, 6),
             proxie_exists = fetch_proxy(lnd_proxy_list, proxy_id);
@@ -907,7 +907,7 @@ function trigger_ln() {
         if (!imp) {
             popnotify("error", "Select implementation");
             lnd_select.focus();
-            return;
+            return
         }
         var proxy_switch = $("#lnurl_s .switchpanel"),
             use_lnurl = (proxy_switch.hasClass("true")) ? true : false;
@@ -939,7 +939,7 @@ function trigger_ln() {
                 return
             }
             test_create_invoice(imp, cp_dat, lnd_host_val, lnd_key_val);
-            return;
+            return
         }
         lndcd.slideDown(200);
         proxy_switch.removeClass("true").addClass("false");
@@ -1014,7 +1014,7 @@ function test_lnd_proxy(value, pid, pw) { // make test api call
                     $(this).focus();
                 })
             }
-            return;
+            return
         }
         if (result.add) {
             var lnli = lndli(),
@@ -1119,10 +1119,10 @@ function test_create_invoice(imp, proxydat, host, key) {
                     return
                 }
                 popnotify("error", default_error);
-                return;
+                return
             }
             popnotify("error", default_error);
-            return;
+            return
         }).fail(function(jqXHR, textStatus, errorThrown) {
             closeloader();
             popnotify("error", default_error);
@@ -1165,7 +1165,7 @@ function test_create_invoice(imp, proxydat, host, key) {
                     return
                 }
                 popnotify("error", default_error);
-                return;
+                return
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
             closeloader();
@@ -1211,7 +1211,7 @@ function test_create_invoice(imp, proxydat, host, key) {
                     return
                 }
                 popnotify("error", default_error);
-                return;
+                return
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
             closeloader();
@@ -1256,7 +1256,7 @@ function test_create_invoice(imp, proxydat, host, key) {
                     return
                 }
                 popnotify("error", default_error);
-                return;
+                return
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
             closeloader();
@@ -1300,7 +1300,7 @@ function test_create_invoice(imp, proxydat, host, key) {
                     return
                 }
                 popnotify("error", default_error);
-                return;
+                return
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
             closeloader();
@@ -1496,7 +1496,7 @@ function p_promt(pid) {
         if (error) {
             var message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
             popnotify("error", message);
-            return;
+            return
         }
         if (result == "pong") {
             var other_proxies = fetch_other_proxies(proxylist, pid),

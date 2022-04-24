@@ -872,7 +872,7 @@ function seed_callback() {
         seed_object.pob = seed_string;
         var savedat = JSON.stringify({
             "id": phraseid,
-            "dat": null,
+            "dat": null
         });
         localStorage.setItem("bitrequest_bpdat", savedat);
         localStorage.setItem("bitrequest_tp", $.now());
@@ -1009,7 +1009,7 @@ function key_cc() {
             seed = toseed(phrase),
             rootkey = get_rootkey(seed),
             key = rootkey.slice(0, 64),
-            cc = rootkey.slice(64)
+            cc = rootkey.slice(64);
         return {
             "key": key,
             "cc": cc,
@@ -1263,15 +1263,15 @@ function newseed(numWords) {
 
 function to_mnemonic(byteArray) {
     if (byteArray.length % 4 > 0) {
-        throw 'Data length in bits should be divisible by 32, but it is not (' + byteArray.length + ' bytes = ' + byteArray.length * 8 + ' bits).'
+        throw "Data length in bits should be divisible by 32, but it is not (" + byteArray.length + " bytes = " + byteArray.length * 8 + " bits)."
     }
-    var data = byteArrayToWordArray(byteArray);
-    h = hmacsha(data, "sha256"),
+    var data = byteArrayToWordArray(byteArray),
+    	h = hmacsha(data, "sha256"),
         a = byteArrayToBinaryString(byteArray),
         c = zfill(hexStringToBinaryString(h), 256),
         d = c.substring(0, byteArray.length * 8 / 32),
-        b = a + d;
-    result = [],
+        b = a + d,
+		result = [],
         blen = b.length / 11;
     for (var i = 0; i < blen; i++) {
         var idx = parseInt(b.substring(i * 11, (i + 1) * 11), 2);
@@ -1283,7 +1283,7 @@ function to_mnemonic(byteArray) {
 function zfill(source, length) {
     var source = source.toString();
     while (source.length < length) {
-        source = '0' + source;
+        source = "0" + source;
     }
     return source;
 }
@@ -1348,8 +1348,8 @@ function derive_x(dx_dat, from_x_priv) {
                 purpose = level;
             }
             if (i === levels) {
-                kd.purpose = purpose;
-                kd.depth = i,
+                kd.purpose = purpose,
+                	kd.depth = i,
                     kd.childnumber = childnumber,
                     kd.xpub = xpub;
                 keydat = kd;
@@ -1532,7 +1532,7 @@ function xpub_prefix(currency) {
         dx_dat = {
             "dpath": "m/0",
             "key": test_rootkey.slice(0, 64),
-            "cc": test_rootkey.slice(64),
+            "cc": test_rootkey.slice(64)
         },
         x_keys_dat = derive_x(dx_dat),
         x_keys = ext_keys(x_keys_dat, currency);
@@ -1561,7 +1561,7 @@ function phrase_info_pu(coin) {
             "key": key,
             "cc": cc,
             "seed": seed,
-            "xpub": false,
+            "xpub": false
         },
         singleclass = (coin) ? "single" : "",
         rootclass = (coin) ? "pd_" + coin : "pd_bitcoin",

@@ -55,9 +55,7 @@ if ($apikey && !$lnget) {
 if (isset($pdat["add"])) {
 	$result = api(null, json_encode($pdat), null, 0, "tx", null, null);
 	echo json_encode(
-		[
-			"ping" => $result
-		]
+		["ping" => $result]
 	);
 	return;
 }
@@ -468,8 +466,7 @@ if ($imp == "lnd" || $imp == "eclair" || $imp == "c-lightning" || $imp == "lnbit
 	return;
 }
 
-function create_invoice($imp, $pid, $host, $key, $amount, $memo, $type, $pingtest, $src, $desc_hash, $expiry)
-{
+function create_invoice($imp, $pid, $host, $key, $amount, $memo, $type, $pingtest, $src, $desc_hash, $expiry) {
 	if ($imp == "lnd") {
 		$rpcurl = $host . "/v1/invoices";
 		$pl = [];
@@ -581,8 +578,7 @@ function create_invoice($imp, $pid, $host, $key, $amount, $memo, $type, $pingtes
 	return r_err("unable to create invoice", null);
 }
 
-function invoice_uniform($imp, $inv, $type)
-{
+function invoice_uniform($imp, $inv, $type) {
 	$proxy_host = $_SERVER["HTTP_HOST"];
 	if ($inv) {
 		$dat = json_decode($inv, true);
@@ -626,8 +622,7 @@ function invoice_uniform($imp, $inv, $type)
 	return false;
 }
 
-function list_invoices($imp, $host, $key, $type, $pingtest)
-{
+function list_invoices($imp, $host, $key, $type, $pingtest) {
 	if ($imp == "lnd") {
 		$rpcurl = $host . "/v1/invoices";
 		$headers = [
@@ -724,8 +719,7 @@ function list_invoices($imp, $host, $key, $type, $pingtest)
 	}
 }
 
-function invoice_lookup($imp, $pid, $host, $key, $hash, $type, $expiry, $status)
-{
+function invoice_lookup($imp, $pid, $host, $key, $hash, $type, $expiry, $status) {
 	if ($imp == "lnd") {
 		$lnd_hash = (substr($hash, -1)) == "=" ? lnd_b64_dec($hash) : $hash;
 		$rpcurl = $host . "/v1/invoice/" . $lnd_hash;
@@ -803,8 +797,7 @@ function invoice_lookup($imp, $pid, $host, $key, $hash, $type, $expiry, $status)
 	return r_err("unable to fetch invoice", null);
 }
 
-function invoice_status($imp, $dat, $pid, $type, $expiry)
-{
+function invoice_status($imp, $dat, $pid, $type, $expiry) {
 	$proxy_host = $_SERVER["HTTP_HOST"];
 	if ($dat) {
 		if ($imp == "lnd") {
@@ -942,23 +935,19 @@ function invoice_status($imp, $dat, $pid, $type, $expiry)
 	return false;
 }
 
-function d_hash($arr)
-{
+function d_hash($arr) {
 	return hash("sha256", utf8_encode(json_encode($arr)));
 }
 
-function lnd_b64_enc($val)
-{
+function lnd_b64_enc($val) {
 	return base64_encode(hex2bin($val));
 }
 
-function lnd_b64_dec($val)
-{
+function lnd_b64_dec($val) {
 	return bin2hex(base64_decode($val));
 }
 
-function r_obj($dat)
-{
+function r_obj($dat) {
 	return json_encode(
 		[
 			"ping" => $dat
@@ -966,8 +955,7 @@ function r_obj($dat)
 	);
 }
 
-function r_objl2($dat)
-{
+function r_objl2($dat) {
 	return json_encode(
 		[
 			"ping" => [
@@ -980,8 +968,7 @@ function r_objl2($dat)
 	);
 }
 
-function r_err($dat, $code)
-{
+function r_err($dat, $code) {
 	return [
 		"error" => [
 			"message" => $dat,

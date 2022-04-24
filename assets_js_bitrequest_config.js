@@ -25,6 +25,8 @@ var apptitle = "Bitrequest",
     socket_attempt = {},
     api_attempt = {},
     api_attempts = {},
+    statuspush = [],
+    tx_list = [],
     rpc_attempts = {},
     changes = {};
 

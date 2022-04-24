@@ -78,6 +78,7 @@ function authenticate() {
                     if (GD_auth() === true) {
                         updateappdata();
                         body.removeClass("haschanges");
+                        html.addClass("gdauth");
                     }
                 }, 500);
             },
@@ -158,7 +159,7 @@ function createfile() {
     };
     var form = new FormData();
     form.append("metadata", new Blob([JSON.stringify(metadata)], {
-        type: "application/json"
+        "type": "application/json"
     }));
     form.append("file", file);
     var xhr = new XMLHttpRequest();
@@ -166,8 +167,8 @@ function createfile() {
     xhr.setRequestHeader("Authorization", "Bearer " + user.getAuthResponse().access_token);
     xhr.responseType = "json";
     xhr.onload = () => {
-        var response_id = xhr.response.id;
-        var response_id_string = response_id.toString();
+        var response_id = xhr.response.id,
+        	response_id_string = response_id.toString();
         localStorage.setItem("bitrequest_backupfile_id", response_id_string);
     };
     xhr.send(form);
