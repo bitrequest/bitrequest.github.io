@@ -97,9 +97,7 @@ function authenticate() {
 function loadClient() {
     return gapi.client.load("https://content.googleapis.com/discovery/v1/apis/drive/v3/rest").then(function() {
             console.log("GAPI client loaded for API");
-            setTimeout(function() {
-                html.addClass("gdauth");
-            }, 500);
+            html.addClass("gdauth");
         },
         function(err) {
             console.error("Error loading GAPI client for API", err);
