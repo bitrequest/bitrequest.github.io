@@ -324,7 +324,7 @@ html.hidemain header {
 }
 
 html.gdauth #alert {
-	display: none;
+	display: none!important;
 }
 
 html:not(.gdauth) body.haschanges #alert {
