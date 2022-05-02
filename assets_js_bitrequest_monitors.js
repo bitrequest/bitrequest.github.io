@@ -1780,7 +1780,6 @@ function compareamounts(rd) {
                 status_cc = "insufficient";
                 pending_cc = "scanning";
             }
-            var lightning = rd.lightning;
             updaterequest({
                 "requestid": thisrequestid,
                 "status": status_cc,
@@ -1789,7 +1788,7 @@ function compareamounts(rd) {
                 "txhash": txhash_cc,
                 "confirmations": confirmations_cc,
                 "pending": pending_cc,
-                "lightning": lightning
+                "lightning": rd.lightning
             }, false);
             api_callback(thisrequestid);
             return
@@ -1938,13 +1937,14 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 receivedusd = 0,
                 receivedcc = 0,
                 txhash,
+                lnd = rd.lightning,
                 paymenttimestamp,
                 conf = 0,
                 status = "pending",
                 confirmed = false,
                 historicusdvalue = (thisamount / lcrate) * usdrate,
                 tx_counter = 0,
-                margin = (historicusdvalue < 2) ? 0.40 : 0.95; // be flexible with small amounts
+                margin = (lnd && historicusdvalue < 2) ? 0.40 : 0.95; // be flexible with small amounts
             $(requestli.find(".transactionlist li").get().reverse()).each(function(i) {
                 tx_counter++;
                 var thisnode = $(this),
@@ -2003,7 +2003,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 "txhash": txhash,
                 "confirmations": conf,
                 "pending": pending,
-                "lightning": rd.lightning
+                "lightning": lnd
             }, false);
             var cacheval = latestinput + latestconf;
             if (pending == "no") {} else {
@@ -2061,8 +2061,6 @@ function compare_historic_prices(api, values, price_array, thistimestamp) {
             get_historic_object_coinpaprika(value),
             historic_timestamp = historic_object.timestamp,
             historic_price = historic_object.price;
-        //var transactiontime_formatted = fulldateformat(new Date(historic_timestamp), "en-us");
-        //var thistimestamp_formatted = fulldateformat(new Date(thistimestamp), "en-us");
         if (historic_timestamp > thistimestamp) {
             values["timestamp"] = historic_timestamp,
                 values["price"] = historic_price,

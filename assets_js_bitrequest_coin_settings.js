@@ -336,7 +336,7 @@ function get_rpc_placeholder(currency) {
         "apiseth3": "eg: https://mainnet.infura.io/v3/YOUR-PROJECT-ID",
         "websocketseth1": "eg: ws://localhost:8545",
         "websocketseth2": "eg: ws://some.local-or-remote.node:8546",
-        "websocketseth3": "eg: wss://mainnet.infura.io/ws/v3/YOUR-PROJECT-ID",
+        "websocketseth3": "eg: wss://mainnet.infura.io/ws/v3/YOUR-PROJECT-ID"
     }
 }
 
@@ -399,7 +399,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
             provider_name = value.name,
             ping_event = "heartbeat";
         if (provider_name == "blockcypher websocket") {
-            provider = provider + "btc/main";
+            var provider = value.url + "btc/main";
         }
         if (thiscurrency == "bitcoin") {
             var ping_event = JSON.stringify({
@@ -420,8 +420,8 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                 "id": 1,
                 "method": "eth_subscribe",
                 "params": ["logs", {
-                    address: "0x56ba2Ee7890461f463F7be02aAC3099f6d5811A8",
-                    topics: []
+                    "address": "0x56ba2Ee7890461f463F7be02aAC3099f6d5811A8",
+                    "topics": []
                 }]
             });
         }
@@ -436,7 +436,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
             //console.log(e);
             console.log("socket test success");
             web_socket.close();
-            web_socket = undefined;
+            web_socket = null;
         };
         web_socket.onclose = function(e) {
             console.log("End socket test");
@@ -446,7 +446,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
             rpc_option_li(optionlist, false, key, value, selected, true);
             console.log("socket test failed");
             web_socket.close();
-            web_socket = undefined;
+            web_socket = null;
         };
     }
 }
@@ -470,14 +470,13 @@ function test_rpcnode() {
         if (thisoption.hasClass("offline")) {
             playsound(funk);
             topnotify("Unable to connect");
-        } else {
-            var settingsbox = $("#settingsbox"),
-                rpc_main_input = settingsbox.find("#rpc_main_input");
-            settingsbox.find("#rpc_main_input").removeData().data(thisdata);
-            settingsbox.find(".options .optionwrap").removeClass("rpc_selected");
-            thisoption.addClass("rpc_selected");
+            return
         }
-        return false;
+        var settingsbox = $("#settingsbox"),
+            rpc_main_input = settingsbox.find("#rpc_main_input");
+        settingsbox.find("#rpc_main_input").removeData().data(thisdata);
+        settingsbox.find(".options .optionwrap").removeClass("rpc_selected");
+        thisoption.addClass("rpc_selected");
     })
 }
 
@@ -489,32 +488,31 @@ function submit_rpcnode() {
             rpc_main_input = settingsbox.find("#rpc_main_input"),
             setvalue = rpc_main_input.data(),
             rpc_input_box = settingsbox.find("#rpc_input_box");
-        if (rpc_input_box.length > 0) {
+        if (rpc_input_box.length) {
             var rpc_url_input_val = rpc_input_box.find("#rpc_url_input").val();
             if (rpc_url_input_val.length > 5) {
                 var optionsbox = settingsbox.find(".options"),
                     duplicates = optionsbox.find("span[data-value='" + rpc_url_input_val + "']"),
-                    indexed = (duplicates.length > 0);
-                if (indexed === true) {
+                    indexed = (duplicates.length) ? true : false;
+                if (indexed) {
                     popnotify("error", "Node already added");
-                    return false;
-                } else {
-                    var rpc_username_input_val = rpc_input_box.find("#rpc_username_input").val(),
-                        rpc_password_input_val = rpc_input_box.find("#rpc_password_input").val(),
-                        rpc_data = {
-                            "url": rpc_url_input_val,
-                            "username": rpc_username_input_val,
-                            "password": rpc_password_input_val,
-                            "default": false
-                        };
-                    test_rpc(rpc_input_box, rpc_data, thiscurrency);
+                    return
                 }
-            } else {
-                pass_rpc_submit(thiscurrency, setvalue, false)
+                var rpc_username_input_val = rpc_input_box.find("#rpc_username_input").val(),
+                    rpc_password_input_val = rpc_input_box.find("#rpc_password_input").val(),
+                    rpc_data = {
+                        "url": rpc_url_input_val,
+                        "username": rpc_username_input_val,
+                        "password": rpc_password_input_val,
+                        "default": false
+                    };
+                test_rpc(rpc_input_box, rpc_data, thiscurrency);
+                return
             }
-        } else {
-            pass_rpc_submit(thiscurrency, setvalue, false)
+            pass_rpc_submit(thiscurrency, setvalue, false);
+            return
         }
+        pass_rpc_submit(thiscurrency, setvalue, false)
     })
 }
 
@@ -551,7 +549,6 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                 "search": "test",
                 "cachetime": 25,
                 "cachefolder": "1h",
-                //"custom": "btc_rpc_test",
                 "api_url": rpcurl,
                 "proxy": false,
                 "params": {
@@ -591,23 +588,23 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
             ping_event;
         if (currency == "bitcoin") {
             var ping_event = JSON.stringify({
-                op: "ping"
+                "op": "ping"
             });
         } else if (currency == "nano") {
             var ping_event = JSON.stringify({
-                action: "subscribe",
-                topic: "confirmation",
-                ack: true,
-                id: 1
+                "action": "subscribe",
+                "topic": "confirmation",
+                "ack": true,
+                "id": 1
             });
         } else if (currency == "ethereum" || is_erc20t === true) {
             var ping_event = JSON.stringify({
-                jsonrpc: "2.0",
-                id: 1,
-                method: "eth_subscribe",
-                params: ["logs", {
-                    address: "",
-                    topics: []
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "eth_subscribe",
+                "params": ["logs", {
+                    "address": "",
+                    "topics": []
                 }]
             });
         }
@@ -621,7 +618,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
             pass_rpc_submit(currency, rpc_data, true);
             console.log("socket test success");
             web_socket.close();
-            web_socket = undefined;
+            web_socket = null;
         };
         web_socket.onclose = function(e) {
             console.log("End socket test");
@@ -632,7 +629,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
             popnotify("error", "Unable to connect");
             console.log("socket test failed");
             web_socket.close();
-            web_socket = undefined;
+            web_socket = null;
         };
     }
 }
@@ -664,7 +661,7 @@ function remove_rpcnode() {
             thiscurrency = settingsbox.find("#rpc_input_box").attr("data-currency"),
             rpc_setting_li = $("#" + thiscurrency + "_settings .cc_settinglist li[data-id='" + s_id + "']"),
             options = rpc_setting_li.data("options");
-        if (options.length > 0) {
+        if (options.length) {
             var thisoption = thistrigger.closest(".optionwrap"),
                 thisdata = thisoption.data(),
                 thisurl = thisdata.url,
@@ -675,23 +672,23 @@ function remove_rpcnode() {
             if (default_node === true && is_duplicate === false) {
                 playsound(funk);
                 topnotify("Cannot delete default node");
-            } else {
-                var thisname = (thisdata.name) ? thisdata.name : thisurl,
-                    result = confirm("Are you sure you want to delete '" + thisname + "'");
-                if (result === true) {
-                    var new_array = $.grep(options, function(option) {
-                        return option.url != thisurl;
-                    });
-                    thisoption.slideUp(500, function() {
-                        $(this).remove();
-                    });
-                    rpc_setting_li.data("options", new_array);
-                    notify("RPC node removed");
-                    save_cc_settings(thiscurrency, true);
-                }
+                return
+            }
+            var thisname = (thisdata.name) ? thisdata.name : thisurl,
+                result = confirm("Are you sure you want to delete '" + thisname + "'");
+            if (result === true) {
+                var new_array = $.grep(options, function(option) {
+                    return option.url != thisurl;
+                });
+                thisoption.slideUp(500, function() {
+                    $(this).remove();
+                });
+                rpc_setting_li.data("options", new_array);
+                notify("RPC node removed");
+                save_cc_settings(thiscurrency, true);
             }
         }
-        return false;
+        return
     })
 }
 
@@ -734,12 +731,10 @@ function edit_xpub_trigger() {
 						</div>\
 			    	</div>");
                 popdialog(content, "alert", "triggersubmit", null, true);
-            } else {
-                playsound(funk);
+                return
             }
-        } else {
-            playsound(funk);
         }
+        playsound(funk)
     })
 }
 
@@ -999,7 +994,7 @@ function xpub_derivelists(currency, xpub) {
                 "key": key,
                 "cc": chaincode,
                 "xpub": true,
-                "versionbytes": versionbytes,
+                "versionbytes": versionbytes
             },
             derivelist = "",
             derive_array = keypair_array(false, new Array(5), startindex, root_path, bip32dat, key, chaincode, currency, versionbytes);
@@ -1069,7 +1064,7 @@ function xpub_info_pu(currency, xpub) {
             "key": key,
             "cc": chaincode,
             "xpub": true,
-            "versionbytes": versionbytes,
+            "versionbytes": versionbytes
         },
         derivelist = "",
         derive_array = keypair_array(false, new Array(5), startindex, root_path, bip32dat, key, chaincode, currency, versionbytes);

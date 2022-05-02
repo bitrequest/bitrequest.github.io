@@ -119,6 +119,9 @@ $(document).ready(function() {
     selectbox();
     pickselect();
     canceldialogtrigger();
+    console.log({
+        "config": br_config
+    });
 })
 
 function checkphp() { //check for php support by fetching fiat currencies from local api php file
@@ -2476,7 +2479,7 @@ function validateaddress(ad, vk) {
                             if (index === 1) {
                                 if (iserc20 === true) {
                                     buildpage(ad, true);
-                                    append_coinsetting(currency, erc20_dat.settings, false);
+                                    append_coinsetting(currency, br_config.erc20_dat.settings, false);
                                 }
                                 if (body.hasClass("showstartpage")) {
                                     var acountname = $("#eninput").val();
@@ -3291,7 +3294,7 @@ function blockexplorer_url(currency, tx, erc20) {
     } else {
         var blockexplorer = get_blockexplorer(currency);
         if (blockexplorer) {
-            var blockdata = $.grep(blockexplorers, function(filter) { //filter pending requests	
+            var blockdata = $.grep(br_config.blockexplorers, function(filter) { //filter pending requests	
                     return filter.name == blockexplorer;
                 })[0],
                 be_prefix = blockdata.prefix,
@@ -3882,7 +3885,7 @@ function vibrate() {
 }
 
 function get_api_data(api_id) {
-    var apipath = apis.filter(function(val) {
+    var apipath = br_config.apis.filter(function(val) {
         return val.name == api_id;
     });
     return apipath[0];
@@ -3986,7 +3989,7 @@ function getcoindata(currency) {
     } else { // if not it's probably erc20 token
         var currencyref = $("#usedcurrencies li[data-currency='" + currency + "']"); // check if erc20 token is added
         if (currencyref.length > 0) {
-            return $.extend(currencyref.data(), erc20_dat.data);
+            return $.extend(currencyref.data(), br_config.erc20_dat.data);
         } else { // else lookup erc20 data
             var tokenobject = JSON.parse(localStorage.getItem("bitrequest_erc20tokens"));
             if (tokenobject) {
@@ -4000,7 +4003,7 @@ function getcoindata(currency) {
                         "cmcid": erc20data.cmcid.toString(),
                         "contract": erc20data.contract
                     }
-                    return $.extend(fetched_data, erc20_dat.data);
+                    return $.extend(fetched_data, br_config.erc20_dat.data);
                 } else {
                     return false;
                 }
@@ -4021,7 +4024,7 @@ function getcoinsettings(currency) {
     if (coindata) {
         return coindata.settings;
     } else { // return erc20 settings
-        return erc20_dat.settings;
+        return br_config.erc20_dat.settings;
     }
 }
 
@@ -4053,13 +4056,13 @@ function hasbip32(currency) {
 }
 
 function getcoinconfig(currency) {
-    return $.grep(bitrequest_coin_data, function(filter) {
+    return $.grep(br_config.bitrequest_coin_data, function(filter) {
         return filter.currency == currency;
     })[0];
 }
 
 function try_next_api(apilistitem, current_apiname) {
-    var apilist = apilists[apilistitem],
+    var apilist = br_config.apilists[apilistitem],
         next_scan = apilist[$.inArray(current_apiname, apilist) + 1],
         next_api = (next_scan) ? next_scan : apilist[0];
     if (api_attempt[apilistitem][next_api] === true) {
@@ -4185,7 +4188,7 @@ function render_currencysettings(thiscurrency) {
 // build settings
 function buildsettings() {
     var appsettingslist = $("#appsettings");
-    $.each(app_settings, function(i, value) {
+    $.each(br_config.app_settings, function(i, value) {
         var setting_id = value.id,
             setting_li = (setting_id == "heading") ? $("<li class='set_heading'>\
 		  	<h2>" + value.heading + "</h2>\
@@ -4263,7 +4266,7 @@ function fetchrequests(cachename, archive) {
 
 //initiate page when there's no cache
 function initiate() {
-    $.each(bitrequest_coin_data, function(dat, val) {
+    $.each(br_config.bitrequest_coin_data, function(dat, val) {
         if (val.active === true) {
             var settings = val.settings,
                 has_settings = (settings) ? true : false,
@@ -4342,7 +4345,7 @@ function buildpage(cd, init) {
         if (erc20 === true) {
             var coin_settings_cache = localStorage.getItem("bitrequest_" + currency + "_settings");
             if (coin_settings_cache === null) {
-                localStorage.setItem("bitrequest_" + currency + "_settings", JSON.stringify(erc20_dat.settings));
+                localStorage.setItem("bitrequest_" + currency + "_settings", JSON.stringify(br_config.erc20_dat.settings));
             }
         }
     } else {

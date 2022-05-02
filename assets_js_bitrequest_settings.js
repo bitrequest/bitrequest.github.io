@@ -1562,8 +1562,8 @@ function complile_csv() {
             lnhash = (txhash && txhash.slice(0, 9) == "lightning") ? true : false,
             lightning = val.lightning,
             hybrid = (lightning && lightning.hybrid === true),
-            lnd_string = (lnhash) ? " (lightning)" : "";
-        rqname = (val.requestname) ? val.requestname : "",
+            lnd_string = (lnhash) ? " (lightning)" : "",
+			rqname = (val.requestname) ? val.requestname : "",
             description = (val.requesttitle) ? val.requesttitle : "",
             type = val.requesttype,
             timestamp = val.timestamp,
@@ -2002,7 +2002,7 @@ function editccapi() {
             cmcapikey = cc_apisettings.cmcapikey,
             cmcapikeyval = (cc_apisettings.cmcapikey) ? cc_apisettings.cmcapikey : "",
             cmcapikeyclass = (ccapisrc == "coinmarketcap") ? "" : "hide",
-            options = "<span data-pe='none'>" + apilists.crypto_price_apis.join("</span><span data-pe='none'>") + "</span>",
+            options = "<span data-pe='none'>" + br_config.apilists.crypto_price_apis.join("</span><span data-pe='none'>") + "</span>",
             ddat = [{
                 "div": {
                     "class": "popform",
@@ -2127,7 +2127,7 @@ function editfiatxrapi() {
         var thisdata = $(this).data(),
             fiatxrapisrc = thisdata.selected,
             fiatxrapikey = (thisdata.fxapikey) ? thisdata.fxapikey : "",
-            options = "<span data-pe='none'>" + apilists.fiat_price_apis.join("</span><span data-pe='none'>") + "</span>",
+            options = "<span data-pe='none'>" + br_config.apilists.fiat_price_apis.join("</span><span data-pe='none'>") + "</span>",
             fiatxrapikeyclass = (fiatxrapisrc == "fixer") ? "" : "hide",
             ddat = [{
                 "div": {
@@ -2506,8 +2506,8 @@ function apikeys() {
             blockchairkey = (ak_data.blockchair) ? ak_data.blockchair : "",
             infurakey = (ak_data.infura) ? ak_data.infura : "",
             amberdatakey = (ak_data.amberdata) ? ak_data.amberdata : "",
-            currencylayerkey = (ak_data.currencylayer) ? ak_data.currencylayer : "";
-        content = "\
+            currencylayerkey = (ak_data.currencylayer) ? ak_data.currencylayer : "",
+			content = "\
 			<div class='formbox' id='apikeyformbox'>\
 				<h2 class='icon-key'>API keys</h2>\
 				<div class='popnotify'></div>\
@@ -2903,12 +2903,12 @@ function submit_contactform() {
             emailinput = cfb.find(".cf_emailinput"),
             emailinput_val = emailinput.val(),
             cf_data = {
-                name: nameinput_val,
-                address: addressinput_val,
-                zipcode: zipcodeinput_val,
-                city: cityinput_val,
-                country: countryinput_val,
-                email: emailinput_val
+                "name": nameinput_val,
+                "address": addressinput_val,
+                "zipcode": zipcodeinput_val,
+                "city": cityinput_val,
+                "country": countryinput_val,
+                "email": emailinput_val
             },
             email_regex = /^\w(?:\.?[\w%+-]+)*@\w(?:[\w-]*\.)+?[a-z]{2,}$/,
             email_check = email_regex.test(emailinput_val);
@@ -3144,7 +3144,7 @@ function adjust_object(object, seedobj) {
             key = rootkey.slice(0, 64),
             cc = rootkey.slice(64);
     }
-    $.each(bitrequest_coin_data, function(i, coinconfig) {
+    $.each(br_config.bitrequest_coin_data, function(i, coinconfig) {
         var currency = coinconfig.currency,
             default_coinsettings = coinconfig.settings,
             bip32dat = default_coinsettings.Xpub,
@@ -3348,7 +3348,7 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
         localStorage.setItem("bitrequest_teamid", JSON.stringify(teamid_arr));
     }
     rendersettings(["restore", "backup"]); // exclude restore and backup settings
-    var lastrestore = "last restore: <span class='icon-folder-open'>Team invite " + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_') + "</span>";
+    var lastrestore = "last restore: <span class='icon-folder-open'>Team invite " + new Date($.now()).toLocaleString(language).replace(/\s+/g, "_") + "</span>";
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": bu_filename,
