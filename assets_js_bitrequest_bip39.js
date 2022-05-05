@@ -815,7 +815,7 @@ function verify_words() {
 }
 
 function move_seed_cb() {
-    $.each(bitrequest_coin_data, function(i, coinconfig) {
+    $.each(br_config.bitrequest_coin_data, function(i, coinconfig) {
         var currency = coinconfig.currency,
             bip32 = coinconfig.settings.Xpub;
         if (bip32.active === true) {
@@ -913,7 +913,7 @@ function seed_callback() {
 }
 
 function deactivate_xpubs() {
-    $.each(bitrequest_coin_data, function(i, coinconfig) {
+    $.each(br_config.bitrequest_coin_data, function(i, coinconfig) {
         var bip32 = coinconfig.settings.Xpub;
         if (bip32.xpub === true) {
             var currency = coinconfig.currency,
@@ -1049,7 +1049,7 @@ function derive_all(phrase, seedid, extra) {
         rootkey = get_rootkey(seed),
         master_key = rootkey.slice(0, 64),
         master_chaincode = rootkey.slice(64);
-    $.each(bitrequest_coin_data, function(i, coinconfig) {
+    $.each(br_config.bitrequest_coin_data, function(i, coinconfig) {
         var currency = coinconfig.currency,
             coindat = coinconfig.data,
             bip32 = coinconfig.settings.Xpub;
@@ -1594,7 +1594,7 @@ function phrase_info_pu(coin) {
             "</ul>\
 	</div>").data(root_dat);
     popdialog(content, "alert", "canceldialog");
-    $.each(bitrequest_coin_data, function(i, coinconfig) {
+    $.each(br_config.bitrequest_coin_data, function(i, coinconfig) {
         var currency = coinconfig.currency,
             ccsymbol = coinconfig.data.ccsymbol,
             walletdat = coinconfig.wallets,
@@ -1689,7 +1689,7 @@ function compatible_wallets(coin) {
 		</ul>\
 	</div>");
     popdialog(content, "alert", "canceldialog");
-    $.each(bitrequest_coin_data, function(i, coinconfig) {
+    $.each(br_config.bitrequest_coin_data, function(i, coinconfig) {
         var currency = coinconfig.currency,
             ccsymbol = coinconfig.data.ccsymbol,
             walletdat = coinconfig.wallets,
