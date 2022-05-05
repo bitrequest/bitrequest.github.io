@@ -368,7 +368,7 @@ function locktime() {
                                     "value": locktime,
                                     "type": "hidden"
                                 }
-                            },
+                            }
                         },
                         {
                             "input": {
@@ -782,7 +782,7 @@ function complilebackup() {
 }
 
 function complilefilename() {
-    return "bitrequest_backup_" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_') + ".json";
+    return "bitrequest_backup_" + new Date($.now()).toLocaleString(language).replace(/\s+/g, "_").replace(/\:/g, "_") + ".json";
 }
 
 function submitbackup() {
@@ -1148,7 +1148,7 @@ function submit_pin_dialog() {
                         var result = confirm("Restore without seed?");
                         if (result === true) {
                             restore_callback(pass_dat, false);
-                        } else {}
+                        }
                         resd.pcnt = 0;
                         canceldialog();
                     } else {
@@ -1563,7 +1563,7 @@ function complile_csv() {
             lightning = val.lightning,
             hybrid = (lightning && lightning.hybrid === true),
             lnd_string = (lnhash) ? " (lightning)" : "",
-			rqname = (val.requestname) ? val.requestname : "",
+            rqname = (val.requestname) ? val.requestname : "",
             description = (val.requesttitle) ? val.requesttitle : "",
             type = val.requesttype,
             timestamp = val.timestamp,
@@ -1690,7 +1690,7 @@ function check_csvexport() {
                         base64 = br_result.base64,
                         account = atob(br_result.account),
                         sharedtitle = "CSV Export " + account + " (" + filetime_format + ")",
-                        bu_date = filetime_format.replace(/\s+/g, '_').replace(/\:/g, '_'),
+                        bu_date = filetime_format.replace(/\s+/g, "_").replace(/\:/g, "_"),
                         cache_time = br_cache.cache_time,
                         expires_in = (filetime + cache_time) - server_time,
                         filename = "bitrequest_csv_export_" + encodeURIComponent(account) + "_" + bu_date + ".csv",
@@ -2507,7 +2507,7 @@ function apikeys() {
             infurakey = (ak_data.infura) ? ak_data.infura : "",
             amberdatakey = (ak_data.amberdata) ? ak_data.amberdata : "",
             currencylayerkey = (ak_data.currencylayer) ? ak_data.currencylayer : "",
-			content = "\
+            content = "\
 			<div class='formbox' id='apikeyformbox'>\
 				<h2 class='icon-key'>API keys</h2>\
 				<div class='popnotify'></div>\
@@ -2915,37 +2915,37 @@ function submit_contactform() {
         if (nameinput_val.length < 4) {
             popnotify("error", "Name is a required field");
             nameinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return false;
+            return
         }
         if (addressinput_val.length < 10) {
             popnotify("error", "Address is a required field");
             addressinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return false;
+            return
         }
         if (zipcodeinput_val.length < 6) {
             popnotify("error", "Zip/postal code is a required field");
             zipcodeinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return false;
+            return
         }
         if (cityinput_val.length < 3) {
             popnotify("error", "City is a required field");
             cityinput.focus();
-            return false;
+            return
         }
         if (countryinput_val.length < 3) {
             popnotify("error", "Country is a required field");
             countryinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return false;
+            return
         }
         if (emailinput_val.length < 1) {
             popnotify("error", "Email is a required field");
             emailinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return false;
+            return
         }
         if (email_check === false) {
             popnotify("error", "Email contains invalid characters");
             emailinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return false;
+            return
         }
         set_setting("contactform", cf_data);
         canceldialog(true);
@@ -3055,7 +3055,7 @@ function team_invite_trigger() {
         if (hasbip && !bipv) {
             bipv_pass();
             notify("please verify your secret phrase first");
-            return false;
+            return
         }
         if (haspin() === true) {
             team_invite();
@@ -3321,7 +3321,7 @@ function install_teaminvite_trigger() {
             ismaster = this_bttn.attr("data-ismaster");
         if (ismaster === "true") {
             notify("Can't install invite on own device	");
-            return false;
+            return
         }
         var update = this_bttn.attr("data-update"),
             installid = this_bttn.attr("data-installid"),
