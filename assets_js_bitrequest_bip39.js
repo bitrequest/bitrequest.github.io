@@ -446,9 +446,9 @@ function restore_seed_verify() {
                     words = phrase.split(" "),
                     phraseid = get_seedid(words);
                 if (seedid == phraseid) {
-                    phrasearray = words;
-                    phraseverified = true,
-                        $("#seed_steps").addClass("checked");
+                    phrasearray = words,
+                    	phraseverified = true;
+                    $("#seed_steps").addClass("checked");
                     finish_seed();
                 } else {
                     shake($("#bip39phrase"));

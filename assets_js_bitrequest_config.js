@@ -86,7 +86,6 @@ var apptitle = "Bitrequest",
             "desktop": "https://atomicwallet.io/#download-section-anchor",
             "seed": true
         }
-
     },
     br_config = {
         "bitrequest_coin_data": [{
@@ -1245,12 +1244,6 @@ var apptitle = "Bitrequest",
                 "fileused": null,
                 "device": null
             },
-            /*{
-            	"id": "themesettings",
-                "heading": "Choose theme",
-               	"selected": "default.css",
-               	"icon": "icon-paint-format"
-            },*/
             {
                 "id": "heading",
                 "heading": "Advanced"

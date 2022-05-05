@@ -1550,13 +1550,13 @@ html.dragmode .currentpage .applist li.dragging {
 	display:none;
 }
 
-.requestlist li.rqli .transactionlist li .txli_conf.txl_cancelled {
+.requestlist li.rqli .transactionlist li .txli_conf.txl_canceled {
 	display:none;
 	color:#eeac57;
 	opacity:1;
 }
 
-.requestlist li.rqli[data-status="canceled"] .transactionlist li .txli_conf.txl_cancelled {
+.requestlist li.rqli[data-status="canceled"] .transactionlist li .txli_conf.txl_canceled {
 	display:inline-block;
 }
 

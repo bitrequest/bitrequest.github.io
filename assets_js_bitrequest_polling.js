@@ -29,20 +29,17 @@ function api_monitor_init(api_data, txhash, tx_data) {
 }
 
 function api_monitor(api_data, txhash, tx_data) {
-    var direct = (tx_data !== undefined),
-        payment = request.payment,
-        api_name = api_data.name,
-        currencysymbol = request.currencysymbol,
-        set_confirmations = request.set_confirmations;
-    if (api_name === false) {
-        console.log("No API selected");
-    } else {
-        var poll_url = (api_name == "blockcypher") ? currencysymbol + "/main/txs/" + txhash :
+    var api_name = api_data.name;
+    if (api_name) {
+        var payment = request.payment,
+            currencysymbol = request.currencysymbol,
+            set_confirmations = request.set_confirmations,
+            poll_url = (api_name == "blockcypher") ? currencysymbol + "/main/txs/" + txhash :
             (api_name == "ethplorer") ? "getTxInfo/" + txhash :
             (api_name == "blockchair") ? (request.erc20 === true) ? "ethereum/dashboards/transaction/" + txhash + "?erc_20=true" : payment + "/dashboards/transaction/" + txhash :
             (api_name == "bitcoin.com") ? currencysymbol + "/v1/tx/" + txhash :
-            (api_name == "mempool.space") ? "tx/" + txhash : "";
-        if (direct === true) {
+            (api_name == "mempool.space") ? "tx/" + txhash : null;
+        if (tx_data) {
             confirmations(tx_data, true);
             var xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
                 setconfirmations = tx_data.setconfirmations,
@@ -77,11 +74,11 @@ function api_monitor(api_data, txhash, tx_data) {
                 if (data.error) {
                     clearpinging();
                     handle_api_fails(false, data.error, api_name, payment, txhash);
-                    return false;
+                    return
                 } else {
                     var currentaddress = geturlparameters().address,
-                        legacy = (currencysymbol == "bch") ? bchutils.toLegacyAddress(currentaddress) : currentaddress;
-                    txd = (api_name == "blockcypher") ? blockcypher_poll_data(data, set_confirmations, currencysymbol, currentaddress) :
+                        legacy = (currencysymbol == "bch") ? bchutils.toLegacyAddress(currentaddress) : currentaddress,
+                        txd = (api_name == "blockcypher") ? blockcypher_poll_data(data, set_confirmations, currencysymbol, currentaddress) :
                         (api_name == "ethplorer") ? ethplorer_poll_data(data, set_confirmations, currencysymbol) :
                         (api_name == "bitcoin.com") ? bitcoincom_scan_data(data, set_confirmations, currencysymbol, legacy, currentaddress) :
                         (api_name == "mempool.space") ? mempoolspace_scan_data(data, set_confirmations, currencysymbol, currentaddress) :
@@ -100,10 +97,12 @@ function api_monitor(api_data, txhash, tx_data) {
             clearpinging();
             var error_object = (errorThrown) ? errorThrown : jqXHR;
             handle_api_fails(false, error_object, api_name, payment, txhash);
-            return false;
+            return
         }
+        console.log("source: " + api_name);
+        return
     }
-    console.log("source: " + api_name);
+    console.log("No API selected");
 }
 
 function ampl(api_name, poll_url) { // api_monitor payload
@@ -120,11 +119,10 @@ function ampl(api_name, poll_url) { // api_monitor payload
 }
 
 function rpc_monitor(rpcdata, txhash, tx_data) {
-    var direct = (tx_data !== undefined),
-        payment = request.payment,
+    var payment = request.payment,
         rpcurl = rpcdata.url;
     if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin") {
-        if (direct === true) {
+        if (tx_data) {
             confirmations(tx_data, true);
             pinging[txhash] = setInterval(function() {
                 api_proxy(rmpl(payment, rpcurl, txhash)).done(function(e) {
@@ -153,13 +151,12 @@ function rpc_monitor(rpcdata, txhash, tx_data) {
             if (data.error) {
                 clearpinging();
                 handle_rpc_monitor_fails(rpcdata, data.error, txhash);
-                return false;
-            } else {
-                if (data.result.confirmations) {
-                    var currentaddress = geturlparameters().address;
-                    var txd = bitcoin_rpc_data(data.result, request.set_confirmations, request.currencysymbol, currentaddress);
-                    confirmations(txd);
-                }
+                return
+            }
+            if (data.result.confirmations) {
+                var currentaddress = geturlparameters().address,
+                    txd = bitcoin_rpc_data(data.result, request.set_confirmations, request.currencysymbol, currentaddress);
+                confirmations(txd);
             }
         };
 
@@ -167,10 +164,10 @@ function rpc_monitor(rpcdata, txhash, tx_data) {
             clearpinging();
             var error_object = (errorThrown) ? errorThrown : jqXHR;
             handle_rpc_monitor_fails(rpcdata, error_object, txhash);
-            return false;
+            return
         }
     } else if (payment == "ethereum") {
-        if (direct === true) {
+        if (tx_data) {
             confirmations(tx_data, true);
         } else {
             ping_eth_node(rpcdata, txhash);
@@ -179,7 +176,7 @@ function rpc_monitor(rpcdata, txhash, tx_data) {
             ping_eth_node(rpcdata, txhash);
         }, 25000);
     } else if (request.erc20 === true) {
-        if (direct === true) {
+        if (tx_data) {
             confirmations(tx_data, true);
         } else {
             ping_eth_node_erc20(rpcdata, txhash);
@@ -188,7 +185,7 @@ function rpc_monitor(rpcdata, txhash, tx_data) {
             ping_eth_node_erc20(rpcdata, txhash);
         }, 25000);
     } else if (payment == "nano") {
-        if (direct === true) {
+        if (tx_data) {
             confirmations(tx_data, true);
         } else {
             // nano payment with confirmations
@@ -225,56 +222,46 @@ function ping_eth_node(rpcdata, txhash) {
         }
         web3.eth.getBlockNumber(function(err_1, data_1) {
             if (err_1) {
-                console.log(err_1);
                 clearpinging();
                 handle_rpc_monitor_fails(rpcdata, err_1, txhash);
-                return false;
-            } else {
-                if (data_1) {
-                    var current_blocknumber = data_1;
-                    web3.eth.getTransaction(txhash, function(err_2, data_2) {
-                        if (err_2) {
-                            console.log(err_2);
-                            clearpinging();
-                            handle_rpc_monitor_fails(rpcdata, err_2, txhash);
-                            return false;
-                        } else {
-                            if (data_2) {
-                                var this_blocknumber = data_2.blockNumber;
-                                web3.eth.getBlock(this_blocknumber, function(err_3, data_3) {
-                                    if (err_3) {
-                                        console.log(err_3);
-                                        clearpinging();
-                                        handle_rpc_monitor_fails(rpcdata, err_3, txhash);
-                                        return false;
-                                    } else {
-                                        var conf = current_blocknumber - this_blocknumber,
-                                            conf_correct = (conf < 0) ? 0 : conf,
-                                            txdata = {
-                                                "timestamp": data_3.timestamp,
-                                                "hash": txhash,
-                                                "confirmations": conf_correct,
-                                                "value": data_2.value,
-                                                "decimals": 18
-                                            },
-                                            txd = infura_eth_poll_data(txdata, request.set_confirmations, request.currencysymbol);
-                                        confirmations(txd);
-                                    }
-                                });
+                return
+            }
+            if (data_1) {
+                var current_blocknumber = data_1;
+                web3.eth.getTransaction(txhash, function(err_2, data_2) {
+                    if (err_2) {
+                        clearpinging();
+                        handle_rpc_monitor_fails(rpcdata, err_2, txhash);
+                        return
+                    }
+                    if (data_2) {
+                        var this_blocknumber = data_2.blockNumber;
+                        web3.eth.getBlock(this_blocknumber, function(err_3, data_3) {
+                            if (err_3) {
+                                clearpinging();
+                                handle_rpc_monitor_fails(rpcdata, err_3, txhash);
+                                return
                             }
-                        }
-                    });
-                } else {
-                    clearpinging();
-                    handle_rpc_monitor_fails(rpcdata, false, txhash);
-                    return false;
-                }
+                            var conf = current_blocknumber - this_blocknumber,
+                                conf_correct = (conf < 0) ? 0 : conf,
+                                txdata = {
+                                    "timestamp": data_3.timestamp,
+                                    "hash": txhash,
+                                    "confirmations": conf_correct,
+                                    "value": data_2.value,
+                                    "decimals": 18
+                                },
+                                txd = infura_eth_poll_data(txdata, request.set_confirmations, request.currencysymbol);
+                            confirmations(txd);
+                        });
+                    }
+                });
+                return
             }
         });
-    } else {
-        handle_rpc_monitor_fails(txhash);
-        return false;
     }
+    clearpinging();
+    handle_rpc_monitor_fails(rpcdata, false, txhash);
 }
 
 function ping_eth_node_erc20(rpcdata, txhash) {
@@ -285,62 +272,51 @@ function ping_eth_node_erc20(rpcdata, txhash) {
         }
         web3.eth.getBlockNumber(function(err_1, data_1) {
             if (err_1) {
-                console.log(err_1);
                 clearpinging();
                 handle_rpc_monitor_fails(rpcdata, err_1, txhash);
-                return false;
-            } else {
-                if (data_1) {
-                    var current_blocknumber = data_1;
-                    web3.eth.getTransaction(txhash, function(err_2, data_2) {
-                        if (err_2) {
-                            console.log(err_2);
-                            clearpinging();
-                            handle_rpc_monitor_fails(rpcdata, err_2, txhash);
-                            return false;
-                        } else {
-                            if (data_2) {
-                                var this_blocknumber = data_2.blockNumber;
-                                web3.eth.getBlock(this_blocknumber, function(err_3, data_3) {
-                                    if (err_3) {
-                                        console.log(err_3);
-                                        clearpinging();
-                                        handle_rpc_monitor_fails(rpcdata, err_3, txhash);
-                                        return false;
-                                    } else {
-                                        if (data_3) {
-                                            var input = data_2.input,
-                                                amount_hex = input.slice(74, input.length),
-                                                tokenValue = web3.utils.hexToNumberString(amount_hex),
-                                                conf = current_blocknumber - this_blocknumber,
-                                                conf_correct = (conf < 0) ? 0 : conf,
-                                                txdata = {
-                                                    "timestamp": data_3.timestamp,
-                                                    "hash": txhash,
-                                                    "confirmations": conf_correct,
-                                                    "value": tokenValue,
-                                                    "decimals": request.decimals
-                                                },
-                                                txd = infura_erc20_poll_data(txdata, request.set_confirmations, request.currencysymbol);
-                                            confirmations(txd);
-                                        }
-                                    }
-                                });
+                return
+            }
+            if (data_1) {
+                var current_blocknumber = data_1;
+                web3.eth.getTransaction(txhash, function(err_2, data_2) {
+                    if (err_2) {
+                        clearpinging();
+                        handle_rpc_monitor_fails(rpcdata, err_2, txhash);
+                        return
+                    }
+                    if (data_2) {
+                        var this_blocknumber = data_2.blockNumber;
+                        web3.eth.getBlock(this_blocknumber, function(err_3, data_3) {
+                            if (err_3) {
+                                clearpinging();
+                                handle_rpc_monitor_fails(rpcdata, err_3, txhash);
+                                return
                             }
-                        }
-                    });
-                } else {
-                    clearpinging();
-                    handle_rpc_monitor_fails(rpcdata, false, txhash);
-                    return false;
-                }
+                            if (data_3) {
+                                var input = data_2.input,
+                                    amount_hex = input.slice(74, input.length),
+                                    tokenValue = web3.utils.hexToNumberString(amount_hex),
+                                    conf = current_blocknumber - this_blocknumber,
+                                    conf_correct = (conf < 0) ? 0 : conf,
+                                    txdata = {
+                                        "timestamp": data_3.timestamp,
+                                        "hash": txhash,
+                                        "confirmations": conf_correct,
+                                        "value": tokenValue,
+                                        "decimals": request.decimals
+                                    },
+                                    txd = infura_erc20_poll_data(txdata, request.set_confirmations, request.currencysymbol);
+                                confirmations(txd);
+                            }
+                        });
+                    }
+                });
+                return
             }
         });
-    } else {
-        clearpinging();
-        handle_rpc_monitor_fails(rpcdata, false, txhash);
-        return false;
     }
+    clearpinging();
+    handle_rpc_monitor_fails(rpcdata, false, txhash);
 }
 
 function handle_rpc_monitor_fails(rpcdata, error, txhash) {
@@ -358,104 +334,102 @@ function handle_rpc_monitor_fails(rpcdata, error, txhash) {
 function confirmations(tx_data, direct, ln) {
     closeloader();
     clearTimeout(request_timer);
-    if (tx_data === false || tx_data.ccval === undefined) {
-        return false;
-    }
-    var pmd = $("#paymentdialogbox"),
-        brstatuspanel = pmd.find(".brstatuspanel"),
-        brheader = brstatuspanel.find("h2"),
-        status = tx_data.status;
-    if (status && status == "canceled") {
-        brheader.html("<span class='icon-blocked'></span>Invoice cancelled");
-        pmd.attr("data-status", "canceled");
-        updaterequest({
-            "requestid": request.requestid,
-            "status": "canceled",
-            "confirmations": 0
-        }, true);
-        notify("Invoice canceled", 500000);
-        forceclosesocket();
-        return
-    }
-    var setconfirmations = (ln) ? 1 : (tx_data.setconfirmations) ? parseInt(tx_data.setconfirmations) : null,
-        conf_text = (setconfirmations) ? setconfirmations.toString() : "",
-        confbox = brstatuspanel.find("span.confbox"),
-        confboxspan = confbox.find("span"),
-        currentconf = parseFloat(confboxspan.attr("data-conf")),
-        xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
-        txhash = tx_data.txhash,
-        zero_conf = (xconf === false || setconfirmations == 0 || setconfirmations == "undefined" || setconfirmations === undefined);
-    brstatuspanel.find("span#confnumber").text(conf_text);
-    if (xconf > currentconf || zero_conf === true || direct === true) {
-        reset_recent();
-        sessionStorage.removeItem("bitrequest_txstatus"); // remove cached historical exchange rates
-        confbox.removeClass("blob");
-        setTimeout(function() {
-            confbox.addClass("blob");
-            confboxspan.text(xconf).attr("data-conf", xconf);
-        }, 500);
-        var cc_raw = $("#open_wallet").attr("data-rel"),
-            cc_rawf = parseFloat(cc_raw),
-            receivedutc = tx_data.transactiontime,
-            receivedtime = receivedutc - timezone,
-            receivedcc = tx_data.ccval,
-            rccf = parseFloat(receivedcc.toFixed(6)),
-            payment = request.payment,
-            thiscurrency = request.uoa,
-            currencysymbol = request.currencysymbol,
-            requesttype = request.requesttype,
-            iscrypto = (thiscurrency == currencysymbol),
-            fiatvalue = (iscrypto === true) ? null : (rccf / parseFloat($("#paymentdialogbox .ccpool").attr("data-xrate"))) * parseFloat($("#paymentdialog .cpool[data-currency='" + thiscurrency + "']").attr("data-xrate")), // calculate fiat value
-            fiatrounded = (iscrypto === true) ? null : fiatvalue.toFixed(2),
-            receivedrounded = (iscrypto === true) ? receivedcc : fiatrounded;
-        // extend global request object
-        $.extend(request, {
-            "received": true,
-            "inout": requesttype,
-            "receivedamount": rccf,
-            "fiatvalue": fiatvalue,
-            "paymenttimestamp": receivedutc,
-            "txhash": txhash,
-            "confirmations": xconf,
-            "set_confirmations": setconfirmations
-        });
-        brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), "en-us"));
-        if (iscrypto) {} else {
-            brstatuspanel.find("span.receivedcrypto").text(rccf + " " + currencysymbol);
+    if (tx_data && tx_data.ccval) {
+        var pmd = $("#paymentdialogbox"),
+            brstatuspanel = pmd.find(".brstatuspanel"),
+            brheader = brstatuspanel.find("h2"),
+            status = tx_data.status;
+        if (status && status == "canceled") {
+            brheader.html("<span class='icon-blocked'></span>Invoice canceled");
+            pmd.attr("data-status", "canceled");
+            updaterequest({
+                "requestid": request.requestid,
+                "status": "canceled",
+                "confirmations": 0
+            }, true);
+            notify("Invoice canceled", 500000);
+            forceclosesocket();
+            return
         }
-        brstatuspanel.find("span.receivedfiat").text(" (" + receivedrounded + " " + thiscurrency + ")");
-        var exact = helper.exact,
-            xmr_pass = (payment == "monero") ? (rccf > cc_rawf * 0.97 && rccf < cc_rawf * 1.03) : true; // error margin for xmr integrated addresses
-        if (xmr_pass) {
-            var pass = (exact) ? (rccf == cc_rawf) : (rccf >= cc_rawf * 0.97);
-            if (pass) {
-                if (xconf >= setconfirmations || zero_conf === true) {
-                    closesocket();
-                    if (payment == "dogecoin") {
-                        playsound(howl);
+        var setconfirmations = (ln) ? 1 : (tx_data.setconfirmations) ? parseInt(tx_data.setconfirmations) : 0,
+            conf_text = (setconfirmations) ? setconfirmations.toString() : "",
+            confbox = brstatuspanel.find("span.confbox"),
+            confboxspan = confbox.find("span"),
+            currentconf = parseFloat(confboxspan.attr("data-conf")),
+            xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
+            txhash = tx_data.txhash,
+            zero_conf = (xconf === false || !setconfirmations);
+        brstatuspanel.find("span#confnumber").text(conf_text);
+        if (xconf > currentconf || zero_conf === true || direct === true) {
+            reset_recent();
+            sessionStorage.removeItem("bitrequest_txstatus"); // remove cached historical exchange rates
+            confbox.removeClass("blob");
+            setTimeout(function() {
+                confbox.addClass("blob");
+                confboxspan.text(xconf).attr("data-conf", xconf);
+            }, 500);
+            var cc_raw = parseFloat($("#open_wallet").attr("data-rel")),
+                receivedutc = tx_data.transactiontime,
+                receivedtime = receivedutc - timezone,
+                receivedcc = tx_data.ccval,
+                rccf = parseFloat(receivedcc.toFixed(6)),
+                payment = request.payment,
+                thiscurrency = request.uoa,
+                currencysymbol = request.currencysymbol,
+                requesttype = request.requesttype,
+                iscrypto = (thiscurrency == currencysymbol) ? true : false,
+                fiatvalue = (iscrypto) ? null : (rccf / parseFloat($("#paymentdialogbox .ccpool").attr("data-xrate"))) * parseFloat($("#paymentdialog .cpool[data-currency='" + thiscurrency + "']").attr("data-xrate")), // calculate fiat value
+                fiatrounded = (iscrypto) ? null : fiatvalue.toFixed(2),
+                receivedrounded = (iscrypto) ? receivedcc : fiatrounded;
+            // extend global request object
+            $.extend(request, {
+                "received": true,
+                "inout": requesttype,
+                "receivedamount": rccf,
+                "fiatvalue": fiatvalue,
+                "paymenttimestamp": receivedutc,
+                "txhash": txhash,
+                "confirmations": xconf,
+                "set_confirmations": setconfirmations
+            });
+            brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), "en-us"));
+            if (iscrypto) {} else {
+                brstatuspanel.find("span.receivedcrypto").text(rccf + " " + currencysymbol);
+            }
+            brstatuspanel.find("span.receivedfiat").text(" (" + receivedrounded + " " + thiscurrency + ")");
+            var exact = helper.exact,
+                xmr_pass = (payment == "monero") ? (rccf > cc_raw * 0.97 && rccf < cc_raw * 1.03) : true; // error margin for xmr integrated addresses
+            if (xmr_pass) {
+                var pass = (exact) ? (rccf == cc_raw) : (rccf >= cc_raw * 0.97);
+                if (pass) {
+                    if (xconf >= setconfirmations || zero_conf === true) {
+                        closesocket();
+                        if (payment == "dogecoin") {
+                            playsound(howl);
+                        } else {
+                            playsound(cashier);
+                        }
+                        pmd.addClass("transacting").attr("data-status", "paid");
+                        brheader.text("Payment received");
+                        request.status = "paid",
+                            request.pending = "polling";
+                        saverequest(direct);
+                        $("span#ibstatus").fadeOut(500);
+                        closenotify();
                     } else {
-                        playsound(cashier);
+                        if (ln) {} else {
+                            playsound(blip);
+                        }
+                        pmd.addClass("transacting").attr("data-status", "pending");
+                        var bctext = (ln) ? "Waiting for payment" : "Transaction broadcasted";
+                        brheader.text(bctext);
+                        request.status = "pending",
+                            request.pending = "polling";
+                        saverequest(direct);
                     }
-                    pmd.addClass("transacting").attr("data-status", "paid");
-                    brheader.text("Payment received");
-                    request.status = "paid",
-                        request.pending = "polling";
-                    saverequest(direct);
-                    $("span#ibstatus").fadeOut(500);
-                    closenotify();
-                } else {
-                    if (ln) {} else {
-                        playsound(blip);
-                    }
-                    pmd.addClass("transacting").attr("data-status", "pending");
-                    var bctext = (ln) ? "Waiting for payment" : "Transaction broadcasted";
-                    brheader.text(bctext);
-                    request.status = "pending",
-                        request.pending = "polling";
-                    saverequest(direct);
+                    brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
+                    return
                 }
-                brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
-            } else {
                 if (exact) {} else {
                     brheader.text("Insufficient amount");
                     pmd.addClass("transacting").attr("data-status", "insufficient");
@@ -466,8 +440,8 @@ function confirmations(tx_data, direct, ln) {
                 }
                 playsound(funk);
             }
+            return
         }
-    } else {
         playsound(blip);
     }
 }
