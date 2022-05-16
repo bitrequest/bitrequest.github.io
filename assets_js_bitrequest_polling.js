@@ -403,7 +403,7 @@ function confirmations(tx_data, direct, ln) {
                 var pass = (exact) ? (rccf == cc_raw) : (rccf >= cc_raw * 0.97);
                 if (pass) {
                     if (xconf >= setconfirmations || zero_conf === true) {
-                        closesocket();
+                        forceclosesocket();
                         if (payment == "dogecoin") {
                             playsound(howl);
                         } else {

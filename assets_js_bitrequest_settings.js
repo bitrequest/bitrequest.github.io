@@ -754,7 +754,7 @@ function backupcd() {
 }
 
 function complilebackup() {
-    var jsonfile = [];
+	var jsonfile = [];
     for (var key in localStorage) {
         var value = localStorage.getItem(key);
         if (value === null ||
@@ -769,7 +769,8 @@ function complilebackup() {
             key == "bitrequest_k" ||
             key == "bitrequest_awl" ||
             key == "bitrequest_tp") {} else if (key == "bitrequest_bpdat") { // only backup ecrypted seed
-            if (test_derive === true && get_setting("backup", "sbu") === true) {
+	        var not_verified = (io.bipv != "yes"); // add to google drive when not verified
+	        if (not_verified || (test_derive === true && get_setting("backup", "sbu") === true)) {
                 var val_obj = JSON.parse(value);
                 val_obj.dat = null;
                 jsonfile.push('"' + key + '":' + JSON.stringify(val_obj));
@@ -787,11 +788,6 @@ function complilefilename() {
 
 function submitbackup() {
     $(document).on("click", "#triggerdownload", function(e) {
-        if (body.hasClass("ios")) {
-            e.preventDefault();
-            notify("Downloads for IOS App unavailable at the moment");
-            return false;
-        }
         var thisnode = $(this),
             href = thisnode.attr("href"),
             title = thisnode.attr("title"),
