@@ -505,7 +505,7 @@ function get_api_inputs(rd, api_data, api_name) {
                         handle_api_fails(rd, error_object, api_name, payment);
                     }).always(function() {
                         api_src(thislist, {
-                            "name": "xmr node"
+                            "name": "mymonero api"
                         });
                     });
                 }

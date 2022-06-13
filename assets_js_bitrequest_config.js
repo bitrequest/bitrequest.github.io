@@ -1061,12 +1061,12 @@ var apptitle = "Bitrequest",
                     "apis": {
                         "icon": "sphere",
                         "selected": {
-                            "name": "xmr node",
+                            "name": "mymonero api",
                             "api": true,
                             "display": true
                         },
                         "apis": [{
-                            "name": "xmr node",
+                            "name": "mymonero api",
                             "api": true,
                             "display": true
                         }]
@@ -1423,7 +1423,7 @@ var apptitle = "Bitrequest",
                 "sign_up": "https://firebase.google.com/"
             },
             {
-                "name": "xmr node",
+                "name": "mymonero api",
                 "base_url": "https://api.mymonero.com:8443/",
                 "key_param": null,
                 "api_key": null,

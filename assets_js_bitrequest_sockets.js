@@ -772,7 +772,7 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
         "generated_locally": false
     };
     api_proxy({
-        "api": "xmr node",
+        "api": "mymonero api",
         "search": "login",
         "cachetime": 25,
         "cachefolder": "1h",
@@ -815,7 +815,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
         "view_key": vk
     };
     api_proxy({
-        "api": "xmr node",
+        "api": "mymonero api",
         "search": "get_address_txs",
         "cachetime": cachetime,
         "cachefolder": "1h",
@@ -1121,7 +1121,7 @@ function xmr_scan_poll_init(address, vk, set_confirmations, request_ts) {
         "generated_locally": false
     };
     api_proxy({
-        "api": "xmr node",
+        "api": "mymonero api",
         "search": "login",
         "cachetime": 25,
         "cachefolder": "1h",
@@ -1152,7 +1152,7 @@ function xmr_scan_poll(address, vk, set_confirmations, request_ts) {
         "view_key": vk
     };
     api_proxy({
-        "api": "xmr node",
+        "api": "mymonero api",
         "search": "get_address_txs",
         "cachetime": 25,
         "cachefolder": "1h",

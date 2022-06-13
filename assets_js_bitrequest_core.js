@@ -2382,7 +2382,7 @@ function validateaddress_vk(ad) {
                 "generated_locally": false
             };
             api_proxy({
-                "api": "xmr node",
+                "api": "mymonero api",
                 "search": "login",
                 "cachetime": 25,
                 "cachefolder": "1h",
