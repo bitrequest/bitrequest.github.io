@@ -229,6 +229,7 @@ function get_api_inputs(rd, api_data, api_name) {
         }
         if (pending == "scanning" || pending == "polling" || canceled) {
             transactionlist.html("");
+            rd.tx_index = [];
             if (lnd) {
                 var metalist = thislist.find(".metalist"),
                     status_field = metalist.find(".status"),
