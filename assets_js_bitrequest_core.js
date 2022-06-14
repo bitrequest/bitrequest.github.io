@@ -4453,7 +4453,6 @@ function appendrequest(rd) {
         requestid = rd.requestid,
         archive = rd.archive,
         showarchive = rd.showarchive,
-        tx_index = rd.tx_index,
         timestamp = rd.timestamp,
         requestdate = rd.requestdate,
         rqdata = rd.rqdata,
@@ -4535,7 +4534,7 @@ function appendrequest(rd) {
         cc_logo = (lightning) ? (txhash && !lnhash) ? cclogo : ln_logo : cclogo,
         rc_address_title = (hybrid) ? "Fallback address" : "Receiving Address",
         address_markup = (lightning && (lnhash || hybrid === false)) ? "" : "<li><p class='address'><strong>" + rc_address_title + ":</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>",
-        new_requestli = $("<li class='rqli " + requesttypeclass + expiredclass + lnclass + "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status + "' data-address='" + address + "' data-pending='" + pending + "' data-iscrypto='" + iscrypto + "' data-tx_index='" + tx_index + "'>\
+        new_requestli = $("<li class='rqli " + requesttypeclass + expiredclass + lnclass + "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status + "' data-address='" + address + "' data-pending='" + pending + "' data-iscrypto='" + iscrypto + "'>\
 			<div class='liwrap iconright'>" + cc_logo +
             "<div class='atext'>\
 					<h2>" + requesttitlestring + "</h2>\

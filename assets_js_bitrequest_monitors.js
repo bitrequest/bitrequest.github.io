@@ -229,7 +229,6 @@ function get_api_inputs(rd, api_data, api_name) {
         }
         if (pending == "scanning" || pending == "polling" || canceled) {
             transactionlist.html("");
-            rd.tx_index = [];
             if (lnd) {
                 var metalist = thislist.find(".metalist"),
                     status_field = metalist.find(".status"),
@@ -1663,38 +1662,21 @@ function append_tx_li(txd, this_request, ln) {
         }
         if (this_request === false) {
             return tx_listitem;
-        } else {
-            var tx_dat = this_request.data();
-            if (tx_dat.xmr_ia) { // xmr integrated adddresses are unique
-                return tx_listitem;
-            }
-            var tx_index = tx_dat.tx_index,
-                tx_indexed = ($.inArray(txhash, tx_index) !== -1),
-                on_tx_list = ($.inArray(txhash, tx_list) !== -1),
-                requesttype = tx_dat.requesttype;
-            if (on_tx_list === true || tx_indexed === true) { // check for indexed transaction id's
-                if (tx_indexed === false) { // add to 'blacklist'
-                    tx_index.push(txhash);
-                    this_request.data("tx_index", tx_index);
-                }
-                if (on_tx_list === false) {
-                    tx_list.push(txhash);
-                }
-                if (requesttype == "outgoing") {
-                    return null;
-                } else {
-                    return tx_listitem;
-                }
-            } else {
-                if (on_tx_list === false) {
-                    tx_list.push(txhash);
-                }
-                return tx_listitem;
-            }
         }
-    } else {
-        return null;
+        var tx_dat = this_request.data();
+        if (tx_dat.xmr_ia) { // xmr integrated adddresses are unique
+            return tx_listitem;
+        }
+        if ($.inArray(txhash, tx_list) !== -1) { // check for indexed transaction id's
+            if (tx_dat.requesttype == "outgoing") {
+                return null;
+            }
+            return tx_listitem;
+        }
+        tx_list.push(txhash);
+        return tx_listitem;
     }
+    return null;
 }
 
 function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, fromcache) {

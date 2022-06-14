@@ -2628,7 +2628,6 @@ function saverequest(direct) {
                 append_object = $.extend(request, {
                     "archive": false,
                     "showarchive": false,
-                    "tx_index": [],
                     "timestamp": timestamp,
                     "requestdate": requesttimestamp,
                     "rqdata": rqdatahash,
