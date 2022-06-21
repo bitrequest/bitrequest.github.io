@@ -148,6 +148,7 @@ function lightning_socket(lnd) {
                 lnd_confirm = true;
                 paymentdialogbox.addClass("accept_lnd");
                 notify("Accept the payment in your lightning app...", 500000);
+                vibrate();
                 playsound(blip);
             }
             set_request_timer();
