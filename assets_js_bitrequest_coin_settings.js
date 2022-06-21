@@ -174,9 +174,7 @@ function edit_blockexplorer() {
         var current_li = $(this),
             this_data = current_li.data(),
             options = this_data.options;
-        if (options === undefined) {
-            return false;
-        } else {
+        if (options) {
             var thiscurrency = current_li.children(".liwrap").attr("data-currency"),
                 selected = this_data.selected,
                 ddat = [{
@@ -228,7 +226,7 @@ function edit_blockexplorer() {
                 });
             popdialog(content, "alert", "triggersubmit");
             var optionlist = $("#be_formbox").find(".options");
-            $.each(options, function(key, value) {
+            $.each(options, function(i, value) {
                 optionlist.append("<span data-pe='none'>" + value + "</span>");
             });
         }
@@ -257,63 +255,62 @@ function edit_rpcnode() {
             sockets = this_data.websockets;
         s_id = current_li.attr("data-id");
         if (options === undefined && api_list === undefined) {
-            return false;
-        } else {
-            test_rpc_call = this_data.rpc_test_command;
-            var thiscurrency = current_li.children(".liwrap").attr("data-currency");
-            is_erc20t = ($("#" + thiscurrency + "_settings").attr("data-erc20") == "true");
-            var header_text = (s_id === "websockets") ? "Add websocket" : "Add RPC node",
-                currencycode = (thiscurrency == "bitcoin" || thiscurrency == "litecoin" || thiscurrency == "dogecoin") ? "btc" :
-                (thiscurrency == "ethereum" || is_erc20t === true) ? "eth" :
-                thiscurrency,
-                placeholder_id = s_id + currencycode + getrandomnumber(1, 3),
-                getplaceholder = get_rpc_placeholder(thiscurrency)[placeholder_id],
-                placeholder = (getplaceholder) ? getplaceholder : "eg: some.local-or-remote.node:port",
-                api_form = (options) ? "<div id='rpc_input_box' data-currency='" + thiscurrency + "' data-erc20='" + is_erc20t + "'>\
-						<h3 class='icon-plus'>" + header_text + "</h3>\
-						<div id='rpc_input'>\
-							<input type='text' value='' placeholder='" + placeholder + "' id='rpc_url_input'/>\
-							<div class='c_stat icon-wifi-off'></div>\
-							<div class='c_stat icon-connection'></div>\
-						</div>\
-						<input type='text' value='' placeholder='Username (optional)' id='rpc_username_input'/>\
-						<input type='password' value='' placeholder='Password (optional)' id='rpc_password_input'/>\
-					</div>" : "",
-                selected = this_data.selected,
-                selected_title = (selected.name) ? selected.name : selected.url,
-                content = "\
-				<div class='formbox' id='settingsbox' data-id='" + s_id + "'>\
-					<h2 class='icon-sphere'>Choose " + thiscurrency + " " + s_id + "</h2>\
-					<div class='popnotify'></div>\
-					<div class='popform'>\
-						<div class='selectbox'>\
-							<input type='text' value='" + selected_title + "' placeholder='Choose RPC node' readonly='readonly' id='rpc_main_input'/>\
-							<div class='selectarrows icon-menu2' data-pe='none'></div>\
-							<div class='options'>\
-							</div>\
-						</div>" +
-                api_form +
-                "<input type='submit' class='submit' value='OK' data-currency='" + thiscurrency + "'/>\
-					</div>\
-				</div>";
-            popdialog(content, "alert", "triggersubmit");
-            var optionlist = $("#settingsbox").find(".options");
-            $.each(api_list, function(key, value) {
-                if (value.display === true) {
-                    var selected = (value.url == selected_title || value.name == selected_title);
-                    if (thiscurrency == "nano") {
-                        test_append_rpc(thiscurrency, optionlist, key, value, selected);
-                    } else {
-                        rpc_option_li(optionlist, true, key, value, selected, false);
-                    }
-                }
-            });
-            $.each(options, function(key, value) {
-                var selected = (value.url == selected_title || value.name == selected_title);
-                test_append_rpc(thiscurrency, optionlist, key, value, selected);
-            });
-            $("#rpc_main_input").data(selected);
+            return
         }
+        test_rpc_call = this_data.rpc_test_command;
+        var thiscurrency = current_li.children(".liwrap").attr("data-currency");
+        is_erc20t = ($("#" + thiscurrency + "_settings").attr("data-erc20") == "true");
+        var header_text = (s_id === "websockets") ? "Add websocket" : "Add RPC node",
+            currencycode = (thiscurrency == "bitcoin" || thiscurrency == "litecoin" || thiscurrency == "dogecoin") ? "btc" :
+            (thiscurrency == "ethereum" || is_erc20t === true) ? "eth" :
+            thiscurrency,
+            placeholder_id = s_id + currencycode + getrandomnumber(1, 3),
+            getplaceholder = get_rpc_placeholder(thiscurrency)[placeholder_id],
+            placeholder = (getplaceholder) ? getplaceholder : "eg: some.local-or-remote.node:port",
+            api_form = (options) ? "<div id='rpc_input_box' data-currency='" + thiscurrency + "' data-erc20='" + is_erc20t + "'>\
+					<h3 class='icon-plus'>" + header_text + "</h3>\
+					<div id='rpc_input'>\
+						<input type='text' value='' placeholder='" + placeholder + "' id='rpc_url_input'/>\
+						<div class='c_stat icon-wifi-off'></div>\
+						<div class='c_stat icon-connection'></div>\
+					</div>\
+					<input type='text' value='' placeholder='Username (optional)' id='rpc_username_input'/>\
+					<input type='password' value='' placeholder='Password (optional)' id='rpc_password_input'/>\
+				</div>" : "",
+            selected = this_data.selected,
+            selected_title = (selected.name) ? selected.name : selected.url,
+            content = "\
+			<div class='formbox' id='settingsbox' data-id='" + s_id + "'>\
+				<h2 class='icon-sphere'>Choose " + thiscurrency + " " + s_id + "</h2>\
+				<div class='popnotify'></div>\
+				<div class='popform'>\
+					<div class='selectbox'>\
+						<input type='text' value='" + selected_title + "' placeholder='Choose RPC node' readonly='readonly' id='rpc_main_input'/>\
+						<div class='selectarrows icon-menu2' data-pe='none'></div>\
+						<div class='options'>\
+						</div>\
+					</div>" +
+            api_form +
+            "<input type='submit' class='submit' value='OK' data-currency='" + thiscurrency + "'/>\
+				</div>\
+			</div>";
+        popdialog(content, "alert", "triggersubmit");
+        var optionlist = $("#settingsbox").find(".options");
+        $.each(api_list, function(key, value) {
+            if (value.display === true) {
+                var selected = (value.url == selected_title || value.name == selected_title);
+                if (thiscurrency == "nano") {
+                    test_append_rpc(thiscurrency, optionlist, key, value, selected);
+                } else {
+                    rpc_option_li(optionlist, true, key, value, selected, false);
+                }
+            }
+        });
+        $.each(options, function(key, value) {
+            var selected = (value.url == selected_title || value.name == selected_title);
+            test_append_rpc(thiscurrency, optionlist, key, value, selected);
+        });
+        $("#rpc_main_input").data(selected);
     })
 }
 

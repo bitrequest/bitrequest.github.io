@@ -75,18 +75,17 @@ function api_monitor(api_data, txhash, tx_data) {
                     clearpinging();
                     handle_api_fails(false, data.error, api_name, payment, txhash);
                     return
-                } else {
-                    var currentaddress = geturlparameters().address,
-                        legacy = (currencysymbol == "bch") ? bchutils.toLegacyAddress(currentaddress) : currentaddress,
-                        txd = (api_name == "blockcypher") ? blockcypher_poll_data(data, set_confirmations, currencysymbol, currentaddress) :
-                        (api_name == "ethplorer") ? ethplorer_poll_data(data, set_confirmations, currencysymbol) :
-                        (api_name == "bitcoin.com") ? bitcoincom_scan_data(data, set_confirmations, currencysymbol, legacy, currentaddress) :
-                        (api_name == "mempool.space") ? mempoolspace_scan_data(data, set_confirmations, currencysymbol, currentaddress) :
-                        (api_name == "blockchair") ? (request.erc20 === true) ? blockchair_erc20_poll_data(data.data[txhash], set_confirmations, currencysymbol, data.context.state) :
-                        (payment == "ethereum") ? blockchair_eth_scan_data(data.data[txhash].calls[0], set_confirmations, currencysymbol, data.context.state) :
-                        blockchair_scan_data(data.data[txhash], set_confirmations, currencysymbol, currentaddress, data.context.state) : false;
-                    confirmations(txd);
                 }
+                var currentaddress = geturlparameters().address,
+                    legacy = (currencysymbol == "bch") ? bchutils.toLegacyAddress(currentaddress) : currentaddress,
+                    txd = (api_name == "blockcypher") ? blockcypher_poll_data(data, set_confirmations, currencysymbol, currentaddress) :
+                    (api_name == "ethplorer") ? ethplorer_poll_data(data, set_confirmations, currencysymbol) :
+                    (api_name == "bitcoin.com") ? bitcoincom_scan_data(data, set_confirmations, currencysymbol, legacy, currentaddress) :
+                    (api_name == "mempool.space") ? mempoolspace_scan_data(data, set_confirmations, currencysymbol, currentaddress) :
+                    (api_name == "blockchair") ? (request.erc20 === true) ? blockchair_erc20_poll_data(data.data[txhash], set_confirmations, currencysymbol, data.context.state) :
+                    (payment == "ethereum") ? blockchair_eth_scan_data(data.data[txhash].calls[0], set_confirmations, currencysymbol, data.context.state) :
+                    blockchair_scan_data(data.data[txhash], set_confirmations, currencysymbol, currentaddress, data.context.state) : false;
+                confirmations(txd);
                 return
             }
             clearpinging();

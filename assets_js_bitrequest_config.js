@@ -228,11 +228,7 @@ var apptitle = "Bitrequest",
                     "blockexplorers": {
                         "icon": "eye",
                         "selected": "blockchain.com",
-                        "options": {
-                            "key1": "blockchain.com",
-                            "key2": "blockchair.com",
-                            "key3": "bitcoin.com"
-                        }
+                        "options": ["blockchain.com","blockchair.com"]
                     },
                     "apis": {
                         "icon": "sphere",
@@ -258,7 +254,7 @@ var apptitle = "Bitrequest",
                                 "name": "blockchair",
                                 "url": "blockchair.com",
                                 "api": true,
-                                "display": false
+                                "display": true
                             }
                         ],
                         "options": [],
@@ -501,7 +497,7 @@ var apptitle = "Bitrequest",
                                 "name": "blockchair",
                                 "url": "blockchair.com",
                                 "api": true,
-                                "display": false
+                                "display": true
                             }
                         ],
                         "options": [],
@@ -602,27 +598,17 @@ var apptitle = "Bitrequest",
                     "blockexplorers": {
                         "icon": "eye",
                         "selected": "blockchain.com",
-                        "options": {
-                            "key1": "blockchain.com",
-                            "key2": "blockchair.com",
-                            "key3": "bitcoin.com"
-                        }
+                        "options": ["blockchain.com","blockchair.com"]
                     },
                     "apis": {
                         "icon": "sphere",
                         "selected": {
-                            "name": "bitcoin.com",
-                            "url": "bitcoin.com",
+                            "name": "blockchair",
+                                "url": "blockchair.com",
                             "api": true,
                             "display": true
                         },
                         "apis": [{
-                                "name": "bitcoin.com",
-                                "url": "bitcoin.com",
-                                "api": true,
-                                "display": true
-                            },
-                            {
                                 "name": "blockchair",
                                 "url": "blockchair.com",
                                 "api": true,
@@ -723,10 +709,7 @@ var apptitle = "Bitrequest",
                     "blockexplorers": {
                         "icon": "eye",
                         "selected": "blockchain.com",
-                        "options": {
-                            "blockchain": "blockchain.com",
-                            "blockchair": "blockchair.com"
-                        }
+                        "options": ["blockchain.com","blockchair.com"]
                     },
                     "apis": {
                         "icon": "sphere",
@@ -868,10 +851,7 @@ var apptitle = "Bitrequest",
                     "blockexplorers": {
                         "icon": "eye",
                         "selected": "nanocrawler.cc",
-                        "options": {
-                            "key1": "nanocrawler.cc",
-                            "key2": "nanolooker.com"
-                        }
+                        "options": ["nanocrawler.cc","nanolooker.com"]
                     },
                     "apis": {
                         "icon": "sphere",
@@ -1053,10 +1033,7 @@ var apptitle = "Bitrequest",
                     },
                     "blockexplorers": {
                         "icon": "eye",
-                        "selected": "blockchair.com",
-                        "options": {
-                            "key1": "blockchair.com"
-                        }
+                        "selected": "blockchair.com"
                     },
                     "apis": {
                         "icon": "sphere",
@@ -1133,8 +1110,7 @@ var apptitle = "Bitrequest",
                 },
                 "blockexplorers": {
                     "icon": "eye",
-                    "selected": "ethplorer.io",
-                    "options": {}
+                    "selected": "ethplorer.io"
                 },
                 "apis": {
                     "icon": "sphere",
@@ -1349,15 +1325,6 @@ var apptitle = "Bitrequest",
                 "sign_up": "https://blockchair.com/api"
             },
             {
-                "name": "bitcoin.com",
-                "base_url": "https://explorer.api.bitcoin.com/",
-                // for now no api key needed yet
-                // "key_param": "key=",
-                "key_param": null,
-                "api_key": null,
-                "sign_up": "https://explorer.api.bitcoin.com/docs/bch/v1/"
-            },
-            {
                 "name": "mempool.space",
                 "base_url": "https://mempool.space/api/",
                 // for now no api key needed yet
@@ -1469,13 +1436,6 @@ var apptitle = "Bitrequest",
                 "url": "https://www.blockchair.com/",
                 "prefix": "currency",
                 "tx_prefix": "transaction/",
-                "address_prefix": "address/"
-            },
-            {
-                "name": "bitcoin.com",
-                "url": "https://explorer.bitcoin.com/",
-                "prefix": "currencysymbol",
-                "tx_prefix": "tx/",
                 "address_prefix": "address/"
             },
             {

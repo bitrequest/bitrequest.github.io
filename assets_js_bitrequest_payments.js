@@ -2591,6 +2591,7 @@ function saverequest(direct) {
                     "pending": request.pending,
                     "lightning": lightning
                 };
+                sessionStorage.removeItem("bitrequest_historic_" + smart_id); // remove historic price cache
                 updaterequest(update_dat, true);
             }
         } else {

@@ -651,21 +651,27 @@ function get_api_inputs(rd, api_data, api_name) {
                         }
                     }).done(function(e) {
                         var data = br_result(e).result;
+                        console.log(data);
                         if (data) {
-                            var items = data.items;
-                            if ($.isEmptyObject(items)) {} else {
-                                $.each(items, function(dat, value) {
-                                    if (value.txid) { // filter outgoing transactions
-                                        var txd = bitcoincom_scan_data(value, setconfirmations, ccsymbol, legacy, address);
-                                        if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                            var tx_listitem = append_tx_li(txd, thislist);
-                                            if (tx_listitem) {
-                                                transactionlist.append(tx_listitem.data(txd));
-                                                counter++;
-                                            }
-                                        }
-                                    }
-                                });
+	                        if (data.error) {
+                                tx_api_fail(thislist, statuspanel);
+                                handle_api_fails(rd, data.error, api_name, payment);
+                            } else {
+                                var items = data.items;
+	                            if ($.isEmptyObject(items)) {} else {
+	                                $.each(items, function(dat, value) {
+	                                    if (value.txid) { // filter outgoing transactions
+	                                        var txd = bitcoincom_scan_data(value, setconfirmations, ccsymbol, legacy, address);
+	                                        if (txd.transactiontime > request_timestamp && txd.ccval) {
+	                                            var tx_listitem = append_tx_li(txd, thislist);
+	                                            if (tx_listitem) {
+	                                                transactionlist.append(tx_listitem.data(txd));
+	                                                counter++;
+	                                            }
+	                                        }
+	                                    }
+	                                });
+	                            }
                             }
                         } else {
                             tx_api_fail(thislist, statuspanel);
@@ -1049,34 +1055,38 @@ function get_api_inputs(rd, api_data, api_name) {
                                             compareamounts(rd);
                                         } else {
                                             var txarray = data.data[address].transactions; // get transactions
-                                            api_proxy({
-                                                "api": api_name,
-                                                "search": payment + "/dashboards/transactions/" + txarray.slice(0, 6), // get last 5 transactions
-                                                "cachetime": 25,
-                                                "cachefolder": "1h",
-                                                "params": {
-                                                    "method": "GET"
-                                                }
-                                            }).done(function(e) {
-                                                var dat = br_result(e).result;
-                                                $.each(dat.data, function(dt, val) {
-                                                    var txd = blockchair_scan_data(val, setconfirmations, ccsymbol, address, latestblock);
-                                                    if (txd.transactiontime > request_timestamp && txd.ccval) { // get all transactions after requestdate
-                                                        var tx_listitem = append_tx_li(txd, thislist);
-                                                        if (tx_listitem) {
-                                                            transactionlist.append(tx_listitem.data(txd));
-                                                            counter++;
-                                                        }
-                                                    }
-                                                });
-                                                statuspanel.attr("data-count", counter).text("+ " + counter);
-                                                tx_count(statuspanel, counter);
-                                                compareamounts(rd);
-                                            }).fail(function(jqXHR, textStatus, errorThrown) {
-                                                tx_api_fail(thislist, statuspanel);
-                                                var error_object = (errorThrown) ? errorThrown : jqXHR;
-                                                handle_api_fails(rd, error_object, api_name, payment);
-                                            });
+                                            if ($.isEmptyObject(txarray)) {
+									        }
+									        else {
+										        api_proxy({
+	                                                "api": api_name,
+	                                                "search": payment + "/dashboards/transactions/" + txarray.slice(0, 6), // get last 5 transactions
+	                                                "cachetime": 25,
+	                                                "cachefolder": "1h",
+	                                                "params": {
+	                                                    "method": "GET"
+	                                                }
+	                                            }).done(function(e) {
+	                                                var dat = br_result(e).result;
+	                                                $.each(dat.data, function(dt, val) {
+	                                                    var txd = blockchair_scan_data(val, setconfirmations, ccsymbol, address, latestblock);
+	                                                    if (txd.transactiontime > request_timestamp && txd.ccval) { // get all transactions after requestdate
+	                                                        var tx_listitem = append_tx_li(txd, thislist);
+	                                                        if (tx_listitem) {
+	                                                            transactionlist.append(tx_listitem.data(txd));
+	                                                            counter++;
+	                                                        }
+	                                                    }
+	                                                });
+	                                                statuspanel.attr("data-count", counter).text("+ " + counter);
+	                                                tx_count(statuspanel, counter);
+	                                                compareamounts(rd);
+	                                            }).fail(function(jqXHR, textStatus, errorThrown) {
+	                                                tx_api_fail(thislist, statuspanel);
+	                                                var error_object = (errorThrown) ? errorThrown : jqXHR;
+	                                                handle_api_fails(rd, error_object, api_name, payment);
+	                                            });
+									        }
                                         }
                                     }
                                 }
