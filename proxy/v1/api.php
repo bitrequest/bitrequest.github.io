@@ -116,7 +116,7 @@ function curl_get($url, $data, $headers) {
     }
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 3); //timeout in seconds
+    curl_setopt($ch, CURLOPT_TIMEOUT, 5); //timeout in seconds
     $result = curl_exec($ch);
     if (curl_errno($ch)) {
         return error_object("411", curl_error($ch));
