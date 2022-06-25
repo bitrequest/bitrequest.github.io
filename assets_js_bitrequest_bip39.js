@@ -1451,14 +1451,13 @@ function xpub_obj(currency, rootpath, cc, key) {
 function b58c_x_payload(eo, currency) {
 	var xpubdat = getbip32dat(currency),
     	xz_pub = (eo.purpose == "84'") ? xpubdat.prefix.pubz : xpubdat.prefix.pubx,
-		xpub = eo.xpub,
-        version = (xpub) ? xz_pub : xpubdat.prefix.privx,
+		version = (eo.xpub === true) ? xz_pub : xpubdat.prefix.privx,
 		v_hex = str_pad(dectohex(version), 8),
         depth = (eo.depth) ? str_pad(eo.depth, 2) : "00",
         fingerprint = (eo.fingerprint) ? eo.fingerprint : "00000000",
         childnumber = (eo.childnumber) ? str_pad(eo.childnumber, 8) : "00000000",
         chaincode = eo.chaincode,
-        keyprefix = (xpub === true) ? "" : "00",
+        keyprefix = (eo.xpub === true) ? "" : "00",
         newkey = eo.key;
     if (version && newkey && chaincode) {
         return v_hex + depth + fingerprint + childnumber + chaincode + keyprefix + newkey;

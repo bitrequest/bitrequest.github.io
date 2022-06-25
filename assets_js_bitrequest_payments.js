@@ -2815,16 +2815,14 @@ function openwallet() {
             this_url = thisnode.attr("title"),
             lndurl = (this_url && this_url.slice(0, 9) == "lightning"),
             lnd_ref = (lndurl) ? "lightning" : thiscurrency,
-            content = "<div class='formbox' id='backupformbox'><h2 class='icon-folder-open'>Do you have a " + lnd_ref + " wallet on this device?</h2><div class='popnotify'></div><div id='backupactions'><div data-rel='" + this_url + "' class='customtrigger' id='openwalleturl'>Yes</div><div id='dw_trigger' class='customtrigger' data-currency='" + lnd_ref + "'>No</div></div>";
+            content = "<div class='formbox' id='backupformbox'><h2 class='icon-folder-open'>Do you have a " + lnd_ref + " wallet on this device?</h2><div class='popnotify'></div><div id='backupactions'><a href='" + this_url + "' class='customtrigger' id='openwalleturl'>Yes</a><div id='dw_trigger' class='customtrigger' data-currency='" + lnd_ref + "'>No</div></div>";
         popdialog(content, "alert", "triggersubmit");
     });
 }
 
 function openwalleturl() {
-    $(document).on("click", "#openwalleturl", function(e) {
-        e.preventDefault();
+    $(document).on("click", "#openwalleturl", function() {
         canceldialog();
-        window.location.href = $(this).attr("data-rel");
     });
 }
 
