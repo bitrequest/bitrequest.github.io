@@ -2808,8 +2808,7 @@ function adjust_paymentdialog(status, pending, status_text) {
 
 //open wallet
 function openwallet() {
-    $(document).on("click", ".openwallet, .openwallet_lnd", function(e) {
-        e.preventDefault();
+    $(document).on("click", ".openwallet, .openwallet_lnd", function() {
         var thisnode = $(this),
             thiscurrency = thisnode.attr("data-currency"),
             this_url = thisnode.attr("title"),
