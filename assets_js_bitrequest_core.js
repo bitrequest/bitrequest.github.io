@@ -4029,7 +4029,11 @@ function getcoinsettings(currency) {
 }
 
 function getbip32dat(currency) {
-    var coindata = getcoinconfig(currency);
+	var xpub_dat = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']").data();
+	if (xpub_dat && xpub_dat.active === true) {
+        return xpub_dat;
+    }
+	var coindata = getcoinconfig(currency);
     if (coindata) {
         var xpubdat = coindata.settings.Xpub;
         if (xpubdat && xpubdat.active === true) {

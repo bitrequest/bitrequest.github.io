@@ -1112,14 +1112,17 @@ function derive_obj(source, keycc, coindat, bip32, add) {
         versionbytes = keycc.version,
         currency = coindat.currency,
         id_key = source + "id",
+        b32rp = bip32.root_path,
+        purpose = b32rp.split("/")[1],
         addressli = get_addresslist(currency).children("li"),
-        deriveli = filter_list(addressli, id_key, seedid),
+        filterli = filter_list(addressli, id_key, seedid),
+        deriveli = filter_list(filterli, "purpose", purpose),
         actives = deriveli.not(".used"),
         check_p = (actives.length) ? ch_pending(actives.first().data()) : false;
     if (!actives.length || check_p === true || add) {
         var allength = deriveli.length,
             index = (allength > 1) ? get_latest_index(deriveli) + 1 : allength,
-            root_path = (source == "xpub") ? "M/0/" : (source == "seed") ? bip32.root_path : "",
+            root_path = (source == "xpub") ? "M/0/" : (source == "seed") ? b32rp : "",
             path = root_path + index,
             dx_dat = {
                 "dpath": path,
@@ -1148,7 +1151,8 @@ function derive_obj(source, keycc, coindat, bip32, add) {
                 "erc20": false,
                 "checked": true,
                 "label": "",
-                "a_id": label
+                "a_id": label,
+                "purpose": purpose
             },
             vk = key_object.vk;
         if (vk) {
@@ -1410,9 +1414,10 @@ function ext_keys(eo, currency) {
         priv_key = eo.key;
     eko.ext_key = b58check_encode(ext_payload);
     if (eo.xpub === false) {
-        var pub_key = secp.Point.fromPrivateKey(priv_key).toHex(true),
+	    var pub_key = secp.Point.fromPrivateKey(priv_key).toHex(true),
             pub_obj = {
                 "chaincode": eo.chaincode,
+                "purpose": eo.purpose,
                 "childnumber": eo.childnumber,
                 "depth": eo.depth,
                 "fingerprint": eo.fingerprint,
@@ -1427,7 +1432,7 @@ function ext_keys(eo, currency) {
 }
 
 function xpub_obj(currency, rootpath, cc, key) {
-    var dx_dat = {
+	var dx_dat = {
             "dpath": rootpath.slice(0, -3),
             "key": key,
             "cc": cc
@@ -1444,10 +1449,11 @@ function xpub_obj(currency, rootpath, cc, key) {
 }
 
 function b58c_x_payload(eo, currency) {
-    var xpubdat = getbip32dat(currency),
-        xpub = eo.xpub,
-        version = (currency == "bitcoin") ? (xpub) ? xpubdat.prefix.pubz : xpubdat.prefix.privz : (xpub) ? xpubdat.prefix.pubx : xpubdat.prefix.privx,
-        v_hex = str_pad(dectohex(version), 8),
+	var xpubdat = getbip32dat(currency),
+    	xz_pub = (eo.purpose == "84'") ? xpubdat.prefix.pubz : xpubdat.prefix.pubx,
+		xpub = eo.xpub,
+        version = (xpub) ? xz_pub : xpubdat.prefix.privx,
+		v_hex = str_pad(dectohex(version), 8),
         depth = (eo.depth) ? str_pad(eo.depth, 2) : "00",
         fingerprint = (eo.fingerprint) ? eo.fingerprint : "00000000",
         childnumber = (eo.childnumber) ? str_pad(eo.childnumber, 8) : "00000000",
@@ -1497,12 +1503,23 @@ function format_keys(seed, key_object, bip32, index, coin) {
                 ko.address = web3.eth.accounts.privateKeyToAccount("0x" + prekey).address;
             }
         } else if (coin == "bitcoin") {
-            if (purpose.indexOf("84") > -1) {
+            if (purpose == "84'") {
                 ko.address = pub_to_address_bech32("bc", pubkey);
             } else {
                 var versionbytes = key_object.vb;
                 if (versionbytes == "04b24746") {
                     ko.address = pub_to_address_bech32("bc", pubkey);
+                } else {
+                    ko.address = pub_to_address(vb, pubkey);
+                }
+            }
+        } else if (coin == "litecoin") {
+            if (purpose == "84'") {
+                ko.address = pub_to_address_bech32("ltc", pubkey);
+            } else {
+                var versionbytes = key_object.vb;
+                if (versionbytes == "04b24746") {
+                    ko.address = pub_to_address_bech32("ltc", pubkey);
                 } else {
                     ko.address = pub_to_address(vb, pubkey);
                 }
@@ -1548,7 +1565,7 @@ function phrase_info() {
 }
 
 function phrase_info_pu(coin) {
-    var savedseed = (hasbip === true) ? ls_phrase_obj().pob.join(" ") : false,
+	var savedseed = (hasbip === true) ? ls_phrase_obj().pob.join(" ") : false,
         phrase = (savedseed) ? savedseed : get_phrase();
     if (phrase.length < 50) {
         return false
@@ -1578,6 +1595,9 @@ function phrase_info_pu(coin) {
     		<div id='pi_icons'>\
     		</div>\
     	</li>\
+    	<li class='clearfix noline' style='margin:0;padding:0'>\
+    		<ul id='segw_box'>\
+    		</ul>\
     	<li>\
     		<div id='d_paths'>\
     		</div>\
@@ -1598,7 +1618,8 @@ function phrase_info_pu(coin) {
         var currency = coinconfig.currency,
             ccsymbol = coinconfig.data.ccsymbol,
             walletdat = coinconfig.wallets,
-            bip32dat = coinconfig.settings.Xpub;
+            bip32dat = getbip32dat(currency),
+            xpubdat;
         if (bip32dat.active === true) {
             var root_path = bip32dat.root_path,
                 startindex = 0,
@@ -1651,6 +1672,7 @@ function phrase_info_pu(coin) {
     			</div>").data(dp_node_dat),
                 sw_node = $("<ul id='formbox_ul' class='clearfix" + coinclass + "'>" + walletlist + "</ul>"),
                 xp_node = "";
+                segw_node = "";
             if (x_pub) {
                 var xp_node = $("<div class='xpub_ib clearfix" + coinclass + "' data-xpub='" + x_pub + "'>\
 	    			<div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>show</span></div>\
@@ -1661,12 +1683,17 @@ function phrase_info_pu(coin) {
 							<p class='adbox adboxl select' data-type='Xpub'>" + x_pub + "</p>\
 						</div>\
 					</div>");
+				if (currency == "bitcoin" || currency == "litecoin") {
+					var hsw = (root_path.indexOf("m/84") > -1),
+						segw_node = $("<li class='clearfix" + coinclass + "' data-currency='" + currency + "'><strong>SegWit:</strong><div class='toggle_segwit ait'>" + switchpanel(hsw, " custom") + "</div></li>");
+				}
             }
             if (c_derive[currency]) {
                 $("#pi_icons").append(icon_node);
                 $("#d_paths").append(dp_node);
             }
             $("#xpub_box").append(xp_node);
+            $("#segw_box").append(segw_node);
             $("#supported_wallets").append(sw_node);
             pi_show();
         }
@@ -1772,7 +1799,10 @@ function test_derive_function(thisnode, prev) {
             count = 5,
             td_li = (prev === true) ? test_derive_box.find(".der_li").first() : test_derive_box.find(".der_li").last(),
             der_index = (td_li.length) ? parseInt(td_li.attr("data-index")) : 0,
-            startindex = (der_index === 0) ? 0 : (prev === true) ? der_index - count : der_index + 1;
+            startindex = (der_index === 0) ? 0 :
+            (prev === "replace") ? der_index - 4 :
+            (prev === true) ? der_index - count :
+            der_index + 1;
         if (startindex > 1) {
             td_prev.show();
         } else {

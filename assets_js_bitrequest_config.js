@@ -314,6 +314,7 @@ var apptitle = "Bitrequest",
                     "Key derivations": {
                         "icon": "cog",
                         "selected": "Compatible wallets",
+                        "segwit": true
                     }
                 }
             },
@@ -420,11 +421,13 @@ var apptitle = "Bitrequest",
                         "custom_switch": true,
                         "selected": false,
                         "key": null,
-                        "root_path": "m/44'/2'/0'/0/",
+                        "root_path": "m/84'/2'/0'/0/",
                         "prefix": {
                             "pub": 48,
                             "pubx": 27108450,
-                            "privx": 27106558
+                            "privx": 27106558,
+                            "pubz": 78792518,
+                            "privz": 78791436
                         },
                         "pk_vbytes": {
                             "wif": 176
@@ -433,6 +436,7 @@ var apptitle = "Bitrequest",
                     "Key derivations": {
                         "icon": "cog",
                         "selected": "Compatible wallets",
+                        "segwit": true
                     }
                 }
             },

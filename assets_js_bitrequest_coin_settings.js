@@ -44,6 +44,7 @@ $(document).ready(function() {
 
     // Key Management
     key_management();
+    segwit_switch();
     //xpub_info_pu
     export_keys();
     //export_keys_fallback
@@ -1006,7 +1007,7 @@ function xpub_derivelists(currency, xpub) {
 }
 
 function check_xpub(address, prefix, currency) {
-    var this_prefix = (currency == "bitcoin") ? "zpub|xpub" : prefix,
+    var this_prefix = (currency == "bitcoin") ? "zpub|xpub" : (currency == "litecoin") ? "zpub|Ltub" : prefix,
         regex = "(" + this_prefix + ")([a-km-zA-HJ-NP-Z1-9]{107})(\\?c=\\d*&h=bip\\d{2,3})?";
     return new RegExp(regex).test(address);
 }
@@ -1041,6 +1042,43 @@ function key_management() {
                 manage_bip32();
             }
         }
+    })
+}
+
+function segwit_switch() {
+    $(document).on("mouseup", "#segw_box .toggle_segwit .switchpanel", function() {
+        var this_switch = $(this),
+            thisvalue = (this_switch.hasClass("true")) ? true : false,
+            current_li = this_switch.closest("li"),
+            thiscurrency = current_li.attr("data-currency"),
+            kdli = $("#" + thiscurrency + "_settings .cc_settinglist li[data-id='Xpub']"),
+            kdli_dat = kdli.data(),
+            rootpath = kdli_dat.root_path,
+            coincode = rootpath.split("/")[2],
+            dpath_header = $("#d_paths .pd_" + thiscurrency + " .d_path_header span.ref");
+        if (thisvalue === true) {
+            var result = confirm("Use " + thiscurrency + " Legacy addresses?");
+            if (result === false) {
+	            return
+            }
+            var dp = "m/44'/" + coincode + "/0'/0/";
+            kdli.data("root_path", dp);
+            this_switch.removeClass("true").addClass("false");
+            dpath_header.text(dp);
+        }
+        else {
+	       	var result = confirm("Use " + thiscurrency + " SegWit addresses?");
+            if (result === false) {
+	            return
+            }
+            var dp = "m/84'/" + coincode + "/0'/0/";
+            kdli.data("root_path", dp);
+            this_switch.addClass("true").removeClass("false");
+            dpath_header.text(dp);
+        }
+        var dpath_next = $("#d_paths .pd_" + thiscurrency + " .d_path_body .td_bar .td_next");
+        save_cc_settings(thiscurrency, true);
+        test_derive_function(dpath_next, "replace");
     })
 }
 
