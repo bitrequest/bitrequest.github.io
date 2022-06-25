@@ -1740,7 +1740,7 @@ function set_uris(urlscheme, amount) {
             "data-rel": amount,
             "title": urlscheme
         });
-    }, 1500, function() {
+    }, 300, function() {
         clearTimeout(uri_timer);
     });
 }
@@ -1763,7 +1763,7 @@ function set_lnd_uris(urlscheme, amount) {
             "data-rel": amount,
             "title": "lightning:" + urlscheme
         });
-    }, 1500, function() {
+    }, 300, function() {
         clearTimeout(uri_timer_lnd);
     });
     $("#paymentaddress_lnd").text(urlscheme);
