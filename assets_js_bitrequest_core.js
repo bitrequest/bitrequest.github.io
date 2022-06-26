@@ -3155,9 +3155,15 @@ function addressinfo() {
             srcval = (source) ? (active_src) ? source + " <span class='icon-checkmark'>" :
             source + " (Unavailable)" + restore : "external",
             d_index = dd.derive_index,
-            dpath = (bip32dat) ? bip32dat.root_path + d_index : "";
+            dpath = (bip32dat) ? bip32dat.root_path + d_index : "",
+			purpose = dd.purpose;
+        if (purpose) {
+	        var dsplit = dpath.split("/");
+			dsplit[1] = purpose;
+			var dpath = dsplit.join("/");
+        }
         dd.dpath = dpath,
-            dd.bip32dat = bip32dat;
+        dd.bip32dat = bip32dat;
         var cc_icon = getcc_icon(dd.cmcid, dd.ccsymbol + "-" + currency, dd.erc20),
             dpath_str = (isseed) ? "<li><strong>Derivation path:</strong> " + dpath + "</li>" : "",
             pk_verified = "Unknown <span class='icon-checkmark'></span>",
