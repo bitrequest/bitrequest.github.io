@@ -79,7 +79,7 @@ function init_socket(socket_node, address, swtch, retry) {
                 blockcypher_websocket(socket_node, address);
             }
         } else if (payment == "bitcoin-cash") {
-            //blockchain_bch_socket(socket_node, address);
+            blockchain_bch_socket(socket_node, address);
         } else if (payment == "nano") {
             nano_socket(socket_node, address);
         } else if (payment == "ethereum") {
