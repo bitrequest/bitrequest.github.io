@@ -25,7 +25,7 @@ $(document).ready(function() {
     //ping_xmr_node
     //after_poll
     //ap_loader
-    //bitcoincom_scan_poll
+    //blockchair_scan_poll_bch
     //blockcypher_scan_poll
     //nano_scan_poll
     //erc20_scan_poll
@@ -79,7 +79,7 @@ function init_socket(socket_node, address, swtch, retry) {
                 blockcypher_websocket(socket_node, address);
             }
         } else if (payment == "bitcoin-cash") {
-            blockchain_bch_socket(socket_node, address);
+            //blockchain_bch_socket(socket_node, address);
         } else if (payment == "nano") {
             nano_socket(socket_node, address);
         } else if (payment == "ethereum") {
@@ -882,14 +882,14 @@ function after_poll(rq_init) {
         request_ts_utc = rq_init + timezone,
         request_ts = request_ts_utc - 30000; // 30 seconds compensation for unexpected results
     if (input_val > 0) {
-        if (ccsymbol == "btc" || ccsymbol == "bch") {
-            ap_loader();
-            bitcoincom_scan_poll(api_name, ccsymbol, set_confirmations, address, request_ts);
-            return
-        }
-        if (ccsymbol == "ltc" || ccsymbol == "doge" || ccsymbol == "eth") {
+        if (ccsymbol == "btc" || ccsymbol == "ltc" || ccsymbol == "doge" || ccsymbol == "eth") {
             ap_loader();
             blockcypher_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts);
+            return
+        }
+        if (ccsymbol == "bch") {
+            ap_loader();
+            blockchair_scan_poll_bch(api_name, ccsymbol, set_confirmations, address, request_ts);
             return
         }
         if (ccsymbol == "nano") {
@@ -928,41 +928,59 @@ function ap_loader() {
     loadertext("Closing request / scanning for incoming transactions");
 }
 
-function bitcoincom_scan_poll(api_name, ccsymbol, set_confirmations, address, request_ts) {
+function blockchair_scan_poll_bch(api_name, ccsymbol, set_confirmations, address, request_ts) {
+	var scan_url = "bitcoin-cash/dashboards/address/" + address;
     api_proxy({
-        "api": "bitcoin.com",
-        "search": ccsymbol + "/v1/addrs/txs",
+        "api": "blockchair",
+        "search": scan_url,
         "cachetime": 25,
         "cachefolder": "1h",
-        "proxy": true,
         "params": {
-            "method": "POST",
-            "data": JSON.stringify({
-                "addrs": address
-            }),
+            "method": "GET"
         }
     }).done(function(e) {
         var data = br_result(e).result;
         if (data) {
-            var items = data.items;
-            if (!$.isEmptyObject(items)) {
-                var legacy = (ccsymbol == "bch") ? bchutils.toLegacyAddress(address) : address,
-                    detect = false,
-                    txdat;
-                $.each(items, function(dat, value) {
-                    if (value.txid) { // filter outgoing transactions
-                        var txd = bitcoincom_scan_data(value, set_confirmations, ccsymbol, legacy, address);
-                        if (txd.transactiontime > request_ts && txd.ccval) {
-                            txdat = txd;
-                            detect = true;
-                            return
-                        }
-                    }
-                });
-                if (txdat && detect === true) {
-                    pick_monitor(txdat.txhash, txdat);
-                    return
-                }
+            var context = data.context;
+            if (context) {
+                var latestblock = context.state;
+                if (latestblock) {
+	                var ddat = data.data;
+	                if (ddat) {
+		                var txarray = ddat[address].transactions; // get transactions
+		                if (txarray && !$.isEmptyObject(txarray)) {
+			               	api_proxy({
+		                        "api": "blockchair",
+		                        "search": "bitcoin-cash/dashboards/transactions/" + txarray.slice(0, 6), // get last 5 transactions
+		                        "cachetime": 25,
+		                        "cachefolder": "1h",
+		                        "params": {
+		                            "method": "GET"
+		                        }
+		                    }).done(function(e) {
+		                        var dat = br_result(e).result;
+		                        if (dat.data) {
+			                        var detect = false,
+										txdat;
+			                        $.each(dat.data, function(dt, val) {
+			                            var txd = blockchair_scan_data(val, set_confirmations, ccsymbol, address, latestblock);
+			                            if (txd.transactiontime > request_ts && txd.ccval) {
+				                            txdat = txd;
+				                            detect = true;
+				                            return
+				                        }
+			                        });
+			                        if (txdat && detect === true) {
+					                    pick_monitor(txdat.txhash, txdat);
+					                    return
+					                }
+			                    }
+			                    close_paymentdialog(true);
+		                    })
+		                    return
+			            }
+	                }
+	            }
             }
         }
         close_paymentdialog(true);
