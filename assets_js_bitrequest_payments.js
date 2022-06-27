@@ -15,8 +15,6 @@ var txid,
     payment,
     request,
     request_timer,
-    uri_timer,
-    uri_timer_lnd,
     blocktyping = false,
     lnd_ph = false;
 
@@ -1725,14 +1723,9 @@ function renderqr(payment, address, amount, title) {
 }
 
 function set_uris(urlscheme, amount) {
-    clearTimeout(uri_timer);
-    uri_timer = setTimeout(function() {
-        $(".openwallet").attr({
-            "data-rel": amount,
-            "title": urlscheme
-        });
-    }, 300, function() {
-        clearTimeout(uri_timer);
+    $("#paymentdialogbox .openwallet").attr({
+        "data-rel": amount,
+        "title": urlscheme
     });
 }
 
@@ -1748,14 +1741,9 @@ function set_lnd_qr(a, title) {
 }
 
 function set_lnd_uris(urlscheme, amount) {
-    clearTimeout(uri_timer_lnd);
-    uri_timer_lnd = setTimeout(function() {
-        $("#paymentdialogbox .openwallet_lnd").attr({
-            "data-rel": amount,
-            "title": "lightning:" + urlscheme
-        });
-    }, 300, function() {
-        clearTimeout(uri_timer_lnd);
+    $("#paymentdialogbox .openwallet_lnd").attr({
+        "data-rel": amount,
+        "title": "lightning:" + urlscheme
     });
     $("#paymentaddress_lnd").text(urlscheme);
 }
