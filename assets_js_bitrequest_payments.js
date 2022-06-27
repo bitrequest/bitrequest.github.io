@@ -1019,6 +1019,7 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
         (fiatapi == "coingecko") ? "exchange_rates" :
         (fiatapi == "exchangeratesapi") ? "latest" :
         (fiatapi == "currencylayer") ? "live" :
+        (fiatapi == "coinbase") ? "exchange-rates" :
         false;
     if (payload === false) {
         loadertext("error");
@@ -1041,10 +1042,12 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
                 (fiatapi == "coingecko") ? data.rates :
                 (fiatapi == "exchangeratesapi") ? data.rates :
                 (fiatapi == "currencylayer") ? data.quotes :
+                (fiatapi == "coinbase") ? data.data.rates :
                 null;
             if (ratesnode) {
                 loadertext("success");
-                var localupper = request.fiatcurrency.toUpperCase(),
+                var fiatsymbol = request.fiatcurrency,
+                	localupper = fiatsymbol.toUpperCase(),
                     rates = {
                         "eur": 1
                     },
@@ -1053,45 +1056,44 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
                 if (fiatapi == "fixer") {
                     var usdval = ratesnode.USD,
                         localval = ratesnode[localupper];
-                } else if (fiatapi == "coingecko") {
-                    if (ratesnode[request.fiatcurrency]) {
+                }
+                else if (fiatapi == "coingecko") {
+                    if (ratesnode[fiatsymbol]) {
                         var eurval = ratesnode.eur.value,
                             usdval = ratesnode.usd.value / eurval,
-                            localval = ratesnode[request.fiatcurrency].value / eurval;
-                    } else {
-                        var error_object = request.fiatcurrency + " exchangerates not available from " + fiatapi;
-                        next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, ccapi, cachetime);
-                        return false;
+                            localval = ratesnode[fiatsymbol].value / eurval;
                     }
-                } else if (fiatapi == "exchangeratesapi") {
+                }
+                else if (fiatapi == "exchangeratesapi") {
                     if (ratesnode[localupper]) {
                         var usdval = ratesnode.USD,
                             localval = (localupper == "EUR") ? 1 : ratesnode[localupper];
-                    } else {
-                        var error_object = localupper + " exchangerates not available from " + fiatapi;
-                        next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, ccapi, cachetime);
-                        return false;
                     }
-                } else if (fiatapi == "currencylayer") {
-                    if (ratesnode["USD" + localupper]) {
+                }
+                else if (fiatapi == "currencylayer") {
+	                var localkey = ratesnode["USD" + localupper];
+                    if (localkey) {
                         var usdval = 1 / ratesnode.USDEUR,
-                            localval = ratesnode["USD" + localupper] * usdval;
-                    } else {
-                        var error_object = localupper + " exchangerates not available from " + fiatapi;
-                        next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, ccapi, cachetime);
-                        return false;
+                            localval = localkey * usdval;
+                    }
+                }
+                else if (fiatapi == "coinbase") {
+	                var localkey = ratesnode[localupper];
+                    if (localkey) {
+                        var usdval = 1 / ratesnode.EUR,
+                            localval = localkey * usdval;
                     }
                 } else {
                     loadertext("error");
                     closeloader();
                     cancelpaymentdialog();
-                    fail_dialogs(false, fiatapi, "Fiat price API not defined");
-                    return false;
+                    fail_dialogs(fiatapi, "Fiat price API not defined");
+                    return
                 }
                 if (localval && usdval) {
                     rates.usd = usdval;
-                    if (request.fiatcurrency == "eur" || request.fiatcurrency == "usd" || request.fiatcurrency == "btc") {} else {
-                        rates[request.fiatcurrency] = localval;
+                    if (fiatsymbol == "eur" || fiatsymbol == "usd" || fiatsymbol == "btc") {} else {
+                        rates[fiatsymbol] = localval;
                     }
                     rendercurrencypool(rates, ccrate, ccapi, fiatapi, cachetime, "0"); // render exchangerates
                     // cache exchange rates
@@ -1101,35 +1103,23 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
                         "api": fiatapi
                     });
                     sessionStorage.setItem("bitrequest_exchangerates", xratestring);
-                } else {
-                    var nextfiatapi = try_next_api(apilist, fiatapi);
-                    if (nextfiatapi === false) {
-                        loadertext("error");
-                        closeloader();
-                        cancelpaymentdialog();
-                        fail_dialogs(fiatapi, "Failed to load data from " + fiatapi);
-                    } else {
-                        get_fiat_exchangerate(apilist, nextfiatapi, ccrate, currencystring, ccapi, cachetime);
-                    }
-                    return false;
+                    return
                 }
-            } else {
-                var nextfiatapi = try_next_api(apilist, fiatapi);
-                if (nextfiatapi === false) {
-                    loadertext("error");
-                    closeloader();
-                    cancelpaymentdialog();
-                    var errorcode = (data.error) ? data.error : "Failed to load data from " + fiatapi;
-                    fail_dialogs(fiatapi, errorcode);
-                } else {
-                    get_fiat_exchangerate(apilist, nextfiatapi, ccrate, currencystring, ccapi, cachetime);
-                }
-                return false;
             }
+            var nextfiatapi = try_next_api(apilist, fiatapi);
+            if (nextfiatapi === false) {
+                loadertext("error");
+                closeloader();
+                cancelpaymentdialog();
+                var errorcode = (data.error) ? data.error : "Failed to load data from " + fiatapi;
+                fail_dialogs(fiatapi, errorcode);
+                return
+            }
+            get_fiat_exchangerate(apilist, nextfiatapi, ccrate, currencystring, ccapi, cachetime);
         }).fail(function(jqXHR, textStatus, errorThrown) {
             var error_object = (errorThrown) ? errorThrown : jqXHR;
             next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, ccapi, cachetime);
-            return false;
+            return
         });
     }
 }
@@ -1155,6 +1145,7 @@ function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cache
         (fiatapi == "coingecko") ? "coingecko.com" :
         (fiatapi == "exchangeratesapi") ? "exchangeratesapi.io" :
         (fiatapi == "currencylayer") ? "currencylayer.com" :
+        (fiatapi == "coinbase") ? "coinbase.com" :
         null,
         xratedata1 = "<div data-currency='" + request.currencysymbol + "' data-value='' data-xrate='" + ccrateeuro + "' class='cpool ccpool' data-currencyname='" + request.payment + "'><span>" + ccapi + ": <span class='ratesspan'>" + request.currencysymbol + "_" + request.uoa + ": " + (1 / (ccrateeuro / currentrate)).toFixed(8) + "</span></span></div><div class='cachetime'> (" + (cachetimecrypto / 60000).toFixed(1) + " of " + (cacheperiodcrypto / 60000).toFixed(0) + " min. in cache)</div><br/><div class='mainrate'>" + fiatapiurl + ": </div>",
         xratedata2 = [],

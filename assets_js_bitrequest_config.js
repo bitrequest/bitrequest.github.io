@@ -1380,6 +1380,13 @@ var apptitle = "Bitrequest",
                 "sign_up": "https://currencylayer.com/product"
             },
             {
+                "name": "coinbase",
+                "base_url": "https://api.coinbase.com/v2/",
+                "key_param": null,
+                "api_key": null,
+                "sign_up": null
+            },
+            {
                 "name": "bitly",
                 "base_url": "https://api-ssl.bitly.com/v4/",
                 "key_param": "post",
@@ -1424,7 +1431,7 @@ var apptitle = "Bitrequest",
         ],
         "apilists": {
             "crypto_price_apis": ["coinmarketcap", "coinpaprika", "coingecko"],
-            "fiat_price_apis": ["fixer", "coingecko", "exchangeratesapi", "currencylayer"],
+            "fiat_price_apis": ["fixer", "coingecko", "exchangeratesapi", "currencylayer", "coinbase"],
             "historic_crypto_price_apis": ["coinpaprika", "coingecko"],
             "historic_fiat_price_apis": ["fixer", "exchangeratesapi", "currencylayer"]
         },

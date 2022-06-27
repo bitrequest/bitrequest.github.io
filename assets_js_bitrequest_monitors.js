@@ -635,7 +635,7 @@ function get_api_inputs(rd, api_data, api_name) {
                 return
             }
             if (api_name == "bitcoin.com") {
-                var legacy = (ccsymbol == "bch") ? bchutils.toLegacyAddress(address) : address;
+	            var legacy = (ccsymbol == "bch") ? bchutils.toLegacyAddress(address) : address;
                 if (pending == "scanning") { // scan incoming transactions on address
                     api_proxy({
                         "api": api_name,
@@ -1799,7 +1799,7 @@ function compareamounts(rd) {
             });
             var apilist = "historic_fiat_price_apis",
                 fiatapi = $("#fiatapisettings").data("selected"),
-                fiatapi_default = (fiatapi == "coingecko") ? "fixer" : fiatapi; // exclude coingecko api"
+                fiatapi_default = (fiatapi == "coingecko" || fiatapi == "coinbase") ? "fixer" : fiatapi; // exclude coingecko api"
             api_attempt[apilist] = {}; // reset global historic fiat price api attempt
             get_historical_fiat_data(historic_payload, apilist, fiatapi_default);
         } else {
