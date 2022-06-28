@@ -83,7 +83,7 @@ function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
             "created" => $timeformat,
             "created_utc" => $time,
             "cache_time" => $ctime,
-            "time_in_cache" => "0",
+            "time_in_cache" => 0,
             "utc_timestamp" => $time,
             "version" => $version
         ];
