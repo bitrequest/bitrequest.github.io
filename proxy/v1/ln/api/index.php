@@ -381,6 +381,12 @@ if ($imp == "lnd" || $imp == "eclair" || $imp == "c-lightning" || $imp == "lnbit
 							"proxy" => $serverhost
 						];
 					} else {
+						echo json_encode(
+							[
+								"status" => "ERROR",
+								"reason" => "failed to create invoice"
+							]
+						);
 						$s_content = [
 							"pid" => $g_pid,
 							"status" => "error",
@@ -400,8 +406,7 @@ if ($imp == "lnd" || $imp == "eclair" || $imp == "c-lightning" || $imp == "lnbit
 					if ($callback_url && strlen($callback_url) > 10) {
 						if ($type_txt) {
 							if ($remote_tracking == "yes" && $local_tracking == "yes") {
-								$jaja = curl_get($callback_url, $s_content, null); // track all
-								echo $jaja;
+								echo curl_get($callback_url, $s_content, null); // track all
 								return;
 							}
 							if ($remote_tracking == "yes" && $local_tracking != "yes") {
