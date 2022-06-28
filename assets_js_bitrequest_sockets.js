@@ -45,17 +45,22 @@ function init_socket(socket_node, address, swtch, retry) {
             socket_attempt[btoa(socket_node.url)] = true;
         }
         if (payment == "bitcoin") {
-            if (socket_name == "blockcypher websocket") {
-                blockcypher_websocket(socket_node, address);
-            } else if (socket_name == "blockchain.info websocket") {
-                blockchain_btc_socket(socket_node, address);
-            } else if (socket_name == main_ad_socket) {
-                amberdata_btc_websocket(socket_node, address, "408fa195a34b533de9ad9889f076045e");
-            } else if (socket_name == "mempool.space websocket") {
-                mempoolspace_btc_socket(socket_node, address);
-            } else {
-                blockcypher_websocket(socket_node, address);
-            }
+	        if (address == "lnurl") {
+		        // lightning only
+	        }
+	        else {
+		        if (socket_name == "blockcypher websocket") {
+                	blockcypher_websocket(socket_node, address);
+	            } else if (socket_name == "blockchain.info websocket") {
+	                blockchain_btc_socket(socket_node, address);
+	            } else if (socket_name == main_ad_socket) {
+	                amberdata_btc_websocket(socket_node, address, "408fa195a34b533de9ad9889f076045e");
+	            } else if (socket_name == "mempool.space websocket") {
+	                mempoolspace_btc_socket(socket_node, address);
+	            } else {
+	                blockcypher_websocket(socket_node, address);
+	            }
+	        }
             if (helper.lnd_status) {
                 if (retry) {
                     return;
