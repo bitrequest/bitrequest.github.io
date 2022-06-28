@@ -623,7 +623,7 @@ function invoice_uniform($imp, $inv, $type) {
 				"invoice" => $dat,
 				"proxy" => $proxy_host,
 				"type" => $type,
-				"error" => isset($dat["error"]) ? $dat["error"]["message"] : null
+				"error" => isset($dat["error"]) ? "LNbits: " . $dat["error"]["message"] : null
 			];
 		}
 	}
