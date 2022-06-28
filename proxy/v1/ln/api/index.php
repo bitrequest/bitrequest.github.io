@@ -342,11 +342,10 @@ if ($imp == "lnd" || $imp == "eclair" || $imp == "c-lightning" || $imp == "lnbit
 				if ($result) {
 					$inv_error = isset($result["error"]) ? $result["error"] : false;
 					if ($inv_error) {
-						$inv_error_message = isset($inv_error["message"]) ? $inv_error["message"] : $result["message"];
 						echo json_encode(
 							[
 								"status" => "ERROR",
-								"reason" => $inv_error_message
+								"reason" => $inv_error
 							]
 						);
 						return;
@@ -593,7 +592,8 @@ function invoice_uniform($imp, $inv, $type) {
 				"hash" => lnd_b64_dec($dat["r_hash"]),
 				"invoice" => $dat,
 				"proxy" => $proxy_host,
-				"type" => $type
+				"type" => $type,
+				"error" => null
 			];
 		}
 		if ($imp == "c-lightning") {
@@ -602,7 +602,8 @@ function invoice_uniform($imp, $inv, $type) {
 				"hash" => $dat["payment_hash"],
 				"invoice" => $dat,
 				"proxy" => $proxy_host,
-				"type" => $type
+				"type" => $type,
+				"error" => null
 			];
 		}
 		if ($imp == "eclair") {
@@ -611,7 +612,8 @@ function invoice_uniform($imp, $inv, $type) {
 				"hash" => $dat["paymentHash"],
 				"invoice" => $dat,
 				"proxy" => $proxy_host,
-				"type" => $type
+				"type" => $type,
+				"error" => null
 			];
 		}
 		if ($imp == "lnbits") {
@@ -620,7 +622,8 @@ function invoice_uniform($imp, $inv, $type) {
 				"hash" => $dat["payment_hash"],
 				"invoice" => $dat,
 				"proxy" => $proxy_host,
-				"type" => $type
+				"type" => $type,
+				"error" => isset($dat["error"]) ? $dat["error"]["message"] : null
 			];
 		}
 	}
