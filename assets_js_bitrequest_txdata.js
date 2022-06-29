@@ -248,7 +248,7 @@ function bitcoincom_scan_data(data, setconfirmations, ccsymbol, legacy, address)
 
 function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestblock) { // scan/poll
 	if (data) {
-	    var thisaddress = (ccsymbol == "bch") ? (address.indexOf(":") > -1) ? address.split(":")[1] : address : address;
+	    var thisaddress = (ccsymbol == "bch") ? (address.indexOf(":") > -1) ? address.split(":")[1] : address : address,
 	    	transaction = data.transaction,
             transactiontime = (transaction) ? returntimestamp(transaction.time).getTime() : null,
             conf = (transaction.block_id && transaction.block_id > 10 && latestblock) ? (latestblock - transaction.block_id) + 1 : null,
