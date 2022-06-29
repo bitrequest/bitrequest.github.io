@@ -653,7 +653,7 @@ function lightning_setup() {
         if (dataobject) {
             var imp = dataobject.imp;
             if (imp) { //lightning request
-                loadertext("check lightning status");
+                loadertext("check " + imp + " lightning status");
                 var phd = dataobject.proxy,
                     host = dataobject.host,
                     key = dataobject.key,
@@ -718,7 +718,8 @@ function lightning_setup() {
         ln_dat = lnli.data(),
         ss = ln_dat.selected_service;
     if (ss) {
-        loadertext("check lightning status");
+	    var imp = ss.imp;
+        loadertext("check " + imp + " lightning status");
         var node_id = ss.node_id,
             proxies = ln_dat.proxies,
             proxy_id = ss.proxy_id,
@@ -732,7 +733,6 @@ function lightning_setup() {
             host = ss.host,
             local_lnd = is_local_node(host),
             key = ss.key,
-            imp = ss.imp,
             lnurls = (ss.lnurl) ? true : false,
             lnurls_bool = (lnurls && !host) ? true : false,
             proxy_bool = (proxy == true) ? true : false,
