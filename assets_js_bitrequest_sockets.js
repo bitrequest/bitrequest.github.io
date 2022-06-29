@@ -735,7 +735,7 @@ function try_next_socket(current_socket_data) {
                 socket_index = i;
             }
         });
-        if (socket_index) {
+        if (socket_index > -1) {
             var next_scan = socketlist[socket_index + 1],
                 next_socket = (next_scan) ? next_scan : socketlist[0];
             if (socket_attempt[btoa(next_socket.url)] === true) {
