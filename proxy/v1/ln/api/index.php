@@ -586,6 +586,7 @@ function invoice_uniform($imp, $inv, $type) {
 	$proxy_host = $_SERVER["HTTP_HOST"];
 	if ($inv) {
 		$dat = json_decode($inv, true);
+		$error = isset($dat["error"]) ? $imp . ": " . $dat["error"]["code"] . ": " . $dat["error"]["message"] : null;
 		if ($imp == "lnd") {
 			return [
 				"bolt11" => $dat["payment_request"],
@@ -593,7 +594,7 @@ function invoice_uniform($imp, $inv, $type) {
 				"invoice" => $dat,
 				"proxy" => $proxy_host,
 				"type" => $type,
-				"error" => null
+				"error" => $error
 			];
 		}
 		if ($imp == "c-lightning") {
@@ -603,7 +604,7 @@ function invoice_uniform($imp, $inv, $type) {
 				"invoice" => $dat,
 				"proxy" => $proxy_host,
 				"type" => $type,
-				"error" => null
+				"error" => $error
 			];
 		}
 		if ($imp == "eclair") {
@@ -613,7 +614,7 @@ function invoice_uniform($imp, $inv, $type) {
 				"invoice" => $dat,
 				"proxy" => $proxy_host,
 				"type" => $type,
-				"error" => null
+				"error" => $error
 			];
 		}
 		if ($imp == "lnbits") {
@@ -623,7 +624,7 @@ function invoice_uniform($imp, $inv, $type) {
 				"invoice" => $dat,
 				"proxy" => $proxy_host,
 				"type" => $type,
-				"error" => isset($dat["error"]) ? "LNbits: " . $dat["error"]["message"] : null
+				"error" => $error
 			];
 		}
 	}
