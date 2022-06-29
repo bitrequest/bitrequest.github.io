@@ -36,8 +36,7 @@ function api_monitor(api_data, txhash, tx_data) {
             set_confirmations = request.set_confirmations,
             poll_url = (api_name == "blockcypher") ? currencysymbol + "/main/txs/" + txhash :
             (api_name == "ethplorer") ? "getTxInfo/" + txhash :
-            (api_name == "blockchair") ? (request.erc20 === true) ? "ethereum/dashboards/transaction/" + txhash + "?erc_20=true" : payment + "/dashboards/transaction/" + txhash :
-            (api_name == "bitcoin.com") ? currencysymbol + "/v1/tx/" + txhash :
+            (api_name == "blockchair" || api_name == "bitcoin.com") ? (request.erc20 === true) ? "ethereum/dashboards/transaction/" + txhash + "?erc_20=true" : payment + "/dashboards/transaction/" + txhash :
             (api_name == "mempool.space") ? "tx/" + txhash : null;
         if (tx_data) {
             confirmations(tx_data, true);
@@ -80,9 +79,8 @@ function api_monitor(api_data, txhash, tx_data) {
                     legacy = (currencysymbol == "bch") ? bchutils.toLegacyAddress(currentaddress) : currentaddress,
                     txd = (api_name == "blockcypher") ? blockcypher_poll_data(data, set_confirmations, currencysymbol, currentaddress) :
                     (api_name == "ethplorer") ? ethplorer_poll_data(data, set_confirmations, currencysymbol) :
-                    (api_name == "bitcoin.com") ? bitcoincom_scan_data(data, set_confirmations, currencysymbol, legacy, currentaddress) :
                     (api_name == "mempool.space") ? mempoolspace_scan_data(data, set_confirmations, currencysymbol, currentaddress) :
-                    (api_name == "blockchair") ? (request.erc20 === true) ? blockchair_erc20_poll_data(data.data[txhash], set_confirmations, currencysymbol, data.context.state) :
+                    (api_name == "blockchair" || api_name == "bitcoin.com") ? (request.erc20 === true) ? blockchair_erc20_poll_data(data.data[txhash], set_confirmations, currencysymbol, data.context.state) :
                     (payment == "ethereum") ? blockchair_eth_scan_data(data.data[txhash].calls[0], set_confirmations, currencysymbol, data.context.state) :
                     blockchair_scan_data(data.data[txhash], set_confirmations, currencysymbol, currentaddress, data.context.state) : false;
                 confirmations(txd);
