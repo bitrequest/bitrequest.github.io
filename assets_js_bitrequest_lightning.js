@@ -1717,7 +1717,9 @@ function test_lnurl_status(lnd) {
         proceed_pf();
         return
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        proceed_pf();
+	    var error_object = (errorThrown) ? errorThrown : jqXHR,
+	    	error_data = get_api_error_data(error_object);
+	    proceed_pf(error_data);
     });
 }
 
@@ -1747,7 +1749,9 @@ function check_lnd_status(lnd) {
         proceed_pf();
         return
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        proceed_pf();
+        var error_object = (errorThrown) ? errorThrown : jqXHR,
+	    	error_data = get_api_error_data(error_object);
+	    proceed_pf(error_data);
     });
 }
 
@@ -1778,7 +1782,9 @@ function check_c_lightning_status(lnd) {
         proceed_pf();
         return
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        proceed_pf();
+        var error_object = (errorThrown) ? errorThrown : jqXHR,
+	    	error_data = get_api_error_data(error_object);
+	    proceed_pf(error_data);
     });
 }
 
@@ -1800,7 +1806,8 @@ function check_eclair_status(lnd) {
         var data = br_result(e).result;
         if (data) {
             if (data.error) {
-                proceed_pf();
+                var error_data = get_api_error_data(data.error);
+				proceed_pf(error_data);
                 return
             }
             helper.lnd_status = true;
@@ -1811,7 +1818,9 @@ function check_eclair_status(lnd) {
         proceed_pf();
         return
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        proceed_pf();
+        var error_object = (errorThrown) ? errorThrown : jqXHR,
+	    	error_data = get_api_error_data(error_object);
+	    proceed_pf(error_data);
     });
 }
 
@@ -1841,6 +1850,8 @@ function check_lnbits_status(lnd) {
         proceed_pf();
         return
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        proceed_pf();
+        var error_object = (errorThrown) ? errorThrown : jqXHR,
+	    	error_data = get_api_error_data(error_object);
+	    proceed_pf(error_data);
     });
 }

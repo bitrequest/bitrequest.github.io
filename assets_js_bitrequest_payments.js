@@ -857,14 +857,14 @@ function test_lnd(lnurl) {
     }
 }
 
-function proceed_pf() {
+function proceed_pf(error) {
     if (helper.lnd_status === false && helper.lnd_only) {
         request.monitored = false;
-        var error_message = $("#rq_errlog > .rq_err").text(),
+        var error_message = (helper.lnd_only) ? (error) ? error.errorcode + ": " + error.errormessage : "Unable to connect with lightning node" : $("#rq_errlog > .rq_err").text(),
             content = "<h2 class='icon-blocked'>" + error_message + "</h2>";
+        cancelpaymentdialog();
         popdialog(content, "alert", "canceldialog");
         closeloader();
-        notify("request is not monitored", 500000, "yes");
         return false;
     }
     var lndstatus = (helper.lnd) ? (helper.lnd.selected) ? (helper.lnd_status) ? "lnd_ao" : "lnd_active" : "lnd_inactive" : "no_lnd";
