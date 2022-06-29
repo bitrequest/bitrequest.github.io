@@ -247,8 +247,9 @@ function bitcoincom_scan_data(data, setconfirmations, ccsymbol, legacy, address)
 // blockchair
 
 function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestblock) { // scan/poll
-    if (data) {
-        var transaction = data.transaction,
+	if (data) {
+	    var thisaddress = (ccsymbol == "bch") ? (address.indexOf(":") > -1) ? address.split(":")[1] : address : address;
+	    	transaction = data.transaction,
             transactiontime = (transaction) ? returntimestamp(transaction.time).getTime() : null,
             conf = (transaction.block_id && transaction.block_id > 10 && latestblock) ? (latestblock - transaction.block_id) + 1 : null,
             outputs = data.outputs;
@@ -256,7 +257,7 @@ function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestb
             var outputsum = 0;
             $.each(outputs, function(dat, val) {
                 var satval = val.value,
-                    output = (val.recipient == address) ? Math.abs(satval) : 0;
+                    output = (val.recipient == thisaddress) ? Math.abs(satval) : 0;
                 outputsum += parseFloat(output) || 0; // sum of outputs
             });
         }
