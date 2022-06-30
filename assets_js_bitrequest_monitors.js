@@ -1140,7 +1140,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                 }
                             } else {
                                 tx_api_fail(thislist, statuspanel);
-                                handle_api_fails();
+                                handle_api_fails(rd, "unknown error", api_name, payment);
                             }
                         }).fail(function(jqXHR, textStatus, errorThrown) {
                             tx_api_fail(thislist, statuspanel);
@@ -1917,7 +1917,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
         }
     }).done(function(e) {
         var api_result = br_result(e).result,
-            data = (api == "coingecko") ? api_result.prices : api_result;
+            data = (api == "coingecko") ? (api_result) ? api_result.prices : null : api_result;
         if (data) {
             var latestconf = rd.latestconf,
                 thisamount = rd.amount,
