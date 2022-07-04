@@ -455,7 +455,7 @@ function test_lnbits_option_li(value, selected, fn) {
         closeloader();
         var data = br_result(e).result;
         if (fn == "append") {
-            if (data && data.balance) {
+            if (data && data.balance > -1) {
                 lightning_option_li(true, value, selected, data.invoices);
                 return
             }
@@ -463,7 +463,7 @@ function test_lnbits_option_li(value, selected, fn) {
             return
         }
         if (fn == "test_connect") {
-            if (data && data.balance) {
+            if (data && data.balance > -1) {
                 tconnectcb(true);
                 return
             }
@@ -1840,7 +1840,7 @@ function check_lnbits_status(lnd) {
     }).done(function(e) {
         var data = br_result(e).result;
         if (data) {
-            if (data.balance) {
+            if (data.balance > -1) {
                 helper.lnd_status = true;
                 if (lnd.nid) {
                     sessionStorage.setItem("lnd_timer_" + lnd.nid, $.now());

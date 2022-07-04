@@ -2579,9 +2579,14 @@ function saverequest(direct) {
                 return false;
             } else {
                 if (pendingstate == "polling" || requestli.hasClass("expired")) {
+	                console.log("nnsckt");
                     pendingdialog(requestli);
+                    if (lightning) {
+		            	return false;
+	            	}
                     return "nosocket";
-                } else if (pendingstate == "no") {
+                }
+                if (pendingstate == "no") {
                     request.received = true;
                     var txhash_state = rldata.txhash,
                         typestate = rldata.requesttype,

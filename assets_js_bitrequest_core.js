@@ -48,7 +48,8 @@ var language = navigator.language || navigator.userLanguage,
     cashier_seedid = (is_cashier) ? cashier_dat.seedid : false,
     hasbip = (bipobj) ? true : false,
     bipid = (hasbip) ? JSON.parse(bipobj).id : false,
-    safety_poll_timeout = 15000;
+    safety_poll_timeout = 15000,
+    blockswipe;
 
 $(document).ready(function() {
     $.ajaxSetup({
