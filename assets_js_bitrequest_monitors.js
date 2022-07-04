@@ -282,28 +282,39 @@ function get_api_inputs(rd, api_data, api_name) {
                                             "x-api": pk
                                         }
                                     }).done(function(e) {
-                                        var status = e.status;
-                                        if (status) {
-                                            lnd.invoice = e;
-                                            status_field.text(" " + status);
-                                            rd.lightning = lnd; // push invoice
-                                            var txd = lnd_tx_data(e);
-                                            if (txd.ccval) {
-                                                var tx_listitem = append_tx_li(txd, thislist, true);
-                                                if (tx_listitem) {
-                                                    transactionlist.append(tx_listitem.data(txd));
-                                                    tx_count(statuspanel, txd.confirmations);
-                                                    if (status == "canceled") {
-                                                        updaterequest({
-                                                            "requestid": requestid,
-                                                            "status": "canceled",
-                                                            "confirmations": 0
-                                                        }, false);
-                                                    }
-                                                    compareamounts(rd);
-                                                }
-                                            }
-                                        }
+	                                    var inv_error = e.error;
+				                        if (inv_error) {
+				                            var err_message = (inv_error.message) ? inv_error.message : (typeof inv_error == "string") ? inv_error : default_error;
+				                            tx_api_fail(thislist, statuspanel);
+				                            handle_api_fails(rd, {
+				                                "error": err_message,
+				                                "console": true
+				                            }, false, payment);
+				                            status_field.text(" " + err_message);
+				                        } else {
+					                        var status = e.status;
+	                                        if (status) {
+	                                            lnd.invoice = e;
+	                                            status_field.text(" " + status);
+	                                            rd.lightning = lnd; // push invoice
+	                                            var txd = lnd_tx_data(e);
+	                                            if (txd.ccval) {
+	                                                var tx_listitem = append_tx_li(txd, thislist, true);
+	                                                if (tx_listitem) {
+	                                                    transactionlist.append(tx_listitem.data(txd));
+	                                                    tx_count(statuspanel, txd.confirmations);
+	                                                    if (status == "canceled") {
+	                                                        updaterequest({
+	                                                            "requestid": requestid,
+	                                                            "status": "canceled",
+	                                                            "confirmations": 0
+	                                                        }, false);
+	                                                    }
+	                                                    compareamounts(rd);
+	                                                }
+	                                            }
+	                                        }
+					                    }    
                                     }).fail(function(jqXHR, textStatus, errorThrown) {
                                         tx_api_fail(thislist, statuspanel);
                                         var error_object = (errorThrown) ? errorThrown : jqXHR;

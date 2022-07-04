@@ -2579,8 +2579,7 @@ function saverequest(direct) {
                 return false;
             } else {
                 if (pendingstate == "polling" || requestli.hasClass("expired")) {
-	                console.log("nnsckt");
-                    pendingdialog(requestli);
+	                pendingdialog(requestli);
                     if (lightning) {
 		            	return false;
 	            	}
