@@ -713,7 +713,7 @@ function list_invoices($imp, $host, $key, $type, $pingtest) {
 		$headers[] = "X-Api-Key: " . $key;
 		$invoices = curl_get($rpcurl, null, $headers);
 		$result = json_decode($invoices, true);
-		$connected = $result["balance"] ? true : false;
+		$connected = ($result["balance"] > -1) ? true : false;
 		$m_dat = [
 			"connected" => $connected,
 			"type" => $type
