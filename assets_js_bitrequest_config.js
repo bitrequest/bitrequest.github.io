@@ -1089,7 +1089,7 @@ var apptitle = "Bitrequest",
                     "address_regex": "^(NQ)[a-zA-Z0-9]{34}"
                 },
                 "wallets": {
-                    "wallet_download_page": "https://www.nimiq.coms",
+                    "wallet_download_page": "https://www.nimiq.com",
                     "wallets": [
                         multi_wallets.atomicwallet,
                         {
