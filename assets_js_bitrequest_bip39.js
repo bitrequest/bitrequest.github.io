@@ -1449,8 +1449,11 @@ function xpub_obj(currency, rootpath, cc, key) {
 }
 
 function b58c_x_payload(eo, currency) {
-	var xpubdat = getbip32dat(currency),
-    	xz_pub = (eo.purpose == "84'") ? xpubdat.prefix.pubz : xpubdat.prefix.pubx,
+	var xpubdat = getbip32dat(currency);
+	if (!xpubdat) {
+		return false;
+	}
+	var xz_pub = (eo.purpose == "84'") ? xpubdat.prefix.pubz : xpubdat.prefix.pubx,
 		version = (eo.xpub === true) ? xz_pub : xpubdat.prefix.privx,
 		v_hex = str_pad(dectohex(version), 8),
         depth = (eo.depth) ? str_pad(eo.depth, 2) : "00",

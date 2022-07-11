@@ -1075,6 +1075,85 @@ var apptitle = "Bitrequest",
                         "selected": "Compatible wallets",
                     }
                 }
+            },
+            {
+                "currency": "nimiq",
+                "active": true,
+                "data": {
+                    "currency": "nimiq",
+                    "ccsymbol": "nim",
+                    "cmcid": 2916,
+                    "urlscheme": function(payment, address, amount, iszero) {
+                        return btc_urlscheme(payment, address, amount, iszero);
+                    },
+                    "address_regex": "^(NQ)[a-zA-Z0-9]{34}"
+                },
+                "wallets": {
+                    "wallet_download_page": "https://www.nimiq.coms",
+                    "wallets": [
+                        multi_wallets.atomicwallet,
+                        {
+                            "name": "wallet.nimiq.com",
+                            "website": "https://wallet.nimiq.com",
+                            "appstore": null,
+                            "playstore": null,
+                            "desktop": "https://wallet.nimiq.com",
+                            "seed": false
+                        }
+                    ]
+                },
+                "settings": {
+                    "confirmations": {
+                        "icon": "clock",
+                        "selected": 0
+                    },
+                    "Use random address": {
+                        "icon": "dice",
+                        "selected": false,
+                        "switch": true,
+                    },
+                    "blockexplorers": {
+                        "icon": "eye",
+                        "selected": "nimiq.watch",
+                        "options": ["nimiq.watch","mopsus.com"]
+                    },
+                    "apis": {
+                        "icon": "sphere",
+                        "selected": {
+                            "name": "nimiq.watch",
+                            "api": true,
+                            "display": true
+                        },
+                        "apis": [{
+                            "name": "nimiq.watch",
+                            "api": true,
+                            "display": true
+                        },
+                        {
+                            "name": "mopsus.com",
+                            "api": true,
+                            "display": true
+                        }]
+                    },
+                    "Xpub": {
+                        "active": false,
+                        "xpub": false,
+                        "icon": "key",
+                        "switch": true,
+                        "custom_switch": true,
+                        "selected": false,
+                        "key": null,
+                        "root_path": "m/44'/242'/0'/0/",
+                        "prefix": {
+                            "pub": 0,
+                            "pubx": "00000000",
+                            "privx": "00000000"
+                        },
+                        "pk_vbytes": {
+                            "wif": 0
+                        }
+                    }
+                }
             }
         ],
         "erc20_dat": {
@@ -1339,7 +1418,7 @@ var apptitle = "Bitrequest",
             },
             {
                 "name": "coinmarketcap",
-                "base_url": "https://pro-api.coinmarketcap.com/v1/",
+                "base_url": "https://pro-api.coinmarketcap.com/",
                 "key_param": "CMC_PRO_API_KEY=",
                 "api_key": null,
                 "sign_up": "https://pro.coinmarketcap.com/signup/"
@@ -1347,6 +1426,13 @@ var apptitle = "Bitrequest",
             {
                 "name": "coingecko",
                 "base_url": "https://api.coingecko.com/api/v3/",
+                "key_param": null,
+                "api_key": null,
+                "sign_up": null
+            },
+            {
+                "name": "coincodex",
+                "base_url": "https://coincodex.com/api/coincodex/",
                 "key_param": null,
                 "api_key": null,
                 "sign_up": null
@@ -1408,6 +1494,20 @@ var apptitle = "Bitrequest",
                 "sign_up": null
             },
             {
+                "name": "nimiq.watch",
+                "base_url": "https://api.nimiq.watch/",
+                "key_param": null,
+                "api_key": null,
+                "sign_up": null
+            },
+            {
+                "name": "mopsus.com",
+                "base_url": "https://www.mopsus.com/api/",
+                "key_param": null,
+                "api_key": null,
+                "sign_up": null
+            },
+            {
                 "name": "infura",
                 "base_url": main_eth_node,
                 "key_param": null,
@@ -1432,7 +1532,7 @@ var apptitle = "Bitrequest",
         "apilists": {
             "crypto_price_apis": ["coinmarketcap", "coinpaprika", "coingecko"],
             "fiat_price_apis": ["fixer", "coingecko", "exchangeratesapi", "currencylayer", "coinbase"],
-            "historic_crypto_price_apis": ["coinpaprika", "coingecko"],
+            "historic_crypto_price_apis": ["coinpaprika", "coingecko", "coincodex"],
             "historic_fiat_price_apis": ["fixer", "exchangeratesapi", "currencylayer"]
         },
         "blockexplorers": [{
@@ -1469,6 +1569,20 @@ var apptitle = "Bitrequest",
                 "prefix": null,
                 "tx_prefix": "tx/",
                 "address_prefix": "address/"
+            },
+            {
+                "name": "nimiq.watch",
+                "url": "https://nimiq.watch/",
+                "prefix": null,
+                "tx_prefix": "#",
+                "address_prefix": "#"
+            },
+            {
+                "name": "mopsus.com",
+                "url": "https://nimiq.mopsus.com/",
+                "prefix": null,
+                "tx_prefix": "tx/",
+                "address_prefix": "addr/"
             }
         ]
     };

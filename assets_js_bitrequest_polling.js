@@ -14,7 +14,7 @@
 
 // pick API / RPC
 function pick_monitor(txhash, tx_data) {
-    var api_info = helper.api_info;
+	var api_info = helper.api_info;
     if (api_info.api === true) {
         api_monitor_init(api_info.data, txhash, tx_data);
     } else {
@@ -23,7 +23,7 @@ function pick_monitor(txhash, tx_data) {
 }
 
 function api_monitor_init(api_data, txhash, tx_data) {
-    api_attempts["polling" + api_data.name] = null;
+	api_attempts = {};
     api_monitor(api_data, txhash, tx_data);
     paymentdialogbox.addClass("transacting");
 }
@@ -31,20 +31,23 @@ function api_monitor_init(api_data, txhash, tx_data) {
 function api_monitor(api_data, txhash, tx_data) {
     var api_name = api_data.name;
     if (api_name) {
+	    api_attempts["pollings" + api_name] = true;
         var payment = request.payment,
             currencysymbol = request.currencysymbol,
             set_confirmations = request.set_confirmations,
             poll_url = (api_name == "blockcypher") ? currencysymbol + "/main/txs/" + txhash :
             (api_name == "ethplorer") ? "getTxInfo/" + txhash :
             (api_name == "blockchair" || api_name == "bitcoin.com") ? (request.erc20 === true) ? "ethereum/dashboards/transaction/" + txhash + "?erc_20=true" : payment + "/dashboards/transaction/" + txhash :
-            (api_name == "mempool.space") ? "tx/" + txhash : null;
+            (api_name == "mempool.space") ? "tx/" + txhash :
+            (api_name == "nimiq.watch") ? "transaction/" + nimiqhash(txhash) :
+            (api_name == "mopsus.com") ? "tx/" + txhash : null;
         if (tx_data) {
             confirmations(tx_data, true);
             var xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
                 setconfirmations = tx_data.setconfirmations,
                 zero_conf = (xconf === false || setconfirmations == 0 || setconfirmations == "undefined" || setconfirmations === undefined);
             if (zero_conf) {} else {
-                pinging[txhash] = setInterval(function() {
+                pinging[txhash + api_name] = setInterval(function() {
                     api_proxy(ampl(api_name, poll_url)).done(function(e) {
                         api_result(br_result(e));
                     }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -55,7 +58,7 @@ function api_monitor(api_data, txhash, tx_data) {
         } else {
             api_proxy(ampl(api_name, poll_url)).done(function(e) {
                 api_result(br_result(e));
-                pinging[txhash] = setInterval(function() {
+                pinging[txhash + api_name] = setInterval(function() {
                     api_proxy(ampl(api_name, poll_url)).done(function(e) {
                         api_result(br_result(e));
                     }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -71,15 +74,20 @@ function api_monitor(api_data, txhash, tx_data) {
             var data = result.result;
             if (data) {
                 if (data.error) {
-                    clearpinging();
-                    handle_api_fails(false, data.error, api_name, payment, txhash);
+	                clearpinging();
+                    handle_api_fails(false, data.error, api_name, payment, txhash, true);
                     return
+                }
+                if (api_name == "mopsus.com") {
+	                mopsus_blockheight(data, set_confirmations, txhash);
+	                return
                 }
                 var currentaddress = geturlparameters().address,
                     legacy = (currencysymbol == "bch") ? bchutils.toLegacyAddress(currentaddress) : currentaddress,
                     txd = (api_name == "blockcypher") ? blockcypher_poll_data(data, set_confirmations, currencysymbol, currentaddress) :
                     (api_name == "ethplorer") ? ethplorer_poll_data(data, set_confirmations, currencysymbol) :
                     (api_name == "mempool.space") ? mempoolspace_scan_data(data, set_confirmations, currencysymbol, currentaddress) :
+                    (api_name == "nimiq.watch") ? nimiq_scan_data(data, set_confirmations) :
                     (api_name == "blockchair" || api_name == "bitcoin.com") ? (request.erc20 === true) ? blockchair_erc20_poll_data(data.data[txhash], set_confirmations, currencysymbol, data.context.state) :
                     (payment == "ethereum") ? blockchair_eth_scan_data(data.data[txhash].calls[0], set_confirmations, currencysymbol, data.context.state) :
                     blockchair_scan_data(data.data[txhash], set_confirmations, currencysymbol, currentaddress, data.context.state) : false;
@@ -87,13 +95,13 @@ function api_monitor(api_data, txhash, tx_data) {
                 return
             }
             clearpinging();
-            handle_api_fails(false, "error", api_name, payment, txhash);
+            handle_api_fails(false, "error", api_name, payment, txhash, true);
         };
 
         function api_error(jqXHR, textStatus, errorThrown) {
-            clearpinging();
+	        clearpinging();
             var error_object = (errorThrown) ? errorThrown : jqXHR;
-            handle_api_fails(false, error_object, api_name, payment, txhash);
+            handle_api_fails(false, error_object, api_name, payment, txhash, true);
             return
         }
         console.log("source: " + api_name);
@@ -113,6 +121,32 @@ function ampl(api_name, poll_url) { // api_monitor payload
             "cache": true
         }
     }
+}
+
+function mopsus_blockheight(data, set_confirmations, txhash) { // api_monitor payload
+    api_proxy({
+        "api": "mopsus.com",
+        "search": "quick-stats/",
+        "proxy": false,
+        "params": {
+            "method": "GET"
+        }
+    }).done(function(e) {
+	    if (e) {
+		    var lb = e.latest_block;
+		    if (lb) {
+			    var bh = lb.height,
+			    txd = nimiq_scan_data(data, set_confirmations, bh, null, txhash);
+			    confirmations(txd);
+			    return
+		    }
+	    }
+	    var txd = nimiq_scan_data(data, set_confirmations, null, true, txhash);
+        confirmations(txd, true);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        var txd = nimiq_scan_data(data, set_confirmations, null, true, txhash);
+        confirmations(txd, true);
+    });
 }
 
 function rpc_monitor(rpcdata, txhash, tx_data) {

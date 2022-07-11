@@ -110,7 +110,13 @@ function init_socket(socket_node, address, swtch, retry) {
                 request.viewkey = false;
                 notify("this address is not monitored", 500000, "yes");
             }
-        } else if (request.erc20 === true) {
+        } else if (payment == "nimiq") {
+	        var rq_init = request.rq_init,
+                request_ts_utc = rq_init + timezone,
+                request_ts = request_ts_utc - 30000;
+	        clearpinging();
+	        nimiq_scan(address, request_ts);
+	    } else if (request.erc20 === true) {
             clearpinging();
             web3_erc20_websocket(socket_node, address);
         } else {
@@ -858,6 +864,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
                                     pinging[address] = setInterval(function() {
                                         ping_xmr_node(34, address, vk, request_ts, txd.txhash);
                                     }, 35000);
+                                    return
                                 }
                                 confirmations(txd, true);
                             }
@@ -868,9 +875,49 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         clearpinging();
-        var error_object = (errorThrown) ? errorThrown : jqXHR,
-            payment = request.payment;
-        handle_api_fails(false, error_object, payment, payment, txhash);
+        var error_object = (errorThrown) ? errorThrown : jqXHR;
+        handle_api_fails(false, error_object, "mymonero api", request.payment, txhash);
+    });
+}
+
+function nimiq_scan(address, request_ts) {
+	pinging[address] = setInterval(function() {
+        ping_nimiq(address, request_ts);
+    }, 5000);
+}
+
+function ping_nimiq(address, request_ts) {
+    api_proxy({
+        "api": "nimiq.watch",
+        "search": "account-transactions/" + address,
+        "proxy": false,
+        "params": {
+            "method": "GET"
+        }
+    }).done(function(transactions) {
+	    if (transactions) {
+            var setconf = request.set_confirmations,
+                txflip = transactions.reverse();
+            $.each(txflip, function(dat, value) {
+                var txd = nimiq_scan_data(value, setconf);
+                if (txd.transactiontime > request_ts && txd.ccval) {
+	                clearpinging();
+                    var requestlist = $("#requestlist > li.rqli"),
+                        txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
+                    if (txid_match.length) {} else {
+                        if (setconf > 0) {
+	                        pick_monitor(txd.txhash, txd);
+                            return
+                        }
+                        confirmations(txd, true);
+                    }
+                }
+            });
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        clearpinging();
+        var error_object = (errorThrown) ? errorThrown : jqXHR;
+        handle_api_fails(false, error_object, "nimiq.watch", request.payment, txhash);
     });
 }
 

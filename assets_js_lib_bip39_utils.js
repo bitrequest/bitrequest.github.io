@@ -492,3 +492,11 @@ function aes_dec(content, keyst) {
 function pub_to_cashaddr(legacy) {
     return bchutils.toCashAddress(legacy).split(":")[1];
 }
+
+// Nimiq.watch TXD
+
+function nimiqhash(tx) {
+	return encodeURIComponent(btoa(tx.match(/\w{2}/g).map(function(a) {
+        return String.fromCharCode(parseInt(a, 16));
+    }).join("")));
+}

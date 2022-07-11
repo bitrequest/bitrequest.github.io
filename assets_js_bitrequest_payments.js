@@ -907,7 +907,7 @@ function proceed_pf(error) {
 function getccexchangerates(apilist, api) {
     api_attempt[apilist][api] = true;
     loadertext("get " + request.currencysymbol + " rates from " + api);
-    var payload = (api == "coinmarketcap") ? "cryptocurrency/quotes/latest?id=" + request.cmcid :
+    var payload = (api == "coinmarketcap") ? "v1/cryptocurrency/quotes/latest?id=" + request.cmcid :
         (api == "coinpaprika") ? request.currencysymbol + "-" + request.payment :
         (api == "coingecko") ? (request.erc20 === true) ? "simple/token_price/ethereum?contract_addresses=" + request.token_contract + "&vs_currencies=usd" : "simple/price?ids=" + payment + "&vs_currencies=usd" :
         false;

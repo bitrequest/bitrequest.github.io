@@ -210,16 +210,17 @@ function geterc20tokens() {
     } else {
         api_proxy({
             "api": "coinmarketcap",
-            "search": "cryptocurrency/listings/latest?cryptocurrency_type=tokens&limit=600&aux=cmc_rank,platform",
+            "search": "v1/cryptocurrency/listings/latest?cryptocurrency_type=tokens&limit=600&aux=cmc_rank,platform",
             "cachetime": 604800,
             "cachefolder": "1w",
             "params": {
                 "method": "GET"
             }
         }).done(function(e) {
-            var data = br_result(e).result;
-            if (data.status) {
-                if (data.status.error_code === 0) {
+            var data = br_result(e).result,
+            	status = data.status;
+            if (status) {
+                if (status.error_code === 0) {
                     storecoindata(data);
                 } else {
                     geterc20tokens_local(); // get localy stored coindata
@@ -236,8 +237,8 @@ function geterc20tokens() {
 }
 
 function geterc20tokens_local() {
-    var apiurl = "assets_data_erc20.json";
-    $.getJSON(apiurl, function(data) { // get top 600 tokens from coinmarketcap
+    var apiurl = approot + "assets_data_erc20.json";
+    $.getJSON(apiurl, function(data) {
         if (data) {
             storecoindata(data);
         }
@@ -2427,7 +2428,8 @@ function validateaddress(ad, vk) {
         currencycheck = (iserc20 === true) ? "ethereum" : currency,
         ccsymbol = ad.ccsymbol,
         addressfield = $("#addressform .address"),
-        addressinputval = addressfield.val(),
+        addressinputvalue = addressfield.val(),
+        addressinputval = (currency == "nimiq") ? addressinputvalue.replace(/\s/g, "") : addressinputvalue,
         currentaddresslist = get_addresslist(currency),
         getindex = currentaddresslist.children("li").length + 1,
         index = (getindex > 1) ? getindex : 1,
@@ -2448,8 +2450,8 @@ function validateaddress(ad, vk) {
                 canceldialog();
                 setTimeout(function() {
                     api_eror_msg("infura", {
-                        errormessage: "Missing API key",
-                        errorcode: "300"
+                        "errormessage": "Missing API key",
+                        "errorcode": "300"
                     }, true);
                 }, 800);
                 return false;
@@ -2728,10 +2730,15 @@ function clearpinging(s_id) {
             delete pinging[s_id]
         }
     } else { // close all intervals
-        $.each(pinging, function(key, value) {
-            clearInterval(value);
-        });
-        pinging = {};
+	    if ($.isEmptyObject(pinging)) {
+        } else {
+            $.each(pinging, function(key, value) {
+		        console.log(key);
+		        console.log(value);
+	            clearInterval(value);
+	        });
+	        pinging = {};
+        }
     }
 }
 
@@ -3306,9 +3313,10 @@ function blockexplorer_url(currency, tx, erc20) {
                 })[0],
                 be_prefix = blockdata.prefix,
                 coindata = getcoindata(currency),
-                prefix = (be_prefix == "currencysymbol") ? coindata.ccsymbol : (be_prefix == "currency") ? currency : be_prefix,
+                pfix = (be_prefix == "currencysymbol") ? coindata.ccsymbol : (be_prefix == "currency") ? currency : be_prefix,
+                prefix = (pfix) ? pfix + "/" : "",
                 prefix_type = (tx === true) ? blockdata.tx_prefix : blockdata.address_prefix;
-            return blockdata.url + prefix + "/" + prefix_type;
+            return blockdata.url + prefix + prefix_type;
         }
     }
 }

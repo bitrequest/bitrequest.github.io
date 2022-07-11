@@ -986,7 +986,7 @@ function submit_GD_restore() {
                     restore_algo(pass_dat);
                 },
                 function(err) {
-                    console.log(err)
+                    console.log(err);
                 });
         }
     })
@@ -2585,7 +2585,7 @@ function checkapikey(thisref, apikeyval, lastinput) {
         } :
         (thisref == "coinmarketcap") ? {
             "keylength": 20,
-            "payload": "cryptocurrency/quotes/latest?id=1&CMC_PRO_API_KEY="
+            "payload": "v1/cryptocurrency/quotes/latest?id=1&CMC_PRO_API_KEY="
         } :
         (thisref == "fixer") ? {
             "keylength": 20,
@@ -3151,7 +3151,7 @@ function adjust_object(object, seedobj) {
             bip32dat = default_coinsettings.Xpub,
             keyval = "bitrequest_cc_" + currency,
             addresses = object[keyval];
-        if (seedid) {
+        if (seedid && bip32dat.active) {
             var root_path = bip32dat.root_path,
                 xpubdat = xpub_obj(currency, root_path, cc, key),
                 xpub = xpubdat.xpub,
@@ -3161,6 +3161,7 @@ function adjust_object(object, seedobj) {
             var checked = $.grep(addresses, function(filter) {
                 return filter.checked == true;
             });
+            console.log(bip32dat);
             if (bip32dat.xpub) {
                 var address_object = $.grep(checked, function(filter) {
                     if (filter.seedid) {

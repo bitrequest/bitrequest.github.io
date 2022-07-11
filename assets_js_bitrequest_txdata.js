@@ -86,7 +86,7 @@ function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address) { // 
                     outputsum += value.value || 0; // sum of outputs
                 }
             });
-            var transactiontime = (status.block_time) ? status.block_time * 1000 : $.now(),
+            var transactiontime = (status.block_time) ? status.block_time * 1000 : $.now() + timezone,
                 transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
             return {
                 "ccval": (outputsum) ? outputsum / 100000000 : null,
@@ -542,6 +542,28 @@ function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
             "setconfirmations": setconfirmations,
             "ccsymbol": ccsymbol,
             "payment_id": payment_id
+        };
+    } else {
+        return default_tx_data();
+    }
+}
+
+function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash) { // scan
+	if (data) {
+		var transactiontime = (data.timestamp) ? (data.timestamp * 1000) + timezone : $.now() + timezone,
+			confval = (confirmed) ? false :
+			(data.confirmations) ? data.confirmations :
+			(latestblock && data.height) ? latestblock - data.height : 0,
+			conf = (confval < 0) ? 0 : confval,
+			thash = (txhash) ? txhash : data.hash,
+			setconf = (confirmed) ? null : setconfirmations;
+		return {
+            "ccval": data.value / 100000,
+            "transactiontime": transactiontime,
+            "txhash": thash,
+            "confirmations": conf,
+            "setconfirmations": setconf,
+            "ccsymbol": "nim"
         };
     } else {
         return default_tx_data();
