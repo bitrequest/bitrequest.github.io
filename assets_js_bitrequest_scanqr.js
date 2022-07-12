@@ -85,12 +85,12 @@ function setResult(result) {
             mid_result = (result.indexOf(prefix) >= 0) ? result.split(prefix).pop() : result,
             end_result = (result.indexOf("?") >= 0) ? mid_result.split("?")[0] : mid_result,
             isxpub = (end_result.length > 103),
+            er_val = (payment == "nimiq") ? end_result.replace(/\s/g, "") : end_result;
             validate = (isxpub) ? check_xpub(end_result, xpub_prefix(payment), payment) :
-            check_address(end_result, payment);
+            check_address(er_val, payment);
         clear_xpub_inputs();
         if (validate === true) {
-	        var er_val = (payment == "nimiq") ? end_result.replace(/\s/g, "") : end_result;
-            $("#popup .formbox input.address").val(er_val);
+	        $("#popup .formbox input.address").val(er_val);
             if (supportsTouch === true) {} else {
                 $("#popup .formbox input.addresslabel").focus();
             }
