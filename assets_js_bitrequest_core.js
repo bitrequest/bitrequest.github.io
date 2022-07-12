@@ -2536,8 +2536,7 @@ function check_address(address, currency) {
     if (currency == "ethereum" || regex == "web3") {
         var check_result = (web3) ? web3.utils.isAddress(address) : false;
     } else {
-	    var addressinputval = (currency == "nimiq") ? address.replace(/\s/g, "") : address,
-        	check_result = (regex) ? new RegExp(regex).test(addressinputval) : false;
+        var check_result = (regex) ? new RegExp(regex).test(address) : false;
     }
     return check_result;
 }

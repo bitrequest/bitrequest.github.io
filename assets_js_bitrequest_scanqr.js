@@ -89,7 +89,8 @@ function setResult(result) {
             check_address(end_result, payment);
         clear_xpub_inputs();
         if (validate === true) {
-            $("#popup .formbox input.address").val(end_result);
+	        var er_val = (payment == "nimiq") ? end_result.replace(/\s/g, "") : end_result;
+            $("#popup .formbox input.address").val(er_val);
             if (supportsTouch === true) {} else {
                 $("#popup .formbox input.addresslabel").focus();
             }
