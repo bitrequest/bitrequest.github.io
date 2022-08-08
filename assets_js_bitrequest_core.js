@@ -2733,9 +2733,7 @@ function clearpinging(s_id) {
 	    if ($.isEmptyObject(pinging)) {
         } else {
             $.each(pinging, function(key, value) {
-		        console.log(key);
-		        console.log(value);
-	            clearInterval(value);
+		        clearInterval(value);
 	        });
 	        pinging = {};
         }
