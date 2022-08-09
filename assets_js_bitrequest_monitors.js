@@ -84,7 +84,7 @@ function get_requeststates(trigger) {
             var statuscache = sessionStorage.getItem("bitrequest_txstatus");
             if (statuscache) {
                 var parsevalue = JSON.parse(statuscache),
-                    cachetime = $.now() - parsevalue.timestamp,
+                    cachetime = now() - parsevalue.timestamp,
                     requeststates = parsevalue.requeststates;
                 if (cachetime > 30000 || $.isEmptyObject(requeststates)) { //check if cached crypto rates are expired (check every 30 seconds on page refresh or when opening request page)
                     sessionStorage.removeItem("bitrequest_txstatus"); // remove cached transactions
@@ -119,7 +119,7 @@ function get_requeststates(trigger) {
     } else {
         if (!$.isEmptyObject(statuspush)) {
             var statusobject = JSON.stringify({
-                "timestamp": $.now(),
+                "timestamp": now(),
                 "requeststates": statuspush
             });
             sessionStorage.setItem("bitrequest_txstatus", statusobject);

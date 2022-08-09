@@ -136,7 +136,7 @@ function istrial() {
     var trialp = localStorage.getItem("bitrequest_tp");
     if (trialp) {
         var twelvehours = 43200000;
-        if (($.now() - parseFloat(trialp)) < twelvehours) {
+        if ((now() - parseFloat(trialp)) < twelvehours) {
             return true;
         }
     }
@@ -875,7 +875,7 @@ function seed_callback() {
             "dat": null
         });
         localStorage.setItem("bitrequest_bpdat", savedat);
-        localStorage.setItem("bitrequest_tp", $.now());
+        localStorage.setItem("bitrequest_tp", now());
         bipobj = savedat,
             hasbip = true,
             bipid = phraseid;

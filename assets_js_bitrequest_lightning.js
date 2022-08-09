@@ -1072,7 +1072,7 @@ function test_create_invoice(imp, proxydat, host, key) {
         node_id = sha_sub(nid_src, 10),
         n_exists = node_exists(nodelist, node_id),
         default_error = "unable to connect",
-        pid = sha_sub($.now(), 10);
+        pid = sha_sub(now(), 10);
     if (n_exists) {
         popnotify("error", imp + " node already added");
         return
@@ -1710,7 +1710,7 @@ function test_lnurl_status(lnd) {
             if (connected) {
                 helper.lnd_status = true;
                 if (node_id) {
-                    sessionStorage.setItem("lnd_timer_" + node_id, $.now());
+                    sessionStorage.setItem("lnd_timer_" + node_id, now());
                 }
             }
         }
@@ -1742,7 +1742,7 @@ function check_lnd_status(lnd) {
             if (data.invoices) {
                 helper.lnd_status = true;
                 if (lnd.nid) {
-                    sessionStorage.setItem("lnd_timer_" + lnd.nid, $.now());
+                    sessionStorage.setItem("lnd_timer_" + lnd.nid, now());
                 }
             }
         }
@@ -1775,7 +1775,7 @@ function check_c_lightning_status(lnd) {
             if (data.invoices) {
                 helper.lnd_status = true;
                 if (lnd.nid) {
-                    sessionStorage.setItem("lnd_timer_" + lnd.nid, $.now());
+                    sessionStorage.setItem("lnd_timer_" + lnd.nid, now());
                 }
             }
         }
@@ -1812,7 +1812,7 @@ function check_eclair_status(lnd) {
             }
             helper.lnd_status = true;
             if (lnd.nid) {
-                sessionStorage.setItem("lnd_timer_" + lnd.nid, $.now());
+                sessionStorage.setItem("lnd_timer_" + lnd.nid, now());
             }
         }
         proceed_pf();
@@ -1843,7 +1843,7 @@ function check_lnbits_status(lnd) {
             if (data.balance > -1) {
                 helper.lnd_status = true;
                 if (lnd.nid) {
-                    sessionStorage.setItem("lnd_timer_" + lnd.nid, $.now());
+                    sessionStorage.setItem("lnd_timer_" + lnd.nid, now());
                 }
             }
         }

@@ -127,7 +127,7 @@ function updateappdata() {
 
 function updatemeta() {
     var description = {
-        "modified": $.now() + timezone,
+        "modified": now() + timezone,
         "device": getdevicetype(),
         "deviceid": deviceid
     }
@@ -150,7 +150,7 @@ function createfile() {
         type: "text/plain"
     });
     var description = {
-        "modified": $.now() + timezone,
+        "modified": now() + timezone,
         "device": getdevicetype(),
         "deviceid": deviceid
     }

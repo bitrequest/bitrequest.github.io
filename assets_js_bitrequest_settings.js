@@ -510,7 +510,7 @@ function backupdatabase() {
                                         "attr": {
                                             "href": "data:text/json;charset=utf-16le;base64," + jsonencode + "' download='" + filename,
                                             "title": filename,
-                                            "data-date": new Date($.now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_'),
+                                            "data-date": new Date(now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_'),
                                             "data-lastbackup": filename,
                                             "download": "download"
                                         },
@@ -589,7 +589,7 @@ function sharebu() {
             }).done(function(e) {
                 var br_cache = e.ping.br_cache,
                     filetime = br_cache.created_utc,
-                    filetimesec = (filetime) ? filetime * 1000 : $.now(),
+                    filetimesec = (filetime) ? filetime * 1000 : now(),
                     filetime_format = new Date(filetimesec).toLocaleString(language),
                     sharedtitle = "System Backup " + accountname + " (" + filetime_format + ")",
                     set_proxy = c_proxy(),
@@ -627,7 +627,7 @@ function check_systembu() {
                     var br_cache = e.ping.br_cache,
                         server_time = br_cache.utc_timestamp,
                         filetime = br_cache.created_utc,
-                        filetimesec = (filetime) ? filetime * 1000 : $.now(),
+                        filetimesec = (filetime) ? filetime * 1000 : now(),
                         filetime_format = new Date(filetimesec).toLocaleString(language),
                         br_result = e.ping.br_result,
                         base64 = br_result.base64,
@@ -783,7 +783,7 @@ function complilebackup() {
 }
 
 function complilefilename() {
-    return "bitrequest_backup_" + new Date($.now()).toLocaleString(language).replace(/\s+/g, "_").replace(/\:/g, "_") + ".json";
+    return "bitrequest_backup_" + new Date(now()).toLocaleString(language).replace(/\s+/g, "_").replace(/\:/g, "_") + ".json";
 }
 
 function submitbackup() {
@@ -1069,7 +1069,7 @@ function pin_dialog(pass_dat, cb) {
     var pinsettings = $("#pinsettings").data(),
         current_timeout = pinsettings.timeout;
     if (current_timeout) {
-        var timeleft = current_timeout - $.now();
+        var timeleft = current_timeout - now();
         if (timeleft > 0) {
             lockscreen(current_timeout);
             return false;
@@ -1144,7 +1144,7 @@ function submit_pin_dialog() {
                     notify("Succes!");
                 } else {
                     if (resd.pcnt > 1) {
-                        pinsettings.timeout = $.now() + 300000; // 5 minutes
+                        pinsettings.timeout = now() + 300000; // 5 minutes
                         topnotify("Max attempts exeeded");
                         var result = confirm("Restore without seed?");
                         if (result === true) {
@@ -1168,7 +1168,7 @@ function submit_pin_dialog() {
 }
 
 function restore_cb_init_addresses() {
-    localStorage.setItem("bitrequest_tp", $.now());
+    localStorage.setItem("bitrequest_tp", now());
     var initdat = localStorage.getItem("bitrequest_init"),
         iodat = (initdat) ? JSON.parse(initdat) : {};
     delete iodat.bipv;
@@ -1179,7 +1179,7 @@ function restore_callback_file(pass_dat, np) {
     var newphrase = (hasbip === true) ? np : true;
     restorestorage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
-    var lastrestore = "last restore: <span class='icon-folder-open'>" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_') + "</span>";
+    var lastrestore = "last restore: <span class='icon-folder-open'>" + new Date(now()).toLocaleString(language).replace(/\s+/g, "_") + "</span>";
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": pass_dat.filename,
@@ -1198,7 +1198,7 @@ function restore_callback_gd(pass_dat, np) {
     var newphrase = (hasbip === true) ? np : true;
     restorestorage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
-    var lastrestore = "last restore: <span class='icon-googledrive'>" + new Date($.now()).toLocaleString(language).replace(/\s+/g, '_') + "</span>";
+    var lastrestore = "last restore: <span class='icon-googledrive'>" + new Date(now()).toLocaleString(language).replace(/\s+/g, "_") + "</span>";
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": pass_dat.filename,
@@ -1423,7 +1423,7 @@ function csvexport_trigger() {
             has_requests = (rq_arr && !$.isEmptyObject(rq_arr)),
             has_archive = (archive_arr && !$.isEmptyObject(archive_arr));
         if (has_requests === true || has_archive === true) {
-            var filename = "bitrequest_csv_export_" + new Date($.now()).toLocaleString(language).replace(/\s+/g, "_").replace(/\:/g, "_") + ".csv",
+            var filename = "bitrequest_csv_export_" + new Date(now()).toLocaleString(language).replace(/\s+/g, "_").replace(/\:/g, "_") + ".csv",
                 show_archive = (has_requests === true) ? "false" : "true",
                 content = "<div class='formbox' id='exportcsvbox'>\
 					<h2 class='icon-table'>Export CSV</h2>\
@@ -1647,7 +1647,7 @@ function share_csv() {
             }).done(function(e) {
                 var br_cache = e.ping.br_cache,
                     filetime = br_cache.created_utc,
-                    filetimesec = (filetime) ? filetime * 1000 : $.now(),
+                    filetimesec = (filetime) ? filetime * 1000 : now(),
                     filetime_format = new Date(filetimesec).toLocaleString(language),
                     sharedtitle = "CSV Export " + accountname + " (" + filetime_format + ")",
                     set_proxy = c_proxy(),
@@ -1685,7 +1685,7 @@ function check_csvexport() {
                     var br_cache = e.ping.br_cache,
                         server_time = br_cache.utc_timestamp,
                         filetime = br_cache.created_utc,
-                        filetimesec = (filetime) ? filetime * 1000 : $.now(),
+                        filetimesec = (filetime) ? filetime * 1000 : now(),
                         filetime_format = new Date(filetimesec).toLocaleString(language),
                         br_result = e.ping.br_result,
                         base64 = br_result.base64,
@@ -3255,7 +3255,7 @@ function check_teaminvite() {
                     var br_cache = e.ping.br_cache,
                         server_time = br_cache.utc_timestamp,
                         filetime = br_cache.created_utc,
-                        filetimesec = (filetime) ? filetime * 1000 : $.now(),
+                        filetimesec = (filetime) ? filetime * 1000 : now(),
                         filetime_format = new Date(filetimesec).toLocaleString(language),
                         br_result = e.ping.br_result,
                         base64 = br_result.base64,
@@ -3350,7 +3350,7 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
         localStorage.setItem("bitrequest_teamid", JSON.stringify(teamid_arr));
     }
     rendersettings(["restore", "backup"]); // exclude restore and backup settings
-    var lastrestore = "last restore: <span class='icon-folder-open'>Team invite " + new Date($.now()).toLocaleString(language).replace(/\s+/g, "_") + "</span>";
+    var lastrestore = "last restore: <span class='icon-folder-open'>Team invite " + new Date(now()).toLocaleString(language).replace(/\s+/g, "_") + "</span>";
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": bu_filename,

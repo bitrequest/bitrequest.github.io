@@ -282,8 +282,8 @@ function haspin() {
 function islocked() {
     var locktime = $("#pinsettings").data("locktime"),
         lastlock = localStorage.getItem("bitrequest_locktime"),
-        now = $.now(),
-        tsll = now - lastlock,
+        _now = now(),
+        tsll = _now - lastlock,
         pflt = parseFloat(locktime);
     return (geturlparameters().payment) ? false : (haspin() === true && tsll > pflt) ? true : false;
 }
@@ -586,6 +586,7 @@ function finishfunctions() {
     // Query helpers
 
     //exists
+    //now
     //shake
     //get_setting
     //set_setting
@@ -723,24 +724,24 @@ function enterapp(pinval) {
         savedpin = pinsettings.pinhash,
         attempts = pinsettings.attempts,
         hashpin = hashcode(pinval),
-        now = $.now(),
+        _now = now(),
         timeout;
     if (hashpin == savedpin) {
         if (pinfloat.hasClass("global")) {
-            localStorage.setItem("bitrequest_locktime", now);
+            localStorage.setItem("bitrequest_locktime", _now);
             finishfunctions();
             setTimeout(function() {
                 playsound(waterdrop);
                 canceloptions(true);
             }, 500);
         } else if (pinfloat.hasClass("admin")) {
-            localStorage.setItem("bitrequest_locktime", now);
+            localStorage.setItem("bitrequest_locktime", _now);
             loadpage("?p=currencies");
             $(".currenciesbttn .self").addClass("activemenu");
             playsound(waterdrop);
             canceloptions(true);
         } else if (pinfloat.hasClass("reset")) {
-            localStorage.setItem("bitrequest_locktime", now);
+            localStorage.setItem("bitrequest_locktime", _now);
             $("#pintext").text("Enter new pin");
             pinfloat.addClass("p_admin").removeClass("pinwall reset");
             playsound(waterdrop);
@@ -752,7 +753,7 @@ function enterapp(pinval) {
             if (callback) {
                 callback.func(callback.args);
             } else {
-                localStorage.setItem("bitrequest_locktime", now);
+                localStorage.setItem("bitrequest_locktime", _now);
             }
             playsound(waterdrop);
             canceloptions(true);
@@ -770,15 +771,15 @@ function enterapp(pinval) {
         }, 10);
         if (attempts > 2) {
             if (attempts === 3) {
-                var timeout = now + 300000; // 5 minutes
+                var timeout = _now + 300000; // 5 minutes
                 pinsettings.timeout = timeout;
                 lockscreen(timeout);
             } else if (attempts === 6) {
-                var timeout = now + 1800000; // 30 minutes
+                var timeout = _now + 1800000; // 30 minutes
                 pinsettings.timeout = timeout;
                 lockscreen(timeout);
             } else if (attempts === 9) {
-                var timeout = now + 86400000; // 24 hours
+                var timeout = _now + 86400000; // 24 hours
                 pinsettings.timeout = timeout;
                 lockscreen(timeout);
             } else if (attempts > 9) {
@@ -1680,7 +1681,7 @@ function keyup() {
                 if (paymentdialogbox.find("input").is(":focus")) {
                     playsound(funk);
                 } else {
-                    var timelapsed = $.now() - sa_timer;
+                    var timelapsed = now() - sa_timer;
                     if (timelapsed < 500) { // prevent clicking too fast
                         playsound(funk);
                     } else {
@@ -1698,7 +1699,7 @@ function keyup() {
                                 flip_right1();
                             }
                         }
-                        sa_timer = $.now();
+                        sa_timer = now();
                     }
                 }
             }
@@ -1711,7 +1712,7 @@ function keyup() {
                 if (paymentdialogbox.find("input").is(":focus")) {
                     playsound(funk);
                 } else {
-                    var timelapsed = $.now() - sa_timer;
+                    var timelapsed = now() - sa_timer;
                     if (timelapsed < 500) { // prevent clicking too fast
                         playsound(funk);
                     } else {
@@ -1729,7 +1730,7 @@ function keyup() {
                                 }, 400);
                             }
                         }
-                        sa_timer = $.now();
+                        sa_timer = now();
                     }
                 }
             }
@@ -2611,7 +2612,7 @@ function canceldialog(pass) {
         clearTimeout(timeout);
     });
     if (request) { // reset after_poll
-        request.rq_timer = $.now();
+        request.rq_timer = now();
     }
 }
 
@@ -2636,14 +2637,14 @@ function cancelpaymentdialogtrigger() {
         if (html.hasClass("flipmode")) { // prevent closing request when flipping
             return
         }
-        var timelapsed = $.now() - cp_timer;
+        var timelapsed = now() - cp_timer;
         if (timelapsed < 1500) { // prevent clicking too fast
             playsound(funk);
             console.log("clicking too fast");
         } else {
             if (e.target == this) {
                 escapeandback();
-                cp_timer = $.now();
+                cp_timer = now();
             }
         }
     });
@@ -2665,7 +2666,7 @@ function cpd_pollcheck() {
         } else {
             var rq_init = request.rq_init,
                 rq_timer = request.rq_timer,
-                rq_time = $.now() - rq_timer;
+                rq_time = now() - rq_timer;
             if (rq_time > safety_poll_timeout) {
                 after_poll(rq_init)
             } else {
@@ -2786,7 +2787,7 @@ function showoptions(content, addclass, callback) {
             var pinsettings = $("#pinsettings").data(),
                 timeout = pinsettings.timeout;
             if (timeout) {
-                if ($.now() > timeout) {
+                if (now() > timeout) {
                     pinsettings.timeout = null;
                     savesettings();
                 } else {
@@ -2803,7 +2804,7 @@ function showoptions(content, addclass, callback) {
 }
 
 function lockscreen(timer) {
-    var timeleft = timer - $.now(),
+    var timeleft = timer - now(),
         cd = countdown(timeleft),
         dstr = (cd.days) ? cd.days + " days<br/>" : "",
         hstr = (cd.hours) ? cd.hours + " hours<br/>" : "",
@@ -3908,7 +3909,7 @@ function all_pinpanel(cb, top) {
     var topclass = (top) ? " ontop" : "";
     if (haspin() === true) {
         var lastlock = localStorage.getItem("bitrequest_locktime"),
-            tsll = $.now() - lastlock,
+            tsll = now() - lastlock,
             pass = (tsll < 10000);
         if (cb && pass) { // keep unlocked in 10 second time window
             cb.func(cb.args);
@@ -4509,7 +4510,7 @@ function appendrequest(rd) {
         lnclass = (lightning) ? " lightning" : "",
         lnd_expire = (lightning && hybrid === false || lnhash) ? true : false,
         expirytime = (lnd_expire) ? 604800000 : (iscrypto === true) ? 25920000000 : 6048000000, // expirydate crypto: 300 days / fiat: 70 days / lightning: 7 days
-        isexpired = (status == "expired" || ($.now() - localtime) >= expirytime && (lnd_expire || status == "new" || insufficient === true)),
+        isexpired = (status == "expired" || (now() - localtime) >= expirytime && (lnd_expire || status == "new" || insufficient === true)),
         expiredclass = (isexpired === true) ? " expired" : "",
         localtimeobject = new Date(localtime),
         requestdateformatted = fulldateformat(localtimeobject, "en-us"),
@@ -5074,6 +5075,10 @@ function exists(val) {
         return false;
     }
     return true;
+}
+
+function now() {
+    return Date.now();
 }
 
 function shake(node) {

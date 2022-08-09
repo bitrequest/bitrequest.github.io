@@ -565,7 +565,7 @@ function nano_socket(socket_node, thisaddress) {
         }, 55000);
     };
     websocket.onmessage = function(e) {
-        var now_utc = $.now() + timezone,
+        var now_utc = now() + timezone,
             json = JSON.parse(e.data),
             data = json.message;
         if (data) {
@@ -685,7 +685,7 @@ function web3_erc20_websocket(socket_node, thisaddress) {
                                     closesocket();
                                     var amount_hex = input.slice(74, input.length),
                                         txd = infura_erc20_poll_data({
-                                            "timestamp": parseFloat(($.now() / 1000).toFixed(0)),
+                                            "timestamp": parseFloat((now() / 1000).toFixed(0)),
                                             "hash": txhash,
                                             "confirmations": 0,
                                             "value": web3.utils.hexToNumberString(amount_hex),

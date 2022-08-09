@@ -153,7 +153,7 @@ function swipestart() {
         }
         var thisdialog = $(this),
             startheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
-        startswipetime = $.now();
+        startswipetime = now();
         swipe(thisdialog.height(), startheight);
     })
 }
@@ -186,7 +186,7 @@ function swipeend() {
         var thisunit = $(this);
         if (thisunit.hasClass("swiping")) {
             var paymentdialog = $("#paymentdialog"),
-                swipetime = $.now() - startswipetime,
+                swipetime = now() - startswipetime,
                 largeswipe = (percent > 90 || percent < -90),
                 smallswipe = (percent > 25 || percent < -25);
             if (largeswipe === true || (smallswipe === true && swipetime < 500)) {
@@ -412,7 +412,7 @@ function loadpaymentfunction(pass) {
                 coindata = getcoindata(payment);
             if (coindata) {
                 var iserc20 = (coindata.erc20 === true),
-                    request_start_time = $.now(),
+                    request_start_time = now(),
                     exact = (gets.exact !== undefined);
                 request = {
                         "received": false,
@@ -737,7 +737,7 @@ function lightning_setup() {
             lnurls_bool = (lnurls && !host) ? true : false,
             proxy_bool = (proxy == true) ? true : false,
             saved_id = sessionStorage.getItem("bitrequest_lndpid"),
-            pid = (saved_id) ? saved_id : sha_sub($.now(), 10),
+            pid = (saved_id) ? saved_id : sha_sub(now(), 10),
             use_lnurl = (lnurls_bool || proxy_bool),
             lnd = {
                 "request": false,
@@ -827,7 +827,7 @@ function test_lnd(lnurl) {
         return
     }
     var status_cache = sessionStorage.getItem("lnd_timer_" + lnd.nid);
-    if (status_cache && ($.now() - status_cache) < 20000) { // get cached status
+    if (status_cache && (now() - status_cache) < 20000) { // get cached status
         // lightning status is cached for 10 minutes
         helper.lnd_status = true;
         proceed_pf();
@@ -885,7 +885,7 @@ function proceed_pf(error) {
             apilist = "crypto_price_apis",
             getcache = sessionStorage.getItem("bitrequest_xrates_" + request.currencysymbol);
         if (getcache) { //check for cached crypto rates in localstorage
-            var timestamp = $.now(),
+            var timestamp = now(),
                 parsevalue = JSON.parse(getcache),
                 cachedtimestamp = parsevalue.timestamp,
                 thisusdrate = parsevalue.ccrate,
@@ -944,7 +944,7 @@ function getccexchangerates(apilist, api) {
                         null;
                     if (ccrate) {
                         loadertext("success");
-                        var timestamp = $.now(),
+                        var timestamp = now(),
                             ccratearray = {};
                         ccratearray.timestamp = timestamp;
                         ccratearray.ccrate = ccrate;
@@ -974,7 +974,7 @@ function getccexchangerates(apilist, api) {
 function initexchangerate(cc_rate, ccapi, cachetime) {
     loadertext("get fiat rates");
     var ccrate = 1 / cc_rate,
-        timestamp = $.now(),
+        timestamp = now(),
         newcurrency = (request.fiatcurrency != request.localcurrency && request.fiatcurrency != "eur" && request.fiatcurrency != "usd" && request.fiatcurrency != request.currencysymbol), //check if currency request is other then usd, eur or localcurrency
         localcurrencyparam = (request.localcurrency == "usd" || request.localcurrency == "btc") ? "usd,eur" :
         (request.localcurrency == "eur") ? "eur,usd" :
@@ -1096,7 +1096,7 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
                     rendercurrencypool(rates, ccrate, ccapi, fiatapi, cachetime, "0"); // render exchangerates
                     // cache exchange rates
                     var xratestring = JSON.stringify({
-                        "timestamp": $.now(),
+                        "timestamp": now(),
                         "fiat_exchangerates": rates,
                         "api": fiatapi
                     });
@@ -1750,7 +1750,7 @@ function set_lnd_uris(urlscheme, amount) {
 
 function switchaddress() {
     $(document).on("click", "#paymentdialogbox.norequest #labelbttn", function() {
-        var timelapsed = $.now() - sa_timer;
+        var timelapsed = now() - sa_timer;
         if (timelapsed < 1500) { // prevent clicking too fast
             playsound(funk);
         } else {
@@ -1786,7 +1786,7 @@ function switchaddress() {
                     paymentdialogbox.attr("data-pending", "");
                 }
                 request.address = newaddress;
-                sa_timer = $.now();
+                sa_timer = now();
             }
         }
     });
@@ -1867,7 +1867,7 @@ function validaterequestdata(lnurl) {
         newurl,
         ln_info = helper.lnd;
     if (valid === true) {
-        var utc = $.now() + timezone, // UTC
+        var utc = now() + timezone, // UTC
             no_conf = request.no_conf,
             dataobject = {
                 "ts": utc,
@@ -2509,7 +2509,7 @@ function saverequest(direct) {
         thisaddress = (request.address == "lnurl") ? "lnurl" : gets.address, // if lightning payment, overwrite address 
         thisdata = gets.d,
         thismeta = gets.m,
-        timestamp = $.now() + timezone, // UTC
+        timestamp = now() + timezone, // UTC
         rqdatahash = (thisdata && thisdata.length > 5) ? thisdata : null, // check if data param exists
         rqmetahash = (thismeta && thismeta.length > 5) ? thismeta : null, // check if meta param exists
         dataobject = (rqdatahash) ? JSON.parse(atob(rqdatahash)) : null, // decode data param if exists
@@ -2764,7 +2764,7 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
                 if (vk) {
                     var account = (vk.account) ? vk.account : address,
                         viewkey = vk.vk;
-                    var starttime = $.now();
+                    var starttime = now();
                     closenotify();
                     init_xmr_node(34, account, viewkey, starttime, smart_txhash, true);
                 } else {

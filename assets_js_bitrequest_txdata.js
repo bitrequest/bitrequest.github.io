@@ -86,7 +86,7 @@ function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address) { // 
                     outputsum += value.value || 0; // sum of outputs
                 }
             });
-            var transactiontime = (status.block_time) ? status.block_time * 1000 : $.now() + timezone,
+            var transactiontime = (status.block_time) ? status.block_time * 1000 : now() + timezone,
                 transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
             return {
                 "ccval": (outputsum) ? outputsum / 100000000 : null,
@@ -395,7 +395,7 @@ function nano_scan_data(data, setconfirmations, ccsymbol, txhash) { // scan/poll
     if (data) {
         var ccval = (data.amount) ? parseFloat((data.amount / Math.pow(10, 30)).toFixed(8)) : null, // convert Mnano to nano
             transactiontime = (data.local_timestamp) ? (data.local_timestamp * 1000) + timezone : null,
-            transactiontime_utc = (transactiontime) ? transactiontime : $.now() + timezone,
+            transactiontime_utc = (transactiontime) ? transactiontime : now() + timezone,
             txhash = (data.hash) ? data.hash : (txhash) ? txhash : null;
         return {
             "ccval": ccval,
@@ -550,7 +550,7 @@ function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
 
 function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash) { // scan
 	if (data) {
-		var transactiontime = (data.timestamp) ? (data.timestamp * 1000) + timezone : $.now() + timezone,
+		var transactiontime = (data.timestamp) ? (data.timestamp * 1000) + timezone : now() + timezone,
 			confval = (confirmed) ? false :
 			(data.confirmations) ? data.confirmations :
 			(latestblock && data.height) ? latestblock - data.height : 0,
