@@ -30,8 +30,7 @@ $data_var = $payload ? $payload : null;
 
 // Define key
 $accestoken = isset($keys[$apiname]) ? $keys[$apiname] : false;
-$at_var = $accestoken ? $accestoken : null;
-$auth_token = $apikey ? $apikey : $at_var;
+$auth_token = $apikey ? $apikey : $accestoken;
 
 // Construct headers
 if (isset($proxyheaders) || $method == "POST" || $bearer) {
@@ -59,8 +58,8 @@ if ($bearer) {
 }
 
 // Construct url
-$key_param_var = $accestoken ? $ampersand . $keyparam . $accestoken : "";
-$key_param = $apikey || $nokey == "true" ? "" : $key_param_var;
+$key_param_var = $auth_token ? $ampersand . $keyparam . $auth_token : "";
+$key_param = ($apikey && $nokey == "true") ? "" : $key_param_var;
 $new_url = $apiurl . $key_param;
 if ($custom) {
     if ($custom == "gk") {
