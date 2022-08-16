@@ -218,7 +218,7 @@ function geterc20tokens() {
             }
         }).done(function(e) {
             var data = br_result(e).result,
-            	status = data.status;
+                status = data.status;
             if (status) {
                 if (status.error_code === 0) {
                     storecoindata(data);
@@ -2447,16 +2447,6 @@ function validateaddress(ad, vk) {
             addressfield.select();
         } else {
             var valid = check_address(addinputval, currencycheck);
-            if (valid === "no_web3") {
-                canceldialog();
-                setTimeout(function() {
-                    api_eror_msg("infura", {
-                        "errormessage": "Missing API key",
-                        "errorcode": "300"
-                    }, true);
-                }, 800);
-                return false;
-            }
             if (valid === true) {
                 var validlabel = check_address(labelinputval, currencycheck);
                 if (validlabel === true) {
@@ -2529,17 +2519,8 @@ function validateaddress(ad, vk) {
 }
 
 function check_address(address, currency) {
-    if (currency == "ethereum" && web3 === undefined) {
-        return "no_web3";
-    }
-    var regex = getcoindata(currency).regex,
-        check_result = false;
-    if (currency == "ethereum" || regex == "web3") {
-        var check_result = (web3) ? web3.utils.isAddress(address) : false;
-    } else {
-        var check_result = (regex) ? new RegExp(regex).test(address) : false;
-    }
-    return check_result;
+    var regex = getcoindata(currency).regex;
+    return (regex) ? new RegExp(regex).test(address) : false;
 }
 
 function check_vk(vk) {
@@ -2731,12 +2712,11 @@ function clearpinging(s_id) {
             delete pinging[s_id]
         }
     } else { // close all intervals
-	    if ($.isEmptyObject(pinging)) {
-        } else {
+        if ($.isEmptyObject(pinging)) {} else {
             $.each(pinging, function(key, value) {
-		        clearInterval(value);
-	        });
-	        pinging = {};
+                clearInterval(value);
+            });
+            pinging = {};
         }
     }
 }
@@ -3163,14 +3143,14 @@ function addressinfo() {
             source + " (Unavailable)" + restore : "external",
             d_index = dd.derive_index,
             dpath = (bip32dat) ? bip32dat.root_path + d_index : "",
-			purpose = dd.purpose;
+            purpose = dd.purpose;
         if (purpose) {
-	        var dsplit = dpath.split("/");
-			dsplit[1] = purpose;
-			var dpath = dsplit.join("/");
+            var dsplit = dpath.split("/");
+            dsplit[1] = purpose;
+            var dpath = dsplit.join("/");
         }
         dd.dpath = dpath,
-        dd.bip32dat = bip32dat;
+            dd.bip32dat = bip32dat;
         var cc_icon = getcc_icon(dd.cmcid, dd.ccsymbol + "-" + currency, dd.erc20),
             dpath_str = (isseed) ? "<li><strong>Derivation path:</strong> " + dpath + "</li>" : "",
             pk_verified = "Unknown <span class='icon-checkmark'></span>",
@@ -3589,12 +3569,11 @@ function get_infura_apikey(rpcurl) {
 }
 
 function api_proxy(ad, p_proxy) {
-    var set_proxy = (p_proxy) ? p_proxy : d_proxy(),
-        custom_url = ad.api_url,
-        aud = (custom_url) ? {} :
-        get_api_url({
+    var custom_url = (ad.api_url) ? ad.api_url : false,
+        aud = get_api_url({
             "api": ad.api,
-            "search": ad.search
+            "search": ad.search,
+            "custom_url": custom_url
         });
     if (aud === false) {
         return false;
@@ -3602,11 +3581,11 @@ function api_proxy(ad, p_proxy) {
     var params = ad.params,
         proxy = ad.proxy,
         forced_proxy = ad.proxy_url,
-        api_url = (custom_url) ? custom_url : aud.api_url,
+        api_url = aud.api_url,
         key_param = aud.key_param,
         api_key = aud.api_key,
         set_key = (api_key) ? true : false,
-        nokey = (key_param == "post") ? false : (!key_param) ? true : false,
+        nokey = (ad.key) ? false : (!key_param) ? true : false,
         key_pass = (nokey === true || set_key === true);
     if (proxy === false && key_pass === true) {
         params.url = api_url;
@@ -3620,6 +3599,7 @@ function api_proxy(ad, p_proxy) {
     } else { // use api proxy
         var api_location = "proxy/v1/",
             localhost = ad.localhost,
+            set_proxy = (p_proxy) ? p_proxy : d_proxy(),
             app_root = (forced_proxy) ? forced_proxy :
             (localhost === false) ? set_proxy :
             (localhost === true) ? "" :
@@ -3661,13 +3641,13 @@ function proxy_alert(version) {
 
 function get_api_url(get) {
     var api = get.api,
-        search = get.search,
+        search = (get.search) ? get.search : "",
         ad = get_api_data(api);
     if (ad) {
-        var base_url = ad.base_url,
+        var base_url = (get.custom_url) ? get.custom_url : ad.base_url,
             key_param = ad.key_param,
             saved_key = $("#apikeys").data(api),
-            ampersand = (search.indexOf("?") > -1 || search.indexOf("&") > -1) ? "&" : "?",
+            ampersand = (search) ? (search.indexOf("?") > -1 || search.indexOf("&") > -1) ? "&" : "?" : "",
             api_param = (key_param && key_param != "bearer" && saved_key) ? ampersand + key_param + saved_key : "";
         return {
             "api_url": base_url + search + api_param,
@@ -4043,11 +4023,11 @@ function getcoinsettings(currency) {
 }
 
 function getbip32dat(currency) {
-	var xpub_dat = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']").data();
-	if (xpub_dat && xpub_dat.active === true) {
+    var xpub_dat = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']").data();
+    if (xpub_dat && xpub_dat.active === true) {
         return xpub_dat;
     }
-	var coindata = getcoinconfig(currency);
+    var coindata = getcoinconfig(currency);
     if (coindata) {
         var xpubdat = coindata.settings.Xpub;
         if (xpubdat && xpubdat.active === true) {
@@ -4514,7 +4494,7 @@ function appendrequest(rd) {
         expiredclass = (isexpired === true) ? " expired" : "",
         localtimeobject = new Date(localtime),
         requestdateformatted = fulldateformat(localtimeobject, "en-us"),
-        timeformat = "<span class='rq_month'>" + localtimeobject.toLocaleString('en-us', {
+        timeformat = "<span class='rq_month'>" + localtimeobject.toLocaleString("en-us", {
             "month": "short"
         }) + "</span> <span class='rq_day'>" + localtimeobject.getDate() + "</span>",
         ptsformatted = fulldateformatmarkup(new Date(paymenttimestamp - timezone), "en-us"),
@@ -5244,9 +5224,6 @@ function init_keys(ko, set) { // set required keys
         if_saved_key = api_data.infura,
         if_set_key = (if_set === true) ? if_id : null,
         if_key = (if_saved_key) ? if_saved_key : if_set_key;
-    if (if_key) {
-        web3 = new Web3(Web3.givenProvider || main_eth_node + if_id);
-    }
     if (ga_set === true) {
         setTimeout(function() {
             gapi_load(is_ios_app);

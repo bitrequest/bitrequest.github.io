@@ -199,16 +199,16 @@ function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) { // p
 
 function bitcoincom_scan_data(data, setconfirmations, ccsymbol, legacy, address) { // bitcoin.com api
     if (data) {
-	    var inputs = data.vin,
-	    	doublespend = null;
-	    if (inputs) {
-		    $.each(inputs, function(dat, value) {
-			    var dstxid = value.doubleSpentTxID;
-	            if (dstxid) {
-	                var doublespend = dstxid;
-	            }
-	        });
-	    }
+        var inputs = data.vin,
+            doublespend = null;
+        if (inputs) {
+            $.each(inputs, function(dat, value) {
+                var dstxid = value.doubleSpentTxID;
+                if (dstxid) {
+                    var doublespend = dstxid;
+                }
+            });
+        }
         var outputs = data.vout,
             outputsum;
         if (outputs) {
@@ -247,9 +247,9 @@ function bitcoincom_scan_data(data, setconfirmations, ccsymbol, legacy, address)
 // blockchair
 
 function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestblock) { // scan/poll
-	if (data) {
-	    var thisaddress = (ccsymbol == "bch") ? (address.indexOf(":") > -1) ? address.split(":")[1] : address : address,
-	    	transaction = data.transaction,
+    if (data) {
+        var thisaddress = (ccsymbol == "bch") ? (address.indexOf(":") > -1) ? address.split(":")[1] : address : address,
+            transaction = data.transaction,
             transactiontime = (transaction) ? returntimestamp(transaction.time).getTime() : null,
             conf = (transaction.block_id && transaction.block_id > 10 && latestblock) ? (latestblock - transaction.block_id) + 1 : null,
             outputs = data.outputs;
@@ -549,15 +549,15 @@ function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
 }
 
 function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash) { // scan
-	if (data) {
-		var transactiontime = (data.timestamp) ? (data.timestamp * 1000) + timezone : now() + timezone,
-			confval = (confirmed) ? false :
-			(data.confirmations) ? data.confirmations :
-			(latestblock && data.height) ? latestblock - data.height : 0,
-			conf = (confval < 0) ? 0 : confval,
-			thash = (txhash) ? txhash : data.hash,
-			setconf = (confirmed) ? null : setconfirmations;
-		return {
+    if (data) {
+        var transactiontime = (data.timestamp) ? (data.timestamp * 1000) + timezone : now() + timezone,
+            confval = (confirmed) ? false :
+            (data.confirmations) ? data.confirmations :
+            (latestblock && data.height) ? latestblock - data.height : 0,
+            conf = (confval < 0) ? 0 : confval,
+            thash = (txhash) ? txhash : data.hash,
+            setconf = (confirmed) ? null : setconfirmations;
+        return {
             "ccval": data.value / 100000,
             "transactiontime": transactiontime,
             "txhash": thash,

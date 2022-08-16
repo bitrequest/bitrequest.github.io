@@ -45,22 +45,21 @@ function init_socket(socket_node, address, swtch, retry) {
             socket_attempt[btoa(socket_node.url)] = true;
         }
         if (payment == "bitcoin") {
-	        if (address == "lnurl") {
-		        // lightning only
-	        }
-	        else {
-		        if (socket_name == "blockcypher websocket") {
-                	blockcypher_websocket(socket_node, address);
-	            } else if (socket_name == "blockchain.info websocket") {
-	                blockchain_btc_socket(socket_node, address);
-	            } else if (socket_name == main_ad_socket) {
-	                amberdata_btc_websocket(socket_node, address, "408fa195a34b533de9ad9889f076045e");
-	            } else if (socket_name == "mempool.space websocket") {
-	                mempoolspace_btc_socket(socket_node, address);
-	            } else {
-	                blockcypher_websocket(socket_node, address);
-	            }
-	        }
+            if (address == "lnurl") {
+                // lightning only
+            } else {
+                if (socket_name == "blockcypher websocket") {
+                    blockcypher_websocket(socket_node, address);
+                } else if (socket_name == "blockchain.info websocket") {
+                    blockchain_btc_socket(socket_node, address);
+                } else if (socket_name == main_ad_socket) {
+                    amberdata_btc_websocket(socket_node, address, "408fa195a34b533de9ad9889f076045e");
+                } else if (socket_name == "mempool.space websocket") {
+                    mempoolspace_btc_socket(socket_node, address);
+                } else {
+                    blockcypher_websocket(socket_node, address);
+                }
+            }
             if (helper.lnd_status) {
                 if (retry) {
                     return;
@@ -111,12 +110,12 @@ function init_socket(socket_node, address, swtch, retry) {
                 notify("this address is not monitored", 500000, "yes");
             }
         } else if (payment == "nimiq") {
-	        var rq_init = request.rq_init,
+            var rq_init = request.rq_init,
                 request_ts_utc = rq_init + timezone,
                 request_ts = request_ts_utc - 30000;
-	        clearpinging();
-	        nimiq_scan(address, request_ts);
-	    } else if (request.erc20 === true) {
+            clearpinging();
+            nimiq_scan(address, request_ts);
+        } else if (request.erc20 === true) {
             clearpinging();
             web3_erc20_websocket(socket_node, address);
         } else {
@@ -663,7 +662,7 @@ function web3_erc20_websocket(socket_node, thisaddress) {
             var result = params.result,
                 contractdata = result.data,
                 cd_hex = contractdata.slice(2),
-                token_value = web3.utils.hexToNumberString(cd_hex),
+                token_value = hexToNumberString(cd_hex),
                 token_decimals = request.decimals,
                 ccval = parseFloat((token_value / Math.pow(10, token_decimals)).toFixed(8));
             if (ccval === Infinity) {} else {
@@ -672,30 +671,47 @@ function web3_erc20_websocket(socket_node, thisaddress) {
                     amountnumber = parseFloat(urlamount),
                     percent = (ccval / amountnumber) * 100;
                 if (percent > 70 && percent < 130) { // only scan amounts with a margin less then 20%
-                    var txhash = result.transactionHash;
-                    web3.eth.getTransaction(txhash, function(err, data) {
-                        if (err) {
-                            console.log(err);
-                        } else {
-                            if (data) {
-                                var input = data.input,
-                                    address_upper = thisaddress.slice(3).toUpperCase(),
-                                    input_upper = input.toUpperCase();
-                                if (input_upper.indexOf(address_upper) >= 0) {
-                                    closesocket();
-                                    var amount_hex = input.slice(74, input.length),
-                                        txd = infura_erc20_poll_data({
-                                            "timestamp": parseFloat((now() / 1000).toFixed(0)),
-                                            "hash": txhash,
-                                            "confirmations": 0,
-                                            "value": web3.utils.hexToNumberString(amount_hex),
-                                            "decimals": token_decimals
-                                        }, request.set_confirmations, request.currencysymbol);
-                                    pick_monitor(txhash, txd);
-                                    return
-                                }
+                    var txhash = result.transactionHash,
+                        payload = {
+                            "jsonrpc": "2.0",
+                            "id": 2,
+                            "method": "eth_getTransactionByHash",
+                            "params": [txhash]
+                        };
+                    api_proxy({
+                        "api_url": main_eth_node + if_id,
+                        "proxy": false,
+                        "params": {
+                            "method": "POST",
+                            "data": JSON.stringify(payload),
+                            "headers": {
+                                "Content-Type": "application/json"
                             }
                         }
+                    }).done(function(e) {
+                        var data = e.result;
+                        if (data) {
+                            var input = data.input,
+                                address_upper = thisaddress.slice(3).toUpperCase(),
+                                input_upper = input.toUpperCase();
+                            if (input_upper.indexOf(address_upper) >= 0) {
+                                closesocket();
+                                var amount_hex = input.slice(74, input.length),
+                                    txd = infura_erc20_poll_data({
+                                        "timestamp": parseFloat((now() / 1000).toFixed(0)),
+                                        "hash": txhash,
+                                        "confirmations": 0,
+                                        "value": hex_to_number(amount_hex),
+                                        "decimals": token_decimals
+                                    }, request.set_confirmations, request.currencysymbol);
+                                pick_monitor(txhash, txd);
+                                return
+                            }
+                        }
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        console.log(jqXHR);
+                        console.log(textStatus);
+                        console.log(errorThrown);
                     });
                 }
             }
@@ -881,7 +897,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
 }
 
 function nimiq_scan(address, request_ts) {
-	pinging[address] = setInterval(function() {
+    pinging[address] = setInterval(function() {
         ping_nimiq(address, request_ts);
     }, 5000);
 }
@@ -895,18 +911,18 @@ function ping_nimiq(address, request_ts) {
             "method": "GET"
         }
     }).done(function(transactions) {
-	    if (transactions) {
+        if (transactions) {
             var setconf = request.set_confirmations,
                 txflip = transactions.reverse();
             $.each(txflip, function(dat, value) {
                 var txd = nimiq_scan_data(value, setconf);
                 if (txd.transactiontime > request_ts && txd.ccval) {
-	                clearpinging();
+                    clearpinging();
                     var requestlist = $("#requestlist > li.rqli"),
                         txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
                     if (txid_match.length) {} else {
                         if (setconf > 0) {
-	                        pick_monitor(txd.txhash, txd);
+                            pick_monitor(txd.txhash, txd);
                             return
                         }
                         confirmations(txd, true);
@@ -981,7 +997,7 @@ function ap_loader() {
 }
 
 function blockchair_scan_poll_bch(api_name, ccsymbol, set_confirmations, address, request_ts) {
-	var scan_url = "bitcoin-cash/dashboards/address/" + address;
+    var scan_url = "bitcoin-cash/dashboards/address/" + address;
     api_proxy({
         "api": "blockchair",
         "search": scan_url,
@@ -997,42 +1013,42 @@ function blockchair_scan_poll_bch(api_name, ccsymbol, set_confirmations, address
             if (context) {
                 var latestblock = context.state;
                 if (latestblock) {
-	                var ddat = data.data;
-	                if (ddat) {
-		                var txarray = ddat[address].transactions; // get transactions
-		                if (txarray && !$.isEmptyObject(txarray)) {
-			               	api_proxy({
-		                        "api": "blockchair",
-		                        "search": "bitcoin-cash/dashboards/transactions/" + txarray.slice(0, 6), // get last 5 transactions
-		                        "cachetime": 25,
-		                        "cachefolder": "1h",
-		                        "params": {
-		                            "method": "GET"
-		                        }
-		                    }).done(function(e) {
-		                        var dat = br_result(e).result;
-		                        if (dat.data) {
-			                        var detect = false,
-										txdat;
-			                        $.each(dat.data, function(dt, val) {
-			                            var txd = blockchair_scan_data(val, set_confirmations, ccsymbol, address, latestblock);
-			                            if (txd.transactiontime > request_ts && txd.ccval) {
-				                            txdat = txd;
-				                            detect = true;
-				                            return
-				                        }
-			                        });
-			                        if (txdat && detect === true) {
-					                    pick_monitor(txdat.txhash, txdat);
-					                    return
-					                }
-			                    }
-			                    close_paymentdialog(true);
-		                    })
-		                    return
-			            }
-	                }
-	            }
+                    var ddat = data.data;
+                    if (ddat) {
+                        var txarray = ddat[address].transactions; // get transactions
+                        if (txarray && !$.isEmptyObject(txarray)) {
+                            api_proxy({
+                                "api": "blockchair",
+                                "search": "bitcoin-cash/dashboards/transactions/" + txarray.slice(0, 6), // get last 5 transactions
+                                "cachetime": 25,
+                                "cachefolder": "1h",
+                                "params": {
+                                    "method": "GET"
+                                }
+                            }).done(function(e) {
+                                var dat = br_result(e).result;
+                                if (dat.data) {
+                                    var detect = false,
+                                        txdat;
+                                    $.each(dat.data, function(dt, val) {
+                                        var txd = blockchair_scan_data(val, set_confirmations, ccsymbol, address, latestblock);
+                                        if (txd.transactiontime > request_ts && txd.ccval) {
+                                            txdat = txd;
+                                            detect = true;
+                                            return
+                                        }
+                                    });
+                                    if (txdat && detect === true) {
+                                        pick_monitor(txdat.txhash, txdat);
+                                        return
+                                    }
+                                }
+                                close_paymentdialog(true);
+                            })
+                            return
+                        }
+                    }
+                }
             }
         }
         close_paymentdialog(true);

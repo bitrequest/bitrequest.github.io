@@ -718,7 +718,7 @@ function lightning_setup() {
         ln_dat = lnli.data(),
         ss = ln_dat.selected_service;
     if (ss) {
-	    var imp = ss.imp;
+        var imp = ss.imp;
         loadertext("check " + imp + " lightning status");
         var node_id = ss.node_id,
             proxies = ln_dat.proxies,
@@ -1045,7 +1045,7 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
             if (ratesnode) {
                 loadertext("success");
                 var fiatsymbol = request.fiatcurrency,
-                	localupper = fiatsymbol.toUpperCase(),
+                    localupper = fiatsymbol.toUpperCase(),
                     rates = {
                         "eur": 1
                     },
@@ -1054,29 +1054,25 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
                 if (fiatapi == "fixer") {
                     var usdval = ratesnode.USD,
                         localval = ratesnode[localupper];
-                }
-                else if (fiatapi == "coingecko") {
+                } else if (fiatapi == "coingecko") {
                     if (ratesnode[fiatsymbol]) {
                         var eurval = ratesnode.eur.value,
                             usdval = ratesnode.usd.value / eurval,
                             localval = ratesnode[fiatsymbol].value / eurval;
                     }
-                }
-                else if (fiatapi == "exchangeratesapi") {
+                } else if (fiatapi == "exchangeratesapi") {
                     if (ratesnode[localupper]) {
                         var usdval = ratesnode.USD,
                             localval = (localupper == "EUR") ? 1 : ratesnode[localupper];
                     }
-                }
-                else if (fiatapi == "currencylayer") {
-	                var localkey = ratesnode["USD" + localupper];
+                } else if (fiatapi == "currencylayer") {
+                    var localkey = ratesnode["USD" + localupper];
                     if (localkey) {
                         var usdval = 1 / ratesnode.USDEUR,
                             localval = localkey * usdval;
                     }
-                }
-                else if (fiatapi == "coinbase") {
-	                var localkey = ratesnode[localupper];
+                } else if (fiatapi == "coinbase") {
+                    var localkey = ratesnode[localupper];
                     if (localkey) {
                         var usdval = 1 / ratesnode.EUR,
                             localval = localkey * usdval;
@@ -2255,7 +2251,6 @@ function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
                         "cache": false,
                         "dataType": "json",
                         "contentType": "application/json",
-                        "method": "POST",
                         "data": JSON.stringify({
                             "dynamicLinkInfo": {
                                 "domainUriPrefix": firebase_dynamic_link_domain,
@@ -2579,10 +2574,10 @@ function saverequest(direct) {
                 return false;
             } else {
                 if (pendingstate == "polling" || requestli.hasClass("expired")) {
-	                pendingdialog(requestli);
+                    pendingdialog(requestli);
                     if (lightning) {
-		            	return false;
-	            	}
+                        return false;
+                    }
                     return "nosocket";
                 }
                 if (pendingstate == "no") {
@@ -2867,7 +2862,7 @@ function updaterequest(ua, save) {
             metalist.find(".receivedamount span").text(" " + trimdecimals(ua.receivedamount, 6));
     }
     if (ua.fiatvalue) {
-        metalist.find(".payday.pd_fiat .fiatvalue").text(" " + trimdecimals(ua.fiatvalue, 2));
+        //metalist.find(".payday.pd_fiat .fiatvalue").text(" " + trimdecimals(ua.fiatvalue, 2));
     }
     if (ua.paymenttimestamp) {
         var fulldateformat = fulldateformatmarkup(new Date(ua.paymenttimestamp - timezone), "en-us");

@@ -146,7 +146,7 @@ function istrial() {
 // Reminder to write down secret phrase
 
 function bipv_pass() {
-	if (hasbip === true) {
+    if (hasbip === true) {
         if (bipv === true) {} else {
             var used_addresses = filter_all_addressli("seedid", bipid).filter(".used");
             if (istrial() === true) {
@@ -447,7 +447,7 @@ function restore_seed_verify() {
                     phraseid = get_seedid(words);
                 if (seedid == phraseid) {
                     phrasearray = words,
-                    	phraseverified = true;
+                        phraseverified = true;
                     $("#seed_steps").addClass("checked");
                     finish_seed();
                 } else {
@@ -1270,12 +1270,12 @@ function to_mnemonic(byteArray) {
         throw "Data length in bits should be divisible by 32, but it is not (" + byteArray.length + " bytes = " + byteArray.length * 8 + " bits)."
     }
     var data = byteArrayToWordArray(byteArray),
-    	h = hmacsha(data, "sha256"),
+        h = hmacsha(data, "sha256"),
         a = byteArrayToBinaryString(byteArray),
         c = zfill(hexStringToBinaryString(h), 256),
         d = c.substring(0, byteArray.length * 8 / 32),
         b = a + d,
-		result = [],
+        result = [],
         blen = b.length / 11;
     for (var i = 0; i < blen; i++) {
         var idx = parseInt(b.substring(i * 11, (i + 1) * 11), 2);
@@ -1353,7 +1353,7 @@ function derive_x(dx_dat, from_x_priv) {
             }
             if (i === levels) {
                 kd.purpose = purpose,
-                	kd.depth = i,
+                    kd.depth = i,
                     kd.childnumber = childnumber,
                     kd.xpub = xpub;
                 keydat = kd;
@@ -1414,7 +1414,7 @@ function ext_keys(eo, currency) {
         priv_key = eo.key;
     eko.ext_key = b58check_encode(ext_payload);
     if (eo.xpub === false) {
-	    var pub_key = secp.Point.fromPrivateKey(priv_key).toHex(true),
+        var pub_key = secp.Point.fromPrivateKey(priv_key).toHex(true),
             pub_obj = {
                 "chaincode": eo.chaincode,
                 "purpose": eo.purpose,
@@ -1432,7 +1432,7 @@ function ext_keys(eo, currency) {
 }
 
 function xpub_obj(currency, rootpath, cc, key) {
-	var dx_dat = {
+    var dx_dat = {
             "dpath": rootpath.slice(0, -3),
             "key": key,
             "cc": cc
@@ -1449,13 +1449,13 @@ function xpub_obj(currency, rootpath, cc, key) {
 }
 
 function b58c_x_payload(eo, currency) {
-	var xpubdat = getbip32dat(currency);
-	if (!xpubdat) {
-		return false;
-	}
-	var xz_pub = (eo.purpose == "84'") ? xpubdat.prefix.pubz : xpubdat.prefix.pubx,
-		version = (eo.xpub === true) ? xz_pub : xpubdat.prefix.privx,
-		v_hex = str_pad(dectohex(version), 8),
+    var xpubdat = getbip32dat(currency);
+    if (!xpubdat) {
+        return false;
+    }
+    var xz_pub = (eo.purpose == "84'") ? xpubdat.prefix.pubz : xpubdat.prefix.pubx,
+        version = (eo.xpub === true) ? xz_pub : xpubdat.prefix.privx,
+        v_hex = str_pad(dectohex(version), 8),
         depth = (eo.depth) ? str_pad(eo.depth, 2) : "00",
         fingerprint = (eo.fingerprint) ? eo.fingerprint : "00000000",
         childnumber = (eo.childnumber) ? str_pad(eo.childnumber, 8) : "00000000",
@@ -1499,11 +1499,7 @@ function format_keys(seed, key_object, bip32, index, coin) {
             vb = str_pad(dectohex(bip32.prefix.pub), 2);
         ko.index = index;
         if (coin == "ethereum") {
-            if (xpub === true) {
-                ko.address = pub_to_eth_address(pubkey);
-            } else {
-                ko.address = web3.eth.accounts.privateKeyToAccount("0x" + prekey).address;
-            }
+            ko.address = pub_to_eth_address(pubkey);
         } else if (coin == "bitcoin") {
             if (purpose == "84'") {
                 ko.address = pub_to_address_bech32("bc", pubkey);
@@ -1567,7 +1563,7 @@ function phrase_info() {
 }
 
 function phrase_info_pu(coin) {
-	var savedseed = (hasbip === true) ? ls_phrase_obj().pob.join(" ") : false,
+    var savedseed = (hasbip === true) ? ls_phrase_obj().pob.join(" ") : false,
         phrase = (savedseed) ? savedseed : get_phrase();
     if (phrase.length < 50) {
         return false
@@ -1674,7 +1670,7 @@ function phrase_info_pu(coin) {
     			</div>").data(dp_node_dat),
                 sw_node = $("<ul id='formbox_ul' class='clearfix" + coinclass + "'>" + walletlist + "</ul>"),
                 xp_node = "";
-                segw_node = "";
+            segw_node = "";
             if (x_pub) {
                 var xp_node = $("<div class='xpub_ib clearfix" + coinclass + "' data-xpub='" + x_pub + "'>\
 	    			<div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>show</span></div>\
@@ -1685,10 +1681,10 @@ function phrase_info_pu(coin) {
 							<p class='adbox adboxl select' data-type='Xpub'>" + x_pub + "</p>\
 						</div>\
 					</div>");
-				if (currency == "bitcoin" || currency == "litecoin") {
-					var hsw = (root_path.indexOf("m/84") > -1),
-						segw_node = $("<li class='clearfix" + coinclass + "' data-currency='" + currency + "'><strong>SegWit:</strong><div class='toggle_segwit ait'>" + switchpanel(hsw, " custom") + "</div></li>");
-				}
+                if (currency == "bitcoin" || currency == "litecoin") {
+                    var hsw = (root_path.indexOf("m/84") > -1),
+                        segw_node = $("<li class='clearfix" + coinclass + "' data-currency='" + currency + "'><strong>SegWit:</strong><div class='toggle_segwit ait'>" + switchpanel(hsw, " custom") + "</div></li>");
+                }
             }
             if (c_derive[currency]) {
                 $("#pi_icons").append(icon_node);

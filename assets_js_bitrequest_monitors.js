@@ -12,9 +12,9 @@ $(document).ready(function() {
     //get_api_inputs
     //match_xmr_pid
     //fail_dialogs
-    //handle_api_fails
-    //get_api_error_data
+    //handle_api_fails_list
     //get_next_api
+    //get_api_error_data
     //api_src
     //tx_api_fail
     //api_eror_msg
@@ -22,7 +22,9 @@ $(document).ready(function() {
 
     //get_rpc_inputs_init
     //get_rpc_inputs
-    //handle_rpc_fails
+    //eth_params
+    //inf_err
+    //handle_rpc_fails_list
     //get_next_rpc
     //get_rpc_error_data
     //rpc_eror_msg
@@ -64,6 +66,7 @@ function trigger_requeststates(trigger) {
         return // do nothing when offline
     } else {
         api_attempts = {}, // reset cache and index
+            rpc_attempts = {},
             tx_list = [], // reset transaction index
             statuspush = [];
         var active_requests = $("#requestlist .rqli").filter(function() {
@@ -134,7 +137,7 @@ function getinputs(rd) {
         api_info = check_api(rd.payment, iserc20),
         selected = api_info.data;
     thislist.removeClass("pmstatloaded");
-    if (api_info.api === true || iserc20) {
+    if (api_info.api === true) {
         choose_api_inputs(rd, selected);
     } else {
         get_rpc_inputs_init(rd, selected);
@@ -175,7 +178,8 @@ function check_api(payment, iserc20) {
 
 function choose_api_inputs(rd, api_data) {
     if (api_data === false) {
-        get_api_inputs_defaults(rd, api_data);
+        console.log("no api data available");
+        //get_api_inputs_defaults(rd, api_data);
     } else {
         get_api_inputs_init(rd, api_data, api_data.name);
     }
@@ -193,7 +197,7 @@ function get_api_inputs_defaults(rd, api_data) {
 }
 
 function get_api_inputs_init(rd, api_data, api_name) {
-    api_attempts[rd.pending + api_name] = null; // reset api attempts
+    api_attempts[rd.requestid + api_name] = null; // reset api attempts
     get_api_inputs(rd, api_data, api_name);
 }
 
@@ -201,9 +205,9 @@ function get_api_inputs(rd, api_data, api_name) {
     var requestid = rd.requestid,
         thislist = $("#" + requestid);
     if (thislist.hasClass("scan")) {
-        var pending = rd.pending;
-        api_attempts[pending + api_name] = true;
+        api_attempts[requestid + api_name] = true;
         var payment = rd.payment,
+            pending = rd.pending,
             address = rd.address,
             requestdate = (rd.inout == "incoming") ? rd.timestamp : rd.requestdate,
             request_timestamp = requestdate - 30000, // 30 seconds compensation for unexpected results
@@ -258,7 +262,7 @@ function get_api_inputs(rd, api_data, api_name) {
                         if (error) {
                             var message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
                             tx_api_fail(thislist, statuspanel);
-                            handle_api_fails(rd, {
+                            handle_api_fails_list(rd, {
                                 "error": message,
                                 "console": true
                             }, false, payment);
@@ -284,47 +288,47 @@ function get_api_inputs(rd, api_data, api_name) {
                                             "x-api": pk
                                         }
                                     }).done(function(e) {
-	                                    var inv_error = e.error;
-				                        if (inv_error) {
-				                            var err_message = (inv_error.message) ? inv_error.message : (typeof inv_error == "string") ? inv_error : default_error;
-				                            tx_api_fail(thislist, statuspanel);
-				                            handle_api_fails(rd, {
-				                                "error": err_message,
-				                                "console": true
-				                            }, false, payment);
-				                            status_field.text(" " + err_message);
-				                        } else {
-					                        var status = e.status;
-	                                        if (status) {
-	                                            lnd.invoice = e;
-	                                            status_field.text(" " + status);
-	                                            rd.lightning = lnd; // push invoice
-	                                            var txd = lnd_tx_data(e);
-	                                            if (txd.ccval) {
-	                                                var tx_listitem = append_tx_li(txd, thislist, true);
-	                                                if (tx_listitem) {
-	                                                    transactionlist.append(tx_listitem.data(txd));
-	                                                    tx_count(statuspanel, txd.confirmations);
-	                                                    if (status == "canceled") {
-	                                                        updaterequest({
-	                                                            "requestid": requestid,
-	                                                            "status": "canceled",
-	                                                            "confirmations": 0
-	                                                        }, false);
-	                                                    }
-	                                                    compareamounts(rd);
-	                                                }
-	                                            }
-	                                        }
-					                    }    
+                                        var inv_error = e.error;
+                                        if (inv_error) {
+                                            var err_message = (inv_error.message) ? inv_error.message : (typeof inv_error == "string") ? inv_error : default_error;
+                                            tx_api_fail(thislist, statuspanel);
+                                            handle_api_fails_list(rd, {
+                                                "error": err_message,
+                                                "console": true
+                                            }, false, payment);
+                                            status_field.text(" " + err_message);
+                                        } else {
+                                            var status = e.status;
+                                            if (status) {
+                                                lnd.invoice = e;
+                                                status_field.text(" " + status);
+                                                rd.lightning = lnd; // push invoice
+                                                var txd = lnd_tx_data(e);
+                                                if (txd.ccval) {
+                                                    var tx_listitem = append_tx_li(txd, thislist, true);
+                                                    if (tx_listitem) {
+                                                        transactionlist.append(tx_listitem.data(txd));
+                                                        tx_count(statuspanel, txd.confirmations);
+                                                        if (status == "canceled") {
+                                                            updaterequest({
+                                                                "requestid": requestid,
+                                                                "status": "canceled",
+                                                                "confirmations": 0
+                                                            }, false);
+                                                        }
+                                                        compareamounts(rd);
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }).fail(function(jqXHR, textStatus, errorThrown) {
                                         tx_api_fail(thislist, statuspanel);
                                         var error_object = (errorThrown) ? errorThrown : jqXHR;
-                                        handle_api_fails(rd, error_object, false, payment);
+                                        handle_api_fails_list(rd, error_object, false, payment);
                                     });
                                 } else {
                                     tx_count(statuspanel, 0);
-                                    handle_api_fails(rd, {
+                                    handle_api_fails_list(rd, {
                                         "error": "invoice not found",
                                         "console": true
                                     }, false, payment);
@@ -338,7 +342,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                         "confirmations": 0
                                     }, true);
                                 }
-                                handle_api_fails(rd, {
+                                handle_api_fails_list(rd, {
                                     "error": "payment id not found",
                                     "console": true
                                 }, false, payment);
@@ -351,7 +355,7 @@ function get_api_inputs(rd, api_data, api_name) {
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails(rd, error_object, false, payment);
+                        handle_api_fails_list(rd, error_object, false, payment);
                     }).always(function() {
                         api_src(thislist, {
                             "name": "proxy"
@@ -406,20 +410,20 @@ function get_api_inputs(rd, api_data, api_name) {
                             }).fail(function(jqXHR, textStatus, errorThrown) {
                                 tx_api_fail(thislist, statuspanel);
                                 var error_object = (errorThrown) ? errorThrown : jqXHR;
-                                handle_api_fails(rd, error_object, false, payment);
+                                handle_api_fails_list(rd, error_object, false, payment);
                             }).always(function() {
                                 api_src(thislist, {
                                     "name": "proxy"
                                 });
                             });
                         } else {
-                            handle_api_fails(rd, {
+                            handle_api_fails_list(rd, {
                                 "error": "Transaction not found",
                                 "console": true
                             }, false, payment);
                         }
                     } else {
-                        handle_api_fails(rd, {
+                        handle_api_fails_list(rd, {
                             "error": "invoice not found",
                             "console": true
                         }, false, payment);
@@ -505,7 +509,7 @@ function get_api_inputs(rd, api_data, api_name) {
                             }).fail(function(jqXHR, textStatus, errorThrown) {
                                 tx_api_fail(thislist, statuspanel);
                                 var error_object = (errorThrown) ? errorThrown : jqXHR;
-                                handle_api_fails(rd, error_object, api_name, payment);
+                                handle_api_fails_list(rd, error_object, api_data, payment);
                             });
                         } else {
                             var errormessage = data.Error,
@@ -515,7 +519,7 @@ function get_api_inputs(rd, api_data, api_name) {
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails(rd, error_object, api_name, payment);
+                        handle_api_fails_list(rd, error_object, api_data, payment);
                     }).always(function() {
                         api_src(thislist, {
                             "name": "mymonero api"
@@ -551,10 +555,10 @@ function get_api_inputs(rd, api_data, api_name) {
                             var nano_data = data.data;
                             if ($.isEmptyObject(nano_data)) {
                                 tx_api_fail(thislist, statuspanel);
-                                handle_api_fails(rd, {
+                                handle_api_fails_list(rd, {
                                     "error": "nano node offline",
                                     "console": true
-                                }, api_name, payment);
+                                }, api_data, payment);
                             } else {
                                 var pending_array_node = (nano_data[0]) ? nano_data[0].pending : [],
                                     pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
@@ -579,18 +583,18 @@ function get_api_inputs(rd, api_data, api_name) {
                             }
                         } else {
                             tx_api_fail(thislist, statuspanel);
-                            handle_api_fails(rd, {
+                            handle_api_fails_list(rd, {
                                 "error": "No results found",
                                 "console": true
-                            }, api_name, payment);
+                            }, api_data, payment);
                         }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails(rd, {
+                        handle_api_fails_list(rd, {
                             "error": "nano node offline",
                             "console": true
-                        }, api_name, payment);
+                        }, api_data, payment);
                     }).always(function() {
                         api_src(thislist, api_data);
                     });
@@ -617,7 +621,7 @@ function get_api_inputs(rd, api_data, api_name) {
                         if (data) {
                             if (data.error) {
                                 tx_api_fail(thislist, statuspanel);
-                                handle_api_fails(rd, data.error, api_name, payment);
+                                handle_api_fails_list(rd, data.error, api_data, payment);
                             } else {
                                 var txd = nano_scan_data(data, setconfirmations, ccsymbol, transactionhash);
                                 if (txd.ccval) {
@@ -632,15 +636,15 @@ function get_api_inputs(rd, api_data, api_name) {
                             }
                         } else {
                             tx_api_fail(thislist, statuspanel);
-                            handle_api_fails(rd, {
+                            handle_api_fails_list(rd, {
                                 "error": "No results found",
                                 "console": true
-                            }, api_name, payment);
+                            }, api_data, payment);
                         }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails(rd, error_object, api_name, payment);
+                        handle_api_fails_list(rd, error_object, api_data, payment);
                     }).always(function() {
                         api_src(thislist, api_data);
                     });
@@ -648,7 +652,7 @@ function get_api_inputs(rd, api_data, api_name) {
                 return
             }
             if (api_name == "bitcoin.com") {
-	            var legacy = (ccsymbol == "bch") ? bchutils.toLegacyAddress(address) : address;
+                var legacy = (ccsymbol == "bch") ? bchutils.toLegacyAddress(address) : address;
                 if (pending == "scanning") { // scan incoming transactions on address
                     api_proxy({
                         "api": api_name,
@@ -665,36 +669,36 @@ function get_api_inputs(rd, api_data, api_name) {
                     }).done(function(e) {
                         var data = br_result(e).result;
                         if (data) {
-	                        if (data.error) {
+                            if (data.error) {
                                 tx_api_fail(thislist, statuspanel);
-                                handle_api_fails(rd, data.error, api_name, payment);
+                                handle_api_fails_list(rd, data.error, api_data, payment);
                             } else {
                                 var items = data.items;
-	                            if ($.isEmptyObject(items)) {} else {
-	                                $.each(items, function(dat, value) {
-	                                    if (value.txid) { // filter outgoing transactions
-	                                        var txd = bitcoincom_scan_data(value, setconfirmations, ccsymbol, legacy, address);
-	                                        if (txd.transactiontime > request_timestamp && txd.ccval) {
-	                                            var tx_listitem = append_tx_li(txd, thislist);
-	                                            if (tx_listitem) {
-	                                                transactionlist.append(tx_listitem.data(txd));
-	                                                counter++;
-	                                            }
-	                                        }
-	                                    }
-	                                });
-	                            }
+                                if ($.isEmptyObject(items)) {} else {
+                                    $.each(items, function(dat, value) {
+                                        if (value.txid) { // filter outgoing transactions
+                                            var txd = bitcoincom_scan_data(value, setconfirmations, ccsymbol, legacy, address);
+                                            if (txd.transactiontime > request_timestamp && txd.ccval) {
+                                                var tx_listitem = append_tx_li(txd, thislist);
+                                                if (tx_listitem) {
+                                                    transactionlist.append(tx_listitem.data(txd));
+                                                    counter++;
+                                                }
+                                            }
+                                        }
+                                    });
+                                }
                             }
                         } else {
                             tx_api_fail(thislist, statuspanel);
-                            handle_api_fails(rd, "unknown error", api_name, payment);
+                            handle_api_fails_list(rd, "unknown error", api_data, payment);
                         }
                         tx_count(statuspanel, counter);
                         compareamounts(rd);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails(rd, error_object, api_name, payment);
+                        handle_api_fails_list(rd, error_object, api_data, payment);
                     }).always(function() {
                         api_src(thislist, api_data);
                     });
@@ -725,12 +729,12 @@ function get_api_inputs(rd, api_data, api_name) {
                                 }
                             } else {
                                 tx_api_fail(thislist, statuspanel);
-                                handle_api_fails(rd, "unknown error", api_name, payment);
+                                handle_api_fails_list(rd, "unknown error", api_data, payment);
                             }
                         }).fail(function(jqXHR, textStatus, errorThrown) {
                             tx_api_fail(thislist, statuspanel);
                             var error_object = (errorThrown) ? errorThrown : jqXHR;
-                            handle_api_fails(rd, error_object, api_name, payment);
+                            handle_api_fails_list(rd, error_object, api_data, payment);
                         }).always(function() {
                             api_src(thislist, api_data);
                         });
@@ -768,14 +772,14 @@ function get_api_inputs(rd, api_data, api_name) {
                             }
                         } else {
                             tx_api_fail(thislist, statuspanel);
-                            handle_api_fails(rd, "unknown error", api_name, payment);
+                            handle_api_fails_list(rd, "unknown error", api_data, payment);
                         }
                         tx_count(statuspanel, counter);
                         compareamounts(rd);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails(rd, error_object, api_name, payment);
+                        handle_api_fails_list(rd, error_object, api_data, payment);
                     }).always(function() {
                         api_src(thislist, api_data);
                     });
@@ -806,12 +810,12 @@ function get_api_inputs(rd, api_data, api_name) {
                                 }
                             } else {
                                 tx_api_fail(thislist, statuspanel);
-                                handle_api_fails(rd, "unknown error", api_name, payment);
+                                handle_api_fails_list(rd, "unknown error", api_data, payment);
                             }
                         }).fail(function(jqXHR, textStatus, errorThrown) {
                             tx_api_fail(thislist, statuspanel);
                             var error_object = (errorThrown) ? errorThrown : jqXHR;
-                            handle_api_fails(rd, error_object, api_name, payment);
+                            handle_api_fails_list(rd, error_object, api_data, payment);
                         }).always(function() {
                             api_src(thislist, api_data);
                         });
@@ -834,7 +838,7 @@ function get_api_inputs(rd, api_data, api_name) {
                         if (data) {
                             if (data.error) {
                                 tx_api_fail(thislist, statuspanel);
-                                handle_api_fails(rd, data.error, api_name, payment);
+                                handle_api_fails_list(rd, data.error, api_data, payment);
                             } else {
                                 if (payment == "ethereum") {
                                     $.each(data.txrefs, function(dat, value) {
@@ -871,12 +875,12 @@ function get_api_inputs(rd, api_data, api_name) {
                             }
                         } else {
                             tx_api_fail(thislist, statuspanel);
-                            handle_api_fails(rd, "unknown error", api_name, payment);
+                            handle_api_fails_list(rd, "unknown error", api_data, payment);
                         }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails(rd, error_object, api_name, payment);
+                        handle_api_fails_list(rd, error_object, api_data, payment);
                     }).always(function() {
                         api_src(thislist, api_data);
                     });
@@ -897,7 +901,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                 var txd;
                                 if (data.error) {
                                     tx_api_fail(thislist, statuspanel);
-                                    handle_api_fails(rd, data.error, api_name, payment);
+                                    handle_api_fails_list(rd, data.error, api_data, payment);
                                 } else {
                                     var txd = blockcypher_poll_data(data, setconfirmations, ccsymbol, address);
                                     if (txd.ccval) {
@@ -911,12 +915,12 @@ function get_api_inputs(rd, api_data, api_name) {
                                 }
                             } else {
                                 tx_api_fail(thislist, statuspanel);
-                                handle_api_fails(rd, "unknown error", api_name, payment);
+                                handle_api_fails_list(rd, "unknown error", api_data, payment);
                             }
                         }).fail(function(jqXHR, textStatus, errorThrown) {
                             tx_api_fail(thislist, statuspanel);
                             var error_object = (errorThrown) ? errorThrown : jqXHR;
-                            handle_api_fails(rd, error_object, api_name, payment);
+                            handle_api_fails_list(rd, error_object, api_data, payment);
                         }).always(function() {
                             api_src(thislist, api_data);
                         });
@@ -939,7 +943,7 @@ function get_api_inputs(rd, api_data, api_name) {
                         if (data) {
                             if (data.error) {
                                 tx_api_fail(thislist, statuspanel);
-                                handle_api_fails(rd, data.error, api_name, payment);
+                                handle_api_fails_list(rd, data.error, api_data, payment);
                             } else {
                                 $.each(data.operations, function(dat, value) {
                                     var txd = ethplorer_scan_data(value, setconfirmations, ccsymbol),
@@ -957,12 +961,12 @@ function get_api_inputs(rd, api_data, api_name) {
                             }
                         } else {
                             tx_api_fail(thislist, statuspanel);
-                            handle_api_fails(rd, "unknown error", api_name, payment);
+                            handle_api_fails_list(rd, "unknown error", api_data, payment);
                         }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails(rd, error_object, api_name, payment);
+                        handle_api_fails_list(rd, error_object, api_data, payment);
                     }).always(function() {
                         api_src(thislist, api_data);
                     });
@@ -983,7 +987,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                 var txd;
                                 if (data.error) {
                                     tx_api_fail(thislist, statuspanel);
-                                    handle_api_fails(rd, data.error, api_name, payment);
+                                    handle_api_fails_list(rd, data.error, api_data, payment);
                                 } else {
                                     var txd = ethplorer_poll_data(data, setconfirmations, ccsymbol);
                                     if (txd.ccval) {
@@ -997,12 +1001,12 @@ function get_api_inputs(rd, api_data, api_name) {
                                 }
                             } else {
                                 tx_api_fail(thislist, statuspanel);
-                                handle_api_fails(rd, "unknown error", api_name, payment);
+                                handle_api_fails_list(rd, "unknown error", api_data, payment);
                             }
                         }).fail(function(jqXHR, textStatus, errorThrown) {
                             tx_api_fail(thislist, statuspanel);
                             var error_object = (errorThrown) ? errorThrown : jqXHR;
-                            handle_api_fails(rd, error_object, api_name, payment);
+                            handle_api_fails_list(rd, error_object, api_data, payment);
                         }).always(function() {
                             api_src(thislist, api_data);
                         });
@@ -1026,12 +1030,12 @@ function get_api_inputs(rd, api_data, api_name) {
                         if (data) {
                             if (data.error) {
                                 tx_api_fail(thislist, statuspanel);
-                                handle_api_fails(rd, data.error, api_name, payment);
+                                handle_api_fails_list(rd, data.error, api_data, payment);
                             } else {
                                 var context = data.context;
                                 if (context.error) {
                                     tx_api_fail(thislist, statuspanel);
-                                    handle_api_fails(rd, context.error, api_name, payment);
+                                    handle_api_fails_list(rd, context.error, api_data, payment);
                                 } else {
                                     var latestblock = context.state;
                                     if (erc20 === true) {
@@ -1067,50 +1071,48 @@ function get_api_inputs(rd, api_data, api_name) {
                                             compareamounts(rd);
                                         } else {
                                             var txarray = data.data[address].transactions; // get transactions
-                                            if ($.isEmptyObject(txarray)) {
-									        }
-									        else {
-										        api_proxy({
-	                                                "api": api_name,
-	                                                "search": payment + "/dashboards/transactions/" + txarray.slice(0, 6), // get last 5 transactions
-	                                                "cachetime": 25,
-	                                                "cachefolder": "1h",
-	                                                "params": {
-	                                                    "method": "GET"
-	                                                }
-	                                            }).done(function(e) {
-	                                                var dat = br_result(e).result;
-	                                                $.each(dat.data, function(dt, val) {
-	                                                    var txd = blockchair_scan_data(val, setconfirmations, ccsymbol, address, latestblock);
-	                                                    if (txd.transactiontime > request_timestamp && txd.ccval) { // get all transactions after requestdate
-	                                                        var tx_listitem = append_tx_li(txd, thislist);
-	                                                        if (tx_listitem) {
-	                                                            transactionlist.append(tx_listitem.data(txd));
-	                                                            counter++;
-	                                                        }
-	                                                    }
-	                                                });
-	                                                statuspanel.attr("data-count", counter).text("+ " + counter);
-	                                                tx_count(statuspanel, counter);
-	                                                compareamounts(rd);
-	                                            }).fail(function(jqXHR, textStatus, errorThrown) {
-	                                                tx_api_fail(thislist, statuspanel);
-	                                                var error_object = (errorThrown) ? errorThrown : jqXHR;
-	                                                handle_api_fails(rd, error_object, api_name, payment);
-	                                            });
-									        }
+                                            if ($.isEmptyObject(txarray)) {} else {
+                                                api_proxy({
+                                                    "api": api_name,
+                                                    "search": payment + "/dashboards/transactions/" + txarray.slice(0, 6), // get last 5 transactions
+                                                    "cachetime": 25,
+                                                    "cachefolder": "1h",
+                                                    "params": {
+                                                        "method": "GET"
+                                                    }
+                                                }).done(function(e) {
+                                                    var dat = br_result(e).result;
+                                                    $.each(dat.data, function(dt, val) {
+                                                        var txd = blockchair_scan_data(val, setconfirmations, ccsymbol, address, latestblock);
+                                                        if (txd.transactiontime > request_timestamp && txd.ccval) { // get all transactions after requestdate
+                                                            var tx_listitem = append_tx_li(txd, thislist);
+                                                            if (tx_listitem) {
+                                                                transactionlist.append(tx_listitem.data(txd));
+                                                                counter++;
+                                                            }
+                                                        }
+                                                    });
+                                                    statuspanel.attr("data-count", counter).text("+ " + counter);
+                                                    tx_count(statuspanel, counter);
+                                                    compareamounts(rd);
+                                                }).fail(function(jqXHR, textStatus, errorThrown) {
+                                                    tx_api_fail(thislist, statuspanel);
+                                                    var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                                    handle_api_fails_list(rd, error_object, api_data, payment);
+                                                });
+                                            }
                                         }
                                     }
                                 }
                             }
                         } else {
                             tx_api_fail(thislist, statuspanel);
-                            handle_api_fails(rd, "unknown error", api_name, payment);
+                            handle_api_fails_list(rd, "unknown error", api_data, payment);
                         }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails(rd, error_object, api_name, payment);
+                        handle_api_fails_list(rd, error_object, api_data, payment);
                     }).always(function() {
                         api_src(thislist, api_data);
                     });
@@ -1134,7 +1136,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                 if (context) {
                                     if (context.error) {
                                         tx_api_fail(thislist, statuspanel);
-                                        handle_api_fails(rd, context.error, api_name, payment);
+                                        handle_api_fails_list(rd, context.error, api_data, payment);
                                     } else {
                                         var latestblock = context.state,
                                             txd = (erc20 === true) ? blockchair_erc20_poll_data(data.data[transactionhash], setconfirmations, ccsymbol, latestblock) :
@@ -1152,12 +1154,12 @@ function get_api_inputs(rd, api_data, api_name) {
                                 }
                             } else {
                                 tx_api_fail(thislist, statuspanel);
-                                handle_api_fails(rd, "unknown error", api_name, payment);
+                                handle_api_fails_list(rd, "unknown error", api_data, payment);
                             }
                         }).fail(function(jqXHR, textStatus, errorThrown) {
                             tx_api_fail(thislist, statuspanel);
                             var error_object = (errorThrown) ? errorThrown : jqXHR;
-                            handle_api_fails(rd, error_object, api_name, payment);
+                            handle_api_fails_list(rd, error_object, api_data, payment);
                         }).always(function() {
                             api_src(thislist, api_data);
                         });
@@ -1165,7 +1167,7 @@ function get_api_inputs(rd, api_data, api_name) {
                 }
             }
             if (api_name == "nimiq.watch" || api_name == "mopsus.com") {
-	            if (pending == "scanning") { // scan incoming transactions on address
+                if (pending == "scanning") { // scan incoming transactions on address
                     api_proxy({
                         "api": api_name,
                         "search": "account-transactions/" + address,
@@ -1179,15 +1181,14 @@ function get_api_inputs(rd, api_data, api_name) {
                         var data = br_result(e).result;
                         if (data) {
                             if ($.isEmptyObject(data)) {
-    
-                            }
-                            else {
+
+                            } else {
                                 $.each(data, function(dat, value) {
-	                                var r_address = value.receiver_address.replace(/\s/g, "");
+                                    var r_address = value.receiver_address.replace(/\s/g, "");
                                     if (r_address == address) { // filter outgoing transactions
                                         var txd = nimiq_scan_data(value, setconfirmations);
                                         if (txd.transactiontime > request_timestamp && txd.ccval) {
-	                                        var tx_listitem = append_tx_li(txd, thislist);
+                                            var tx_listitem = append_tx_li(txd, thislist);
                                             if (tx_listitem) {
                                                 transactionlist.append(tx_listitem.data(txd));
                                                 counter++;
@@ -1198,122 +1199,121 @@ function get_api_inputs(rd, api_data, api_name) {
                             }
                         } else {
                             tx_api_fail(thislist, statuspanel);
-                            handle_api_fails(rd, "unknown error", api_name, payment);
+                            handle_api_fails_list(rd, "unknown error", api_data, payment);
                         }
                         tx_count(statuspanel, counter);
                         compareamounts(rd);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails(rd, error_object, api_name, payment);
+                        handle_api_fails_list(rd, error_object, api_data, payment);
                     }).always(function() {
                         api_src(thislist, api_data);
                     });
                 }
                 if (pending == "polling") {
                     if (transactionhash) {
-	                    if (api_name == "nimiq.watch") { // poll nimiq.watch transaction id
-	                        api_proxy({
-	                            "api": api_name,
-	                            "search": "transaction/" + nimiqhash(transactionhash),
-	                            "cachetime": 25,
-	                            "cachefolder": "1h",
-	                            "params": {
-	                                "method": "GET"
-	                            }
-	                        }).done(function(e) {
-	                            var data = br_result(e).result;
-	                            if (data) {
-		                            if (data.error) {
-	                                    tx_api_fail(thislist, statuspanel);
-	                                    handle_api_fails(rd, data.error, api_name, payment);
-	                                } else {
-	                                    var txd = nimiq_scan_data(data, setconfirmations);
-	                                    if (txd) {
-		                                    if (txd.ccval) {
-		                                        var tx_listitem = append_tx_li(txd, thislist);
-		                                        if (tx_listitem) {
-		                                            transactionlist.append(tx_listitem.data(txd));
-		                                        }
-		                                        tx_count(statuspanel, 1);
-		                                        compareamounts(rd);
-		                                    }
-		                                }
-	                                }
-	                            } else {
-	                                tx_api_fail(thislist, statuspanel);
-	                                handle_api_fails(rd, "unknown error", api_name, payment);
-	                            }
-	                        }).fail(function(jqXHR, textStatus, errorThrown) {
-	                            tx_api_fail(thislist, statuspanel);
-	                            var error_object = (errorThrown) ? errorThrown : jqXHR;
-	                            handle_api_fails(rd, error_object, api_name, payment);
-	                        }).always(function() {
-	                            api_src(thislist, api_data);
-	                        });
-                        }
-                        else {
-	                        if (api_name == "mopsus.com") { // poll mopsus.com transaction id
-		                        api_proxy({
-		                            "api": api_name,
-		                            "search": "tx/" + transactionhash,
-		                            "cachetime": 25,
-		                            "cachefolder": "1h",
-		                            "params": {
-		                                "method": "GET"
-		                            }
-		                        }).done(function(e) {
-		                            var data = br_result(e).result;
-		                            if (data) {
-			                            if (data.error) {
-		                                    tx_api_fail(thislist, statuspanel);
-		                                    handle_api_fails(rd, data.error, api_name, payment);
-		                                } else {
-			                                api_proxy({
-										        "api": api_name,
-										        "search": "quick-stats/",
-										        "cachetime": 25,
-					                            "cachefolder": "1h",
-					                            "params": {
-					                                "method": "GET"
-					                            }
-										    }).done(function(res) {
-											    var e = br_result(res).result;
-											    if (e) {
-												    var lb = e.latest_block;
-												    if (lb) {
-													    var bh = lb.height,
-													    	txd = nimiq_scan_data(data, setconfirmations, bh, null, transactionhash);
-													    if (txd) {
-						                                    if (txd.ccval) {
-						                                        var tx_listitem = append_tx_li(txd, thislist);
-						                                        if (tx_listitem) {
-						                                            transactionlist.append(tx_listitem.data(txd));
-						                                        }
-						                                        tx_count(statuspanel, 1);
-						                                        compareamounts(rd);
-						                                    }
-						                                }
-												    }
-											    }
-										    }).fail(function(jqXHR, textStatus, errorThrown) {
-										        tx_api_fail(thislist, statuspanel);
-					                            var error_object = (errorThrown) ? errorThrown : jqXHR;
-					                            handle_api_fails(rd, error_object, api_name, payment);
-										    });
-		                                }
-		                            } else {
-		                                tx_api_fail(thislist, statuspanel);
-		                                handle_api_fails(rd, "unknown error", api_name, payment);
-		                            }
-		                        }).fail(function(jqXHR, textStatus, errorThrown) {
-		                            tx_api_fail(thislist, statuspanel);
-		                            var error_object = (errorThrown) ? errorThrown : jqXHR;
-		                            handle_api_fails(rd, error_object, api_name, payment);
-		                        }).always(function() {
-		                            api_src(thislist, api_data);
-		                        });
-	                        }
+                        if (api_name == "nimiq.watch") { // poll nimiq.watch transaction id
+                            api_proxy({
+                                "api": api_name,
+                                "search": "transaction/" + nimiqhash(transactionhash),
+                                "cachetime": 25,
+                                "cachefolder": "1h",
+                                "params": {
+                                    "method": "GET"
+                                }
+                            }).done(function(e) {
+                                var data = br_result(e).result;
+                                if (data) {
+                                    if (data.error) {
+                                        tx_api_fail(thislist, statuspanel);
+                                        handle_api_fails_list(rd, data.error, api_data, payment);
+                                    } else {
+                                        var txd = nimiq_scan_data(data, setconfirmations);
+                                        if (txd) {
+                                            if (txd.ccval) {
+                                                var tx_listitem = append_tx_li(txd, thislist);
+                                                if (tx_listitem) {
+                                                    transactionlist.append(tx_listitem.data(txd));
+                                                }
+                                                tx_count(statuspanel, 1);
+                                                compareamounts(rd);
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    tx_api_fail(thislist, statuspanel);
+                                    handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                }
+                            }).fail(function(jqXHR, textStatus, errorThrown) {
+                                tx_api_fail(thislist, statuspanel);
+                                var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                handle_api_fails_list(rd, error_object, api_data, payment);
+                            }).always(function() {
+                                api_src(thislist, api_data);
+                            });
+                        } else {
+                            if (api_name == "mopsus.com") { // poll mopsus.com transaction id
+                                api_proxy({
+                                    "api": api_name,
+                                    "search": "tx/" + transactionhash,
+                                    "cachetime": 25,
+                                    "cachefolder": "1h",
+                                    "params": {
+                                        "method": "GET"
+                                    }
+                                }).done(function(e) {
+                                    var data = br_result(e).result;
+                                    if (data) {
+                                        if (data.error) {
+                                            tx_api_fail(thislist, statuspanel);
+                                            handle_api_fails_list(rd, data.error, api_data, payment);
+                                        } else {
+                                            api_proxy({
+                                                "api": api_name,
+                                                "search": "quick-stats/",
+                                                "cachetime": 25,
+                                                "cachefolder": "1h",
+                                                "params": {
+                                                    "method": "GET"
+                                                }
+                                            }).done(function(res) {
+                                                var e = br_result(res).result;
+                                                if (e) {
+                                                    var lb = e.latest_block;
+                                                    if (lb) {
+                                                        var bh = lb.height,
+                                                            txd = nimiq_scan_data(data, setconfirmations, bh, null, transactionhash);
+                                                        if (txd) {
+                                                            if (txd.ccval) {
+                                                                var tx_listitem = append_tx_li(txd, thislist);
+                                                                if (tx_listitem) {
+                                                                    transactionlist.append(tx_listitem.data(txd));
+                                                                }
+                                                                tx_count(statuspanel, 1);
+                                                                compareamounts(rd);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }).fail(function(jqXHR, textStatus, errorThrown) {
+                                                tx_api_fail(thislist, statuspanel);
+                                                var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                                handle_api_fails_list(rd, error_object, api_data, payment);
+                                            });
+                                        }
+                                    } else {
+                                        tx_api_fail(thislist, statuspanel);
+                                        handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                    }
+                                }).fail(function(jqXHR, textStatus, errorThrown) {
+                                    tx_api_fail(thislist, statuspanel);
+                                    var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                    handle_api_fails_list(rd, error_object, api_data, payment);
+                                }).always(function() {
+                                    api_src(thislist, api_data);
+                                });
+                            }
                         }
                     }
                 }
@@ -1340,34 +1340,51 @@ function match_xmr_pid(xmria, xmrpid, xmr_pid) {
 // API error handling
 
 function fail_dialogs(apisrc, error) {
-    var error_data = get_api_error_data(error),
-        key_fail = error_data.apikey;
-    api_eror_msg(apisrc, error_data, key_fail)
+    var error_data = get_api_error_data(error);
+    api_eror_msg(apisrc, error_data)
 }
 
-function handle_api_fails(rd, error, api_name, thispayment, txid, poll) {
-	var monitor = (txid !== undefined),
-        error_data = get_api_error_data(error),
-        key_fail = error_data.apikey;
-    if (key_fail === true || !api_name) { // show alert when apikey is missing
-        api_eror_msg(api_name, error_data, true, monitor);
-        api_callback(rd.requestid, true);
-        return false;
+function handle_api_fails_list(rd, error, api_data, thispayment, txid) {
+    var api_name = api_data.name,
+        requestid = rd.requestid,
+        nextapi = get_next_api(thispayment, api_name, requestid);
+    if (nextapi === false) {
+        var api_url = api_data.url,
+            nextrpc = get_next_rpc(thispayment, api_url, requestid);
+        if (nextrpc === false) { // try next rpc
+            var rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
+                error_data = get_api_error_data(error);
+            api_eror_msg(rpc_id, error_data);
+            api_callback(requestid, true);
+            return
+        }
+    }
+    if (nextrpc) {
+        get_rpc_inputs(rd, nextrpc);
+        return
+    }
+    if (nextapi.api) {
+        get_api_inputs(rd, nextapi, nextapi.name);
     } else {
-	    var nextapi = get_next_api(thispayment, api_name, rd.pending, poll);
-        if (nextapi === false) { // only one api
-            api_eror_msg(api_name, error_data, key_fail, monitor);
-            api_callback(rd.requestid, true);
-            return false;
-        } else {
-            if (poll === true) {
-                api_monitor(nextapi, txid);
-            } else {
-                get_api_inputs(rd, nextapi, nextapi.name);
+        get_rpc_inputs(rd, nextapi);
+    }
+}
+
+function get_next_api(this_payment, api_name, requestid) {
+    var rpc_settings_li = $("#" + this_payment + "_settings .cc_settinglist li[data-id='apis']");
+    if (rpc_settings_li) {
+        var rpc_settings = rpc_settings_li.data(),
+            apilist = rpc_settings.apis;
+        if (!$.isEmptyObject(apilist)) {
+            var next_scan = apilist[apilist.findIndex(option => option.name == api_name) + 1],
+                next_api = (next_scan) ? next_scan : apilist[0],
+                rqid = (requestid) ? requestid : "";
+            if (api_attempts[rqid + next_api.name] !== true) {
+                return next_api;
             }
         }
-        return false;
     }
+    return false;
 }
 
 function get_api_error_data(error) {
@@ -1399,21 +1416,6 @@ function get_api_error_data(error) {
             "console": cons
         };
     return error_object;
-}
-
-function get_next_api(this_payment, this_api_name, pending, poll) {
-    var apilist = $.grep(getcoinsettings(this_payment).apis.apis, function(obj) { // filter out rpc's
-        return obj.api === true;
-    });
-    var this_index = apilist.findIndex(option => option.name == this_api_name),
-        next_scan = apilist[this_index + 1],
-        next_api = (next_scan) ? next_scan : apilist[0],
-        pendings = (poll === true) ? "pollings" : pending;
-    if (api_attempts[pendings + next_api.name] === true) {
-        return false;
-    } else {
-        return next_api;
-    }
 }
 
 function api_src(thislist, api_data) {
@@ -1459,14 +1461,14 @@ function tx_api_fail(thislist, statuspanel) {
     statuspanel.attr("data-count", 0).text("?");
 }
 
-function api_eror_msg(apisrc, error, apikey, monitor) {
+function api_eror_msg(apisrc, error) {
     var error_dat = (error) ? error : {
             "errormessage": "errormessage",
             "errorcode": "errorcode"
         },
         errormessage = error_dat.errormessage,
         errorcode = error_dat.errorcode,
-        keyfail = (apikey === true);
+        keyfail = (error.apikey === true);
     if (error.console) {
         console.log(error);
         return false;
@@ -1474,7 +1476,7 @@ function api_eror_msg(apisrc, error, apikey, monitor) {
     if ($("#dialogbody .doselect").length) {
         return false;
     }
-    var api_bttn = (keyfail === true) ? "<div id='add_api' data-api='" + apisrc + "' class='button' data-type='" + monitor + "'>Add " + apisrc + " Api key</div>" : "",
+    var api_bttn = (keyfail === true) ? "<div id='add_api' data-api='" + apisrc + "' class='button'>Add " + apisrc + " Api key</div>" : "",
         content = "<h2 class='icon-blocked'>Error " + errorcode + "</h2><p class='doselect'><strong>Error: " + errorcode + " " + errormessage + "<br/><br/><span id='proxy_dialog' class='ref'>Try other proxy</span></p>" + api_bttn;
     popdialog(content, "alert", "canceldialog");
 }
@@ -1484,18 +1486,19 @@ function tx_count(statuspanel, count) {
 }
 
 function get_rpc_inputs_init(rd, api_data) {
-    rpc_attempts[api_data.url] = null; // reset api attempts
+    rpc_attempts[rd.requestid + api_data.url] = null; // reset api attempts
     get_rpc_inputs(rd, api_data);
 }
 
 function get_rpc_inputs(rd, rpc_data) {
-    var thislist = $("#" + rd.requestid);
+    var requestid = rd.requestid,
+        thislist = $("#" + requestid);
     if (thislist.hasClass("scan")) {
-        rpc_attempts[rpc_data.url] = true;
+        rpc_attempts[requestid + rpc_data.url] = true;
         var payment = rd.payment,
+            pending = rd.pending,
             address = rd.address,
             requestdate = (rd.inout == "incoming") ? rd.timestamp : rd.requestdate,
-            pending = rd.pending,
             request_timestamp = requestdate - 30000, // 30 seconds compensation for unexpected results
             ccsymbol = rd.currencysymbol,
             getconfirmations = rd.set_confirmations,
@@ -1513,12 +1516,12 @@ function get_rpc_inputs(rd, rpc_data) {
             transactionlist.find("li").each(function() {
                 tx_list.push($(this).data("txhash"));
             });
-            api_callback(rd.requestid, true);
+            api_callback(requestid, true);
         } else if (pending == "scanning" || pending == "polling") {
             transactionlist.html("");
             if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin") {
                 if (pending == "scanning") { // scan incoming transactions on address
-                    handle_rpc_fails(rd, false, payment, rpc_data); // use api because rpc does not scan external addresses unfortunately
+                    handle_rpc_fails_list(rd, false, payment, rpc_data); // use api because rpc does not scan external addresses unfortunately
                 } else {
                     api_proxy({
                         "api": "bitcoin_rpc",
@@ -1540,7 +1543,7 @@ function get_rpc_inputs(rd, rpc_data) {
                         var data = br_result(e).result;
                         if (data.error) {
                             tx_api_fail(thislist, statuspanel);
-                            handle_rpc_fails(rd, data.error, payment, rpc_data);
+                            handle_rpc_fails_list(rd, data.error, payment, rpc_data);
                         } else {
                             if (data.result) {
                                 var txd = bitcoin_rpc_data(data.result, setconfirmations, ccsymbol, address);
@@ -1550,7 +1553,6 @@ function get_rpc_inputs(rd, rpc_data) {
                                         transactionlist.append(tx_listitem.data(txd));
                                     }
                                     tx_count(statuspanel, 1);
-                                    api_src(thislist, rpc_data);
                                     compareamounts(rd);
                                 }
                             }
@@ -1558,166 +1560,136 @@ function get_rpc_inputs(rd, rpc_data) {
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_rpc_fails(rd, error_object, payment, rpc_data);
+                        handle_rpc_fails_list(rd, error_object, payment, rpc_data);
                     }).always(function() {
                         api_src(thislist, rpc_data);
                     });
                 }
-            } else if (payment == "ethereum") {
+            } else if (payment == "ethereum" || erc20 === true) {
                 if (pending == "scanning") { // scan incoming transactions on address
-                    handle_rpc_fails(rd, false, payment, rpc_data); // use api instead
+                    handle_rpc_fails_list(rd, false, payment, rpc_data); // use api instead
                 } else {
-                    if (web3) {
-                        var current_provider = web3.currentProvider.host,
-                            if_id = get_infura_apikey(url),
-                            current_url = url + if_id;
-                        if (current_provider == current_url) {} else {
-                            web3.setProvider(current_url);
-                        }
-                        web3.eth.getBlockNumber(function(err_1, data_1) {
-                            if (err_1) {
-                                console.log(err_1);
-                                tx_api_fail(thislist, statuspanel);
-                                handle_rpc_fails(rd, err_1, payment, rpc_data);
-                            } else {
-                                if (data_1) {
-                                    var current_blocknumber = data_1;
-                                    web3.eth.getTransaction(transactionhash, function(err_2, data_2) {
-                                        if (err_2) {
-                                            console.log(err_2);
-                                            tx_api_fail(thislist, statuspanel);
-                                            handle_rpc_fails(rd, err_2, payment, rpc_data);
-                                        } else {
-                                            var this_blocknumber = data_2.blockNumber;
-                                            web3.eth.getBlock(this_blocknumber, function(err_3, data_3) {
-                                                if (err_3) {
-                                                    console.log(err_3);
-                                                    tx_api_fail(thislist, statuspanel);
-                                                    handle_rpc_fails(rd, err_3, payment, rpc_data);
+                    var set_url = (url) ? url : main_eth_node;
+                    api_proxy(eth_params(set_url, 25, "eth_blockNumber", [])).done(function(a) {
+                        var r_1 = inf_result(a);
+                        if (r_1) {
+                            api_proxy(eth_params(set_url, 25, "eth_getTransactionByHash", [transactionhash])).done(function(b) {
+                                var r_2 = inf_result(b);
+                                if (r_2) {
+                                    var this_bn = r_2.blockNumber;
+                                    api_proxy(eth_params(set_url, 25, "eth_getBlockByNumber", [this_bn, false])).done(function(c) {
+                                        var r_3 = inf_result(c);
+                                        if (r_3) {
+                                            var tbn = Number(this_bn),
+                                                cbn = Number(r_1),
+                                                conf = cbn - tbn,
+                                                conf_correct = (conf < 0) ? 0 : conf,
+                                                txd;
+                                            if (erc20 === true) {
+                                                var input = r_2.input,
+                                                    address_upper = address.slice(3).toUpperCase(),
+                                                    input_upper = input.toUpperCase();
+                                                if (input_upper.indexOf(address_upper) >= 0) {
+                                                    var signature_hex = input.slice(2, 10),
+                                                        address_hex = input.slice(10, 74),
+                                                        amount_hex = input.slice(74, input.length),
+                                                        tokenValue = hexToNumberString(amount_hex),
+                                                        txdata = {
+                                                            "timestamp": r_3.timestamp,
+                                                            "hash": transactionhash,
+                                                            "confirmations": conf_correct,
+                                                            "value": tokenValue,
+                                                            "decimals": rd.decimals
+                                                        },
+                                                        txd = infura_erc20_poll_data(txdata, setconfirmations, ccsymbol);
                                                 } else {
-                                                    if (data_3) {
-                                                        var conf = current_blocknumber - this_blocknumber,
-                                                            conf_correct = (conf < 0) ? 0 : conf,
-                                                            txdata = {
-                                                                "timestamp": data_3.timestamp,
-                                                                "hash": transactionhash,
-                                                                "confirmations": conf_correct,
-                                                                "value": data_2.value
-                                                            },
-                                                            txd = infura_eth_poll_data(txdata, setconfirmations, ccsymbol);
-                                                        if (txd.ccval) {
-                                                            var tx_listitem = append_tx_li(txd, thislist);
-                                                            if (tx_listitem) {
-                                                                transactionlist.append(tx_listitem.data(txd));
-                                                            }
-                                                            tx_count(statuspanel, 1);
-                                                            compareamounts(rd);
-                                                        }
-                                                    } else {
-                                                        tx_api_fail(thislist, statuspanel);
-                                                        handle_rpc_fails(rd, false, payment, rpc_data);
-                                                    }
+                                                    tx_api_fail(thislist, statuspanel);
+                                                    handle_rpc_fails_list(rd, inf_err(set_url), payment, rpc_data);
+                                                    return
                                                 }
-                                            });
-                                        }
-                                    });
-                                } else {
-                                    tx_api_fail(thislist, statuspanel);
-                                    handle_rpc_fails(rd, false, payment, rpc_data);
-                                }
-                            }
-                        });
-                    } else {
-                        tx_api_fail(thislist, statuspanel);
-                        handle_rpc_fails(rd, false, payment, rpc_data);
-                    }
-                    api_src(thislist, rpc_data);
-                }
-            } else if (erc20 === true) {
-                if (pending == "scanning") { // scan incoming transactions on address
-                    handle_rpc_fails(rd, false, payment, rpc_data); // use api instead
-                } else {
-                    if (web3) {
-                        var current_provider = web3.currentProvider.host,
-                            set_url = (url) ? url : main_eth_node,
-                            if_id = get_infura_apikey(set_url),
-                            current_url = set_url + if_id;
-                        if (current_provider == current_url) {} else {
-                            web3.setProvider(current_url);
-                        }
-                        web3.eth.getBlockNumber(function(err_1, data_1) {
-                            if (err_1) {
-                                console.log(err_1);
-                                tx_api_fail(thislist, statuspanel);
-                                handle_rpc_fails(rd, err_1, payment, rpc_data);
-                            } else {
-                                if (data_1) {
-                                    var current_blocknumber = data_1;
-                                    web3.eth.getTransaction(transactionhash, function(err_2, data_2) {
-                                        if (err_2) {
-                                            console.log(err_2);
-                                            tx_api_fail(thislist, statuspanel);
-                                            handle_rpc_fails(rd, err_2, payment, rpc_data);
-                                        } else {
-                                            if (data_2) {
-                                                var this_blocknumber = data_2.blockNumber;
-                                                web3.eth.getBlock(this_blocknumber, function(err_3, data_3) {
-                                                    if (err_3) {
-                                                        console.log(err_3);
-                                                        tx_api_fail(thislist, statuspanel);
-                                                        handle_rpc_fails(rd, err_3, payment, rpc_data);
-                                                    } else {
-                                                        if (data_3) {
-                                                            var input = data_2.input,
-                                                                address_upper = address.slice(3).toUpperCase(),
-                                                                input_upper = input.toUpperCase();
-                                                            if (input_upper.indexOf(address_upper) >= 0) {
-                                                                var signature_hex = input.slice(2, 10),
-                                                                    address_hex = input.slice(10, 74),
-                                                                    amount_hex = input.slice(74, input.length),
-                                                                    tokenValue = web3.utils.hexToNumberString(amount_hex),
-                                                                    conf = current_blocknumber - this_blocknumber,
-                                                                    conf_correct = (conf < 0) ? 0 : conf,
-                                                                    txdata = {
-                                                                        "timestamp": data_3.timestamp,
-                                                                        "hash": transactionhash,
-                                                                        "confirmations": conf_correct,
-                                                                        "value": tokenValue,
-                                                                        "decimals": rd.decimals
-                                                                    },
-                                                                    txd = infura_erc20_poll_data(txdata, setconfirmations, ccsymbol);
-                                                                if (txd.ccval) {
-                                                                    var tx_listitem = append_tx_li(txd, thislist);
-                                                                    if (tx_listitem) {
-                                                                        transactionlist.append(tx_listitem.data(txd));
-                                                                    }
-                                                                    tx_count(statuspanel, 1);
-                                                                    compareamounts(rd);
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                });
                                             } else {
-                                                tx_api_fail(thislist, statuspanel);
-                                                handle_rpc_fails(rd, false, payment, rpc_data);
+                                                var txdata = {
+                                                        "timestamp": Number(r_3.timestamp),
+                                                        "hash": transactionhash,
+                                                        "confirmations": conf_correct,
+                                                        "value": Number(r_2.value)
+                                                    },
+                                                    txd = infura_eth_poll_data(txdata, setconfirmations, ccsymbol);
+                                            }
+                                            if (txd.ccval) {
+                                                var tx_listitem = append_tx_li(txd, thislist);
+                                                if (tx_listitem) {
+                                                    transactionlist.append(tx_listitem.data(txd));
+                                                }
+                                                tx_count(statuspanel, 1);
+                                                compareamounts(rd);
+                                                return
                                             }
                                         }
+                                        tx_api_fail(thislist, statuspanel);
+                                        handle_rpc_fails_list(rd, inf_err(set_url), payment, rpc_data);
+                                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                                        tx_api_fail(thislist, statuspanel);
+                                        handle_rpc_fails_list(rd, errorThrown, payment, rpc_data);
                                     });
-                                } else {
-                                    tx_api_fail(thislist, statuspanel);
-                                    handle_rpc_fails(rd, false, payment, rpc_data);
+                                    return
                                 }
-                            }
-                        });
-                    } else {
+                                tx_api_fail(thislist, statuspanel);
+                                handle_rpc_fails_list(rd, inf_err(set_url), payment, rpc_data);
+                            }).fail(function(jqXHR, textStatus, errorThrown) {
+                                tx_api_fail(thislist, statuspanel);
+                                handle_rpc_fails_list(rd, errorThrown, payment, rpc_data);
+                            });
+                            return
+                        }
                         tx_api_fail(thislist, statuspanel);
-                        handle_rpc_fails(rd, false, payment, rpc_data);
-                    }
-                    api_src(thislist, rpc_data);
+                        handle_rpc_fails_list(rd, inf_err(set_url), payment, rpc_data);
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        tx_api_fail(thislist, statuspanel);
+                        handle_rpc_fails_list(rd, errorThrown, payment, rpc_data);
+                    }).always(function() {
+                        api_src(thislist, rpc_data);
+                    });
                 }
-            } else {
-                get_api_inputs_defaults(rd, rpc_data);
+                return
+            }
+            get_api_inputs_defaults(rd, rpc_data);
+        }
+    }
+}
+
+function inf_result(r) {
+    var ir1 = br_result(r);
+    if (ir1) {
+        var ir2 = ir1.result;
+        if (ir2) {
+            return ir2.result;
+        }
+    }
+    return false;
+}
+
+function inf_err(set_url) {
+    return "error fetching data from " + set_url;
+}
+
+function eth_params(set_url, cachetime, method, params) {
+    return {
+        "api": "infura",
+        "api_url": set_url,
+        "cachetime": cachetime,
+        "cachefolder": "1h",
+        "key": true,
+        "params": {
+            "method": "POST",
+            "data": JSON.stringify({
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": method,
+                "params": params
+            }),
+            "headers": {
+                "Content-Type": "application/json"
             }
         }
     }
@@ -1725,46 +1697,48 @@ function get_rpc_inputs(rd, rpc_data) {
 
 // RPC error handling
 
-function handle_rpc_fails(rd, error, thispayment, rpc_data) {
-    var this_coinsettings = getcoinsettings(thispayment),
-        api_data = this_coinsettings.apis.selected; // get api source
-    if (api_data.url == rpc_data.url) {
-        var error_object = (error === false) ? false : get_rpc_error_data(error);
-        rpc_eror_msg(rpc_data.url, error_object, false);
-        api_callback(rd.requestid, true);
-    } else {
-        var nextrpc = get_next_rpc(thispayment, rpc_data.url);
-        if (nextrpc === false) { // retry with api source
-            get_api_inputs_init(rd, api_data, api_data.name);
-        } else {
-            get_rpc_inputs(rd, nextrpc);
+function handle_rpc_fails_list(rd, error, thispayment, rpc_data) {
+    var api_url = rpc_data.url,
+        requestid = rd.requestid,
+        nextrpc = get_next_rpc(thispayment, api_url, requestid);
+    if (nextrpc === false) {
+        var api_name = rpc_data.name,
+            nextapi = get_next_api(thispayment, api_name, requestid);
+        if (nextapi === false) { // try next api
+            var rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
+                error_data = (error === false) ? false : get_rpc_error_data(error);
+            api_eror_msg(rpc_id, error_data);
+            api_callback(requestid, true);
+            return
         }
+    }
+    if (nextapi) {
+        get_api_inputs(rd, nextapi, nextapi.name);
+    } else if (nextrpc) {
+        get_rpc_inputs(rd, nextrpc);
     }
 }
 
-function get_next_rpc(this_payment, this_rpc_url) {
+function get_next_rpc(this_payment, api_url, requestid) {
     var rpc_settings_li = $("#" + this_payment + "_settings .cc_settinglist li[data-id='apis']");
     if (rpc_settings_li) {
         var rpc_settings = rpc_settings_li.data(),
-            rpclist = rpc_settings.options;
-        if (rpclist) {
-            if ($.isEmptyObject(rpclist)) {
-                return false;
-            } else {
-                var next_scan = rpclist[rpclist.findIndex(option => option.url == this_rpc_url) + 1],
-                    next_rpc = (next_scan) ? next_scan : rpclist[0];
-                if (rpc_attempts[next_rpc.url] === true) {
-                    return false;
-                } else {
-                    return next_rpc;
-                }
+            apilist = rpc_settings.apis,
+            rpclist = rpc_settings.options,
+            apirpc = $.grep(apilist, function(filter) {
+                return !filter.api;
+            }),
+            restlist = $.merge(apirpc, rpclist);
+        if (!$.isEmptyObject(restlist)) {
+            var next_scan = restlist[restlist.findIndex(option => option.url == api_url) + 1],
+                next_rpc = (next_scan) ? next_scan : restlist[0],
+                rqid = (requestid) ? requestid : "";
+            if (rpc_attempts[rqid + next_rpc.url] !== true) {
+                return next_rpc;
             }
-        } else {
-            return false;
         }
-    } else {
-        return false;
     }
+    return false;
 }
 
 function get_rpc_error_data(error) {
@@ -1785,7 +1759,7 @@ function get_rpc_error_data(error) {
     return error_object;
 }
 
-function rpc_eror_msg(apisrc, error, monitor) {
+function rpc_eror_msg(apisrc, error) {
     var error_dat = (error !== false) ? error : {
             "errormessage": "errormessage",
             "errorcode": "errorcode"
@@ -1800,12 +1774,8 @@ function rpc_eror_msg(apisrc, error, monitor) {
         return false;
     } else {
         var content = "<h2 class='icon-blocked'>Error " + errorcode + "</h2><p class='doselect'><strong>Error: " + errorcode + " " + errormessage + "</p>";
-        if (monitor === true || monitor === undefined) {
+        if (geturlparameters().p == "requests") { // only show errors on "requests page"
             popdialog(content, "alert", "canceldialog");
-        } else {
-            if (geturlparameters().p == "requests") { // only show errors on "requests page"
-                popdialog(content, "alert", "canceldialog");
-            }
         }
     }
 }
@@ -1856,29 +1826,28 @@ function append_tx_li(txd, this_request, ln) {
 }
 
 function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, fromcache) {
-	var timestamp = historic.timestamp,
+    var timestamp = historic.timestamp,
         price = historic.price;
     if (timestamp && price) {
-	    var fiatsrc = historic.fiatapisrc,
-	        src = historic.apisrc,
-	        lcsymbol = historic.lcsymbol,
-	        lc_eur_rate = historic.lcrate,
-	        usd_eur_rate = historic.usdrate,
-	        fetched = historic.fetched,
-	        lc_usd_rate = 1 / (lc_eur_rate / usd_eur_rate),
-	        lc_ccrate = price / lc_usd_rate,
-	        lc_val = ccval * lc_ccrate,
-	        cc_upper = (ccsymbol) ? ccsymbol.toUpperCase() : ccsymbol,
-	        lc_upper = (lcsymbol) ? lcsymbol.toUpperCase() : lcsymbol,
-	        localrate = (lc_upper == "USD") ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(6) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2),
-	        conf_var = (conf === false) ? "Confirmed" : (conf && setconfirmations) ? conf + "/" + setconfirmations : "",
-	        cf_info = "\nConfirmations: " + conf_var;
-	    return "Historic data (" + fulldateformat(new Date((timestamp - timezone)), "en-us") + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(6) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src + cf_info;
-    }
-    else {
-	    var resp = "Failed to get historical " + ccsymbol + " price data";
-	    notify(resp);
-	    return resp;
+        var fiatsrc = historic.fiatapisrc,
+            src = historic.apisrc,
+            lcsymbol = historic.lcsymbol,
+            lc_eur_rate = historic.lcrate,
+            usd_eur_rate = historic.usdrate,
+            fetched = historic.fetched,
+            lc_usd_rate = 1 / (lc_eur_rate / usd_eur_rate),
+            lc_ccrate = price / lc_usd_rate,
+            lc_val = ccval * lc_ccrate,
+            cc_upper = (ccsymbol) ? ccsymbol.toUpperCase() : ccsymbol,
+            lc_upper = (lcsymbol) ? lcsymbol.toUpperCase() : lcsymbol,
+            localrate = (lc_upper == "USD") ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(6) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2),
+            conf_var = (conf === false) ? "Confirmed" : (conf && setconfirmations) ? conf + "/" + setconfirmations : "",
+            cf_info = "\nConfirmations: " + conf_var;
+        return "Historic data (" + fulldateformat(new Date((timestamp - timezone)), "en-us") + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(6) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src + cf_info;
+    } else {
+        var resp = "Failed to get historical " + ccsymbol + " price data";
+        notify(resp);
+        return resp;
     }
 }
 
@@ -2066,7 +2035,7 @@ function get_historic_fiatprice_api_payload(fiatapi, lcsymbol, latestinput) {
 }
 
 function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, lcsymbol) {
-	api_attempt[apilist][api] = true;
+    api_attempt[apilist][api] = true;
     var thisrequestid = rd.requestid,
         thispayment = rd.payment,
         ccsymbol = rd.currencysymbol,
@@ -2091,7 +2060,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
             "method": "GET"
         }
     }).done(function(e) {
-	    var api_result = br_result(e).result,
+        var api_result = br_result(e).result,
             data = (api == "coingecko") ? (api_result) ? api_result.prices : null :
             (api == "coincodex") ? (api_result) ? api_result[ccsymbol.toUpperCase()] : null : api_result;
         if (data && !data.error) {
@@ -2135,7 +2104,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     receivedcc += parseFloat(thisvalue) || 0; // sum of outputs CC
                 var thisusdsum = receivedusd += parseFloat(historic_price * thisvalue) || 0;
                 if (historic_price && (conf >= setconfirmations || rd.no_conf === true || conf === false)) { // check all confirmations + whitelist for currencies unable to fetch confirmations
-	                confirmed = true,
+                    confirmed = true,
                         paymenttimestamp = thisnode.data("transactiontime"), // update timestamp of latest confirmed tx
                         txhash = thisnode.data("txhash"); // update txhash of latest confirmed tx
                     if (thisusdsum >= historicusdvalue * margin) { //minus 5% dollar for volatility compensation
@@ -2161,12 +2130,11 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     pending = scan_to_poll;
                 }
             } else {
-	            if (receivedusd === 0) {
-		            // usdval was probably not fetched
-	            }
-	            else {
-		            status = "insufficient";
-	            }
+                if (receivedusd === 0) {
+                    // usdval was probably not fetched
+                } else {
+                    status = "insufficient";
+                }
                 pending = "scanning";
             }
             updaterequest({
@@ -2242,18 +2210,18 @@ function cx_date(ts) {
 }
 
 function compare_historic_prices(api, values, price_array, thistimestamp) {
-	$.each(price_array, function(i, value) {
+    $.each(price_array, function(i, value) {
         var historic_object = (api == "coincodex") ? get_historic_object_coincodex(value) :
-        (api == "coingecko") ? get_historic_object_coingecko(value) :
+            (api == "coingecko") ? get_historic_object_coingecko(value) :
             get_historic_object_coinpaprika(value);
         if (historic_object) {
-	        var historic_timestamp = historic_object.timestamp,
-            	historic_price = historic_object.price;
+            var historic_timestamp = historic_object.timestamp,
+                historic_price = historic_object.price;
             if (historic_timestamp > thistimestamp) {
-	            values["timestamp"] = historic_timestamp,
-	                values["price"] = historic_price,
-	                values["fetched"] = true;
-	        }
+                values["timestamp"] = historic_timestamp,
+                    values["price"] = historic_price,
+                    values["fetched"] = true;
+            }
         }
     });
     var fetched = values.fetched;
@@ -2272,7 +2240,7 @@ function compare_historic_prices(api, values, price_array, thistimestamp) {
 }
 
 function get_historic_object_coincodex(value) {
-	return {
+    return {
         "timestamp": ((value[0] * 1000) + timezone) + 60000, // add 1 minute for compensation margin
         "price": value[1]
     }
@@ -2286,11 +2254,11 @@ function get_historic_object_coingecko(value) {
 }
 
 function get_historic_object_coinpaprika(value) {
-	if (value && value.timestamp) {
-		return {
-	        "timestamp": returntimestamp(makedatestring(value.timestamp.split("T"))).getTime(),
-	        "price": value.price
-	    }
-	}
-	return false;
+    if (value && value.timestamp) {
+        return {
+            "timestamp": returntimestamp(makedatestring(value.timestamp.split("T"))).getTime(),
+            "price": value.price
+        }
+    }
+    return false;
 }

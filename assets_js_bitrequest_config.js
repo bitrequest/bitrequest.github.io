@@ -10,11 +10,10 @@ var apptitle = "Bitrequest",
         "https://www.bitrequest.io/",
         "https://www.bitrequest.app/"
     ],
-    proxy_version = "0.001",
+    proxy_version = "0.002",
     firebase_dynamic_link_domain = "bitrequest.page.link",
     firebase_shortlink = "https://" + firebase_dynamic_link_domain + "/",
     androidpackagename = "io.bitrequest.app",
-    web3 = new Web3(),
     main_eth_node = "https://mainnet.infura.io/v3/",
     eth_node2 = "https://ropsten.infura.io/v3/",
     main_eth_socket = "wss://mainnet.infura.io/ws/v3/",
@@ -228,7 +227,7 @@ var apptitle = "Bitrequest",
                     "blockexplorers": {
                         "icon": "eye",
                         "selected": "blockchain.com",
-                        "options": ["blockchain.com","blockchair.com"]
+                        "options": ["blockchain.com", "blockchair.com"]
                     },
                     "apis": {
                         "icon": "sphere",
@@ -256,11 +255,7 @@ var apptitle = "Bitrequest",
                                 "api": true,
                                 "display": true
                             }
-                        ],
-                        "options": [],
-                        "rpc_test_command": {
-                            "method": "getblockchaininfo"
-                        }
+                        ]
                     },
                     "websockets": {
                         "icon": "tab",
@@ -388,11 +383,7 @@ var apptitle = "Bitrequest",
                                 "api": true,
                                 "display": false
                             }
-                        ],
-                        "options": [],
-                        "rpc_test_command": {
-                            "method": "getblockchaininfo"
-                        }
+                        ]
                     },
                     "websockets": {
                         "icon": "tab",
@@ -503,11 +494,7 @@ var apptitle = "Bitrequest",
                                 "api": true,
                                 "display": true
                             }
-                        ],
-                        "options": [],
-                        "rpc_test_command": {
-                            "method": "getblockchaininfo"
-                        }
+                        ]
                     },
                     "websockets": {
                         "icon": "tab",
@@ -602,27 +589,22 @@ var apptitle = "Bitrequest",
                     "blockexplorers": {
                         "icon": "eye",
                         "selected": "blockchain.com",
-                        "options": ["blockchain.com","blockchair.com"]
+                        "options": ["blockchain.com", "blockchair.com"]
                     },
                     "apis": {
                         "icon": "sphere",
                         "selected": {
                             "name": "blockchair",
-                                "url": "blockchair.com",
+                            "url": "blockchair.com",
                             "api": true,
                             "display": true
                         },
                         "apis": [{
-                                "name": "blockchair",
-                                "url": "blockchair.com",
-                                "api": true,
-                                "display": false
-                            }
-                        ],
-                        "options": [],
-                        "rpc_test_command": {
-                            "method": "getblockchaininfo"
-                        }
+                            "name": "blockchair",
+                            "url": "blockchair.com",
+                            "api": true,
+                            "display": false
+                        }]
                     },
                     "websockets": {
                         "icon": "tab",
@@ -673,7 +655,7 @@ var apptitle = "Bitrequest",
                         var amount = (iszero === true) ? "" : "?value=" + (parseFloat(amount) * "1000000000000000000").toFixedSpecial(0);
                         return payment + ":" + address + amount;
                     },
-                    "address_regex": "web3"
+                    "address_regex": "^0x[a-fA-F0-9]{40}$"
                 },
                 "wallets": {
                     "wallet_download_page": "https://ethereum.org/en/wallets/",
@@ -713,7 +695,7 @@ var apptitle = "Bitrequest",
                     "blockexplorers": {
                         "icon": "eye",
                         "selected": "blockchain.com",
-                        "options": ["blockchain.com","blockchair.com"]
+                        "options": ["blockchain.com", "blockchair.com"]
                     },
                     "apis": {
                         "icon": "sphere",
@@ -855,7 +837,7 @@ var apptitle = "Bitrequest",
                     "blockexplorers": {
                         "icon": "eye",
                         "selected": "nanocrawler.cc",
-                        "options": ["nanocrawler.cc","nanolooker.com"]
+                        "options": ["nanocrawler.cc", "nanolooker.com"]
                     },
                     "apis": {
                         "icon": "sphere",
@@ -1115,7 +1097,7 @@ var apptitle = "Bitrequest",
                     "blockexplorers": {
                         "icon": "eye",
                         "selected": "nimiq.watch",
-                        "options": ["nimiq.watch","mopsus.com"]
+                        "options": ["nimiq.watch", "mopsus.com"]
                     },
                     "apis": {
                         "icon": "sphere",
@@ -1125,15 +1107,16 @@ var apptitle = "Bitrequest",
                             "display": true
                         },
                         "apis": [{
-                            "name": "nimiq.watch",
-                            "api": true,
-                            "display": true
-                        },
-                        {
-                            "name": "mopsus.com",
-                            "api": true,
-                            "display": true
-                        }]
+                                "name": "nimiq.watch",
+                                "api": true,
+                                "display": true
+                            },
+                            {
+                                "name": "mopsus.com",
+                                "api": true,
+                                "display": true
+                            }
+                        ]
                     },
                     "Xpub": {
                         "active": false,
@@ -1160,7 +1143,7 @@ var apptitle = "Bitrequest",
             "data": {
                 "monitored": true,
                 "url-scheme": "",
-                "regex": "web3",
+                "address_regex": "^0x[a-fA-F0-9]{40}$",
                 "erc20": true
             },
             "wallets": {
@@ -1225,11 +1208,7 @@ var apptitle = "Bitrequest",
                             "url": eth_node2,
                             "display": true
                         }
-                    ],
-                    "options": [],
-                    "rpc_test_command": {
-                        "method": null
-                    }
+                    ]
                 },
                 "websockets": {
                     "icon": "tab",
@@ -1475,7 +1454,7 @@ var apptitle = "Bitrequest",
             {
                 "name": "bitly",
                 "base_url": "https://api-ssl.bitly.com/v4/",
-                "key_param": "post",
+                "key_param": null,
                 "api_key": null,
                 "sign_up": "https://bitly.com/a/sign_up/"
             },

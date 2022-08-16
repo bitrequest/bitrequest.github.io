@@ -2619,28 +2619,33 @@ function checkapikey(thisref, apikeyval, lastinput) {
 function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
     if (apikeyval.length > keylength) {
         if (thisref == "infura") {
-            var infura_testurl = main_eth_node + apikeyval;
-            if (web3 === undefined) {
-                web3 = new Web3(Web3.givenProvider || infura_testurl);
-            }
-            if (web3) {
-                if (web3.currentProvider.host == infura_testurl) {} else {
-                    web3.setProvider(infura_testurl);
-                }
-                web3.eth.getTransaction("0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", function(err_1, data_1) { // random tx
-                    if (err_1) {
-                        api_fail(thisref, apikeyval);
-                    } else {
-                        if (data_1) {
-                            update_api_attr(thisref, apikeyval, lastinput);
-                        } else {
-                            api_fail(thisref, apikeyval);
-                        }
+            var txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
+                payload = {
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "eth_getTransactionByHash",
+                    "params": [txhash]
+                };
+            api_proxy({
+                "api": "infura",
+                "api_url": main_eth_node + apikeyval,
+                "proxy": false,
+                "params": {
+                    "method": "POST",
+                    "data": JSON.stringify(payload),
+                    "headers": {
+                        "Content-Type": "application/json"
                     }
-                });
-            } else {
+                }
+            }).done(function(e) {
+                if (e.result) {
+                    update_api_attr(thisref, apikeyval, lastinput);
+                } else {
+                    api_fail(thisref, apikeyval);
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
                 api_fail(thisref, apikeyval);
-            }
+            });
         } else {
             var api_data = get_api_data(thisref),
                 base_url = api_data.base_url,
@@ -3161,7 +3166,6 @@ function adjust_object(object, seedobj) {
             var checked = $.grep(addresses, function(filter) {
                 return filter.checked == true;
             });
-            console.log(bip32dat);
             if (bip32dat.xpub) {
                 var address_object = $.grep(checked, function(filter) {
                     if (filter.seedid) {

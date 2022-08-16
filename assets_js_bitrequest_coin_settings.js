@@ -316,9 +316,6 @@ function edit_rpcnode() {
 }
 
 function get_rpc_placeholder(currency) {
-    var btc_port = (currency == "bitcoin") ? "8332" :
-        (currency == "litecoin") ? "9332" :
-        (currency == "dogecoin") ? "22555" : "port";
     return {
         "apisnano1": "eg: http://127.0.0.1:7076",
         "apisnano2": "eg: http://some.local-or-remote.node:7076",
@@ -326,9 +323,6 @@ function get_rpc_placeholder(currency) {
         "websocketsnano1": "eg: ws://127.0.0.1:7078",
         "websocketsnano2": "eg: ws://some.local-or-remote.node:7078",
         "websocketsnano3": "eg: ws://localhost:7078",
-        "apisbtc1": "eg: http://127.0.0.1:" + btc_port,
-        "apisbtc2": "eg: http://some.local-or-remote.node:" + btc_port,
-        "apisbtc3": "eg: http://localhost:" + btc_port,
         "apiseth1": "eg: http://localhost:8545",
         "apiseth2": "eg: http://some.local-or-remote.node:8546",
         "apiseth3": "eg: https://mainnet.infura.io/v3/YOUR-PROJECT-ID",
@@ -341,21 +335,33 @@ function get_rpc_placeholder(currency) {
 function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
     if (s_id == "apis") {
         if (thiscurrency == "ethereum") {
-            if (web3) {
-                web3.setProvider(value.url);
-                web3.eth.getTransaction("0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", function(err_1, data_1) { // random tx
-                    if (err_1) {
-                        console.log(err_1);
-                        rpc_option_li(optionlist, false, key, value, selected, true);
-                    } else {
-                        if (data_1) {
-                            rpc_option_li(optionlist, true, key, value, selected, true);
-                        }
+            var txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
+                payload = {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "eth_getTransactionByHash",
+                    "params": [txhash]
+                };
+            api_proxy({
+                "api_url": value.url,
+                "proxy": false,
+                "params": {
+                    "method": "POST",
+                    "data": JSON.stringify(payload),
+                    "headers": {
+                        "Content-Type": "application/json"
                     }
-                });
-            } else {
+                }
+            }).done(function(e) {
+                var data = e.result;
+                if (data) {
+                    rpc_option_li(optionlist, true, key, value, selected, true);
+                } else {
+                    rpc_option_li(optionlist, false, key, value, selected, true);
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
                 rpc_option_li(optionlist, false, key, value, selected, true);
-            }
+            });
         } else {
             var rpc = (thiscurrency == "bitcoin" || thiscurrency == "litecoin" || thiscurrency == "dogecoin" || thiscurrency == "bitcoin-cash") ? "bitcoin" : thiscurrency,
                 rpcurl = get_rpc_url({
@@ -386,9 +392,6 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                     rpc_option_li(optionlist, false, key, value, selected, true);
                 }
             }).fail(function(jqXHR, textStatus, errorThrown) {
-                console.log(jqXHR);
-                console.log(textStatus);
-                console.log(errorThrown);
                 rpc_option_li(optionlist, false, key, value, selected, true);
             });
         }
@@ -517,28 +520,36 @@ function submit_rpcnode() {
 function test_rpc(rpc_input_box, rpc_data, currency) {
     if (s_id == "apis") {
         if (currency == "ethereum") {
-            if (web3) {
-                if (web3.currentProvider.host == rpc_data.url) {} else {
-                    web3.setProvider(rpc_data.url);
-                }
-                web3.eth.getTransaction("0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", function(err_1, data_1) { // random tx
-                    if (err_1) {
-                        rpc_input_box.addClass("offline").removeClass("live");
-                        popnotify("error", err_1);
-                    } else {
-                        if (data_1) {
-                            rpc_input_box.addClass("live").removeClass("offline");
-                            pass_rpc_submit(currency, rpc_data, true);
-                        } else {
-                            rpc_input_box.addClass("offline").removeClass("live");
-                            popnotify("error", "unable to connect");
-                        }
+            var txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
+                payload = {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "eth_getTransactionByHash",
+                    "params": [txhash]
+                };
+            api_proxy({
+                "api_url": rpc_data.url,
+                "proxy": false,
+                "params": {
+                    "method": "POST",
+                    "data": JSON.stringify(payload),
+                    "headers": {
+                        "Content-Type": "application/json"
                     }
-                });
-            } else {
+                }
+            }).done(function(e) {
+                var data = e.result;
+                if (data) {
+                    rpc_input_box.addClass("live").removeClass("offline");
+                    pass_rpc_submit(currency, rpc_data, true);
+                } else {
+                    rpc_input_box.addClass("offline").removeClass("live");
+                    popnotify("error", "unable to connect");
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
                 rpc_input_box.addClass("offline").removeClass("live");
-                popnotify("error", "Unable to connect");
-            }
+                popnotify("error", "unable to connect");
+            });
         } else {
             var rpc = (currency == "bitcoin" || currency == "litecoin" || currency == "dogecoin" || currency == "bitcoin-cash") ? "bitcoin" : currency,
                 rpcurl = get_rpc_url(rpc_data);
@@ -1059,17 +1070,16 @@ function segwit_switch() {
         if (thisvalue === true) {
             var result = confirm("Use " + thiscurrency + " Legacy addresses?");
             if (result === false) {
-	            return
+                return
             }
             var dp = "m/44'/" + coincode + "/0'/0/";
             kdli.data("root_path", dp);
             this_switch.removeClass("true").addClass("false");
             dpath_header.text(dp);
-        }
-        else {
-	       	var result = confirm("Use " + thiscurrency + " SegWit addresses?");
+        } else {
+            var result = confirm("Use " + thiscurrency + " SegWit addresses?");
             if (result === false) {
-	            return
+                return
             }
             var dp = "m/84'/" + coincode + "/0'/0/";
             kdli.data("root_path", dp);
