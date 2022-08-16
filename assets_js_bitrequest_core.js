@@ -3570,7 +3570,9 @@ function get_infura_apikey(rpcurl) {
 
 function api_proxy(ad, p_proxy) {
     var custom_url = (ad.api_url) ? ad.api_url : false,
-        aud = get_api_url({
+        custom_key = ad.key,
+        aud = (custom_url && !custom_key) ? {} :
+        get_api_url({
             "api": ad.api,
             "search": ad.search,
             "custom_url": custom_url
@@ -3585,7 +3587,7 @@ function api_proxy(ad, p_proxy) {
         key_param = aud.key_param,
         api_key = aud.api_key,
         set_key = (api_key) ? true : false,
-        nokey = (ad.key) ? false : (!key_param) ? true : false,
+        nokey = (custom_key) ? false : (!key_param) ? true : false,
         key_pass = (nokey === true || set_key === true);
     if (proxy === false && key_pass === true) {
         params.url = api_url;
@@ -3641,10 +3643,10 @@ function proxy_alert(version) {
 
 function get_api_url(get) {
     var api = get.api,
-        search = (get.search) ? get.search : "",
         ad = get_api_data(api);
     if (ad) {
-        var base_url = (get.custom_url) ? get.custom_url : ad.base_url,
+        var search = (get.search) ? get.search : "",
+            base_url = (get.custom_url) ? get.custom_url : ad.base_url,
             key_param = ad.key_param,
             saved_key = $("#apikeys").data(api),
             ampersand = (search) ? (search.indexOf("?") > -1 || search.indexOf("&") > -1) ? "&" : "?" : "",
