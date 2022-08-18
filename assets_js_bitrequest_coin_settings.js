@@ -334,7 +334,7 @@ function get_rpc_placeholder(currency) {
 
 function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
     if (s_id == "apis") {
-        if (thiscurrency == "ethereum") {
+        if (thiscurrency == "ethereum" || is_erc20t === true) {
             var txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
                 payload = {
                     "jsonrpc": "2.0",
@@ -519,7 +519,7 @@ function submit_rpcnode() {
 
 function test_rpc(rpc_input_box, rpc_data, currency) {
     if (s_id == "apis") {
-        if (currency == "ethereum") {
+        if (currency == "ethereum" || is_erc20t === true) {
             var txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
                 payload = {
                     "jsonrpc": "2.0",

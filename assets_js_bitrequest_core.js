@@ -916,7 +916,7 @@ function ios_redirections(url) {
                 openpage(url, pagename, "page");
             }
         }
-        trigger_requeststates();
+        updaterequeststatesrefresh();
     }
 }
 
@@ -3570,12 +3570,10 @@ function get_infura_apikey(rpcurl) {
 
 function api_proxy(ad, p_proxy) {
     var custom_url = (ad.api_url) ? ad.api_url : false,
-        custom_key = ad.key,
-        aud = (custom_url && !custom_key) ? {} :
+        aud = (custom_url) ? {} :
         get_api_url({
             "api": ad.api,
-            "search": ad.search,
-            "custom_url": custom_url
+            "search": ad.search
         });
     if (aud === false) {
         return false;
@@ -3583,11 +3581,11 @@ function api_proxy(ad, p_proxy) {
     var params = ad.params,
         proxy = ad.proxy,
         forced_proxy = ad.proxy_url,
-        api_url = aud.api_url,
+        api_url = (custom_url) ? custom_url : aud.api_url,
         key_param = aud.key_param,
         api_key = aud.api_key,
         set_key = (api_key) ? true : false,
-        nokey = (custom_key) ? false : (!key_param) ? true : false,
+        nokey = (!key_param) ? true : false,
         key_pass = (nokey === true || set_key === true);
     if (proxy === false && key_pass === true) {
         params.url = api_url;

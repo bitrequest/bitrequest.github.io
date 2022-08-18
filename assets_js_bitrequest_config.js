@@ -15,9 +15,7 @@ var apptitle = "Bitrequest",
     firebase_shortlink = "https://" + firebase_dynamic_link_domain + "/",
     androidpackagename = "io.bitrequest.app",
     main_eth_node = "https://mainnet.infura.io/v3/",
-    eth_node2 = "https://ropsten.infura.io/v3/",
     main_eth_socket = "wss://mainnet.infura.io/ws/v3/",
-    eth_socket2 = "wss://ropsten.infura.io/ws/v3/",
     main_ad_node = "https://web3api.io/api/v2/",
     main_ad_socket = "wss://ws.web3api.io/",
     main_nano_node = "https://www.bitrequest.app:8020",
@@ -617,8 +615,7 @@ var apptitle = "Bitrequest",
                             "name": "blockchain.info websocket",
                             "url": "wss://ws.blockchain.info/bch/inv",
                             "display": true
-                        }],
-                        "options": []
+                        }]
                     },
                     "Xpub": {
                         "active": true,
@@ -720,11 +717,6 @@ var apptitle = "Bitrequest",
                             {
                                 "name": main_eth_node,
                                 "url": main_eth_node,
-                                "display": true
-                            },
-                            {
-                                "name": eth_node2,
-                                "url": eth_node2,
                                 "display": true
                             }
                         ],
@@ -852,7 +844,6 @@ var apptitle = "Bitrequest",
                         "apis": [{
                                 "name": "bitrequest.app",
                                 "url": main_nano_node,
-                                "api": true,
                                 "username": "",
                                 "password": "",
                                 "display": true
@@ -860,7 +851,6 @@ var apptitle = "Bitrequest",
                             {
                                 "name": "api.nanos.cc",
                                 "url": "https://proxy.nanos.cc/proxy",
-                                "api": true,
                                 "username": "",
                                 "password": "",
                                 "display": true
@@ -868,7 +858,6 @@ var apptitle = "Bitrequest",
                             {
                                 "name": "rainstorm.city",
                                 "url": "https://rainstorm.city/api",
-                                "api": true,
                                 "username": "",
                                 "password": "",
                                 "display": true
@@ -876,7 +865,6 @@ var apptitle = "Bitrequest",
                             {
                                 "name": "proxy.powernode.cc",
                                 "url": "https://proxy.powernode.cc/proxy",
-                                "api": true,
                                 "username": "",
                                 "password": "",
                                 "display": true
@@ -1202,13 +1190,12 @@ var apptitle = "Bitrequest",
                             "name": main_eth_node,
                             "url": main_eth_node,
                             "display": true
-                        },
-                        {
-                            "name": eth_node2,
-                            "url": eth_node2,
-                            "display": true
                         }
-                    ]
+                    ],
+                    "options": [],
+                    "rpc_test_command": {
+                        "method": null
+                    }
                 },
                 "websockets": {
                     "icon": "tab",
@@ -1218,16 +1205,10 @@ var apptitle = "Bitrequest",
                         "display": true
                     },
                     "apis": [{
-                            "name": main_eth_socket,
-                            "url": main_eth_socket,
-                            "display": true
-                        },
-                        {
-                            "name": eth_socket2,
-                            "url": eth_socket2,
-                            "display": true
-                        }
-                    ],
+                        "name": main_eth_socket,
+                        "url": main_eth_socket,
+                        "display": true
+                    }],
                     "options": []
                 }
             }
