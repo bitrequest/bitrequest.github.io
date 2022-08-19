@@ -3779,10 +3779,13 @@ function settitle(title) {
 }
 
 function getcc_icon(cmcid, cpid, erc20) {
-    var img_url = (erc20 === true) ? (offline === true) ? "img_qrplaceholder.png" :
-        "https://s2.coinmarketcap.com/static/img/coins/200x200/" + cmcid + ".png" :
-        "img_logos_" + cpid + ".png";
-    return "<img src='" + img_url + "' class='cmc_icon'/>";
+    if (erc20) {
+        if (offline === true) {
+            return "<img src='img_qrplaceholder.png' class='cmc_icon'/>";
+        }
+        return "<img src='https://s2.coinmarketcap.com/static/img/coins/200x200/" + cmcid + ".png' class='cmc_icon'/>";
+    }
+    return "<img src='data:image/png;base64," + c_icons(cpid) + "' class='cmc_icon'/>";
 }
 
 function getdevicetype() {

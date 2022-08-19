@@ -112,6 +112,8 @@ $(document).ready(function() {
     // Phrase info
     phrase_info();
     //phrase_info_pu
+    //compatible_wallets
+    //w_icon
     phrase_coin_info();
     toggle_dpaths();
     //pi_show
@@ -1646,7 +1648,7 @@ function phrase_info_pu(coin) {
                     if (device_url && value.seed === true) {
                         var walletname = value.name,
                             website = value.website,
-                            wallet_icon = "<img src='img_icons_wallet-icons_" + walletname + ".png' class='wallet_icon'/>";
+                            wallet_icon = "<img src='" + w_icon(walletname) + "' class='wallet_icon'/>";
                         walletlist += "<li><a href='" + website + "' target='_blank' class='exit app_dll'>" + wallet_icon + walletname + "</a><a href='" + device_url + "' target='_blank' class='exit store_tag'>" + store_tag + "</a></li>";
                     }
                 });
@@ -1732,7 +1734,7 @@ function compatible_wallets(coin) {
                     if (device_url && value.seed === true) {
                         var walletname = value.name,
                             website = value.website,
-                            wallet_icon = "<img src='img_icons_wallet-icons_" + walletname + ".png' class='wallet_icon'/>";
+                            wallet_icon = "<img src='" + w_icon(walletname) + "' class='wallet_icon'/>";
                         walletlist += "<li><a href='" + website + "' target='_blank' class='exit app_dll'>" + wallet_icon + walletname + "</a><a href='" + device_url + "' target='_blank' class='exit store_tag'>" + store_tag + "</a></li>";
                     }
                 });
@@ -1744,6 +1746,10 @@ function compatible_wallets(coin) {
             pi_show();
         }
     });
+}
+
+function w_icon(wname) {
+    return "https://brq.s3.us-west-2.amazonaws.com/img_icons_wallet-icons_" + wname + ".png";
 }
 
 function phrase_coin_info() {
