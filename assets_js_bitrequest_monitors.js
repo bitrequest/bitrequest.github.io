@@ -26,10 +26,9 @@ $(document).ready(function() {
     //inf_err
     //handle_rpc_fails_list
     //get_next_rpc
-    //get_rpc_error_data
-    //rpc_eror_msg
     //scan_tx_li
     //append_tx_li
+    //hs_for
     //historic_data_title
 
     //compareamounts
@@ -177,12 +176,11 @@ function check_api(payment, iserc20) {
 }
 
 function choose_api_inputs(rd, api_data) {
-    if (api_data === false) {
-        console.log("no api data available");
-        //get_api_inputs_defaults(rd, api_data);
-    } else {
+    if (api_data) {
         get_api_inputs_init(rd, api_data, api_data.name);
+        return
     }
+    console.log("no api data available");
 }
 
 function get_api_inputs_defaults(rd, api_data) {
@@ -1305,28 +1303,30 @@ function api_callback(requestid, nocache) {
     if (thislist.hasClass("scan")) {
         thislist.removeClass("scan").addClass("pmstatloaded");
         if (nocache === true) {} else {
-            var statuspanel = thislist.find(".pmetastatus"),
-                transactionlist = thislist.find(".transactionlist"),
+            var transactionlist = thislist.find(".transactionlist"),
+                transactionli = transactionlist.find("li");
+            if (transactionli.length) {
                 transactionpush = [];
-            transactionlist.find("li").each(function() {
-                var thisnode = $(this),
-                    thisdata = thisnode.data(),
-                    historic = thisdata.historic,
-                    conf = thisdata.confirmations,
-                    setconfirmations = thisdata.setconfirmations,
-                    confirmed = (conf && conf >= setconfirmations);
-                transactionpush.push(thisdata);
-                if (!historic || $.isEmptyObject(historic)) {} else {
-                    var h_string = historic_data_title(thisdata.ccsymbol, thisdata.ccval, historic, setconfirmations, conf, false);
-                    thisnode.append("<div class='historic_meta'>" + h_string.split("\n").join("<br/>") + "</div>").attr("title", h_string);
-                }
-            });
-            var statusbox = {
-                "requestid": thislist.attr("id"),
-                "status": statuspanel.attr("data-count"),
-                "transactions": transactionpush
-            };
-            statuspush.push(statusbox);
+                transactionli.each(function() {
+                    var thisnode = $(this),
+                        thisdata = thisnode.data(),
+                        historic = thisdata.historic,
+                        conf = thisdata.confirmations,
+                        setconfirmations = thisdata.setconfirmations;
+                    transactionpush.push(thisdata);
+                    if (!historic || $.isEmptyObject(historic)) {} else {
+                        var h_string = historic_data_title(thisdata.ccsymbol, thisdata.ccval, historic, setconfirmations, conf, false);
+                        thisnode.append(hs_for(h_string)).attr("title", h_string);
+                    }
+                });
+                var statuspanel = thislist.find(".pmetastatus"),
+                    statusbox = {
+                        "requestid": thislist.attr("id"),
+                        "status": statuspanel.attr("data-count"),
+                        "transactions": transactionpush
+                    };
+                statuspush.push(statusbox);
+            }
         }
         get_requeststates("loop");
     }
@@ -1711,7 +1711,7 @@ function handle_rpc_fails_list(rd, error, rpc_data, thispayment) {
             nextapi = get_next_api(thispayment, api_name, requestid);
         if (nextapi === false) { // try next api
             var rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
-                error_data = (error === false) ? false : get_rpc_error_data(error);
+                error_data = (error === false) ? false : get_api_error_data(error);
             api_eror_msg(rpc_id, error_data);
             api_callback(requestid, true);
             return
@@ -1746,45 +1746,6 @@ function get_next_rpc(this_payment, api_url, requestid) {
     return false;
 }
 
-function get_rpc_error_data(error) {
-    var errorcode = (error.code) ? error.code :
-        (error.status) ? error.status :
-        (error.error_code) ? error.error_code : "",
-        cons = error.console,
-        errormessage = (error.error) ? error.error :
-        (error.message) ? error.message :
-        (error.type) ? error.type :
-        (error.error_message) ? error.error_message :
-        (error.statusText) ? error.statusText : error,
-        error_object = {
-            "errorcode": errorcode,
-            "errormessage": errormessage,
-            "console": cons
-        };
-    return error_object;
-}
-
-function rpc_eror_msg(apisrc, error) {
-    var error_dat = (error !== false) ? error : {
-            "errormessage": "errormessage",
-            "errorcode": "errorcode"
-        },
-        errormessage = error_dat.errormessage,
-        errorcode = error_dat.errorcode;
-    if (error.console) {
-        console.log(error);
-        return false;
-    }
-    if ($("#dialogbody .doselect").length) {
-        return false;
-    } else {
-        var content = "<h2 class='icon-blocked'>Error " + errorcode + "</h2><p class='doselect'><strong>Error: " + errorcode + " " + errormessage + "</p>";
-        if (geturlparameters().p == "requests") { // only show errors on "requests page"
-            popdialog(content, "alert", "canceldialog");
-        }
-    }
-}
-
 function append_tx_li(txd, this_request, ln) {
     var txhash = txd.txhash;
     if (txhash) {
@@ -1809,7 +1770,7 @@ function append_tx_li(txd, this_request, ln) {
             historic = txd.historic;
         if (historic) {
             var h_string = historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, true);
-            tx_listitem.append("<div class='historic_meta'>" + h_string.split("\n").join("<br/>") + "</div>").attr("title", h_string);
+            tx_listitem.append(hs_for(h_string)).attr("title", h_string);
         }
         if (this_request === false) {
             return tx_listitem;
@@ -1828,6 +1789,10 @@ function append_tx_li(txd, this_request, ln) {
         return tx_listitem;
     }
     return null;
+}
+
+function hs_for(dat) {
+    return "<div class='historic_meta'>" + dat.split("\n").join("<br/>") + "</div>";
 }
 
 function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, fromcache) {
