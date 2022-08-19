@@ -1372,7 +1372,7 @@ var apptitle = "Bitrequest",
                 // for now no api key needed yet
                 // "key_param": "key=",
                 "key_param": null,
-                "api_key": null,
+                "api_key": "no_key",
                 "sign_up": "https://mempool.space/nl/docs/api/rest"
             },
             {
@@ -1386,21 +1386,21 @@ var apptitle = "Bitrequest",
                 "name": "coingecko",
                 "base_url": "https://api.coingecko.com/api/v3/",
                 "key_param": null,
-                "api_key": null,
+                "api_key": "no_key",
                 "sign_up": null
             },
             {
                 "name": "coincodex",
                 "base_url": "https://coincodex.com/api/coincodex/",
                 "key_param": null,
-                "api_key": null,
+                "api_key": "no_key",
                 "sign_up": null
             },
             {
                 "name": "coinpaprika",
                 "base_url": "https://api.coinpaprika.com/v1/tickers/",
                 "key_param": null,
-                "api_key": null,
+                "api_key": "no_key",
                 "sign_up": null
             },
             {
@@ -1414,7 +1414,7 @@ var apptitle = "Bitrequest",
                 "name": "exchangeratesapi",
                 "base_url": "https://api.exchangeratesapi.io/",
                 "key_param": null,
-                "api_key": null,
+                "api_key": "no_key",
                 "sign_up": null
             },
             {
@@ -1428,7 +1428,7 @@ var apptitle = "Bitrequest",
                 "name": "coinbase",
                 "base_url": "https://api.coinbase.com/v2/",
                 "key_param": null,
-                "api_key": null,
+                "api_key": "no_key",
                 "sign_up": null
             },
             {
@@ -1449,21 +1449,21 @@ var apptitle = "Bitrequest",
                 "name": "mymonero api",
                 "base_url": "https://api.mymonero.com:8443/",
                 "key_param": null,
-                "api_key": null,
+                "api_key": "no_key",
                 "sign_up": null
             },
             {
                 "name": "nimiq.watch",
                 "base_url": "https://api.nimiq.watch/",
                 "key_param": null,
-                "api_key": null,
+                "api_key": "no_key",
                 "sign_up": null
             },
             {
                 "name": "mopsus.com",
                 "base_url": "https://www.mopsus.com/api/",
                 "key_param": null,
-                "api_key": null,
+                "api_key": "no_key",
                 "sign_up": null
             },
             {

@@ -344,7 +344,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                 };
             api_proxy({
                 "api_url": value.url,
-                "proxy": false,
+                "proxy": true,
                 "params": {
                     "method": "POST",
                     "data": JSON.stringify(payload),
@@ -353,7 +353,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                     }
                 }
             }).done(function(e) {
-                var data = e.result;
+                var data = br_result(e);
                 if (data) {
                     rpc_option_li(optionlist, true, key, value, selected, true);
                 } else {
@@ -529,7 +529,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                 };
             api_proxy({
                 "api_url": rpc_data.url,
-                "proxy": false,
+                "proxy": true,
                 "params": {
                     "method": "POST",
                     "data": JSON.stringify(payload),
@@ -538,7 +538,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                     }
                 }
             }).done(function(e) {
-                var data = e.result;
+                var data = br_result(e);
                 if (data) {
                     rpc_input_box.addClass("live").removeClass("offline");
                     pass_rpc_submit(currency, rpc_data, true);

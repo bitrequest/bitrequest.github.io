@@ -3578,19 +3578,15 @@ function api_proxy(ad, p_proxy) {
     if (aud === false) {
         return false;
     }
-    var params = ad.params,
-        proxy = ad.proxy,
-        forced_proxy = ad.proxy_url,
-        api_url = (custom_url) ? custom_url : aud.api_url,
-        key_param = aud.key_param,
+    var proxy = ad.proxy,
         api_key = aud.api_key,
         set_key = (api_key) ? true : false,
-        nokey = (!key_param) ? true : false,
+        nokey = (api_key == "no_key") ? true : false,
         key_pass = (nokey === true || set_key === true);
     if (proxy === false && key_pass === true) {
-        params.url = api_url;
-        var bearer = ad.bearer;
-        if (bearer && bearer === true) {
+        var params = ad.params;
+        params.url = (custom_url) ? custom_url : aud.api_url_key;
+        if (ad.bearer) {
             params.headers = {
                 "Authorization": "Bearer " + api_key
             };
@@ -3600,6 +3596,7 @@ function api_proxy(ad, p_proxy) {
         var api_location = "proxy/v1/",
             localhost = ad.localhost,
             set_proxy = (p_proxy) ? p_proxy : d_proxy(),
+            forced_proxy = ad.proxy_url,
             app_root = (forced_proxy) ? forced_proxy :
             (localhost === false) ? set_proxy :
             (localhost === true) ? "" :
@@ -3644,13 +3641,15 @@ function get_api_url(get) {
         ad = get_api_data(api);
     if (ad) {
         var search = (get.search) ? get.search : "",
-            base_url = (get.custom_url) ? get.custom_url : ad.base_url,
-            key_param = ad.key_param,
+            base_url = ad.base_url,
+            key_param = (ad.key_param) ? ad.key_param : "",
             saved_key = $("#apikeys").data(api),
             ampersand = (search) ? (search.indexOf("?") > -1 || search.indexOf("&") > -1) ? "&" : "?" : "",
-            api_param = (key_param && key_param != "bearer" && saved_key) ? ampersand + key_param + saved_key : "";
+            api_param = (key_param != "bearer" && saved_key) ? ampersand + key_param + saved_key : "",
+            api_url = base_url + search;
         return {
-            "api_url": base_url + search + api_param,
+            "api_url": api_url,
+            "api_url_key": api_url + api_param,
             "api_key": saved_key,
             "ampersand": ampersand,
             "key_param": key_param
