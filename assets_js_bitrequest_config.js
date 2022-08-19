@@ -836,7 +836,6 @@ var apptitle = "Bitrequest",
                         "selected": {
                             "name": "bitrequest.app",
                             "url": main_nano_node,
-                            "api": true,
                             "username": "",
                             "password": "",
                             "display": true
