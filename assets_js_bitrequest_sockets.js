@@ -906,7 +906,7 @@ function ping_nimiq(address, request_ts) {
     api_proxy({
         "api": "nimiq.watch",
         "search": "account-transactions/" + address,
-        "proxy": true,
+        "proxy": false,
         "params": {
             "method": "GET"
         }
