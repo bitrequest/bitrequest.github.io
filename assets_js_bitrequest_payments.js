@@ -1310,7 +1310,7 @@ function getpayment(ccrateeuro, ccapi) {
         poweredby = "<div class='poweredby'>Powered by: <a href='https://www.bitrequest.io' target='_blank'>Bitrequest</a></div>",
         bottomcard = (request.isrequest === true) ? paymethods : shareform,
         ccqr = "<div id='qrcode' class='qrcode'><canvas width='256' height='256'></canvas></div>" + cryptologo,
-        lndqr = (request.payment == "bitcoin") ? "<div id='qrcode_lnd' class='qrcode'><canvas width='256' height='256'></canvas></div><img src='img_logos_btc-lnd.png' class='cmc_icon' id='lnd_icon'><img src='img_phone_icon.png' class='cmc_icon' id='phone_icon'>" : "",
+        lndqr = (request.payment == "bitcoin") ? "<div id='qrcode_lnd' class='qrcode'><canvas width='256' height='256'></canvas></div><img src='img_logos_btc-lnd.png' class='cmc_icon' id='lnd_icon'><img src='" + c_icons("phone-icon") + "' class='cmc_icon' id='phone_icon'>" : "",
         lndow = (request.payment == "bitcoin") ? "<div class='openwallet_lnd abr icon-folder-open' data-currency='bitcoin' data-rel='0'>Open wallet</div>" : "";
     $("#request_front").prepend("<div id='cl_wrap'>" + cryptologo + "</div>\
 		<div class='actionbar clearfix'>\

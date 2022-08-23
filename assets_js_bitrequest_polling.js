@@ -127,8 +127,9 @@ function mopsus_blockheight(data, set_confirmations, txhash) { // api_monitor pa
             "method": "GET"
         }
     }).done(function(e) {
-        if (e) {
-            var lb = e.latest_block;
+        var result = br_result(e).result;
+        if (result) {
+            var lb = result.latest_block;
             if (lb) {
                 var bh = lb.height,
                     txd = nimiq_scan_data(data, set_confirmations, bh, null, txhash);

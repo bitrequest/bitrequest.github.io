@@ -1339,6 +1339,13 @@ function tx_api_fail(thislist, statuspanel) {
 }
 
 function api_eror_msg(apisrc, error) {
+    if (error.console) {
+        console.log(error);
+        return false;
+    }
+    if ($("#dialogbody .doselect").length) {
+        return
+    }
     var error_dat = (error) ? error : {
             "errormessage": "errormessage",
             "errorcode": "errorcode"
@@ -1346,13 +1353,6 @@ function api_eror_msg(apisrc, error) {
         errormessage = error_dat.errormessage,
         errorcode = error_dat.errorcode,
         keyfail = (error.apikey === true);
-    if (error.console) {
-        console.log(error);
-        return false;
-    }
-    if ($("#dialogbody .doselect").length) {
-        return false;
-    }
     var api_bttn = (keyfail === true) ? "<div id='add_api' data-api='" + apisrc + "' class='button'>Add " + apisrc + " Api key</div>" : "",
         content = "<h2 class='icon-blocked'>Error " + errorcode + "</h2><p class='doselect'><strong>Error: " + errorcode + " " + errormessage + "<br/><br/><span id='proxy_dialog' class='ref'>Try other proxy</span></p>" + api_bttn;
     popdialog(content, "alert", "canceldialog");

@@ -906,11 +906,12 @@ function ping_nimiq(address, request_ts) {
     api_proxy({
         "api": "nimiq.watch",
         "search": "account-transactions/" + address,
-        "proxy": false,
+        "proxy": true,
         "params": {
             "method": "GET"
         }
-    }).done(function(transactions) {
+    }).done(function(e) {
+        var transactions = br_result(e).result;
         if (transactions) {
             var setconf = request.set_confirmations,
                 txflip = transactions.reverse();

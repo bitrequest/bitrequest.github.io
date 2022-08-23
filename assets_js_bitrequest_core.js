@@ -3644,13 +3644,14 @@ function get_api_url(get) {
             base_url = ad.base_url,
             key_param = (ad.key_param) ? ad.key_param : "",
             saved_key = $("#apikeys").data(api),
+            key_val = (saved_key) ? saved_key : ad.api_key,
             ampersand = (search) ? (search.indexOf("?") > -1 || search.indexOf("&") > -1) ? "&" : "?" : "",
             api_param = (key_param != "bearer" && saved_key) ? ampersand + key_param + saved_key : "",
             api_url = base_url + search;
         return {
             "api_url": api_url,
             "api_url_key": api_url + api_param,
-            "api_key": saved_key,
+            "api_key": key_val,
             "ampersand": ampersand,
             "key_param": key_param
         }
@@ -3780,11 +3781,11 @@ function settitle(title) {
 function getcc_icon(cmcid, cpid, erc20) {
     if (erc20) {
         if (offline === true) {
-            return "<img src='img_qrplaceholder.png' class='cmc_icon'/>";
+            return "<img src='" + c_icons("ph") + "' class='cmc_icon'/>";
         }
         return "<img src='https://s2.coinmarketcap.com/static/img/coins/200x200/" + cmcid + ".png' class='cmc_icon'/>";
     }
-    return "<img src='data:image/png;base64," + c_icons(cpid) + "' class='cmc_icon'/>";
+    return "<img src='" + c_icons(cpid) + "' class='cmc_icon'/>";
 }
 
 function getdevicetype() {
@@ -4173,7 +4174,7 @@ function rendercurrencies() {
             }
         });
     }
-    $("ul#allcurrencies").append("<li id='choose_erc20' data-currency='erc20 token' class='start_cli' data-currency='erc20 token'><div class='liwrap'><h2><img src='img_erc20.png'/>erc20 token</h2></div></li>\
+    $("ul#allcurrencies").append("<li id='choose_erc20' data-currency='erc20 token' class='start_cli' data-currency='erc20 token'><div class='liwrap'><h2><img src='" + c_icons("ph") + "'/>erc20 token</h2></div></li>\
 	<li id='rshome' class='restore start_cli' data-currency='erc20 token'><div class='liwrap'><h2><span class='icon-upload'> Restore from backup</h2></div></li><li id='start_cli_margin' class='start_cli'><div class='liwrap'><h2></h2></div></li>");
 }
 
@@ -4573,7 +4574,7 @@ function appendrequest(rd) {
 				<div class='api_source'>" + src_html + "</div>\
 			</div>\
 			<div class='brstatuspanel flex'>\
-				<img src='img_confirmed.png'>\
+				<img src='" + c_icons("confirmed") + "'>\
 				<h2>Payment received</h2>\
 			</div>\
 			<div class='brmarker'></div>\
