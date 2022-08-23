@@ -34,6 +34,7 @@ $(document).ready(function() {
     //compareamounts
     //get_historical_fiat_data
     //get_historic_fiatprice_api_payload
+    //form_date
     //get_historical_crypto_data
     //get_payload_historic_coingecko
     //get_payload_historic_coinpaprika
@@ -1914,13 +1915,10 @@ function compareamounts(rd) {
                 fiatapi_default = (fiatapi == "coingecko" || fiatapi == "coinbase") ? "fixer" : fiatapi; // exclude coingecko api"
             api_attempt[apilist] = {}; // reset global historic fiat price api attempt
             get_historical_fiat_data(historic_payload, apilist, fiatapi_default);
-        } else {
-            api_callback(thisrequestid);
         }
-    } else {
-        // API Callback
-        api_callback(thisrequestid);
+        return
     }
+    api_callback(thisrequestid);
 }
 
 // get historic crypto rates
@@ -1944,8 +1942,14 @@ function get_historical_fiat_data(rd, apilist, fiatapi) {
             var data = br_result(e).result,
                 error = data.error;
             if (error) {
+                var next_historic = try_next_api(apilist, fiatapi);
+                if (next_historic) {
+                    get_historical_fiat_data(rd, apilist, next_historic);
+                    return
+                }
                 fail_dialogs(fiatapi, error);
                 api_callback(thisrequestid);
+
             } else {
                 var usdrate,
                     lcrate,
@@ -1962,46 +1966,51 @@ function get_historical_fiat_data(rd, apilist, fiatapi) {
                 var lcrate = (lcsymbol == "EUR") ? 1 : get_lcrate;
                 if (lcrate === undefined || usdrate === undefined) {
                     var next_historic = try_next_api(apilist, fiatapi);
-                    if (next_historic === false) {
-                        fail_dialogs(fiatapi, "unable to fetch " + lcsymbol + " exchange rate");
-                        api_callback(thisrequestid);
-                    } else {
+                    if (next_historic) {
                         get_historical_fiat_data(rd, apilist, next_historic);
+                        return
                     }
-                } else {
-                    var historic_api = $("#cmcapisettings").data("selected"),
-                        picked_historic_api = (historic_api == "coinmarketcap") ? "coingecko" : historic_api; // default to "coingecko api"
-                    api_attempt["historic_crypto_price_apis"] = {};
-                    get_historical_crypto_data(rd, fiatapi, "historic_crypto_price_apis", picked_historic_api, lcrate, usdrate, lcsymbol);
+                    fail_dialogs(fiatapi, "unable to fetch " + lcsymbol + " exchange rate");
+                    api_callback(thisrequestid);
+                    return
                 }
+                var historic_api = $("#cmcapisettings").data("selected"),
+                    picked_historic_api = (historic_api == "coinmarketcap") ? "coingecko" : historic_api, // default to "coingecko api"
+                    init_apilist = "historic_crypto_price_apis";
+                api_attempt[init_apilist] = {};
+                get_historical_crypto_data(rd, fiatapi, init_apilist, picked_historic_api, lcrate, usdrate, lcsymbol);
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
             var next_historic = try_next_api(apilist, fiatapi);
-            if (next_historic === false) {
-                var error_object = (errorThrown) ? errorThrown : jqXHR;
-                fail_dialogs(fiatapi, error_object);
-                api_callback(thisrequestid);
-            } else {
+            if (next_historic) {
                 get_historical_fiat_data(rd, apilist, next_historic);
+                return
             }
+            var error_object = (errorThrown) ? errorThrown : jqXHR;
+            fail_dialogs(fiatapi, error_object);
+            api_callback(thisrequestid);
         });
-    } else {
-        api_callback(thisrequestid);
+        return
     }
+    api_callback(thisrequestid);
 }
 
 function get_historic_fiatprice_api_payload(fiatapi, lcsymbol, latestinput) {
+    var dateformat = form_date(latestinput),
+        payload = (fiatapi == "fixer") ? dateformat + "?symbols=" + lcsymbol + ",USD" :
+        (fiatapi == "currencylayer") ? "historical?date=" + dateformat :
+        dateformat + "?base=EUR"; // <- exchangeratesapi
+    return payload;
+}
+
+function form_date(latestinput) {
     var dateobject = new Date(parseFloat(latestinput)),
         getmonth = dateobject.getUTCMonth() + 1,
         getday = dateobject.getUTCDate(),
         year = dateobject.getUTCFullYear(),
         month = (getmonth < 10) ? "0" + getmonth : getmonth,
-        day = (getday < 10) ? "0" + getday : getday,
-        dateformat = year + "-" + month + "-" + day,
-        payload = (fiatapi == "fixer") ? dateformat + "?symbols=" + lcsymbol + ",USD" :
-        (fiatapi == "currencylayer") ? "historical?date=" + dateformat :
-        dateformat + "?base=EUR"; // <- exchangeratesapi
-    return payload;
+        day = (getday < 10) ? "0" + getday : getday;
+    return year + "-" + month + "-" + day;
 }
 
 function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, lcsymbol) {
@@ -2123,24 +2132,24 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 sessionStorage.setItem("bitrequest_historic_" + thisrequestid, cacheval); // 'cache' historic data
             }
             api_callback(thisrequestid);
-        } else {
-            var next_historic = try_next_api(apilist, api);
-            if (next_historic === false) {
-                fail_dialogs(api, "error retrieving historical price data");
-                api_callback(thisrequestid);
-            } else {
-                get_historical_crypto_data(rd, fiatapi, apilist, next_historic, lcrate, usdrate, lcsymbol);
-            }
+            return;
         }
+        var next_historic = try_next_api(apilist, api);
+        if (next_historic) {
+            get_historical_crypto_data(rd, fiatapi, apilist, next_historic, lcrate, usdrate, lcsymbol);
+            return
+        }
+        fail_dialogs(api, "error retrieving historical price data");
+        api_callback(thisrequestid);
     }).fail(function(jqXHR, textStatus, errorThrown) {
         var next_historic = try_next_api(apilist, api);
-        if (next_historic === false) {
-            var error_object = (errorThrown) ? errorThrown : jqXHR;
-            fail_dialogs(api, error_object);
-            api_callback(thisrequestid);
-        } else {
+        if (next_historic) {
             get_historical_crypto_data(rd, fiatapi, apilist, next_historic, lcrate, usdrate, lcsymbol);
+            return
         }
+        var error_object = (errorThrown) ? errorThrown : jqXHR;
+        fail_dialogs(api, error_object);
+        api_callback(thisrequestid);
     })
 }
 

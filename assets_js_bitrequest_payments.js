@@ -6,8 +6,8 @@ var txid,
     cacheperiodcrypto = 120000, //120000 = 2 minutes
     cacheperiodfiat = 600000, //600000 = 10 minutes
     zeroplaceholder = parseFloat((0.00).toLocaleString(language, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        "minimumFractionDigits": 2,
+        "maximumFractionDigits": 2
     })).toFixed(2),
     // Global helpers
     block_swipe,
