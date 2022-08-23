@@ -58,11 +58,6 @@ body.nobip .cc_settinglist li[data-id='Reuse address'],
 	display: none;
 }
 
-#icon_placeholder {
-	display: none;
-}
-
-
 /* globals */
 
 a {
