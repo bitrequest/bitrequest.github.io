@@ -1266,7 +1266,7 @@ function getpayment(ccrateeuro, ccapi) {
         conf_section = (request.instant === true) ? "" : "<span id='statusbox'>Waiting for <span id='confnumber'></span> confirmations </span><span class='confbox'><span data-conf='0'>0</span> confirmations</span>",
         brstatuspanel = "\
 			<div class='brstatuspanel'>\
-				<img src='img_confirmed.png'/>\
+				<img src='" + c_icons("confirmed") + "'/>\
 				<div id='mainpulse' class='pulse'></div>\
 				<div class='main_wifi_off icon-wifi-off'></div>\
 				<h2>" + status_text + "</h2>\
