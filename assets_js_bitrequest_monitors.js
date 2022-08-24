@@ -1852,11 +1852,11 @@ function compareamounts(rd) {
             $(requestli.find(".transactionlist li").get().reverse()).each(function(i) {
                 tx_counter++;
                 var thisnode = $(this),
-                    tn_dat = thisnode.data(),
-                    confirmations_cc = tn_dat.confirmations,
+                    tn_dat = thisnode.data();
+                confirmations_cc = tn_dat.confirmations,
                     paymenttimestamp_cc = tn_dat.transactiontime,
-                    txhash_cc = tn_dat.txhash;
-                thissum_cc += parseFloat(tn_dat.ccval) || 0; // sum of outputs
+                    txhash_cc = tn_dat.txhash,
+                    thissum_cc += parseFloat(tn_dat.ccval) || 0; // sum of outputs
                 if (confirmations_cc >= setconfirmations || rd.no_conf === true || confirmations_cc === false) { // check all confirmations + whitelist for currencies unable to fetch confirmation
                     confirmed_cc = true;
                     if (thissum_cc >= thisamount * margin) { // compensation for small fluctuations in rounding amount
@@ -2080,8 +2080,8 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     historic_price = historic_object.price;
                 conf = tn_dat.confirmations, // check confirmations
                     paymenttimestamp = tn_dat.transactiontime,
-                    txhash = tn_dat.txhash;
-                receivedcc += parseFloat(thisvalue) || 0; // sum of outputs CC
+                    txhash = tn_dat.txhash,
+                    receivedcc += parseFloat(thisvalue) || 0; // sum of outputs CC
                 var thisusdsum = receivedusd += parseFloat(historic_price * thisvalue) || 0;
                 if (historic_price && (conf >= setconfirmations || rd.no_conf === true || conf === false)) { // check all confirmations + whitelist for currencies unable to fetch confirmations
                     confirmed = true;
