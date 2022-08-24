@@ -1837,7 +1837,7 @@ function compareamounts(rd) {
         firstlist = requestli.find(".transactionlist li:first"),
         lastlist = requestli.find(".transactionlist li:last"),
         latestinput = firstlist.data("transactiontime"),
-        firstinput = lastlist.data("transactiontime"); // only look up historical dat after one hour
+        firstinput = lastlist.data("transactiontime");
     if (latestinput) {
         if (iscrypto) {
             var thissum_cc = 0,
@@ -1851,20 +1851,19 @@ function compareamounts(rd) {
                 margin = 0.95;
             $(requestli.find(".transactionlist li").get().reverse()).each(function(i) {
                 tx_counter++;
-                var thisnode = $(this);
-                confirmations_cc = thisnode.data("confirmations");
-                paymenttimestamp_cc = thisnode.data("transactiontime");
-                txhash_cc = thisnode.data("txhash");
-                thissum_cc += parseFloat(thisnode.data("ccval")) || 0; // sum of outputs
+                var thisnode = $(this),
+                    tn_dat = thisnode.data(),
+                    confirmations_cc = tn_dat.confirmations,
+                    paymenttimestamp_cc = tn_dat.transactiontime,
+                    txhash_cc = tn_dat.txhash;
+                thissum_cc += parseFloat(tn_dat.ccval) || 0; // sum of outputs
                 if (confirmations_cc >= setconfirmations || rd.no_conf === true || confirmations_cc === false) { // check all confirmations + whitelist for currencies unable to fetch confirmation
                     confirmed_cc = true;
-                    paymenttimestamp_cc = paymenttimestamp_cc; // update timestamp of latest confirmed tx
-                    txhash_cc = txhash_cc; // update txhash of latest confirmed tx
                     if (thissum_cc >= thisamount * margin) { // compensation for small fluctuations in rounding amount
-                        status_cc = "paid";
-                        pending_cc = "no";
+                        status_cc = "paid",
+                            pending_cc = "no";
                         thisnode.addClass("exceed").nextAll().addClass("exceed");
-                        return // stop loop
+                        return
                     }
                 } else {
                     confirmed_cc = false;
@@ -1878,13 +1877,12 @@ function compareamounts(rd) {
             });
             if (thissum_cc >= thisamount * margin) { // compensation for small fluctuations in rounding amount
                 if (confirmed_cc === false) { // check confirmations outside the loop
-                    status_cc = "pending";
-                    var scan_to_poll = (tx_counter === 1) ? "polling" : pendingstatus; // switch to tx polling if there's only one transaction
-                    pending_cc = scan_to_poll;
+                    status_cc = "pending",
+                        pending_cc = (tx_counter === 1) ? "polling" : pendingstatus; // switch to tx polling if there's only one transaction
                 }
             } else {
-                status_cc = "insufficient";
-                pending_cc = "scanning";
+                status_cc = "insufficient",
+                    pending_cc = "scanning";
             }
             updaterequest({
                 "requestid": thisrequestid,
@@ -1939,18 +1937,18 @@ function get_historical_fiat_data(rd, apilist, fiatapi) {
                 "method": "GET"
             }
         }).done(function(e) {
-            var data = br_result(e).result,
-                error = data.error;
-            if (error) {
-                var next_historic = try_next_api(apilist, fiatapi);
-                if (next_historic) {
-                    get_historical_fiat_data(rd, apilist, next_historic);
+            var data = br_result(e).result;
+            if (data) {
+                if (data.error) {
+                    var next_historic = try_next_api(apilist, fiatapi);
+                    if (next_historic) {
+                        get_historical_fiat_data(rd, apilist, next_historic);
+                        return
+                    }
+                    fail_dialogs(fiatapi, data.error);
+                    api_callback(thisrequestid);
                     return
                 }
-                fail_dialogs(fiatapi, error);
-                api_callback(thisrequestid);
-
-            } else {
                 var usdrate,
                     lcrate,
                     get_lcrate;
@@ -1979,7 +1977,10 @@ function get_historical_fiat_data(rd, apilist, fiatapi) {
                     init_apilist = "historic_crypto_price_apis";
                 api_attempt[init_apilist] = {};
                 get_historical_crypto_data(rd, fiatapi, init_apilist, picked_historic_api, lcrate, usdrate, lcsymbol);
+                return
             }
+            fail_dialogs(fiatapi, "unable to fetch " + lcsymbol + " exchange rate");
+            api_callback(thisrequestid);
         }).fail(function(jqXHR, textStatus, errorThrown) {
             var next_historic = try_next_api(apilist, fiatapi);
             if (next_historic) {
@@ -2061,12 +2062,13 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 confirmed = false,
                 historicusdvalue = (thisamount / lcrate) * usdrate,
                 tx_counter = 0,
-                margin = (lnd && historicusdvalue < 2) ? 0.40 : 0.95; // be flexible with small amounts
+                margin = (historicusdvalue < 2) ? 0.60 : 0.95; // be flexible with small amounts
             $(requestli.find(".transactionlist li").get().reverse()).each(function(i) {
                 tx_counter++;
                 var thisnode = $(this),
-                    thistimestamp = thisnode.data("transactiontime"),
-                    thisvalue = thisnode.data("ccval"),
+                    tn_dat = thisnode.data(),
+                    thistimestamp = tn_dat.transactiontime,
+                    thisvalue = tn_dat.ccval,
                     values = {
                         "fiatapisrc": fiatapi,
                         "apisrc": api,
@@ -2076,16 +2078,13 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     },
                     historic_object = compare_historic_prices(api, values, data, thistimestamp),
                     historic_price = historic_object.price;
-                thisnode.data("historic", historic_object);
-                conf = thisnode.data("confirmations"), // check confirmations
-                    paymenttimestamp = thisnode.data("transactiontime"),
-                    txhash = thisnode.data("txhash"),
-                    receivedcc += parseFloat(thisvalue) || 0; // sum of outputs CC
+                conf = tn_dat.confirmations, // check confirmations
+                    paymenttimestamp = tn_dat.transactiontime,
+                    txhash = tn_dat.txhash;
+                receivedcc += parseFloat(thisvalue) || 0; // sum of outputs CC
                 var thisusdsum = receivedusd += parseFloat(historic_price * thisvalue) || 0;
                 if (historic_price && (conf >= setconfirmations || rd.no_conf === true || conf === false)) { // check all confirmations + whitelist for currencies unable to fetch confirmations
-                    confirmed = true,
-                        paymenttimestamp = thisnode.data("transactiontime"), // update timestamp of latest confirmed tx
-                        txhash = thisnode.data("txhash"); // update txhash of latest confirmed tx
+                    confirmed = true;
                     if (thisusdsum >= historicusdvalue * margin) { //minus 5% dollar for volatility compensation
                         status = "paid",
                             pending = "no";
@@ -2104,9 +2103,8 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
             });
             if (receivedusd >= historicusdvalue * margin) { // check total incoming amount // minus 5% dollar for volatility compensation
                 if (confirmed === false) { // check confirmations outside the loop
-                    status = "pending";
-                    var scan_to_poll = (tx_counter === 1) ? "polling" : pending; // switch to tx polling if there's only one transaction
-                    pending = scan_to_poll;
+                    status = "pending",
+                        pending = (tx_counter === 1) ? "polling" : pending; // switch to tx polling if there's only one transaction
                 }
             } else {
                 if (receivedusd === 0) {
@@ -2235,7 +2233,7 @@ function get_historic_object_coingecko(value) {
 function get_historic_object_coinpaprika(value) {
     if (value && value.timestamp) {
         return {
-            "timestamp": returntimestamp(makedatestring(value.timestamp.split("T"))).getTime(),
+            "timestamp": to_ts(value.timestamp),
             "price": value.price
         }
     }

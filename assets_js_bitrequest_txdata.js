@@ -141,8 +141,7 @@ function blockcypher_scan_data(data, setconfirmations, ccsymbol) { // scan
     if (data) {
         var is_eth = (ccsymbol == "eth"),
             datekey = (data.confirmed) ? data.confirmed : (data.received) ? data.received : false,
-            datetimeparts = (datekey) ? datekey.split("T") : null,
-            transactiontime = (datetimeparts) ? returntimestamp(makedatestring(datetimeparts)).getTime() : null,
+            transactiontime = to_ts(datekey),
             ccval = (data.value) ? (is_eth === true) ? parseFloat((data.value / Math.pow(10, 18)).toFixed(8)) : data.value / 100000000 : null,
             txhash = data.tx_hash,
             txhash_mod = (txhash) ? (is_eth === true) ? (txhash.match("^0x")) ? txhash : "0x" + txhash : txhash : null,
@@ -163,8 +162,7 @@ function blockcypher_scan_data(data, setconfirmations, ccsymbol) { // scan
 function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) { // poll
     if (data) {
         var is_eth = (ccsymbol == "eth"),
-            datetimeparts = (data.received) ? data.received.split("T") : null,
-            transactiontime = (datetimeparts) ? returntimestamp(makedatestring(datetimeparts)).getTime() : null,
+            transactiontime = to_ts(data.received),
             outputs = data.outputs;
         if (outputs) {
             var outputsum = 0;
@@ -527,16 +525,14 @@ function infura_erc20_poll_data(data, setconfirmations, ccsymbol) { // poll
 function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
     if (data) {
         var recieved = data.total_received,
-            datetimeparts = (data.timestamp) ? data.timestamp.split("T") : null,
-            transactiontime = (datetimeparts) ? returntimestamp(makedatestring(datetimeparts)).getTime() : null,
-            transactiontimeutc = (transactiontime) ? transactiontime : null,
+            transactiontime = to_ts(data.timestamp),
             height = (data.height) ? data.height : latestblock,
             blocks = latestblock - height,
             conf = (blocks < 0) ? 0 : blocks,
             payment_id = (data.payment_id) ? data.payment_id : false;
         return {
             "ccval": recieved / 1000000000000,
-            "transactiontime": transactiontimeutc,
+            "transactiontime": transactiontime,
             "txhash": data.hash,
             "confirmations": conf,
             "setconfirmations": setconfirmations,

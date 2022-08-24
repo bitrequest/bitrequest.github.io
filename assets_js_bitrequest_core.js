@@ -504,6 +504,7 @@ function finishfunctions() {
     //makedatestring
     //short_date
     //returntimestamp
+    //to_ts
     //weekdays
     //fulldateformat
     //fulldateformatmarkup
@@ -3818,6 +3819,14 @@ function returntimestamp(datestring) {
         timeparts = datetimeparts[1].split(":"),
         dateparts = datetimeparts[0].split("-");
     return new Date(dateparts[0], parseInt(dateparts[1], 10) - 1, dateparts[2], timeparts[0], timeparts[1], timeparts[2]);
+}
+
+function to_ts(ts) {
+    if (ts) {
+        var tstamp = ts.split("T");
+        return (tstamp) ? returntimestamp(makedatestring(tstamp)).getTime() : null;
+    }
+    return null;
 }
 
 function short_date(txtime) {
