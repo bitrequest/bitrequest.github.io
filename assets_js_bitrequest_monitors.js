@@ -2078,6 +2078,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     },
                     historic_object = compare_historic_prices(api, values, data, thistimestamp),
                     historic_price = historic_object.price;
+                thisnode.data("historic", historic_object);
                 conf = tn_dat.confirmations, // check confirmations
                     paymenttimestamp = tn_dat.transactiontime,
                     txhash = tn_dat.txhash,
