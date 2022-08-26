@@ -574,6 +574,8 @@ function finishfunctions() {
 
     //getapp
     close_app_panel();
+    //platform_icon
+    //fetch_aws
 
     // ** HTML rendering **
 
@@ -617,7 +619,7 @@ function setlocales() {
     $("meta[property='og:url']").attr("content", w_loc.href);
     var coindata = getcoindata(geturlparameters().payment),
         imgid = (coindata) ? coindata.cmcid : "1";
-    $("meta[property='og:image']").attr("content", "https://s2.coinmarketcap.com/static/img/coins/200x200/" + imgid + ".png");
+    $("meta[property='og:image']").attr("content", cmc_icon_loc + imgid + ".png");
 }
 
 function settheme() {
@@ -3076,7 +3078,7 @@ function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
                         "content": [{
                                 "div": {
                                     "class": "invoice_body",
-                                    "content": "<pre>" + syntaxHighlight(e) + "</pre><div class='inv_pb'><img src='img_icons_lnd-icons_" + imp + ".png' class='lnd_icon' title='" + imp + "'/> Powered by " + imp + "</div>"
+                                    "content": "<pre>" + syntaxHighlight(e) + "</pre><div class='inv_pb'><img src='" + c_icons(imp) + "' class='lnd_icon' title='" + imp + "'/> Powered by " + imp + "</div>"
                                 }
                             },
                             {
@@ -3784,7 +3786,7 @@ function getcc_icon(cmcid, cpid, erc20) {
         if (offline === true) {
             return "<img src='" + c_icons("ph") + "' class='cmc_icon'/>";
         }
-        return "<img src='https://s2.coinmarketcap.com/static/img/coins/200x200/" + cmcid + ".png' class='cmc_icon'/>";
+        return "<img src='" + cmc_icon_loc + cmcid + ".png' class='cmc_icon'/>";
     }
     return "<img src='" + c_icons(cpid) + "' class='cmc_icon'/>";
 }
@@ -4767,7 +4769,7 @@ function share_receipt() {
             loadertext("generate receipt");
             var accountname = $("#accountsettings").data("selected"),
                 sharedtitle = "bitrequest_receipt_" + requestid + ".pdf";
-            shorten_url(sharedtitle, href, approot + "/img_receipt_icon.png", true);
+            shorten_url(sharedtitle, href, fetch_aws("img_receipt_icon.png"), true);
             closeloader();
         }
     })
@@ -4979,7 +4981,7 @@ function getapp(type) {
     var app_panel = $("#app_panel");
     app_panel.html("");
     var android = (type == "android"),
-        button = (android === true) ? "button-playstore-v2.svg" : "button-appstore.svg",
+        button = (android === true) ? fetch_aws("img_button-playstore.png") : fetch_aws("img_button-appstore.png"),
         url = (android === true) ? "https://play.google.com/store/apps/details?id=" + androidpackagename + "&pcampaignid=fdl_long&url=" + approot + encodeURIComponent(w_loc.search) : "https://apps.apple.com/app/id1484815377?mt=8",
         panelcontent = "<h2>Download the app</h2>\
 			<a href='" + url + "' class='exit store_bttn'><img src='img_" + button + "'></a><br/>\
@@ -5001,6 +5003,17 @@ function close_app_panel() {
             localStorage.setItem("bitrequest_appstore_dialog", true);
         }
     });
+}
+
+function platform_icon(platform) {
+    return (platform == "playstore") ? fetch_aws("img_button-playstore.png") :
+        (platform == "appstore") ? fetch_aws("img_button-appstore.png") :
+        fetch_aws("img_button-desktop_app.png");
+}
+
+function fetch_aws(filename, bckt) {
+    var bucket = (bckt) ? bckt : aws_bucket;
+    return bucket + filename;
 }
 
 // HTML rendering

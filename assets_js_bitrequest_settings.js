@@ -597,7 +597,7 @@ function sharebu() {
                         "ro": br_cache.filename,
                         "proxy": set_proxy
                     }));
-                shorten_url(sharedtitle, approot + "?p=settings&sbu=" + r_dat, approot + "/img_system_backup.png", true);
+                shorten_url(sharedtitle, approot + "?p=settings&sbu=" + r_dat, fetch_aws("img_system_backup.png"), true);
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 console.log(jqXHR);
                 console.log(textStatus);
@@ -1655,7 +1655,7 @@ function share_csv() {
                         "ro": br_cache.filename,
                         "proxy": set_proxy
                     }));
-                shorten_url(sharedtitle, approot + "?p=settings&csv=" + r_dat, approot + "/img_system_backup.png", true);
+                shorten_url(sharedtitle, approot + "?p=settings&csv=" + r_dat, fetch_aws("img_system_backup.png"), true);
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 console.log(jqXHR);
                 console.log(textStatus);

@@ -1166,7 +1166,7 @@ function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cache
         proxy_icon = (ln_info && ln_info.proxy) ? "<span class='icon-sphere' title='" + ln_info.proxy_host + "'></span>" : "",
         lndstatus_icon = (helper.lnd_status) ? " <span class='icon-connection'></span>" : " <span class='icon-wifi-off'></span>",
         lnd_nodeinfo = (request.isrequest === true) ? "" : ": <span id='lnd_nodeinfo_trigger'>" + ln_info.name + "</span>",
-        lnd_node_info = (ln_info) ? "<br/><span id='current_lndnode'><img src='img_icons_lnd-icons_" + ln_info.imp + ".png' class='lnd_icon' title='" + ln_info.imp + "'/> Lightning node" + lnd_nodeinfo + lndstatus_icon + proxy_icon + "</span>" : "";
+        lnd_node_info = (ln_info) ? "<br/><span id='current_lndnode'><img src='" + c_icons(ln_info.imp) + "' class='lnd_icon' title='" + ln_info.imp + "'/> Lightning node" + lnd_nodeinfo + lndstatus_icon + proxy_icon + "</span>" : "";
     $("#xratestats").prepend(xratedata1 + xratedata2.join(" | ") + "<div class='cachetime'> (" + (cachetimefiat / 60000).toFixed(1) + " of " + (cacheperiodfiat / 60000).toFixed(0) + " min. in cache)</div><br/><span id='current_socket'></span>" + lnd_node_info);
     getpayment(ccrateeuro, ccapi);
 }
@@ -2201,7 +2201,6 @@ function share(thisbutton) {
         }
         var newdatastring = (thisdata === true) ? "&d=" + dataparam : "", // construct data param if exists
             shared_host = (thishostname.indexOf("ipfs") > -1 || thishostname.indexOf("bitrequest.crypto") > -1) ? thishostname : "https://bitrequest.github.io", // check for IFPS
-            //shared_host = (thishostname.indexOf("ipfs") > -1 || thishostname.indexOf("bitrequest.crypto") > -1) ? thishostname : "http://localhost:8888/devxz_lnd", // check for IFPS
             sharedurl = shared_host + "/?p=requests&payment=" + payment + "&uoa=" + thiscurrency + "&amount=" + thisamount + "&address=" + thisaddress + newdatastring,
             thisrequestname_uppercase = thisrequestname.substr(0, 1).toUpperCase() + thisrequestname.substr(1), // capitalize requestname
             paymentupper = payment.substr(0, 1).toUpperCase() + payment.substr(1),
@@ -2209,7 +2208,7 @@ function share(thisbutton) {
             sharedtitle = (thisdata === true) ? thisrequestname_uppercase + " sent a " + payment_name + " payment request of " + thisamount + " " + thiscurrency.toUpperCase() + " for '" + thisrequesttitle + "'" : "You have a " + payment_name + " payment request of " + thisamount + " " + thiscurrency,
             encodedurl = encodeURIComponent(sharedurl),
             firebase_dynamiclink = firebase_shortlink + "?link=" + encodedurl + "&apn=" + androidpackagename + "&afl=" + encodedurl,
-            share_icon = (lightning) ? "https://bitrequest.github.io/img_logos_btc-lnd.png" : "https://s2.coinmarketcap.com/static/img/coins/200x200/" + cmcid + ".png";
+            share_icon = (lightning) ? "https://bitrequest.github.io/img_logos_btc-lnd.png" : cmc_icon_loc + cmcid + ".png";
         shorten_url(sharedtitle, sharedurl, share_icon);
         setlocales();
     } else {
@@ -2837,8 +2836,7 @@ function download_wallet(currency) {
             var walletlist = $("#formbox_ul"),
                 device = getdevicetype(),
                 platform = getplatform(device),
-                store_icon = (platform == "playstore") ? "button-playstore-v2.svg" :
-                (platform == "appstore") ? "button-appstore.svg" : "button-desktop_app.svg",
+                store_icon = platform_icon(platform),
                 store_tag = (store_icon) ? "<img src='img_" + store_icon + "'/>" : "<span class='icon-download'></span> ";
             $.each(wallets_arr, function(key, value) {
                 var device_url = value[platform];

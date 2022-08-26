@@ -1639,9 +1639,8 @@ function phrase_info_pu(coin) {
             });
             if (walletdat) {
                 var platform = getplatform(getdevicetype()),
-                    store_icon = (platform == "playstore") ? "button-playstore-v2.svg" :
-                    (platform == "appstore") ? "button-appstore.svg" : "button-desktop_app.svg",
-                    store_tag = (store_icon) ? "<img src='img_" + store_icon + "'/>" : "<span class='icon-download'></span> ",
+                    store_icon = platform_icon(platform),
+                    store_tag = (store_icon) ? "<img src='" + store_icon + "'/>" : "<span class='icon-download'></span> ",
                     wallets = walletdat.wallets;
                 $.each(wallets, function(key, value) {
                     var device_url = value[platform];
@@ -1653,7 +1652,9 @@ function phrase_info_pu(coin) {
                     }
                 });
             }
-            var icon_node = $("<img src='img_logos_" + ccsymbol + "-" + currency + ".png' data-class='pd_" + currency + "'/>"),
+            var c_id = ccsymbol + "-" + currency,
+                icon_src = c_icons(c_id),
+                icon_node = $("<img src='" + icon_src + "' data-class='pd_" + currency + "'/>"),
                 dp_node_dat = {
                     "bip32": bip32dat,
                     "currency": currency
@@ -1678,7 +1679,7 @@ function phrase_info_pu(coin) {
 	    			<div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>show</span></div>\
 						<div class='xp_span drawer'>\
 							<div class='qrwrap flex'>\
-								<div class='qrcode'></div><img src='img_logos_" + ccsymbol + "-" + currency + ".png' class='cmc_icon'>\
+								<div class='qrcode'></div><img src='" + icon_src + "' class='cmc_icon'>\
 							</div>\
 							<p class='adbox adboxl select' data-type='Xpub'>" + x_pub + "</p>\
 						</div>\
@@ -1725,9 +1726,8 @@ function compatible_wallets(coin) {
             var walletlist = "";
             if (walletdat) {
                 var platform = getplatform(getdevicetype()),
-                    store_icon = (platform == "playstore") ? "button-playstore-v2.svg" :
-                    (platform == "appstore") ? "button-appstore.svg" : "button-desktop_app.svg",
-                    store_tag = (store_icon) ? "<img src='img_" + store_icon + "'/>" : "<span class='icon-download'></span> ",
+                    store_icon = platform_icon(platform),
+                    store_tag = (store_icon) ? "<img src='" + store_icon + "'/>" : "<span class='icon-download'></span> ",
                     wallets = walletdat.wallets;
                 $.each(wallets, function(key, value) {
                     var device_url = value[platform];
@@ -1739,7 +1739,9 @@ function compatible_wallets(coin) {
                     }
                 });
             }
-            var icon_node = $("<img src='img_logos_" + ccsymbol + "-" + currency + ".png' data-class='pd_" + currency + "'/>"),
+            var c_id = ccsymbol + "-" + currency,
+                icon_src = c_icons(c_id),
+                icon_node = $("<img src='" + icon_src + "' data-class='pd_" + currency + "'/>"),
                 sw_node = $("<ul id='formbox_ul' class='clearfix pd_hide pd_" + currency + "'>" + walletlist + "</ul>");
             $("#pi_icons").append(icon_node);
             $("#supported_wallets").append(sw_node);
@@ -1749,7 +1751,7 @@ function compatible_wallets(coin) {
 }
 
 function w_icon(wname) {
-    return "https://brq.s3.us-west-2.amazonaws.com/img_icons_wallet-icons_" + wname + ".png";
+    return aws_bucket + "img_icons_wallet-icons_" + wname + ".png";
 }
 
 function phrase_coin_info() {

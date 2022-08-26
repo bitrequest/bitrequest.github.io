@@ -117,10 +117,10 @@ function lm_function(replace) {
 									<input type='text' value='' placeholder='Implementation' id='lnd_select_input' readonly='readonly'/>\
 									<div class='selectarrows icon-menu2' data-pe='none'></div>\
 									<div class='options' id='implements'>\
-										<span data-value='lnd' class='imp_select'><img src='img_icons_lnd-icons_lnd.png' class='lnd_icon'> LND</span>\
-										<span data-value='eclair' class='imp_select'><img src='img_icons_lnd-icons_eclair.png' class='lnd_icon'> Eclair</span>\
-										<span data-value='c-lightning' class='imp_select'><img src='img_icons_lnd-icons_c-lightning.png' class='lnd_icon'> c-lightning</span>\
-										<span data-value='lnbits' class='imp_select'><img src='img_icons_lnd-icons_lnbits.png' class='lnd_icon'> LNbits</span>\
+										<span data-value='lnd' class='imp_select'><img src='" + c_icons("lnd") + "' class='lnd_icon'> LND</span>\
+										<span data-value='eclair' class='imp_select'><img src='" + c_icons("eclair") + "' class='lnd_icon'> Eclair</span>\
+										<span data-value='c-lightning' class='imp_select'><img src='" + c_icons("c-lightning") + "' class='lnd_icon'> c-lightning</span>\
+										<span data-value='lnbits' class='imp_select'><img src='" + c_icons("lnbits") + "' class='lnd_icon'> LNbits</span>\
 									</div>\
 								</div>\
 								<div id='lnd_credentials'>\
@@ -506,8 +506,9 @@ function lightning_option_li(live, value, selected, invoices, proxy) {
         lnurls_bool = (value.lnurl) ? true : false,
         icon = (locked) ? "lock" : (live === true) ? "connection" : "wifi-off",
         name = value.name,
+        icon_loc = c_icons(imp),
         lnurl_icon = (lnurls_bool) ? "<div class='opt_icon icon-sphere' data-pe='none'></div>" : "",
-        option = $("<div class='optionwrap" + liveclass + selected_class + "' style='display:none' data-pe='none'><span data-value='" + node_id + "' data-live='" + icon + "'><img src='img_icons_lnd-icons_" + imp + ".png' class='lnd_icon'/> " + name + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon icon-bin' data-pe='none'></div><div class='opt_icon c_stat icon-" + icon + "' data-pe='none'></div>" + lnurl_icon + "</div>");
+        option = $("<div class='optionwrap" + liveclass + selected_class + "' style='display:none' data-pe='none'><span data-value='" + node_id + "' data-live='" + icon + "'><img src='" + icon_loc + "' class='lnd_icon'/> " + name + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon icon-bin' data-pe='none'></div><div class='opt_icon c_stat icon-" + icon + "' data-pe='none'></div>" + lnurl_icon + "</div>");
     option.data(value).appendTo($("#ln_nodelist"));
     option.slideDown(500);
     if (has_invoices) {
@@ -518,7 +519,7 @@ function lightning_option_li(live, value, selected, invoices, proxy) {
                 timestamp = (value.creation_date) ? value.creation_date : (value.timestamp) ? value.timestamp : false,
                 inv_date = (timestamp) ? short_date(parseInt((timestamp) * 1000) + timezone) : "",
                 settle_icon = (value.settled === true || value.status == "paid") ? "icon-checkmark" : (value.settled === false || value.status == "expired") ? "icon-clock" : false,
-                icon_span = (settle_icon) ? "<span class='" + settle_icon + "'></span>" : "<img src='img_icons_lnd-icons_" + imp + ".png' class='lnd_icon'>";
+                icon_span = (settle_icon) ? "<span class='" + settle_icon + "'></span>" : "<img src='" + icon_loc + "' class='lnd_icon'>";
             invoiceslist += "<div class='ivli'><div class='invoice_memo clearfix'><div class='iv_title'>" + icon_span + " " + inv_title + "</div><div class='iv_date'>" + inv_date + "</div></div><div class='invoice_body'><pre>" + syntaxHighlight(value) + "</pre></div></div>";
         });
     } else {
@@ -532,8 +533,8 @@ function lightning_option_li(live, value, selected, invoices, proxy) {
         hideclass = (selected === true) ? " node_selected hide" : " hide",
         lnurls_class = (lnurls_bool) ? " lnurlclass" : "",
         node_name = (missing_proxy) ? "Proxy not found" : (lnurls_bool) ? "hidden by Proxy server" : host,
-        lnurl_markup = (lnurls_bool) ? "<strong><img src='img_icons_lnd-icons_" + imp + ".png' class='lnd_icon' style='opacity:0'/> Proxy server: </strong>" + proxy_val + "</br/>" : "",
-        proxy_markup = (lnurls_bool) ? "" : "<strong><img src='img_icons_lnd-icons_" + imp + ".png' class='lnd_icon' style='opacity:0'/> Proxy: </strong><span class='inline_pval'>" + proxy_val + "</span></br/>",
+        lnurl_markup = (lnurls_bool) ? "<strong><img src='" + icon_loc + "' class='lnd_icon' style='opacity:0'/> Proxy server: </strong>" + proxy_val + "</br/>" : "",
+        proxy_markup = (lnurls_bool) ? "" : "<strong><img src='" + icon_loc + "' class='lnd_icon' style='opacity:0'/> Proxy: </strong><span class='inline_pval'>" + proxy_val + "</span></br/>",
         info_markup = $("<li class='noln_ref" + hideclass + lnurls_class + "' data-id='" + node_id + "' data-pid='" + proxy_id + "'>\
     	<div class='d_trigger'>\
 			<span class='ref'><span class='icon-info'></span>Info</span>\
@@ -541,9 +542,9 @@ function lightning_option_li(live, value, selected, invoices, proxy) {
 		<div class='drawer2 infodrawer' style='display:block'>\
 			<div class='ln_info_wrap clearfix" + liveclass + "'>\
 				<div class='lni_dat'>\
-					<img src='img_icons_lnd-icons_" + imp + ".png' class='lnd_icon'/> <strong>" + imp + " Node: </strong>" + node_name + "<br/>" +
+					<img src='" + icon_loc + "' class='lnd_icon'/> <strong>" + imp + " Node: </strong>" + node_name + "<br/>" +
             lnurl_markup + proxy_markup +
-            "<strong><img src='img_icons_lnd-icons_" + imp + ".png' class='lnd_icon' style='opacity:0'/> Status: </strong><span class='online_stat'> Online <span class='icon-connection'></span></span><span class='offline_stat'> Offline <span class='icon-wifi-off'></span></span><span class='locked_stat'> <span id='pw_unlock_info' data-pid='" + proxy_id + "' class='ref'>Locked</span> <span class='icon-lock'></span></span></br/>\
+            "<strong><img src='" + icon_loc + "' class='lnd_icon' style='opacity:0'/> Status: </strong><span class='online_stat'> Online <span class='icon-connection'></span></span><span class='offline_stat'> Offline <span class='icon-wifi-off'></span></span><span class='locked_stat'> <span id='pw_unlock_info' data-pid='" + proxy_id + "' class='ref'>Locked</span> <span class='icon-lock'></span></span></br/>\
 				</div>\
 				<div class='lnurl_p'>Proxy" + switchpanel(proxy_bool, " custom") + "</div>\
 			</div>\
@@ -1717,9 +1718,9 @@ function test_lnurl_status(lnd) {
         proceed_pf();
         return
     }).fail(function(jqXHR, textStatus, errorThrown) {
-	    var error_object = (errorThrown) ? errorThrown : jqXHR,
-	    	error_data = get_api_error_data(error_object);
-	    proceed_pf(error_data);
+        var error_object = (errorThrown) ? errorThrown : jqXHR,
+            error_data = get_api_error_data(error_object);
+        proceed_pf(error_data);
     });
 }
 
@@ -1750,8 +1751,8 @@ function check_lnd_status(lnd) {
         return
     }).fail(function(jqXHR, textStatus, errorThrown) {
         var error_object = (errorThrown) ? errorThrown : jqXHR,
-	    	error_data = get_api_error_data(error_object);
-	    proceed_pf(error_data);
+            error_data = get_api_error_data(error_object);
+        proceed_pf(error_data);
     });
 }
 
@@ -1783,8 +1784,8 @@ function check_c_lightning_status(lnd) {
         return
     }).fail(function(jqXHR, textStatus, errorThrown) {
         var error_object = (errorThrown) ? errorThrown : jqXHR,
-	    	error_data = get_api_error_data(error_object);
-	    proceed_pf(error_data);
+            error_data = get_api_error_data(error_object);
+        proceed_pf(error_data);
     });
 }
 
@@ -1807,7 +1808,7 @@ function check_eclair_status(lnd) {
         if (data) {
             if (data.error) {
                 var error_data = get_api_error_data(data.error);
-				proceed_pf(error_data);
+                proceed_pf(error_data);
                 return
             }
             helper.lnd_status = true;
@@ -1819,8 +1820,8 @@ function check_eclair_status(lnd) {
         return
     }).fail(function(jqXHR, textStatus, errorThrown) {
         var error_object = (errorThrown) ? errorThrown : jqXHR,
-	    	error_data = get_api_error_data(error_object);
-	    proceed_pf(error_data);
+            error_data = get_api_error_data(error_object);
+        proceed_pf(error_data);
     });
 }
 
@@ -1851,7 +1852,7 @@ function check_lnbits_status(lnd) {
         return
     }).fail(function(jqXHR, textStatus, errorThrown) {
         var error_object = (errorThrown) ? errorThrown : jqXHR,
-	    	error_data = get_api_error_data(error_object);
-	    proceed_pf(error_data);
+            error_data = get_api_error_data(error_object);
+        proceed_pf(error_data);
     });
 }
