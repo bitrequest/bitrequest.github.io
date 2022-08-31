@@ -961,7 +961,7 @@ function after_poll(rq_init) {
             blockchair_scan_poll_bch(api_name, ccsymbol, set_confirmations, address, request_ts);
             return
         }
-        if (ccsymbol == "nano") {
+        if (ccsymbol == "xno") {
             ap_loader();
             nano_scan_poll(api_name, api_data.url, ccsymbol, set_confirmations, address, request_ts);
             return
