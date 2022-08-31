@@ -569,7 +569,7 @@ function finishfunctions() {
     // ** Get_app **
 
     setTimeout(function() { // wait for ios app detection
-        detectapp();
+        //detectapp();
     }, 700);
 
     //getapp
