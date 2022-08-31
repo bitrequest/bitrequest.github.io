@@ -3578,43 +3578,43 @@ function api_proxy(ad, p_proxy) {
             "api": ad.api,
             "search": ad.search
         });
-    if (aud === false) {
-        return false;
+    if (aud) {
+        var proxy = ad.proxy,
+	        api_key = aud.api_key,
+	        set_key = (api_key) ? true : false,
+	        nokey = (api_key == "no_key") ? true : false,
+	        key_pass = (nokey === true || set_key === true);
+	    if (proxy === false && key_pass === true) {
+	        var params = ad.params;
+	        params.url = (custom_url) ? custom_url : aud.api_url_key;
+	        if (ad.bearer) {
+	            params.headers = {
+	                "Authorization": "Bearer " + api_key
+	            };
+	        }
+	        return $.ajax(params);
+	    } else { // use api proxy
+	        var api_location = "proxy/v1/",
+	            localhost = ad.localhost,
+	            set_proxy = (p_proxy) ? p_proxy : d_proxy(),
+	            forced_proxy = ad.proxy_url,
+	            app_root = (forced_proxy) ? forced_proxy :
+	            (localhost === false) ? set_proxy :
+	            (localhost === true) ? "" :
+	            set_proxy,
+	            proxy_data = {
+	                "method": "POST",
+	                "cache": false,
+	                "timeout": 5000,
+	                "url": app_root + api_location,
+	                "data": $.extend(ad, aud, {
+	                    "nokey": nokey
+	                })
+	            };
+	        return $.ajax(proxy_data);
+	    }
     }
-    var proxy = ad.proxy,
-        api_key = aud.api_key,
-        set_key = (api_key) ? true : false,
-        nokey = (api_key == "no_key") ? true : false,
-        key_pass = (nokey === true || set_key === true);
-    if (proxy === false && key_pass === true) {
-        var params = ad.params;
-        params.url = (custom_url) ? custom_url : aud.api_url_key;
-        if (ad.bearer) {
-            params.headers = {
-                "Authorization": "Bearer " + api_key
-            };
-        }
-        return $.ajax(params);
-    } else { // use api proxy
-        var api_location = "proxy/v1/",
-            localhost = ad.localhost,
-            set_proxy = (p_proxy) ? p_proxy : d_proxy(),
-            forced_proxy = ad.proxy_url,
-            app_root = (forced_proxy) ? forced_proxy :
-            (localhost === false) ? set_proxy :
-            (localhost === true) ? "" :
-            set_proxy,
-            proxy_data = {
-                "method": "POST",
-                "cache": false,
-                "timeout": 5000,
-                "url": app_root + api_location,
-                "data": $.extend(ad, aud, {
-                    "nokey": nokey
-                })
-            };
-        return $.ajax(proxy_data);
-    }
+    return $.ajax();
 }
 
 function br_result(e) {
