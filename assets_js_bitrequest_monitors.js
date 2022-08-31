@@ -1322,7 +1322,7 @@ function api_callback(requestid, nocache) {
                 });
                 var statuspanel = thislist.find(".pmetastatus"),
                     statusbox = {
-                        "requestid": thislist.attr("id"),
+                        "requestid": requestid,
                         "status": statuspanel.attr("data-count"),
                         "transactions": transactionpush
                     };
@@ -1913,8 +1913,8 @@ function compareamounts(rd) {
                 fiatapi_default = (fiatapi == "coingecko" || fiatapi == "coinbase") ? "fixer" : fiatapi; // exclude coingecko api"
             api_attempt[apilist] = {}; // reset global historic fiat price api attempt
             get_historical_fiat_data(historic_payload, apilist, fiatapi_default);
+            return
         }
-        return
     }
     api_callback(thisrequestid);
 }
