@@ -332,6 +332,10 @@ ul.conf_options li .conf_emoji {
 	color: #FFF;
 }
 
+body.ios #donate {
+	display:none;
+}
+
 #donate>span {
 	color: #FFF;
 }
