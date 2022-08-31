@@ -225,7 +225,7 @@ function get_api_inputs(rd, api_data, api_name) {
             ln_only = (lnd && lnd.hybrid === false) ? true : false,
             canceled = (rq_status == "canceled") ? true : false;
         thislist.removeClass("no_network");
-        if (pending == "no" || pending == "incoming") {
+        if (pending == "no" || pending == "incoming" || thislist.hasClass("expired")) {
             transactionlist.find("li").each(function(i) {
                 tx_list.push($(this).data("txhash"));
             });
@@ -1328,6 +1328,14 @@ function api_callback(requestid, nocache) {
                     };
                 statuspush.push(statusbox);
             }
+            else {
+	            var statusbox = {
+                        "requestid": requestid,
+                        "status": 0,
+                        "transactions": []
+                    };
+                statuspush.push(statusbox);
+            }
         }
         get_requeststates("loop");
     }
@@ -1389,7 +1397,7 @@ function get_rpc_inputs(rd, api_data) {
             rpcurl = get_rpc_url(api_data), // (bitrequest_settings.js)
             erc20 = (rd.erc20 === true);
         thislist.removeClass("no_network");
-        if (pending == "no" || pending == "incoming") {
+        if (pending == "no" || pending == "incoming" || thislist.hasClass("expired")) {
             transactionlist.find("li").each(function() {
                 tx_list.push($(this).data("txhash"));
             });
