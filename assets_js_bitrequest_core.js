@@ -3582,7 +3582,7 @@ function api_proxy(ad, p_proxy) {
         var proxy = ad.proxy,
 	        api_key = aud.api_key,
 	        set_key = (api_key) ? true : false,
-	        nokey = (api_key == "no_key") ? true : false,
+	        nokey = (ad.keypass || api_key == "no_key") ? true : false,
 	        key_pass = (nokey === true || set_key === true);
 	    if (proxy === false && key_pass === true) {
 	        var params = ad.params;

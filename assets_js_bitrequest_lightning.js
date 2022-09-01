@@ -287,8 +287,8 @@ function test_lnd_option_li(value, selected, fn) {
     loadertext("connecting to " + host);
     api_proxy({
         "proxy": false,
+        "keypass": true,
         "api_url": host + "/v1/invoices",
-        "bearer": "tls_wildcard",
         "params": {
             "method": "GET",
             "cache": false,
@@ -335,8 +335,8 @@ function test_c_lightning_option_li(value, selected, fn) {
     loadertext("connecting to " + host);
     api_proxy({
         "proxy": false,
+        "keypass": true,
         "api_url": host + "/v1/invoice/listInvoices",
-        "bearer": "tls_wildcard",
         "params": {
             "method": "GET",
             "cache": false,
@@ -384,6 +384,7 @@ function test_eclair_option_li(value, selected, fn) {
     loadertext("connecting to " + host);
     api_proxy({
         "proxy": false,
+        "keypass": true,
         "api_url": host + "/listinvoices",
         "params": {
             "method": "POST",
@@ -441,8 +442,8 @@ function test_lnbits_option_li(value, selected, fn) {
     loadertext("connecting to " + host);
     api_proxy({
         "proxy": false,
+        "keypass": true,
         "api_url": host + "/api/v1/wallet",
-        "bearer": "tls_wildcard",
         "params": {
             "method": "GET",
             "cache": false,
@@ -707,7 +708,7 @@ function lnd_proxy_switch() {
         var lnd_proxy_list = ln_dat.proxies,
             this_pid = this_li.data("pid"),
             current_proxy = fetch_proxy(lnd_proxy_list, this_pid),
-            select_proxy = (current_proxy) ? current_proxy.proxy : (ln_dat.selected_proxy) ? ln_dat.selected_proxy : d_proxy(),
+            select_proxy = (current_proxy) ? current_proxy.proxy : (ln_dat.selected_proxy) ? ln_dat.selected_proxy.proxy : d_proxy(),
             p_arr = lnurl_deform(select_proxy),
             set_proxy_val = p_arr.url,
             pw = p_arr.k,
@@ -1136,6 +1137,7 @@ function test_create_invoice(imp, proxydat, host, key) {
     if (imp == "lnd") {
         api_proxy({
             "proxy": false,
+            "keypass": true,
             "api_url": host + "/v1/invoices",
             "params": {
                 "method": "POST",
@@ -1180,6 +1182,7 @@ function test_create_invoice(imp, proxydat, host, key) {
     if (imp == "c-lightning") {
         api_proxy({
             "proxy": false,
+            "keypass": true,
             "api_url": host + "/v1/invoice/genInvoice",
             "params": {
                 "method": "POST",
@@ -1226,6 +1229,7 @@ function test_create_invoice(imp, proxydat, host, key) {
     if (imp == "eclair") {
         api_proxy({
             "proxy": false,
+            "keypass": true,
             "api_url": host + "/createinvoice",
             "params": {
                 "method": "POST",
@@ -1272,6 +1276,7 @@ function test_create_invoice(imp, proxydat, host, key) {
         api_proxy({
             "proxy": false,
             "api_url": host + "/api/v1/payments",
+            "keypass": true,
             "params": {
                 "method": "POST",
                 "cache": false,
@@ -1727,8 +1732,8 @@ function test_lnurl_status(lnd) {
 function check_lnd_status(lnd) {
     api_proxy({
         "proxy": false,
+        "keypass": true,
         "api_url": lnd.host + "/v1/invoices",
-        "bearer": "tls_wildcard",
         "params": {
             "method": "GET",
             "cache": false,
@@ -1759,8 +1764,8 @@ function check_lnd_status(lnd) {
 function check_c_lightning_status(lnd) {
     api_proxy({
         "proxy": false,
+        "keypass": true,
         "api_url": lnd.host + "/v1/invoice/listInvoices",
-        "bearer": "tls_wildcard",
         "params": {
             "method": "GET",
             "cache": false,
@@ -1792,6 +1797,7 @@ function check_c_lightning_status(lnd) {
 function check_eclair_status(lnd) {
     api_proxy({
         "proxy": false,
+        "keypass": true,
         "api_url": lnd.host + "/listinvoices",
         "params": {
             "method": "POST",
@@ -1828,8 +1834,8 @@ function check_eclair_status(lnd) {
 function check_lnbits_status(lnd) {
     api_proxy({
         "proxy": false,
+        "keypass": true,
         "api_url": lnd.host + "/api/v1/wallet",
-        "bearer": "tls_wildcard",
         "params": {
             "method": "GET",
             "cache": false,
