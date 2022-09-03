@@ -242,7 +242,7 @@ if ($imp == "lnd" || $imp == "eclair" || $imp == "c-lightning" || $imp == "lnbit
 			$amount = $pdat["amount"];
 			$lnurl_id = $type == "lnurl" ? " (LNURL)" : "";
 			$memo = $pdat["memo"] ? $pdat["memo"] . $lnurl_id : null;
-			$invoice = create_invoice($imp, $p_pid, $host, $key, $amount, $memo, $type, $pingtest, "test", null, $p_expiry);
+			$invoice = create_invoice($imp, $p_pid, $host, $key, $amount, $memo, $type, $pingtest, "test", null, null, $p_expiry);
 			echo json_encode($invoice);
 			return;
 		}
@@ -338,7 +338,8 @@ if ($imp == "lnd" || $imp == "eclair" || $imp == "c-lightning" || $imp == "lnbit
 					$meta_arr[] = ["image/png;base64", $logo];
 				}
 				$desc_hash = d_hash($meta_arr);
-				$result = create_invoice($imp, $g_pid, $host, $key, $g_samount, $memo, $type, null, "lnurl", $desc_hash, $p_expiry);
+				$meta = bin2hex(json_encode($meta_arr));
+				$result = create_invoice($imp, $g_pid, $host, $key, $g_samount, $memo, $type, null, "lnurl", $desc_hash, $meta, $p_expiry);
 				if ($result) {
 					$inv_error = isset($result["error"]) ? $result["error"] : false;
 					if ($inv_error) {
@@ -470,7 +471,7 @@ if ($imp == "lnd" || $imp == "eclair" || $imp == "c-lightning" || $imp == "lnbit
 	return;
 }
 
-function create_invoice($imp, $pid, $host, $key, $amount, $memo, $type, $pingtest, $src, $desc_hash, $expiry) {
+function create_invoice($imp, $pid, $host, $key, $amount, $memo, $type, $pingtest, $src, $desc_hash, $meta, $expiry) {
 	if ($imp == "lnd") {
 		$rpcurl = $host . "/v1/invoices";
 		$pl = [];
@@ -556,13 +557,13 @@ function create_invoice($imp, $pid, $host, $key, $amount, $memo, $type, $pingtes
 		$pl["out"] = false;
 		if ($memo) {
 			$pl["memo"] = $memo;
-			$pl["description"] = $memo;
+			if ($src == "lnurl" && $desc_hash) {
+				$pl["unhashed_description"] = $meta;
+			}
 		}
-		$pl["expiry"] = $expiry;
 		if ($amount) {
 			$pl["amount"] = $amount / 1000;
 		}
-		$pl["lnurl_callback"] = null;
 		$payload = json_encode($pl);
 		$headers = [
 			"tls_wildcard" => true
