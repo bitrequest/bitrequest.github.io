@@ -3578,6 +3578,7 @@ function api_proxy(ad, p_proxy) {
             "api": ad.api,
             "search": ad.search
         });
+    console.log(aud);
     if (aud) {
         var proxy = ad.proxy,
 	        api_key = aud.api_key,
@@ -3640,6 +3641,7 @@ function proxy_alert(version) {
 }
 
 function get_api_url(get) {
+	console.log(get);
     var api = get.api,
         ad = get_api_data(api);
     if (ad) {

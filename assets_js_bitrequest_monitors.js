@@ -583,6 +583,8 @@ function get_api_inputs(rd, api_data, api_name) {
                     });
                 }
                 if (pending == "polling") { // poll bitcoin.com transaction id
+	                console.log(pending);
+	                console.log(transactionhash);
                     if (transactionhash) {
                         api_proxy({
                             "api": api_name,
