@@ -530,99 +530,6 @@ function get_api_inputs(rd, api_data, api_name) {
                 }
                 return
             }
-            if (api_name == "bitcoin.com") {
-                var legacy = (ccsymbol == "bch") ? bchutils.toLegacyAddress(address) : address;
-                if (pending == "scanning") { // scan incoming transactions on address
-                    api_proxy({
-                        "api": api_name,
-                        "search": ccsymbol + "/v1/addrs/txs",
-                        "cachetime": 25,
-                        "cachefolder": "1h",
-                        "proxy": true,
-                        "params": {
-                            "method": "POST",
-                            "data": JSON.stringify({
-                                "addrs": address
-                            })
-                        }
-                    }).done(function(e) {
-                        var data = br_result(e).result;
-                        if (data) {
-                            if (data.error) {
-                                tx_api_fail(thislist, statuspanel);
-                                handle_api_fails_list(rd, data.error, api_data, payment);
-                            } else {
-                                var items = data.items;
-                                if ($.isEmptyObject(items)) {} else {
-                                    $.each(items, function(dat, value) {
-                                        if (value.txid) { // filter outgoing transactions
-                                            var txd = bitcoincom_scan_data(value, setconfirmations, ccsymbol, legacy, address);
-                                            if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                                var tx_listitem = append_tx_li(txd, thislist);
-                                                if (tx_listitem) {
-                                                    transactionlist.append(tx_listitem.data(txd));
-                                                    counter++;
-                                                }
-                                            }
-                                        }
-                                    });
-                                    tx_count(statuspanel, counter);
-                                    compareamounts(rd);
-                                }
-                            }
-                        } else {
-                            tx_api_fail(thislist, statuspanel);
-                            handle_api_fails_list(rd, "unknown error", api_data, payment);
-                        }
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        tx_api_fail(thislist, statuspanel);
-                        var error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails_list(rd, error_object, api_data, payment);
-                    }).always(function() {
-                        api_src(thislist, api_data);
-                    });
-                }
-                if (pending == "polling") { // poll bitcoin.com transaction id
-	                console.log(pending);
-	                console.log(transactionhash);
-                    if (transactionhash) {
-                        api_proxy({
-                            "api": api_name,
-                            "search": ccsymbol + "/v1/tx/" + transactionhash,
-                            "cachetime": 25,
-                            "cachefolder": "1h",
-                            "params": {
-                                "method": "GET"
-                            }
-                        }).done(function(e) {
-                            var data = br_result(e).result;
-                            if (data) {
-                                var txd = bitcoincom_scan_data(data, setconfirmations, ccsymbol, legacy, address);
-                                if (txd) {
-                                    if (txd.ccval) {
-                                        var tx_listitem = append_tx_li(txd, thislist);
-                                        if (tx_listitem) {
-                                            transactionlist.append(tx_listitem.data(txd));
-                                            tx_count(statuspanel, 1);
-                                            compareamounts(rd);
-                                        }
-                                    }
-                                }
-                            } else {
-                                tx_api_fail(thislist, statuspanel);
-                                handle_api_fails_list(rd, "unknown error", api_data, payment);
-                            }
-                        }).fail(function(jqXHR, textStatus, errorThrown) {
-                            tx_api_fail(thislist, statuspanel);
-                            var error_object = (errorThrown) ? errorThrown : jqXHR;
-                            handle_api_fails_list(rd, error_object, api_data, payment);
-                        }).always(function() {
-                            api_src(thislist, api_data);
-                        });
-                    }
-                }
-                return
-            }
             if (api_name == "mempool.space") {
                 if (pending == "scanning") { // scan incoming transactions on address
                     api_proxy({
@@ -1329,13 +1236,12 @@ function api_callback(requestid, nocache) {
                         "transactions": transactionpush
                     };
                 statuspush.push(statusbox);
-            }
-            else {
-	            var statusbox = {
-                        "requestid": requestid,
-                        "status": 0,
-                        "transactions": []
-                    };
+            } else {
+                var statusbox = {
+                    "requestid": requestid,
+                    "status": 0,
+                    "transactions": []
+                };
                 statuspush.push(statusbox);
             }
         }

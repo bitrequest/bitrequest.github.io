@@ -192,56 +192,6 @@ function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) { // p
     }
 }
 
-
-//bitcoin.com
-
-function bitcoincom_scan_data(data, setconfirmations, ccsymbol, legacy, address) { // bitcoin.com api
-    if (data) {
-        var inputs = data.vin,
-            doublespend = null;
-        if (inputs) {
-            $.each(inputs, function(dat, value) {
-                var dstxid = value.doubleSpentTxID;
-                if (dstxid) {
-                    var doublespend = dstxid;
-                }
-            });
-        }
-        var outputs = data.vout,
-            outputsum;
-        if (outputs) {
-            var outputsum = 0;
-            $.each(outputs, function(dat, value) {
-                var pubdat = value.scriptPubKey;
-                if (pubdat) {
-                    var addr_arrr = pubdat.addresses;
-                    if (addr_arrr) {
-                        var addrstr = addr_arrr.toString();
-                        if (addrstr.indexOf(legacy) > -1 || addrstr.indexOf(address) > -1) {
-                            outputsum += value.value * 100000000 || 0; // sum of outputs
-                        }
-                    }
-                }
-            });
-            var transactiontime = (data.time) ? data.time * 1000 : null,
-                transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
-            return {
-                "ccval": (outputsum) ? outputsum / 100000000 : null,
-                "transactiontime": transactiontimeutc,
-                "txhash": data.txid,
-                "confirmations": (data.confirmations) ? data.confirmations : null,
-                "setconfirmations": setconfirmations,
-                "ccsymbol": ccsymbol,
-                "doublespend": doublespend
-            };
-        } else {
-            return false;
-        }
-    } else {
-        return default_tx_data();
-    }
-}
-
 // blockchair
 
 function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestblock) { // scan/poll
