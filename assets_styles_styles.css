@@ -1314,8 +1314,8 @@ html.dragmode .currentpage .applist li.dragging {
 }
 
 .requestlist li.rqli.lightning[data-status="paid"] .metalist li.receivedamount,
-.requestlist li.rqli.lightning[data-status="paid"] .metalist li.receivedamount,
-.requestlist li.rqli.lightning[data-status="insufficient"] .metalist li.payday,
+.requestlist li.rqli.lightning[data-status="insufficient"] .metalist li.receivedamount,
+.requestlist li.rqli.lightning[data-status="paid"] .metalist li.payday,
 .requestlist li.rqli.lightning[data-status="insufficient"] .metalist li.payday {
 	display:block;
 }
