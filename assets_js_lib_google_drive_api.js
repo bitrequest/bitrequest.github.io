@@ -95,9 +95,7 @@ function authenticate() {
 function loadClient() {
     return gapi.client.load("https://content.googleapis.com/discovery/v1/apis/drive/v3/rest").then(function() {
             console.log("GAPI client loaded for API");
-            if (user) {
-                html.addClass("gdauth");
-            }
+            GD_auth_class();
         },
         function(err) {
             console.error("Error loading GAPI client for API", err);
