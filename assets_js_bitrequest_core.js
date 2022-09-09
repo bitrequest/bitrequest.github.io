@@ -4935,8 +4935,10 @@ function change_alert() {
     }
     var total_changes = get_total_changes();
     if (total_changes > 0) {
-        body.addClass("haschanges");
         $("#alert > span").text(total_changes).attr("title", "You have " + total_changes + " changes in your app");
+        setTimeout(function() {
+            body.addClass("haschanges");
+        }, 2500);
     }
 }
 

@@ -318,10 +318,6 @@ html.hidemain header {
 	transition: all 400ms cubic-bezier(0.5, -0.5, 0.5, 1.5);
 }
 
-html.gdauth #alert {
-	display: none!important;
-}
-
 html:not(.gdauth) body.haschanges #alert {
 	opacity: 1;
 	-webkit-transform: translate(0%, 0);
@@ -335,6 +331,9 @@ html:not(.gdauth) body.haschanges #header h1 {
 	transform: translate(1em, 0);
 }
 
+html.gdauth #alert {
+	display: none!important;
+}
 
 /* Nav */
 

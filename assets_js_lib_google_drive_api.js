@@ -56,11 +56,9 @@ function Drive_Backup_trigger() {
             if (thistrigger.hasClass("true")) {
                 thistrigger.removeClass("true");
                 changelog.slideDown(300);
-                html.removeClass("gdauth");
             } else {
                 thistrigger.addClass("true");
                 changelog.slideUp(300);
-                html.addClass("gdauth");
             }
         } else {
             authenticate().then(loadClient);
@@ -71,14 +69,12 @@ function Drive_Backup_trigger() {
 function authenticate() {
     if (GoogleAuth) {
         return GoogleAuth.signIn().then(function() {
-                html.addClass("gdauth");
                 $("#gdtrigger .switchpanel").addClass("true");
                 setTimeout(function() {
                     $("#listappdata .switchpanel").trigger("click");
                     if (GD_auth() === true) {
                         updateappdata();
                         body.removeClass("haschanges");
-                        html.addClass("gdauth");
                     }
                 }, 500);
             },
@@ -97,9 +93,6 @@ function authenticate() {
 function loadClient() {
     return gapi.client.load("https://content.googleapis.com/discovery/v1/apis/drive/v3/rest").then(function() {
             console.log("GAPI client loaded for API");
-            if (user) {
-                html.addClass("gdauth");
-            }
         },
         function(err) {
             console.error("Error loading GAPI client for API", err);
@@ -192,12 +185,10 @@ function listappdata() {
                     thistrigger.removeClass("true");
                     backuplist.slideUp(300);
                     importjsonlist.slideDown(300);
-                    html.removeClass("gdauth");
                 } else {
                     thistrigger.addClass("true");
                     backuplist.slideDown(300);
                     importjsonlist.slideUp(300);
-                    html.addClass("gdauth");
                 }
             } else {
                 return gapi.client.drive.files.list({
@@ -228,7 +219,6 @@ function listappdata() {
                         }
                         importjsonlist.slideUp(300);
                         thistrigger.addClass("true");
-                        html.addClass("gdauth");
                     },
                     function(err) {
                         console.log(err);
