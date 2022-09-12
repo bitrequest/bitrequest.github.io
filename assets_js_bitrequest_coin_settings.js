@@ -1118,14 +1118,13 @@ function xpub_info_pu(currency, xpub) {
         derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> | <span class='mspace'>" + val.address + "</span></li>";
     });
     var ccsymbol = coindat.ccsymbol,
-        content = $("<div id='ad_info_wrap'><h2>" + getcc_icon(coindat.cmcid, ccsymbol + "-" + currency, coindat.erc20) + " <span>" + currency + " Key Derivation</span></h2><ul>\
+    	cc_icon = getcc_icon(coindat.cmcid, ccsymbol + "-" + currency, coindat.erc20),
+        content = $("<div id='ad_info_wrap'><h2>" + cc_icon + " <span>" + currency + " Key Derivation</span></h2><ul>\
 	    <li id='xpub_box' class='clearfix noline'>\
 	    	<div class='xpub_ib clearfix pd_" + currency + "' data-xpub='" + xpub + "'>\
     			<div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>show</span></div>\
 					<div class='xp_span drawer'>\
-						<div class='qrwrap flex'>\
-							<div class='qrcode'></div><img src='img_logos_" + ccsymbol + "-" + currency + ".png' class='cmc_icon'>\
-						</div>\
+						<div class='qrwrap flex'><div class='qrcode'></div>" + cc_icon + "</div>\
 						<p class='adbox adboxl select' data-type='Xpub'>" + xpub + "</p>\
 					</div>\
 				</div>\
