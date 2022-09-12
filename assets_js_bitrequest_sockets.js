@@ -1132,15 +1132,15 @@ function nano_scan_poll(api_name, api_url, ccsymbol, set_confirmations, address,
             })
         }
     }).done(function(e) {
-        var data = br_result(e).result;
+	    var data = br_result(e).result;
         if (data) {
             var nano_data = data.data;
             if (!$.isEmptyObject(nano_data)) {
                 var detect = false,
                     txdat,
-                    pending_array_node = nano_data[0].pending,
+                    pending_array_node = (nano_data[0]) ? nano_data[0].pending : [],
                     pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
-                    history_array_node = nano_data[1].history,
+                    history_array_node = (nano_data[1]) ? nano_data[1].history : [],
                     history_array = $.isEmptyObject(history_array_node) ? [] : history_array_node,
                     merged_array = pending_array.concat(history_array).sort(function(x, y) { // merge and sort arrays
                         return y.local_timestamp - x.local_timestamp;
