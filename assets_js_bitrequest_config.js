@@ -10,7 +10,7 @@ var apptitle = "Bitrequest",
         "https://www.bitrequest.io/",
         "https://www.bitrequest.app/"
     ],
-    proxy_version = "0.003",
+    proxy_version = "0.004",
     firebase_dynamic_link_domain = "bitrequest.page.link",
     firebase_shortlink = "https://" + firebase_dynamic_link_domain + "/",
     androidpackagename = "io.bitrequest.app",
@@ -252,6 +252,12 @@ var apptitle = "Bitrequest",
                             {
                                 "name": "blockchair",
                                 "url": "blockchair.com",
+                                "api": true,
+                                "display": true
+                            },
+                            {
+                                "name": "amberdata",
+                                "url": "amberdata.io",
                                 "api": true,
                                 "display": true
                             }
