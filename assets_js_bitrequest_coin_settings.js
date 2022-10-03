@@ -255,8 +255,6 @@ function edit_rpcnode() {
             api_list = this_data.apis,
             sockets = this_data.websockets;
         s_id = current_li.attr("data-id");
-        console.log(options);
-        console.log(this_data);
         if (options === undefined && api_list === undefined) {
             return
         }
