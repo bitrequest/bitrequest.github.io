@@ -672,24 +672,9 @@ function web3_erc20_websocket(socket_node, thisaddress) {
                     percent = (ccval / amountnumber) * 100;
                 if (percent > 70 && percent < 130) { // only scan amounts with a margin less then 20%
                     var txhash = result.transactionHash,
-                        payload = {
-                            "jsonrpc": "2.0",
-                            "id": 2,
-                            "method": "eth_getTransactionByHash",
-                            "params": [txhash]
-                        };
-                    api_proxy({
-                        "api_url": main_eth_node + if_id,
-                        "proxy": false,
-                        "params": {
-                            "method": "POST",
-                            "data": JSON.stringify(payload),
-                            "headers": {
-                                "Content-Type": "application/json"
-                            }
-                        }
-                    }).done(function(e) {
-                        var data = e.result;
+                        set_url = main_eth_node + if_id;
+                    api_proxy(eth_params(set_url, 25, "eth_getTransactionByHash", [txhash])).done(function(e) {
+                        var data = inf_result(e);
                         if (data) {
                             var input = data.input,
                                 address_upper = thisaddress.slice(3).toUpperCase(),
@@ -984,7 +969,7 @@ function after_poll(rq_init) {
             var token_contract = request.token_contract;
             if (token_contract) {
                 ap_loader();
-                erc20_scan_poll(api_name, ccsymbol, set_confirmations, address, request_ts, token_contract);
+                erc20_scan_poll(ccsymbol, set_confirmations, address, request_ts, token_contract);
                 return
             }
         }
@@ -1132,7 +1117,7 @@ function nano_scan_poll(api_name, api_url, ccsymbol, set_confirmations, address,
             })
         }
     }).done(function(e) {
-	    var data = br_result(e).result;
+        var data = br_result(e).result;
         if (data) {
             var nano_data = data.data;
             if (!$.isEmptyObject(nano_data)) {
@@ -1165,9 +1150,9 @@ function nano_scan_poll(api_name, api_url, ccsymbol, set_confirmations, address,
     });
 }
 
-function erc20_scan_poll(api_name, ccsymbol, set_confirmations, address, request_ts, token_contract) {
+function erc20_scan_poll(ccsymbol, set_confirmations, address, request_ts, token_contract) {
     api_proxy({
-        "api": api_name,
+        "api": "ethplorer",
         "search": "getAddressHistory/" + address + "?token=" + token_contract + "&type=transfer",
         "cachetime": 25,
         "cachefolder": "1h",

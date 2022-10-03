@@ -1302,7 +1302,7 @@ function get_rpc_inputs(rd, api_data) {
             transactionhash = rd.txhash,
             counter = 0,
             url = api_data.url,
-            rpcurl = get_rpc_url(api_data), // (bitrequest_settings.js)
+            rpcurl = get_rpc_url(api_data), // (bitrequest_coin_settings.js)
             erc20 = (rd.erc20 === true);
         thislist.removeClass("no_network");
         if (pending == "no" || pending == "incoming" || thislist.hasClass("expired")) {
