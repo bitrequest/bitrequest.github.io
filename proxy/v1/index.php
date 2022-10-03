@@ -50,7 +50,12 @@ if (isset($proxyheaders) || $method == "POST" || $bearer) {
 // Add Authorization header if needed
 if ($bearer) {
     if ($auth_token) {
-        $postheaders[] = "Authorization: Bearer " . $auth_token;
+	    if ($bearer == "amberdata") {
+        	$postheaders[] = "x-api-key: " . $auth_token;
+    	}
+    	else {
+	    	$postheaders[] = "Authorization: Bearer " . $auth_token;
+    	}
     }
     if ($bearer == "tls_wildcard") {
         $postheaders["tls_wildcard"] = true;
@@ -58,7 +63,7 @@ if ($bearer) {
 }
 
 // Construct url
-$key_param_var = $auth_token ? $ampersand . $keyparam . $auth_token : "";
+$key_param_var = ($auth_token && $keyparam) ? $ampersand . $keyparam . $auth_token : "";
 $key_param = ($apikey && $nokey == "true") ? "" : $key_param_var;
 $new_url = $apiurl . $key_param;
 if ($custom) {
