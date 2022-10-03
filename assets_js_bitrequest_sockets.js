@@ -29,8 +29,6 @@ $(document).ready(function() {
     //blockcypher_scan_poll
     //nano_scan_poll
     //erc20_scan_poll
-    //xmr_scan_poll_init
-    //xmr_scan_poll
 });
 
 // Websockets / Pollfunctions
@@ -671,33 +669,8 @@ function web3_erc20_websocket(socket_node, thisaddress) {
                     amountnumber = parseFloat(urlamount),
                     percent = (ccval / amountnumber) * 100;
                 if (percent > 70 && percent < 130) { // only scan amounts with a margin less then 20%
-                    var txhash = result.transactionHash,
-                        set_url = main_eth_node + if_id;
-                    api_proxy(eth_params(set_url, 25, "eth_getTransactionByHash", [txhash])).done(function(e) {
-                        var data = inf_result(e);
-                        if (data) {
-                            var input = data.input,
-                                address_upper = thisaddress.slice(3).toUpperCase(),
-                                input_upper = input.toUpperCase();
-                            if (input_upper.indexOf(address_upper) >= 0) {
-                                closesocket();
-                                var amount_hex = input.slice(74, input.length),
-                                    txd = infura_erc20_poll_data({
-                                        "timestamp": parseFloat((now() / 1000).toFixed(0)),
-                                        "hash": txhash,
-                                        "confirmations": 0,
-                                        "value": hex_to_number(amount_hex),
-                                        "decimals": token_decimals
-                                    }, request.set_confirmations, request.currencysymbol);
-                                pick_monitor(txhash, txd);
-                                return
-                            }
-                        }
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        console.log(jqXHR);
-                        console.log(textStatus);
-                        console.log(errorThrown);
-                    });
+                    pick_monitor(result.transactionHash);
+                    return
                 }
             }
         }
@@ -951,20 +924,6 @@ function after_poll(rq_init) {
             nano_scan_poll(api_name, api_data.url, ccsymbol, set_confirmations, address, request_ts);
             return
         }
-        if (ccsymbol == "xmr") {
-            var vk = get_vk(address);
-            if (vk) {
-                var account = (vk.account) ? vk.account : address,
-                    viewkey = vk.vk;
-                if (viewkey) {
-                    request.monitored = true;
-                    request.viewkey = viewkey;
-                    ap_loader();
-                    xmr_scan_poll_init(account, viewkey, set_confirmations, request_ts);
-                    return
-                }
-            }
-        }
         if (request.erc20 === true) {
             var token_contract = request.token_contract;
             if (token_contract) {
@@ -1176,90 +1135,6 @@ function erc20_scan_poll(ccsymbol, set_confirmations, address, request_ts, token
                 });
                 if (txdat && detect === true) {
                     pick_monitor(txdat.txhash, txdat);
-                    return
-                }
-            }
-        }
-        close_paymentdialog(true);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        close_paymentdialog(true);
-    });
-}
-
-function xmr_scan_poll_init(address, vk, set_confirmations, request_ts) {
-    var payload = {
-        "address": address,
-        "view_key": vk,
-        "create_account": true,
-        "generated_locally": false
-    };
-    api_proxy({
-        "api": "mymonero api",
-        "search": "login",
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "params": {
-            "method": "POST",
-            "data": JSON.stringify(payload),
-            "headers": {
-                "Content-Type": "text/plain"
-            }
-        }
-    }).done(function(e) {
-        var data = br_result(e).result;
-        if (!data.Error) {
-            if (data.start_height > -1) { // success!
-                xmr_scan_poll(address, vk, set_confirmations, request_ts);
-                return
-            }
-        }
-        close_paymentdialog(true);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        close_paymentdialog(true);
-    });
-}
-
-function xmr_scan_poll(address, vk, set_confirmations, request_ts) {
-    var payload = {
-        "address": address,
-        "view_key": vk
-    };
-    api_proxy({
-        "api": "mymonero api",
-        "search": "get_address_txs",
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "params": {
-            "method": "POST",
-            "data": JSON.stringify(payload),
-            "headers": {
-                "Content-Type": "text/plain"
-            }
-        }
-    }).done(function(e) {
-        var data = br_result(e).result;
-        if (data) {
-            var items = data.transactions;
-            if (!$.isEmptyObject(items)) {
-                var detect = false,
-                    txdat,
-                    txflip = items.reverse();
-                $.each(txflip, function(dat, value) {
-                    var txd = xmr_scan_data(value, set_confirmations, "xmr", data.blockchain_height);
-                    if (txd) {
-                        if (txd.transactiontime > request_ts && txd.ccval) {
-                            var requestlist = $("#requestlist > li.rqli"),
-                                txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
-                            if (txid_match.length) {} else {
-                                txdat = txd;
-                                detect = true;
-                                return
-                            }
-                        }
-                    }
-                });
-                if (txdat && detect === true) {
-                    confirmations(txdat, true);
                     return
                 }
             }
