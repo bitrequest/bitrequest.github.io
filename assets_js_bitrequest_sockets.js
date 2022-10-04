@@ -81,7 +81,14 @@ function init_socket(socket_node, address, swtch, retry) {
                 blockcypher_websocket(socket_node, address);
             }
         } else if (payment == "bitcoin-cash") {
-            blockchain_bch_socket(socket_node, address);
+            if (socket_name == "blockchain.info websocket") {
+                blockchain_bch_socket(socket_node, address);
+            } else if (socket_name == main_ad_socket) {
+                blockchain_bch_socket(socket_node, address);
+                //amberdata_btc_websocket(socket_node, address, "43b45e71cc0615b491cb699e7071fc06");
+            } else {
+                blockchain_bch_socket(socket_node, address);
+            }
         } else if (payment == "nano") {
             nano_socket(socket_node, address);
         } else if (payment == "ethereum") {
@@ -429,7 +436,7 @@ function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
         if (params) {
             var result = params.result,
                 txhash = result.hash,
-                txd = amberdata_poll_btc_data(result, request.set_confirmations, request.currencysymbol, thisaddress);
+                txd = amberdata_ws_btc_data(result, request.set_confirmations, request.currencysymbol, thisaddress);
             closesocket();
             pick_monitor(txhash, txd);
             return
@@ -615,7 +622,7 @@ function amberdata_eth_websocket(socket_node, thisaddress) {
             if (params.result.to == thisaddress.toLowerCase()) {
                 var result = params.result,
                     txhash = result.hash,
-                    txd = amberdata_poll_data(result, request.set_confirmations, request.currencysymbol);
+                    txd = amberdata_ws_data(result, request.set_confirmations, request.currencysymbol);
                 closesocket();
                 pick_monitor(txhash, txd);
                 return

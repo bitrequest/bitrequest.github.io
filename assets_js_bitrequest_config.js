@@ -388,6 +388,12 @@ var apptitle = "Bitrequest",
                                 "url": "blockchair.com",
                                 "api": true,
                                 "display": false
+                            },
+                            {
+                                "name": "amberdata",
+                                "url": "amberdata.io",
+                                "api": true,
+                                "display": true
                             }
                         ]
                     },
@@ -606,11 +612,18 @@ var apptitle = "Bitrequest",
                             "display": true
                         },
                         "apis": [{
-                            "name": "blockchair",
-                            "url": "blockchair.com",
-                            "api": true,
-                            "display": false
-                        }]
+                                "name": "blockchair",
+                                "url": "blockchair.com",
+                                "api": true,
+                                "display": false
+                            },
+                            {
+                                "name": "amberdata",
+                                "url": "amberdata.io",
+                                "api": true,
+                                "display": true
+                            }
+                        ]
                     },
                     "websockets": {
                         "icon": "tab",
@@ -713,6 +726,12 @@ var apptitle = "Bitrequest",
                         "apis": [{
                                 "name": "blockcypher",
                                 "url": "blockcypher.com",
+                                "api": true,
+                                "display": true
+                            },
+                            {
+                                "name": "amberdata",
+                                "url": "amberdata.io",
                                 "api": true,
                                 "display": true
                             },
@@ -1190,6 +1209,12 @@ var apptitle = "Bitrequest",
                         {
                             "name": "blockchair",
                             "url": "blockchair.com",
+                            "api": true,
+                            "display": true
+                        },
+                        {
+                            "name": "amberdata",
+                            "url": "amberdata.io",
                             "api": true,
                             "display": true
                         },

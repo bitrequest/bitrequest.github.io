@@ -227,7 +227,7 @@ function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestb
 function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan/poll
     if (data) {
         var transactiontime = (data.time) ? returntimestamp(data.time).getTime() : null,
-            ethvalue = (transactiontime) ? parseFloat((data.value / Math.pow(10, 18)).toFixed(8)) : null,
+            ethvalue = (data.value) ? parseFloat((data.value / Math.pow(10, 18)).toFixed(8)) : null,
             txhash = (data.transaction_hash) ? data.transaction_hash : null,
             conf = (data.block_id && latestblock) ? latestblock - data.block_id : null,
             recipient = (data.recipient) ? data.recipient : null;
@@ -288,6 +288,121 @@ function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latestbloc
         } else {
             return default_tx_data();
         }
+    } else {
+        return default_tx_data();
+    }
+}
+
+// amberdata
+
+function amberdata_scan_data(data, setconfirmations, ccsymbol, address) {
+    if (data) {
+        var transactiontime = (data.timestamp) ? to_ts(data.timestamp) : null,
+            outputs = data.outputs;
+        if (outputs) {
+            var thisaddress = (ccsymbol == "bch") ? (address.indexOf(":") > -1) ? address : "bitcoincash:" + address : address,
+                outputsum = 0;
+            $.each(outputs, function(dat, val) {
+                var satval = val.value,
+                    output = (val.addresses[0] == thisaddress) ? Math.abs(satval) : 0;
+                outputsum += parseFloat(output) || 0; // sum of outputs
+            });
+        }
+        var ccval = (outputs) ? outputsum / 100000000 :
+            (ccsymbol == "eth") ? parseFloat((data.value / Math.pow(10, 18)).toFixed(8)) : null,
+            txhash = data.hash;
+        return {
+            "ccval": ccval,
+            "transactiontime": transactiontime,
+            "txhash": txhash,
+            "confirmations": data.confirmations,
+            "setconfirmations": setconfirmations,
+            "ccsymbol": ccsymbol
+        };
+    } else {
+        return default_tx_data();
+    }
+}
+
+function amberdata_scan_token_data(data, setconfirmations, ccsymbol) {
+    if (data) {
+        var transactiontime = (data.timestamp) ? data.timestamp + timezone : null,
+            erc20value = (data.amount) ? parseFloat((data.amount / Math.pow(10, data.decimals)).toFixed(8)) : null,
+            symbol = data.symbol;
+        return {
+            "ccval": erc20value,
+            "transactiontime": transactiontime,
+            "txhash": data.transactionHash,
+            "confirmations": setconfirmations,
+            "setconfirmations": setconfirmations,
+            "ccsymbol": ccsymbol,
+            "tokensymbol": symbol.toLowerCase()
+        };
+    } else {
+        return default_tx_data();
+    }
+}
+
+function amberdata_poll_token_data(data, setconfirmations, ccsymbol, txhash, conf) {
+    if (data) {
+        var transactiontime = (data.timestamp) ? to_ts(data.timestamp) : null,
+            erc20value = (data.amount) ? parseFloat((data.amount / Math.pow(10, data.decimals)).toFixed(8)) : null,
+            symbol = data.symbol;
+        return {
+            "ccval": erc20value,
+            "transactiontime": transactiontime,
+            "txhash": txhash,
+            "confirmations": conf,
+            "setconfirmations": setconfirmations,
+            "ccsymbol": ccsymbol,
+            "tokensymbol": symbol.toLowerCase()
+        };
+    } else {
+        return default_tx_data();
+    }
+}
+
+function amberdata_ws_data(data, setconfirmations, ccsymbol) { // poll (websocket)
+    if (data) {
+        var transactiontime = (data.timestamp) ? (data.timestamp) + timezone : null,
+            txhash = (data.hash) ? data.hash : null,
+            ccval = (data.value) ? parseFloat((data.value / Math.pow(10, 18)).toFixed(8)) : null;
+        return {
+            "ccval": ccval,
+            "transactiontime": transactiontime,
+            "txhash": txhash,
+            "confirmations": null,
+            "setconfirmations": setconfirmations,
+            "ccsymbol": ccsymbol
+        };
+    } else {
+        return default_tx_data();
+    }
+}
+
+function amberdata_ws_btc_data(data, setconfirmations, ccsymbol, address) { // poll (websocket)
+    if (data) {
+        var transactiontime = (data.timestamp) ? data.timestamp + timezone : null,
+            txhash = (data.hash) ? data.hash : null,
+            outputs = data.outputs,
+            outputsum;
+        if (outputs) {
+            var outputsum = 0;
+            $.each(outputs, function(dat, value) {
+                var addrstr = value.addresses.toString(),
+                    output = (addrstr.indexOf(address) > -1) ? value.value : 0;
+                outputsum += output || 0; // sum of outputs
+            });
+        }
+        var ccval = (outputsum) ? outputsum / 100000000 : null;
+        return {
+            "ccval": ccval,
+            "transactiontime": transactiontime,
+            "txhash": txhash,
+            "confirmations": null,
+            "setconfirmations": setconfirmations,
+            "ccsymbol": ccsymbol
+        };
     } else {
         return default_tx_data();
     }
@@ -378,52 +493,6 @@ function bitcoin_rpc_data(data, setconfirmations, ccsymbol, address) { // poll
             "transactiontime": transactiontime,
             "txhash": txhash,
             "confirmations": conf,
-            "setconfirmations": setconfirmations,
-            "ccsymbol": ccsymbol
-        };
-    } else {
-        return default_tx_data();
-    }
-}
-
-function amberdata_poll_data(data, setconfirmations, ccsymbol) { // poll (websocket)
-    if (data) {
-        var transactiontime = (data.timestamp) ? (data.timestamp) + timezone : null,
-            txhash = (data.hash) ? data.hash : null,
-            ccval = (data.value) ? parseFloat((data.value / Math.pow(10, 18)).toFixed(8)) : null;
-        return {
-            "ccval": ccval,
-            "transactiontime": transactiontime,
-            "txhash": txhash,
-            "confirmations": null,
-            "setconfirmations": setconfirmations,
-            "ccsymbol": ccsymbol
-        };
-    } else {
-        return default_tx_data();
-    }
-}
-
-function amberdata_poll_btc_data(data, setconfirmations, ccsymbol, address) { // poll (websocket)
-    if (data) {
-        var transactiontime = (data.timestamp) ? data.timestamp + timezone : null,
-            txhash = (data.hash) ? data.hash : null,
-            outputs = data.outputs,
-            outputsum;
-        if (outputs) {
-            var outputsum = 0;
-            $.each(outputs, function(dat, value) {
-                var addrstr = value.addresses.toString(),
-                    output = (addrstr.indexOf(address) > -1) ? value.value : 0;
-                outputsum += output || 0; // sum of outputs
-            });
-        }
-        var ccval = (outputsum) ? outputsum / 100000000 : null;
-        return {
-            "ccval": ccval,
-            "transactiontime": transactiontime,
-            "txhash": txhash,
-            "confirmations": null,
             "setconfirmations": setconfirmations,
             "ccsymbol": ccsymbol
         };
