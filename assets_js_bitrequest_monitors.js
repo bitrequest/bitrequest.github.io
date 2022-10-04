@@ -951,166 +951,112 @@ function get_api_inputs(rd, api_data, api_name) {
                 }
             }
             if (api_name == "amberdata") {
-	            var network = (ccsymbol == "btc") ? "bitcoin-mainnet" :
-	            	(ccsymbol == "ltc") ? "litecoin-mainnet" :
-	            	(ccsymbol == "bch") ? "bitcoin-abc-mainnet" :
-	            	(ccsymbol == "eth" || erc20 === true) ? "ethereum-mainnet" : null;
-	            if (pending == "scanning") {
-		            if (erc20 === true) {
-			            api_proxy({
-	                        "api": api_name,
-	                        "search": "addresses/" + address + "/token-transfers?page=0&size=50",
-	                        "cachetime": 25,
-	                        "cachefolder": "1h",
-	                        "proxy": true,
-	                        "bearer": api_name,
-	                        "params": {
-	                            "method": "GET",
-	                            "cache": true,
-	                            "headers": {
-		                            "accept": "application/json",
-		                            "x-amberdata-blockchain-id": "ethereum-mainnet"
-	                            }
-	                        }
-	                    }).done(function(e) {
-		                    var data = br_result(e).result;
-		                    if (data) {
-		                        var payload = data.payload;
-		                        if (payload) {
-			                        var records = payload.records;
-			                        if (records) {
-				                        if ($.isEmptyObject(records)) {
-			                                tx_api_fail(thislist, statuspanel);
-			                                handle_api_fails_list(rd, "unknown error", api_data, payment);
-			                            } else {
-				                            $.each(records, function(dat, value) {
-				                                var txd = amberdata_scan_token_data(value, setconfirmations, ccsymbol, address);
-				                                if (txd.transactiontime > request_timestamp && txd.ccval && txd.ccsymbol == txd.tokensymbol) {
-		                                            var tx_listitem = append_tx_li(txd, thislist);
-		                                            if (tx_listitem) {
-		                                                transactionlist.append(tx_listitem.data(txd));
-		                                                counter++;
-		                                            }
-		                                        }
-			                                });
-			                                tx_count(statuspanel, counter);
-			                                compareamounts(rd);
-			                            }
-			                        }
-		                        }
-	                        } else {
-	                            tx_api_fail(thislist, statuspanel);
-	                            handle_api_fails_list(rd, "unknown error", api_data, payment);
-	                        }
-	                    }).fail(function(jqXHR, textStatus, errorThrown) {
-	                        tx_api_fail(thislist, statuspanel);
-	                        var error_object = (errorThrown) ? errorThrown : jqXHR;
-	                        handle_api_fails_list(rd, error_object, api_data, payment);
-	                    }).always(function() {
-	                        api_src(thislist, api_data);
-	                    });
-		            }
-		            else {
-			            api_proxy({
-	                        "api": api_name,
-	                        "search": "addresses/" + address + "/transactions?decodeTransactions=false&page=0&size=50",
-	                        "cachetime": 25,
-	                        "cachefolder": "1h",
-	                        "proxy": true,
-	                        "bearer": api_name,
-	                        "params": {
-	                            "method": "GET",
-	                            "cache": true,
-	                            "headers": {
-		                            "accept": "application/json",
-		                            "x-amberdata-blockchain-id": network
-	                            }
-	                        }
-	                    }).done(function(e) {
-		                    var data = br_result(e).result;
-	                        if (data) {
-		                        var payload = data.payload;
-		                        if (payload) {
-			                        var records = payload.records;
-			                        if (records) {
-				                        if ($.isEmptyObject(records)) {
-			                                tx_api_fail(thislist, statuspanel);
-			                                handle_api_fails_list(rd, "unknown error", api_data, payment);
-			                            } else {
-				                            var txflip = records.reverse();
-			                                $.each(txflip, function(dat, value) {
-				                                var txd = amberdata_scan_data(value, setconfirmations, ccsymbol, address);
-				                                if (txd.transactiontime > request_timestamp && txd.ccval) {
-		                                            var tx_listitem = append_tx_li(txd, thislist);
-		                                            if (tx_listitem) {
-		                                                transactionlist.append(tx_listitem.data(txd));
-		                                                counter++;
-		                                            }
-		                                        }
-			                                });
-			                                tx_count(statuspanel, counter);
-			                                compareamounts(rd);
-			                            }
-			                        }
-		                        }
-	                        } else {
-	                            tx_api_fail(thislist, statuspanel);
-	                            handle_api_fails_list(rd, "unknown error", api_data, payment);
-	                        }
-	                    }).fail(function(jqXHR, textStatus, errorThrown) {
-	                        tx_api_fail(thislist, statuspanel);
-	                        var error_object = (errorThrown) ? errorThrown : jqXHR;
-	                        handle_api_fails_list(rd, error_object, api_data, payment);
-	                    }).always(function() {
-	                        api_src(thislist, api_data);
-	                    });
-		            }
-	            }
-	            if (pending == "polling") {
-		            if (transactionhash) {
-			            api_proxy({
-	                        "api": api_name,
-	                        "search": "transactions/" + transactionhash + "?includeFunctions=false&includeLogs=false&decodeTransactions=false&includeTokenTransfers=true",
-	                        "cachetime": 25,
-	                        "cachefolder": "1h",
-	                        "proxy": true,
-	                        "bearer": api_name,
-	                        "params": {
-	                            "method": "GET",
-	                            "cache": true,
-	                            "headers": {
-		                            "accept": "application/json",
-		                            "x-amberdata-blockchain-id": network
-	                            }
-	                        }
-	                    }).done(function(e) {
-		                    var data = br_result(e).result;
-		                    if (data) {
-		                        var payload = data.payload;
-		                        if (payload) {
-			                        var token_transfers = payload.tokenTransfers;
-			                        var txd = (erc20 === true) ? (token_transfers) ? amberdata_poll_token_data(token_transfers[0], setconfirmations, ccsymbol, transactionhash, payload.confirmations) :
-			                        	null :
-			                        	amberdata_scan_data(payload, setconfirmations, ccsymbol, address);
-			                        	console.log(txd);
-				                        if (txd.ccval) {
-	                                        var tx_listitem = append_tx_li(txd, thislist);
-	                                        if (tx_listitem) {
-	                                            transactionlist.append(tx_listitem.data(txd));
-	                                            tx_count(statuspanel, 1);
-	                                            compareamounts(rd);
-	                                        }
-	                                    }
-		                        }
-		                        else {
-			                        tx_api_fail(thislist, statuspanel);
-									handle_api_fails_list(rd, "unknown error", api_data, payment);
-		                        }
-	                        } else {
-	                            tx_api_fail(thislist, statuspanel);
-	                            handle_api_fails_list(rd, "unknown error", api_data, payment);
-	                        }
-	                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                var network = (ccsymbol == "btc") ? "bitcoin-mainnet" :
+                    (ccsymbol == "ltc") ? "litecoin-mainnet" :
+                    (ccsymbol == "bch") ? "bitcoin-abc-mainnet" :
+                    (ccsymbol == "eth" || erc20 === true) ? "ethereum-mainnet" : null;
+                if (pending == "scanning") {
+                    if (erc20 === true) {
+                        api_proxy({
+                            "api": api_name,
+                            "search": "addresses/" + address + "/token-transfers?page=0&size=50",
+                            "cachetime": 25,
+                            "cachefolder": "1h",
+                            "proxy": true,
+                            "bearer": api_name,
+                            "params": {
+                                "method": "GET",
+                                "cache": true,
+                                "headers": {
+                                    "accept": "application/json",
+                                    "x-amberdata-blockchain-id": "ethereum-mainnet"
+                                }
+                            }
+                        }).done(function(e) {
+                            var data = br_result(e).result;
+                            if (data) {
+                                var payload = data.payload;
+                                if (payload) {
+                                    var records = payload.records;
+                                    if (records) {
+                                        if ($.isEmptyObject(records)) {
+                                            tx_api_fail(thislist, statuspanel);
+                                            handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                        } else {
+                                            $.each(records, function(dat, value) {
+                                                var txd = amberdata_scan_token_data(value, setconfirmations, ccsymbol, address);
+                                                if (txd.transactiontime > request_timestamp && txd.ccval && txd.ccsymbol == txd.tokensymbol) {
+                                                    var tx_listitem = append_tx_li(txd, thislist);
+                                                    if (tx_listitem) {
+                                                        transactionlist.append(tx_listitem.data(txd));
+                                                        counter++;
+                                                    }
+                                                }
+                                            });
+                                            tx_count(statuspanel, counter);
+                                            compareamounts(rd);
+                                        }
+                                    }
+                                }
+                            } else {
+                                tx_api_fail(thislist, statuspanel);
+                                handle_api_fails_list(rd, "unknown error", api_data, payment);
+                            }
+                        }).fail(function(jqXHR, textStatus, errorThrown) {
+                            tx_api_fail(thislist, statuspanel);
+                            var error_object = (errorThrown) ? errorThrown : jqXHR;
+                            handle_api_fails_list(rd, error_object, api_data, payment);
+                        }).always(function() {
+                            api_src(thislist, api_data);
+                        });
+                    } else {
+                        api_proxy({
+                            "api": api_name,
+                            "search": "addresses/" + address + "/transactions?decodeTransactions=false&page=0&size=50",
+                            "cachetime": 25,
+                            "cachefolder": "1h",
+                            "proxy": true,
+                            "bearer": api_name,
+                            "params": {
+                                "method": "GET",
+                                "cache": true,
+                                "headers": {
+                                    "accept": "application/json",
+                                    "x-amberdata-blockchain-id": network
+                                }
+                            }
+                        }).done(function(e) {
+                            var data = br_result(e).result;
+                            if (data) {
+                                var payload = data.payload;
+                                if (payload) {
+                                    var records = payload.records;
+                                    if (records) {
+                                        if ($.isEmptyObject(records)) {
+                                            tx_api_fail(thislist, statuspanel);
+                                            handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                        } else {
+                                            var txflip = records.reverse();
+                                            $.each(txflip, function(dat, value) {
+                                                var txd = amberdata_scan_data(value, setconfirmations, ccsymbol, address);
+                                                if (txd.transactiontime > request_timestamp && txd.ccval) {
+                                                    var tx_listitem = append_tx_li(txd, thislist);
+                                                    if (tx_listitem) {
+                                                        transactionlist.append(tx_listitem.data(txd));
+                                                        counter++;
+                                                    }
+                                                }
+                                            });
+                                            tx_count(statuspanel, counter);
+                                            compareamounts(rd);
+                                        }
+                                    }
+                                }
+                            } else {
+                                tx_api_fail(thislist, statuspanel);
+                                handle_api_fails_list(rd, "unknown error", api_data, payment);
+                            }
+                        }).fail(function(jqXHR, textStatus, errorThrown) {
                             tx_api_fail(thislist, statuspanel);
                             var error_object = (errorThrown) ? errorThrown : jqXHR;
                             handle_api_fails_list(rd, error_object, api_data, payment);
@@ -1118,8 +1064,60 @@ function get_api_inputs(rd, api_data, api_name) {
                             api_src(thislist, api_data);
                         });
                     }
-		        }
-	        }
+                }
+                if (pending == "polling") {
+                    if (transactionhash) {
+                        api_proxy({
+                            "api": api_name,
+                            "search": "transactions/" + transactionhash + "?includeFunctions=false&includeLogs=false&decodeTransactions=false&includeTokenTransfers=true",
+                            "cachetime": 25,
+                            "cachefolder": "1h",
+                            "proxy": true,
+                            "bearer": api_name,
+                            "params": {
+                                "method": "GET",
+                                "cache": true,
+                                "headers": {
+                                    "accept": "application/json",
+                                    "x-amberdata-blockchain-id": network
+                                }
+                            }
+                        }).done(function(e) {
+                            var data = br_result(e).result;
+                            if (data) {
+                                var payload = data.payload;
+                                if (payload) {
+                                    var token_transfers = payload.tokenTransfers;
+                                    var txd = (erc20 === true) ? (token_transfers) ? amberdata_poll_token_data(token_transfers[0], setconfirmations, ccsymbol, transactionhash, payload.confirmations) :
+                                        null :
+                                        amberdata_scan_data(payload, setconfirmations, ccsymbol, address);
+                                    console.log(txd);
+                                    if (txd.ccval) {
+                                        var tx_listitem = append_tx_li(txd, thislist);
+                                        if (tx_listitem) {
+                                            transactionlist.append(tx_listitem.data(txd));
+                                            tx_count(statuspanel, 1);
+                                            compareamounts(rd);
+                                        }
+                                    }
+                                } else {
+                                    tx_api_fail(thislist, statuspanel);
+                                    handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                }
+                            } else {
+                                tx_api_fail(thislist, statuspanel);
+                                handle_api_fails_list(rd, "unknown error", api_data, payment);
+                            }
+                        }).fail(function(jqXHR, textStatus, errorThrown) {
+                            tx_api_fail(thislist, statuspanel);
+                            var error_object = (errorThrown) ? errorThrown : jqXHR;
+                            handle_api_fails_list(rd, error_object, api_data, payment);
+                        }).always(function() {
+                            api_src(thislist, api_data);
+                        });
+                    }
+                }
+            }
             if (api_name == "nimiq.watch" || api_name == "mopsus.com") {
                 if (pending == "scanning") { // scan incoming transactions on address
                     api_proxy({
@@ -1925,7 +1923,10 @@ function compareamounts(rd) {
         latestinput = firstlist.data("transactiontime"),
         firstinput = lastlist.data("transactiontime");
     if (latestinput) {
-        if (iscrypto) {
+        var one_input = (latestinput === firstinput),
+            time_laps = Math.abs(firstinput - requestdate),
+            present = (one_input && time_laps < 60000); // the request is less then 1 minute, so no historical lookup
+        if (iscrypto || present) {
             var thissum_cc = 0,
                 txhash_cc,
                 paymenttimestamp_cc,
@@ -2189,36 +2190,36 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 };
             });
             if (receivedusd) {
-	            if (receivedusd >= historicusdvalue * margin) { // check total incoming amount // minus 5% dollar for volatility compensation
-	                if (confirmed === false) { // check confirmations outside the loop
-	                    status = "pending",
-	                        pending = (tx_counter === 1) ? "polling" : pending; // switch to tx polling if there's only one transaction
-	                }
-	            } else {
-	                if (receivedusd === 0) {
-	                    // usdval was probably not fetched
-	                } else {
-	                    status = "insufficient";
-	                }
-	                pending = "scanning";
-	            }
-	            updaterequest({
-	                "requestid": thisrequestid,
-	                "status": status,
-	                "receivedamount": receivedcc,
-	                "fiatvalue": (receivedusd / usdrate) * lcrate,
-	                "paymenttimestamp": paymenttimestamp,
-	                "txhash": txhash,
-	                "confirmations": conf,
-	                "pending": pending,
-	                "lightning": lnd
-	            }, false);
-	            var cacheval = latestinput + latestconf;
-	            if (pending == "no") {} else {
-	                sessionStorage.setItem("bitrequest_historic_" + thisrequestid, cacheval); // 'cache' historic data
-	            }
-	            api_callback(thisrequestid);
-	            return;
+                if (receivedusd >= historicusdvalue * margin) { // check total incoming amount // minus 5% dollar for volatility compensation
+                    if (confirmed === false) { // check confirmations outside the loop
+                        status = "pending",
+                            pending = (tx_counter === 1) ? "polling" : pending; // switch to tx polling if there's only one transaction
+                    }
+                } else {
+                    if (receivedusd === 0) {
+                        // usdval was probably not fetched
+                    } else {
+                        status = "insufficient";
+                    }
+                    pending = "scanning";
+                }
+                updaterequest({
+                    "requestid": thisrequestid,
+                    "status": status,
+                    "receivedamount": receivedcc,
+                    "fiatvalue": (receivedusd / usdrate) * lcrate,
+                    "paymenttimestamp": paymenttimestamp,
+                    "txhash": txhash,
+                    "confirmations": conf,
+                    "pending": pending,
+                    "lightning": lnd
+                }, false);
+                var cacheval = latestinput + latestconf;
+                if (pending == "no") {} else {
+                    sessionStorage.setItem("bitrequest_historic_" + thisrequestid, cacheval); // 'cache' historic data
+                }
+                api_callback(thisrequestid);
+                return;
             }
         }
         var next_historic = try_next_api(apilist, api);
@@ -2313,13 +2314,13 @@ function get_historic_object_coincodex(value) {
 }
 
 function get_historic_object_coingecko(value) {
-	if (value) {
-	    return {
-	        "timestamp": (value[0] + timezone) + 60000, // add 1 minute for compensation margin
-	        "price": value[1]
-	    }
-	}
-	return false;
+    if (value) {
+        return {
+            "timestamp": (value[0] + timezone) + 60000, // add 1 minute for compensation margin
+            "price": value[1]
+        }
+    }
+    return false;
 }
 
 function get_historic_object_coinpaprika(value) {
