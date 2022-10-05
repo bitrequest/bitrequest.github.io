@@ -1091,7 +1091,6 @@ function get_api_inputs(rd, api_data, api_name) {
                                     var txd = (erc20 === true) ? (token_transfers) ? amberdata_poll_token_data(token_transfers[0], setconfirmations, ccsymbol, transactionhash, payload.confirmations) :
                                         null :
                                         amberdata_scan_data(payload, setconfirmations, ccsymbol, address);
-                                    console.log(txd);
                                     if (txd.ccval) {
                                         var tx_listitem = append_tx_li(txd, thislist);
                                         if (tx_listitem) {
