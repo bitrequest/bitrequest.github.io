@@ -1347,8 +1347,6 @@ function payrequest() {
                     "lid": lightning.pid
                 })) : "";
             paymenturl = "?p=requests&payment=" + rl_payment + "&uoa=" + rl_uoa + "&amount=" + paymenturl_amount + midstring + endstring + d;
-
-
             openpage(paymenturl, "", "payment");
         }
         return false;

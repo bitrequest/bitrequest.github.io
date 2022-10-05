@@ -1923,10 +1923,7 @@ function compareamounts(rd) {
         latestinput = firstlist.data("transactiontime"),
         firstinput = lastlist.data("transactiontime");
     if (latestinput) {
-        var one_input = (latestinput === firstinput),
-            time_laps = Math.abs(firstinput - requestdate),
-            present = (one_input && time_laps < 60000); // the request is less then 1 minute, so no historical lookup
-        if (iscrypto || present) {
+        if (iscrypto) {
             var thissum_cc = 0,
                 txhash_cc,
                 paymenttimestamp_cc,
