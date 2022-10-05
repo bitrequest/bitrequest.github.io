@@ -642,7 +642,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                 } else {
                                     var conf_tx = data.txrefs,
                                         unconf_tx = data.unconfirmed_txrefs,
-                                        all_tx = (conf_tx) ? (conf_tx) : (unconf_tx) ? unconf_tx : null;
+                                        all_tx = (unconf_tx && conf_tx) ? unconf_tx.concat(conf_tx) : conf_tx;
                                     if (all_tx) {
                                         $.each(all_tx, function(dat, value) {
                                             if (value.spent !== undefined) { // filter outgoing transactions
@@ -984,7 +984,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                             handle_api_fails_list(rd, "unknown error", api_data, payment);
                                         } else {
                                             $.each(records, function(dat, value) {
-                                                var txd = amberdata_scan_token_data(value, setconfirmations, ccsymbol, address);
+                                                var txd = amberdata_scan_token_data(value, null, ccsymbol, address);
                                                 if (txd.transactiontime > request_timestamp && txd.ccval && txd.ccsymbol == txd.tokensymbol) {
                                                     var tx_listitem = append_tx_li(txd, thislist);
                                                     if (tx_listitem) {
@@ -1907,22 +1907,24 @@ function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, 
 
 function compareamounts(rd) {
     var thisrequestid = rd.requestid,
-        thisamount = parseFloat(rd.amount),
-        requestdate = rd.requestdate,
-        iscrypto = rd.iscrypto,
-        thispayment = rd.payment,
-        ccsymbol = rd.currencysymbol,
-        pendingstatus = rd.pending,
-        getconfirmations = rd.set_confirmations,
-        getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
-        setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
         requestli = $("#" + thisrequestid),
-        firstlist = requestli.find(".transactionlist li:first"),
         lastlist = requestli.find(".transactionlist li:last"),
-        latestinput = firstlist.data("transactiontime"),
         firstinput = lastlist.data("transactiontime");
-    if (latestinput) {
-        if (iscrypto) {
+    if (firstinput) {
+        var thisamount = parseFloat(rd.amount),
+            requestdate = rd.requestdate,
+            iscrypto = rd.iscrypto,
+            thispayment = rd.payment,
+            ccsymbol = rd.currencysymbol,
+            pendingstatus = rd.pending,
+            getconfirmations = rd.set_confirmations,
+            getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
+            setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
+            firstlist = requestli.find(".transactionlist li:first"),
+            latestinput = firstlist.data("transactiontime"),
+            offset = Math.abs(now() - (firstinput - timezone)),
+            recent = (offset < 900000); // Only lookup hystorical data after 15 minutes
+        if (iscrypto || recent) {
             var thissum_cc = 0,
                 txhash_cc,
                 paymenttimestamp_cc,
@@ -1931,6 +1933,7 @@ function compareamounts(rd) {
                 pending_cc = pendingstatus,
                 confirmed_cc = false,
                 tx_counter = 0,
+                cc_amount = parseFloat(rd.cc_amount),
                 margin = 0.95;
             $(requestli.find(".transactionlist li").get().reverse()).each(function(i) {
                 tx_counter++;
@@ -1942,7 +1945,7 @@ function compareamounts(rd) {
                     thissum_cc += parseFloat(tn_dat.ccval) || 0; // sum of outputs
                 if (confirmations_cc >= setconfirmations || rd.no_conf === true || confirmations_cc === false) { // check all confirmations + whitelist for currencies unable to fetch confirmation
                     confirmed_cc = true;
-                    if (thissum_cc >= thisamount * margin) { // compensation for small fluctuations in rounding amount
+                    if (thissum_cc >= cc_amount * margin) { // compensation for small fluctuations in rounding amount
                         status_cc = "paid",
                             pending_cc = "no";
                         thisnode.addClass("exceed").nextAll().addClass("exceed");
@@ -1958,7 +1961,7 @@ function compareamounts(rd) {
                     });
                 };
             });
-            if (thissum_cc >= thisamount * margin) { // compensation for small fluctuations in rounding amount
+            if (thissum_cc >= cc_amount * margin) { // compensation for small fluctuations in rounding amount
                 if (confirmed_cc === false) { // check confirmations outside the loop
                     status_cc = "pending",
                         pending_cc = (tx_counter === 1) ? "polling" : pendingstatus; // switch to tx polling if there's only one transaction
@@ -1971,6 +1974,7 @@ function compareamounts(rd) {
                 "requestid": thisrequestid,
                 "status": status_cc,
                 "receivedamount": thissum_cc,
+                "fiatvalue": rd.fiatvalue,
                 "paymenttimestamp": paymenttimestamp_cc,
                 "txhash": txhash_cc,
                 "confirmations": confirmations_cc,
@@ -2238,10 +2242,12 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
 }
 
 function get_payload_historic_coingecko(coin_id, starttime, endtime, erc20_contract) {
+    var time_range = Math.abs(endtime - starttime),
+        start_time = (time_range < 3600) ? 5200 : 3600; // compensation for minimum range
     if (erc20_contract) {
-        return "coins/ethereum/contract/" + erc20_contract + "/market_chart/range?vs_currency=usd&from=" + (starttime - 3600) + "&to=" + (endtime + 3600); // expand range with one hour for error margin
+        return "coins/ethereum/contract/" + erc20_contract + "/market_chart/range?vs_currency=usd&from=" + (starttime - start_time) + "&to=" + (endtime + 3600); // expand range with one hour for error margin
     }
-    return "coins/" + coin_id + "/market_chart/range?vs_currency=usd&from=" + (starttime - 3600) + "&to=" + (endtime + 3600); // expand range with one hour for error margin
+    return "coins/" + coin_id + "/market_chart/range?vs_currency=usd&from=" + (starttime - start_time) + "&to=" + (endtime + 3600); // expand range with one hour for error margin
 }
 
 function get_payload_historic_coinpaprika(coin_id, starttime, endtime) {

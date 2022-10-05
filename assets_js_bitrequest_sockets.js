@@ -367,7 +367,6 @@ function blockchain_btc_socket(socket_node, thisaddress) {
 
 function blockchain_bch_socket(socket_node, thisaddress) {
     var provider = socket_node.url,
-        legacy = bchutils.toLegacyAddress(thisaddress),
         websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
@@ -392,7 +391,8 @@ function blockchain_bch_socket(socket_node, thisaddress) {
                 closesocket();
                 popdialog(content, "alert", "canceldialog");
             } else {
-                var txd = blockchain_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress, legacy);
+                var legacy = bchutils.toLegacyAddress(thisaddress),
+                	txd = blockchain_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress, legacy);
                 if (txd) {
                     closesocket();
                     pick_monitor(txhash, txd);

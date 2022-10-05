@@ -328,13 +328,14 @@ function amberdata_scan_token_data(data, setconfirmations, ccsymbol) {
     if (data) {
         var transactiontime = (data.timestamp) ? data.timestamp + timezone : null,
             erc20value = (data.amount) ? parseFloat((data.amount / Math.pow(10, data.decimals)).toFixed(8)) : null,
-            symbol = data.symbol;
+            symbol = data.symbol,
+            conf = 1; // no confirmation data available
         return {
             "ccval": erc20value,
             "transactiontime": transactiontime,
             "txhash": data.transactionHash,
-            "confirmations": setconfirmations,
-            "setconfirmations": setconfirmations,
+            "confirmations": conf,
+            "setconfirmations": conf,
             "ccsymbol": ccsymbol,
             "tokensymbol": symbol.toLowerCase()
         };
