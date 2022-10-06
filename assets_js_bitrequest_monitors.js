@@ -1972,21 +1972,21 @@ function compareamounts(rd) {
             }
             if (recent && !iscrypto) { // get local fiat rates when request is less then 15 minutes old
                 var exchangerates = sessionStorage.getItem("bitrequest_exchangerates"),
-                	cc_xrates = sessionStorage.getItem("bitrequest_xrates_" + ccsymbol);
-				if (exchangerates && cc_xrates) {
-					var fiat_xrate_parse = JSON.parse(exchangerates),
-						local_xrate = (fiat_xrate_parse.fiat_exchangerates) ? fiat_xrate_parse.fiat_exchangerates[rd.fiatcurrency] : null,
-						usd_eur_xrate = (fiat_xrate_parse.fiat_exchangerates) ? fiat_xrate_parse.fiat_exchangerates.usd : null;
-					if (local_xrate && usd_eur_xrate) {
-						var cc_xrate = JSON.parse(cc_xrates),
-			            	usd_rate = (cc_xrate) ? cc_xrate.ccrate : null;
-			            if (usd_rate) {
-				            var usdval = thissum_cc * usd_rate,
-				            	eurval = usdval / usd_eur_xrate,
-				            	fiatvalue = eurval * local_xrate;
-			            }
-					}
-				}
+                    cc_xrates = sessionStorage.getItem("bitrequest_xrates_" + ccsymbol);
+                if (exchangerates && cc_xrates) {
+                    var fiat_xrate_parse = JSON.parse(exchangerates),
+                        local_xrate = (fiat_xrate_parse.fiat_exchangerates) ? fiat_xrate_parse.fiat_exchangerates[rd.fiatcurrency] : null,
+                        usd_eur_xrate = (fiat_xrate_parse.fiat_exchangerates) ? fiat_xrate_parse.fiat_exchangerates.usd : null;
+                    if (local_xrate && usd_eur_xrate) {
+                        var cc_xrate = JSON.parse(cc_xrates),
+                            usd_rate = (cc_xrate) ? cc_xrate.ccrate : null;
+                        if (usd_rate) {
+                            var usdval = thissum_cc * usd_rate,
+                                eurval = usdval / usd_eur_xrate,
+                                fiatvalue = eurval * local_xrate;
+                        }
+                    }
+                }
             }
             updaterequest({
                 "requestid": thisrequestid,
