@@ -2860,7 +2860,7 @@ function updaterequest(ua, save) {
             metalist.find(".receivedamount span").text(" " + trimdecimals(ua.receivedamount, 6));
     }
     if (ua.fiatvalue) {
-        //metalist.find(".payday.pd_fiat .fiatvalue").text(" " + trimdecimals(ua.fiatvalue, 2));
+        metalist.find(".payday.pd_fiat .fiatvalue").text(" " + trimdecimals(ua.fiatvalue, 2));
     }
     if (ua.paymenttimestamp) {
         var fulldateformat = fulldateformatmarkup(new Date(ua.paymenttimestamp - timezone), "en-us");

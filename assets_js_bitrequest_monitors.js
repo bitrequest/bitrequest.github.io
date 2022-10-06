@@ -1911,8 +1911,7 @@ function compareamounts(rd) {
         lastlist = requestli.find(".transactionlist li:last"),
         firstinput = lastlist.data("transactiontime");
     if (firstinput) {
-        var thisamount = parseFloat(rd.amount),
-            requestdate = rd.requestdate,
+        var requestdate = rd.requestdate,
             iscrypto = rd.iscrypto,
             thispayment = rd.payment,
             ccsymbol = rd.currencysymbol,
@@ -1934,6 +1933,7 @@ function compareamounts(rd) {
                 confirmed_cc = false,
                 tx_counter = 0,
                 cc_amount = parseFloat(rd.cc_amount),
+                fiatvalue = rd.fiatvalue,
                 margin = 0.95;
             $(requestli.find(".transactionlist li").get().reverse()).each(function(i) {
                 tx_counter++;
@@ -1970,11 +1970,29 @@ function compareamounts(rd) {
                 status_cc = "insufficient",
                     pending_cc = "scanning";
             }
+            if (recent && !iscrypto) { // get local fiat rates when request is less then 15 minutes old
+                var exchangerates = sessionStorage.getItem("bitrequest_exchangerates"),
+                	cc_xrates = sessionStorage.getItem("bitrequest_xrates_" + ccsymbol);
+				if (exchangerates && cc_xrates) {
+					var fiat_xrate_parse = JSON.parse(exchangerates),
+						local_xrate = (fiat_xrate_parse.fiat_exchangerates) ? fiat_xrate_parse.fiat_exchangerates[rd.fiatcurrency] : null,
+						usd_eur_xrate = (fiat_xrate_parse.fiat_exchangerates) ? fiat_xrate_parse.fiat_exchangerates.usd : null;
+					if (local_xrate && usd_eur_xrate) {
+						var cc_xrate = JSON.parse(cc_xrates),
+			            	usd_rate = (cc_xrate) ? cc_xrate.ccrate : null;
+			            if (usd_rate) {
+				            var usdval = thissum_cc * usd_rate,
+				            	eurval = usdval / usd_eur_xrate,
+				            	fiatvalue = eurval * local_xrate;
+			            }
+					}
+				}
+            }
             updaterequest({
                 "requestid": thisrequestid,
                 "status": status_cc,
                 "receivedamount": thissum_cc,
-                "fiatvalue": rd.fiatvalue,
+                "fiatvalue": fiatvalue,
                 "paymenttimestamp": paymenttimestamp_cc,
                 "txhash": txhash_cc,
                 "confirmations": confirmations_cc,
