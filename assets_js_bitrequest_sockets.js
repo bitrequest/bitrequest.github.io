@@ -392,7 +392,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
                 popdialog(content, "alert", "canceldialog");
             } else {
                 var legacy = bchutils.toLegacyAddress(thisaddress),
-                	txd = blockchain_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress, legacy);
+                    txd = blockchain_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress, legacy);
                 if (txd) {
                     closesocket();
                     pick_monitor(txhash, txd);
@@ -676,7 +676,16 @@ function web3_erc20_websocket(socket_node, thisaddress) {
                     amountnumber = parseFloat(urlamount),
                     percent = (ccval / amountnumber) * 100;
                 if (percent > 70 && percent < 130) { // only scan amounts with a margin less then 20%
-                    pick_monitor(result.transactionHash);
+                    var tx_hash = result.transactionHash,
+                        txd = {
+                            "ccval": ccval,
+                            "transactiontime": now() + timezone,
+                            "txhash": tx_hash,
+                            "confirmations": 0,
+                            "setconfirmations": request.set_confirmations,
+                            "ccsymbol": request.currencysymbol
+                        }
+                    pick_monitor(tx_hash, txd);
                     return
                 }
             }
