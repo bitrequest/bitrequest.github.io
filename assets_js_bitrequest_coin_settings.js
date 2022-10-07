@@ -399,7 +399,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
         var provider = value.url,
             provider_name = value.name,
             ping_event = "heartbeat";
-        if (provider_name == "blockcypher websocket") {
+        if (provider_name == "blockcypher wss") {
             var provider = value.url + "btc/main";
         }
         if (thiscurrency == "bitcoin") {

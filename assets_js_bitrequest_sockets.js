@@ -4,6 +4,7 @@ var sockets = {},
 
 $(document).ready(function() {
     //init_socket
+    //blockcypherws
     //init_xmr_node
     //ping_xmr_node
     //blockcypher_websocket
@@ -46,8 +47,10 @@ function init_socket(socket_node, address, swtch, retry) {
             if (address == "lnurl") {
                 // lightning only
             } else {
-                if (socket_name == "blockcypher websocket") {
+                if (socket_name == "blockcypher wss") {
                     blockcypher_websocket(socket_node, address);
+                } else if (socket_name == "blockcypher ws") {
+                    blockcypherws(socket_node, address)
                 } else if (socket_name == "blockchain.info websocket") {
                     blockchain_btc_socket(socket_node, address);
                 } else if (socket_name == main_ad_socket) {
@@ -65,16 +68,20 @@ function init_socket(socket_node, address, swtch, retry) {
                 lightning_socket(helper.lnd);
             }
         } else if (payment == "litecoin") {
-            if (socket_name == "blockcypher websocket") {
+            if (socket_name == "blockcypher wss") {
                 blockcypher_websocket(socket_node, address);
+            } else if (socket_name == "blockcypher ws") {
+                blockcypherws(socket_node, address)
             } else if (socket_name == main_ad_socket) {
                 amberdata_btc_websocket(socket_node, address, "f94be61fd9f4fa684f992ddfd4e92272");
             } else {
                 blockcypher_websocket(socket_node, address);
             }
         } else if (payment == "dogecoin") {
-            if (socket_name == "blockcypher websocket") {
+            if (socket_name == "blockcypher wss") {
                 blockcypher_websocket(socket_node, address);
+            } else if (socket_name == "blockcypher ws") {
+                blockcypherws(socket_node, address)
             } else if (socket_name == "dogechain api") {
                 dogechain_info_socket(socket_node, address);
             } else {
@@ -126,6 +133,14 @@ function init_socket(socket_node, address, swtch, retry) {
         } else {
             notify("this request is not monitored", 500000, "yes")
         }
+    }
+}
+
+function blockcypherws(socket_node, address) {
+    if (local === true) {
+        blockcypher_websocket(socket_node, address);
+    } else {
+        handle_socket_fails(socket_node, address)
     }
 }
 
@@ -315,7 +330,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
         txid = null;
     };
     websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress, e.data)
+        handle_socket_fails(socket_node, thisaddress)
         return
     };
 }
@@ -360,7 +375,7 @@ function blockchain_btc_socket(socket_node, thisaddress) {
         txid = null;
     };
     websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress, e.data)
+        handle_socket_fails(socket_node, thisaddress);
         return
     };
 }
@@ -405,7 +420,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
         txid = null;
     };
     websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress, e.data)
+        handle_socket_fails(socket_node, thisaddress);
         return
     };
 }
@@ -447,7 +462,7 @@ function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
         txid = null;
     };
     websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress, e.data);
+        handle_socket_fails(socket_node, thisaddress);
         return
     };
 }
@@ -496,7 +511,7 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
         txid = null;
     };
     mps_websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress, e.data)
+        handle_socket_fails(socket_node, thisaddress);
         return
     };
 }
@@ -543,7 +558,7 @@ function dogechain_info_socket(socket_node, thisaddress) {
         txid = null;
     };
     websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress, e.data)
+        handle_socket_fails(socket_node, thisaddress);
         return
     };
 }
@@ -590,7 +605,7 @@ function nano_socket(socket_node, thisaddress) {
         txid = null;
     };
     websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress, e.data);
+        handle_socket_fails(socket_node, thisaddress);
         return
     };
 }
@@ -696,12 +711,12 @@ function web3_erc20_websocket(socket_node, thisaddress) {
         txid = null;
     };
     websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress, e);
+        handle_socket_fails(socket_node, thisaddress);
         return
     };
 }
 
-function handle_socket_fails(socket_node, thisaddress, error) {
+function handle_socket_fails(socket_node, thisaddress) {
     if (paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
         return false;
     }

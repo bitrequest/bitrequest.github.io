@@ -14,7 +14,8 @@ var apptitle = "Bitrequest",
     firebase_dynamic_link_domain = "bitrequest.page.link",
     firebase_shortlink = "https://" + firebase_dynamic_link_domain + "/",
     androidpackagename = "io.bitrequest.app",
-    main_bc_socket = "wss://socket.blockcypher.com/v1/",
+    main_bc_ws = "ws://socket.blockcypher.com/v1/",
+    main_bc_wss = "wss://socket.blockcypher.com/v1/",
     main_eth_node = "https://mainnet.infura.io/v3/",
     main_eth_socket = "wss://mainnet.infura.io/ws/v3/",
     main_ad_node = "https://web3api.io/api/v2/",
@@ -267,11 +268,26 @@ var apptitle = "Bitrequest",
                     "websockets": {
                         "icon": "tab",
                         "selected": {
-                            "name": "blockcypher websocket",
-                            "url": main_bc_socket,
+                            "name": "blockcypher wss",
+                            "url": main_bc_wss,
                             "display": true
                         },
                         "apis": [{
+                                "name": "blockcypher wss",
+                                "url": main_bc_wss,
+                                "display": true
+                            },
+                            {
+                                "name": "blockcypher ws",
+                                "url": main_bc_ws,
+                                "display": false
+                            },
+                            {
+                                "name": "mempool.space websocket",
+                                "url": "wss://mempool.space/api/v1/ws",
+                                "display": true
+                            },
+                            {
                                 "name": "blockchain.info websocket",
                                 "url": "wss://ws.blockchain.info/inv",
                                 "display": true
@@ -279,16 +295,6 @@ var apptitle = "Bitrequest",
                             {
                                 "name": main_ad_socket,
                                 "url": main_ad_socket,
-                                "display": true
-                            },
-                            {
-                                "name": "blockcypher websocket",
-                                "url": main_bc_socket,
-                                "display": true
-                            },
-                            {
-                                "name": "mempool.space websocket",
-                                "url": "wss://mempool.space/api/v1/ws",
                                 "display": true
                             }
                         ]
@@ -401,14 +407,19 @@ var apptitle = "Bitrequest",
                     "websockets": {
                         "icon": "tab",
                         "selected": {
-                            "name": "blockcypher websocket",
-                            "url": main_bc_socket,
+                            "name": "blockcypher wss",
+                            "url": main_bc_wss,
                             "display": true
                         },
                         "apis": [{
-                                "name": "blockcypher websocket",
-                                "url": main_bc_socket,
+                                "name": "blockcypher wss",
+                                "url": main_bc_wss,
                                 "display": true
+                            },
+                            {
+                                "name": "blockcypher ws",
+                                "url": main_bc_ws,
+                                "display": false
                             },
                             {
                                 "name": main_ad_socket,
@@ -512,14 +523,19 @@ var apptitle = "Bitrequest",
                     "websockets": {
                         "icon": "tab",
                         "selected": {
-                            "name": "blockcypher websocket",
-                            "url": main_bc_socket,
+                            "name": "blockcypher wss",
+                            "url": main_bc_wss,
                             "display": true
                         },
                         "apis": [{
-                                "name": "blockcypher websocket",
-                                "url": main_bc_socket,
+                                "name": "blockcypher wss",
+                                "url": main_bc_wss,
                                 "display": true
+                            },
+                            {
+                                "name": "blockcypher ws",
+                                "url": main_bc_ws,
+                                "display": false
                             },
                             {
                                 "name": "dogechain api",
