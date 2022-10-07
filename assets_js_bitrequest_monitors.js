@@ -315,7 +315,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                                                 "confirmations": 0
                                                             }, false);
                                                         }
-                                                        compareamounts(rd);
+                                                        compareamounts(rd, true);
                                                     }
                                                 }
                                             }
@@ -402,7 +402,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                                     "confirmations": 0
                                                 }, true);
                                             }
-                                            compareamounts(rd);
+                                            compareamounts(rd, true);
                                         }
                                     }
                                 }
@@ -1905,7 +1905,7 @@ function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, 
     }
 }
 
-function compareamounts(rd) {
+function compareamounts(rd, ln) {
     var thisrequestid = rd.requestid,
         requestli = $("#" + thisrequestid),
         lastlist = requestli.find(".transactionlist li:last"),
@@ -1918,7 +1918,7 @@ function compareamounts(rd) {
             pendingstatus = rd.pending,
             getconfirmations = rd.set_confirmations,
             getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
-            setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
+            setconfirmations = (ln == true) ? 1 : (getconfint) ? getconfint : 1, // set minimum confirmations to 1
             firstlist = requestli.find(".transactionlist li:first"),
             latestinput = firstlist.data("transactiontime"),
             offset = Math.abs(now() - (firstinput - timezone)),
@@ -2017,7 +2017,7 @@ function compareamounts(rd) {
                 fiatapi = $("#fiatapisettings").data("selected"),
                 fiatapi_default = (fiatapi == "coingecko" || fiatapi == "coinbase") ? "fixer" : fiatapi; // exclude coingecko api"
             api_attempt[apilist] = {}; // reset global historic fiat price api attempt
-            get_historical_fiat_data(historic_payload, apilist, fiatapi_default);
+            get_historical_fiat_data(historic_payload, apilist, fiatapi_default, ln);
             return
         }
     }
@@ -2026,7 +2026,7 @@ function compareamounts(rd) {
 
 // get historic crypto rates
 
-function get_historical_fiat_data(rd, apilist, fiatapi) {
+function get_historical_fiat_data(rd, apilist, fiatapi, ln) {
     api_attempt[apilist][fiatapi] = true;
     var thisrequestid = rd.requestid,
         fiatcurrency = rd.fiatcurrency;
@@ -2081,7 +2081,7 @@ function get_historical_fiat_data(rd, apilist, fiatapi) {
                     picked_historic_api = (historic_api == "coinmarketcap") ? "coingecko" : historic_api, // default to "coingecko api"
                     init_apilist = "historic_crypto_price_apis";
                 api_attempt[init_apilist] = {};
-                get_historical_crypto_data(rd, fiatapi, init_apilist, picked_historic_api, lcrate, usdrate, lcsymbol);
+                get_historical_crypto_data(rd, fiatapi, init_apilist, picked_historic_api, lcrate, usdrate, lcsymbol, ln);
                 return
             }
             fail_dialogs(fiatapi, "unable to fetch " + lcsymbol + " exchange rate");
@@ -2119,7 +2119,7 @@ function form_date(latestinput) {
     return year + "-" + month + "-" + day;
 }
 
-function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, lcsymbol) {
+function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, lcsymbol, ln) {
     api_attempt[apilist][api] = true;
     var thisrequestid = rd.requestid,
         thispayment = rd.payment,
@@ -2153,7 +2153,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 thisamount = rd.amount,
                 getconfirmations = rd.set_confirmations,
                 getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
-                setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
+                setconfirmations = (ln === true) ? 1 : (getconfint) ? getconfint : 1, // set minimum confirmations to 1
                 pending = rd.pending,
                 iserc20 = rd.erc20,
                 requestli = $("#" + thisrequestid),
@@ -2242,7 +2242,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
         }
         var next_historic = try_next_api(apilist, api);
         if (next_historic) {
-            get_historical_crypto_data(rd, fiatapi, apilist, next_historic, lcrate, usdrate, lcsymbol);
+            get_historical_crypto_data(rd, fiatapi, apilist, next_historic, lcrate, usdrate, lcsymbol, ln);
             return
         }
         fail_dialogs(api, "error retrieving historical price data");
@@ -2250,7 +2250,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
     }).fail(function(jqXHR, textStatus, errorThrown) {
         var next_historic = try_next_api(apilist, api);
         if (next_historic) {
-            get_historical_crypto_data(rd, fiatapi, apilist, next_historic, lcrate, usdrate, lcsymbol);
+            get_historical_crypto_data(rd, fiatapi, apilist, next_historic, lcrate, usdrate, lcsymbol, ln);
             return
         }
         var error_object = (errorThrown) ? errorThrown : jqXHR;
