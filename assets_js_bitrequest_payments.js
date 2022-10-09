@@ -2496,10 +2496,10 @@ function saverequest(direct) {
         thisrequesttype = request.requesttype,
         thispaymenttimestamp = request.paymenttimestamp,
         set_confirmations = request.set_confirmations,
-        sc_string = (set_confirmations) ? set_confirmations.toString() : "0",
-        amount_string = (thisamount) ? thisamount.toString() : "0",
         ln_info = helper.lnd,
         ln_id = (ln_info) ? ln_info.pid : "",
+        sc_string = (ln_info) ? "1" : (set_confirmations) ? set_confirmations.toString() : "0",
+        amount_string = (thisamount) ? thisamount.toString() : "0",
         thisaddress = (request.address == "lnurl") ? "lnurl" : gets.address, // if lightning payment, overwrite address 
         thisdata = gets.d,
         thismeta = gets.m,

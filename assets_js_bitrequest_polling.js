@@ -388,7 +388,7 @@ function confirmations(tx_data, direct, ln) {
             forceclosesocket();
             return
         }
-        var setconfirmations = (ln) ? 1 : (tx_data.setconfirmations) ? parseInt(tx_data.setconfirmations) : 0,
+        var setconfirmations = (tx_data.setconfirmations) ? parseInt(tx_data.setconfirmations) : 0,
             conf_text = (setconfirmations) ? setconfirmations.toString() : "",
             confbox = brstatuspanel.find("span.confbox"),
             confboxspan = confbox.find("span"),
