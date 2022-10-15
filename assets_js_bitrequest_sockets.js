@@ -26,8 +26,8 @@ $(document).ready(function() {
     //ping_xmr_node
     //after_poll
     //ap_loader
-    //blockchair_scan_poll_bch
     //blockcypher_scan_poll
+    //blockchair_scan_poll_bch
     //nano_scan_poll
     //erc20_scan_poll
 });
@@ -972,6 +972,59 @@ function ap_loader() {
     loadertext("Closing request / scanning for incoming transactions");
 }
 
+function blockcypher_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts) {
+    api_proxy({
+        "api": "blockcypher",
+        "search": ccsymbol + "/main/addrs/" + address,
+        "cachetime": 25,
+        "cachefolder": "1h",
+        "params": {
+            "method": "GET"
+        }
+    }).done(function(e) {
+        var data = br_result(e).result;
+        if (data) {
+            if (data.error) {
+                close_paymentdialog(true);
+            } else {
+                var items = data.txrefs;
+                if (!$.isEmptyObject(items)) {
+                    var detect = false,
+                        txdat;
+                    if (payment == "ethereum") {
+                        $.each(items, function(dat, value) {
+                            var txd = blockcypher_scan_data(value, set_confirmations, ccsymbol, payment);
+                            if (txd.transactiontime > request_ts && txd.ccval) {
+                                txdat = txd;
+                                detect = true;
+                                return
+                            }
+                        });
+                    } else {
+                        $.each(items, function(dat, value) {
+                            if (value.spent !== undefined) { // filter outgoing transactions
+                                var txd = blockcypher_scan_data(value, set_confirmations, ccsymbol, payment);
+                                if (txd.transactiontime > request_ts && txd.ccval) {
+                                    txdat = txd;
+                                    detect = true;
+                                    return
+                                }
+                            }
+                        });
+                    }
+                    if (txdat && detect === true) {
+                        pick_monitor(txdat.txhash, txdat);
+                        return
+                    }
+                }
+            }
+        }
+        close_paymentdialog(true);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        close_paymentdialog(true);
+    });
+}
+
 function blockchair_scan_poll_bch(api_name, ccsymbol, set_confirmations, address, request_ts) {
     var scan_url = "bitcoin-cash/dashboards/address/" + address;
     api_proxy({
@@ -1023,59 +1076,6 @@ function blockchair_scan_poll_bch(api_name, ccsymbol, set_confirmations, address
                             })
                             return
                         }
-                    }
-                }
-            }
-        }
-        close_paymentdialog(true);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        close_paymentdialog(true);
-    });
-}
-
-function blockcypher_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts) {
-    api_proxy({
-        "api": "blockcypher",
-        "search": ccsymbol + "/main/addrs/" + address,
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "params": {
-            "method": "GET"
-        }
-    }).done(function(e) {
-        var data = br_result(e).result;
-        if (data) {
-            if (data.error) {
-                close_paymentdialog(true);
-            } else {
-                var items = data.txrefs;
-                if (!$.isEmptyObject(items)) {
-                    var detect = false,
-                        txdat;
-                    if (payment == "ethereum") {
-                        $.each(items, function(dat, value) {
-                            var txd = blockcypher_scan_data(value, set_confirmations, ccsymbol, payment);
-                            if (txd.transactiontime > request_ts && txd.ccval) {
-                                txdat = txd;
-                                detect = true;
-                                return
-                            }
-                        });
-                    } else {
-                        $.each(items, function(dat, value) {
-                            if (value.spent !== undefined) { // filter outgoing transactions
-                                var txd = blockcypher_scan_data(value, set_confirmations, ccsymbol, payment);
-                                if (txd.transactiontime > request_ts && txd.ccval) {
-                                    txdat = txd;
-                                    detect = true;
-                                    return
-                                }
-                            }
-                        });
-                    }
-                    if (txdat && detect === true) {
-                        pick_monitor(txdat.txhash, txdat);
-                        return
                     }
                 }
             }
