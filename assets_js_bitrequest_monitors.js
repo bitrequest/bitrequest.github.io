@@ -1120,7 +1120,7 @@ function get_api_inputs(rd, api_data, api_name) {
             if (api_name == "nimiq.watch" || api_name == "mopsus.com") {
                 if (pending == "scanning") { // scan incoming transactions on address
                     api_proxy({
-                        "api": api_name,
+                        "api": "nimiq.watch",
                         "search": "account-transactions/" + address,
                         "cachetime": 25,
                         "cachefolder": "1h",
