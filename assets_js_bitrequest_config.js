@@ -1511,7 +1511,7 @@ var apptitle = "Bitrequest",
             },
             {
                 "name": "mopsus.com",
-                "base_url": "https://www.mopsus.com/api/",
+                "base_url": "https://nimiq.mopsus.com/api/",
                 "key_param": null,
                 "api_key": "no_key",
                 "sign_up": null
