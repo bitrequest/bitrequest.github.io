@@ -384,9 +384,8 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                     }
                 }
             }).done(function(e) {
-                var data = br_result(e).result,
-                    rpc_result = data.result;
-                if (rpc_result || e.network == "live") { // network is for nano check
+                var data = br_result(e).result;
+                if (data.resul || data.network == "live") { // network is for nano check
                     rpc_option_li(optionlist, true, key, value, selected, true);
                 } else {
                     rpc_option_li(optionlist, false, key, value, selected, true);
