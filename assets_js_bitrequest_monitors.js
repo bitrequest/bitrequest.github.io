@@ -949,6 +949,7 @@ function get_api_inputs(rd, api_data, api_name) {
                         });
                     }
                 }
+                return
             }
             if (api_name == "amberdata") {
                 var network = (ccsymbol == "btc") ? "bitcoin-mainnet" :
@@ -1116,6 +1117,7 @@ function get_api_inputs(rd, api_data, api_name) {
                         });
                     }
                 }
+                return
             }
             if (api_name == "nimiq.watch" || api_name == "mopsus.com") {
                 if (pending == "scanning") { // scan incoming transactions on address

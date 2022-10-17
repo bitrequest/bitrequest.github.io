@@ -48,7 +48,7 @@ var language = navigator.language || navigator.userLanguage,
     cashier_seedid = (is_cashier) ? cashier_dat.seedid : false,
     hasbip = (bipobj) ? true : false,
     bipid = (hasbip) ? JSON.parse(bipobj).id : false,
-    safety_poll_timeout = 15000,
+    after_poll_timeout = 15000,
     blockswipe;
 
 $(document).ready(function() {
@@ -2649,7 +2649,7 @@ function cpd_pollcheck() {
             var rq_init = request.rq_init,
                 rq_timer = request.rq_timer,
                 rq_time = now() - rq_timer;
-            if (rq_time > safety_poll_timeout) {
+            if (rq_time > after_poll_timeout) {
                 after_poll(rq_init)
             } else {
                 close_paymentdialog();
