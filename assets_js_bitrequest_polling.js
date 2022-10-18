@@ -147,7 +147,6 @@ function mopsus_blockheight(data, set_confirmations, txhash) { // api_monitor pa
     api_proxy({
         "api": "mopsus.com",
         "search": "quick-stats/",
-        "proxy": false,
         "params": {
             "method": "GET"
         }
@@ -362,7 +361,7 @@ function handle_rpc_fails(rpcdata, error, txhash) {
     var rpcurl = rpcdata.url,
         nextrpc = get_next_rpc(request.payment, rpcurl, "pollings");
     if (nextrpc === false) { // retry with api source
-	    var error_data = get_api_error_data("unabel to fetch data from " + rpcurl);
+        var error_data = get_api_error_data("unable to fetch data from " + rpcurl);
         api_eror_msg(rpcurl, error_data);
     } else {
         api_monitor_init(txhash, null, nextrpc);

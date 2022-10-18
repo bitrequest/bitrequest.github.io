@@ -344,7 +344,6 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                 };
             api_proxy({
                 "api_url": value.url,
-                "proxy": true,
                 "params": {
                     "method": "POST",
                     "data": JSON.stringify(payload),
@@ -375,7 +374,6 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                 "cachetime": 25,
                 "cachefolder": "1h",
                 "api_url": rpcurl,
-                "proxy": false,
                 "params": {
                     "method": "POST",
                     "data": JSON.stringify(test_rpc_call),
@@ -528,7 +526,6 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                 };
             api_proxy({
                 "api_url": rpc_data.url,
-                "proxy": true,
                 "params": {
                     "method": "POST",
                     "data": JSON.stringify(payload),
@@ -558,7 +555,6 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                 "cachetime": 25,
                 "cachefolder": "1h",
                 "api_url": rpcurl,
-                "proxy": false,
                 "params": {
                     "method": "POST",
                     "data": JSON.stringify(test_rpc_call),
@@ -1117,7 +1113,7 @@ function xpub_info_pu(currency, xpub) {
         derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> | <span class='mspace'>" + val.address + "</span></li>";
     });
     var ccsymbol = coindat.ccsymbol,
-    	cc_icon = getcc_icon(coindat.cmcid, ccsymbol + "-" + currency, coindat.erc20),
+        cc_icon = getcc_icon(coindat.cmcid, ccsymbol + "-" + currency, coindat.erc20),
         content = $("<div id='ad_info_wrap'><h2>" + cc_icon + " <span>" + currency + " Key Derivation</span></h2><ul>\
 	    <li id='xpub_box' class='clearfix noline'>\
 	    	<div class='xpub_ib clearfix pd_" + currency + "' data-xpub='" + xpub + "'>\

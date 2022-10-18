@@ -802,7 +802,7 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
             "method": "POST",
             "data": JSON.stringify(payload),
             "headers": {
-                "Content-Type": "text/plain"
+                "Content-Type": "application/json"
             }
         }
     }).done(function(e) {
@@ -845,7 +845,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
             "method": "POST",
             "data": JSON.stringify(payload),
             "headers": {
-                "Content-Type": "text/plain"
+                "Content-Type": "application/json"
             }
         }
     }).done(function(e) {
@@ -900,7 +900,6 @@ function ping_nimiq(address, request_ts) {
     api_proxy({
         "api": "nimiq.watch",
         "search": "account-transactions/" + address,
-        "proxy": false,
         "params": {
             "method": "GET"
         }

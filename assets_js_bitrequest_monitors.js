@@ -450,7 +450,7 @@ function get_api_inputs(rd, api_data, api_name) {
                             "method": "POST",
                             "data": payload,
                             "headers": {
-                                "Content-Type": "text/plain"
+                                "Content-Type": "application/json"
                             }
                         }
                     }).done(function(e) {
@@ -469,7 +469,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                     "method": "POST",
                                     "data": JSON.stringify(pl),
                                     "headers": {
-                                        "Content-Type": "text/plain"
+                                        "Content-Type": "application/json"
                                     }
                                 }
                             }).done(function(e) {
@@ -537,7 +537,6 @@ function get_api_inputs(rd, api_data, api_name) {
                         "search": "address/" + address + "/txs",
                         "cachetime": 25,
                         "cachefolder": "1h",
-                        "proxy": true,
                         "params": {
                             "method": "GET"
                         }
@@ -963,7 +962,6 @@ function get_api_inputs(rd, api_data, api_name) {
                             "search": "addresses/" + address + "/token-transfers?page=0&size=50",
                             "cachetime": 25,
                             "cachefolder": "1h",
-                            "proxy": true,
                             "bearer": api_name,
                             "params": {
                                 "method": "GET",
@@ -1016,7 +1014,6 @@ function get_api_inputs(rd, api_data, api_name) {
                             "search": "addresses/" + address + "/transactions?decodeTransactions=false&page=0&size=50",
                             "cachetime": 25,
                             "cachefolder": "1h",
-                            "proxy": true,
                             "bearer": api_name,
                             "params": {
                                 "method": "GET",
@@ -1073,7 +1070,6 @@ function get_api_inputs(rd, api_data, api_name) {
                             "search": "transactions/" + transactionhash + "?includeFunctions=false&includeLogs=false&decodeTransactions=false&includeTokenTransfers=true",
                             "cachetime": 25,
                             "cachefolder": "1h",
-                            "proxy": true,
                             "bearer": api_name,
                             "params": {
                                 "method": "GET",
@@ -1126,7 +1122,6 @@ function get_api_inputs(rd, api_data, api_name) {
                         "search": "account-transactions/" + address,
                         "cachetime": 25,
                         "cachefolder": "1h",
-                        "proxy": true,
                         "params": {
                             "method": "GET"
                         }

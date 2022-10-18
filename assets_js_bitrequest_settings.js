@@ -2629,7 +2629,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
             api_proxy({
                 "api": "infura",
                 "api_url": main_eth_node + apikeyval,
-                "proxy": false,
+                "keypass": true,
                 "params": {
                     "method": "POST",
                     "data": JSON.stringify(payload),
@@ -2638,7 +2638,8 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                     }
                 }
             }).done(function(e) {
-                if (e.result) {
+                var data = br_result(e).result;
+                if (data) {
                     update_api_attr(thisref, apikeyval, lastinput);
                 } else {
                     api_fail(thisref, apikeyval);
@@ -2650,7 +2651,6 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
             var api_data = get_api_data(thisref),
                 base_url = api_data.base_url,
                 method = (thisref == "firebase") ? "POST" : "GET",
-                proxy = (thisref == "coinmarketcap") ? true : true,
                 params = {
                     "method": method,
                     "cache": true
@@ -2674,8 +2674,8 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                 "search": search,
                 "cachetime": 0,
                 "cachefolder": "1h",
-                "proxy": proxy,
                 "api_url": api_url,
+                "keypass": true,
                 "params": params
             }
             api_proxy(postdata).done(function(e) {

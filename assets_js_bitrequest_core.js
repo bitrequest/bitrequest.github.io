@@ -3582,7 +3582,7 @@ function api_proxy(ad, p_proxy) {
             set_key = (api_key) ? true : false,
             nokey = (ad.keypass || api_key == "no_key") ? true : false,
             key_pass = (nokey === true || set_key === true);
-        if (proxy === false && key_pass === true) {
+        if (proxy !== true && key_pass === true) {
             var params = ad.params,
                 bearer = ad.bearer;
             params.url = (custom_url) ? custom_url : aud.api_url_key;
@@ -3590,7 +3590,15 @@ function api_proxy(ad, p_proxy) {
                 if (bearer == "amberdata") {
                     params.headers["x-api-key"] = api_key;
                 } else {
-                    params.headers["Authorization"] = "Bearer " + api_key;
+                    if (params.headers) {
+                        params.headers["Authorization"] = "Bearer " + api_key;
+                    } else {
+                        var auth = {
+                            "Authorization": "Bearer " + api_key
+                        }
+                        params.headers = auth;
+                    }
+                    console.log(ad);
                 }
             }
             return $.ajax(params);
@@ -3650,7 +3658,7 @@ function get_api_url(get) {
             saved_key = $("#apikeys").data(api),
             key_val = (saved_key) ? saved_key : ad.api_key,
             ampersand = (search) ? (search.indexOf("?") > -1 || search.indexOf("&") > -1) ? "&" : "?" : "",
-            api_param = (key_param && key_param != "bearer" && saved_key) ? ampersand + key_param + saved_key : "",
+            api_param = (key_param != "bearer" && saved_key) ? ampersand + key_param + saved_key : "",
             api_url = base_url + search;
         return {
             "api_url": api_url,
