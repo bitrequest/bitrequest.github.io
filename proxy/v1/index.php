@@ -63,9 +63,11 @@ if ($bearer) {
 }
 
 // Construct url
-$key_param_var = ($auth_token && $keyparam) ? $ampersand . $keyparam . $auth_token : "";
-$key_param = ($apikey && $nokey == "true") ? "" : $key_param_var;
-$new_url = $apiurl . $key_param;
+$key_param1 = isset($keyparam) ? $keyparam : "";
+$ampersand1 = isset($ampersand) ? $ampersand : "";
+$key_param_var = ($auth_token) ? $ampersand1 . $key_param1 . $auth_token : "";
+$key_param2 = ($apikey && $nokey == "true") ? "" : $key_param_var;
+$new_url = $apiurl . $key_param2;
 if ($custom) {
     if ($custom == "gk") {
         $key_array = base64_encode(
