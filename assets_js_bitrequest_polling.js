@@ -446,8 +446,9 @@ function confirmations(tx_data, direct, ln) {
                         } else {
                             playsound(cashier);
                         }
+                        var status_text = (requesttype == "incoming") ? "Payment sent" : "Payment received";
                         pmd.addClass("transacting").attr("data-status", "paid");
-                        brheader.text("Payment received");
+                        brheader.text(status_text);
                         request.status = "paid",
                             request.pending = "polling";
                         saverequest(direct);

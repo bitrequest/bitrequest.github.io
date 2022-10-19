@@ -1262,7 +1262,7 @@ function getpayment(ccrateeuro, ccapi) {
 					</span>\
 				</div>\
 			</div>",
-        status_text = (request.paid === true) ? (request.requesttype == "outgoing") ? "Payment received" : "Payment sent" : "Transaction broadcasted",
+        status_text = (request.paid === true) ? (request.requesttype == "incoming") ? "Payment sent" : "Payment received" : "Transaction broadcasted",
         conf_section = (request.instant === true) ? "" : "<span id='statusbox'>Waiting for <span id='confnumber'></span> confirmations </span><span class='confbox'><span data-conf='0'>0</span> confirmations</span>",
         brstatuspanel = "\
 			<div class='brstatuspanel'>\

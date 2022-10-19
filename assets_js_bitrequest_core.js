@@ -4707,7 +4707,6 @@ function get_pdf_url(rqdat) {
         local = (requesttype == "local"),
         checkout = (requesttype == "checkout"),
         typetext = (incoming === true) ? (checkout) ? "online purchase" : "incoming" : (local === true) ? "point of sale" : "outgoing",
-        direction = (incoming === true) ? "send" : "received",
         iscrypto = rqdat.iscrypto,
         deter = (iscrypto === true) ? 6 : 2,
         amount_rounded = trimdecimals(amount, deter),
