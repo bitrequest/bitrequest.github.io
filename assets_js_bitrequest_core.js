@@ -4497,7 +4497,7 @@ function appendrequest(rd) {
         local = (requesttype == "local"),
         checkout = (requesttype == "checkout"),
         outgoing = (requesttype == "outgoing"),
-        direction = (incoming === true) ? "send" : "received",
+        direction = (incoming === true) ? "sent" : "received",
         typetext = (checkout) ? "online purchase" : (local) ? "point of sale" : requesttype,
         requesticon = (checkout) ? " typeicon icon-cart" : (local) ? " icon-qrcode" : (incoming === true) ? " typeicon icon-arrow-down-right2" : " typeicon icon-arrow-up-right2",
         typeicon = "<span class='inout" + requesticon + "'></span> ",
@@ -4595,7 +4595,7 @@ function appendrequest(rd) {
 			</div>\
 			<div class='brstatuspanel flex'>\
 				<img src='" + c_icons("confirmed") + "'>\
-				<h2>Payment received</h2>\
+				<h2>Payment " + direction + "</h2>\
 			</div>\
 			<div class='brmarker'></div>\
 			<div class='expired_panel'><h2>Expired</h2></div>\
