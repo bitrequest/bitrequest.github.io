@@ -1527,7 +1527,7 @@ var apptitle = "Bitrequest",
             {
                 "name": "amberdata",
                 "base_url": main_ad_node,
-                "key_param": null,
+                "key_param": "bearer",
                 "api_key": null,
                 "sign_up": "https://amberdata.io/onboarding"
             },

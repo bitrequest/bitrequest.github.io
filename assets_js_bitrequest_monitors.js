@@ -1368,8 +1368,9 @@ function get_api_error_data(error) {
 
 function api_src(thislist, api_data) {
     var api_url = api_data.url,
-        api_name = (api_data.name) ? api_data.name : api_data.url;
-    thislist.data("source", api_name).find(".api_source").html("<span class='src_txt' title='" + api_url + "'>source: " + api_name + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
+    	api_url_short = (api_url.length > 40) ? api_url.slice(0,40) + "..." : api_url,
+        api_name = (api_data.name) ? api_data.name : api_url_short;
+    thislist.data("source", api_name).find(".api_source").html("<span class='src_txt' title='" + api_url_short + "'>source: " + api_name + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
 }
 
 function api_callback(requestid, nocache) {
@@ -1775,7 +1776,8 @@ function eth_params(set_url, cachetime, method, params) {
         });
     } else {
         $.extend(payload, {
-            "api_url": set_url
+            "api_url": set_url,
+            "keypass": true
         });
     }
     return payload;
