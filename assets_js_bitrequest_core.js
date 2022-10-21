@@ -2394,7 +2394,7 @@ function validateaddress_vk(ad) {
                     "method": "POST",
                     "data": JSON.stringify(payload),
                     "headers": {
-                        "Content-Type": "text/plain"
+                        "Content-Type": "application/json"
                     }
                 }
             }).done(function(e) {
