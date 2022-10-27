@@ -1,10 +1,17 @@
 var sockets = {},
     pinging = {},
-    lnd_confirm = false;
+    lnd_confirm = false,
+    ndef_processing,
+    ndef_timer = 0;
 
 $(document).ready(function() {
     //init_socket
     //blockcypherws
+    //lightning_socket
+    //ln_ndef
+    //ndef_apifail
+    //ndef_controller
+    //abort_ndef
     //init_xmr_node
     //ping_xmr_node
     //blockcypher_websocket
@@ -199,6 +206,202 @@ function lightning_socket(lnd) {
             lnd_poll_data(proxy_host, pk, pid, nid, imp);
         }, 5000);
     };
+    ln_ndef(proxy_host, pk, pid, nid, imp);
+}
+
+async function ln_ndef(proxy_host, pk, pid, nid, imp) {
+    if (ndef) {
+        ndef_processing = false;
+        try {
+            ndef_controller();
+            await ndef.scan({
+                "signal": ctrl.signal
+            });
+            ndef.onreading = event => {
+                if ((now() - 7000) < ndef_timer) { // prevent too many taps
+                    notify("Tapped too quick", 7000);
+                    return;
+                }
+                ndef_timer = now();
+                closenotify();
+                var message = event.message;
+                if (message) {
+                    var records = message.records;
+                    if (records) {
+                        var first_record = records[0];
+                        if (first_record) {
+                            var data = first_record.data;
+                            if (data) {
+                                var lnurlw = utf8Decoder.decode(data);
+                                if (lnurlw) {
+                                    if (lnurlw.indexOf("p=") && lnurlw.indexOf("c=")) {
+                                        var prefix = lnurlw.split("urlw://");
+                                        if (prefix[0] == "ln") {
+                                            var amount_rel = $("#open_wallet").attr("data-rel"),
+                                                ccraw = (amount_rel.length) ? parseFloat(amount_rel) : 0,
+                                                milli_sats = (ccraw * 100000000000).toFixed(0);
+                                            if (ccraw <= 0) {
+                                                notify("Please enter amount", 5000);
+                                                return
+                                            }
+                                            if (ndef_processing) {
+                                                console.log("already processing");
+                                                console.log(ndef_processing);
+                                                return
+                                            }
+                                            notify("Processing...", 50000);
+                                            paymentdialogbox.addClass("accept_lnd");
+                                            set_request_timer();
+                                            var lnurl_http = "https://" + prefix[1];
+                                            ndef_processing = true;
+                                            api_proxy({
+                                                "api_url": lnurl_http,
+                                                "params": {
+                                                    "method": "GET",
+                                                    "cache": false
+                                                }
+                                            }, proxy_host).done(function(e) {
+                                                var result = br_result(e).result;
+                                                if (result.status == "ERROR") {
+                                                    playsound(funk);
+                                                    var error_message = result.reason;
+                                                    notify(error_message, 5000);
+                                                    paymentdialogbox.removeClass("accept_lnd");
+                                                    ndef_processing = false;
+                                                    return
+                                                }
+                                                if (result.error) {
+                                                    playsound(funk);
+                                                    api_eror_msg(null, get_api_error_data(result.error));
+                                                    paymentdialogbox.removeClass("accept_lnd");
+                                                    closenotify();
+                                                    ndef_processing = false;
+                                                    return
+                                                }
+                                                if (milli_sats > result.maxWithdrawable) {
+                                                    notify("Request exceeds card's maximum", 5000);
+                                                    paymentdialogbox.removeClass("accept_lnd");
+                                                    ndef_processing = false;
+                                                    return
+                                                }
+                                                if (milli_sats < result.minWithdrawable) {
+                                                    notify("Minimum request amount is " + result.minWithdrawable, 5000);
+                                                    paymentdialogbox.removeClass("accept_lnd");
+                                                    ndef_processing = false;
+                                                    return
+                                                }
+                                                var callback = result.callback;
+                                                if (callback) {
+                                                    var k1 = result.k1;
+                                                    if (k1) {
+                                                        var descr = $("#paymentdialog input#requesttitle").val(),
+                                                            final_descr = (descr && descr.length > 1) ? descr + " (Boltcard)" :
+                                                            (result.defaultDescription) ? result.defaultDescription : "bitrequest " + pid + " (Boltcard)";
+                                                        $.ajax({
+                                                            "method": "POST",
+                                                            "cache": false,
+                                                            "timeout": 5000,
+                                                            "url": proxy_host + "proxy/v1/ln/api/",
+                                                            "data": {
+                                                                "imp": imp,
+                                                                "fn": "ln-create-invoice",
+                                                                "amount": milli_sats,
+                                                                "memo": final_descr,
+                                                                "id": pid,
+                                                                "nid": nid,
+                                                                "expiry": 60,
+                                                                "x-api": pk
+                                                            }
+                                                        }).done(function(inv1) {
+                                                            var invoice = inv1.bolt11;
+                                                            if (invoice) {
+                                                                var ampersand = (callback.indexOf("?") > 0) ? "&" : "?",
+                                                                    cb_url = callback + ampersand + "k1=" + k1 + "&pr=" + invoice;
+                                                                api_proxy({
+                                                                    "keypass": true,
+                                                                    "api_url": cb_url,
+                                                                    "params": {
+                                                                        "method": "GET",
+                                                                        "cache": false,
+                                                                        "timeout": 15000
+                                                                    }
+                                                                }, proxy_host).done(function(e) {
+                                                                    var result = br_result(e).result;
+                                                                    console.log(result);
+                                                                    if (result.status == "ERROR") {
+                                                                        playsound(funk);
+                                                                        notify(result.reason, 5000);
+                                                                        paymentdialogbox.removeClass("accept_lnd");
+                                                                        return
+                                                                    }
+                                                                    if (result.status == "OK") {
+                                                                        notify("Monitoring...", 50000);
+                                                                        clearpinging(pid);
+                                                                        closesocket(pid);
+                                                                        abort_ndef();
+                                                                        lnd_poll_invoice(proxy_host, pk, imp, inv1, pid, nid);
+                                                                        pinging[inv1.hash] = setInterval(function() {
+                                                                            lnd_poll_invoice(proxy_host, pk, imp, inv1, pid, nid);
+                                                                        }, 3000);
+                                                                        return
+                                                                    }
+                                                                }).fail(function(jqXHR, textStatus, errorThrown) {
+                                                                    ndef_apifail(jqXHR, textStatus, errorThrown);
+                                                                });
+                                                                return
+                                                            }
+                                                        }).fail(function(jqXHR, textStatus, errorThrown) {
+                                                            ndef_apifail(jqXHR, textStatus, errorThrown);
+                                                        }).always(function() {
+                                                            ndef_processing = false;
+                                                        });
+                                                        return
+                                                    }
+                                                }
+                                                ndef_processing = false;
+                                            }).fail(function(jqXHR, textStatus, errorThrown) {
+                                                ndef_apifail(jqXHR, textStatus, errorThrown);
+                                            });
+                                            return;
+                                        }
+                                    }
+                                    notify("invalind lnurlw", 5000);
+                                    return
+                                }
+                            }
+                        }
+                    }
+                }
+                notify("lnurlw not found", 5000);
+            }
+        } catch (error) {
+            notify(error, 5000);
+        }
+        return
+    }
+}
+
+function ndef_apifail(jqXHR, textStatus, errorThrown) {
+    var error_object = (errorThrown) ? errorThrown : jqXHR;
+    api_eror_msg(null, get_api_error_data(error_object));
+    paymentdialogbox.removeClass("accept_lnd");
+    closenotify();
+    ndef_processing = false;
+}
+
+function ndef_controller() {
+    ctrl = new AbortController();
+    console.log("Waiting for NDEF messages.");
+    ctrl.signal.onabort = () => {
+        console.log("Done waiting for NDEF messages.");
+    };
+}
+
+function abort_ndef() {
+    if (has_ndef && ctrl) {
+        ctrl.abort();
+        ctrl = null;
+    }
 }
 
 function lnd_poll_data(proxy_host, pk, pid, nid, imp) {

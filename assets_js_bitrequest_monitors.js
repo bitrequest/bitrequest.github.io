@@ -1368,7 +1368,7 @@ function get_api_error_data(error) {
 
 function api_src(thislist, api_data) {
     var api_url = api_data.url,
-    	api_url_short = (api_url.length > 40) ? api_url.slice(0,40) + "..." : api_url,
+        api_url_short = (api_url) ? (api_url.length > 40) ? api_url.slice(0, 40) + "..." : api_url : "",
         api_name = (api_data.name) ? api_data.name : api_url_short;
     thislist.data("source", api_name).find(".api_source").html("<span class='src_txt' title='" + api_url_short + "'>source: " + api_name + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
 }
@@ -1429,13 +1429,14 @@ function api_eror_msg(apisrc, error) {
     }
     var error_dat = (error) ? error : {
             "errormessage": "errormessage",
-            "errorcode": "errorcode"
+            "errorcode": null
         },
         errormessage = error_dat.errormessage,
-        errorcode = error_dat.errorcode,
+        errorcode = (error_dat.errorcode) ? "Error: " + error_dat.errorcode : "",
         keyfail = (error.apikey === true);
     var api_bttn = (keyfail === true) ? "<div id='add_api' data-api='" + apisrc + "' class='button'>Add " + apisrc + " Api key</div>" : "",
-        content = "<h2 class='icon-blocked'>Error " + errorcode + "</h2><p class='doselect'><strong>Error: " + errorcode + " " + errormessage + "<br/><br/><span id='proxy_dialog' class='ref'>Try other proxy</span></p>" + api_bttn;
+        t_op = (apisrc) ? "<span id='proxy_dialog' class='ref'>Try other proxy</span>" : "",
+        content = "<h2 class='icon-blocked'>" + errorcode + "</h2><p class='doselect'><strong>Error: " + errormessage + "<br/><br/>" + t_op + "</p>" + api_bttn;
     popdialog(content, "alert", "canceldialog");
 }
 

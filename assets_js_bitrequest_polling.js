@@ -405,7 +405,8 @@ function confirmations(tx_data, direct, ln) {
                 confbox.addClass("blob");
                 confboxspan.text(xconf).attr("data-conf", xconf);
             }, 500);
-            var cc_raw = parseFloat($("#open_wallet").attr("data-rel")),
+            var amount_rel = $("#open_wallet").attr("data-rel"),
+                cc_raw = (amount_rel.length) ? parseFloat(amount_rel) : 0,
                 receivedutc = tx_data.transactiontime,
                 receivedtime = receivedutc - timezone,
                 receivedcc = tx_data.ccval,
@@ -437,7 +438,7 @@ function confirmations(tx_data, direct, ln) {
             var exact = helper.exact,
                 xmr_pass = (payment == "monero") ? (rccf > cc_raw * 0.97 && rccf < cc_raw * 1.03) : true; // error margin for xmr integrated addresses
             if (xmr_pass) {
-                var pass = (exact) ? (rccf == cc_raw) : (rccf >= cc_raw * 0.97);
+                var pass = (exact) ? (rccf == cc_raw) ? true : false : (rccf >= cc_raw * 0.97) ? true : false;
                 if (pass) {
                     if (xconf >= setconfirmations || zero_conf === true) {
                         forceclosesocket();

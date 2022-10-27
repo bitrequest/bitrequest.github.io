@@ -55,6 +55,7 @@ $(document).ready(function() {
     //show_paymentdialog
     //main_input_focus
     lnd_switch_function();
+    ndef_switch_function();
     //lnd_statusx
     lnd_offline();
     lnd_nodeinfo();
@@ -133,7 +134,7 @@ function wake_panel() {
     })
 }
 
-function set_request_timer(timeout) {
+function set_request_timer() {
     // close request dialog after 3 minutes
     clearTimeout(request_timer);
     request_timer = setTimeout(function() {
@@ -631,9 +632,10 @@ function continue_paymentfunction() {
             "data-pending": pendingclass,
             "class": requestclass + statusclass + showclass + typeclass + offlineclass + iszeroclass
         },
-        lnd_switch = (payment == "bitcoin") ? (isrequest && !ln) ? "" : "<div id='lightning_switch' title='lightning'><span class='icon-power'></span></div>" : "";
+        lnd_switch = (payment == "bitcoin") ? (isrequest && !ln) ? "" : "<div id='lightning_switch' title='lightning' class='lnswitch'><span class='icon-power'></span></div>" : "",
+        ndef_switch = (payment == "bitcoin" && has_ndef) ? "<div id='ndef_switch' title='Tap to pay' class='lnswitch'><span class='icon-connection'></span></div>" : "";
     settitle(pagename + " | " + apptitle);
-    paymentdialogbox.append("<div id='request_back' class='share_request dialogstyle'></div><div id='request_front' class='dialogstyle'><div id='xratestats'><span id='rq_errlog'></span></div>" + lnd_switch + "</div>").attr(payment_attributes);
+    paymentdialogbox.append("<div id='request_back' class='share_request dialogstyle'></div><div id='request_front' class='dialogstyle'><div id='xratestats'><span id='rq_errlog'></span></div>" + ndef_switch + lnd_switch + "</div>").attr(payment_attributes);
     // Extend global request object
     $.extend(request, extend_data);
     // Extend global helper object
@@ -1465,6 +1467,12 @@ function lnd_switch_function() {
                 lndli().find(".atext").trigger("click");
             }
         }
+    });
+}
+
+function ndef_switch_function() {
+    $(document).on("click", "#paymentdialogbox #ndef_switch", function() {
+        notify("Please tap your Boltcard to the back of this device", 10000);
     });
 }
 

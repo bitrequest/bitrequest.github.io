@@ -636,13 +636,16 @@ html.inframe #request_back {
 	padding:0.2em 0.5em;
 }
 
-#lightning_switch {
+.lnswitch {
 	position:absolute;
 	bottom:0;
-	right:0;
 	padding:0 0 1em 0;
 	cursor:pointer;
 	color:#CCC;
+}
+
+#lightning_switch {
+	right:0;
 }
 
 #lightning_switch span.icon-power {
@@ -655,6 +658,23 @@ html.inframe #request_back {
 
 #paymentdialogbox #lnd_icon {
 	width:10%;
+}
+
+#ndef_switch {
+	left:-0.5em;
+	color:#8f8f8f;
+	-webkit-transform: rotate(90deg);
+	-ms-transform: rotate(90deg);
+	transform: rotate(90deg);
+	display:none;
+}
+
+#ndef_switch span.icon-connection {
+	font-size:200%;
+}
+
+#paymentdialogbox[data-lswitch="lnd_ao"] #ndef_switch {
+	display:block;
 }
 
 #paymentdialogbox #qrcode_lnd,

@@ -19,6 +19,7 @@ var language = navigator.language || navigator.userLanguage,
     timezoneoffset = new Date().getTimezoneOffset(),
     timezone = timezoneoffset * 60000,
     scrollposition = 0,
+    has_ndef = ("NDEFReader" in window),
     supportsTouch = ("ontouchstart" in window || navigator.msMaxTouchPoints),
     checkcookie = navigator.cookieEnabled,
     referrer,
@@ -49,7 +50,12 @@ var language = navigator.language || navigator.userLanguage,
     hasbip = (bipobj) ? true : false,
     bipid = (hasbip) ? JSON.parse(bipobj).id : false,
     after_poll_timeout = 15000,
-    blockswipe;
+    blockswipe,
+    ndef,
+    ctrl;
+if (has_ndef) {
+    var ndef = new NDEFReader();
+}
 
 $(document).ready(function() {
     $.ajaxSetup({
@@ -2683,6 +2689,7 @@ function cancelpaymentdialog() {
     clearpinging();
     closenotify();
     sleep();
+    abort_ndef();
     lnd_ph = false;
 }
 

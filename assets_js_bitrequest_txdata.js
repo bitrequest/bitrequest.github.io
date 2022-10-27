@@ -589,9 +589,10 @@ function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash)
 // lightning
 
 function lnd_tx_data(data) { // poll
-    var txtime = (data.txtime) ? data.txtime : data.timestamp;
+    var txtime = (data.txtime) ? data.txtime : data.timestamp,
+        amount = parseFloat(data.amount / 100000000000);
     return {
-        "ccval": parseFloat(data.amount / 100000000000),
+        "ccval": Math.abs(amount),
         "transactiontime": txtime + timezone,
         "txhash": "lightning" + data.hash,
         "confirmations": data.conf,
