@@ -181,6 +181,7 @@ function lightning_socket(lnd) {
             if (result.status == "pending" && result.bolt11) {
                 clearpinging(pid);
                 closesocket(pid);
+                paymentdialogbox.removeClass("accept_lnd");
                 lnd_poll_invoice(proxy_host, pk, imp, result, pid, nid);
                 pinging[result.hash] = setInterval(function() {
                     lnd_poll_invoice(proxy_host, pk, imp, result, pid, nid);
@@ -218,8 +219,8 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                 "signal": ctrl.signal
             });
             ndef.onreading = event => {
-                if ((now() - 7000) < ndef_timer) { // prevent too many taps
-                    notify("Tapped too quick", 7000);
+                if ((now() - 6000) < ndef_timer) { // prevent too many taps
+                    notify("Tapped too quick", 6000);
                     return;
                 }
                 ndef_timer = now();
@@ -315,6 +316,7 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                         }).done(function(inv1) {
                                                             var invoice = inv1.bolt11;
                                                             if (invoice) {
+                                                                paymentdialogbox.addClass("transacting");
                                                                 var ampersand = (callback.indexOf("?") > 0) ? "&" : "?",
                                                                     cb_url = callback + ampersand + "k1=" + k1 + "&pr=" + invoice;
                                                                 api_proxy({
@@ -327,11 +329,10 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                                     }
                                                                 }, proxy_host).done(function(e) {
                                                                     var result = br_result(e).result;
-                                                                    console.log(result);
                                                                     if (result.status == "ERROR") {
                                                                         playsound(funk);
                                                                         notify(result.reason, 5000);
-                                                                        paymentdialogbox.removeClass("accept_lnd");
+                                                                        paymentdialogbox.removeClass("accept_lnd transacting");
                                                                         return
                                                                     }
                                                                     if (result.status == "OK") {
@@ -339,6 +340,7 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                                         clearpinging(pid);
                                                                         closesocket(pid);
                                                                         abort_ndef();
+                                                                        paymentdialogbox.removeClass("accept_lnd");
                                                                         lnd_poll_invoice(proxy_host, pk, imp, inv1, pid, nid);
                                                                         pinging[inv1.hash] = setInterval(function() {
                                                                             lnd_poll_invoice(proxy_host, pk, imp, inv1, pid, nid);
@@ -350,6 +352,8 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                                 });
                                                                 return
                                                             }
+                                                            notify("failed to create invoice", 5000);
+                                                            paymentdialogbox.removeClass("accept_lnd transacting");
                                                         }).fail(function(jqXHR, textStatus, errorThrown) {
                                                             ndef_apifail(jqXHR, textStatus, errorThrown);
                                                         }).always(function() {
@@ -384,7 +388,7 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
 function ndef_apifail(jqXHR, textStatus, errorThrown) {
     var error_object = (errorThrown) ? errorThrown : jqXHR;
     api_eror_msg(null, get_api_error_data(error_object));
-    paymentdialogbox.removeClass("accept_lnd");
+    paymentdialogbox.removeClass("accept_lnd transacting");
     closenotify();
     ndef_processing = false;
 }
@@ -430,6 +434,7 @@ function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
             if (e.status == "pending" && e.bolt11) {
                 clearpinging(pid);
                 set_request_timer();
+                paymentdialogbox.removeClass("accept_lnd");
                 pinging[e.hash] = setInterval(function() {
                     lnd_poll_invoice(proxy_host, pk, imp, e, pid, nid);
                 }, 5000);

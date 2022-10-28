@@ -135,7 +135,8 @@
 	pointer-events: all;
 }
 
-html.inframe #paymentdialogbox.transacting #view_tx {
+html.inframe #paymentdialogbox.transacting #view_tx,
+#paymentdialogbox.accept_lnd #view_tx {
 	display: none;
 	pointer-events: none;
 }
