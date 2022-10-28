@@ -271,6 +271,10 @@ html.inframe #paymentdialogbox[data-pending="no"].transacting #view_tx {
 	}
 }
 
+#paymentdialogbox.pd_error .pulse {
+	opacity:0;
+}
+
 .requestlist li .brstatuspanel h2 {
 	color: #FFF;
 	padding: 0 0 0 0.5em;
@@ -773,6 +777,10 @@ html.inframe #request_back {
 
 #backwrapbottom .brstatuspanel {
 	background-color: #e7e7e7;
+}
+
+#paymentdialogbox.pd_error .brstatuspanel h2 {
+	text-transform: uppercase;
 }
 
 .norequest #backwraptop {

@@ -10,6 +10,7 @@ $(document).ready(function() {
     //lightning_socket
     //ln_ndef
     //ndef_apifail
+    //ndef_errormg
     //ndef_controller
     //abort_ndef
     //init_xmr_node
@@ -330,9 +331,7 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                                 }, proxy_host).done(function(e) {
                                                                     var result = br_result(e).result;
                                                                     if (result.status == "ERROR") {
-                                                                        playsound(funk);
-                                                                        notify(result.reason, 5000);
-                                                                        paymentdialogbox.removeClass("accept_lnd transacting");
+                                                                        ndef_errormg(result.reason);
                                                                         return
                                                                     }
                                                                     if (result.status == "OK") {
@@ -352,8 +351,7 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                                 });
                                                                 return
                                                             }
-                                                            notify("failed to create invoice", 5000);
-                                                            paymentdialogbox.removeClass("accept_lnd transacting");
+                                                            ndef_errormg("failed to create invoice");
                                                         }).fail(function(jqXHR, textStatus, errorThrown) {
                                                             ndef_apifail(jqXHR, textStatus, errorThrown);
                                                         }).always(function() {
@@ -369,7 +367,7 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                             return;
                                         }
                                     }
-                                    notify("invalind lnurlw", 5000);
+                                    notify("invalid lnurlw", 5000);
                                     return
                                 }
                             }
@@ -391,6 +389,20 @@ function ndef_apifail(jqXHR, textStatus, errorThrown) {
     paymentdialogbox.removeClass("accept_lnd transacting");
     closenotify();
     ndef_processing = false;
+}
+
+function ndef_errormg(message) {
+    var pmd = $("#paymentdialogbox"),
+        brstatuspanel = pmd.find(".brstatuspanel"),
+        brheader = brstatuspanel.find("h2");
+    brheader.text(message);
+    pmd.addClass("accept_lnd transacting pd_error");
+    playsound(funk);
+    notify(message, 5000);
+    setTimeout(function() {
+        pmd.removeClass("accept_lnd transacting pd_error");
+        brheader.text("Waiting for payment");
+    }, 5000);
 }
 
 function ndef_controller() {
