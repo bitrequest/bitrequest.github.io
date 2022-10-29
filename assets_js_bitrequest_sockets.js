@@ -338,7 +338,6 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                                         clearpinging(pid);
                                                                         closesocket(pid);
                                                                         abort_ndef();
-                                                                        paymentdialogbox.removeClass("blockd");
                                                                         lnd_poll_invoice(proxy_host, pk, imp, inv1, pid, nid);
                                                                         pinging[inv1.hash] = setInterval(function() {
                                                                             lnd_poll_invoice(proxy_host, pk, imp, inv1, pid, nid);
@@ -489,6 +488,7 @@ function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
             helper.lnd.invoice = e;
             var txd = lnd_tx_data(e);
             confirmations(txd, true, true);
+            paymentdialogbox.removeClass("blockd");
             if (status == "paid") {
                 clearpinging(inv.hash);
                 helper.currencylistitem.removeData("url");
