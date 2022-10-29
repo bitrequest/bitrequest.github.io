@@ -136,7 +136,7 @@
 }
 
 html.inframe #paymentdialogbox.transacting #view_tx,
-#paymentdialogbox.accept_lnd #view_tx {
+#paymentdialogbox.blockd #view_tx {
 	display: none;
 	pointer-events: none;
 }
