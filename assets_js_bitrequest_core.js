@@ -3587,9 +3587,9 @@ function api_proxy(ad, p_proxy) {
         var proxy = ad.proxy,
             api_key = aud.api_key,
             set_key = (api_key) ? true : false,
-            nokey = (ad.keypass || api_key == "no_key") ? true : false,
+            nokey = (api_key == "no_key") ? true : false,
             key_pass = (nokey === true || set_key === true);
-        if (proxy !== true && key_pass === true) {
+        if (proxy === false || (proxy !== true && key_pass === true)) {
             var params = ad.params,
                 bearer = ad.bearer;
             params.url = (custom_url) ? custom_url : aud.api_url_key;
@@ -3605,7 +3605,6 @@ function api_proxy(ad, p_proxy) {
                         }
                         params.headers = auth;
                     }
-                    console.log(ad);
                 }
             }
             return $.ajax(params);

@@ -321,7 +321,7 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                                 var ampersand = (callback.indexOf("?") > 0) ? "&" : "?",
                                                                     cb_url = callback + ampersand + "k1=" + k1 + "&pr=" + invoice;
                                                                 api_proxy({
-                                                                    "keypass": true,
+                                                                    "proxy": false,
                                                                     "api_url": cb_url,
                                                                     "params": {
                                                                         "method": "GET",
@@ -1016,6 +1016,7 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
         "search": "login",
         "cachetime": 25,
         "cachefolder": "1h",
+        "proxy": true,
         "params": {
             "method": "POST",
             "data": JSON.stringify(payload),
@@ -1059,6 +1060,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
         "search": "get_address_txs",
         "cachetime": cachetime,
         "cachefolder": "1h",
+        "proxy": true,
         "params": {
             "method": "POST",
             "data": JSON.stringify(payload),

@@ -2629,7 +2629,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
             api_proxy({
                 "api": "infura",
                 "api_url": main_eth_node + apikeyval,
-                "keypass": true,
+                "proxy": false,
                 "params": {
                     "method": "POST",
                     "data": JSON.stringify(payload),
@@ -2675,7 +2675,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                 "cachetime": 0,
                 "cachefolder": "1h",
                 "api_url": api_url,
-                "keypass": true,
+                "proxy": false,
                 "params": params
             }
             api_proxy(postdata).done(function(e) {

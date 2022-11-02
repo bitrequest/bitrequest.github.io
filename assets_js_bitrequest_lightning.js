@@ -286,7 +286,7 @@ function test_lnd_option_li(value, selected, fn) {
     loader(true);
     loadertext("connecting to " + host);
     api_proxy({
-        "keypass": true,
+        "proxy": false,
         "api_url": host + "/v1/invoices",
         "params": {
             "method": "GET",
@@ -333,7 +333,7 @@ function test_c_lightning_option_li(value, selected, fn) {
     loader(true);
     loadertext("connecting to " + host);
     api_proxy({
-        "keypass": true,
+        "proxy": false,
         "api_url": host + "/v1/invoice/listInvoices",
         "params": {
             "method": "GET",
@@ -381,7 +381,7 @@ function test_eclair_option_li(value, selected, fn) {
     loader(true);
     loadertext("connecting to " + host);
     api_proxy({
-        "keypass": true,
+        "proxy": false,
         "api_url": host + "/listinvoices",
         "params": {
             "method": "POST",
@@ -438,7 +438,7 @@ function test_lnbits_option_li(value, selected, fn) {
     loader(true);
     loadertext("connecting to " + host);
     api_proxy({
-        "keypass": true,
+        "proxy": false,
         "api_url": host + "/api/v1/wallet",
         "params": {
             "method": "GET",
@@ -1132,7 +1132,7 @@ function test_create_invoice(imp, proxydat, host, key) {
     }
     if (imp == "lnd") {
         api_proxy({
-            "keypass": true,
+            "proxy": false,
             "api_url": host + "/v1/invoices",
             "params": {
                 "method": "POST",
@@ -1176,7 +1176,7 @@ function test_create_invoice(imp, proxydat, host, key) {
     }
     if (imp == "c-lightning") {
         api_proxy({
-            "keypass": true,
+            "proxy": false,
             "api_url": host + "/v1/invoice/genInvoice",
             "params": {
                 "method": "POST",
@@ -1222,7 +1222,7 @@ function test_create_invoice(imp, proxydat, host, key) {
     }
     if (imp == "eclair") {
         api_proxy({
-            "keypass": true,
+            "proxy": false,
             "api_url": host + "/createinvoice",
             "params": {
                 "method": "POST",
@@ -1268,7 +1268,7 @@ function test_create_invoice(imp, proxydat, host, key) {
     if (imp == "lnbits") {
         api_proxy({
             "api_url": host + "/api/v1/payments",
-            "keypass": true,
+            "proxy": false,
             "params": {
                 "method": "POST",
                 "cache": false,
@@ -1723,7 +1723,7 @@ function test_lnurl_status(lnd) {
 
 function check_lnd_status(lnd) {
     api_proxy({
-        "keypass": true,
+        "proxy": false,
         "api_url": lnd.host + "/v1/invoices",
         "params": {
             "method": "GET",
@@ -1754,7 +1754,7 @@ function check_lnd_status(lnd) {
 
 function check_c_lightning_status(lnd) {
     api_proxy({
-        "keypass": true,
+        "proxy": false,
         "api_url": lnd.host + "/v1/invoice/listInvoices",
         "params": {
             "method": "GET",
@@ -1786,7 +1786,7 @@ function check_c_lightning_status(lnd) {
 
 function check_eclair_status(lnd) {
     api_proxy({
-        "keypass": true,
+        "proxy": false,
         "api_url": lnd.host + "/listinvoices",
         "params": {
             "method": "POST",
@@ -1822,7 +1822,7 @@ function check_eclair_status(lnd) {
 
 function check_lnbits_status(lnd) {
     api_proxy({
-        "keypass": true,
+        "proxy": false,
         "api_url": lnd.host + "/api/v1/wallet",
         "params": {
             "method": "GET",

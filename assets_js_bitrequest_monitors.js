@@ -446,6 +446,7 @@ function get_api_inputs(rd, api_data, api_name) {
                         "search": "login",
                         "cachetime": 25,
                         "cachefolder": "1h",
+                        "proxy": true,
                         "params": {
                             "method": "POST",
                             "data": payload,
@@ -465,6 +466,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                 "search": "get_address_txs",
                                 "cachetime": 25,
                                 "cachefolder": "1h",
+                                "proxy": true,
                                 "params": {
                                     "method": "POST",
                                     "data": JSON.stringify(pl),
@@ -1778,7 +1780,7 @@ function eth_params(set_url, cachetime, method, params) {
     } else {
         $.extend(payload, {
             "api_url": set_url,
-            "keypass": true
+            "proxy": false
         });
     }
     return payload;
