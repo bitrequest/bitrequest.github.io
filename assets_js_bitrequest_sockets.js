@@ -412,7 +412,7 @@ function ndef_controller() {
 }
 
 function abort_ndef() {
-    if (has_ndef && ctrl) {
+    if (ndef && ctrl) {
         ctrl.abort();
         ctrl = null;
     }

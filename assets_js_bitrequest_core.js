@@ -53,7 +53,7 @@ var language = navigator.language || navigator.userLanguage,
     blockswipe,
     ndef,
     ctrl;
-if (has_ndef) {
+if (has_ndef && !inframe) {
     var ndef = new NDEFReader();
 }
 

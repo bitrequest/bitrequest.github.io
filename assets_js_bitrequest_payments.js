@@ -633,7 +633,7 @@ function continue_paymentfunction() {
             "class": requestclass + statusclass + showclass + typeclass + offlineclass + iszeroclass
         },
         lnd_switch = (payment == "bitcoin") ? (isrequest && !ln) ? "" : "<div id='lightning_switch' title='lightning' class='lnswitch'><span class='icon-power'></span></div>" : "",
-        ndef_switch = (payment == "bitcoin" && has_ndef) ? "<div id='ndef_switch' title='Tap to pay' class='lnswitch'><span class='icon-connection'></span></div>" : "";
+        ndef_switch = (payment == "bitcoin" && ndef) ? "<div id='ndef_switch' title='Tap to pay' class='lnswitch'><span class='icon-connection'></span></div>" : "";
     settitle(pagename + " | " + apptitle);
     paymentdialogbox.append("<div id='request_back' class='share_request dialogstyle'></div><div id='request_front' class='dialogstyle'><div id='xratestats'><span id='rq_errlog'></span></div>" + ndef_switch + lnd_switch + "</div>").attr(payment_attributes);
     // Extend global request object
