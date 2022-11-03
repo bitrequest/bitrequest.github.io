@@ -3610,13 +3610,8 @@ function api_proxy(ad, p_proxy) {
             return $.ajax(params);
         } else { // use api proxy
             var api_location = "proxy/v1/",
-                localhost = ad.localhost,
                 set_proxy = (p_proxy) ? p_proxy : d_proxy(),
-                forced_proxy = ad.proxy_url,
-                app_root = (forced_proxy) ? forced_proxy :
-                (localhost === false) ? set_proxy :
-                (localhost === true) ? "" :
-                set_proxy,
+                app_root = (ad.localhost) ? "" : set_proxy,
                 proxy_data = {
                     "method": "POST",
                     "cache": false,
@@ -5242,7 +5237,6 @@ function gk() {
 function fk() {
     api_proxy({
         "proxy": true,
-        "localhost": false,
         "custom": "gk",
         "api_url": true
     }).done(function(e) {
