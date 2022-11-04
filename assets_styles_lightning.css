@@ -87,7 +87,8 @@
 	color:#f5c243;
 }
 
-pre {
+pre,
+.pre {
 	outline: 1px solid #ccc;
 	padding: 10px 5px;
 	margin: 0;

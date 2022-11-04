@@ -135,7 +135,8 @@ $(document).ready(function() {
     share_teaminvite()
     check_teaminvite();
     install_teaminvite_trigger()
-    //install_teaminvite    
+    //install_teaminvite
+    check_useragent();
 });
 
 // ** Settings **
@@ -3364,4 +3365,27 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
     notify("Installation complete!");
     canceldialog();
     window.location.href = window.location.pathname + "?p=home";
+}
+
+function check_useragent() {
+    $(document).on("click", "#ua", function() {
+        var ddat = [{
+                "div": {
+                    "class": "popform",
+                    "content": [{
+                        "div": {
+                            "class": "pre",
+                            "content": syntaxHighlight(userAgent)
+                        }
+                    }]
+                }
+            }],
+            content = template_dialog({
+                "id": "uabox",
+                "icon": "icon-user",
+                "title": "User Agent",
+                "elements": ddat
+            });
+        popdialog(content, "alert", "canceldialog");
+    })
 }

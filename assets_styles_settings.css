@@ -1229,3 +1229,9 @@ body.seed_dialog #seed_panel {
 	color: #009788;
 	cursor: pointer;
 }
+
+#ua {
+	cursor:pointer;
+}
+
+#uabox .number {color: #88a8c5;}
