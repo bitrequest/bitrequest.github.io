@@ -34,7 +34,7 @@ function gapi_load(redirect) {
                 "client_id": to.ga_id,
                 "scope": scope,
                 "ux_mode": rdirect,
-                "redirect_uri": "https://" + window.location.hostname + "/?p=settings&rd=1"
+                "redirect_uri": "https://" + w_loc.hostname + "/?p=settings&rd=1"
             }).then(function() {
                 GoogleAuth = gapi.auth2.getAuthInstance();
                 user = GoogleAuth.currentUser.get();

@@ -296,7 +296,7 @@ function islocked() {
 
 function setfunctions() {
     setlocales(); //set meta attribute
-    settheme();
+    //settheme();
     setpermissions();
 
     // ** Pincode **
@@ -317,21 +317,16 @@ function setfunctions() {
     phrase_login();
     //remove_rqo
     keyup();
-    if (is_viewonly() === true) {
+    if (is_viewonly() === true || ishome() === true) {
         finishfunctions();
-        return false;
+        return
     }
-    if (ishome() === true) {
-        finishfunctions();
-    } else {
-        if (islocked() === true) {
-            var content = pinpanel(" pinwall global");
-            showoptions(content, "pin");
-            return false;
-        } else {
-            finishfunctions();
-        }
+    if (islocked() === true) {
+        var content = pinpanel(" pinwall global");
+        showoptions(content, "pin");
+        return
     }
+    finishfunctions();
 }
 
 function finishfunctions() {
@@ -364,6 +359,8 @@ function finishfunctions() {
     //cancel_url_dialogs
     //loadpageevent
     //shownav
+    activemenu();
+    fixednav();
 
     // ** Triggerrequest **
 
@@ -381,9 +378,9 @@ function finishfunctions() {
     //cmst_callback
     //cmst_callback
     //add_seed_whitelist
-    //seed_whitelist
+    //seed_wl
     //add_address_whitelist
-    //address_whitelist
+    //addr_whitelist
     check_pk();
     toggleswitch();
     closeselectbox();
@@ -402,8 +399,6 @@ function finishfunctions() {
     request_history();
     //recent_requests
     //recent_requests_list
-    activemenu();
-    fixednav();
     //notifications
     //notify
     closenotifytrigger();
@@ -472,9 +467,9 @@ function finishfunctions() {
 
     showrequestdetails();
     toggle_request_meta();
+    //animate_confbar
     show_transaction_meta();
     hide_transaction_meta();
-    //animate_confbar
     archive();
     //archivefunction
     unarchive();
@@ -543,6 +538,7 @@ function finishfunctions() {
     //render_currencysettings
     //rendersettings
     renderrequests();
+    //archive_button
     //fetchrequests
     //initiate
     //buildpage
@@ -552,6 +548,7 @@ function finishfunctions() {
     receipt();
     download_receipt();
     share_receipt();
+    //lnd_lookup_invoice
     //get_pdf_url;
     //amountshort
     editrequest();
@@ -575,7 +572,7 @@ function finishfunctions() {
     // ** Get_app **
 
     setTimeout(function() { // wait for ios app detection
-        //detectapp();
+        detectapp();
     }, 700);
 
     //getapp
@@ -837,7 +834,6 @@ function pinvalidate(thispad) {
                 "locktime": locktime,
                 "selected": titlepin
             }).find("p").html(titlepin);
-            //canceldialog();
             savesettings();
             playsound(waterdrop);
             canceloptions(true);
@@ -988,28 +984,27 @@ function startnexttrigger() {
 }
 
 function startnext(thisnode) {
-    var thisnext = thisnode.attr("data-next"),
-        nameinput = $("#eninput");
+    var thisnext = thisnode.attr("data-next");
     if (thisnext === undefined) {
-        return false;
-    } else if (thisnode.hasClass("validstep")) {
+        return
+    }
+    if (thisnode.hasClass("validstep")) {
         $("#startpage").attr("class", "sp_" + thisnext);
         thisnode.removeClass("panelactive").next(".startpanel").addClass("panelactive");
-        nameinput.blur();
-    } else {
-        topnotify("Please enter your name");
+        $("#eninput").blur();
+        return
     }
+    topnotify("Please enter your name");
 }
 
 function startprev(thisnode) {
     var thisprev = thisnode.attr("data-prev");
     if (thisprev === undefined) {
-        return false;
-    } else {
-        $("#startpage").attr("class", "sp_" + thisprev);
-        thisnode.removeClass("panelactive").prev(".startpanel").addClass("panelactive");
-        $("#eninput").blur();
+        return
     }
+    $("#startpage").attr("class", "sp_" + thisprev);
+    thisnode.removeClass("panelactive").prev(".startpanel").addClass("panelactive");
+    $("#eninput").blur();
 }
 
 function lettercountkeydown() { // Character limit on input field
@@ -1022,11 +1017,11 @@ function lettercountkeydown() { // Character limit on input field
             startnext($("#entername"));
         }
         if (keycode === 8 || keycode === 39 || keycode === 37 || keycode === 91 || keycode === 17 || e.metaKey || e.ctrlKey) { //alow backspace, arrowright, arrowleft, command, ctrl
-        } else {
-            if (lettersleft === 0) {
-                playsound(funk);
-                e.preventDefault();
-            }
+            return
+        }
+        if (lettersleft === 0) {
+            playsound(funk);
+            e.preventDefault();
         }
     });
 }
@@ -1064,7 +1059,6 @@ function choosecurrency() {
             "erc20": false,
             "checked": true
         }, false);
-        return false;
     })
 }
 
@@ -1075,21 +1069,20 @@ function togglenav() {
         if (html.hasClass("showmain")) {
             loadpage("?p=home");
             $(".navstyle li .self").removeClass("activemenu");
-        } else {
-            if (islocked() === true) {
-                if (is_viewonly() === true) {
-                    loadpage("?p=currencies");
-                    $(".currenciesbttn .self").addClass("activemenu");
-                    return false;
-                }
-                var content = pinpanel(" pinwall admin");
-                showoptions(content, "pin");
-                return false;
-            } else {
+            return
+        }
+        if (islocked() === true) {
+            if (is_viewonly() === true) {
                 loadpage("?p=currencies");
                 $(".currenciesbttn .self").addClass("activemenu");
+                return
             }
+            var content = pinpanel(" pinwall admin");
+            showoptions(content, "pin");
+            return
         }
+        loadpage("?p=currencies");
+        $(".currenciesbttn .self").addClass("activemenu");
     });
 }
 
@@ -1115,20 +1108,14 @@ function clicklink() {
     $(document).on("click", ".self", function(e) {
         e.preventDefault();
         loadpage($(this).attr("data-rel"));
-        return false
+        return
     })
 }
 
 //push history and set current page
 function loadpage(href) {
-    var presplit = href.split("&")[0],
-        split = presplit.split("="),
-        pagename = split.pop();
+    var pagename = href.split("&")[0].split("=").pop();
     openpage(href, pagename, "loadpage");
-    if (body.hasClass("showsatedited")) {
-        save_cc_settings(body.data("currency"), false);
-        body.removeClass("showsatedited").data("currency", "");
-    }
 }
 
 function openpage(href, pagename, event) {
@@ -1144,27 +1131,28 @@ function popstate() {
         var statemeta = e.state;
         if (statemeta && statemeta.pagename) { //check for history
             loadfunction(statemeta.pagename, statemeta.event);
-        } else {
-            cancel_url_dialogs();
-            return false;
+            return
         }
+        cancel_url_dialogs();
     }
 }
 //activate page
 function loadfunction(pagename, thisevent) {
     if (thisevent == "payment") { //load paymentpopup if payment is set
         loadpaymentfunction();
-    } else if (thisevent == "both") { //load paymentpopup if payment is set and load page
+        return
+    }
+    if (thisevent == "both") { //load paymentpopup if payment is set and load page
         loadpageevent(pagename);
         setTimeout(function() {
             loadpaymentfunction("delay");
         }, 1000);
-    } else {
-        loadpageevent(pagename);
-        var title = pagename + " | " + apptitle;
-        settitle(title);
-        cancel_url_dialogs();
+        return
     }
+    loadpageevent(pagename);
+    var title = pagename + " | " + apptitle;
+    settitle(title);
+    cancel_url_dialogs();
 }
 
 function cancel_url_dialogs() {
@@ -1178,7 +1166,7 @@ function cancel_url_dialogs() {
 
 function loadpageevent(pagename) {
     $("html, body").animate({
-        scrollTop: 0
+        "scrollTop": 0
     }, 400);
     var currentpage = $("#" + pagename);
     currentpage.addClass("currentpage");
@@ -1197,10 +1185,29 @@ function shownav(pagename) { // show / hide navigation
     if (ishome(pagename) === true) {
         html.removeClass("showmain").addClass("hidemain");
         $("#relnav .nav").slideUp(300);
-    } else {
-        html.addClass("showmain").removeClass("hidemain")
-        $("#relnav .nav").slideDown(300);
+        return
     }
+    html.addClass("showmain").removeClass("hidemain")
+    $("#relnav .nav").slideDown(300);
+}
+
+function activemenu() {
+    $(document).on("click", ".nav li .self", function() {
+        var thisitem = $(this);
+        thisitem.addClass("activemenu");
+        $(".nav li .self").not(thisitem).removeClass("activemenu");
+        return
+    })
+}
+
+function fixednav() {
+    $(document).scroll(function(e) {
+        if (html.hasClass("paymode")) {
+            e.preventDefault();
+            return
+        }
+        fixedcheck($(document).scrollTop());
+    });
 }
 
 // ** Triggerrequest **
@@ -1215,11 +1222,11 @@ function triggertx() {
 function triggertxfunction(thislink) {
     var currency = thislink.data("currency"),
         can_derive = derive_first_check(currency);
-    if (can_derive === false) {} else {
+    if (can_derive === true) {
         triggertxfunction(thislink);
-        return false;
+        return
     }
-    var pick_random = $("#" + currency + "_settings .cc_settinglist li[data-id='Use random address']").data("selected"),
+    var pick_random = cs_dat(currency, "Use random address").selected,
         derives = check_derivations(currency),
         addresslist = filter_addressli(currency, "checked", true),
         firstlist = addresslist.first(),
@@ -1235,7 +1242,7 @@ function triggertxfunction(thislink) {
         seedid = a_data.seedid;
     if (seedid) {
         if (seedid != bipid) {
-            if (address_whitelist(thisaddress) === true) {} else {
+            if (addr_whitelist(thisaddress) === true) {} else {
                 var pass_dat = {
                         "currency": currency,
                         "address": thisaddress,
@@ -1328,34 +1335,34 @@ function payrequest() {
         if (offline === true && thisnode.hasClass("isfiat")) {
             // do not trigger fiat request when offline because of unknown exchange rate
             notify("Unable to get exchange rate");
-        } else {
-            var thisrequestlist = thisnode.closest("li.rqli"),
-                rldata = thisrequestlist.data(),
-                rl_payment = rldata.payment,
-                rl_uoa = rldata.uoa,
-                rl_status = rldata.status,
-                rl_requesttype = rldata.requesttype,
-                rl_amount = rldata.amount,
-                rl_receivedamount = rldata.receivedamount,
-                rl_fiatvalue = rldata.fiatvalue,
-                rl_iscrypto = rldata.iscrypto,
-                rl_uoa = rldata.uoa,
-                insufficient = (rl_status == "insufficient"),
-                midstring = thisnode.attr("data-rel"),
-                endstring = "&status=" + rl_status + "&type=" + rl_requesttype,
-                amount_short_rounded = amountshort(rl_amount, rl_receivedamount, rl_fiatvalue, rl_iscrypto),
-                paymenturl_amount = (insufficient === true) ? amount_short_rounded : rl_amount,
-                lightning = rldata.lightning,
-                d = (lightning && lightning.invoice) ? "&d=" + btoa(JSON.stringify({
-                    "imp": lightning.imp,
-                    "proxy": lightning.proxy_host,
-                    "nid": lightning.nid,
-                    "lid": lightning.pid
-                })) : "";
-            paymenturl = "?p=requests&payment=" + rl_payment + "&uoa=" + rl_uoa + "&amount=" + paymenturl_amount + midstring + endstring + d;
-            openpage(paymenturl, "", "payment");
+            return
         }
-        return false;
+        var thisrequestlist = thisnode.closest("li.rqli"),
+            rldata = thisrequestlist.data(),
+            rl_payment = rldata.payment,
+            rl_uoa = rldata.uoa,
+            rl_status = rldata.status,
+            rl_requesttype = rldata.requesttype,
+            rl_amount = rldata.amount,
+            rl_receivedamount = rldata.receivedamount,
+            rl_fiatvalue = rldata.fiatvalue,
+            rl_iscrypto = rldata.iscrypto,
+            rl_uoa = rldata.uoa,
+            insufficient = (rl_status == "insufficient"),
+            midstring = thisnode.attr("data-rel"),
+            endstring = "&status=" + rl_status + "&type=" + rl_requesttype,
+            amount_short_rounded = amountshort(rl_amount, rl_receivedamount, rl_fiatvalue, rl_iscrypto),
+            paymenturl_amount = (insufficient === true) ? amount_short_rounded : rl_amount,
+            lightning = rldata.lightning,
+            d = (lightning && lightning.invoice) ? "&d=" + btoa(JSON.stringify({
+                "imp": lightning.imp,
+                "proxy": lightning.proxy_host,
+                "nid": lightning.nid,
+                "lid": lightning.pid
+            })) : "",
+            paymenturl = "?p=requests&payment=" + rl_payment + "&uoa=" + rl_uoa + "&amount=" + paymenturl_amount + midstring + endstring + d;
+        openpage(paymenturl, "", "payment");
+        return
     });
 }
 
@@ -1404,7 +1411,7 @@ function toggleaddress() {
             if (parentlistitem.hasClass("seedu")) {
                 var address = a_dat.address,
                     seedid = a_dat.seedid;
-                if (address_whitelist(address) === true) {} else {
+                if (addr_whitelist(address) === true) {} else {
                     var pass_dat = {
                             "address": address,
                             "pli": parentlistitem,
@@ -1416,7 +1423,7 @@ function toggleaddress() {
                 }
             } else if (parentlistitem.hasClass("xpubu")) {
                 var address = a_dat.address;
-                if (address_whitelist(address) === true) {} else {
+                if (addr_whitelist(address) === true) {} else {
                     var haspub = has_xpub(currency),
                         xpubid = a_dat.xpubid;
                     if (haspub === false || (haspub && haspub.key_id != xpubid)) {
@@ -1479,7 +1486,7 @@ function add_seed_whitelist(seedid) {
     localStorage.setItem("bitrequest_swl", JSON.stringify(seed_whitelist));
 }
 
-function seed_whitelist(seedid) {
+function seed_wl(seedid) {
     var stored_whitelist = localStorage.getItem("bitrequest_swl"),
         seed_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
     return ($.inArray(seedid, seed_whitelist) === -1) ? false : true;
@@ -1494,7 +1501,7 @@ function add_address_whitelist(address) {
     localStorage.setItem("bitrequest_awl", JSON.stringify(address_whitelist));
 }
 
-function address_whitelist(address) {
+function addr_whitelist(address) {
     var stored_whitelist = localStorage.getItem("bitrequest_awl"),
         address_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
     return ($.inArray(address, address_whitelist) === -1) ? false : true;
@@ -1538,7 +1545,6 @@ function showselect() {
 
 function selectbox() {
     $(document).on("click", ".selectbox > input:not([readonly])", function() {
-        //return false;
         var thisselect = $(this),
             thisvalue = thisselect.val(),
             options = thisselect.parent(".selectbox").find(".options span");
@@ -1684,71 +1690,75 @@ function keyup() {
             if (body.hasClass("showstartpage")) {
                 e.preventDefault();
                 startnext($(".panelactive"));
-            } else {
-                if (paymentdialogbox.find("input").is(":focus")) {
-                    playsound(funk);
-                } else {
-                    var timelapsed = now() - sa_timer;
-                    if (timelapsed < 500) { // prevent clicking too fast
-                        playsound(funk);
-                    } else {
-                        paymentpopup.removeClass("flipping");
-                        if (paymentdialogbox.hasClass("flipped")) {
-                            flip_right2();
-                            setTimeout(function() {
-                                paymentpopup.addClass("flipping");
-                                paymentdialogbox.css("-webkit-transform", "");
-                            }, 400);
-                        } else {
-                            if (paymentdialogbox.hasClass("norequest") && (paymentdialogbox.attr("data-pending") == "ispending" || (offline === true))) {
-                                playsound(funk);
-                            } else {
-                                flip_right1();
-                            }
-                        }
-                        sa_timer = now();
-                    }
-                }
+                return
             }
+            if (paymentdialogbox.find("input").is(":focus")) {
+                playsound(funk);
+                return
+            }
+            var timelapsed = now() - sa_timer;
+            if (timelapsed < 500) { // prevent clicking too fast
+                playsound(funk);
+                return
+            }
+            paymentpopup.removeClass("flipping");
+            if (paymentdialogbox.hasClass("flipped")) {
+                flip_right2();
+                setTimeout(function() {
+                    paymentpopup.addClass("flipping");
+                    paymentdialogbox.css("-webkit-transform", "");
+                }, 400);
+                return
+            }
+            if (paymentdialogbox.hasClass("norequest") && (paymentdialogbox.attr("data-pending") == "ispending" || (offline === true))) {
+                playsound(funk);
+                return
+            }
+            flip_right1();
+            sa_timer = now();
+            return
         }
         if (e.keyCode == 37) {
             if (body.hasClass("showstartpage")) {
                 e.preventDefault();
                 startprev($(".panelactive"));
-            } else {
-                if (paymentdialogbox.find("input").is(":focus")) {
-                    playsound(funk);
-                } else {
-                    var timelapsed = now() - sa_timer;
-                    if (timelapsed < 500) { // prevent clicking too fast
-                        playsound(funk);
-                    } else {
-                        paymentpopup.removeClass("flipping");
-                        if (paymentdialogbox.hasClass("flipped")) {
-                            flip_left2();
-                        } else {
-                            if (paymentdialogbox.hasClass("norequest") && (paymentdialogbox.attr("data-pending") == "ispending" || (offline === true))) {
-                                playsound(funk);
-                            } else {
-                                flip_left1();
-                                setTimeout(function() {
-                                    paymentpopup.addClass("flipping");
-                                    paymentdialogbox.css("-webkit-transform", "rotateY(180deg)");
-                                }, 400);
-                            }
-                        }
-                        sa_timer = now();
-                    }
-                }
+                return
             }
+            if (paymentdialogbox.find("input").is(":focus")) {
+                playsound(funk);
+                return
+            }
+            var timelapsed = now() - sa_timer;
+            if (timelapsed < 500) { // prevent clicking too fast
+                playsound(funk);
+                return
+            }
+            paymentpopup.removeClass("flipping");
+            if (paymentdialogbox.hasClass("flipped")) {
+                flip_left2();
+                return
+            }
+            if (paymentdialogbox.hasClass("norequest") && (paymentdialogbox.attr("data-pending") == "ispending" || (offline === true))) {
+                playsound(funk);
+                return
+            }
+            flip_left1();
+            setTimeout(function() {
+                paymentpopup.addClass("flipping");
+                paymentdialogbox.css("-webkit-transform", "rotateY(180deg)");
+            }, 400);
+            sa_timer = now();
+            return
         }
         if (e.keyCode == 27) {
             escapeandback();
+            return
         }
         if (e.keyCode == 13) {
             if ($("#popup").hasClass("active")) {
                 $("#popup #execute").trigger("click");
             }
+            return
         }
     });
 }
@@ -1816,7 +1826,6 @@ function close_paymentdialog(empty) {
                 address = request.address,
                 ls_recentrequests = localStorage.getItem("bitrequest_recent_requests"),
                 lsrr_arr = (ls_recentrequests) ? JSON.parse(ls_recentrequests) : {},
-                rr_object = {},
                 request_dat = {
                     "currency": currency,
                     "cmcid": request.cmcid,
@@ -1825,7 +1834,6 @@ function close_paymentdialog(empty) {
                     "erc20": request.erc20,
                     "rqtime": request.rq_init
                 };
-            rr_object[currency] = request_dat;
             lsrr_arr[currency] = request_dat;
             localStorage.setItem("bitrequest_recent_requests", JSON.stringify(lsrr_arr));
             closeloader();
@@ -1887,7 +1895,7 @@ function check_recent() {
         if (result === true) {
             open_share_url("location", thisurl);
         }
-        return false;
+        return
     })
 }
 
@@ -1927,7 +1935,7 @@ function request_history() {
 function recent_requests(recent_payments) {
     var addresslist = recent_requests_list(recent_payments);
     if (!addresslist.length) {
-        return false;
+        return
     }
     var content = "<div class='formbox'>\
         <h2 class='icon-history'>Recent requests:</h2>\
@@ -1969,28 +1977,8 @@ function recent_requests_list(recent_payments) {
     return addresslist;
 }
 
-function activemenu() {
-    $(document).on("click", ".nav li .self", function() {
-        var thisitem = $(this);
-        thisitem.addClass("activemenu");
-        $(".nav li .self").not(thisitem).removeClass("activemenu");
-        return false
-    })
-}
-
-function fixednav() {
-    $(document).scroll(function(e) {
-        if (html.hasClass("paymode")) {
-            e.preventDefault();
-            return
-        }
-        fixedcheck($(document).scrollTop());
-    });
-}
-
 //notifications
 function notify(message, time, showbutton) {
-    //return false;
     var settime = (time) ? time : 4000,
         setbutton = (showbutton) ? showbutton : "no",
         notify = $("#notify");
@@ -2082,15 +2070,15 @@ function addcurrency(cd) {
         loadpage("?p=" + currency);
     } else {
         var can_derive = derive_first_check(currency);
-        if (can_derive === false) {
-            if (is_viewonly() === true) {
-                vu_block();
-                return
-            }
-            addaddress(cd, false);
-        } else {
+        if (can_derive === true) {
             loadpage("?p=" + currency);
+            return
         }
+        if (is_viewonly() === true) {
+            vu_block();
+            return
+        }
+        addaddress(cd, false);
     }
 }
 
@@ -2102,15 +2090,10 @@ function derive_first_check(currency) {
             if (has_derives === false) {
                 derive_addone(currency);
                 return true;
-            } else {
-                return false;
             }
-        } else {
-            return false;
         }
-    } else {
-        return false;
     }
+    return false;
 }
 
 function addaddresstrigger() {
@@ -2151,31 +2134,32 @@ function addaddress(ad, edit) {
 		</div>" + pk_checkbox +
             "<input type='submit' class='submit' value='OK'></form>").data(ad);
     popdialog(content, "alert", "triggersubmit");
-    if (supportsTouch === true) {} else {
-        if (edit === true) {
-            $("#popup input.addresslabel").focus().select();
-        } else {
-            $("#popup input.address").focus();
-        }
+    if (supportsTouch === true) {
+        return
     }
+    if (edit === true) {
+        $("#popup input.addresslabel").focus().select();
+        return
+    }
+    $("#popup input.address").focus();
 }
 
 function address_xpub_change() {
     $(document).on("input", "#addressformbox.noxpub #address_xpub_input", function(e) {
         var thisnode = $(this),
-            addressinputval = thisnode.val(),
-            currency = thisnode.attr("data-currency");
+            addressinputval = thisnode.val();
         if (addressinputval.length > 103) {
-            var valid = check_xpub(addressinputval, xpub_prefix(currency), currency);
+            var currency = thisnode.attr("data-currency"),
+                valid = check_xpub(addressinputval, xpub_prefix(currency), currency);
             if (valid === true) {
                 clear_xpub_checkboxes();
                 validate_xpub(thisnode.closest("#addressformbox"));
-            } else {
-                xpub_fail(currency);
+                return
             }
-        } else {
-            clear_xpub_inputs();
+            xpub_fail(currency);
+            return
         }
+        clear_xpub_inputs();
     })
 }
 
@@ -2238,15 +2222,16 @@ function submitaddresstrigger() {
         var thisform = $(this).closest("#addressformbox");
         if (thisform.hasClass("hasxpub")) {
             validateaddress_vk(thisform.data());
-        } else {
-            var addressinput = thisform.find(".address"),
-                ad_val = addressinput.val();
-            if (ad_val.length > 103) {
-                validate_xpub(thisform);
-            } else {
-                validateaddress_vk(thisform.data());
-            }
+            return
         }
+        var addressinput = thisform.find(".address"),
+            ad_val = addressinput.val();
+        if (ad_val.length > 103) {
+            validate_xpub(thisform);
+            return
+        }
+        validateaddress_vk(thisform.data());
+        return
     })
 }
 
@@ -2363,7 +2348,7 @@ function validateaddress_vk(ad) {
         var errormessage = "Enter a " + currency + " address";
         popnotify("error", errormessage);
         addressfield.focus();
-        return false;
+        return
     }
     if (currency) {
         var vkfield = $("#addressform .vk_input"),
@@ -2372,18 +2357,17 @@ function validateaddress_vk(ad) {
         if (vklength) {
             if (vklength !== 64) {
                 popnotify("error", "Invalid Viewkey");
-                return false;
-            } else {
-                if (check_vk(vkinputval)) {} else {
-                    popnotify("error", "Invalid Viewkey");
-                    return false;
-                }
+                return
+            }
+            if (check_vk(vkinputval)) {} else {
+                popnotify("error", "Invalid Viewkey");
+                return
             }
             var valid = check_address(addressinputval, currency);
             if (valid === true) {} else {
                 var errormessage = addressinputval + " is NOT a valid " + currency + " address";
                 popnotify("error", errormessage);
-                return false;
+                return
             }
             var payload = {
                 "address": addressinputval,
@@ -2409,11 +2393,11 @@ function validateaddress_vk(ad) {
                 if (errormessage) {
                     var error = (errormessage) ? errormessage : "Invalid Viewkey";
                     popnotify("error", error);
-                } else {
-                    var start_height = data.start_height;
-                    if (start_height > -1) { // success!
-                        validateaddress(ad, vkinputval);
-                    } else {}
+                    return
+                }
+                var start_height = data.start_height;
+                if (start_height > -1) { // success!
+                    validateaddress(ad, vkinputval);
                 }
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 console.log(jqXHR);
@@ -2421,13 +2405,12 @@ function validateaddress_vk(ad) {
                 console.log(errorThrown);
                 popnotify("error", "Error verifying Viewkey");
             });
-        } else {
-            validateaddress(ad, false);
+            return
         }
-    } else {
-        var errormessage = "Pick a currency";
-        popnotify("error", errormessage);
+        validateaddress(ad, false);
+        return
     }
+    popnotify("error", "Pick a currency");
 }
 
 function validateaddress(ad, vk) {
@@ -2452,77 +2435,75 @@ function validateaddress(ad, vk) {
         if (addressduplicate === true && address !== addinputval) {
             popnotify("error", "address already exists");
             addressfield.select();
-        } else {
-            var valid = check_address(addinputval, currencycheck);
-            if (valid === true) {
-                var validlabel = check_address(labelinputval, currencycheck);
-                if (validlabel === true) {
-                    popnotify("error", "invalid label");
-                    labelfield.val(label).select();
-                } else {
-                    if ($("#addressformbox").hasClass("formedit")) {
-                        var currentlistitem = currentaddresslist.children("li[data-address='" + address + "']"),
-                            ed = {};
-                        ed.label = labelinputval;
-                        if (vk) {
-                            ed.vk = vk;
-                        }
-                        currentlistitem.data(ed).attr("data-address", addinputval);
-                        currentlistitem.find(".atext h2 > span").text(labelinputval);
-                        currentlistitem.find(".atext p.address").text(addinputval);
-                        saveaddresses(currency, true);
-                        canceldialog();
-                        canceloptions();
+            return
+        }
+        var valid = check_address(addinputval, currencycheck);
+        if (valid === true) {
+            var validlabel = check_address(labelinputval, currencycheck);
+            if (validlabel === true) {
+                popnotify("error", "invalid label");
+                labelfield.val(label).select();
+                return
+            }
+            if ($("#addressformbox").hasClass("formedit")) {
+                var currentlistitem = currentaddresslist.children("li[data-address='" + address + "']"),
+                    ed = {};
+                ed.label = labelinputval;
+                if (vk) {
+                    ed.vk = vk;
+                }
+                currentlistitem.data(ed).attr("data-address", addinputval);
+                currentlistitem.find(".atext h2 > span").text(labelinputval);
+                currentlistitem.find(".atext p.address").text(addinputval);
+                saveaddresses(currency, true);
+                canceldialog();
+                canceloptions();
+                return
+            }
+            var pk_checkbox = $("#pk_confirmwrap"),
+                pk_checked = pk_checkbox.data("checked");
+            if (pk_checked == true) {
+                if (index === 1) {
+                    if (iserc20 === true) {
+                        buildpage(ad, true);
+                        append_coinsetting(currency, br_config.erc20_dat.settings, false);
+                    }
+                    if (body.hasClass("showstartpage")) {
+                        var acountname = $("#eninput").val();
+                        $("#accountsettings").data("selected", acountname).find("p").html(acountname);
+                        savesettings();
+                        var href = "?p=home&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0" + "&address=" + addinputval;
+                        localStorage.setItem("bitrequest_editurl", href); // to check if request is being edited
+                        openpage(href, "create " + currency + " request", "payment");
+                        body.removeClass("showstartpage");
                     } else {
-                        var pk_checkbox = $("#pk_confirmwrap"),
-                            pk_checked = pk_checkbox.data("checked");
-                        if (pk_checked == true) {
-                            if (index === 1) {
-                                if (iserc20 === true) {
-                                    buildpage(ad, true);
-                                    append_coinsetting(currency, br_config.erc20_dat.settings, false);
-                                }
-                                if (body.hasClass("showstartpage")) {
-                                    var acountname = $("#eninput").val();
-                                    $("#accountsettings").data("selected", acountname).find("p").html(acountname);
-                                    savesettings();
-                                    var href = "?p=home&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0" + "&address=" + addinputval;
-                                    localStorage.setItem("bitrequest_editurl", href); // to check if request is being edited
-                                    openpage(href, "create " + currency + " request", "payment");
-                                    body.removeClass("showstartpage");
-                                } else {
-                                    loadpage("?p=" + currency);
-                                }
-                            }
-                            ad.address = addinputval,
-                                ad.label = labelinputval,
-                                ad.a_id = ccsymbol + index,
-                                ad.vk = vk,
-                                ad.checked = true;
-                            appendaddress(currency, ad);
-                            saveaddresses(currency, true);
-                            currency_check(currency);
-                            canceldialog();
-                            canceloptions();
-                            clear_savedurl();
-                        } else {
-                            popnotify("error", "Confirm privatekey ownership");
-                        }
+                        loadpage("?p=" + currency);
                     }
                 }
-            } else {
-                var errormessage = addressinputval + " is NOT a valid " + currency + " address";
-                popnotify("error", errormessage);
-                setTimeout(function() {
-                    addressfield.select();
-                }, 10);
+                ad.address = addinputval,
+                    ad.label = labelinputval,
+                    ad.a_id = ccsymbol + index,
+                    ad.vk = vk,
+                    ad.checked = true;
+                appendaddress(currency, ad);
+                saveaddresses(currency, true);
+                currency_check(currency);
+                canceldialog();
+                canceloptions();
+                clear_savedurl();
+                return
             }
+            popnotify("error", "Confirm privatekey ownership");
+            return
         }
-    } else {
-        var errormessage = "Enter a " + currency + " address";
-        popnotify("error", errormessage);
-        addressfield.focus();
+        popnotify("error", addressinputval + " is NOT a valid " + currency + " address");
+        setTimeout(function() {
+            addressfield.select();
+        }, 10);
+        return
     }
+    popnotify("error", "Enter a " + currency + " address");
+    addressfield.focus();
 }
 
 function check_address(address, currency) {
@@ -2538,9 +2519,9 @@ function send_trigger() {
     $(document).on("click", ".send", function() {
         if (hasbip === true) {
             compatible_wallets($(this).attr("data-currency"));
-        } else {
-            playsound(funk);
+            return
         }
+        playsound(funk);
     })
 }
 
@@ -2570,10 +2551,10 @@ function canceldialogtrigger() {
             if (pointerevent == "none") {} else {
                 options.removeClass("showoptions");
             }
-        } else {
-            if (target == this || target_id == "canceldialog") {
-                canceldialog();
-            }
+            return
+        }
+        if (target == this || target_id == "canceldialog") {
+            canceldialog();
         }
     });
 }
@@ -2629,11 +2610,11 @@ function cancelpaymentdialogtrigger() {
         if (timelapsed < 1500) { // prevent clicking too fast
             playsound(funk);
             console.log("clicking too fast");
-        } else {
-            if (e.target == this) {
-                escapeandback();
-                cp_timer = now();
-            }
+            return
+        }
+        if (e.target == this) {
+            escapeandback();
+            cp_timer = now();
         }
     });
 }
@@ -2649,21 +2630,17 @@ function cpd_pollcheck() {
         return
     }
     if (request) {
-        if (request.received === true) {
-            close_paymentdialog();
-        } else {
+        if (request.received !== true) {
             var rq_init = request.rq_init,
                 rq_timer = request.rq_timer,
                 rq_time = now() - rq_timer;
             if (rq_time > after_poll_timeout) {
-                after_poll(rq_init)
-            } else {
-                close_paymentdialog();
+                after_poll(rq_init);
+                return
             }
         }
-    } else {
-        close_paymentdialog();
     }
+    close_paymentdialog();
 }
 
 function cancelpaymentdialog() {
@@ -2859,15 +2836,15 @@ function newrequest_alias() {
             active_currency_count = active_currencies.length;
         if (active_currency_count === 0) {
             alert("no active currencies");
-        } else {
-            if (active_currency_count > 1) {
-                content = "<ul id='alias_currencylist' class='currencylist'>" + currencylist.html() + "</ul>"
-                showoptions(content);
-            } else {
-                var active_currency_trigger = active_currencies.find(".rq_icon").first();
-                triggertxfunction(active_currency_trigger);
-            }
+            return
         }
+        if (active_currency_count > 1) {
+            content = "<ul id='alias_currencylist' class='currencylist'>" + currencylist.html() + "</ul>"
+            showoptions(content);
+            return
+        }
+        var active_currency_trigger = active_currencies.find(".rq_icon").first();
+        triggertxfunction(active_currency_trigger);
     });
 }
 
@@ -2882,7 +2859,7 @@ function newrequest() {
             seedid = ad.seedid;
         if (seedid) {
             if (seedid != bipid) {
-                if (address_whitelist(address) === true) {} else {
+                if (addr_whitelist(address) === true) {} else {
                     var pass_dat = {
                             "currency": currency,
                             "address": address,
@@ -3047,75 +3024,6 @@ function showtransaction_trigger() {
     })
 }
 
-function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
-    var p_arr = lnurl_deform(proxy),
-        proxy_host = p_arr.url,
-        pk = (pw) ? pw : p_arr.k,
-        proxy_url = proxy_host + "proxy/v1/ln/api/",
-        postdata = {
-            "method": "POST",
-            "cache": false,
-            "timeout": 5000,
-            "url": proxy_url,
-            "data": {
-                "fn": "ln-invoice-decode",
-                "imp": imp,
-                "hash": hash,
-                "nid": nid,
-                "callback": "no",
-                "id": pid,
-                "x-api": pk
-            }
-        };
-    loader(true);
-    loadertext("connecting to " + lnurl_encode("lnurl", proxy_host));
-    $.ajax(postdata).done(function(e) {
-        if (e) {
-            var error = e.error;
-            if (error) {
-                popdialog("<h2 class='icon-blocked'>" + error.message + "</h2>", "alert", "canceldialog");
-                closeloader();
-                return;
-            }
-            var ddat = [{
-                    "div": {
-                        "class": "popform",
-                        "content": [{
-                                "div": {
-                                    "class": "invoice_body",
-                                    "content": "<pre>" + syntaxHighlight(e) + "</pre><div class='inv_pb'><img src='" + c_icons(imp) + "' class='lnd_icon' title='" + imp + "'/> Powered by " + imp + "</div>"
-                                }
-                            },
-                            {
-                                "input": {
-                                    "class": "submit",
-                                    "attr": {
-                                        "type": "submit",
-                                        "value": "OK"
-                                    }
-                                }
-                            }
-                        ]
-                    }
-                }],
-                content = template_dialog({
-                    "id": "invoiceformbox",
-                    "icon": "icon-power",
-                    "title": "Invoice",
-                    "elements": ddat
-                });
-            popdialog(content, "alert", "canceldialog");
-            closeloader();
-            return
-        }
-        notify("Unable to fetch invoice");
-        closeloader();
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        notify("Unable to fetch invoice");
-        closeloader();
-    });
-}
-
 function showtransactions() {
     $(document).on("click", ".showtransactions", function(e) {
         e.preventDefault();
@@ -3145,7 +3053,7 @@ function addressinfo() {
             active_src = (isseed) ? (seedid == bipid) :
             (isxpub) ? (activepub && xpubid == activepub.key_id) : false,
             address = dd.address,
-            a_wl = address_whitelist(address),
+            a_wl = addr_whitelist(address),
             restore = (isseed) ? (hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + seedid + "'>Restore</div>" : "",
             srcval = (source) ? (active_src) ? source + " <span class='icon-checkmark'>" :
             source + " (Unavailable)" + restore : "external",
@@ -3195,29 +3103,29 @@ function show_pk() {
         if (pkspan.is(":visible")) {
             pkspan.slideUp(200);
             thisbttn.text("show");
-        } else {
-            if (pkspan.hasClass("shwpk")) {
-                pkspan.slideDown(200);
-                thisbttn.text("hide");
-            } else {
-                $("#optionsbox").html("");
-                var addat = $("#ad_info_wrap").data(),
-                    currency = addat.currency,
-                    keycc = key_cc(),
-                    dx_dat = {
-                        "dpath": addat.dpath,
-                        "key": keycc.key,
-                        "cc": keycc.cc
-                    },
-                    x_keys_dat = derive_x(dx_dat),
-                    key_object = format_keys(keycc.seed, x_keys_dat, addat.bip32dat, addat.derive_index, currency),
-                    privkey = key_object.privkey;
-                all_pinpanel({
-                    "func": show_pk_cb,
-                    "args": privkey
-                }, true)
-            }
+            return
         }
+        if (pkspan.hasClass("shwpk")) {
+            pkspan.slideDown(200);
+            thisbttn.text("hide");
+            return
+        }
+        $("#optionsbox").html("");
+        var addat = $("#ad_info_wrap").data(),
+            currency = addat.currency,
+            keycc = key_cc(),
+            dx_dat = {
+                "dpath": addat.dpath,
+                "key": keycc.key,
+                "cc": keycc.cc
+            },
+            x_keys_dat = derive_x(dx_dat),
+            key_object = format_keys(keycc.seed, x_keys_dat, addat.bip32dat, addat.derive_index, currency),
+            privkey = key_object.privkey;
+        all_pinpanel({
+            "func": show_pk_cb,
+            "args": privkey
+        }, true)
     })
 }
 
@@ -3240,37 +3148,37 @@ function show_vk() {
         if (pkspan.is(":visible")) {
             pkspan.slideUp(200);
             thisbttn.text("show");
+            return
+        }
+        if (pkspan.hasClass("shwpk")) {
+            pkspan.slideDown(200);
+            thisbttn.text("hide");
+            return
+        }
+        $("#optionsbox").html("");
+        var x_ko = {};
+        if (vk == "derive") {
+            var addat = $("#ad_info_wrap").data(),
+                keycc = key_cc(),
+                dx_dat = {
+                    "dpath": addat.dpath,
+                    "key": keycc.key,
+                    "cc": keycc.cc
+                },
+                x_keys_dat = derive_x(dx_dat),
+                rootkey = x_keys_dat.key,
+                ssk = sc_reduce32(fasthash(rootkey)),
+                x_ko = xmr_getpubs(ssk, addat.derive_index);
         } else {
-            if (pkspan.hasClass("shwpk")) {
-                pkspan.slideDown(200);
-                thisbttn.text("hide");
-            } else {
-                $("#optionsbox").html("");
-                var x_ko = {};
-                if (vk == "derive") {
-                    var addat = $("#ad_info_wrap").data(),
-                        keycc = key_cc(),
-                        dx_dat = {
-                            "dpath": addat.dpath,
-                            "key": keycc.key,
-                            "cc": keycc.cc
-                        },
-                        x_keys_dat = derive_x(dx_dat),
-                        rootkey = x_keys_dat.key,
-                        ssk = sc_reduce32(fasthash(rootkey)),
-                        x_ko = xmr_getpubs(ssk, addat.derive_index);
-                } else {
-                    x_ko = {
-                        "stat": true,
-                        "svk": vk
-                    }
-                }
-                all_pinpanel({
-                    "func": show_vk_cb,
-                    "args": x_ko
-                }, true)
+            x_ko = {
+                "stat": true,
+                "svk": vk
             }
         }
+        all_pinpanel({
+            "func": show_vk_cb,
+            "args": x_ko
+        }, true)
     })
 }
 
@@ -3309,13 +3217,13 @@ function blockexplorer_url(currency, tx, erc20) {
 }
 
 function get_blockexplorer(currency) {
-    return $("#" + currency + "_settings .cc_settinglist li[data-id='blockexplorers']").data("selected");
+    return cs_dat(currency, "blockexplorers").selected;
 }
 
 function apisrc_shortcut() {
     $(document).on("click", ".api_source", function() {
-        var rpc_settings_li = $("#" + $(this).closest("li.rqli").data("payment") + "_settings .cc_settinglist li[data-id='apis']");
-        if (rpc_settings_li.length > 0) {
+        var rpc_settings_li = cs_node($(this).closest("li.rqli").data("payment"), "apis");
+        if (rpc_settings_li) {
             rpc_settings_li.trigger("click");
         }
     })
@@ -3403,42 +3311,15 @@ function toggle_request_meta() {
         var metalist = $(this).closest(".moreinfo").find(".metalist");
         if (metalist.is(":visible")) {
             metalist.slideUp(300);
-            //confbar.css("transform", "translate(-100%)");
-        } else {
-            var confbar = metalist.find(".confbar");
-            metalist.slideDown(300);
-            if (confbar.length > 0) {
-                confbar.each(function(i) {
-                    animate_confbar($(this), i);
-                });
-            }
+            return
         }
-        return false;
-    })
-}
-
-function show_transaction_meta() {
-    $(document).on("dblclick", ".requestlist li .transactionlist li", function() {
-        var thisli = $(this),
-            txmeta = thisli.children(".historic_meta");
-        if (txmeta.is(":visible")) {} else {
-            var txlist = thisli.closest(".transactionlist"),
-                alltxmeta = txlist.find(".historic_meta");
-            alltxmeta.not(txmeta).slideUp(300);
-            txmeta.slideDown(300);
+        var confbar = metalist.find(".confbar");
+        metalist.slideDown(300);
+        if (confbar.length > 0) {
+            confbar.each(function(i) {
+                animate_confbar($(this), i);
+            });
         }
-        return false;
-    })
-}
-
-function hide_transaction_meta() {
-    $(document).on("click", ".requestlist li .transactionlist li", function() {
-        var thisli = $(this),
-            tx_meta = thisli.children(".historic_meta");
-        if (tx_meta.is(":visible")) {
-            tx_meta.slideUp(300);
-        }
-        return false;
     })
 }
 
@@ -3453,10 +3334,33 @@ function animate_confbar(confbox, index) {
     }, index * 500);
 }
 
+function show_transaction_meta() {
+    $(document).on("dblclick", ".requestlist li .transactionlist li", function() {
+        var thisli = $(this),
+            txmeta = thisli.children(".historic_meta");
+        if (txmeta.is(":visible")) {
+            return
+        }
+        var txlist = thisli.closest(".transactionlist"),
+            alltxmeta = txlist.find(".historic_meta");
+        alltxmeta.not(txmeta).slideUp(300);
+        txmeta.slideDown(300);
+    })
+}
+
+function hide_transaction_meta() {
+    $(document).on("click", ".requestlist li .transactionlist li", function() {
+        var thisli = $(this),
+            tx_meta = thisli.children(".historic_meta");
+        if (tx_meta.is(":visible")) {
+            tx_meta.slideUp(300);
+        }
+    })
+}
+
 function archive() {
     $(document).on("click", "#requestlist .req_actions .icon-folder-open", function() {
         popdialog("<h2 class='icon-folder-open'>Archive request?</h2>", "alert", "archivefunction", $(this));
-        return false;
     })
 }
 
@@ -3477,10 +3381,7 @@ function archivefunction() {
         savearchive();
         saverequests();
     }, 350);
-    var viewarchive = $("#viewarchive"),
-        va_title = viewarchive.attr("data-title"),
-        archivecount = $("#archivelist > li").length;
-    viewarchive.slideDown(300).text(va_title + " (" + archivecount + ")");
+    archive_button();
     canceldialog();
     notify("Moved to archive");
 }
@@ -3488,7 +3389,6 @@ function archivefunction() {
 function unarchive() {
     $(document).on("click", "#archivelist .req_actions .icon-undo2", function() {
         popdialog("<h2 class='icon-undo2'>Unarchive request?</h2>", "alert", "unarchivefunction", $(this));
-        return false;
     })
 }
 
@@ -3502,13 +3402,7 @@ function unarchivefunction() {
         thisreguest.remove();
         savearchive();
         saverequests();
-        var viewarchive = $("#viewarchive"),
-            va_title = viewarchive.attr("data-title"),
-            archivecount = $("#archivelist > li").length;
-        viewarchive.text(va_title + " (" + archivecount + ")");
-        if (archivecount < 1) {
-            viewarchive.slideUp(300);
-        }
+        archive_button();
     }, 350);
     canceldialog();
     notify("Request restored");
@@ -3517,7 +3411,6 @@ function unarchivefunction() {
 function removerequest() {
     $(document).on("click", ".req_actions .icon-bin", function() {
         popdialog("<h2 class='icon-bin'>Delete request?</h2>", "alert", "removerequestfunction", $(this));
-        return false;
     })
 }
 
@@ -3684,26 +3577,24 @@ function fetchsymbol(currencyname) {
     return ccsymbol;
 }
 
-Number.prototype.toFixedSpecial = function(n) { //Convert from Scientific Notation to Standard Notation
+Number.prototype.toFixedSpecial = function(n) {
     var str = this.toFixed(n);
     if (str.indexOf("e+") < 0) {
         return str;
-    } else {
-        // if number is in scientific notation, pick (b)ase and (p)ower
-        var convert = str.replace(".", "").split("e+").reduce(function(p, b) {
-            return p + Array(b - p.length + 2).join(0);
-        }) + "." + Array(n + 1).join(0);
-        return convert.slice(0, -1);
     }
+    var convert = str.replace(".", "").split("e+").reduce(function(p, b) {
+        return p + Array(b - p.length + 2).join(0);
+    }) + "." + Array(n + 1).join(0);
+    return convert.slice(0, -1);
 };
 
 function fixedcheck(livetop) {
     var headerheight = $(".showmain #header").outerHeight();
     if (livetop > headerheight) {
         $(".showmain").addClass("fixednav");
-    } else {
-        $(".showmain").removeClass("fixednav");
+        return
     }
+    $(".showmain").removeClass("fixednav");
 }
 
 function geturlparameters() {
@@ -3731,7 +3622,7 @@ function copytoclipboard(content, type) {
     if (copy_api) {
         navigator.clipboard.writeText(content);
         notify(type + " copied to clipboard", 2500, "no");
-        return false;
+        return
     }
     copycontent.val(content);
     copycontent[0].setSelectionRange(0, 999);
@@ -3917,69 +3808,69 @@ function all_pinpanel(cb, top) {
             pass = (tsll < 10000);
         if (cb && pass) { // keep unlocked in 10 second time window
             cb.func(cb.args);
-            return false;
+            return
         }
         var content = pinpanel(" pinwall", cb);
         showoptions(content, "pin" + topclass);
-    } else {
-        var content = pinpanel("", cb);
-        showoptions(content, "pin" + topclass);
+        return
     }
+    var content = pinpanel("", cb);
+    showoptions(content, "pin" + topclass);
 }
 
 function pinpanel(pinclass, pincb) {
     var makeclass = (pinclass === undefined) ? "" : pinclass,
         headertext = (haspin() === true) ? "Please enter your pin" : "Create a 4-digit pin";
     return $("<div id='pinfloat' class='enterpin" + makeclass + "'>\
-			<p id='pintext'>" + headertext + "</p>\
-			<p id='confirmpin'>Confirm your pin</p>\
-			<input id='pininput' type='password' readonly='readonly'/>\
-			<input id='validatepin' type='password' readonly='readonly'/>\
-			<div id='pinkeypad'>\
-				<div id='pin1' class='pinpad flex'>\
-					<span class='pincell'>1</span>\
-				</div>\
-				<div id='pin2' class='pinpad'>\
-					<span class='pincell'>2</span>\
-				</div>\
-				<div id='pin3' class='pinpad'>\
-					<span class='pincell'>3</span>\
-				</div><br>\
-				<div id='pin4' class='pinpad'>\
-					<span class='pincell'>4</span>\
-				</div>\
-				<div id='pin5' class='pinpad'>\
-					<span class='pincell'>5</span>\
-				</div>\
-				<div id='pin6' class='pinpad'>\
-					<span class='pincell'>6</span>\
-				</div><br>\
-				<div id='pin7' class='pinpad'>\
-					<span class='pincell'>7</span>\
-				</div>\
-				<div id='pin8' class='pinpad'>\
-					<span class='pincell'>8</span>\
-				</div>\
-				<div id='pin9' class='pinpad'>\
-					<span class='pincell'>9</span>\
-				</div><br>\
-				<div id='locktime' class='pinpad'>\
-					<span class='icomoon'></span>\
-				</div>\
-				<div id='pin0' class='pinpad'>\
-					<span class='pincell'>0</span>\
-				</div>\
-				<div id='pinback' class='pinpad'>\
-					<span class='icomoon'></span>\
-				</div>\
+		<p id='pintext'>" + headertext + "</p>\
+		<p id='confirmpin'>Confirm your pin</p>\
+		<input id='pininput' type='password' readonly='readonly'/>\
+		<input id='validatepin' type='password' readonly='readonly'/>\
+		<div id='pinkeypad'>\
+			<div id='pin1' class='pinpad flex'>\
+				<span class='pincell'>1</span>\
 			</div>\
-			<div id='pin_admin' class='flex'>\
-				<div id='pin_admin_float'>\
-					<div id='lock_time'><span class='icomoon'></span> Lock time</div>\
-					<div id='reset_pin'>Reset pin</div>\
-				</div>\
+			<div id='pin2' class='pinpad'>\
+				<span class='pincell'>2</span>\
 			</div>\
-		</div>").data("pincb", pincb);
+			<div id='pin3' class='pinpad'>\
+				<span class='pincell'>3</span>\
+			</div><br>\
+			<div id='pin4' class='pinpad'>\
+				<span class='pincell'>4</span>\
+			</div>\
+			<div id='pin5' class='pinpad'>\
+				<span class='pincell'>5</span>\
+			</div>\
+			<div id='pin6' class='pinpad'>\
+				<span class='pincell'>6</span>\
+			</div><br>\
+			<div id='pin7' class='pinpad'>\
+				<span class='pincell'>7</span>\
+			</div>\
+			<div id='pin8' class='pinpad'>\
+				<span class='pincell'>8</span>\
+			</div>\
+			<div id='pin9' class='pinpad'>\
+				<span class='pincell'>9</span>\
+			</div><br>\
+			<div id='locktime' class='pinpad'>\
+				<span class='icomoon'></span>\
+			</div>\
+			<div id='pin0' class='pinpad'>\
+				<span class='pincell'>0</span>\
+			</div>\
+			<div id='pinback' class='pinpad'>\
+				<span class='icomoon'></span>\
+			</div>\
+		</div>\
+		<div id='pin_admin' class='flex'>\
+			<div id='pin_admin_float'>\
+				<div id='lock_time'><span class='icomoon'></span> Lock time</div>\
+				<div id='reset_pin'>Reset pin</div>\
+			</div>\
+		</div>\
+	</div>").data("pincb", pincb);
 }
 
 function switchpanel(switchmode, mode) {
@@ -4004,32 +3895,27 @@ function getcoindata(currency) {
                 "erc20": false
             };
         return cd_object;
-    } else { // if not it's probably erc20 token
-        var currencyref = $("#usedcurrencies li[data-currency='" + currency + "']"); // check if erc20 token is added
-        if (currencyref.length > 0) {
-            return $.extend(currencyref.data(), br_config.erc20_dat.data);
-        } else { // else lookup erc20 data
-            var tokenobject = JSON.parse(localStorage.getItem("bitrequest_erc20tokens"));
-            if (tokenobject) {
-                var erc20data = $.grep(tokenobject, function(filter) { //filter pending requests	
-                    return filter.name == currency;
-                })[0];
-                if (erc20data) {
-                    var fetched_data = {
-                        "currency": erc20data.name,
-                        "ccsymbol": erc20data.symbol,
-                        "cmcid": erc20data.cmcid.toString(),
-                        "contract": erc20data.contract
-                    }
-                    return $.extend(fetched_data, br_config.erc20_dat.data);
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
+    } // if not it's probably erc20 token
+    var currencyref = $("#usedcurrencies li[data-currency='" + currency + "']"); // check if erc20 token is added
+    if (currencyref.length > 0) {
+        return $.extend(currencyref.data(), br_config.erc20_dat.data);
+    } // else lookup erc20 data
+    var tokenobject = JSON.parse(localStorage.getItem("bitrequest_erc20tokens"));
+    if (tokenobject) {
+        var erc20data = $.grep(tokenobject, function(filter) {
+            return filter.name == currency;
+        })[0];
+        if (erc20data) {
+            var fetched_data = {
+                "currency": erc20data.name,
+                "ccsymbol": erc20data.symbol,
+                "cmcid": erc20data.cmcid.toString(),
+                "contract": erc20data.contract
             }
+            return $.extend(fetched_data, br_config.erc20_dat.data);
         }
     }
+    return false;
 }
 
 function activecoinsettings(currency) {
@@ -4041,13 +3927,12 @@ function getcoinsettings(currency) {
     var coindata = getcoinconfig(currency);
     if (coindata) {
         return coindata.settings;
-    } else { // return erc20 settings
-        return br_config.erc20_dat.settings;
-    }
+    } // return erc20 settings
+    return br_config.erc20_dat.settings;
 }
 
 function getbip32dat(currency) {
-    var xpub_dat = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']").data();
+    var xpub_dat = cs_dat(currency, "Xpub");
     if (xpub_dat && xpub_dat.active === true) {
         return xpub_dat;
     }
@@ -4089,9 +3974,8 @@ function try_next_api(apilistitem, current_apiname) {
         next_api = (next_scan) ? next_scan : apilist[0];
     if (api_attempt[apilistitem][next_api] === true) {
         return false;
-    } else {
-        return next_api;
     }
+    return next_api;
 }
 
 function wake() {
@@ -4162,8 +4046,8 @@ function countdown_format(cd) {
         ms = (hours) ? ", " : "",
         minutenode = (minutes) ? (minutes < 2) ? ms + minutes + " minute" : ms + minutes + " minutes" : "",
         ss = (minutes) ? " and " : "",
-        secondnode = (seconds) ? ss + seconds + " seconds" : ""
-    result = (cd) ? daynode + hournode + minutenode + secondnode : false;
+        secondnode = (seconds) ? ss + seconds + " seconds" : "",
+        result = (cd) ? daynode + hournode + minutenode + secondnode : false;
     return result;
 }
 
@@ -4203,7 +4087,7 @@ function rendercurrencies() {
 function render_currencysettings(thiscurrency) {
     var settingcache = localStorage.getItem("bitrequest_" + thiscurrency + "_settings");
     if (settingcache) {
-        append_coinsetting(thiscurrency, JSON.parse(settingcache), false)
+        append_coinsetting(thiscurrency, JSON.parse(settingcache), false);
     }
 }
 
@@ -4231,25 +4115,6 @@ function buildsettings() {
     });
 }
 
-// add serviceworker
-function add_serviceworker() {
-    if ("serviceWorker" in navigator) {
-        if (navigator.serviceWorker.controller) {
-            // console.log("active service worker found, no need to register");
-        } else {
-            // Register the service worker
-            navigator.serviceWorker.register(approot + "serviceworker.js", {
-                    "scope": "./"
-                })
-                .then(function(reg) {
-                    // console.log("Service worker has been registered for scope: " + reg.scope);
-                });
-        }
-    } else {
-        // console.log("service worker is not supported");
-    }
-}
-
 // render settings
 function rendersettings(excludes) {
     var settingcache = localStorage.getItem("bitrequest_settings");
@@ -4265,12 +4130,18 @@ function rendersettings(excludes) {
 function renderrequests() {
     fetchrequests("bitrequest_requests", false);
     fetchrequests("bitrequest_archive", true);
-    var archivecount = $("#archivelist > li").length;
+    archive_button();
+}
+
+function archive_button() {
+    var viewarchive = $("#viewarchive"),
+        archivecount = $("#archivelist > li").length;
     if (archivecount > 0) {
-        var viewarchive = $("#viewarchive"),
-            va_title = viewarchive.attr("data-title");
-        viewarchive.show().text(va_title + " (" + archivecount + ")");
+        va_title = viewarchive.attr("data-title");
+        viewarchive.slideDown(300).text(va_title + " (" + archivecount + ")");
+        return
     }
+    viewarchive.slideUp(300);
 }
 
 function fetchrequests(cachename, archive) {
@@ -4292,7 +4163,7 @@ function initiate() {
         if (val.active === true) {
             var settings = val.settings,
                 has_settings = (settings) ? true : false,
-                is_monitored = (settings) ? (settings.apis) ? true : false : false,
+                is_monitored = (has_settings) ? (settings.apis) ? true : false : false,
                 cd = val.data,
                 coindata = {
                     "currency": cd.currency,
@@ -4366,7 +4237,7 @@ function buildpage(cd, init) {
         currency_page.data(cd).appendTo("main");
         if (erc20 === true) {
             var coin_settings_cache = localStorage.getItem("bitrequest_" + currency + "_settings");
-            if (coin_settings_cache === null) {
+            if (!coin_settings_cache) {
                 localStorage.setItem("bitrequest_" + currency + "_settings", JSON.stringify(br_config.erc20_dat.settings));
             }
         }
@@ -4784,6 +4655,75 @@ function share_receipt() {
     })
 }
 
+function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
+    var p_arr = lnurl_deform(proxy),
+        proxy_host = p_arr.url,
+        pk = (pw) ? pw : p_arr.k,
+        proxy_url = proxy_host + "proxy/v1/ln/api/",
+        postdata = {
+            "method": "POST",
+            "cache": false,
+            "timeout": 5000,
+            "url": proxy_url,
+            "data": {
+                "fn": "ln-invoice-decode",
+                "imp": imp,
+                "hash": hash,
+                "nid": nid,
+                "callback": "no",
+                "id": pid,
+                "x-api": pk
+            }
+        };
+    loader(true);
+    loadertext("connecting to " + lnurl_encode("lnurl", proxy_host));
+    $.ajax(postdata).done(function(e) {
+        if (e) {
+            var error = e.error;
+            if (error) {
+                popdialog("<h2 class='icon-blocked'>" + error.message + "</h2>", "alert", "canceldialog");
+                closeloader();
+                return;
+            }
+            var ddat = [{
+                    "div": {
+                        "class": "popform",
+                        "content": [{
+                                "div": {
+                                    "class": "invoice_body",
+                                    "content": "<pre>" + syntaxHighlight(e) + "</pre><div class='inv_pb'><img src='" + c_icons(imp) + "' class='lnd_icon' title='" + imp + "'/> Powered by " + imp + "</div>"
+                                }
+                            },
+                            {
+                                "input": {
+                                    "class": "submit",
+                                    "attr": {
+                                        "type": "submit",
+                                        "value": "OK"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }],
+                content = template_dialog({
+                    "id": "invoiceformbox",
+                    "icon": "icon-power",
+                    "title": "Invoice",
+                    "elements": ddat
+                });
+            popdialog(content, "alert", "canceldialog");
+            closeloader();
+            return
+        }
+        notify("Unable to fetch invoice");
+        closeloader();
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        notify("Unable to fetch invoice");
+        closeloader();
+    });
+}
+
 function amountshort(amount, receivedamount, fiatvalue, iscrypto) {
     var amount_recieved = (iscrypto === true) ? receivedamount : fiatvalue,
         amount_short = amount - amount_recieved;
@@ -4817,16 +4757,16 @@ function submit_request_description() {
             this_requestid = thisnode.attr("data-requestid"),
             this_requesttitle = thisnode.prev("input").val(),
             requesttitle_val = (this_requesttitle) ? this_requesttitle : "empty";
-        updaterequest({
-            "requestid": this_requestid,
-            "requesttitle": requesttitle_val
-        }, true);
         if (this_requesttitle) {
+            updaterequest({
+                "requestid": this_requestid,
+                "requesttitle": requesttitle_val
+            }, true);
             canceldialog();
             notify("Request saved");
-        } else {
-            popnotify("error", "Description is a required field");
+            return
         }
+        popnotify("error", "Description is a required field");
     })
 }
 
@@ -4902,13 +4842,13 @@ function updatechanges(key, add) {
     if (GD_auth_class() === true) {
         updateappdata();
         body.removeClass("haschanges");
-    } else {
-        if (add === true) {
-            var cc = changes[key],
-                cc_correct = (cc) ? cc : 0;
-            changes[key] = cc_correct + 1;
-            savechangesstats();
-        }
+        return
+    }
+    if (add === true) {
+        var cc = changes[key],
+            cc_correct = (cc) ? cc : 0;
+        changes[key] = cc_correct + 1;
+        savechangesstats();
     }
 }
 
@@ -4928,19 +4868,19 @@ function savechangesstats() {
 function renderchanges() {
     var changescache = localStorage.getItem("bitrequest_changes");
     if (changescache) {
-        changes = JSON.parse(changescache),
-            setTimeout(function() { // wait for Googleauth to load
-                change_alert();
-            }, 700);
-    } else {
-        changes = {};
+        changes = JSON.parse(changescache);
+        setTimeout(function() { // wait for Googleauth to load
+            change_alert();
+        }, 700);
+        return
     }
+    changes = {};
 }
 
 function change_alert() {
     if (GoogleAuth) {
         body.removeClass("haschanges");
-        return false;
+        return
     }
     var total_changes = get_total_changes();
     if (total_changes > 0) {
@@ -4963,27 +4903,21 @@ function get_total_changes() {
 // ** Get_app **
 
 function detectapp() {
-    if (inframe === true) {
-        return false;
-    } else {
-        var show_dialog = sessionStorage.getItem("bitrequest_appstore_dialog") || localStorage.getItem("bitrequest_appstore_dialog");
-        if (show_dialog) {
-            return false;
-        } else {
-            if (is_android_app === true || is_ios_app === true) {
-                return false;
-            } else {
-                if (supportsTouch === true) {
-                    var device = getdevicetype();
-                    if (device == "Android") {
-                        //getapp("android");
-                    } else if (device == "iPhone" || device == "iPad" || device == "Macintosh") {
-                        getapp("apple");
-                    } else {
-
-                    }
-                }
-            }
+    if (inframe === true || is_android_app === true || is_ios_app === true) {
+        return
+    }
+    var show_dialog = sessionStorage.getItem("bitrequest_appstore_dialog") || localStorage.getItem("bitrequest_appstore_dialog");
+    if (show_dialog) {
+        return
+    }
+    if (supportsTouch === true) {
+        var device = getdevicetype();
+        if (device == "Android") {
+            //getapp("android");
+            return
+        }
+        if (device == "iPhone" || device == "iPad" || device == "Macintosh") {
+            getapp("apple");
         }
     }
 }
@@ -4995,7 +4929,7 @@ function getapp(type) {
         button = (android === true) ? fetch_aws("img_button-playstore.png") : fetch_aws("img_button-appstore.png"),
         url = (android === true) ? "https://play.google.com/store/apps/details?id=" + androidpackagename + "&pcampaignid=fdl_long&url=" + approot + encodeURIComponent(w_loc.search) : "https://apps.apple.com/app/id1484815377?mt=8",
         panelcontent = "<h2>Download the app</h2>\
-			<a href='" + url + "' class='exit store_bttn'><img src='img_" + button + "'></a><br/>\
+			<a href='" + url + "' class='exit store_bttn'><img src='" + button + "'></a><br/>\
 			<div id='not_now'>Not now</div>";
     app_panel.html(panelcontent);
     setTimeout(function() {
@@ -5162,9 +5096,9 @@ function check_currency(currency) {
     var addresscount = filter_addressli(currency, "checked", true).length;
     if (addresscount > 0) {
         currency_check(currency);
-    } else {
-        currency_uncheck(currency);
+        return
     }
+    currency_uncheck(currency);
 }
 
 function currency_check(currency) {
@@ -5203,7 +5137,8 @@ function vk_obj(vk) {
             "account": false,
             "vk": vk
         }
-    } else if (vk.length === 159) {
+    }
+    if (vk.length === 159) {
         return {
             "account": vk.slice(0, 95),
             "vk": vk.slice(95)
@@ -5213,7 +5148,7 @@ function vk_obj(vk) {
 }
 
 function share_vk() {
-    var vkshare = $("#monero_settings .cc_settinglist li[data-id='Share viewkey']").data("selected");
+    var vkshare = cs_dat("monero", "Share viewkey").selected;
     if (vkshare === true) {
         return true;
     }
@@ -5226,12 +5161,12 @@ function gk() {
         var pk = JSON.parse(atob(k));
         if (pk.if_id == "" || pk.ad_id == "" || pk.ga_id == "" || pk.bc_id == "") {
             fk();
-        } else {
-            init_keys(k, true);
+            return
         }
-    } else {
-        fk();
+        init_keys(k, true);
+        return
     }
+    fk();
 }
 
 function fk() {
@@ -5276,12 +5211,12 @@ function check_rr() {
         var lsrr_arr = JSON.parse(ls_recentrequests);
         if ($.isEmptyObject(lsrr_arr)) {
             toggle_rr(false);
-        } else {
-            toggle_rr(true);
+            return
         }
-    } else {
-        toggle_rr(false);
+        toggle_rr(true);
+        return
     }
+    toggle_rr(false);
 }
 
 function toggle_rr(bool) {
@@ -5292,7 +5227,21 @@ function toggle_rr(bool) {
         setTimeout(function() {
             hist_bttn.removeClass("load");
         }, 500);
-    } else {
-        html.removeClass("show_rr");
+        return
+    }
+    html.removeClass("show_rr");
+}
+
+// add serviceworker
+function add_serviceworker() {
+    if ("serviceWorker" in navigator) {
+        if (!navigator.serviceWorker.controller) {
+            navigator.serviceWorker.register(approot + "serviceworker.js", {
+                    "scope": "./"
+                })
+                .then(function(reg) {
+                    // console.log("Service worker has been registered for scope: " + reg.scope);
+                });
+        }
     }
 }

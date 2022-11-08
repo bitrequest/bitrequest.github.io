@@ -1192,7 +1192,7 @@ function restore_callback_file(pass_dat, np) {
     }
     notify("file restored");
     canceldialog();
-    window.location.href = window.location.pathname + "?p=settings";
+    w_loc.href = w_loc.pathname + "?p=settings";
 }
 
 function restore_callback_gd(pass_dat, np) {
@@ -1216,7 +1216,7 @@ function restore_callback_gd(pass_dat, np) {
         }
         canceldialog();
         setTimeout(function() {
-            window.location.href = window.location.pathname + "?p=settings";
+            w_loc.href = w_loc.pathname + "?p=settings";
         }, 300);
     }, 300);
 }
@@ -3364,7 +3364,7 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
     savesettings();
     notify("Installation complete!");
     canceldialog();
-    window.location.href = window.location.pathname + "?p=home";
+    w_loc.href = w_loc.pathname + "?p=home";
 }
 
 function check_useragent() {

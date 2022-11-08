@@ -11,6 +11,7 @@ var txid,
     })).toFixed(2),
     // Global helpers
     block_swipe,
+    percent,
     sa_timer,
     payment,
     request,
@@ -58,7 +59,8 @@ $(document).ready(function() {
     ndef_switch_function();
     //lnd_statusx
     lnd_offline();
-    lnd_nodeinfo();
+    lnd_ni();
+    //lnd_popup
     pickcurrency();
     //rendercpooltext
     pushamount();
@@ -129,7 +131,7 @@ $(document).ready(function() {
 // ** Swipe payment dialog **
 
 function wake_panel() {
-    $(document).on("mousedown touchstart", paymentdialogbox, function() {
+    $(document).on("mousedown touchstart", "#paymentdialogbox", function() {
         set_request_timer();
     })
 }
@@ -152,8 +154,7 @@ function swipestart() {
         if (inputs.is(":focus")) {
             blockswipe = true;
         }
-        var thisdialog = $(this),
-            startheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
+        var startheight = (e.originalEvent.touches) ? e.originalEvent.touches[0].pageY : e.pageY;
         startswipetime = now();
         swipe(thisdialog.height(), startheight);
     })
@@ -163,9 +164,9 @@ function swipe(dialogheight, startheight) {
     $(document).on("mousemove touchmove", "#payment", function(e) {
         if (blockswipe === true) {
             unfocus_inputs();
-            return false;
+            return
         }
-        var currentheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY,
+        var currentheight = (e.originalEvent.touches) ? e.originalEvent.touches[0].pageY : e.pageY,
             dragdistance = currentheight - startheight;
         if (dragdistance > 3 || dragdistance < -3) { // margin to activate swipe
             html.addClass("swipemode");
@@ -219,19 +220,14 @@ function flipstart() {
                 return
             }
             var is_lnd = (paymentdialogbox.attr("data-lswitch") == "lnd_ao");
-            if (paymentdialogbox.attr("data-pending") == "ispending") {
-                if (is_lnd) {} else {
-                    return
-                }
-            } else {
-                if (is_lnd) {
-                    if (paymentdialogbox.hasClass("accept_lnd")) {
-                        //return
-                    }
-                }
+            if (paymentdialogbox.attr("data-pending") == "ispending" && !is_lnd) {
+                return
+            }
+            if (is_lnd && paymentdialogbox.hasClass("accept_lnd")) {
+                return
             }
         }
-        var startwidth = e.originalEvent.touches ? e.originalEvent.touches[0].pageX : e.pageX;
+        var startwidth = (e.originalEvent.touches) ? e.originalEvent.touches[0].pageX : e.pageX;
         flip($(this).width(), startwidth);
     })
 }
@@ -239,7 +235,7 @@ function flipstart() {
 function flip(dialogwidth, startwidth) {
     $(document).on("mousemove touchmove", "#payment", function(e) {
         html.addClass("flipmode");
-        var currentwidth = e.originalEvent.touches ? e.originalEvent.touches[0].pageX : e.pageX,
+        var currentwidth = (e.originalEvent.touches) ? e.originalEvent.touches[0].pageX : e.pageX,
             dragdistance = currentwidth - startwidth;
         if (dragdistance > 3 || dragdistance < -3) { // margin to activate flip (prevent sloppy click)
             html.addClass("swipemode");
@@ -334,23 +330,23 @@ function face_front() {
                     setTimeout(function() {
                         requesttitle.add(requestname).blur();
                     }, 300);
-                } else {
-                    setTimeout(function() {
-                        amountinput.focus();
-                    }, 300);
+                    return
                 }
-            } else {
                 setTimeout(function() {
-                    requesttitle.attr("placeholder", "eg: " + requesttitle.attr("data-ph" + getrandomnumber(1, 13)));
                     amountinput.focus();
                 }, 300);
+                return
             }
-        } else {
-            if (request.iszero_request === true) {
-                setTimeout(function() {
-                    $("#amountbreak input").focus();
-                }, 300);
-            }
+            setTimeout(function() {
+                requesttitle.attr("placeholder", "eg: " + requesttitle.attr("data-ph" + getrandomnumber(1, 13)));
+                amountinput.focus();
+            }, 300);
+            return
+        }
+        if (request.iszero_request === true) {
+            setTimeout(function() {
+                $("#amountbreak input").focus();
+            }, 300);
         }
     }
 }
@@ -364,30 +360,30 @@ function face_back() {
                 setTimeout(function() {
                     requestname.focus();
                 }, 300);
-            } else {
-                if (requesttitle.val().length < 2) {
-                    setTimeout(function() {
-                        requesttitle.focus();
-                    }, 300);
-                } else {
-                    var amountinput = $("#amountbreak input");
-                    if (amountinput.val().length > 0 && supportsTouch === true) {
-                        setTimeout(function() {
-                            amountinput.add(requesttitle).add(requestname).blur();
-                        }, 300);
-                    } else {
-                        setTimeout(function() {
-                            requesttitle.focus();
-                        }, 300);
-                    }
-                }
+                return
             }
-        } else {
-            if (request.iszero_request === true) {
+            if (requesttitle.val().length < 2) {
                 setTimeout(function() {
-                    $("#paymentdialog #shareamount input:visible:first").focus();
+                    requesttitle.focus();
                 }, 300);
+                return
             }
+            var amountinput = $("#amountbreak input");
+            if (amountinput.val().length > 0 && supportsTouch === true) {
+                setTimeout(function() {
+                    amountinput.add(requesttitle).add(requestname).blur();
+                }, 300);
+                return
+            }
+            setTimeout(function() {
+                requesttitle.focus();
+            }, 300);
+            return
+        }
+        if (request.iszero_request === true) {
+            setTimeout(function() {
+                $("#paymentdialog #shareamount input:visible:first").focus();
+            }, 300);
         }
     }
 }
@@ -398,66 +394,64 @@ function face_back() {
 
 function loadpaymentfunction(pass) {
     if ($("#request_front").length > 0) { // prevent double load
-        return false;
+        return
     }
     loader();
     symbolcache = localStorage.getItem("bitrequest_symbols");
     if (symbolcache) {
         var gets = geturlparameters(),
-            contactform = (gets.contactform !== undefined);
-        if (contactform === true && pass !== true) { // show contactform
+            contactform = exists(gets.contactform);
+        if (contactform && pass !== true) { // show contactform
             edit_contactform(true);
-            return false;
-        } else {
-            var payment = gets.payment,
-                coindata = getcoindata(payment);
-            if (coindata) {
-                var iserc20 = (coindata.erc20 === true),
-                    request_start_time = now(),
-                    exact = (gets.exact !== undefined);
-                request = {
-                        "received": false,
-                        "rq_init": request_start_time,
-                        "rq_timer": request_start_time,
-                        "payment": payment,
-                        "coindata": coindata,
-                        "erc20": iserc20
-                    }, // global request object
-                    helper = {
-                        "exact": exact,
-                        "contactform": contactform,
-                        "lnd": false,
-                        "lnd_status": false
-                    },
-                    api_attempt["crypto_price_apis"] = {},
-                    api_attempt["fiat_price_apis"] = {},
-                    socket_attempt = {};
-                if (iserc20 === true) {
-                    var token_contract = coindata.contract;
-                    if (token_contract) {
-                        request.token_contract = token_contract;
-                        get_tokeninfo(payment, token_contract);
-                    } else {
-                        var content = "<h2 class='icon-blocked'>Unable to get token data</h2>";
-                        popdialog(content, "alert", "canceldialog");
-                        closeloader();
-                    }
-                } else {
-                    continue_paymentfunction();
+            return
+        }
+        var payment = gets.payment,
+            coindata = getcoindata(payment);
+        if (coindata) {
+            var iserc20 = (coindata.erc20 === true),
+                request_start_time = now(),
+                exact = (gets.exact !== undefined);
+            request = {
+                    "received": false,
+                    "rq_init": request_start_time,
+                    "rq_timer": request_start_time,
+                    "payment": payment,
+                    "coindata": coindata,
+                    "erc20": iserc20
+                }, // global request object
+                helper = {
+                    "exact": exact,
+                    "contactform": contactform,
+                    "lnd": false,
+                    "lnd_status": false
+                },
+                api_attempt["crypto_price_apis"] = {},
+                api_attempt["fiat_price_apis"] = {},
+                socket_attempt = {};
+            if (iserc20 === true) {
+                var token_contract = coindata.contract;
+                if (token_contract) {
+                    request.token_contract = token_contract;
+                    get_tokeninfo(payment, token_contract);
+                    return
                 }
-            } else {
-                var content = "<h2 class='icon-blocked'>Currency not supported</h2>";
+                var content = "<h2 class='icon-blocked'>Unable to get token data</h2>";
                 popdialog(content, "alert", "canceldialog");
                 closeloader();
+                return
             }
+            continue_paymentfunction();
+            return
         }
-    } else { // need to set fixer API key first
-        api_eror_msg("fixer", {
-            "errormessage": "Missing API key",
-            "errorcode": "300"
-        }, true);
-        return false;
-    }
+        var content = "<h2 class='icon-blocked'>Currency not supported</h2>";
+        popdialog(content, "alert", "canceldialog");
+        closeloader();
+        return
+    } // need to set fixer API key first
+    api_eror_msg("fixer", {
+        "errormessage": "Missing API key",
+        "errorcode": "300"
+    }, true);
 }
 
 function get_tokeninfo(payment, contract) {
@@ -465,36 +459,35 @@ function get_tokeninfo(payment, contract) {
     if (getcache) { // check for cached values
         request.decimals = getcache;
         continue_paymentfunction();
-    } else {
-        loadertext("get token info");
-        api_proxy({
-            "api": "ethplorer",
-            "search": "getTokenInfo/" + contract,
-            "cachetime": 86400,
-            "cachefolder": "1d",
-            "params": {
-                "method": "GET"
-            }
-        }).done(function(e) {
-            var data = br_result(e).result;
-            var error = data.error;
-            if (error) {
-                cancelpaymentdialog();
-                fail_dialogs("ethplorer", error);
-                return false;
-            } else {
-                var decimals = data.decimals;
-                request.decimals = decimals;
-                continue_paymentfunction();
-                localStorage.setItem("bitrequest_decimals_" + payment, decimals); //cache token decimals
-            }
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            cancelpaymentdialog();
-            var error_object = (errorThrown) ? errorThrown : jqXHR;
-            fail_dialogs("ethplorer", error_object);
-            closeloader();
-        });
+        return
     }
+    loadertext("get token info");
+    api_proxy({
+        "api": "ethplorer",
+        "search": "getTokenInfo/" + contract,
+        "cachetime": 86400,
+        "cachefolder": "1d",
+        "params": {
+            "method": "GET"
+        }
+    }).done(function(e) {
+        var data = br_result(e).result,
+            error = data.error;
+        if (error) {
+            cancelpaymentdialog();
+            fail_dialogs("ethplorer", error);
+            return
+        }
+        var decimals = data.decimals;
+        request.decimals = decimals;
+        continue_paymentfunction();
+        localStorage.setItem("bitrequest_decimals_" + payment, decimals); //cache token decimals
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        cancelpaymentdialog();
+        var error_object = (errorThrown) ? errorThrown : jqXHR;
+        fail_dialogs("ethplorer", error_object);
+        closeloader();
+    });
 }
 
 function continue_paymentfunction() {
@@ -516,10 +509,10 @@ function continue_paymentfunction() {
             content = "<h2 class='icon-blocked'>" + error_message + "</h2>";
         popdialog(content, "alert", "canceldialog");
         closeloader();
-        return false;
+        return
     }
     var api_info = check_api(payment, erc20),
-        isrequest = (localStorage.getItem("bitrequest_editurl") !== window.location.search), // check if url is a request
+        isrequest = (localStorage.getItem("bitrequest_editurl") !== w_loc.search), // check if url is a request
         coindata = request.coindata,
         coinsettings = activecoinsettings(payment),
         uoa = gets.uoa,
@@ -577,7 +570,7 @@ function continue_paymentfunction() {
         showclass = (iscrypto === true) ? (uoa == "btc") ? " showsat showlc showcc" : " showlc showcc" : (uoa == fiatcurrency) ? "" : " showlc",
         statusattr = (status) ? status : "unknown",
         statusclass = (status) ? " " + status : " unknown",
-        satclass = (payment == "bitcoin" && $("#bitcoin_settings .cc_settinglist li[data-id='showsatoshis']").data("selected") === true) ? true : false,
+        satclass = (payment == "bitcoin" && cs_dat("bitcoin", "showsatoshis").selected === true) ? true : false,
         typeclass = " " + requesttype,
         offlineclass = (offline === true) ? " br_offline" : "",
         pendingclass = (ispending === true && monitored === true && requesttype == "local") ? "ispending" : "",
@@ -702,10 +695,8 @@ function lightning_setup() {
                             }
                         lnd_put(ph, pw, put, use_lnurl);
                         return
-
-                    } else {
-                        console.log("missing payment id");
                     }
+                    console.log("missing payment id");
                 } else {
                     console.log("missing proxy");
                 }
@@ -867,7 +858,7 @@ function proceed_pf(error) {
         cancelpaymentdialog();
         popdialog(content, "alert", "canceldialog");
         closeloader();
-        return false;
+        return
     }
     var lndstatus = (helper.lnd) ? (helper.lnd.selected) ? (helper.lnd_status) ? "lnd_ao" : "lnd_active" : "lnd_inactive" : "no_lnd";
     paymentdialogbox.attr({
@@ -882,27 +873,27 @@ function proceed_pf(error) {
             "EUR": 1,
             "USD": 1.095063
         }, 0.025661699261756998, "coinmarketcap", "fixer", 0, 0);
-    } else {
-        var ccapi = $("#cmcapisettings").data("selected"),
-            apilist = "crypto_price_apis",
-            getcache = sessionStorage.getItem("bitrequest_xrates_" + request.currencysymbol);
-        if (getcache) { //check for cached crypto rates in localstorage
-            var timestamp = now(),
-                parsevalue = JSON.parse(getcache),
-                cachedtimestamp = parsevalue.timestamp,
-                thisusdrate = parsevalue.ccrate,
-                apisrc = parsevalue.apisrc,
-                cachetime = timestamp - cachedtimestamp;
-            if (cachetime > cacheperiodcrypto) { //check if cached crypto rates are expired
-                getccexchangerates(apilist, ccapi);
-            } else { //fetch cache
-                loadertext("reading " + request.currencysymbol + " rate from cache");
-                initexchangerate(thisusdrate, apisrc, cachetime); //check for fiat rates and pass usd amount
-            }
-        } else {
-            getccexchangerates(apilist, ccapi);
-        }
+        return
     }
+    var ccapi = $("#cmcapisettings").data("selected"),
+        apilist = "crypto_price_apis",
+        getcache = sessionStorage.getItem("bitrequest_xrates_" + request.currencysymbol);
+    if (getcache) { //check for cached crypto rates in localstorage
+        var timestamp = now(),
+            parsevalue = JSON.parse(getcache),
+            cachedtimestamp = parsevalue.timestamp,
+            thisusdrate = parsevalue.ccrate,
+            apisrc = parsevalue.apisrc,
+            cachetime = timestamp - cachedtimestamp;
+        if (cachetime > cacheperiodcrypto) { //check if cached crypto rates are expired
+            getccexchangerates(apilist, ccapi);
+            return
+        } //fetch cache
+        loadertext("reading " + request.currencysymbol + " rate from cache");
+        initexchangerate(thisusdrate, apisrc, cachetime); //check for fiat rates and pass usd amount
+        return
+    }
+    getccexchangerates(apilist, ccapi);
 }
 
 //get crypto rates
@@ -918,59 +909,54 @@ function getccexchangerates(apilist, api) {
         closeloader();
         cancelpaymentdialog();
         fail_dialogs(api, "Crypto price API not defined");
-    } else {
-        api_proxy({
-            "api": api,
-            "search": payload,
-            "cachetime": 90,
-            "cachefolder": "1h",
-            "params": {
-                "method": "GET",
-                "cache": true
-            },
-        }).done(function(e) {
-            var data = br_result(e).result;
-            if (data) {
-                var status = data.status,
-                    has_error = (data.statusCode == 404 ||
-                        (data.error) ||
-                        (status && status.error_message));
-                if (has_error) {
-                    var error_val = (data.error) ? data.error : "Unable to get " + payment + " Exchangerate";
-                    cc_fail(apilist, api, error_val);
-                    return false;
-                } else {
-                    var ccrate = (api == "coinmarketcap") ? data.data[request.cmcid].quote.USD.price :
-                        (api == "coinpaprika") ? data.quotes.USD.price :
-                        (api == "coingecko") ? data[Object.keys(data)[0]].usd :
-                        null;
-                    if (ccrate) {
-                        loadertext("success");
-                        var timestamp = now(),
-                            ccratearray = {};
-                        ccratearray.timestamp = timestamp;
-                        ccratearray.ccrate = ccrate;
-                        ccratearray.apisrc = api;
-                        var storeccratestring = JSON.stringify(ccratearray);
-                        sessionStorage.setItem("bitrequest_xrates_" + request.currencysymbol, storeccratestring); //cache crypto rates in sessionstorage
-                        initexchangerate(ccrate, api, 0); //pass usd amount, check for fiat rates
-                    } else {
-                        var error_val = "unable to get " + payment + " rate";
-                        cc_fail(apilist, api, error_val);
-                        return false;
-                    }
-                }
-            } else {
-                var error_val = "unable to get " + payment + " rate";
-                cc_fail(apilist, api, error_val);
-                return false;
-            }
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            var error_object = (errorThrown) ? errorThrown : jqXHR;
-            cc_fail(apilist, api, error_object);
-            return false;
-        });
+        return
     }
+    api_proxy({
+        "api": api,
+        "search": payload,
+        "cachetime": 90,
+        "cachefolder": "1h",
+        "params": {
+            "method": "GET",
+            "cache": true
+        },
+    }).done(function(e) {
+        var data = br_result(e).result;
+        if (data) {
+            var status = data.status,
+                has_error = (data.statusCode == 404 ||
+                    (data.error) ||
+                    (status && status.error_message));
+            if (has_error) {
+                var error_val = (data.error) ? data.error : "Unable to get " + payment + " Exchangerate";
+                cc_fail(apilist, api, error_val);
+                return
+            }
+            var ccrate = (api == "coinmarketcap") ? data.data[request.cmcid].quote.USD.price :
+                (api == "coinpaprika") ? data.quotes.USD.price :
+                (api == "coingecko") ? data[Object.keys(data)[0]].usd :
+                null;
+            if (ccrate) {
+                loadertext("success");
+                var timestamp = now(),
+                    ccratearray = {};
+                ccratearray.timestamp = timestamp;
+                ccratearray.ccrate = ccrate;
+                ccratearray.apisrc = api;
+                var storeccratestring = JSON.stringify(ccratearray);
+                sessionStorage.setItem("bitrequest_xrates_" + request.currencysymbol, storeccratestring); //cache crypto rates in sessionstorage
+                initexchangerate(ccrate, api, 0); //pass usd amount, check for fiat rates
+                return
+            }
+            cc_fail(apilist, api, "unable to get " + payment + " rate");
+            return
+        }
+        var error_val = "unable to get " + payment + " rate";
+        cc_fail(apilist, api, error_val);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        var error_object = (errorThrown) ? errorThrown : jqXHR;
+        cc_fail(apilist, api, error_object);
+    });
 }
 
 function initexchangerate(cc_rate, ccapi, cachetime) {
@@ -998,16 +984,14 @@ function initexchangerate(cc_rate, ccapi, cachetime) {
                 lcrate = xratesnode[request.fiatcurrency];
             if (timeexpired > cacheperiodfiat || lcrate === undefined) { //check if cache is expired and if fiatcurrency is cached
                 get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, cachetime);
-            } else { //fetch cached exchange rates
-                loadertext("reading fiat rates from cache");
-                rendercurrencypool(xratesnode, ccrate, ccapi, parsevalue.api, cachetime, timeexpired)
-            }
-        } else {
-            get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, cachetime);
+                return
+            } //fetch cached exchange rates
+            loadertext("reading fiat rates from cache");
+            rendercurrencypool(xratesnode, ccrate, ccapi, parsevalue.api, cachetime, timeexpired);
+            return
         }
-    } else {
-        get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, cachetime);
     }
+    get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, cachetime);
 }
 
 //get fiat rates
@@ -1026,110 +1010,109 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
         closeloader();
         cancelpaymentdialog();
         fail_dialogs(fiatapi, "Fiat price API not defined");
-        return false;
-    } else {
-        api_proxy({
-            "api": fiatapi,
-            "search": payload,
-            "cachetime": 540,
-            "cachefolder": "1h",
-            "params": {
-                "method": "GET"
-            }
-        }).done(function(e) {
-            var data = br_result(e).result,
-                ratesnode = (fiatapi == "fixer") ? data.rates :
-                (fiatapi == "coingecko") ? data.rates :
-                (fiatapi == "exchangeratesapi") ? data.rates :
-                (fiatapi == "currencylayer") ? data.quotes :
-                (fiatapi == "coinbase") ? data.data.rates :
-                null;
-            if (ratesnode) {
-                loadertext("success");
-                var fiatsymbol = request.fiatcurrency,
-                    localupper = fiatsymbol.toUpperCase(),
-                    rates = {
-                        "eur": 1
-                    },
-                    usdval,
-                    localval;
-                if (fiatapi == "fixer") {
+        return
+    }
+    api_proxy({
+        "api": fiatapi,
+        "search": payload,
+        "cachetime": 540,
+        "cachefolder": "1h",
+        "params": {
+            "method": "GET"
+        }
+    }).done(function(e) {
+        var data = br_result(e).result,
+            ratesnode = (fiatapi == "fixer") ? data.rates :
+            (fiatapi == "coingecko") ? data.rates :
+            (fiatapi == "exchangeratesapi") ? data.rates :
+            (fiatapi == "currencylayer") ? data.quotes :
+            (fiatapi == "coinbase") ? data.data.rates :
+            null;
+        if (ratesnode) {
+            loadertext("success");
+            var fiatsymbol = request.fiatcurrency,
+                localupper = fiatsymbol.toUpperCase(),
+                rates = {
+                    "eur": 1
+                },
+                usdval,
+                localval;
+            if (fiatapi == "fixer") {
+                var usdval = ratesnode.USD,
+                    localval = ratesnode[localupper];
+            } else if (fiatapi == "coingecko") {
+                if (ratesnode[fiatsymbol]) {
+                    var eurval = ratesnode.eur.value,
+                        usdval = ratesnode.usd.value / eurval,
+                        localval = ratesnode[fiatsymbol].value / eurval;
+                }
+            } else if (fiatapi == "exchangeratesapi") {
+                if (ratesnode[localupper]) {
                     var usdval = ratesnode.USD,
-                        localval = ratesnode[localupper];
-                } else if (fiatapi == "coingecko") {
-                    if (ratesnode[fiatsymbol]) {
-                        var eurval = ratesnode.eur.value,
-                            usdval = ratesnode.usd.value / eurval,
-                            localval = ratesnode[fiatsymbol].value / eurval;
-                    }
-                } else if (fiatapi == "exchangeratesapi") {
-                    if (ratesnode[localupper]) {
-                        var usdval = ratesnode.USD,
-                            localval = (localupper == "EUR") ? 1 : ratesnode[localupper];
-                    }
-                } else if (fiatapi == "currencylayer") {
-                    var localkey = ratesnode["USD" + localupper];
-                    if (localkey) {
-                        var usdval = 1 / ratesnode.USDEUR,
-                            localval = localkey * usdval;
-                    }
-                } else if (fiatapi == "coinbase") {
-                    var localkey = ratesnode[localupper];
-                    if (localkey) {
-                        var usdval = 1 / ratesnode.EUR,
-                            localval = localkey * usdval;
-                    }
-                } else {
-                    loadertext("error");
-                    closeloader();
-                    cancelpaymentdialog();
-                    fail_dialogs(fiatapi, "Fiat price API not defined");
-                    return
+                        localval = (localupper == "EUR") ? 1 : ratesnode[localupper];
                 }
-                if (localval && usdval) {
-                    rates.usd = usdval;
-                    if (fiatsymbol == "eur" || fiatsymbol == "usd" || fiatsymbol == "btc") {} else {
-                        rates[fiatsymbol] = localval;
-                    }
-                    rendercurrencypool(rates, ccrate, ccapi, fiatapi, cachetime, "0"); // render exchangerates
-                    // cache exchange rates
-                    var xratestring = JSON.stringify({
-                        "timestamp": now(),
-                        "fiat_exchangerates": rates,
-                        "api": fiatapi
-                    });
-                    sessionStorage.setItem("bitrequest_exchangerates", xratestring);
-                    return
+            } else if (fiatapi == "currencylayer") {
+                var localkey = ratesnode["USD" + localupper];
+                if (localkey) {
+                    var usdval = 1 / ratesnode.USDEUR,
+                        localval = localkey * usdval;
                 }
-            }
-            var nextfiatapi = try_next_api(apilist, fiatapi);
-            if (nextfiatapi === false) {
+            } else if (fiatapi == "coinbase") {
+                var localkey = ratesnode[localupper];
+                if (localkey) {
+                    var usdval = 1 / ratesnode.EUR,
+                        localval = localkey * usdval;
+                }
+            } else {
                 loadertext("error");
                 closeloader();
                 cancelpaymentdialog();
-                var errorcode = (data.error) ? data.error : "Failed to load data from " + fiatapi;
-                fail_dialogs(fiatapi, errorcode);
+                fail_dialogs(fiatapi, "Fiat price API not defined");
                 return
             }
-            get_fiat_exchangerate(apilist, nextfiatapi, ccrate, currencystring, ccapi, cachetime);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            var error_object = (errorThrown) ? errorThrown : jqXHR;
-            next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, ccapi, cachetime);
+            if (localval && usdval) {
+                rates.usd = usdval;
+                if (fiatsymbol == "eur" || fiatsymbol == "usd" || fiatsymbol == "btc") {} else {
+                    rates[fiatsymbol] = localval;
+                }
+                rendercurrencypool(rates, ccrate, ccapi, fiatapi, cachetime, "0"); // render exchangerates
+                // cache exchange rates
+                var xratestring = JSON.stringify({
+                    "timestamp": now(),
+                    "fiat_exchangerates": rates,
+                    "api": fiatapi
+                });
+                sessionStorage.setItem("bitrequest_exchangerates", xratestring);
+                return
+            }
+        }
+        var nextfiatapi = try_next_api(apilist, fiatapi);
+        if (nextfiatapi === false) {
+            loadertext("error");
+            closeloader();
+            cancelpaymentdialog();
+            var errorcode = (data.error) ? data.error : "Failed to load data from " + fiatapi;
+            fail_dialogs(fiatapi, errorcode);
             return
-        });
-    }
+        }
+        get_fiat_exchangerate(apilist, nextfiatapi, ccrate, currencystring, ccapi, cachetime);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        var error_object = (errorThrown) ? errorThrown : jqXHR;
+        next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, ccapi, cachetime);
+        return
+    });
 }
 
 function next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, ccapi, cachetime) {
     var nextfiatapi = try_next_api(apilist, fiatapi);
-    if (nextfiatapi === false) {
-        loadertext("error");
-        closeloader();
-        cancelpaymentdialog();
-        fail_dialogs(fiatapi, error_object);
-    } else {
+    if (nextfiatapi) {
         get_fiat_exchangerate(apilist, nextfiatapi, ccrate, currencystring, ccapi, cachetime);
+        return
     }
+    loadertext("error");
+    closeloader();
+    cancelpaymentdialog();
+    fail_dialogs(fiatapi, error_object);
 }
 
 function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cachetimefiat) {
@@ -1150,7 +1133,7 @@ function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cache
         "currency": request.currencysymbol,
         "xrate": ccrateeuro,
         "currencyname": request.payment
-    })
+    });
     $.each(data, function(thiscurrency, rate) {
         var parsedrate = (rate / currentrate).toFixed(6) / 1,
             ratesspanclass = (parsedrate === 1) ? " hide" : "",
@@ -1191,9 +1174,8 @@ function getpayment(ccrateeuro, ccapi) {
         rn_set = (request.requestname && request.requestname.length > 1), // check if requestname is set
         rt_set = (request.requesttitle && request.requesttitle.length > 1), // check if requesttitle is set
         requesttitle_string = (rt_set === true) ? request.requesttitle : "",
-        pobox = $("main #" + request.payment + " .content ul.pobox[data-currency='" + request.payment + "']"),
-        savedaddressli = pobox.find("li[data-address='" + request.address + "']"),
-        has_label = (savedaddressli.length > 0 && savedaddressli.data("label").length > 0) ? true : false,
+        savedaddressli = filter_addressli(request.payment, "address", request.address)
+    has_label = (savedaddressli.length > 0 && savedaddressli.data("label").length > 0) ? true : false,
         labelvalue = (has_label) ? savedaddressli.data("label") : "",
         label_markup = (has_label) ? "<span id='labelbttn'>" + labelvalue + "</span>" : "", // check if label is set
         thiscurrencyvalueraw = ((request.amount / currencyxrate) * ccrateeuro),
@@ -1404,18 +1386,18 @@ function getpayment(ccrateeuro, ccapi) {
 
 function cc_fail(apilist, api, error_val) {
     var nextccapi = try_next_api(apilist, api);
-    if (nextccapi === false) {
-        loadertext("api error");
-        closeloader();
-        cancelpaymentdialog();
-        fail_dialogs(api, error_val);
-    } else {
+    if (nextccapi) {
         getccexchangerates(apilist, nextccapi);
+        return
     }
+    loadertext("api error");
+    closeloader();
+    cancelpaymentdialog();
+    fail_dialogs(api, error_val);
 }
 
 function show_paymentdialog() {
-    scrollposition = $(document).scrollTop(); // get scrollposition save as global
+    var scrollposition = $(document).scrollTop(); // get scrollposition save as global
     fixedcheck(scrollposition); // fix nav position
     html.addClass("paymode blurmain_payment");
     $(".showmain #mainwrap").css("-webkit-transform", "translate(0, -" + scrollposition + "px)"); // fake scroll position
@@ -1443,30 +1425,30 @@ function lnd_switch_function() {
             }
             if (helper.lnd.selected) {
                 lnd_statusx();
-            } else {
-                var result = confirm("Enable lightning payments?");
-                if (result === true) {
-                    var lnli = lndli();
-                    lnli.data("selected", true);
-                    lnli.find(".switchpanel").removeClass("false").addClass("true");
-                    save_cc_settings("bitcoin", true);
-                    if (helper.lnd_status) {
-                        helper.lnd.selected = true;
-                        paymentdialogbox.attr("data-lswitch", "lnd_ao");
-                    } else {
-                        notify("<span id='lnd_offline'>Lightning node is offline</span>", 200000, "yes");
-                    }
-                } else {
-                    playsound(funk);
+                return
+            }
+            var result = confirm("Enable lightning payments?");
+            if (result === true) {
+                var lnli = lndli();
+                lnli.data("selected", true);
+                lnli.find(".switchpanel").removeClass("false").addClass("true");
+                save_cc_settings("bitcoin", true);
+                if (helper.lnd_status) {
+                    helper.lnd.selected = true;
+                    paymentdialogbox.attr("data-lswitch", "lnd_ao");
+                    return
                 }
+                notify("<span id='lnd_offline'>Lightning node is offline</span>", 200000, "yes");
+                return
             }
-        } else {
-            if (request.isrequest) {
-                playsound(funk);
-            } else {
-                lndli().find(".atext").trigger("click");
-            }
+            playsound(funk);
+            return
         }
+        if (request.isrequest) {
+            playsound(funk);
+            return
+        }
+        lnd_popup();
     });
 }
 
@@ -1480,30 +1462,34 @@ function lnd_statusx() {
     if (helper.lnd_status) {
         if (paymentdialogbox.attr("data-lswitch") == "lnd_ao") {
             paymentdialogbox.attr("data-lswitch", "");
-        } else {
-            paymentdialogbox.attr("data-lswitch", "lnd_ao");
+            return
         }
-    } else {
-        if (request.isrequest) {
-            playsound(funk);
-        } else {
-            notify("<span id='lnd_offline'>Lightning node is offline</span>", 200000, "yes");
-        }
+        paymentdialogbox.attr("data-lswitch", "lnd_ao");
+        return
     }
+    if (request.isrequest) {
+        playsound(funk);
+        return
+    }
+    notify("<span id='lnd_offline'>Lightning node is offline</span>", 200000, "yes");
 }
 
 function lnd_offline() {
     $(document).on("click", "#lnd_offline", function() {
-        lndli().find(".atext").trigger("click");
+        lnd_popup();
     });
 }
 
-function lnd_nodeinfo() {
+function lnd_ni() {
     $(document).on("click", "#paymentdialogbox #current_lndnode #lnd_nodeinfo_trigger", function(e) {
         e.stopPropagation();
-        lndli().find(".atext").trigger("click");
+        lnd_popup();
         topnotify("Add Lightning node");
     });
+}
+
+function lnd_popup() {
+    lndli().find(".atext").trigger("click");
 }
 
 function pickcurrency() {
@@ -1686,17 +1672,17 @@ function updatecpool(thisamount, thisrate, ccvalue) {
     rendercpool(thisamount, thisrate);
     var gets = geturlparameters(),
         payment = gets.payment,
-        page = gets.p,
-        currency = gets.uoa,
         address = gets.address,
-        address_xmr_ia = (request.xmr_ia) ? request.xmr_ia : address,
-        data = (gets.d) ? "&d=" + gets.d : "",
-        starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
-        href = starturl + payment + "&uoa=" + currency + "&amount=" + thisamount + "&address=" + address + data,
-        pagename = payment + " request for " + thisamount + " " + currency,
-        title = pagename + " | " + apptitle;
+        address_xmr_ia = (request.xmr_ia) ? request.xmr_ia : address;
     renderqr(payment, address_xmr_ia, ccvalue);
     if (request.iszero_request === true) {} else {
+        var page = gets.p,
+            currency = gets.uoa,
+            data = (gets.d) ? "&d=" + gets.d : "",
+            starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
+            href = starturl + payment + "&uoa=" + currency + "&amount=" + thisamount + "&address=" + address + data,
+            pagename = payment + " request for " + thisamount + " " + currency,
+            title = pagename + " | " + apptitle;
         helper.currencylistitem.data("url", href);
         request.amount = thisamount;
         set_edit(href);
@@ -1757,41 +1743,41 @@ function switchaddress() {
         var timelapsed = now() - sa_timer;
         if (timelapsed < 1500) { // prevent clicking too fast
             playsound(funk);
-        } else {
-            var gets = geturlparameters(),
-                payment = gets.payment;
-            if (payment == "monero") {
-                return false;
+            return
+        }
+        var gets = geturlparameters(),
+            payment = gets.payment;
+        if (payment == "monero") {
+            return
+        }
+        var currentaddress = gets.address,
+            nextaddress = newaddresli(payment, currentaddress);
+        if (nextaddress) {
+            var newaddress = nextaddress.data("address"),
+                selected_socket = helper.selected_socket;
+            closesocket(currentaddress);
+            init_socket(selected_socket, newaddress, true);
+            var dp = gets.d,
+                has_dat = (dp && dp.length > 5),
+                new_dp = (has_dat) ? "&d=" + dp : "",
+                ccvalue = $("#paymentdialogbox .ccpool").attr("data-value"),
+                newaddressid = nextaddress.data("cmcid"),
+                newaddresslabel = nextaddress.data("label"),
+                page = gets.p,
+                starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
+                href = starturl + payment + "&uoa=" + gets.uoa + "&amount=" + gets.amount + "&address=" + newaddress + new_dp;
+            renderqr(payment, newaddress, ccvalue);
+            set_edit(href);
+            $("#paymentaddress").text(newaddress);
+            $(this).text(newaddresslabel);
+            var ispending = check_pending(newaddress, newaddressid);
+            if (ispending === true && request.monitored === true) {
+                paymentdialogbox.attr("data-pending", "ispending"); // prevent share because of pending transaction
+            } else {
+                paymentdialogbox.attr("data-pending", "");
             }
-            var currentaddress = gets.address,
-                nextaddress = newaddresli(payment, currentaddress);
-            if (nextaddress) {
-                var newaddress = nextaddress.data("address"),
-                    selected_socket = helper.selected_socket;
-                closesocket(currentaddress);
-                init_socket(selected_socket, newaddress, true);
-                var dp = gets.d,
-                    has_dat = (dp && dp.length > 5),
-                    new_dp = (has_dat) ? "&d=" + dp : "",
-                    ccvalue = $("#paymentdialogbox .ccpool").attr("data-value"),
-                    newaddressid = nextaddress.data("cmcid"),
-                    newaddresslabel = nextaddress.data("label"),
-                    page = gets.p,
-                    starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
-                    href = starturl + payment + "&uoa=" + gets.uoa + "&amount=" + gets.amount + "&address=" + newaddress + new_dp;
-                renderqr(payment, newaddress, ccvalue);
-                set_edit(href);
-                $("#paymentaddress").text(newaddress);
-                $(this).text(newaddresslabel);
-                var ispending = check_pending(newaddress, newaddressid);
-                if (ispending === true && request.monitored === true) {
-                    paymentdialogbox.attr("data-pending", "ispending"); // prevent share because of pending transaction
-                } else {
-                    paymentdialogbox.attr("data-pending", "");
-                }
-                request.address = newaddress;
-                sa_timer = now();
-            }
+            request.address = newaddress;
+            sa_timer = now();
         }
     });
 }
@@ -1806,9 +1792,8 @@ function newaddresli(currency, address) {
         firstaddressli = label_li.not(".adli[data-address='" + address + "']").first();
     if (firstaddressli.length === 0) {
         return false;
-    } else {
-        return (nextaddressli.length) ? nextaddressli : firstaddressli;
     }
+    return (nextaddressli.length) ? nextaddressli : firstaddressli;
 }
 
 function copyaddress_dblclick() {
@@ -1849,8 +1834,6 @@ function xmrsettings() {
             var page_title = "monero_settings";
             openpage("?p=" + page_title, page_title, "loadpage");
             cancelpaymentdialog();
-        } else {
-            return false;
         }
     });
 }
@@ -1919,36 +1902,72 @@ function inputrequestdata() {
     });
 }
 
+function validatestepsq() {
+    $(document).on("keydown", "#paymentdialogbox .mirrordiv input", function(e) {
+        if (blocktyping === true) {
+            playsound(funk);
+            blocktyping = false;
+            return
+        }
+        var thisnode = $(this),
+            thisvalue = thisnode.val(),
+            keycode = e.keyCode;
+        console.log(keycode);
+        if (keycode === 188 || keycode === 190 || keycode === 110) { // prevent double commas and dots
+            if (e.target.validity.valid === false) { //test input patern and steps attribustes
+                console.log("a");
+                e.preventDefault();
+            }
+            if (thisvalue.indexOf(",") > -1 || thisvalue.indexOf(".") > -1) {
+                console.log("b");
+                e.preventDefault();
+            }
+            if (thisnode.hasClass("satinput") && (keycode === 188 || keycode === 190 || keycode === 110)) {
+                console.log("c");
+                e.preventDefault();
+            }
+            return
+        }
+        if (keycode === 8 || keycode === 39 || keycode === 37 || keycode === 91 || keycode === 17 || e.metaKey || e.ctrlKey) { //alow backspace, arrowright, arrowleft, command, ctrl
+            return
+        }
+        if ((keycode > 47 && keycode < 58) || (keycode >= 96 && keycode < 106)) { //only allow numbers
+            return
+        }
+        e.preventDefault();
+        return
+    })
+}
+
 function validatesteps() {
     $(document).on("keydown", "#paymentdialogbox .mirrordiv input", function(e) {
         if (blocktyping === true) {
             playsound(funk);
             blocktyping = false;
+            e.preventDefault();
             return false;
         }
         var thisnode = $(this),
             thisvalue = thisnode.val(),
             keycode = e.keyCode;
-        if ((thisvalue.indexOf(",") > -1 || thisvalue.indexOf(".") > -1) && (keycode === 188 || keycode === 190 || keycode === 110)) { // prevent double commas and dots
-            e.preventDefault();
-            return false;
+        if (keycode === 188 || keycode === 190 || keycode === 110) { // prevent double commas and dots
+            if (e.target.validity.valid === false || thisnode.hasClass("satinput")) { //test input patern and steps attributes
+                e.preventDefault();
+                return false;
+            }
         } else {
-            if (keycode === 8 || keycode === 188 || keycode === 190 || keycode === 110 || keycode === 39 || keycode === 37 || keycode === 91 || keycode === 17 || e.metaKey || e.ctrlKey) { //alow backspace, comma and period, arrowright, arrowleft, command, ctrl
-                if (thisnode.hasClass("satinput")) {
-                    if (keycode === 188 || keycode === 190 || keycode === 110) { //disallow period and comma
-                        e.preventDefault();
-                    }
-                }
+            if (keycode === 8 || keycode === 39 || keycode === 37 || keycode === 91 || keycode === 17 || e.metaKey || e.ctrlKey) { //alow backspace, comma and period, arrowright, arrowleft, command, ctrl
             } else {
                 if ((keycode > 47 && keycode < 58) || (keycode >= 96 && keycode < 106)) { //only allow numbers
-                    if (e.target.validity.valid) { //test input patern and steps attribustes
-                    } else {
+                    if (e.target.validity.valid === false) { //test input patern and steps attributes
                         if (document.getSelection().toString().replace(",", ".") !== thisvalue.replace(",", ".")) {
                             e.preventDefault();
+                            return false;
                         }
                     }
                 } else {
                     e.preventDefault();
+                    return false;
                 }
             }
         }
@@ -1962,21 +1981,16 @@ function fliprequest() {
             return
         }
         var is_lnd = (paymentdialogbox.attr("data-lswitch") == "lnd_ao");
-        if (paymentdialogbox.attr("data-pending") == "ispending") {
-            if (is_lnd) {} else {
-                if (request.payment == "monero") {
-                    notify("Address in use. <span id='xmrsettings'>Activate integrated addresses?</span>", 40000, "yes");
-                    return
-                }
-                pendingrequest();
+        if (paymentdialogbox.attr("data-pending") == "ispending" && !is_lnd) {
+            if (request.payment == "monero") {
+                notify("Address in use. <span id='xmrsettings'>Activate integrated addresses?</span>", 40000, "yes");
                 return
             }
-        } else {
-            if (is_lnd) {
-                if (paymentdialogbox.hasClass("accept_lnd")) {
-                    //return
-                }
-            }
+            pendingrequest();
+            return
+        }
+        if (is_lnd && paymentdialogbox.hasClass("accept_lnd")) {
+            return
         }
         flip_right1();
     });
@@ -2173,14 +2187,16 @@ function sharebutton() {
             setTimeout(function() { // wait for url to change
                 share(thisbttn);
             }, 100);
-        } else if (!geturlparameters().d) {
+            return
+        }
+        if (!geturlparameters().d) {
             validaterequestdata();
             setTimeout(function() { // wait for url to change
                 share(thisbttn);
             }, 100);
-        } else {
-            share(thisbttn);
+            return
         }
+        share(thisbttn);
     });
 }
 
@@ -2199,8 +2215,8 @@ function share(thisbutton) {
         try {
             var dataobject = (thisdata === true) ? JSON.parse(atob(dataparam)) : null, // decode data param if exists
                 thisrequestname = (thisdata === true) ? dataobject.n : $("#accountsettings").data("selected"),
-                thisrequesttitle = (thisdata === true) ? dataobject.t : "";
-            lightning = (thisdata === true) ? (dataobject.imp) ? true : false : false,
+                thisrequesttitle = (thisdata === true) ? dataobject.t : "",
+                lightning = (thisdata === true) ? (dataobject.imp) ? true : false : false,
                 hybrid = (lightning && thisaddress != "lnurl");
         } catch (e) { // data param corrupted
             var content = "<h2 class='icon-blocked'>Invalid request</h2><p>" + e + "</p>";
@@ -2245,107 +2261,107 @@ function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
             getcache = sessionStorage.getItem("bitrequest_" + us_service + "_shorturl_" + hashcode(sharedurl));
         if (getcache) { // get existing shorturl from cache
             sharerequest(getcache, sharedtitle);
-        } else {
-            if (us_service == "firebase") {
-                var security = (unguessable === true) ? "UNGUESSABLE" : "SHORT";
-                api_proxy({
-                    "api": "firebase",
-                    "search": "shortLinks",
-                    "cachetime": 84600,
-                    "cachefolder": "1d",
-                    "params": {
-                        "method": "POST",
-                        "cache": false,
-                        "dataType": "json",
-                        "contentType": "application/json",
-                        "data": JSON.stringify({
-                            "dynamicLinkInfo": {
-                                "domainUriPrefix": firebase_dynamic_link_domain,
-                                "link": sharedurl,
-                                "androidInfo": {
-                                    "androidPackageName": androidpackagename
-                                },
-                                "iosInfo": {
-                                    "iosBundleId": androidpackagename,
-                                    "iosAppStoreId": "1484815377"
-                                },
-                                "navigationInfo": {
-                                    "enableForcedRedirect": "1"
-                                },
-                                "socialMetaTagInfo": {
-                                    "socialTitle": "Bitrequest",
-                                    "socialDescription": "Accept crypto anywhere",
-                                    "socialImageLink": sitethumb
-                                }
-                            },
-                            "suffix": {
-                                "option": security
-                            }
-                        })
-                    }
-                }).done(function(e) {
-                    var data = br_result(e).result;
-                    if (data.error) {
-                        sharerequest(sharedurl, sharedtitle);
-                    } else {
-                        var shorturl = data.shortLink;
-                        sharerequest(shorturl, sharedtitle);
-                        sessionStorage.setItem("bitrequest_firebase_shorturl_" + hashcode(sharedurl), shorturl);
-                    }
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    sharerequest(sharedurl, sharedtitle);
-                });
-            } else if (us_service == "bitly") {
-                api_proxy({
-                    "api": "bitly",
-                    "search": "bitlinks",
-                    "cachetime": 84600,
-                    "cachefolder": "1d",
-                    "bearer": true,
-                    "params": {
-                        "method": "POST",
-                        "contentType": "application/json",
-                        "data": JSON.stringify({
-                            "long_url": sharedurl
-                        })
-                    }
-                }).done(function(e) {
-                    var data = br_result(e).result;
-                    if (data.id) {
-                        var linkid = data.id.split("/").pop(),
-                            shorturl = data.link;
-                        sharerequest(shorturl, sharedtitle);
-                        sessionStorage.setItem("bitrequest_bitly_shorturl_" + hashcode(sharedurl), shorturl);
-                    } else {
-                        sharerequest(sharedurl, sharedtitle);
-                    }
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    sharerequest(sharedurl, sharedtitle);
-                });
-            } else {
-                sharerequest(sharedurl, sharedtitle);
-            }
+            return
         }
-    } else {
-        sharerequest(sharedurl, sharedtitle);
+        if (us_service == "firebase") {
+            var security = (unguessable === true) ? "UNGUESSABLE" : "SHORT";
+            api_proxy({
+                "api": "firebase",
+                "search": "shortLinks",
+                "cachetime": 84600,
+                "cachefolder": "1d",
+                "params": {
+                    "method": "POST",
+                    "cache": false,
+                    "dataType": "json",
+                    "contentType": "application/json",
+                    "data": JSON.stringify({
+                        "dynamicLinkInfo": {
+                            "domainUriPrefix": firebase_dynamic_link_domain,
+                            "link": sharedurl,
+                            "androidInfo": {
+                                "androidPackageName": androidpackagename
+                            },
+                            "iosInfo": {
+                                "iosBundleId": androidpackagename,
+                                "iosAppStoreId": "1484815377"
+                            },
+                            "navigationInfo": {
+                                "enableForcedRedirect": "1"
+                            },
+                            "socialMetaTagInfo": {
+                                "socialTitle": "Bitrequest",
+                                "socialDescription": "Accept crypto anywhere",
+                                "socialImageLink": sitethumb
+                            }
+                        },
+                        "suffix": {
+                            "option": security
+                        }
+                    })
+                }
+            }).done(function(e) {
+                var data = br_result(e).result;
+                if (data.error) {
+                    sharerequest(sharedurl, sharedtitle);
+                    return
+                }
+                var shorturl = data.shortLink;
+                sharerequest(shorturl, sharedtitle);
+                sessionStorage.setItem("bitrequest_firebase_shorturl_" + hashcode(sharedurl), shorturl);
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                sharerequest(sharedurl, sharedtitle);
+            });
+            return
+        }
+        if (us_service == "bitly") {
+            api_proxy({
+                "api": "bitly",
+                "search": "bitlinks",
+                "cachetime": 84600,
+                "cachefolder": "1d",
+                "bearer": true,
+                "params": {
+                    "method": "POST",
+                    "contentType": "application/json",
+                    "data": JSON.stringify({
+                        "long_url": sharedurl
+                    })
+                }
+            }).done(function(e) {
+                var data = br_result(e).result;
+                if (data.id) {
+                    var linkid = data.id.split("/").pop(),
+                        shorturl = data.link;
+                    sharerequest(shorturl, sharedtitle);
+                    sessionStorage.setItem("bitrequest_bitly_shorturl_" + hashcode(sharedurl), shorturl);
+                    return
+                }
+                sharerequest(sharedurl, sharedtitle);
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                sharerequest(sharedurl, sharedtitle);
+            });
+            return
+        }
     }
+    sharerequest(sharedurl, sharedtitle);
 }
 
 function sharerequest(sharedurl, sharedtitle) {
     closeloader();
     if (is_ios_app === true) {
         sharefallback(sharedurl, sharedtitle);
-    } else {
-        if (supportsTouch === true && navigator.canShare) {
-            navigator.share({
-                "title": sharedtitle + " | " + apptitle,
-                "text": sharedtitle + ": \n",
-                "url": sharedurl
-            }).then(() => sharecallback()).catch(err => console.log(err));
-        } else {
-            sharefallback(sharedurl, sharedtitle);
-        }
+        return
     }
+    if (supportsTouch === true && navigator.canShare) {
+        navigator.share({
+            "title": sharedtitle + " | " + apptitle,
+            "text": sharedtitle + ": \n",
+            "url": sharedurl
+        }).then(() => sharecallback()).catch(err => console.log(err));
+        return
+    }
+    sharefallback(sharedurl, sharedtitle);
 }
 
 function sharefallback(sharedurl, sharedtitle) {
@@ -2443,10 +2459,10 @@ function open_share_url(type, url) {
         closeloader();
         if (type == "open") {
             window.open(url);
-        } else if (type == "location") {
-            window.location.href = url;
-        } else {
-
+            return
+        }
+        if (type == "location") {
+            w_loc.href = url;
         }
     }, 500);
 }
@@ -2488,7 +2504,7 @@ function open_tx(tx_node) {
     };
     setTimeout(function() { // wait for url to change
         $("html, body").animate({
-            scrollTop: selected_request.offset().top - $("#fixednav").height()
+            "scrollTop": selected_request.offset().top - $("#fixednav").height()
         }, 500);
     }, 1000);
 }
@@ -2626,9 +2642,8 @@ function saverequest(direct) {
                 saverequests();
             }, 500);
             if (!requestid_param && direct === true) { // Add request_params (make it a request)
-                var request_params = "&requestid=" + requestid + "&status=" + request.status + "&type=" + thisrequesttype,
-                    window_location = window.location.href;
-                history.replaceState(null, null, window_location + request_params);
+                var request_params = "&requestid=" + requestid + "&status=" + request.status + "&type=" + thisrequesttype;
+                history.replaceState(null, null, w_loc.href + request_params);
             }
             if (coinsettings) {
                 var reuse = coinsettings["Reuse address"];
@@ -2648,8 +2663,8 @@ function saverequest(direct) {
     }
     // post to parent
     if (checkout) {
-        var contact_param = geturlparameters().contactform,
-            meta_data_object = (rqmetahash) ? JSON.parse(atob(rqmetahash)) : undefined, // decode meta param if exists
+        var contact_param = gets.contactform,
+            meta_data_object = (rqmetahash) ? JSON.parse(atob(rqmetahash)) : null, // decode meta param if exists
             fiatvalue_rounded = trimdecimals(request.fiatvalue, 2),
             received_in_currency = (this_iscrypto === true) ? request.receivedamount : fiatvalue_rounded,
             tpts = (thispaymenttimestamp) ? thispaymenttimestamp : timestamp,
@@ -2674,7 +2689,7 @@ function saverequest(direct) {
                 "lightning": lightning
             },
             contactdata;
-        if (contact_param !== undefined) {
+        if (contact_param) {
             var cfdata = $("#contactform").data(),
                 cf_address = cfdata.address;
             if (cf_address) {
@@ -2745,9 +2760,9 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
     if (thispayment == "nano") { // 0 confirmation so payment must be sent
         if (status == "insufficient") {
             adjust_paymentdialog("insufficient", "scanning", "Insufficient amount");
-        } else {
-            adjust_paymentdialog("paid", "no", "Payment " + send_receive);
+            return
         }
+        adjust_paymentdialog("paid", "no", "Payment " + send_receive);
         return
     }
     if (smart_txhash) {
@@ -2755,27 +2770,27 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
         if (pending == "scanning") {
             if (status == "insufficient") {
                 adjust_paymentdialog("insufficient", "scanning", "Insufficient amount");
-            } else {
-                adjust_paymentdialog("pending", "scanning", "Pending request");
+                return
             }
-        } else {
-            adjust_paymentdialog("pending", "polling", "Transaction broadcasted");
-            if (thispayment == "monero") {
-                var address = prdata.address,
-                    vk = request.viewkey;
-                if (vk) {
-                    var account = (vk.account) ? vk.account : address,
-                        viewkey = vk.vk;
-                    var starttime = now();
-                    closenotify();
-                    init_xmr_node(34, account, viewkey, starttime, smart_txhash, true);
-                } else {
-                    notify("this currency is not monitored", 500000, "yes");
-                }
-            } else {
-                pick_monitor(smart_txhash);
-            }
+            adjust_paymentdialog("pending", "scanning", "Pending request");
+            return
         }
+        adjust_paymentdialog("pending", "polling", "Transaction broadcasted");
+        if (thispayment == "monero") {
+            var address = prdata.address,
+                vk = request.viewkey;
+            if (vk) {
+                var account = (vk.account) ? vk.account : address,
+                    viewkey = vk.vk,
+                    starttime = now();
+                closenotify();
+                init_xmr_node(34, account, viewkey, starttime, smart_txhash, true);
+                return
+            }
+            notify("this currency is not monitored", 500000, "yes");
+            return
+        }
+        pick_monitor(smart_txhash);
     }
 }
 
@@ -2864,8 +2879,7 @@ function updaterequest(ua, save) {
         rldata = requestlist.data(),
         metalist = requestlist.find(".metalist");
     if (ua.receivedamount) {
-        receivedamount_rounded = trimdecimals(ua.receivedamount, 6),
-            metalist.find(".receivedamount span").text(" " + trimdecimals(ua.receivedamount, 6));
+        metalist.find(".receivedamount span").text(" " + trimdecimals(ua.receivedamount, 6));
     }
     if (ua.fiatvalue) {
         metalist.find(".payday.pd_fiat .fiatvalue").text(" " + trimdecimals(ua.fiatvalue, 2));
@@ -2933,12 +2947,11 @@ function updaterequest(ua, save) {
     if (ua.requesttitle) {
         var thisrequesttitle = ua.requesttitle;
         if (thisrequesttitle == "empty") {
-            return false;
-        } else {
-            var textinput = (rldata.requesttitle) ? requestlist.find(".atext h2") :
-                requestlist.find(".rq_subject");
-            textinput.add(metalist.find(".requesttitlebox")).text(thisrequesttitle);
+            return
         }
+        var textinput = (rldata.requesttitle) ? requestlist.find(".atext h2") :
+            requestlist.find(".rq_subject");
+        textinput.add(metalist.find(".requesttitlebox")).text(thisrequesttitle);
     }
     requestlist.data(ua);
     if (save === true) {
@@ -2949,7 +2962,7 @@ function updaterequest(ua, save) {
 }
 
 function get_xmrpid() {
-    var use_integrated = $("#monero_settings .cc_settinglist li[data-id='Integrated addresses']").data("selected");
+    var use_integrated = cs_dat("monero", "Integrated addresses").selected;
     if (use_integrated) {
         return xmr_pid();
     }

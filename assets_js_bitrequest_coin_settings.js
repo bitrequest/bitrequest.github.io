@@ -56,6 +56,8 @@ $(document).ready(function() {
 
     reset_coinsettings();
     //reset_coinsettings_function
+    //cs_node
+    //cs_dat
 });
 
 // ** Currency Settings **
@@ -120,11 +122,14 @@ function submit_confirmations() {
         e.preventDefault();
         var thistrigger = $(this),
             thiscurrency = thistrigger.attr("data-currency"),
-            thisvalue = thistrigger.prev("input").val();
-        $("#" + thiscurrency + "_settings .cc_settinglist li[data-id='confirmations']").data("selected", thisvalue).find("p").html(thisvalue);
-        canceldialog();
-        notify("Data saved");
-        save_cc_settings(thiscurrency, true);
+            thisvalue = thistrigger.prev("input").val(),
+            csnode = cs_node(thiscurrency, "confirmations");
+        if (csnode) {
+	        csnode.data("selected", thisvalue).find("p").html(thisvalue);
+	        canceldialog();
+	        notify("Data saved");
+	        save_cc_settings(thiscurrency, true);
+        }
     })
 }
 
@@ -238,11 +243,14 @@ function submit_blockexplorer() {
     $(document).on("click", "#be_formbox input.submit", function(e) {
         e.preventDefault();
         var thiscurrency = $(this).attr("data-currency"),
-            thisvalue = $("#be_formbox").find("input:first").val();
-        $("#" + thiscurrency + "_settings .cc_settinglist li[data-id='blockexplorers']").data("selected", thisvalue).find("p").html(thisvalue);
-        canceldialog();
-        notify("Data saved");
-        save_cc_settings(thiscurrency, true);
+            thisvalue = $("#be_formbox").find("input:first").val(),
+            csnode = cs_node(thiscurrency, "blockexplorers");
+		if (csnode) {
+		    csnode.data("selected", thisvalue).find("p").html(thisvalue);
+		    canceldialog();
+			notify("Data saved");
+			save_cc_settings(thiscurrency, true);
+		}
     })
 }
 
@@ -639,7 +647,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
 }
 
 function pass_rpc_submit(thiscurrency, thisvalue, newnode) {
-    var rpc_setting_li = $("#" + thiscurrency + "_settings .cc_settinglist li[data-id='" + s_id + "']"),
+    var rpc_setting_li = cs_node(thiscurrency, s_id),
         options = rpc_setting_li.data("options"),
         node_name = (thisvalue.name) ? thisvalue.name : thisvalue.url;
     rpc_setting_li.data("selected", thisvalue).find("p").html(node_name);
@@ -663,7 +671,7 @@ function remove_rpcnode() {
         var thistrigger = $(this),
             settingsbox = $("#settingsbox"),
             thiscurrency = settingsbox.find("#rpc_input_box").attr("data-currency"),
-            rpc_setting_li = $("#" + thiscurrency + "_settings .cc_settinglist li[data-id='" + s_id + "']"),
+            rpc_setting_li = cs_node(thiscurrency, s_id),
             options = rpc_setting_li.data("options");
         if (options.length) {
             var thisoption = thistrigger.closest(".optionwrap"),
@@ -747,7 +755,7 @@ function delete_xpub() {
         var result = confirm("Delete BIP32 Extended public key?");
         if (result === true) {
             var currency = $(this).attr("data-currency"),
-                xpubli = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']"),
+                xpubli = cs_node(currency, "Xpub"),
                 x_pubid = xpubli.data("key_id");
             delete_xpub_cb(currency, x_pubid, true);
             saveaddresses(currency, false);
@@ -902,7 +910,7 @@ function validate_xpub(thisnode) {
                 return false;
             }
             if (pk_checked == true && mw_checked == true) {
-                var xpubli = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']"),
+                var xpubli = cs_node(currency, "Xpub"),
                     haskey = xpubli.data("key");
                 if (haskey) {
                     if (haskey == addressinputval) {
@@ -1057,7 +1065,7 @@ function segwit_switch() {
             thisvalue = (this_switch.hasClass("true")) ? true : false,
             current_li = this_switch.closest("li"),
             thiscurrency = current_li.attr("data-currency"),
-            kdli = $("#" + thiscurrency + "_settings .cc_settinglist li[data-id='Xpub']"),
+            kdli = cs_node(thiscurrency, "Xpub"),
             kdli_dat = kdli.data(),
             rootpath = kdli_dat.root_path,
             coincode = rootpath.split("/")[2],
@@ -1261,4 +1269,23 @@ function reset_coinsettings_function(trigger) {
         canceldialog();
         notify(currency + " settings reset to default");
     }
+}
+
+function cs_node(currency, id) {
+    var coinnode = $("#" + currency + "_settings .cc_settinglist li[data-id='" + id + "']");
+    if (coinnode.length) {
+	    return coinnode;
+    }
+    return false
+}
+
+function cs_dat(currency, id) {
+	var cnode = cs_node(currency, id);
+	if (cnode) {
+		var coindata = cnode.data();
+	    if (coindata) {
+		    return coindata;
+	    }
+	}
+    return false
 }
