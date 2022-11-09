@@ -809,7 +809,7 @@ function nano_socket(socket_node, thisaddress) {
     websocket.onmessage = function(e) {
         var now_utc = now() + timezone,
             json = JSON.parse(e.data),
-            data = json.message;
+            data = (json.message) ? json.message : (json.account) ? json : null;
         if (data) {
             if (data.account == thisaddress) {
                 return // block outgoing transactions

@@ -1,3 +1,7 @@
+var ap_id,
+    test_rpc_call,
+    is_erc20t;
+
 $(document).ready(function() {
 
     // ** Currency Settings **
@@ -46,8 +50,6 @@ $(document).ready(function() {
     key_management();
     segwit_switch();
     //xpub_info_pu
-    export_keys();
-    //export_keys_fallback
 
     // Add apikey
     trigger_apikey();
@@ -125,10 +127,10 @@ function submit_confirmations() {
             thisvalue = thistrigger.prev("input").val(),
             csnode = cs_node(thiscurrency, "confirmations");
         if (csnode) {
-	        csnode.data("selected", thisvalue).find("p").html(thisvalue);
-	        canceldialog();
-	        notify("Data saved");
-	        save_cc_settings(thiscurrency, true);
+            csnode.data("selected", thisvalue).find("p").html(thisvalue);
+            canceldialog();
+            notify("Data saved");
+            save_cc_settings(thiscurrency, true);
         }
     })
 }
@@ -151,13 +153,13 @@ function reuse_address_trigger() {
                 this_switch.removeClass("true").addClass("false");
                 save_cc_settings(thiscurrency, false);
             }
-        } else {
-            var result = confirm("Are you sure you want to reuse " + thiscurrency + " addresses?");
-            if (result === true) {
-                thislist.data("selected", true);
-                this_switch.removeClass("false").addClass("true");
-                save_cc_settings(thiscurrency, true);
-            }
+            return
+        }
+        var result = confirm("Are you sure you want to reuse " + thiscurrency + " addresses?");
+        if (result === true) {
+            thislist.data("selected", true);
+            this_switch.removeClass("false").addClass("true");
+            save_cc_settings(thiscurrency, true);
         }
     })
 }
@@ -245,12 +247,12 @@ function submit_blockexplorer() {
         var thiscurrency = $(this).attr("data-currency"),
             thisvalue = $("#be_formbox").find("input:first").val(),
             csnode = cs_node(thiscurrency, "blockexplorers");
-		if (csnode) {
-		    csnode.data("selected", thisvalue).find("p").html(thisvalue);
-		    canceldialog();
-			notify("Data saved");
-			save_cc_settings(thiscurrency, true);
-		}
+        if (csnode) {
+            csnode.data("selected", thisvalue).find("p").html(thisvalue);
+            canceldialog();
+            notify("Data saved");
+            save_cc_settings(thiscurrency, true);
+        }
     })
 }
 
@@ -260,20 +262,17 @@ function edit_rpcnode() {
         var current_li = $(this),
             this_data = current_li.data(),
             options = this_data.options,
-            api_list = this_data.apis,
-            sockets = this_data.websockets;
-        s_id = current_li.attr("data-id");
+            api_list = this_data.apis;
         if (options === undefined && api_list === undefined) {
             return
         }
-        test_rpc_call = this_data.rpc_test_command;
         var thiscurrency = current_li.children(".liwrap").attr("data-currency");
-        is_erc20t = ($("#" + thiscurrency + "_settings").attr("data-erc20") == "true");
-        var header_text = (s_id === "websockets") ? "Add websocket" : "Add RPC node",
-            currencycode = (thiscurrency == "bitcoin" || thiscurrency == "litecoin" || thiscurrency == "dogecoin") ? "btc" :
-            (thiscurrency == "ethereum" || is_erc20t === true) ? "eth" :
-            thiscurrency,
-            placeholder_id = s_id + currencycode + getrandomnumber(1, 3),
+        ap_id = current_li.attr("data-id"),
+            test_rpc_call = this_data.rpc_test_command,
+            is_erc20t = ($("#" + thiscurrency + "_settings").attr("data-erc20") == "true");
+        var header_text = (ap_id === "websockets") ? "Add websocket" : "Add RPC node",
+            currencycode = (thiscurrency == "ethereum" || is_erc20t === true) ? "eth" : thiscurrency,
+            placeholder_id = ap_id + currencycode + getrandomnumber(1, 3),
             getplaceholder = get_rpc_placeholder(thiscurrency)[placeholder_id],
             placeholder = (getplaceholder) ? getplaceholder : "eg: some.local-or-remote.node:port",
             api_form = (options) ? "<div id='rpc_input_box' data-currency='" + thiscurrency + "' data-erc20='" + is_erc20t + "'>\
@@ -289,8 +288,8 @@ function edit_rpcnode() {
             selected = this_data.selected,
             selected_title = (selected.name) ? selected.name : selected.url,
             content = "\
-			<div class='formbox' id='settingsbox' data-id='" + s_id + "'>\
-				<h2 class='icon-sphere'>Choose " + thiscurrency + " " + s_id + "</h2>\
+			<div class='formbox' id='settingsbox' data-id='" + ap_id + "'>\
+				<h2 class='icon-sphere'>Choose " + thiscurrency + " " + ap_id + "</h2>\
 				<div class='popnotify'></div>\
 				<div class='popform'>\
 					<div class='selectbox'>\
@@ -320,6 +319,9 @@ function edit_rpcnode() {
             test_append_rpc(thiscurrency, optionlist, key, value, selected);
         });
         $("#rpc_main_input").data(selected);
+        setTimeout(function() {
+            closesocket();
+        }, 5000);
     })
 }
 
@@ -341,7 +343,7 @@ function get_rpc_placeholder(currency) {
 }
 
 function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
-    if (s_id == "apis") {
+    if (ap_id == "apis") {
         if (thiscurrency == "ethereum" || is_erc20t === true) {
             var txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
                 payload = {
@@ -363,46 +365,46 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                 var data = br_result(e);
                 if (data) {
                     rpc_option_li(optionlist, true, key, value, selected, true);
-                } else {
-                    rpc_option_li(optionlist, false, key, value, selected, true);
+                    return
                 }
+                rpc_option_li(optionlist, false, key, value, selected, true);
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 rpc_option_li(optionlist, false, key, value, selected, true);
             });
-        } else {
-            var rpc = (thiscurrency == "bitcoin" || thiscurrency == "litecoin" || thiscurrency == "dogecoin" || thiscurrency == "bitcoin-cash") ? "bitcoin" : thiscurrency,
-                rpcurl = get_rpc_url({
-                    "url": value.url,
-                    "username": value.username,
-                    "password": value.password
-                });
-            api_proxy({
-                "api": rpc,
-                "search": "test",
-                "cachetime": 25,
-                "cachefolder": "1h",
-                "api_url": rpcurl,
-                "params": {
-                    "method": "POST",
-                    "data": JSON.stringify(test_rpc_call),
-                    "headers": {
-                        "Content-Type": "text/plain"
-                    }
-                }
-            }).done(function(e) {
-                var data = br_result(e).result;
-                if (data.resul || data.network == "live") { // network is for nano check
-                    rpc_option_li(optionlist, true, key, value, selected, true);
-                } else {
-                    rpc_option_li(optionlist, false, key, value, selected, true);
-                }
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                rpc_option_li(optionlist, false, key, value, selected, true);
-            });
+            return
         }
-    } else if (s_id == "websockets") {
+        var rpc = (thiscurrency == "bitcoin" || thiscurrency == "litecoin" || thiscurrency == "dogecoin" || thiscurrency == "bitcoin-cash") ? "bitcoin" : thiscurrency,
+            rpcurl = get_rpc_url({
+                "url": value.url,
+                "username": value.username,
+                "password": value.password
+            });
+        api_proxy({
+            "api": rpc,
+            "search": "test",
+            "cachetime": 25,
+            "cachefolder": "1h",
+            "api_url": rpcurl,
+            "params": {
+                "method": "POST",
+                "data": JSON.stringify(test_rpc_call),
+                "headers": {
+                    "Content-Type": "text/plain"
+                }
+            }
+        }).done(function(e) {
+            var data = br_result(e),
+                result = data.result,
+                live = ($.isEmptyObject(result)) ? false : (thiscurrency == "nano") ? (result.network == "live") ? true : false : true;
+            rpc_option_li(optionlist, live, key, value, selected, true);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            rpc_option_li(optionlist, false, key, value, selected, true);
+        });
+        return
+    }
+    if (ap_id == "websockets") {
         var provider = value.url,
-            provider_name = value.name,
+            provider_name = (value.name) ? value.name : provider,
             ping_event = "heartbeat";
         if (provider_name == "blockcypher wss") {
             var provider = value.url + "btc/main";
@@ -411,48 +413,53 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
             var ping_event = JSON.stringify({
                 "op": "ping"
             });
-        } else if (thiscurrency == "nano") {
-            var ping_event = JSON.stringify({
-                "action": "subscribe",
-                "topic": "confirmation",
-                "ack": true,
-                "id": 1
-            });
-        } else if (is_erc20t === true) {
-            var if_id = get_infura_apikey(provider),
-                provider = provider + if_id;
-            var ping_event = JSON.stringify({
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "eth_subscribe",
-                "params": ["logs", {
-                    "address": "0x56ba2Ee7890461f463F7be02aAC3099f6d5811A8",
-                    "topics": []
-                }]
-            });
         }
-        var web_socket = new WebSocket(provider);
+        if (thiscurrency == "nano") {
+            var naddr = "nano_1hedzz9g3oq1pw49hf9u9koqgwwg8in49o73xwrnfu9j43qk533r7hhuratx", // random xno address for testing
+                ping_event = JSON.stringify({
+                    "action": "subscribe",
+                    "topic": "confirmation",
+                    "all_local_accounts": true,
+                    "options": {
+                        "accounts": [naddr]
+                    },
+                    "ack": true
+                });
+        }
+        if (thiscurrency == "ethereum" || is_erc20t === true) {
+            var if_id = get_infura_apikey(provider),
+                provider = provider + if_id,
+                ping_event = JSON.stringify({
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "eth_subscribe",
+                    "params": ["logs", {
+                        "address": expected_eth_address,
+                        "topics": []
+                    }]
+                });
+        }
+        var web_socket = sockets["ws_test"] = new WebSocket(provider);
         web_socket.onopen = function(e) {
             web_socket.send(ping_event);
-            console.log(ping_event);
-            rpc_option_li(optionlist, true, key, value, selected, true);
             console.log("Connected: " + provider);
         };
         web_socket.onmessage = function(e) {
-            //console.log(e);
+            rpc_option_li(optionlist, true, key, value, selected, true);
             console.log("socket test success");
             web_socket.close();
             web_socket = null;
+            closesocket("ws_test");
         };
         web_socket.onclose = function(e) {
             console.log("End socket test");
         };
         web_socket.onerror = function(e) {
-            console.log(e);
             rpc_option_li(optionlist, false, key, value, selected, true);
             console.log("socket test failed");
             web_socket.close();
             web_socket = null;
+            closesocket("ws_test");
         };
     }
 }
@@ -515,15 +522,13 @@ function submit_rpcnode() {
                 test_rpc(rpc_input_box, rpc_data, thiscurrency);
                 return
             }
-            pass_rpc_submit(thiscurrency, setvalue, false);
-            return
         }
         pass_rpc_submit(thiscurrency, setvalue, false)
     })
 }
 
 function test_rpc(rpc_input_box, rpc_data, currency) {
-    if (s_id == "apis") {
+    if (ap_id == "apis") {
         if (currency == "ethereum" || is_erc20t === true) {
             var txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
                 payload = {
@@ -546,114 +551,126 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                 if (data) {
                     rpc_input_box.addClass("live").removeClass("offline");
                     pass_rpc_submit(currency, rpc_data, true);
-                } else {
-                    rpc_input_box.addClass("offline").removeClass("live");
-                    popnotify("error", "unable to connect");
+                    return
                 }
+                rpc_input_box.addClass("offline").removeClass("live");
+                popnotify("error", "unable to connect");
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 rpc_input_box.addClass("offline").removeClass("live");
                 popnotify("error", "unable to connect");
             });
-        } else {
-            var rpc = (currency == "bitcoin" || currency == "litecoin" || currency == "dogecoin" || currency == "bitcoin-cash") ? "bitcoin" : currency,
-                rpcurl = get_rpc_url(rpc_data);
-            api_proxy({
-                "api": rpc,
-                "search": "test",
-                "cachetime": 25,
-                "cachefolder": "1h",
-                "api_url": rpcurl,
-                "params": {
-                    "method": "POST",
-                    "data": JSON.stringify(test_rpc_call),
-                    "headers": {
-                        "Content-Type": "text/plain"
-                    }
+            return
+        }
+        var rpc = (currency == "bitcoin" || currency == "litecoin" || currency == "dogecoin" || currency == "bitcoin-cash") ? "bitcoin" : currency,
+            rpcurl = get_rpc_url(rpc_data);
+        api_proxy({
+            "api": rpc,
+            "search": "test",
+            "cachetime": 25,
+            "cachefolder": "1h",
+            "api_url": rpcurl,
+            "params": {
+                "method": "POST",
+                "data": JSON.stringify(test_rpc_call),
+                "headers": {
+                    "Content-Type": "text/plain"
                 }
-            }).done(function(e) {
-                var data = br_result(e),
-                    rpc_result = data.result;
-                if (rpc_result) {
-                    rpc_input_box.addClass("live").removeClass("offline");
-                    pass_rpc_submit(currency, rpc_data, true);
-                } else {
-                    var error = data.error || rpc_result.error;
-                    if (error) {
-                        rpc_input_box.addClass("offline").removeClass("live");
-                        topnotify("Unable to connect");
-                        var error_message = error.error_message;
-                        if (error_message) {
-                            popnotify("error", error_message);
-                        }
-                    }
-                }
-            }).fail(function(data) {
+            }
+        }).done(function(e) {
+            var data = br_result(e),
+                rpc_result = data.result;
+            if (rpc_result) {
+                rpc_input_box.addClass("live").removeClass("offline");
+                pass_rpc_submit(currency, rpc_data, true);
+                return
+            }
+            var error = data.error || rpc_result.error;
+            if (error) {
                 rpc_input_box.addClass("offline").removeClass("live");
                 topnotify("Unable to connect");
-                if (data.status === 0) {
-                    popnotify("error", "Try disabeling Cross Origin Limitations in your browser");
+                var error_message = error.error_message;
+                if (error_message) {
+                    popnotify("error", error_message);
                 }
-            });
-        }
-    } else if (s_id == "websockets") {
+            }
+        }).fail(function(data) {
+            rpc_input_box.addClass("offline").removeClass("live");
+            topnotify("Unable to connect");
+            if (data.status === 0) {
+                popnotify("error", "Try disabeling Cross Origin Limitations in your browser");
+            }
+        });
+        return
+    }
+    if (ap_id == "websockets") {
         var provider = rpc_data.url,
             ping_event;
         if (currency == "bitcoin") {
             var ping_event = JSON.stringify({
                 "op": "ping"
             });
-        } else if (currency == "nano") {
-            var ping_event = JSON.stringify({
-                "action": "subscribe",
-                "topic": "confirmation",
-                "ack": true,
-                "id": 1
-            });
-        } else if (currency == "ethereum" || is_erc20t === true) {
+        }
+        if (currency == "nano") {
+            var naddr = "nano_1hedzz9g3oq1pw49hf9u9koqgwwg8in49o73xwrnfu9j43qk533r7hhuratx", // random xno address for testing
+                ping_event = JSON.stringify({
+                    "action": "subscribe",
+                    "topic": "confirmation",
+                    "all_local_accounts": true,
+                    "options": {
+                        "accounts": [naddr]
+                    },
+                    "ack": true
+                });
+        }
+        if (currency == "ethereum" || is_erc20t === true) {
             var ping_event = JSON.stringify({
                 "jsonrpc": "2.0",
                 "id": 1,
                 "method": "eth_subscribe",
                 "params": ["logs", {
-                    "address": "",
+                    "address": expected_eth_address,
                     "topics": []
                 }]
             });
         }
-        var web_socket = new WebSocket(provider);
-        web_socket.onopen = function(e) {
-            web_socket.send(ping_event);
+        var w_socket = sockets["ws_submit"] = new WebSocket(provider);
+        w_socket.onopen = function(e) {
+            w_socket.send(ping_event);
             console.log("Connected: " + provider);
         };
-        web_socket.onmessage = function(e) {
+        w_socket.onmessage = function(e) {
             rpc_input_box.addClass("live").removeClass("offline");
             pass_rpc_submit(currency, rpc_data, true);
             console.log("socket test success");
-            web_socket.close();
-            web_socket = null;
+            w_socket.close();
+            w_socket = null;
+            closesocket("ws_submit");
         };
-        web_socket.onclose = function(e) {
+        w_socket.onclose = function(e) {
             console.log("End socket test");
         };
-        web_socket.onerror = function(e) {
-            console.log(e);
+        w_socket.onerror = function(e) {
             rpc_input_box.addClass("offline").removeClass("live");
             popnotify("error", "Unable to connect");
             console.log("socket test failed");
-            web_socket.close();
-            web_socket = null;
+            w_socket.close();
+            w_socket = null;
+            closesocket("ws_submit");
         };
+        setTimeout(function() {
+            closesocket();
+        }, 5000);
     }
 }
 
 function pass_rpc_submit(thiscurrency, thisvalue, newnode) {
-    var rpc_setting_li = cs_node(thiscurrency, s_id),
+    var rpc_setting_li = cs_node(thiscurrency, ap_id),
         options = rpc_setting_li.data("options"),
         node_name = (thisvalue.name) ? thisvalue.name : thisvalue.url;
     rpc_setting_li.data("selected", thisvalue).find("p").html(node_name);
-    if (options === undefined) {
+    if ($.isEmptyObject(options)) {
         if (newnode === true) {
-            rpc_setting_li.data("options", thisvalue);
+            rpc_setting_li.data("options", [thisvalue]);
         }
     } else {
         if (newnode === true) {
@@ -671,7 +688,7 @@ function remove_rpcnode() {
         var thistrigger = $(this),
             settingsbox = $("#settingsbox"),
             thiscurrency = settingsbox.find("#rpc_input_box").attr("data-currency"),
-            rpc_setting_li = cs_node(thiscurrency, s_id),
+            rpc_setting_li = cs_node(thiscurrency, ap_id),
             options = rpc_setting_li.data("options");
         if (options.length) {
             var thisoption = thistrigger.closest(".optionwrap"),
@@ -707,15 +724,14 @@ function remove_rpcnode() {
 function get_rpc_url(rpc_data) {
     if (rpc_data === false) {
         return false;
-    } else {
-        var url = rpc_data.url,
-            username = rpc_data.username,
-            password = rpc_data.password,
-            login_param = (username && password) ? username + ":" + password + "@" : "",
-            hasprefix = (url.indexOf("http") > -1),
-            urlsplit = (hasprefix === true) ? url.split("://") : url;
-        return (hasprefix === true) ? urlsplit[0] + "://" + login_param + urlsplit[1] : url;
     }
+    var url = rpc_data.url,
+        username = rpc_data.username,
+        password = rpc_data.password,
+        login_param = (username && password) ? username + ":" + password + "@" : "",
+        hasprefix = (url.indexOf("http") > -1),
+        urlsplit = (hasprefix === true) ? url.split("://") : url;
+    return (hasprefix === true) ? urlsplit[0] + "://" + login_param + urlsplit[1] : url;
 }
 
 // Xpub settings
@@ -806,28 +822,28 @@ function xpub_cc_switch() {
                     save_cc_settings(thiscurrency, true);
                     delete_xpub_cb(thiscurrency, thisdat.key_id);
                 }
-            } else {
-                if (thisdat.key) {
-                    thislist.data("selected", true).find("p").html("true");
-                    this_switch.removeClass("false").addClass("true");
-                    save_cc_settings(thiscurrency, true);
-                    add_xpub_cb(thiscurrency, thisdat.key_id);
-                    saveaddresses(thiscurrency, false);
-                    currency_check(thiscurrency);
-                } else {
-                    var cd = getcoindata(thiscurrency),
-                        ad = {
-                            "currency": thiscurrency,
-                            "ccsymbol": cd.ccsymbol,
-                            "cmcid": cd.cmcid,
-                            "erc20": cd.erc20
-                        }
-                    edit_xpub(ad, false, true);
-                }
+                return
             }
-        } else {
-            playsound(funk);
+            if (thisdat.key) {
+                thislist.data("selected", true).find("p").html("true");
+                this_switch.removeClass("false").addClass("true");
+                save_cc_settings(thiscurrency, true);
+                add_xpub_cb(thiscurrency, thisdat.key_id);
+                saveaddresses(thiscurrency, false);
+                currency_check(thiscurrency);
+                return
+            }
+            var cd = getcoindata(thiscurrency),
+                ad = {
+                    "currency": thiscurrency,
+                    "ccsymbol": cd.ccsymbol,
+                    "cmcid": cd.cmcid,
+                    "erc20": cd.erc20
+                }
+            edit_xpub(ad);
+            return
         }
+        playsound(funk);
     })
 }
 
@@ -865,9 +881,9 @@ function xpub_change() {
         if (valid === true) {
             clear_xpub_checkboxes();
             validate_xpub(thisnode.closest("#xpubformbox"));
-        } else {
-            xpub_fail(currency);
+            return
         }
+        xpub_fail(currency);
     })
 }
 
@@ -916,11 +932,10 @@ function validate_xpub(thisnode) {
                     if (haskey == addressinputval) {
                         canceldialog();
                         return false;
-                    } else {
-                        var result = confirm("Replace Xpub?");
-                        if (result === true) {} else {
-                            return false;
-                        }
+                    }
+                    var result = confirm("Replace Xpub?");
+                    if (result === true) {} else {
+                        return false;
                     }
                 }
                 var xpub_id = hmacsha(addressinputval, "sha256").slice(0, 8);
@@ -952,26 +967,26 @@ function validate_xpub(thisnode) {
                     openpage("?p=home", "home", "loadpage");
                     body.removeClass("showstartpage");
                     home_icon.find(".rq_icon").trigger("click");
-                } else {
-                    notify("Xpub saved");
-                    add_xpub_cb(currency, xpub_id);
-                    saveaddresses(currency, false);
-                    currency_check(currency);
+                    return
                 }
-            } else {
-                popnotify("error", "Confirm privatekey ownership");
+                notify("Xpub saved");
+                add_xpub_cb(currency, xpub_id);
+                saveaddresses(currency, false);
+                currency_check(currency);
+                return
             }
-        } else {
-            var errormessage = "NOT a valid / supported " + currency + " Xpub key";
-            popnotify("error", errormessage);
-            setTimeout(function() {
-                addressfield.select();
-            }, 10);
+            popnotify("error", "Confirm privatekey ownership");
+            return
         }
-    } else {
-        xpub_fail(currency);
-        addressfield.focus();
+        var errormessage = "NOT a valid / supported " + currency + " Xpub key";
+        popnotify("error", errormessage);
+        setTimeout(function() {
+            addressfield.select();
+        }, 10);
+        return
     }
+    xpub_fail(currency);
+    addressfield.focus();
 }
 
 function xpub_fail(currency) {
@@ -1038,29 +1053,35 @@ function key_management() {
             activepub = active_xpub(thiscurrency);
         if (activepub) {
             xpub_info_pu(thiscurrency, activepub.key);
-        } else {
-            if (hasbip === true) {
-                if (thiscurrency == "monero") {
+            return
+        }
+        if (hasbip === true) {
+            if (thiscurrency == "monero") {
+                if (is_viewonly() === false) {
                     all_pinpanel({
                         "func": phrase_info_pu,
                         "args": thiscurrency
-                    }, true)
-                } else {
-                    phrase_info_pu(thiscurrency);
+                    }, true);
+                    return
                 }
-            } else {
-                if (is_viewonly() === true) {
-                    vu_block();
-                    return false;
-                }
-                manage_bip32();
             }
+            phrase_info_pu(thiscurrency);
+            return
         }
+        if (is_viewonly() === true) {
+            vu_block();
+            return false;
+        }
+        manage_bip32();
     })
 }
 
 function segwit_switch() {
     $(document).on("mouseup", "#segw_box .toggle_segwit .switchpanel", function() {
+        if (is_viewonly() === true) {
+            vu_block();
+            return
+        }
         var this_switch = $(this),
             thisvalue = (this_switch.hasClass("true")) ? true : false,
             current_li = this_switch.closest("li"),
@@ -1154,44 +1175,6 @@ function xpub_info_pu(currency, xpub) {
     }, 550);
 }
 
-function export_keys() {
-    $(document).on("click", "#export_keys", function() {
-        var pks_box = $("#pks_box");
-        if (pks_box.is(":visible")) {
-            pks_box.slideUp(200);
-        } else {
-            var pkspan = pks_box.find("span");
-            if (pkspan.length) {
-                pks_box.slideDown(200);
-            } else {
-                all_pinpanel({
-                    "func": export_keys_fallback,
-                    "args": $(this).attr("data-currency")
-                }, true);
-            }
-        }
-        $("#test_derive_wrap").slideUp(200);
-    })
-}
-
-function export_keys_fallback(currency) {
-    var pks_box = $("#pks_box"),
-        keydat = key_cc(currency),
-        seedid = keydat.seedid,
-        bip32dat = getbip32dat(currency),
-        d_path = bip32dat.root_path,
-        derives = filter_addressli(currency, "seedid", seedid),
-        latest = get_latest_index(derives),
-        new_array = new Array(latest + 1),
-        derive_array = keypair_array(keydat.seed, new_array, 0, d_path, bip32dat, keydat.key, keydat.cc, currency),
-        pk_array = [];
-    pks_box.html("");
-    $.each(derive_array, function(i, val) {
-        pk_array.push(val.privkey);
-    });
-    pks_box.html("<span class='adbox select'>" + pk_array.join(", ") + "</span>").slideDown(200);
-}
-
 // Add api key
 
 function trigger_apikey() {
@@ -1231,17 +1214,17 @@ function submit_apikey() {
         if (thisvalue) {
             if (thisvalue === currentkey) {
                 canceldialog();
-            } else {
-                if (thisinput.attr("data-checkchange") == thisvalue) {
-                    popnotify("error", "Enter a valid API key");
-                } else {
-                    thisinput.attr("data-checkchange", thisvalue);
-                    checkapikey(thisform.attr("data-api"), thisvalue, true);
-                }
+                return
             }
-        } else {
-            popnotify("error", "Enter a valid API key");
+            if (thisinput.attr("data-checkchange") == thisvalue) {
+                popnotify("error", "Enter a valid API key");
+                return
+            }
+            thisinput.attr("data-checkchange", thisvalue);
+            checkapikey(thisform.attr("data-api"), thisvalue, true);
+            return
         }
+        popnotify("error", "Enter a valid API key");
     })
 }
 
@@ -1274,18 +1257,18 @@ function reset_coinsettings_function(trigger) {
 function cs_node(currency, id) {
     var coinnode = $("#" + currency + "_settings .cc_settinglist li[data-id='" + id + "']");
     if (coinnode.length) {
-	    return coinnode;
+        return coinnode;
     }
     return false
 }
 
 function cs_dat(currency, id) {
-	var cnode = cs_node(currency, id);
-	if (cnode) {
-		var coindata = cnode.data();
-	    if (coindata) {
-		    return coindata;
-	    }
-	}
+    var cnode = cs_node(currency, id);
+    if (cnode) {
+        var coindata = cnode.data();
+        if (coindata) {
+            return coindata;
+        }
+    }
     return false
 }

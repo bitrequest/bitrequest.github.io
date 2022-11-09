@@ -2,6 +2,7 @@ var test_phrase = "army van defense carry jealous true garbage claim echo media 
     expected_seed = "5b56c417303faa3fcba7e57400e120a0ca83ec5a4fc9ffba757fbe63fbd77a89a1a3be4c67196f57c39a88b76373733891bfaba16ed27a813ceed498804c0570", // expected seed used for test derive
     expected_address = "1HQ3rb7nyLPrjnuW85MUknPekwkn7poAUm", // expected addres used for test derive
     expected_bech32 = "bc1qg0azlj4w2lrq8jssrrz6eprt2fe7f7edm4vpd5", // expected bech32 addres used for test derive
+    expected_eth_address = "0x2161DedC3Be05B7Bb5aa16154BcbD254E9e9eb68",
     has_bigint = false,
     test_derive = true,
     c_derive = {
@@ -329,8 +330,7 @@ function xpub_check() {
 }
 
 function eth_xpub_check() {
-    var expected_eth_address = "0x2161DedC3Be05B7Bb5aa16154BcbD254E9e9eb68",
-        eth_pub = "03c026c4b041059c84a187252682b6f80cbbe64eb81497111ab6914b050a8936fd",
+    var eth_pub = "03c026c4b041059c84a187252682b6f80cbbe64eb81497111ab6914b050a8936fd",
         eth_address = pub_to_eth_address(eth_pub);
     if (expected_eth_address == eth_address) {
         return true;
@@ -1659,7 +1659,8 @@ function phrase_info_pu(coin) {
                     "bip32": bip32dat,
                     "currency": currency
                 },
-                xmr_phrase = (currency == "monero") ? secret_spend_key_to_words(get_ssk(seed, true)) : false,
+                xmr_phrase = (currency == "monero") ? (is_viewonly() === true) ? false :
+                	secret_spend_key_to_words(get_ssk(seed, true)) : false,
                 xmr_phrase_box = (xmr_phrase) ? "<div><strong>XMR Seed words: </strong><br/><span class='adboxl adbox select' data-type='XMR Seed words'>" + xmr_phrase + "</span></div>" : "",
                 dp_node = $("<div class='d_path" + coinclass + "'>\
 				<div class='d_path_header'><strong>Derivation path: </strong><span class='ref'>" + root_path + "</span></div>" +
