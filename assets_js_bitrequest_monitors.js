@@ -223,7 +223,8 @@ function get_api_inputs(rd, api_data, api_name) {
             counter = 0,
             lnd = rd.lightning,
             ln_only = (lnd && lnd.hybrid === false) ? true : false,
-            canceled = (rq_status == "canceled") ? true : false;
+            canceled = (rq_status == "canceled") ? true : false,
+            rqtype = rd.requesttype;
         thislist.removeClass("no_network");
         if (pending == "no" || pending == "incoming" || thislist.hasClass("expired")) {
             transactionlist.find("li").each(function(i) {
@@ -243,7 +244,6 @@ function get_api_inputs(rd, api_data, api_name) {
                     pid = lnd.pid,
                     nid = lnd.nid,
                     imp = lnd.imp,
-                    rqtype = rd.requesttype,
                     default_error = "unable to connect";
                 if (pending == "scanning" || canceled) {
                     $.ajax({
@@ -304,7 +304,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                                 rd.lightning = lnd; // push invoice
                                                 var txd = lnd_tx_data(e);
                                                 if (txd.ccval) {
-                                                    var tx_listitem = append_tx_li(txd, thislist, true);
+                                                    var tx_listitem = append_tx_li(txd, rqtype, true);
                                                     if (tx_listitem) {
                                                         transactionlist.append(tx_listitem.data(txd));
                                                         tx_count(statuspanel, txd.confirmations);
@@ -391,7 +391,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                     rd.lightning = lnd; // push invoice
                                     var txd = lnd_tx_data(e);
                                     if (txd.ccval) {
-                                        var tx_listitem = append_tx_li(txd, thislist, true);
+                                        var tx_listitem = append_tx_li(txd, rqtype, true);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
                                             tx_count(statuspanel, txd.confirmations);
@@ -484,7 +484,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                         if (txd) {
                                             if (pending == "polling") {
                                                 if (txd.txhash == transactionhash && txd.ccval) {
-                                                    var tx_listitem = append_tx_li(txd, thislist);
+                                                    var tx_listitem = append_tx_li(txd, rqtype);
                                                     if (tx_listitem) {
                                                         transactionlist.append(tx_listitem.data(txd));
                                                         counter++;
@@ -496,7 +496,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                                 if (pending == "scanning") {
                                                     var xid_match = match_xmr_pid(rd.xmr_ia, rd.payment_id, txd.payment_id); // match xmr payment_id if set
                                                     if (xid_match === true) {
-                                                        var tx_listitem = append_tx_li(txd, thislist);
+                                                        var tx_listitem = append_tx_li(txd, rqtype);
                                                         if (tx_listitem) {
                                                             transactionlist.append(tx_listitem.data(txd));
                                                             counter++;
@@ -550,7 +550,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                     if (value.txid) { // filter outgoing transactions
                                         var txd = mempoolspace_scan_data(value, setconfirmations, ccsymbol, address);
                                         if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                            var tx_listitem = append_tx_li(txd, thislist);
+                                            var tx_listitem = append_tx_li(txd, rqtype);
                                             if (tx_listitem) {
                                                 transactionlist.append(tx_listitem.data(txd));
                                                 counter++;
@@ -589,7 +589,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                 var txd = mempoolspace_scan_data(data, setconfirmations, ccsymbol, address);
                                 if (txd) {
                                     if (txd.ccval) {
-                                        var tx_listitem = append_tx_li(txd, thislist);
+                                        var tx_listitem = append_tx_li(txd, rqtype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
                                             tx_count(statuspanel, 1);
@@ -633,7 +633,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                     $.each(data.txrefs, function(dat, value) {
                                         var txd = blockcypher_scan_data(value, setconfirmations, ccsymbol, payment);
                                         if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                            var tx_listitem = append_tx_li(txd, thislist);
+                                            var tx_listitem = append_tx_li(txd, rqtype);
                                             if (tx_listitem) {
                                                 transactionlist.append(tx_listitem.data(txd));
                                                 counter++;
@@ -649,7 +649,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                             if (value.spent !== undefined) { // filter outgoing transactions
                                                 var txd = blockcypher_scan_data(value, setconfirmations, ccsymbol, payment);
                                                 if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                                    var tx_listitem = append_tx_li(txd, thislist);
+                                                    var tx_listitem = append_tx_li(txd, rqtype);
                                                     if (tx_listitem) {
                                                         transactionlist.append(tx_listitem.data(txd));
                                                         counter++;
@@ -693,7 +693,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                 } else {
                                     var txd = blockcypher_poll_data(data, setconfirmations, ccsymbol, address);
                                     if (txd.ccval) {
-                                        var tx_listitem = append_tx_li(txd, thislist);
+                                        var tx_listitem = append_tx_li(txd, rqtype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
                                             tx_count(statuspanel, 1);
@@ -737,7 +737,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                     var txd = ethplorer_scan_data(value, setconfirmations, ccsymbol),
                                         rt_compensate = (rd.inout == "local" && rd.status == "insufficient") ? request_timestamp - 30000 : request_timestamp; // substract extra 30 seconds (extra compensation)
                                     if ((value.to.toUpperCase() == address.toUpperCase()) && (txd.transactiontime > rt_compensate) && txd.ccval) {
-                                        var tx_listitem = append_tx_li(txd, thislist);
+                                        var tx_listitem = append_tx_li(txd, rqtype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
                                             counter++;
@@ -778,7 +778,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                 } else {
                                     var txd = ethplorer_poll_data(data, setconfirmations, ccsymbol);
                                     if (txd.ccval) {
-                                        var tx_listitem = append_tx_li(txd, thislist);
+                                        var tx_listitem = append_tx_li(txd, rqtype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
                                             tx_count(statuspanel, 1);
@@ -830,7 +830,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                             $.each(value.transactions, function(dt, val) {
                                                 var txd = blockchair_erc20_scan_data(val, setconfirmations, ccsymbol, latestblock);
                                                 if ((txd.transactiontime > request_timestamp) && (txd.recipient.toUpperCase() == address.toUpperCase()) && (txd.token_symbol.toUpperCase() == ccsymbol.toUpperCase()) && txd.ccval) {
-                                                    var tx_listitem = append_tx_li(txd, thislist);
+                                                    var tx_listitem = append_tx_li(txd, rqtype);
                                                     if (tx_listitem) {
                                                         transactionlist.append(tx_listitem.data(txd));
                                                         counter++;
@@ -846,7 +846,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                                 $.each(value.calls, function(dt, val) {
                                                     var txd = blockchair_eth_scan_data(val, setconfirmations, ccsymbol, latestblock);
                                                     if (txd.transactiontime > request_timestamp && txd.recipient.toUpperCase() == address.toUpperCase() && txd.ccval) {
-                                                        var tx_listitem = append_tx_li(txd, thislist);
+                                                        var tx_listitem = append_tx_li(txd, rqtype);
                                                         if (tx_listitem) {
                                                             transactionlist.append(tx_listitem.data(txd));
                                                             counter++;
@@ -872,7 +872,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                                     $.each(dat.data, function(dt, val) {
                                                         var txd = blockchair_scan_data(val, setconfirmations, ccsymbol, address, latestblock);
                                                         if (txd.transactiontime > request_timestamp && txd.ccval) { // get all transactions after requestdate
-                                                            var tx_listitem = append_tx_li(txd, thislist);
+                                                            var tx_listitem = append_tx_li(txd, rqtype);
                                                             if (tx_listitem) {
                                                                 transactionlist.append(tx_listitem.data(txd));
                                                                 counter++;
@@ -928,7 +928,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                             (payment == "ethereum") ? blockchair_eth_scan_data(data.data[transactionhash].calls[0], setconfirmations, ccsymbol, latestblock) :
                                             blockchair_scan_data(data.data[transactionhash], setconfirmations, ccsymbol, address, latestblock);
                                         if (txd.ccval) {
-                                            var tx_listitem = append_tx_li(txd, thislist);
+                                            var tx_listitem = append_tx_li(txd, rqtype);
                                             if (tx_listitem) {
                                                 transactionlist.append(tx_listitem.data(txd));
                                                 tx_count(statuspanel, 1);
@@ -987,7 +987,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                             $.each(records, function(dat, value) {
                                                 var txd = amberdata_scan_token_data(value, null, ccsymbol, address);
                                                 if (txd.transactiontime > request_timestamp && txd.ccval && txd.ccsymbol == txd.tokensymbol) {
-                                                    var tx_listitem = append_tx_li(txd, thislist);
+                                                    var tx_listitem = append_tx_li(txd, rqtype);
                                                     if (tx_listitem) {
                                                         transactionlist.append(tx_listitem.data(txd));
                                                         counter++;
@@ -1040,7 +1040,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                             $.each(txflip, function(dat, value) {
                                                 var txd = amberdata_scan_data(value, setconfirmations, ccsymbol, address);
                                                 if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                                    var tx_listitem = append_tx_li(txd, thislist);
+                                                    var tx_listitem = append_tx_li(txd, rqtype);
                                                     if (tx_listitem) {
                                                         transactionlist.append(tx_listitem.data(txd));
                                                         counter++;
@@ -1091,7 +1091,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                         null :
                                         amberdata_scan_data(payload, setconfirmations, ccsymbol, address);
                                     if (txd.ccval) {
-                                        var tx_listitem = append_tx_li(txd, thislist);
+                                        var tx_listitem = append_tx_li(txd, rqtype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
                                             tx_count(statuspanel, 1);
@@ -1139,7 +1139,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                     if (r_address == address) { // filter outgoing transactions
                                         var txd = nimiq_scan_data(value, setconfirmations);
                                         if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                            var tx_listitem = append_tx_li(txd, thislist);
+                                            var tx_listitem = append_tx_li(txd, rqtype);
                                             if (tx_listitem) {
                                                 transactionlist.append(tx_listitem.data(txd));
                                                 counter++;
@@ -1183,7 +1183,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                         var txd = nimiq_scan_data(data, setconfirmations);
                                         if (txd) {
                                             if (txd.ccval) {
-                                                var tx_listitem = append_tx_li(txd, thislist);
+                                                var tx_listitem = append_tx_li(txd, rqtype);
                                                 if (tx_listitem) {
                                                     transactionlist.append(tx_listitem.data(txd));
                                                     tx_count(statuspanel, 1);
@@ -1237,7 +1237,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                                             txd = nimiq_scan_data(data, setconfirmations, bh, null, transactionhash);
                                                         if (txd) {
                                                             if (txd.ccval) {
-                                                                var tx_listitem = append_tx_li(txd, thislist);
+                                                                var tx_listitem = append_tx_li(txd, rqtype);
                                                                 if (tx_listitem) {
                                                                     transactionlist.append(tx_listitem.data(txd));
                                                                     tx_count(statuspanel, 1);
@@ -1276,14 +1276,13 @@ function get_api_inputs(rd, api_data, api_name) {
 
 function match_xmr_pid(xmria, xmrpid, xmr_pid) {
     if (xmria) {
-        if (xmrpid) {
-            if (xmr_pid) {
-                if (xmrpid == xmr_pid) {
-                    return true;
-                }
-            }
-            return false;
+        if (xmrpid == xmr_pid) {
+            return true;
         }
+        return false;
+    }
+    if (xmrpid || xmr_pid) {
+        return false;
     }
     return true;
 }
@@ -1471,7 +1470,8 @@ function get_rpc_inputs(rd, api_data) {
             counter = 0,
             url = api_data.url,
             rpcurl = get_rpc_url(api_data), // (bitrequest_coin_settings.js)
-            erc20 = (rd.erc20 === true);
+            erc20 = (rd.erc20 === true),
+            rqtype = rd.requesttype;
         thislist.removeClass("no_network");
         if (pending == "no" || pending == "incoming" || thislist.hasClass("expired")) {
             transactionlist.find("li").each(function() {
@@ -1512,7 +1512,7 @@ function get_rpc_inputs(rd, api_data) {
                         if (data.result) {
                             var txd = bitcoin_rpc_data(data.result, setconfirmations, ccsymbol, address);
                             if (txd.ccval) {
-                                var tx_listitem = append_tx_li(txd, thislist);
+                                var tx_listitem = append_tx_li(txd, rqtype);
                                 if (tx_listitem) {
                                     transactionlist.append(tx_listitem.data(txd));
                                 }
@@ -1583,7 +1583,7 @@ function get_rpc_inputs(rd, api_data) {
                                                 txd = infura_eth_poll_data(txdata, setconfirmations, ccsymbol);
                                         }
                                         if (txd.ccval) {
-                                            var tx_listitem = append_tx_li(txd, thislist);
+                                            var tx_listitem = append_tx_li(txd, rqtype);
                                             if (tx_listitem) {
                                                 transactionlist.append(tx_listitem.data(txd));
                                             }
@@ -1660,7 +1660,7 @@ function get_rpc_inputs(rd, api_data) {
                                 $.each(merged_array, function(data, value) {
                                     var txd = nano_scan_data(value, setconfirmations, ccsymbol);
                                     if ((txd.transactiontime > request_timestamp) && txd.ccval && (value.type === undefined || value.type == "receive")) {
-                                        var tx_listitem = append_tx_li(txd, thislist);
+                                        var tx_listitem = append_tx_li(txd, rqtype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
                                             counter++;
@@ -1711,7 +1711,7 @@ function get_rpc_inputs(rd, api_data) {
                             } else {
                                 var txd = nano_scan_data(data, setconfirmations, ccsymbol, transactionhash);
                                 if (txd.ccval) {
-                                    var tx_listitem = append_tx_li(txd, thislist);
+                                    var tx_listitem = append_tx_li(txd, rqtype);
                                     if (tx_listitem) {
                                         transactionlist.append(tx_listitem.data(txd));
                                     }
@@ -1832,7 +1832,7 @@ function get_next_rpc(this_payment, api_url, requestid) {
     return false;
 }
 
-function append_tx_li(txd, this_request, ln) {
+function append_tx_li(txd, rqtype, ln) {
     var txhash = txd.txhash;
     if (txhash) {
         var ccval = txd.ccval,
@@ -1858,15 +1858,11 @@ function append_tx_li(txd, this_request, ln) {
             var h_string = historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, true);
             tx_listitem.append(hs_for(h_string)).attr("title", h_string);
         }
-        if (this_request === false) {
-            return tx_listitem;
-        }
-        var tx_dat = this_request.data();
-        if (tx_dat.xmr_ia) { // xmr integrated adddresses are unique
+        if (rqtype === false) {
             return tx_listitem;
         }
         if ($.inArray(txhash, tx_list) !== -1) { // check for indexed transaction id's
-            if (tx_dat.requesttype == "outgoing") {
+            if (rqtype == "outgoing") {
                 return null;
             }
             return tx_listitem;
@@ -2329,10 +2325,13 @@ function compare_historic_prices(api, values, price_array, thistimestamp) {
 }
 
 function get_historic_object_coincodex(value) {
-    return {
-        "timestamp": ((value[0] * 1000) + timezone) + 60000, // add 1 minute for compensation margin
-        "price": value[1]
+    if (value) {
+        return {
+            "timestamp": ((value[0] * 1000) + timezone) + 60000, // add 1 minute for compensation margin
+            "price": value[1]
+        }
     }
+    return false;
 }
 
 function get_historic_object_coingecko(value) {
