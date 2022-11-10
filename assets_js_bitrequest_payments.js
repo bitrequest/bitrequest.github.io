@@ -2860,7 +2860,7 @@ function download_wallet(currency) {
                 device = getdevicetype(),
                 platform = getplatform(device),
                 store_icon = platform_icon(platform),
-                store_tag = (store_icon) ? "<img src='img_" + store_icon + "'/>" : "<span class='icon-download'></span> ";
+                store_tag = (store_icon) ? "<img src='" + store_icon + "'/>" : "<span class='icon-download'></span> ";
             $.each(wallets_arr, function(key, value) {
                 var device_url = value[platform];
                 if (device_url) {
