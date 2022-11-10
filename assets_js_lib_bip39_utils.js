@@ -85,11 +85,10 @@ function mnemonicToBinaryString(mnemonic) {
     if (mnemonic.length == 0 || mnemonic.length % 3 > 0) {
         return null;
     }
-    // idx = map(lambda x: bin(self.wordlist.index(x))[2:].zfill(11), mnemonic)
     var idx = [];
     for (var i = 0; i < mnemonic.length; i++) {
-        var word = mnemonic[i];
-        var wordIndex = wordlist.indexOf(word);
+        var word = mnemonic[i],
+            wordIndex = wordlist.indexOf(word);
         if (wordIndex == -1) {
             return null;
         }
@@ -100,11 +99,11 @@ function mnemonicToBinaryString(mnemonic) {
 }
 
 function binaryStringToWordArray(binary) {
-    var aLen = binary.length / 32;
-    var a = [];
+    var aLen = binary.length / 32,
+        a = [];
     for (var i = 0; i < aLen; i++) {
-        var valueStr = binary.substring(0, 32);
-        var value = parseInt(valueStr, 2);
+        var valueStr = binary.substring(0, 32),
+            value = parseInt(valueStr, 2);
         a.push(value);
         binary = binary.slice(32);
     }
@@ -324,7 +323,7 @@ function pub_to_address_bech32(hrp, pubkey) {
         step2 = hexStringToBinaryString(step1),
         step3 = step2.match(/.{1,5}/g),
         step4 = bech32_dec_array(step3);
-    return checksssum = bech32_encode(hrp, step4);
+    return bech32_encode(hrp, step4);
 }
 
 function bech32_dec_array(bitarr) {
@@ -423,8 +422,8 @@ function bech32_decode(bechString) { // unused
         return null;
     }
     return {
-        hrp: hrp,
-        data: data.slice(0, data.length - 6)
+        "hrp": hrp,
+        "data": data.slice(0, data.length - 6)
     };
 }
 

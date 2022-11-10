@@ -14,25 +14,22 @@ var l = 723700557733226221397318656304299424085711635937990760600195093828545425
             full_block_size = 8,
             full_encoded_block_size = 11,
             UINT64_MAX = new JSBigInt(2).pow(64);
-
         b58.decode_block = function(data, buf, index) {
             if (data.length < 1 || data.length > full_encoded_block_size) {
                 throw "Invalid block length: " + data.length;
             }
-
             var res_size = encoded_block_sizes.indexOf(data.length);
             if (res_size <= 0) {
                 throw "Invalid block size";
             }
-            var res_num = new JSBigInt(0);
-            var order = new JSBigInt(1);
+            var res_num = new JSBigInt(0),
+                order = new JSBigInt(1);
             for (var i = data.length - 1; i >= 0; i--) {
                 var digit = alphabet.indexOf(data[i]);
                 if (digit < 0) {
                     throw "Invalid symbol";
                 }
                 var product = order.multiply(digit).add(res_num);
-                // if product > UINT64_MAX
                 if (product.compare(UINT64_MAX) === 1) {
                     throw "Overflow";
                 }
@@ -45,20 +42,19 @@ var l = 723700557733226221397318656304299424085711635937990760600195093828545425
             buf.set(uint64_to_8be(res_num, res_size), index);
             return buf;
         };
-
-        b58.decode = function(enc) {
-            enc = strtobin(enc);
+        b58.decode = function(encode) {
+            var enc = strtobin(encode);
             if (enc.length === 0) {
                 return "";
             }
-            var full_block_count = Math.floor(enc.length / full_encoded_block_size);
-            var last_block_size = enc.length % full_encoded_block_size;
-            var last_block_decoded_size = encoded_block_sizes.indexOf(last_block_size);
+            var full_block_count = Math.floor(enc.length / full_encoded_block_size),
+                last_block_size = enc.length % full_encoded_block_size,
+                last_block_decoded_size = encoded_block_sizes.indexOf(last_block_size);
             if (last_block_decoded_size < 0) {
                 throw "Invalid encoded length";
             }
-            var data_size = full_block_count * full_block_size + last_block_decoded_size;
-            var data = uint_8Array(data_size);
+            var data_size = full_block_count * full_block_size + last_block_decoded_size,
+                data = uint_8Array(data_size);
             for (var i = 0; i < full_block_count; i++) {
                 data = b58.decode_block(enc.subarray(i * full_encoded_block_size, i * full_encoded_block_size + full_encoded_block_size), data, i * full_block_size);
             }
@@ -113,21 +109,20 @@ function xmr_getpubs(ssk, index) {
             "psk": psk,
             "pvk": pvk
         }
-    } else {
-        var pubp = point_multiply(sc_reduce32(fasthash(5375624164647200 + svk + uint32hex(0) + uint32hex(index)))),
-            pskp = xmr_getpoint(psk),
-            np = pskp.add(pubp),
-            sub_psk = np.toHex(),
-            sub_pvk = np.multiply(xmr_getpoint(svk).y).toHex();
-        return {
-            "index": index,
-            "account": account,
-            "address": pub_keys_to_address(sub_psk, sub_pvk, index),
-            "ssk": sskh,
-            "svk": svk,
-            "psk": sub_psk,
-            "pvk": sub_pvk
-        }
+    }
+    var pubp = point_multiply(sc_reduce32(fasthash(5375624164647200 + svk + uint32hex(0) + uint32hex(index)))),
+        pskp = xmr_getpoint(psk),
+        np = pskp.add(pubp),
+        sub_psk = np.toHex(),
+        sub_pvk = np.multiply(xmr_getpoint(svk).y).toHex();
+    return {
+        "index": index,
+        "account": account,
+        "address": pub_keys_to_address(sub_psk, sub_pvk, index),
+        "ssk": sskh,
+        "svk": svk,
+        "psk": sub_psk,
+        "pvk": sub_pvk
     }
 }
 
@@ -228,7 +223,7 @@ function base58_encode(data) {
         base = ab.length;
     for (var z = 0; z < ab.length; z++) {
         var x = ab.charAt(z);
-        if (ab_map[x] !== undefined) throw new TypeError(x + ' is ambiguous');
+        if (ab_map[x] !== undefined) throw new TypeError(x + " is ambiguous");
         ab_map[x] = z;
     }
 
@@ -252,11 +247,11 @@ function base58_encode(data) {
         for (var q = digits.length - 1; q >= 0; --q) res += ab[digits[q]];
         return res;
     }
-    var res = "";
+    var resu = "";
     for (var i = 0; i < data.length; i += 8) {
-        res += encode_partial(data, i);
+        resu += encode_partial(data, i);
     }
-    return res;
+    return resu;
 }
 
 // Code based on / credits: https://github.com/paulmillr/noble-ed25519
@@ -606,7 +601,7 @@ function check_pid(payment_id) {
 }
 
 function mn_random(bits) {
-    'use strict';
+    "use strict";
     if (bits % 32 !== 0) throw "Something weird went wrong: Invalid number of bits - " + bits;
     var array = new Uint32Array(bits / 32);
     if (!crypto) throw "Unfortunately MyMonero only runs on browsers that support the JavaScript Crypto API";
@@ -618,7 +613,6 @@ function mn_random(bits) {
         }
         return true;
     }
-
     do {
         crypto.getRandomValues(array);
         ++i;
@@ -627,9 +621,9 @@ function mn_random(bits) {
         throw "Something went wrong and we could not securely generate random data for your account";
     }
     // Convert to hex
-    var out = '';
+    var out = "";
     for (var j = 0; j < bits / 32; ++j) {
-        out += ('0000000' + array[j].toString(16)).slice(-8);
+        out += ("0000000" + array[j].toString(16)).slice(-8);
     }
     return out;
 }

@@ -22,7 +22,9 @@ var test_phrase = "army van defense carry jealous true garbage claim echo media 
         "monero": false,
         "ethereum": true,
         "bitcoin-cash": true
-    };
+    },
+    phrasearray,
+    phraseverified;
 
 $(document).ready(function() {
     hasbigint();
@@ -150,24 +152,25 @@ function istrial() {
 
 function bipv_pass() {
     if (hasbip === true) {
-        if (bipv === true) {} else {
-            var used_addresses = filter_all_addressli("seedid", bipid).filter(".used");
-            if (istrial() === true) {
-                if (used_addresses.length > 1) {
-                    manage_bip32({
-                        "type": "popup"
-                    });
-                }
-                if (used_addresses.length > 2) {
-                    return false;
-                }
-            } else {
+        if (bipv === true) {
+            return true;
+        }
+        var used_addresses = filter_all_addressli("seedid", bipid).filter(".used");
+        if (istrial() === true) {
+            if (used_addresses.length > 1) {
                 manage_bip32({
                     "type": "popup"
                 });
-                if (used_addresses.length > 0) {
-                    return false;
-                }
+            }
+            if (used_addresses.length > 2) {
+                return false;
+            }
+        } else {
+            manage_bip32({
+                "type": "popup"
+            });
+            if (used_addresses.length > 0) {
+                return false;
             }
         }
     }
@@ -346,10 +349,9 @@ function check_derivations(currency) {
         var activepub = active_xpub(currency);
         if (can_xpub[currency] && activepub) {
             return "xpub";
-        } else {
-            if (hasbip === true) {
-                return "seed";
-            }
+        }
+        if (hasbip === true) {
+            return "seed";
         }
     }
     return false;
@@ -395,13 +397,13 @@ function make_seed() {
         var currency = $(this).attr("data-currency");
         if (hasbip === true) {
             topnotify("You already have a seed");
-        } else {
-            canceldialog();
-            manage_bip32({
-                "type": currency,
-                "edit": true
-            });
+            return
         }
+        canceldialog();
+        manage_bip32({
+            "type": currency,
+            "edit": true
+        });
     })
 }
 
@@ -413,22 +415,21 @@ function restore_seed() {
         }
         if (hasbip === true) {
             return false;
-        } else {
-            var result = confirm("Restore seed?");
-            if (result === true) {
-                var thistrigger = $(this),
-                    seedid = thistrigger.attr("data-seedid");
-                canceloptions();
-                canceldialog();
-                bip39({
-                    "type": "restore",
-                    "edit": true,
-                    "seedid": seedid
-                });
-                $("#seed_step2").addClass("restore");
-                seed_nav(2);
-                $("#bip39phrase").focus();
-            }
+        }
+        var result = confirm("Restore seed?");
+        if (result === true) {
+            var thistrigger = $(this),
+                seedid = thistrigger.attr("data-seedid");
+            canceloptions();
+            canceldialog();
+            bip39({
+                "type": "restore",
+                "edit": true,
+                "seedid": seedid
+            });
+            $("#seed_step2").addClass("restore");
+            seed_nav(2);
+            $("#bip39phrase").focus();
         }
     })
 }
@@ -437,29 +438,28 @@ function restore_seed_verify() {
     $(document).on("click", "#restore_seed", function() {
         if (hasbip === true) {
             return false;
-        } else {
-            phrasearray = null,
-                phraseverified = false;
-            var phrase = get_phrase(),
-                verify = check_phrase(phrase);
-            if (verify === true) {
-                var thistrigger = $(this),
-                    seedid = thistrigger.attr("data-seedid"),
-                    words = phrase.split(" "),
-                    phraseid = get_seedid(words);
-                if (seedid == phraseid) {
-                    phrasearray = words,
-                        phraseverified = true;
-                    $("#seed_steps").addClass("checked");
-                    finish_seed();
-                } else {
-                    shake($("#bip39phrase"));
-                    topnotify("wrong seed");
-                }
-            } else {
-                topnotify(verify);
-            }
         }
+        phrasearray = null,
+            phraseverified = false;
+        var phrase = get_phrase(),
+            verify = check_phrase(phrase);
+        if (verify === true) {
+            var thistrigger = $(this),
+                seedid = thistrigger.attr("data-seedid"),
+                words = phrase.split(" "),
+                phraseid = get_seedid(words);
+            if (seedid == phraseid) {
+                phrasearray = words,
+                    phraseverified = true;
+                $("#seed_steps").addClass("checked");
+                finish_seed();
+                return
+            }
+            shake($("#bip39phrase"));
+            topnotify("wrong seed");
+            return
+        }
+        topnotify(verify);
     })
 }
 
@@ -470,23 +470,23 @@ function get_seedid(words) {
 function manage_bip32(dat) {
     if (hasbip === true) {
         bip39(dat);
-    } else {
-        var data = (dat) ? dat : {},
-            content = $("<div class='formbox' id='disclaimer_dialog'>\
-        	<h2><span class='icon-warning' style='color:#B33A3A'></span>Disclaimer!</h2>\
-        	<div class='popnotify'></div>\
-        	<form class='popform'>\
-        		<div class='inputwrap'><p>Funds received by addresses generated from your secret phrase can not be spend by Bitrequest.<br/>To spend your funds you wil need to restore your secret phrase in a <a href='https://www.bitrequest.io/compatible-wallets' target='_blank' class='ref'>compatible wallet.</a></p></div>\
-        		<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I understand and am ok with this.</span></div>\
-        		<input type='submit' class='submit' value='OK'></form></div>").data(data);
-        if ($("#option_makeseed").length) {
-            canceldialog();
-            setTimeout(function() {
-                popdialog(content, "alert", "triggersubmit");
-            }, 1000)
-        } else {
+        return
+    }
+    var data = (dat) ? dat : {},
+        content = $("<div class='formbox' id='disclaimer_dialog'>\
+    	<h2><span class='icon-warning' style='color:#B33A3A'></span>Disclaimer!</h2>\
+    	<div class='popnotify'></div>\
+    	<form class='popform'>\
+    		<div class='inputwrap'><p>Funds received by addresses generated from your secret phrase can not be spend by Bitrequest.<br/>To spend your funds you wil need to restore your secret phrase in a <a href='https://www.bitrequest.io/compatible-wallets' target='_blank' class='ref'>compatible wallet.</a></p></div>\
+    		<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I understand and am ok with this.</span></div>\
+    		<input type='submit' class='submit' value='OK'></form></div>").data(data);
+    if ($("#option_makeseed").length) {
+        canceldialog();
+        setTimeout(function() {
             popdialog(content, "alert", "triggersubmit");
-        }
+        }, 1000);
+    } else {
+        popdialog(content, "alert", "triggersubmit");
     }
 }
 
@@ -615,9 +615,8 @@ function ls_phrase_obj() {
     if (bipobj) {
         var savedat = JSON.parse(bipobj);
         return ls_phrase_obj_parsed(savedat);
-    } else {
-        return false;
     }
+    return false;
 
 }
 
@@ -726,7 +725,7 @@ function missing_words(words) {
     $.each(words, function(i, word) {
         if (wordlist.indexOf(word) == -1) {
             missing = word;
-            return false;
+            return
         }
     });
     return missing;
@@ -741,23 +740,23 @@ function verify_phrase(words, count) {
         }
         wordindex.push(wordobject);
     });
-    var shuffled_words = shuffleArray(wordindex);
-    trimmed_sw = shuffled_words.slice(0, count),
+    var shuffled_words = shuffleArray(wordindex),
+        trimmed_sw = shuffled_words.slice(0, count),
         verify_box = $("#seed_verify_box");
     verify_box.html("");
     $.each(trimmed_sw, function(i, word_obj) {
         var word = word_obj.word,
             index = word_obj.index,
-            af_attr = (i === 0) ? " autofocus" : "";
-        input = "<div class='checkword_box uncheck'><input type='text' placeholder='word #" + index + "' data-word='" + word + "'" + af_attr + " autocorrect='off' autocapitalize='none'/><span class='icon-checkmark'></span></div>";
+            af_attr = (i === 0) ? " autofocus" : "",
+            input = "<div class='checkword_box uncheck'><input type='text' placeholder='word #" + index + "' data-word='" + word + "'" + af_attr + " autocorrect='off' autocapitalize='none'/><span class='icon-checkmark'></span></div>";
         verify_box.append(input);
     });
 }
 
 function shuffleArray(array) {
     for (var i = array.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var temp = array[i];
+        var j = Math.floor(Math.random() * (i + 1)),
+            temp = array[i];
         array[i] = array[j];
         array[j] = temp;
     }
@@ -779,40 +778,42 @@ function verify_words() {
                 var first_uncheck = unchecked.first().find("input");
                 setTimeout(function() {
                     first_uncheck.focus().val("");
-                }, 500)
-            } else {
-                var step3 = $("#seed_step3");
-                if (step3.hasClass("delete")) {
-                    var result = confirm("Are you sure you want to delete your secret phrase?");
-                    if (result === true) {
-                        localStorage.removeItem("bitrequest_bpdat");
-                        var initdat = localStorage.getItem("bitrequest_init"),
-                            iodat = (initdat) ? JSON.parse(initdat) : {};
-                        iodat.bipv = "no";
-                        delete iodat.bipv;
-                        localStorage.setItem("bitrequest_init", JSON.stringify(iodat));
-                        hasbip = false;
-                        bipv = false;
-                        bipid = false;
-                        move_seed_cb();
-                        hide_seed_panel();
-                        notify("Secret phrase deleted");
-                    }
-                } else if (step3.hasClass("replace")) {
-                    var result = confirm("Are you sure you want to restore your seed from backup? Your current seed will be erased.");
-                    if (result === true) {
-                        var bu_dat = $("#seed_steps").data().dat;
-                        restore_callback(bu_dat, true);
-                    }
-                } else {
-                    phraseverified = true,
-                        $("#seed_steps").addClass("checked");
-                    finish_seed();
-                }
+                }, 500);
+                return
             }
-        } else {
-            cw_box.addClass("uncheck");
+            var step3 = $("#seed_step3");
+            if (step3.hasClass("delete")) {
+                var result = confirm("Are you sure you want to delete your secret phrase?");
+                if (result === true) {
+                    localStorage.removeItem("bitrequest_bpdat");
+                    var initdat = localStorage.getItem("bitrequest_init"),
+                        iodat = (initdat) ? JSON.parse(initdat) : {};
+                    iodat.bipv = "no";
+                    delete iodat.bipv;
+                    localStorage.setItem("bitrequest_init", JSON.stringify(iodat));
+                    hasbip = false;
+                    bipv = false;
+                    bipid = false;
+                    move_seed_cb();
+                    hide_seed_panel();
+                    notify("Secret phrase deleted");
+                }
+                return
+            }
+            if (step3.hasClass("replace")) {
+                var result = confirm("Are you sure you want to restore your seed from backup? Your current seed will be erased.");
+                if (result === true) {
+                    var bu_dat = $("#seed_steps").data().dat;
+                    restore_callback(bu_dat, true);
+                }
+                return
+            }
+            phraseverified = true,
+                $("#seed_steps").addClass("checked");
+            finish_seed();
+            return
         }
+        cw_box.addClass("uncheck");
     });
 }
 
@@ -856,13 +857,13 @@ function finish_seed() {
     canceldialog();
     if (haspin() === true) {
         seed_callback();
-    } else {
-        var cb = {
-                "func": seed_callback
-            },
-            content = pinpanel("", cb);
-        showoptions(content, "pin");
+        return
     }
+    var cb = {
+            "func": seed_callback
+        },
+        content = pinpanel("", cb);
+    showoptions(content, "pin");
 }
 
 function seed_callback() {
@@ -1018,9 +1019,8 @@ function key_cc() {
             "seed": seed,
             "seedid": seedid
         }
-    } else {
-        return false;
     }
+    return false;
 }
 
 function key_cc_xpub(xpub) {
@@ -1198,19 +1198,19 @@ function show_phrase() {
         var phrase_cb = $("#phrase_cb");
         if (phrase_cb.hasClass("showphrase")) {
             phrase_cb.removeClass("showphrase").addClass("hidephrase");
-        } else {
-            if (hasbip === true) {
-                if (bipv === true) {
-                    show_phrase_callback();
-                } else {
-                    all_pinpanel({
-                        "func": show_phrase_callback
-                    })
-                }
-            } else {
-                show_phrase_callback();
-            }
+            return
         }
+        if (hasbip === true) {
+            if (bipv === true) {
+                show_phrase_callback();
+                return
+            }
+            all_pinpanel({
+                "func": show_phrase_callback
+            })
+            return
+        }
+        show_phrase_callback();
     })
 }
 
@@ -1476,70 +1476,72 @@ function format_keys(seed, key_object, bip32, index, coin) {
     if (coin == "nano") {
         if (seed) {
             var nano_account = NanocurrencyWeb.wallet.accounts(seed, index, index)[0];
-            ko = {
+            return {
                 "index": nano_account.accountIndex,
                 "address": nano_account.address,
                 "pubkey": nano_account.publicKey,
                 "privkey": nano_account.privateKey
             }
         }
-    } else if (coin == "monero") {
+        return ko;
+    }
+    if (coin == "monero") {
         if (seed) {
             var ssk = get_ssk(seed, true),
                 xko = xmr_getpubs(ssk, index);
-            ko = {
+            return {
                 "index": index,
                 "address": xko.address,
                 "vk": xko.account + xko.svk
             }
         }
-    } else {
-        var purpose = key_object.purpose,
-            xpub = key_object.xpub,
-            prekey = key_object.key,
-            pubkey = (xpub === true) ? prekey : secp.Point.fromPrivateKey(prekey).toHex(true),
-            vb = str_pad(dectohex(bip32.prefix.pub), 2);
-        ko.index = index;
-        if (coin == "ethereum") {
-            ko.address = pub_to_eth_address(pubkey);
-        } else if (coin == "bitcoin") {
-            if (purpose == "84'") {
+        return ko;
+    }
+    var purpose = key_object.purpose,
+        xpub = key_object.xpub,
+        prekey = key_object.key,
+        pubkey = (xpub === true) ? prekey : secp.Point.fromPrivateKey(prekey).toHex(true),
+        vb = str_pad(dectohex(bip32.prefix.pub), 2);
+    ko.index = index;
+    if (coin == "ethereum") {
+        ko.address = pub_to_eth_address(pubkey);
+    } else if (coin == "bitcoin") {
+        if (purpose == "84'") {
+            ko.address = pub_to_address_bech32("bc", pubkey);
+        } else {
+            var versionbytes = key_object.vb;
+            if (versionbytes == "04b24746") {
                 ko.address = pub_to_address_bech32("bc", pubkey);
             } else {
-                var versionbytes = key_object.vb;
-                if (versionbytes == "04b24746") {
-                    ko.address = pub_to_address_bech32("bc", pubkey);
-                } else {
-                    ko.address = pub_to_address(vb, pubkey);
-                }
+                ko.address = pub_to_address(vb, pubkey);
             }
-        } else if (coin == "litecoin") {
-            if (purpose == "84'") {
+        }
+    } else if (coin == "litecoin") {
+        if (purpose == "84'") {
+            ko.address = pub_to_address_bech32("ltc", pubkey);
+        } else {
+            var versionbytes = key_object.vb;
+            if (versionbytes == "04b24746") {
                 ko.address = pub_to_address_bech32("ltc", pubkey);
             } else {
-                var versionbytes = key_object.vb;
-                if (versionbytes == "04b24746") {
-                    ko.address = pub_to_address_bech32("ltc", pubkey);
-                } else {
-                    ko.address = pub_to_address(vb, pubkey);
-                }
+                ko.address = pub_to_address(vb, pubkey);
             }
-        } else if (coin == "bitcoin-cash") {
-            var legacybch = pub_to_address(vb, pubkey);
-            ko.address = pub_to_cashaddr(legacybch);
+        }
+    } else if (coin == "bitcoin-cash") {
+        var legacybch = pub_to_address(vb, pubkey);
+        ko.address = pub_to_cashaddr(legacybch);
+    } else {
+        ko.address = pub_to_address(vb, pubkey);
+    }
+    ko.pubkey = (coin == "ethereum") ? "0x" + pubkey : pubkey;
+    if (xpub === false) {
+        if (coin == "ethereum") {
+            ko.privkey = "0x" + prekey;
         } else {
-            ko.address = pub_to_address(vb, pubkey);
+            var pkv = bip32.pk_vbytes.wif;
+            ko.privkey = privkey_wif(str_pad(dectohex(pkv), 2), prekey, true);
         }
-        ko.pubkey = (coin == "ethereum") ? "0x" + pubkey : pubkey;
-        if (xpub === false) {
-            if (coin == "ethereum") {
-                ko.privkey = "0x" + prekey;
-            } else {
-                var pkv = bip32.pk_vbytes.wif;
-                ko.privkey = privkey_wif(str_pad(dectohex(pkv), 2), prekey, true);
-            }
 
-        }
     }
     return ko;
 }
@@ -1660,7 +1662,7 @@ function phrase_info_pu(coin) {
                     "currency": currency
                 },
                 xmr_phrase = (currency == "monero") ? (is_viewonly() === true) ? false :
-                	secret_spend_key_to_words(get_ssk(seed, true)) : false,
+                secret_spend_key_to_words(get_ssk(seed, true)) : false,
                 xmr_phrase_box = (xmr_phrase) ? "<div><strong>XMR Seed words: </strong><br/><span class='adboxl adbox select' data-type='XMR Seed words'>" + xmr_phrase + "</span></div>" : "",
                 dp_node = $("<div class='d_path" + coinclass + "'>\
 				<div class='d_path_header'><strong>Derivation path: </strong><span class='ref'>" + root_path + "</span></div>" +
@@ -1673,8 +1675,8 @@ function phrase_info_pu(coin) {
     				</div>\
     			</div>").data(dp_node_dat),
                 sw_node = $("<ul id='formbox_ul' class='clearfix" + coinclass + "'>" + walletlist + "</ul>"),
-                xp_node = "";
-            segw_node = "";
+                xp_node = "",
+                segw_node = "";
             if (x_pub) {
                 var xp_node = $("<div class='xpub_ib clearfix" + coinclass + "' data-xpub='" + x_pub + "'>\
 	    			<div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>show</span></div>\
@@ -1863,8 +1865,8 @@ function phrase_showxp() {
                 xpub_ib.each(function() {
                     var thisnode = $(this),
                         xpub = thisnode.attr("data-xpub"),
-                        qrcode = thisnode.find(".qrcode");
-                    qrcode.qrcode(xpub);
+                        qr_code = thisnode.find(".qrcode");
+                    qr_code.qrcode(xpub);
                 });
                 xpub_box.addClass("rendered");
             }
