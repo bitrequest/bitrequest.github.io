@@ -310,30 +310,30 @@ function submitcurrency() {
                 thisform.addClass("validated");
             }
         });
-        var defaultcurrency_switch = $("#toggle_defaultcurrency .switchpanel");
         if (thisform.hasClass("validated")) {
-            var switchchange = (defaultcurrency_switch.hasClass("dc_changed")),
+            var defaultcurrency_switch = $("#toggle_defaultcurrency .switchpanel"),
+                switchchange = (defaultcurrency_switch.hasClass("dc_changed")),
                 values = thisinputvalue.split(" | "),
                 currencysymbol = values[0],
                 currency = values[1],
                 currencysymbollc = currencysymbol.toLowerCase();
             if (currencysymbollc == localcurrency && switchchange === false) {
                 canceldialog();
-            } else {
-                var dc_output = (defaultcurrency_switch.hasClass("true")) ? true : false;
-                set_setting("currencysettings", {
-                    "currencysymbol": currencysymbollc,
-                    "selected": thisinputvalue,
-                    "default": dc_output
-                }, thisinputvalue);
-                canceldialog();
-                notify("Currency saved");
-                savesettings();
+                return false;
             }
-        } else {
-            popnotify("error", "currency '" + thisinputvalue.toUpperCase() + "' not supported");
-            thisinput.focus();
+            var dc_output = (defaultcurrency_switch.hasClass("true")) ? true : false;
+            set_setting("currencysettings", {
+                "currencysymbol": currencysymbollc,
+                "selected": thisinputvalue,
+                "default": dc_output
+            }, thisinputvalue);
+            canceldialog();
+            notify("Currency saved");
+            savesettings();
+            return false;
         }
+        popnotify("error", "currency '" + thisinputvalue.toUpperCase() + "' not supported");
+        thisinput.focus();
         return false;
     });
 }
@@ -419,10 +419,10 @@ function trigger_bip32() {
         if (hasbip === true) {
             all_pinpanel({
                 "func": manage_bip32
-            })
-        } else {
-            manage_bip32();
+            });
+            return
         }
+        manage_bip32();
     })
 }
 
@@ -625,16 +625,16 @@ function check_systembu() {
             }, ro_proxy).done(function(e) {
                 var ping = e.ping;
                 if (ping) {
-                    var br_cache = e.ping.br_cache,
+                    var br_cache = ping.br_cache,
                         server_time = br_cache.utc_timestamp,
                         filetime = br_cache.created_utc,
                         filetimesec = (filetime) ? filetime * 1000 : now(),
                         filetime_format = new Date(filetimesec).toLocaleString(language),
-                        br_result = e.ping.br_result,
+                        br_result = ping.br_result,
                         base64 = br_result.base64,
                         account = atob(br_result.account),
                         sharedtitle = "System Backup " + account + " (" + filetime_format + ")",
-                        bu_date = filetime_format.replace(/\s+/g, '_').replace(/\:/g, '_'),
+                        bu_date = filetime_format.replace(/\s+/g, "_").replace(/\:/g, "_"),
                         cache_time = br_cache.cache_time,
                         expires_in = (filetime + cache_time) - server_time,
                         filename = "bitrequest_system_backup_" + encodeURIComponent(account) + "_" + bu_date + ".json",
@@ -792,7 +792,7 @@ function submitbackup() {
         if (body.hasClass("ios")) {
             e.preventDefault();
             notify("Downloads for IOS App unavailable at the moment");
-            return false;
+            return
         }
         var thisnode = $(this),
             href = thisnode.attr("href"),
@@ -800,7 +800,7 @@ function submitbackup() {
             result = confirm("Download: " + title + "?");
         if (result === false) {
             e.preventDefault();
-            return false;
+            return
         }
         var lastsaved = "last backup: <span class='icon-folder-open'>" + thisnode.attr("data-date") + "</span>",
             lastbackup = thisnode.attr("data-lastbackup");
@@ -892,20 +892,19 @@ function restorebackup() {
             topnotify(filesizewarningtext);
             popnotify(filesizewarningtext);
             return false;
-        } else {
-            if (filetype == "application/json") {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    backup_result = e.target.result,
-                        backup_active = true;
-                };
-                reader.readAsDataURL(file);
-            } else {
-                var filetypewarningtext = "Filetype '" + filetype + "' not supported";
-                topnotify(filetypewarningtext);
-                return false;
-            }
         }
+        if (filetype == "application/json") {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                backup_result = e.target.result,
+                    backup_active = true;
+            };
+            reader.readAsDataURL(file);
+            return
+        }
+        var filetypewarningtext = "Filetype '" + filetype + "' not supported";
+        topnotify(filetypewarningtext);
+        return false;
     })
 }
 
@@ -915,36 +914,36 @@ function submitrestore() {
         var switchpanel = $("#popup #listappdata .switchpanel");
         if (switchpanel.hasClass("true")) {
             topnotify("Select a Backup file");
-        } else {
-            if (backup_active === true) {
-                var jsonobject = JSON.parse(atob(backup_result.substr(backup_result.indexOf(",") + 1)));
-                restore(jsonobject, backup_filename)
-            } else {
-                topnotify("Select a Backup file");
-            }
+            return
         }
+        if (backup_active === true) {
+            var jsonobject = JSON.parse(atob(backup_result.substr(backup_result.indexOf(",") + 1)));
+            restore(jsonobject, backup_filename);
+            return
+        }
+        topnotify("Select a Backup file");
     })
 }
 
 function restore(jsonobject, bu_filename) {
     var cbu = check_backup(jsonobject);
     if (cbu === false) {
-        return false
+        return
     }
     var result = confirm("Restore " + bu_filename + "?");
     if (result === true) {
         var is_team_invite = isteaminvite(jsonobject);
         if (is_team_invite === true) {
             install_teaminvite(jsonobject, bu_filename, false);
-        } else {
-            scan_restore(jsonobject);
-            var pass_dat = {
-                "jasobj": jsonobject,
-                "filename": bu_filename,
-                "type": "file"
-            };
-            restore_algo(pass_dat);
+            return
         }
+        scan_restore(jsonobject);
+        var pass_dat = {
+            "jasobj": jsonobject,
+            "filename": bu_filename,
+            "type": "file"
+        };
+        restore_algo(pass_dat);
     }
 }
 
@@ -1038,10 +1037,14 @@ function restore_callback(pass_dat, newphrase) {
     if (type) {
         if (type == "gd") {
             restore_callback_gd(pass_dat, newphrase);
-        } else if (type == "file") {
+            return
+        }
+        if (type == "file") {
             restore_callback_file(pass_dat, newphrase);
-        } else {}
+            return
+        }
     }
+    return false
 }
 
 function s_decode(pdat, phash) {
@@ -1062,7 +1065,7 @@ function s_decode(pdat, phash) {
             }
         }
     }
-    return false;
+    return false
 }
 
 function pin_dialog(pass_dat, cb) {
@@ -1073,7 +1076,7 @@ function pin_dialog(pass_dat, cb) {
         var timeleft = current_timeout - now();
         if (timeleft > 0) {
             lockscreen(current_timeout);
-            return false;
+            return false
         }
     }
     var ddat = [{
@@ -1126,8 +1129,7 @@ function submit_pin_dialog() {
             if (jasobj) {
                 var pbdat = jasobj.bitrequest_bpdat,
                     pbdat_eq = (pbdat.dat) ? pbdat : pbdat.datenc,
-                    can_dec = s_decode(pbdat_eq, hashcode(thisvalue)),
-                    pinsettings = $("#pinsettings").data();
+                    can_dec = s_decode(pbdat_eq, hashcode(thisvalue));
                 if (can_dec) {
                     resd.pcnt = 0;
                     var callback = pdat.cb;
@@ -1143,27 +1145,27 @@ function submit_pin_dialog() {
                         }
                     }
                     notify("Succes!");
-                } else {
-                    if (resd.pcnt > 1) {
-                        pinsettings.timeout = now() + 300000; // 5 minutes
-                        topnotify("Max attempts exeeded");
-                        var result = confirm("Restore without seed?");
-                        if (result === true) {
-                            restore_callback(pass_dat, false);
-                        }
-                        resd.pcnt = 0;
-                        canceldialog();
-                    } else {
-                        resd.pcnt = resd.pcnt + 1;
-                    }
-                    savesettings();
-                    shake(dialog);
-                    thisinput.val("");
+                    return
                 }
+                if (resd.pcnt > 1) {
+                    $("#pinsettings").data("timeout", now() + 300000); // 5 minutes
+                    topnotify("Max attempts exeeded");
+                    var result = confirm("Restore without seed?");
+                    if (result === true) {
+                        restore_callback(pass_dat, false);
+                    }
+                    resd.pcnt = 0;
+                    canceldialog();
+                } else {
+                    resd.pcnt = resd.pcnt + 1;
+                }
+                savesettings();
+                shake(dialog);
+                thisinput.val("");
             }
-        } else {
-            popnotify("error", "Enter your 4 digit pin");
+            return
         }
+        popnotify("error", "Enter your 4 digit pin");
         return false;
     })
 }
@@ -1343,36 +1345,36 @@ function compare_seeds() {
         var comparebox = $("#compare_box");
         if (comparebox.is(":visible")) {
             comparebox.slideUp(200);
-        } else {
-            var checktext = $("#ext_sbox .sbox").text();
-            if (checktext.length < 20) {
-                var is_dialog = $("#importseedbox"),
-                    bu_dat = is_dialog.data(),
-                    jasobj = bu_dat.jasobj;
-                if (jasobj) {
-                    var pbdat = jasobj.bitrequest_bpdat,
-                        pbdat_eq = (pbdat.dat) ? pbdat : pbdat.datenc;
-                    if (pbdat_eq) {
-                        if (resd.bpdat) {} else {
-                            var enterpin = prompt("Enter your 4 digit pin"),
-                                can_dec = s_decode(pbdat_eq, hashcode(enterpin));
-                            if (can_dec) {
-                                resd.bpdat = can_dec;
-                                is_dialog.addClass("verified");
-                                cs_callback(true)
-                            } else {
-                                popnotify("error", "wrong pin");
-                                shake(is_dialog);
-                            }
-                            return false;
+            return
+        }
+        var checktext = $("#ext_sbox .sbox").text();
+        if (checktext.length < 20) {
+            var is_dialog = $("#importseedbox"),
+                bu_dat = is_dialog.data(),
+                jasobj = bu_dat.jasobj;
+            if (jasobj) {
+                var pbdat = jasobj.bitrequest_bpdat,
+                    pbdat_eq = (pbdat.dat) ? pbdat : pbdat.datenc;
+                if (pbdat_eq) {
+                    if (resd.bpdat) {} else {
+                        var enterpin = prompt("Enter your 4 digit pin"),
+                            can_dec = s_decode(pbdat_eq, hashcode(enterpin));
+                        if (can_dec) {
+                            resd.bpdat = can_dec;
+                            is_dialog.addClass("verified");
+                            cs_callback(true)
+                        } else {
+                            popnotify("error", "wrong pin");
+                            shake(is_dialog);
                         }
+                        return false;
                     }
                 }
-                cs_callback()
-            } else {
-                comparebox.slideDown(200);
             }
+            cs_callback();
+            return
         }
+        comparebox.slideDown(200);
     })
 }
 
@@ -1385,12 +1387,12 @@ function cs_callback(pass) {
         };
     if (pass === true) {
         compare_seeds_callback(compare);
-    } else {
-        all_pinpanel({
-            "func": compare_seeds_callback,
-            "args": compare
-        }, true)
+        return
     }
+    all_pinpanel({
+        "func": compare_seeds_callback,
+        "args": compare
+    }, true)
 }
 
 function compare_seeds_callback(compare) {
@@ -1493,10 +1495,10 @@ function csvexport_trigger() {
 					<div id='backupcd'>CANCEL</div>\
 				</div>";
             popdialog(content, "alert", "triggersubmit", null, true);
-        } else {
-            playsound(funk);
-            notify("No requests to export");
+            return
         }
+        playsound(funk);
+        notify("No requests to export");
     })
 }
 
@@ -1683,12 +1685,12 @@ function check_csvexport() {
             }, ro_proxy).done(function(e) {
                 var ping = e.ping;
                 if (ping) {
-                    var br_cache = e.ping.br_cache,
+                    var br_cache = ping.br_cache,
                         server_time = br_cache.utc_timestamp,
                         filetime = br_cache.created_utc,
                         filetimesec = (filetime) ? filetime * 1000 : now(),
                         filetime_format = new Date(filetimesec).toLocaleString(language),
-                        br_result = e.ping.br_result,
+                        br_result = ping.br_result,
                         base64 = br_result.base64,
                         account = atob(br_result.account),
                         sharedtitle = "CSV Export " + account + " (" + filetime_format + ")",
@@ -1751,9 +1753,9 @@ function check_csvexport() {
                             "elements": ddat
                         }) + "<div id='backupactions'><div id='backupcd'>CANCEL</div></div>";
                     popdialog(content, "alert", "triggersubmit", null, true);
-                } else {
-                    systembu_expired();
+                    return
                 }
+                systembu_expired();
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 systembu_expired();
             });
@@ -1955,44 +1957,42 @@ function submit_urlshortener_select() {
         if (thisvalue == currentapi && firebase_checkchange == firebase_apival && bitly_checkchange == bitly_apival && !toggle_urlshortener.hasClass("us_changed")) { // check for changes
             canceldialog();
             return false;
-        } else {
-            var us_active = (toggle_urlshortener.hasClass("true"));
-            if (thisvalue != currentapi || toggle_urlshortener.hasClass("us_changed")) {
-                var us_state = (us_active === true) ? "active" : "inactive",
-                    us_title = (us_active === true) ? thisvalue : "inactive";
-                set_setting("url_shorten_settings", {
-                    "selected": us_title,
-                    "us_active": us_state
-                }, us_title);
-            }
-            if (us_active === true) {
-                var current_firebase_key = firebase_api_input.attr("data-apikey"),
-                    current_bitly_key = bitly_api_input.attr("data-apikey");
-                if (firebase_apival != current_firebase_key) {
-                    if (firebase_checkchange == firebase_apival) {
-                        popnotify("error", "Enter a valid API key");
-                    } else {
-                        firebase_api_input.attr("data-checkchange", firebase_apival);
-                        checkapikey("firebase", firebase_apival, true)
-                    }
-                } else if (bitly_apival != current_bitly_key) {
-                    if (bitly_checkchange == bitly_apival) {
-                        popnotify("error", "Enter a valid API key");
-                    } else {
-                        bitly_api_input.attr("data-checkchange", bitly_apival);
-                        checkapikey("bitly", bitly_apival, true)
-                    }
-                } else {
-                    canceldialog();
-                    notify("Data saved");
-                    savesettings();
+        }
+        var us_active = (toggle_urlshortener.hasClass("true"));
+        if (thisvalue != currentapi || toggle_urlshortener.hasClass("us_changed")) {
+            var us_state = (us_active === true) ? "active" : "inactive",
+                us_title = (us_active === true) ? thisvalue : "inactive";
+            set_setting("url_shorten_settings", {
+                "selected": us_title,
+                "us_active": us_state
+            }, us_title);
+        }
+        if (us_active === true) {
+            var current_firebase_key = firebase_api_input.attr("data-apikey"),
+                current_bitly_key = bitly_api_input.attr("data-apikey");
+            if (firebase_apival != current_firebase_key) {
+                if (firebase_checkchange == firebase_apival) {
+                    popnotify("error", "Enter a valid API key");
+                    return false;
                 }
-            } else {
-                canceldialog();
-                notify("Data saved");
-                savesettings();
+                firebase_api_input.attr("data-checkchange", firebase_apival);
+                checkapikey("firebase", firebase_apival, true)
+                return
+            }
+            if (bitly_apival != current_bitly_key) {
+                if (bitly_checkchange == bitly_apival) {
+                    popnotify("error", "Enter a valid API key");
+                    return false;
+                }
+                bitly_api_input.attr("data-checkchange", bitly_apival);
+                checkapikey("bitly", bitly_apival, true)
+                return false;
             }
         }
+        canceldialog();
+        notify("Data saved");
+        savesettings();
+        return false;
     })
 }
 
@@ -2101,25 +2101,25 @@ function submitccapi() {
         if (thisvalue == currentapi && checkchange == apival) {
             canceldialog();
             return false;
-        } else {
-            if (thisvalue != currentapi) {
-                set_setting("cmcapisettings", {
-                    "selected": thisvalue
-                }, thisvalue);
-            }
-            if (apival !== api_input.attr("data-apikey")) {
-                if (checkchange == apival) {
-                    popnotify("error", "Enter a valid API key");
-                } else {
-                    api_input.attr("data-checkchange", apival);
-                    checkapikey("coinmarketcap", apival, true)
-                }
-            } else {
-                canceldialog();
-                notify("Data saved");
-                savesettings();
-            }
         }
+        if (thisvalue != currentapi) {
+            set_setting("cmcapisettings", {
+                "selected": thisvalue
+            }, thisvalue);
+        }
+        if (apival !== api_input.attr("data-apikey")) {
+            if (checkchange == apival) {
+                popnotify("error", "Enter a valid API key");
+                return false;
+            }
+            api_input.attr("data-checkchange", apival);
+            checkapikey("coinmarketcap", apival, true);
+            return false;
+        }
+        canceldialog();
+        notify("Data saved");
+        savesettings();
+        return false;
     })
 }
 
@@ -2227,25 +2227,25 @@ function submitfiatxrapi() {
         if (thisvalue == currentapi && checkchange == apival) {
             canceldialog();
             return false;
-        } else {
-            if (thisvalue != currentapi) {
-                set_setting("fiatapisettings", {
-                    "selected": thisvalue
-                }, thisvalue);
-            }
-            if (apival !== api_input.attr("data-apikey")) {
-                if (checkchange == apival) {
-                    popnotify("error", "Enter a valid API key");
-                } else {
-                    api_input.attr("data-checkchange", apival);
-                    checkapikey("fixer", apival, true)
-                }
-            } else {
-                canceldialog();
-                notify("Data saved");
-                savesettings();
-            }
         }
+        if (thisvalue != currentapi) {
+            set_setting("fiatapisettings", {
+                "selected": thisvalue
+            }, thisvalue);
+        }
+        if (apival !== api_input.attr("data-apikey")) {
+            if (checkchange == apival) {
+                popnotify("error", "Enter a valid API key");
+                return false;
+            }
+            api_input.attr("data-checkchange", apival);
+            checkapikey("fixer", apival, true);
+            return false;
+        }
+        canceldialog();
+        notify("Data saved");
+        savesettings();
+        return false;
     })
 }
 
@@ -2360,19 +2360,18 @@ function submit_proxy() {
         if (customval.length > 0) {
             test_custom_proxy(customval);
             return
-        } else {
-            var set_proxy = c_proxy();
-            if (selectval == set_proxy) {
-                canceldialog();
-            } else {
-                set_setting("api_proxy", {
-                    "selected": selectval
-                }, selectval);
-                canceldialog();
-                notify("Data saved");
-                savesettings();
-            }
         }
+        var set_proxy = c_proxy();
+        if (selectval == set_proxy) {
+            canceldialog();
+            return
+        }
+        set_setting("api_proxy", {
+            "selected": selectval
+        }, selectval);
+        canceldialog();
+        notify("Data saved");
+        savesettings();
     })
 }
 
@@ -2403,54 +2402,53 @@ function test_custom_proxy(value) { // make test api call
     if ($.inArray(fixed_url, custom_proxies) !== -1 || $.inArray(fixed_url, proxy_list) !== -1) {
         popnotify("error", "Proxy already added");
         return false;
-    } else {
-        if (fixed_url.indexOf("http") > -1) {
-            $.ajax({
-                "method": "POST",
-                "cache": false,
-                "timeout": 5000,
-                "url": fixed_url + "proxy/v1/",
-                "data": {
-                    "custom": "add"
-                }
-            }).done(function(e) {
-                var api_result = br_result(e),
-                    result = api_result.result;
-                if (result) {
-                    var error = result.error;
-                    if (error) {
-                        var message = error.message;
-                        if (message && message == "no write acces") {
-                            popnotify("error", "Unable to write to cache, please check your folder permissions.");
-                            return
-                        }
-                    }
-                    if (result.custom) {
-                        custom_proxies.push(fixed_url);
-                        set_setting("api_proxy", {
-                            "selected": fixed_url,
-                            "custom_proxies": custom_proxies
-                        }, fixed_url);
-                        canceldialog();
-                        notify("Data saved");
-                        savesettings();
-                        setTimeout(function() {
-                            $("#apikeys").trigger("click");
-                        }, 800);
+    }
+    if (fixed_url.indexOf("http") > -1) {
+        $.ajax({
+            "method": "POST",
+            "cache": false,
+            "timeout": 5000,
+            "url": fixed_url + "proxy/v1/",
+            "data": {
+                "custom": "add"
+            }
+        }).done(function(e) {
+            var api_result = br_result(e),
+                result = api_result.result;
+            if (result) {
+                var error = result.error;
+                if (error) {
+                    var message = error.message;
+                    if (message && message == "no write acces") {
+                        popnotify("error", "Unable to write to cache, please check your folder permissions.");
                         return
                     }
                 }
-                popnotify("error", "Unable to send Post request from " + fixed_url);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                popnotify("error", "Unable to connect");
-                console.log(jqXHR);
-                console.log(textStatus);
-                console.log(errorThrown);
-            });
-        } else {
-            popnotify("error", "Invalid url");
-        }
+                if (result.custom) {
+                    custom_proxies.push(fixed_url);
+                    set_setting("api_proxy", {
+                        "selected": fixed_url,
+                        "custom_proxies": custom_proxies
+                    }, fixed_url);
+                    canceldialog();
+                    notify("Data saved");
+                    savesettings();
+                    setTimeout(function() {
+                        $("#apikeys").trigger("click");
+                    }, 800);
+                    return
+                }
+            }
+            popnotify("error", "Unable to send Post request from " + fixed_url);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            popnotify("error", "Unable to connect");
+            console.log(jqXHR);
+            console.log(textStatus);
+            console.log(errorThrown);
+        });
+        return
     }
+    popnotify("error", "Invalid url");
 }
 
 function remove_proxy() {
@@ -2563,19 +2561,19 @@ function submitapi() {
                 notify("Invalid API key");
                 $(".input_error").select();
                 return false;
-            } else {
-                canceldialog();
             }
-        } else {
-            ak_input.each(function(index) {
-                var thisindex = index + 1,
-                    thisinput = $(this),
-                    thisvalue = thisinput.val(),
-                    thisref = thisinput.attr("data-ref"),
-                    lastinput = (inputcount === thisindex);
-                checkapikey(thisref, thisvalue, lastinput);
-            });
+            canceldialog();
+            return false;
         }
+        ak_input.each(function(index) {
+            var thisindex = index + 1,
+                thisinput = $(this),
+                thisvalue = thisinput.val(),
+                thisref = thisinput.attr("data-ref"),
+                lastinput = (inputcount === thisindex);
+            checkapikey(thisref, thisvalue, lastinput);
+        });
+        return false;
     })
 }
 
@@ -2642,124 +2640,124 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                 var data = br_result(e).result;
                 if (data) {
                     update_api_attr(thisref, apikeyval, lastinput);
+                    return
+                }
+                api_fail(thisref, apikeyval);
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                api_fail(thisref, apikeyval);
+            });
+            return
+        }
+        var api_data = get_api_data(thisref),
+            base_url = api_data.base_url,
+            method = (thisref == "firebase") ? "POST" : "GET",
+            params = {
+                "method": method,
+                "cache": true
+            },
+            search = (thisref == "amberdata") ? payload :
+            payload + apikeyval,
+            api_url = (thisref == "bitly") ? "https://api-ssl.bitly.com/v3/shorten?access_token=" + apikeyval + "&longUrl=http%3A%2F%2Fgoogle.com%2F" :
+            base_url + search;
+        if (thisref == "firebase") {
+            params.data = {
+                "longDynamicLink": firebase_shortlink + "?link=" + approot + "?p=request"
+            }
+        } else if (thisref == "amberdata") {
+            params.headers = {
+                "x-amberdata-blockchain-id": "ethereum-mainnet",
+                "x-api-key": apikeyval
+            }
+        }
+        var postdata = {
+            "api": thisref,
+            "search": search,
+            "cachetime": 0,
+            "cachefolder": "1h",
+            "api_url": api_url,
+            "proxy": false,
+            "params": params
+        }
+        api_proxy(postdata).done(function(e) {
+            var data = br_result(e).result;
+            if (thisref == "bitly" && data.status_code === 500) {
+                api_fail(thisref, apikeyval);
+                return
+            }
+            if (thisref == "coinmarketcap" && data.status.error_code === 1001) {
+                api_fail(thisref, apikeyval);
+                return
+            }
+            if (thisref == "fixer" && data.success === false) {
+                if (data.error.code === 101) {
+                    api_fail(thisref, apikeyval);
+                } else {
+                    notify("API call error");
+                    var content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
+                    popdialog(content, "alert", "canceldialog");
+                }
+                return
+            }
+            if (thisref == "blockcypher") {
+                if (data.address) {
+                    update_api_attr(thisref, apikeyval, lastinput);
                 } else {
                     api_fail(thisref, apikeyval);
                 }
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                api_fail(thisref, apikeyval);
-            });
-        } else {
-            var api_data = get_api_data(thisref),
-                base_url = api_data.base_url,
-                method = (thisref == "firebase") ? "POST" : "GET",
-                params = {
-                    "method": method,
-                    "cache": true
-                },
-                search = (thisref == "amberdata") ? payload :
-                payload + apikeyval,
-                api_url = (thisref == "bitly") ? "https://api-ssl.bitly.com/v3/shorten?access_token=" + apikeyval + "&longUrl=http%3A%2F%2Fgoogle.com%2F" :
-                base_url + search;
-            if (thisref == "firebase") {
-                params.data = {
-                    "longDynamicLink": firebase_shortlink + "?link=" + approot + "?p=request"
-                }
-            } else if (thisref == "amberdata") {
-                params.headers = {
-                    "x-amberdata-blockchain-id": "ethereum-mainnet",
-                    "x-api-key": apikeyval
-                }
+                return
             }
-            var postdata = {
-                "api": thisref,
-                "search": search,
-                "cachetime": 0,
-                "cachefolder": "1h",
-                "api_url": api_url,
-                "proxy": false,
-                "params": params
+            if (thisref == "ethplorer") {
+                if (data.tokens) {
+                    update_api_attr(thisref, apikeyval, lastinput);
+                } else {
+                    if (data.error.code === 1) {
+                        api_fail(thisref, apikeyval);
+                    } else {
+                        notify("API call error");
+                        var content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
+                        popdialog(content, "alert", "canceldialog");
+                    }
+                }
+                return
             }
-            api_proxy(postdata).done(function(e) {
-                var data = br_result(e).result;
-                if (thisref == "bitly" && data.status_code === 500) {
+            if (thisref == "blockchair") {
+                var context_code = data.context.code;
+                if (context_code === 200) {
+                    update_api_attr(thisref, apikeyval, lastinput);
+                } else if (context_code === 402) {
                     api_fail(thisref, apikeyval);
-                    return
+                } else {
+                    notify("API call error");
+                    var content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
+                    popdialog(content, "alert", "canceldialog");
                 }
-                if (thisref == "coinmarketcap" && data.status.error_code === 1001) {
+                return
+            }
+            if (thisref == "currencylayer" && data.success === false) {
+                if (data.error.code === 101) {
                     api_fail(thisref, apikeyval);
-                    return
+                } else {
+                    notify("API call error");
+                    var content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
+                    popdialog(content, "alert", "canceldialog");
                 }
-                if (thisref == "fixer" && data.success === false) {
-                    if (data.error.code === 101) {
-                        api_fail(thisref, apikeyval);
-                    } else {
-                        notify("API call error");
-                        var content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
-                        popdialog(content, "alert", "canceldialog");
-                    }
-                    return
-                }
-                if (thisref == "blockcypher") {
-                    if (data.address) {
-                        update_api_attr(thisref, apikeyval, lastinput);
-                    } else {
-                        api_fail(thisref, apikeyval);
-                    }
-                    return
-                }
-                if (thisref == "ethplorer") {
-                    if (data.tokens) {
-                        update_api_attr(thisref, apikeyval, lastinput);
-                    } else {
-                        if (data.error.code === 1) {
-                            api_fail(thisref, apikeyval);
-                        } else {
-                            notify("API call error");
-                            var content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
-                            popdialog(content, "alert", "canceldialog");
-                        }
-                    }
-                    return
-                }
-                if (thisref == "blockchair") {
-                    var context_code = data.context.code;
-                    if (context_code === 200) {
-                        update_api_attr(thisref, apikeyval, lastinput);
-                    } else if (context_code === 402) {
-                        api_fail(thisref, apikeyval);
-                    } else {
-                        notify("API call error");
-                        var content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
-                        popdialog(content, "alert", "canceldialog");
-                    }
-                    return
-                }
-                if (thisref == "currencylayer" && data.success === false) {
-                    if (data.error.code === 101) {
-                        api_fail(thisref, apikeyval);
-                    } else {
-                        notify("API call error");
-                        var content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
-                        popdialog(content, "alert", "canceldialog");
-                    }
-                    return
-                }
-                if (thisref == "amberdata" && data.status === 401) {
-                    api_fail(thisref, apikeyval);
-                    return
-                }
-                update_api_attr(thisref, apikeyval, lastinput);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
+                return
+            }
+            if (thisref == "amberdata" && data.status === 401) {
                 api_fail(thisref, apikeyval);
-            });
-        }
-    } else {
-        if (!apikeyval) {
-            update_api_attr(thisref, null, lastinput);
-        } else {
+                return
+            }
+            update_api_attr(thisref, apikeyval, lastinput);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
             api_fail(thisref, apikeyval);
-        }
+        });
+        return
     }
+    if (!apikeyval) {
+        update_api_attr(thisref, null, lastinput);
+        return
+    }
+    api_fail(thisref, apikeyval);
 }
 
 function api_fail(thisref, thisvalue) {
@@ -2769,7 +2767,6 @@ function api_fail(thisref, thisvalue) {
     apiformbox.removeClass("pass");
     apiformbox.find("input[data-ref=" + thisref + "]").attr("data-checkchange", thisvalue).removeClass("changed").addClass("input_error").select();
     notify(errormsg);
-    return
 }
 
 function update_api_attr(thisref, thisvalue, lastinput) {
@@ -2783,16 +2780,16 @@ function update_api_attr(thisref, thisvalue, lastinput) {
             notify("Data saved");
             savesettings();
         }
-    } else {
-        complement_apisettings(thisref, thisvalue);
-        canceldialog();
-        notify("Data saved");
-        savesettings();
-        // update monitor
-        sessionStorage.removeItem("bitrequest_" + thisref + "_api_attempt");
-        sessionStorage.removeItem("bitrequest_txstatus");
-        cancelpaymentdialog();
+        return
     }
+    complement_apisettings(thisref, thisvalue);
+    canceldialog();
+    notify("Data saved");
+    savesettings();
+    // update monitor
+    sessionStorage.removeItem("bitrequest_" + thisref + "_api_attempt");
+    sessionStorage.removeItem("bitrequest_txstatus");
+    cancelpaymentdialog();
 }
 
 function complement_apisettings(thisref, thisvalue) {
@@ -2959,9 +2956,9 @@ function submit_contactform() {
         savesettings();
         if (geturlparameters().contactform !== undefined) { // test for contactform param 
             loadpaymentfunction(true) // continue to paymentdialog
-        } else {
-            notify("Data saved");
+            return
         }
+        notify("Data saved");
     })
 }
 
@@ -3043,15 +3040,15 @@ function submit_permissions() {
         if (thisvalue == currentval) { // check for changes
             canceldialog();
             return false;
-        } else {
-            set_setting("permissions", {
-                "selected": thisvalue
-            }, thisvalue);
-            html.attr("data-role", thisvalue);
-            canceldialog();
-            notify("Data saved");
-            savesettings();
         }
+        set_setting("permissions", {
+            "selected": thisvalue
+        }, thisvalue);
+        html.attr("data-role", thisvalue);
+        canceldialog();
+        notify("Data saved");
+        savesettings();
+        return false;
     })
 }
 
@@ -3066,12 +3063,12 @@ function team_invite_trigger() {
         }
         if (haspin() === true) {
             team_invite();
-        } else {
-            var content = pinpanel("", {
-                "func": team_invite
-            });
-            showoptions(content, "pin");
+            return
         }
+        var content = pinpanel("", {
+            "func": team_invite
+        });
+        showoptions(content, "pin");
     })
 }
 
@@ -3257,12 +3254,12 @@ function check_teaminvite() {
             }, ro_proxy).done(function(e) {
                 var ping = e.ping;
                 if (ping) {
-                    var br_cache = e.ping.br_cache,
+                    var br_cache = ping.br_cache,
                         server_time = br_cache.utc_timestamp,
                         filetime = br_cache.created_utc,
                         filetimesec = (filetime) ? filetime * 1000 : now(),
                         filetime_format = new Date(filetimesec).toLocaleString(language),
-                        br_result = e.ping.br_result,
+                        br_result = ping.br_result,
                         base64 = br_result.base64,
                         account = atob(br_result.account),
                         br_dat = JSON.parse(atob(base64)),
@@ -3312,9 +3309,9 @@ function check_teaminvite() {
                             "elements": ddat
                         }) + "<div id='backupactions'><div id='backupcd'>CANCEL</div></div>";
                     popdialog(content, "alert", "triggersubmit", null, true);
-                } else {
-                    systembu_expired();
+                    return
                 }
+                systembu_expired();
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 systembu_expired();
             });
