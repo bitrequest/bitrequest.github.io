@@ -482,20 +482,20 @@ function get_api_inputs(rd, api_data, api_name) {
                                     $.each(txflip, function(dat, value) {
                                         var txd = xmr_scan_data(value, setconfirmations, "xmr", data.blockchain_height);
                                         if (txd) {
-                                            if (pending == "polling") {
-                                                if (txd.txhash == transactionhash && txd.ccval) {
-                                                    var tx_listitem = append_tx_li(txd, rqtype);
-                                                    if (tx_listitem) {
-                                                        transactionlist.append(tx_listitem.data(txd));
-                                                        counter++;
+                                            var xid_match = match_xmr_pid(rd.xmr_ia, rd.payment_id, txd.payment_id); // match xmr payment_id if set
+                                            if (xid_match === true) {
+                                                if (pending == "polling") {
+                                                    if (txd.txhash == transactionhash && txd.ccval) {
+                                                        var tx_listitem = append_tx_li(txd, rqtype);
+                                                        if (tx_listitem) {
+                                                            transactionlist.append(tx_listitem.data(txd));
+                                                            counter++;
+                                                        }
+                                                        return
                                                     }
-                                                    return
                                                 }
-                                            }
-                                            if (txd.transactiontime > request_timestamp && txd.ccval) {
                                                 if (pending == "scanning") {
-                                                    var xid_match = match_xmr_pid(rd.xmr_ia, rd.payment_id, txd.payment_id); // match xmr payment_id if set
-                                                    if (xid_match === true) {
+                                                    if (txd.transactiontime > request_timestamp && txd.ccval) {
                                                         var tx_listitem = append_tx_li(txd, rqtype);
                                                         if (tx_listitem) {
                                                             transactionlist.append(tx_listitem.data(txd));
