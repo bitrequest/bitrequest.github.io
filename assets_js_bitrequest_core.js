@@ -4419,7 +4419,7 @@ function appendrequest(rd) {
         render_archive = (txhistory && (pending == "no" || archive === true)),
         tl_text = (render_archive === true) ? "Transactions:" : "",
         edit_request = (local === true) ? "<div class='editrequest icon-pencil' title='edit request' data-requestid='" + requestid + "'></div>" : "",
-        pid_li = (payment_id) ? "<li><strong>Payment ID:</strong> " + payment_id + "</li>" : "",
+        pid_li = (payment_id) ? "<li><strong>Payment ID:</strong> <span class='select' data-type='payment ID'>" + payment_id + "</span></li>" : "",
         ia_li = (xmr_ia) ? "<li><p class='address'><strong>Integrated Address:</strong> <span class='requestaddress select'>" + xmr_ia + "</span></p></li>" : "",
         ln_emoji = (lnhash) ? " <span class='icon-power'></span>" : "",
         ln_logo = "<img src='img_logos_btc-lnd.png' class='cmc_icon'><img src='img_logos_btc-lnd.png' class='cmc_icon'>",
