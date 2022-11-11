@@ -2754,8 +2754,8 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
                 adjust_paymentdialog("pending", "polling", "Waiting for payment");
                 return
             }
+            return
         }
-        return
     }
     if (thispayment == "nano") { // 0 confirmation so payment must be sent
         if (status == "insufficient") {
