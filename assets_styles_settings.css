@@ -519,12 +519,20 @@ body.ios #donate {
 }
 
 #lockscreen .icon-lock {
-	font-size: 400%;
+	font-size: 300%;
 	color: #1b5526;
 	margin: 0 0 1em 28%;
 }
 
+#lockscreen .tmua {
+	font-size: 200%;
+	color: #1a7b2c;
+	font-weight: bold;
+	line-height: 1em;
+}
+
 #lockscreen #seed_unlock {
+	margin-top:1em;
 	font-weight: 600;
 	color: #009788;
 	cursor: pointer;

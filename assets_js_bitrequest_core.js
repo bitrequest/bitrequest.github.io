@@ -2779,7 +2779,7 @@ function lockscreen(timer) {
         attempts = $("#pinsettings").data("attempts"),
         has_seedid = (hasbip || cashier_seedid) ? true : false,
         us_string = (has_seedid === true && attempts > 5) ? "<p id='seed_unlock'>Unlock with seed</p>" : "",
-        content = "<h1 id='lock_heading'>Bitrequest</h1><div id='lockscreen'><h2><span class='icon-lock'/><br/>Too many unlock attempts</h2>\
+        content = "<h1 id='lock_heading'>Bitrequest</h1><div id='lockscreen'><h2><span class='icon-lock'></span></h2><p class='tmua'>Too many unlock attempts</p>\
     	<p><br/>Please try again in:<br/>" + cdown_str + "</p>" + us_string +
         "<div id='phrasewrap'>\
 	    	<p><br/>Enter your 12 word<br/>secret phrase:</p>\
