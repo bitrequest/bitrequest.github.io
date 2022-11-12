@@ -749,6 +749,18 @@ html.inframe #request_back {
 	display:block;
 }
 
+#paymentdialogbox[data-lswitch="lnd_ao"].accept_lnd #rf_wrap {
+	opacity:0.5;
+}
+
+#paymentdialogbox[data-lswitch="lnd_ao"].accept_lnd #rf_wrap * {
+	pointer-events:none;
+}
+
+#paymentdialogbox[data-lswitch="lnd_ao"].accept_lnd #lightning_switch {
+	pointer-events:none;
+}
+
 #lnd_offline {
 	text-decoration: underline;
 	cursor:pointer;

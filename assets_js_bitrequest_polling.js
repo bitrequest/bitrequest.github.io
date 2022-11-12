@@ -440,7 +440,7 @@ function confirmations(tx_data, direct, ln) {
             if (xmr_pass) {
                 var pass = (exact) ? (rccf == cc_raw) ? true : false : (rccf >= cc_raw * 0.97) ? true : false;
                 if (pass) {
-	                if (xconf >= setconfirmations || zero_conf === true || ln) {
+	                if (xconf >= setconfirmations || zero_conf === true) {
                         forceclosesocket();
                         if (payment == "dogecoin") {
                             playsound(howl);
