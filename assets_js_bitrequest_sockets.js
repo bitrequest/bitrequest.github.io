@@ -316,7 +316,8 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                         }).done(function(inv1) {
                                                             var invoice = inv1.bolt11;
                                                             if (invoice) {
-                                                                paymentdialogbox.addClass("transacting blockd");
+                                                                paymentdialogbox.addClass("transacting blockd").attr("data-status", "pending");
+                                                                $("#confnumber").text("1");
                                                                 notify("Monitoring...", 50000);
                                                                 var ampersand = (callback.indexOf("?") > 0) ? "&" : "?",
                                                                     cb_url = callback + ampersand + "k1=" + k1 + "&pr=" + invoice;

@@ -389,7 +389,7 @@ function confirmations(tx_data, direct, ln) {
             return
         }
         var setconfirmations = (tx_data.setconfirmations) ? parseInt(tx_data.setconfirmations) : 0,
-            conf_text = (setconfirmations) ? setconfirmations.toString() : "",
+        	conf_text = (setconfirmations) ? setconfirmations.toString() : "",
             confbox = brstatuspanel.find("span.confbox"),
             confboxspan = confbox.find("span"),
             currentconf = parseFloat(confboxspan.attr("data-conf")),
