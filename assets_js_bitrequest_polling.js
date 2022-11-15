@@ -129,16 +129,15 @@ function ampl(api_name, poll_url) { // api_monitor payload
                 }
             }
         }
-    } else {
-        return {
-            "api": api_name,
-            "search": poll_url,
-            "cachetime": 10,
-            "cachefolder": "1h",
-            "params": {
-                "method": "GET",
-                "cache": true
-            }
+    }
+    return {
+        "api": api_name,
+        "search": poll_url,
+        "cachetime": 10,
+        "cachefolder": "1h",
+        "params": {
+            "method": "GET",
+            "cache": true
         }
     }
 }
@@ -193,20 +192,20 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
                     rpc_error(jqXHR, textStatus, errorThrown);
                 });
             }, 25000);
-        } else {
-            api_proxy(rmpl(payment, rpcurl, txhash)).done(function(e) {
-                rpc_result(br_result(e));
-                pinging[txhash] = setInterval(function() {
-                    api_proxy(rmpl(payment, rpcurl, txhash)).done(function(e) {
-                        rpc_result(br_result(e));
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        rpc_error(jqXHR, textStatus, errorThrown);
-                    });
-                }, 25000);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                rpc_error(jqXHR, textStatus, errorThrown);
-            });
+            return
         }
+        api_proxy(rmpl(payment, rpcurl, txhash)).done(function(e) {
+            rpc_result(br_result(e));
+            pinging[txhash] = setInterval(function() {
+                api_proxy(rmpl(payment, rpcurl, txhash)).done(function(e) {
+                    rpc_result(br_result(e));
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    rpc_error(jqXHR, textStatus, errorThrown);
+                });
+            }, 25000);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            rpc_error(jqXHR, textStatus, errorThrown);
+        });
 
         function rpc_result(result) {
             var data = result.result;
@@ -228,7 +227,9 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
             handle_rpc_fails(rpcdata, error_object, txhash);
             return
         }
-    } else if (payment == "ethereum") {
+        return
+    }
+    if (payment == "ethereum") {
         if (tx_data) {
             confirmations(tx_data, true);
         } else {
@@ -237,7 +238,9 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
         pinging[txhash] = setInterval(function() {
             ping_eth_node(rpcdata, txhash);
         }, 25000);
-    } else if (request.erc20 === true) {
+        return
+    }
+    if (request.erc20 === true) {
         if (tx_data) {
             confirmations(tx_data, true);
         } else {
@@ -246,7 +249,9 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
         pinging[txhash] = setInterval(function() {
             ping_eth_node(rpcdata, txhash, true);
         }, 25000);
-    } else if (payment == "nano") {
+        return
+    }
+    if (payment == "nano") {
         if (tx_data) {
             confirmations(tx_data, true);
         } else {
@@ -363,9 +368,9 @@ function handle_rpc_fails(rpcdata, error, txhash) {
     if (nextrpc === false) { // retry with api source
         var error_data = get_api_error_data("unable to fetch data from " + rpcurl);
         api_eror_msg(rpcurl, error_data);
-    } else {
-        api_monitor_init(txhash, null, nextrpc);
+        return
     }
+    api_monitor_init(txhash, null, nextrpc);
 }
 
 function confirmations(tx_data, direct, ln) {
@@ -389,7 +394,7 @@ function confirmations(tx_data, direct, ln) {
             return
         }
         var setconfirmations = (tx_data.setconfirmations) ? parseInt(tx_data.setconfirmations) : 0,
-        	conf_text = (setconfirmations) ? setconfirmations.toString() : "",
+            conf_text = (setconfirmations) ? setconfirmations.toString() : "",
             confbox = brstatuspanel.find("span.confbox"),
             confboxspan = confbox.find("span"),
             currentconf = parseFloat(confboxspan.attr("data-conf")),
@@ -440,7 +445,7 @@ function confirmations(tx_data, direct, ln) {
             if (xmr_pass) {
                 var pass = (exact) ? (rccf == cc_raw) ? true : false : (rccf >= cc_raw * 0.97) ? true : false;
                 if (pass) {
-	                if (xconf >= setconfirmations || zero_conf === true) {
+                    if (xconf >= setconfirmations || zero_conf === true) {
                         forceclosesocket();
                         if (payment == "dogecoin") {
                             playsound(howl);
