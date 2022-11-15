@@ -1174,8 +1174,8 @@ function getpayment(ccrateeuro, ccapi) {
         rn_set = (request.requestname && request.requestname.length > 1), // check if requestname is set
         rt_set = (request.requesttitle && request.requesttitle.length > 1), // check if requesttitle is set
         requesttitle_string = (rt_set === true) ? request.requesttitle : "",
-        savedaddressli = filter_addressli(request.payment, "address", request.address)
-    has_label = (savedaddressli.length > 0 && savedaddressli.data("label").length > 0) ? true : false,
+        savedaddressli = filter_addressli(request.payment, "address", request.address),
+		has_label = (savedaddressli.length > 0 && savedaddressli.data("label").length > 0) ? true : false,
         labelvalue = (has_label) ? savedaddressli.data("label") : "",
         label_markup = (has_label) ? "<span id='labelbttn'>" + labelvalue + "</span>" : "", // check if label is set
         thiscurrencyvalueraw = ((request.amount / currencyxrate) * ccrateeuro),
