@@ -238,13 +238,13 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
             });
             ndef.onreading = event => {
                 if ((now() - 6000) < ndef_timer) { // prevent too many taps
+                    playsound(funk);
                     notify("Tapped too quick", 6000);
                     return;
                 }
                 ndef_timer = now();
                 closenotify();
                 var message = event.message;
-                playsound(blip);
                 if (message) {
                     var records = message.records;
                     if (records) {
@@ -271,6 +271,7 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                 console.log(ndef_processing);
                                                 return
                                             }
+                                            playsound(blip);
                                             notify("Processing...", 50000);
                                             paymentdialogbox.addClass("accept_lnd");
                                             set_request_timer();
@@ -688,18 +689,18 @@ function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
             var result = params.result;
             if (result) {
                 var txhash = result.hash;
-                    if (txhash) {
-                        if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
-                            rconnect(txid);
-                            return
-                        }
-                        var txd = amberdata_ws_btc_data(result, request.set_confirmations, request.currencysymbol, thisaddress);
-                        if (txd) {
-                            txid = txhash;
-                            closesocket();
-                            pick_monitor(txhash, txd);
-                        }
+                if (txhash) {
+                    if (paymentdialogbo x.hasClass("transacting") && txid != txhash) {
+                        rconnect(txid);
+                        return
                     }
+                    var txd = amberdata_ws_btc_data(result, request.set_confirmations, request.currencysymbol, thisaddress);
+                    if (txd) {
+                        txid = txhash;
+                        closesocket();
+                        pick_monitor(txhash, txd);
+                    }
+                }
             }
         }
     };
