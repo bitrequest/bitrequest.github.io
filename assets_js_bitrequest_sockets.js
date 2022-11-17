@@ -41,6 +41,7 @@ $(document).ready(function() {
     //amberdata_scan_poll
     //erc20_scan_poll
     //after_poll_fails
+    //rconnect
     //get_next_scan_api
 });
 
@@ -49,104 +50,121 @@ $(document).ready(function() {
 function init_socket(socket_node, address, swtch, retry) {
     if (offline === true) {
         notify("You are currently offline, request is not monitored");
-    } else {
-        scan_attempts = {};
-        var payment = request.payment;
-        if (socket_node) {
-            var socket_name = socket_node.name;
-            socket_attempt[btoa(socket_node.url)] = true;
-        }
-        if (payment == "bitcoin") {
-            if (address == "lnurl") {
-                // lightning only
-            } else {
-                if (socket_name == "blockcypher wss") {
-                    blockcypher_websocket(socket_node, address);
-                } else if (socket_name == "blockcypher ws") {
-                    blockcypherws(socket_node, address)
-                } else if (socket_name == "blockchain.info websocket") {
-                    blockchain_btc_socket(socket_node, address);
-                } else if (socket_name == main_ad_socket) {
-                    amberdata_btc_websocket(socket_node, address, "408fa195a34b533de9ad9889f076045e");
-                } else if (socket_name == "mempool.space websocket") {
-                    mempoolspace_btc_socket(socket_node, address);
-                } else {
-                    blockcypher_websocket(socket_node, address);
-                }
-            }
-            if (helper.lnd_status) {
-                if (retry) {
-                    return;
-                }
-                lightning_socket(helper.lnd);
-            }
-        } else if (payment == "litecoin") {
-            if (socket_name == "blockcypher wss") {
-                blockcypher_websocket(socket_node, address);
-            } else if (socket_name == "blockcypher ws") {
-                blockcypherws(socket_node, address)
-            } else if (socket_name == main_ad_socket) {
-                amberdata_btc_websocket(socket_node, address, "f94be61fd9f4fa684f992ddfd4e92272");
-            } else {
-                blockcypher_websocket(socket_node, address);
-            }
-        } else if (payment == "dogecoin") {
-            if (socket_name == "blockcypher wss") {
-                blockcypher_websocket(socket_node, address);
-            } else if (socket_name == "blockcypher ws") {
-                blockcypherws(socket_node, address)
-            } else if (socket_name == "dogechain api") {
-                dogechain_info_socket(socket_node, address);
-            } else {
-                blockcypher_websocket(socket_node, address);
-            }
-        } else if (payment == "bitcoin-cash") {
-            if (socket_name == "blockchain.info websocket") {
-                blockchain_bch_socket(socket_node, address);
-            } else if (socket_name == main_ad_socket) {
-                blockchain_bch_socket(socket_node, address);
-                //amberdata_btc_websocket(socket_node, address, "43b45e71cc0615b491cb699e7071fc06");
-            } else {
-                blockchain_bch_socket(socket_node, address);
-            }
-        } else if (payment == "nano") {
-            nano_socket(socket_node, address);
-        } else if (payment == "ethereum") {
-            amberdata_eth_websocket(socket_node, address);
-        } else if (payment == "monero") {
-            clearpinging();
-            var vk = (swtch) ? get_vk(address) : request.viewkey;
-            if (vk) {
-                trigger_requeststates(); // update outgoing
-                var account = (vk.account) ? vk.account : address,
-                    viewkey = vk.vk,
-                    rq_init = request.rq_init,
-                    request_ts_utc = rq_init + timezone,
-                    request_ts = request_ts_utc - 30000; // 30 seconds compensation for unexpected results
-                request.monitored = true;
-                if (swtch) {
-                    request.viewkey = vk;
-                }
-                closenotify();
-                init_xmr_node(9, account, viewkey, request_ts);
-            } else {
-                request.monitored = false;
-                request.viewkey = false;
-                notify("this address is not monitored", 500000, "yes");
-            }
-        } else if (payment == "nimiq") {
-            var rq_init = request.rq_init,
-                request_ts_utc = rq_init + timezone,
-                request_ts = request_ts_utc - 30000;
-            clearpinging();
-            nimiq_scan(address, request_ts);
-        } else if (request.erc20 === true) {
-            clearpinging();
-            web3_erc20_websocket(socket_node, address);
-        } else {
-            notify("this request is not monitored", 500000, "yes")
-        }
+        return
     }
+    scan_attempts = {};
+    var payment = request.payment,
+        socket_name;
+    if (socket_node) {
+        var socket_name = socket_node.name;
+        socket_attempt[btoa(socket_node.url)] = true;
+    }
+    if (payment == "bitcoin") {
+        if (address == "lnurl") {
+            // lightning only
+        } else {
+            if (socket_name == "blockcypher wss") {
+                blockcypher_websocket(socket_node, address);
+            } else if (socket_name == "blockcypher ws") {
+                blockcypherws(socket_node, address)
+            } else if (socket_name == "blockchain.info websocket") {
+                blockchain_btc_socket(socket_node, address);
+            } else if (socket_name == main_ad_socket) {
+                amberdata_btc_websocket(socket_node, address, "408fa195a34b533de9ad9889f076045e");
+            } else if (socket_name == "mempool.space websocket") {
+                mempoolspace_btc_socket(socket_node, address);
+            } else {
+                blockcypher_websocket(socket_node, address);
+            }
+        }
+        if (helper.lnd_status) {
+            if (retry) {
+                return;
+            }
+            lightning_socket(helper.lnd);
+        }
+        return
+    }
+    if (payment == "litecoin") {
+        if (socket_name == "blockcypher wss") {
+            blockcypher_websocket(socket_node, address);
+        } else if (socket_name == "blockcypher ws") {
+            blockcypherws(socket_node, address)
+        } else if (socket_name == main_ad_socket) {
+            amberdata_btc_websocket(socket_node, address, "f94be61fd9f4fa684f992ddfd4e92272");
+        } else {
+            blockcypher_websocket(socket_node, address);
+        }
+        return
+    }
+    if (payment == "dogecoin") {
+        if (socket_name == "blockcypher wss") {
+            blockcypher_websocket(socket_node, address);
+        } else if (socket_name == "blockcypher ws") {
+            blockcypherws(socket_node, address)
+        } else if (socket_name == "dogechain api") {
+            dogechain_info_socket(socket_node, address);
+        } else {
+            blockcypher_websocket(socket_node, address);
+        }
+        return
+    }
+    if (payment == "bitcoin-cash") {
+        if (socket_name == "blockchain.info websocket") {
+            blockchain_bch_socket(socket_node, address);
+        } else if (socket_name == main_ad_socket) {
+            blockchain_bch_socket(socket_node, address);
+            //amberdata_btc_websocket(socket_node, address, "43b45e71cc0615b491cb699e7071fc06");
+        } else {
+            blockchain_bch_socket(socket_node, address);
+        }
+        return
+    }
+    if (payment == "nano") {
+        nano_socket(socket_node, address);
+        return
+    }
+    if (payment == "ethereum") {
+        amberdata_eth_websocket(socket_node, address);
+        return
+    }
+    if (payment == "monero") {
+        clearpinging();
+        var vk = (swtch) ? get_vk(address) : request.viewkey;
+        if (vk) {
+            trigger_requeststates(); // update outgoing
+            var account = (vk.account) ? vk.account : address,
+                viewkey = vk.vk,
+                rq_init = request.rq_init,
+                request_ts_utc = rq_init + timezone,
+                request_ts = request_ts_utc - 30000; // 30 seconds compensation for unexpected results
+            request.monitored = true;
+            if (swtch) {
+                request.viewkey = vk;
+            }
+            closenotify();
+            init_xmr_node(9, account, viewkey, request_ts);
+            return
+        }
+        request.monitored = false;
+        request.viewkey = false;
+        notify("this address is not monitored", 500000, "yes");
+        return
+    }
+    if (payment == "nimiq") {
+        var rq_init = request.rq_init,
+            request_ts_utc = rq_init + timezone,
+            request_ts = request_ts_utc - 30000;
+        clearpinging();
+        nimiq_scan(address, request_ts);
+        return
+    }
+    if (request.erc20 === true) {
+        clearpinging();
+        web3_erc20_websocket(socket_node, address);
+        return
+    }
+    notify("this request is not monitored", 500000, "yes")
 }
 
 function blockcypherws(socket_node, address) {
@@ -226,6 +244,7 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                 ndef_timer = now();
                 closenotify();
                 var message = event.message;
+                playsound(blip);
                 if (message) {
                     var records = message.records;
                     if (records) {
@@ -242,10 +261,12 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                 ccraw = (amount_rel.length) ? parseFloat(amount_rel) : 0,
                                                 milli_sats = (ccraw * 100000000000).toFixed(0);
                                             if (ccraw <= 0) {
+                                                playsound(funk);
                                                 notify("Please enter amount", 5000);
                                                 return
                                             }
                                             if (ndef_processing) {
+                                                playsound(funk);
                                                 console.log("already processing");
                                                 console.log(ndef_processing);
                                                 return
@@ -280,12 +301,14 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                     return
                                                 }
                                                 if (milli_sats > result.maxWithdrawable) {
+                                                    playsound(funk);
                                                     notify("Request exceeds card's maximum", 5000);
                                                     paymentdialogbox.removeClass("accept_lnd");
                                                     ndef_processing = false;
                                                     return
                                                 }
                                                 if (milli_sats < result.minWithdrawable) {
+                                                    playsound(funk);
                                                     notify("Minimum request amount is " + result.minWithdrawable, 5000);
                                                     paymentdialogbox.removeClass("accept_lnd");
                                                     ndef_processing = false;
@@ -483,7 +506,7 @@ function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
         }
     }).done(function(e) {
         var status = e.status;
-        if (status) { // leave because false must also pass
+        if (status) {
             request.address = "lnurl"; // make it a lightning request
             notify("Waiting for payment", 500000);
             helper.lnd.invoice = e;
@@ -535,17 +558,13 @@ function blockcypher_websocket(socket_node, thisaddress) {
             var txhash = data.hash;
             if (txhash) {
                 if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
-                    paymentdialogbox.removeClass("transacting");
-                    var reconnectbttn = (txid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + txid + "'>Reconnect</span></div></p>" : "",
-                        content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + reconnectbttn;
-                    closesocket();
-                    popdialog(content, "alert", "canceldialog");
-                } else {
-                    txid = txhash;
-                    closesocket();
-                    var txd = blockcypher_poll_data(data, request.set_confirmations, request.currencysymbol, thisaddress);
-                    pick_monitor(txhash, txd);
+                    rconnect(txid);
+                    return
                 }
+                txid = txhash;
+                closesocket();
+                var txd = blockcypher_poll_data(data, request.set_confirmations, request.currencysymbol, thisaddress);
+                pick_monitor(txhash, txd);
             }
         }
     };
@@ -578,18 +597,14 @@ function blockchain_btc_socket(socket_node, thisaddress) {
             txhash = json.hash;
         if (txhash) {
             if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
-                paymentdialogbox.removeClass("transacting");
-                var reconnectbttn = (txid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + txid + "'>Reconnect</span></div></p>" : "",
-                    content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + reconnectbttn;
+                rconnect(txid);
+                return
+            }
+            var txd = blockchain_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress);
+            if (txd) {
+                txid = txhash;
                 closesocket();
-                popdialog(content, "alert", "canceldialog");
-            } else {
-                var txd = blockchain_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress);
-                if (txd) {
-                    txid = txhash;
-                    closesocket();
-                    pick_monitor(txhash, txd);
-                }
+                pick_monitor(txhash, txd);
             }
         }
 
@@ -624,18 +639,15 @@ function blockchain_bch_socket(socket_node, thisaddress) {
             txhash = json.hash;
         if (txhash) {
             if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
-                paymentdialogbox.removeClass("transacting");
-                var reconnectbttn = (txid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + txid + "'>Reconnect</span></div></p>" : "",
-                    content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + reconnectbttn;
+                rconnect(txid);
+                return
+            }
+            var legacy = bchutils.toLegacyAddress(thisaddress),
+                txd = blockchain_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress, legacy);
+            if (txd) {
+                txid = txhash;
                 closesocket();
-                popdialog(content, "alert", "canceldialog");
-            } else {
-                var legacy = bchutils.toLegacyAddress(thisaddress),
-                    txd = blockchain_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress, legacy);
-                if (txd) {
-                    closesocket();
-                    pick_monitor(txhash, txd);
-                }
+                pick_monitor(txhash, txd);
             }
         }
     };
@@ -673,12 +685,22 @@ function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
         var data = JSON.parse(e.data),
             params = (data.params);
         if (params) {
-            var result = params.result,
-                txhash = result.hash,
-                txd = amberdata_ws_btc_data(result, request.set_confirmations, request.currencysymbol, thisaddress);
-            closesocket();
-            pick_monitor(txhash, txd);
-            return
+            var result = params.result;
+            if (result) {
+                var txhash = result.hash;
+                    if (txhash) {
+                        if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
+                            rconnect(txid);
+                            return
+                        }
+                        var txd = amberdata_ws_btc_data(result, request.set_confirmations, request.currencysymbol, thisaddress);
+                        if (txd) {
+                            txid = txhash;
+                            closesocket();
+                            pick_monitor(txhash, txd);
+                        }
+                    }
+            }
         }
     };
     websocket.onclose = function(e) {
@@ -713,18 +735,14 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
                 var txhash = json.txid;
                 if (txhash) {
                     if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
-                        paymentdialogbox.removeClass("transacting");
-                        var reconnectbttn = (txid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + txid + "'>Reconnect</span></div></p>" : "",
-                            content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + reconnectbttn;
+                        rconnect(txid);
+                        return
+                    }
+                    var txd = mempoolspace_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress);
+                    if (txd) {
+                        txid = txhash;
                         closesocket();
-                        popdialog(content, "alert", "canceldialog");
-                    } else {
-                        var txd = mempoolspace_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress);
-                        if (txd) {
-                            txid = txhash;
-                            closesocket();
-                            pick_monitor(txhash, txd);
-                        }
+                        pick_monitor(txhash, txd);
                     }
                 }
             }
@@ -761,18 +779,14 @@ function dogechain_info_socket(socket_node, thisaddress) {
             var txhash = data.hash;
             if (txhash) {
                 if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
-                    paymentdialogbox.removeClass("transacting");
-                    var reconnectbttn = (txid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + txid + "'>Reconnect</span></div></p>" : "",
-                        content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + reconnectbttn;
+                    rconnect(txid);
+                    return
+                }
+                var txd = dogechain_ws_data(data, request.set_confirmations, request.currencysymbol, thisaddress);
+                if (txd) {
+                    txid = txhash;
                     closesocket();
-                    popdialog(content, "alert", "canceldialog");
-                } else {
-                    var txd = dogechain_ws_data(data, request.set_confirmations, request.currencysymbol, thisaddress);
-                    if (txd) {
-                        txid = txhash;
-                        closesocket();
-                        pick_monitor(txhash, txd);
-                    }
+                    pick_monitor(txhash, txd);
                 }
             }
         }
@@ -942,20 +956,19 @@ function web3_erc20_websocket(socket_node, thisaddress) {
 
 function handle_socket_fails(socket_node, thisaddress) {
     if (paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
-        return false;
+        return
     }
     if (paymentpopup.hasClass("active")) { // only when request is visible
         var next_socket = try_next_socket(socket_node);
-        if (next_socket === false) {
-            var error_message = "unable to connect to " + socket_node.name;
-            //fail_dialogs(socketname, error_message);
-            console.log(error_message);
-            socket_info(socket_node, false);
-            notify("websocket offline", 500000, "yes");
-        } else {
+        if (next_socket) {
             closesocket(thisaddress);
             init_socket(next_socket, thisaddress, null, true);
+            return
         }
+        var error_message = "unable to connect to " + socket_node.name;
+        console.log(error_message);
+        socket_info(socket_node, false);
+        notify("websocket offline", 500000, "yes");
     }
 }
 
@@ -1031,17 +1044,17 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
         if (errormessage) {
             var error = (errormessage) ? errormessage : "Invalid Viewkey";
             popnotify("error", error);
-        } else {
-            var start_height = data.start_height;
-            if (start_height > -1) { // success!
-                var pingtime = (txhash) ? 35000 : 12000; // poll slower when we know txid
-                if (start === true) {
-                    ping_xmr_node(cachetime, address, vk, request_ts, txhash);
-                }
-                pinging[address] = setInterval(function() {
-                    ping_xmr_node(cachetime, address, vk, request_ts, txhash);
-                }, pingtime);
+            return
+        }
+        var start_height = data.start_height;
+        if (start_height > -1) { // success!
+            var pingtime = (txhash) ? 35000 : 12000; // poll slower when we know txid
+            if (start === true) {
+                ping_xmr_node(cachetime, address, vk, request_ts, txhash);
             }
+            pinging[address] = setInterval(function() {
+                ping_xmr_node(cachetime, address, vk, request_ts, txhash);
+            }, pingtime);
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         console.log(jqXHR);
@@ -1088,17 +1101,18 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
                         if (txd.transactiontime > request_ts && txd.ccval) {
                             var requestlist = $("#requestlist > li.rqli"),
                                 txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
-                            if (txid_match.length) {} else {
-                                clearpinging();
-                                if (setconf > 0) {
-                                    confirmations(txd);
-                                    pinging[address] = setInterval(function() {
-                                        ping_xmr_node(34, address, vk, request_ts, txd.txhash);
-                                    }, 35000);
-                                    return
-                                }
-                                confirmations(txd, true);
+                            if (txid_match.length) {
+                                return
                             }
+                            clearpinging();
+                            if (setconf > 0) {
+                                confirmations(txd);
+                                pinging[address] = setInterval(function() {
+                                    ping_xmr_node(34, address, vk, request_ts, txd.txhash);
+                                }, 35000);
+                                return
+                            }
+                            confirmations(txd, true);
                         }
                     }
                 }
@@ -1135,13 +1149,14 @@ function ping_nimiq(address, request_ts) {
                     clearpinging();
                     var requestlist = $("#requestlist > li.rqli"),
                         txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
-                    if (txid_match.length) {} else {
-                        if (setconf > 0) {
-                            pick_monitor(txd.txhash, txd);
-                            return
-                        }
-                        confirmations(txd, true);
+                    if (txid_match.length) {
+                        return
                     }
+                    if (setconf > 0) {
+                        pick_monitor(txd.txhash, txd);
+                        return
+                    }
+                    confirmations(txd, true);
                 }
             });
         }
@@ -1294,11 +1309,10 @@ function mempoolspace_scan_poll(payment, api_name, ccsymbol, set_confirmations, 
                 if (txdat && detect === true) {
                     pick_monitor(txdat.txhash, txdat);
                     return
-                } else {
-                    close_paymentdialog(true);
-                    return
                 }
+                close_paymentdialog(true);
             }
+            return
         }
         after_poll_fails(api_name);
     }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -1347,10 +1361,9 @@ function blockcypher_scan_poll(payment, api_name, ccsymbol, set_confirmations, a
                     if (txdat && detect === true) {
                         pick_monitor(txdat.txhash, txdat);
                         return
-                    } else {
-                        close_paymentdialog(true);
-                        return
                     }
+                    close_paymentdialog(true);
+                    return
                 }
             }
         }
@@ -1397,10 +1410,8 @@ function blockchair_scan_poll(payment, api_name, ccsymbol, set_confirmations, ad
                         if (txdat && detect === true) {
                             pick_monitor(txdat.txhash, txdat);
                             return
-                        } else {
-                            close_paymentdialog(true);
-                            return
                         }
+                        close_paymentdialog(true);
                     } else {
                         if (payment == "ethereum") {
                             $.each(records, function(dat, value) {
@@ -1419,10 +1430,8 @@ function blockchair_scan_poll(payment, api_name, ccsymbol, set_confirmations, ad
                             if (txdat && detect === true) {
                                 pick_monitor(txdat.txhash, txdat);
                                 return
-                            } else {
-                                close_paymentdialog(true);
-                                return
                             }
+                            close_paymentdialog(true);
                         } else {
                             var addr_txs = records[address];
                             if (addr_txs) {
@@ -1449,19 +1458,17 @@ function blockchair_scan_poll(payment, api_name, ccsymbol, set_confirmations, ad
                                         if (txdat && detect === true) {
                                             pick_monitor(txdat.txhash, txdat);
                                             return
-                                        } else {
-                                            close_paymentdialog(true);
-                                            return
                                         }
-                                        after_poll_fails(api_name);
+                                        close_paymentdialog(true);
+                                        return
                                     }).fail(function(jqXHR, textStatus, errorThrown) {
                                         after_poll_fails(api_name);
                                     });
                                 }
                             }
-                            return
                         }
                     }
+                    return
                 }
             }
         }
@@ -1512,10 +1519,9 @@ function amberdata_scan_poll(api_name, ccsymbol, set_confirmations, address, req
                             if (txdat && detect === true) {
                                 pick_monitor(txdat.txhash, txdat);
                                 return
-                            } else {
-                                close_paymentdialog(true);
-                                return
                             }
+                            close_paymentdialog(true);
+                            return
                         }
                     }
                 }
@@ -1561,10 +1567,9 @@ function amberdata_scan_poll(api_name, ccsymbol, set_confirmations, address, req
                             if (txdat && detect === true) {
                                 pick_monitor(txdat.txhash, txdat);
                                 return
-                            } else {
-                                close_paymentdialog(true);
-                                return
                             }
+                            close_paymentdialog(true);
+                            return
                         }
                     }
                 }
@@ -1603,10 +1608,9 @@ function erc20_scan_poll(ccsymbol, set_confirmations, address, request_ts, token
                 if (txdat && detect === true) {
                     pick_monitor(txdat.txhash, txdat);
                     return
-                } else {
-                    close_paymentdialog(true);
-                    return
                 }
+                close_paymentdialog(true);
+                return
             }
         }
         after_poll_fails("ethplorer");
@@ -1622,6 +1626,14 @@ function after_poll_fails(api_name) {
         return
     }
     close_paymentdialog(true);
+}
+
+function rconnect(tid) {
+    paymentdialogbox.removeClass("transacting");
+    var bttn = (tid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + tid + "'>Reconnect</span></div></p>" : "",
+        content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + bttn;
+    closesocket();
+    popdialog(content, "alert", "canceldialog");
 }
 
 function get_next_scan_api(api_name) {
