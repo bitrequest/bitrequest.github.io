@@ -690,7 +690,7 @@ function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
             if (result) {
                 var txhash = result.hash;
                 if (txhash) {
-                    if (paymentdialogbo x.hasClass("transacting") && txid != txhash) {
+                    if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
                         rconnect(txid);
                         return
                     }
