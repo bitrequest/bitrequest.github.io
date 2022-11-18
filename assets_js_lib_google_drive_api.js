@@ -1,7 +1,7 @@
 var gapi,
     GoogleAuth,
     user,
-    scope = "https://www.googleapis.com/auth/drive.appdata"; // useragent of ios app
+    scope = "https://www.googleapis.com/auth/drive.appdata";
 $(document).ready(function() {
     if (gapi) {
         if (geturlparameters().rd) { // Ios app workaround
