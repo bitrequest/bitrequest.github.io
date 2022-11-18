@@ -900,8 +900,9 @@ function proceed_pf(error) {
 function getccexchangerates(apilist, api) {
     api_attempt[apilist][api] = true;
     loadertext("get " + request.currencysymbol + " rates from " + api);
-    var payload = (api == "coinmarketcap") ? "v1/cryptocurrency/quotes/latest?id=" + request.cmcid :
-        (api == "coinpaprika") ? request.currencysymbol + "-" + request.payment :
+    var payment = request.payment,
+        payload = (api == "coinmarketcap") ? "v1/cryptocurrency/quotes/latest?id=" + request.cmcid :
+        (api == "coinpaprika") ? request.currencysymbol + "-" + payment :
         (api == "coingecko") ? (request.erc20 === true) ? "simple/token_price/ethereum?contract_addresses=" + request.token_contract + "&vs_currencies=usd" : "simple/price?ids=" + payment + "&vs_currencies=usd" :
         false;
     if (payload === false) {
@@ -923,33 +924,35 @@ function getccexchangerates(apilist, api) {
     }).done(function(e) {
         var data = br_result(e).result;
         if (data) {
-            var status = data.status,
-                has_error = (data.statusCode == 404 ||
-                    (data.error) ||
-                    (status && status.error_message));
-            if (has_error) {
-                var error_val = (data.error) ? data.error : "Unable to get " + payment + " Exchangerate";
-                cc_fail(apilist, api, error_val);
+            if (!$.isEmptyObject(data)) {
+                var status = data.status,
+                    has_error = (data.statusCode == 404 ||
+                        (data.error) ||
+                        (status && status.error_message));
+                if (has_error) {
+                    var error_val = (data.error) ? data.error : "Unable to get " + payment + " Exchangerate";
+                    cc_fail(apilist, api, error_val);
+                    return
+                }
+                var ccrate = (api == "coinmarketcap") ? data.data[request.cmcid].quote.USD.price :
+                    (api == "coinpaprika") ? data.quotes.USD.price :
+                    (api == "coingecko") ? data[payment].usd :
+                    null;
+                if (ccrate) {
+                    loadertext("success");
+                    var timestamp = now(),
+                        ccratearray = {};
+                    ccratearray.timestamp = timestamp;
+                    ccratearray.ccrate = ccrate;
+                    ccratearray.apisrc = api;
+                    var storeccratestring = JSON.stringify(ccratearray);
+                    sessionStorage.setItem("bitrequest_xrates_" + request.currencysymbol, storeccratestring); //cache crypto rates in sessionstorage
+                    initexchangerate(ccrate, api, 0); //pass usd amount, check for fiat rates
+                    return
+                }
+                cc_fail(apilist, api, "unable to get " + payment + " rate");
                 return
             }
-            var ccrate = (api == "coinmarketcap") ? data.data[request.cmcid].quote.USD.price :
-                (api == "coinpaprika") ? data.quotes.USD.price :
-                (api == "coingecko") ? data[Object.keys(data)[0]].usd :
-                null;
-            if (ccrate) {
-                loadertext("success");
-                var timestamp = now(),
-                    ccratearray = {};
-                ccratearray.timestamp = timestamp;
-                ccratearray.ccrate = ccrate;
-                ccratearray.apisrc = api;
-                var storeccratestring = JSON.stringify(ccratearray);
-                sessionStorage.setItem("bitrequest_xrates_" + request.currencysymbol, storeccratestring); //cache crypto rates in sessionstorage
-                initexchangerate(ccrate, api, 0); //pass usd amount, check for fiat rates
-                return
-            }
-            cc_fail(apilist, api, "unable to get " + payment + " rate");
-            return
         }
         var error_val = "unable to get " + payment + " rate";
         cc_fail(apilist, api, error_val);
@@ -1175,7 +1178,7 @@ function getpayment(ccrateeuro, ccapi) {
         rt_set = (request.requesttitle && request.requesttitle.length > 1), // check if requesttitle is set
         requesttitle_string = (rt_set === true) ? request.requesttitle : "",
         savedaddressli = filter_addressli(request.payment, "address", request.address),
-		has_label = (savedaddressli.length > 0 && savedaddressli.data("label").length > 0) ? true : false,
+        has_label = (savedaddressli.length > 0 && savedaddressli.data("label").length > 0) ? true : false,
         labelvalue = (has_label) ? savedaddressli.data("label") : "",
         label_markup = (has_label) ? "<span id='labelbttn'>" + labelvalue + "</span>" : "", // check if label is set
         thiscurrencyvalueraw = ((request.amount / currencyxrate) * ccrateeuro),
