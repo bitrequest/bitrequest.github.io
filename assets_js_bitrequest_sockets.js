@@ -1311,8 +1311,8 @@ function mempoolspace_scan_poll(payment, api_name, ccsymbol, set_confirmations, 
                     pick_monitor(txdat.txhash, txdat);
                     return
                 }
-                close_paymentdialog(true);
             }
+            close_paymentdialog(true);
             return
         }
         after_poll_fails(api_name);
@@ -1335,33 +1335,35 @@ function blockcypher_scan_poll(payment, api_name, ccsymbol, set_confirmations, a
         if (data) {
             if (data.error) {} else {
                 var items = data.txrefs;
-                if (!$.isEmptyObject(items)) {
-                    var detect = false,
-                        txdat;
-                    if (payment == "ethereum") {
-                        $.each(items, function(dat, value) {
-                            var txd = blockcypher_scan_data(value, set_confirmations, ccsymbol, payment);
-                            if (txd.transactiontime > request_ts && txd.ccval) {
-                                txdat = txd;
-                                detect = true;
-                                return
-                            }
-                        });
-                    } else {
-                        $.each(items, function(dat, value) {
-                            if (value.spent !== undefined) { // filter outgoing transactions
+                if (items) {
+                    if (!$.isEmptyObject(items)) {
+                        var detect = false,
+                            txdat;
+                        if (payment == "ethereum") {
+                            $.each(items, function(dat, value) {
                                 var txd = blockcypher_scan_data(value, set_confirmations, ccsymbol, payment);
                                 if (txd.transactiontime > request_ts && txd.ccval) {
                                     txdat = txd;
                                     detect = true;
                                     return
                                 }
-                            }
-                        });
-                    }
-                    if (txdat && detect === true) {
-                        pick_monitor(txdat.txhash, txdat);
-                        return
+                            });
+                        } else {
+                            $.each(items, function(dat, value) {
+                                if (value.spent !== undefined) { // filter outgoing transactions
+                                    var txd = blockcypher_scan_data(value, set_confirmations, ccsymbol, payment);
+                                    if (txd.transactiontime > request_ts && txd.ccval) {
+                                        txdat = txd;
+                                        detect = true;
+                                        return
+                                    }
+                                }
+                            });
+                        }
+                        if (txdat && detect === true) {
+                            pick_monitor(txdat.txhash, txdat);
+                            return
+                        }
                     }
                     close_paymentdialog(true);
                     return
@@ -1393,34 +1395,15 @@ function blockchair_scan_poll(payment, api_name, ccsymbol, set_confirmations, ad
                     detect = false,
                     txdat,
                     records = data.data;
-                if (records && !$.isEmptyObject(records)) {
-                    if (erc) {
-                        $.each(records, function(dat, value) {
-                            var transactions = value.transactions;
-                            if (transactions && !$.isEmptyObject(transactions)) {
-                                $.each(transactions, function(dt, val) {
-                                    var txd = blockchair_erc20_scan_data(val, set_confirmations, ccsymbol, latestblock);
-                                    if ((txd.transactiontime > request_ts) && (txd.recipient.toUpperCase() == address.toUpperCase()) && (txd.token_symbol.toUpperCase() == ccsymbol.toUpperCase()) && txd.ccval) {
-                                        txdat = txd;
-                                        detect = true;
-                                        return
-                                    }
-                                });
-                            }
-                        });
-                        if (txdat && detect === true) {
-                            pick_monitor(txdat.txhash, txdat);
-                            return
-                        }
-                        close_paymentdialog(true);
-                    } else {
-                        if (payment == "ethereum") {
+                if (records) {
+                    if (!$.isEmptyObject(records)) {
+                        if (erc) {
                             $.each(records, function(dat, value) {
-                                var transactions = value.calls;
+                                var transactions = value.transactions;
                                 if (transactions && !$.isEmptyObject(transactions)) {
-                                    $.each(vtransactions, function(dt, val) {
-                                        var txd = blockchair_eth_scan_data(val, set_confirmations, ccsymbol, latestblock);
-                                        if (txd.transactiontime > request_ts && txd.recipient.toUpperCase() == address.toUpperCase() && txd.ccval) {
+                                    $.each(transactions, function(dt, val) {
+                                        var txd = blockchair_erc20_scan_data(val, set_confirmations, ccsymbol, latestblock);
+                                        if ((txd.transactiontime > request_ts) && (txd.recipient.toUpperCase() == address.toUpperCase()) && (txd.token_symbol.toUpperCase() == ccsymbol.toUpperCase()) && txd.ccval) {
                                             txdat = txd;
                                             detect = true;
                                             return
@@ -1432,43 +1415,67 @@ function blockchair_scan_poll(payment, api_name, ccsymbol, set_confirmations, ad
                                 pick_monitor(txdat.txhash, txdat);
                                 return
                             }
-                            close_paymentdialog(true);
                         } else {
-                            var addr_txs = records[address];
-                            if (addr_txs) {
-                                var txarray = addr_txs.transactions; // get transactions
-                                if (txarray && !$.isEmptyObject(txarray)) {
-                                    api_proxy({
-                                        "api": api_name,
-                                        "search": payment + "/dashboards/transactions/" + txarray.slice(0, 6), // get last 5 transactions
-                                        "cachetime": 25,
-                                        "cachefolder": "1h",
-                                        "params": {
-                                            "method": "GET"
-                                        }
-                                    }).done(function(e) {
-                                        var dat = br_result(e).result;
-                                        $.each(dat.data, function(dt, val) {
-                                            var txd = blockchair_scan_data(val, set_confirmations, ccsymbol, address, latestblock);
-                                            if (txd.transactiontime > request_ts && txd.ccval) { // get all transactions after requestdate
+                            if (payment == "ethereum") {
+                                $.each(records, function(dat, value) {
+                                    var transactions = value.calls;
+                                    if (transactions && !$.isEmptyObject(transactions)) {
+                                        $.each(vtransactions, function(dt, val) {
+                                            var txd = blockchair_eth_scan_data(val, set_confirmations, ccsymbol, latestblock);
+                                            if (txd.transactiontime > request_ts && txd.recipient.toUpperCase() == address.toUpperCase() && txd.ccval) {
                                                 txdat = txd;
                                                 detect = true;
                                                 return
                                             }
                                         });
-                                        if (txdat && detect === true) {
-                                            pick_monitor(txdat.txhash, txdat);
-                                            return
-                                        }
-                                        close_paymentdialog(true);
-                                        return
-                                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                                        after_poll_fails(api_name);
-                                    });
+                                    }
+                                });
+                                if (txdat && detect === true) {
+                                    pick_monitor(txdat.txhash, txdat);
+                                    return
                                 }
+                            } else {
+                                var addr_txs = records[address];
+                                if (addr_txs) {
+                                    var txarray = addr_txs.transactions; // get transactions
+                                    if (txarray) {
+                                        if (!$.isEmptyObject(txarray)) {
+                                            api_proxy({
+                                                "api": api_name,
+                                                "search": payment + "/dashboards/transactions/" + txarray.slice(0, 6), // get last 5 transactions
+                                                "cachetime": 25,
+                                                "cachefolder": "1h",
+                                                "params": {
+                                                    "method": "GET"
+                                                }
+                                            }).done(function(e) {
+                                                var dat = br_result(e).result;
+                                                $.each(dat.data, function(dt, val) {
+                                                    var txd = blockchair_scan_data(val, set_confirmations, ccsymbol, address, latestblock);
+                                                    if (txd.transactiontime > request_ts && txd.ccval) { // get all transactions after requestdate
+                                                        txdat = txd;
+                                                        detect = true;
+                                                        return
+                                                    }
+                                                });
+                                                if (txdat && detect === true) {
+                                                    pick_monitor(txdat.txhash, txdat);
+                                                    return
+                                                }
+                                                close_paymentdialog(true);
+                                                return
+                                            }).fail(function(jqXHR, textStatus, errorThrown) {
+                                                after_poll_fails(api_name);
+                                            });
+                                        }
+                                    }
+                                }
+                                after_poll_fails(api_name);
+                                return
                             }
                         }
                     }
+                    close_paymentdialog(true);
                     return
                 }
             }
@@ -1521,9 +1528,9 @@ function amberdata_scan_poll(api_name, ccsymbol, set_confirmations, address, req
                                 pick_monitor(txdat.txhash, txdat);
                                 return
                             }
-                            close_paymentdialog(true);
-                            return
                         }
+                        close_paymentdialog(true);
+                        return
                     }
                 }
             }
@@ -1553,7 +1560,7 @@ function amberdata_scan_poll(api_name, ccsymbol, set_confirmations, address, req
                 if (payload) {
                     var records = payload.records;
                     if (records) {
-                        if ($.isEmptyObject(records)) {} else {
+                        if (!$.isEmptyObject(records)) {
                             var txflip = records.reverse();
                             var detect = false,
                                 txdat;
@@ -1569,9 +1576,9 @@ function amberdata_scan_poll(api_name, ccsymbol, set_confirmations, address, req
                                 pick_monitor(txdat.txhash, txdat);
                                 return
                             }
-                            close_paymentdialog(true);
-                            return
                         }
+                        close_paymentdialog(true);
+                        return
                     }
                 }
             }
@@ -1610,9 +1617,9 @@ function erc20_scan_poll(ccsymbol, set_confirmations, address, request_ts, token
                     pick_monitor(txdat.txhash, txdat);
                     return
                 }
-                close_paymentdialog(true);
-                return
             }
+            close_paymentdialog(true);
+            return
         }
         after_poll_fails("ethplorer");
     }).fail(function(jqXHR, textStatus, errorThrown) {
