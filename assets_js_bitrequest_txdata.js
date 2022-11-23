@@ -25,22 +25,19 @@ function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) {
                     outputsum += value.value || 0; // sum of outputs
                 }
             });
-            var transactiontime = (data.time) ? data.time * 1000 : null,
-                transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
-            return {
-                "ccval": (outputsum) ? outputsum / 100000000 : null,
-                "transactiontime": transactiontimeutc,
-                "txhash": data.hash,
-                "confirmations": (data.confirmations) ? data.confirmations : null,
-                "setconfirmations": setconfirmations,
-                "ccsymbol": ccsymbol
-            };
-        } else {
-            return false;
         }
-    } else {
-        return default_tx_data();
+        var transactiontime = (data.time) ? data.time * 1000 : null,
+            transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
+        return {
+            "ccval": (outputsum) ? outputsum / 100000000 : null,
+            "transactiontime": transactiontimeutc,
+            "txhash": data.hash,
+            "confirmations": (data.confirmations) ? data.confirmations : null,
+            "setconfirmations": setconfirmations,
+            "ccsymbol": ccsymbol
+        };
     }
+    return default_tx_data();
 }
 
 // mempool.space
@@ -56,22 +53,19 @@ function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) { // po
                     outputsum += value.value || 0; // sum of outputs
                 }
             });
-            var transactiontime = (data.firstSeen) ? data.firstSeen * 1000 : null,
-                transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
-            return {
-                "ccval": (outputsum) ? outputsum / 100000000 : null,
-                "transactiontime": transactiontimeutc,
-                "txhash": data.txid,
-                "confirmations": (data.confirmations) ? data.confirmations : null,
-                "setconfirmations": setconfirmations,
-                "ccsymbol": ccsymbol
-            };
-        } else {
-            return false;
         }
-    } else {
-        return default_tx_data();
+        var transactiontime = (data.firstSeen) ? data.firstSeen * 1000 : null,
+            transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
+        return {
+            "ccval": (outputsum) ? outputsum / 100000000 : null,
+            "transactiontime": transactiontimeutc,
+            "txhash": data.txid,
+            "confirmations": (data.confirmations) ? data.confirmations : null,
+            "setconfirmations": setconfirmations,
+            "ccsymbol": ccsymbol
+        };
     }
+    return default_tx_data();
 }
 
 function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address) { // poll mempool.space websocket data
@@ -86,22 +80,19 @@ function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address) { // 
                     outputsum += value.value || 0; // sum of outputs
                 }
             });
-            var transactiontime = (status.block_time) ? status.block_time * 1000 : now() + timezone,
-                transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
-            return {
-                "ccval": (outputsum) ? outputsum / 100000000 : null,
-                "transactiontime": transactiontimeutc,
-                "txhash": data.txid,
-                "confirmations": (status.confirmed === true) ? setconfirmations : null,
-                "setconfirmations": setconfirmations,
-                "ccsymbol": ccsymbol
-            };
-        } else {
-            return false;
         }
-    } else {
-        return default_tx_data();
+        var transactiontime = (status.block_time) ? status.block_time * 1000 : now() + timezone,
+            transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
+        return {
+            "ccval": (outputsum) ? outputsum / 100000000 : null,
+            "transactiontime": transactiontimeutc,
+            "txhash": data.txid,
+            "confirmations": (status.confirmed === true) ? setconfirmations : null,
+            "setconfirmations": setconfirmations,
+            "ccsymbol": ccsymbol
+        };
     }
+    return default_tx_data();
 }
 
 // dogechain
@@ -117,22 +108,19 @@ function dogechain_ws_data(data, setconfirmations, ccsymbol, address) { // poll 
                     outputsum += value.value || 0; // sum of outputs
                 }
             });
-            var transactiontime = (data.time) ? data.time * 1000 : null,
-                transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
-            return {
-                "ccval": (outputsum) ? outputsum / 100000000 : null,
-                "transactiontime": transactiontimeutc,
-                "txhash": data.hash,
-                "confirmations": (data.confirmations) ? data.confirmations : null,
-                "setconfirmations": setconfirmations,
-                "ccsymbol": ccsymbol
-            };
-        } else {
-            return false;
         }
-    } else {
-        return default_tx_data();
+        var transactiontime = (data.time) ? data.time * 1000 : null,
+            transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
+        return {
+            "ccval": (outputsum) ? outputsum / 100000000 : null,
+            "transactiontime": transactiontimeutc,
+            "txhash": data.hash,
+            "confirmations": (data.confirmations) ? data.confirmations : null,
+            "setconfirmations": setconfirmations,
+            "ccsymbol": ccsymbol
+        };
     }
+    return default_tx_data();
 }
 
 // blockcypher
@@ -154,9 +142,8 @@ function blockcypher_scan_data(data, setconfirmations, ccsymbol) { // scan
             "setconfirmations": setconfirmations,
             "ccsymbol": ccsymbol
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
 function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) { // poll
@@ -187,9 +174,8 @@ function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) { // p
             "setconfirmations": setconfirmations,
             "ccsymbol": ccsymbol
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
 // blockchair
@@ -219,9 +205,8 @@ function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestb
             "setconfirmations": setconfirmations,
             "ccsymbol": ccsymbol
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
 function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan/poll
@@ -240,9 +225,8 @@ function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latestblock)
             "ccsymbol": ccsymbol,
             "recipient": recipient
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
 function blockchair_erc20_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
@@ -263,9 +247,8 @@ function blockchair_erc20_scan_data(data, setconfirmations, ccsymbol, latestbloc
             "recipient": recipient,
             "token_symbol": token_symbol
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
 function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latestblock) { // poll
@@ -285,12 +268,9 @@ function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latestbloc
                 "setconfirmations": setconfirmations,
                 "ccsymbol": ccsymbol
             };
-        } else {
-            return default_tx_data();
         }
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
 // amberdata
@@ -319,9 +299,8 @@ function amberdata_scan_data(data, setconfirmations, ccsymbol, address) {
             "setconfirmations": setconfirmations,
             "ccsymbol": ccsymbol
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
 function amberdata_scan_token_data(data, setconfirmations, ccsymbol) {
@@ -339,9 +318,8 @@ function amberdata_scan_token_data(data, setconfirmations, ccsymbol) {
             "ccsymbol": ccsymbol,
             "tokensymbol": symbol.toLowerCase()
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
 function amberdata_poll_token_data(data, setconfirmations, ccsymbol, txhash, conf) {
@@ -358,30 +336,11 @@ function amberdata_poll_token_data(data, setconfirmations, ccsymbol, txhash, con
             "ccsymbol": ccsymbol,
             "tokensymbol": symbol.toLowerCase()
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
-function amberdata_ws_data(data, setconfirmations, ccsymbol) { // poll (websocket)
-    if (data) {
-        var transactiontime = (data.timestamp) ? (data.timestamp) + timezone : null,
-            txhash = (data.hash) ? data.hash : null,
-            ccval = (data.value) ? parseFloat((data.value / Math.pow(10, 18)).toFixed(8)) : null;
-        return {
-            "ccval": ccval,
-            "transactiontime": transactiontime,
-            "txhash": txhash,
-            "confirmations": null,
-            "setconfirmations": setconfirmations,
-            "ccsymbol": ccsymbol
-        };
-    } else {
-        return default_tx_data();
-    }
-}
-
-function amberdata_ws_btc_data(data, setconfirmations, ccsymbol, address) { // poll (websocket)
+function amberdata_ws_btc_data(data, setconfirmations, ccsymbol, address) {
     if (data) {
         var transactiontime = (data.timestamp) ? data.timestamp + timezone : null,
             txhash = (data.hash) ? data.hash : null,
@@ -404,9 +363,25 @@ function amberdata_ws_btc_data(data, setconfirmations, ccsymbol, address) { // p
             "setconfirmations": setconfirmations,
             "ccsymbol": ccsymbol
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
+}
+
+function amberdata_ws_data(data, setconfirmations, ccsymbol) {
+    if (data) {
+        var transactiontime = (data.timestamp) ? (data.timestamp) + timezone : null,
+            txhash = (data.hash) ? data.hash : null,
+            ccval = (data.value) ? parseFloat((data.value / Math.pow(10, 18)).toFixed(8)) : null;
+        return {
+            "ccval": ccval,
+            "transactiontime": transactiontime,
+            "txhash": txhash,
+            "confirmations": null,
+            "setconfirmations": setconfirmations,
+            "ccsymbol": ccsymbol
+        };
+    }
+    return default_tx_data();
 }
 
 // ethplorer
@@ -425,9 +400,8 @@ function ethplorer_scan_data(data, setconfirmations, ccsymbol) { // scan
             "setconfirmations": setconfirmations,
             "ccsymbol": ccsymbol
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
 function ethplorer_poll_data(data, setconfirmations, ccsymbol) { // poll
@@ -448,9 +422,8 @@ function ethplorer_poll_data(data, setconfirmations, ccsymbol) { // poll
             "setconfirmations": setconfirmations,
             "ccsymbol": ccsymbol
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
 // RPC templates
@@ -469,9 +442,8 @@ function nano_scan_data(data, setconfirmations, ccsymbol, txhash) { // scan/poll
             "setconfirmations": null,
             "ccsymbol": ccsymbol
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
 function bitcoin_rpc_data(data, setconfirmations, ccsymbol, address) { // poll
@@ -497,9 +469,8 @@ function bitcoin_rpc_data(data, setconfirmations, ccsymbol, address) { // poll
             "setconfirmations": setconfirmations,
             "ccsymbol": ccsymbol
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
 function infura_eth_poll_data(data, setconfirmations, ccsymbol) { // poll
@@ -516,9 +487,8 @@ function infura_eth_poll_data(data, setconfirmations, ccsymbol) { // poll
             "setconfirmations": setconfirmations,
             "ccsymbol": ccsymbol
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
 function infura_erc20_poll_data(data, setconfirmations, ccsymbol) { // poll
@@ -537,9 +507,8 @@ function infura_erc20_poll_data(data, setconfirmations, ccsymbol) { // poll
             "setconfirmations": setconfirmations,
             "ccsymbol": ccsymbol
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
 function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
@@ -559,9 +528,8 @@ function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
             "ccsymbol": ccsymbol,
             "payment_id": payment_id
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
 function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash) { // scan
@@ -581,9 +549,8 @@ function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash)
             "setconfirmations": setconf,
             "ccsymbol": "nim"
         };
-    } else {
-        return default_tx_data();
     }
+    return default_tx_data();
 }
 
 // lightning
