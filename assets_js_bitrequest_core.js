@@ -4963,7 +4963,7 @@ function render_html(dat) {
                 attr = (val.attr) ? render_attributes(val.attr) : "",
                 cval = val.content,
                 content = (cval) ? (typeof cval == "object") ? render_html(cval) : cval : "",
-                close = (val.close) ? "/>" : ">" + content + "</" + key + ">",
+                close = (val.close) ? "/>" : ">" + content + "</" + key + ">";
                 result += "<" + key + id + clas + attr + close;
         });
     });
