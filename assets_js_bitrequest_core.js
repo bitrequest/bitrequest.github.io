@@ -225,17 +225,13 @@ function geterc20tokens() {
         }).done(function(e) {
             var data = br_result(e).result,
                 status = data.status;
-            if (status) {
-                if (status.error_code === 0) {
-                    storecoindata(data);
-                } else {
-                    geterc20tokens_local(); // get localy stored coindata
-                }
-            } else {
-                geterc20tokens_local(); // get localy stored coindata
+            if (status && status.error_code === 0) {
+                storecoindata(data);
+                return
             }
-        }).fail(function(jqXHR, textStatus, errorThrown) {
             geterc20tokens_local(); // get localy stored coindata
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            geterc20tokens_local();
         }).always(function() {
             setfunctions();
         });
@@ -280,9 +276,8 @@ function haspin() {
     if (pinhash) {
         var pinstring = pinhash.toString();
         return (pinstring.length > 3 && pinsettings.locktime != "never");
-    } else {
-        return false;
     }
+    return false;
 }
 
 function islocked() {
@@ -683,9 +678,9 @@ function pinkeypress() {
 function pinpressselect(node) {
     if ($("#pinfloat").hasClass("enterpin")) {
         pinpress(node);
-    } else {
-        pinvalidate(node)
+        return
     }
+    pinvalidate(node)
 }
 
 function pinpresstrigger() {
@@ -705,13 +700,12 @@ function pinpress(thispad) {
             enterapp(newval);
             pininput.val(newval);
             return false;
-        } else {
-            pininput.val(newval);
-            setTimeout(function() {
-                pinfloat.addClass("validatepin").removeClass("enterpin");
-            }, 100);
-            return false;
         }
+        pininput.val(newval);
+        setTimeout(function() {
+            pinfloat.addClass("validatepin").removeClass("enterpin");
+        }, 100);
+        return false;
     }
     if (newval.length > 4) {
         return false;
@@ -897,32 +891,31 @@ function ios_init() {
 function ios_redirections(url) {
     if (url.endsWith("4bR")) { // handle bitly shortlink
         ios_redirect_bitly(url);
-    } else {
-        var currenturlvar = w_loc.href,
-            currenturl = currenturlvar.toUpperCase(),
-            newpage = url.toUpperCase();
-        if (currenturl == newpage) {
-            // Do nothing
-        } else {
-            var isrequest = (newpage.indexOf("PAYMENT=") >= 0);
-            if (isrequest === true) {
-                var isopenrequest = (currenturl.indexOf("PAYMENT=") >= 0);
-                if (isopenrequest === true) {
-                    cancelpaymentdialog();
-                    setTimeout(function() {
-                        openpage(url, "", "payment");
-                    }, 1000);
-                } else {
-                    openpage(url, "", "payment");
-                }
-            } else {
-                var slice = url.slice(url.lastIndexOf("?p=") + 3),
-                    pagename = (slice.indexOf("&") >= 0) ? slice.substr(0, slice.indexOf("&")) : slice;
-                openpage(url, pagename, "page");
-            }
-        }
-        updaterequeststatesrefresh();
+        return
     }
+    var currenturlvar = w_loc.href,
+        currenturl = currenturlvar.toUpperCase(),
+        newpage = url.toUpperCase();
+    if (currenturl == newpage) {
+        return
+    }
+    var isrequest = (newpage.indexOf("PAYMENT=") >= 0);
+    if (isrequest === true) {
+        var isopenrequest = (currenturl.indexOf("PAYMENT=") >= 0);
+        if (isopenrequest === true) {
+            cancelpaymentdialog();
+            setTimeout(function() {
+                openpage(url, "", "payment");
+            }, 1000);
+        } else {
+            openpage(url, "", "payment");
+        }
+    } else {
+        var slice = url.slice(url.lastIndexOf("?p=") + 3),
+            pagename = (slice.indexOf("&") >= 0) ? slice.substr(0, slice.indexOf("&")) : slice;
+        openpage(url, pagename, "page");
+    }
+    updaterequeststatesrefresh();
 }
 
 function ios_redirect_bitly(shorturl) {
@@ -930,7 +923,7 @@ function ios_redirect_bitly(shorturl) {
         var bitly_id = shorturl.split(approot)[1].split("4bR")[0],
             getcache = sessionStorage.getItem("bitrequest_longurl_" + bitly_id);
         if (getcache) { // check for cached values
-            ios_redirections(getcache)
+            ios_redirections(getcache);
         } else {
             api_proxy({
                 "api": "bitly",
@@ -1612,12 +1605,11 @@ function dragstart() {
             addresses = this_drag.closest(".applist").find("li");
         if (addresses.length < 2) {
             return
-        } else {
-            var thisli = this_drag.closest("li"),
-                dialogheight = thisli.height(),
-                startheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
-            drag(thisli, dialogheight, startheight, thisli.index());
         }
+        var thisli = this_drag.closest("li"),
+            dialogheight = thisli.height(),
+            startheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
+        drag(thisli, dialogheight, startheight, thisli.index());
     })
 }
 
@@ -2068,18 +2060,18 @@ function addcurrency(cd) {
     if (get_addresslist(currency).children("li").length) {
         derive_first_check(currency);
         loadpage("?p=" + currency);
-    } else {
-        var can_derive = derive_first_check(currency);
-        if (can_derive === true) {
-            loadpage("?p=" + currency);
-            return
-        }
-        if (is_viewonly() === true) {
-            vu_block();
-            return
-        }
-        addaddress(cd, false);
+        return
     }
+    var can_derive = derive_first_check(currency);
+    if (can_derive === true) {
+        loadpage("?p=" + currency);
+        return
+    }
+    if (is_viewonly() === true) {
+        vu_block();
+        return
+    }
+    addaddress(cd, false);
 }
 
 function derive_first_check(currency) {
@@ -3501,21 +3493,21 @@ function api_proxy(ad, p_proxy) {
                 }
             }
             return $.ajax(params);
-        } else { // use api proxy
-            var api_location = "proxy/v1/",
-                set_proxy = (p_proxy) ? p_proxy : d_proxy(),
-                app_root = (ad.localhost) ? "" : set_proxy,
-                proxy_data = {
-                    "method": "POST",
-                    "cache": false,
-                    "timeout": 5000,
-                    "url": app_root + api_location,
-                    "data": $.extend(ad, aud, {
-                        "nokey": nokey
-                    })
-                };
-            return $.ajax(proxy_data);
         }
+        // use api proxy
+        var api_location = "proxy/v1/",
+            set_proxy = (p_proxy) ? p_proxy : d_proxy(),
+            app_root = (ad.localhost) ? "" : set_proxy,
+            proxy_data = {
+                "method": "POST",
+                "cache": false,
+                "timeout": 5000,
+                "url": app_root + api_location,
+                "data": $.extend(ad, aud, {
+                    "nokey": nokey
+                })
+            };
+        return $.ajax(proxy_data);
     }
     return $.ajax();
 }
@@ -4970,8 +4962,8 @@ function render_html(dat) {
                 clas = (val.class) ? " class='" + val.class + "'" : "",
                 attr = (val.attr) ? render_attributes(val.attr) : "",
                 cval = val.content,
-                content = (cval) ? (typeof cval == "object") ? render_html(cval) : cval : "";
-            close = (val.close) ? "/>" : ">" + content + "</" + key + ">",
+                content = (cval) ? (typeof cval == "object") ? render_html(cval) : cval : "",
+                close = (val.close) ? "/>" : ">" + content + "</" + key + ">",
                 result += "<" + key + id + clas + attr + close;
         });
     });
