@@ -901,9 +901,11 @@ function getccexchangerates(apilist, api) {
     api_attempt[apilist][api] = true;
     loadertext("get " + request.currencysymbol + " rates from " + api);
     var payment = request.payment,
+        contract = request.token_contract,
+        iserc = (request.erc20 === true) ? true : false,
         payload = (api == "coinmarketcap") ? "v1/cryptocurrency/quotes/latest?id=" + request.cmcid :
         (api == "coinpaprika") ? request.currencysymbol + "-" + payment :
-        (api == "coingecko") ? (request.erc20 === true) ? "simple/token_price/ethereum?contract_addresses=" + request.token_contract + "&vs_currencies=usd" : "simple/price?ids=" + payment + "&vs_currencies=usd" :
+        (api == "coingecko") ? (iserc) ? "simple/token_price/ethereum?contract_addresses=" + contract + "&vs_currencies=usd" : "simple/price?ids=" + payment + "&vs_currencies=usd" :
         false;
     if (payload === false) {
         loadertext("api error");
@@ -934,9 +936,10 @@ function getccexchangerates(apilist, api) {
                     cc_fail(apilist, api, error_val);
                     return
                 }
-                var ccrate = (api == "coinmarketcap") ? data.data[request.cmcid].quote.USD.price :
+                var pnode = (iserc) ? contract : payment,
+                    ccrate = (api == "coinmarketcap") ? data.data[request.cmcid].quote.USD.price :
                     (api == "coinpaprika") ? data.quotes.USD.price :
-                    (api == "coingecko") ? data[payment].usd :
+                    (api == "coingecko") ? data[pnode].usd :
                     null;
                 if (ccrate) {
                     loadertext("success");
