@@ -29,7 +29,7 @@ $(document).ready(function() {
 
 // ** Google api **
 
-function gapi_load(redirect) {
+function gapi_load() {
     tokenClient = google.accounts.oauth2.initTokenClient({
         "client_id": to.ga_id,
         "scope": scope,
@@ -47,14 +47,14 @@ function gapi_load(redirect) {
 function init_login_dialog(direct) {
     var ctoken = cashed_token();
     if (ctoken) {
-        var oa_timer = sessionStorage.getItem("bitrequest_oa_timer");
+        var oa_timer = localStorage.getItem("bitrequest_oa_timer");
         if (oa_timer) {
             var interval = 3600000; // show every hour
             if ((now() - oa_timer) < interval) {
                 return
             }
         }
-        sessionStorage.setItem("bitrequest_oa_timer", now());
+        localStorage.setItem("bitrequest_oa_timer", now());
         setTimeout(function() {
             if (direct) {
                 tokenClient.requestAccessToken();
@@ -129,7 +129,7 @@ function oauth_pop(ab) {
             "elements": ddat
         });
     popdialog(content, "triggersubmit");
-    sessionStorage.setItem("bitrequest_oa_timer", now());
+    localStorage.setItem("bitrequest_oa_timer", now());
 }
 
 function gd_login_trigger() {
@@ -187,20 +187,20 @@ function set_gatoken(e) {
 }
 
 function gdlogin_callbacks() {
+    html.addClass("gdauth");
+    notify("Successfully signed in");
     var switch_panel = $("#popup.showpu .switchpanel");
     if (switch_panel.length) {
         switch_panel.addClass("true").removeClass("false");
         var lad = $("#listappdata");
         if (lad.length) {
             listappdata();
-        } else {
-            $("#changelog").slideUp(300);
+            return
         }
-    } else {
-        canceldialog();
+        $("#changelog").slideUp(300);
+        return
     }
-    html.addClass("gdauth");
-    notify("Successfully signed in");
+    canceldialog();
 }
 
 function g_logout() {
@@ -208,7 +208,6 @@ function g_logout() {
     if (result === true) {
         var token = has_token();
         if (token) {
-            //google.accounts.oauth2.revoke(tob.token);
             gapi.client.setToken("");
         }
         localStorage.removeItem("bitrequest_a_dat");
@@ -217,15 +216,15 @@ function g_logout() {
 }
 
 function gdlogout_callbacks() {
+    html.removeClass("gdauth");
+    notify("Successfully signed out");
     var switch_panel = $("#popup.showpu .switchpanel");
     if (switch_panel.length) {
         switch_panel.removeClass("true").addClass("false");
         $("#changelog").slideDown(300);
-    } else {
-        canceldialog();
+        return
     }
-    html.removeClass("gdauth");
-    notify("Successfully signed out");
+    canceldialog();
 }
 
 function Drive_Backup_trigger() {
@@ -270,14 +269,24 @@ function updateappdata() {
                 }
             }).done(function(e) {}).fail(function(jqXHR, textStatus, errorThrown) {
                 if (textStatus == "error") {
-                    if (errorThrown == "Unauthorized") {
-                        oauth_pop(true); // log in
-                        notify("Unauthorized");
-                        return
-                    }
-                    if (errorThrown == "Not Found") {
-                        createfile(pass); // create file
-                        return
+                    var error_object = jqXHR;
+                    if (error_object) {
+                        var resp_obj = error_object.responseJSON;
+                        if (resp_obj) {
+                            var resp = resp_obj.error;
+                            if (resp) {
+                                console.log(resp);
+                                if (resp.code == 401) {
+                                    //oauth_pop(true); // log in
+                                    notify("Unauthorized");
+                                    return
+                                }
+                                if (resp.code == 404) {
+                                    createfile(pass); // create file
+                                    return
+                                }
+                            }
+                        }
                     }
                     notify("error");
                 }
