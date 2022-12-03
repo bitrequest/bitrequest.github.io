@@ -313,7 +313,7 @@ function createfile(tob) {
             "type": "application/json"
         }));
         form.append("file", file);
-        xhr.open("post", drivepath + "/upload/drive/v3/files?uploadType=multipart&fields=id");
+        xhr.open("post", "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id");
         xhr.setRequestHeader("Authorization", "Bearer " + pass.token);
         xhr.responseType = "json";
         xhr.onload = () => {
