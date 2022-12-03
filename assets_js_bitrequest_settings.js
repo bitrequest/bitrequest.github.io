@@ -979,7 +979,7 @@ function submit_GD_restore() {
                         "method": "GET",
                         "mimeType": "text/plain",
                         "headers": {
-                            "Authorization": "Bearer " + pass.token + "2"
+                            "Authorization": "Bearer " + pass.token
                         }
                     }
                 }).done(function(e) {
