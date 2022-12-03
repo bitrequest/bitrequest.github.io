@@ -1438,7 +1438,7 @@ function api_eror_msg(apisrc, error) {
     var api_bttn = (keyfail === true) ? "<div id='add_api' data-api='" + apisrc + "' class='button'>Add " + apisrc + " Api key</div>" : "",
         t_op = (apisrc) ? "<span id='proxy_dialog' class='ref'>Try other proxy</span>" : "",
         content = "<h2 class='icon-blocked'>" + errorcode + "</h2><p class='doselect'><strong>Error: " + errormessage + "<br/><br/>" + t_op + "</p>" + api_bttn;
-    popdialog(content, "alert", "canceldialog");
+    popdialog(content, "canceldialog");
 }
 
 function tx_count(statuspanel, count) {

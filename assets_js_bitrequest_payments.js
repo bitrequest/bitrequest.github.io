@@ -436,7 +436,7 @@ function loadpaymentfunction(pass) {
                     return
                 }
                 var content = "<h2 class='icon-blocked'>Unable to get token data</h2>";
-                popdialog(content, "alert", "canceldialog");
+                popdialog(content, "canceldialog");
                 closeloader();
                 return
             }
@@ -444,7 +444,7 @@ function loadpaymentfunction(pass) {
             return
         }
         var content = "<h2 class='icon-blocked'>Currency not supported</h2>";
-        popdialog(content, "alert", "canceldialog");
+        popdialog(content, "canceldialog");
         closeloader();
         return
     } // need to set fixer API key first
@@ -507,7 +507,7 @@ function continue_paymentfunction() {
         var error_message = (address == "undefined") ? "Undefined address, please ask for a new request" :
             "Invalid " + payment + " address",
             content = "<h2 class='icon-blocked'>" + error_message + "</h2>";
-        popdialog(content, "alert", "canceldialog");
+        popdialog(content, "canceldialog");
         closeloader();
         return
     }
@@ -856,7 +856,7 @@ function proceed_pf(error) {
         var error_message = (helper.lnd_only) ? (error) ? error.errorcode + ": " + error.errormessage : "Unable to connect with lightning node" : $("#rq_errlog > .rq_err").text(),
             content = "<h2 class='icon-blocked'>" + error_message + "</h2>";
         cancelpaymentdialog();
-        popdialog(content, "alert", "canceldialog");
+        popdialog(content, "canceldialog");
         closeloader();
         return
     }
@@ -1918,18 +1918,14 @@ function validatestepsq() {
         var thisnode = $(this),
             thisvalue = thisnode.val(),
             keycode = e.keyCode;
-        console.log(keycode);
         if (keycode === 188 || keycode === 190 || keycode === 110) { // prevent double commas and dots
             if (e.target.validity.valid === false) { //test input patern and steps attribustes
-                console.log("a");
                 e.preventDefault();
             }
             if (thisvalue.indexOf(",") > -1 || thisvalue.indexOf(".") > -1) {
-                console.log("b");
                 e.preventDefault();
             }
             if (thisnode.hasClass("satinput") && (keycode === 188 || keycode === 190 || keycode === 110)) {
-                console.log("c");
                 e.preventDefault();
             }
             return
@@ -2052,7 +2048,7 @@ function pendingrequest() {
     var content = "<div class='formbox' id='addresslock' data-currency='" + payment + "' data-currencysymbol='" + currencysymbol + "' data-cmcid='" + cmcid + "'><h2 class='icon-lock'>Temporarily unable to share request</h2><p>This address has a <span id='view_pending_tx' data-requestid='" + pending_requestid + "'>pending shared request</span>.<br/>Please wait for the transaction to confirm before re-using the address.</p>\
 	<div class='popnotify'></div>\
 	<div class='popform validated'>" + dialogcontent + "</div>";
-    popdialog(content, "alert", "triggersubmit");
+    popdialog(content, "triggersubmit");
 }
 
 function view_pending_tx() {
@@ -2226,7 +2222,7 @@ function share(thisbutton) {
                 hybrid = (lightning && thisaddress != "lnurl");
         } catch (e) { // data param corrupted
             var content = "<h2 class='icon-blocked'>Invalid request</h2><p>" + e + "</p>";
-            popdialog(content, "alert", "canceldialog");
+            popdialog(content, "canceldialog");
             return false;
         }
         var newdatastring = (thisdata === true) ? "&d=" + dataparam : "", // construct data param if exists
@@ -2725,6 +2721,12 @@ function saverequest(direct) {
         localStorage.removeItem("bitrequest_editurl");
         sessionStorage.removeItem("bitrequest_lndpid");
     }
+    if (body.hasClass("ios")) {} else {
+        var rq_storage = localStorage.getItem("bitrequest_requests");
+        if (!rq_storage || rq_storage == "[]") {
+            gd_init = true;
+        }
+    }
 }
 
 function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
@@ -2821,7 +2823,7 @@ function openwallet() {
             lndurl = (this_url && this_url.slice(0, 9) == "lightning"),
             lnd_ref = (lndurl) ? "lightning" : thiscurrency,
             content = "<div class='formbox' id='backupformbox'><h2 class='icon-folder-open'>Do you have a " + lnd_ref + " wallet on this device?</h2><div class='popnotify'></div><div id='backupactions'><a href='" + this_url + "' class='customtrigger' id='openwalleturl'>Yes</a><div id='dw_trigger' class='customtrigger' data-currency='" + lnd_ref + "'>No</div></div>";
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
     });
 }
 
@@ -2860,7 +2862,7 @@ function download_wallet(currency) {
 					<div class='cancel_dialog customtrigger'>CANCEL</div>\
 				</div>\
 			</div>";
-        popdialog(content, "alert", "canceldialog");
+        popdialog(content, "canceldialog");
         if (wallets_arr) {
             var walletlist = $("#formbox_ul"),
                 device = getdevicetype(),

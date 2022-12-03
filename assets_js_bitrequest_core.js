@@ -52,7 +52,8 @@ var language = navigator.language || navigator.userLanguage,
     after_poll_timeout = 15000,
     blockswipe,
     ndef,
-    ctrl;
+    ctrl,
+    gd_init = false;
 if (has_ndef && !inframe) {
     var ndef = new NDEFReader();
 }
@@ -107,11 +108,11 @@ $(document).ready(function() {
             }
         } else {
             var content = "<h2 class='icon-bin'>Sorry!</h2><p>No Web Storage support..</p>";
-            popdialog(content, "alert", "canceldialog");
+            popdialog(content, "canceldialog");
         }
     } else {
         var content = "<h2 class='icon-bin'>Sorry!</h2><p>Seems like your browser does not allow cookies...<br/>Please enable cookies if you want to continue using this app.</p>";
-        popdialog(content, "alert", "canceldialog");
+        popdialog(content, "canceldialog");
     }
     $("#fixednav").html($("#relnav").html()); // copy nav
     //startscreen
@@ -204,7 +205,7 @@ function setsymbols() { //fetch fiat currencies from fixer.io api
             geterc20tokens();
         }).fail(function(jqXHR, textStatus, errorThrown) {
             var content = "<h2 class='icon-bin'>Api call failed</h2><p class='doselect'>" + textStatus + "<br/>api did not respond<br/><br/><span id='proxy_dialog' class='ref'>Try other proxy</span></p>";
-            popdialog(content, "alert", "canceldialog");
+            popdialog(content, "canceldialog");
         })
     }
 }
@@ -246,7 +247,7 @@ function geterc20tokens_local() {
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         var content = "<h2 class='icon-bin'>Api call failed</h2><p class='doselect'>Unable to fetch tokeninfo</p>";
-        popdialog(content, "alert", "canceldialog");
+        popdialog(content, "canceldialog");
     });
 }
 
@@ -725,9 +726,11 @@ function enterapp(pinval) {
         attempts = pinsettings.attempts,
         hashpin = hashcode(pinval),
         _now = now(),
-        timeout;
+        timeout,
+        global = (pinfloat.hasClass("global")) ? true : false;
     if (hashpin == savedpin) {
-        if (pinfloat.hasClass("global")) {
+        if (global) {
+            var nit = true;
             localStorage.setItem("bitrequest_locktime", _now);
             finishfunctions();
             setTimeout(function() {
@@ -759,7 +762,7 @@ function enterapp(pinval) {
             canceloptions(true);
         }
         pinsettings.attempts = 0;
-        savesettings();
+        savesettings(global);
         remove_cashier();
     } else {
         if (navigator.vibrate) {} else {
@@ -787,7 +790,7 @@ function enterapp(pinval) {
             }
         }
         pinsettings.attempts = attempts + 1;
-        savesettings();
+        savesettings(global);
     }
 }
 
@@ -1244,7 +1247,7 @@ function triggertxfunction(thislink) {
                         "seedid": seedid
                     },
                     content = get_address_warning("addresswarning", thisaddress, pass_dat);
-                popdialog(content, "alert", "triggersubmit");
+                popdialog(content, "triggersubmit");
                 return false;
             }
         } else {
@@ -1411,7 +1414,7 @@ function toggleaddress() {
                             "seedid": seedid
                         },
                         content = get_address_warning("addresswarningcheck", address, pass_dat);
-                    popdialog(content, "alert", "triggersubmit");
+                    popdialog(content, "triggersubmit");
                     return
                 }
             } else if (parentlistitem.hasClass("xpubu")) {
@@ -1426,7 +1429,7 @@ function toggleaddress() {
                                 "xpubid": xpubid
                             },
                             content = get_address_warning("addresswarningcheck", address, pass_dat);
-                        popdialog(content, "alert", "triggersubmit");
+                        popdialog(content, "triggersubmit");
                         return
                     }
                 }
@@ -1875,7 +1878,7 @@ function payment_lookup(request_dat) {
 				<div id='dismiss' class='customtrigger'>DISMISS</div>\
 			</div>\
 	        </div>";
-    popdialog(content, "alert", "triggersubmit");
+    popdialog(content, "triggersubmit");
 }
 
 function check_recent() {
@@ -1938,7 +1941,7 @@ function recent_requests(recent_payments) {
 			<div id='dismiss' class='customtrigger'>CANCEL</div>\
 		</div>\
         </div>";
-    popdialog(content, "alert", "triggersubmit");
+    popdialog(content, "triggersubmit");
 }
 
 function recent_requests_list(recent_payments) {
@@ -2021,7 +2024,7 @@ function popnotify(result, message) {
 }
 
 //dialogs
-function popdialog(content, type, functionname, trigger, custom, replace) {
+function popdialog(content, functionname, trigger, custom, replace) {
     if (custom) {
         $("#popup #actions").addClass("custom");
     }
@@ -2125,7 +2128,7 @@ function addaddress(ad, edit) {
 			</div>\
 		</div>" + pk_checkbox +
             "<input type='submit' class='submit' value='OK'></form>").data(ad);
-    popdialog(content, "alert", "triggersubmit");
+    popdialog(content, "triggersubmit");
     if (supportsTouch === true) {
         return
     }
@@ -2262,7 +2265,7 @@ function add_erc20() {
 					</div></div>\
 					<input type='submit' class='submit' value='OK'/>\
 				</form></div>").data(nodedata);
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
     })
 }
 
@@ -2660,6 +2663,14 @@ function cancelpaymentdialog() {
     sleep();
     abort_ndef();
     lnd_ph = false;
+    if (gd_init === true) {
+        gd_init = false;
+        var pass = GD_pass();
+        if (pass) {
+            return
+        }
+        oauth_pop();
+    }
 }
 
 function closesocket(s_id) {
@@ -2827,7 +2838,7 @@ function newrequest_alias() {
             active_currencies = currencylist.find("li").not(".hide"),
             active_currency_count = active_currencies.length;
         if (active_currency_count === 0) {
-            alert("no active currencies");
+            notify("no active currencies");
             return
         }
         if (active_currency_count > 1) {
@@ -2860,7 +2871,7 @@ function newrequest() {
                             "seedid": seedid
                         },
                         content = get_address_warning("address_newrequest", address, pass_dat);
-                    popdialog(content, "alert", "triggersubmit");
+                    popdialog(content, "triggersubmit");
                     return
                 }
             } else {
@@ -2933,7 +2944,7 @@ function editaddresstrigger() {
 function removeaddress() {
     $(document).on("click", ".removeaddress", function(e) {
         e.preventDefault();
-        popdialog("<h2 class='icon-bin'>Remove address?</h2>", "alert", "removeaddressfunction", $(this));
+        popdialog("<h2 class='icon-bin'>Remove address?</h2>", "removeaddressfunction", $(this));
     })
 }
 
@@ -3079,7 +3090,7 @@ function addressinfo() {
 				<li><div class='showtransactions ref'><span class='icon-eye'></span> Show transactions</div></li>\
 				</ul>\
 	    	</div>").data(dd);
-        popdialog(content, "alert", "canceldialog");
+        popdialog(content, "canceldialog");
         return false;
     })
 }
@@ -3352,7 +3363,7 @@ function hide_transaction_meta() {
 
 function archive() {
     $(document).on("click", "#requestlist .req_actions .icon-folder-open", function() {
-        popdialog("<h2 class='icon-folder-open'>Archive request?</h2>", "alert", "archivefunction", $(this));
+        popdialog("<h2 class='icon-folder-open'>Archive request?</h2>", "archivefunction", $(this));
     })
 }
 
@@ -3380,7 +3391,7 @@ function archivefunction() {
 
 function unarchive() {
     $(document).on("click", "#archivelist .req_actions .icon-undo2", function() {
-        popdialog("<h2 class='icon-undo2'>Unarchive request?</h2>", "alert", "unarchivefunction", $(this));
+        popdialog("<h2 class='icon-undo2'>Unarchive request?</h2>", "unarchivefunction", $(this));
     })
 }
 
@@ -3402,7 +3413,7 @@ function unarchivefunction() {
 
 function removerequest() {
     $(document).on("click", ".req_actions .icon-bin", function() {
-        popdialog("<h2 class='icon-bin'>Delete request?</h2>", "alert", "removerequestfunction", $(this));
+        popdialog("<h2 class='icon-bin'>Delete request?</h2>", "removerequestfunction", $(this));
     })
 }
 
@@ -4541,7 +4552,7 @@ function receipt() {
                 "title": "bitrequest_receipt_" + requestid + ".pdf",
                 "elements": ddat
             });
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
     })
 }
 
@@ -4672,7 +4683,7 @@ function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
         if (e) {
             var error = e.error;
             if (error) {
-                popdialog("<h2 class='icon-blocked'>" + error.message + "</h2>", "alert", "canceldialog");
+                popdialog("<h2 class='icon-blocked'>" + error.message + "</h2>", "canceldialog");
                 closeloader();
                 return;
             }
@@ -4703,7 +4714,7 @@ function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
                     "title": "Invoice",
                     "elements": ddat
                 });
-            popdialog(content, "alert", "canceldialog");
+            popdialog(content, "canceldialog");
             closeloader();
             return
         }
@@ -4738,7 +4749,7 @@ function editrequest() {
 					<input type='submit' class='submit' value='OK' data-requestid='" + thisrequestid + "'/>\
 				</div>\
 			</div>";
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
     })
 }
 
@@ -4810,13 +4821,13 @@ function savearchive() {
 }
 
 //update settings
-function savesettings() {
+function savesettings(nit) {
     var settingsspush = [];
     $("ul#appsettings > li.render").each(function() {
         settingsspush.push($(this).data());
     });
     localStorage.setItem("bitrequest_settings", JSON.stringify(settingsspush));
-    updatechanges("settings", true);
+    updatechanges("settings", true, nit);
 }
 
 function save_cc_settings(currency, add) {
@@ -4829,17 +4840,15 @@ function save_cc_settings(currency, add) {
     updatechanges("currencysettings", add);
 }
 
-function updatechanges(key, add) {
-    if (GD_auth_class() === true) {
-        updateappdata();
-        body.removeClass("haschanges");
-        return
-    }
+function updatechanges(key, add, nit) {
     if (add === true) {
         var cc = changes[key],
             cc_correct = (cc) ? cc : 0;
         changes[key] = cc_correct + 1;
         savechangesstats();
+    }
+    if (!nit === true) {
+        updateappdata();
     }
 }
 
@@ -4869,10 +4878,6 @@ function renderchanges() {
 }
 
 function change_alert() {
-    if (GoogleAuth) {
-        body.removeClass("haschanges");
-        return
-    }
     var total_changes = get_total_changes();
     if (total_changes > 0) {
         $("#alert > span").text(total_changes).attr("title", "You have " + total_changes + " changes in your app");
@@ -4964,7 +4969,7 @@ function render_html(dat) {
                 cval = val.content,
                 content = (cval) ? (typeof cval == "object") ? render_html(cval) : cval : "",
                 close = (val.close) ? "/>" : ">" + content + "</" + key + ">";
-                result += "<" + key + id + clas + attr + close;
+            result += "<" + key + id + clas + attr + close;
         });
     });
     return result;

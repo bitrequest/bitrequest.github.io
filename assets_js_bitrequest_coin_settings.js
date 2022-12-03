@@ -111,7 +111,7 @@ function edit_confirmations() {
                 "title": "Confirmations",
                 "elements": ddat
             });
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
         var currentli = $("#conf_formbox ul.conf_options li").filter(function() {
             return $(this).find("span").text() == confsrc;
         });
@@ -232,7 +232,7 @@ function edit_blockexplorer() {
                     "title": "Choose Blockexplorer",
                     "elements": ddat
                 });
-            popdialog(content, "alert", "triggersubmit");
+            popdialog(content, "triggersubmit");
             var optionlist = $("#be_formbox").find(".options");
             $.each(options, function(i, value) {
                 optionlist.append("<span data-pe='none'>" + value + "</span>");
@@ -302,7 +302,7 @@ function edit_rpcnode() {
             "<input type='submit' class='submit' value='OK' data-currency='" + thiscurrency + "'/>\
 				</div>\
 			</div>";
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
         var optionlist = $("#settingsbox").find(".options");
         $.each(api_list, function(key, value) {
             if (value.display === true) {
@@ -758,7 +758,7 @@ function edit_xpub_trigger() {
 							<div id='backupcd'>CANCEL</div>\
 						</div>\
 			    	</div>");
-                popdialog(content, "alert", "triggersubmit", null, true);
+                popdialog(content, "triggersubmit", null, true);
                 return
             }
         }
@@ -866,7 +866,7 @@ function edit_xpub(ad) {
 					</div>\
 				</div>\
         		<input type='submit' class='submit' value='OK'></form>").data(ad);
-    popdialog(content, "alert", "triggersubmit");
+    popdialog(content, "triggersubmit");
     if (supportsTouch === true) {} else {
         $("#popup input.address").focus();
     }
@@ -1157,7 +1157,7 @@ function xpub_info_pu(currency, xpub) {
 		</li>\
     </ul>\
 	</div>").data(root_dat);
-    popdialog(content, "alert", "triggersubmit");
+    popdialog(content, "triggersubmit");
     var dp_node_dat = {
             "bip32": bip32dat,
             "currency": currency
@@ -1200,7 +1200,7 @@ function add_apikey(api) {
         "</div>";
     canceldialog();
     setTimeout(function() {
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
     }, 800);
 }
 

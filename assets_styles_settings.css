@@ -43,7 +43,7 @@ ul.conf_options li .conf_emoji {
 #gd_meta {
 	float: left;
 	width: 100%;
-	padding: 0.3em 0 0 0.5em;
+	padding: 0.3em 0 0 0;
 	color: #9f9f9f;
 	font-size: 100%;
 	font-weight: 700;
@@ -74,7 +74,7 @@ ul.conf_options li .conf_emoji {
 	float: left;
 	width: 100%;
 	color: #9f9f9f;
-	padding: 0 0 1.5em 1em;
+	padding: 0 0 1.5em 0;
 }
 
 #gd_backuplist {
@@ -89,7 +89,7 @@ ul.conf_options li .conf_emoji {
 	position: relative;
 	float: left;
 	width: 100%;
-	font-size: 140%;
+	font-size: 130%;
 	padding: 0.5em 0;
 	border-bottom: 1px solid #CCC;
 }
@@ -107,7 +107,7 @@ ul.conf_options li .conf_emoji {
 	position: absolute;
 	top: 0;
 	right: 0;
-	padding: 0.5em 1em;
+	padding: 0.6em 0 0.4em 1em;
 	cursor: pointer;
 }
 
@@ -1243,3 +1243,32 @@ body.seed_dialog #seed_panel {
 }
 
 #uabox .number {color: #88a8c5;}
+
+#disclaimer_dialog h2.icon-warning:before {
+	color:#B33A3A;
+}
+
+#gdbu_dialog {
+	
+}
+
+#gdbu_dialog h2.icon-googledrive:before {
+	color:#3b6cd6;
+	font-size:150%;
+}
+
+#oauth_onload {
+	display:inline-block;
+	font-size:150%;
+	font-weight:600;
+	margin:0 0 1em 0;
+	padding:0.5em 1em 0.5em 0.5em;
+	background-color: #5281de;
+	border-radius: 5px;
+	color:#FFF;
+	cursor:pointer;
+}
+
+#oauth_onload span {
+	font-size:150%;
+}

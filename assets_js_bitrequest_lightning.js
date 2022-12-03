@@ -170,7 +170,7 @@ function lm_function(replace) {
                 "elements": ln_markup
             }),
             trigger = (replace) ? null : "trigger_ln";
-        popdialog(content, "alert", trigger, null, null, replace);
+        popdialog(content, trigger, null, null, replace);
         if (has_nodes) {
             $.each(node_list, function(key, value) {
                 var nselect = (value.node_id == c_node_id),

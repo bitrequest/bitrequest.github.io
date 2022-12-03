@@ -173,7 +173,7 @@ function editaccount() {
                 "title": "Account name",
                 "elements": ddat
             });
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
     })
 }
 
@@ -266,7 +266,7 @@ function editcurrency() {
                 "title": "Enter currency",
                 "elements": ddat
             });
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
     })
 }
 
@@ -389,7 +389,7 @@ function locktime() {
                 "title": "Pin lock time",
                 "elements": ddat
             });
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
         var currentli = $("#locktime_formbox ul.conf_options li").filter(function() {
             return $(this).find("span").text() == locktime
         });
@@ -455,7 +455,7 @@ function backupdatabase() {
         }
         changespush.push(changekey);
     });
-    var gd_active = (GD_auth_class() === true),
+    var gd_active = (GD_pass()) ? true : false,
         alert_icon = $("#alert > span"),
         nr_changes = alert_icon.text(),
         alert_title = alert_icon.attr("title"),
@@ -551,7 +551,7 @@ function backupdatabase() {
             "title": "Backup App data",
             "elements": ddat
         });
-    popdialog(content, "alert", "triggersubmit", null, true);
+    popdialog(content, "triggersubmit", null, true);
 }
 
 function sbu_switch() {
@@ -701,7 +701,7 @@ function check_systembu() {
                             "title": "System Backup",
                             "elements": ddat
                         }) + "<div id='backupactions'><div id='backupcd'>CANCEL</div></div>";
-                    popdialog(content, "alert", "triggersubmit", null, true);
+                    popdialog(content, "triggersubmit", null, true);
                 } else {
                     systembu_expired();
                 }
@@ -732,7 +732,7 @@ function systembu_expired() {
             }
         }
     ]);
-    popdialog(content, "alert", "triggersubmit", null, true);
+    popdialog(content, "triggersubmit", null, true);
 }
 
 function restore_systembu() {
@@ -769,6 +769,7 @@ function complilebackup() {
             key == "bitrequest_init" ||
             key == "bitrequest_k" ||
             key == "bitrequest_awl" ||
+            key == "bitrequest_a_dat" ||
             key == "bitrequest_tp") {} else if (key == "bitrequest_bpdat") { // only backup ecrypted seed
             var not_verified = (io.bipv != "yes"); // add to google drive when not verified
             if (not_verified || (test_derive === true && get_setting("backup", "sbu") === true)) {
@@ -802,7 +803,7 @@ function submitbackup() {
             e.preventDefault();
             return
         }
-        var lastsaved = "last backup: <span class='icon-folder-open'>" + thisnode.attr("data-date") + "</span>",
+        var lastsaved = "last backup:<br/><span class='icon-folder-open'>" + thisnode.attr("data-date") + "</span>",
             lastbackup = thisnode.attr("data-lastbackup");
         set_setting("backup", {
             "titlebackup": lastsaved,
@@ -830,12 +831,12 @@ function trigger_restore() {
         lastfileused = restorenode.data("fileused"),
         lastdevice = restorenode.data("device"),
         deviceused = (lastdevice == "folder-open") ? "" : "google-drive",
-        lastfileusedstring = (lastfileused) ? "<p class='icon-" + deviceused + "'>Last restore: <span class='icon-" + lastdevice + "'>" + lastfileused + "</span></p>" : "",
+        lastfileusedstring = (lastfileused) ? "<p class='icon-" + deviceused + "'>Last restore:<br/><span class='icon-" + lastdevice + "'>" + lastfileused + "</span></p>" : "",
         lastbackup = backupnode.data("lastbackup"),
         lastbudevice = backupnode.data("device"),
         lastbackupdevice = (lastbudevice == "folder-open") ? "" : "google-drive",
-        lastbackupstring = (lastbackup) ? "<p class='icon-" + lastbackupdevice + "'>Last backup: <span class='icon-" + lastbudevice + "'>" + lastbackup + "</span></p>" : "",
-        gd_active = (GD_auth_class() === true),
+        lastbackupstring = (lastbackup) ? "<p class='icon-" + lastbackupdevice + "'>Last backup:<br/><span class='icon-" + lastbudevice + "'>" + lastbackup + "</span></p>" : "",
+        gd_active = (GD_pass()) ? true : false,
         showhidegd = (gd_active === true) ? "display:none" : "display:block",
         ddat = [{
                 "div": {
@@ -873,9 +874,9 @@ function trigger_restore() {
             "title": "Restore App data",
             "elements": ddat
         });
-    popdialog(content, "alert", "triggersubmit");
+    popdialog(content, "triggersubmit");
     if (gd_active === true) {
-        $("#listappdata .switchpanel").trigger("click");
+        listappdata();
     }
 }
 
@@ -968,12 +969,21 @@ function submit_GD_restore() {
             thisdevice = thisfield.attr("data-device"),
             result = confirm("Restore " + thisfield.text() + " from " + thisdevice + " device?");
         if (result === true) {
-            var thisfileid = thisfield.attr("data-gdbu_id");
-            return gapi.client.drive.files.get({
-                "fileId": thisfileid,
-                "alt": "media"
-            }).then(function(response) {
-                    var jsonobject = JSON.parse(atob(response.body));
+            var thisfileid = thisfield.attr("data-gdbu_id"),
+                pass = GD_pass();
+            if (pass) {
+                api_proxy({
+                    "api_url": "https://www.googleapis.com/drive/v3/files/" + thisfileid + "?alt=media",
+                    "proxy": false,
+                    "params": {
+                        "method": "GET",
+                        "mimeType": "text/plain",
+                        "headers": {
+                            "Authorization": "Bearer " + pass.token + "2"
+                        }
+                    }
+                }).done(function(e) {
+                    var jsonobject = JSON.parse(atob(e));
                     scan_restore(jsonobject);
                     var pass_dat = {
                         "jasobj": jsonobject,
@@ -984,10 +994,20 @@ function submit_GD_restore() {
                         "type": "gd"
                     };
                     restore_algo(pass_dat);
-                },
-                function(err) {
-                    console.log(err);
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    console.log(jqXHR);
+                    console.log(textStatus);
+                    console.log(errorThrown);
+                    if (textStatus == "error") {
+                        if (errorThrown == "Unauthorized") {
+                            notify("Unauthorized"); // log in
+                            return
+                        }
+                        notify("error");
+                    }
                 });
+                return
+            }
         }
     })
 }
@@ -1112,7 +1132,7 @@ function pin_dialog(pass_dat, cb) {
             "cb": cb
         });
     setTimeout(function() {
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
     }, 700);
 }
 
@@ -1182,7 +1202,7 @@ function restore_callback_file(pass_dat, np) {
     var newphrase = (hasbip === true) ? np : true;
     restorestorage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
-    var lastrestore = "last restore: <span class='icon-folder-open'>" + new Date(now()).toLocaleString(language).replace(/\s+/g, "_") + "</span>";
+    var lastrestore = "last restore:<br/><span class='icon-folder-open'>" + new Date(now()).toLocaleString(language).replace(/\s+/g, "_") + "</span>";
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": pass_dat.filename,
@@ -1201,7 +1221,7 @@ function restore_callback_gd(pass_dat, np) {
     var newphrase = (hasbip === true) ? np : true;
     restorestorage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
-    var lastrestore = "last restore: <span class='icon-googledrive'>" + new Date(now()).toLocaleString(language).replace(/\s+/g, "_") + "</span>";
+    var lastrestore = "last restore:<br/><span class='icon-googledrive'>" + new Date(now()).toLocaleString(language).replace(/\s+/g, "_") + "</span>";
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": pass_dat.filename,
@@ -1211,7 +1231,10 @@ function restore_callback_gd(pass_dat, np) {
         savesettings();
         createfile(); // create new file from backup
         if (pass_dat.thisdeviceid == deviceid) {
-            deletefile(pass_dat.thisfileid) // delete old backup file
+            var pass = GD_pass();
+            if (pass) {
+                deletefile(pass_dat.thisfileid, null, pass); // delete old backup file
+            }
         }
         if (newphrase === true) {
             restore_cb_init_addresses();
@@ -1287,7 +1310,7 @@ function dphrase_dialog(pass_dat) {
             "elements": ddat
         })).data(pass_dat);
     setTimeout(function() {
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
     }, 700);
 }
 
@@ -1494,7 +1517,7 @@ function csvexport_trigger() {
 					<div id='share_csv' data-url='' class='util_icon icon-share2'></div>\
 					<div id='backupcd'>CANCEL</div>\
 				</div>";
-            popdialog(content, "alert", "triggersubmit", null, true);
+            popdialog(content, "triggersubmit", null, true);
             return
         }
         playsound(funk);
@@ -1660,9 +1683,6 @@ function share_csv() {
                     }));
                 shorten_url(sharedtitle, approot + "?p=settings&csv=" + r_dat, fetch_aws("img_system_backup.png"), true);
             }).fail(function(jqXHR, textStatus, errorThrown) {
-                console.log(jqXHR);
-                console.log(textStatus);
-                console.log(errorThrown);
                 closeloader();
             });
         }
@@ -1752,7 +1772,7 @@ function check_csvexport() {
                             "title": "CSV Export",
                             "elements": ddat
                         }) + "<div id='backupactions'><div id='backupcd'>CANCEL</div></div>";
-                    popdialog(content, "alert", "triggersubmit", null, true);
+                    popdialog(content, "triggersubmit", null, true);
                     return
                 }
                 systembu_expired();
@@ -1883,7 +1903,7 @@ function urlshortener() {
                 "title": "Choose URL shortener",
                 "elements": ddat
             });
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
     })
 }
 
@@ -2070,7 +2090,7 @@ function editccapi() {
                 "title": "Choose API",
                 "elements": ddat
             });
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
     })
 }
 
@@ -2196,7 +2216,7 @@ function editfiatxrapi() {
                 "title": "Choose API",
                 "elements": ddat
             });
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
     })
 }
 
@@ -2293,7 +2313,7 @@ function pick_api_proxy() {
 					<input type='submit' class='submit' value='OK'/>\
 				</div>\
 			</div>";
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
         if (phpsupportglobal === true) {
             var protocol = (localserver) ? w_loc.protocol + "//" : "",
                 port = w_loc.port,
@@ -2535,7 +2555,7 @@ function apikeys() {
 					<input type='submit' class='submit' value='OK' id='apisubmit'/>\
 				</div>\
 			</div>";
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
     })
 }
 
@@ -2694,7 +2714,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                 } else {
                     notify("API call error");
                     var content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
-                    popdialog(content, "alert", "canceldialog");
+                    popdialog(content, "canceldialog");
                 }
                 return
             }
@@ -2715,7 +2735,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                     } else {
                         notify("API call error");
                         var content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
-                        popdialog(content, "alert", "canceldialog");
+                        popdialog(content, "canceldialog");
                     }
                 }
                 return
@@ -2729,7 +2749,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                 } else {
                     notify("API call error");
                     var content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
-                    popdialog(content, "alert", "canceldialog");
+                    popdialog(content, "canceldialog");
                 }
                 return
             }
@@ -2739,7 +2759,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                 } else {
                     notify("API call error");
                     var content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
-                    popdialog(content, "alert", "canceldialog");
+                    popdialog(content, "canceldialog");
                 }
                 return
             }
@@ -2853,7 +2873,7 @@ function edit_contactform(checkout) {
 			<input type='submit' class='submit' value='OK'/>\
 		</div>\
 	</div>";
-    popdialog(content, "alert", "triggersubmit");
+    popdialog(content, "triggersubmit");
     check_contactform();
     if (checkout === true) {
         $("#popup #execute").text("CONTINUE");
@@ -3027,7 +3047,7 @@ function permissions_callback() {
             "title": "Set permissions",
             "elements": ddat
         });
-    popdialog(content, "alert", "triggersubmit");
+    popdialog(content, "triggersubmit");
 }
 
 function submit_permissions() {
@@ -3090,7 +3110,7 @@ function team_invite() {
             "title": "Team invite",
             "elements": ddat
         }) + "<div id='backupactions'><div id='backupcd'>CANCEL</div></div>";
-    popdialog(content, "alert", "triggersubmit");
+    popdialog(content, "triggersubmit");
 }
 
 function complile_teaminvite() {
@@ -3111,6 +3131,7 @@ function complile_teaminvite() {
             key == "bitrequest_tp" ||
             key == "bitrequest_requests" ||
             key == "bitrequest_archive" ||
+            key == "bitrequest_a_dat" ||
             key == "bitrequest_bpdat") {} else {
             var pval = JSON.parse(value);
             if (key == "bitrequest_settings") {
@@ -3308,7 +3329,7 @@ function check_teaminvite() {
                             "title": dialog_heading,
                             "elements": ddat
                         }) + "<div id='backupactions'><div id='backupcd'>CANCEL</div></div>";
-                    popdialog(content, "alert", "triggersubmit", null, true);
+                    popdialog(content, "triggersubmit", null, true);
                     return
                 }
                 systembu_expired();
@@ -3352,7 +3373,7 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
         localStorage.setItem("bitrequest_teamid", JSON.stringify(teamid_arr));
     }
     rendersettings(["restore", "backup"]); // exclude restore and backup settings
-    var lastrestore = "last restore: <span class='icon-folder-open'>Team invite " + new Date(now()).toLocaleString(language).replace(/\s+/g, "_") + "</span>";
+    var lastrestore = "last restore:<br/><span class='icon-folder-open'>Team invite " + new Date(now()).toLocaleString(language).replace(/\s+/g, "_") + "</span>";
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": bu_filename,
@@ -3383,6 +3404,6 @@ function check_useragent() {
                 "title": "User Agent",
                 "elements": ddat
             });
-        popdialog(content, "alert", "canceldialog");
+        popdialog(content, "canceldialog");
     })
 }

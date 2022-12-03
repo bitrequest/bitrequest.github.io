@@ -2627,11 +2627,6 @@ html.flipmode #paymentdialog {
 	transition: opacity 300ms linear;
 }
 
-html.gdauth #share_bu {
-	opacity: 0;
-	pointer-events: none;
-}
-
 #custom_actions .button {
 	float: left;
 	clear: both;

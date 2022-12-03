@@ -473,20 +473,64 @@ function manage_bip32(dat) {
         return
     }
     var data = (dat) ? dat : {},
-        content = $("<div class='formbox' id='disclaimer_dialog'>\
-    	<h2><span class='icon-warning' style='color:#B33A3A'></span>Disclaimer!</h2>\
-    	<div class='popnotify'></div>\
-    	<form class='popform'>\
-    		<div class='inputwrap'><p>Funds received by addresses generated from your secret phrase can not be spend by Bitrequest.<br/>To spend your funds you wil need to restore your secret phrase in a <a href='https://www.bitrequest.io/compatible-wallets' target='_blank' class='ref'>compatible wallet.</a></p></div>\
-    		<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I understand and am ok with this.</span></div>\
-    		<input type='submit' class='submit' value='OK'></form></div>").data(data);
+        ddat = [{
+                "div": {
+                    "class": "popform",
+                    "content": [{
+                        "div": {
+                            "class": "inputwrap",
+                            "content": "<p>Funds received by addresses generated from your secret phrase can not be spend by Bitrequest.<br/>To spend your funds you wil need to restore your secret phrase in a <a href='https://www.bitrequest.io/compatible-wallets' target='_blank' class='ref'>compatible wallet.</a></p>"
+                        },
+                    }]
+                }
+            },
+            {
+                "div": {
+                    "id": "pk_confirm",
+                    "class": "noselect",
+                    "content": [{
+                        "div": {
+                            "id": "pk_confirmwrap",
+                            "class": "cb_wrap",
+                            "attr": {
+                                "data-checked": "false"
+                            },
+                            "content": [{
+                                "span": {
+                                    "class": "checkbox"
+                                }
+                            }]
+                        },
+                        "span": {
+                            "content": "I understand and am ok with this."
+                        }
+
+                    }]
+                }
+            },
+            {
+                "input": {
+                    "class": "submit",
+                    "attr": {
+                        "type": "submit",
+                        "value": "ok"
+                    }
+                }
+            }
+        ],
+        content = $(template_dialog({
+            "id": "disclaimer_dialog",
+            "icon": "icon-warning",
+            "title": "Disclaimer!",
+            "elements": ddat
+        })).data(data);
     if ($("#option_makeseed").length) {
         canceldialog();
         setTimeout(function() {
-            popdialog(content, "alert", "triggersubmit");
+            popdialog(content, "triggersubmit");
         }, 1000);
     } else {
-        popdialog(content, "alert", "triggersubmit");
+        popdialog(content, "triggersubmit");
     }
 }
 
@@ -849,7 +893,7 @@ function continue_seed() {
 function skip_verify() {
     $(document).on("click", "#cfbu3", function() {
         var content = "<h2><span class='icon-warning' style='color:#B33A3A'></span>Warning! Continue at your own risk.</h2><p><strong>If you lose your device, uninstall your application or clear your browserdata, you'll need your secret phrase to recover your funds!</strong></p>";
-        popdialog(content, "alert", "finish_seed");
+        popdialog(content, "finish_seed");
     })
 }
 
@@ -1221,7 +1265,7 @@ function show_phrase_callback() {
 function delete_phrase_trigger() {
     $(document).on("click", "#deletephrase", function() {
         var content = "<h2 style='color:#B33A3A'><span class='icon-warning'></span>Warning! Deleting your seed may result in lost of funds.</h2><p><strong>Continue only if you have a backup of your secret phrase.</strong></p>";
-        popdialog(content, "alert", "delete_phrase_verify");
+        popdialog(content, "delete_phrase_verify");
     });
 }
 
@@ -1615,7 +1659,7 @@ function phrase_info_pu(coin) {
     	</li>" + del_phr_str +
             "</ul>\
 	</div>").data(root_dat);
-    popdialog(content, "alert", "canceldialog");
+    popdialog(content, "canceldialog");
     $.each(br_config.bitrequest_coin_data, function(i, coinconfig) {
         var currency = coinconfig.currency,
             ccsymbol = coinconfig.data.ccsymbol,
@@ -1719,7 +1763,7 @@ function compatible_wallets(coin) {
 			</li>\
 		</ul>\
 	</div>");
-    popdialog(content, "alert", "canceldialog");
+    popdialog(content, "canceldialog");
     $.each(br_config.bitrequest_coin_data, function(i, coinconfig) {
         var currency = coinconfig.currency,
             ccsymbol = coinconfig.data.ccsymbol,

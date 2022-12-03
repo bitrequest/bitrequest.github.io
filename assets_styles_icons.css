@@ -80,10 +80,6 @@
 	content: "\e900";
 }
 
-.icon-googledrive:before {
-	content: "\e901";
-}
-
 .icon-gmail:before {
 	content: "\e902";
 }
@@ -324,8 +320,16 @@
 	content: "\ea83";
 }
 
+.icon-googledrive:before {
+	content: "\e901";
+}
+
 .icon-google-drive:before {
 	content: "\ea8f";
+}
+
+.icon-google2:before {
+  content: "\ea89";
 }
 
 .icon-facebook:before {

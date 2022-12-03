@@ -1641,7 +1641,7 @@ function rconnect(tid) {
     var bttn = (tid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + tid + "'>Reconnect</span></div></p>" : "",
         content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + bttn;
     closesocket();
-    popdialog(content, "alert", "canceldialog");
+    popdialog(content, "canceldialog");
 }
 
 function get_next_scan_api(api_name) {
