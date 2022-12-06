@@ -1857,11 +1857,8 @@ function close_paymentdialog(empty) {
 
 function continue_cpd() {
     if (html.hasClass("firstload")) {
-        var gets = geturlparameters();
-        if (gets == "xss") {
-            return
-        }
-        var pagename = gets.p,
+        var gets = geturlparameters(),
+			pagename = gets.p,
             set_pagename = (pagename) ? pagename : "home";
         openpage("?p=" + set_pagename, set_pagename, "loadpage");
     } else {
