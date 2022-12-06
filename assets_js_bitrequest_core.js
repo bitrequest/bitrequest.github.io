@@ -283,14 +283,10 @@ function haspin() {
 }
 
 function islocked() {
-    var gets = geturlparameters();
-    if (gets.xss) {
-        return true
-    }
-    var locktime = $("#pinsettings").data("locktime"),
+    var gets = geturlparameters(),
+    	locktime = $("#pinsettings").data("locktime"),
         lastlock = localStorage.getItem("bitrequest_locktime"),
-        _now = now(),
-        tsll = _now - lastlock,
+        tsll = now() - lastlock,
         pflt = parseFloat(locktime);
     return (gets.payment) ? false : (haspin() === true && tsll > pflt) ? true : false;
 }
