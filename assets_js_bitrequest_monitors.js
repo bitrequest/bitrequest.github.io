@@ -55,7 +55,7 @@ function updaterequeststatestrigger() {
 
 function updaterequeststatesrefresh() {
     var gets = geturlparameters();
-    if (gets == "xss") {
+    if (gets.xss) {
         return
     }
     if (gets.p == "requests") { // only trigger on "requests page"

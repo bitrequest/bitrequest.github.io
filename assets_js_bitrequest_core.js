@@ -284,7 +284,7 @@ function haspin() {
 
 function islocked() {
     var gets = geturlparameters();
-    if (gets == "xss") {
+    if (gets.xss) {
         return true
     }
     var locktime = $("#pinsettings").data("locktime"),
@@ -1087,7 +1087,7 @@ function togglenav() {
 
 function loadurl() {
     var gets = geturlparameters();
-    if (gets == "xss") {
+    if (gets.xss) {
         loadpageevent("home");
         return
     }
@@ -1858,7 +1858,7 @@ function close_paymentdialog(empty) {
 function continue_cpd() {
     if (html.hasClass("firstload")) {
         var gets = geturlparameters(),
-			pagename = gets.p,
+            pagename = gets.p,
             set_pagename = (pagename) ? pagename : "home";
         openpage("?p=" + set_pagename, set_pagename, "loadpage");
     } else {
@@ -2918,7 +2918,7 @@ function confirm_ms_newrequest() {
 
 function newrequest_cb(currency, ccsymbol, address, title) {
     var gets = geturlparameters();
-    if (gets == "xss") {
+    if (gets.xss) {
         return
     }
     var thishref = "?p=" + gets.p + "&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0&address=" + address;
@@ -3616,7 +3616,9 @@ function geturlparameters() {
     var qstring = w_loc.search.substring(1),
         xss = xss_search(qstring);
     if (xss) {
-        return "xss";
+        return {
+            "xss": true
+        }
     }
     var getvalues = qstring.split("&"),
         get_object = {};
@@ -3629,13 +3631,13 @@ function geturlparameters() {
     if (dp) {
         var isxx = scanmeta(dp);
         if (isxx) {
-            return "xss";
+            get_object.xss = true;
         }
     }
     if (mp) {
         var isxx = scanmeta(mp);
         if (isxx) {
-            return "xss";
+            get_object.xss = true;
         }
     }
     return get_object;
@@ -3652,12 +3654,13 @@ function scanmeta(val) {
 
 function xss_search(val) {
     if (val) {
-        if (val.indexOf("<scrip") > -1) {
+        var val_lower = val.toLowerCase();
+        if (val_lower.indexOf("<scrip") > -1) {
             vibrate();
             notify(xss_alert);
             return true
         }
-        if (val.indexOf("onerror") > -1) {
+        if (val_lower.indexOf("onerror") > -1) {
             vibrate();
             notify(xss_alert);
             return true

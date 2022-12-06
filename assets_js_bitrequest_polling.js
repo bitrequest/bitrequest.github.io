@@ -32,7 +32,7 @@ function api_monitor(txhash, tx_data, api_dat) {
     var api_name = api_dat.name;
     if (api_name) {
         var gets = geturlparameters();
-        if (get == "xss") {
+        if (gets.xss) {
             return
         }
         api_attempts["pollings" + api_name] = true;

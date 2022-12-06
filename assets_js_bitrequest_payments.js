@@ -400,7 +400,7 @@ function loadpaymentfunction(pass) {
     symbolcache = localStorage.getItem("bitrequest_symbols");
     if (symbolcache) {
         var gets = geturlparameters();
-        if (gets == "xss") { //xss detection
+        if (gets.xss) { //xss detection
             var content = "<h2 class='icon-warning'>" + xss_alert + "</h2>";
             popdialog(content, "canceldialog");
             closeloader();
@@ -499,7 +499,7 @@ function get_tokeninfo(payment, contract) {
 function continue_paymentfunction() {
     //set globals
     var gets = geturlparameters();
-    if (gets == "xss") { //xss detection
+    if (gets.xss) { //xss detection
         var content = "<h2 class='icon-warning'>" + xss_alert + "</h2>";
         popdialog(content, "canceldialog");
         closeloader();
@@ -1857,15 +1857,12 @@ function xmrsettings() {
 }
 
 function validaterequestdata(lnurl) {
-    var requestname_val = $("input#requestname").val(),
+    var gets = geturlparameters(),
+    	requestname_val = $("input#requestname").val(),
         requesttitle_val = $("input#requesttitle").val(),
         valid = (requestname_val === undefined) ? false : (requestname_val.length > 2 && requesttitle_val.length > 1) ? true : false,
         sharebutton = $("#sharebutton"),
-        gets = geturlparameters();
-    if (gets == "xss") {
-        return
-    }
-    var page = gets.p,
+		page = gets.p,
         payment = gets.payment,
         currency = gets.uoa,
         amount = gets.amount,
@@ -2088,7 +2085,7 @@ function pickaddressfromdialog() {
         var result = confirm("Use '" + thisinputvalue + "' instead?");
         if (result === true) {
             var gets = geturlparameters();
-            if (gets == "xss") {
+            if (gets.xss) {
                 return
             }
             var picked_value = thisinputvalue.split(" | "),
@@ -2223,7 +2220,8 @@ function sharebutton() {
 function share(thisbutton) {
     if (thisbutton.hasClass("sbactive")) {
         var gets = geturlparameters();
-        if (gets == "xss") {
+        if (gets.xss) {
+	        thisbutton.removeClass("sbactive")
             return
         }
         loader(true);
@@ -2492,7 +2490,7 @@ function open_share_url(type, url) {
 
 function trigger_open_tx() {
     var gets = geturlparameters();
-    if (gets == "xss") {
+    if (gets.xss) {
         return
     }
     var tx_param = gets.txhash;
@@ -2540,7 +2538,7 @@ function open_tx(tx_node) {
 
 function saverequest(direct) {
     var gets = geturlparameters();
-    if (gets == "xss") {
+    if (gets.xss) {
         return
     }
     var thispayment = gets.payment,
