@@ -966,7 +966,7 @@ function deactivate_xpubs() {
             var currency = coinconfig.currency,
                 thislist = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']"),
                 this_switch = thislist.find(".switchpanel.custom");
-            thislist.data("selected", false).find("p").html("false");
+            thislist.data("selected", false).find("p").text("false");
             this_switch.removeClass("true").addClass("false");
             save_cc_settings(currency);
         }
@@ -1084,7 +1084,7 @@ function get_rootkey(seed) {
 function derive_all_init(phrase, seedid, extra) {
     derive_all(phrase, seedid, extra);
     var acountname = $("#eninput").val();
-    $("#accountsettings").data("selected", acountname).find("p").html(acountname);
+    $("#accountsettings").data("selected", acountname).find("p").text(acountname);
     savesettings();
     savecurrencies(true);
     body.removeClass("showstartpage");

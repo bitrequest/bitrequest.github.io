@@ -399,8 +399,14 @@ function loadpaymentfunction(pass) {
     loader();
     symbolcache = localStorage.getItem("bitrequest_symbols");
     if (symbolcache) {
-        var gets = geturlparameters(),
-            contactform = exists(gets.contactform);
+        var gets = geturlparameters();
+        if (gets == "xss") { //xss detection
+            var content = "<h2 class='icon-warning'>" + xss_alert + "</h2>";
+            popdialog(content, "canceldialog");
+            closeloader();
+            return
+        }
+        var contactform = exists(gets.contactform);
         if (contactform && pass !== true) { // show contactform
             edit_contactform(true);
             return
@@ -492,9 +498,15 @@ function get_tokeninfo(payment, contract) {
 
 function continue_paymentfunction() {
     //set globals
+    var gets = geturlparameters();
+    if (gets == "xss") { //xss detection
+        var content = "<h2 class='icon-warning'>" + xss_alert + "</h2>";
+        popdialog(content, "canceldialog");
+        closeloader();
+        return
+    }
     var payment = request.payment,
         erc20 = request.erc20,
-        gets = geturlparameters(),
         address = gets.address,
         currencycheck = (erc20 === true) ? "ethereum" : payment,
         data = gets.d,
@@ -1207,7 +1219,7 @@ function getpayment(ccrateeuro, ccapi) {
         initrequestname = (rn_set === true) ? request.requestname : $("#accountsettings").data("selected"),
         sharetitle_exceed = (request.requesttitle && request.requesttitle.length > 65),
         exceedclass = (sharetitle_exceed === true) ? "title_exceed" : "",
-        requesttitle_short = (sharetitle_exceed === true) ? request.requesttitle.substring(0, 44) + "<span>...</span>" : request.requesttitle,
+        requesttitle_short = (sharetitle_exceed === true) ? request.requesttitle.substring(0, 44) + " ... " : request.requesttitle,
         requesttitle_quotes = (request.requesttitle && request.requesttitle.length > 1) ? "'" + requesttitle_short + "'" : "",
         backbttnandtitle = (request.isrequest === true) ? "<div id='sharetitle' title='" + requesttitle_string + "' data-shorttitle='" + requesttitle_short + "' class='" + exceedclass + "'>" + requesttitle_quotes + "</div>" : "",
         save_request,
@@ -1849,8 +1861,11 @@ function validaterequestdata(lnurl) {
         requesttitle_val = $("input#requesttitle").val(),
         valid = (requestname_val === undefined) ? false : (requestname_val.length > 2 && requesttitle_val.length > 1) ? true : false,
         sharebutton = $("#sharebutton"),
-        gets = geturlparameters(),
-        page = gets.p,
+        gets = geturlparameters();
+    if (gets == "xss") {
+        return
+    }
+    var page = gets.p,
         payment = gets.payment,
         currency = gets.uoa,
         amount = gets.amount,
@@ -2004,9 +2019,9 @@ function revealtitle() {
             longtext = thisnode.attr("title"),
             shorttext = thisnode.attr("data-shorttitle");
         if (thisnode.hasClass("longtext")) {
-            thisnode.html("'" + shorttext + "'").removeClass("longtext");
+            thisnode.text("'" + shorttext + "'").removeClass("longtext");
         } else {
-            thisnode.html("'" + longtext + "'").addClass("longtext");
+            thisnode.text("'" + longtext + "'").addClass("longtext");
         }
     });
 }
@@ -2072,8 +2087,11 @@ function pickaddressfromdialog() {
             thisinputvalue = thisinput.val();
         var result = confirm("Use '" + thisinputvalue + "' instead?");
         if (result === true) {
-            var gets = geturlparameters(),
-                picked_value = thisinputvalue.split(" | "),
+            var gets = geturlparameters();
+            if (gets == "xss") {
+                return
+            }
+            var picked_value = thisinputvalue.split(" | "),
                 picked_label = picked_value[0],
                 picked_address = picked_value[1],
                 page = gets.p,
@@ -2204,9 +2222,12 @@ function sharebutton() {
 
 function share(thisbutton) {
     if (thisbutton.hasClass("sbactive")) {
+        var gets = geturlparameters();
+        if (gets == "xss") {
+            return
+        }
         loader(true);
-        var gets = geturlparameters(),
-            payment = gets.payment,
+        var payment = gets.payment,
             thiscurrency = gets.uoa,
             thisamount = gets.amount,
             thisaddress = gets.address,
@@ -2470,7 +2491,11 @@ function open_share_url(type, url) {
 }
 
 function trigger_open_tx() {
-    var tx_param = geturlparameters().txhash;
+    var gets = geturlparameters();
+    if (gets == "xss") {
+        return
+    }
+    var tx_param = gets.txhash;
     if (tx_param) {
         tx_node = get_requestli("txhash", tx_param);
         open_tx(tx_node);
@@ -2514,8 +2539,11 @@ function open_tx(tx_node) {
 // ** Save and update request **
 
 function saverequest(direct) {
-    var gets = geturlparameters(),
-        thispayment = gets.payment,
+    var gets = geturlparameters();
+    if (gets == "xss") {
+        return
+    }
+    var thispayment = gets.payment,
         thiscurrency = gets.uoa,
         thisamount = gets.amount,
         currencysymbol = request.currencysymbol,
@@ -2811,7 +2839,7 @@ function adjust_paymentdialog(status, pending, status_text) {
         "data-status": status,
         "data-pending": pending
     });
-    brstatuspanel.find("h2").html(status_text);
+    brstatuspanel.find("h2").text(status_text);
 }
 
 //open wallet

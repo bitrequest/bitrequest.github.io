@@ -54,7 +54,11 @@ function updaterequeststatestrigger() {
 }
 
 function updaterequeststatesrefresh() {
-    if (geturlparameters().p == "requests") { // only trigger on "requests page"
+    var gets = geturlparameters();
+    if (gets == "xss") {
+        return
+    }
+    if (gets.p == "requests") { // only trigger on "requests page"
         setTimeout(function() {
             trigger_requeststates();
         }, 300);

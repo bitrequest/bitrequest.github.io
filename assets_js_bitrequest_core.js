@@ -53,7 +53,8 @@ var language = navigator.language || navigator.userLanguage,
     blockswipe,
     ndef,
     ctrl,
-    gd_init = false;
+    gd_init = false,
+    xss_alert = "xss attempt detected";
 if (has_ndef && !inframe) {
     var ndef = new NDEFReader();
 }
@@ -282,12 +283,16 @@ function haspin() {
 }
 
 function islocked() {
+    var gets = geturlparameters();
+    if (gets == "xss") {
+        return true
+    }
     var locktime = $("#pinsettings").data("locktime"),
         lastlock = localStorage.getItem("bitrequest_locktime"),
         _now = now(),
         tsll = _now - lastlock,
         pflt = parseFloat(locktime);
-    return (geturlparameters().payment) ? false : (haspin() === true && tsll > pflt) ? true : false;
+    return (gets.payment) ? false : (haspin() === true && tsll > pflt) ? true : false;
 }
 
 function setfunctions() {
@@ -485,6 +490,7 @@ function finishfunctions() {
     //fetchsymbol
     //fixedcheck
     //geturlparameters
+    //xss_search
     //ishome
     //triggersubmit
     //copytoclipboard
@@ -616,9 +622,6 @@ function setlocales() {
     html.attr("lang", language);
     $("meta[property='og:locale']").attr("content", language);
     $("meta[property='og:url']").attr("content", w_loc.href);
-    var coindata = getcoindata(geturlparameters().payment),
-        imgid = (coindata) ? coindata.cmcid : "1";
-    $("meta[property='og:image']").attr("content", cmc_icon_loc + imgid + ".png");
 }
 
 function settheme() {
@@ -830,7 +833,7 @@ function pinvalidate(thispad) {
                 "pinhash": pinhash,
                 "locktime": locktime,
                 "selected": titlepin
-            }).find("p").html(titlepin);
+            }).find("p").text(titlepin);
             savesettings();
             playsound(waterdrop);
             canceloptions(true);
@@ -1083,8 +1086,12 @@ function togglenav() {
 }
 
 function loadurl() {
-    var gets = geturlparameters(),
-        page = gets.p,
+    var gets = geturlparameters();
+    if (gets == "xss") {
+        loadpageevent("home");
+        return
+    }
+    var page = gets.p,
         payment = gets.payment,
         url = w_loc.search,
         event = (payment) ? "both" : "loadpage";
@@ -1850,7 +1857,11 @@ function close_paymentdialog(empty) {
 
 function continue_cpd() {
     if (html.hasClass("firstload")) {
-        var pagename = geturlparameters().p,
+        var gets = geturlparameters();
+        if (gets == "xss") {
+            return
+        }
+        var pagename = gets.p,
             set_pagename = (pagename) ? pagename : "home";
         openpage("?p=" + set_pagename, set_pagename, "loadpage");
     } else {
@@ -2465,7 +2476,7 @@ function validateaddress(ad, vk) {
                     }
                     if (body.hasClass("showstartpage")) {
                         var acountname = $("#eninput").val();
-                        $("#accountsettings").data("selected", acountname).find("p").html(acountname);
+                        $("#accountsettings").data("selected", acountname).find("p").text(acountname);
                         savesettings();
                         var href = "?p=home&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0" + "&address=" + addinputval;
                         localStorage.setItem("bitrequest_editurl", href); // to check if request is being edited
@@ -2909,7 +2920,11 @@ function confirm_ms_newrequest() {
 }
 
 function newrequest_cb(currency, ccsymbol, address, title) {
-    var thishref = "?p=" + geturlparameters().p + "&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0&address=" + address;
+    var gets = geturlparameters();
+    if (gets == "xss") {
+        return
+    }
+    var thishref = "?p=" + gets.p + "&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0&address=" + address;
     localStorage.setItem("bitrequest_editurl", thishref); // to check if request is being edited
     canceloptions();
     remove_flip(); // reset request card facing front
@@ -3602,13 +3617,56 @@ function fixedcheck(livetop) {
 
 function geturlparameters() {
     var qstring = w_loc.search.substring(1),
-        getvalues = qstring.split("&"),
+        xss = xss_search(qstring);
+    if (xss) {
+        return "xss";
+    }
+    var getvalues = qstring.split("&"),
         get_object = {};
     $.each(getvalues, function(i, val) {
         var keyval = val.split("=");
         get_object[keyval[0]] = keyval[1];
     });
+    var dp = get_object.d,
+        mp = get_object.m;
+    if (dp) {
+        var isxx = scanmeta(dp);
+        if (isxx) {
+            return "xss";
+        }
+    }
+    if (mp) {
+        var isxx = scanmeta(mp);
+        if (isxx) {
+            return "xss";
+        }
+    }
     return get_object;
+}
+
+function scanmeta(val) {
+    var isd = (val && val.length > 5) ? atob(val) : false,
+        xssdat = xss_search(isd);
+    if (xssdat) { //xss detection
+        return true
+    }
+    return false
+}
+
+function xss_search(val) {
+    if (val) {
+        if (val.indexOf("<scrip") > -1) {
+            vibrate();
+            notify(xss_alert);
+            return true
+        }
+        if (val.indexOf("onerror") > -1) {
+            vibrate();
+            notify(xss_alert);
+            return true
+        }
+    }
+    return false
 }
 
 function ishome(pagename) {
@@ -4123,7 +4181,7 @@ function rendersettings(excludes) {
     if (settingcache) {
         $.each(JSON.parse(settingcache), function(i, value) {
             if ($.inArray(value.id, excludes) === -1) { // exclude excludes
-                $("#" + value.id).data(value).find("p").html(value.selected);
+                $("#" + value.id).data(value).find("p").text(value.selected);
             }
         });
     }
@@ -4279,7 +4337,7 @@ function append_coinsetting(currency, settings, init) {
 						</li>");
                     coinsettings_li.data(val).appendTo(coinsettings_list);
                 } else {
-                    check_setting_li.data(val).find("p").html(ss_filter);
+                    check_setting_li.data(val).find("p").text(ss_filter);
                     if (val.switch === true) {
                         check_setting_li.find(".switchpanel").removeClass("true false").addClass(selected_string);
                     }
@@ -5043,7 +5101,7 @@ function set_setting(setting, keypairs, title) {
     var set_node = $("#" + setting);
     set_node.data(keypairs);
     if (title) {
-        set_node.find("p").html(title);
+        set_node.find("p").text(title);
     }
 }
 

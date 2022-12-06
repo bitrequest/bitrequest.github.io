@@ -31,6 +31,10 @@ function api_monitor_init(txhash, tx_data, api_data) {
 function api_monitor(txhash, tx_data, api_dat) {
     var api_name = api_dat.name;
     if (api_name) {
+        var gets = geturlparameters();
+        if (get == "xss") {
+            return
+        }
         api_attempts["pollings" + api_name] = true;
         var payment = request.payment,
             currencysymbol = request.currencysymbol,
@@ -78,7 +82,7 @@ function api_monitor(txhash, tx_data, api_dat) {
                     mopsus_blockheight(data, set_confirmations, txhash);
                     return true;
                 }
-                var currentaddress = geturlparameters().address,
+                var currentaddress = gets.address,
                     legacy = (currencysymbol == "bch") ? bchutils.toLegacyAddress(currentaddress) : currentaddress,
                     txd = (api_name == "blockcypher") ? blockcypher_poll_data(data, set_confirmations, currencysymbol, currentaddress) :
                     (api_name == "ethplorer") ? ethplorer_poll_data(data, set_confirmations, currencysymbol) :
@@ -179,6 +183,10 @@ function handle_api_fails(rd, error, api_name, thispayment, txid) {
 }
 
 function rpc_monitor(txhash, tx_data, rpcdata) {
+    var gets = geturlparameters();
+    if (get == "xss") {
+        return
+    }
     var payment = request.payment,
         rpcurl = rpcdata.url;
     rpc_attempts["pollings" + rpcurl] = true;
@@ -215,7 +223,7 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
                 return
             }
             if (data.result.confirmations) {
-                var currentaddress = geturlparameters().address,
+                var currentaddress = gets.address,
                     txd = bitcoin_rpc_data(data.result, request.set_confirmations, request.currencysymbol, currentaddress);
                 confirmations(txd);
             }
