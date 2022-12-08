@@ -184,7 +184,7 @@ function handle_api_fails(rd, error, api_name, thispayment, txid) {
 
 function rpc_monitor(txhash, tx_data, rpcdata) {
     var gets = geturlparameters();
-    if (get == "xss") {
+    if (gets.xss) {
         return
     }
     var payment = request.payment,

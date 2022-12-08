@@ -611,7 +611,7 @@ function sharebu() {
 
 function check_systembu() {
     var url_params = geturlparameters();
-    if (url_params == "xss") {
+    if (url_params.xss) {
         return
     }
     if (url_params.p == "settings") {
@@ -1695,7 +1695,7 @@ function share_csv() {
 
 function check_csvexport() {
     var url_params = geturlparameters();
-    if (url_params == "xss") {
+    if (url_params.xss) {
         return
     }
     if (url_params.p == "settings") {
@@ -3269,7 +3269,7 @@ function share_teaminvite() {
 
 function check_teaminvite() {
     var url_params = geturlparameters();
-    if (url_params == "xss") {
+    if (url_params.xss) {
         return
     }
     if (url_params.p == "settings") {

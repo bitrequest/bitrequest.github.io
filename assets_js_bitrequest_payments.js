@@ -2245,7 +2245,7 @@ function share(thisbutton) {
             return false;
         }
         var newdatastring = (thisdata === true) ? "&d=" + dataparam : "", // construct data param if exists
-            shared_host = (thishostname.indexOf("ipfs") > -1 || thishostname.indexOf("bitrequest.crypto") > -1) ? thishostname : "https://bitrequest.github.io", // check for IFPS
+            shared_host = (thishostname.indexOf("ipfs") > -1 || thishostname.indexOf("bitrequest.crypto") > -1) ? c_host : "https://bitrequest.github.io", // check for IFPS
             sharedurl = shared_host + "/?p=requests&payment=" + payment + "&uoa=" + thiscurrency + "&amount=" + thisamount + "&address=" + thisaddress + newdatastring,
             thisrequestname_uppercase = thisrequestname.substr(0, 1).toUpperCase() + thisrequestname.substr(1), // capitalize requestname
             paymentupper = payment.substr(0, 1).toUpperCase() + payment.substr(1),
