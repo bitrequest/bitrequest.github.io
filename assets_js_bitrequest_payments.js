@@ -1858,11 +1858,11 @@ function xmrsettings() {
 
 function validaterequestdata(lnurl) {
     var gets = geturlparameters(),
-    	requestname_val = $("input#requestname").val(),
+        requestname_val = $("input#requestname").val(),
         requesttitle_val = $("input#requesttitle").val(),
         valid = (requestname_val === undefined) ? false : (requestname_val.length > 2 && requesttitle_val.length > 1) ? true : false,
         sharebutton = $("#sharebutton"),
-		page = gets.p,
+        page = gets.p,
         payment = gets.payment,
         currency = gets.uoa,
         amount = gets.amount,
@@ -2221,7 +2221,7 @@ function share(thisbutton) {
     if (thisbutton.hasClass("sbactive")) {
         var gets = geturlparameters();
         if (gets.xss) {
-	        thisbutton.removeClass("sbactive")
+            thisbutton.removeClass("sbactive")
             return
         }
         loader(true);
@@ -2245,7 +2245,8 @@ function share(thisbutton) {
             return false;
         }
         var newdatastring = (thisdata === true) ? "&d=" + dataparam : "", // construct data param if exists
-            shared_host = (thishostname.indexOf("ipfs") > -1 || thishostname.indexOf("bitrequest.crypto") > -1) ? c_host : "https://bitrequest.github.io", // check for IFPS
+            isipfs = (thishostname.indexOf("ipfs") > -1 || thishostname.indexOf("bitrequest.crypto") > -1) ? true : false,
+            shared_host = (isipfs) ? c_host : "https://bitrequest.github.io", // check for IFPS
             sharedurl = shared_host + "/?p=requests&payment=" + payment + "&uoa=" + thiscurrency + "&amount=" + thisamount + "&address=" + thisaddress + newdatastring,
             thisrequestname_uppercase = thisrequestname.substr(0, 1).toUpperCase() + thisrequestname.substr(1), // capitalize requestname
             paymentupper = payment.substr(0, 1).toUpperCase() + payment.substr(1),
@@ -2254,22 +2255,26 @@ function share(thisbutton) {
             encodedurl = encodeURIComponent(sharedurl),
             firebase_dynamiclink = firebase_shortlink + "?link=" + encodedurl + "&apn=" + androidpackagename + "&afl=" + encodedurl,
             share_icon = (lightning) ? "https://bitrequest.github.io/img_logos_btc-lnd.png" : cmc_icon_loc + cmcid + ".png";
+        if (isipfs) {
+            sharerequest(sharedurl, sharedtitle);
+            setlocales();
+            return
+        }
         shorten_url(sharedtitle, sharedurl, share_icon);
         setlocales();
-    } else {
-        var requestname = $("#requestname"),
-            requesttitle = $("#requesttitle"),
-            name_check = requestname.val().length,
-            title_check = requesttitle.val().length,
-            name_check_message = (name_check < 1) ? "Please enter your name" : (name_check < 3) ? "Name should have minimal 3 characters" : "Please check your form",
-            title_check_message = (title_check < 1) ? "Please enter a description" : (title_check < 2) ? "Description should have minimal 2 characters" : "Please check your form",
-            check_message = (name_check < 3) ? name_check_message : (title_check < 2) ? title_check_message : "Please fill in required fields";
-        topnotify(check_message);
-        if (name_check < 3) {
-            requestname.focus();
-        } else if (title_check < 2) {
-            requesttitle.focus();
-        }
+    }
+    var requestname = $("#requestname"),
+        requesttitle = $("#requesttitle"),
+        name_check = requestname.val().length,
+        title_check = requesttitle.val().length,
+        name_check_message = (name_check < 1) ? "Please enter your name" : (name_check < 3) ? "Name should have minimal 3 characters" : "Please check your form",
+        title_check_message = (title_check < 1) ? "Please enter a description" : (title_check < 2) ? "Description should have minimal 2 characters" : "Please check your form",
+        check_message = (name_check < 3) ? name_check_message : (title_check < 2) ? title_check_message : "Please fill in required fields";
+    topnotify(check_message);
+    if (name_check < 3) {
+        requestname.focus();
+    } else if (title_check < 2) {
+        requesttitle.focus();
     }
 }
 
