@@ -30,7 +30,7 @@ $(document).ready(function() {
 // ** Google api **
 
 function gapi_load() {
-	if (local) {
+	if (hostlocation == "local") {
 		return
 	}
     tokenClient = google.accounts.oauth2.initTokenClient({
@@ -48,7 +48,7 @@ function gapi_load() {
 }
 
 function init_login_dialog(direct) {
-	if (local) {
+	if (hostlocation == "local") {
 		return
 	}
     var ctoken = cashed_token();
@@ -161,7 +161,7 @@ function submit_gdbu_dialog() {
 }
 
 function g_login(tob) {
-	if (local) {
+	if (hostlocation == "local") {
 		notify("GoogleAuth not available");
 		return
 	}

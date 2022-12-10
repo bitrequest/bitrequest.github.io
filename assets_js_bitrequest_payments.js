@@ -2753,7 +2753,7 @@ function saverequest(direct) {
         localStorage.removeItem("bitrequest_editurl");
         sessionStorage.removeItem("bitrequest_lndpid");
     }
-    if (body.hasClass("ios") || local) {} else {
+    if (body.hasClass("ios") || hostlocation == "local") {} else {
         var rq_storage = localStorage.getItem("bitrequest_requests");
         if (!rq_storage || rq_storage == "[]") {
             gd_init = true;

@@ -2669,7 +2669,7 @@ function cancelpaymentdialog() {
     lnd_ph = false;
     if (gd_init === true) {
         gd_init = false;
-        if (local) {
+        if (hostlocation == "local") {
             return
         }
         var pass = GD_pass();
