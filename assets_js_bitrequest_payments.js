@@ -2262,6 +2262,7 @@ function share(thisbutton) {
         }
         shorten_url(sharedtitle, sharedurl, share_icon);
         setlocales();
+        return
     }
     var requestname = $("#requestname"),
         requesttitle = $("#requesttitle"),
@@ -2752,7 +2753,7 @@ function saverequest(direct) {
         localStorage.removeItem("bitrequest_editurl");
         sessionStorage.removeItem("bitrequest_lndpid");
     }
-    if (body.hasClass("ios")) {} else {
+    if (body.hasClass("ios") || local) {} else {
         var rq_storage = localStorage.getItem("bitrequest_requests");
         if (!rq_storage || rq_storage == "[]") {
             gd_init = true;

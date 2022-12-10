@@ -30,6 +30,9 @@ $(document).ready(function() {
 // ** Google api **
 
 function gapi_load() {
+	if (local) {
+		return
+	}
     tokenClient = google.accounts.oauth2.initTokenClient({
         "client_id": to.ga_id,
         "scope": scope,
@@ -45,6 +48,9 @@ function gapi_load() {
 }
 
 function init_login_dialog(direct) {
+	if (local) {
+		return
+	}
     var ctoken = cashed_token();
     if (ctoken) {
         var oa_timer = localStorage.getItem("bitrequest_oa_timer");
@@ -155,6 +161,10 @@ function submit_gdbu_dialog() {
 }
 
 function g_login(tob) {
+	if (local) {
+		notify("GoogleAuth not available");
+		return
+	}
     if (tob && tob.cached === false) {
         tokenClient.requestAccessToken({
             "prompt": "none"

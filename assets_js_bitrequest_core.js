@@ -2669,6 +2669,9 @@ function cancelpaymentdialog() {
     lnd_ph = false;
     if (gd_init === true) {
         gd_init = false;
+        if (local) {
+            return
+        }
         var pass = GD_pass();
         if (pass) {
             return
