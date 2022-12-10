@@ -75,6 +75,9 @@ function init_login_dialog(direct) {
 }
 
 function oauth_pop(ab) {
+	if (body.hasClass("showstartpage")) { // only show when logged in
+		return
+	}
     var cbx = (ab) ? render_html([{
             "div": {
                 "id": "pk_confirmwrap",

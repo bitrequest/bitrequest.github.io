@@ -2511,6 +2511,11 @@ function view_tx() {
         if (inframe === true) {
             html.removeClass("hide_app");
         }
+        if (body.hasClass("showstartpage")) {
+	        cancelpaymentdialog();
+        	startnext($("#intro"));
+        	return
+        }
         openpage("?p=requests", "requests", "loadpage");
         var tx_hash = $(this).attr("data-txhash"),
             tx_node = get_requestli("txhash", tx_hash);
