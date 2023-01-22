@@ -75,7 +75,8 @@ if ($custom) {
                 "ad_id" => $keys["amberdata"],
                 "if_id" => $keys["infura"],
                 "ga_id" => $keys["googleauth"],
-                "bc_id" => $keys["blockcypher"]
+                "bc_id" => $keys["blockcypher"],
+                "fb_id" => $keys["firebase"]
             ])
         );
         echo json_encode([
