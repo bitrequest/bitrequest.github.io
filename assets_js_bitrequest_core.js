@@ -284,7 +284,7 @@ function haspin() {
 
 function islocked() {
     var gets = geturlparameters(),
-    	locktime = $("#pinsettings").data("locktime"),
+        locktime = $("#pinsettings").data("locktime"),
         lastlock = localStorage.getItem("bitrequest_locktime"),
         tsll = now() - lastlock,
         pflt = parseFloat(locktime);
@@ -5240,16 +5240,10 @@ function fk() {
 function init_keys(ko, set) { // set required keys
     var k = JSON.parse(atob(ko));
     to = k;
-    var if_id = k.if_id,
-        if_set = (if_id != ""),
-        ga_set = (k.ga_id != ""),
-        api_data = $("#apikeys").data(),
-        if_saved_key = api_data.infura,
-        if_set_key = (if_set === true) ? if_id : null,
-        if_key = (if_saved_key) ? if_saved_key : if_set_key;
-    if (ga_set === true) {
+    var ga_set = (k.ga_id != "");
+    if (ga_set) {
         setTimeout(function() {
-            gapi_load(is_ios_app);
+            gapi_load();
         }, 1000);
     }
     io.k = ko;

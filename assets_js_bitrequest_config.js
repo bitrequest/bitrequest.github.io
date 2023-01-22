@@ -235,18 +235,12 @@ var apptitle = "Bitrequest",
                     "apis": {
                         "icon": "sphere",
                         "selected": {
-                            "name": "blockcypher",
-                            "url": "blockcypher.com",
+                            "name": "mempool.space",
+                            "url": "memppol.space",
                             "api": true,
                             "display": true
                         },
                         "apis": [{
-                                "name": "blockcypher",
-                                "url": "blockcypher.com",
-                                "api": true,
-                                "display": true
-                            },
-                            {
                                 "name": "mempool.space",
                                 "url": "memppol.space",
                                 "api": true,
@@ -255,6 +249,12 @@ var apptitle = "Bitrequest",
                             {
                                 "name": "blockchair",
                                 "url": "blockchair.com",
+                                "api": true,
+                                "display": true
+                            },
+                            {
+                                "name": "blockcypher",
+                                "url": "blockcypher.com",
                                 "api": true,
                                 "display": true
                             },

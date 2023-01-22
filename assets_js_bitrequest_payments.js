@@ -102,6 +102,8 @@ $(document).ready(function() {
     hideapistats();
     sharebutton();
     //share
+    //shorten_url
+    //bitly_shorten
     //sharerequest
     //sharefallback
     whatsappshare();
@@ -2291,87 +2293,106 @@ function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
             return
         }
         if (us_service == "firebase") {
-            var security = (unguessable === true) ? "UNGUESSABLE" : "SHORT";
-            api_proxy({
-                "api": "firebase",
-                "search": "shortLinks",
-                "cachetime": 84600,
-                "cachefolder": "1d",
-                "params": {
-                    "method": "POST",
-                    "cache": false,
-                    "dataType": "json",
-                    "contentType": "application/json",
-                    "data": JSON.stringify({
-                        "dynamicLinkInfo": {
-                            "domainUriPrefix": firebase_dynamic_link_domain,
-                            "link": sharedurl,
-                            "androidInfo": {
-                                "androidPackageName": androidpackagename
-                            },
-                            "iosInfo": {
-                                "iosBundleId": androidpackagename,
-                                "iosAppStoreId": "1484815377"
-                            },
-                            "navigationInfo": {
-                                "enableForcedRedirect": "1"
-                            },
-                            "socialMetaTagInfo": {
-                                "socialTitle": "Bitrequest",
-                                "socialDescription": "Accept crypto anywhere",
-                                "socialImageLink": sitethumb
-                            }
-                        },
-                        "suffix": {
-                            "option": security
+            if (to) {
+                var fbid = to.fb_id;
+                if (fbid) {
+                    var security = (unguessable === true) ? "UNGUESSABLE" : "SHORT";
+                    api_proxy({
+                        "api": "firebase",
+                        "search": "shortLinks",
+                        "cachetime": 84600,
+                        "cachefolder": "1d",
+                        "proxy": false,
+                        "api_url": "https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=" + fbid,
+                        "params": {
+                            "method": "POST",
+                            "cache": false,
+                            "dataType": "json",
+                            "contentType": "application/json",
+                            "data": JSON.stringify({
+                                "dynamicLinkInfo": {
+                                    "domainUriPrefix": firebase_dynamic_link_domain,
+                                    "link": sharedurl,
+                                    "androidInfo": {
+                                        "androidPackageName": androidpackagename
+                                    },
+                                    "iosInfo": {
+                                        "iosBundleId": androidpackagename,
+                                        "iosAppStoreId": "1484815377"
+                                    },
+                                    "navigationInfo": {
+                                        "enableForcedRedirect": "1"
+                                    },
+                                    "socialMetaTagInfo": {
+                                        "socialTitle": "Bitrequest",
+                                        "socialDescription": "Accept crypto anywhere",
+                                        "socialImageLink": sitethumb
+                                    }
+                                },
+                                "suffix": {
+                                    "option": security
+                                }
+                            })
                         }
-                    })
-                }
-            }).done(function(e) {
-                var data = br_result(e).result;
-                if (data.error) {
-                    sharerequest(sharedurl, sharedtitle);
+                    }).done(function(e) {
+                        var data = br_result(e).result;
+                        if (data) {
+                            if (data.error) {
+                                bitly_shorten(sharedurl, sharedtitle);
+                                return
+                            }
+                            var shorturl = data.shortLink;
+                            if (shorturl) {
+                                sharerequest(shorturl, sharedtitle);
+                                sessionStorage.setItem("bitrequest_firebase_shorturl_" + hashcode(sharedurl), shorturl);
+                                return
+                            }
+                        }
+                        bitly_shorten(sharedurl, sharedtitle);
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        bitly_shorten(sharedurl, sharedtitle);
+                    });
                     return
                 }
-                var shorturl = data.shortLink;
-                sharerequest(shorturl, sharedtitle);
-                sessionStorage.setItem("bitrequest_firebase_shorturl_" + hashcode(sharedurl), shorturl);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                sharerequest(sharedurl, sharedtitle);
-            });
+            }
+            bitly_shorten(sharedurl, sharedtitle);
             return
         }
         if (us_service == "bitly") {
-            api_proxy({
-                "api": "bitly",
-                "search": "bitlinks",
-                "cachetime": 84600,
-                "cachefolder": "1d",
-                "bearer": true,
-                "params": {
-                    "method": "POST",
-                    "contentType": "application/json",
-                    "data": JSON.stringify({
-                        "long_url": sharedurl
-                    })
-                }
-            }).done(function(e) {
-                var data = br_result(e).result;
-                if (data.id) {
-                    var linkid = data.id.split("/").pop(),
-                        shorturl = data.link;
-                    sharerequest(shorturl, sharedtitle);
-                    sessionStorage.setItem("bitrequest_bitly_shorturl_" + hashcode(sharedurl), shorturl);
-                    return
-                }
-                sharerequest(sharedurl, sharedtitle);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                sharerequest(sharedurl, sharedtitle);
-            });
+            bitly_shorten(sharedurl, sharedtitle);
             return
         }
     }
     sharerequest(sharedurl, sharedtitle);
+}
+
+function bitly_shorten(sharedurl, sharedtitle) {
+    api_proxy({
+        "api": "bitly",
+        "search": "bitlinks",
+        "cachetime": 84600,
+        "cachefolder": "1d",
+        "bearer": true,
+        "params": {
+            "method": "POST",
+            "contentType": "application/json",
+            "data": JSON.stringify({
+                "long_url": sharedurl
+            })
+        }
+    }).done(function(e) {
+        var data = br_result(e).result;
+        if (data.id) {
+            var linkid = data.id.split("/").pop(),
+                shorturl = data.link;
+            sharerequest(shorturl, sharedtitle);
+            sessionStorage.setItem("bitrequest_bitly_shorturl_" + hashcode(sharedurl), shorturl);
+            return
+        }
+        sharerequest(sharedurl, sharedtitle);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        sharerequest(sharedurl, sharedtitle);
+    });
 }
 
 function sharerequest(sharedurl, sharedtitle) {
@@ -2512,9 +2533,9 @@ function view_tx() {
             html.removeClass("hide_app");
         }
         if (body.hasClass("showstartpage")) {
-	        cancelpaymentdialog();
-        	startnext($("#intro"));
-        	return
+            cancelpaymentdialog();
+            startnext($("#intro"));
+            return
         }
         openpage("?p=requests", "requests", "loadpage");
         var tx_hash = $(this).attr("data-txhash"),
