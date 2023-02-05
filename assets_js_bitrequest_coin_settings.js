@@ -1232,7 +1232,7 @@ function reset_coinsettings() {
     $(document).on("click", ".reset_cc_settings", function() {
         var thistrigger = $(this),
             currency = thistrigger.attr("data-currency");
-        popdialog("<h2 class='icon-bin'>Reset " + currency + " settings?</h2>", "alert", "reset_coinsettings_function", thistrigger);
+        popdialog("<h2 class='icon-bin'>Reset " + currency + " settings?</h2>", "reset_coinsettings_function", thistrigger);
     })
 }
 
