@@ -521,7 +521,10 @@ function get_api_inputs(rd, api_data, api_name) {
                         } else {
                             tx_api_fail(thislist, statuspanel);
                             var errormessage = data.Error,
-                                error_object = (errormessage) ? errormessage : "Invalid Viewkey";
+                                error_object = (errormessage) ? errormessage : {
+                                    "error": "Unable to connect to mymonero api",
+                                    "console": true
+                                };
                             handle_api_fails_list(rd, error_object, api_data, payment);
                         }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
