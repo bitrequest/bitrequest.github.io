@@ -901,9 +901,9 @@ function ios_redirections(url) {
     if (currenturl == newpage) {
         return
     }
-    var isrequest = (newpage.indexOf("PAYMENT=") >= 0);
+    var isrequest = (newpage.indexOf("PAYMENT=") >= 0),
+        isopenrequest = (currenturl.indexOf("PAYMENT=") >= 0);
     if (isrequest === true) {
-        var isopenrequest = (currenturl.indexOf("PAYMENT=") >= 0);
         if (isopenrequest === true) {
             cancelpaymentdialog();
             setTimeout(function() {
@@ -913,9 +913,14 @@ function ios_redirections(url) {
             openpage(url, "", "payment");
         }
     } else {
-        var slice = url.slice(url.lastIndexOf("?p=") + 3),
-            pagename = (slice.indexOf("&") >= 0) ? slice.substr(0, slice.indexOf("&")) : slice;
-        openpage(url, pagename, "page");
+        if (isopenrequest === true) {} else {
+            var pageparam = url.lastIndexOf("?p=");
+            if (pageparam > 10) {
+                var slice = url.slice(pageparam + 3),
+                    pagename = (slice.indexOf("&") >= 0) ? slice.substr(0, slice.indexOf("&")) : slice;
+                openpage(url, pagename, "page");
+            }
+        }
     }
     updaterequeststatesrefresh();
 }
