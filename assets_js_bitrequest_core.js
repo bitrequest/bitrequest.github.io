@@ -895,14 +895,14 @@ function ios_redirections(url) {
         ios_redirect_bitly(url);
         return
     }
-    var currenturlvar = w_loc.href,
+    var currenturlvar = window.location.href,
         currenturl = currenturlvar.toUpperCase(),
         newpage = url.toUpperCase();
     if (currenturl == newpage) {
         return
     }
     var isrequest = (newpage.indexOf("PAYMENT=") >= 0),
-        isopenrequest = (currenturl.indexOf("PAYMENT=") >= 0);
+        isopenrequest = (paymentpopup.hasClass("active"));
     if (isrequest === true) {
         if (isopenrequest === true) {
             cancelpaymentdialog();
