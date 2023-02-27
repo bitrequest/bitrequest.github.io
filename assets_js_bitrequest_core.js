@@ -895,7 +895,7 @@ function ios_redirections(url) {
         ios_redirect_bitly(url);
         return
     }
-    var currenturlvar = window.location.href,
+    var currenturlvar = w_loc.href,
         currenturl = currenturlvar.toUpperCase(),
         newpage = url.toUpperCase();
     if (currenturl == newpage) {
@@ -905,10 +905,12 @@ function ios_redirections(url) {
         isopenrequest = (paymentpopup.hasClass("active"));
     if (isrequest === true) {
         if (isopenrequest === true) {
-            cancelpaymentdialog();
-            setTimeout(function() {
-                openpage(url, "", "payment");
-            }, 1000);
+            if (localStorage.getItem("bitrequest_editurl") == w_loc.search) {} else {
+                cancelpaymentdialog();
+                setTimeout(function() {
+                    openpage(url, "", "payment");
+                }, 1000);
+            }
         } else {
             openpage(url, "", "payment");
         }
