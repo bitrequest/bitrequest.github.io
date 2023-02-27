@@ -901,7 +901,7 @@ function ios_redirections(url) {
     if (currenturl == newpage) {
         return
     }
-    var isrequest = (currenturl.indexOf("PAYMENT=") >= 0),
+    var isrequest = (newpage.indexOf("PAYMENT=") >= 0),
         isopenrequest = (paymentpopup.hasClass("active"));
     if (isrequest === true) {
         if (isopenrequest === true) {
