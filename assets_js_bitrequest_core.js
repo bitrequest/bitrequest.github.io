@@ -2673,7 +2673,9 @@ function cancelpaymentdialog() {
     closenotify();
     sleep();
     abort_ndef();
-    lnd_ph = false;
+    lnd_ph = false,
+    	request = null,
+    	helper = null;
     if (gd_init === true) {
         gd_init = false;
         if (hostlocation == "local") {
