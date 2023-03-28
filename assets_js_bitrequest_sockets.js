@@ -919,28 +919,33 @@ function web3_erc20_websocket(socket_node, thisaddress) {
             params = (dat.params);
         if (params) {
             var result = params.result,
-                contractdata = result.data,
-                cd_hex = contractdata.slice(2),
-                token_value = hexToNumberString(cd_hex),
-                token_decimals = request.decimals,
-                ccval = parseFloat((token_value / Math.pow(10, token_decimals)).toFixed(8));
-            if (ccval === Infinity) {} else {
-                var cryptoval = $("#shareccinputmirror > span").text(),
-                    urlamount = parseFloat(cryptoval).toFixed(8),
-                    amountnumber = parseFloat(urlamount),
-                    percent = (ccval / amountnumber) * 100;
-                if (percent > 70 && percent < 130) { // only scan amounts with a margin less then 20%
-                    var tx_hash = result.transactionHash,
-                        txd = {
-                            "ccval": ccval,
-                            "transactiontime": now() + timezone,
-                            "txhash": tx_hash,
-                            "confirmations": 0,
-                            "setconfirmations": request.set_confirmations,
-                            "ccsymbol": request.currencysymbol
+                topics = result.topics;
+            if (topics) {
+                var topic_address = topics[2];
+                if (topic_address) {
+                    var topic_address_upper = topic_address.toUpperCase(),
+                        addr_slice = thisaddress.slice(3),
+                        addr_slice_upper = addr_slice.toUpperCase();
+                    if (topic_address_upper.indexOf(addr_slice_upper) >= 0) {
+                        var contractdata = result.data,
+                            cd_hex = contractdata.slice(2),
+                            token_value = hexToNumberString(cd_hex),
+                            token_decimals = request.decimals,
+                            ccval = parseFloat((token_value / Math.pow(10, token_decimals)).toFixed(8));
+                        if (ccval === Infinity) {} else {
+                            var tx_hash = result.transactionHash,
+                                txd = {
+                                    "ccval": ccval,
+                                    "transactiontime": now() + timezone,
+                                    "txhash": tx_hash,
+                                    "confirmations": 0,
+                                    "setconfirmations": request.set_confirmations,
+                                    "ccsymbol": request.currencysymbol
+                                }
+                            pick_monitor(tx_hash, txd);
+                            return
                         }
-                    pick_monitor(tx_hash, txd);
-                    return
+                    }
                 }
             }
         }

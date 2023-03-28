@@ -313,8 +313,7 @@ function ping_eth_node(rpcdata, txhash, erc20) {
                                     input_upper = input.toUpperCase();
                                 if (input_upper.indexOf(address_upper) >= 0) {
                                     var signature_hex = input.slice(2, 10),
-                                        address_hex = input.slice(10, 74),
-                                        amount_hex = input.slice(74, input.length),
+                                        amount_hex = input.slice(74),
                                         tokenValue = hexToNumberString(amount_hex),
                                         txdata = {
                                             "timestamp": r_3.timestamp,
