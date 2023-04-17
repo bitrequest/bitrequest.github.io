@@ -708,6 +708,12 @@ var apptitle = "Bitrequest",
                             "playstore": "https://play.google.com/store/apps/details?id=com.myetherwallet.mewwallet",
                             "desktop": "https://www.myetherwallet.com",
                             "seed": true
+                        },
+                        {
+                            "name": "metamask",
+                            "website": "https://metamask.io",
+                            "desktop": "https://metamask.io/download",
+                            "seed": true
                         }
                     ]
                 },
@@ -825,6 +831,13 @@ var apptitle = "Bitrequest",
                     "wallet_download_page": "https://nanowallets.guide",
                     "wallets": [
                         multi_wallets.trustwallet,
+                        {
+                            "name": "nautilus",
+                            "website": "https://nautilus.io",
+                            "appstore": "https://apps.apple.com/app/id1615775960",
+                            "playstore": "https://play.google.com/store/apps/details?id=co.perish.nautiluswallet",
+                            "seed": true
+                        },
                         {
                             "name": "nalli",
                             "website": "https://nalli.app",
@@ -1186,6 +1199,12 @@ var apptitle = "Bitrequest",
                         "appstore": "https://apps.apple.com/app/id1464614025",
                         "playstore": "https://play.google.com/store/apps/details?id=com.myetherwallet.mewwallet",
                         "desktop": "https://www.myetherwallet.com"
+                    },
+                    {
+                        "name": "metamask",
+                        "website": "https://metamask.io",
+                        "desktop": "https://metamask.io/download",
+                        "seed": true
                     },
                     {
                         "name": "enjin",
