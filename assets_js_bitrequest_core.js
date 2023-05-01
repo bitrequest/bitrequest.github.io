@@ -511,6 +511,7 @@ function finishfunctions() {
     //playsound
     //vibrate
     //get_api_data
+    //str_match
     //pinpanel
     //switchpanel
     //getcoindata
@@ -610,6 +611,7 @@ function finishfunctions() {
     html.addClass("loaded");
     check_rr();
     //toggle_rr
+    //q_obj
 }
 
 //checks
@@ -2674,8 +2676,8 @@ function cancelpaymentdialog() {
     sleep();
     abort_ndef();
     lnd_ph = false,
-    	request = null,
-    	helper = null;
+        request = null,
+        helper = null;
     if (gd_init === true) {
         gd_init = false;
         if (hostlocation == "local") {
@@ -3868,6 +3870,17 @@ function get_api_data(api_id) {
     return apipath[0];
 }
 
+function str_match(add1, add2) {
+    if (add1 && add2) {
+        var a1u = add1.toUpperCase(),
+            a2u = add2.toUpperCase();
+        if (a1u.indexOf(a2u) >= 0) {
+            return true
+        }
+    }
+    return false
+}
+
 function all_pinpanel(cb, top) {
     var topclass = (top) ? " ontop" : "";
     if (haspin() === true) {
@@ -4064,7 +4077,6 @@ function wake() {
 
 function sleep() {
     if (wl) {
-        console.log(wakelock);
         if (wakelock) {
             wakelock.release();
         }
@@ -5286,6 +5298,26 @@ function toggle_rr(bool) {
         return
     }
     html.removeClass("show_rr");
+}
+
+function q_obj(obj, path) {
+    try {
+        var p_arr = path.split(".");
+        if ($.isArray(p_arr) && p_arr.length > 1) {
+            $.each(p_arr, function(i, v) {
+                if (!obj[v]) {
+                    obj = false;
+                    return false
+                }
+                obj = obj[v];
+            });
+            return obj;
+        }
+        return false;
+    } catch (e) {
+        console.error(e.name, e.message);
+        return false
+    }
 }
 
 // add serviceworker

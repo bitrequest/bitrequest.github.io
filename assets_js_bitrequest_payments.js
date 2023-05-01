@@ -2848,10 +2848,9 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
                 vk = request.viewkey;
             if (vk) {
                 var account = (vk.account) ? vk.account : address,
-                    viewkey = vk.vk,
-                    starttime = now();
+                    viewkey = vk.vk;
                 closenotify();
-                init_xmr_node(34, account, viewkey, starttime, smart_txhash, true);
+                init_xmr_node(34, account, viewkey, null, smart_txhash, true);
                 return
             }
             notify("this currency is not monitored", 500000, "yes");

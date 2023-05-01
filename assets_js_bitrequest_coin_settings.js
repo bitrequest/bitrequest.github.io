@@ -1,6 +1,7 @@
 var ap_id,
     test_rpc_call,
-    is_erc20t;
+    is_erc20t,
+    is_btc;
 
 $(document).ready(function() {
 
@@ -269,8 +270,10 @@ function edit_rpcnode() {
         var thiscurrency = current_li.children(".liwrap").attr("data-currency");
         ap_id = current_li.attr("data-id"),
             test_rpc_call = this_data.rpc_test_command,
-            is_erc20t = ($("#" + thiscurrency + "_settings").attr("data-erc20") == "true");
-        var header_text = (ap_id === "websockets") ? "Add websocket" : "Add RPC node",
+            is_erc20t = ($("#" + thiscurrency + "_settings").attr("data-erc20") == "true"),
+            is_btc = (thiscurrency == "bitcoin" || thiscurrency == "litecoin" || thiscurrency == "dogecoin" || thiscurrency == "bitcoin-cash");
+        var h_hint = (is_btc) ? "mempool.space" : (thiscurrency == "ethereum" || is_erc20t === true) ? "Infura" : "",
+            header_text = (ap_id === "websockets") ? "Add " + h_hint + " websocket" : "Add " + h_hint + " RPC",
             currencycode = (thiscurrency == "ethereum" || is_erc20t === true) ? "eth" : thiscurrency,
             placeholder_id = ap_id + currencycode + getrandomnumber(1, 3),
             getplaceholder = get_rpc_placeholder(thiscurrency)[placeholder_id],
@@ -362,25 +365,31 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                     }
                 }
             }).done(function(e) {
-                var data = br_result(e);
-                if (data) {
+                var data = br_result(e),
+                    rhash = q_obj(data, "result.result.hash");
+                if (rhash == txhash) {
                     rpc_option_li(optionlist, true, key, value, selected, true);
                     return
                 }
                 rpc_option_li(optionlist, false, key, value, selected, true);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
+            }).fail(function(e) {
                 rpc_option_li(optionlist, false, key, value, selected, true);
             });
             return
         }
-        var rpc = (thiscurrency == "bitcoin" || thiscurrency == "litecoin" || thiscurrency == "dogecoin" || thiscurrency == "bitcoin-cash") ? "bitcoin" : thiscurrency,
-            rpcurl = get_rpc_url({
-                "url": value.url,
-                "username": value.username,
-                "password": value.password
-            });
-        api_proxy({
-            "api": rpc,
+        var rpcurl = get_rpc_url({
+            "url": value.url,
+            "username": value.username,
+            "password": value.password
+        });
+        var pload = (is_btc) ? {
+            "api_url": value.url + "/api/v1/difficulty-adjustment",
+            "proxy": false,
+            "params": {
+                "method": "GET"
+            }
+        } : {
+            "api": thiscurrency,
             "search": "test",
             "cachetime": 25,
             "cachefolder": "1h",
@@ -392,12 +401,13 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                     "Content-Type": "text/plain"
                 }
             }
-        }).done(function(e) {
+        }
+        api_proxy(pload).done(function(e) {
             var data = br_result(e),
                 result = data.result,
                 live = ($.isEmptyObject(result)) ? false : (thiscurrency == "nano") ? (result.network == "live") ? true : false : true;
             rpc_option_li(optionlist, live, key, value, selected, true);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+        }).fail(function(e) {
             rpc_option_li(optionlist, false, key, value, selected, true);
         });
         return
@@ -409,9 +419,10 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
         if (provider_name == "blockcypher wss") {
             var provider = value.url + "btc/main";
         }
-        if (thiscurrency == "bitcoin") {
+        if (is_btc) {
             var ping_event = JSON.stringify({
-                "op": "ping"
+                "action": "want",
+                "data": ["stats"]
             });
         }
         if (thiscurrency == "nano") {
@@ -477,7 +488,11 @@ function rpc_option_li(optionlist, live, key, value, selected, checked) {
 }
 
 function test_rpcnode() {
-    $(document).on("click", "#settingsbox .selectbox .options > div", function() {
+    $(document).on("click", "#settingsbox .selectbox .options > div", function(e) {
+        var target = $(e.target);
+        if (target.hasClass("icon-bin")) {
+            return // prevent selection when deleting
+        }
         var thisoption = $(this),
             thisdata = thisoption.data();
         if (thisoption.hasClass("offline")) {
@@ -507,7 +522,7 @@ function submit_rpcnode() {
                 var optionsbox = settingsbox.find(".options"),
                     duplicates = optionsbox.find("span[data-value='" + rpc_url_input_val + "']"),
                     indexed = (duplicates.length) ? true : false;
-                if (indexed) {
+                if (indexed || rpc_url_input_val.indexOf("mempool.space") > -1) {
                     popnotify("error", "Node already added");
                     return
                 }
@@ -547,67 +562,77 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                     }
                 }
             }).done(function(e) {
-                var data = br_result(e);
-                if (data) {
+                var data = br_result(e),
+                    rhash = q_obj(data, "result.result.hash");
+                if (rhash == txhash) {
                     rpc_input_box.addClass("live").removeClass("offline");
                     pass_rpc_submit(currency, rpc_data, true);
                     return
                 }
                 rpc_input_box.addClass("offline").removeClass("live");
                 popnotify("error", "unable to connect");
-            }).fail(function(jqXHR, textStatus, errorThrown) {
+            }).fail(function(e) {
                 rpc_input_box.addClass("offline").removeClass("live");
                 popnotify("error", "unable to connect");
             });
             return
         }
-        var rpc = (currency == "bitcoin" || currency == "litecoin" || currency == "dogecoin" || currency == "bitcoin-cash") ? "bitcoin" : currency,
-            rpcurl = get_rpc_url(rpc_data);
-        api_proxy({
-            "api": rpc,
-            "search": "test",
-            "cachetime": 25,
-            "cachefolder": "1h",
-            "api_url": rpcurl,
-            "params": {
-                "method": "POST",
-                "data": JSON.stringify(test_rpc_call),
-                "headers": {
-                    "Content-Type": "text/plain"
+        var rpcurl = get_rpc_url(rpc_data),
+            txid = (currency == "bitcoin") ? "15e10745f15593a899cef391191bdd3d7c12412cc4696b7bcb669d0feadc8521" :
+            (currency == "litecoin") ? "ce23198bbbd195e5d774cbbbc865f0565b9db9dfca5e72fa0cf00cf9801069e3" :
+            (currency == "dogecoin") ? "757d4d3fe9b3d2a65fa4c5e6c654336a90d075b432c9c787bed7364eeadbef85" :
+            (currency == "bitcoin-cash") ? "bae30e04844a2f457b7eb96f4cdf24f249f3d05d03119263f550b1add043fed8" : "",
+            pload = (is_btc) ? {
+                "api_url": rpcurl + "/api/tx/" + txid,
+                "proxy": false,
+                "params": {
+                    "method": "GET"
+                }
+            } : {
+                "api": currency,
+                "search": "test",
+                "cachetime": 25,
+                "cachefolder": "1h",
+                "api_url": rpcurl,
+                "params": {
+                    "method": "POST",
+                    "data": JSON.stringify(test_rpc_call),
+                    "headers": {
+                        "Content-Type": "text/plain"
+                    }
                 }
             }
-        }).done(function(e) {
+        api_proxy(pload).done(function(e) {
             var data = br_result(e),
                 rpc_result = data.result;
             if (rpc_result) {
-                rpc_input_box.addClass("live").removeClass("offline");
-                pass_rpc_submit(currency, rpc_data, true);
-                return
-            }
-            var error = data.error || rpc_result.error;
-            if (error) {
-                rpc_input_box.addClass("offline").removeClass("live");
-                topnotify("Unable to connect");
-                var error_message = error.error_message;
-                if (error_message) {
-                    popnotify("error", error_message);
+                var error = data.error || rpc_result.error;
+                if (error) {
+                    rpc_input_box.addClass("offline").removeClass("live");
+                    topnotify("Unable to connect");
+                    var error_message = (error.error_message) ? error.error_message : error.message;
+                    if (error_message) {
+                        popnotify("error", error_message);
+                    }
+                    return
+                }
+                if (rpc_result.txid == txid || rpc_result.network == "live") {
+                    rpc_input_box.addClass("live").removeClass("offline");
+                    pass_rpc_submit(currency, rpc_data, true);
                 }
             }
-        }).fail(function(data) {
+        }).fail(function(e) {
             rpc_input_box.addClass("offline").removeClass("live");
             topnotify("Unable to connect");
-            if (data.status === 0) {
-                popnotify("error", "Try disabeling Cross Origin Limitations in your browser");
-            }
         });
         return
     }
     if (ap_id == "websockets") {
         var provider = rpc_data.url,
             ping_event;
-        if (currency == "bitcoin") {
+        if (is_btc) {
             var ping_event = JSON.stringify({
-                "op": "ping"
+                "action": "ping"
             });
         }
         if (currency == "nano") {
@@ -668,12 +693,10 @@ function pass_rpc_submit(thiscurrency, thisvalue, newnode) {
         options = rpc_setting_li.data("options"),
         node_name = (thisvalue.name) ? thisvalue.name : thisvalue.url;
     rpc_setting_li.data("selected", thisvalue).find("p").html(node_name);
-    if ($.isEmptyObject(options)) {
-        if (newnode === true) {
+    if (newnode === true) {
+        if ($.isEmptyObject(options)) {
             rpc_setting_li.data("options", [thisvalue]);
-        }
-    } else {
-        if (newnode === true) {
+        } else {
             options.push(thisvalue);
         }
     }
@@ -714,6 +737,7 @@ function remove_rpcnode() {
                 });
                 rpc_setting_li.data("options", new_array);
                 notify("RPC node removed");
+                $("#rpc_url_input").val("");
                 save_cc_settings(thiscurrency, true);
             }
         }

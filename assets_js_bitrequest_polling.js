@@ -190,7 +190,7 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
     var payment = request.payment,
         rpcurl = rpcdata.url;
     rpc_attempts["pollings" + rpcurl] = true;
-    if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin") {
+    if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin" || payment == "bitcoin-cash") {
         if (tx_data) {
             confirmations(tx_data, true);
             pinging[txhash] = setInterval(function() {
@@ -217,15 +217,17 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
 
         function rpc_result(result) {
             var data = result.result;
-            if (data.error) {
-                clearpinging();
-                handle_rpc_fails(rpcdata, data.error, txhash);
-                return
-            }
-            if (data.result.confirmations) {
-                var currentaddress = gets.address,
-                    txd = bitcoin_rpc_data(data.result, request.set_confirmations, request.currencysymbol, currentaddress);
-                confirmations(txd);
+            if (data) {
+                if (data.error) {
+                    clearpinging();
+                    handle_rpc_fails(rpcdata, data.error, txhash);
+                    return
+                }
+                if (data.txid) {
+                    var currentaddress = gets.address,
+                        txd = mempoolspace_scan_data(data, request.set_confirmations, request.currencysymbol, currentaddress);
+                    confirmations(txd);
+                }
             }
         };
 
@@ -271,20 +273,10 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
 
 function rmpl(payment, rpcurl, txhash) { // rpc_monitor payload
     return {
-        "api": payment,
-        "search": "txid",
-        "cachetime": 10,
-        "cachefolder": "1h",
-        "api_url": rpcurl,
+        "api_url": rpcurl + "/api/tx/" + txhash,
+        "proxy": false,
         "params": {
-            "method": "POST",
-            "data": JSON.stringify({
-                "method": "getrawtransaction",
-                "params": [txhash, true]
-            }),
-            "headers": {
-                "Content-Type": "text/plain"
-            }
+            "method": "GET"
         }
     }
 }
@@ -308,10 +300,8 @@ function ping_eth_node(rpcdata, txhash, erc20) {
                                 conf_correct = (conf < 0) ? 0 : conf,
                                 txd;
                             if (erc20 === true) {
-                                var input = r_2.input,
-                                    address_upper = request.address.slice(3).toUpperCase(),
-                                    input_upper = input.toUpperCase();
-                                if (input_upper.indexOf(address_upper) >= 0) {
+                                var input = r_2.input;
+                                if (str_match(input, request.address.slice(3)) === true) {
                                     var signature_hex = input.slice(2, 10),
                                         amount_hex = input.slice(74),
                                         tokenValue = hexToNumberString(amount_hex),

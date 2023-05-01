@@ -264,7 +264,8 @@ var apptitle = "Bitrequest",
                                 "api": true,
                                 "display": true
                             }
-                        ]
+                        ],
+                        "options": []
                     },
                     "websockets": {
                         "icon": "tab",
@@ -298,7 +299,8 @@ var apptitle = "Bitrequest",
                                 "url": main_ad_socket,
                                 "display": true
                             }
-                        ]
+                        ],
+                        "options": []
                     },
                     "Xpub": {
                         "active": true,
@@ -403,7 +405,8 @@ var apptitle = "Bitrequest",
                                 "api": true,
                                 "display": true
                             }
-                        ]
+                        ],
+                        "options": []
                     },
                     "websockets": {
                         "icon": "tab",
@@ -427,7 +430,8 @@ var apptitle = "Bitrequest",
                                 "url": main_ad_socket,
                                 "display": true
                             }
-                        ]
+                        ],
+                        "options": []
                     },
                     "Xpub": {
                         "active": true,
@@ -519,7 +523,8 @@ var apptitle = "Bitrequest",
                                 "api": true,
                                 "display": true
                             }
-                        ]
+                        ],
+                        "options": []
                     },
                     "websockets": {
                         "icon": "tab",
@@ -543,7 +548,8 @@ var apptitle = "Bitrequest",
                                 "url": "wss://ws.dogechain.info/inv",
                                 "display": true
                             }
-                        ]
+                        ],
+                        "options": []
                     },
                     "Xpub": {
                         "active": true,
@@ -641,7 +647,8 @@ var apptitle = "Bitrequest",
                                 "api": true,
                                 "display": true
                             }
-                        ]
+                        ],
+                        "options": []
                     },
                     "websockets": {
                         "icon": "tab",
@@ -654,7 +661,8 @@ var apptitle = "Bitrequest",
                             "name": "blockchain.info websocket",
                             "url": "wss://ws.blockchain.info/bch/inv",
                             "display": true
-                        }]
+                        }],
+                        "options": []
                     },
                     "Xpub": {
                         "active": true,

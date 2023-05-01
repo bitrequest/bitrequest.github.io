@@ -301,16 +301,14 @@ ul.conf_options li .conf_emoji {
 	opacity: 1;
 }
 
-#settingsbox #rpc_input_box[data-currency="ethereum"] #rpc_username_input,
-#settingsbox #rpc_input_box[data-currency="ethereum"] #rpc_password_input,
-#settingsbox #rpc_input_box[data-erc20="true"] #rpc_username_input,
-#settingsbox #rpc_input_box[data-erc20="true"] #rpc_password_input {
+#settingsbox #rpc_input_box #rpc_username_input,
+#settingsbox #rpc_input_box #rpc_password_input {
 	display: none;
 }
 
-#settingsbox[data-id="websockets"] #rpc_input_box[data-currency="nano"] #rpc_username_input,
-#settingsbox[data-id="websockets"] #rpc_input_box[data-currency="nano"] #rpc_password_input {
-	display: none;
+#settingsbox[data-id="apis"] #rpc_input_box[data-currency="nano"] #rpc_username_input,
+#settingsbox[data-id="apis"] #rpc_input_box[data-currency="nano"] #rpc_password_input {
+	display: block;
 }
 
 #app_info {

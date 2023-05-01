@@ -68,7 +68,36 @@ function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) { // po
     return default_tx_data();
 }
 
-function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address) { // poll mempool.space websocket data
+function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestblock) { // scan/poll
+    if (data) {
+        var thisaddress = (ccsymbol == "bch") ? (address.indexOf(":") > -1) ? address.split(":")[1] : address : address,
+            transaction = data.transaction,
+            transactiontime = (transaction) ? returntimestamp(transaction.time).getTime() : null,
+            conf = (transaction.block_id && transaction.block_id > 10 && latestblock) ? (latestblock - transaction.block_id) + 1 : null,
+            outputs = data.outputs;
+        if (outputs) {
+            var outputsum = 0;
+            $.each(outputs, function(dat, val) {
+                var satval = val.value,
+                    output = (val.recipient == thisaddress) ? Math.abs(satval) : 0;
+                outputsum += parseFloat(output) || 0; // sum of outputs
+            });
+        }
+        var ccval = (outputs) ? outputsum / 100000000 : null,
+            txhash = (transaction) ? transaction.hash : null;
+        return {
+            "ccval": ccval,
+            "transactiontime": transactiontime,
+            "txhash": txhash,
+            "confirmations": conf,
+            "setconfirmations": setconfirmations,
+            "ccsymbol": ccsymbol
+        };
+    }
+    return default_tx_data();
+}
+
+function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, latestblock) { // scan/poll mempool.space api data
     if (data) {
         var status = data.status,
             outputs = data.vout,
@@ -82,12 +111,15 @@ function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address) { // 
             });
         }
         var transactiontime = (status.block_time) ? status.block_time * 1000 : now() + timezone,
-            transactiontimeutc = (transactiontime) ? transactiontime + timezone : null;
+            transactiontimeutc = (transactiontime) ? transactiontime + timezone : null,
+            block_height = status.block_height,
+            confs = (status.confirmed) ? setconfirmations : null,
+            conf = (block_height && block_height > 10 && latestblock) ? (latestblock - block_height) + 1 : confs;
         return {
             "ccval": (outputsum) ? outputsum / 100000000 : null,
             "transactiontime": transactiontimeutc,
             "txhash": data.txid,
-            "confirmations": (status.confirmed === true) ? setconfirmations : null,
+            "confirmations": conf,
             "setconfirmations": setconfirmations,
             "ccsymbol": ccsymbol
         };
@@ -154,11 +186,8 @@ function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) { // p
         if (outputs) {
             var outputsum = 0;
             $.each(outputs, function(dat, value) {
-                var satval = value.value,
-                    output_address = value.addresses[0].slice(3),
-                    output_address_upper = output_address.toUpperCase(),
-                    adress_upper = address.toUpperCase(),
-                    output = (adress_upper.indexOf(output_address_upper) >= 0) ? Math.abs(satval) : 0;
+                var satval = value.value;
+                output = (str_match(address, value.addresses[0].slice(3)) === true) ? Math.abs(satval) : 0;
                 outputsum += parseFloat(output) || 0; // sum of outputs
             });
         }
@@ -504,6 +533,22 @@ function infura_erc20_poll_data(data, setconfirmations, ccsymbol) { // poll
             "transactiontime": transactiontime,
             "txhash": txhash,
             "confirmations": conf,
+            "setconfirmations": setconfirmations,
+            "ccsymbol": ccsymbol
+        };
+    }
+    return default_tx_data();
+}
+
+function infura_block_data(data, setconfirmations, ccsymbol, ts) {
+    if (data) {
+        var ccval = (data.value) ? parseFloat((Number(data.value) / Math.pow(10, 18)).toFixed(8)) : null,
+            transactiontime = (ts) ? (Number(ts) * 1000) + timezone : null;
+        return {
+            "ccval": ccval,
+            "transactiontime": transactiontime,
+            "txhash": data.hash,
+            "confirmations": null,
             "setconfirmations": setconfirmations,
             "ccsymbol": ccsymbol
         };
