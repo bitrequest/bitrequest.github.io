@@ -101,20 +101,22 @@ function get_requeststates(trigger) {
                         // parse cached transaction data
                         $.each(requeststates, function(i, value) {
                             var thislist = $("#" + value.requestid),
-                                thisdata = thislist.data(),
-                                pendingstatus = thisdata.pending;
-                            if (pendingstatus == "scanning" || pendingstatus == "polling") {
-                                var statuspanel = thislist.find(".pmetastatus"),
-                                    transactionlist = thislist.find(".transactionlist");
-                                statuspanel.text(value.status);
-                                transactionlist.html("");
-                                $.each(value.transactions, function(data, value) {
-                                    var tx_listitem = append_tx_li(value, false);
-                                    if (tx_listitem) {
-                                        transactionlist.append(tx_listitem.data(value));
-                                    }
-                                });
-                                thislist.addClass("pmstatloaded");
+                                thisdata = thislist.data();
+                            if (thisdata) {
+                                var pendingstatus = thisdata.pending;
+                                if (pendingstatus == "scanning" || pendingstatus == "polling") {
+                                    var statuspanel = thislist.find(".pmetastatus"),
+                                        transactionlist = thislist.find(".transactionlist");
+                                    statuspanel.text(value.status);
+                                    transactionlist.html("");
+                                    $.each(value.transactions, function(data, value) {
+                                        var tx_listitem = append_tx_li(value, false);
+                                        if (tx_listitem) {
+                                            transactionlist.append(tx_listitem.data(value));
+                                        }
+                                    });
+                                    thislist.addClass("pmstatloaded");
+                                }
                             }
                         });
                     }
@@ -1323,15 +1325,20 @@ function fail_dialogs(apisrc, error) {
 }
 
 function handle_api_fails_list(rd, error, api_data, thispayment) {
+    var error_data = get_api_error_data(error);
+    if (!api_data) {
+        api_eror_msg(false, error_data);
+        api_callback(requestid, true);
+        return
+    }
     var api_name = api_data.name,
         requestid = rd.requestid,
-        nextapi = (api_name) ? get_next_api(thispayment, api_name, requestid) : false;
+        nextapi = get_next_api(thispayment, api_name, requestid);
     if (nextapi === false) {
         var api_url = api_data.url,
-            nextrpc = (api_url) ? get_next_rpc(thispayment, api_url, requestid) : false;
+            nextrpc = get_next_rpc(thispayment, api_url, requestid);
         if (nextrpc === false) { // try next api
-            var rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
-                error_data = get_api_error_data(error);
+            var rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown";
             api_eror_msg(rpc_id, error_data);
             api_callback(requestid, true);
             return
@@ -1449,24 +1456,26 @@ function tx_api_fail(thislist, statuspanel) {
 }
 
 function api_eror_msg(apisrc, error) {
-    if (error.console) {
-        console.log(error);
-        return false;
-    }
-    if ($("#dialogbody .doselect").length) {
-        return
-    }
     var error_dat = (error) ? error : {
             "errormessage": "errormessage",
             "errorcode": null
         },
         errormessage = error_dat.errormessage,
-        errorcode = (error_dat.errorcode) ? "Error: " + error_dat.errorcode : "",
-        keyfail = (error.apikey === true);
-    var api_bttn = (keyfail === true) ? "<div id='add_api' data-api='" + apisrc + "' class='button'>Add " + apisrc + " Api key</div>" : "",
-        t_op = (apisrc) ? "<span id='proxy_dialog' class='ref'>Try other proxy</span>" : "",
-        content = "<h2 class='icon-blocked'>" + errorcode + "</h2><p class='doselect'><strong>Error: " + errormessage + "<br/><br/>" + t_op + "</p>" + api_bttn;
-    popdialog(content, "canceldialog");
+        errorcode = (error_dat.errorcode) ? "Error: " + error_dat.errorcode : "";
+    if (error.console) {
+        console.log(errorcode + errormessage);
+        return false;
+    }
+    if ($("#dialogbody .doselect").length) {
+        return
+    }
+    if (apisrc) {
+        var keyfail = (error.apikey === true),
+            api_bttn = (keyfail === true) ? "<div id='add_api' data-api='" + apisrc + "' class='button'>Add " + apisrc + " Api key</div>" : "",
+            t_op = (apisrc) ? "<span id='proxy_dialog' class='ref'>Try other proxy</span>" : "",
+            content = "<h2 class='icon-blocked'>" + errorcode + "</h2><p class='doselect'><strong>Error: " + errormessage + "<br/><br/>" + t_op + "</p>" + api_bttn;
+        popdialog(content, "canceldialog");
+    }
 }
 
 function tx_count(statuspanel, count) {
