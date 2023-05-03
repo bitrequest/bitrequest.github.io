@@ -1004,30 +1004,25 @@ function get_api_inputs(rd, api_data, api_name) {
                                 }
                             }
                         }).done(function(e) {
-                            var data = br_result(e).result;
-                            if (data) {
-                                var payload = data.payload;
-                                if (payload) {
-                                    var records = payload.records;
-                                    if (records) {
-                                        if ($.isEmptyObject(records)) {
-                                            tx_api_fail(thislist, statuspanel);
-                                            handle_api_fails_list(rd, "unknown error", api_data, payment);
-                                        } else {
-                                            $.each(records, function(dat, value) {
-                                                var txd = amberdata_scan_token_data(value, null, ccsymbol, address);
-                                                if (txd.transactiontime > request_timestamp && txd.ccval && txd.ccsymbol == txd.tokensymbol) {
-                                                    var tx_listitem = append_tx_li(txd, rqtype);
-                                                    if (tx_listitem) {
-                                                        transactionlist.append(tx_listitem.data(txd));
-                                                        counter++;
-                                                    }
-                                                }
-                                            });
-                                            tx_count(statuspanel, counter);
-                                            compareamounts(rd);
+                            var data = br_result(e),
+                            	records = q_obj(data, "result.payload.records");
+                            if (records) {
+                                if ($.isEmptyObject(records)) {
+                                    tx_api_fail(thislist, statuspanel);
+                                    handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                } else {
+                                    $.each(records, function(dat, value) {
+                                        var txd = amberdata_scan_token_data(value, null, ccsymbol, address);
+                                        if (txd.transactiontime > request_timestamp && txd.ccval && txd.ccsymbol == txd.tokensymbol) {
+                                            var tx_listitem = append_tx_li(txd, rqtype);
+                                            if (tx_listitem) {
+                                                transactionlist.append(tx_listitem.data(txd));
+                                                counter++;
+                                            }
                                         }
-                                    }
+                                    });
+                                    tx_count(statuspanel, counter);
+                                    compareamounts(rd);
                                 }
                             } else {
                                 tx_api_fail(thislist, statuspanel);
@@ -1056,31 +1051,26 @@ function get_api_inputs(rd, api_data, api_name) {
                                 }
                             }
                         }).done(function(e) {
-                            var data = br_result(e).result;
-                            if (data) {
-                                var payload = data.payload;
-                                if (payload) {
-                                    var records = payload.records;
-                                    if (records) {
-                                        if ($.isEmptyObject(records)) {
-                                            tx_api_fail(thislist, statuspanel);
-                                            handle_api_fails_list(rd, "unknown error", api_data, payment);
-                                        } else {
-                                            var txflip = records.reverse();
-                                            $.each(txflip, function(dat, value) {
-                                                var txd = amberdata_scan_data(value, setconfirmations, ccsymbol, address);
-                                                if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                                    var tx_listitem = append_tx_li(txd, rqtype);
-                                                    if (tx_listitem) {
-                                                        transactionlist.append(tx_listitem.data(txd));
-                                                        counter++;
-                                                    }
-                                                }
-                                            });
-                                            tx_count(statuspanel, counter);
-                                            compareamounts(rd);
+                            var data = br_result(e),
+                            	records = q_obj(data, "result.payload.records");
+                            if (records) {
+                                if ($.isEmptyObject(records)) {
+                                    tx_api_fail(thislist, statuspanel);
+                                    handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                } else {
+                                    var txflip = records.reverse();
+                                    $.each(txflip, function(dat, value) {
+                                        var txd = amberdata_scan_data(value, setconfirmations, ccsymbol, address);
+                                        if (txd.transactiontime > request_timestamp && txd.ccval) {
+                                            var tx_listitem = append_tx_li(txd, rqtype);
+                                            if (tx_listitem) {
+                                                transactionlist.append(tx_listitem.data(txd));
+                                                counter++;
+                                            }
                                         }
-                                    }
+                                    });
+                                    tx_count(statuspanel, counter);
+                                    compareamounts(rd);
                                 }
                             } else {
                                 tx_api_fail(thislist, statuspanel);
@@ -1112,25 +1102,18 @@ function get_api_inputs(rd, api_data, api_name) {
                                 }
                             }
                         }).done(function(e) {
-                            var data = br_result(e).result;
-                            if (data) {
-                                var payload = data.payload;
-                                if (payload) {
-                                    var token_transfers = payload.tokenTransfers;
-                                    var txd = (erc20 === true) ? (token_transfers) ? amberdata_poll_token_data(token_transfers[0], setconfirmations, ccsymbol, transactionhash, payload.confirmations) :
-                                        null :
-                                        amberdata_scan_data(payload, setconfirmations, ccsymbol, address);
-                                    if (txd.ccval) {
-                                        var tx_listitem = append_tx_li(txd, rqtype);
-                                        if (tx_listitem) {
-                                            transactionlist.append(tx_listitem.data(txd));
-                                            tx_count(statuspanel, 1);
-                                            compareamounts(rd);
-                                        }
+                            var data = br_result(e),
+                            	payload = q_obj(data, "result.payload");
+                            if (payload) {
+                                var token_transfers = payload.tokenTransfers,
+                                	txd = (erc20 === true) ? (token_transfers) ? amberdata_poll_token_data(token_transfers[0], setconfirmations, ccsymbol, transactionhash, payload.confirmations) : null : amberdata_scan_data(payload, setconfirmations, ccsymbol, address);
+                                if (txd.ccval) {
+                                    var tx_listitem = append_tx_li(txd, rqtype);
+                                    if (tx_listitem) {
+                                        transactionlist.append(tx_listitem.data(txd));
+                                        tx_count(statuspanel, 1);
+                                        compareamounts(rd);
                                     }
-                                } else {
-                                    tx_api_fail(thislist, statuspanel);
-                                    handle_api_fails_list(rd, "unknown error", api_data, payment);
                                 }
                             } else {
                                 tx_api_fail(thislist, statuspanel);
@@ -1259,20 +1242,17 @@ function get_api_inputs(rd, api_data, api_name) {
                                                     "method": "GET"
                                                 }
                                             }).done(function(res) {
-                                                var e = br_result(res).result;
-                                                if (e) {
-                                                    var lb = e.latest_block;
-                                                    if (lb) {
-                                                        var bh = lb.height,
-                                                            txd = nimiq_scan_data(data, setconfirmations, bh, null, transactionhash);
-                                                        if (txd) {
-                                                            if (txd.ccval) {
-                                                                var tx_listitem = append_tx_li(txd, rqtype);
-                                                                if (tx_listitem) {
-                                                                    transactionlist.append(tx_listitem.data(txd));
-                                                                    tx_count(statuspanel, 1);
-                                                                    compareamounts(rd);
-                                                                }
+                                                var e = br_result(res),
+                                                	bh = q_obj(e, "result.latest_block.height");
+                                                if (bh) {
+                                                    var txd = nimiq_scan_data(data, setconfirmations, bh, null, transactionhash);
+                                                    if (txd) {
+                                                        if (txd.ccval) {
+                                                            var tx_listitem = append_tx_li(txd, rqtype);
+                                                            if (tx_listitem) {
+                                                                transactionlist.append(tx_listitem.data(txd));
+                                                                tx_count(statuspanel, 1);
+                                                                compareamounts(rd);
                                                             }
                                                         }
                                                     }

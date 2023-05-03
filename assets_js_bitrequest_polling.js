@@ -154,15 +154,12 @@ function mopsus_blockheight(data, set_confirmations, txhash) { // api_monitor pa
             "method": "GET"
         }
     }).done(function(e) {
-        var result = br_result(e).result;
-        if (result) {
-            var lb = result.latest_block;
-            if (lb) {
-                var bh = lb.height,
-                    txd = nimiq_scan_data(data, set_confirmations, bh, null, txhash);
-                confirmations(txd);
-                return
-            }
+        var dat = br_result(e),
+        	bh = q_obj(dat, "result.latest_block.height");
+        if (bh) {
+            var txd = nimiq_scan_data(data, set_confirmations, bh, null, txhash);
+            confirmations(txd);
+            return
         }
         var txd = nimiq_scan_data(data, set_confirmations, null, true, txhash);
         confirmations(txd, true);

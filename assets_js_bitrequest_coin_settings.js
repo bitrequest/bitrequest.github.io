@@ -770,10 +770,13 @@ function edit_xpub_trigger() {
                     thiscurrency = thisliwrap.attr("data-currency"),
                     coindat = getcoindata(thiscurrency),
                     xpub = thisdat.key,
-                    content = $("<div id='ad_info_wrap'><h2>" + getcc_icon(coindat.cmcid, coindat.ccsymbol + "-" + thiscurrency, coindat.erc20) + " BIP32 Extended public key</h2>\
+                    cc_icon = getcc_icon(coindat.cmcid, coindat.ccsymbol + "-" + thiscurrency, coindat.erc20),
+                    content = $("<div id='ad_info_wrap'><h2>" + cc_icon + " BIP32 Extended public key</h2>\
 						<div class='d_ulwrap'>\
 							<ul>\
-					    		<li><strong>Key: </strong><span class='adbox adboxl select'>" + xpub + "</span></li>\
+					    		<li><strong>Key: </strong><span class='adbox adboxl select'>" + xpub + "</span>\
+					    		<div id='qrcodexp' class='qrwrap flex'><div class='qrcode'></div>" + cc_icon + "</div>\
+					    		</li>\
 					    		<li><strong>Derivation path:</strong> M/0/</li>\
 				    		</ul>\
 				    	</div>\
@@ -783,6 +786,7 @@ function edit_xpub_trigger() {
 						</div>\
 			    	</div>");
                 popdialog(content, "triggersubmit", null, true);
+                $("#qrcodexp .qrcode").qrcode(xpub);
                 return
             }
         }

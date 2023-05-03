@@ -907,8 +907,7 @@ function amberdata_eth_websocket(socket_node, thisaddress) {
 }
 
 function web3_eth_websocket(socket_node, thisaddress) {
-    var websocket = sockets[thisaddress] = new WebSocket(socket_node.url),
-        api_dat = q_obj(helper, "api_info.data");
+    var websocket = sockets[thisaddress] = new WebSocket(socket_node.url);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
@@ -924,31 +923,27 @@ function web3_eth_websocket(socket_node, thisaddress) {
     };
     websocket.onmessage = function(e) {
         var data = JSON.parse(e.data),
-            params = (data.params);
-        if (params) {
-            var result = params.result;
-            if (result) {
-                var blockhash = result.hash,
-                    timestamp = result.timestamp;
-                if (blockhash) {
-                    var rpc_url = (api_dat.default === false) ? api_dat.url : main_eth_node;
-                    api_proxy(eth_params(rpc_url, 25, "eth_getBlockByHash", [blockhash, true])).done(function(res) {
-                        var rslt = inf_result(res),
-                            transactions = rslt.transactions;
-                        if (transactions) {
-                            $.each(transactions, function(i, val) {
-                                if (str_match(val.to, thisaddress) === true) {
-                                    var txd = infura_block_data(val, request.set_confirmations, request.currencysymbol, timestamp);
-                                    closesocket();
-                                    pick_monitor(val.hash, txd, api_dat);
-                                    return
-                                }
-                            });
-                        }
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        handle_socket_fails(socket_node, thisaddress);
-                    });
-                }
+        	result = q_obj(data, "params.result");
+        if (result) {
+            if (result.hash) {
+	            var api_dat = q_obj(helper, "api_info.data"),
+                	rpc_url = (api_dat.default === false) ? api_dat.url : main_eth_node;
+                api_proxy(eth_params(rpc_url, 25, "eth_getBlockByHash", [result.hash, true])).done(function(res) {
+                    var rslt = inf_result(res),
+                        transactions = rslt.transactions;
+                    if (transactions) {
+                        $.each(transactions, function(i, val) {
+                            if (str_match(val.to, thisaddress) === true) {
+                                var txd = infura_block_data(val, request.set_confirmations, request.currencysymbol, result.timestamp);
+                                closesocket();
+                                pick_monitor(val.hash, txd, api_dat);
+                                return
+                            }
+                        });
+                    }
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    handle_socket_fails(socket_node, thisaddress);
+                });
             }
         }
     };
@@ -985,12 +980,10 @@ function web3_erc20_websocket(socket_node, thisaddress) {
     };
     websocket.onmessage = function(e) {
         var dat = JSON.parse(e.data),
-            params = (dat.params);
-        if (params) {
-            var result = params.result,
-                topics = result.topics;
-            if (topics) {
-                var topic_address = topics[2];
+        	result = q_obj(dat, "params.result");
+        if (result) {
+            if (result.topics) {
+                var topic_address = result.topics[2];
                 if (topic_address) {
                     if (str_match(topic_address, thisaddress.slice(3)) === true) {
                         var contractdata = result.data,

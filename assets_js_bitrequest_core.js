@@ -3099,7 +3099,9 @@ function addressinfo() {
             vkdat = (vkobj) ? (isseed && active_src) ? "derive" : vkobj.vk : false,
             pk_str = (vkdat) ? "<span id='show_vk' class='ref' data-vk='" + vkdat + "'>Show</span>" : (isseed) ? (active_src) ? "<span id='show_pk' class='ref'>Show</span>" : (a_wl === true) ? pk_verified : "Unknown" : pk_verified,
             content = $("<div id='ad_info_wrap'><h2>" + cc_icon + " <span>" + label + "</span></h2><ul>\
-	    		<li><strong>Address: </strong><span class='adbox adboxl select'>" + address + "</span></li>\
+	    		<li><strong>Address: </strong><span class='adbox adboxl select'>" + address + "</span>\
+	    		<div id='qrcodea' class='qrwrap flex'><div class='qrcode'></div>" + cc_icon + "</div>\
+				</li>\
 	    		<li><strong>Source: </strong>" + srcval + "</li>" +
                 dpath_str +
                 "<li><strong>Private key: </strong>" + pk_str +
@@ -3113,6 +3115,7 @@ function addressinfo() {
 				</ul>\
 	    	</div>").data(dd);
         popdialog(content, "canceldialog");
+        $("#qrcodea .qrcode").qrcode(address);
         return false;
     })
 }
@@ -3159,6 +3162,7 @@ function show_pk_cb(pk) {
     $("#pkspan").text(pk);
     $("#qrcode").qrcode(pk);
     $("#pk_span").addClass("shwpk").slideDown(200);
+    $("#qrcodea").slideUp(200);
 }
 
 function show_vk() {
