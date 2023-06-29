@@ -1271,9 +1271,13 @@ function reset_coinsettings_function(trigger) {
         var current_settings = localStorage.getItem("bitrequest_" + currency + "_settings"),
             cs_object = JSON.parse(current_settings),
             ln_settings = (currency == "bitcoin") ? cs_object["Lightning network"] : false,
+            xpub_settings = (cs_object.Xpub) ? cs_object.Xpub : false,
             coinsettings = getcoinsettings(currency);
         if (ln_settings) {
             coinsettings["Lightning network"] = ln_settings; // don't reset lightning settings
+        }
+        if (xpub_settings) {
+            coinsettings.Xpub = xpub_settings; // don't reset xpub settings
         }
         localStorage.setItem("bitrequest_" + currency + "_settings", JSON.stringify(coinsettings));
         append_coinsetting(currency, coinsettings, false);

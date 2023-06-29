@@ -5306,18 +5306,18 @@ function toggle_rr(bool) {
 
 function q_obj(obj, path) {
     try {
-        var p_arr = path.split(".");
+        const p_arr = path.split(".");
         if ($.isArray(p_arr) && p_arr.length > 1) {
-            $.each(p_arr, function(i, v) {
-                if (!obj[v]) {
-                    obj = false;
-                    return false
-                }
-                obj = obj[v];
-            });
+            for (let v of p_arr) {
+				if (!obj[v]) {
+					obj = false;
+					break
+				}
+				obj = obj[v];
+			}
             return obj;
         }
-        return false;
+        return false
     } catch (e) {
         console.error(e.name, e.message);
         return false
