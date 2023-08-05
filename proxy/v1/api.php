@@ -1,8 +1,8 @@
 <?php
 // PROXY
-$version = "0.005";
+$version = "0.006";
 function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
-    $version = "0.005";
+    $version = "0.006";
     $cf = isset($cfd) ? $cfd : false;
     if (!$cf) {
         $curl_result = curl_get($url, $data, $headers);
@@ -103,6 +103,11 @@ function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
 
 // CURL
 function curl_get($url, $data, $headers) {
+	if (strpos($url, ".onion")) { // use TOR
+		include "ln/tor/index.php";
+		$result = fetch_tor($url, $data, $headers);
+		return $result;
+	}
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     if (!empty($headers)) {
@@ -124,9 +129,8 @@ function curl_get($url, $data, $headers) {
     curl_close($ch);
     if ($result) {
         return $result;
-    } else {
-        return error_object("411", "no result");
     }
+    return error_object("411", "no result");
 }
 
 function error_object($code, $message) {
@@ -137,5 +141,4 @@ function error_object($code, $message) {
         ]
     ]);
 }
-
 ?>
