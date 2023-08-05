@@ -807,7 +807,7 @@ function submitbackup() {
             e.preventDefault();
             return
         }
-        var lastsaved = "last backup:<br/><span class='icon-folder-open'>" + thisnode.attr("data-date") + "</span>",
+        var lastsaved = "last backup: " + thisnode.attr("data-date"),
             lastbackup = thisnode.attr("data-lastbackup");
         set_setting("backup", {
             "titlebackup": lastsaved,

@@ -2805,7 +2805,7 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
     viewtx.attr("data-txhash", smart_txhash);
     if (pendingrequest.hasClass("expired")) {
         if (status == "new" || status == "insufficient") {
-            adjust_paymentdialog("expired", "no", "<span class='icon-clock'></span>Request expired");
+            adjust_paymentdialog("expired", "no", "Request expired");
             paymentdialogbox.find("span#view_tx").hide();
         }
         return
