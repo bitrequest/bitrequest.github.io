@@ -147,10 +147,8 @@ function checkphp() { //check for php support by fetching fiat currencies from l
     }).done(function(e) {
         var result = br_result(e);
         if (result.proxy === true) {
-            var data = result.result;
-            if (data) {
-                var symbols = data.symbols;
-                if (symbols) {
+	        var symbols = q_obj(result, "result.result.symbols");
+	        if (symbols) {
                     if (symbols.USD) {
                         localStorage.setItem("bitrequest_symbols", JSON.stringify(symbols));
                     } else {
@@ -158,7 +156,6 @@ function checkphp() { //check for php support by fetching fiat currencies from l
                         fail_dialogs("fixer", this_error);
                     }
                 }
-            }
             io.phpsupport = "yes";
             localStorage.setItem("bitrequest_init", JSON.stringify(io));
             phpsupportglobal = true;
@@ -215,29 +212,29 @@ function setsymbols() { //fetch fiat currencies from fixer.io api
 function geterc20tokens() {
     if (localStorage.getItem("bitrequest_erc20tokens")) {
         setfunctions();
-    } else {
-        api_proxy({
-            "api": "coinmarketcap",
-            "search": "v1/cryptocurrency/listings/latest?cryptocurrency_type=tokens&limit=600&aux=cmc_rank,platform",
-            "cachetime": 604800,
-            "cachefolder": "1w",
-            "params": {
-                "method": "GET"
-            }
-        }).done(function(e) {
-            var data = br_result(e).result,
-                status = data.status;
-            if (status && status.error_code === 0) {
-                storecoindata(data);
-                return
-            }
-            geterc20tokens_local(); // get localy stored coindata
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            geterc20tokens_local();
-        }).always(function() {
-            setfunctions();
-        });
+        return;
     }
+    api_proxy({
+        "api": "coinmarketcap",
+        "search": "v1/cryptocurrency/listings/latest?cryptocurrency_type=tokens&limit=600&aux=cmc_rank,platform",
+        "cachetime": 604800,
+        "cachefolder": "1w",
+        "params": {
+            "method": "GET"
+        }
+    }).done(function(e) {
+        var data = br_result(e).result,
+            status = data.status;
+        if (status && status.error_code === 0) {
+            storecoindata(data);
+            return
+        }
+        geterc20tokens_local(); // get localy stored coindata
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        geterc20tokens_local();
+    }).always(function() {
+        setfunctions();
+    });
 }
 
 function geterc20tokens_local() {
@@ -259,12 +256,13 @@ function storecoindata(data) {
             var platform = value.platform;
             if (platform) {
                 if (platform.id === 1027) { // only get erc20 tokens
-                    var erc20box = {};
-                    erc20box.name = value.slug;
-                    erc20box.symbol = value.symbol.toLowerCase();
-                    erc20box.cmcid = value.id;
-                    erc20box.contract = value.platform.token_address;
-                    erc20push.push(erc20box);
+	                var erc20box = {
+		                "name": value.slug,
+		                "symbol": value.symbol.toLowerCase(),
+		                "cmcid": value.id,
+		                "contract": value.platform.token_address
+	                };
+	                erc20push.push(erc20box);
                 }
             }
         });

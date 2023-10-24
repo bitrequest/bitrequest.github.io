@@ -952,9 +952,9 @@ function getccexchangerates(apilist, api) {
                     return
                 }
                 var pnode = (iserc) ? contract : payment,
-                    ccrate = (api == "coinmarketcap") ? data.data[request.cmcid].quote.USD.price :
-                    (api == "coinpaprika") ? data.quotes.USD.price :
-                    (api == "coingecko") ? data[pnode].usd :
+                    ccrate = (api == "coinmarketcap") ? q_obj(data, "data." + request.cmcid + ".quote.USD.price") :
+                    (api == "coinpaprika") ? q_obj(data, "quotes.USD.price") :
+                    (api == "coingecko") ? q_obj(data, pnode + ".usd") :
                     null;
                 if (ccrate) {
                     loadertext("success");

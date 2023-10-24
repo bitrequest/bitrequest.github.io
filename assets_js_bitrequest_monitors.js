@@ -68,17 +68,16 @@ function updaterequeststatesrefresh() {
 function trigger_requeststates(trigger) {
     if (offline === true || inframe === true) {
         return // do nothing when offline
-    } else {
-        api_attempts = {}, // reset cache and index
-            rpc_attempts = {},
-            tx_list = [], // reset transaction index
-            statuspush = [];
-        var active_requests = $("#requestlist .rqli").filter(function() {
-            return $(this).data("pending") != "unknown";
-        });
-        active_requests.addClass("scan");
-        get_requeststates(trigger);
     }
+    api_attempts = {}, // reset cache and index
+        rpc_attempts = {},
+        tx_list = [], // reset transaction index
+        statuspush = [];
+    var active_requests = $("#requestlist .rqli").filter(function() {
+        return $(this).data("pending") != "unknown";
+    });
+    active_requests.addClass("scan");
+    get_requeststates(trigger);
 }
 
 function get_requeststates(trigger) {
@@ -87,53 +86,53 @@ function get_requeststates(trigger) {
     if (request_data) {
         if (trigger == "loop") {
             getinputs(request_data);
-        } else {
-            var statuscache = sessionStorage.getItem("bitrequest_txstatus");
-            if (statuscache) {
-                var parsevalue = JSON.parse(statuscache),
-                    cachetime = now() - parsevalue.timestamp,
-                    requeststates = parsevalue.requeststates;
-                if (cachetime > 30000 || $.isEmptyObject(requeststates)) { //check if cached crypto rates are expired (check every 30 seconds on page refresh or when opening request page)
-                    sessionStorage.removeItem("bitrequest_txstatus"); // remove cached transactions
-                    getinputs(request_data);
-                } else {
-                    if (trigger === true) {} else { // only update on page refresh
-                        // parse cached transaction data
-                        $.each(requeststates, function(i, value) {
-                            var thislist = $("#" + value.requestid),
-                                thisdata = thislist.data();
-                            if (thisdata) {
-                                var pendingstatus = thisdata.pending;
-                                if (pendingstatus == "scanning" || pendingstatus == "polling") {
-                                    var statuspanel = thislist.find(".pmetastatus"),
-                                        transactionlist = thislist.find(".transactionlist");
-                                    statuspanel.text(value.status);
-                                    transactionlist.html("");
-                                    $.each(value.transactions, function(data, value) {
-                                        var tx_listitem = append_tx_li(value, false);
-                                        if (tx_listitem) {
-                                            transactionlist.append(tx_listitem.data(value));
-                                        }
-                                    });
-                                    thislist.addClass("pmstatloaded");
-                                }
-                            }
-                        });
-                    }
-                }
-            } else {
+            return;
+        }
+        var statuscache = sessionStorage.getItem("bitrequest_txstatus");
+        if (statuscache) {
+            var parsevalue = JSON.parse(statuscache),
+                cachetime = now() - parsevalue.timestamp,
+                requeststates = parsevalue.requeststates;
+            if (cachetime > 30000 || $.isEmptyObject(requeststates)) { //check if cached crypto rates are expired (check every 30 seconds on page refresh or when opening request page)
+                sessionStorage.removeItem("bitrequest_txstatus"); // remove cached transactions
                 getinputs(request_data);
+                return
             }
+            if (trigger === true) {} else { // only update on page refresh
+                // parse cached transaction data
+                $.each(requeststates, function(i, value) {
+                    var thislist = $("#" + value.requestid),
+                        thisdata = thislist.data();
+                    if (thisdata) {
+                        var pendingstatus = thisdata.pending;
+                        if (pendingstatus == "scanning" || pendingstatus == "polling") {
+                            var statuspanel = thislist.find(".pmetastatus"),
+                                transactionlist = thislist.find(".transactionlist");
+                            statuspanel.text(value.status);
+                            transactionlist.html("");
+                            $.each(value.transactions, function(data, value) {
+                                var tx_listitem = append_tx_li(value, false);
+                                if (tx_listitem) {
+                                    transactionlist.append(tx_listitem.data(value));
+                                }
+                            });
+                            thislist.addClass("pmstatloaded");
+                        }
+                    }
+                });
+            }
+            return
         }
-    } else {
-        if (!$.isEmptyObject(statuspush)) {
-            var statusobject = JSON.stringify({
-                "timestamp": now(),
-                "requeststates": statuspush
-            });
-            sessionStorage.setItem("bitrequest_txstatus", statusobject);
-            saverequests();
-        }
+        getinputs(request_data);
+        return
+    }
+    if (!$.isEmptyObject(statuspush)) {
+        var statusobject = JSON.stringify({
+            "timestamp": now(),
+            "requeststates": statuspush
+        });
+        sessionStorage.setItem("bitrequest_txstatus", statusobject);
+        saverequests();
     }
 }
 
@@ -145,9 +144,9 @@ function getinputs(rd) {
     thislist.removeClass("pmstatloaded");
     if (api_info.api === true) {
         choose_api_inputs(rd, selected);
-    } else {
-        get_rpc_inputs_init(rd, selected);
+        return
     }
+    get_rpc_inputs_init(rd, selected);
 }
 
 function check_api(payment, iserc20) {
@@ -191,14 +190,16 @@ function choose_api_inputs(rd, api_data) {
 }
 
 function get_api_inputs_defaults(rd, api_data) {
+    if (rd.erc20 === true) {
+        get_api_inputs_init(rd, api_data, "ethplorer");
+        return
+    }
     var payment = rd.payment;
     if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin" || payment == "ethereum") {
         get_api_inputs_init(rd, api_data, "blockcypher");
-    } else if (rd.erc20 === true) {
-        get_api_inputs_init(rd, api_data, "ethplorer");
-    } else {
-        get_api_inputs_init(rd, api_data, api_data.name);
+        return
     }
+    get_api_inputs_init(rd, api_data, api_data.name);
 }
 
 function get_api_inputs_init(rd, api_data, api_name) {
@@ -1005,7 +1006,7 @@ function get_api_inputs(rd, api_data, api_name) {
                             }
                         }).done(function(e) {
                             var data = br_result(e),
-                            	records = q_obj(data, "result.payload.records");
+                                records = q_obj(data, "result.payload.records");
                             if (records) {
                                 if ($.isEmptyObject(records)) {
                                     tx_api_fail(thislist, statuspanel);
@@ -1052,7 +1053,7 @@ function get_api_inputs(rd, api_data, api_name) {
                             }
                         }).done(function(e) {
                             var data = br_result(e),
-                            	records = q_obj(data, "result.payload.records");
+                                records = q_obj(data, "result.payload.records");
                             if (records) {
                                 if ($.isEmptyObject(records)) {
                                     tx_api_fail(thislist, statuspanel);
@@ -1103,10 +1104,10 @@ function get_api_inputs(rd, api_data, api_name) {
                             }
                         }).done(function(e) {
                             var data = br_result(e),
-                            	payload = q_obj(data, "result.payload");
+                                payload = q_obj(data, "result.payload");
                             if (payload) {
                                 var token_transfers = payload.tokenTransfers,
-                                	txd = (erc20 === true) ? (token_transfers) ? amberdata_poll_token_data(token_transfers[0], setconfirmations, ccsymbol, transactionhash, payload.confirmations) : null : amberdata_scan_data(payload, setconfirmations, ccsymbol, address);
+                                    txd = (erc20 === true) ? (token_transfers) ? amberdata_poll_token_data(token_transfers[0], setconfirmations, ccsymbol, transactionhash, payload.confirmations) : null : amberdata_scan_data(payload, setconfirmations, ccsymbol, address);
                                 if (txd.ccval) {
                                     var tx_listitem = append_tx_li(txd, rqtype);
                                     if (tx_listitem) {
@@ -1243,7 +1244,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                                 }
                                             }).done(function(res) {
                                                 var e = br_result(res),
-                                                	bh = q_obj(e, "result.latest_block.height");
+                                                    bh = q_obj(e, "result.latest_block.height");
                                                 if (bh) {
                                                     var txd = nimiq_scan_data(data, setconfirmations, bh, null, transactionhash);
                                                     if (txd) {
