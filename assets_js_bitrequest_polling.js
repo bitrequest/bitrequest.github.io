@@ -59,11 +59,15 @@ function api_monitor(txhash, tx_data, api_dat) {
             var apiresult = api_result(br_result(e));
             if (apiresult) {
                 pinging[txhash + api_name] = setInterval(function() {
-                    api_proxy(ampl(api_name, poll_url)).done(function(e) {
-                        api_result(br_result(e));
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        api_error(jqXHR, textStatus, errorThrown);
-                    });
+                    if (paymentpopup.hasClass("active")) { // only when request is visible
+                        api_proxy(ampl(api_name, poll_url)).done(function(e) {
+                            api_result(br_result(e));
+                        }).fail(function(jqXHR, textStatus, errorThrown) {
+                            api_error(jqXHR, textStatus, errorThrown);
+                        });
+                        return
+                    }
+                    forceclosesocket();
                 }, 25000);
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -155,7 +159,7 @@ function mopsus_blockheight(data, set_confirmations, txhash) { // api_monitor pa
         }
     }).done(function(e) {
         var dat = br_result(e),
-        	bh = q_obj(dat, "result.latest_block.height");
+            bh = q_obj(dat, "result.latest_block.height");
         if (bh) {
             var txd = nimiq_scan_data(data, set_confirmations, bh, null, txhash);
             confirmations(txd);
@@ -191,22 +195,30 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
         if (tx_data) {
             confirmations(tx_data, true);
             pinging[txhash] = setInterval(function() {
-                api_proxy(rmpl(payment, rpcurl, txhash)).done(function(e) {
-                    rpc_result(br_result(e));
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    rpc_error(jqXHR, textStatus, errorThrown);
-                });
+                if (paymentpopup.hasClass("active")) { // only when request is visible
+                    api_proxy(rmpl(payment, rpcurl, txhash)).done(function(e) {
+                        rpc_result(br_result(e));
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        rpc_error(jqXHR, textStatus, errorThrown);
+                    });
+                    return
+                }
+                forceclosesocket();
             }, 25000);
             return
         }
         api_proxy(rmpl(payment, rpcurl, txhash)).done(function(e) {
             rpc_result(br_result(e));
             pinging[txhash] = setInterval(function() {
-                api_proxy(rmpl(payment, rpcurl, txhash)).done(function(e) {
-                    rpc_result(br_result(e));
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    rpc_error(jqXHR, textStatus, errorThrown);
-                });
+                if (paymentpopup.hasClass("active")) { // only when request is visible
+                    api_proxy(rmpl(payment, rpcurl, txhash)).done(function(e) {
+                        rpc_result(br_result(e));
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        rpc_error(jqXHR, textStatus, errorThrown);
+                    });
+                    return
+                }
+                forceclosesocket();
             }, 25000);
         }).fail(function(jqXHR, textStatus, errorThrown) {
             rpc_error(jqXHR, textStatus, errorThrown);
@@ -279,81 +291,85 @@ function rmpl(payment, rpcurl, txhash) { // rpc_monitor payload
 }
 
 function ping_eth_node(rpcdata, txhash, erc20) {
-    var url = rpcdata.url,
-        set_url = (url) ? url : main_eth_node;
-    api_proxy(eth_params(set_url, 10, "eth_blockNumber", [])).done(function(a) {
-        var r_1 = inf_result(a);
-        if (r_1) {
-            api_proxy(eth_params(set_url, 10, "eth_getTransactionByHash", [txhash])).done(function(b) {
-                var r_2 = inf_result(b);
-                if (r_2) {
-                    var this_bn = r_2.blockNumber;
-                    api_proxy(eth_params(set_url, 10, "eth_getBlockByNumber", [this_bn, false])).done(function(c) {
-                        var r_3 = inf_result(c);
-                        if (r_3) {
-                            var tbn = Number(this_bn),
-                                cbn = Number(r_1),
-                                conf = cbn - tbn,
-                                conf_correct = (conf < 0) ? 0 : conf,
-                                txd;
-                            if (erc20 === true) {
-                                var input = r_2.input;
-                                if (str_match(input, request.address.slice(3)) === true) {
-                                    var signature_hex = input.slice(2, 10),
-                                        amount_hex = input.slice(74),
-                                        tokenValue = hexToNumberString(amount_hex),
-                                        txdata = {
-                                            "timestamp": r_3.timestamp,
+    if (paymentpopup.hasClass("active")) { // only when request is visible
+        var url = rpcdata.url,
+            set_url = (url) ? url : main_eth_node;
+        api_proxy(eth_params(set_url, 10, "eth_blockNumber", [])).done(function(a) {
+            var r_1 = inf_result(a);
+            if (r_1) {
+                api_proxy(eth_params(set_url, 10, "eth_getTransactionByHash", [txhash])).done(function(b) {
+                    var r_2 = inf_result(b);
+                    if (r_2) {
+                        var this_bn = r_2.blockNumber;
+                        api_proxy(eth_params(set_url, 10, "eth_getBlockByNumber", [this_bn, false])).done(function(c) {
+                            var r_3 = inf_result(c);
+                            if (r_3) {
+                                var tbn = Number(this_bn),
+                                    cbn = Number(r_1),
+                                    conf = cbn - tbn,
+                                    conf_correct = (conf < 0) ? 0 : conf,
+                                    txd;
+                                if (erc20 === true) {
+                                    var input = r_2.input;
+                                    if (str_match(input, request.address.slice(3)) === true) {
+                                        var signature_hex = input.slice(2, 10),
+                                            amount_hex = input.slice(74),
+                                            tokenValue = hexToNumberString(amount_hex),
+                                            txdata = {
+                                                "timestamp": r_3.timestamp,
+                                                "hash": txhash,
+                                                "confirmations": conf_correct,
+                                                "value": tokenValue,
+                                                "decimals": request.decimals
+                                            },
+                                            txd = infura_erc20_poll_data(txdata, request.set_confirmations, request.currencysymbol);
+                                    } else {
+                                        clearpinging();
+                                        handle_rpc_fails(rpcdata, inf_err(set_url), txhash);
+                                        return
+                                    }
+                                } else {
+                                    var txdata = {
+                                            "timestamp": Number(r_3.timestamp),
                                             "hash": txhash,
                                             "confirmations": conf_correct,
-                                            "value": tokenValue,
-                                            "decimals": request.decimals
+                                            "value": Number(r_2.value)
                                         },
-                                        txd = infura_erc20_poll_data(txdata, request.set_confirmations, request.currencysymbol);
+                                        txd = infura_eth_poll_data(txdata, request.set_confirmations, request.currencysymbol);
+                                }
+                                if (txd.ccval) {
+                                    confirmations(txd);
                                 } else {
                                     clearpinging();
                                     handle_rpc_fails(rpcdata, inf_err(set_url), txhash);
-                                    return
                                 }
-                            } else {
-                                var txdata = {
-                                        "timestamp": Number(r_3.timestamp),
-                                        "hash": txhash,
-                                        "confirmations": conf_correct,
-                                        "value": Number(r_2.value)
-                                    },
-                                    txd = infura_eth_poll_data(txdata, request.set_confirmations, request.currencysymbol);
+                                return
                             }
-                            if (txd.ccval) {
-                                confirmations(txd);
-                            } else {
-                                clearpinging();
-                                handle_rpc_fails(rpcdata, inf_err(set_url), txhash);
-                            }
-                            return
-                        }
-                        clearpinging();
-                        handle_rpc_fails(rpcdata, inf_err(set_url), txhash);
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        clearpinging();
-                        handle_rpc_fails(rpcdata, errorThrown, txhash);
-                    });
-                    return
-                }
-                clearpinging();
-                handle_rpc_fails(rpcdata, inf_err(set_url), txhash);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                clearpinging();
-                handle_rpc_fails(rpcdata, errorThrown, txhash);
-            });
-            return
-        }
-        clearpinging();
-        handle_rpc_fails(rpcdata, inf_err(set_url), txhash);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        clearpinging();
-        handle_rpc_fails(rpcdata, errorThrown, txhash);
-    });
+                            clearpinging();
+                            handle_rpc_fails(rpcdata, inf_err(set_url), txhash);
+                        }).fail(function(jqXHR, textStatus, errorThrown) {
+                            clearpinging();
+                            handle_rpc_fails(rpcdata, errorThrown, txhash);
+                        });
+                        return
+                    }
+                    clearpinging();
+                    handle_rpc_fails(rpcdata, inf_err(set_url), txhash);
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    clearpinging();
+                    handle_rpc_fails(rpcdata, errorThrown, txhash);
+                });
+                return
+            }
+            clearpinging();
+            handle_rpc_fails(rpcdata, inf_err(set_url), txhash);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            clearpinging();
+            handle_rpc_fails(rpcdata, errorThrown, txhash);
+        });
+        return
+    }
+    forceclosesocket();
 }
 
 function handle_rpc_fails(rpcdata, error, txhash) {

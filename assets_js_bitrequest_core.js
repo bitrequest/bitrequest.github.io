@@ -2669,7 +2669,6 @@ function cancelpaymentdialog() {
     }, 600);
     closeloader();
     clearTimeout(request_timer);
-    closesocket();
     clearpinging();
     closenotify();
     sleep();
@@ -2677,6 +2676,11 @@ function cancelpaymentdialog() {
     lnd_ph = false,
         request = null,
         helper = null;
+    var wstimeout = setTimeout(function() {
+        closesocket();
+    }, 2500, function() {
+        clearTimeout(wstimeout);
+    });
     if (gd_init === true) {
         gd_init = false;
         if (hostlocation == "local") {
@@ -2706,6 +2710,7 @@ function closesocket(s_id) {
 }
 
 function forceclosesocket() {
+    console.log("force close");
     clearpinging();
     closesocket();
 }
@@ -2716,13 +2721,13 @@ function clearpinging(s_id) {
             clearInterval(pinging[s_id]);
             delete pinging[s_id]
         }
-    } else { // close all intervals
-        if ($.isEmptyObject(pinging)) {} else {
-            $.each(pinging, function(key, value) {
-                clearInterval(value);
-            });
-            pinging = {};
-        }
+        return
+    }
+    if ($.isEmptyObject(pinging)) {} else {
+        $.each(pinging, function(key, value) {
+            clearInterval(value);
+        });
+        pinging = {};
     }
 }
 

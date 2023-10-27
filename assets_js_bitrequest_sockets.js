@@ -456,90 +456,98 @@ function abort_ndef() {
 }
 
 function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
-    var default_error = "unable to connect";
-    $.ajax({
-        "method": "POST",
-        "cache": false,
-        "timeout": 5000,
-        "url": proxy_host + "proxy/v1/ln/api/",
-        "data": {
-            "fn": "ln-request-status",
-            "id": pid,
-            "x-api": pk
-        }
-    }).done(function(e) {
-        var error = e.error;
-        if (error) {
-            var message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
-            console.log(message);
-        }
-        var version = e.version;
-        if (version != proxy_version) {
-            proxy_alert(version);
-        }
-        if (e.pid == pid) {
-            if (e.status == "pending" && e.bolt11) {
-                clearpinging(pid);
-                set_request_timer();
-                pinging[e.hash] = setInterval(function() {
-                    lnd_poll_invoice(proxy_host, pk, imp, e, pid, nid);
-                }, 5000);
+    if (paymentpopup.hasClass("active")) { // only when request is visible
+        var default_error = "unable to connect";
+        $.ajax({
+            "method": "POST",
+            "cache": false,
+            "timeout": 5000,
+            "url": proxy_host + "proxy/v1/ln/api/",
+            "data": {
+                "fn": "ln-request-status",
+                "id": pid,
+                "x-api": pk
+            }
+        }).done(function(e) {
+            var error = e.error;
+            if (error) {
+                var message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
+                console.log(message);
+            }
+            var version = e.version;
+            if (version != proxy_version) {
+                proxy_alert(version);
+            }
+            if (e.pid == pid) {
+                if (e.status == "pending" && e.bolt11) {
+                    clearpinging(pid);
+                    set_request_timer();
+                    pinging[e.hash] = setInterval(function() {
+                        lnd_poll_invoice(proxy_host, pk, imp, e, pid, nid);
+                    }, 5000);
+                    return
+                }
+                if (e.status == "confirm" && !lnd_confirm) {
+                    lnd_confirm = true;
+                    paymentdialogbox.addClass("accept_lnd");
+                    notify("Accept the payment in your lightning app...", 500000);
+                    playsound(blip);
+                }
                 return
             }
-            if (e.status == "confirm" && !lnd_confirm) {
-                lnd_confirm = true;
-                paymentdialogbox.addClass("accept_lnd");
-                notify("Accept the payment in your lightning app...", 500000);
-                playsound(blip);
-            }
-            return
-        }
-        lnd_poll_data_fail(pid);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        lnd_poll_data_fail(pid);
-    });
+            lnd_poll_data_fail(pid);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            lnd_poll_data_fail(pid);
+        });
+        return
+    }
+    forceclosesocket();
 }
 
 function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
-    var default_error = "unable to connect";
-    $.ajax({
-        "method": "POST",
-        "cache": false,
-        "timeout": 5000,
-        "url": proxy_host + "proxy/v1/ln/api/",
-        "data": {
-            "fn": "ln-invoice-status",
-            "imp": imp,
-            "hash": inv.hash,
-            "id": pid,
-            "nid": nid,
-            "callback": "yes",
-            "type": request.requesttype,
-            "x-api": pk
-        }
-    }).done(function(e) {
-        var status = e.status;
-        if (status) {
-            request.address = "lnurl"; // make it a lightning request
-            notify("Waiting for payment", 500000);
-            helper.lnd.invoice = e;
-            var txd = lnd_tx_data(e);
-            confirmations(txd, true, true);
-            paymentdialogbox.removeClass("blockd");
-            if (status == "paid") {
-                clearpinging(inv.hash);
-                helper.currencylistitem.removeData("url");
-                localStorage.removeItem("bitrequest_editurl");
-                sessionStorage.removeItem("bitrequest_lndpid");
-                closenotify();
-                return
+    if (paymentpopup.hasClass("active")) { // only when request is visible
+        var default_error = "unable to connect";
+        $.ajax({
+            "method": "POST",
+            "cache": false,
+            "timeout": 5000,
+            "url": proxy_host + "proxy/v1/ln/api/",
+            "data": {
+                "fn": "ln-invoice-status",
+                "imp": imp,
+                "hash": inv.hash,
+                "id": pid,
+                "nid": nid,
+                "callback": "yes",
+                "type": request.requesttype,
+                "x-api": pk
             }
-        }
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        console.log(jqXHR);
-        console.log(textStatus);
-        console.log(errorThrown);
-    });
+        }).done(function(e) {
+            var status = e.status;
+            if (status) {
+                request.address = "lnurl"; // make it a lightning request
+                notify("Waiting for payment", 500000);
+                helper.lnd.invoice = e;
+                var txd = lnd_tx_data(e);
+                confirmations(txd, true, true);
+                paymentdialogbox.removeClass("blockd");
+                if (status == "paid") {
+                    clearpinging(inv.hash);
+                    helper.currencylistitem.removeData("url");
+                    localStorage.removeItem("bitrequest_editurl");
+                    sessionStorage.removeItem("bitrequest_lndpid");
+                    closenotify();
+                    return
+                }
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.log(jqXHR);
+            console.log(textStatus);
+            console.log(errorThrown);
+        });
+        return
+    }
+    forceclosesocket();
 }
 
 function lnd_poll_data_fail(pid) {
@@ -1159,64 +1167,68 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
 }
 
 function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
-    var payload = {
-        "address": address,
-        "view_key": vk
-    };
-    api_proxy({
-        "api": "mymonero api",
-        "search": "get_address_txs",
-        "cachetime": cachetime,
-        "cachefolder": "1h",
-        "proxy": true,
-        "params": {
-            "method": "POST",
-            "data": JSON.stringify(payload),
-            "headers": {
-                "Content-Type": "application/json"
+    if (paymentpopup.hasClass("active")) { // only when request is visible
+        var payload = {
+            "address": address,
+            "view_key": vk
+        };
+        api_proxy({
+            "api": "mymonero api",
+            "search": "get_address_txs",
+            "cachetime": cachetime,
+            "cachefolder": "1h",
+            "proxy": true,
+            "params": {
+                "method": "POST",
+                "data": JSON.stringify(payload),
+                "headers": {
+                    "Content-Type": "application/json"
+                }
             }
-        }
-    }).done(function(e) {
-        var data = br_result(e).result,
-            transactions = data.transactions;
-        if (transactions) {
-            var setconf = request.set_confirmations,
-                txflip = transactions.reverse();
-            $.each(txflip, function(dat, value) {
-                var txd = xmr_scan_data(value, setconf, "xmr", data.blockchain_height);
-                if (txd) {
-                    if (txd.ccval) {
-                        if (txhash) {
-                            if (txhash == txd.txhash) {
-                                confirmations(txd);
-                            }
-                            return
-                        }
-                        if (txd.transactiontime > request_ts) {
-                            var requestlist = $("#requestlist > li.rqli"),
-                                txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
-                            if (txid_match.length) {
+        }).done(function(e) {
+            var data = br_result(e).result,
+                transactions = data.transactions;
+            if (transactions) {
+                var setconf = request.set_confirmations,
+                    txflip = transactions.reverse();
+                $.each(txflip, function(dat, value) {
+                    var txd = xmr_scan_data(value, setconf, "xmr", data.blockchain_height);
+                    if (txd) {
+                        if (txd.ccval) {
+                            if (txhash) {
+                                if (txhash == txd.txhash) {
+                                    confirmations(txd);
+                                }
                                 return
                             }
-                            clearpinging();
-                            if (setconf > 0) {
+                            if (txd.transactiontime > request_ts) {
+                                var requestlist = $("#requestlist > li.rqli"),
+                                    txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
+                                if (txid_match.length) {
+                                    return
+                                }
+                                clearpinging();
+                                if (setconf > 0) {
+                                    confirmations(txd, true);
+                                    pinging[address] = setInterval(function() {
+                                        ping_xmr_node(34, address, vk, request_ts, txd.txhash);
+                                    }, 35000);
+                                    return
+                                }
                                 confirmations(txd, true);
-                                pinging[address] = setInterval(function() {
-                                    ping_xmr_node(34, address, vk, request_ts, txd.txhash);
-                                }, 35000);
-                                return
                             }
-                            confirmations(txd, true);
                         }
                     }
-                }
-            });
-        }
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        clearpinging();
-        var error_object = (errorThrown) ? errorThrown : jqXHR;
-        handle_api_fails(false, error_object, "mymonero api", request.payment, txhash);
-    });
+                });
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            clearpinging();
+            var error_object = (errorThrown) ? errorThrown : jqXHR;
+            handle_api_fails(false, error_object, "mymonero api", request.payment, txhash);
+        });
+        return
+    }
+    forceclosesocket();
 }
 
 function nimiq_scan(address, request_ts) {
@@ -1226,39 +1238,43 @@ function nimiq_scan(address, request_ts) {
 }
 
 function ping_nimiq(address, request_ts) {
-    api_proxy({
-        "api": "nimiq.watch",
-        "search": "account-transactions/" + address,
-        "params": {
-            "method": "GET"
-        }
-    }).done(function(e) {
-        var transactions = br_result(e).result;
-        if (transactions) {
-            var setconf = request.set_confirmations,
-                txflip = transactions.reverse();
-            $.each(txflip, function(dat, value) {
-                var txd = nimiq_scan_data(value, setconf);
-                if (txd.transactiontime > request_ts && txd.ccval) {
-                    clearpinging();
-                    var requestlist = $("#requestlist > li.rqli"),
-                        txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
-                    if (txid_match.length) {
-                        return
+    if (paymentpopup.hasClass("active")) { // only when request is visible
+        api_proxy({
+            "api": "nimiq.watch",
+            "search": "account-transactions/" + address,
+            "params": {
+                "method": "GET"
+            }
+        }).done(function(e) {
+            var transactions = br_result(e).result;
+            if (transactions) {
+                var setconf = request.set_confirmations,
+                    txflip = transactions.reverse();
+                $.each(txflip, function(dat, value) {
+                    var txd = nimiq_scan_data(value, setconf);
+                    if (txd.transactiontime > request_ts && txd.ccval) {
+                        clearpinging();
+                        var requestlist = $("#requestlist > li.rqli"),
+                            txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
+                        if (txid_match.length) {
+                            return
+                        }
+                        if (setconf > 0) {
+                            pick_monitor(txd.txhash, txd);
+                            return
+                        }
+                        confirmations(txd, true);
                     }
-                    if (setconf > 0) {
-                        pick_monitor(txd.txhash, txd);
-                        return
-                    }
-                    confirmations(txd, true);
-                }
-            });
-        }
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        clearpinging();
-        var error_object = (errorThrown) ? errorThrown : jqXHR;
-        handle_api_fails(false, error_object, "nimiq.watch", request.payment, txhash);
-    });
+                });
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            clearpinging();
+            var error_object = (errorThrown) ? errorThrown : jqXHR;
+            handle_api_fails(false, error_object, "nimiq.watch", request.payment, txhash);
+        });
+        return
+    }
+    forceclosesocket();
 }
 
 function after_poll(rq_init, next_api) {
