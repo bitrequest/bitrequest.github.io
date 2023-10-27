@@ -24,6 +24,7 @@ $(document).ready(function() {
     //amberdata_eth_websocket
     //web3_eth_websocket
     //web3_erc20_websocket
+    //ws_check_fc
     //handle_socket_fails
     //try_next_socket
     //current_socket
@@ -549,7 +550,8 @@ function lnd_poll_data_fail(pid) {
 // Websockets
 
 function blockcypher_websocket(socket_node, thisaddress) {
-    var provider = socket_node.url + request.currencysymbol + "/main",
+    var starttime = now(),
+        provider = socket_node.url + request.currencysymbol + "/main",
         websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
@@ -583,6 +585,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
     websocket.onclose = function(e) {
         console.log("Disconnected");
         txid = null;
+        ws_check_fc(starttime, socket_node, thisaddress);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress)
@@ -591,7 +594,8 @@ function blockcypher_websocket(socket_node, thisaddress) {
 }
 
 function blockchain_btc_socket(socket_node, thisaddress) {
-    var provider = socket_node.url,
+    var starttime = now(),
+        provider = socket_node.url,
         websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
@@ -624,6 +628,7 @@ function blockchain_btc_socket(socket_node, thisaddress) {
     websocket.onclose = function(e) {
         console.log("Disconnected");
         txid = null;
+        ws_check_fc(starttime, socket_node, thisaddress);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
@@ -632,7 +637,8 @@ function blockchain_btc_socket(socket_node, thisaddress) {
 }
 
 function blockchain_bch_socket(socket_node, thisaddress) {
-    var provider = socket_node.url,
+    var starttime = now(),
+        provider = socket_node.url,
         websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
@@ -666,6 +672,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
     websocket.onclose = function(e) {
         console.log("Disconnected");
         txid = null;
+        ws_check_fc(starttime, socket_node, thisaddress);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
@@ -674,7 +681,8 @@ function blockchain_bch_socket(socket_node, thisaddress) {
 }
 
 function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
-    var socket_url = socket_node.url,
+    var starttime = now(),
+        socket_url = socket_node.url,
         ak = get_amberdata_apikey(),
         provider = socket_url + "?x-api-key=" + ak + "&x-amberdata-blockchain-id=" + blockchainid,
         websocket = sockets[thisaddress] = new WebSocket(provider);
@@ -718,6 +726,7 @@ function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
     websocket.onclose = function(e) {
         console.log("Disconnected");
         txid = null;
+        ws_check_fc(starttime, socket_node, thisaddress);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
@@ -726,7 +735,8 @@ function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
 }
 
 function mempoolspace_btc_socket(socket_node, thisaddress) {
-    var provider = socket_node.url,
+    var starttime = now(),
+        provider = socket_node.url,
         mps_websocket = sockets[thisaddress] = new WebSocket(provider);
     mps_websocket.onopen = function(e) {
         socket_info(socket_node, true);
@@ -763,6 +773,7 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
     mps_websocket.onclose = function(e) {
         console.log("Disconnected");
         txid = null;
+        ws_check_fc(starttime, socket_node, thisaddress);
     };
     mps_websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
@@ -771,7 +782,8 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
 }
 
 function dogechain_info_socket(socket_node, thisaddress) {
-    var provider = socket_node.url,
+    var starttime = now(),
+        provider = socket_node.url,
         websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
@@ -806,6 +818,7 @@ function dogechain_info_socket(socket_node, thisaddress) {
     websocket.onclose = function(e) {
         console.log("Disconnected");
         txid = null;
+        ws_check_fc(starttime, socket_node, thisaddress);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
@@ -814,7 +827,8 @@ function dogechain_info_socket(socket_node, thisaddress) {
 }
 
 function nano_socket(socket_node, thisaddress) {
-    var address_mod = (thisaddress.match("^xrb")) ? "nano_" + thisaddress.split("_").pop() : thisaddress, // change nano address prefix xrb_ to nano untill websocket support
+    var starttime = now(),
+        address_mod = (thisaddress.match("^xrb")) ? "nano_" + thisaddress.split("_").pop() : thisaddress, // change nano address prefix xrb_ to nano untill websocket support
         provider = socket_node.url,
         websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
@@ -853,6 +867,7 @@ function nano_socket(socket_node, thisaddress) {
     websocket.onclose = function(e) {
         console.log("Disconnected");
         txid = null;
+        ws_check_fc(starttime, socket_node, thisaddress);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
@@ -861,7 +876,8 @@ function nano_socket(socket_node, thisaddress) {
 }
 
 function amberdata_eth_websocket(socket_node, thisaddress) {
-    var socket_url = socket_node.url,
+    var starttime = now(),
+        socket_url = socket_node.url,
         ak = get_amberdata_apikey(),
         provider = socket_url + "?x-api-key=" + ak,
         websocket = sockets[thisaddress] = new WebSocket(provider);
@@ -899,6 +915,7 @@ function amberdata_eth_websocket(socket_node, thisaddress) {
     websocket.onclose = function(e) {
         console.log("Disconnected");
         txid = null;
+        ws_check_fc(starttime, socket_node, thisaddress);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
@@ -907,7 +924,8 @@ function amberdata_eth_websocket(socket_node, thisaddress) {
 }
 
 function web3_eth_websocket(socket_node, thisaddress) {
-    var websocket = sockets[thisaddress] = new WebSocket(socket_node.url);
+    var starttime = now(),
+        websocket = sockets[thisaddress] = new WebSocket(socket_node.url);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({
@@ -923,11 +941,11 @@ function web3_eth_websocket(socket_node, thisaddress) {
     };
     websocket.onmessage = function(e) {
         var data = JSON.parse(e.data),
-        	result = q_obj(data, "params.result");
+            result = q_obj(data, "params.result");
         if (result) {
             if (result.hash) {
-	            var api_dat = q_obj(helper, "api_info.data"),
-                	rpc_url = (api_dat.default === false) ? api_dat.url : main_eth_node;
+                var api_dat = q_obj(helper, "api_info.data"),
+                    rpc_url = (api_dat.default === false) ? api_dat.url : main_eth_node;
                 api_proxy(eth_params(rpc_url, 25, "eth_getBlockByHash", [result.hash, true])).done(function(res) {
                     var rslt = inf_result(res),
                         transactions = rslt.transactions;
@@ -950,6 +968,7 @@ function web3_eth_websocket(socket_node, thisaddress) {
     websocket.onclose = function(e) {
         console.log("Disconnected");
         txid = null;
+        ws_check_fc(starttime, socket_node, thisaddress);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
@@ -958,7 +977,8 @@ function web3_eth_websocket(socket_node, thisaddress) {
 }
 
 function web3_erc20_websocket(socket_node, thisaddress) {
-    var provider_url = socket_node.url,
+    var starttime = now(),
+        provider_url = socket_node.url,
         if_id = get_infura_apikey(provider_url),
         provider = provider_url + if_id,
         websocket = sockets[thisaddress] = new WebSocket(provider);
@@ -980,7 +1000,7 @@ function web3_erc20_websocket(socket_node, thisaddress) {
     };
     websocket.onmessage = function(e) {
         var dat = JSON.parse(e.data),
-        	result = q_obj(dat, "params.result");
+            result = q_obj(dat, "params.result");
         if (result) {
             if (result.topics) {
                 var topic_address = result.topics[2];
@@ -1012,11 +1032,20 @@ function web3_erc20_websocket(socket_node, thisaddress) {
     websocket.onclose = function(e) {
         console.log("Disconnected");
         txid = null;
+        ws_check_fc(starttime, socket_node, thisaddress);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
         return
     };
+}
+
+function ws_check_fc(starttime, socket_node, thisaddress) {
+    if ((now() - starttime) < 2000) {
+        socket_info(socket_node, false);
+        handle_socket_fails(socket_node, thisaddress);
+        return
+    }
 }
 
 function handle_socket_fails(socket_node, thisaddress) {

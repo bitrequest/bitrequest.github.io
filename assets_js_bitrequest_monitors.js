@@ -208,7 +208,7 @@ function get_api_inputs_init(rd, api_data, api_name) {
 }
 
 function get_api_inputs(rd, api_data, api_name) {
-    var requestid = rd.requestid,
+	var requestid = rd.requestid,
         thislist = $("#" + requestid);
     if (thislist.hasClass("scan")) {
         api_attempts[requestid + api_name] = true;
@@ -422,18 +422,13 @@ function get_api_inputs(rd, api_data, api_name) {
                                     "name": "proxy"
                                 });
                             });
-                        } else {
-                            handle_api_fails_list(rd, {
-                                "error": "Transaction not found",
-                                "console": true
-                            }, false, payment);
+                            return
                         }
-                    } else {
-                        handle_api_fails_list(rd, {
-                            "error": "invoice not found",
-                            "console": true
-                        }, false, payment);
                     }
+                    handle_api_fails_list(rd, {
+                        "error": "invoice not found",
+                        "console": true
+                    }, false, payment);
                     return
                 }
             }
@@ -521,15 +516,15 @@ function get_api_inputs(rd, api_data, api_name) {
                                 var error_object = (errorThrown) ? errorThrown : jqXHR;
                                 handle_api_fails_list(rd, error_object, api_data, payment);
                             });
-                        } else {
-                            tx_api_fail(thislist, statuspanel);
-                            var errormessage = data.Error,
-                                error_object = (errormessage) ? errormessage : {
-                                    "error": "Unable to connect to mymonero api",
-                                    "console": true
-                                };
-                            handle_api_fails_list(rd, error_object, api_data, payment);
+                            return
                         }
+                        tx_api_fail(thislist, statuspanel);
+                        var errormessage = data.Error,
+                            error_object = (errormessage) ? errormessage : {
+                                "error": "Unable to connect to mymonero api",
+                                "console": true
+                            };
+                        handle_api_fails_list(rd, error_object, api_data, payment);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -567,7 +562,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                 }).done(function(e) {
                                     var data = br_result(e).result;
                                     if (data) {
-                                        if ($.isEmptyObject(data)) {} else {
+                                        if (!$.isEmptyObject(data)) {
                                             $.each(data, function(dat, value) {
                                                 if (value.txid) { // filter outgoing transactions
                                                     var txd = mempoolspace_scan_data(value, setconfirmations, ccsymbol, address, latestblock);
@@ -582,11 +577,11 @@ function get_api_inputs(rd, api_data, api_name) {
                                             });
                                             tx_count(statuspanel, counter);
                                             compareamounts(rd);
+                                            return
                                         }
-                                    } else {
-                                        tx_api_fail(thislist, statuspanel);
-                                        handle_api_fails_list(rd, "unknown error", api_data, payment);
                                     }
+                                    tx_api_fail(thislist, statuspanel);
+                                    handle_api_fails_list(rd, "unknown error", api_data, payment);
                                 }).fail(function(jqXHR, textStatus, errorThrown) {
                                     tx_api_fail(thislist, statuspanel);
                                     var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -618,10 +613,10 @@ function get_api_inputs(rd, api_data, api_name) {
                                                     }
                                                 }
                                             }
-                                        } else {
-                                            tx_api_fail(thislist, statuspanel);
-                                            handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                            return
                                         }
+                                        tx_api_fail(thislist, statuspanel);
+                                        handle_api_fails_list(rd, "unknown error", api_data, payment);
                                     }).fail(function(jqXHR, textStatus, errorThrown) {
                                         tx_api_fail(thislist, statuspanel);
                                         var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -630,10 +625,10 @@ function get_api_inputs(rd, api_data, api_name) {
                                 }
                             }
                         }, 500);
-                    } else {
-                        tx_api_fail(thislist, statuspanel);
-                        handle_api_fails_list(rd, "unknown error", api_data, payment);
+                        return
                     }
+                    tx_api_fail(thislist, statuspanel);
+                    handle_api_fails_list(rd, "unknown error", api_data, payment);
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     tx_api_fail(thislist, statuspanel);
                     var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -693,10 +688,10 @@ function get_api_inputs(rd, api_data, api_name) {
                                 tx_count(statuspanel, counter);
                                 compareamounts(rd);
                             }
-                        } else {
-                            tx_api_fail(thislist, statuspanel);
-                            handle_api_fails_list(rd, "unknown error", api_data, payment);
+                            return
                         }
+                        tx_api_fail(thislist, statuspanel);
+                        handle_api_fails_list(rd, "unknown error", api_data, payment);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -732,10 +727,10 @@ function get_api_inputs(rd, api_data, api_name) {
                                         }
                                     }
                                 }
-                            } else {
-                                tx_api_fail(thislist, statuspanel);
-                                handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                return
                             }
+                            tx_api_fail(thislist, statuspanel);
+                            handle_api_fails_list(rd, "unknown error", api_data, payment);
                         }).fail(function(jqXHR, textStatus, errorThrown) {
                             tx_api_fail(thislist, statuspanel);
                             var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -778,10 +773,10 @@ function get_api_inputs(rd, api_data, api_name) {
                                 tx_count(statuspanel, counter);
                                 compareamounts(rd);
                             }
-                        } else {
-                            tx_api_fail(thislist, statuspanel);
-                            handle_api_fails_list(rd, "unknown error", api_data, payment);
+                            return
                         }
+                        tx_api_fail(thislist, statuspanel);
+                        handle_api_fails_list(rd, "unknown error", api_data, payment);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -817,10 +812,10 @@ function get_api_inputs(rd, api_data, api_name) {
                                         }
                                     }
                                 }
-                            } else {
-                                tx_api_fail(thislist, statuspanel);
-                                handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                return
                             }
+                            tx_api_fail(thislist, statuspanel);
+                            handle_api_fails_list(rd, "unknown error", api_data, payment);
                         }).fail(function(jqXHR, textStatus, errorThrown) {
                             tx_api_fail(thislist, statuspanel);
                             var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -922,10 +917,10 @@ function get_api_inputs(rd, api_data, api_name) {
                                     }
                                 }
                             }
-                        } else {
-                            tx_api_fail(thislist, statuspanel);
-                            handle_api_fails_list(rd, "unknown error", api_data, payment);
+                            return
                         }
+                        tx_api_fail(thislist, statuspanel);
+                        handle_api_fails_list(rd, "unknown error", api_data, payment);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -967,11 +962,11 @@ function get_api_inputs(rd, api_data, api_name) {
                                             }
                                         }
                                     }
+                                    return
                                 }
-                            } else {
-                                tx_api_fail(thislist, statuspanel);
-                                handle_api_fails_list(rd, "unknown error", api_data, payment);
                             }
+                            tx_api_fail(thislist, statuspanel);
+                            handle_api_fails_list(rd, "unknown error", api_data, payment);
                         }).fail(function(jqXHR, textStatus, errorThrown) {
                             tx_api_fail(thislist, statuspanel);
                             var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -1025,10 +1020,10 @@ function get_api_inputs(rd, api_data, api_name) {
                                     tx_count(statuspanel, counter);
                                     compareamounts(rd);
                                 }
-                            } else {
-                                tx_api_fail(thislist, statuspanel);
-                                handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                return
                             }
+                            tx_api_fail(thislist, statuspanel);
+                            handle_api_fails_list(rd, "unknown error", api_data, payment);
                         }).fail(function(jqXHR, textStatus, errorThrown) {
                             tx_api_fail(thislist, statuspanel);
                             var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -1073,10 +1068,10 @@ function get_api_inputs(rd, api_data, api_name) {
                                     tx_count(statuspanel, counter);
                                     compareamounts(rd);
                                 }
-                            } else {
-                                tx_api_fail(thislist, statuspanel);
-                                handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                return
                             }
+                            tx_api_fail(thislist, statuspanel);
+                            handle_api_fails_list(rd, "unknown error", api_data, payment);
                         }).fail(function(jqXHR, textStatus, errorThrown) {
                             tx_api_fail(thislist, statuspanel);
                             var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -1164,10 +1159,10 @@ function get_api_inputs(rd, api_data, api_name) {
                                 tx_count(statuspanel, counter);
                                 compareamounts(rd);
                             }
-                        } else {
-                            tx_api_fail(thislist, statuspanel);
-                            handle_api_fails_list(rd, "unknown error", api_data, payment);
+                            return
                         }
+                        tx_api_fail(thislist, statuspanel);
+                        handle_api_fails_list(rd, "unknown error", api_data, payment);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -1206,10 +1201,10 @@ function get_api_inputs(rd, api_data, api_name) {
                                             }
                                         }
                                     }
-                                } else {
-                                    tx_api_fail(thislist, statuspanel);
-                                    handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                    return
                                 }
+                                tx_api_fail(thislist, statuspanel);
+                                handle_api_fails_list(rd, "unknown error", api_data, payment);
                             }).fail(function(jqXHR, textStatus, errorThrown) {
                                 tx_api_fail(thislist, statuspanel);
                                 var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -1217,69 +1212,68 @@ function get_api_inputs(rd, api_data, api_name) {
                             }).always(function() {
                                 api_src(thislist, api_data);
                             });
-                        } else {
-                            if (api_name == "mopsus.com") { // poll mopsus.com transaction id
-                                api_proxy({
-                                    "api": api_name,
-                                    "search": "tx/" + transactionhash,
-                                    "cachetime": 25,
-                                    "cachefolder": "1h",
-                                    "params": {
-                                        "method": "GET"
-                                    }
-                                }).done(function(e) {
-                                    var data = br_result(e).result;
-                                    if (data) {
-                                        if (data.error) {
-                                            tx_api_fail(thislist, statuspanel);
-                                            handle_api_fails_list(rd, data.error, api_data, payment);
-                                        } else {
-                                            api_proxy({
-                                                "api": api_name,
-                                                "search": "quick-stats/",
-                                                "cachetime": 25,
-                                                "cachefolder": "1h",
-                                                "params": {
-                                                    "method": "GET"
-                                                }
-                                            }).done(function(res) {
-                                                var e = br_result(res),
-                                                    bh = q_obj(e, "result.latest_block.height");
-                                                if (bh) {
-                                                    var txd = nimiq_scan_data(data, setconfirmations, bh, null, transactionhash);
-                                                    if (txd) {
-                                                        if (txd.ccval) {
-                                                            var tx_listitem = append_tx_li(txd, rqtype);
-                                                            if (tx_listitem) {
-                                                                transactionlist.append(tx_listitem.data(txd));
-                                                                tx_count(statuspanel, 1);
-                                                                compareamounts(rd);
-                                                            }
+                            return
+                        }
+                        if (api_name == "mopsus.com") { // poll mopsus.com transaction id
+                            api_proxy({
+                                "api": api_name,
+                                "search": "tx/" + transactionhash,
+                                "cachetime": 25,
+                                "cachefolder": "1h",
+                                "params": {
+                                    "method": "GET"
+                                }
+                            }).done(function(e) {
+                                var data = br_result(e).result;
+                                if (data) {
+                                    if (data.error) {
+                                        tx_api_fail(thislist, statuspanel);
+                                        handle_api_fails_list(rd, data.error, api_data, payment);
+                                    } else {
+                                        api_proxy({
+                                            "api": api_name,
+                                            "search": "quick-stats/",
+                                            "cachetime": 25,
+                                            "cachefolder": "1h",
+                                            "params": {
+                                                "method": "GET"
+                                            }
+                                        }).done(function(res) {
+                                            var e = br_result(res),
+                                                bh = q_obj(e, "result.latest_block.height");
+                                            if (bh) {
+                                                var txd = nimiq_scan_data(data, setconfirmations, bh, null, transactionhash);
+                                                if (txd) {
+                                                    if (txd.ccval) {
+                                                        var tx_listitem = append_tx_li(txd, rqtype);
+                                                        if (tx_listitem) {
+                                                            transactionlist.append(tx_listitem.data(txd));
+                                                            tx_count(statuspanel, 1);
+                                                            compareamounts(rd);
                                                         }
                                                     }
                                                 }
-                                            }).fail(function(jqXHR, textStatus, errorThrown) {
-                                                tx_api_fail(thislist, statuspanel);
-                                                var error_object = (errorThrown) ? errorThrown : jqXHR;
-                                                handle_api_fails_list(rd, error_object, api_data, payment);
-                                            });
-                                        }
-                                    } else {
-                                        tx_api_fail(thislist, statuspanel);
-                                        handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                            }
+                                        }).fail(function(jqXHR, textStatus, errorThrown) {
+                                            tx_api_fail(thislist, statuspanel);
+                                            var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                            handle_api_fails_list(rd, error_object, api_data, payment);
+                                        });
                                     }
-                                }).fail(function(jqXHR, textStatus, errorThrown) {
-                                    tx_api_fail(thislist, statuspanel);
-                                    var error_object = (errorThrown) ? errorThrown : jqXHR;
-                                    handle_api_fails_list(rd, error_object, api_data, payment);
-                                }).always(function() {
-                                    api_src(thislist, api_data);
-                                });
-                            }
+                                    return
+                                }
+                                tx_api_fail(thislist, statuspanel);
+                                handle_api_fails_list(rd, "unknown error", api_data, payment);
+                            }).fail(function(jqXHR, textStatus, errorThrown) {
+                                tx_api_fail(thislist, statuspanel);
+                                var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                handle_api_fails_list(rd, error_object, api_data, payment);
+                            }).always(function() {
+                                api_src(thislist, api_data);
+                            });
                         }
                     }
                 }
-                return
             }
         }
     }
@@ -1537,13 +1531,13 @@ function get_rpc_inputs(rd, api_data) {
                                             tx_count(statuspanel, counter);
                                             compareamounts(rd);
                                         }
-                                    } else {
-                                        tx_api_fail(thislist, statuspanel);
-                                        handle_rpc_fails_list(rd, {
-                                            "error": "No results found",
-                                            "console": true
-                                        }, api_data, payment);
+                                        return
                                     }
+                                    tx_api_fail(thislist, statuspanel);
+                                    handle_rpc_fails_list(rd, {
+                                        "error": "No results found",
+                                        "console": true
+                                    }, api_data, payment);
                                 }).fail(function(jqXHR, textStatus, errorThrown) {
                                     tx_api_fail(thislist, statuspanel);
                                     var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -1571,20 +1565,20 @@ function get_rpc_inputs(rd, api_data) {
                                             }
                                         }
                                     }
-                                } else {
-                                    tx_api_fail(thislist, statuspanel);
-                                    handle_rpc_fails_list(rd, "unknown error", api_data, payment);
+                                    return
                                 }
+                                tx_api_fail(thislist, statuspanel);
+                                handle_rpc_fails_list(rd, "unknown error", api_data, payment);
                             }).fail(function(jqXHR, textStatus, errorThrown) {
                                 tx_api_fail(thislist, statuspanel);
                                 var error_object = (errorThrown) ? errorThrown : jqXHR;
                                 handle_rpc_fails_list(rd, error_object, api_data, payment);
                             });
                         }, 500);
-                    } else {
-                        tx_api_fail(thislist, statuspanel);
-                        handle_rpc_fails_list(rd, "unknown error", api_data, payment);
+                        return
                     }
+                    tx_api_fail(thislist, statuspanel);
+                    handle_rpc_fails_list(rd, "unknown error", api_data, payment);
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     tx_api_fail(thislist, statuspanel);
                     var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -1732,13 +1726,13 @@ function get_rpc_inputs(rd, api_data) {
                                 tx_count(statuspanel, counter);
                                 compareamounts(rd);
                             }
-                        } else {
-                            tx_api_fail(thislist, statuspanel);
-                            handle_rpc_fails_list(rd, {
-                                "error": "No results found",
-                                "console": true
-                            }, api_data, payment);
+                            return
                         }
+                        tx_api_fail(thislist, statuspanel);
+                        handle_rpc_fails_list(rd, {
+                            "error": "No results found",
+                            "console": true
+                        }, api_data, payment);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -1781,13 +1775,13 @@ function get_rpc_inputs(rd, api_data) {
                                     compareamounts(rd);
                                 }
                             }
-                        } else {
-                            tx_api_fail(thislist, statuspanel);
-                            handle_rpc_fails_list(rd, {
-                                "error": "No results found",
-                                "console": true
-                            }, api_data, payment);
+                            return
                         }
+                        tx_api_fail(thislist, statuspanel);
+                        handle_rpc_fails_list(rd, {
+                            "error": "No results found",
+                            "console": true
+                        }, api_data, payment);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         var error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -1958,11 +1952,10 @@ function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, 
             conf_var = (conf === false) ? "Confirmed" : (conf && setconfirmations) ? conf + "/" + setconfirmations : "",
             cf_info = "\nConfirmations: " + conf_var;
         return "Historic data (" + fulldateformat(new Date((timestamp - timezone)), "en-us") + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(6) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src + cf_info;
-    } else {
-        var resp = "Failed to get historical " + ccsymbol + " price data";
-        notify(resp);
-        return resp;
     }
+    var resp = "Failed to get historical " + ccsymbol + " price data";
+    notify(resp);
+    return resp;
 }
 
 function compareamounts(rd, ln) {
@@ -2114,35 +2107,35 @@ function get_historical_fiat_data(rd, apilist, fiatapi, ln) {
                     api_callback(thisrequestid);
                     return
                 }
-                var usdrate,
-                    lcrate,
-                    get_lcrate;
+                var usdeur = false,
+                    usdloc = false,
+                    usdrate = false,
+                    get_lcrate = false;
                 if (fiatapi == "currencylayer") {
-                    var rates = data.quotes,
-                        usdrate = 1 / rates["USDEUR"],
-                        get_lcrate = rates["USD" + lcsymbol] * usdrate;
-                } else {
-                    var rates = data.rates,
-                        usdrate = rates["USD"],
-                        get_lcrate = rates[lcsymbol];
-                }
-                var lcrate = (lcsymbol == "EUR") ? 1 : get_lcrate;
-                if (lcrate === undefined || usdrate === undefined) {
-                    var next_historic = try_next_api(apilist, fiatapi);
-                    if (next_historic) {
-                        get_historical_fiat_data(rd, apilist, next_historic);
-                        return
+                    var usdeur = q_obj(data, "quotes.USDEUR"),
+                        usdloc = q_obj(data, "quotes.USD" + lcsymbol);
+                    if (usdeur && usdloc) {
+                        var usdrate = 1 / usdeur,
+                            get_lcrate = usdloc * usdrate;
                     }
-                    fail_dialogs(fiatapi, "unable to fetch " + lcsymbol + " exchange rate");
-                    api_callback(thisrequestid);
+                } else {
+                    var usdrate = q_obj(data, "quotes.USD"),
+                        get_lcrate = q_obj(data, "quotes." + lcsymbol);
+                }
+                if (usdrate && get_lcrate) {
+                    var lcrate = (lcsymbol == "EUR") ? 1 : get_lcrate;
+                    var historic_api = $("#cmcapisettings").data("selected"),
+                        picked_historic_api = (historic_api == "coinmarketcap") ? "coingecko" : historic_api, // default to "coingecko api"
+                        init_apilist = "historic_crypto_price_apis";
+                    api_attempt[init_apilist] = {};
+                    get_historical_crypto_data(rd, fiatapi, init_apilist, picked_historic_api, lcrate, usdrate, lcsymbol, ln);
                     return
                 }
-                var historic_api = $("#cmcapisettings").data("selected"),
-                    picked_historic_api = (historic_api == "coinmarketcap") ? "coingecko" : historic_api, // default to "coingecko api"
-                    init_apilist = "historic_crypto_price_apis";
-                api_attempt[init_apilist] = {};
-                get_historical_crypto_data(rd, fiatapi, init_apilist, picked_historic_api, lcrate, usdrate, lcsymbol, ln);
-                return
+                var next_historic = try_next_api(apilist, fiatapi);
+                if (next_historic) {
+                    get_historical_fiat_data(rd, apilist, next_historic);
+                    return
+                }
             }
             fail_dialogs(fiatapi, "unable to fetch " + lcsymbol + " exchange rate");
             api_callback(thisrequestid);

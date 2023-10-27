@@ -696,7 +696,7 @@ var apptitle = "Bitrequest",
                     "ccsymbol": "eth",
                     "cmcid": 1027,
                     "urlscheme": function(payment, address, amount, iszero) {
-                        var amount = (iszero === true) ? "" : "?value=" + (parseFloat(amount) * "1000000000000000000").toFixedSpecial(0);
+                        var amount = (iszero === true) ? "" : "?value=" + tofixedspecial((parseFloat(amount) * 1000000000000000000).toString(), 0);
                         return payment + ":" + address + amount;
                     },
                     "address_regex": "^0x[a-fA-F0-9]{40}$"

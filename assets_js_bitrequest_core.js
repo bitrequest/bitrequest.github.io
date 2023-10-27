@@ -147,25 +147,25 @@ function checkphp() { //check for php support by fetching fiat currencies from l
     }).done(function(e) {
         var result = br_result(e);
         if (result.proxy === true) {
-	        var symbols = q_obj(result, "result.result.symbols");
-	        if (symbols) {
-                    if (symbols.USD) {
-                        localStorage.setItem("bitrequest_symbols", JSON.stringify(symbols));
-                    } else {
-                        var this_error = (data.error) ? data.error : "Unable to get API data";
-                        fail_dialogs("fixer", this_error);
-                    }
+            var symbols = q_obj(result, "result.result.symbols");
+            if (symbols) {
+                if (symbols.USD) {
+                    localStorage.setItem("bitrequest_symbols", JSON.stringify(symbols));
+                } else {
+                    var this_error = (data.error) ? data.error : "Unable to get API data";
+                    fail_dialogs("fixer", this_error);
                 }
+            }
             io.phpsupport = "yes";
             localStorage.setItem("bitrequest_init", JSON.stringify(io));
             phpsupportglobal = true;
             setsymbols();
-        } else {
-            io.phpsupport = "no";
-            localStorage.setItem("bitrequest_init", JSON.stringify(io));
-            phpsupportglobal = false;
-            setsymbols();
+            return
         }
+        io.phpsupport = "no";
+        localStorage.setItem("bitrequest_init", JSON.stringify(io));
+        phpsupportglobal = false;
+        setsymbols();
     }).fail(function(jqXHR, textStatus, errorThrown) {
         io.phpsupport = "no";
         localStorage.setItem("bitrequest_init", JSON.stringify(io));
@@ -256,13 +256,13 @@ function storecoindata(data) {
             var platform = value.platform;
             if (platform) {
                 if (platform.id === 1027) { // only get erc20 tokens
-	                var erc20box = {
-		                "name": value.slug,
-		                "symbol": value.symbol.toLowerCase(),
-		                "cmcid": value.id,
-		                "contract": value.platform.token_address
-	                };
-	                erc20push.push(erc20box);
+                    var erc20box = {
+                        "name": value.slug,
+                        "symbol": value.symbol.toLowerCase(),
+                        "cmcid": value.id,
+                        "contract": value.platform.token_address
+                    };
+                    erc20push.push(erc20box);
                 }
             }
         });
@@ -482,6 +482,7 @@ function finishfunctions() {
     //result
     //get_api_url
     //fetchsymbol
+    //tofixedspecial
     //fixedcheck
     //geturlparameters
     //xss_search
@@ -3604,8 +3605,7 @@ function fetchsymbol(currencyname) {
     return ccsymbol;
 }
 
-Number.prototype.toFixedSpecial = function(n) {
-    var str = this.toFixed(n);
+function tofixedspecial(str, n) {
     if (str.indexOf("e+") < 0) {
         return str;
     }
@@ -3613,7 +3613,7 @@ Number.prototype.toFixedSpecial = function(n) {
         return p + Array(b - p.length + 2).join(0);
     }) + "." + Array(n + 1).join(0);
     return convert.slice(0, -1);
-};
+}
 
 function fixedcheck(livetop) {
     var headerheight = $(".showmain #header").outerHeight();
@@ -5307,12 +5307,12 @@ function q_obj(obj, path) {
         const p_arr = path.split(".");
         if ($.isArray(p_arr) && p_arr.length > 1) {
             for (let v of p_arr) {
-				if (!obj[v]) {
-					obj = false;
-					break
-				}
-				obj = obj[v];
-			}
+                if (!obj[v]) {
+                    obj = false;
+                    break
+                }
+                obj = obj[v];
+            }
             return obj;
         }
         return false
