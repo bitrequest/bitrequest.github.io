@@ -208,7 +208,7 @@ function get_api_inputs_init(rd, api_data, api_name) {
 }
 
 function get_api_inputs(rd, api_data, api_name) {
-	var requestid = rd.requestid,
+    var requestid = rd.requestid,
         thislist = $("#" + requestid);
     if (thislist.hasClass("scan")) {
         api_attempts[requestid + api_name] = true;
@@ -802,7 +802,18 @@ function get_api_inputs(rd, api_data, api_name) {
                                     tx_api_fail(thislist, statuspanel);
                                     handle_api_fails_list(rd, data.error, api_data, payment);
                                 } else {
-                                    var txd = ethplorer_poll_data(data, setconfirmations, ccsymbol);
+                                    var input = data.input,
+                                        amount_hex = input.slice(74, input.length),
+                                        tokenValue = hexToNumberString(amount_hex),
+                                        conf_correct = (data.confirmations < 0) ? 0 : data.confirmations,
+                                        txdata = {
+                                            "timestamp": data.timestamp,
+                                            "hash": transactionhash,
+                                            "confirmations": conf_correct,
+                                            "value": tokenValue,
+                                            "decimals": rd.decimals
+                                        },
+                                        txd = infura_erc20_poll_data(txdata, setconfirmations, ccsymbol);
                                     if (txd.ccval) {
                                         var tx_listitem = append_tx_li(txd, rqtype);
                                         if (tx_listitem) {
