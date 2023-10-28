@@ -137,6 +137,10 @@ function init_socket(socket_node, address, swtch, retry) {
             web3_eth_websocket(socket_node, address);
             return
         }
+        if (socket_name == main_eth_socket) {
+            web3_eth_websocket(socket_node, address);
+            return
+        }
         amberdata_eth_websocket(socket_node, address);
         return
     }
@@ -933,7 +937,10 @@ function amberdata_eth_websocket(socket_node, thisaddress) {
 
 function web3_eth_websocket(socket_node, thisaddress) {
     var starttime = now(),
-        websocket = sockets[thisaddress] = new WebSocket(socket_node.url);
+        provider_url = socket_node.url,
+        if_id = get_infura_apikey(provider_url),
+        provider = provider_url + if_id,
+        websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         var ping_event = JSON.stringify({

@@ -792,10 +792,16 @@ var apptitle = "Bitrequest",
                             "display": true
                         },
                         "apis": [{
-                            "name": main_ad_socket,
-                            "url": main_ad_socket,
-                            "display": true
-                        }],
+                                "name": main_ad_socket,
+                                "url": main_ad_socket,
+                                "display": true
+                            },
+                            {
+                                "name": main_eth_socket,
+                                "url": main_eth_socket,
+                                "display": true
+                            }
+                        ],
                         "options": []
                     },
                     "Xpub": {
