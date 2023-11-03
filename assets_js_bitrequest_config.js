@@ -920,6 +920,13 @@ var apptitle = "Bitrequest",
                                 "display": true
                             },
                             {
+                                "name": "app.natrium.io",
+                                "url": "https://app.natrium.io/api",
+                                "username": "",
+                                "password": "",
+                                "display": true
+                            },
+                            {
                                 "name": "api.nanos.cc",
                                 "url": "https://proxy.nanos.cc/proxy",
                                 "username": "",
@@ -1496,10 +1503,10 @@ var apptitle = "Bitrequest",
             },
             {
                 "name": "exchangeratesapi",
-                "base_url": "https://api.exchangeratesapi.io/",
-                "key_param": null,
-                "api_key": "no_key",
-                "sign_up": null
+                "base_url": "http://api.exchangeratesapi.io/",
+                "key_param": "access_key=",
+                "api_key": null,
+                "sign_up": "https://exchangeratesapi.io"
             },
             {
                 "name": "currencylayer",
