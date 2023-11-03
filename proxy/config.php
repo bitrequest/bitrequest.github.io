@@ -12,6 +12,7 @@ $keys = array(
 	"currencylayer" => "",
 	"amberdata" => "",
 	"infura" => "",
+	"exchangeratesapi" => "",
 	"googleauth" => ""
 );
 
@@ -26,6 +27,7 @@ $keys = array(
 	currencylayer: https://currencylayer.com/product
 	amberdata: https://amberdata.io/onboarding
 	infura: https://infura.io/register
+	exchangeratesapi: https://exchangeratesapi.io/
 	googleauth: https://developers.google.com/
 */
 
