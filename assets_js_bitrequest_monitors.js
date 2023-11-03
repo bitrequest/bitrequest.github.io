@@ -2130,8 +2130,8 @@ function get_historical_fiat_data(rd, apilist, fiatapi, ln) {
                             get_lcrate = usdloc * usdrate;
                     }
                 } else {
-                    var usdrate = q_obj(data, "quotes.USD"),
-                        get_lcrate = q_obj(data, "quotes." + lcsymbol);
+                    var usdrate = q_obj(data, "rates.USD"),
+                        get_lcrate = q_obj(data, "rates." + lcsymbol);
                 }
                 if (usdrate && get_lcrate) {
                     var lcrate = (lcsymbol == "EUR") ? 1 : get_lcrate;
