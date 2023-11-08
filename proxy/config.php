@@ -10,7 +10,6 @@ $keys = array(
 	"firebase" => "",
 	"blockchair" => "",
 	"currencylayer" => "",
-	"amberdata" => "",
 	"infura" => "",
 	"exchangeratesapi" => "",
 	"googleauth" => ""
@@ -25,7 +24,6 @@ $keys = array(
 	firebase: https://firebase.google.com/
 	blockchair: https://blockchair.com/api
 	currencylayer: https://currencylayer.com/product
-	amberdata: https://amberdata.io/onboarding
 	infura: https://infura.io/register
 	exchangeratesapi: https://exchangeratesapi.io/
 	googleauth: https://developers.google.com/

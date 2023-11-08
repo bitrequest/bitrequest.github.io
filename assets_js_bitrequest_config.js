@@ -18,8 +18,6 @@ var apptitle = "Bitrequest",
     main_bc_wss = "wss://socket.blockcypher.com/v1/",
     main_eth_node = "https://mainnet.infura.io/v3/",
     main_eth_socket = "wss://mainnet.infura.io/ws/v3/",
-    main_ad_node = "https://web3api.io/api/v2/",
-    main_ad_socket = "wss://ws.web3api.io/",
     main_nano_node = "https://www.bitrequest.app:8020",
     aws_bucket = "https://brq.s3.us-west-2.amazonaws.com/",
     cmc_icon_loc = "https://s2.coinmarketcap.com/static/img/coins/200x200/",
@@ -257,12 +255,6 @@ var apptitle = "Bitrequest",
                                 "url": "blockcypher.com",
                                 "api": true,
                                 "display": true
-                            },
-                            {
-                                "name": "amberdata",
-                                "url": "amberdata.io",
-                                "api": true,
-                                "display": true
                             }
                         ],
                         "options": []
@@ -292,11 +284,6 @@ var apptitle = "Bitrequest",
                             {
                                 "name": "blockchain.info websocket",
                                 "url": "wss://ws.blockchain.info/inv",
-                                "display": true
-                            },
-                            {
-                                "name": main_ad_socket,
-                                "url": main_ad_socket,
                                 "display": true
                             }
                         ],
@@ -398,12 +385,6 @@ var apptitle = "Bitrequest",
                                 "url": "blockchair.com",
                                 "api": true,
                                 "display": false
-                            },
-                            {
-                                "name": "amberdata",
-                                "url": "amberdata.io",
-                                "api": true,
-                                "display": true
                             }
                         ],
                         "options": []
@@ -424,11 +405,6 @@ var apptitle = "Bitrequest",
                                 "name": "blockcypher ws",
                                 "url": main_bc_ws,
                                 "display": false
-                            },
-                            {
-                                "name": main_ad_socket,
-                                "url": main_ad_socket,
-                                "display": true
                             }
                         ],
                         "options": []
@@ -636,18 +612,11 @@ var apptitle = "Bitrequest",
                             "display": true
                         },
                         "apis": [{
-                                "name": "blockchair",
-                                "url": "blockchair.com",
-                                "api": true,
-                                "display": false
-                            },
-                            {
-                                "name": "amberdata",
-                                "url": "amberdata.io",
-                                "api": true,
-                                "display": true
-                            }
-                        ],
+                            "name": "blockchair",
+                            "url": "blockchair.com",
+                            "api": true,
+                            "display": false
+                        }],
                         "options": []
                     },
                     "websockets": {
@@ -762,12 +731,6 @@ var apptitle = "Bitrequest",
                                 "display": true
                             },
                             {
-                                "name": "amberdata",
-                                "url": "amberdata.io",
-                                "api": true,
-                                "display": true
-                            },
-                            {
                                 "name": "blockchair",
                                 "url": "blockchair.com",
                                 "api": true,
@@ -787,21 +750,15 @@ var apptitle = "Bitrequest",
                     "websockets": {
                         "icon": "tab",
                         "selected": {
-                            "name": main_ad_socket,
-                            "url": main_ad_socket,
+                            "name": main_eth_socket,
+                            "url": main_eth_socket,
                             "display": true
                         },
                         "apis": [{
-                                "name": main_ad_socket,
-                                "url": main_ad_socket,
-                                "display": true
-                            },
-                            {
-                                "name": main_eth_socket,
-                                "url": main_eth_socket,
-                                "display": true
-                            }
-                        ],
+                            "name": main_eth_socket,
+                            "url": main_eth_socket,
+                            "display": true
+                        }],
                         "options": []
                     },
                     "Xpub": {
@@ -1271,12 +1228,6 @@ var apptitle = "Bitrequest",
                             "display": true
                         },
                         {
-                            "name": "amberdata",
-                            "url": "amberdata.io",
-                            "api": true,
-                            "display": true
-                        },
-                        {
                             "name": main_eth_node,
                             "url": main_eth_node,
                             "display": true
@@ -1407,7 +1358,7 @@ var apptitle = "Bitrequest",
                 "blockchair": null,
                 "currencylayer": null,
                 "infura": null,
-                "amberdata": null
+                "exchangeratesapi": null
             },
             {
                 "id": "contactform",
@@ -1563,13 +1514,6 @@ var apptitle = "Bitrequest",
                 "key_param": null,
                 "api_key": null,
                 "sign_up": "https://infura.io/register"
-            },
-            {
-                "name": "amberdata",
-                "base_url": main_ad_node,
-                "key_param": "bearer",
-                "api_key": null,
-                "sign_up": "https://amberdata.io/onboarding"
             },
             {
                 "name": "google_auth",

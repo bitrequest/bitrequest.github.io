@@ -2532,7 +2532,7 @@ function apikeys() {
             ethplorerkey = (ak_data.ethplorer) ? ak_data.ethplorer : "",
             blockchairkey = (ak_data.blockchair) ? ak_data.blockchair : "",
             infurakey = (ak_data.infura) ? ak_data.infura : "",
-            amberdatakey = (ak_data.amberdata) ? ak_data.amberdata : "",
+            exchangeratesapikey = (ak_data.exchangeratesapi) ? ak_data.exchangeratesapi : "",
             currencylayerkey = (ak_data.currencylayer) ? ak_data.currencylayer : "",
             content = "\
 			<div class='formbox' id='apikeyformbox'>\
@@ -2553,8 +2553,8 @@ function apikeys() {
 					<input type='text' value='" + blockchairkey + "' placeholder='Blockchair API key' data-ref='blockchair' data-checkchange='" + blockchairkey + "' class='ak_input'/>\
 					<h3>Infura</h3>\
 					<input type='text' value='" + infurakey + "' placeholder='Infura Project ID' data-ref='infura' data-checkchange='" + infurakey + "' class='ak_input'/>\
-					<h3>Amberdata</h3>\
-					<input type='text' value='" + amberdatakey + "' placeholder='Amberdata API key' data-ref='amberdata' data-checkchange='" + amberdatakey + "' class='ak_input'/>\
+					<h3>Exchangeratesapi</h3>\
+					<input type='text' value='" + exchangeratesapikey + "' placeholder='Exchangeratesapi API key' data-ref='exchangeratesapi' data-checkchange='" + exchangeratesapikey + "' class='ak_input'/>\
 					<h3>Bitly</h3>\
 					<input type='text' value='" + bitlykey + "' placeholder='Bitly access token' data-ref='bitly' data-checkchange='" + bitlykey + "' class='ak_input'/>\
 					<h3>Firebase</h3>\
@@ -2633,9 +2633,9 @@ function checkapikey(thisref, apikeyval, lastinput) {
             "keylength": 6,
             "payload": "live?access_key="
         } :
-        (thisref == "amberdata") ? {
+        (thisref == "exchangeratesapi") ? {
             "keylength": 6,
-            "payload": "blockchains/metrics/latest"
+            "payload": "v1/latest?access_key="
         } : null,
         keylength = (token_data) ? token_data.keylength : 6,
         payload = (token_data) ? token_data.payload : null;
@@ -2682,18 +2682,12 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                 "method": method,
                 "cache": true
             },
-            search = (thisref == "amberdata") ? payload :
-            payload + apikeyval,
+            search = payload + apikeyval,
             api_url = (thisref == "bitly") ? "https://api-ssl.bitly.com/v3/shorten?access_token=" + apikeyval + "&longUrl=http%3A%2F%2Fgoogle.com%2F" :
             base_url + search;
         if (thisref == "firebase") {
             params.data = {
                 "longDynamicLink": firebase_shortlink + "?link=" + approot + "?p=request"
-            }
-        } else if (thisref == "amberdata") {
-            params.headers = {
-                "x-amberdata-blockchain-id": "ethereum-mainnet",
-                "x-api-key": apikeyval
             }
         }
         var postdata = {
@@ -2770,9 +2764,18 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                 }
                 return
             }
-            if (thisref == "amberdata" && data.status === 401) {
-                api_fail(thisref, apikeyval);
-                return
+            if (thisref == "exchangeratesapi" && !data.success) {
+                let ec = q_obj(data, "error.code");
+                if (ec) {
+                    if (ec == "invalid_access_key") {
+                        api_fail(thisref, apikeyval);
+                    } else {
+                        notify("API call error");
+                        let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + ec + "</p>";
+                        popdialog(content, "canceldialog");
+                    }
+                    return
+                }
             }
             update_api_attr(thisref, apikeyval, lastinput);
         }).fail(function(jqXHR, textStatus, errorThrown) {

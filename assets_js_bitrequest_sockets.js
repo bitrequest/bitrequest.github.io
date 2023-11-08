@@ -18,10 +18,8 @@ $(document).ready(function() {
     //blockcypher_websocket
     //blockchain_btc_socket
     //blockchain_bch_socket
-    //amberdata_btc_websocket
     //mempoolspace_btc_socket
     //nano_socket
-    //amberdata_eth_websocket
     //web3_eth_websocket
     //web3_erc20_websocket
     //ws_check_fc
@@ -40,7 +38,6 @@ $(document).ready(function() {
     //mempoolspace_scan_poll
     //blockcypher_scan_poll
     //blockchair_scan_poll
-    //amberdata_scan_poll
     //erc20_scan_poll
     //after_poll_fails
     //rconnect
@@ -71,8 +68,6 @@ function init_socket(socket_node, address, swtch, retry) {
                 blockcypherws(socket_node, address)
             } else if (socket_name == "blockchain.info websocket") {
                 blockchain_btc_socket(socket_node, address);
-            } else if (socket_name == main_ad_socket) {
-                amberdata_btc_websocket(socket_node, address, "408fa195a34b533de9ad9889f076045e");
             } else if (socket_name == "mempool.space websocket" || socket_node.default === false) {
                 mempoolspace_btc_socket(socket_node, address);
             } else {
@@ -94,8 +89,6 @@ function init_socket(socket_node, address, swtch, retry) {
             blockcypher_websocket(socket_node, address);
         } else if (socket_name == "blockcypher ws") {
             blockcypherws(socket_node, address)
-        } else if (socket_name == main_ad_socket) {
-            amberdata_btc_websocket(socket_node, address, "f94be61fd9f4fa684f992ddfd4e92272");
         } else {
             blockcypher_websocket(socket_node, address);
         }
@@ -120,9 +113,6 @@ function init_socket(socket_node, address, swtch, retry) {
             mempoolspace_btc_socket(socket_node, address);
         } else if (socket_name == "blockchain.info websocket") {
             blockchain_bch_socket(socket_node, address);
-        } else if (socket_name == main_ad_socket) {
-            blockchain_bch_socket(socket_node, address);
-            //amberdata_btc_websocket(socket_node, address, "43b45e71cc0615b491cb699e7071fc06");
         } else {
             blockchain_bch_socket(socket_node, address);
         }
@@ -141,8 +131,6 @@ function init_socket(socket_node, address, swtch, retry) {
             web3_eth_websocket(socket_node, address);
             return
         }
-        amberdata_eth_websocket(socket_node, address);
-        return
     }
     if (payment == "monero") {
         clearpinging();
@@ -692,60 +680,6 @@ function blockchain_bch_socket(socket_node, thisaddress) {
     };
 }
 
-function amberdata_btc_websocket(socket_node, thisaddress, blockchainid) {
-    var starttime = now(),
-        socket_url = socket_node.url,
-        ak = get_amberdata_apikey(),
-        provider = socket_url + "?x-api-key=" + ak + "&x-amberdata-blockchain-id=" + blockchainid,
-        websocket = sockets[thisaddress] = new WebSocket(provider);
-    websocket.onopen = function(e) {
-        socket_info(socket_node, true);
-        var ping_event = JSON.stringify({
-            "jsonrpc": "2.0",
-            "id": 2,
-            "method": "subscribe",
-            "params": ["address:pending_transactions", {
-                "address": thisaddress
-            }]
-        });
-        websocket.send(ping_event);
-        pinging[thisaddress] = setInterval(function() {
-            websocket.send(ping_event);
-        }, 55000);
-    };
-    websocket.onmessage = function(e) {
-        var data = JSON.parse(e.data),
-            params = (data.params);
-        if (params) {
-            var result = params.result;
-            if (result) {
-                var txhash = result.hash;
-                if (txhash) {
-                    if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
-                        rconnect(txid);
-                        return
-                    }
-                    var txd = amberdata_ws_btc_data(result, request.set_confirmations, request.currencysymbol, thisaddress);
-                    if (txd) {
-                        txid = txhash;
-                        closesocket();
-                        pick_monitor(txhash, txd);
-                    }
-                }
-            }
-        }
-    };
-    websocket.onclose = function(e) {
-        console.log("Disconnected");
-        txid = null;
-        ws_check_fc(starttime, socket_node, thisaddress);
-    };
-    websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress);
-        return
-    };
-}
-
 function mempoolspace_btc_socket(socket_node, thisaddress) {
     var starttime = now(),
         provider = socket_node.url,
@@ -873,54 +807,6 @@ function nano_socket(socket_node, thisaddress) {
             if (timestamp_difference < 60000) { // filter transactions longer then a minute ago
                 closesocket();
                 pick_monitor(data.hash, txd);
-            }
-        }
-    };
-    websocket.onclose = function(e) {
-        console.log("Disconnected");
-        txid = null;
-        ws_check_fc(starttime, socket_node, thisaddress);
-    };
-    websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress);
-        return
-    };
-}
-
-function amberdata_eth_websocket(socket_node, thisaddress) {
-    var starttime = now(),
-        socket_url = socket_node.url,
-        ak = get_amberdata_apikey(),
-        provider = socket_url + "?x-api-key=" + ak,
-        websocket = sockets[thisaddress] = new WebSocket(provider);
-    websocket.onopen = function(e) {
-        socket_info(socket_node, true);
-        var ping_event = JSON.stringify({
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "subscribe",
-            "params": ["address:pending_transactions", {
-                "address": thisaddress
-            }]
-        });
-        websocket.send(ping_event);
-        pinging[thisaddress] = setInterval(function() {
-            websocket.send(ping_event);
-        }, 55000);
-    };
-    websocket.onmessage = function(e) {
-        var data = JSON.parse(e.data),
-            params = data.params;
-        if (params) {
-            var result = params.result;
-            if (result) {
-                if (str_match(result.to, thisaddress) === true) {
-                    var txhash = result.hash,
-                        txd = amberdata_ws_data(result, request.set_confirmations, request.currencysymbol);
-                    closesocket();
-                    pick_monitor(txhash, txd);
-                    return
-                }
             }
         }
     };
@@ -1323,12 +1209,6 @@ function after_poll(rq_init, next_api) {
             blockchair_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts, erc);
             return
         }
-        if (api_name == "amberdata") {
-            var erc = (request.erc20 === true) ? true : false;
-            ap_loader();
-            amberdata_scan_poll(api_name, ccsymbol, set_confirmations, address, request_ts, erc);
-            return
-        }
         if (api_name == "ethplorer") {
             var token_contract = request.token_contract;
             if (token_contract) {
@@ -1614,109 +1494,6 @@ function blockchair_scan_poll(payment, api_name, ccsymbol, set_confirmations, ad
     }).fail(function(jqXHR, textStatus, errorThrown) {
         after_poll_fails(api_name);
     });
-}
-
-function amberdata_scan_poll(api_name, ccsymbol, set_confirmations, address, request_ts, erc) {
-    var network = (ccsymbol == "btc") ? "bitcoin-mainnet" :
-        (ccsymbol == "ltc") ? "litecoin-mainnet" :
-        (ccsymbol == "bch") ? "bitcoin-abc-mainnet" :
-        (ccsymbol == "eth" || erc === true) ? "ethereum-mainnet" : null;
-    if (erc === true) {
-        api_proxy({
-            "api": api_name,
-            "search": "addresses/" + address + "/token-transfers?page=0&size=50",
-            "cachetime": 25,
-            "cachefolder": "1h",
-            "bearer": api_name,
-            "params": {
-                "method": "GET",
-                "cache": true,
-                "headers": {
-                    "accept": "application/json",
-                    "x-amberdata-blockchain-id": "ethereum-mainnet"
-                }
-            }
-        }).done(function(e) {
-            var data = br_result(e).result;
-            if (data) {
-                var payload = data.payload;
-                if (payload) {
-                    var records = payload.records;
-                    if (records) {
-                        if (!$.isEmptyObject(records)) {
-                            var detect = false,
-                                txdat;
-                            $.each(records, function(dat, value) {
-                                var txd = amberdata_scan_token_data(value, null, ccsymbol, address);
-                                if (txd.transactiontime > request_ts && txd.ccval && txd.ccsymbol == txd.tokensymbol) {
-                                    txdat = txd;
-                                    detect = true;
-                                    return
-                                }
-                            });
-                            if (txdat && detect === true) {
-                                pick_monitor(txdat.txhash, txdat);
-                                return
-                            }
-                        }
-                        close_paymentdialog(true);
-                        return
-                    }
-                }
-            }
-            after_poll_fails(api_name);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            after_poll_fails(api_name);
-        });
-    } else {
-        api_proxy({
-            "api": api_name,
-            "search": "addresses/" + address + "/transactions?decodeTransactions=false&page=0&size=50",
-            "cachetime": 25,
-            "cachefolder": "1h",
-            "bearer": api_name,
-            "params": {
-                "method": "GET",
-                "cache": true,
-                "headers": {
-                    "accept": "application/json",
-                    "x-amberdata-blockchain-id": network
-                }
-            }
-        }).done(function(e) {
-            var data = br_result(e).result;
-            if (data) {
-                var payload = data.payload;
-                if (payload) {
-                    var records = payload.records;
-                    if (records) {
-                        if (!$.isEmptyObject(records)) {
-                            var txflip = records.reverse();
-                            var detect = false,
-                                txdat;
-                            $.each(txflip, function(dat, value) {
-                                var txd = amberdata_scan_data(value, set_confirmations, ccsymbol, address);
-                                if (txd.transactiontime > request_ts && txd.ccval) {
-                                    txdat = txd;
-                                    detect = true;
-                                    return
-                                }
-                            });
-                            if (txdat && detect === true) {
-                                pick_monitor(txdat.txhash, txdat);
-                                return
-                            }
-                        }
-                        close_paymentdialog(true);
-                        return
-                    }
-                }
-            }
-            after_poll_fails(api_name);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            after_poll_fails(api_name);
-        });
-    }
 }
 
 function erc20_scan_poll(ccsymbol, set_confirmations, address, request_ts, token_contract) {

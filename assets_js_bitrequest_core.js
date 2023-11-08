@@ -476,7 +476,6 @@ function finishfunctions() {
 
     open_url();
     //get_blockcypher_apikey
-    //get_amberdata_apikey
     //get_infura_apikey
     //api_proxy
     //result
@@ -3491,11 +3490,6 @@ function get_blockcypher_apikey() {
     return (savedkey) ? savedkey : to.bc_id;
 }
 
-function get_amberdata_apikey() {
-    var savedkey = $("#apikeys").data("amberdata");
-    return (savedkey) ? savedkey : to.ad_id;
-}
-
 function get_infura_apikey(rpcurl) {
     var savedkey = $("#apikeys").data("infura");
     return (/^[A-Za-z0-9]+$/.test(rpcurl.slice(rpcurl.length - 15))) ? "" : // check if rpcurl already contains apikey
@@ -3520,17 +3514,13 @@ function api_proxy(ad, p_proxy) {
                 bearer = ad.bearer;
             params.url = (custom_url) ? custom_url : aud.api_url_key;
             if (bearer && api_key) {
-                if (bearer == "amberdata") {
-                    params.headers["x-api-key"] = api_key;
+                if (params.headers) {
+                    params.headers["Authorization"] = "Bearer " + api_key;
                 } else {
-                    if (params.headers) {
-                        params.headers["Authorization"] = "Bearer " + api_key;
-                    } else {
-                        var auth = {
-                            "Authorization": "Bearer " + api_key
-                        }
-                        params.headers = auth;
+                    var auth = {
+                        "Authorization": "Bearer " + api_key
                     }
+                    params.headers = auth;
                 }
             }
             return $.ajax(params);

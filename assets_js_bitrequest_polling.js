@@ -42,7 +42,6 @@ function api_monitor(txhash, tx_data, api_dat) {
             poll_url = (api_name == "blockcypher") ? currencysymbol + "/main/txs/" + txhash :
             (api_name == "ethplorer") ? "getTxInfo/" + txhash :
             (api_name == "blockchair") ? (request.erc20 === true) ? "ethereum/dashboards/transaction/" + txhash + "?erc_20=true" : payment + "/dashboards/transaction/" + txhash :
-            (api_name == "amberdata") ? "transactions/" + txhash + "?includeFunctions=false&includeLogs=false&decodeTransactions=false&includeTokenTransfers=true" :
             (api_name == "mempool.space") ? "tx/" + txhash :
             (api_name == "nimiq.watch") ? "transaction/" + nimiqhash(txhash) :
             (api_name == "mopsus.com") ? "tx/" + txhash : null;
@@ -92,7 +91,6 @@ function api_monitor(txhash, tx_data, api_dat) {
                     (api_name == "ethplorer") ? ethplorer_poll_data(data, set_confirmations, currencysymbol) :
                     (api_name == "mempool.space") ? mempoolspace_scan_data(data, set_confirmations, currencysymbol, currentaddress) :
                     (api_name == "nimiq.watch") ? nimiq_scan_data(data, set_confirmations) :
-                    (api_name == "amberdata") ? (request.erc20 === true) ? (data.payload.tokenTransfers) ? amberdata_poll_token_data(data.payload.tokenTransfers[0], set_confirmations, currencysymbol, txhash, data.payload.confirmations) : null : amberdata_scan_data(data.payload, set_confirmations, currencysymbol, currentaddress) :
                     (api_name == "blockchair") ? (request.erc20 === true) ? blockchair_erc20_poll_data(data.data[txhash], set_confirmations, currencysymbol, data.context.state) :
                     (payment == "ethereum") ? blockchair_eth_scan_data(data.data[txhash].calls[0], set_confirmations, currencysymbol, data.context.state) :
                     blockchair_scan_data(data.data[txhash], set_confirmations, currencysymbol, currentaddress, data.context.state) : false;
@@ -116,28 +114,6 @@ function api_monitor(txhash, tx_data, api_dat) {
 }
 
 function ampl(api_name, poll_url) { // api_monitor payload
-    if (api_name == "amberdata") {
-        var ccsymbol = request.currencysymbol,
-            network = (ccsymbol == "btc") ? "bitcoin-mainnet" :
-            (ccsymbol == "ltc") ? "litecoin-mainnet" :
-            (ccsymbol == "bch") ? "bitcoin-abc-mainnet" :
-            (ccsymbol == "eth" || request.erc20 === true) ? "ethereum-mainnet" : null;
-        return {
-            "api": api_name,
-            "search": poll_url,
-            "cachetime": 10,
-            "cachefolder": "1h",
-            "bearer": api_name,
-            "params": {
-                "method": "GET",
-                "cache": true,
-                "headers": {
-                    "accept": "application/json",
-                    "x-amberdata-blockchain-id": network
-                }
-            }
-        }
-    }
     return {
         "api": api_name,
         "search": poll_url,
