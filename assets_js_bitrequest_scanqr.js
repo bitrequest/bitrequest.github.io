@@ -95,8 +95,12 @@ function setResult(result) {
                 $("#popup .formbox input.addresslabel").focus();
             }
             if (isxpub) {
-                clear_xpub_checkboxes();
-                validate_xpub($(".formbox"));
+                if (cxpub(payment)) {
+                    clear_xpub_checkboxes();
+                    validate_xpub($(".formbox"));
+                } else {
+                    popnotify("error", "invalid " + payment + " address");
+                }
             }
         } else {
             if (isxpub) {

@@ -41,6 +41,7 @@ $(document).ready(function() {
     //active_xpub
     //has_xpub
     //is_xpub
+    //cxpub
 
     // Bip 39 seed generation
     make_seed();
@@ -347,7 +348,7 @@ function eth_xpub_check() {
 function check_derivations(currency) {
     if (test_derive === true && c_derive[currency]) {
         let activepub = active_xpub(currency);
-        if (can_xpub[currency] && activepub) {
+        if (cxpub(currency) && activepub) {
             return "xpub";
         }
         if (hasbip === true) {
@@ -378,7 +379,7 @@ function has_xpub(currency) {
 }
 
 function is_xpub(currency) {
-    if (can_xpub[currency]) {
+    if (cxpub(currency)) {
         let xpubli = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']");
         if (xpubli) {
             let xpubli_dat = xpubli.data();
@@ -386,6 +387,13 @@ function is_xpub(currency) {
                 return xpubli_dat;
             }
         }
+    }
+    return false;
+}
+
+function cxpub(currency) {
+    if (can_xpub[currency]) {
+        return true;
     }
     return false;
 }
