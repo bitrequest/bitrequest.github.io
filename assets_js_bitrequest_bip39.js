@@ -1341,18 +1341,18 @@ function zfill(source1, length) {
 // bip32 Derivation
 
 function objectify_extended(extended) {
-    let version = extended.slice(0, 8),
+    var version = extended.slice(0, 8),
         remain = extended.slice(8),
         depth = remain.slice(0, 2),
-        remain0 = remain.slice(2),
-        fingerprint = remain0.slice(0, 8),
-        remain1 = remain0.slice(8),
-        child_number = remain0.slice(0, 8),
-        remain2 = remain1.slice(8),
-        chain_code = remain1.slice(0, 64),
-        remain3 = remain2.slice(64),
-        parent_key = remain3.slice(0, 66),
-        remain4 = remain3.slice(66);
+        remain = remain.slice(2),
+        fingerprint = remain.slice(0, 8),
+        remain = remain.slice(8),
+        child_number = remain.slice(0, 8),
+        remain = remain.slice(8),
+        chain_code = remain.slice(0, 64),
+        remain = remain.slice(64),
+        parent_key = remain.slice(0, 66),
+        remain = remain.slice(66);
     return {
         "version": version,
         "depth": depth,
@@ -1360,7 +1360,7 @@ function objectify_extended(extended) {
         "childnumber": child_number,
         "chaincode": chain_code,
         "key": parent_key,
-        "remain": remain4
+        "remain": remain
     }
 }
 
