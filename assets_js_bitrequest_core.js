@@ -1,7 +1,7 @@
 //globals
-var language = navigator.language || navigator.userLanguage,
+
+const language = navigator.language || navigator.userLanguage,
     userAgent = navigator.userAgent || navigator.vendor || window.opera,
-    phpsupportglobal,
     titlenode = $("title"),
     ogtitle = $("meta[property='og:title']"),
     html = $("html"),
@@ -22,11 +22,9 @@ var language = navigator.language || navigator.userLanguage,
     has_ndef = ("NDEFReader" in window),
     supportsTouch = ("ontouchstart" in window || navigator.msMaxTouchPoints),
     checkcookie = navigator.cookieEnabled,
-    referrer,
     referrer = document.referrer,
     isrefferer = (referrer.length > 0),
     is_android_app = (window.matchMedia("(display-mode: standalone)").matches || referrer == "android-app://" + androidpackagename || navigator.standalone), // android app fingerprint
-    is_ios_app, // ios app fingerprint
     inframe = (self !== top),
     offline = (navigator.onLine === false),
     w_loc = window.location,
@@ -35,28 +33,33 @@ var language = navigator.language || navigator.userLanguage,
     hostlocation = (thishostname == "" || thishostname == "localhost" || thishostname === "127.0.0.1") ? "local" :
     (thishostname == "bitrequest.github.io") ? "hosted" :
     (thishostname == localhostname) ? "selfhosted" : "unknown",
+    wl = navigator.wakeLock,
+    cashier_dat = JSON.parse(localStorage.getItem("bitrequest_cashier")),
+    is_cashier = (cashier_dat && cashier_dat.cashier) ? true : false,
+    cashier_seedid = (is_cashier) ? cashier_dat.seedid : false,
+    after_poll_timeout = 15000,
+    xss_alert = "xss attempt detected",
+    stored_currencies = localStorage.getItem("bitrequest_currencies");
+
+let is_ios_app, // ios app fingerprint
+    phpsupportglobal,
     symbolcache,
     hascam,
     cp_timer,
     local,
     localserver,
-    wl = navigator.wakeLock,
     wakelock,
     bipv,
     bipobj = localStorage.getItem("bitrequest_bpdat"),
-    cashier_dat = JSON.parse(localStorage.getItem("bitrequest_cashier")),
-    is_cashier = (cashier_dat && cashier_dat.cashier) ? true : false,
-    cashier_seedid = (is_cashier) ? cashier_dat.seedid : false,
     hasbip = (bipobj) ? true : false,
     bipid = (hasbip) ? JSON.parse(bipobj).id : false,
-    after_poll_timeout = 15000,
-    blockswipe,
     ndef,
+    blockswipe,
     ctrl,
-    gd_init = false,
-    xss_alert = "xss attempt detected";
+    gd_init = false;
+
 if (has_ndef && !inframe) {
-    var ndef = new NDEFReader();
+    let ndef = new NDEFReader();
 }
 
 $(document).ready(function() {
@@ -65,9 +68,8 @@ $(document).ready(function() {
     });
     buildsettings(); // build settings first
 
-    stored_currencies = localStorage.getItem("bitrequest_currencies"),
-        init = localStorage.getItem("bitrequest_init"),
-        io = (init) ? JSON.parse(init) : {};
+    let init = localStorage.getItem("bitrequest_init");
+    io = (init) ? JSON.parse(init) : {};
 
     if (hostlocation != "local") { // don't add service worker on desktop
         add_serviceworker();
@@ -96,7 +98,7 @@ $(document).ready(function() {
             if (!stored_currencies) { //show startpage if no addresses are added
                 body.addClass("showstartpage");
             }
-            var bipverified = io.bipv,
+            let bipverified = io.bipv,
                 phpsupport = io.phpsupport;
             if (bipverified && hasbip === true) {
                 bipv = true;
@@ -108,17 +110,17 @@ $(document).ready(function() {
                 checkphp();
             }
         } else {
-            var content = "<h2 class='icon-bin'>Sorry!</h2><p>No Web Storage support..</p>";
+            let content = "<h2 class='icon-bin'>Sorry!</h2><p>No Web Storage support..</p>";
             popdialog(content, "canceldialog");
         }
     } else {
-        var content = "<h2 class='icon-bin'>Sorry!</h2><p>Seems like your browser does not allow cookies...<br/>Please enable cookies if you want to continue using this app.</p>";
+        let content = "<h2 class='icon-bin'>Sorry!</h2><p>Seems like your browser does not allow cookies...<br/>Please enable cookies if you want to continue using this app.</p>";
         popdialog(content, "canceldialog");
     }
     $("#fixednav").html($("#relnav").html()); // copy nav
     //startscreen
     setTimeout(function() {
-        var startscreen = $("#startscreen");
+        let startscreen = $("#startscreen");
         startscreen.addClass("hidesplashscreen");
         setTimeout(function() {
             startscreen.remove();
@@ -145,14 +147,14 @@ function checkphp() { //check for php support by fetching fiat currencies from l
             "method": "GET"
         }
     }).done(function(e) {
-        var result = br_result(e);
+        let result = br_result(e);
         if (result.proxy === true) {
-            var symbols = q_obj(result, "result.result.symbols");
+            let symbols = q_obj(result, "result.result.symbols");
             if (symbols) {
                 if (symbols.USD) {
                     localStorage.setItem("bitrequest_symbols", JSON.stringify(symbols));
                 } else {
-                    var this_error = (data.error) ? data.error : "Unable to get API data";
+                    let this_error = (data.error) ? data.error : "Unable to get API data";
                     fail_dialogs("fixer", this_error);
                 }
             }
@@ -190,19 +192,19 @@ function setsymbols() { //fetch fiat currencies from fixer.io api
                 "method": "GET"
             }
         }).done(function(e) {
-            var data = br_result(e).result;
+            let data = br_result(e).result;
             if (data) {
-                var symbols = data.symbols;
+                let symbols = data.symbols;
                 if (symbols && symbols.USD) {
                     localStorage.setItem("bitrequest_symbols", JSON.stringify(symbols));
                 } else {
-                    var this_error = (data.error) ? data.error : "Unable to get API data";
+                    let this_error = (data.error) ? data.error : "Unable to get API data";
                     fail_dialogs("fixer", this_error);
                 }
             }
             geterc20tokens();
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            var content = "<h2 class='icon-bin'>Api call failed</h2><p class='doselect'>" + textStatus + "<br/>api did not respond<br/><br/><span id='proxy_dialog' class='ref'>Try other proxy</span></p>";
+            let content = "<h2 class='icon-bin'>Api call failed</h2><p class='doselect'>" + textStatus + "<br/>api did not respond<br/><br/><span id='proxy_dialog' class='ref'>Try other proxy</span></p>";
             popdialog(content, "canceldialog");
         })
     }
@@ -223,7 +225,7 @@ function geterc20tokens() {
             "method": "GET"
         }
     }).done(function(e) {
-        var data = br_result(e).result,
+        let data = br_result(e).result,
             status = data.status;
         if (status && status.error_code === 0) {
             storecoindata(data);
@@ -238,25 +240,25 @@ function geterc20tokens() {
 }
 
 function geterc20tokens_local() {
-    var apiurl = approot + "assets_data_erc20.json";
+    let apiurl = approot + "assets_data_erc20.json";
     $.getJSON(apiurl, function(data) {
         if (data) {
             storecoindata(data);
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        var content = "<h2 class='icon-bin'>Api call failed</h2><p class='doselect'>Unable to fetch tokeninfo</p>";
+        let content = "<h2 class='icon-bin'>Api call failed</h2><p class='doselect'>Unable to fetch tokeninfo</p>";
         popdialog(content, "canceldialog");
     });
 }
 
 function storecoindata(data) {
     if (data) {
-        var erc20push = [];
+        let erc20push = [];
         $.each(data.data, function(key, value) {
-            var platform = value.platform;
+            let platform = value.platform;
             if (platform) {
                 if (platform.id === 1027) { // only get erc20 tokens
-                    var erc20box = {
+                    let erc20box = {
                         "name": value.slug,
                         "symbol": value.symbol.toLowerCase(),
                         "cmcid": value.id,
@@ -271,17 +273,17 @@ function storecoindata(data) {
 }
 
 function haspin() {
-    var pinsettings = $("#pinsettings").data(),
+    let pinsettings = $("#pinsettings").data(),
         pinhash = pinsettings.pinhash;
     if (pinhash) {
-        var pinstring = pinhash.toString();
+        let pinstring = pinhash.toString();
         return (pinstring.length > 3 && pinsettings.locktime != "never");
     }
     return false;
 }
 
 function islocked() {
-    var gets = geturlparameters(),
+    let gets = geturlparameters(),
         locktime = $("#pinsettings").data("locktime"),
         lastlock = localStorage.getItem("bitrequest_locktime"),
         tsll = now() - lastlock,
@@ -317,7 +319,7 @@ function setfunctions() {
         return
     }
     if (islocked() === true) {
-        var content = pinpanel(" pinwall global");
+        let content = pinpanel(" pinwall global");
         showoptions(content, "pin");
         return
     }
@@ -609,7 +611,6 @@ function finishfunctions() {
     html.addClass("loaded");
     check_rr();
     //toggle_rr
-    //q_obj
 }
 
 //checks
@@ -621,19 +622,19 @@ function setlocales() {
 }
 
 function settheme() {
-    var theme_settings = $("#themesettings").data("selected");
+    let theme_settings = $("#themesettings").data("selected");
     if (theme_settings) {
         $("#theme").attr("href", "assets/styles/themes/" + theme_settings);
     }
 }
 
 function setpermissions() {
-    var permission = $("#permissions").data("selected");
+    let permission = $("#permissions").data("selected");
     html.attr("data-role", permission);
 }
 
 function is_viewonly() {
-    var permission = $("#permissions").data("selected");
+    let permission = $("#permissions").data("selected");
     return (permission == "cashier");
 }
 
@@ -641,9 +642,9 @@ function is_viewonly() {
 
 function pinkeypress() {
     $(document).keydown(function(e) {
-        var pinfloat = $("#pinfloat");
+        let pinfloat = $("#pinfloat");
         if (pinfloat.length) {
-            var keycode = e.keyCode;
+            let keycode = e.keyCode;
             if (keycode === 49 || keycode === 97) {
                 pinpressselect($("#pin1 > span"));
             } else if (keycode === 50 || keycode === 98) {
@@ -690,7 +691,7 @@ function pinpresstrigger() {
 }
 
 function pinpress(thispad) {
-    var pinfloat = $("#pinfloat"),
+    let pinfloat = $("#pinfloat"),
         thisval = thispad.text(),
         pininput = $("#pininput"),
         pinval = pininput.val(),
@@ -719,7 +720,7 @@ function pinpress(thispad) {
 }
 
 function enterapp(pinval) {
-    var pinfloat = $("#pinfloat"),
+    let pinfloat = $("#pinfloat"),
         pinsettings = $("#pinsettings").data(),
         savedpin = pinsettings.pinhash,
         attempts = pinsettings.attempts,
@@ -729,7 +730,7 @@ function enterapp(pinval) {
         global = (pinfloat.hasClass("global")) ? true : false;
     if (hashpin == savedpin) {
         if (global) {
-            var nit = true;
+            let nit = true;
             localStorage.setItem("bitrequest_locktime", _now);
             finishfunctions();
             setTimeout(function() {
@@ -751,7 +752,7 @@ function enterapp(pinval) {
                 $("#pininput").val("");
             }, 200);
         } else {
-            var callback = pinfloat.data("pincb");
+            let callback = pinfloat.data("pincb");
             if (callback) {
                 callback.func(callback.args);
             } else {
@@ -773,15 +774,15 @@ function enterapp(pinval) {
         }, 10);
         if (attempts > 2) {
             if (attempts === 3) {
-                var timeout = _now + 300000; // 5 minutes
+                let timeout = _now + 300000; // 5 minutes
                 pinsettings.timeout = timeout;
                 lockscreen(timeout);
             } else if (attempts === 6) {
-                var timeout = _now + 1800000; // 30 minutes
+                let timeout = _now + 1800000; // 30 minutes
                 pinsettings.timeout = timeout;
                 lockscreen(timeout);
             } else if (attempts === 9) {
-                var timeout = _now + 86400000; // 24 hours
+                let timeout = _now + 86400000; // 24 hours
                 pinsettings.timeout = timeout;
                 lockscreen(timeout);
             } else if (attempts > 9) {
@@ -794,7 +795,7 @@ function enterapp(pinval) {
 }
 
 function clearpinlock() {
-    var pinsettings = $("#pinsettings").data();
+    let pinsettings = $("#pinsettings").data();
     pinsettings.timeout = null;
     pinsettings.attempts = 0;
     savesettings();
@@ -813,14 +814,14 @@ function pinvalidatetrigger() {
 }
 
 function pinvalidate(thispad) {
-    var pinfloat = $("#pinfloat"),
+    let pinfloat = $("#pinfloat"),
         thisval = thispad.text(),
         pininput = $("#validatepin"),
         pinval = pininput.val(),
         newval = pinval + thisval;
     if (newval.length > 3) {
         if (newval == $("#pininput").val()) {
-            var current_pin = get_setting("pinsettings", "pinhash"),
+            let current_pin = get_setting("pinsettings", "pinhash"),
                 pinsettings = $("#pinsettings"),
                 pinhash = hashcode(newval),
                 titlepin = "pincode activated",
@@ -833,14 +834,14 @@ function pinvalidate(thispad) {
             savesettings();
             playsound(waterdrop);
             canceloptions(true);
-            var callback = pinfloat.data("pincb");
+            let callback = pinfloat.data("pincb");
             if (callback) {
                 callback.func(callback.args);
             }
             notify("Data saved");
             enc_s(seed_decrypt(current_pin));
         } else {
-            var pinfloat = $("#pinfloat");
+            let pinfloat = $("#pinfloat");
             topnotify("pincode does not match");
             if (navigator.vibrate) {} else {
                 playsound(funk);
@@ -873,7 +874,7 @@ function pinbackvalidatetrigger() {
 }
 
 function pinback(pininput) {
-    var pinval = pininput.val(),
+    let pinval = pininput.val(),
         inputlength = pinval.length,
         prevval = pinval.substring(0, inputlength - 1);
     pininput.val(prevval);
@@ -895,13 +896,13 @@ function ios_redirections(url) {
         ios_redirect_bitly(url);
         return
     }
-    var currenturlvar = w_loc.href,
+    let currenturllet = w_loc.href,
         currenturl = currenturlvar.toUpperCase(),
         newpage = url.toUpperCase();
     if (currenturl == newpage) {
         return
     }
-    var isrequest = (newpage.indexOf("PAYMENT=") >= 0),
+    let isrequest = (newpage.indexOf("PAYMENT=") >= 0),
         isopenrequest = (paymentpopup.hasClass("active"));
     if (isrequest === true) {
         if (isopenrequest === true) {
@@ -916,9 +917,9 @@ function ios_redirections(url) {
         }
     } else {
         if (isopenrequest === true) {} else {
-            var pageparam = url.lastIndexOf("?p=");
+            let pageparam = url.lastIndexOf("?p=");
             if (pageparam > 10) {
-                var slice = url.slice(pageparam + 3),
+                let slice = url.slice(pageparam + 3),
                     pagename = (slice.indexOf("&") >= 0) ? slice.substr(0, slice.indexOf("&")) : slice;
                 openpage(url, pagename, "page");
             }
@@ -929,7 +930,7 @@ function ios_redirections(url) {
 
 function ios_redirect_bitly(shorturl) {
     if (hostlocation == "local") {} else {
-        var bitly_id = shorturl.split(approot)[1].split("4bR")[0],
+        let bitly_id = shorturl.split(approot)[1].split("4bR")[0],
             getcache = sessionStorage.getItem("bitrequest_longurl_" + bitly_id);
         if (getcache) { // check for cached values
             ios_redirections(getcache);
@@ -948,12 +949,12 @@ function ios_redirect_bitly(shorturl) {
                     })
                 }
             }).done(function(e) {
-                var data = br_result(e).result;
+                let data = br_result(e).result;
                 if (data.error) {
                     fail_dialogs("bitly", data.error);
                 } else {
                     if (data) {
-                        var longurl = data.long_url;
+                        let longurl = data.long_url;
                         if (longurl) {
                             ios_redirections(longurl);
                             sessionStorage.setItem("bitrequest_longurl_" + bitly_id, longurl); //cache token decimals
@@ -986,7 +987,7 @@ function startnexttrigger() {
 }
 
 function startnext(thisnode) {
-    var thisnext = thisnode.attr("data-next");
+    let thisnext = thisnode.attr("data-next");
     if (thisnext === undefined) {
         return
     }
@@ -1000,7 +1001,7 @@ function startnext(thisnode) {
 }
 
 function startprev(thisnode) {
-    var thisprev = thisnode.attr("data-prev");
+    let thisprev = thisnode.attr("data-prev");
     if (thisprev === undefined) {
         return
     }
@@ -1011,7 +1012,7 @@ function startprev(thisnode) {
 
 function lettercountkeydown() { // Character limit on input field
     $(document).on("keydown", "#eninput", function(e) {
-        var keycode = e.keyCode,
+        let keycode = e.keyCode,
             thisinput = $(this),
             thisvallength = thisinput.val().length,
             lettersleft = thisinput.attr("data-max") - thisvallength;
@@ -1030,7 +1031,7 @@ function lettercountkeydown() { // Character limit on input field
 
 function lettercountinput() { // Character count plus validation
     $(document).on("input", "#eninput", function() {
-        var thisinput = $(this),
+        let thisinput = $(this),
             mininput = thisinput.attr("data-min"),
             thispanel = $("#entername"),
             thisvallength = thisinput.val().length,
@@ -1052,7 +1053,7 @@ function lettercountinput() { // Character count plus validation
 
 function choosecurrency() {
     $(document).on("click touch", "#allcurrencies li.choose_currency", function() {
-        var currency = $(this).attr("data-currency"),
+        let currency = $(this).attr("data-currency"),
             cd = getcoindata(currency);
         addaddress({
             "currency": currency,
@@ -1079,7 +1080,7 @@ function togglenav() {
                 $(".currenciesbttn .self").addClass("activemenu");
                 return
             }
-            var content = pinpanel(" pinwall admin");
+            let content = pinpanel(" pinwall admin");
             showoptions(content, "pin");
             return
         }
@@ -1089,12 +1090,12 @@ function togglenav() {
 }
 
 function loadurl() {
-    var gets = geturlparameters();
+    let gets = geturlparameters();
     if (gets.xss) {
         loadpageevent("home");
         return
     }
-    var page = gets.p,
+    let page = gets.p,
         payment = gets.payment,
         url = w_loc.search,
         event = (payment) ? "both" : "loadpage";
@@ -1104,7 +1105,7 @@ function loadurl() {
         loadpageevent("home");
     }
     shownav(page);
-    var bip39info = gets.bip39;
+    let bip39info = gets.bip39;
     if (bip39info) {
         bip39_sc(bip39info);
     }
@@ -1120,7 +1121,7 @@ function clicklink() {
 
 //push history and set current page
 function loadpage(href) {
-    var pagename = href.split("&")[0].split("=").pop();
+    let pagename = href.split("&")[0].split("=").pop();
     openpage(href, pagename, "loadpage");
 }
 
@@ -1134,7 +1135,7 @@ function openpage(href, pagename, event) {
 
 function popstate() {
     window.onpopstate = function(e) {
-        var statemeta = e.state;
+        let statemeta = e.state;
         if (statemeta && statemeta.pagename) { //check for history
             loadfunction(statemeta.pagename, statemeta.event);
             return
@@ -1156,7 +1157,7 @@ function loadfunction(pagename, thisevent) {
         return
     }
     loadpageevent(pagename);
-    var title = pagename + " | " + apptitle;
+    let title = pagename + " | " + apptitle;
     settitle(title);
     cancel_url_dialogs();
 }
@@ -1174,12 +1175,12 @@ function loadpageevent(pagename) {
     $("html, body").animate({
         "scrollTop": 0
     }, 400);
-    var currentpage = $("#" + pagename);
+    let currentpage = $("#" + pagename);
     currentpage.addClass("currentpage");
     $(".page").not(currentpage).removeClass("currentpage");
     $(".highlightbar").attr("data-class", pagename);
     shownav(pagename);
-    var requestfilter = geturlparameters().filteraddress; // filter requests if filter parameter exists
+    let requestfilter = geturlparameters().filteraddress; // filter requests if filter parameter exists
     if (requestfilter && pagename == "requests") {
         $("#requestlist > li").not(get_requestli("address", requestfilter)).hide();
     } else {
@@ -1199,7 +1200,7 @@ function shownav(pagename) { // show / hide navigation
 
 function activemenu() {
     $(document).on("click", ".nav li .self", function() {
-        var thisitem = $(this);
+        let thisitem = $(this);
         thisitem.addClass("activemenu");
         $(".nav li .self").not(thisitem).removeClass("activemenu");
         return
@@ -1226,13 +1227,13 @@ function triggertx() {
 }
 
 function triggertxfunction(thislink) {
-    var currency = thislink.data("currency"),
+    let currency = thislink.data("currency"),
         can_derive = derive_first_check(currency);
     if (can_derive === true) {
         triggertxfunction(thislink);
         return
     }
-    var pick_random = cs_dat(currency, "Use random address").selected,
+    let pick_random = cs_dat(currency, "Use random address").selected,
         derives = check_derivations(currency),
         addresslist = filter_addressli(currency, "checked", true),
         firstlist = addresslist.first(),
@@ -1249,7 +1250,7 @@ function triggertxfunction(thislink) {
     if (seedid) {
         if (seedid != bipid) {
             if (addr_whitelist(thisaddress) === true) {} else {
-                var pass_dat = {
+                let pass_dat = {
                         "currency": currency,
                         "address": thisaddress,
                         "url": savedurl,
@@ -1272,7 +1273,7 @@ function triggertxfunction(thislink) {
 function confirm_missing_seed() {
     $(document).on("click", "#addresswarning .submit", function(e) {
         e.preventDefault();
-        var thisdialog = $("#addresswarning"),
+        let thisdialog = $("#addresswarning"),
             d_dat = thisdialog.data(),
             pk_checkbox = thisdialog.find("#pk_confirmwrap"),
             pk_checked = pk_checkbox.data("checked"),
@@ -1292,7 +1293,7 @@ function confirm_missing_seed() {
 }
 
 function get_address_warning(id, address, pass_dat) {
-    var seedstr = (pass_dat.xpubid) ? "Xpub" : "Seed",
+    let seedstr = (pass_dat.xpubid) ? "Xpub" : "Seed",
         rest_str = (seedstr == "Seed") ? (hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + pass_dat.seedid + "'>Restore seed</div>" : "";
     return $("<div class='formbox addwarning' id='" + id + "'>\
 		<h2 class='icon-warning'>Warning!</h2>\
@@ -1315,7 +1316,7 @@ function get_address_warning(id, address, pass_dat) {
 }
 
 function finishtxfunction(currency, thisaddress, savedurl, title) {
-    var cd = getcoindata(currency),
+    let cd = getcoindata(currency),
         currencysettings = $("#currencysettings").data(),
         c_default = currencysettings.default,
         currencysymbol = (c_default === true && offline === false) ? currencysettings.currencysymbol : cd.ccsymbol,
@@ -1337,13 +1338,13 @@ function clear_savedurl() {
 function payrequest() {
     $(document).on("click", "#requestlist .req_actions .icon-qrcode, #requestlist .payrequest", function(e) {
         e.preventDefault();
-        var thisnode = $(this);
+        let thisnode = $(this);
         if (offline === true && thisnode.hasClass("isfiat")) {
             // do not trigger fiat request when offline because of unknown exchange rate
             notify("Unable to get exchange rate");
             return
         }
-        var thisrequestlist = thisnode.closest("li.rqli"),
+        let thisrequestlist = thisnode.closest("li.rqli"),
             rldata = thisrequestlist.data(),
             rl_payment = rldata.payment,
             rl_uoa = rldata.uoa,
@@ -1353,7 +1354,6 @@ function payrequest() {
             rl_receivedamount = rldata.receivedamount,
             rl_fiatvalue = rldata.fiatvalue,
             rl_iscrypto = rldata.iscrypto,
-            rl_uoa = rldata.uoa,
             insufficient = (rl_status == "insufficient"),
             midstring = thisnode.attr("data-rel"),
             endstring = "&status=" + rl_status + "&type=" + rl_requesttype,
@@ -1376,7 +1376,7 @@ function payrequest() {
 
 function togglecurrency() {
     $(document).on("click", ".togglecurrency", function() {
-        var parentlistitem = $(this).closest("li"),
+        let parentlistitem = $(this).closest("li"),
             coindata = parentlistitem.data(),
             currency = coindata.currency,
             checked = coindata.checked,
@@ -1385,9 +1385,9 @@ function togglecurrency() {
             parentlistitem.attr("data-checked", "false").data("checked", false);
             currencylistitem.addClass("hide");
         } else {
-            var lscurrency = localStorage.getItem("bitrequest_cc_" + currency);
+            let lscurrency = localStorage.getItem("bitrequest_cc_" + currency);
             if (lscurrency) {
-                var addresslist = get_addresslist(currency),
+                let addresslist = get_addresslist(currency),
                     addresscount = addresslist.find("li[data-checked='true']").length;
                 if (addresscount == 0) {
                     addresslist.find("li[data-checked='false']").first().find(".toggleaddress").trigger("click");
@@ -1405,7 +1405,7 @@ function togglecurrency() {
 
 function toggleaddress() {
     $(document).on("click", ".toggleaddress", function() {
-        var parentlistitem = $(this).closest("li"),
+        let parentlistitem = $(this).closest("li"),
             checked = parentlistitem.data("checked"),
             parentlist = parentlistitem.closest("ul.pobox"),
             addresscount = parentlist.find("li[data-checked='true']").length,
@@ -1413,12 +1413,12 @@ function toggleaddress() {
         if (checked === true || checked == "true") {
             parentlistitem.attr("data-checked", "false").data("checked", false);
         } else {
-            var a_dat = parentlistitem.data();
+            let a_dat = parentlistitem.data();
             if (parentlistitem.hasClass("seedu")) {
-                var address = a_dat.address,
+                let address = a_dat.address,
                     seedid = a_dat.seedid;
                 if (addr_whitelist(address) === true) {} else {
-                    var pass_dat = {
+                    let pass_dat = {
                             "address": address,
                             "pli": parentlistitem,
                             "seedid": seedid
@@ -1428,12 +1428,12 @@ function toggleaddress() {
                     return
                 }
             } else if (parentlistitem.hasClass("xpubu")) {
-                var address = a_dat.address;
+                let address = a_dat.address;
                 if (addr_whitelist(address) === true) {} else {
-                    var haspub = has_xpub(currency),
+                    let haspub = has_xpub(currency),
                         xpubid = a_dat.xpubid;
                     if (haspub === false || (haspub && haspub.key_id != xpubid)) {
-                        var pass_dat = {
+                        let pass_dat = {
                                 "address": address,
                                 "pli": parentlistitem,
                                 "xpubid": xpubid
@@ -1455,7 +1455,7 @@ function toggleaddress() {
 function confirm_missing_seed_toggle() {
     $(document).on("click", "#addresswarningcheck .submit", function(e) {
         e.preventDefault();
-        var thisdialog = $("#addresswarningcheck"),
+        let thisdialog = $("#addresswarningcheck"),
             d_dat = thisdialog.data(),
             pk_checkbox = thisdialog.find("#pk_confirmwrap"),
             pk_checked = pk_checkbox.data("checked"),
@@ -1475,7 +1475,7 @@ function confirm_missing_seed_toggle() {
 }
 
 function cmst_callback(parentlistitem) {
-    var parentlist = parentlistitem.closest("ul.pobox"),
+    let parentlist = parentlistitem.closest("ul.pobox"),
         currency = parentlist.attr("data-currency");
     parentlistitem.attr("data-checked", "true").data("checked", true);
     check_currency(currency);
@@ -1484,7 +1484,7 @@ function cmst_callback(parentlistitem) {
 }
 
 function add_seed_whitelist(seedid) {
-    var stored_whitelist = localStorage.getItem("bitrequest_swl"),
+    let stored_whitelist = localStorage.getItem("bitrequest_swl"),
         seed_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
     if ($.inArray(seedid, seed_whitelist) === -1) {
         seed_whitelist.push(seedid);
@@ -1493,13 +1493,13 @@ function add_seed_whitelist(seedid) {
 }
 
 function seed_wl(seedid) {
-    var stored_whitelist = localStorage.getItem("bitrequest_swl"),
+    let stored_whitelist = localStorage.getItem("bitrequest_swl"),
         seed_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
     return ($.inArray(seedid, seed_whitelist) === -1) ? false : true;
 }
 
 function add_address_whitelist(address) {
-    var stored_whitelist = localStorage.getItem("bitrequest_awl"),
+    let stored_whitelist = localStorage.getItem("bitrequest_awl"),
         address_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
     if ($.inArray(address, address_whitelist) === -1) {
         address_whitelist.push(address);
@@ -1508,14 +1508,14 @@ function add_address_whitelist(address) {
 }
 
 function addr_whitelist(address) {
-    var stored_whitelist = localStorage.getItem("bitrequest_awl"),
+    let stored_whitelist = localStorage.getItem("bitrequest_awl"),
         address_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
     return ($.inArray(address, address_whitelist) === -1) ? false : true;
 }
 
 function check_pk() {
     $(document).on("click", "#popup .cb_wrap", function() {
-        var thisnode = $(this),
+        let thisnode = $(this),
             checked = thisnode.data("checked");
         if (checked == true) {
             thisnode.attr("data-checked", "false").data("checked", false);
@@ -1527,7 +1527,7 @@ function check_pk() {
 
 function toggleswitch() {
     $(document).on("mousedown", ".switchpanel.global", function() {
-        var thistoggle = $(this);
+        let thistoggle = $(this);
         if (thistoggle.hasClass("true")) {
             thistoggle.removeClass("true").addClass("false");
         } else {
@@ -1540,7 +1540,7 @@ function toggleswitch() {
 
 function showselect() {
     $(document).on("click", ".selectarrows", function() {
-        var options = $(this).next(".options");
+        let options = $(this).next(".options");
         if (options.hasClass("showoptions")) {
             options.removeClass("showoptions");
         } else {
@@ -1551,7 +1551,7 @@ function showselect() {
 
 function selectbox() {
     $(document).on("click", ".selectbox > input:not([readonly])", function() {
-        var thisselect = $(this),
+        let thisselect = $(this),
             thisvalue = thisselect.val(),
             options = thisselect.parent(".selectbox").find(".options span");
         if (options.hasClass("show")) {
@@ -1566,7 +1566,7 @@ function selectbox() {
 
 function pickselect() {
     $(document).on("click", ".selectbox > .options span", function() {
-        var thisselect = $(this),
+        let thisselect = $(this),
             thisvalue = thisselect.text(),
             thisdata = thisselect.data(),
             selectbox = thisselect.closest(".selectbox"),
@@ -1582,7 +1582,7 @@ function closeselectbox() {
 
 function radio_select() {
     $(document).on("click", ".formbox .pick_conf", function() {
-        var thistrigger = $(this),
+        let thistrigger = $(this),
             thisradio = thistrigger.find(".radio");
         if (thisradio.hasClass("icon-radio-unchecked")) {
             $(".formbox .conf_options .radio").not(thisradio).removeClass("icon-radio-checked2").addClass("icon-radio-unchecked")
@@ -1590,7 +1590,7 @@ function radio_select() {
         } else {
             thisradio.removeClass("icon-radio-checked2").addClass("icon-radio-unchecked");
         }
-        var thisvalue = thistrigger.children("span").text(),
+        let thisvalue = thistrigger.children("span").text(),
             thisinput = $(".formbox input:first");
         thisinput.val(thisvalue);
     })
@@ -1598,7 +1598,7 @@ function radio_select() {
 
 function dialog_drawer() {
     $(document).on("click", "#ad_info_wrap .d_trigger", function() {
-        var thistrigger = $(this),
+        let thistrigger = $(this),
             drawer = thistrigger.next(".drawer2");
         if (drawer.is(":visible")) {
             drawer.slideUp(200);
@@ -1614,12 +1614,12 @@ function dialog_drawer() {
 function dragstart() {
     $(document).on("mousedown touchstart", ".currentpage .applist li .popoptions", function(e) {
         e.preventDefault();
-        var this_drag = $(this),
+        let this_drag = $(this),
             addresses = this_drag.closest(".applist").find("li");
         if (addresses.length < 2) {
             return
         }
-        var thisli = this_drag.closest("li"),
+        let thisli = this_drag.closest("li"),
             dialogheight = thisli.height(),
             startheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
         drag(thisli, dialogheight, startheight, thisli.index());
@@ -1631,13 +1631,13 @@ function drag(thisli, dialogheight, startheight, thisindex) {
         e.preventDefault();
         thisli.addClass("dragging");
         html.addClass("dragmode");
-        var currentheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY,
+        let currentheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY,
             dragdistance = currentheight - startheight;
         thisli.addClass("dragging").css({
             "-webkit-transform": "translate(0, " + dragdistance + "px)"
         });
         $(".currentpage .applist li").not(thisli).each(function(i) {
-            var this_li = $(this),
+            let this_li = $(this),
                 thisoffset = this_li.offset().top,
                 thisheight = this_li.height(),
                 hoverpoint = thisoffset + (thisheight / 2),
@@ -1672,7 +1672,7 @@ function drag(thisli, dialogheight, startheight, thisindex) {
 function dragend() {
     $(document).on("mouseup mouseleave touchend", ".currentpage .applist li", function() {
         $(document).off("mousemove touchmove", ".currentpage .applist li");
-        var thisunit = $(this).closest("li");
+        let thisunit = $(this).closest("li");
         if (thisunit.hasClass("dragging")) {
             if (thisunit.hasClass("before")) {
                 thisunit.insertBefore(".hovered:first");
@@ -1701,7 +1701,7 @@ function keyup() {
                 playsound(funk);
                 return
             }
-            var timelapsed = now() - sa_timer;
+            let timelapsed = now() - sa_timer;
             if (timelapsed < 500) { // prevent clicking too fast
                 playsound(funk);
                 return
@@ -1733,7 +1733,7 @@ function keyup() {
                 playsound(funk);
                 return
             }
-            var timelapsed = now() - sa_timer;
+            let timelapsed = now() - sa_timer;
             if (timelapsed < 500) { // prevent clicking too fast
                 playsound(funk);
                 return
@@ -1827,7 +1827,7 @@ function escapeandback() {
 function close_paymentdialog(empty) {
     if (request) {
         if (empty === true && inframe === false && request.requesttype == "local") {
-            var currency = request.payment,
+            let currency = request.payment,
                 address = request.address,
                 ls_recentrequests = localStorage.getItem("bitrequest_recent_requests"),
                 lsrr_arr = (ls_recentrequests) ? JSON.parse(ls_recentrequests) : {},
@@ -1843,9 +1843,9 @@ function close_paymentdialog(empty) {
             localStorage.setItem("bitrequest_recent_requests", JSON.stringify(lsrr_arr));
             closeloader();
             toggle_rr(true);
-            var rr_whitelist = sessionStorage.getItem("bitrequest_rrwl");
+            let rr_whitelist = sessionStorage.getItem("bitrequest_rrwl");
             if (rr_whitelist) {
-                var rrwl_obj = JSON.parse(rr_whitelist);
+                let rrwl_obj = JSON.parse(rr_whitelist);
                 if (rrwl_obj && rrwl_obj[currency] == address) {
                     continue_cpd();
                     return
@@ -1860,7 +1860,7 @@ function close_paymentdialog(empty) {
 
 function continue_cpd() {
     if (html.hasClass("firstload")) {
-        var gets = geturlparameters(),
+        let gets = geturlparameters(),
             pagename = gets.p,
             set_pagename = (pagename) ? pagename : "home";
         openpage("?p=" + set_pagename, set_pagename, "loadpage");
@@ -1873,7 +1873,7 @@ function payment_lookup(request_dat) {
     if ($("#dismiss").length) {
         return false;
     }
-    var currency = request.payment,
+    let currency = request.payment,
         blockexplorer = get_blockexplorer(currency),
         bu_url = blockexplorer_url(currency, false, request_dat.erc20) + request_dat.address,
         content = "<div class='formbox'>\
@@ -1895,7 +1895,7 @@ function payment_lookup(request_dat) {
 function check_recent() {
     $(document).on("click", ".check_recent", function(e) {
         e.preventDefault();
-        var thisnode = $(this),
+        let thisnode = $(this),
             thisurl = thisnode.attr("href"),
             result = confirm("Open " + thisurl + "?");
         if (result === true) {
@@ -1907,7 +1907,7 @@ function check_recent() {
 
 function dismiss_payment_lookup() {
     $(document).on("click", "#dismiss", function() {
-        var ds_checkbox = $("#dontshowwrap"),
+        let ds_checkbox = $("#dontshowwrap"),
             ds_checked = ds_checkbox.data("checked");
         if (ds_checked == true) {
             block_payment_lookup();
@@ -1921,7 +1921,7 @@ function dismiss_payment_lookup() {
 
 function block_payment_lookup() {
     if (request) {
-        var rr_whitelist = sessionStorage.getItem("bitrequest_rrwl"),
+        let rr_whitelist = sessionStorage.getItem("bitrequest_rrwl"),
             rrwl_arr = (rr_whitelist) ? JSON.parse(rr_whitelist) : {};
         rrwl_arr[request.payment] = request.address;
         sessionStorage.setItem("bitrequest_rrwl", JSON.stringify(rrwl_arr));
@@ -1930,20 +1930,20 @@ function block_payment_lookup() {
 
 function request_history() {
     $(document).on("click", "#request_history", function() {
-        var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
+        let ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
         if (ls_recentrequests) {
-            var lsrr_arr = JSON.parse(ls_recentrequests);
+            let lsrr_arr = JSON.parse(ls_recentrequests);
             recent_requests(lsrr_arr);
         }
     })
 }
 
 function recent_requests(recent_payments) {
-    var addresslist = recent_requests_list(recent_payments);
+    let addresslist = recent_requests_list(recent_payments);
     if (!addresslist.length) {
         return
     }
-    var content = "<div class='formbox'>\
+    let content = "<div class='formbox'>\
         <h2 class='icon-history'>Recent requests:</h2>\
         <div id='ad_info_wrap'>\
         <ul>" + addresslist + "</ul>\
@@ -1956,19 +1956,19 @@ function recent_requests(recent_payments) {
 }
 
 function recent_requests_list(recent_payments) {
-    var addresslist = "",
+    let addresslist = "",
         rp_array = [];
     $.each(recent_payments, function(key, val) {
         if (val) {
             rp_array.push(val);
         }
     });
-    var sorted_array = rp_array.sort(function(x, y) {
+    let sorted_array = rp_array.sort(function(x, y) {
         return y.rqtime - x.rqtime;
     });
     $.each(sorted_array, function(i, val) {
         if (val) {
-            var currency = val.currency,
+            let currency = val.currency,
                 ccsymbol = val.ccsymbol,
                 address = val.address,
                 cmcid = val.cmcid,
@@ -1985,12 +1985,12 @@ function recent_requests_list(recent_payments) {
 
 //notifications
 function notify(message, time, showbutton) {
-    var settime = (time) ? time : 4000,
+    let settime = (time) ? time : 4000,
         setbutton = (showbutton) ? showbutton : "no",
         notify = $("#notify");
     $("#notifysign").html(message + "<span class='icon-cross'></div>").attr("class", "button" + setbutton);
     notify.addClass("popupn");
-    var timeout = setTimeout(function() {
+    let timeout = setTimeout(function() {
         closenotify();
     }, settime, function() {
         clearTimeout(timeout);
@@ -2008,9 +2008,9 @@ function closenotify() {
 }
 
 function topnotify(message) {
-    var topnotify = $("#topnotify");
+    let topnotify = $("#topnotify");
     topnotify.text(message).addClass("slidedown");
-    var timeout = setTimeout(function() {
+    let timeout = setTimeout(function() {
         topnotify.removeClass("slidedown");
     }, 7000, function() {
         clearTimeout(timeout);
@@ -2018,7 +2018,7 @@ function topnotify(message) {
 }
 
 function popnotify(result, message) {
-    var notify = $(".popnotify");
+    let notify = $(".popnotify");
     if (result == "error") {
         notify.removeClass("success warning").addClass("error");
     } else if (result == "warning") {
@@ -2027,7 +2027,7 @@ function popnotify(result, message) {
         notify.addClass("success").removeClass("error warning");
     }
     notify.slideDown(200).html(message);
-    var timeout = setTimeout(function() {
+    let timeout = setTimeout(function() {
         notify.slideUp(200);
     }, 6000, function() {
         clearTimeout(timeout);
@@ -2046,7 +2046,7 @@ function popdialog(content, functionname, trigger, custom, replace) {
     }
     body.addClass("blurmain");
     $("#popup").addClass("active showpu");
-    var thistrigger = (trigger) ? trigger : $("#popup #execute");
+    let thistrigger = (trigger) ? trigger : $("#popup #execute");
     if (functionname) {
         execute(thistrigger, functionname);
     }
@@ -2070,13 +2070,13 @@ function addcurrencytrigger() {
 }
 
 function addcurrency(cd) {
-    var currency = cd.currency;
+    let currency = cd.currency;
     if (get_addresslist(currency).children("li").length) {
         derive_first_check(currency);
         loadpage("?p=" + currency);
         return
     }
-    var can_derive = derive_first_check(currency);
+    let can_derive = derive_first_check(currency);
     if (can_derive === true) {
         loadpage("?p=" + currency);
         return
@@ -2090,9 +2090,9 @@ function addcurrency(cd) {
 
 function derive_first_check(currency) {
     if (hasbip32(currency) === true) {
-        var derives = check_derivations(currency);
+        let derives = check_derivations(currency);
         if (derives) {
-            var has_derives = active_derives(currency, derives);
+            let has_derives = active_derives(currency, derives);
             if (has_derives === false) {
                 derive_addone(currency);
                 return true;
@@ -2109,7 +2109,7 @@ function addaddresstrigger() {
 }
 
 function addaddress(ad, edit) {
-    var currency = ad.currency,
+    let currency = ad.currency,
         cpid = ad.ccsymbol + "-" + currency,
         address = (ad.address) ? ad.address : "",
         label = (ad.label) ? ad.label : "",
@@ -2152,10 +2152,10 @@ function addaddress(ad, edit) {
 
 function address_xpub_change() {
     $(document).on("input", "#addressformbox.noxpub #address_xpub_input", function(e) {
-        var thisnode = $(this),
+        let thisnode = $(this),
             addressinputval = thisnode.val();
         if (addressinputval.length > 103) {
-            var currency = thisnode.attr("data-currency"),
+            let currency = thisnode.attr("data-currency"),
                 valid = check_xpub(addressinputval, xpub_prefix(currency), currency);
             if (valid === true) {
                 clear_xpub_checkboxes();
@@ -2170,13 +2170,13 @@ function address_xpub_change() {
 }
 
 function active_derives(currency, derive) {
-    var addresslist = get_addresslist(currency).children("li");
+    let addresslist = get_addresslist(currency).children("li");
     if (addresslist.length < 1) {
         return false;
     }
-    var coinsettings = activecoinsettings(currency);
+    let coinsettings = activecoinsettings(currency);
     if (coinsettings) {
-        var reuse = coinsettings["Reuse address"];
+        let reuse = coinsettings["Reuse address"];
         if (reuse) {
             if (reuse.selected === true) {
                 return true;
@@ -2186,9 +2186,9 @@ function active_derives(currency, derive) {
         }
     }
     if (derive == "seed") {
-        var active_sder = filter_list(addresslist, "seedid", bipid).not(".used");
+        let active_sder = filter_list(addresslist, "seedid", bipid).not(".used");
         if (active_sder.length) {
-            var check_p = ch_pending(active_sder.first().data());
+            let check_p = ch_pending(active_sder.first().data());
             if (check_p === true) {
                 return false;
             }
@@ -2197,11 +2197,11 @@ function active_derives(currency, derive) {
         }
     }
     if (derive == "xpub") {
-        var activepub = active_xpub(currency),
+        let activepub = active_xpub(currency),
             xpubid = activepub.key_id,
             active_xder = filter_list(addresslist, "xpubid", xpubid).not(".used");
         if (active_xder.length) {
-            var check_p = ch_pending(active_xder.first().data());
+            let check_p = ch_pending(active_xder.first().data());
             if (check_p === true) {
                 return false;
             }
@@ -2214,7 +2214,7 @@ function active_derives(currency, derive) {
 
 function get_wallet() {
     $(document).on("click", "#get_wallet", function() {
-        var this_currency = $(this).attr("data-currency");
+        let this_currency = $(this).attr("data-currency");
         canceldialog();
         setTimeout(function() {
             download_wallet(this_currency);
@@ -2225,12 +2225,12 @@ function get_wallet() {
 function submitaddresstrigger() {
     $(document).on("click", "#addressformbox input.submit", function(e) {
         e.preventDefault();
-        var thisform = $(this).closest("#addressformbox");
+        let thisform = $(this).closest("#addressformbox");
         if (thisform.hasClass("hasxpub")) {
             validateaddress_vk(thisform.data());
             return
         }
-        var addressinput = thisform.find(".address"),
+        let addressinput = thisform.find(".address"),
             ad_val = addressinput.val();
         if (ad_val.length > 103) {
             validate_xpub(thisform);
@@ -2244,12 +2244,12 @@ function submitaddresstrigger() {
 //Add erc20 token
 function add_erc20() {
     $(document).on("click", "#add_erc20, #choose_erc20", function() {
-        var tokenobject = JSON.parse(localStorage.getItem("bitrequest_erc20tokens")),
+        let tokenobject = JSON.parse(localStorage.getItem("bitrequest_erc20tokens")),
             tokenlist = "";
         $.each(tokenobject, function(key, value) {
             tokenlist += "<span data-id='" + value.cmcid + "' data-currency='" + value.name + "' data-ccsymbol='" + value.symbol.toLowerCase() + "' data-contract='" + value.contract + "' data-pe='none'>" + value.symbol + " | " + value.name + "</span>";
         });
-        var nodedata = {
+        let nodedata = {
                 "erc20": true,
                 "monitored": true,
                 "checked": true
@@ -2282,22 +2282,22 @@ function add_erc20() {
 
 function autocomplete_erc20token() {
     $(document).on("input", "#ac_input", function() {
-        var thisinput = $(this),
+        let thisinput = $(this),
             thisform = thisinput.closest("form");
         thisform.removeClass("validated");
-        var thisvalue = thisinput.val().toLowerCase(),
+        let thisvalue = thisinput.val().toLowerCase(),
             options = thisform.find(".options");
         $("#ac_options > span").each(function(i) {
-            var thisoption = $(this);
+            let thisoption = $(this);
             thisoption.removeClass("show");
-            var thistext = thisoption.text(),
+            let thistext = thisoption.text(),
                 currency = thisoption.attr("data-currency"),
                 currencysymbol = thisoption.attr("data-ccsymbol"),
                 contract = thisoption.attr("data-contract"),
                 thisid = thisoption.attr("data-id");
             if (thisvalue.length > 2 && currencysymbol === thisvalue || currency === thisvalue) {
                 thisform.addClass("validated");
-                var coin_data = {
+                let coin_data = {
                     "cmcid": thisid,
                     "currency": currency,
                     "ccsymbol": currencysymbol,
@@ -2314,7 +2314,7 @@ function autocomplete_erc20token() {
 
 function pickerc20select() {
     $(document).on("click", "#erc20formbox .selectbox > #ac_options span", function() {
-        var thisselect = $(this),
+        let thisselect = $(this),
             coin_data = {
                 "cmcid": thisselect.attr("data-id"),
                 "currency": thisselect.attr("data-currency"),
@@ -2326,7 +2326,7 @@ function pickerc20select() {
 }
 
 function initaddressform(coin_data) {
-    var erc20formbox = $("#erc20formbox"),
+    let erc20formbox = $("#erc20formbox"),
         erc20_inputs = erc20formbox.find("#erc20_inputs"),
         addressfield = erc20formbox.find("input.address"),
         labelfield = erc20formbox.find("input.addresslabel");
@@ -2347,17 +2347,17 @@ function submit_erc20() {
 }
 
 function validateaddress_vk(ad) {
-    var currency = ad.currency,
+    let currency = ad.currency,
         addressfield = $("#addressform .address"),
         addressinputval = addressfield.val();
     if (addressinputval) {} else {
-        var errormessage = "Enter a " + currency + " address";
+        let errormessage = "Enter a " + currency + " address";
         popnotify("error", errormessage);
         addressfield.focus();
         return
     }
     if (currency) {
-        var vkfield = $("#addressform .vk_input"),
+        let vkfield = $("#addressform .vk_input"),
             vkinputval = (currency == "monero") ? (vkfield.length) ? vkfield.val() : 0 : 0,
             vklength = vkinputval.length;
         if (vklength) {
@@ -2369,13 +2369,13 @@ function validateaddress_vk(ad) {
                 popnotify("error", "Invalid Viewkey");
                 return
             }
-            var valid = check_address(addressinputval, currency);
+            let valid = check_address(addressinputval, currency);
             if (valid === true) {} else {
-                var errormessage = addressinputval + " is NOT a valid " + currency + " address";
+                let errormessage = addressinputval + " is NOT a valid " + currency + " address";
                 popnotify("error", errormessage);
                 return
             }
-            var payload = {
+            let payload = {
                 "address": addressinputval,
                 "view_key": vkinputval,
                 "create_account": true,
@@ -2394,14 +2394,14 @@ function validateaddress_vk(ad) {
                     }
                 }
             }).done(function(e) {
-                var data = br_result(e).result,
+                let data = br_result(e).result,
                     errormessage = data.Error;
                 if (errormessage) {
-                    var error = (errormessage) ? errormessage : "Invalid Viewkey";
+                    let error = (errormessage) ? errormessage : "Invalid Viewkey";
                     popnotify("error", error);
                     return
                 }
-                var start_height = data.start_height;
+                let start_height = data.start_height;
                 if (start_height > -1) { // success!
                     validateaddress(ad, vkinputval);
                 }
@@ -2420,7 +2420,7 @@ function validateaddress_vk(ad) {
 }
 
 function validateaddress(ad, vk) {
-    var currency = ad.currency,
+    let currency = ad.currency,
         iserc20 = (ad.erc20 === true),
         currencycheck = (iserc20 === true) ? "ethereum" : currency,
         ccsymbol = ad.ccsymbol,
@@ -2434,7 +2434,7 @@ function validateaddress(ad, vk) {
         labelinput = labelfield.val(),
         labelinputval = (labelinput) ? labelinput : "";
     if (addressinputval) {
-        var addinputval = (addressinputval.indexOf(":") > -1) ? addressinputval.split(":").pop() : addressinputval,
+        let addinputval = (addressinputval.indexOf(":") > -1) ? addressinputval.split(":").pop() : addressinputval,
             addressduplicate = currentaddresslist.children("li[data-address=" + addinputval + "]").length > 0,
             address = ad.address,
             label = ad.label;
@@ -2443,16 +2443,16 @@ function validateaddress(ad, vk) {
             addressfield.select();
             return
         }
-        var valid = check_address(addinputval, currencycheck);
+        let valid = check_address(addinputval, currencycheck);
         if (valid === true) {
-            var validlabel = check_address(labelinputval, currencycheck);
+            let validlabel = check_address(labelinputval, currencycheck);
             if (validlabel === true) {
                 popnotify("error", "invalid label");
                 labelfield.val(label).select();
                 return
             }
             if ($("#addressformbox").hasClass("formedit")) {
-                var currentlistitem = currentaddresslist.children("li[data-address='" + address + "']"),
+                let currentlistitem = currentaddresslist.children("li[data-address='" + address + "']"),
                     ed = {};
                 ed.label = labelinputval;
                 if (vk) {
@@ -2466,7 +2466,7 @@ function validateaddress(ad, vk) {
                 canceloptions();
                 return
             }
-            var pk_checkbox = $("#pk_confirmwrap"),
+            let pk_checkbox = $("#pk_confirmwrap"),
                 pk_checked = pk_checkbox.data("checked");
             if (pk_checked == true) {
                 if (index === 1) {
@@ -2475,10 +2475,10 @@ function validateaddress(ad, vk) {
                         append_coinsetting(currency, br_config.erc20_dat.settings, false);
                     }
                     if (body.hasClass("showstartpage")) {
-                        var acountname = $("#eninput").val();
+                        let acountname = $("#eninput").val();
                         $("#accountsettings").data("selected", acountname).find("p").text(acountname);
                         savesettings();
-                        var href = "?p=home&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0" + "&address=" + addinputval;
+                        let href = "?p=home&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0" + "&address=" + addinputval;
                         localStorage.setItem("bitrequest_editurl", href); // to check if request is being edited
                         openpage(href, "create " + currency + " request", "payment");
                         body.removeClass("showstartpage");
@@ -2513,7 +2513,7 @@ function validateaddress(ad, vk) {
 }
 
 function check_address(address, currency) {
-    var regex = getcoindata(currency).regex;
+    let regex = getcoindata(currency).regex;
     return (regex) ? new RegExp(regex).test(address) : false;
 }
 
@@ -2548,12 +2548,12 @@ function canceldialog_click() {
 
 function canceldialogtrigger() {
     $(document).on("click", "#popup", function(e) {
-        var target = e.target,
+        let target = e.target,
             jtarget = $(target),
             target_id = jtarget.attr("id"),
             options = $("#dialog").find(".options");
         if (options.length > 0 && options.hasClass("showoptions")) {
-            var pointerevent = jtarget.attr("data-pe");
+            let pointerevent = jtarget.attr("data-pe");
             if (pointerevent == "none") {} else {
                 options.removeClass("showoptions");
             }
@@ -2573,10 +2573,10 @@ function canceldialog(pass) {
             }
         }
     }
-    var popup = $("#popup");
+    let popup = $("#popup");
     body.removeClass("blurmain themepu");
     popup.removeClass("active");
-    var timeout = setTimeout(function() {
+    let timeout = setTimeout(function() {
         popup.removeClass("showpu");
         $("#dialogbody").html("");
         $("#actions").removeClass("custom");
@@ -2595,7 +2595,7 @@ function blockcancelpaymentdialog() {
     $(document).on("mousedown", "#payment", function(e) {
         blockswipe = false;
         if (e.target == this) {
-            var inputs = paymentdialogbox.find("input");
+            let inputs = paymentdialogbox.find("input");
             if (inputs.is(":focus")) {
                 blockswipe = true;
             }
@@ -2612,7 +2612,7 @@ function cancelpaymentdialogtrigger() {
         if (html.hasClass("flipmode")) { // prevent closing request when flipping
             return
         }
-        var timelapsed = now() - cp_timer;
+        let timelapsed = now() - cp_timer;
         if (timelapsed < 1500) { // prevent clicking too fast
             playsound(funk);
             console.log("clicking too fast");
@@ -2626,7 +2626,7 @@ function cancelpaymentdialogtrigger() {
 }
 
 function unfocus_inputs() {
-    var inputs = paymentdialogbox.find("input");
+    let inputs = paymentdialogbox.find("input");
     inputs.blur();
 }
 
@@ -2637,7 +2637,7 @@ function cpd_pollcheck() {
     }
     if (request) {
         if (request.received !== true) {
-            var rq_init = request.rq_init,
+            let rq_init = request.rq_init,
                 rq_timer = request.rq_timer,
                 rq_time = now() - rq_timer;
             if (rq_time > after_poll_timeout) {
@@ -2657,7 +2657,7 @@ function cancelpaymentdialog() {
     }
     paymentpopup.removeClass("active");
     html.removeClass("blurmain_payment");
-    var timeout = setTimeout(function() {
+    let timeout = setTimeout(function() {
         paymentpopup.removeClass("showpu outgoing");
         html.removeClass("paymode firstload");
         $(".showmain #mainwrap").css("-webkit-transform", "translate(0, 0)"); // restore fake scroll position
@@ -2675,7 +2675,7 @@ function cancelpaymentdialog() {
     lnd_ph = false,
         request = null,
         helper = null;
-    var wstimeout = setTimeout(function() {
+    let wstimeout = setTimeout(function() {
         closesocket();
     }, 2500, function() {
         clearTimeout(wstimeout);
@@ -2685,7 +2685,7 @@ function cancelpaymentdialog() {
         if (hostlocation == "local") {
             return
         }
-        var pass = GD_pass();
+        let pass = GD_pass();
         if (pass) {
             return
         }
@@ -2739,10 +2739,10 @@ function cancelsharedialogtrigger() {
 }
 
 function cancelsharedialog() {
-    var sharepopup = $("#sharepopup");
+    let sharepopup = $("#sharepopup");
     sharepopup.removeClass("active");
     body.removeClass("sharemode");
-    var timeout = setTimeout(function() {
+    let timeout = setTimeout(function() {
         sharepopup.removeClass("showpu");
     }, 500, function() {
         clearTimeout(timeout);
@@ -2751,7 +2751,7 @@ function cancelsharedialog() {
 
 function showoptionstrigger() {
     $(document).on("click", ".popoptions", function(e) {
-        var ad = $(this).closest("li").data(),
+        let ad = $(this).closest("li").data(),
             savedrequest = $("#requestlist li[data-address='" + ad.address + "']"),
             showrequests = (savedrequest.length > 0) ? "<li><div class='showrequests'><span class='icon-qrcode'></span> Show requests</div></li>" : "",
             newrequest = (ad.checked === true) ? "<li>\
@@ -2773,7 +2773,7 @@ function showoptionstrigger() {
 function showoptions(content, addclass, callback) {
     if (addclass) {
         if (addclass.indexOf("pin") > -1) {
-            var pinsettings = $("#pinsettings").data(),
+            let pinsettings = $("#pinsettings").data(),
                 timeout = pinsettings.timeout;
             if (timeout) {
                 if (now() > timeout) {
@@ -2786,14 +2786,14 @@ function showoptions(content, addclass, callback) {
             }
         }
     }
-    var plusclass = (addclass) ? " " + addclass : "";
+    let plusclass = (addclass) ? " " + addclass : "";
     $("#optionspop").addClass("showpu active" + plusclass);
     $("#optionsbox").html(content);
     body.addClass("blurmain_options");
 }
 
 function lockscreen(timer) {
-    var timeleft = timer - now(),
+    let timeleft = timer - now(),
         cd = countdown(timeleft),
         dstr = (cd.days) ? cd.days + " days<br/>" : "",
         hstr = (cd.hours) ? cd.hours + " hours<br/>" : "",
@@ -2824,7 +2824,7 @@ function seed_unlock_trigger() {
 
 function phrase_login() {
     $(document).on("click", "#phrase_login", function() {
-        var bip39phrase = $("#lockscreen #bip39phrase"),
+        let bip39phrase = $("#lockscreen #bip39phrase"),
             b39txt = bip39phrase.text(),
             seedobject = ls_phrase_obj(),
             savedid = seedobject.pid,
@@ -2834,7 +2834,7 @@ function phrase_login() {
             if (html.hasClass("loaded")) {} else {
                 finishfunctions();
             }
-            var content = pinpanel(" reset");
+            let content = pinpanel(" reset");
             showoptions(content, "pin");
             $("#pinfloat").removeClass("p_admin");
             remove_cashier();
@@ -2855,7 +2855,7 @@ function remove_cashier() {
 
 function newrequest_alias() {
     $(document).on("click", "#newrequest_alias", function() {
-        var currencylist = $("#currencylist"),
+        let currencylist = $("#currencylist"),
             active_currencies = currencylist.find("li").not(".hide"),
             active_currency_count = active_currencies.length;
         if (active_currency_count === 0) {
@@ -2867,14 +2867,14 @@ function newrequest_alias() {
             showoptions(content);
             return
         }
-        var active_currency_trigger = active_currencies.find(".rq_icon").first();
+        let active_currency_trigger = active_currencies.find(".rq_icon").first();
         triggertxfunction(active_currency_trigger);
     });
 }
 
 function newrequest() {
     $(document).on("click", ".newrequest", function() {
-        var thislink = $(this),
+        let thislink = $(this),
             ad = thislink.closest("#optionslist").data(),
             currency = ad.currency,
             address = ad.address,
@@ -2884,7 +2884,7 @@ function newrequest() {
         if (seedid) {
             if (seedid != bipid) {
                 if (addr_whitelist(address) === true) {} else {
-                    var pass_dat = {
+                    let pass_dat = {
                             "currency": currency,
                             "address": address,
                             "ccsymbol": ccsymbol,
@@ -2909,7 +2909,7 @@ function newrequest() {
 function confirm_ms_newrequest() {
     $(document).on("click", "#address_newrequest .submit", function(e) {
         e.preventDefault();
-        var thisdialog = $("#address_newrequest"),
+        let thisdialog = $("#address_newrequest"),
             d_dat = thisdialog.data(),
             pk_checkbox = thisdialog.find("#pk_confirmwrap"),
             pk_checked = pk_checkbox.data("checked"),
@@ -2930,11 +2930,11 @@ function confirm_ms_newrequest() {
 }
 
 function newrequest_cb(currency, ccsymbol, address, title) {
-    var gets = geturlparameters();
+    let gets = geturlparameters();
     if (gets.xss) {
         return
     }
-    var thishref = "?p=" + gets.p + "&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0&address=" + address;
+    let thishref = "?p=" + gets.p + "&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0&address=" + address;
     localStorage.setItem("bitrequest_editurl", thishref); // to check if request is being edited
     canceloptions();
     remove_flip(); // reset request card facing front
@@ -2951,7 +2951,7 @@ function showrequests() {
 
 function showrequests_inlne() {
     $(document).on("click", ".applist.pobox li .usedicon", function() {
-        var address = $(this).prev("span").text(),
+        let address = $(this).prev("span").text(),
             result = confirm("Show requests for " + address + "?");
         if (result === true) {
             loadpage("?p=requests&filteraddress=" + address);
@@ -2974,9 +2974,9 @@ function removeaddress() {
 }
 
 function removeaddressfunction(trigger) {
-    var result = confirm("Are you sure?");
+    let result = confirm("Are you sure?");
     if (result === true) {
-        var optionslist = trigger.closest("ul#optionslist"),
+        let optionslist = trigger.closest("ul#optionslist"),
             ad = optionslist.data(),
             currency = ad.currency,
             address = ad.address,
@@ -2985,7 +2985,7 @@ function removeaddressfunction(trigger) {
         currentaddresslist.children("li[data-address='" + address + "']").remove();
         if (currentaddresslist.children("li").length) {} else {
             loadpage("?p=currencies");
-            var currencyli = $("#usedcurrencies > li[data-currency='" + currency + "']"),
+            let currencyli = $("#usedcurrencies > li[data-currency='" + currency + "']"),
                 homeli = $("#currencylist > li[data-currency='" + currency + "']");
             if (erc20 === true) {
                 $("#" + currency + ".page").remove();
@@ -3006,7 +3006,7 @@ function removeaddressfunction(trigger) {
 
 function rec_payments() {
     $(document).on("click", "#rpayments", function() {
-        var ad = $(this).closest("ul").data(),
+        let ad = $(this).closest("ul").data(),
             blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20);
         if (blockchainurl === undefined) {} else {
             open_blockexplorer_url(blockchainurl + ad.address);
@@ -3016,22 +3016,22 @@ function rec_payments() {
 
 function showtransaction_trigger() {
     $(document).on("click", ".metalist .show_tx, .transactionlist .tx_val", function() {
-        var thisnode = $(this),
+        let thisnode = $(this),
             thislist = thisnode.closest("li"),
             rqli = thisnode.closest("li.rqli"),
             rqldat = rqli.data(),
             txhash = (thisnode.hasClass("tx_val")) ? thislist.data("txhash") : rqldat.txhash,
             lnhash = (txhash && txhash.slice(0, 9) == "lightning") ? true : false;
         if (lnhash) {
-            var lightning = rqldat.lightning,
+            let lightning = rqldat.lightning,
                 imp = lightning.imp,
                 invoice = lightning.invoice;
             if (invoice) {
-                var hash = invoice.hash;
+                let hash = invoice.hash;
                 if (hash) {
-                    var result = confirm("Open invoice: " + hash + "?");
+                    let result = confirm("Open invoice: " + hash + "?");
                     if (result === true) {
-                        var proxy = lightning.proxy_host,
+                        let proxy = lightning.proxy_host,
                             nid = lightning.nid,
                             pid = lightning.pid,
                             pw = lightning.pw;
@@ -3043,7 +3043,7 @@ function showtransaction_trigger() {
             playsound(funk);
             return
         }
-        var currency = rqli.data("payment"),
+        let currency = rqli.data("payment"),
             erc20 = rqli.data("erc20"),
             blockchainurl = blockexplorer_url(currency, true, erc20);
         if (blockchainurl === undefined || txhash === undefined) {} else {
@@ -3055,7 +3055,7 @@ function showtransaction_trigger() {
 function showtransactions() {
     $(document).on("click", ".showtransactions", function(e) {
         e.preventDefault();
-        var ad = $("#ad_info_wrap").data(),
+        let ad = $("#ad_info_wrap").data(),
             blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20);
         if (blockchainurl === undefined) {} else {
             open_blockexplorer_url(blockchainurl + ad.address);
@@ -3065,7 +3065,7 @@ function showtransactions() {
 
 function addressinfo() {
     $(document).on("click", ".address_info", function() {
-        var dialogwrap = $(this).closest("ul"),
+        let dialogwrap = $(this).closest("ul"),
             dd = dialogwrap.data(),
             label = (dd.label) ? dd.label : (dd.a_id) ? dd.a_id : "",
             currency = dd.currency,
@@ -3089,13 +3089,13 @@ function addressinfo() {
             dpath = (bip32dat) ? bip32dat.root_path + d_index : "",
             purpose = dd.purpose;
         if (purpose) {
-            var dsplit = dpath.split("/");
+            let dsplit = dpath.split("/");
             dsplit[1] = purpose;
-            var dpath = dsplit.join("/");
+            let dpath = dsplit.join("/");
         }
         dd.dpath = dpath,
             dd.bip32dat = bip32dat;
-        var cc_icon = getcc_icon(dd.cmcid, dd.ccsymbol + "-" + currency, dd.erc20),
+        let cc_icon = getcc_icon(dd.cmcid, dd.ccsymbol + "-" + currency, dd.erc20),
             dpath_str = (isseed) ? "<li><strong>Derivation path:</strong> " + dpath + "</li>" : "",
             pk_verified = "Unknown <span class='icon-checkmark'></span>",
             vkobj = (dd.vk) ? vk_obj(dd.vk) : false,
@@ -3129,7 +3129,7 @@ function show_pk() {
             vu_block();
             return
         }
-        var thisbttn = $(this),
+        let thisbttn = $(this),
             pkspan = $("#pk_span");
         if (pkspan.is(":visible")) {
             pkspan.slideUp(200);
@@ -3142,7 +3142,7 @@ function show_pk() {
             return
         }
         $("#optionsbox").html("");
-        var addat = $("#ad_info_wrap").data(),
+        let addat = $("#ad_info_wrap").data(),
             currency = addat.currency,
             keycc = key_cc(),
             dx_dat = {
@@ -3174,7 +3174,7 @@ function show_vk() {
             vu_block();
             return
         }
-        var thisbttn = $(this),
+        let thisbttn = $(this),
             vk = thisbttn.attr("data-vk"),
             pkspan = $("#pk_span");
         if (pkspan.is(":visible")) {
@@ -3188,9 +3188,9 @@ function show_vk() {
             return
         }
         $("#optionsbox").html("");
-        var x_ko = {};
+        let x_ko = {};
         if (vk == "derive") {
-            var addat = $("#ad_info_wrap").data(),
+            let addat = $("#ad_info_wrap").data(),
                 keycc = key_cc(),
                 dx_dat = {
                     "dpath": addat.dpath,
@@ -3215,14 +3215,14 @@ function show_vk() {
 }
 
 function show_vk_cb(kd) {
-    var stat = kd.stat,
+    let stat = kd.stat,
         ststr = (stat) ? "" : "<br/><strong style='color:#8d8d8d'>Spendkey</strong> <span class='adbox adboxl select' data-type='Spendkey'>" + kd.ssk + "</span><br/>";
     $("#show_vk").text("hide");
     $("#pk_span").html(ststr + "<br/><strong style='color:#8d8d8d'>Viewkey</strong> <span class='adbox adboxl select' data-type='Viewkey'>" + kd.svk + "</span>").addClass("shwpk").slideDown(200);
 }
 
 function open_blockexplorer_url(be_link) {
-    var result = confirm("Open " + be_link + "?");
+    let result = confirm("Open " + be_link + "?");
     if (result === true) {
         w_loc.href = be_link;
     }
@@ -3230,12 +3230,12 @@ function open_blockexplorer_url(be_link) {
 
 function blockexplorer_url(currency, tx, erc20) {
     if (erc20 == "true" || erc20 === true) {
-        var tx_prefix = (tx === true) ? "tx/" : "address/";
+        let tx_prefix = (tx === true) ? "tx/" : "address/";
         return "https://ethplorer.io/" + tx_prefix;
     } else {
-        var blockexplorer = get_blockexplorer(currency);
+        let blockexplorer = get_blockexplorer(currency);
         if (blockexplorer) {
-            var blockdata = $.grep(br_config.blockexplorers, function(filter) { //filter pending requests	
+            let blockdata = $.grep(br_config.blockexplorers, function(filter) { //filter pending requests	
                     return filter.name == blockexplorer;
                 })[0],
                 be_prefix = blockdata.prefix,
@@ -3254,7 +3254,7 @@ function get_blockexplorer(currency) {
 
 function apisrc_shortcut() {
     $(document).on("click", ".api_source", function() {
-        var rpc_settings_li = cs_node($(this).closest("li.rqli").data("payment"), "apis");
+        let rpc_settings_li = cs_node($(this).closest("li.rqli").data("payment"), "apis");
         if (rpc_settings_li) {
             rpc_settings_li.trigger("click");
         }
@@ -3274,10 +3274,10 @@ function canceloptions(pass) {
         clearoptions();
         return
     }
-    var optionspop = $("#optionspop"),
+    let optionspop = $("#optionspop"),
         thishaspin = (optionspop.hasClass("pin"));
     if (thishaspin) {
-        var phrasewrap = $("#lockscreen #phrasewrap");
+        let phrasewrap = $("#lockscreen #phrasewrap");
         if (phrasewrap.hasClass("showph")) {
             phrasewrap.removeClass("showph");
             return
@@ -3293,11 +3293,11 @@ function canceloptions(pass) {
 }
 
 function clearoptions() {
-    var optionspop = $("#optionspop");
+    let optionspop = $("#optionspop");
     optionspop.addClass("fadebg");
     optionspop.removeClass("active");
     body.removeClass("blurmain_options");
-    var timeout = setTimeout(function() {
+    let timeout = setTimeout(function() {
         optionspop.removeClass("showpu pin fadebg ontop");
         $("#optionsbox").html("");
     }, 600, function() {
@@ -3309,7 +3309,7 @@ function clearoptions() {
 
 function showrequestdetails() {
     $(document).on("click", ".requestlist .liwrap", function() {
-        var thisnode = $(this),
+        let thisnode = $(this),
             thislist = thisnode.closest("li"),
             infopanel = thisnode.next(".moreinfo"),
             metalist = infopanel.find(".metalist");
@@ -3317,7 +3317,7 @@ function showrequestdetails() {
             infopanel.add(metalist).slideUp(200);
             thislist.removeClass("visible_request");
         } else {
-            var fixednavheight = $("#fixednav").height();
+            let fixednavheight = $("#fixednav").height();
             $(".requestlist > li").not(thislist).removeClass("visible_request");
             $(".moreinfo").add(".metalist").not(infopanel).slideUp(200);
             setTimeout(function() {
@@ -3326,7 +3326,7 @@ function showrequestdetails() {
                 }, 200);
                 infopanel.slideDown(200);
                 thislist.addClass("visible_request");
-                var confbar = thislist.find(".transactionlist .confbar");
+                let confbar = thislist.find(".transactionlist .confbar");
                 if (confbar.length > 0) {
                     confbar.each(function(i) {
                         animate_confbar($(this), i);
@@ -3340,12 +3340,12 @@ function showrequestdetails() {
 
 function toggle_request_meta() {
     $(document).on("click", ".requestlist li .req_actions .icon-info", function() {
-        var metalist = $(this).closest(".moreinfo").find(".metalist");
+        let metalist = $(this).closest(".moreinfo").find(".metalist");
         if (metalist.is(":visible")) {
             metalist.slideUp(300);
             return
         }
-        var confbar = metalist.find(".confbar");
+        let confbar = metalist.find(".confbar");
         metalist.slideDown(300);
         if (confbar.length > 0) {
             confbar.each(function(i) {
@@ -3357,7 +3357,7 @@ function toggle_request_meta() {
 
 function animate_confbar(confbox, index) {
     confbox.css("transform", "translate(-100%)");
-    var txdata = confbox.closest("li").data(),
+    let txdata = confbox.closest("li").data(),
         percentage = (txdata.confirmations / txdata.setconfirmations) * 100,
         percent_output = (percentage > 100) ? 100 : percentage,
         percent_final = (percent_output - 100).toFixed(2);
@@ -3368,12 +3368,12 @@ function animate_confbar(confbox, index) {
 
 function show_transaction_meta() {
     $(document).on("dblclick", ".requestlist li .transactionlist li", function() {
-        var thisli = $(this),
+        let thisli = $(this),
             txmeta = thisli.children(".historic_meta");
         if (txmeta.is(":visible")) {
             return
         }
-        var txlist = thisli.closest(".transactionlist"),
+        let txlist = thisli.closest(".transactionlist"),
             alltxmeta = txlist.find(".historic_meta");
         alltxmeta.not(txmeta).slideUp(300);
         txmeta.slideDown(300);
@@ -3382,7 +3382,7 @@ function show_transaction_meta() {
 
 function hide_transaction_meta() {
     $(document).on("click", ".requestlist li .transactionlist li", function() {
-        var thisli = $(this),
+        let thisli = $(this),
             tx_meta = thisli.children(".historic_meta");
         if (tx_meta.is(":visible")) {
             tx_meta.slideUp(300);
@@ -3397,7 +3397,7 @@ function archive() {
 }
 
 function archivefunction() {
-    var thisreguest = $("#requestlist > li.visible_request"),
+    let thisreguest = $("#requestlist > li.visible_request"),
         requestdata = thisreguest.data(),
         requestcopy = thisreguest.clone();
     if (thisreguest.data("status") == "insufficient") {
@@ -3425,7 +3425,7 @@ function unarchive() {
 }
 
 function unarchivefunction() {
-    var thisreguest = $("#archivelist li.visible_request"),
+    let thisreguest = $("#archivelist li.visible_request"),
         requestdata = thisreguest.data(),
         requestcopy = thisreguest.clone();
     thisreguest.slideUp(300);
@@ -3447,9 +3447,9 @@ function removerequest() {
 }
 
 function removerequestfunction() {
-    var result = confirm("Are you sure?");
+    let result = confirm("Are you sure?");
     if (result === true) {
-        var visiblerequest = $(".requestlist > li.visible_request");
+        let visiblerequest = $(".requestlist > li.visible_request");
         visiblerequest.slideUp(300);
         setTimeout(function() {
             visiblerequest.remove();
@@ -3466,7 +3466,7 @@ function removerequestfunction() {
 function open_url() {
     $(document).on("click", "a.exit", function(e) {
         e.preventDefault();
-        var this_href = $(this),
+        let this_href = $(this),
             target = this_href.attr("target"),
             url = this_href.attr("href");
         loader(true);
@@ -3486,38 +3486,38 @@ function open_url() {
 }
 
 function get_blockcypher_apikey() {
-    var savedkey = $("#apikeys").data("blockcypher");
+    let savedkey = $("#apikeys").data("blockcypher");
     return (savedkey) ? savedkey : to.bc_id;
 }
 
 function get_infura_apikey(rpcurl) {
-    var savedkey = $("#apikeys").data("infura");
+    let savedkey = $("#apikeys").data("infura");
     return (/^[A-Za-z0-9]+$/.test(rpcurl.slice(rpcurl.length - 15))) ? "" : // check if rpcurl already contains apikey
         (savedkey) ? savedkey : to.if_id;
 }
 
 function api_proxy(ad, p_proxy) {
-    var custom_url = (ad.api_url) ? ad.api_url : false,
+    let custom_url = (ad.api_url) ? ad.api_url : false,
         aud = (custom_url) ? {} :
         get_api_url({
             "api": ad.api,
             "search": ad.search
         });
     if (aud) {
-        var proxy = ad.proxy,
+        let proxy = ad.proxy,
             api_key = aud.api_key,
             set_key = (api_key) ? true : false,
             nokey = (api_key == "no_key") ? true : false,
             key_pass = (nokey === true || set_key === true);
         if (proxy === false || (proxy !== true && key_pass === true)) {
-            var params = ad.params,
+            let params = ad.params,
                 bearer = ad.bearer;
             params.url = (custom_url) ? custom_url : aud.api_url_key;
             if (bearer && api_key) {
                 if (params.headers) {
                     params.headers["Authorization"] = "Bearer " + api_key;
                 } else {
-                    var auth = {
+                    let auth = {
                         "Authorization": "Bearer " + api_key
                     }
                     params.headers = auth;
@@ -3526,7 +3526,7 @@ function api_proxy(ad, p_proxy) {
             return $.ajax(params);
         }
         // use api proxy
-        var api_location = "proxy/v1/",
+        let api_location = "proxy/v1/",
             set_proxy = (p_proxy) ? p_proxy : d_proxy(),
             app_root = (ad.localhost) ? "" : set_proxy,
             proxy_data = {
@@ -3544,10 +3544,10 @@ function api_proxy(ad, p_proxy) {
 }
 
 function br_result(e) {
-    var ping = e.ping,
+    let ping = e.ping,
         proxy = (ping) ? true : false;
     if (proxy && ping.br_cache) {
-        var version = ping.br_cache.version;
+        let version = ping.br_cache.version;
         if (version != proxy_version) {
             proxy_alert(version);
         }
@@ -3566,10 +3566,10 @@ function proxy_alert(version) {
 }
 
 function get_api_url(get) {
-    var api = get.api,
+    let api = get.api,
         ad = get_api_data(api);
     if (ad) {
-        var search = (get.search) ? get.search : "",
+        let search = (get.search) ? get.search : "",
             base_url = ad.base_url,
             key_param = (ad.key_param) ? ad.key_param : "",
             saved_key = $("#apikeys").data(api),
@@ -3589,7 +3589,7 @@ function get_api_url(get) {
 }
 
 function fetchsymbol(currencyname) {
-    var ccsymbol = {};
+    let ccsymbol = {};
     $.each(JSON.parse(localStorage.getItem("bitrequest_erc20tokens")), function(key, value) {
         if (value.name == currencyname) {
             ccsymbol.symbol = value.symbol;
@@ -3604,14 +3604,14 @@ function tofixedspecial(str, n) {
     if (str.indexOf("e+") < 0) {
         return str;
     }
-    var convert = str.replace(".", "").split("e+").reduce(function(p, b) {
+    let convert = str.replace(".", "").split("e+").reduce(function(p, b) {
         return p + Array(b - p.length + 2).join(0);
     }) + "." + Array(n + 1).join(0);
     return convert.slice(0, -1);
 }
 
 function fixedcheck(livetop) {
-    var headerheight = $(".showmain #header").outerHeight();
+    let headerheight = $(".showmain #header").outerHeight();
     if (livetop > headerheight) {
         $(".showmain").addClass("fixednav");
         return
@@ -3620,29 +3620,29 @@ function fixedcheck(livetop) {
 }
 
 function geturlparameters() {
-    var qstring = w_loc.search.substring(1),
+    let qstring = w_loc.search.substring(1),
         xss = xss_search(qstring);
     if (xss) {
         return {
             "xss": true
         }
     }
-    var getvalues = qstring.split("&"),
+    let getvalues = qstring.split("&"),
         get_object = {};
     $.each(getvalues, function(i, val) {
-        var keyval = val.split("=");
+        let keyval = val.split("=");
         get_object[keyval[0]] = keyval[1];
     });
-    var dp = get_object.d,
+    let dp = get_object.d,
         mp = get_object.m;
     if (dp) {
-        var isxx = scanmeta(dp);
+        let isxx = scanmeta(dp);
         if (isxx) {
             get_object.xss = true;
         }
     }
     if (mp) {
-        var isxx = scanmeta(mp);
+        let isxx = scanmeta(mp);
         if (isxx) {
             get_object.xss = true;
         }
@@ -3651,7 +3651,7 @@ function geturlparameters() {
 }
 
 function scanmeta(val) {
-    var isd = (val && val.length > 5) ? atob(val) : false,
+    let isd = (val && val.length > 5) ? atob(val) : false,
         xssdat = xss_search(isd);
     if (xssdat) { //xss detection
         return true
@@ -3661,7 +3661,7 @@ function scanmeta(val) {
 
 function xss_search(val) {
     if (val) {
-        var val_lower = val.toLowerCase();
+        let val_lower = val.toLowerCase();
         if (val_lower.indexOf("<scrip") > -1) {
             vibrate();
             notify(xss_alert);
@@ -3677,7 +3677,7 @@ function xss_search(val) {
 }
 
 function ishome(pagename) {
-    var page = (pagename) ? pagename : geturlparameters().p;
+    let page = (pagename) ? pagename : geturlparameters().p;
     return (!page || page == "home");
 }
 
@@ -3686,7 +3686,7 @@ function triggersubmit(trigger) {
 }
 
 function copytoclipboard(content, type) {
-    var copy_api = navigator.clipboard;
+    let copy_api = navigator.clipboard;
     if (copy_api) {
         navigator.clipboard.writeText(content);
         notify(type + " copied to clipboard", 2500, "no");
@@ -3695,7 +3695,7 @@ function copytoclipboard(content, type) {
     copycontent.val(content);
     copycontent[0].setSelectionRange(0, 999);
     try {
-        var success = document.execCommand("copy");
+        let success = document.execCommand("copy");
         if (success) {
             notify(type + " copied to clipboard", 2500, "no");
         } else {
@@ -3724,7 +3724,7 @@ function hashcode(str) {
 }
 
 function loader(top) {
-    var loader = $("#loader"),
+    let loader = $("#loader"),
         class_string = (top === true) ? "showpu active toploader" : "showpu active";
     $("#loader").addClass(class_string);
 }
@@ -3760,7 +3760,7 @@ function getcc_icon(cmcid, cpid, erc20) {
 }
 
 function getdevicetype() {
-    var ua = userAgent;
+    let ua = userAgent;
     return (is_android_app === true) ? "android-app" :
         (is_ios_app === true) ? "apple-app" :
         (/iPad/.test(ua)) ? "iPad" :
@@ -3780,12 +3780,12 @@ function getplatform(device) {
 }
 
 function makedatestring(datetimeparts) {
-    var split = (datetimeparts.indexOf(".") > -1) ? "." : "Z";
+    let split = (datetimeparts.indexOf(".") > -1) ? "." : "Z";
     return datetimeparts[0] + " " + datetimeparts[1].split(split)[0];
 }
 
 function returntimestamp(datestring) {
-    var datetimeparts = datestring.split(" "),
+    let datetimeparts = datestring.split(" "),
         timeparts = datetimeparts[1].split(":"),
         dateparts = datetimeparts[0].split("-");
     return new Date(dateparts[0], parseInt(dateparts[1], 10) - 1, dateparts[2], timeparts[0], timeparts[1], timeparts[2]);
@@ -3793,7 +3793,7 @@ function returntimestamp(datestring) {
 
 function to_ts(ts) {
     if (ts) {
-        var tstamp = ts.split("T");
+        let tstamp = ts.split("T");
         return (tstamp) ? returntimestamp(makedatestring(tstamp)).getTime() : null;
     }
     return null;
@@ -3834,7 +3834,7 @@ function fulldateformatmarkup(date, lng) {
 }
 
 function formattime(date) {
-    var h = date.getHours(),
+    let h = date.getHours(),
         m = date.getMinutes(),
         s = date.getSeconds(),
         hours = (h < 10) ? "0" + h : h,
@@ -3844,7 +3844,7 @@ function formattime(date) {
 }
 
 function playsound(audio) {
-    var promise = audio[0].play();
+    let promise = audio[0].play();
     if (promise) {
         promise.then(_ => {
             // Autoplay started!
@@ -3861,7 +3861,7 @@ function vibrate() {
 }
 
 function get_api_data(api_id) {
-    var apipath = br_config.apis.filter(function(val) {
+    let apipath = br_config.apis.filter(function(val) {
         return val.name == api_id;
     });
     return apipath[0];
@@ -3869,7 +3869,7 @@ function get_api_data(api_id) {
 
 function str_match(add1, add2) {
     if (add1 && add2) {
-        var a1u = add1.toUpperCase(),
+        let a1u = add1.toUpperCase(),
             a2u = add2.toUpperCase();
         if (a1u.indexOf(a2u) >= 0) {
             return true
@@ -3879,25 +3879,25 @@ function str_match(add1, add2) {
 }
 
 function all_pinpanel(cb, top) {
-    var topclass = (top) ? " ontop" : "";
+    let topclass = (top) ? " ontop" : "";
     if (haspin() === true) {
-        var lastlock = localStorage.getItem("bitrequest_locktime"),
+        let lastlock = localStorage.getItem("bitrequest_locktime"),
             tsll = now() - lastlock,
             pass = (tsll < 10000);
         if (cb && pass) { // keep unlocked in 10 second time window
             cb.func(cb.args);
             return
         }
-        var content = pinpanel(" pinwall", cb);
+        let content = pinpanel(" pinwall", cb);
         showoptions(content, "pin" + topclass);
         return
     }
-    var content = pinpanel("", cb);
+    let content = pinpanel("", cb);
     showoptions(content, "pin" + topclass);
 }
 
 function pinpanel(pinclass, pincb) {
-    var makeclass = (pinclass === undefined) ? "" : pinclass,
+    let makeclass = (pinclass === undefined) ? "" : pinclass,
         headertext = (haspin() === true) ? "Please enter your pin" : "Create a 4-digit pin";
     return $("<div id='pinfloat' class='enterpin" + makeclass + "'>\
 		<p id='pintext'>" + headertext + "</p>\
@@ -3956,9 +3956,9 @@ function switchpanel(switchmode, mode) {
 }
 
 function getcoindata(currency) {
-    var coindata_object = getcoinconfig(currency);
+    let coindata_object = getcoinconfig(currency);
     if (coindata_object) {
-        var coindata = coindata_object.data,
+        let coindata = coindata_object.data,
             settings = coindata_object.settings,
             has_settings = (settings) ? true : false,
             is_monitored = (settings) ? (settings.apis) ? true : false : false,
@@ -3974,17 +3974,17 @@ function getcoindata(currency) {
             };
         return cd_object;
     } // if not it's probably erc20 token
-    var currencyref = $("#usedcurrencies li[data-currency='" + currency + "']"); // check if erc20 token is added
+    let currencyref = $("#usedcurrencies li[data-currency='" + currency + "']"); // check if erc20 token is added
     if (currencyref.length > 0) {
         return $.extend(currencyref.data(), br_config.erc20_dat.data);
     } // else lookup erc20 data
-    var tokenobject = JSON.parse(localStorage.getItem("bitrequest_erc20tokens"));
+    let tokenobject = JSON.parse(localStorage.getItem("bitrequest_erc20tokens"));
     if (tokenobject) {
-        var erc20data = $.grep(tokenobject, function(filter) {
+        let erc20data = $.grep(tokenobject, function(filter) {
             return filter.name == currency;
         })[0];
         if (erc20data) {
-            var fetched_data = {
+            let fetched_data = {
                 "currency": erc20data.name,
                 "ccsymbol": erc20data.symbol,
                 "cmcid": erc20data.cmcid.toString(),
@@ -3997,12 +3997,12 @@ function getcoindata(currency) {
 }
 
 function activecoinsettings(currency) {
-    var saved_coinsettings = JSON.parse(localStorage.getItem("bitrequest_" + currency + "_settings"));
+    let saved_coinsettings = JSON.parse(localStorage.getItem("bitrequest_" + currency + "_settings"));
     return (saved_coinsettings) ? saved_coinsettings : getcoinsettings(currency);
 }
 
 function getcoinsettings(currency) {
-    var coindata = getcoinconfig(currency);
+    let coindata = getcoinconfig(currency);
     if (coindata) {
         return coindata.settings;
     } // return erc20 settings
@@ -4010,13 +4010,13 @@ function getcoinsettings(currency) {
 }
 
 function getbip32dat(currency) {
-    var xpub_dat = cs_dat(currency, "Xpub");
+    let xpub_dat = cs_dat(currency, "Xpub");
     if (xpub_dat && xpub_dat.active === true) {
         return xpub_dat;
     }
-    var coindata = getcoinconfig(currency);
+    let coindata = getcoinconfig(currency);
     if (coindata) {
-        var xpubdat = coindata.settings.Xpub;
+        let xpubdat = coindata.settings.Xpub;
         if (xpubdat && xpubdat.active === true) {
             return xpubdat;
         }
@@ -4025,11 +4025,11 @@ function getbip32dat(currency) {
 }
 
 function hasbip32(currency) {
-    var coindata = getcoinconfig(currency);
+    let coindata = getcoinconfig(currency);
     if (coindata) {
-        var settings = coindata.settings;
+        let settings = coindata.settings;
         if (settings) {
-            var xpub = settings.Xpub;
+            let xpub = settings.Xpub;
             if (xpub) {
                 if (xpub.active) {
                     return true;
@@ -4047,7 +4047,7 @@ function getcoinconfig(currency) {
 }
 
 function try_next_api(apilistitem, current_apiname) {
-    var apilist = br_config.apilists[apilistitem],
+    let apilist = br_config.apilists[apilistitem],
         next_scan = apilist[$.inArray(current_apiname, apilist) + 1],
         next_api = (next_scan) ? next_scan : apilist[0];
     if (api_attempt[apilistitem][next_api] === true) {
@@ -4065,7 +4065,7 @@ function wake() {
                     //console.log(e);
                 });
             } catch (e) {
-                console.error(e.name, e.message);
+                //console.error(e.name, e.message);
             }
         };
         requestwakelock();
@@ -4088,21 +4088,21 @@ function vu_block() {
 
 // Fix decimals
 function trimdecimals(amount, decimals) {
-    var round_amount = parseFloat(amount).toFixed(decimals);
+    let round_amount = parseFloat(amount).toFixed(decimals);
     return parseFloat(round_amount.toString());
 }
 
 // Countdown format
 
 function countdown(timestamp) {
-    var uts = timestamp / 1000,
+    let uts = timestamp / 1000,
         days = Math.floor(uts / 86400);
     uts -= days * 86400;
-    var hours = Math.floor(uts / 3600) % 24;
+    let hours = Math.floor(uts / 3600) % 24;
     uts -= hours * 3600;
-    var minutes = Math.floor(uts / 60) % 60;
+    let minutes = Math.floor(uts / 60) % 60;
     uts -= minutes * 60;
-    var seconds = uts % 60,
+    let seconds = uts % 60,
         cd_object = {
             "days": days,
             "hours": hours,
@@ -4113,7 +4113,7 @@ function countdown(timestamp) {
 }
 
 function countdown_format(cd) {
-    var days = cd.days,
+    let days = cd.days,
         hours = cd.hours,
         minutes = cd.minutes,
         seconds = cd.seconds,
@@ -4129,9 +4129,9 @@ function countdown_format(cd) {
 }
 
 function adjust_objectarray(array, mods) {
-    var newarray = array;
+    let newarray = array;
     $.each(mods, function(i, val) {
-        var index = array.findIndex((obj => obj.id == val.id));
+        let index = array.findIndex((obj => obj.id == val.id));
         newarray[index][val.change] = val.val;
     });
     return newarray;
@@ -4144,11 +4144,11 @@ function rendercurrencies() {
     initiate();
     if (stored_currencies) {
         $.each(JSON.parse(stored_currencies), function(index, data) {
-            var thiscurrency = data.currency,
+            let thiscurrency = data.currency,
                 thiscmcid = data.cmcid;
             buildpage(data, false);
             render_currencysettings(thiscurrency);
-            var addresses = localStorage.getItem("bitrequest_cc_" + thiscurrency);
+            let addresses = localStorage.getItem("bitrequest_cc_" + thiscurrency);
             if (addresses) {
                 $.each(JSON.parse(addresses).reverse(), function(index, address_data) {
                     appendaddress(thiscurrency, address_data);
@@ -4162,7 +4162,7 @@ function rendercurrencies() {
 
 // render currency settings
 function render_currencysettings(thiscurrency) {
-    var settingcache = localStorage.getItem("bitrequest_" + thiscurrency + "_settings");
+    let settingcache = localStorage.getItem("bitrequest_" + thiscurrency + "_settings");
     if (settingcache) {
         append_coinsetting(thiscurrency, JSON.parse(settingcache), false);
     }
@@ -4170,9 +4170,9 @@ function render_currencysettings(thiscurrency) {
 
 // build settings
 function buildsettings() {
-    var appsettingslist = $("#appsettings");
+    let appsettingslist = $("#appsettings");
     $.each(br_config.app_settings, function(i, value) {
-        var setting_id = value.id,
+        let setting_id = value.id,
             setting_li = (setting_id == "heading") ? $("<li class='set_heading'>\
 		  	<h2>" + value.heading + "</h2>\
 		</li>") :
@@ -4194,7 +4194,7 @@ function buildsettings() {
 
 // render settings
 function rendersettings(excludes) {
-    var settingcache = localStorage.getItem("bitrequest_settings");
+    let settingcache = localStorage.getItem("bitrequest_settings");
     if (settingcache) {
         $.each(JSON.parse(settingcache), function(i, value) {
             if ($.inArray(value.id, excludes) === -1) { // exclude excludes
@@ -4211,7 +4211,7 @@ function renderrequests() {
 }
 
 function archive_button() {
-    var viewarchive = $("#viewarchive"),
+    let viewarchive = $("#viewarchive"),
         archivecount = $("#archivelist > li").length;
     if (archivecount > 0) {
         va_title = viewarchive.attr("data-title");
@@ -4222,9 +4222,9 @@ function archive_button() {
 }
 
 function fetchrequests(cachename, archive) {
-    var requestcache = localStorage.getItem(cachename);
+    let requestcache = localStorage.getItem(cachename);
     if (requestcache) {
-        var parsevalue = JSON.parse(requestcache),
+        let parsevalue = JSON.parse(requestcache),
             showarchive = (archive === false && parsevalue.length > 11); // only show archive button when there are more then 11 requests
         $.each(parsevalue.reverse(), function(i, value) {
             value.archive = archive;
@@ -4238,7 +4238,7 @@ function fetchrequests(cachename, archive) {
 function initiate() {
     $.each(br_config.bitrequest_coin_data, function(dat, val) {
         if (val.active === true) {
-            var settings = val.settings,
+            let settings = val.settings,
                 has_settings = (settings) ? true : false,
                 is_monitored = (has_settings) ? (settings.apis) ? true : false : false,
                 cd = val.data,
@@ -4258,8 +4258,8 @@ function initiate() {
     });
 }
 
-function buildpage(cd, init) {
-    var currency = cd.currency,
+function buildpage(cd, ini) {
+    let currency = cd.currency,
         ccsymbol = cd.ccsymbol,
         checked = cd.checked,
         cmcid = cd.cmcid,
@@ -4271,10 +4271,10 @@ function buildpage(cd, init) {
         home_currencylist = $("ul#currencylist"),
         home_cc_li = home_currencylist.children("li[data-currency='" + currency + "']"),
         visibility = (checked === true) ? "" : "hide",
-        has_settings = (cd.settings === true || erc20 === true),
-        init = (cc_li.length === 0 && init === true);
+        has_settings = (cd.settings === true || erc20 === true);
+    init = (cc_li.length === 0 && ini === true);
     if (init === true || erc20 === true) {
-        var new_li = $("<li class='iconright' data-currency='" + currency + "' data-checked='" + checked + "'>\
+        let new_li = $("<li class='iconright' data-currency='" + currency + "' data-checked='" + checked + "'>\
 			<div data-rel='?p=" + currency + "' class='liwrap addcurrency'>\
 				<h2>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + "\</h2>\
 			</div>\
@@ -4284,13 +4284,13 @@ function buildpage(cd, init) {
 		</li>");
         new_li.data(cd).appendTo(currencylist);
         // append currencies homepage
-        var new_homeli = $("<li class='" + visibility + "' data-currency='" + currency + "'>\
+        let new_homeli = $("<li class='" + visibility + "' data-currency='" + currency + "'>\
 			<div class='rq_icon' data-rel='?p=home&payment=" + currency + "&uoa=' data-title='create " + currency + " request' data-currency='" + currency + "'>" +
             getcc_icon(cmcid, cpid, erc20) + "\
 			</div>\
 		</li>");
         new_homeli.data(cd).appendTo(home_currencylist);
-        var settingspage = (has_settings === true) ? "\
+        let settingspage = (has_settings === true) ? "\
 		<div class='page' id='" + currency + "_settings' data-erc20='" + erc20 + "'>\
 			<div class='content'>\
 				<h2 class='heading'>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + " settings</h2>\
@@ -4300,7 +4300,7 @@ function buildpage(cd, init) {
 				</div>\
 			</div>\
 		</div>" : "";
-        var settingsbutton = (has_settings === true) ? "<div data-rel='?p=" + currency + "_settings' class='self icon-cog'></div>" : "",
+        let settingsbutton = (has_settings === true) ? "<div data-rel='?p=" + currency + "_settings' class='self icon-cog'></div>" : "",
             sendbttn = (hasbip === true) ? "<div class='button send' data-currency='" + currency + "'><span class='icon-telegram'>Send</span></div>" : "",
             currency_page = $("<div class='page' id='" + currency + "'>\
 			<div class='content'>\
@@ -4313,7 +4313,7 @@ function buildpage(cd, init) {
 		</div>" + settingspage);
         currency_page.data(cd).appendTo("main");
         if (erc20 === true) {
-            var coin_settings_cache = localStorage.getItem("bitrequest_" + currency + "_settings");
+            let coin_settings_cache = localStorage.getItem("bitrequest_" + currency + "_settings");
             if (!coin_settings_cache) {
                 localStorage.setItem("bitrequest_" + currency + "_settings", JSON.stringify(br_config.erc20_dat.settings));
             }
@@ -4330,17 +4330,17 @@ function buildpage(cd, init) {
 }
 
 function append_coinsetting(currency, settings, init) {
-    var coinsettings_list = $("#" + currency + "_settings ul.cc_settinglist");
+    let coinsettings_list = $("#" + currency + "_settings ul.cc_settinglist");
     $.each(settings, function(dat, val) {
         if (val.xpub === false) {} else {
-            var selected = val.selected,
+            let selected = val.selected,
                 selected_val = (selected.name) ? selected.name : (selected.url) ? selected.url : selected;
             if (selected_val !== undefined) {
-                var selected_string = selected_val.toString(),
+                let selected_string = selected_val.toString(),
                     ss_filter = (selected_string == "true" || selected_string == "false") ? "" : selected_string,
                     check_setting_li = coinsettings_list.children("li[data-id='" + dat + "']");
                 if (check_setting_li.length === 0) {
-                    var switchclass = (val.custom_switch) ? " custom" : " global bool",
+                    let switchclass = (val.custom_switch) ? " custom" : " global bool",
                         trigger = (val.switch === true) ? switchpanel(selected_string, switchclass) : "<span class='icon-pencil'></span>",
                         coinsettings_li = $("<li data-id='" + dat + "'>\
 							<div class='liwrap edit_trigger iconright' data-currency='" + currency + "'>\
@@ -4365,7 +4365,7 @@ function append_coinsetting(currency, settings, init) {
 }
 
 function appendaddress(currency, ad) {
-    var address = ad.address,
+    let address = ad.address,
         pobox = get_addresslist(currency),
         index = pobox.children("li").length + 1,
         seedid = ad.seedid,
@@ -4395,7 +4395,7 @@ function appendaddress(currency, ad) {
 }
 
 function appendrequest(rd) {
-    var payment = rd.payment,
+    let payment = rd.payment,
         erc20 = rd.erc20,
         uoa = rd.uoa,
         amount = rd.amount,
@@ -4551,9 +4551,9 @@ function appendrequest(rd) {
 		</li>");
     new_requestli.data(rd).prependTo(requestlist);
     if (render_archive === true) {
-        var transactionlist = requestlist.find("#" + requestid).find(".transactionlist");
+        let transactionlist = requestlist.find("#" + requestid).find(".transactionlist");
         $.each(txhistory, function(dat, val) {
-            var txh = val.txhash,
+            let txh = val.txhash,
                 lnh = (txh && txh.slice(0, 9) == "lightning") ? true : false,
                 tx_listitem = append_tx_li(val, false, lnh);
             if (tx_listitem.length > 0) {
@@ -4565,7 +4565,7 @@ function appendrequest(rd) {
 
 function receipt() {
     $(document).on("click", ".receipt > p", function() {
-        var thisnode = $(this),
+        let thisnode = $(this),
             requestli = thisnode.closest(".rqli"),
             rqdat = requestli.data(),
             requestid = rqdat.requestid,
@@ -4632,7 +4632,7 @@ function receipt() {
 }
 
 function get_pdf_url(rqdat) {
-    var requestid = rqdat.requestid,
+    let requestid = rqdat.requestid,
         currencyname = rqdat.currencyname,
         requestname = rqdat.requestname,
         requesttitle = rqdat.requesttitle,
@@ -4697,13 +4697,13 @@ function get_pdf_url(rqdat) {
     if (exists(txhash)) {
         invd["TxID"] = txhash;
     }
-    var set_proxy = d_proxy();
+    let set_proxy = d_proxy();
     return set_proxy + "proxy/v1/receipt/?data=" + btoa(JSON.stringify(invd));
 }
 
 function download_receipt() {
     $(document).on("click", "#dl_receipt", function(e) {
-        var thisbttn = $(this),
+        let thisbttn = $(this),
             href = thisbttn.attr("href"),
             title = thisbttn.attr("title"),
             result = confirm(title + "?");
@@ -4716,7 +4716,7 @@ function download_receipt() {
 
 function share_receipt() {
     $(document).on("click", "#share_receipt", function() {
-        var thisbttn = $(this),
+        let thisbttn = $(this),
             href = thisbttn.attr("data-receiptdat"),
             requestid = thisbttn.attr("data-requestid"),
             filename = "bitrequest_receipt_" + requestid + ".pdf",
@@ -4724,7 +4724,7 @@ function share_receipt() {
         if (result === true) {
             loader(true);
             loadertext("generate receipt");
-            var accountname = $("#accountsettings").data("selected"),
+            let accountname = $("#accountsettings").data("selected"),
                 sharedtitle = "bitrequest_receipt_" + requestid + ".pdf";
             shorten_url(sharedtitle, href, fetch_aws("img_receipt_icon.png"), true);
             closeloader();
@@ -4733,7 +4733,7 @@ function share_receipt() {
 }
 
 function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
-    var p_arr = lnurl_deform(proxy),
+    let p_arr = lnurl_deform(proxy),
         proxy_host = p_arr.url,
         pk = (pw) ? pw : p_arr.k,
         proxy_url = proxy_host + "proxy/v1/ln/api/",
@@ -4756,13 +4756,13 @@ function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
     loadertext("connecting to " + lnurl_encode("lnurl", proxy_host));
     $.ajax(postdata).done(function(e) {
         if (e) {
-            var error = e.error;
+            let error = e.error;
             if (error) {
                 popdialog("<h2 class='icon-blocked'>" + error.message + "</h2>", "canceldialog");
                 closeloader();
                 return;
             }
-            var ddat = [{
+            let ddat = [{
                     "div": {
                         "class": "popform",
                         "content": [{
@@ -4802,14 +4802,14 @@ function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
 }
 
 function amountshort(amount, receivedamount, fiatvalue, iscrypto) {
-    var amount_recieved = (iscrypto === true) ? receivedamount : fiatvalue,
+    let amount_recieved = (iscrypto === true) ? receivedamount : fiatvalue,
         amount_short = amount - amount_recieved;
     return (iscrypto === true) ? trimdecimals(amount_short, 5) : trimdecimals(amount_short, 2);
 }
 
 function editrequest() {
     $(document).on("click", ".editrequest", function() {
-        var thisnode = $(this),
+        let thisnode = $(this),
             thisrequestid = thisnode.attr("data-requestid"),
             requestlist = $("#" + thisrequestid),
             requesttitle = requestlist.data("requesttitle"),
@@ -4830,7 +4830,7 @@ function editrequest() {
 
 function submit_request_description() {
     $(document).on("click", "#edit_request_formbox input.submit", function(e) {
-        var thisnode = $(this),
+        let thisnode = $(this),
             this_requestid = thisnode.attr("data-requestid"),
             this_requesttitle = thisnode.prev("input").val(),
             requesttitle_val = (this_requesttitle) ? this_requesttitle : "empty";
@@ -4851,7 +4851,7 @@ function submit_request_description() {
 
 //update used cryptocurrencies
 function savecurrencies(add) {
-    var currenciespush = [];
+    let currenciespush = [];
     $("#usedcurrencies li").each(function(i) {
         currenciespush.push($(this).data());
     });
@@ -4861,10 +4861,10 @@ function savecurrencies(add) {
 
 //update addresses in localstorage
 function saveaddresses(currency, add) {
-    var pobox = get_addresslist(currency),
+    let pobox = get_addresslist(currency),
         addresses = pobox.find("li");
     if (addresses.length) {
-        var addressboxpush = [];
+        let addressboxpush = [];
         addresses.each(function(i) {
             addressboxpush.push($(this).data());
         });
@@ -4878,7 +4878,7 @@ function saveaddresses(currency, add) {
 
 //update requests
 function saverequests() {
-    var requestpush = [];
+    let requestpush = [];
     $("ul#requestlist > li").each(function() {
         requestpush.push($(this).data());
     });
@@ -4888,7 +4888,7 @@ function saverequests() {
 
 //update archive
 function savearchive() {
-    var requestpush = [];
+    let requestpush = [];
     $("ul#archivelist > li").each(function() {
         requestpush.push($(this).data());
     });
@@ -4897,7 +4897,7 @@ function savearchive() {
 
 //update settings
 function savesettings(nit) {
-    var settingsspush = [];
+    let settingsspush = [];
     $("ul#appsettings > li.render").each(function() {
         settingsspush.push($(this).data());
     });
@@ -4906,9 +4906,9 @@ function savesettings(nit) {
 }
 
 function save_cc_settings(currency, add) {
-    var settingbox = {};
+    let settingbox = {};
     $("#" + currency + "_settings ul.cc_settinglist > li").each(function() {
-        var thisnode = $(this);
+        let thisnode = $(this);
         settingbox[thisnode.attr("data-id")] = thisnode.data();
     });
     localStorage.setItem("bitrequest_" + currency + "_settings", JSON.stringify(settingbox));
@@ -4917,7 +4917,7 @@ function save_cc_settings(currency, add) {
 
 function updatechanges(key, add, nit) {
     if (add === true) {
-        var cc = changes[key],
+        let cc = changes[key],
             cc_correct = (cc) ? cc : 0;
         changes[key] = cc_correct + 1;
         savechangesstats();
@@ -4941,7 +4941,7 @@ function savechangesstats() {
 
 // render changes
 function renderchanges() {
-    var changescache = localStorage.getItem("bitrequest_changes");
+    let changescache = localStorage.getItem("bitrequest_changes");
     if (changescache) {
         changes = JSON.parse(changescache);
         setTimeout(function() { // wait for Googleauth to load
@@ -4953,7 +4953,7 @@ function renderchanges() {
 }
 
 function change_alert() {
-    var total_changes = get_total_changes();
+    let total_changes = get_total_changes();
     if (total_changes > 0) {
         $("#alert > span").text(total_changes).attr("title", "You have " + total_changes + " changes in your app");
         setTimeout(function() {
@@ -4963,9 +4963,9 @@ function change_alert() {
 }
 
 function get_total_changes() {
-    var totalchanges = 0;
+    let totalchanges = 0;
     $.each(changes, function(key, value) {
-        var thisval = (value) ? value : 0;
+        let thisval = (value) ? value : 0;
         totalchanges += parseInt(thisval);
     });
     return totalchanges;
@@ -4977,12 +4977,12 @@ function detectapp() {
     if (inframe === true || is_android_app === true || is_ios_app === true) {
         return
     }
-    var show_dialog = sessionStorage.getItem("bitrequest_appstore_dialog") || localStorage.getItem("bitrequest_appstore_dialog");
+    let show_dialog = sessionStorage.getItem("bitrequest_appstore_dialog") || localStorage.getItem("bitrequest_appstore_dialog");
     if (show_dialog) {
         return
     }
     if (supportsTouch === true) {
-        var device = getdevicetype();
+        let device = getdevicetype();
         if (device == "Android") {
             //getapp("android");
             return
@@ -4994,9 +4994,9 @@ function detectapp() {
 }
 
 function getapp(type) {
-    var app_panel = $("#app_panel");
+    let app_panel = $("#app_panel");
     app_panel.html("");
-    var android = (type == "android"),
+    let android = (type == "android"),
         button = (android === true) ? fetch_aws("img_button-playstore.png") : fetch_aws("img_button-appstore.png"),
         url = (android === true) ? "https://play.google.com/store/apps/details?id=" + androidpackagename + "&pcampaignid=fdl_long&url=" + approot + encodeURIComponent(w_loc.search) : "https://apps.apple.com/app/id1484815377?mt=8",
         panelcontent = "<h2>Download the app</h2>\
@@ -5028,17 +5028,17 @@ function platform_icon(platform) {
 }
 
 function fetch_aws(filename, bckt) {
-    var bucket = (bckt) ? bckt : aws_bucket;
+    let bucket = (bckt) ? bckt : aws_bucket;
     return bucket + filename;
 }
 
 // HTML rendering
 
 function render_html(dat) {
-    var result = "";
+    let result = "";
     $.each(dat, function(i, value) {
         $.each(value, function(key, val) {
-            var id = (val.id) ? " id='" + val.id + "'" : "",
+            let id = (val.id) ? " id='" + val.id + "'" : "",
                 clas = (val.class) ? " class='" + val.class + "'" : "",
                 attr = (val.attr) ? render_attributes(val.attr) : "",
                 cval = val.content,
@@ -5051,7 +5051,7 @@ function render_html(dat) {
 }
 
 function render_attributes(attr) {
-    var attributes = "";
+    let attributes = "";
     $.each(attr, function(key, value) {
         attributes += " " + key + "='" + value + "'";
     });
@@ -5061,7 +5061,7 @@ function render_attributes(attr) {
 // HTML templates
 
 function template_dialog(ddat) {
-    var validated_class = (ddat.validated) ? " validated" : "",
+    let validated_class = (ddat.validated) ? " validated" : "",
         dialog_object = [{
             "div": {
                 "id": ddat.id,
@@ -5115,7 +5115,7 @@ function get_setting(setting, dat) {
 }
 
 function set_setting(setting, keypairs, title) {
-    var set_node = $("#" + setting);
+    let set_node = $("#" + setting);
     set_node.data(keypairs);
     if (title) {
         set_node.find("p").text(title);
@@ -5133,14 +5133,14 @@ function get_addresslist(currency) {
 }
 
 function filter_addressli(currency, datakey, dataval) {
-    var addressli = get_addresslist(currency).children("li");
+    let addressli = get_addresslist(currency).children("li");
     return addressli.filter(function() {
         return $(this).data(datakey) == dataval;
     })
 }
 
 function filter_all_addressli(datakey, dataval) {
-    var all_addressli = $(".adli");
+    let all_addressli = $(".adli");
     return all_addressli.filter(function() {
         return $(this).data(datakey) == dataval;
     })
@@ -5159,12 +5159,12 @@ function dom_to_array(dom, dat) {
 }
 
 function get_latest_index(alist) {
-    var index = dom_to_array(alist, "derive_index");
+    let index = dom_to_array(alist, "derive_index");
     return Math.max.apply(Math, index);
 }
 
 function check_currency(currency) {
-    var addresscount = filter_addressli(currency, "checked", true).length;
+    let addresscount = filter_addressli(currency, "checked", true).length;
     if (addresscount > 0) {
         currency_check(currency);
         return
@@ -5173,7 +5173,7 @@ function check_currency(currency) {
 }
 
 function currency_check(currency) {
-    var currencylistitem = $("#currencylist > li[data-currency='" + currency + "']"),
+    let currencylistitem = $("#currencylist > li[data-currency='" + currency + "']"),
         parentcheckbox = $("#usedcurrencies li[data-currency='" + currency + "']");
     currencylistitem.removeClass("hide");
     parentcheckbox.attr("data-checked", "true").data("checked", true);
@@ -5181,7 +5181,7 @@ function currency_check(currency) {
 }
 
 function currency_uncheck(currency) {
-    var currencylistitem = $("#currencylist > li[data-currency='" + currency + "']"),
+    let currencylistitem = $("#currencylist > li[data-currency='" + currency + "']"),
         parentcheckbox = $("#usedcurrencies li[data-currency='" + currency + "']");
     currencylistitem.addClass("hide");
     parentcheckbox.attr("data-checked", "false").data("checked", false);
@@ -5193,7 +5193,7 @@ function d_proxy() {
 }
 
 function get_vk(address) {
-    var ad_li = filter_addressli("monero", "address", address),
+    let ad_li = filter_addressli("monero", "address", address),
         ad_dat = (ad_li.length) ? ad_li.data() : {},
         ad_vk = ad_dat.vk;
     if (ad_vk && ad_vk != "") {
@@ -5219,7 +5219,7 @@ function vk_obj(vk) {
 }
 
 function share_vk() {
-    var vkshare = cs_dat("monero", "Share viewkey").selected;
+    let vkshare = cs_dat("monero", "Share viewkey").selected;
     if (vkshare === true) {
         return true;
     }
@@ -5227,9 +5227,9 @@ function share_vk() {
 }
 
 function gk() {
-    var k = io.k;
+    let k = io.k;
     if (k) {
-        var pk = JSON.parse(atob(k));
+        let pk = JSON.parse(atob(k));
         if (pk.if_id == "" || pk.ad_id == "" || pk.ga_id == "" || pk.bc_id == "") {
             fk();
             return
@@ -5246,7 +5246,7 @@ function fk() {
         "custom": "gk",
         "api_url": true
     }).done(function(e) {
-        var ko = e.k;
+        let ko = e.k;
         if (ko) {
             init_keys(ko, false);
         }
@@ -5256,9 +5256,9 @@ function fk() {
 }
 
 function init_keys(ko, set) { // set required keys
-    var k = JSON.parse(atob(ko));
+    let k = JSON.parse(atob(ko));
     to = k;
-    var ga_set = (k.ga_id != "");
+    let ga_set = (k.ga_id != "");
     if (ga_set) {
         setTimeout(function() {
             gapi_load();
@@ -5271,9 +5271,9 @@ function init_keys(ko, set) { // set required keys
 }
 
 function check_rr() {
-    var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
+    let ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
     if (ls_recentrequests) {
-        var lsrr_arr = JSON.parse(ls_recentrequests);
+        let lsrr_arr = JSON.parse(ls_recentrequests);
         if ($.isEmptyObject(lsrr_arr)) {
             toggle_rr(false);
             return
@@ -5287,7 +5287,7 @@ function check_rr() {
 function toggle_rr(bool) {
     if (bool) {
         html.addClass("show_rr");
-        var hist_bttn = $("#request_history");
+        let hist_bttn = $("#request_history");
         hist_bttn.addClass("load");
         setTimeout(function() {
             hist_bttn.removeClass("load");
@@ -5295,26 +5295,6 @@ function toggle_rr(bool) {
         return
     }
     html.removeClass("show_rr");
-}
-
-function q_obj(obj, path) {
-    try {
-        const p_arr = path.split(".");
-        if ($.isArray(p_arr) && p_arr.length > 1) {
-            for (let v of p_arr) {
-                if (!obj[v]) {
-                    obj = false;
-                    break
-                }
-                obj = obj[v];
-            }
-            return obj;
-        }
-        return false
-    } catch (e) {
-        console.error(e.name, e.message);
-        return false
-    }
 }
 
 // add serviceworker

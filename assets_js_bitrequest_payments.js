@@ -1,14 +1,16 @@
 //globals
-var txid,
-    ping,
-    pingtx,
-    websocket,
-    cacheperiodcrypto = 120000, //120000 = 2 minutes
+
+const cacheperiodcrypto = 120000, //120000 = 2 minutes
     cacheperiodfiat = 600000, //600000 = 10 minutes
     zeroplaceholder = parseFloat((0.00).toLocaleString(language, {
         "minimumFractionDigits": 2,
         "maximumFractionDigits": 2
-    })).toFixed(2),
+    })).toFixed(2);
+
+let txid,
+    ping,
+    pingtx,
+    websocket,
     // Global helpers
     block_swipe,
     percent,
@@ -152,12 +154,12 @@ function set_request_timer() {
 function swipestart() {
     $(document).on("mousedown touchstart", "#paymentdialog", function(e) {
         blockswipe = false;
-        var thisdialog = $(this),
+        let thisdialog = $(this),
             inputs = thisdialog.find("input");
         if (inputs.is(":focus")) {
             blockswipe = true;
         }
-        var startheight = (e.originalEvent.touches) ? e.originalEvent.touches[0].pageY : e.pageY;
+        let startheight = (e.originalEvent.touches) ? e.originalEvent.touches[0].pageY : e.pageY;
         startswipetime = now();
         swipe(thisdialog.height(), startheight);
     })
@@ -169,11 +171,11 @@ function swipe(dialogheight, startheight) {
             unfocus_inputs();
             return
         }
-        var currentheight = (e.originalEvent.touches) ? e.originalEvent.touches[0].pageY : e.pageY,
+        let currentheight = (e.originalEvent.touches) ? e.originalEvent.touches[0].pageY : e.pageY,
             dragdistance = currentheight - startheight;
         if (dragdistance > 3 || dragdistance < -3) { // margin to activate swipe
             html.addClass("swipemode");
-            var distance = dragdistance / dialogheight,
+            let distance = dragdistance / dialogheight,
                 posdist = 1 - Math.abs(distance);
             percent = distance * 100;
             $(this).addClass("swiping");
@@ -188,9 +190,9 @@ function swipe(dialogheight, startheight) {
 function swipeend() {
     $(document).on("mouseup mouseleave touchend", "#payment", function() {
         $(document).off("mousemove touchmove", "#payment");
-        var thisunit = $(this);
+        let thisunit = $(this);
         if (thisunit.hasClass("swiping")) {
-            var paymentdialog = $("#paymentdialog"),
+            let paymentdialog = $("#paymentdialog"),
                 swipetime = now() - startswipetime,
                 largeswipe = (percent > 90 || percent < -90),
                 smallswipe = (percent > 25 || percent < -25);
@@ -222,7 +224,7 @@ function flipstart() {
             if (offline === true) {
                 return
             }
-            var is_lnd = (paymentdialogbox.attr("data-lswitch") == "lnd_ao");
+            let is_lnd = (paymentdialogbox.attr("data-lswitch") == "lnd_ao");
             if (paymentdialogbox.attr("data-pending") == "ispending" && !is_lnd) {
                 return
             }
@@ -230,7 +232,7 @@ function flipstart() {
                 return
             }
         }
-        var startwidth = (e.originalEvent.touches) ? e.originalEvent.touches[0].pageX : e.pageX;
+        let startwidth = (e.originalEvent.touches) ? e.originalEvent.touches[0].pageX : e.pageX;
         flip($(this).width(), startwidth);
     })
 }
@@ -238,14 +240,14 @@ function flipstart() {
 function flip(dialogwidth, startwidth) {
     $(document).on("mousemove touchmove", "#payment", function(e) {
         html.addClass("flipmode");
-        var currentwidth = (e.originalEvent.touches) ? e.originalEvent.touches[0].pageX : e.pageX,
+        let currentwidth = (e.originalEvent.touches) ? e.originalEvent.touches[0].pageX : e.pageX,
             dragdistance = currentwidth - startwidth;
         if (dragdistance > 3 || dragdistance < -3) { // margin to activate flip (prevent sloppy click)
             html.addClass("swipemode");
             $(this).addClass("flipping");
-            var startangle = (paymentdialogbox.hasClass("flipped")) ? 180 : 0;
+            let startangle = (paymentdialogbox.hasClass("flipped")) ? 180 : 0;
             paymentdialogbox.css("-webkit-transform", "rotateY(" + startangle + "deg)");
-            var preangle = 180 * dragdistance / dialogwidth;
+            let preangle = 180 * dragdistance / dialogwidth;
             angle = (paymentdialogbox.hasClass("flipped")) ? 180 + preangle : preangle;
             paymentdialogbox.css("-webkit-transform", "rotateY(" + angle + "deg)");
         }
@@ -254,7 +256,7 @@ function flip(dialogwidth, startwidth) {
 
 function flipend() {
     $(document).on("mouseup mouseleave touchend", "#payment", function() {
-        var thisunit = $(this);
+        let thisunit = $(this);
         $(document).off("mousemove touchmove", paymentpopup);
         if (thisunit.hasClass("flipping")) {
             if (paymentdialogbox.hasClass("flipped")) {
@@ -324,7 +326,7 @@ function remove_flip() {
 function face_front() {
     if (request) {
         if (request.isrequest === false) {
-            var sharebutton = $("#sharebutton"),
+            let sharebutton = $("#sharebutton"),
                 requesttitle = $("#requesttitle"),
                 requestname = $("#requestname"),
                 amountinput = $("#amountbreak input");
@@ -357,7 +359,7 @@ function face_front() {
 function face_back() {
     if (request) {
         if (request.isrequest === false) {
-            var requesttitle = $("#requesttitle"),
+            let requesttitle = $("#requesttitle"),
                 requestname = $("#requestname");
             if (requestname.val().length < 3) {
                 setTimeout(function() {
@@ -371,7 +373,7 @@ function face_back() {
                 }, 300);
                 return
             }
-            var amountinput = $("#amountbreak input");
+            let amountinput = $("#amountbreak input");
             if (amountinput.val().length > 0 && supportsTouch === true) {
                 setTimeout(function() {
                     amountinput.add(requesttitle).add(requestname).blur();
@@ -402,22 +404,22 @@ function loadpaymentfunction(pass) {
     loader();
     symbolcache = localStorage.getItem("bitrequest_symbols");
     if (symbolcache) {
-        var gets = geturlparameters();
+        let gets = geturlparameters();
         if (gets.xss) { //xss detection
-            var content = "<h2 class='icon-warning'>" + xss_alert + "</h2>";
+            let content = "<h2 class='icon-warning'>" + xss_alert + "</h2>";
             popdialog(content, "canceldialog");
             closeloader();
             return
         }
-        var contactform = exists(gets.contactform);
+        let contactform = exists(gets.contactform);
         if (contactform && pass !== true) { // show contactform
             edit_contactform(true);
             return
         }
-        var payment = gets.payment,
+        let payment = gets.payment,
             coindata = getcoindata(payment);
         if (coindata) {
-            var iserc20 = (coindata.erc20 === true),
+            let iserc20 = (coindata.erc20 === true),
                 request_start_time = now(),
                 exact = (gets.exact !== undefined);
             request = {
@@ -438,13 +440,13 @@ function loadpaymentfunction(pass) {
                 api_attempt["fiat_price_apis"] = {},
                 socket_attempt = {};
             if (iserc20 === true) {
-                var token_contract = coindata.contract;
+                let token_contract = coindata.contract;
                 if (token_contract) {
                     request.token_contract = token_contract;
                     get_tokeninfo(payment, token_contract);
                     return
                 }
-                var content = "<h2 class='icon-blocked'>Unable to get token data</h2>";
+                let content = "<h2 class='icon-blocked'>Unable to get token data</h2>";
                 popdialog(content, "canceldialog");
                 closeloader();
                 return
@@ -452,7 +454,7 @@ function loadpaymentfunction(pass) {
             continue_paymentfunction();
             return
         }
-        var content = "<h2 class='icon-blocked'>Currency not supported</h2>";
+        let content = "<h2 class='icon-blocked'>Currency not supported</h2>";
         popdialog(content, "canceldialog");
         closeloader();
         return
@@ -464,7 +466,7 @@ function loadpaymentfunction(pass) {
 }
 
 function get_tokeninfo(payment, contract) {
-    var getcache = localStorage.getItem("bitrequest_decimals_" + payment);
+    let getcache = localStorage.getItem("bitrequest_decimals_" + payment);
     if (getcache) { // check for cached values
         request.decimals = getcache;
         continue_paymentfunction();
@@ -480,20 +482,20 @@ function get_tokeninfo(payment, contract) {
             "method": "GET"
         }
     }).done(function(e) {
-        var data = br_result(e).result,
+        let data = br_result(e).result,
             error = data.error;
         if (error) {
             cancelpaymentdialog();
             fail_dialogs("ethplorer", error);
             return
         }
-        var decimals = data.decimals;
+        let decimals = data.decimals;
         request.decimals = decimals;
         continue_paymentfunction();
         localStorage.setItem("bitrequest_decimals_" + payment, decimals); //cache token decimals
     }).fail(function(jqXHR, textStatus, errorThrown) {
         cancelpaymentdialog();
-        var error_object = (errorThrown) ? errorThrown : jqXHR;
+        let error_object = (errorThrown) ? errorThrown : jqXHR;
         fail_dialogs("ethplorer", error_object);
         closeloader();
     });
@@ -501,14 +503,14 @@ function get_tokeninfo(payment, contract) {
 
 function continue_paymentfunction() {
     //set globals
-    var gets = geturlparameters();
+    let gets = geturlparameters();
     if (gets.xss) { //xss detection
-        var content = "<h2 class='icon-warning'>" + xss_alert + "</h2>";
+        let content = "<h2 class='icon-warning'>" + xss_alert + "</h2>";
         popdialog(content, "canceldialog");
         closeloader();
         return
     }
-    var payment = request.payment,
+    let payment = request.payment,
         erc20 = request.erc20,
         address = gets.address,
         currencycheck = (erc20 === true) ? "ethereum" : payment,
@@ -519,14 +521,14 @@ function continue_paymentfunction() {
         lnd_only = (address == "lnurl") ? true : false,
         valid = (lnd_only && ln) ? true : check_address(address, currencycheck); // validate address   
     if (valid === false) {
-        var error_message = (address == "undefined") ? "Undefined address, please ask for a new request" :
+        let error_message = (address == "undefined") ? "Undefined address, please ask for a new request" :
             "Invalid " + payment + " address",
             content = "<h2 class='icon-blocked'>" + error_message + "</h2>";
         popdialog(content, "canceldialog");
         closeloader();
         return
     }
-    var api_info = check_api(payment, erc20),
+    let api_info = check_api(payment, erc20),
         isrequest = (localStorage.getItem("bitrequest_editurl") !== w_loc.search), // check if url is a request
         coindata = request.coindata,
         coinsettings = activecoinsettings(payment),
@@ -540,15 +542,15 @@ function continue_paymentfunction() {
         xmr_ia = address;
     if (payment == "monero") { // check for monero viewkey
         coindata.monitored = false;
-        var viewkey = (dataobject && dataobject.vk) ? {
+        viewkey = (dataobject && dataobject.vk) ? {
                 "account": address,
                 "vk": dataobject.vk
             } : get_vk(address),
             sharevk = share_vk(),
-            payment_id = (payment_id) ? payment_id : (isrequest) ? false : get_xmrpid();
-        xmr_ia = xmr_integrated(address, payment_id);
+            payment_id = (payment_id) ? payment_id : (isrequest) ? false : get_xmrpid(),
+            xmr_ia = xmr_integrated(address, payment_id);
     }
-    var currencysymbol = coindata.ccsymbol,
+    let currencysymbol = coindata.ccsymbol,
         requesttype = (isrequest === true) ? (type) ? type :
         (inframe === true) ? "checkout" :
         "incoming" : "local",
@@ -659,23 +661,23 @@ function continue_paymentfunction() {
 
 function lightning_setup() {
     if (request.isrequest === true) {
-        var dataobject = request.dataobject;
+        let dataobject = request.dataobject;
         if (dataobject) {
-            var imp = dataobject.imp;
+            let imp = dataobject.imp;
             if (imp) { //lightning request
                 loadertext("check " + imp + " lightning status");
-                var phd = dataobject.proxy,
+                let phd = dataobject.proxy,
                     host = dataobject.host,
                     key = dataobject.key,
                     dprox = (phd) ? phd : (host && key) ? d_proxy() : null;
                 if (dprox) {
-                    var parr = lnurl_deform(dprox),
+                    let parr = lnurl_deform(dprox),
                         pxk = (parr) ? parr.k : false,
                         lightning_id = dataobject.lid,
                         lnd_pid = (lightning_id) ? lightning_id :
                         (dataobject.pid) ? sha_sub(dataobject.pid, 10) : null;
                     if (lnd_pid) {
-                        var proxy_host = lnurl_encode_save(dprox),
+                        let proxy_host = lnurl_encode_save(dprox),
                             ph = (proxy_host) ? lnurl_deform(proxy_host).url : null,
                             nid_src = (host) ? (imp == "lnbits") ? key : host : null,
                             node_id = (nid_src) ? sha_sub(nid_src, 10) : false,
@@ -699,7 +701,7 @@ function lightning_setup() {
                             };
                         helper.lnd = lnd;
                         lnd_ph = ph;
-                        var creds = (host && key && nid) ? true : false,
+                        let creds = (host && key && nid) ? true : false,
                             put = {
                                 "status": lnd_pid,
                                 "cred": (creds) ? btoa(JSON.stringify({
@@ -722,13 +724,13 @@ function lightning_setup() {
         proceed_pf();
         return
     }
-    var lnli = lndli(),
+    let lnli = lndli(),
         ln_dat = lnli.data(),
         ss = ln_dat.selected_service;
     if (ss) {
-        var imp = ss.imp;
+        let imp = ss.imp;
         loadertext("check " + imp + " lightning status");
-        var node_id = ss.node_id,
+        let node_id = ss.node_id,
             proxies = ln_dat.proxies,
             proxy_id = ss.proxy_id,
             fetchproxy = fetch_proxy(proxies, proxy_id),
@@ -766,7 +768,7 @@ function lightning_setup() {
             };
         helper.lnd = lnd;
         lnd_ph = ph;
-        var creds = (host && key && node_id && !lnurls) ? true : false,
+        let creds = (host && key && node_id && !lnurls) ? true : false,
             put = {
                 "status": pid,
                 "cred": (creds) ? btoa(JSON.stringify({
@@ -783,7 +785,7 @@ function lightning_setup() {
 }
 
 function lnd_put(proxy, key, pl, lnurl) {
-    var rqtype = (request.requesttype == "local") ? undefined : request.requesttype;
+    let rqtype = (request.requesttype == "local") ? undefined : request.requesttype;
     $.ajax({
         "method": "POST",
         "cache": false,
@@ -796,7 +798,7 @@ function lnd_put(proxy, key, pl, lnurl) {
             "x-api": key
         }
     }).done(function(e) {
-        var stat = e.stat;
+        let stat = e.stat;
         if (stat === true) {
             test_lnd(lnurl);
             return
@@ -804,11 +806,11 @@ function lnd_put(proxy, key, pl, lnurl) {
         if (stat == "no write acces") {
             notify("LNurl proxy access denied, check folder permissions");
         }
-        var data = br_result(e).result,
+        let data = br_result(e).result,
             error = data.error,
             default_error = "unable to connect";
         if (error) {
-            var message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
+            let message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
             if (request.isrequest) {
                 if (helper.lnd_only) {
                     topnotify(message);
@@ -829,12 +831,12 @@ function lnd_put(proxy, key, pl, lnurl) {
 }
 
 function test_lnd(lnurl) {
-    var lnd = helper.lnd;
+    let lnd = helper.lnd;
     if (!lnd.proxy_host) {
         proceed_pf();
         return
     }
-    var status_cache = sessionStorage.getItem("lnd_timer_" + lnd.nid);
+    let status_cache = sessionStorage.getItem("lnd_timer_" + lnd.nid);
     if (status_cache && (now() - status_cache) < 20000) { // get cached status
         // lightning status is cached for 10 minutes
         helper.lnd_status = true;
@@ -868,14 +870,14 @@ function test_lnd(lnurl) {
 function proceed_pf(error) {
     if (helper.lnd_status === false && helper.lnd_only) {
         request.monitored = false;
-        var error_message = (helper.lnd_only) ? (error) ? error.errorcode + ": " + error.errormessage : "Unable to connect with lightning node" : $("#rq_errlog > .rq_err").text(),
+        let error_message = (helper.lnd_only) ? (error) ? error.errorcode + ": " + error.errormessage : "Unable to connect with lightning node" : $("#rq_errlog > .rq_err").text(),
             content = "<h2 class='icon-blocked'>" + error_message + "</h2>";
         cancelpaymentdialog();
         popdialog(content, "canceldialog");
         closeloader();
         return
     }
-    var lndstatus = (helper.lnd) ? (helper.lnd.selected) ? (helper.lnd_status) ? "lnd_ao" : "lnd_active" : "lnd_inactive" : "no_lnd";
+    let lndstatus = (helper.lnd) ? (helper.lnd.selected) ? (helper.lnd_status) ? "lnd_ao" : "lnd_active" : "lnd_inactive" : "no_lnd";
     paymentdialogbox.attr({
         "data-lswitch": lndstatus,
         "data-lnd": lndstatus
@@ -890,11 +892,11 @@ function proceed_pf(error) {
         }, 0.025661699261756998, "coinmarketcap", "fixer", 0, 0);
         return
     }
-    var ccapi = $("#cmcapisettings").data("selected"),
+    let ccapi = $("#cmcapisettings").data("selected"),
         apilist = "crypto_price_apis",
         getcache = sessionStorage.getItem("bitrequest_xrates_" + request.currencysymbol);
     if (getcache) { //check for cached crypto rates in localstorage
-        var timestamp = now(),
+        let timestamp = now(),
             parsevalue = JSON.parse(getcache),
             cachedtimestamp = parsevalue.timestamp,
             thisusdrate = parsevalue.ccrate,
@@ -915,7 +917,7 @@ function proceed_pf(error) {
 function getccexchangerates(apilist, api) {
     api_attempt[apilist][api] = true;
     loadertext("get " + request.currencysymbol + " rates from " + api);
-    var payment = request.payment,
+    let payment = request.payment,
         contract = request.token_contract,
         iserc = (request.erc20 === true) ? true : false,
         payload = (api == "coinmarketcap") ? "v1/cryptocurrency/quotes/latest?id=" + request.cmcid :
@@ -939,31 +941,31 @@ function getccexchangerates(apilist, api) {
             "cache": true
         },
     }).done(function(e) {
-        var data = br_result(e).result;
+        let data = br_result(e).result;
         if (data) {
             if (!$.isEmptyObject(data)) {
-                var status = data.status,
+                let status = data.status,
                     has_error = (data.statusCode == 404 ||
                         (data.error) ||
                         (status && status.error_message));
                 if (has_error) {
-                    var error_val = (data.error) ? data.error : "Unable to get " + payment + " Exchangerate";
+                    let error_val = (data.error) ? data.error : "Unable to get " + payment + " Exchangerate";
                     cc_fail(apilist, api, error_val);
                     return
                 }
-                var pnode = (iserc) ? contract : payment,
+                let pnode = (iserc) ? contract : payment,
                     ccrate = (api == "coinmarketcap") ? q_obj(data, "data." + request.cmcid + ".quote.USD.price") :
                     (api == "coinpaprika") ? q_obj(data, "quotes.USD.price") :
                     (api == "coingecko") ? q_obj(data, pnode + ".usd") :
                     null;
                 if (ccrate) {
                     loadertext("success");
-                    var timestamp = now(),
+                    let timestamp = now(),
                         ccratearray = {};
                     ccratearray.timestamp = timestamp;
                     ccratearray.ccrate = ccrate;
                     ccratearray.apisrc = api;
-                    var storeccratestring = JSON.stringify(ccratearray);
+                    let storeccratestring = JSON.stringify(ccratearray);
                     sessionStorage.setItem("bitrequest_xrates_" + request.currencysymbol, storeccratestring); //cache crypto rates in sessionstorage
                     initexchangerate(ccrate, api, 0); //pass usd amount, check for fiat rates
                     return
@@ -972,17 +974,17 @@ function getccexchangerates(apilist, api) {
                 return
             }
         }
-        var error_val = "unable to get " + payment + " rate";
+        let error_val = "unable to get " + payment + " rate";
         cc_fail(apilist, api, error_val);
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        var error_object = (errorThrown) ? errorThrown : jqXHR;
+        let error_object = (errorThrown) ? errorThrown : jqXHR;
         cc_fail(apilist, api, error_object);
     });
 }
 
 function initexchangerate(cc_rate, ccapi, cachetime) {
     loadertext("get fiat rates");
-    var ccrate = 1 / cc_rate,
+    let ccrate = 1 / cc_rate,
         timestamp = now(),
         newcurrency = (request.fiatcurrency != request.localcurrency && request.fiatcurrency != "eur" && request.fiatcurrency != "usd" && request.fiatcurrency != request.currencysymbol), //check if currency request is other then usd, eur or localcurrency
         localcurrencyparam = (request.localcurrency == "usd" || request.localcurrency == "btc") ? "usd,eur" :
@@ -996,11 +998,11 @@ function initexchangerate(cc_rate, ccapi, cachetime) {
         apilist = "fiat_price_apis";
     helper.currencyarray = currenciesstring.split(",");
     if (currencycache) { //check if cache exists
-        var parsevalue = JSON.parse(currencycache),
+        let parsevalue = JSON.parse(currencycache),
             xratesnode = parsevalue.fiat_exchangerates,
             thisrate = xratesnode[request.fiatcurrency];
         if (thisrate) { //check if currency is in cache
-            var xratetimestamp = parsevalue.timestamp,
+            let xratetimestamp = parsevalue.timestamp,
                 timeexpired = timestamp - xratetimestamp,
                 lcrate = xratesnode[request.fiatcurrency];
             if (timeexpired > cacheperiodfiat || lcrate === undefined) { //check if cache is expired and if fiatcurrency is cached
@@ -1020,7 +1022,7 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
     api_attempt[apilist][fiatapi] = true;
     loadertext("fetching fiat rates from " + fiatapi);
     // set apipath
-    var payload = (fiatapi == "fixer") ? "latest" :
+    let payload = (fiatapi == "fixer") ? "latest" :
         (fiatapi == "coingecko") ? "exchange_rates" :
         (fiatapi == "exchangeratesapi") ? "latest" :
         (fiatapi == "currencylayer") ? "live" :
@@ -1042,7 +1044,7 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
             "method": "GET"
         }
     }).done(function(e) {
-        var data = br_result(e).result,
+        let data = br_result(e).result,
             ratesnode = (fiatapi == "fixer") ? data.rates :
             (fiatapi == "coingecko") ? data.rates :
             (fiatapi == "exchangeratesapi") ? data.rates :
@@ -1051,7 +1053,7 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
             null;
         if (ratesnode) {
             loadertext("success");
-            var fiatsymbol = request.fiatcurrency,
+            let fiatsymbol = request.fiatcurrency,
                 localupper = fiatsymbol.toUpperCase(),
                 rates = {
                     "eur": 1
@@ -1059,29 +1061,29 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
                 usdval,
                 localval;
             if (fiatapi == "fixer") {
-                var usdval = ratesnode.USD,
+                usdval = ratesnode.USD,
                     localval = ratesnode[localupper];
             } else if (fiatapi == "coingecko") {
                 if (ratesnode[fiatsymbol]) {
-                    var eurval = ratesnode.eur.value,
-                        usdval = ratesnode.usd.value / eurval,
+                    let eurval = ratesnode.eur.value;
+                    usdval = ratesnode.usd.value / eurval,
                         localval = ratesnode[fiatsymbol].value / eurval;
                 }
             } else if (fiatapi == "exchangeratesapi") {
                 if (ratesnode[localupper]) {
-                    var usdval = ratesnode.USD,
+                    usdval = ratesnode.USD,
                         localval = (localupper == "EUR") ? 1 : ratesnode[localupper];
                 }
             } else if (fiatapi == "currencylayer") {
-                var localkey = ratesnode["USD" + localupper];
+                let localkey = ratesnode["USD" + localupper];
                 if (localkey) {
-                    var usdval = 1 / ratesnode.USDEUR,
+                    usdval = 1 / ratesnode.USDEUR,
                         localval = localkey * usdval;
                 }
             } else if (fiatapi == "coinbase") {
-                var localkey = ratesnode[localupper];
+                let localkey = ratesnode[localupper];
                 if (localkey) {
-                    var usdval = 1 / ratesnode.EUR,
+                    usdval = 1 / ratesnode.EUR,
                         localval = localkey * usdval;
                 }
             } else {
@@ -1098,7 +1100,7 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
                 }
                 rendercurrencypool(rates, ccrate, ccapi, fiatapi, cachetime, "0"); // render exchangerates
                 // cache exchange rates
-                var xratestring = JSON.stringify({
+                let xratestring = JSON.stringify({
                     "timestamp": now(),
                     "fiat_exchangerates": rates,
                     "api": fiatapi
@@ -1107,25 +1109,25 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
                 return
             }
         }
-        var nextfiatapi = try_next_api(apilist, fiatapi);
+        let nextfiatapi = try_next_api(apilist, fiatapi);
         if (nextfiatapi === false) {
             loadertext("error");
             closeloader();
             cancelpaymentdialog();
-            var errorcode = (data.error) ? data.error : "Failed to load data from " + fiatapi;
+            let errorcode = (data.error) ? data.error : "Failed to load data from " + fiatapi;
             fail_dialogs(fiatapi, errorcode);
             return
         }
         get_fiat_exchangerate(apilist, nextfiatapi, ccrate, currencystring, ccapi, cachetime);
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        var error_object = (errorThrown) ? errorThrown : jqXHR;
+        let error_object = (errorThrown) ? errorThrown : jqXHR;
         next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, ccapi, cachetime);
         return
     });
 }
 
 function next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, ccapi, cachetime) {
-    var nextfiatapi = try_next_api(apilist, fiatapi);
+    let nextfiatapi = try_next_api(apilist, fiatapi);
     if (nextfiatapi) {
         get_fiat_exchangerate(apilist, nextfiatapi, ccrate, currencystring, ccapi, cachetime);
         return
@@ -1138,7 +1140,7 @@ function next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, c
 
 function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cachetimefiat) {
     xrates_array = [];
-    var usdrate = data.usd, //cryptocurrency rate is in dollar, needs to be converted to euro
+    let usdrate = data.usd, //cryptocurrency rate is in dollar, needs to be converted to euro
         ccrateeuro = ccrate * usdrate,
         currentrate = (request.iscrypto === true) ? ccrateeuro : data[request.fiatcurrency],
         fiatapiurl = (fiatapi == "fixer") ? "fixer.io" :
@@ -1156,7 +1158,7 @@ function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cache
         "currencyname": request.payment
     });
     $.each(data, function(thiscurrency, rate) {
-        var parsedrate = (rate / currentrate).toFixed(6) / 1,
+        let parsedrate = (rate / currentrate).toFixed(6) / 1,
             ratesspanclass = (parsedrate === 1) ? " hide" : "",
             currencyname = parsedsymbols[thiscurrency.toUpperCase()],
             xratedatarray = "<div data-currency='" + thiscurrency + "' data-value='' data-xrate='" + rate + "' class='cpool' data-currencyname='" + currencyname + "'><span class='ratesspan" + ratesspanclass + "'>" + request.uoa + "_" + thiscurrency + ": " + parsedrate + "</span></div>";
@@ -1168,7 +1170,7 @@ function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cache
         });
     });
     helper.xrates = xrates_array;
-    var ln_info = helper.lnd,
+    let ln_info = helper.lnd,
         proxy_icon = (ln_info && ln_info.proxy) ? "<span class='icon-sphere' title='" + ln_info.proxy_host + "'></span>" : "",
         lndstatus_icon = (helper.lnd_status) ? " <span class='icon-connection'></span>" : " <span class='icon-wifi-off'></span>",
         lnd_nodeinfo = (request.isrequest === true) ? "" : ": <span id='lnd_nodeinfo_trigger'>" + ln_info.name + "</span>",
@@ -1179,7 +1181,7 @@ function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cache
 
 function getpayment(ccrateeuro, ccapi) {
     closeloader();
-    var currencypoolnode = $("#paymentdialog .cpool[data-currency='" + request.uoa + "']"),
+    let currencypoolnode = $("#paymentdialog .cpool[data-currency='" + request.uoa + "']"),
         currencyname = currencypoolnode.attr("data-currencyname"),
         fiatcurrencypoolnode = $("#paymentdialog .cpool[data-currency='" + request.fiatcurrency + "']"),
         fiatcurrencyname = fiatcurrencypoolnode.attr("data-currencyname"),
@@ -1190,7 +1192,7 @@ function getpayment(ccrateeuro, ccapi) {
     request.fiatcurrencyname = fiatcurrencyname;
     request.localcurrencyname = localcurrencyname;
     // continue vars
-    var currencyxrate = currencypoolnode.attr("data-xrate"),
+    let currencyxrate = currencypoolnode.attr("data-xrate"),
         fiatcurrencyrate = fiatcurrencypoolnode.attr("data-xrate"),
         rn_set = (request.requestname && request.requestname.length > 1), // check if requestname is set
         rt_set = (request.requesttitle && request.requesttitle.length > 1), // check if requesttitle is set
@@ -1205,14 +1207,14 @@ function getpayment(ccrateeuro, ccapi) {
         thiscurrencyvaluefixedvar = (request.iszero === true) ? "" : thiscurrencyvaluefixed,
         satamount = (thiscurrencyvalueraw * 100000000).toFixed(0),
         fiatcurrencyvalue = ((request.amount / currencyxrate) * fiatcurrencyrate).toFixed(2),
-        fiatcurrencyvaluevar = (request.iszero === true) ? "" : fiatcurrencyvalue,
+        fiatcurrencyvaluelet = (request.iszero === true) ? "" : fiatcurrencyvalue,
         cryptosteps = "0.00001",
         fiatsteps = "0.1",
         steps = (request.iscrypto === true) ? cryptosteps : fiatsteps,
         placeholder = (request.iszero === true) ? zeroplaceholder : request.amount,
         valueplaceholder = (request.iszero === true) ? "" : request.amount,
         satplaceholder = (request.iszero === true) ? "000000000" : satamount,
-        satamountvar = (request.iszero === true) ? "" : satamount,
+        satamountlet = (request.iszero === true) ? "" : satamount,
         currencynamestring = (currencyname == "Euro") ? "" : (request.iscrypto === true) ? fiatcurrencyname : currencyname,
         ccamounttext = "(" + thiscurrencyvaluefixedvar + " " + request.payment + ")",
         sharebuttonclass = (rn_set === true && rt_set === true) ? " sbactive" : "",
@@ -1249,7 +1251,7 @@ function getpayment(ccrateeuro, ccapi) {
 						<span class='quote'>(</span>\
 						<span id='sharelcinputmirror' class='lcmirror mirrordiv'>\
 						<span>" + fiatcurrencyvalue + "</span>\
-						<input value='" + fiatcurrencyvaluevar + "' step='" + steps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
+						<input value='" + fiatcurrencyvaluelet + "' step='" + steps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
 					</span>\
 					<span id='sharelcname'>" + currencynamestring + "</span>\
 					<span class='quote'>)</span>\
@@ -1339,13 +1341,13 @@ function getpayment(ccrateeuro, ccapi) {
 				<div id='ibsat' class='inputbreak'>\
 					<span id='satinputmirror' class='mirrordiv'>\
 						<span>" + satplaceholder + "</span>\
-						<input class='satinput' value='" + satamountvar + "' data-xrate='" + ccrateeuro + "' max='10000000000000' type='number' placeholder='000000000'" + ro_attr + "/>\
+						<input class='satinput' value='" + satamountlet + "' data-xrate='" + ccrateeuro + "' max='10000000000000' type='number' placeholder='000000000'" + ro_attr + "/>\
 					</span> satoshis\
 				</div>\
 				<div id='iblc' class='inputbreak'>\
 					(<span id='lcinputmirror' class='lcmirror mirrordiv'>\
 						<span>" + fiatcurrencyvalue + "</span>\
-						<input value='" + fiatcurrencyvaluevar + "' data-xrate='" + fiatcurrencyrate + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
+						<input value='" + fiatcurrencyvaluelet + "' data-xrate='" + fiatcurrencyrate + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
 					</span> " + request.fiatcurrency + ") \
 				</div>\
 				<div id='txibreak' class='inputbreak'> Send <span id='ccinputmirror' class='ccmirror mirrordiv'><span>" + thiscurrencyvaluefixedplaceholder + "</span><input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/></span> " + request.currencysymbol + " to" + label_markup + ": </div>\
@@ -1367,7 +1369,7 @@ function getpayment(ccrateeuro, ccapi) {
                 if (request.iszero === true) {
                     main_input_focus();
                 }
-                var save_request = saverequest("init");
+                let save_request = saverequest("init");
             }
         }
     } else {
@@ -1385,7 +1387,7 @@ function getpayment(ccrateeuro, ccapi) {
     if (inframe === true) {
         parent.postMessage("close_loader", "*");
     }
-    var title_node = $("#requesttitle");
+    let title_node = $("#requesttitle");
     title_node.attr("placeholder", "eg: " + title_node.attr("data-ph" + getrandomnumber(1, 13)));
     console.log({
         "request_object": request
@@ -1394,10 +1396,10 @@ function getpayment(ccrateeuro, ccapi) {
         "helper": helper
     });
     wake();
-    var ln_info = helper.lnd;
+    let ln_info = helper.lnd;
     if (ln_info) {
         if (request.lightning_id) {} else {
-            var saved_id = sessionStorage.getItem("bitrequest_lndpid");
+            let saved_id = sessionStorage.getItem("bitrequest_lndpid");
             if (saved_id && saved_id == ln_info.pid) {} else {
                 sessionStorage.setItem("bitrequest_lndpid", ln_info.pid);
             }
@@ -1406,7 +1408,7 @@ function getpayment(ccrateeuro, ccapi) {
 }
 
 function cc_fail(apilist, api, error_val) {
-    var nextccapi = try_next_api(apilist, api);
+    let nextccapi = try_next_api(apilist, api);
     if (nextccapi) {
         getccexchangerates(apilist, nextccapi);
         return
@@ -1418,7 +1420,7 @@ function cc_fail(apilist, api, error_val) {
 }
 
 function show_paymentdialog() {
-    var scrollposition = $(document).scrollTop(); // get scrollposition save as global
+    let scrollposition = $(document).scrollTop(); // get scrollposition save as global
     fixedcheck(scrollposition); // fix nav position
     html.addClass("paymode blurmain_payment");
     $(".showmain #mainwrap").css("-webkit-transform", "translate(0, -" + scrollposition + "px)"); // fake scroll position
@@ -1426,10 +1428,10 @@ function show_paymentdialog() {
 }
 
 function main_input_focus() {
-    var visible_input = (paymentdialogbox.hasClass("flipped")) ? $("#paymentdialog #shareamount input:visible:first") :
+    let visible_input = (paymentdialogbox.hasClass("flipped")) ? $("#paymentdialog #shareamount input:visible:first") :
         $("#paymentdialog #amountbreak input:visible:first");
     // hack to move cursor to the end
-    var amount_val = visible_input.val();
+    let amount_val = visible_input.val();
     visible_input.val("");
     visible_input.val(amount_val);
     visible_input.focus();
@@ -1448,9 +1450,9 @@ function lnd_switch_function() {
                 lnd_statusx();
                 return
             }
-            var result = confirm("Enable lightning payments?");
+            let result = confirm("Enable lightning payments?");
             if (result === true) {
-                var lnli = lndli();
+                let lnli = lndli();
                 lnli.data("selected", true);
                 lnli.find(".switchpanel").removeClass("false").addClass("true");
                 save_cc_settings("bitcoin", true);
@@ -1515,7 +1517,7 @@ function lnd_popup() {
 
 function pickcurrency() {
     $(document).on("click", "#paymentdialogbox #pickcurrency", function() {
-        var thisnode = $(this),
+        let thisnode = $(this),
             currencyarray = helper.currencyarray,
             payment = request.payment,
             nextcurrency_scan = currencyarray[$.inArray(request.uoa, currencyarray) + 1],
@@ -1562,7 +1564,7 @@ function pickcurrency() {
 
 function rendercpooltext(nextcurrency, newccrate) {
     $("#paymentdialog .cpool").each(function() {
-        var thisnode = $(this),
+        let thisnode = $(this),
             thisnoderate = thisnode.attr("data-xrate"),
             thiscurrency = thisnode.attr("data-currency"),
             newrate = thisnoderate / newccrate,
@@ -1583,7 +1585,7 @@ function rendercpooltext(nextcurrency, newccrate) {
 function pushamount() {
     $(document).on("input", "#paymentdialogbox .fmirror > input", function() {
         blocktyping = true;
-        var thisnode = $(this),
+        let thisnode = $(this),
             thisamount = thisnode.val(),
             placeholder = (thisamount.length === 0) ? zeroplaceholder : thisamount,
             thisrate = $("#amountinputmirror > input").attr("data-xrate"),
@@ -1599,7 +1601,7 @@ function pushamount() {
 function pushlcamount() {
     $(document).on("input", "#paymentdialogbox .lcmirror > input", function() {
         blocktyping = true;
-        var thisnode = $(this),
+        let thisnode = $(this),
             thisamount = thisnode.val(),
             thisrate = $("#lcinputmirror > input").attr("data-xrate");
         $("#paymentdialogbox .lcmirror > input").not(thisnode).val(thisamount).prev("span").text(thisamount);
@@ -1612,7 +1614,7 @@ function pushlcamount() {
 function pushccamount() {
     $(document).on("input", "#paymentdialogbox .ccmirror > input", function() {
         blocktyping = true;
-        var thisnode = $(this),
+        let thisnode = $(this),
             thisamount = thisnode.val(),
             placeholder = (thisamount.length === 0) ? zeroplaceholder : thisamount,
             thisrate = $("#mainccinputmirror > input").attr("data-xrate");
@@ -1626,7 +1628,7 @@ function pushccamount() {
 function pushsatamount() {
     $(document).on("input", "#satinputmirror > input", function() {
         blocktyping = true;
-        var thisnode = $(this),
+        let thisnode = $(this),
             thisamountpre = thisnode.val(),
             thisamount = (thisamountpre.length === 0) ? thisamountpre : thisamountpre / 100000000,
             thisrate = $("#mainccinputmirror > input").attr("data-xrate");
@@ -1637,7 +1639,7 @@ function pushsatamount() {
 }
 
 function reflectfiatvalue(thisamount, thisrate, fieldtype) { // reflect fiat values
-    var amountinputrate = $("#amountinputmirror > input").attr("data-xrate"), //get fiat rate
+    let amountinputrate = $("#amountinputmirror > input").attr("data-xrate"), //get fiat rate
         deter = (paymentdialogbox.hasClass("showcc")) ? 6 : 2,
         thisamountvalue = parseFloat(((thisamount / thisrate) * amountinputrate).toFixed(deter)),
         thisamountplaceholder = (thisamount.length === 0) ? zeroplaceholder : thisamountvalue,
@@ -1647,26 +1649,26 @@ function reflectfiatvalue(thisamount, thisrate, fieldtype) { // reflect fiat val
 }
 
 function reflectlcvalue(thisamount, thisrate) { // reflect local currency value
-    var lcrate = $("#popform").attr("data-lcrate"),
+    let lcrate = $("#popform").attr("data-lcrate"),
         lcvalue = ((thisamount / thisrate) * lcrate).toFixed(2),
         lcplaceholder = (thisamount.length === 0) ? zeroplaceholder : lcvalue;
     reflectinputs($("#paymentdialogbox .lcmirror > input"), lcvalue, lcplaceholder);
 }
 
 function reflectccvalue(thisamount, thisrate, fieldtype) { // reflect crypto input
-    var ccvalue = (thisamount.length === 0) ? zeroplaceholder : (fieldtype == "crypto") ? thisamount.toFixed(6) : cryptovalue(thisamount, thisrate);
+    let ccvalue = (thisamount.length === 0) ? zeroplaceholder : (fieldtype == "crypto") ? thisamount.toFixed(6) : cryptovalue(thisamount, thisrate);
     reflectinputs($("#paymentdialogbox .ccmirror > input"), ccvalue, ccvalue);
 }
 
 function reflectsatvalue(thisamount, thisrate, fieldtype) { // reflect sat input
-    var ccvalue = (thisamount.length === 0) ? zeroplaceholder : (fieldtype == "crypto") ? thisamount : cryptovalue(thisamount, thisrate),
+    let ccvalue = (thisamount.length === 0) ? zeroplaceholder : (fieldtype == "crypto") ? thisamount : cryptovalue(thisamount, thisrate),
         satvalue = (ccvalue * 100000000).toFixed(0),
         satplaceholder = (thisamount.length === 0) ? "000000000" : satvalue;
     reflectinputs($("#satinputmirror > input"), satvalue, satplaceholder);
 }
 
 function reflectinputs(node, value, placeholder) {
-    var val_correct = (value == 0 || value == "0.00") ? "" : value;
+    let val_correct = (value == 0 || value == "0.00") ? "" : value;
     node.val(val_correct).prev("span").text(placeholder);
 }
 
@@ -1676,7 +1678,7 @@ function cryptovalue(thisamount, thisrate) { // get ccrate
 
 function reflectinput() {
     $(document).on("input change", ".mirrordiv > input", function() {
-        var thisinput = $(this),
+        let thisinput = $(this),
             thisvalue = thisinput.val(),
             mirrordiv = thisinput.prev("span"),
             placeholder = (thisinput.hasClass("satinput")) ? "000000000" : thisinput.attr("placeholder");
@@ -1691,13 +1693,13 @@ function reflectinput() {
 
 function updatecpool(thisamount, thisrate, ccvalue) {
     rendercpool(thisamount, thisrate);
-    var gets = geturlparameters(),
+    let gets = geturlparameters(),
         payment = gets.payment,
         address = gets.address,
         address_xmr_ia = (request.xmr_ia) ? request.xmr_ia : address;
     renderqr(payment, address_xmr_ia, ccvalue);
     if (request.iszero_request === true) {} else {
-        var page = gets.p,
+        let page = gets.p,
             currency = gets.uoa,
             data = (gets.d) ? "&d=" + gets.d : "",
             starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
@@ -1714,7 +1716,7 @@ function updatecpool(thisamount, thisrate, ccvalue) {
 
 function rendercpool(thisamount, thisrate) {
     $("#paymentdialog .cpool").each(function() {
-        var thisnode = $(this),
+        let thisnode = $(this),
             thisnodeval = parseFloat((thisamount / thisrate) * thisnode.attr("data-xrate")),
             deter = (thisnode.hasClass("ccpool")) ? thisnodeval.toFixed(6) : thisnodeval.toFixed(2);
         thisnode.attr("data-value", deter);
@@ -1722,7 +1724,7 @@ function rendercpool(thisamount, thisrate) {
 }
 
 function renderqr(payment, address, amount, title) {
-    var number = Number(amount),
+    let number = Number(amount),
         this_iszero = (number === 0 || isNaN(number)),
         urlscheme = (request.erc20 === true) ? "ethereum:" + address :
         request.coindata.urlscheme(payment, address, amount, this_iszero);
@@ -1741,7 +1743,7 @@ function set_uris(urlscheme, amount) {
 }
 
 function set_lnd_qr(a, title) {
-    var ln = helper.lnd,
+    let ln = helper.lnd,
         rt = (title) ? title : $("#paymentdialog input#requesttitle").val(),
         m = (rt && rt.length > 1) ? "&m=" + encodeURIComponent(rt) : "",
         nid = (ln.lnurl === false) ? ln.nid : "",
@@ -1761,24 +1763,24 @@ function set_lnd_uris(urlscheme, amount) {
 
 function switchaddress() {
     $(document).on("click", "#paymentdialogbox.norequest #labelbttn", function() {
-        var timelapsed = now() - sa_timer;
+        let timelapsed = now() - sa_timer;
         if (timelapsed < 1500) { // prevent clicking too fast
             playsound(funk);
             return
         }
-        var gets = geturlparameters(),
+        let gets = geturlparameters(),
             payment = gets.payment;
         if (payment == "monero") {
             return
         }
-        var currentaddress = gets.address,
+        let currentaddress = gets.address,
             nextaddress = newaddresli(payment, currentaddress);
         if (nextaddress) {
-            var newaddress = nextaddress.data("address"),
+            let newaddress = nextaddress.data("address"),
                 selected_socket = helper.selected_socket;
             closesocket(currentaddress);
             init_socket(selected_socket, newaddress, true);
-            var dp = gets.d,
+            let dp = gets.d,
                 has_dat = (dp && dp.length > 5),
                 new_dp = (has_dat) ? "&d=" + dp : "",
                 ccvalue = $("#paymentdialogbox .ccpool").attr("data-value"),
@@ -1791,7 +1793,7 @@ function switchaddress() {
             set_edit(href);
             $("#paymentaddress").text(newaddress);
             $(this).text(newaddresslabel);
-            var ispending = check_pending(newaddress, newaddressid);
+            let ispending = check_pending(newaddress, newaddressid);
             if (ispending === true && request.monitored === true) {
                 paymentdialogbox.attr("data-pending", "ispending"); // prevent share because of pending transaction
             } else {
@@ -1804,7 +1806,7 @@ function switchaddress() {
 }
 
 function newaddresli(currency, address) {
-    var add_li = filter_addressli(currency, "checked", true),
+    let add_li = filter_addressli(currency, "checked", true),
         label_li = add_li.filter(function() { // only pick addresses with label
             return $(this).data("label").length > 0;
         }),
@@ -1819,7 +1821,7 @@ function newaddresli(currency, address) {
 
 function copyaddress_dblclick() {
     $(document).on("dblclick", "#paymentaddress, #paymentaddress_lnd, .select", function() {
-        var thisnode = $(this),
+        let thisnode = $(this),
             type = thisnode.attr("data-type"),
             typeval = (type) ? type : "address";
         copycontent.val(thisnode.text()).data({
@@ -1831,7 +1833,7 @@ function copyaddress_dblclick() {
 
 function copyaddress() {
     $(document).on("click", "#copyaddress", function() {
-        var val = copycontent.val(),
+        let val = copycontent.val(),
             type = copycontent.data("type");
         copytoclipboard(val, type);
     });
@@ -1839,7 +1841,7 @@ function copyaddress() {
 
 function copyinputs() {
     $(document).on("dblclick", "#paymentdialogbox.request .mirrordiv input", function() {
-        var thisval = $(this).val(),
+        let thisval = $(this).val(),
             typeval = "amount";
         copycontent.val(thisval).data({
             "type": typeval
@@ -1850,9 +1852,9 @@ function copyinputs() {
 
 function xmrsettings() {
     $(document).on("click", "#xmrsettings", function() {
-        var result = confirm("Open XMR settings?");
+        let result = confirm("Open XMR settings?");
         if (result === true) {
-            var page_title = "monero_settings";
+            let page_title = "monero_settings";
             openpage("?p=" + page_title, page_title, "loadpage");
             cancelpaymentdialog();
         }
@@ -1860,7 +1862,7 @@ function xmrsettings() {
 }
 
 function validaterequestdata(lnurl) {
-    var gets = geturlparameters(),
+    let gets = geturlparameters(),
         requestname_val = $("input#requestname").val(),
         requesttitle_val = $("input#requesttitle").val(),
         valid = (requestname_val === undefined) ? false : (requestname_val.length > 2 && requesttitle_val.length > 1) ? true : false,
@@ -1875,7 +1877,7 @@ function validaterequestdata(lnurl) {
         newurl,
         ln_info = helper.lnd;
     if (valid === true) {
-        var utc = now() + timezone, // UTC
+        let utc = now() + timezone, // UTC
             no_conf = request.no_conf,
             dataobject = {
                 "ts": utc,
@@ -1904,12 +1906,12 @@ function validaterequestdata(lnurl) {
             }
             set_lnd_qr($("#ccinputmirror > input").val(), requesttitle_val);
         }
-        var newurl = currenturl + "&d=" + btoa(JSON.stringify(dataobject));
+        newurl = currenturl + "&d=" + btoa(JSON.stringify(dataobject));
         request.requestname = requestname_val,
             request.requesttitle = requesttitle_val;
         sharebutton.addClass("sbactive");
     } else {
-        var newurl = currenturl;
+        let newurl = currenturl;
         sharebutton.removeClass("sbactive");
     }
     helper.currencylistitem.data("url", newurl);
@@ -1923,39 +1925,6 @@ function inputrequestdata() {
     });
 }
 
-function validatestepsq() {
-    $(document).on("keydown", "#paymentdialogbox .mirrordiv input", function(e) {
-        if (blocktyping === true) {
-            playsound(funk);
-            blocktyping = false;
-            return
-        }
-        var thisnode = $(this),
-            thisvalue = thisnode.val(),
-            keycode = e.keyCode;
-        if (keycode === 188 || keycode === 190 || keycode === 110) { // prevent double commas and dots
-            if (e.target.validity.valid === false) { //test input patern and steps attribustes
-                e.preventDefault();
-            }
-            if (thisvalue.indexOf(",") > -1 || thisvalue.indexOf(".") > -1) {
-                e.preventDefault();
-            }
-            if (thisnode.hasClass("satinput") && (keycode === 188 || keycode === 190 || keycode === 110)) {
-                e.preventDefault();
-            }
-            return
-        }
-        if (keycode === 8 || keycode === 39 || keycode === 37 || keycode === 91 || keycode === 17 || e.metaKey || e.ctrlKey) { //alow backspace, arrowright, arrowleft, command, ctrl
-            return
-        }
-        if ((keycode > 47 && keycode < 58) || (keycode >= 96 && keycode < 106)) { //only allow numbers
-            return
-        }
-        e.preventDefault();
-        return
-    })
-}
-
 function validatesteps() {
     $(document).on("keydown", "#paymentdialogbox .mirrordiv input", function(e) {
         if (blocktyping === true) {
@@ -1964,7 +1933,7 @@ function validatesteps() {
             e.preventDefault();
             return false;
         }
-        var thisnode = $(this),
+        let thisnode = $(this),
             thisvalue = thisnode.val(),
             keycode = e.keyCode;
         if (keycode === 188 || keycode === 190 || keycode === 110) { // prevent double commas and dots
@@ -1997,7 +1966,7 @@ function fliprequest() {
         if (offline === true) {
             return
         }
-        var is_lnd = (paymentdialogbox.attr("data-lswitch") == "lnd_ao");
+        let is_lnd = (paymentdialogbox.attr("data-lswitch") == "lnd_ao");
         if (paymentdialogbox.attr("data-pending") == "ispending" && !is_lnd) {
             if (request.payment == "monero") {
                 notify("Address in use. <span id='xmrsettings'>Activate integrated addresses?</span>", 40000, "yes");
@@ -2015,7 +1984,7 @@ function fliprequest() {
 
 function revealtitle() {
     $(document).on("click", "#paymentdialogbox.request #sharetitle.title_exceed", function(e) {
-        var thisnode = $(this),
+        let thisnode = $(this),
             longtext = thisnode.attr("title"),
             shorttext = thisnode.attr("data-shorttitle");
         if (thisnode.hasClass("longtext")) {
@@ -2031,25 +2000,25 @@ function check_pending(cp_address, cp_cmcid) {
 }
 
 function pendingrequest() {
-    var thisaddress = request.address,
+    let thisaddress = request.address,
         payment = request.payment,
         cmcid = request.cmcid,
         currencysymbol = request.currencysymbol,
         pending_tx = $("#requestlist li[data-address='" + thisaddress + "'][data-pending='scanning'][data-cmcid='" + cmcid + "']").first(),
         pending_requestid = pending_tx.data("requestid"),
         nonpending_addresslist = filter_addressli(payment, "checked", true).filter(function() {
-            var thisnode = $(this);
+            let thisnode = $(this);
             return $("#requestlist li[data-address='" + thisnode.data("address") + "'][data-pending='scanning'][data-cmcid='" + thisnode.data("cmcid") + "']").length === 0;
         }),
         has_addresses = nonpending_addresslist.length > 0,
         dialogcontent;
     if (has_addresses === true) {
-        var addresslist = "";
+        let addresslist = "";
         nonpending_addresslist.each(function() {
-            var data = $(this).data();
+            let data = $(this).data();
             addresslist += "<span data-address='" + data.address + "' data-pe='none'>" + data.label + " | " + data.address + "</span>";
         });
-        var first_address = nonpending_addresslist.first(),
+        let first_address = nonpending_addresslist.first(),
             fa_data = first_address.data();
         dialogcontent = "<h3>Pick another address</h3><div class='selectbox'>\
 			<input type='text' value='" + fa_data.label + " | " + fa_data.address + "' placeholder='Pick currency' readonly id='selec_address'/>\
@@ -2060,7 +2029,7 @@ function pendingrequest() {
     } else {
         dialogcontent = "<div id='addaddress' class='button'><span class='icon-plus'>Add new " + currencysymbol + " address</span></div><input type='submit' class='submit' value='OK' id='pending_add_address'/>";
     }
-    var content = "<div class='formbox' id='addresslock' data-currency='" + payment + "' data-currencysymbol='" + currencysymbol + "' data-cmcid='" + cmcid + "'><h2 class='icon-lock'>Temporarily unable to share request</h2><p>This address has a <span id='view_pending_tx' data-requestid='" + pending_requestid + "'>pending shared request</span>.<br/>Please wait for the transaction to confirm before re-using the address.</p>\
+    let content = "<div class='formbox' id='addresslock' data-currency='" + payment + "' data-currencysymbol='" + currencysymbol + "' data-cmcid='" + cmcid + "'><h2 class='icon-lock'>Temporarily unable to share request</h2><p>This address has a <span id='view_pending_tx' data-requestid='" + pending_requestid + "'>pending shared request</span>.<br/>Please wait for the transaction to confirm before re-using the address.</p>\
 	<div class='popnotify'></div>\
 	<div class='popform validated'>" + dialogcontent + "</div>";
     popdialog(content, "triggersubmit");
@@ -2068,7 +2037,7 @@ function pendingrequest() {
 
 function view_pending_tx() {
     $(document).on("click", "#view_pending_tx", function() {
-        var result = confirm("View pending request?");
+        let result = confirm("View pending request?");
         if (result === true) {
             openpage("?p=requests", "requests", "loadpage");
             open_tx($("#" + $(this).attr("data-requestid")));
@@ -2083,15 +2052,15 @@ function view_pending_tx() {
 function pickaddressfromdialog() {
     $(document).on("click", "#addresslock #pending_pick_address", function(e) {
         e.preventDefault();
-        var thisinput = $("#selec_address"),
+        let thisinput = $("#selec_address"),
             thisinputvalue = thisinput.val();
-        var result = confirm("Use '" + thisinputvalue + "' instead?");
+        let result = confirm("Use '" + thisinputvalue + "' instead?");
         if (result === true) {
-            var gets = geturlparameters();
+            let gets = geturlparameters();
             if (gets.xss) {
                 return
             }
-            var picked_value = thisinputvalue.split(" | "),
+            let picked_value = thisinputvalue.split(" | "),
                 picked_label = picked_value[0],
                 picked_address = picked_value[1],
                 page = gets.p,
@@ -2101,7 +2070,7 @@ function pickaddressfromdialog() {
                 currentaddress = gets.address;
             closesocket(currentaddress);
             init_socket(helper.selected_socket, picked_address, true);
-            var dp = gets.d,
+            let dp = gets.d,
                 has_dat = (dp && dp.length > 5),
                 new_dp = (has_dat) ? "&d=" + dp : "",
                 starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
@@ -2131,7 +2100,7 @@ function set_edit(url) {
 function addaddressfromdialog() {
     $(document).on("click", "#addresslock #pending_add_address, #addaddress", function(e) {
         e.preventDefault();
-        var formbox = $(this).closest("#addresslock"),
+        let formbox = $(this).closest("#addresslock"),
             payment = request.payment,
             cmcid = request.cmcid,
             erc20 = request.erc20,
@@ -2156,12 +2125,12 @@ function addaddressfromdialog() {
 
 function add_from_seed() {
     $(document).on("click", "#addfromseed", function() {
-        var ad = $("#addressformbox").data(),
+        let ad = $("#addressformbox").data(),
             currency = ad.currency,
             dd = ad.dd;
         if (currency && dd) {
             if (dd.address) {
-                var result = confirm("Are you sure you want to generate a new " + currency + " address? It may not show up in some wallets");
+                let result = confirm("Are you sure you want to generate a new " + currency + " address? It may not show up in some wallets");
                 if (result === true) {
                     derive_add_address(currency, dd);
                     canceldialog();
@@ -2182,7 +2151,7 @@ function scanqr() {
 
 function showapistats() {
     $(document).on("click", "#apisrc", function() {
-        var xratestats = $("#xratestats");
+        let xratestats = $("#xratestats");
         if (xratestats.hasClass("show")) {
             xratestats.removeClass("show");
         } else {
@@ -2200,9 +2169,9 @@ function hideapistats() {
 //share
 function sharebutton() {
     $(document).on("click", "#sharebutton", function() {
-        var thisbttn = $(this);
+        let thisbttn = $(this);
         if (request.payment == "bitcoin" && helper.lnd_status) {
-            var lnd_only = (paymentdialogbox.attr("data-lswitch") == "lnd_ao") ? ($("#fallback_address").is(":visible")) ? ($("#fallback_address .switchpanel").hasClass("true")) ? false : true : true : false;
+            let lnd_only = (paymentdialogbox.attr("data-lswitch") == "lnd_ao") ? ($("#fallback_address").is(":visible")) ? ($("#fallback_address .switchpanel").hasClass("true")) ? false : true : true : false;
             validaterequestdata(lnd_only);
             setTimeout(function() { // wait for url to change
                 share(thisbttn);
@@ -2222,32 +2191,26 @@ function sharebutton() {
 
 function share(thisbutton) {
     if (thisbutton.hasClass("sbactive")) {
-        var gets = geturlparameters();
+        let gets = geturlparameters();
         if (gets.xss) {
             thisbutton.removeClass("sbactive")
             return
         }
         loader(true);
-        var payment = gets.payment,
+        let payment = gets.payment,
             thiscurrency = gets.uoa,
             thisamount = gets.amount,
             thisaddress = gets.address,
             dataparam = gets.d,
             cmcid = request.cmcid,
             currencysymbol = request.currencysymbol,
-            thisdata = (dataparam && dataparam.length > 5);
-        try {
-            var dataobject = (thisdata === true) ? JSON.parse(atob(dataparam)) : null, // decode data param if exists
-                thisrequestname = (thisdata === true) ? dataobject.n : $("#accountsettings").data("selected"),
-                thisrequesttitle = (thisdata === true) ? dataobject.t : "",
-                lightning = (thisdata === true) ? (dataobject.imp) ? true : false : false,
-                hybrid = (lightning && thisaddress != "lnurl");
-        } catch (e) { // data param corrupted
-            var content = "<h2 class='icon-blocked'>Invalid request</h2><p>" + e + "</p>";
-            popdialog(content, "canceldialog");
-            return false;
-        }
-        var newdatastring = (thisdata === true) ? "&d=" + dataparam : "", // construct data param if exists
+            thisdata = (dataparam && dataparam.length > 5),
+            dataobject = (thisdata === true) ? JSON.parse(atob(dataparam)) : null, // decode data param if exists
+            thisrequestname = (thisdata === true) ? dataobject.n : $("#accountsettings").data("selected"),
+            thisrequesttitle = (thisdata === true) ? dataobject.t : "",
+            lightning = (thisdata === true) ? (dataobject.imp) ? true : false : false,
+            hybrid = (lightning && thisaddress != "lnurl"),
+            newdatastring = (thisdata === true) ? "&d=" + dataparam : "", // construct data param if exists
             isipfs = (thishostname.indexOf("ipfs") > -1 || thishostname.indexOf("bitrequest.crypto") > -1) ? true : false,
             shared_host = (isipfs) ? c_host : "https://bitrequest.github.io", // check for IFPS
             sharedurl = shared_host + "/?p=requests&payment=" + payment + "&uoa=" + thiscurrency + "&amount=" + thisamount + "&address=" + thisaddress + newdatastring,
@@ -2266,8 +2229,9 @@ function share(thisbutton) {
         shorten_url(sharedtitle, sharedurl, share_icon);
         setlocales();
         return
+
     }
-    var requestname = $("#requestname"),
+    let requestname = $("#requestname"),
         requesttitle = $("#requesttitle"),
         name_check = requestname.val().length,
         title_check = requesttitle.val().length,
@@ -2284,10 +2248,10 @@ function share(thisbutton) {
 
 function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
     loadertext("Generating link");
-    var us_settings = $("#url_shorten_settings"),
+    let us_settings = $("#url_shorten_settings"),
         us_active = (us_settings.data("us_active") == "active");
     if (us_active === true) {
-        var us_service = us_settings.data("selected"),
+        let us_service = us_settings.data("selected"),
             getcache = sessionStorage.getItem("bitrequest_" + us_service + "_shorturl_" + hashcode(sharedurl));
         if (getcache) { // get existing shorturl from cache
             sharerequest(getcache, sharedtitle);
@@ -2295,9 +2259,9 @@ function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
         }
         if (us_service == "firebase") {
             if (to) {
-                var fbid = to.fb_id;
+                let fbid = to.fb_id;
                 if (fbid) {
-                    var security = (unguessable === true) ? "UNGUESSABLE" : "SHORT";
+                    let security = (unguessable === true) ? "UNGUESSABLE" : "SHORT";
                     api_proxy({
                         "api": "firebase",
                         "search": "shortLinks",
@@ -2336,13 +2300,13 @@ function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
                             })
                         }
                     }).done(function(e) {
-                        var data = br_result(e).result;
+                        let data = br_result(e).result;
                         if (data) {
                             if (data.error) {
                                 bitly_shorten(sharedurl, sharedtitle);
                                 return
                             }
-                            var shorturl = data.shortLink;
+                            let shorturl = data.shortLink;
                             if (shorturl) {
                                 sharerequest(shorturl, sharedtitle);
                                 sessionStorage.setItem("bitrequest_firebase_shorturl_" + hashcode(sharedurl), shorturl);
@@ -2382,9 +2346,9 @@ function bitly_shorten(sharedurl, sharedtitle) {
             })
         }
     }).done(function(e) {
-        var data = br_result(e).result;
+        let data = br_result(e).result;
         if (data.id) {
-            var linkid = data.id.split("/").pop(),
+            let linkid = data.id.split("/").pop(),
                 shorturl = data.link;
             sharerequest(shorturl, sharedtitle);
             sessionStorage.setItem("bitrequest_bitly_shorturl_" + hashcode(sharedurl), shorturl);
@@ -2414,7 +2378,7 @@ function sharerequest(sharedurl, sharedtitle) {
 }
 
 function sharefallback(sharedurl, sharedtitle) {
-    var mobileclass = (supportsTouch === true) ? " showtouch" : "";
+    let mobileclass = (supportsTouch === true) ? " showtouch" : "";
     $("#sharepopup").addClass("showpu active" + mobileclass).data({
         "sharetitle": sharedtitle,
         "shareurl": sharedurl
@@ -2425,7 +2389,7 @@ function sharefallback(sharedurl, sharedtitle) {
 function whatsappshare() {
     $(document).on("click", "#whatsappshare", function() {
         sharecallback();
-        var shareinfo = getshareinfo(),
+        let shareinfo = getshareinfo(),
             sharetext = encodeURIComponent(shareinfo.body),
             share_url = "whatsapp://send?text=" + sharetext;
         open_share_url("location", share_url);
@@ -2435,7 +2399,7 @@ function whatsappshare() {
 function mailto() {
     $(document).on("click", "#mailto", function() {
         sharecallback();
-        var shareinfo = getshareinfo(),
+        let shareinfo = getshareinfo(),
             share_url = "mailto:?subject=" + encodeURIComponent(shareinfo.title) + "&body=" + encodeURIComponent(shareinfo.body);
         open_share_url("location", share_url);
     });
@@ -2451,7 +2415,7 @@ function copyurl() {
 function gmailshare() {
     $(document).on("click", "#gmailshare", function() {
         sharecallback();
-        var shareinfo = getshareinfo(),
+        let shareinfo = getshareinfo(),
             share_url = "https://mail.google.com/mail/?view=cm&fs=1&su=" + encodeURIComponent(shareinfo.title) + "&body=" + encodeURIComponent(shareinfo.body);
         open_share_url("open", share_url);
     });
@@ -2460,7 +2424,7 @@ function gmailshare() {
 function telegramshare() {
     $(document).on("click", "#telegramshare", function() {
         sharecallback();
-        var shareinfo = getshareinfo(),
+        let shareinfo = getshareinfo(),
             share_url = "https://telegram.me/share/url?url=" + shareinfo.url + "&text=" + encodeURIComponent(shareinfo.body);
         open_share_url("open", share_url);
     });
@@ -2469,14 +2433,14 @@ function telegramshare() {
 function outlookshare() {
     $(document).on("click", "#outlookshare", function() {
         sharecallback();
-        var shareinfo = getshareinfo(),
+        let shareinfo = getshareinfo(),
             share_url = "ms-outlook://compose?subject=" + encodeURIComponent(shareinfo.title) + "&body=" + encodeURIComponent(shareinfo.body);
         open_share_url("location", share_url);
     });
 }
 
 function getshareinfo() {
-    var sharepopup = $("#sharepopup"),
+    let sharepopup = $("#sharepopup"),
         sharetitle = sharepopup.data("sharetitle"),
         shareurl = sharepopup.data("shareurl");
     return {
@@ -2517,11 +2481,11 @@ function open_share_url(type, url) {
 }
 
 function trigger_open_tx() {
-    var gets = geturlparameters();
+    let gets = geturlparameters();
     if (gets.xss) {
         return
     }
-    var tx_param = gets.txhash;
+    let tx_param = gets.txhash;
     if (tx_param) {
         tx_node = get_requestli("txhash", tx_param);
         open_tx(tx_node);
@@ -2539,14 +2503,14 @@ function view_tx() {
             return
         }
         openpage("?p=requests", "requests", "loadpage");
-        var tx_hash = $(this).attr("data-txhash"),
+        let tx_hash = $(this).attr("data-txhash"),
             tx_node = get_requestli("txhash", tx_hash);
         open_tx(tx_node);
     });
 }
 
 function open_tx(tx_node) {
-    var selected_request = (tx_node.length > 0) ? tx_node : $("#requestlist .rqli").first(),
+    let selected_request = (tx_node.length > 0) ? tx_node : $("#requestlist .rqli").first(),
         infopanel = selected_request.find(".moreinfo"),
         metalist = infopanel.find(".metalist");
     $(".moreinfo").not(infopanel).slideUp(500);
@@ -2554,7 +2518,7 @@ function open_tx(tx_node) {
     $(".historic_meta").slideUp(200);
     infopanel.add(metalist).slideDown(500);
     selected_request.addClass("visible_request");
-    var confbar = selected_request.find(".transactionlist .confbar");
+    let confbar = selected_request.find(".transactionlist .confbar");
     if (confbar.length > 0) {
         confbar.each(function(i) {
             animate_confbar($(this), i);
@@ -2570,11 +2534,11 @@ function open_tx(tx_node) {
 // ** Save and update request **
 
 function saverequest(direct) {
-    var gets = geturlparameters();
+    let gets = geturlparameters();
     if (gets.xss) {
         return
     }
-    var thispayment = gets.payment,
+    let thispayment = gets.payment,
         thiscurrency = gets.uoa,
         thisamount = gets.amount,
         currencysymbol = request.currencysymbol,
@@ -2608,9 +2572,9 @@ function saverequest(direct) {
     if (ln_info) {
         if (thisaddress == "lnurl") {
             request.address = thisaddress;
-            var hybrid = false;
+            hybrid = false;
         }
-        var invoice = ln_info.invoice,
+        invoice = ln_info.invoice,
             lightning = (thisrequesttype == "outgoing" && ln == false) ? false : {
                 "imp": ln_info.imp,
                 "host": ln_info.host,
@@ -2624,21 +2588,21 @@ function saverequest(direct) {
             };
     }
     if (requestcache) {
-        var requestnode = JSON.parse(requestcache),
+        let requestnode = JSON.parse(requestcache),
             this_requestid = $.grep(requestnode, function(filter) { //filter pending requests
                 return filter.requestid == requestid;
             });
     }
-    var incache = (this_requestid && this_requestid.length > 0);
+    let incache = (this_requestid && this_requestid.length > 0);
     if (incache === true || requestid_param) { // do not save if request already exists
-        var smart_id = (requestid_param) ? requestid_param : requestid,
+        let smart_id = (requestid_param) ? requestid_param : requestid,
             requestli = $("#" + smart_id),
             rldata = requestli.data(),
             pendingstate = rldata.pending;
         if (savedtxhash) { // check if request is opened or updated
             request.received = true;
             if (pendingstate == "paid") {} else {
-                var update_dat = {
+                let update_dat = {
                     "requestid": smart_id,
                     "status": request.status,
                     "receivedamount": request.receivedamount,
@@ -2653,7 +2617,7 @@ function saverequest(direct) {
                 updaterequest(update_dat, true);
             }
         } else {
-            var rqstatus = rldata.status;
+            let rqstatus = rldata.status;
             if (pendingstate == "scanning" || rqstatus == "canceled") { // do nothing
                 return false;
             } else {
@@ -2666,7 +2630,7 @@ function saverequest(direct) {
                 }
                 if (pendingstate == "no") {
                     request.received = true;
-                    var txhash_state = rldata.txhash,
+                    let txhash_state = rldata.txhash,
                         typestate = rldata.requesttype,
                         send_receive = (typestate == "incoming") ? "sent" : "received";
                     adjust_paymentdialog("paid", "no", "Payment " + send_receive);
@@ -2682,12 +2646,12 @@ function saverequest(direct) {
             request.fiatcurrency = (this_iscrypto === true) ? request.localcurrency : thiscurrency,
             request.currencyname = $("#xratestats .cpool[data-currency='" + thiscurrency + "']").attr("data-currencyname"),
             request.cc_amount = parseFloat($("#open_wallet").attr("data-rel"));
-        var numberamount = Number(thisamount),
+        let numberamount = Number(thisamount),
             this_iszero = (numberamount === 0 || isNaN(numberamount));
         if (direct == "init" && request.shared === false) { // when first opened only save shared requests
         } else if (this_iszero === true) { // don't save requests with zero value
         } else {
-            var coinsettings = request.coinsettings,
+            let coinsettings = request.coinsettings,
                 append_object = $.extend(request, {
                     "archive": false,
                     "showarchive": false,
@@ -2703,13 +2667,13 @@ function saverequest(direct) {
                 saverequests();
             }, 500);
             if (!requestid_param && direct === true) { // Add request_params (make it a request)
-                var request_params = "&requestid=" + requestid + "&status=" + request.status + "&type=" + thisrequesttype;
+                let request_params = "&requestid=" + requestid + "&status=" + request.status + "&type=" + thisrequesttype;
                 history.replaceState(null, null, w_loc.href + request_params);
             }
             if (coinsettings) {
-                var reuse = coinsettings["Reuse address"];
+                let reuse = coinsettings["Reuse address"];
                 if (reuse) {
-                    var addressli = filter_addressli(thispayment, "address", thisaddress);
+                    let addressli = filter_addressli(thispayment, "address", thisaddress);
                     addressli.addClass("used").data("used", true);
                     if (reuse.selected === false) {
                         // Derive new address
@@ -2724,7 +2688,7 @@ function saverequest(direct) {
     }
     // post to parent
     if (checkout) {
-        var contact_param = gets.contactform,
+        let contact_param = gets.contactform,
             meta_data_object = (rqmetahash) ? JSON.parse(atob(rqmetahash)) : null, // decode meta param if exists
             fiatvalue_rounded = trimdecimals(request.fiatvalue, 2),
             received_in_currency = (this_iscrypto === true) ? request.receivedamount : fiatvalue_rounded,
@@ -2751,10 +2715,10 @@ function saverequest(direct) {
             },
             contactdata;
         if (contact_param) {
-            var cfdata = $("#contactform").data(),
+            let cfdata = $("#contactform").data(),
                 cf_address = cfdata.address;
             if (cf_address) {
-                var contactdata = {
+                contactdata = {
                     "name": cfdata.name,
                     "address": cf_address,
                     "zipcode": cfdata.zipcode,
@@ -2764,7 +2728,7 @@ function saverequest(direct) {
                 }
             }
         };
-        var post_data = {
+        let post_data = {
             "txdata": tx_data,
             "data": dataobject,
             "meta": meta_data_object,
@@ -2781,7 +2745,7 @@ function saverequest(direct) {
         sessionStorage.removeItem("bitrequest_lndpid");
     }
     if (body.hasClass("ios") || hostlocation == "local") {} else {
-        var rq_storage = localStorage.getItem("bitrequest_requests");
+        let rq_storage = localStorage.getItem("bitrequest_requests");
         if (!rq_storage || rq_storage == "[]") {
             gd_init = true;
         }
@@ -2790,7 +2754,7 @@ function saverequest(direct) {
 
 function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
     request.received = true;
-    var prdata = pendingrequest.data(),
+    let prdata = pendingrequest.data(),
         status = prdata.status,
         txhash = prdata.txhash,
         tl_txhash = pendingrequest.find(".transactionlist li:first").data("txhash"),
@@ -2811,7 +2775,7 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
         return
     }
     if (lightning) {
-        var invoice = lightning.invoice;
+        let invoice = lightning.invoice;
         if (invoice) {
             if (invoice.status == "paid") {
                 adjust_paymentdialog("paid", "no", "Payment " + send_receive);
@@ -2844,10 +2808,10 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
         }
         adjust_paymentdialog("pending", "polling", "Transaction broadcasted");
         if (thispayment == "monero") {
-            var address = prdata.address,
+            let address = prdata.address,
                 vk = request.viewkey;
             if (vk) {
-                var account = (vk.account) ? vk.account : address,
+                let account = (vk.account) ? vk.account : address,
                     viewkey = vk.vk;
                 closenotify();
                 init_xmr_node(34, account, viewkey, null, smart_txhash, true);
@@ -2861,7 +2825,7 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
 }
 
 function adjust_paymentdialog(status, pending, status_text) {
-    var play_sound = (status == "insufficient") ? funk : blip,
+    let play_sound = (status == "insufficient") ? funk : blip,
         brstatuspanel = paymentdialogbox.find(".brstatuspanel");
     playsound(play_sound);
     add_flip();
@@ -2875,7 +2839,7 @@ function adjust_paymentdialog(status, pending, status_text) {
 //open wallet
 function openwallet() {
     $(document).on("click", ".openwallet, .openwallet_lnd", function() {
-        var thisnode = $(this),
+        let thisnode = $(this),
             thiscurrency = thisnode.attr("data-currency"),
             this_url = thisnode.attr("title"),
             lndurl = (this_url && this_url.slice(0, 9) == "lightning"),
@@ -2893,7 +2857,7 @@ function openwalleturl() {
 
 function dw_trigger() {
     $(document).on("click", "#dw_trigger", function() {
-        var this_currency = $(this).attr("data-currency");
+        let this_currency = $(this).attr("data-currency");
         canceldialog();
         setTimeout(function() {
             download_wallet(this_currency);
@@ -2902,14 +2866,14 @@ function dw_trigger() {
 }
 
 function download_wallet(currency) {
-    var ln = (currency == "lightning") ? true : false,
+    let ln = (currency == "lightning") ? true : false,
         thiscurrency = (ln) ? "bitcoin" : currency,
         coindata = getcoinconfig(thiscurrency),
         wallets = (ln) ? coindata.lightning_wallets : coindata.wallets,
         wdp = wallets.wallet_download_page,
         wallets_arr = wallets.wallets;
     if (wdp || wallets_arr) {
-        var wallet_ul = (wallets_arr) ? "<ul id='formbox_ul'></ul>" : "",
+        let wallet_ul = (wallets_arr) ? "<ul id='formbox_ul'></ul>" : "",
             fmw = (wdp) ? "<a href='" + wdp + "' target='_blank' class='exit formbox_href'>Find more wallets</a>" : "",
             content = "\
 			<div class='formbox' id='wdl_formbox'>\
@@ -2922,15 +2886,15 @@ function download_wallet(currency) {
 			</div>";
         popdialog(content, "canceldialog");
         if (wallets_arr) {
-            var walletlist = $("#formbox_ul"),
+            let walletlist = $("#formbox_ul"),
                 device = getdevicetype(),
                 platform = getplatform(device),
                 store_icon = platform_icon(platform),
                 store_tag = (store_icon) ? "<img src='" + store_icon + "'/>" : "<span class='icon-download'></span> ";
             $.each(wallets_arr, function(key, value) {
-                var device_url = value[platform];
+                let device_url = value[platform];
                 if (device_url) {
-                    var walletname = value.name,
+                    let walletname = value.name,
                         website = value.website,
                         wallet_icon = (ln) ? "<img src='img_logos_btc-lnd.png' class='wallet_icon'/>" : "<img src='" + w_icon(walletname) + "' class='wallet_icon'/>";
                     walletlist.append("<li><a href='" + website + "' target='_blank' class='exit app_dll'>" + wallet_icon + walletname + "</a><a href='" + device_url + "' target='_blank' class='exit store_tag'>" + store_tag + "</a></li>");
@@ -2941,7 +2905,7 @@ function download_wallet(currency) {
 }
 
 function updaterequest(ua, save) {
-    var requestlist = $("#" + ua.requestid),
+    let requestlist = $("#" + ua.requestid),
         rldata = requestlist.data(),
         metalist = requestlist.find(".metalist");
     if (ua.receivedamount) {
@@ -2951,16 +2915,16 @@ function updaterequest(ua, save) {
         metalist.find(".payday.pd_fiat .fiatvalue").text(" " + trimdecimals(ua.fiatvalue, 2));
     }
     if (ua.paymenttimestamp) {
-        var fulldateformat = fulldateformatmarkup(new Date(ua.paymenttimestamp - timezone), "en-us");
+        let fulldateformat = fulldateformatmarkup(new Date(ua.paymenttimestamp - timezone), "en-us");
         metalist.find(".payday.pd_paydate span.paydate").html(" " + fulldateformat);
         metalist.find(".payday.pd_fiat strong span.pd_fiat").html(" " + fulldateformat);
     }
     if (ua.confirmations) {
-        var meta_status = metalist.find("li.meta_status"),
+        let meta_status = metalist.find("li.meta_status"),
             set_confirmations = (rldata && rldata.set_confirmations) ? rldata.set_confirmations : 1,
             conftext = (ua.confirmations == 0) ? "Unconfirmed transaction" : ua.confirmations + " / " + set_confirmations + " confirmations";
         meta_status.attr("data-conf", ua.confirmations).find(".txli_conf > span").text(conftext);
-        var confbar = meta_status.find(".txli_conf > .confbar");
+        let confbar = meta_status.find(".txli_conf > .confbar");
         if (confbar.length > 0) {
             confbar.each(function(i) {
                 animate_confbar($(this), 0);
@@ -2971,7 +2935,7 @@ function updaterequest(ua, save) {
         requestlist.attr("data-pending", ua.pending)
     }
     if (ua.status) {
-        var this_status = ua.status;
+        let this_status = ua.status;
         if (this_status != "archive_pending") { // don't update if status is archive_pending
             requestlist.attr("data-status", this_status);
             metalist.find(".status").text(" " + this_status);
@@ -2983,10 +2947,10 @@ function updaterequest(ua, save) {
                 }
                 requestlist.addClass("shownotification");
             }
-            var transactionlist = requestlist.find(".transactionlist"),
+            let transactionlist = requestlist.find(".transactionlist"),
                 validtxs = (this_status == "archive_pending") ? transactionlist.find("li") : transactionlist.find("li.exceed"); // save all when archiving
             if (validtxs.length > 0) {
-                var transactionpush = [];
+                let transactionpush = [];
                 validtxs.each(function() {
                     transactionpush.push($(this).data());
                 });
@@ -2998,9 +2962,9 @@ function updaterequest(ua, save) {
             }, 3000);
         }
         // adjust insufficient amount
-        var amount_short_span = metalist.find(".amountshort");
+        let amount_short_span = metalist.find(".amountshort");
         if (this_status == "insufficient") {
-            var rl_amount = rldata.amount,
+            let rl_amount = rldata.amount,
                 rl_iscrypto = rldata.iscrypto,
                 rl_uoa = rldata.uoa,
                 amount_short_rounded = amountshort(rl_amount, ua.receivedamount, ua.fiatvalue, rl_iscrypto),
@@ -3011,11 +2975,11 @@ function updaterequest(ua, save) {
         }
     }
     if (ua.requesttitle) {
-        var thisrequesttitle = ua.requesttitle;
+        let thisrequesttitle = ua.requesttitle;
         if (thisrequesttitle == "empty") {
             return
         }
-        var textinput = (rldata.requesttitle) ? requestlist.find(".atext h2") :
+        let textinput = (rldata.requesttitle) ? requestlist.find(".atext h2") :
             requestlist.find(".rq_subject");
         textinput.add(metalist.find(".requesttitlebox")).text(thisrequesttitle);
     }
@@ -3028,7 +2992,7 @@ function updaterequest(ua, save) {
 }
 
 function get_xmrpid() {
-    var use_integrated = cs_dat("monero", "Integrated addresses").selected;
+    let use_integrated = cs_dat("monero", "Integrated addresses").selected;
     if (use_integrated) {
         return xmr_pid();
     }
@@ -3036,9 +3000,9 @@ function get_xmrpid() {
 }
 
 function xmr_integrated(xmr_address, pmid) {
-    var is_valid = check_pid(pmid);
+    let is_valid = check_pid(pmid);
     if (is_valid) {
-        var pahx = cnBase58.decode(xmr_address),
+        let pahx = cnBase58.decode(xmr_address),
             psk = pahx.slice(2, 66),
             pvk = pahx.slice(66, 130),
             bytes = "13" + psk + pvk + pmid,

@@ -1,7 +1,7 @@
-var gapi,
+const scope = "https://www.googleapis.com/auth/drive.appdata",
+    drivepath = "https://content.googleapis.com";
+let gapi,
     google,
-    scope = "https://www.googleapis.com/auth/drive.appdata",
-    drivepath = "https://content.googleapis.com",
     tokenClient;
 $(document).ready(function() {
     // gapi_load
@@ -30,9 +30,9 @@ $(document).ready(function() {
 // ** Google api **
 
 function gapi_load() {
-	if (hostlocation == "local") {
-		return
-	}
+    if (hostlocation == "local") {
+        return
+    }
     tokenClient = google.accounts.oauth2.initTokenClient({
         "client_id": to.ga_id,
         "scope": scope,
@@ -48,14 +48,14 @@ function gapi_load() {
 }
 
 function init_login_dialog(direct) {
-	if (hostlocation == "local") {
-		return
-	}
-    var ctoken = cashed_token();
+    if (hostlocation == "local") {
+        return
+    }
+    let ctoken = cashed_token();
     if (ctoken) {
-        var oa_timer = localStorage.getItem("bitrequest_oa_timer");
+        let oa_timer = localStorage.getItem("bitrequest_oa_timer");
         if (oa_timer) {
-            var interval = 3600000; // show every hour
+            let interval = 3600000; // show every hour
             if ((now() - oa_timer) < interval) {
                 return
             }
@@ -75,10 +75,10 @@ function init_login_dialog(direct) {
 }
 
 function oauth_pop(ab) {
-	if (body.hasClass("showstartpage")) { // only show when logged in
-		return
-	}
-    var cbx = (ab) ? render_html([{
+    if (body.hasClass("showstartpage")) { // only show when logged in
+        return
+    }
+    let cbx = (ab) ? render_html([{
             "div": {
                 "id": "pk_confirmwrap",
                 "class": "cb_wrap",
@@ -143,7 +143,7 @@ function oauth_pop(ab) {
 
 function gd_login_trigger() {
     $(document).on("click", "#oauth_onload", function() {
-        var pass = GD_pass();
+        let pass = GD_pass();
         g_login(pass);
     })
 }
@@ -151,23 +151,23 @@ function gd_login_trigger() {
 function submit_gdbu_dialog() {
     $(document).on("click", "#gdbu_dialog input.submit", function(e) {
         e.preventDefault();
-        var gdbu_dialog = $("#gdbu_dialog"),
+        let gdbu_dialog = $("#gdbu_dialog"),
             gd_checkbox = gdbu_dialog.find("#pk_confirmwrap"),
             gd_checked = gd_checkbox.data("checked");
         if (gd_checked == true) {
             g_logout();
             return
         }
-        var pass = GD_pass();
+        let pass = GD_pass();
         g_login(pass);
     })
 }
 
 function g_login(tob) {
-	if (hostlocation == "local") {
-		notify("GoogleAuth not available");
-		return
-	}
+    if (hostlocation == "local") {
+        notify("GoogleAuth not available");
+        return
+    }
     if (tob && tob.cached === false) {
         tokenClient.requestAccessToken({
             "prompt": "none"
@@ -186,9 +186,9 @@ function set_gatoken(e) {
         notify("error");
         return
     }
-    var access_token = e.access_token;
+    let access_token = e.access_token;
     if (access_token) {
-        var token_object = {
+        let token_object = {
             "access_token": access_token,
             "expires_in": e.expires_in,
             "created": now()
@@ -202,10 +202,10 @@ function set_gatoken(e) {
 function gdlogin_callbacks() {
     html.addClass("gdauth");
     notify("Successfully signed in");
-    var switch_panel = $("#popup.showpu .switchpanel");
+    let switch_panel = $("#popup.showpu .switchpanel");
     if (switch_panel.length) {
         switch_panel.addClass("true").removeClass("false");
-        var lad = $("#listappdata");
+        let lad = $("#listappdata");
         if (lad.length) {
             listappdata();
             return
@@ -217,9 +217,9 @@ function gdlogin_callbacks() {
 }
 
 function g_logout() {
-    var result = confirm("Are you sure you want to stop using Google Drive Backup?");
+    let result = confirm("Are you sure you want to stop using Google Drive Backup?");
     if (result === true) {
-        var token = has_token();
+        let token = has_token();
         if (token) {
             gapi.client.setToken("");
         }
@@ -231,7 +231,7 @@ function g_logout() {
 function gdlogout_callbacks() {
     html.removeClass("gdauth");
     notify("Successfully signed out");
-    var switch_panel = $("#popup.showpu .switchpanel");
+    let switch_panel = $("#popup.showpu .switchpanel");
     if (switch_panel.length) {
         switch_panel.removeClass("true").addClass("false");
         $("#changelog").slideDown(300);
@@ -246,7 +246,7 @@ function Drive_Backup_trigger() {
             notify("GoogleAuth unavailable for IOS App at the moment");
             return
         }
-        var pass = GD_pass();
+        let pass = GD_pass();
         if (pass) {
             g_logout();
             return
@@ -256,13 +256,13 @@ function Drive_Backup_trigger() {
 }
 
 function updateappdata() {
-    var pass = GD_pass();
+    let pass = GD_pass();
     if (pass) {
-        var bu_id = localStorage.getItem("bitrequest_backupfile_id");
+        let bu_id = localStorage.getItem("bitrequest_backupfile_id");
         if (bu_id) {
-            var gd_timer = sessionStorage.getItem("bitrequest_gd_timer"); // prevent Ddos
+            let gd_timer = sessionStorage.getItem("bitrequest_gd_timer"); // prevent Ddos
             if (gd_timer) {
-                var interval = 3000;
+                let interval = 3000;
                 if ((now() - gd_timer) < interval) {
                     return
                 }
@@ -282,11 +282,11 @@ function updateappdata() {
                 }
             }).done(function(e) {}).fail(function(jqXHR, textStatus, errorThrown) {
                 if (textStatus == "error") {
-                    var error_object = jqXHR;
+                    let error_object = jqXHR;
                     if (error_object) {
-                        var resp_obj = error_object.responseJSON;
+                        let resp_obj = error_object.responseJSON;
                         if (resp_obj) {
-                            var resp = resp_obj.error;
+                            let resp = resp_obj.error;
                             if (resp) {
                                 console.log(resp);
                                 if (resp.code == 401) {
@@ -313,9 +313,9 @@ function updateappdata() {
 }
 
 function createfile(tob) {
-    var pass = (tob) ? tob : GD_pass();
+    let pass = (tob) ? tob : GD_pass();
     if (pass) {
-        var file = new Blob([complilebackup()], {
+        let file = new Blob([complilebackup()], {
                 "type": "text/plain"
             }),
             description = {
@@ -339,7 +339,7 @@ function createfile(tob) {
         xhr.setRequestHeader("Authorization", "Bearer " + pass.token);
         xhr.responseType = "json";
         xhr.onload = () => {
-            var response_id = xhr.response.id,
+            let response_id = xhr.response.id,
                 response_id_string = response_id.toString();
             localStorage.setItem("bitrequest_backupfile_id", response_id_string);
         };
@@ -358,9 +358,9 @@ function listappdata() {
         notify("GoogleAuth unavailable for IOS App at the moment");
         return false;
     }
-    var pass = GD_pass();
+    let pass = GD_pass();
     if (pass) {
-        var thistrigger = $("#listappdata .switchpanel"),
+        let thistrigger = $("#listappdata .switchpanel"),
             backuplist = $("#gd_backuplist"),
             importjsonlist = $("#importjson");
         if (backuplist.find("li").length) {
@@ -385,10 +385,10 @@ function listappdata() {
                 }
             }
         }).done(function(e) {
-            var filelist = e.files;
+            let filelist = e.files;
             if (filelist.length) {
-                var sorted_filelist = filelist.sort(function(a, b) { // sort array by timestamp
-                        var amod = a.modifiedTime,
+                let sorted_filelist = filelist.sort(function(a, b) { // sort array by timestamp
+                        let amod = a.modifiedTime,
                             bmod = b.modifiedTime,
                             d1 = (amod) ? to_ts(amod) : 2,
                             d2 = (bmod) ? to_ts(bmod) : 1;
@@ -396,7 +396,7 @@ function listappdata() {
                     }),
                     gdbackuppush = [];
                 $.each(sorted_filelist, function(i, value) {
-                    var description = JSON.parse(value.description),
+                    let description = JSON.parse(value.description),
                         device = description.device,
                         device_id = description.deviceid,
                         dmod = short_date(description.modified),
@@ -434,9 +434,9 @@ function listappdata() {
 
 function deletefiletrigger() {
     $(document).on("click", ".purge_bu", function() {
-        var pass = GD_pass();
+        let pass = GD_pass();
         if (pass) {
-            var thislist = $(this).parent("li"),
+            let thislist = $(this).parent("li"),
                 fileid = thislist.attr("data-gdbu_id"),
                 result = confirm("Delete " + thislist.text() + "?");
             if (result === true) {
@@ -477,7 +477,7 @@ function deletefile(fileId, thislist, tob) {
 function GD_pass() {
     if (gapi) {
         if (gapi.client) {
-            var token = has_token();
+            let token = has_token();
             if (token) {
                 html.addClass("gdauth");
                 return {
@@ -486,7 +486,7 @@ function GD_pass() {
                     "expired": false
                 }
             }
-            var s_token = a_dat();
+            let s_token = a_dat();
             if (s_token) {
                 html.addClass("gdauth");
                 return s_token
@@ -498,7 +498,7 @@ function GD_pass() {
 }
 
 function has_token() {
-    var token = gapi.client.getToken();
+    let token = gapi.client.getToken();
     if (token) {
         if (token.access_token) {
             return token.access_token;
@@ -508,12 +508,12 @@ function has_token() {
 }
 
 function a_dat() {
-    var token_dat = cashed_token();
+    let token_dat = cashed_token();
     if (token_dat) {
-        var token_object = JSON.parse(atob(token_dat)),
+        let token_object = JSON.parse(atob(token_dat)),
             ga_token = token_object.access_token;
         if (ga_token) {
-            var expired = (now() - token_object.created) > (token_object.expires_in * 1000);
+            let expired = (now() - token_object.created) > (token_object.expires_in * 1000);
             if (expired) {
                 return false;
             }
@@ -528,7 +528,7 @@ function a_dat() {
 }
 
 function cashed_token() {
-    var token_dat = localStorage.getItem("bitrequest_a_dat");
+    let token_dat = localStorage.getItem("bitrequest_a_dat");
     if (token_dat) {
         return token_dat
     }

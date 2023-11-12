@@ -54,7 +54,7 @@ function updaterequeststatestrigger() {
 }
 
 function updaterequeststatesrefresh() {
-    var gets = geturlparameters();
+    let gets = geturlparameters();
     if (gets.xss) {
         return
     }
@@ -73,7 +73,7 @@ function trigger_requeststates(trigger) {
         rpc_attempts = {},
         tx_list = [], // reset transaction index
         statuspush = [];
-    var active_requests = $("#requestlist .rqli").filter(function() {
+    let active_requests = $("#requestlist .rqli").filter(function() {
         return $(this).data("pending") != "unknown";
     });
     active_requests.addClass("scan");
@@ -82,15 +82,15 @@ function trigger_requeststates(trigger) {
 
 function get_requeststates(trigger) {
     //requestincoming
-    var request_data = $("#requestlist li.rqli.scan").first().data();
+    let request_data = $("#requestlist li.rqli.scan").first().data();
     if (request_data) {
         if (trigger == "loop") {
             getinputs(request_data);
             return;
         }
-        var statuscache = sessionStorage.getItem("bitrequest_txstatus");
+        let statuscache = sessionStorage.getItem("bitrequest_txstatus");
         if (statuscache) {
-            var parsevalue = JSON.parse(statuscache),
+            let parsevalue = JSON.parse(statuscache),
                 cachetime = now() - parsevalue.timestamp,
                 requeststates = parsevalue.requeststates;
             if (cachetime > 30000 || $.isEmptyObject(requeststates)) { //check if cached crypto rates are expired (check every 30 seconds on page refresh or when opening request page)
@@ -101,17 +101,17 @@ function get_requeststates(trigger) {
             if (trigger === true) {} else { // only update on page refresh
                 // parse cached transaction data
                 $.each(requeststates, function(i, value) {
-                    var thislist = $("#" + value.requestid),
+                    let thislist = $("#" + value.requestid),
                         thisdata = thislist.data();
                     if (thisdata) {
-                        var pendingstatus = thisdata.pending;
+                        let pendingstatus = thisdata.pending;
                         if (pendingstatus == "scanning" || pendingstatus == "polling") {
-                            var statuspanel = thislist.find(".pmetastatus"),
+                            let statuspanel = thislist.find(".pmetastatus"),
                                 transactionlist = thislist.find(".transactionlist");
                             statuspanel.text(value.status);
                             transactionlist.html("");
                             $.each(value.transactions, function(data, value) {
-                                var tx_listitem = append_tx_li(value, false);
+                                let tx_listitem = append_tx_li(value, false);
                                 if (tx_listitem) {
                                     transactionlist.append(tx_listitem.data(value));
                                 }
@@ -127,7 +127,7 @@ function get_requeststates(trigger) {
         return
     }
     if (!$.isEmptyObject(statuspush)) {
-        var statusobject = JSON.stringify({
+        let statusobject = JSON.stringify({
             "timestamp": now(),
             "requeststates": statuspush
         });
@@ -137,7 +137,7 @@ function get_requeststates(trigger) {
 }
 
 function getinputs(rd) {
-    var thislist = $("#" + rd.requestid),
+    let thislist = $("#" + rd.requestid),
         iserc20 = rd.erc20,
         api_info = check_api(rd.payment, iserc20),
         selected = api_info.data;
@@ -150,9 +150,9 @@ function getinputs(rd) {
 }
 
 function check_api(payment, iserc20) {
-    var api_data = $("#" + payment + "_settings .cc_settinglist li[data-id='apis']").data();
+    let api_data = $("#" + payment + "_settings .cc_settinglist li[data-id='apis']").data();
     if (api_data) {
-        var selected = api_data.selected;
+        let selected = api_data.selected;
         if (selected.api === true) {
             return {
                 "api": true,
@@ -194,7 +194,7 @@ function get_api_inputs_defaults(rd, api_data) {
         get_api_inputs_init(rd, api_data, "ethplorer");
         return
     }
-    var payment = rd.payment;
+    let payment = rd.payment;
     if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin" || payment == "ethereum") {
         get_api_inputs_init(rd, api_data, "blockcypher");
         return
@@ -208,11 +208,11 @@ function get_api_inputs_init(rd, api_data, api_name) {
 }
 
 function get_api_inputs(rd, api_data, api_name) {
-    var requestid = rd.requestid,
+    let requestid = rd.requestid,
         thislist = $("#" + requestid);
     if (thislist.hasClass("scan")) {
         api_attempts[requestid + api_name] = true;
-        var payment = rd.payment,
+        let payment = rd.payment,
             pending = rd.pending,
             address = rd.address,
             requestdate = (rd.inout == "incoming") ? rd.timestamp : rd.requestdate,
@@ -243,7 +243,7 @@ function get_api_inputs(rd, api_data, api_name) {
         if (pending == "scanning" || pending == "polling" || canceled) {
             transactionlist.html("");
             if (lnd) {
-                var metalist = thislist.find(".metalist"),
+                let metalist = thislist.find(".metalist"),
                     status_field = metalist.find(".status"),
                     p_arr = lnurl_deform(lnd.proxy_host),
                     proxy_host = p_arr.url,
@@ -264,9 +264,9 @@ function get_api_inputs(rd, api_data, api_name) {
                             "x-api": pk
                         }
                     }).done(function(r) {
-                        var error = r.error;
+                        let error = r.error;
                         if (error) {
-                            var message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
+                            let message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
                             tx_api_fail(thislist, statuspanel);
                             handle_api_fails_list(rd, {
                                 "error": message,
@@ -274,7 +274,7 @@ function get_api_inputs(rd, api_data, api_name) {
                             }, false, payment);
                             status_field.text(" " + message);
                         } else {
-                            var inv_status = r.status;
+                            let inv_status = r.status;
                             status_field.text(" " + inv_status);
                             if (r.pid == lnd.pid) {
                                 if (r.bolt11) {
@@ -294,9 +294,9 @@ function get_api_inputs(rd, api_data, api_name) {
                                             "x-api": pk
                                         }
                                     }).done(function(e) {
-                                        var inv_error = e.error;
+                                        let inv_error = e.error;
                                         if (inv_error) {
-                                            var err_message = (inv_error.message) ? inv_error.message : (typeof inv_error == "string") ? inv_error : default_error;
+                                            let err_message = (inv_error.message) ? inv_error.message : (typeof inv_error == "string") ? inv_error : default_error;
                                             tx_api_fail(thislist, statuspanel);
                                             handle_api_fails_list(rd, {
                                                 "error": err_message,
@@ -304,14 +304,14 @@ function get_api_inputs(rd, api_data, api_name) {
                                             }, false, payment);
                                             status_field.text(" " + err_message);
                                         } else {
-                                            var status = e.status;
+                                            let status = e.status;
                                             if (status) {
                                                 lnd.invoice = e;
                                                 status_field.text(" " + status);
                                                 rd.lightning = lnd; // push invoice
-                                                var txd = lnd_tx_data(e);
+                                                let txd = lnd_tx_data(e);
                                                 if (txd.ccval) {
-                                                    var tx_listitem = append_tx_li(txd, rqtype, true);
+                                                    let tx_listitem = append_tx_li(txd, rqtype, true);
                                                     if (tx_listitem) {
                                                         transactionlist.append(tx_listitem.data(txd));
                                                         tx_count(statuspanel, txd.confirmations);
@@ -329,7 +329,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                         }
                                     }).fail(function(jqXHR, textStatus, errorThrown) {
                                         tx_api_fail(thislist, statuspanel);
-                                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                        let error_object = (errorThrown) ? errorThrown : jqXHR;
                                         handle_api_fails_list(rd, error_object, false, payment);
                                     });
                                 } else {
@@ -354,13 +354,13 @@ function get_api_inputs(rd, api_data, api_name) {
                                 }, false, payment);
                             }
                         }
-                        var version = r.version;
+                        let version = r.version;
                         if (version != proxy_version) {
                             proxy_alert(version);
                         }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
-                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        let error_object = (errorThrown) ? errorThrown : jqXHR;
                         handle_api_fails_list(rd, error_object, false, payment);
                     }).always(function() {
                         api_src(thislist, {
@@ -372,7 +372,7 @@ function get_api_inputs(rd, api_data, api_name) {
                     }
                 }
                 if (pending == "polling" && lnhash) {
-                    var invoice = lnd.invoice;
+                    let invoice = lnd.invoice;
                     if (invoice) {
                         if (transactionhash) {
                             $.ajax({
@@ -391,14 +391,14 @@ function get_api_inputs(rd, api_data, api_name) {
                                     "x-api": pk
                                 }
                             }).done(function(e) {
-                                var status = e.status;
+                                let status = e.status;
                                 if (status) {
                                     lnd.invoice = e;
                                     status_field.text(" " + status);
                                     rd.lightning = lnd; // push invoice
-                                    var txd = lnd_tx_data(e);
+                                    let txd = lnd_tx_data(e);
                                     if (txd.ccval) {
-                                        var tx_listitem = append_tx_li(txd, rqtype, true);
+                                        let tx_listitem = append_tx_li(txd, rqtype, true);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
                                             tx_count(statuspanel, txd.confirmations);
@@ -415,7 +415,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                 }
                             }).fail(function(jqXHR, textStatus, errorThrown) {
                                 tx_api_fail(thislist, statuspanel);
-                                var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                let error_object = (errorThrown) ? errorThrown : jqXHR;
                                 handle_api_fails_list(rd, error_object, false, payment);
                             }).always(function() {
                                 api_src(thislist, {
@@ -433,9 +433,9 @@ function get_api_inputs(rd, api_data, api_name) {
                 }
             }
             if (payment == "monero") {
-                var vk = rd.viewkey;
+                let vk = rd.viewkey;
                 if (vk) {
-                    var account = (vk.account) ? vk.account : address,
+                    let account = (vk.account) ? vk.account : address,
                         viewkey = vk.vk,
                         payload = JSON.stringify({
                             "address": account,
@@ -457,9 +457,9 @@ function get_api_inputs(rd, api_data, api_name) {
                             }
                         }
                     }).done(function(e) {
-                        var data = br_result(e).result;
+                        let data = br_result(e).result;
                         if (data.start_height > -1) { // success!
-                            var pl = {
+                            let pl = {
                                 "address": account,
                                 "view_key": viewkey
                             };
@@ -477,18 +477,18 @@ function get_api_inputs(rd, api_data, api_name) {
                                     }
                                 }
                             }).done(function(e) {
-                                var data = br_result(e).result,
+                                let data = br_result(e).result,
                                     transactions = data.transactions;
                                 if (transactions) {
-                                    var txflip = transactions.reverse();
+                                    let txflip = transactions.reverse();
                                     $.each(txflip, function(dat, value) {
-                                        var txd = xmr_scan_data(value, setconfirmations, "xmr", data.blockchain_height);
+                                        let txd = xmr_scan_data(value, setconfirmations, "xmr", data.blockchain_height);
                                         if (txd) {
-                                            var xid_match = match_xmr_pid(rd.xmr_ia, rd.payment_id, txd.payment_id); // match xmr payment_id if set
+                                            let xid_match = match_xmr_pid(rd.xmr_ia, rd.payment_id, txd.payment_id); // match xmr payment_id if set
                                             if (xid_match === true) {
                                                 if (pending == "polling") {
                                                     if (txd.txhash == transactionhash && txd.ccval) {
-                                                        var tx_listitem = append_tx_li(txd, rqtype);
+                                                        let tx_listitem = append_tx_li(txd, rqtype);
                                                         if (tx_listitem) {
                                                             transactionlist.append(tx_listitem.data(txd));
                                                             counter++;
@@ -498,7 +498,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                                 }
                                                 if (pending == "scanning") {
                                                     if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                                        var tx_listitem = append_tx_li(txd, rqtype);
+                                                        let tx_listitem = append_tx_li(txd, rqtype);
                                                         if (tx_listitem) {
                                                             transactionlist.append(tx_listitem.data(txd));
                                                             counter++;
@@ -513,13 +513,13 @@ function get_api_inputs(rd, api_data, api_name) {
                                 }
                             }).fail(function(jqXHR, textStatus, errorThrown) {
                                 tx_api_fail(thislist, statuspanel);
-                                var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                let error_object = (errorThrown) ? errorThrown : jqXHR;
                                 handle_api_fails_list(rd, error_object, api_data, payment);
                             });
                             return
                         }
                         tx_api_fail(thislist, statuspanel);
-                        var errormessage = data.Error,
+                        let errormessage = data.Error,
                             error_object = (errormessage) ? errormessage : {
                                 "error": "Unable to connect to mymonero api",
                                 "console": true
@@ -527,7 +527,7 @@ function get_api_inputs(rd, api_data, api_name) {
                         handle_api_fails_list(rd, error_object, api_data, payment);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
-                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        let error_object = (errorThrown) ? errorThrown : jqXHR;
                         handle_api_fails_list(rd, error_object, api_data, payment);
                     }).always(function() {
                         api_src(thislist, {
@@ -547,7 +547,7 @@ function get_api_inputs(rd, api_data, api_name) {
                         "method": "GET"
                     }
                 }).done(function(lb) {
-                    var latestblock = br_result(lb).result;
+                    let latestblock = br_result(lb).result;
                     if (latestblock) {
                         setTimeout(function() {
                             if (pending == "scanning") { // scan incoming transactions on address
@@ -560,14 +560,14 @@ function get_api_inputs(rd, api_data, api_name) {
                                         "method": "GET"
                                     }
                                 }).done(function(e) {
-                                    var data = br_result(e).result;
+                                    let data = br_result(e).result;
                                     if (data) {
-                                        if (!$.isEmptyObject(data)) {
+                                        if (br_issar(data)) {
                                             $.each(data, function(dat, value) {
                                                 if (value.txid) { // filter outgoing transactions
-                                                    var txd = mempoolspace_scan_data(value, setconfirmations, ccsymbol, address, latestblock);
+                                                    let txd = mempoolspace_scan_data(value, setconfirmations, ccsymbol, address, latestblock);
                                                     if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                                        var tx_listitem = append_tx_li(txd, rqtype);
+                                                        let tx_listitem = append_tx_li(txd, rqtype);
                                                         if (tx_listitem) {
                                                             transactionlist.append(tx_listitem.data(txd));
                                                             counter++;
@@ -584,7 +584,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                     handle_api_fails_list(rd, "unknown error", api_data, payment);
                                 }).fail(function(jqXHR, textStatus, errorThrown) {
                                     tx_api_fail(thislist, statuspanel);
-                                    var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                    let error_object = (errorThrown) ? errorThrown : jqXHR;
                                     handle_api_fails_list(rd, error_object, api_data, payment);
                                 });
                                 return
@@ -600,12 +600,12 @@ function get_api_inputs(rd, api_data, api_name) {
                                             "method": "GET"
                                         }
                                     }).done(function(e) {
-                                        var data = br_result(e).result;
+                                        let data = br_result(e).result;
                                         if (data) {
-                                            var txd = mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, latestblock);
+                                            let txd = mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, latestblock);
                                             if (txd) {
                                                 if (txd.ccval) {
-                                                    var tx_listitem = append_tx_li(txd, rqtype);
+                                                    let tx_listitem = append_tx_li(txd, rqtype);
                                                     if (tx_listitem) {
                                                         transactionlist.append(tx_listitem.data(txd));
                                                         tx_count(statuspanel, 1);
@@ -619,7 +619,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                         handle_api_fails_list(rd, "unknown error", api_data, payment);
                                     }).fail(function(jqXHR, textStatus, errorThrown) {
                                         tx_api_fail(thislist, statuspanel);
-                                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                        let error_object = (errorThrown) ? errorThrown : jqXHR;
                                         handle_api_fails_list(rd, error_object, api_data, payment);
                                     });
                                 }
@@ -631,7 +631,7 @@ function get_api_inputs(rd, api_data, api_name) {
                     handle_api_fails_list(rd, "unknown error", api_data, payment);
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     tx_api_fail(thislist, statuspanel);
-                    var error_object = (errorThrown) ? errorThrown : jqXHR;
+                    let error_object = (errorThrown) ? errorThrown : jqXHR;
                     handle_api_fails_list(rd, error_object, api_data, payment);
                 }).always(function() {
                     api_src(thislist, api_data);
@@ -649,7 +649,7 @@ function get_api_inputs(rd, api_data, api_name) {
                             "method": "GET"
                         }
                     }).done(function(e) {
-                        var data = br_result(e).result;
+                        let data = br_result(e).result;
                         if (data) {
                             if (data.error) {
                                 tx_api_fail(thislist, statuspanel);
@@ -657,9 +657,9 @@ function get_api_inputs(rd, api_data, api_name) {
                             } else {
                                 if (payment == "ethereum") {
                                     $.each(data.txrefs, function(dat, value) {
-                                        var txd = blockcypher_scan_data(value, setconfirmations, ccsymbol, payment);
+                                        let txd = blockcypher_scan_data(value, setconfirmations, ccsymbol, payment);
                                         if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                            var tx_listitem = append_tx_li(txd, rqtype);
+                                            let tx_listitem = append_tx_li(txd, rqtype);
                                             if (tx_listitem) {
                                                 transactionlist.append(tx_listitem.data(txd));
                                                 counter++;
@@ -667,15 +667,15 @@ function get_api_inputs(rd, api_data, api_name) {
                                         }
                                     });
                                 } else {
-                                    var conf_tx = data.txrefs,
+                                    let conf_tx = data.txrefs,
                                         unconf_tx = data.unconfirmed_txrefs,
                                         all_tx = (unconf_tx && conf_tx) ? unconf_tx.concat(conf_tx) : conf_tx;
                                     if (all_tx) {
                                         $.each(all_tx, function(dat, value) {
                                             if (value.spent !== undefined) { // filter outgoing transactions
-                                                var txd = blockcypher_scan_data(value, setconfirmations, ccsymbol, payment);
+                                                let txd = blockcypher_scan_data(value, setconfirmations, ccsymbol, payment);
                                                 if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                                    var tx_listitem = append_tx_li(txd, rqtype);
+                                                    let tx_listitem = append_tx_li(txd, rqtype);
                                                     if (tx_listitem) {
                                                         transactionlist.append(tx_listitem.data(txd));
                                                         counter++;
@@ -694,7 +694,7 @@ function get_api_inputs(rd, api_data, api_name) {
                         handle_api_fails_list(rd, "unknown error", api_data, payment);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
-                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        let error_object = (errorThrown) ? errorThrown : jqXHR;
                         handle_api_fails_list(rd, error_object, api_data, payment);
                     }).always(function() {
                         api_src(thislist, api_data);
@@ -711,15 +711,15 @@ function get_api_inputs(rd, api_data, api_name) {
                                 "method": "GET"
                             }
                         }).done(function(e) {
-                            var data = br_result(e).result;
+                            let data = br_result(e).result;
                             if (data) {
                                 if (data.error) {
                                     tx_api_fail(thislist, statuspanel);
                                     handle_api_fails_list(rd, data.error, api_data, payment);
                                 } else {
-                                    var txd = blockcypher_poll_data(data, setconfirmations, ccsymbol, address);
+                                    let txd = blockcypher_poll_data(data, setconfirmations, ccsymbol, address);
                                     if (txd.ccval) {
-                                        var tx_listitem = append_tx_li(txd, rqtype);
+                                        let tx_listitem = append_tx_li(txd, rqtype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
                                             tx_count(statuspanel, 1);
@@ -733,7 +733,7 @@ function get_api_inputs(rd, api_data, api_name) {
                             handle_api_fails_list(rd, "unknown error", api_data, payment);
                         }).fail(function(jqXHR, textStatus, errorThrown) {
                             tx_api_fail(thislist, statuspanel);
-                            var error_object = (errorThrown) ? errorThrown : jqXHR;
+                            let error_object = (errorThrown) ? errorThrown : jqXHR;
                             handle_api_fails_list(rd, error_object, api_data, payment);
                         }).always(function() {
                             api_src(thislist, api_data);
@@ -753,17 +753,17 @@ function get_api_inputs(rd, api_data, api_name) {
                             "method": "GET"
                         }
                     }).done(function(e) {
-                        var data = br_result(e).result;
+                        let data = br_result(e).result;
                         if (data) {
                             if (data.error) {
                                 tx_api_fail(thislist, statuspanel);
                                 handle_api_fails_list(rd, data.error, api_data, payment);
                             } else {
                                 $.each(data.operations, function(dat, value) {
-                                    var txd = ethplorer_scan_data(value, setconfirmations, ccsymbol),
+                                    let txd = ethplorer_scan_data(value, setconfirmations, ccsymbol),
                                         rt_compensate = (rd.inout == "local" && rd.status == "insufficient") ? request_timestamp - 30000 : request_timestamp; // substract extra 30 seconds (extra compensation)
                                     if ((str_match(value.to, address) === true) && (txd.transactiontime > rt_compensate) && txd.ccval) {
-                                        var tx_listitem = append_tx_li(txd, rqtype);
+                                        let tx_listitem = append_tx_li(txd, rqtype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
                                             counter++;
@@ -779,7 +779,7 @@ function get_api_inputs(rd, api_data, api_name) {
                         handle_api_fails_list(rd, "unknown error", api_data, payment);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
-                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        let error_object = (errorThrown) ? errorThrown : jqXHR;
                         handle_api_fails_list(rd, error_object, api_data, payment);
                     }).always(function() {
                         api_src(thislist, api_data);
@@ -796,13 +796,13 @@ function get_api_inputs(rd, api_data, api_name) {
                                 "method": "GET"
                             }
                         }).done(function(e) {
-                            var data = br_result(e).result;
+                            let data = br_result(e).result;
                             if (data) {
                                 if (data.error) {
                                     tx_api_fail(thislist, statuspanel);
                                     handle_api_fails_list(rd, data.error, api_data, payment);
                                 } else {
-                                    var input = data.input,
+                                    let input = data.input,
                                         amount_hex = input.slice(74, input.length),
                                         tokenValue = hexToNumberString(amount_hex),
                                         conf_correct = (data.confirmations < 0) ? 0 : data.confirmations,
@@ -815,7 +815,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                         },
                                         txd = infura_erc20_poll_data(txdata, setconfirmations, ccsymbol);
                                     if (txd.ccval) {
-                                        var tx_listitem = append_tx_li(txd, rqtype);
+                                        let tx_listitem = append_tx_li(txd, rqtype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
                                             tx_count(statuspanel, 1);
@@ -829,7 +829,7 @@ function get_api_inputs(rd, api_data, api_name) {
                             handle_api_fails_list(rd, "unknown error", api_data, payment);
                         }).fail(function(jqXHR, textStatus, errorThrown) {
                             tx_api_fail(thislist, statuspanel);
-                            var error_object = (errorThrown) ? errorThrown : jqXHR;
+                            let error_object = (errorThrown) ? errorThrown : jqXHR;
                             handle_api_fails_list(rd, error_object, api_data, payment);
                         }).always(function() {
                             api_src(thislist, api_data);
@@ -840,7 +840,7 @@ function get_api_inputs(rd, api_data, api_name) {
             }
             if (api_name == "blockchair") {
                 if (pending == "scanning") { // scan incoming transactions on address
-                    var scan_url = (erc20 === true) ? "ethereum/erc-20/" + rd.token_contract + "/dashboards/address/" + address : payment + "/dashboards/address/" + address;
+                    let scan_url = (erc20 === true) ? "ethereum/erc-20/" + rd.token_contract + "/dashboards/address/" + address : payment + "/dashboards/address/" + address;
                     api_proxy({
                         "api": api_name,
                         "search": scan_url,
@@ -850,24 +850,24 @@ function get_api_inputs(rd, api_data, api_name) {
                             "method": "GET"
                         }
                     }).done(function(e) {
-                        var data = br_result(e).result;
+                        let data = br_result(e).result;
                         if (data) {
                             if (data.error) {
                                 tx_api_fail(thislist, statuspanel);
                                 handle_api_fails_list(rd, data.error, api_data, payment);
                             } else {
-                                var context = data.context;
+                                let context = data.context;
                                 if (context.error) {
                                     tx_api_fail(thislist, statuspanel);
                                     handle_api_fails_list(rd, context.error, api_data, payment);
                                 } else {
-                                    var latestblock = context.state;
+                                    let latestblock = context.state;
                                     if (erc20 === true) {
                                         $.each(data.data, function(dat, value) {
                                             $.each(value.transactions, function(dt, val) {
-                                                var txd = blockchair_erc20_scan_data(val, setconfirmations, ccsymbol, latestblock);
+                                                let txd = blockchair_erc20_scan_data(val, setconfirmations, ccsymbol, latestblock);
                                                 if ((txd.transactiontime > request_timestamp) && (str_match(txd.recipient, address) === true) && (str_match(txd.token_symbol, ccsymbol) === true) && txd.ccval) {
-                                                    var tx_listitem = append_tx_li(txd, rqtype);
+                                                    let tx_listitem = append_tx_li(txd, rqtype);
                                                     if (tx_listitem) {
                                                         transactionlist.append(tx_listitem.data(txd));
                                                         counter++;
@@ -881,9 +881,9 @@ function get_api_inputs(rd, api_data, api_name) {
                                         if (payment == "ethereum") {
                                             $.each(data.data, function(dat, value) {
                                                 $.each(value.calls, function(dt, val) {
-                                                    var txd = blockchair_eth_scan_data(val, setconfirmations, ccsymbol, latestblock);
+                                                    let txd = blockchair_eth_scan_data(val, setconfirmations, ccsymbol, latestblock);
                                                     if ((txd.transactiontime > request_timestamp) && (str_match(txd.recipient, address) === true) && txd.ccval) {
-                                                        var tx_listitem = append_tx_li(txd, rqtype);
+                                                        let tx_listitem = append_tx_li(txd, rqtype);
                                                         if (tx_listitem) {
                                                             transactionlist.append(tx_listitem.data(txd));
                                                             counter++;
@@ -894,7 +894,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                             tx_count(statuspanel, counter);
                                             compareamounts(rd);
                                         } else {
-                                            var txarray = data.data[address].transactions; // get transactions
+                                            let txarray = data.data[address].transactions; // get transactions
                                             if ($.isEmptyObject(txarray)) {} else {
                                                 api_proxy({
                                                     "api": api_name,
@@ -905,11 +905,11 @@ function get_api_inputs(rd, api_data, api_name) {
                                                         "method": "GET"
                                                     }
                                                 }).done(function(e) {
-                                                    var dat = br_result(e).result;
+                                                    let dat = br_result(e).result;
                                                     $.each(dat.data, function(dt, val) {
-                                                        var txd = blockchair_scan_data(val, setconfirmations, ccsymbol, address, latestblock);
+                                                        let txd = blockchair_scan_data(val, setconfirmations, ccsymbol, address, latestblock);
                                                         if (txd.transactiontime > request_timestamp && txd.ccval) { // get all transactions after requestdate
-                                                            var tx_listitem = append_tx_li(txd, rqtype);
+                                                            let tx_listitem = append_tx_li(txd, rqtype);
                                                             if (tx_listitem) {
                                                                 transactionlist.append(tx_listitem.data(txd));
                                                                 counter++;
@@ -920,7 +920,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                                     compareamounts(rd);
                                                 }).fail(function(jqXHR, textStatus, errorThrown) {
                                                     tx_api_fail(thislist, statuspanel);
-                                                    var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                                    let error_object = (errorThrown) ? errorThrown : jqXHR;
                                                     handle_api_fails_list(rd, error_object, api_data, payment);
                                                 });
                                             }
@@ -934,7 +934,7 @@ function get_api_inputs(rd, api_data, api_name) {
                         handle_api_fails_list(rd, "unknown error", api_data, payment);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
-                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        let error_object = (errorThrown) ? errorThrown : jqXHR;
                         handle_api_fails_list(rd, error_object, api_data, payment);
                     }).always(function() {
                         api_src(thislist, api_data);
@@ -942,7 +942,7 @@ function get_api_inputs(rd, api_data, api_name) {
                 }
                 if (pending == "polling") { // poll transaction id
                     if (transactionhash) {
-                        var poll_url = (erc20 === true) ? "ethereum/dashboards/transaction/" + transactionhash + "?erc_20=true" : payment + "/dashboards/transaction/" + transactionhash;
+                        let poll_url = (erc20 === true) ? "ethereum/dashboards/transaction/" + transactionhash + "?erc_20=true" : payment + "/dashboards/transaction/" + transactionhash;
                         api_proxy({
                             "api": api_name,
                             "search": poll_url,
@@ -952,35 +952,43 @@ function get_api_inputs(rd, api_data, api_name) {
                                 "method": "GET"
                             }
                         }).done(function(e) {
-                            var data = br_result(e).result;
+                            let data = br_result(e).result;
                             if (data) {
-                                var context = data.context;
+                                let context = data.context;
                                 if (context) {
                                     if (context.error) {
                                         tx_api_fail(thislist, statuspanel);
                                         handle_api_fails_list(rd, context.error, api_data, payment);
+                                        return
                                     } else {
-                                        var latestblock = context.state,
-                                            txd = (erc20 === true) ? blockchair_erc20_poll_data(data.data[transactionhash], setconfirmations, ccsymbol, latestblock) :
-                                            (payment == "ethereum") ? blockchair_eth_scan_data(data.data[transactionhash].calls[0], setconfirmations, ccsymbol, latestblock) :
-                                            blockchair_scan_data(data.data[transactionhash], setconfirmations, ccsymbol, address, latestblock);
-                                        if (txd.ccval) {
-                                            var tx_listitem = append_tx_li(txd, rqtype);
-                                            if (tx_listitem) {
-                                                transactionlist.append(tx_listitem.data(txd));
-                                                tx_count(statuspanel, 1);
-                                                compareamounts(rd);
+                                        let latestblock = context.state;
+                                        if (latestblock) {
+                                            let trxs = q_obj(data, "data." + transactionhash);
+                                            console.log(trxs);
+                                            if (trxs) {
+                                                let txd = (erc20 === true) ? blockchair_erc20_poll_data(trxs, setconfirmations, ccsymbol, latestblock) :
+                                                    (payment == "ethereum") ? blockchair_eth_scan_data(trxs.calls[0], setconfirmations, ccsymbol, latestblock) :
+                                                    blockchair_scan_data(trxs, setconfirmations, ccsymbol, address, latestblock);
+                                                console.log(txd);
+                                                if (txd.ccval) {
+                                                    let tx_listitem = append_tx_li(txd, rqtype);
+                                                    if (tx_listitem) {
+                                                        transactionlist.append(tx_listitem.data(txd));
+                                                        tx_count(statuspanel, 1);
+                                                        compareamounts(rd);
+                                                        return
+                                                    }
+                                                }
                                             }
                                         }
                                     }
-                                    return
                                 }
                             }
                             tx_api_fail(thislist, statuspanel);
                             handle_api_fails_list(rd, "unknown error", api_data, payment);
                         }).fail(function(jqXHR, textStatus, errorThrown) {
                             tx_api_fail(thislist, statuspanel);
-                            var error_object = (errorThrown) ? errorThrown : jqXHR;
+                            let error_object = (errorThrown) ? errorThrown : jqXHR;
                             handle_api_fails_list(rd, error_object, api_data, payment);
                         }).always(function() {
                             api_src(thislist, api_data);
@@ -1000,18 +1008,18 @@ function get_api_inputs(rd, api_data, api_name) {
                             "method": "GET"
                         }
                     }).done(function(e) {
-                        var data = br_result(e).result;
+                        let data = br_result(e).result;
                         if (data) {
                             if ($.isEmptyObject(data)) {
                                 tx_api_fail(thislist, statuspanel);
                                 handle_api_fails_list(rd, "unknown error", api_data, payment);
                             } else {
                                 $.each(data, function(dat, value) {
-                                    var r_address = value.receiver_address.replace(/\s/g, "");
+                                    let r_address = value.receiver_address.replace(/\s/g, "");
                                     if (r_address == address) { // filter outgoing transactions
-                                        var txd = nimiq_scan_data(value, setconfirmations);
+                                        let txd = nimiq_scan_data(value, setconfirmations);
                                         if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                            var tx_listitem = append_tx_li(txd, rqtype);
+                                            let tx_listitem = append_tx_li(txd, rqtype);
                                             if (tx_listitem) {
                                                 transactionlist.append(tx_listitem.data(txd));
                                                 counter++;
@@ -1028,7 +1036,7 @@ function get_api_inputs(rd, api_data, api_name) {
                         handle_api_fails_list(rd, "unknown error", api_data, payment);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
-                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        let error_object = (errorThrown) ? errorThrown : jqXHR;
                         handle_api_fails_list(rd, error_object, api_data, payment);
                     }).always(function() {
                         api_src(thislist, api_data);
@@ -1046,16 +1054,16 @@ function get_api_inputs(rd, api_data, api_name) {
                                     "method": "GET"
                                 }
                             }).done(function(e) {
-                                var data = br_result(e).result;
+                                let data = br_result(e).result;
                                 if (data) {
                                     if (data.error) {
                                         tx_api_fail(thislist, statuspanel);
                                         handle_api_fails_list(rd, data.error, api_data, payment);
                                     } else {
-                                        var txd = nimiq_scan_data(data, setconfirmations);
+                                        let txd = nimiq_scan_data(data, setconfirmations);
                                         if (txd) {
                                             if (txd.ccval) {
-                                                var tx_listitem = append_tx_li(txd, rqtype);
+                                                let tx_listitem = append_tx_li(txd, rqtype);
                                                 if (tx_listitem) {
                                                     transactionlist.append(tx_listitem.data(txd));
                                                     tx_count(statuspanel, 1);
@@ -1070,7 +1078,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                 handle_api_fails_list(rd, "unknown error", api_data, payment);
                             }).fail(function(jqXHR, textStatus, errorThrown) {
                                 tx_api_fail(thislist, statuspanel);
-                                var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                let error_object = (errorThrown) ? errorThrown : jqXHR;
                                 handle_api_fails_list(rd, error_object, api_data, payment);
                             }).always(function() {
                                 api_src(thislist, api_data);
@@ -1087,7 +1095,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                     "method": "GET"
                                 }
                             }).done(function(e) {
-                                var data = br_result(e).result;
+                                let data = br_result(e).result;
                                 if (data) {
                                     if (data.error) {
                                         tx_api_fail(thislist, statuspanel);
@@ -1102,13 +1110,13 @@ function get_api_inputs(rd, api_data, api_name) {
                                                 "method": "GET"
                                             }
                                         }).done(function(res) {
-                                            var e = br_result(res),
+                                            let e = br_result(res),
                                                 bh = q_obj(e, "result.latest_block.height");
                                             if (bh) {
-                                                var txd = nimiq_scan_data(data, setconfirmations, bh, null, transactionhash);
+                                                let txd = nimiq_scan_data(data, setconfirmations, bh, null, transactionhash);
                                                 if (txd) {
                                                     if (txd.ccval) {
-                                                        var tx_listitem = append_tx_li(txd, rqtype);
+                                                        let tx_listitem = append_tx_li(txd, rqtype);
                                                         if (tx_listitem) {
                                                             transactionlist.append(tx_listitem.data(txd));
                                                             tx_count(statuspanel, 1);
@@ -1119,7 +1127,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                             }
                                         }).fail(function(jqXHR, textStatus, errorThrown) {
                                             tx_api_fail(thislist, statuspanel);
-                                            var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                            let error_object = (errorThrown) ? errorThrown : jqXHR;
                                             handle_api_fails_list(rd, error_object, api_data, payment);
                                         });
                                     }
@@ -1129,7 +1137,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                 handle_api_fails_list(rd, "unknown error", api_data, payment);
                             }).fail(function(jqXHR, textStatus, errorThrown) {
                                 tx_api_fail(thislist, statuspanel);
-                                var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                let error_object = (errorThrown) ? errorThrown : jqXHR;
                                 handle_api_fails_list(rd, error_object, api_data, payment);
                             }).always(function() {
                                 api_src(thislist, api_data);
@@ -1158,25 +1166,25 @@ function match_xmr_pid(xmria, xmrpid, xmr_pid) {
 // API error handling
 
 function fail_dialogs(apisrc, error) {
-    var error_data = get_api_error_data(error);
+    let error_data = get_api_error_data(error);
     api_eror_msg(apisrc, error_data)
 }
 
 function handle_api_fails_list(rd, error, api_data, thispayment) {
-    var error_data = get_api_error_data(error);
+    let error_data = get_api_error_data(error),
+        requestid = rd.requestid;
     if (!api_data) {
         api_eror_msg(false, error_data);
         api_callback(requestid, true);
         return
     }
-    var api_name = api_data.name,
-        requestid = rd.requestid,
+    let api_name = api_data.name,
         nextapi = get_next_api(thispayment, api_name, requestid);
     if (nextapi === false) {
-        var api_url = api_data.url,
+        let api_url = api_data.url,
             nextrpc = get_next_rpc(thispayment, api_url, requestid);
         if (nextrpc === false) { // try next api
-            var rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown";
+            let rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown";
             api_eror_msg(rpc_id, error_data);
             api_callback(requestid, true);
             return
@@ -1190,15 +1198,15 @@ function handle_api_fails_list(rd, error, api_data, thispayment) {
 }
 
 function get_next_api(this_payment, api_name, requestid) {
-    var rpc_settings_li = $("#" + this_payment + "_settings .cc_settinglist li[data-id='apis']");
+    let rpc_settings_li = $("#" + this_payment + "_settings .cc_settinglist li[data-id='apis']");
     if (rpc_settings_li) {
-        var rpc_settings = rpc_settings_li.data(),
+        let rpc_settings = rpc_settings_li.data(),
             apirpc = rpc_settings.apis,
             apilist = $.grep(apirpc, function(filter) {
                 return filter.api;
             })
         if (!$.isEmptyObject(apilist)) {
-            var next_scan = apilist[apilist.findIndex(option => option.name == api_name) + 1],
+            let next_scan = apilist[apilist.findIndex(option => option.name == api_name) + 1],
                 next_api = (next_scan) ? next_scan : apilist[0],
                 rqid = (requestid) ? requestid : "";
             if (api_attempts[rqid + next_api.name] !== true) {
@@ -1210,7 +1218,7 @@ function get_next_api(this_payment, api_name, requestid) {
 }
 
 function get_api_error_data(error) {
-    var error_type = typeof error,
+    let error_type = typeof error,
         errorcode = (error.code) ? error.code :
         (error.status) ? error.status :
         (error.error_code) ? error.error_code : "",
@@ -1223,9 +1231,9 @@ function get_api_error_data(error) {
         skcheck, // string key check
         cons = error.console;
     if (stringcheck === true) {
-        var skcheck = ((error.indexOf("API calls limits have been reached") >= 0)); // blockcypher
+        let skcheck = ((error.indexOf("API calls limits have been reached") >= 0)); // blockcypher
     }
-    var apikey = ((errorcode === 101) || // fixer
+    let apikey = ((errorcode === 101) || // fixer
             (errorcode === 402) || // blockchair
             (errorcode === 403 || errorcode === 1) || // ethplorer => invalid or missing API key
             (errorcode === 1001) || // coinmarketcap => invalid API key
@@ -1241,34 +1249,34 @@ function get_api_error_data(error) {
 }
 
 function api_src(thislist, api_data) {
-    var api_url = api_data.url,
+    let api_url = api_data.url,
         api_url_short = (api_url) ? (api_url.length > 40) ? api_url.slice(0, 40) + "..." : api_url : "",
         api_name = (api_data.name) ? api_data.name : api_url_short;
     thislist.data("source", api_name).find(".api_source").html("<span class='src_txt' title='" + api_url_short + "'>source: " + api_name + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
 }
 
 function api_callback(requestid, nocache) {
-    var thislist = $("#" + requestid);
+    let thislist = $("#" + requestid);
     if (thislist.hasClass("scan")) {
         thislist.removeClass("scan").addClass("pmstatloaded");
         if (nocache === true) {} else {
-            var transactionlist = thislist.find(".transactionlist"),
+            let transactionlist = thislist.find(".transactionlist"),
                 transactionli = transactionlist.find("li");
             if (transactionli.length) {
                 transactionpush = [];
                 transactionli.each(function() {
-                    var thisnode = $(this),
+                    let thisnode = $(this),
                         thisdata = thisnode.data(),
                         historic = thisdata.historic,
                         conf = thisdata.confirmations,
                         setconfirmations = thisdata.setconfirmations;
                     transactionpush.push(thisdata);
                     if (!historic || $.isEmptyObject(historic)) {} else {
-                        var h_string = historic_data_title(thisdata.ccsymbol, thisdata.ccval, historic, setconfirmations, conf, false);
+                        let h_string = historic_data_title(thisdata.ccsymbol, thisdata.ccval, historic, setconfirmations, conf, false);
                         thisnode.append(hs_for(h_string)).attr("title", h_string);
                     }
                 });
-                var statuspanel = thislist.find(".pmetastatus"),
+                let statuspanel = thislist.find(".pmetastatus"),
                     statusbox = {
                         "requestid": requestid,
                         "status": statuspanel.attr("data-count"),
@@ -1276,7 +1284,7 @@ function api_callback(requestid, nocache) {
                     };
                 statuspush.push(statusbox);
             } else {
-                var statusbox = {
+                let statusbox = {
                     "requestid": requestid,
                     "status": 0,
                     "transactions": []
@@ -1294,7 +1302,7 @@ function tx_api_fail(thislist, statuspanel) {
 }
 
 function api_eror_msg(apisrc, error) {
-    var error_dat = (error) ? error : {
+    let error_dat = (error) ? error : {
             "errormessage": "errormessage",
             "errorcode": null
         },
@@ -1308,7 +1316,7 @@ function api_eror_msg(apisrc, error) {
         return
     }
     if (apisrc) {
-        var keyfail = (error.apikey === true),
+        let keyfail = (error.apikey === true),
             api_bttn = (keyfail === true) ? "<div id='add_api' data-api='" + apisrc + "' class='button'>Add " + apisrc + " Api key</div>" : "",
             t_op = (apisrc) ? "<span id='proxy_dialog' class='ref'>Try other proxy</span>" : "",
             content = "<h2 class='icon-blocked'>" + errorcode + "</h2><p class='doselect'><strong>Error: " + errormessage + "<br/><br/>" + t_op + "</p>" + api_bttn;
@@ -1326,11 +1334,11 @@ function get_rpc_inputs_init(rd, api_data) {
 }
 
 function get_rpc_inputs(rd, api_data) {
-    var requestid = rd.requestid,
+    let requestid = rd.requestid,
         thislist = $("#" + requestid);
     if (thislist.hasClass("scan")) {
         rpc_attempts[requestid + api_data.url] = true;
-        var payment = rd.payment,
+        let payment = rd.payment,
             pending = rd.pending,
             address = rd.address,
             requestdate = (rd.inout == "incoming") ? rd.timestamp : rd.requestdate,
@@ -1365,7 +1373,7 @@ function get_rpc_inputs(rd, api_data) {
                         "method": "GET"
                     }
                 }).done(function(lb) {
-                    var latestblock = br_result(lb).result;
+                    let latestblock = br_result(lb).result;
                     if (latestblock) {
                         setTimeout(function() {
                             if (pending == "scanning") { // scan incoming transactions on address
@@ -1376,14 +1384,14 @@ function get_rpc_inputs(rd, api_data) {
                                         "method": "GET"
                                     }
                                 }).done(function(e) {
-                                    var data = br_result(e).result;
+                                    let data = br_result(e).result;
                                     if (data) {
                                         if ($.isEmptyObject(data)) {} else {
                                             $.each(data, function(dat, value) {
                                                 if (value.txid) { // filter outgoing transactions
-                                                    var txd = mempoolspace_scan_data(value, setconfirmations, ccsymbol, address, latestblock);
+                                                    let txd = mempoolspace_scan_data(value, setconfirmations, ccsymbol, address, latestblock);
                                                     if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                                        var tx_listitem = append_tx_li(txd, rqtype);
+                                                        let tx_listitem = append_tx_li(txd, rqtype);
                                                         if (tx_listitem) {
                                                             transactionlist.append(tx_listitem.data(txd));
                                                             counter++;
@@ -1403,7 +1411,7 @@ function get_rpc_inputs(rd, api_data) {
                                     }, api_data, payment);
                                 }).fail(function(jqXHR, textStatus, errorThrown) {
                                     tx_api_fail(thislist, statuspanel);
-                                    var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                    let error_object = (errorThrown) ? errorThrown : jqXHR;
                                     handle_rpc_fails_list(rd, error_object, api_data, payment);
                                 });
                                 return
@@ -1415,12 +1423,12 @@ function get_rpc_inputs(rd, api_data) {
                                     "method": "GET"
                                 }
                             }).done(function(e) {
-                                var data = br_result(e).result;
+                                let data = br_result(e).result;
                                 if (data) {
-                                    var txd = mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, latestblock);
+                                    let txd = mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, latestblock);
                                     if (txd) {
                                         if (txd.ccval) {
-                                            var tx_listitem = append_tx_li(txd, rqtype);
+                                            let tx_listitem = append_tx_li(txd, rqtype);
                                             if (tx_listitem) {
                                                 transactionlist.append(tx_listitem.data(txd));
                                                 tx_count(statuspanel, 1);
@@ -1434,7 +1442,7 @@ function get_rpc_inputs(rd, api_data) {
                                 handle_rpc_fails_list(rd, "unknown error", api_data, payment);
                             }).fail(function(jqXHR, textStatus, errorThrown) {
                                 tx_api_fail(thislist, statuspanel);
-                                var error_object = (errorThrown) ? errorThrown : jqXHR;
+                                let error_object = (errorThrown) ? errorThrown : jqXHR;
                                 handle_rpc_fails_list(rd, error_object, api_data, payment);
                             });
                         }, 500);
@@ -1444,7 +1452,7 @@ function get_rpc_inputs(rd, api_data) {
                     handle_rpc_fails_list(rd, "unknown error", api_data, payment);
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     tx_api_fail(thislist, statuspanel);
-                    var error_object = (errorThrown) ? errorThrown : jqXHR;
+                    let error_object = (errorThrown) ? errorThrown : jqXHR;
                     handle_rpc_fails_list(rd, error_object, api_data, payment);
                 }).always(function() {
                     api_src(thislist, api_data);
@@ -1456,26 +1464,26 @@ function get_rpc_inputs(rd, api_data) {
                     handle_rpc_fails_list(rd, false, api_data, payment); // use api instead
                     return
                 }
-                var set_url = (rpcurl) ? rpcurl : main_eth_node;
+                let set_url = (rpcurl) ? rpcurl : main_eth_node;
                 api_proxy(eth_params(set_url, 25, "eth_blockNumber", [])).done(function(a) {
-                    var r_1 = inf_result(a);
+                    let r_1 = inf_result(a);
                     if (r_1) {
                         api_proxy(eth_params(set_url, 25, "eth_getTransactionByHash", [transactionhash])).done(function(b) {
-                            var r_2 = inf_result(b);
+                            let r_2 = inf_result(b);
                             if (r_2) {
-                                var this_bn = r_2.blockNumber;
+                                let this_bn = r_2.blockNumber;
                                 api_proxy(eth_params(set_url, 25, "eth_getBlockByNumber", [this_bn, false])).done(function(c) {
-                                    var r_3 = inf_result(c);
+                                    let r_3 = inf_result(c);
                                     if (r_3) {
-                                        var tbn = Number(this_bn),
+                                        let tbn = Number(this_bn),
                                             cbn = Number(r_1),
                                             conf = cbn - tbn,
                                             conf_correct = (conf < 0) ? 0 : conf,
                                             txd;
                                         if (erc20 === true) {
-                                            var input = r_2.input;
+                                            let input = r_2.input;
                                             if (str_match(input, address.slice(3)) === true) {
-                                                var signature_hex = input.slice(2, 10),
+                                                let signature_hex = input.slice(2, 10),
                                                     address_hex = input.slice(10, 74),
                                                     amount_hex = input.slice(74, input.length),
                                                     tokenValue = hexToNumberString(amount_hex),
@@ -1493,7 +1501,7 @@ function get_rpc_inputs(rd, api_data) {
                                                 return
                                             }
                                         } else {
-                                            var txdata = {
+                                            let txdata = {
                                                     "timestamp": Number(r_3.timestamp),
                                                     "hash": transactionhash,
                                                     "confirmations": conf_correct,
@@ -1502,7 +1510,7 @@ function get_rpc_inputs(rd, api_data) {
                                                 txd = infura_eth_poll_data(txdata, setconfirmations, ccsymbol);
                                         }
                                         if (txd.ccval) {
-                                            var tx_listitem = append_tx_li(txd, rqtype);
+                                            let tx_listitem = append_tx_li(txd, rqtype);
                                             if (tx_listitem) {
                                                 transactionlist.append(tx_listitem.data(txd));
                                             }
@@ -1559,9 +1567,9 @@ function get_rpc_inputs(rd, api_data) {
                             })
                         }
                     }).done(function(e) {
-                        var data = br_result(e).result;
+                        let data = br_result(e).result;
                         if (data) {
-                            var nano_data = data.data;
+                            let nano_data = data.data;
                             if ($.isEmptyObject(nano_data)) {
                                 tx_api_fail(thislist, statuspanel);
                                 handle_rpc_fails_list(rd, {
@@ -1569,7 +1577,7 @@ function get_rpc_inputs(rd, api_data) {
                                     "console": true
                                 }, api_data, payment);
                             } else {
-                                var pending_array_node = (nano_data[0]) ? nano_data[0].pending : [],
+                                let pending_array_node = (nano_data[0]) ? nano_data[0].pending : [],
                                     pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
                                     history_array_node = (nano_data[1]) ? nano_data[1].history : [],
                                     history_array = $.isEmptyObject(history_array_node) ? [] : history_array_node,
@@ -1577,9 +1585,9 @@ function get_rpc_inputs(rd, api_data) {
                                         return y.local_timestamp - x.local_timestamp;
                                     });
                                 $.each(merged_array, function(data, value) {
-                                    var txd = nano_scan_data(value, setconfirmations, ccsymbol);
+                                    let txd = nano_scan_data(value, setconfirmations, ccsymbol);
                                     if ((txd.transactiontime > request_timestamp) && txd.ccval && (value.type === undefined || value.type == "receive")) {
-                                        var tx_listitem = append_tx_li(txd, rqtype);
+                                        let tx_listitem = append_tx_li(txd, rqtype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
                                             counter++;
@@ -1598,7 +1606,7 @@ function get_rpc_inputs(rd, api_data) {
                         }, api_data, payment);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
-                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        let error_object = (errorThrown) ? errorThrown : jqXHR;
                         handle_rpc_fails_list(rd, error_object, api_data, payment);
                     }).always(function() {
                         api_src(thislist, api_data);
@@ -1622,15 +1630,15 @@ function get_rpc_inputs(rd, api_data) {
                             })
                         }
                     }).done(function(e) {
-                        var data = br_result(e).result;
+                        let data = br_result(e).result;
                         if (data) {
                             if (data.error) {
                                 tx_api_fail(thislist, statuspanel);
                                 handle_rpc_fails_list(rd, data.error, api_data, payment);
                             } else {
-                                var txd = nano_scan_data(data, setconfirmations, ccsymbol, transactionhash);
+                                let txd = nano_scan_data(data, setconfirmations, ccsymbol, transactionhash);
                                 if (txd.ccval) {
-                                    var tx_listitem = append_tx_li(txd, rqtype);
+                                    let tx_listitem = append_tx_li(txd, rqtype);
                                     if (tx_listitem) {
                                         transactionlist.append(tx_listitem.data(txd));
                                     }
@@ -1647,7 +1655,7 @@ function get_rpc_inputs(rd, api_data) {
                         }, api_data, payment);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
-                        var error_object = (errorThrown) ? errorThrown : jqXHR;
+                        let error_object = (errorThrown) ? errorThrown : jqXHR;
                         handle_rpc_fails_list(rd, error_object, api_data, payment);
                     }).always(function() {
                         api_src(thislist, api_data);
@@ -1661,9 +1669,9 @@ function get_rpc_inputs(rd, api_data) {
 }
 
 function inf_result(r) {
-    var ir1 = br_result(r);
+    let ir1 = br_result(r);
     if (ir1) {
-        var ir2 = ir1.result;
+        let ir2 = ir1.result;
         if (ir2) {
             return ir2.result;
         }
@@ -1676,7 +1684,7 @@ function inf_err(set_url) {
 }
 
 function eth_params(set_url, cachetime, method, params) {
-    var payload = {
+    let payload = {
         "cachetime": cachetime,
         "cachefolder": "1h",
         "params": {
@@ -1708,14 +1716,14 @@ function eth_params(set_url, cachetime, method, params) {
 // RPC error handling
 
 function handle_rpc_fails_list(rd, error, rpc_data, thispayment) {
-    var api_url = rpc_data.url,
+    let api_url = rpc_data.url,
         requestid = rd.requestid,
         nextrpc = get_next_rpc(thispayment, api_url, requestid);
     if (nextrpc === false) {
-        var api_name = rpc_data.name,
+        let api_name = rpc_data.name,
             nextapi = get_next_api(thispayment, api_name, requestid);
         if (nextapi === false) { // try next api
-            var rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
+            let rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
                 error_data = (error === false) ? false : get_api_error_data(error);
             api_eror_msg(rpc_id, error_data);
             api_callback(requestid, true);
@@ -1730,9 +1738,9 @@ function handle_rpc_fails_list(rd, error, rpc_data, thispayment) {
 }
 
 function get_next_rpc(this_payment, api_url, requestid) {
-    var rpc_settings_li = $("#" + this_payment + "_settings .cc_settinglist li[data-id='apis']");
+    let rpc_settings_li = $("#" + this_payment + "_settings .cc_settinglist li[data-id='apis']");
     if (rpc_settings_li) {
-        var rpc_settings = rpc_settings_li.data(),
+        let rpc_settings = rpc_settings_li.data(),
             apilist = rpc_settings.apis,
             rpclist = rpc_settings.options,
             apirpc = $.grep(apilist, function(filter) {
@@ -1740,7 +1748,7 @@ function get_next_rpc(this_payment, api_url, requestid) {
             }),
             restlist = (apirpc && rpclist) ? $.merge(apirpc, rpclist) : apirpc;
         if (!$.isEmptyObject(restlist)) {
-            var next_scan = restlist[restlist.findIndex(option => option.url == api_url) + 1],
+            let next_scan = restlist[restlist.findIndex(option => option.url == api_url) + 1],
                 next_rpc = (next_scan) ? next_scan : restlist[0],
                 rqid = (requestid) ? requestid : "";
             if (rpc_attempts[rqid + next_rpc.url] !== true) {
@@ -1752,9 +1760,9 @@ function get_next_rpc(this_payment, api_url, requestid) {
 }
 
 function append_tx_li(txd, rqtype, ln) {
-    var txhash = txd.txhash;
+    let txhash = txd.txhash;
     if (txhash) {
-        var ccval = txd.ccval,
+        let ccval = txd.ccval,
             ccval_rounded = trimdecimals(ccval, 6),
             transactiontime = txd.transactiontime,
             conf = txd.confirmations,
@@ -1774,7 +1782,7 @@ function append_tx_li(txd, rqtype, ln) {
             tx_listitem = $("<li><div class='txli_content'>" + date_format + confspan + "<div class='txli_conf txl_canceled'><span class='icon-blocked'></span>Canceled</div><span class='tx_val'> + " + valstr + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>"),
             historic = txd.historic;
         if (historic) {
-            var h_string = historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, true);
+            let h_string = historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, true);
             tx_listitem.append(hs_for(h_string)).attr("title", h_string);
         }
         if (rqtype === false) {
@@ -1797,10 +1805,10 @@ function hs_for(dat) {
 }
 
 function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, fromcache) {
-    var timestamp = historic.timestamp,
+    let timestamp = historic.timestamp,
         price = historic.price;
     if (timestamp && price) {
-        var fiatsrc = historic.fiatapisrc,
+        let fiatsrc = historic.fiatapisrc,
             src = historic.apisrc,
             lcsymbol = historic.lcsymbol,
             lc_eur_rate = historic.lcrate,
@@ -1816,18 +1824,18 @@ function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, 
             cf_info = "\nConfirmations: " + conf_var;
         return "Historic data (" + fulldateformat(new Date((timestamp - timezone)), "en-us") + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(6) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src + cf_info;
     }
-    var resp = "Failed to get historical " + ccsymbol + " price data";
+    let resp = "Failed to get historical " + ccsymbol + " price data";
     notify(resp);
     return resp;
 }
 
 function compareamounts(rd, ln) {
-    var thisrequestid = rd.requestid,
+    let thisrequestid = rd.requestid,
         requestli = $("#" + thisrequestid),
         lastlist = requestli.find(".transactionlist li:last"),
         firstinput = lastlist.data("transactiontime");
     if (firstinput) {
-        var requestdate = rd.requestdate,
+        let requestdate = rd.requestdate,
             iscrypto = rd.iscrypto,
             thispayment = rd.payment,
             ccsymbol = rd.currencysymbol,
@@ -1840,7 +1848,7 @@ function compareamounts(rd, ln) {
             offset = Math.abs(now() - (firstinput - timezone)),
             recent = (offset < 900000); // Only lookup hystorical data after 15 minutes
         if (iscrypto || recent) {
-            var thissum_cc = 0,
+            let thissum_cc = 0,
                 txhash_cc,
                 paymenttimestamp_cc,
                 confirmations_cc = 0,
@@ -1853,7 +1861,7 @@ function compareamounts(rd, ln) {
                 margin = 0.95;
             $(requestli.find(".transactionlist li").get().reverse()).each(function(i) {
                 tx_counter++;
-                var thisnode = $(this),
+                let thisnode = $(this),
                     tn_dat = thisnode.data();
                 confirmations_cc = tn_dat.confirmations,
                     paymenttimestamp_cc = tn_dat.transactiontime,
@@ -1870,7 +1878,7 @@ function compareamounts(rd, ln) {
                 } else {
                     confirmed_cc = false;
                 }
-                var confbar = thisnode.find(".confbar");
+                let confbar = thisnode.find(".confbar");
                 if (confbar.length > 0) {
                     confbar.each(function(i) {
                         animate_confbar($(this), i);
@@ -1887,17 +1895,17 @@ function compareamounts(rd, ln) {
                     pending_cc = "scanning";
             }
             if (recent && !iscrypto) { // get local fiat rates when request is less then 15 minutes old
-                var exchangerates = sessionStorage.getItem("bitrequest_exchangerates"),
+                let exchangerates = sessionStorage.getItem("bitrequest_exchangerates"),
                     cc_xrates = sessionStorage.getItem("bitrequest_xrates_" + ccsymbol);
                 if (exchangerates && cc_xrates) {
-                    var fiat_xrate_parse = JSON.parse(exchangerates),
+                    let fiat_xrate_parse = JSON.parse(exchangerates),
                         local_xrate = (fiat_xrate_parse.fiat_exchangerates) ? fiat_xrate_parse.fiat_exchangerates[rd.fiatcurrency] : null,
                         usd_eur_xrate = (fiat_xrate_parse.fiat_exchangerates) ? fiat_xrate_parse.fiat_exchangerates.usd : null;
                     if (local_xrate && usd_eur_xrate) {
-                        var cc_xrate = JSON.parse(cc_xrates),
+                        let cc_xrate = JSON.parse(cc_xrates),
                             usd_rate = (cc_xrate) ? cc_xrate.ccrate : null;
                         if (usd_rate) {
-                            var usdval = thissum_cc * usd_rate,
+                            let usdval = thissum_cc * usd_rate,
                                 eurval = usdval / usd_eur_xrate,
                                 fiatvalue = eurval * local_xrate;
                         }
@@ -1918,18 +1926,18 @@ function compareamounts(rd, ln) {
             api_callback(thisrequestid);
             return
         }
-        var latestconf = (rd.no_conf === true) ? 0 : firstlist.data("confirmations"), // only update on change
+        let latestconf = (rd.no_conf === true) ? 0 : firstlist.data("confirmations"), // only update on change
             hc_prefix = "bitrequest_historic_" + thisrequestid,
             historiccache = sessionStorage.getItem(hc_prefix),
             cacheval = latestinput + latestconf;
         if (cacheval != historiccache) { //new input detected; call historic api
             sessionStorage.removeItem(hc_prefix); // remove historic price cache
-            var historic_payload = $.extend(rd, {
+            let historic_payload = $.extend(rd, {
                 "latestinput": latestinput,
                 "latestconf": latestconf,
                 "firstinput": firstinput
             });
-            var apilist = "historic_fiat_price_apis",
+            let apilist = "historic_fiat_price_apis",
                 fiatapi = $("#fiatapisettings").data("selected"),
                 fiatapi_default = (fiatapi == "coingecko" || fiatapi == "coinbase") ? "fixer" : fiatapi; // exclude coingecko api"
             api_attempt[apilist] = {}; // reset global historic fiat price api attempt
@@ -1944,10 +1952,10 @@ function compareamounts(rd, ln) {
 
 function get_historical_fiat_data(rd, apilist, fiatapi, ln) {
     api_attempt[apilist][fiatapi] = true;
-    var thisrequestid = rd.requestid,
+    let thisrequestid = rd.requestid,
         fiatcurrency = rd.fiatcurrency;
     if (fiatcurrency) {
-        var lcsymbol = fiatcurrency.toUpperCase(),
+        let lcsymbol = fiatcurrency.toUpperCase(),
             payload = get_historic_fiatprice_api_payload(fiatapi, lcsymbol, rd.latestinput);
         api_proxy({
             "api": fiatapi,
@@ -1958,10 +1966,10 @@ function get_historical_fiat_data(rd, apilist, fiatapi, ln) {
                 "method": "GET"
             }
         }).done(function(e) {
-            var data = br_result(e).result;
+            let data = br_result(e).result;
             if (data) {
                 if (data.error) {
-                    var next_historic = try_next_api(apilist, fiatapi);
+                    let next_historic = try_next_api(apilist, fiatapi);
                     if (next_historic) {
                         get_historical_fiat_data(rd, apilist, next_historic);
                         return
@@ -1970,31 +1978,31 @@ function get_historical_fiat_data(rd, apilist, fiatapi, ln) {
                     api_callback(thisrequestid);
                     return
                 }
-                var usdeur = false,
+                let usdeur = false,
                     usdloc = false,
                     usdrate = false,
                     get_lcrate = false;
                 if (fiatapi == "currencylayer") {
-                    var usdeur = q_obj(data, "quotes.USDEUR"),
+                    usdeur = q_obj(data, "quotes.USDEUR"),
                         usdloc = q_obj(data, "quotes.USD" + lcsymbol);
                     if (usdeur && usdloc) {
-                        var usdrate = 1 / usdeur,
+                        usdrate = 1 / usdeur,
                             get_lcrate = usdloc * usdrate;
                     }
                 } else {
-                    var usdrate = q_obj(data, "rates.USD"),
+                    usdrate = q_obj(data, "rates.USD"),
                         get_lcrate = q_obj(data, "rates." + lcsymbol);
                 }
                 if (usdrate && get_lcrate) {
-                    var lcrate = (lcsymbol == "EUR") ? 1 : get_lcrate;
-                    var historic_api = $("#cmcapisettings").data("selected"),
+                    let lcrate = (lcsymbol == "EUR") ? 1 : get_lcrate;
+                    let historic_api = $("#cmcapisettings").data("selected"),
                         picked_historic_api = (historic_api == "coinmarketcap") ? "coingecko" : historic_api, // default to "coingecko api"
                         init_apilist = "historic_crypto_price_apis";
                     api_attempt[init_apilist] = {};
                     get_historical_crypto_data(rd, fiatapi, init_apilist, picked_historic_api, lcrate, usdrate, lcsymbol, ln);
                     return
                 }
-                var next_historic = try_next_api(apilist, fiatapi);
+                let next_historic = try_next_api(apilist, fiatapi);
                 if (next_historic) {
                     get_historical_fiat_data(rd, apilist, next_historic);
                     return
@@ -2003,12 +2011,12 @@ function get_historical_fiat_data(rd, apilist, fiatapi, ln) {
             fail_dialogs(fiatapi, "unable to fetch " + lcsymbol + " exchange rate");
             api_callback(thisrequestid);
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            var next_historic = try_next_api(apilist, fiatapi);
+            let next_historic = try_next_api(apilist, fiatapi);
             if (next_historic) {
                 get_historical_fiat_data(rd, apilist, next_historic);
                 return
             }
-            var error_object = (errorThrown) ? errorThrown : jqXHR;
+            let error_object = (errorThrown) ? errorThrown : jqXHR;
             fail_dialogs(fiatapi, error_object);
             api_callback(thisrequestid);
         });
@@ -2018,7 +2026,7 @@ function get_historical_fiat_data(rd, apilist, fiatapi, ln) {
 }
 
 function get_historic_fiatprice_api_payload(fiatapi, lcsymbol, latestinput) {
-    var dateformat = form_date(latestinput),
+    let dateformat = form_date(latestinput),
         payload = (fiatapi == "fixer") ? dateformat + "?symbols=" + lcsymbol + ",USD" :
         (fiatapi == "currencylayer") ? "historical?date=" + dateformat :
         dateformat + "?base=EUR"; // <- exchangeratesapi
@@ -2026,7 +2034,7 @@ function get_historic_fiatprice_api_payload(fiatapi, lcsymbol, latestinput) {
 }
 
 function form_date(latestinput) {
-    var dateobject = new Date(parseFloat(latestinput)),
+    let dateobject = new Date(parseFloat(latestinput)),
         getmonth = dateobject.getUTCMonth() + 1,
         getday = dateobject.getUTCDate(),
         year = dateobject.getUTCFullYear(),
@@ -2037,7 +2045,7 @@ function form_date(latestinput) {
 
 function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, lcsymbol, ln) {
     api_attempt[apilist][api] = true;
-    var thisrequestid = rd.requestid,
+    let thisrequestid = rd.requestid,
         thispayment = rd.payment,
         ccsymbol = rd.currencysymbol,
         latestinput = rd.latestinput,
@@ -2061,11 +2069,11 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
             "method": "GET"
         }
     }).done(function(e) {
-        var api_result = br_result(e).result,
+        let api_result = br_result(e).result,
             data = (api == "coingecko") ? (api_result) ? api_result.prices : null :
             (api == "coincodex") ? (api_result) ? api_result[ccsymbol.toUpperCase()] : null : api_result;
         if (data && !data.error) {
-            var latestconf = rd.latestconf,
+            let latestconf = rd.latestconf,
                 thisamount = rd.amount,
                 getconfirmations = rd.set_confirmations,
                 getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
@@ -2086,7 +2094,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 margin = (historicusdvalue < 2) ? 0.60 : 0.95; // be flexible with small amounts
             $(requestli.find(".transactionlist li").get().reverse()).each(function(i) {
                 tx_counter++;
-                var thisnode = $(this),
+                let thisnode = $(this),
                     tn_dat = thisnode.data(),
                     thistimestamp = tn_dat.transactiontime,
                     thisvalue = tn_dat.ccval,
@@ -2104,7 +2112,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     paymenttimestamp = tn_dat.transactiontime,
                     txhash = tn_dat.txhash,
                     receivedcc += parseFloat(thisvalue) || 0; // sum of outputs CC
-                var thisusdsum = receivedusd += parseFloat(historic_price * thisvalue) || 0;
+                let thisusdsum = receivedusd += parseFloat(historic_price * thisvalue) || 0;
                 if (historic_price && (conf >= setconfirmations || rd.no_conf === true || conf === false)) { // check all confirmations + whitelist for currencies unable to fetch confirmations
                     confirmed = true;
                     if (thisusdsum >= historicusdvalue * margin) { //minus 5% dollar for volatility compensation
@@ -2116,7 +2124,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 } else {
                     confirmed = false;
                 }
-                var confbar = thisnode.find(".confbar");
+                let confbar = thisnode.find(".confbar");
                 if (confbar.length > 0) {
                     confbar.each(function(i) {
                         animate_confbar($(this), i);
@@ -2148,7 +2156,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     "pending": pending,
                     "lightning": lnd
                 }, false);
-                var cacheval = latestinput + latestconf;
+                let cacheval = latestinput + latestconf;
                 if (pending == "no") {} else {
                     sessionStorage.setItem("bitrequest_historic_" + thisrequestid, cacheval); // 'cache' historic data
                 }
@@ -2156,7 +2164,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 return;
             }
         }
-        var next_historic = try_next_api(apilist, api);
+        let next_historic = try_next_api(apilist, api);
         if (next_historic) {
             get_historical_crypto_data(rd, fiatapi, apilist, next_historic, lcrate, usdrate, lcsymbol, ln);
             return
@@ -2164,19 +2172,19 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
         fail_dialogs(api, "error retrieving historical price data");
         api_callback(thisrequestid);
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        var next_historic = try_next_api(apilist, api);
+        let next_historic = try_next_api(apilist, api);
         if (next_historic) {
             get_historical_crypto_data(rd, fiatapi, apilist, next_historic, lcrate, usdrate, lcsymbol, ln);
             return
         }
-        var error_object = (errorThrown) ? errorThrown : jqXHR;
+        let error_object = (errorThrown) ? errorThrown : jqXHR;
         fail_dialogs(api, error_object);
         api_callback(thisrequestid);
     })
 }
 
 function get_payload_historic_coingecko(coin_id, starttime, endtime, erc20_contract) {
-    var time_range = Math.abs(endtime - starttime),
+    let time_range = Math.abs(endtime - starttime),
         start_time = (time_range < 3600) ? 5200 : 3600; // compensation for minimum range
     if (erc20_contract) {
         return "coins/ethereum/contract/" + erc20_contract + "/market_chart/range?vs_currency=usd&from=" + (starttime - start_time) + "&to=" + (endtime + 3600); // expand range with one hour for error margin
@@ -2185,7 +2193,7 @@ function get_payload_historic_coingecko(coin_id, starttime, endtime, erc20_contr
 }
 
 function get_payload_historic_coinpaprika(coin_id, starttime, endtime) {
-    var ts_start = starttime - 36000,
+    let ts_start = starttime - 36000,
         ts_end = endtime + 36000, // add ten hours flex both ways otherwise api can return empty result
         timespan = (ts_end - ts_start),
         // api limit = 1000 rows (default)
@@ -2202,7 +2210,7 @@ function get_payload_historic_coinpaprika(coin_id, starttime, endtime) {
 }
 
 function get_payload_historic_coincodex(coin_id, starttime, endtime) {
-    var st_format = cx_date(starttime),
+    let st_format = cx_date(starttime),
         et_format = cx_date(endtime),
         tquery = (starttime == endtime) ? st_format + "/" + st_format : st_format + "/" + et_format;
     return "get_coin_history/" + coin_id + "/" + tquery + "/" + 1000;
@@ -2214,11 +2222,11 @@ function cx_date(ts) {
 
 function compare_historic_prices(api, values, price_array, thistimestamp) {
     $.each(price_array, function(i, value) {
-        var historic_object = (api == "coincodex") ? get_historic_object_coincodex(value) :
+        let historic_object = (api == "coincodex") ? get_historic_object_coincodex(value) :
             (api == "coingecko") ? get_historic_object_coingecko(value) :
             get_historic_object_coinpaprika(value);
         if (historic_object) {
-            var historic_timestamp = historic_object.timestamp,
+            let historic_timestamp = historic_object.timestamp,
                 historic_price = historic_object.price;
             if (historic_timestamp > thistimestamp) {
                 values["timestamp"] = historic_timestamp,
@@ -2227,11 +2235,11 @@ function compare_historic_prices(api, values, price_array, thistimestamp) {
             }
         }
     });
-    var fetched = values.fetched;
+    let fetched = values.fetched;
     if (fetched && fetched === true) {
         // check if historical prices are fetched succesfully, if true do nothing
     } else { // if no matching timestamp get latest
-        var lastitem = price_array[price_array.length - 1],
+        let lastitem = price_array[price_array.length - 1],
             last_historic_object = (api == "coincodex") ? get_historic_object_coincodex(lastitem) :
             (api == "coingecko") ? get_historic_object_coingecko(lastitem) :
             get_historic_object_coinpaprika(lastitem);

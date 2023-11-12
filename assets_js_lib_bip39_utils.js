@@ -1,4 +1,4 @@
-var crypto = window.crypto,
+const crypto = window.crypto,
     b58ab = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
     b32ab = "qpzry9x8gf2tvdw0s3jn54khce6mua7l",
     generator = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3],
@@ -81,28 +81,28 @@ function normalizestring(str) {
 }
 
 function mnemonicToBinaryString(mnemonic) {
-    var mnemonic = splitwords(mnemonic);
-    if (mnemonic.length == 0 || mnemonic.length % 3 > 0) {
+    let mm = splitwords(mnemonic);
+    if (mm.length == 0 || mm.length % 3 > 0) {
         return null;
     }
-    var idx = [];
-    for (var i = 0; i < mnemonic.length; i++) {
-        var word = mnemonic[i],
+    let idx = [];
+    for (let i = 0; i < mm.length; i++) {
+        let word = mm[i],
             wordIndex = wordlist.indexOf(word);
         if (wordIndex == -1) {
             return null;
         }
-        var binaryIndex = zfill(wordIndex.toString(2), 11);
+        let binaryIndex = zfill(wordIndex.toString(2), 11);
         idx.push(binaryIndex);
     }
     return idx.join("");
 }
 
 function binaryStringToWordArray(binary) {
-    var aLen = binary.length / 32,
+    let aLen = binary.length / 32,
         a = [];
-    for (var i = 0; i < aLen; i++) {
-        var valueStr = binary.substring(0, 32),
+    for (let i = 0; i < aLen; i++) {
+        let valueStr = binary.substring(0, 32),
             value = parseInt(valueStr, 2);
         a.push(value);
         binary = binary.slice(32);
@@ -111,8 +111,8 @@ function binaryStringToWordArray(binary) {
 }
 
 function byteArrayToWordArray(data) {
-    var a = [];
-    for (var i = 0; i < data.length / 4; i++) {
+    let a = [];
+    for (let i = 0; i < data.length / 4; i++) {
         v = 0;
         v += data[i * 4 + 0] << 8 * 3;
         v += data[i * 4 + 1] << 8 * 2;
@@ -124,16 +124,16 @@ function byteArrayToWordArray(data) {
 }
 
 function byteArrayToBinaryString(data) {
-    var bin = "";
-    for (var i = 0; i < data.length; i++) {
+    let bin = "";
+    for (let i = 0; i < data.length; i++) {
         bin += zfill(data[i].toString(2), 8);
     }
     return bin;
 }
 
 function hexStringToBinaryString(hexString) {
-    var binaryString = "";
-    for (var i = 0; i < hexString.length; i++) {
+    let binaryString = "";
+    for (let i = 0; i < hexString.length; i++) {
         binaryString += zfill(parseInt(hexString[i], 16).toString(2), 4);
     }
     return binaryString;
@@ -143,12 +143,12 @@ function hexStringToBinaryString(hexString) {
 // https://gist.github.com/diafygi/90a3e80ca1c2793220e5/
 
 function b58enc(enc, encode) {
-    var bytestring = (encode = "hex") ? hextobin(enc) : buffer(enc);
+    let bytestring = (encode = "hex") ? hextobin(enc) : buffer(enc);
     return b58enc_uint_array(bytestring);
 }
 
 function b58enc_uint_array(u) {
-    var d = [],
+    let d = [],
         s = "",
         i, j, c, n;
     for (i in u) {
@@ -167,12 +167,12 @@ function b58enc_uint_array(u) {
 }
 
 function b58dec(dec, decode) {
-    var buffer = b58dec_uint_array(dec);
+    let buffer = b58dec_uint_array(dec);
     return (decode == "hex") ? buf2hex(buffer) : unbuffer(buffer, "utf-8");
 }
 
 function b58dec_uint_array(dec) {
-    var d = [],
+    let d = [],
         b = [],
         i, j, c, n;
     for (i in dec) {
@@ -193,12 +193,12 @@ function b58dec_uint_array(dec) {
 
 // base58check
 function b58check_encode(payload) {
-    var full_bytes = payload + hmacsha(hmacsha(payload, "sha256", "hex"), "sha256", "hex").slice(0, 8);
+    let full_bytes = payload + hmacsha(hmacsha(payload, "sha256", "hex"), "sha256", "hex").slice(0, 8);
     return b58enc(full_bytes, "hex");
 }
 
 function b58check_decode(val) {
-    var full_bytes = b58dec(val, "hex"),
+    let full_bytes = b58dec(val, "hex"),
         bytes = full_bytes.substring(0, full_bytes.length - 8);
     return bytes;
 }
@@ -206,7 +206,7 @@ function b58check_decode(val) {
 //LNurl
 
 function toWords(bytes) {
-    var res = convert(bytes, 8, 5, true);
+    let res = convert(bytes, 8, 5, true);
     if (Array.isArray(res)) {
         return res
     }
@@ -214,7 +214,7 @@ function toWords(bytes) {
 }
 
 function fromWords(bytes) {
-    var res = convert(bytes, 5, 8, true);
+    let res = convert(bytes, 5, 8, true);
     if (Array.isArray(res)) {
         return res
     }
@@ -222,11 +222,11 @@ function fromWords(bytes) {
 }
 
 function convert(data, inBits, outBits, pad) {
-    var value = 0,
+    let value = 0,
         bits = 0,
         maxV = (1 << outBits) - 1,
         result = [];
-    for (var i = 0; i < data.length; ++i) {
+    for (let i = 0; i < data.length; ++i) {
         value = (value << inBits) | data[i];
         bits += inBits;
         while (bits >= outBits) {
@@ -252,13 +252,13 @@ function convert(data, inBits, outBits, pad) {
 //hashing
 
 function hmac_bits(message, key, encode) {
-    var enc_msg = (encode == "hex") ? hextobits(message) : message,
+    let enc_msg = (encode == "hex") ? hextobits(message) : message,
         hmac = new sjcl.misc.hmac(key, sjcl.hash.sha512);
     return frombits(hmac.encrypt(enc_msg));
 }
 
 function hmacsha(key, hash, encode) {
-    var enc_key = (encode == "hex") ? hextobits(key) : key;
+    let enc_key = (encode == "hex") ? hextobits(key) : key;
     return frombits(hmacsha_bits(enc_key, hash));
 }
 
@@ -267,7 +267,7 @@ function hmacsha_bits(key, hash) {
 }
 
 function privkey_wif(versionbytes, hexkey, comp) {
-    var compressed = (comp) ? "01" : "";
+    let compressed = (comp) ? "01" : "";
     return b58check_encode(versionbytes + hexkey + compressed);
 }
 
@@ -284,7 +284,7 @@ function pub_to_address(versionbytes, pub) {
 }
 
 function pub_to_eth_address(pub) {
-    var xp_pub = expand_pub(pub),
+    let xp_pub = expand_pub(pub),
         keccak = "0x" + keccak_256(hextobin(xp_pub.slice(2))),
         addr = "0x" + keccak.slice(26);
     return toChecksumAddress(addr);
@@ -319,7 +319,7 @@ function toChecksumAddress(e) {
 // Bech 32
 
 function pub_to_address_bech32(hrp, pubkey) {
-    var step1 = hash160(pubkey),
+    let step1 = hash160(pubkey),
         step2 = hexStringToBinaryString(step1),
         step3 = step2.match(/.{1,5}/g),
         step4 = bech32_dec_array(step3);
@@ -327,7 +327,7 @@ function pub_to_address_bech32(hrp, pubkey) {
 }
 
 function bech32_dec_array(bitarr) {
-    var hexstr = [0];
+    let hexstr = [0];
     $.each(bitarr, function(i, bits) {
         hexstr.push(parseInt(bits, 2));
     });
@@ -337,11 +337,11 @@ function bech32_dec_array(bitarr) {
 // from https://github.com/sipa/bech32/tree/master/ref/javascript
 
 function polymod(values) {
-    var chk = 1;
-    for (var p = 0; p < values.length; ++p) {
-        var top = chk >> 25;
+    let chk = 1;
+    for (let p = 0; p < values.length; ++p) {
+        let top = chk >> 25;
         chk = (chk & 0x1ffffff) << 5 ^ values[p];
-        for (var i = 0; i < 5; ++i) {
+        for (let i = 0; i < 5; ++i) {
             if ((top >> i) & 1) {
                 chk ^= generator[i];
             }
@@ -351,7 +351,7 @@ function polymod(values) {
 }
 
 function hrpExpand(hrp) {
-    var ret = [],
+    let ret = [],
         p;
     for (p = 0; p < hrp.length; ++p) {
         ret.push(hrp.charCodeAt(p) >> 5);
@@ -368,26 +368,26 @@ function verifyChecksum(hrp, data) {
 }
 
 function createChecksum(hrp, data) {
-    var values = hrpExpand(hrp).concat(data).concat([0, 0, 0, 0, 0, 0]),
+    let values = hrpExpand(hrp).concat(data).concat([0, 0, 0, 0, 0, 0]),
         mod = polymod(values) ^ 1,
         ret = [];
-    for (var p = 0; p < 6; ++p) {
+    for (let p = 0; p < 6; ++p) {
         ret.push((mod >> 5 * (5 - p)) & 31);
     }
     return ret;
 }
 
 function bech32_encode(hrp, data) {
-    var combined = data.concat(createChecksum(hrp, data)),
+    let combined = data.concat(createChecksum(hrp, data)),
         ret = hrp + "1";
-    for (var p = 0; p < combined.length; ++p) {
+    for (let p = 0; p < combined.length; ++p) {
         ret += b32ab.charAt(combined[p]);
     }
     return ret;
 }
 
 function bech32_decode(bechString) { // unused
-    var p,
+    let p,
         has_lower = false,
         has_upper = false;
     for (p = 0; p < bechString.length; ++p) {
@@ -405,14 +405,14 @@ function bech32_decode(bechString) { // unused
         return null;
     }
     bechString = bechString.toLowerCase();
-    var pos = bechString.lastIndexOf("1");
+    let pos = bechString.lastIndexOf("1");
     if (pos < 1 || pos + 7 > bechString.length || bechString.length > 90) {
         return null;
     }
-    var hrp = bechString.substring(0, pos),
+    let hrp = bechString.substring(0, pos),
         data = [];
     for (p = pos + 1; p < bechString.length; ++p) {
-        var d = b32ab.indexOf(bechString.charAt(p));
+        let d = b32ab.indexOf(bechString.charAt(p));
         if (d === -1) {
             return null;
         }
@@ -428,7 +428,7 @@ function bech32_decode(bechString) { // unused
 }
 
 function lnurl_decodeb32(lnurl) {
-    var p,
+    let p,
         has_lower = false,
         has_upper = false;
     for (p = 0; p < lnurl.length; ++p) {
@@ -445,12 +445,12 @@ function lnurl_decodeb32(lnurl) {
     if (has_lower && has_upper) {
         return null;
     }
-    var lnurl = lnurl.toLowerCase(),
-        pos = lnurl.lastIndexOf("1"),
-        hrp = lnurl.substring(0, pos),
+    let lnurlow = lnurl.toLowerCase(),
+        pos = lnurlow.lastIndexOf("1"),
+        hrp = lnurlow.substring(0, pos),
         data = [];
-    for (p = pos + 1; p < lnurl.length; ++p) {
-        var d = b32ab.indexOf(lnurl.charAt(p));
+    for (p = pos + 1; p < lnurlow.length; ++p) {
+        let d = b32ab.indexOf(lnurlow.charAt(p));
         if (d === -1) {
             return null;
         }
@@ -466,7 +466,7 @@ function lnurl_decodeb32(lnurl) {
 }
 
 function aes_enc(params, keyString) {
-    var buffer = uint_8Array(16),
+    let buffer = uint_8Array(16),
         iv = byteArrayToWordArray(crypto.getRandomValues(buffer)),
         key = sjcl.codec.base64.toBits(keyString),
         cipher = new sjcl.cipher.aes(key),
@@ -478,14 +478,14 @@ function aes_enc(params, keyString) {
 }
 
 function aes_dec(content, keyst) {
-    var bitArray = sjcl.codec.base64.toBits(content),
+    let bitArray = sjcl.codec.base64.toBits(content),
         bitArrayCopy = bitArray.slice(0),
         ivdec = bitArrayCopy.slice(0, 4),
         encryptedBitArray = bitArray.slice(4),
         key = sjcl.codec.base64.toBits(keyst),
         cipher = new sjcl.cipher.aes(key);
     try {
-        var data = sjcl.mode.gcm.decrypt(cipher, encryptedBitArray, ivdec, {}, 128);
+        let data = sjcl.mode.gcm.decrypt(cipher, encryptedBitArray, ivdec, {}, 128);
         return sjcl.codec.utf8String.fromBits(data);
     } catch (err) {
         console.log(err.message);

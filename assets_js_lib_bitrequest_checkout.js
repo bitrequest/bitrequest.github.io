@@ -8,7 +8,7 @@ $(document).ready(function() {
 function checkout() {
     $(document).on("click", ".br_checkout", function(e) {
         e.preventDefault();
-        var checkout_url = $(this).attr("href"),
+        let checkout_url = $(this).attr("href"),
             br_frame = $("#br_framebox iframe");
         if (br_frame.length > 0) {
             showloader();
@@ -26,7 +26,7 @@ function append_iframe(framesrc) {
 }
 
 function iframe_loaded() {
-    var requestframe = $("#br_framebox iframe");
+    let requestframe = $("#br_framebox iframe");
     requestframe.on("load", function() {
         if (requestframe.attr("src") !== undefined) {
             showframe();
@@ -35,7 +35,7 @@ function iframe_loaded() {
 }
 
 function crossframe(e) {
-    var data = e.data;
+    let data = e.data;
     if (data == "close_loader") {
         closeloader();
     } else if (data == "close_request") {
@@ -58,14 +58,14 @@ function showframe() {
 }
 
 function closeframe_confirm() {
-    var result = confirm("Close request?");
+    let result = confirm("Close request?");
     if (result === true) {
         closeframe();
     }
 }
 
 function closeframe() {
-    var html_node = $("html");
+    let html_node = $("html");
     if (html_node.hasClass("zoomframe")) {
         html_node.removeClass("zoomframe");
         setTimeout(function() {
@@ -86,7 +86,7 @@ function closeloader_trigger() {
 }
 
 function closeloader() {
-    var html_node = $("html");
+    let html_node = $("html");
     if (html_node.hasClass("fade_loader")) {
         html_node.removeClass("fade_loader");
         setTimeout(function() {

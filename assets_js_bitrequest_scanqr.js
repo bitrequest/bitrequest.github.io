@@ -1,7 +1,7 @@
 import QrScanner from "./assets_js_lib_qr-scanner.js";
 QrScanner.WORKER_PATH = "./assets_js_lib_qr-scanner-worker.min.js";
 
-var video = $("#qr-video")[0],
+let video = $("#qr-video")[0],
     scanner = new QrScanner(video, result => setResult(result), error => {
         console.log(error);
     }),
@@ -30,7 +30,7 @@ function start_scan(currency, type) {
     scanner.start().then(() => {
         currencyscan = currency,
             scantype = type;
-        var currentpage = geturlparameters().p,
+        let currentpage = geturlparameters().p,
             currentpage_correct = (currentpage) ? "?p=" + currentpage + "&scan=" : "?scan=",
             url = currentpage_correct + currency,
             title = "scanning " + currency + " " + type;
@@ -49,7 +49,7 @@ function cam_trigger() {
     $(document).on("click", ".qrscanner", function() {
         loader(true);
         loadertext("Loading camera");
-        var thisqr = $(this),
+        let thisqr = $(this),
             currency = thisqr.attr("data-currency"),
             type = thisqr.attr("data-id");
         start_scan(currency, type);
@@ -78,19 +78,19 @@ function close_cam() {
 
 function setResult(result) {
     scanner.stop();
-    var payment = currencyscan,
+    let payment = currencyscan,
         thistype = scantype;
     if (thistype == "address") {
-        var prefix = payment + ":",
+        let prefix = payment + ":",
             mid_result = (result.indexOf(prefix) >= 0) ? result.split(prefix).pop() : result,
             end_result = (result.indexOf("?") >= 0) ? mid_result.split("?")[0] : mid_result,
             isxpub = (end_result.length > 103),
-            er_val = (payment == "nimiq") ? end_result.replace(/\s/g, "") : end_result;
+            er_val = (payment == "nimiq") ? end_result.replace(/\s/g, "") : end_result,
             validate = (isxpub) ? check_xpub(end_result, xpub_prefix(payment), payment) :
             check_address(er_val, payment);
         clear_xpub_inputs();
         if (validate === true) {
-	        $("#popup .formbox input.address").val(er_val);
+            $("#popup .formbox input.address").val(er_val);
             if (supportsTouch === true) {} else {
                 $("#popup .formbox input.addresslabel").focus();
             }
@@ -106,7 +106,7 @@ function setResult(result) {
             }
         }
     } else if (thistype == "viewkey") {
-        var validate = (result.length === 64) ? check_vk(result) : false;
+        let validate = (result.length === 64) ? check_vk(result) : false;
         if (validate === true) {
             $("#popup .formbox input.vk_input").val(result);
             if (supportsTouch === true) {} else {

@@ -1,4 +1,13 @@
-var apptitle = "Bitrequest",
+let socket_attempt = {},
+    api_attempt = {},
+    api_attempts = {},
+    scan_attempts = {},
+    statuspush = [],
+    tx_list = [],
+    rpc_attempts = {},
+    changes = {};
+
+const apptitle = "Bitrequest",
     hostname = "bitrequest.github.io", // change if self hosted
     root = "/",
     localhostname = (hostname.indexOf("http") > -1) ? hostname.split("://").pop() : hostname,
@@ -21,14 +30,6 @@ var apptitle = "Bitrequest",
     main_nano_node = "https://www.bitrequest.app:8020",
     aws_bucket = "https://brq.s3.us-west-2.amazonaws.com/",
     cmc_icon_loc = "https://s2.coinmarketcap.com/static/img/coins/200x200/",
-    socket_attempt = {},
-    api_attempt = {},
-    api_attempts = {},
-    scan_attempts = {},
-    statuspush = [],
-    tx_list = [],
-    rpc_attempts = {},
-    changes = {},
     multi_wallets = {
         "exodus": {
             "name": "exodus",
@@ -665,8 +666,8 @@ var apptitle = "Bitrequest",
                     "ccsymbol": "eth",
                     "cmcid": 1027,
                     "urlscheme": function(payment, address, amount, iszero) {
-                        var amount = (iszero === true) ? "" : "?value=" + tofixedspecial((parseFloat(amount) * 1000000000000000000).toString(), 0);
-                        return payment + ":" + address + amount;
+                        let amnt = (iszero === true) ? "" : "?value=" + tofixedspecial((parseFloat(amount) * 1000000000000000000).toString(), 0);
+                        return payment + ":" + address + amnt;
                     },
                     "address_regex": "^0x[a-fA-F0-9]{40}$"
                 },
@@ -793,8 +794,8 @@ var apptitle = "Bitrequest",
                     "ccsymbol": "xno",
                     "cmcid": 1567,
                     "urlscheme": function(payment, address, amount, iszero) {
-                        var amount = (iszero === true) ? "" : "?amount=" + NanocurrencyWeb.tools.convert(amount, "NANO", "RAW");
-                        return "nano:" + address + amount;
+                        let amnt = (iszero === true) ? "" : "?amount=" + NanocurrencyWeb.tools.convert(amount, "NANO", "RAW");
+                        return "nano:" + address + amnt;
                     },
                     "address_regex": "^(xrb|nano)_([a-z1-9]{60})$"
                 },
@@ -1586,6 +1587,6 @@ function btc_urlscheme(payment, address, amount, iszero) {
 }
 
 function bch_urlscheme(payment, address, amount, iszero) {
-    var c_address = (address.indexOf("bitcoincash:") > -1) ? address.split("bitcoincash:").pop() : address;
+    let c_address = (address.indexOf("bitcoincash:") > -1) ? address.split("bitcoincash:").pop() : address;
     return "bitcoincash:" + c_address + ((iszero === true) ? "" : "?amount=" + amount);
 }

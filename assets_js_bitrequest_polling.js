@@ -15,7 +15,7 @@ function pick_monitor(txhash, tx_data, api_dat) {
 }
 
 function api_monitor_init(txhash, tx_data, api_data) {
-    var api_info = (api_data) ? api_data : (helper.api_info) ? helper.api_info.data : false;
+    let api_info = (api_data) ? api_data : (helper.api_info) ? helper.api_info.data : false;
     if (api_info) {
         if (api_info.api) {
             api_monitor(txhash, tx_data, api_info);
@@ -29,14 +29,14 @@ function api_monitor_init(txhash, tx_data, api_data) {
 }
 
 function api_monitor(txhash, tx_data, api_dat) {
-    var api_name = api_dat.name;
+    let api_name = api_dat.name;
     if (api_name) {
-        var gets = geturlparameters();
+        let gets = geturlparameters();
         if (gets.xss) {
             return
         }
         api_attempts["pollings" + api_name] = true;
-        var payment = request.payment,
+        let payment = request.payment,
             currencysymbol = request.currencysymbol,
             set_confirmations = request.set_confirmations,
             poll_url = (api_name == "blockcypher") ? currencysymbol + "/main/txs/" + txhash :
@@ -47,7 +47,7 @@ function api_monitor(txhash, tx_data, api_dat) {
             (api_name == "mopsus.com") ? "tx/" + txhash : null;
         if (tx_data) {
             confirmations(tx_data, true);
-            var xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
+            let xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
                 setconfirmations = tx_data.setconfirmations,
                 zero_conf = (xconf === false || setconfirmations == 0 || setconfirmations == "undefined" || setconfirmations === undefined);
             if (zero_conf) {
@@ -55,7 +55,7 @@ function api_monitor(txhash, tx_data, api_dat) {
             }
         }
         api_proxy(ampl(api_name, poll_url)).done(function(e) {
-            var apiresult = api_result(br_result(e));
+            let apiresult = api_result(br_result(e));
             if (apiresult) {
                 pinging[txhash + api_name] = setInterval(function() {
                     if (paymentpopup.hasClass("active")) { // only when request is visible
@@ -74,7 +74,7 @@ function api_monitor(txhash, tx_data, api_dat) {
         });
 
         function api_result(result) {
-            var data = result.result;
+            let data = result.result;
             if (data) {
                 if (data.error) {
                     clearpinging();
@@ -85,7 +85,7 @@ function api_monitor(txhash, tx_data, api_dat) {
                     mopsus_blockheight(data, set_confirmations, txhash);
                     return true;
                 }
-                var currentaddress = gets.address,
+                let currentaddress = gets.address,
                     legacy = (currencysymbol == "bch") ? bchutils.toLegacyAddress(currentaddress) : currentaddress,
                     txd = (api_name == "blockcypher") ? blockcypher_poll_data(data, set_confirmations, currencysymbol, currentaddress) :
                     (api_name == "ethplorer") ? ethplorer_poll_data(data, set_confirmations, currencysymbol) :
@@ -104,7 +104,7 @@ function api_monitor(txhash, tx_data, api_dat) {
 
         function api_error(jqXHR, textStatus, errorThrown) {
             clearpinging();
-            var error_object = (errorThrown) ? errorThrown : jqXHR;
+            let error_object = (errorThrown) ? errorThrown : jqXHR;
             handle_api_fails(false, error_object, api_name, payment, txhash, true);
         }
         console.log("source: " + api_name);
@@ -134,25 +134,25 @@ function mopsus_blockheight(data, set_confirmations, txhash) { // api_monitor pa
             "method": "GET"
         }
     }).done(function(e) {
-        var dat = br_result(e),
+        let dat = br_result(e),
             bh = q_obj(dat, "result.latest_block.height");
         if (bh) {
-            var txd = nimiq_scan_data(data, set_confirmations, bh, null, txhash);
+            let txd = nimiq_scan_data(data, set_confirmations, bh, null, txhash);
             confirmations(txd);
             return
         }
-        var txd = nimiq_scan_data(data, set_confirmations, null, true, txhash);
+        let txd = nimiq_scan_data(data, set_confirmations, null, true, txhash);
         confirmations(txd, true);
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        var txd = nimiq_scan_data(data, set_confirmations, null, true, txhash);
+        let txd = nimiq_scan_data(data, set_confirmations, null, true, txhash);
         confirmations(txd, true);
     });
 }
 
 function handle_api_fails(rd, error, api_name, thispayment, txid) {
-    var nextapi = get_next_api(thispayment, api_name, "pollings");
+    let nextapi = get_next_api(thispayment, api_name, "pollings");
     if (nextapi === false) {
-        var error_data = get_api_error_data(error);
+        let error_data = get_api_error_data(error);
         api_eror_msg(api_name, error_data);
         return
     }
@@ -160,11 +160,11 @@ function handle_api_fails(rd, error, api_name, thispayment, txid) {
 }
 
 function rpc_monitor(txhash, tx_data, rpcdata) {
-    var gets = geturlparameters();
+    let gets = geturlparameters();
     if (gets.xss) {
         return
     }
-    var payment = request.payment,
+    let payment = request.payment,
         rpcurl = rpcdata.url;
     rpc_attempts["pollings" + rpcurl] = true;
     if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin" || payment == "bitcoin-cash") {
@@ -201,7 +201,7 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
         });
 
         function rpc_result(result) {
-            var data = result.result;
+            let data = result.result;
             if (data) {
                 if (data.error) {
                     clearpinging();
@@ -209,7 +209,7 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
                     return
                 }
                 if (data.txid) {
-                    var currentaddress = gets.address,
+                    let currentaddress = gets.address,
                         txd = mempoolspace_scan_data(data, request.set_confirmations, request.currencysymbol, currentaddress);
                     confirmations(txd);
                 }
@@ -218,7 +218,7 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
 
         function rpc_error(jqXHR, textStatus, errorThrown) {
             clearpinging();
-            var error_object = (errorThrown) ? errorThrown : jqXHR;
+            let error_object = (errorThrown) ? errorThrown : jqXHR;
             handle_rpc_fails(rpcdata, error_object, txhash);
             return
         }
@@ -268,27 +268,27 @@ function rmpl(payment, rpcurl, txhash) { // rpc_monitor payload
 
 function ping_eth_node(rpcdata, txhash, erc20) {
     if (paymentpopup.hasClass("active")) { // only when request is visible
-        var url = rpcdata.url,
+        let url = rpcdata.url,
             set_url = (url) ? url : main_eth_node;
         api_proxy(eth_params(set_url, 10, "eth_blockNumber", [])).done(function(a) {
-            var r_1 = inf_result(a);
+            let r_1 = inf_result(a);
             if (r_1) {
                 api_proxy(eth_params(set_url, 10, "eth_getTransactionByHash", [txhash])).done(function(b) {
-                    var r_2 = inf_result(b);
+                    let r_2 = inf_result(b);
                     if (r_2) {
-                        var this_bn = r_2.blockNumber;
+                        let this_bn = r_2.blockNumber;
                         api_proxy(eth_params(set_url, 10, "eth_getBlockByNumber", [this_bn, false])).done(function(c) {
-                            var r_3 = inf_result(c);
+                            let r_3 = inf_result(c);
                             if (r_3) {
-                                var tbn = Number(this_bn),
+                                let tbn = Number(this_bn),
                                     cbn = Number(r_1),
                                     conf = cbn - tbn,
                                     conf_correct = (conf < 0) ? 0 : conf,
                                     txd;
                                 if (erc20 === true) {
-                                    var input = r_2.input;
+                                    let input = r_2.input;
                                     if (str_match(input, request.address.slice(3)) === true) {
-                                        var signature_hex = input.slice(2, 10),
+                                        let signature_hex = input.slice(2, 10),
                                             amount_hex = input.slice(74),
                                             tokenValue = hexToNumberString(amount_hex),
                                             txdata = {
@@ -305,7 +305,7 @@ function ping_eth_node(rpcdata, txhash, erc20) {
                                         return
                                     }
                                 } else {
-                                    var txdata = {
+                                    let txdata = {
                                             "timestamp": Number(r_3.timestamp),
                                             "hash": txhash,
                                             "confirmations": conf_correct,
@@ -349,10 +349,10 @@ function ping_eth_node(rpcdata, txhash, erc20) {
 }
 
 function handle_rpc_fails(rpcdata, error, txhash) {
-    var rpcurl = rpcdata.url,
+    let rpcurl = rpcdata.url,
         nextrpc = get_next_rpc(request.payment, rpcurl, "pollings");
     if (nextrpc === false) { // retry with api source
-        var error_data = get_api_error_data("unable to fetch data from " + rpcurl);
+        let error_data = get_api_error_data("unable to fetch data from " + rpcurl);
         api_eror_msg(rpcurl, error_data);
         return
     }
@@ -363,7 +363,7 @@ function confirmations(tx_data, direct, ln) {
     closeloader();
     clearTimeout(request_timer);
     if (tx_data && tx_data.ccval) {
-        var pmd = $("#paymentdialogbox"),
+        let pmd = $("#paymentdialogbox"),
             brstatuspanel = pmd.find(".brstatuspanel"),
             brheader = brstatuspanel.find("h2"),
             status = tx_data.status;
@@ -379,7 +379,7 @@ function confirmations(tx_data, direct, ln) {
             forceclosesocket();
             return
         }
-        var setconfirmations = (tx_data.setconfirmations) ? parseInt(tx_data.setconfirmations) : 0,
+        let setconfirmations = (tx_data.setconfirmations) ? parseInt(tx_data.setconfirmations) : 0,
             conf_text = (setconfirmations) ? setconfirmations.toString() : "",
             confbox = brstatuspanel.find("span.confbox"),
             confboxspan = confbox.find("span"),
@@ -396,7 +396,7 @@ function confirmations(tx_data, direct, ln) {
                 confbox.addClass("blob");
                 confboxspan.text(xconf).attr("data-conf", xconf);
             }, 500);
-            var amount_rel = $("#open_wallet").attr("data-rel"),
+            let amount_rel = $("#open_wallet").attr("data-rel"),
                 cc_raw = (amount_rel.length) ? parseFloat(amount_rel) : 0,
                 receivedutc = tx_data.transactiontime,
                 receivedtime = receivedutc - timezone,
@@ -426,10 +426,10 @@ function confirmations(tx_data, direct, ln) {
                 brstatuspanel.find("span.receivedcrypto").text(rccf + " " + currencysymbol);
             }
             brstatuspanel.find("span.receivedfiat").text(" (" + receivedrounded + " " + thiscurrency + ")");
-            var exact = helper.exact,
+            let exact = helper.exact,
                 xmr_pass = (payment == "monero") ? (rccf > cc_raw * 0.97 && rccf < cc_raw * 1.03) : true; // error margin for xmr integrated addresses
             if (xmr_pass) {
-                var pass = (exact) ? (rccf == cc_raw) ? true : false : (rccf >= cc_raw * 0.97) ? true : false;
+                let pass = (exact) ? (rccf == cc_raw) ? true : false : (rccf >= cc_raw * 0.97) ? true : false;
                 if (pass) {
                     if (xconf >= setconfirmations || zero_conf === true) {
                         forceclosesocket();
@@ -438,7 +438,7 @@ function confirmations(tx_data, direct, ln) {
                         } else {
                             playsound(cashier);
                         }
-                        var status_text = (requesttype == "incoming") ? "Payment sent" : "Payment received";
+                        let status_text = (requesttype == "incoming") ? "Payment sent" : "Payment received";
                         pmd.addClass("transacting").attr("data-status", "paid");
                         brheader.text(status_text);
                         request.status = "paid",
@@ -451,7 +451,7 @@ function confirmations(tx_data, direct, ln) {
                             playsound(blip);
                         }
                         pmd.addClass("transacting").attr("data-status", "pending");
-                        var bctext = (ln) ? "Waiting for payment" : "Transaction broadcasted";
+                        let bctext = (ln) ? "Waiting for payment" : "Transaction broadcasted";
                         brheader.text(bctext);
                         request.status = "pending",
                             request.pending = "polling";
@@ -472,15 +472,14 @@ function confirmations(tx_data, direct, ln) {
             }
             return
         }
-        playsound(blip);
     }
 }
 
 function reset_recent() {
     if (request) {
-        var ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
+        let ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
         if (ls_recentrequests) {
-            var lsrr_arr = JSON.parse(ls_recentrequests);
+            let lsrr_arr = JSON.parse(ls_recentrequests);
             delete lsrr_arr[request.payment];
             localStorage.setItem("bitrequest_recent_requests", JSON.stringify(lsrr_arr));
             if ($.isEmptyObject(lsrr_arr)) {

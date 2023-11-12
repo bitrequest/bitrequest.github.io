@@ -1,9 +1,8 @@
-var test_phrase = "army van defense carry jealous true garbage claim echo media make crunch", // random phrase used for test derive
+const test_phrase = "army van defense carry jealous true garbage claim echo media make crunch", // random phrase used for test derive
     expected_seed = "5b56c417303faa3fcba7e57400e120a0ca83ec5a4fc9ffba757fbe63fbd77a89a1a3be4c67196f57c39a88b76373733891bfaba16ed27a813ceed498804c0570", // expected seed used for test derive
     expected_address = "1HQ3rb7nyLPrjnuW85MUknPekwkn7poAUm", // expected addres used for test derive
     expected_bech32 = "bc1qg0azlj4w2lrq8jssrrz6eprt2fe7f7edm4vpd5", // expected bech32 addres used for test derive
     expected_eth_address = "0x2161DedC3Be05B7Bb5aa16154BcbD254E9e9eb68",
-    has_bigint = false,
     test_derive = true,
     c_derive = {
         "bitcoin": true,
@@ -22,8 +21,9 @@ var test_phrase = "army van defense carry jealous true garbage claim echo media 
         "monero": false,
         "ethereum": true,
         "bitcoin-cash": true
-    },
-    phrasearray,
+    };
+let phrasearray,
+    has_bigint = false,
     phraseverified;
 
 $(document).ready(function() {
@@ -138,9 +138,9 @@ function hasbigint() {
 }
 
 function istrial() {
-    var trialp = localStorage.getItem("bitrequest_tp");
+    let trialp = localStorage.getItem("bitrequest_tp");
     if (trialp) {
-        var twelvehours = 43200000;
+        let twelvehours = 43200000;
         if ((now() - parseFloat(trialp)) < twelvehours) {
             return true;
         }
@@ -155,7 +155,7 @@ function bipv_pass() {
         if (bipv === true) {
             return true;
         }
-        var used_addresses = filter_all_addressli("seedid", bipid).filter(".used");
+        let used_addresses = filter_all_addressli("seedid", bipid).filter(".used");
         if (istrial() === true) {
             if (used_addresses.length > 1) {
                 manage_bip32({
@@ -188,7 +188,7 @@ function test_bip39() {
         bip39_fail();
         test_derive = false;
     }
-    var k_str = expected_seed.slice(0, 32),
+    let k_str = expected_seed.slice(0, 32),
         enc_test = aes_enc(test_phrase, k_str),
         dec_test = aes_dec(enc_test, k_str);
     if (test_phrase != dec_test) { // test encryption
@@ -256,7 +256,7 @@ function derive_xpub_fail(arr) {
 // test derivations
 
 function test_derivation() {
-    var currency = "bitcoin",
+    let currency = "bitcoin",
         test_rootkey = get_rootkey(expected_seed),
         bip32dat = getbip32dat(currency),
         dx_dat = {
@@ -273,7 +273,7 @@ function test_derivation() {
 }
 
 function bech32_check() {
-    var bip84_pub = "03bb4a626f63436a64d7cf1e441713cc964c0d53289a5b17acb1b9c262be57cb17",
+    let bip84_pub = "03bb4a626f63436a64d7cf1e441713cc964c0d53289a5b17acb1b9c262be57cb17",
         expected_bip84_bech32 = expected_bech32,
         bip84_bech32 = pub_to_address_bech32("bc", bip84_pub);
     if (expected_bip84_bech32 == bip84_bech32) {
@@ -283,7 +283,7 @@ function bech32_check() {
 }
 
 function cashaddr_check() {
-    var bch_legacy = "1AVPurYZinnctgGPiXziwU6PuyZKX5rYZU",
+    let bch_legacy = "1AVPurYZinnctgGPiXziwU6PuyZKX5rYZU",
         expected_bch_cashaddr = "qp5p0eur784pk8wxy2kzlz3ctnq5whfnuqqpp78u22",
         bch_cashaddr = pub_to_cashaddr(bch_legacy);
     if (expected_bch_cashaddr == bch_cashaddr) {
@@ -293,7 +293,7 @@ function cashaddr_check() {
 }
 
 function nano_check() {
-    var expected_nano_address = "nano_1mbtirc4x3kixfy5wufxaqakd3gbojpn6gpmk6kjiyngnjwgy6yty3txgztq",
+    let expected_nano_address = "nano_1mbtirc4x3kixfy5wufxaqakd3gbojpn6gpmk6kjiyngnjwgy6yty3txgztq",
         xnano_address = NanocurrencyWeb.wallet.accounts(expected_seed, 0, 0)[0].address;
     if (expected_nano_address == xnano_address) {
         return true;
@@ -302,7 +302,7 @@ function nano_check() {
 }
 
 function xmr_check() { // https://coinomi.github.io/tools/bip39/
-    var expected_xmr_address = "477h3C6E6C4VLMR36bQL3yLcA8Aq3jts1AHLzm5QXipDdXVCYPnKEvUKykh2GTYqkkeQoTEhWpzvVQ4rMgLM1YpeD6qdHbS",
+    let expected_xmr_address = "477h3C6E6C4VLMR36bQL3yLcA8Aq3jts1AHLzm5QXipDdXVCYPnKEvUKykh2GTYqkkeQoTEhWpzvVQ4rMgLM1YpeD6qdHbS",
         ssk = get_ssk(expected_seed, true),
         xko = xmr_getpubs(ssk, 0);
     if (xko.address == expected_xmr_address) {
@@ -312,7 +312,7 @@ function xmr_check() { // https://coinomi.github.io/tools/bip39/
 }
 
 function xpub_check() {
-    var currency = "bitcoin",
+    let currency = "bitcoin",
         xpub_keycc = key_cc_xpub("xpub6Cy7dUR4ZKF22HEuVq7epRgRsoXfL2MK1RE81CSvp1ZySySoYGXk5PUY9y9Cc5ExpnSwXyimQAsVhyyPDNDrfj4xjDsKZJNYgsHXoEPNCYQ"),
         dx_dat = {
             "dpath": "M/0/0",
@@ -333,7 +333,7 @@ function xpub_check() {
 }
 
 function eth_xpub_check() {
-    var eth_pub = "03c026c4b041059c84a187252682b6f80cbbe64eb81497111ab6914b050a8936fd",
+    let eth_pub = "03c026c4b041059c84a187252682b6f80cbbe64eb81497111ab6914b050a8936fd",
         eth_address = pub_to_eth_address(eth_pub);
     if (expected_eth_address == eth_address) {
         return true;
@@ -346,7 +346,7 @@ function eth_xpub_check() {
 
 function check_derivations(currency) {
     if (test_derive === true && c_derive[currency]) {
-        var activepub = active_xpub(currency);
+        let activepub = active_xpub(currency);
         if (can_xpub[currency] && activepub) {
             return "xpub";
         }
@@ -358,7 +358,7 @@ function check_derivations(currency) {
 }
 
 function active_xpub(currency) {
-    var haspub = has_xpub(currency)
+    let haspub = has_xpub(currency)
     if (haspub) {
         if (haspub.selected === true) {
             return haspub;
@@ -368,7 +368,7 @@ function active_xpub(currency) {
 }
 
 function has_xpub(currency) {
-    var ispub = is_xpub(currency);
+    let ispub = is_xpub(currency);
     if (ispub) {
         if (ispub.key) {
             return ispub;
@@ -379,9 +379,9 @@ function has_xpub(currency) {
 
 function is_xpub(currency) {
     if (can_xpub[currency]) {
-        var xpubli = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']");
+        let xpubli = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']");
         if (xpubli) {
-            var xpubli_dat = xpubli.data();
+            let xpubli_dat = xpubli.data();
             if (xpubli_dat) {
                 return xpubli_dat;
             }
@@ -394,7 +394,7 @@ function is_xpub(currency) {
 
 function make_seed() {
     $(document).on("click", "#option_makeseed", function() {
-        var currency = $(this).attr("data-currency");
+        let currency = $(this).attr("data-currency");
         if (hasbip === true) {
             topnotify("You already have a seed");
             return
@@ -416,9 +416,9 @@ function restore_seed() {
         if (hasbip === true) {
             return false;
         }
-        var result = confirm("Restore seed?");
+        let result = confirm("Restore seed?");
         if (result === true) {
-            var thistrigger = $(this),
+            let thistrigger = $(this),
                 seedid = thistrigger.attr("data-seedid");
             canceloptions();
             canceldialog();
@@ -441,10 +441,10 @@ function restore_seed_verify() {
         }
         phrasearray = null,
             phraseverified = false;
-        var phrase = get_phrase(),
+        let phrase = get_phrase(),
             verify = check_phrase(phrase);
         if (verify === true) {
-            var thistrigger = $(this),
+            let thistrigger = $(this),
                 seedid = thistrigger.attr("data-seedid"),
                 words = phrase.split(" "),
                 phraseid = get_seedid(words);
@@ -472,7 +472,7 @@ function manage_bip32(dat) {
         bip39(dat);
         return
     }
-    var data = (dat) ? dat : {},
+    let data = (dat) ? dat : {},
         ddat = [{
                 "div": {
                     "class": "popform",
@@ -537,7 +537,7 @@ function manage_bip32(dat) {
 function submit_disclaimer() {
     $(document).on("click", "#disclaimer_dialog input.submit", function(e) {
         e.preventDefault();
-        var disclaimer_dialog = $("#disclaimer_dialog"),
+        let disclaimer_dialog = $("#disclaimer_dialog"),
             data = disclaimer_dialog.data(),
             pk_checkbox = disclaimer_dialog.find("#pk_confirmwrap"),
             pk_checked = pk_checkbox.data("checked");
@@ -552,7 +552,7 @@ function submit_disclaimer() {
 
 function bip39(dat) {
     phraseverified = false;
-    var data = (dat) ? dat : {},
+    let data = (dat) ? dat : {},
         phrase_obj = ls_phrase_obj(),
         edit = (data && data.edit) ? true : false,
         dtype = (data && data.type) ? data.type : null,
@@ -657,7 +657,7 @@ function seed_nav(index) {
 
 function ls_phrase_obj() {
     if (bipobj) {
-        var savedat = JSON.parse(bipobj);
+        let savedat = JSON.parse(bipobj);
         return ls_phrase_obj_parsed(savedat);
     }
     return false;
@@ -665,17 +665,17 @@ function ls_phrase_obj() {
 }
 
 function ls_phrase_obj_parsed(obj) {
-    var phrasedat = obj.dat,
+    let phrasedat = obj.dat,
         pdat_enc = obj.datenc;
     if (pdat_enc) {
-        var pdat_dec = s_decode(pdat_enc),
+        let pdat_dec = s_decode(pdat_enc),
             pdat_dec_dat = pdat_dec.dat;
         if (pdat_dec_dat) {
-            var phrasedat = pdat_dec_dat;
+            phrasedat = pdat_dec_dat;
         }
     }
     if (phrasedat) {
-        var datparse = JSON.parse(atob(phrasedat));
+        let datparse = JSON.parse(atob(phrasedat));
         return {
             "pid": datparse.pid,
             "pob": JSON.parse(atob(datparse.pob))
@@ -686,16 +686,16 @@ function ls_phrase_obj_parsed(obj) {
 
 function seed_decrypt(pin) {
     if (bipobj) {
-        var pbdat = JSON.parse(bipobj),
+        let pbdat = JSON.parse(bipobj),
             pdat_enc = pbdat.datenc;
         if (pdat_enc) {
-            var pdat_dec = s_decode(pdat_enc, pin),
+            let pdat_dec = s_decode(pdat_enc, pin),
                 pdat_dec_dat = pdat_dec.dat;
             if (pdat_dec_dat) {
                 return JSON.parse(atob(pdat_dec_dat));
             }
         } else {
-            var pdat_dat = pbdat.dat;
+            let pdat_dat = pbdat.dat;
             if (pdat_dat) {
                 return JSON.parse(atob(pdat_dat));
             }
@@ -708,10 +708,10 @@ function backup_continue() {
     $(document).on("click", "#cfbu2", function() {
         phrasearray = null,
             phraseverified = false;
-        var phrase = get_phrase(),
+        let phrase = get_phrase(),
             verify = check_phrase(phrase);
         if (verify === true) {
-            var words = phrase.split(" ");
+            let words = phrase.split(" ");
             verify_phrase(words, 3);
             phrasearray = words;
             $("#seed_steps").removeClass("checked");
@@ -724,7 +724,7 @@ function backup_continue() {
 }
 
 function check_phrase(phrase) {
-    var cleanphrase = get_phrase(),
+    let cleanphrase = get_phrase(),
         words = phrase.split(" "),
         phraselength = words.length;
     if (phraselength < 2) {
@@ -732,7 +732,7 @@ function check_phrase(phrase) {
     }
     if (phraselength === 12) {
         if (checkmnemonic(phrase) === false) {
-            var missing_word = missing_words(words);
+            let missing_word = missing_words(words);
             if (missing_word) {
                 return missing_word + " not in wordlist";
             }
@@ -749,11 +749,11 @@ function get_phrase() {
 }
 
 function checkmnemonic(mnemonic) {
-    var b = mnemonicToBinaryString(mnemonic);
+    let b = mnemonicToBinaryString(mnemonic);
     if (b === null) {
         return false;
     }
-    var l = b.length,
+    let l = b.length,
         d = b.substring(0, l / 33 * 32),
         h = b.substring(l - l / 33, l),
         nd = binaryStringToWordArray(d),
@@ -765,7 +765,7 @@ function checkmnemonic(mnemonic) {
 }
 
 function missing_words(words) {
-    var missing;
+    let missing;
     $.each(words, function(i, word) {
         if (wordlist.indexOf(word) == -1) {
             missing = word;
@@ -776,7 +776,7 @@ function missing_words(words) {
 }
 
 function verify_phrase(words, count) {
-    var wordindex = [];
+    let wordindex = [];
     $.each(words, function(i, word) {
         wordobject = {
             "word": word,
@@ -784,12 +784,12 @@ function verify_phrase(words, count) {
         }
         wordindex.push(wordobject);
     });
-    var shuffled_words = shuffleArray(wordindex),
+    let shuffled_words = shuffleArray(wordindex),
         trimmed_sw = shuffled_words.slice(0, count),
         verify_box = $("#seed_verify_box");
     verify_box.html("");
     $.each(trimmed_sw, function(i, word_obj) {
-        var word = word_obj.word,
+        let word = word_obj.word,
             index = word_obj.index,
             af_attr = (i === 0) ? " autofocus" : "",
             input = "<div class='checkword_box uncheck'><input type='text' placeholder='word #" + index + "' data-word='" + word + "'" + af_attr + " autocorrect='off' autocapitalize='none'/><span class='icon-checkmark'></span></div>";
@@ -798,8 +798,8 @@ function verify_phrase(words, count) {
 }
 
 function shuffleArray(array) {
-    for (var i = array.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1)),
+    for (let i = array.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1)),
             temp = array[i];
         array[i] = array[j];
         array[j] = temp;
@@ -809,28 +809,28 @@ function shuffleArray(array) {
 
 function verify_words() {
     $(document).on("input", "#seed_verify_box input", function(e) {
-        var thisinput = $(this),
+        let thisinput = $(this),
             cw_box = thisinput.closest(".checkword_box"),
             thisword = thisinput.data("word"),
             thisval = thisinput.val();
         if (thisval == thisword) {
             thisinput.blur();
             cw_box.removeClass("uncheck");
-            var unchecked = $("#seed_verify_box").find(".uncheck"),
+            let unchecked = $("#seed_verify_box").find(".uncheck"),
                 uclength = unchecked.length;
             if (uclength > 0) {
-                var first_uncheck = unchecked.first().find("input");
+                let first_uncheck = unchecked.first().find("input");
                 setTimeout(function() {
                     first_uncheck.focus().val("");
                 }, 500);
                 return
             }
-            var step3 = $("#seed_step3");
+            let step3 = $("#seed_step3");
             if (step3.hasClass("delete")) {
-                var result = confirm("Are you sure you want to delete your secret phrase?");
+                let result = confirm("Are you sure you want to delete your secret phrase?");
                 if (result === true) {
                     localStorage.removeItem("bitrequest_bpdat");
-                    var initdat = localStorage.getItem("bitrequest_init"),
+                    let initdat = localStorage.getItem("bitrequest_init"),
                         iodat = (initdat) ? JSON.parse(initdat) : {};
                     iodat.bipv = "no";
                     delete iodat.bipv;
@@ -845,9 +845,9 @@ function verify_words() {
                 return
             }
             if (step3.hasClass("replace")) {
-                var result = confirm("Are you sure you want to restore your seed from backup? Your current seed will be erased.");
+                let result = confirm("Are you sure you want to restore your seed from backup? Your current seed will be erased.");
                 if (result === true) {
-                    var bu_dat = $("#seed_steps").data().dat;
+                    let bu_dat = $("#seed_steps").data().dat;
                     restore_callback(bu_dat, true);
                 }
                 return
@@ -863,14 +863,14 @@ function verify_words() {
 
 function move_seed_cb() {
     $.each(br_config.bitrequest_coin_data, function(i, coinconfig) {
-        var currency = coinconfig.currency,
+        let currency = coinconfig.currency,
             bip32 = coinconfig.settings.Xpub;
         if (bip32.active === true) {
-            var addresslist = get_addresslist(currency);
+            let addresslist = get_addresslist(currency);
             addresslist.children(".adli").each(function(i) {
-                var this_li = $(this);
+                let this_li = $(this);
                 if (this_li.hasClass("seed")) {
-                    var seedid = this_li.data("seedid");
+                    let seedid = this_li.data("seedid");
                     if (seedid == bipid) {
                         this_li.removeClass("seedu").addClass("seedv").attr("data-checked", "true").data("checked", true);
                     } else {
@@ -892,7 +892,7 @@ function continue_seed() {
 
 function skip_verify() {
     $(document).on("click", "#cfbu3", function() {
-        var content = "<h2><span class='icon-warning' style='color:#B33A3A'></span>Warning! Continue at your own risk.</h2><p><strong>If you lose your device, uninstall your application or clear your browserdata, you'll need your secret phrase to recover your funds!</strong></p>";
+        let content = "<h2><span class='icon-warning' style='color:#B33A3A'></span>Warning! Continue at your own risk.</h2><p><strong>If you lose your device, uninstall your application or clear your browserdata, you'll need your secret phrase to recover your funds!</strong></p>";
         popdialog(content, "finish_seed");
     })
 }
@@ -903,7 +903,7 @@ function finish_seed() {
         seed_callback();
         return
     }
-    var cb = {
+    let cb = {
             "func": seed_callback
         },
         content = pinpanel("", cb);
@@ -912,12 +912,12 @@ function finish_seed() {
 
 function seed_callback() {
     if (hasbip === true) {} else {
-        var seed_object = {},
+        let seed_object = {},
             seed_string = btoa(JSON.stringify(phrasearray)),
             phraseid = hmacsha(seed_string, "sha256").slice(0, 8);
         seed_object.pid = phraseid;
         seed_object.pob = seed_string;
-        var savedat = JSON.stringify({
+        let savedat = JSON.stringify({
             "id": phraseid,
             "dat": null
         });
@@ -927,15 +927,15 @@ function seed_callback() {
             hasbip = true,
             bipid = phraseid;
         notify("🎉 Congratulations. You are now your own bank! 🎉");
-        var seedid = phraseid,
+        let seedid = phraseid,
             savedseed = phrasearray.join(" ");
         if (body.hasClass("showstartpage")) {
             derive_all_init(savedseed, seedid);
             openpage("?p=home", "home", "loadpage");
-            var currency = $("#seed_steps").attr("data-goal");
+            let currency = $("#seed_steps").attr("data-goal");
             $("#currencylist > li[data-currency='" + currency + "'] .rq_icon").trigger("click");
         } else {
-            var derivations = filter_all_addressli("seedid", seedid);
+            let derivations = filter_all_addressli("seedid", seedid);
             if (derivations.length > 0) {
                 move_seed_cb();
             }
@@ -947,7 +947,7 @@ function seed_callback() {
     }
     if (phraseverified === true) {
         // save as verified
-        var initdat = localStorage.getItem("bitrequest_init"),
+        let initdat = localStorage.getItem("bitrequest_init"),
             iodat = (initdat) ? JSON.parse(initdat) : {};
         iodat.bipv = "yes";
         localStorage.setItem("bitrequest_init", JSON.stringify(iodat));
@@ -961,9 +961,9 @@ function seed_callback() {
 
 function deactivate_xpubs() {
     $.each(br_config.bitrequest_coin_data, function(i, coinconfig) {
-        var bip32 = coinconfig.settings.Xpub;
+        let bip32 = coinconfig.settings.Xpub;
         if (bip32.xpub === true) {
-            var currency = coinconfig.currency,
+            let currency = coinconfig.currency,
                 thislist = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']"),
                 this_switch = thislist.find(".switchpanel.custom");
             thislist.data("selected", false).find("p").text("false");
@@ -975,19 +975,19 @@ function deactivate_xpubs() {
 
 function enc_s(dat) {
     if (hasbip && test_derive) {
-        var pn = get_setting("pinsettings", "pinhash");
+        let pn = get_setting("pinsettings", "pinhash");
         if (pn) {
-            var sdat;
+            let sdat;
             if (dat) {
-                var sdat = dat;
+                sdat = dat;
             } else {
-                var phrase_obj = seed_decrypt();
+                let phrase_obj = seed_decrypt();
                 if (phrase_obj) {
-                    var sdat = phrase_obj;
+                    sdat = phrase_obj;
                 }
             }
             if (sdat) {
-                var seedenc = btoa(JSON.stringify(sdat)),
+                let seedenc = btoa(JSON.stringify(sdat)),
                     s_obj = JSON.parse(bipobj),
                     s_id = s_obj.id,
                     keystring = ptokey(pn, s_id),
@@ -997,7 +997,7 @@ function enc_s(dat) {
                     "dat": encb
                 };
                 s_obj.dat = null;
-                var bpdat_val = JSON.stringify(s_obj);
+                let bpdat_val = JSON.stringify(s_obj);
                 localStorage.setItem("bitrequest_bpdat", bpdat_val);
                 bipobj = bpdat_val;
             }
@@ -1007,7 +1007,7 @@ function enc_s(dat) {
 
 function has_datenc() {
     if (hasbip === true) {
-        var s_obj = JSON.parse(bipobj);
+        let s_obj = JSON.parse(bipobj);
         if (s_obj.datenc) {
             return true;
         }
@@ -1016,18 +1016,18 @@ function has_datenc() {
 }
 
 function ptokey(p, sid) {
-    var pr = p.toString().split(""),
+    let pr = p.toString().split(""),
         newarr = [];
     $.each(pr, function(i, val) {
-        var v_int = parseFloat(val),
+        let v_int = parseFloat(val),
             valc = (v_int === 0) ? v_int + 1 : v_int,
             multval = valc * (i + 1);
         newarr.push(multval);
     });
-    var maxval = Math.max.apply(Math, newarr),
+    let maxval = Math.max.apply(Math, newarr),
         wordarr = [];
     $.each(newarr, function(i, val) {
-        var perc = Math.floor((val / maxval) * 2048);
+        let perc = Math.floor((val / maxval) * 2048);
         wordarr.push(wordlist[perc - 1]);
     });
     return key = hmacsha(wordarr.join(" ") + sid, "sha256").slice(0, 32);
@@ -1042,16 +1042,16 @@ function derive_addone_trigger() {
 }
 
 function derive_addone(currency, extra) {
-    var dd = derive_data(currency, extra);
+    let dd = derive_data(currency, extra);
     if (dd) {
         derive_add_address(currency, dd);
     }
 }
 
 function key_cc() {
-    var seedobject = ls_phrase_obj();
+    let seedobject = ls_phrase_obj();
     if (seedobject) {
-        var seedid = seedobject.pid,
+        let seedid = seedobject.pid,
             phrase = seedobject.pob.join(" "),
             seed = toseed(phrase),
             rootkey = get_rootkey(seed),
@@ -1068,7 +1068,7 @@ function key_cc() {
 }
 
 function key_cc_xpub(xpub) {
-    var ext_dec = b58check_decode(xpub),
+    let ext_dec = b58check_decode(xpub),
         extend_object = objectify_extended(ext_dec);
     return {
         "key": extend_object.key,
@@ -1083,7 +1083,7 @@ function get_rootkey(seed) {
 
 function derive_all_init(phrase, seedid, extra) {
     derive_all(phrase, seedid, extra);
-    var acountname = $("#eninput").val();
+    let acountname = $("#eninput").val();
     $("#accountsettings").data("selected", acountname).find("p").text(acountname);
     savesettings();
     savecurrencies(true);
@@ -1091,22 +1091,22 @@ function derive_all_init(phrase, seedid, extra) {
 }
 
 function derive_all(phrase, seedid, extra) {
-    var seed = toseed(phrase),
+    let seed = toseed(phrase),
         rootkey = get_rootkey(seed),
         master_key = rootkey.slice(0, 64),
         master_chaincode = rootkey.slice(64);
     $.each(br_config.bitrequest_coin_data, function(i, coinconfig) {
-        var currency = coinconfig.currency,
+        let currency = coinconfig.currency,
             coindat = coinconfig.data,
             bip32 = coinconfig.settings.Xpub;
         if (bip32.active === true && c_derive[currency]) {
-            var keycc = {
+            let keycc = {
                 "seed": seed,
                 "key": master_key,
                 "cc": master_chaincode,
                 "seedid": seedid
             }
-            var ad = derive_obj("seed", keycc, coindat, bip32, extra);
+            let ad = derive_obj("seed", keycc, coindat, bip32, extra);
             if (ad) {
                 derive_add_address(currency, ad);
             }
@@ -1123,23 +1123,23 @@ function derive_add_address(currency, ad) {
 
 function derive_data(currency, extra) {
     if (test_derive === true && c_derive[currency]) {
-        var coindat = getcoindata(currency),
+        let coindat = getcoindata(currency),
             bip32 = getbip32dat(currency),
             activepub = active_xpub(currency);
         if (bip32) {
             if (activepub) {
-                var xpubkey = activepub.key,
+                let xpubkey = activepub.key,
                     xpub_id = activepub.key_id,
                     keycc = key_cc_xpub(xpubkey);
                 keycc.seedid = xpub_id;
-                var ad = derive_obj("xpub", keycc, coindat, bip32, extra);
+                let ad = derive_obj("xpub", keycc, coindat, bip32, extra);
                 if (ad) {
                     return ad;
                 }
             } else {
-                var keycc = key_cc();
+                let keycc = key_cc();
                 if (keycc) {
-                    var ad = derive_obj("seed", keycc, coindat, bip32, extra);
+                    let ad = derive_obj("seed", keycc, coindat, bip32, extra);
                     if (ad) {
                         return ad;
                     }
@@ -1151,7 +1151,7 @@ function derive_data(currency, extra) {
 }
 
 function derive_obj(source, keycc, coindat, bip32, add) {
-    var seed = keycc.seed,
+    let seed = keycc.seed,
         seedid = keycc.seedid,
         key = keycc.key,
         cc = keycc.cc,
@@ -1166,7 +1166,7 @@ function derive_obj(source, keycc, coindat, bip32, add) {
         actives = deriveli.not(".used"),
         check_p = (actives.length) ? ch_pending(actives.first().data()) : false;
     if (!actives.length || check_p === true || add) {
-        var allength = deriveli.length,
+        let allength = deriveli.length,
             index = (allength > 1) ? get_latest_index(deriveli) + 1 : allength,
             root_path = (source == "xpub") ? "M/0/" : (source == "seed") ? b32rp : "",
             path = root_path + index,
@@ -1215,8 +1215,8 @@ function ch_pending(dat) {
 }
 
 function get_uniques(arr) {
-    var counts = {};
-    for (var i = 0; i < arr.length; i++) {
+    let counts = {};
+    for (let i = 0; i < arr.length; i++) {
         counts[arr[i]] = 1 + (counts[arr[i]] || 0);
     }
     return Object.keys(counts).length;
@@ -1224,10 +1224,10 @@ function get_uniques(arr) {
 
 function copy_phrase() {
     $(document).on("click", "#copyphrase", function() {
-        var phrase = get_phrase(),
+        let phrase = get_phrase(),
             verify = check_phrase(phrase);
         if (verify === true) {
-            var result = confirm("Copy secret phrase?");
+            let result = confirm("Copy secret phrase?");
             if (result === true) {
                 copytoclipboard(phrase, "secret phrase");
             }
@@ -1239,7 +1239,7 @@ function copy_phrase() {
 
 function show_phrase() {
     $(document).on("click", "#showphrase, #phrase_cb.hidephrase #phraseblur", function() {
-        var phrase_cb = $("#phrase_cb");
+        let phrase_cb = $("#phrase_cb");
         if (phrase_cb.hasClass("showphrase")) {
             phrase_cb.removeClass("showphrase").addClass("hidephrase");
             return
@@ -1264,14 +1264,14 @@ function show_phrase_callback() {
 
 function delete_phrase_trigger() {
     $(document).on("click", "#deletephrase", function() {
-        var content = "<h2 style='color:#B33A3A'><span class='icon-warning'></span>Warning! Deleting your seed may result in lost of funds.</h2><p><strong>Continue only if you have a backup of your secret phrase.</strong></p>";
+        let content = "<h2 style='color:#B33A3A'><span class='icon-warning'></span>Warning! Deleting your seed may result in lost of funds.</h2><p><strong>Continue only if you have a backup of your secret phrase.</strong></p>";
         popdialog(content, "delete_phrase_verify");
     });
 }
 
 function delete_phrase_verify() {
     canceldialog();
-    var phrase = get_phrase(),
+    let phrase = get_phrase(),
         words = phrase.split(" ");
     verify_phrase(words, 4);
     $("#seed_steps").removeClass("checked");
@@ -1282,30 +1282,30 @@ function delete_phrase_verify() {
 // Bip 32 Key derivation
 
 function hmac_encrypt(key) {
-    var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha512);
+    let hasher = new sjcl.misc.hmac(key, sjcl.hash.sha512);
     this.encrypt = function() {
         return hasher.encrypt.apply(hasher, arguments);
     };
 }
 
 function toseed(mnemonic, passphrase) {
-    var parsed = parse_seed(mnemonic, passphrase);
+    let parsed = parse_seed(mnemonic, passphrase);
     return frombits(sjcl.misc.pbkdf2(parsed.mnemonic, parsed.passphrase, 2048, 512, hmac_encrypt));
 }
 
-function parse_seed(mnemonic, passphrase) {
-    var passphrase = passphrase || "",
+function parse_seed(mnemonic, passphrase1) {
+    let passphrase2 = passphrase1 || "",
         mnemonicNormalized = cleanstring(mnemonic),
-        passphrase = normalizestring(passphrase),
-        passphrase = "mnemonic" + passphrase;
+        passphrase3 = normalizestring(passphrase2),
+        passphrase4 = "mnemonic" + passphrase3;
     return {
         "mnemonic": tobits(mnemonicNormalized),
-        "passphrase": tobits(passphrase)
+        "passphrase": tobits(passphrase4)
     }
 }
 
 function newseed(numWords) {
-    var strength = numWords / 3 * 32,
+    let strength = numWords / 3 * 32,
         buffer = uint_8Array(strength / 8),
         data = crypto.getRandomValues(buffer);
     return to_mnemonic(data);
@@ -1315,7 +1315,7 @@ function to_mnemonic(byteArray) {
     if (byteArray.length % 4 > 0) {
         throw "Data length in bits should be divisible by 32, but it is not (" + byteArray.length + " bytes = " + byteArray.length * 8 + " bits)."
     }
-    var data = byteArrayToWordArray(byteArray),
+    let data = byteArrayToWordArray(byteArray),
         h = hmacsha(data, "sha256"),
         a = byteArrayToBinaryString(byteArray),
         c = zfill(hexStringToBinaryString(h), 256),
@@ -1323,15 +1323,15 @@ function to_mnemonic(byteArray) {
         b = a + d,
         result = [],
         blen = b.length / 11;
-    for (var i = 0; i < blen; i++) {
-        var idx = parseInt(b.substring(i * 11, (i + 1) * 11), 2);
+    for (let i = 0; i < blen; i++) {
+        let idx = parseInt(b.substring(i * 11, (i + 1) * 11), 2);
         result.push(wordlist[idx]);
     }
     return joinwords(result);
 }
 
-function zfill(source, length) {
-    var source = source.toString();
+function zfill(source1, length) {
+    let source = source1.toString();
     while (source.length < length) {
         source = "0" + source;
     }
@@ -1341,18 +1341,18 @@ function zfill(source, length) {
 // bip32 Derivation
 
 function objectify_extended(extended) {
-    var version = extended.slice(0, 8),
+    let version = extended.slice(0, 8),
         remain = extended.slice(8),
         depth = remain.slice(0, 2),
-        remain = remain.slice(2),
-        fingerprint = remain.slice(0, 8),
-        remain = remain.slice(8),
-        child_number = remain.slice(0, 8),
-        remain = remain.slice(8),
-        chain_code = remain.slice(0, 64),
-        remain = remain.slice(64),
-        parent_key = remain.slice(0, 66),
-        remain = remain.slice(66);
+        remain0 = remain.slice(2),
+        fingerprint = remain0.slice(0, 8),
+        remain1 = remain0.slice(8),
+        child_number = remain0.slice(0, 8),
+        remain2 = remain1.slice(8),
+        chain_code = remain1.slice(0, 64),
+        remain3 = remain2.slice(64),
+        parent_key = remain3.slice(0, 66),
+        remain4 = remain3.slice(66);
     return {
         "version": version,
         "depth": depth,
@@ -1360,12 +1360,12 @@ function objectify_extended(extended) {
         "childnumber": child_number,
         "chaincode": chain_code,
         "key": parent_key,
-        "remain": remain
+        "remain": remain4
     }
 }
 
 function derive_x(dx_dat, from_x_priv) {
-    var keydat = {},
+    let keydat = {},
         dpath = dx_dat.dpath,
         key = dx_dat.key,
         chaincode = dx_dat.cc,
@@ -1389,7 +1389,7 @@ function derive_x(dx_dat, from_x_priv) {
             }
         }
         if (i > 0) {
-            var hardened = (xpub === true) ? false : (level.indexOf("'") >= 0) ? true : false,
+            let hardened = (xpub === true) ? false : (level.indexOf("'") >= 0) ? true : false,
                 childindex = (hardened === true) ? level.split("'")[0] : level,
                 childfloat = parseInt(childindex),
                 childnumber = (hardened === true) ? dectohex(childfloat + 2147483648) : str_pad(dectohex(childfloat), 8),
@@ -1416,7 +1416,7 @@ function derive_x(dx_dat, from_x_priv) {
 }
 
 function ckd(ckey, cc, index, xpub, hard) {
-    var ckd = {},
+    let ckd = {},
         parent_pub = (xpub === true) ? ckey : secp.Point.fromPrivateKey(ckey).toHex(true),
         pubh60 = hash160(parent_pub),
         fingerprint = pubh60.slice(0, 8),
@@ -1425,10 +1425,10 @@ function ckd(ckey, cc, index, xpub, hard) {
         child_key_pre = rootnode.slice(0, 64),
         child_chaincode = rootnode.slice(64);
     if (xpub === true) {
-        var key_point = secp.Point.fromPrivateKey(child_key_pre);
+        let key_point = secp.Point.fromPrivateKey(child_key_pre);
         ckd.key = secp.Point.fromHex(ckey).add(key_point).toHex(true);
     } else {
-        var child_key_dec = (hextodec(ckey) + hextodec(child_key_pre)) % oc;
+        let child_key_dec = (hextodec(ckey) + hextodec(child_key_pre)) % oc;
         ckd.key = str_pad(child_key_dec.toString(16), 64);
     }
     ckd.chaincode = child_chaincode;
@@ -1437,9 +1437,9 @@ function ckd(ckey, cc, index, xpub, hard) {
 }
 
 function keypair_array(seed, arr, startindex, d_path, bip32dat, key, chaincode, currency, versionbytes) {
-    var derive_array = [];
+    let derive_array = [];
     $.each(arr, function(i) {
-        var index = i + startindex,
+        let index = i + startindex,
             root_path = d_path + index,
             dx_dat = {
                 "dpath": root_path,
@@ -1455,12 +1455,12 @@ function keypair_array(seed, arr, startindex, d_path, bip32dat, key, chaincode, 
 }
 
 function ext_keys(eo, currency) {
-    var eko = {},
+    let eko = {},
         ext_payload = b58c_x_payload(eo, currency),
         priv_key = eo.key;
     eko.ext_key = b58check_encode(ext_payload);
     if (eo.xpub === false) {
-        var pub_key = secp.Point.fromPrivateKey(priv_key).toHex(true),
+        let pub_key = secp.Point.fromPrivateKey(priv_key).toHex(true),
             pub_obj = {
                 "chaincode": eo.chaincode,
                 "purpose": eo.purpose,
@@ -1478,7 +1478,7 @@ function ext_keys(eo, currency) {
 }
 
 function xpub_obj(currency, rootpath, cc, key) {
-    var dx_dat = {
+    let dx_dat = {
             "dpath": rootpath.slice(0, -3),
             "key": key,
             "cc": cc
@@ -1495,11 +1495,11 @@ function xpub_obj(currency, rootpath, cc, key) {
 }
 
 function b58c_x_payload(eo, currency) {
-    var xpubdat = getbip32dat(currency);
+    let xpubdat = getbip32dat(currency);
     if (!xpubdat) {
         return false;
     }
-    var xz_pub = (eo.purpose == "84'") ? xpubdat.prefix.pubz : xpubdat.prefix.pubx,
+    let xz_pub = (eo.purpose == "84'") ? xpubdat.prefix.pubz : xpubdat.prefix.pubx,
         version = (eo.xpub === true) ? xz_pub : xpubdat.prefix.privx,
         v_hex = str_pad(dectohex(version), 8),
         depth = (eo.depth) ? str_pad(eo.depth, 2) : "00",
@@ -1516,10 +1516,10 @@ function b58c_x_payload(eo, currency) {
 }
 
 function format_keys(seed, key_object, bip32, index, coin) {
-    var ko = {};
+    let ko = {};
     if (coin == "nano") {
         if (seed) {
-            var nano_account = NanocurrencyWeb.wallet.accounts(seed, index, index)[0];
+            let nano_account = NanocurrencyWeb.wallet.accounts(seed, index, index)[0];
             return {
                 "index": nano_account.accountIndex,
                 "address": nano_account.address,
@@ -1531,7 +1531,7 @@ function format_keys(seed, key_object, bip32, index, coin) {
     }
     if (coin == "monero") {
         if (seed) {
-            var ssk = get_ssk(seed, true),
+            let ssk = get_ssk(seed, true),
                 xko = xmr_getpubs(ssk, index);
             return {
                 "index": index,
@@ -1541,7 +1541,7 @@ function format_keys(seed, key_object, bip32, index, coin) {
         }
         return ko;
     }
-    var purpose = key_object.purpose,
+    let purpose = key_object.purpose,
         xpub = key_object.xpub,
         prekey = key_object.key,
         pubkey = (xpub === true) ? prekey : secp.Point.fromPrivateKey(prekey).toHex(true),
@@ -1553,7 +1553,7 @@ function format_keys(seed, key_object, bip32, index, coin) {
         if (purpose == "84'") {
             ko.address = pub_to_address_bech32("bc", pubkey);
         } else {
-            var versionbytes = key_object.vb;
+            let versionbytes = key_object.vb;
             if (versionbytes == "04b24746") {
                 ko.address = pub_to_address_bech32("bc", pubkey);
             } else {
@@ -1564,7 +1564,7 @@ function format_keys(seed, key_object, bip32, index, coin) {
         if (purpose == "84'") {
             ko.address = pub_to_address_bech32("ltc", pubkey);
         } else {
-            var versionbytes = key_object.vb;
+            let versionbytes = key_object.vb;
             if (versionbytes == "04b24746") {
                 ko.address = pub_to_address_bech32("ltc", pubkey);
             } else {
@@ -1572,7 +1572,7 @@ function format_keys(seed, key_object, bip32, index, coin) {
             }
         }
     } else if (coin == "bitcoin-cash") {
-        var legacybch = pub_to_address(vb, pubkey);
+        let legacybch = pub_to_address(vb, pubkey);
         ko.address = pub_to_cashaddr(legacybch);
     } else {
         ko.address = pub_to_address(vb, pubkey);
@@ -1582,7 +1582,7 @@ function format_keys(seed, key_object, bip32, index, coin) {
         if (coin == "ethereum") {
             ko.privkey = "0x" + prekey;
         } else {
-            var pkv = bip32.pk_vbytes.wif;
+            let pkv = bip32.pk_vbytes.wif;
             ko.privkey = privkey_wif(str_pad(dectohex(pkv), 2), prekey, true);
         }
 
@@ -1591,7 +1591,7 @@ function format_keys(seed, key_object, bip32, index, coin) {
 }
 
 function xpub_prefix(currency) {
-    var test_rootkey = get_rootkey(expected_seed),
+    let test_rootkey = get_rootkey(expected_seed),
         dx_dat = {
             "dpath": "m/0",
             "key": test_rootkey.slice(0, 64),
@@ -1611,12 +1611,13 @@ function phrase_info() {
 }
 
 function phrase_info_pu(coin) {
-    var savedseed = (hasbip === true) ? ls_phrase_obj().pob.join(" ") : false,
+    let phrase_obj = ls_phrase_obj(),
+        savedseed = (hasbip === true && phrase_obj) ? phrase_obj.pob.join(" ") : false,
         phrase = (savedseed) ? savedseed : get_phrase();
     if (phrase.length < 50) {
         return false
     }
-    var seed = toseed(phrase),
+    let seed = toseed(phrase),
         rootkey = get_rootkey(seed),
         key = rootkey.slice(0, 64),
         cc = rootkey.slice(64),
@@ -1661,13 +1662,13 @@ function phrase_info_pu(coin) {
 	</div>").data(root_dat);
     popdialog(content, "canceldialog");
     $.each(br_config.bitrequest_coin_data, function(i, coinconfig) {
-        var currency = coinconfig.currency,
+        let currency = coinconfig.currency,
             ccsymbol = coinconfig.data.ccsymbol,
             walletdat = coinconfig.wallets,
             bip32dat = getbip32dat(currency),
             xpubdat;
         if (bip32dat.active === true) {
-            var root_path = bip32dat.root_path,
+            let root_path = bip32dat.root_path,
                 startindex = 0,
                 derivelist = "",
                 walletlist = "",
@@ -1676,29 +1677,29 @@ function phrase_info_pu(coin) {
                 coinclass = " pd_hide pd_" + currency,
                 x_pub;
             if (bip32dat.xpub) {
-                var xpubdat = xpub_obj(currency, root_path, cc, key),
-                    x_pub = xpubdat.xpub;
+                let xpubdat = xpub_obj(currency, root_path, cc, key);
+                x_pub = xpubdat.xpub;
             }
             $.each(derive_array, function(i, val) {
-                var index = startindex + i;
+                let index = startindex + i;
                 derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> <span class='mspace'>" + lb + val.address + "</span></li>";
             });
             if (walletdat) {
-                var platform = getplatform(getdevicetype()),
+                let platform = getplatform(getdevicetype()),
                     store_icon = platform_icon(platform),
                     store_tag = (store_icon) ? "<img src='" + store_icon + "'/>" : "<span class='icon-download'></span> ",
                     wallets = walletdat.wallets;
                 $.each(wallets, function(key, value) {
-                    var device_url = value[platform];
+                    let device_url = value[platform];
                     if (device_url && value.seed === true) {
-                        var walletname = value.name,
+                        let walletname = value.name,
                             website = value.website,
                             wallet_icon = "<img src='" + w_icon(walletname) + "' class='wallet_icon'/>";
                         walletlist += "<li><a href='" + website + "' target='_blank' class='exit app_dll'>" + wallet_icon + walletname + "</a><a href='" + device_url + "' target='_blank' class='exit store_tag'>" + store_tag + "</a></li>";
                     }
                 });
             }
-            var c_id = ccsymbol + "-" + currency,
+            let c_id = ccsymbol + "-" + currency,
                 icon_src = c_icons(c_id),
                 icon_node = $("<img src='" + icon_src + "' data-class='pd_" + currency + "'/>"),
                 dp_node_dat = {
@@ -1722,7 +1723,7 @@ function phrase_info_pu(coin) {
                 xp_node = "",
                 segw_node = "";
             if (x_pub) {
-                var xp_node = $("<div class='xpub_ib clearfix" + coinclass + "' data-xpub='" + x_pub + "'>\
+                xp_node = $("<div class='xpub_ib clearfix" + coinclass + "' data-xpub='" + x_pub + "'>\
 	    			<div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>show</span></div>\
 						<div class='xp_span drawer'>\
 							<div class='qrwrap flex'>\
@@ -1732,8 +1733,8 @@ function phrase_info_pu(coin) {
 						</div>\
 					</div>");
                 if (currency == "bitcoin" || currency == "litecoin") {
-                    var hsw = (root_path.indexOf("m/84") > -1),
-                        segw_node = $("<li class='clearfix" + coinclass + "' data-currency='" + currency + "'><strong>SegWit:</strong><div class='toggle_segwit ait'>" + switchpanel(hsw, " custom") + "</div></li>");
+                    let hsw = (root_path.indexOf("m/84") > -1);
+                    segw_node = $("<li class='clearfix" + coinclass + "' data-currency='" + currency + "'><strong>SegWit:</strong><div class='toggle_segwit ait'>" + switchpanel(hsw, " custom") + "</div></li>");
                 }
             }
             if (c_derive[currency]) {
@@ -1749,7 +1750,7 @@ function phrase_info_pu(coin) {
 }
 
 function compatible_wallets(coin) {
-    var content = $("<div id='ad_info_wrap' class='' data-class='pd_" + coin + "'><h2><span class='icon-warning' style='color:#B33A3A'/>Bitrequest can not send funds!</span></h2><ul>\
+    let content = $("<div id='ad_info_wrap' class='' data-class='pd_" + coin + "'><h2><span class='icon-warning' style='color:#B33A3A'/>Bitrequest can not send funds!</span></h2><ul>\
             <li class='noline'><strong style='color:#6a6a6a'>To send funds you need to restore your <span class='show_bip39 ref'>12 word secret phrase</span> in a bip39 compatible wallet:</strong></li>\
             <li id='pi_li' class='noline'>\
     			<div id='pi_icons'>\
@@ -1765,28 +1766,28 @@ function compatible_wallets(coin) {
 	</div>");
     popdialog(content, "canceldialog");
     $.each(br_config.bitrequest_coin_data, function(i, coinconfig) {
-        var currency = coinconfig.currency,
+        let currency = coinconfig.currency,
             ccsymbol = coinconfig.data.ccsymbol,
             walletdat = coinconfig.wallets,
             bip32dat = coinconfig.settings.Xpub;
         if (bip32dat.active === true) {
-            var walletlist = "";
+            let walletlist = "";
             if (walletdat) {
-                var platform = getplatform(getdevicetype()),
+                let platform = getplatform(getdevicetype()),
                     store_icon = platform_icon(platform),
                     store_tag = (store_icon) ? "<img src='" + store_icon + "'/>" : "<span class='icon-download'></span> ",
                     wallets = walletdat.wallets;
                 $.each(wallets, function(key, value) {
-                    var device_url = value[platform];
+                    let device_url = value[platform];
                     if (device_url && value.seed === true) {
-                        var walletname = value.name,
+                        let walletname = value.name,
                             website = value.website,
                             wallet_icon = "<img src='" + w_icon(walletname) + "' class='wallet_icon'/>";
                         walletlist += "<li><a href='" + website + "' target='_blank' class='exit app_dll'>" + wallet_icon + walletname + "</a><a href='" + device_url + "' target='_blank' class='exit store_tag'>" + store_tag + "</a></li>";
                     }
                 });
             }
-            var c_id = ccsymbol + "-" + currency,
+            let c_id = ccsymbol + "-" + currency,
                 icon_src = c_icons(c_id),
                 icon_node = $("<img src='" + icon_src + "' data-class='pd_" + currency + "'/>"),
                 sw_node = $("<ul id='formbox_ul' class='clearfix pd_hide pd_" + currency + "'>" + walletlist + "</ul>");
@@ -1810,7 +1811,7 @@ function phrase_coin_info() {
 
 function toggle_dpaths() {
     $(document).on("click", "#ad_info_wrap .d_path_header", function() {
-        var d_body = $(".d_path_body");
+        let d_body = $(".d_path_body");
         if (d_body.is(":visible")) {
             d_body.slideUp(200);
         } else {
@@ -1822,7 +1823,7 @@ function toggle_dpaths() {
 }
 
 function pi_show() {
-    var mclass = $("#ad_info_wrap").attr("data-class");
+    let mclass = $("#ad_info_wrap").attr("data-class");
     $(".pd_hide").hide();
     $(".pd_hide." + mclass).show();
     $("#pi_icons img").removeClass("current");
@@ -1842,12 +1843,12 @@ function test_derive_prev() {
 }
 
 function test_derive_function(thisnode, prev) {
-    var kd = $("#ad_info_wrap").data(),
+    let kd = $("#ad_info_wrap").data(),
         dp_node = thisnode.closest(".d_path"),
         dnd = dp_node.data(),
         currency = dnd.currency;
     if (c_derive[currency]) {
-        var test_derive_box = dp_node.find(".td_box"),
+        let test_derive_box = dp_node.find(".td_box"),
             td_prev = dp_node.find(".td_prev"),
             count = 5,
             td_li = (prev === true) ? test_derive_box.find(".der_li").first() : test_derive_box.find(".der_li").last(),
@@ -1861,7 +1862,7 @@ function test_derive_function(thisnode, prev) {
         } else {
             td_prev.hide();
         }
-        var bip32dat = dnd.bip32,
+        let bip32dat = dnd.bip32,
             key = kd.key,
             chaincode = kd.cc,
             versionbytes = kd.versionbytes,
@@ -1870,7 +1871,7 @@ function test_derive_function(thisnode, prev) {
             derive_array = keypair_array(kd.seed, new Array(count), startindex, root_path, bip32dat, key, chaincode, currency, versionbytes);
         test_derive_box.html("");
         $.each(derive_array, function(i, val) {
-            var index = startindex + i,
+            let index = startindex + i,
                 tdb_li = "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> " + lb + "<span class='mspace'>" + val.address + "</span></li>";
             test_derive_box.append(tdb_li);
         });
@@ -1879,7 +1880,7 @@ function test_derive_function(thisnode, prev) {
 
 function phrase_moreinfo() {
     $(document).on("click", "#bip_mi", function() {
-        var thisbttn = $(this),
+        let thisbttn = $(this),
             show_cp = thisbttn.find(".xpref"),
             bmb = $("#bip_mibox");
         if (bmb.is(":visible")) {
@@ -1896,7 +1897,7 @@ function phrase_moreinfo() {
 
 function phrase_showxp() {
     $(document).on("click", ".show_xpub", function() {
-        var thisbttn = $(this),
+        let thisbttn = $(this),
             xpub_box = $("#xpub_box"),
             xpub_ib = xpub_box.find(".xpub_ib"),
             show_cp = xpub_box.find(".xpref"),
@@ -1907,7 +1908,7 @@ function phrase_showxp() {
         } else {
             if (xpub_box.hasClass("rendered")) {} else {
                 xpub_ib.each(function() {
-                    var thisnode = $(this),
+                    let thisnode = $(this),
                         xpub = thisnode.attr("data-xpub"),
                         qr_code = thisnode.find(".qrcode");
                     qr_code.qrcode(xpub);
