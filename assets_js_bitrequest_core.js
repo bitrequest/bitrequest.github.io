@@ -59,7 +59,7 @@ let is_ios_app, // ios app fingerprint
     gd_init = false;
 
 if (has_ndef && !inframe) {
-    let ndef = new NDEFReader();
+    ndef = new NDEFReader();
 }
 
 $(document).ready(function() {
