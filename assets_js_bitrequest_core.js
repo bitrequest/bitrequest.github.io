@@ -3091,7 +3091,7 @@ function addressinfo() {
         if (purpose) {
             let dsplit = dpath.split("/");
             dsplit[1] = purpose;
-            let dpath = dsplit.join("/");
+            dpath = dsplit.join("/");
         }
         dd.dpath = dpath,
             dd.bip32dat = bip32dat;
