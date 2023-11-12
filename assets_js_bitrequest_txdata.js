@@ -351,11 +351,11 @@ function nano_scan_data(data, setconfirmations, ccsymbol, txhash) { // scan/poll
         let ccval = (data.amount) ? parseFloat((data.amount / Math.pow(10, 30)).toFixed(8)) : null, // convert Mnano to nano
             transactiontime = (data.local_timestamp) ? (data.local_timestamp * 1000) + timezone : null,
             transactiontime_utc = (transactiontime) ? transactiontime : now() + timezone,
-            txhash = (data.hash) ? data.hash : (txhash) ? txhash : null;
+            tx_hash = (data.hash) ? data.hash : (txhash) ? txhash : null;
         return {
             "ccval": ccval,
             "transactiontime": transactiontime_utc,
-            "txhash": txhash,
+            "txhash": tx_hash,
             "confirmations": false,
             "setconfirmations": null,
             "ccsymbol": ccsymbol

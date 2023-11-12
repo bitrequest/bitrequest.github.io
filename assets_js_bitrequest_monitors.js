@@ -1636,6 +1636,9 @@ function get_rpc_inputs(rd, api_data) {
                                 tx_api_fail(thislist, statuspanel);
                                 handle_rpc_fails_list(rd, data.error, api_data, payment);
                             } else {
+	                            console.log(setconfirmations);
+	                            console.log(ccsymbol);
+	                            console.log(transactionhash);
                                 let txd = nano_scan_data(data, setconfirmations, ccsymbol, transactionhash);
                                 if (txd.ccval) {
                                     let tx_listitem = append_tx_li(txd, rqtype);

@@ -590,7 +590,6 @@ function finishfunctions() {
 
     // Query helpers
 
-    //exists
     //now
     //shake
     //get_setting
@@ -5090,13 +5089,6 @@ function template_dialog(ddat) {
 }
 
 // Query helpers
-
-function exists(val) {
-    if (val === undefined || val === null || !val.length) {
-        return false;
-    }
-    return true;
-}
 
 function now() {
     return Date.now();

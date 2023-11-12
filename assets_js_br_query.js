@@ -1,3 +1,9 @@
+//lss
+//lsg
+//exists
+//br_issar
+//q_obj
+
 function lss(dat, pref, ss, ns) {
     ddat = (ns) ? dat : JSON.stringify(dat);
     if (ss) {
@@ -13,15 +19,22 @@ function lsg(pref, ss) {
     return localStorage.getItem("bitrequest_" + pref);
 }
 
+function exists(val) {
+    if (val === undefined || val === null || !val.length) {
+        return false;
+    }
+    return true;
+}
+
 function br_issar(e) {
     try {
         if ($.isArray(e)) {
-            return "jaap";
+            return true;
         }
-        return "f1"
+        return false;
     } catch (e) {
-        console.error(e.name, e.message);
-        return "f2"
+        //console.error(e.name, e.message);
+        return false;
     }
 }
 
