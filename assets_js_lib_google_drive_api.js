@@ -1,7 +1,9 @@
+var gapi, // Keep var
+    google,
+    tokenClient;
 const scope = "https://www.googleapis.com/auth/drive.appdata",
     drivepath = "https://content.googleapis.com";
-let gapi,
-    tokenClient;
+
 $(document).ready(function() {
     // gapi_load
     // init_login_dialog
