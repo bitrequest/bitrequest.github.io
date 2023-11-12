@@ -2588,10 +2588,10 @@ function saverequest(direct) {
             };
     }
     if (requestcache) {
-        let requestnode = JSON.parse(requestcache),
-            this_requestid = $.grep(requestnode, function(filter) { //filter pending requests
-                return filter.requestid == requestid;
-            });
+        let requestnode = JSON.parse(requestcache);
+        this_requestid = $.grep(requestnode, function(filter) { //filter pending requests
+            return filter.requestid == requestid;
+        });
     }
     let incache = (this_requestid && this_requestid.length > 0);
     if (incache === true || requestid_param) { // do not save if request already exists
