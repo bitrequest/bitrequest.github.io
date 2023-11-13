@@ -1420,7 +1420,7 @@ function cc_fail(apilist, api, error_val) {
 }
 
 function show_paymentdialog() {
-    let scrollposition = $(document).scrollTop(); // get scrollposition save as global
+    scrollposition = $(document).scrollTop(); // get scrollposition save as global
     fixedcheck(scrollposition); // fix nav position
     html.addClass("paymode blurmain_payment");
     $(".showmain #mainwrap").css("-webkit-transform", "translate(0, -" + scrollposition + "px)"); // fake scroll position

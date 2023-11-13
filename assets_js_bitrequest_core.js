@@ -1,6 +1,8 @@
 //globals
 
-const language = navigator.language || navigator.userLanguage,
+const cookie_support = check_cookie(),
+    ls_support = check_local(),
+    language = navigator.language || navigator.userLanguage,
     userAgent = navigator.userAgent || navigator.vendor || window.opera,
     titlenode = $("title"),
     ogtitle = $("meta[property='og:title']"),
@@ -18,10 +20,8 @@ const language = navigator.language || navigator.userLanguage,
     howl = $("#howl"), // howl sound effect
     timezoneoffset = new Date().getTimezoneOffset(),
     timezone = timezoneoffset * 60000,
-    scrollposition = 0,
     has_ndef = ("NDEFReader" in window),
     supportsTouch = ("ontouchstart" in window || navigator.msMaxTouchPoints),
-    checkcookie = navigator.cookieEnabled,
     referrer = document.referrer,
     isrefferer = (referrer.length > 0),
     is_android_app = (window.matchMedia("(display-mode: standalone)").matches || referrer == "android-app://" + androidpackagename || navigator.standalone), // android app fingerprint
@@ -34,14 +34,11 @@ const language = navigator.language || navigator.userLanguage,
     (thishostname == "bitrequest.github.io") ? "hosted" :
     (thishostname == localhostname) ? "selfhosted" : "unknown",
     wl = navigator.wakeLock,
-    cashier_dat = JSON.parse(localStorage.getItem("bitrequest_cashier")),
-    is_cashier = (cashier_dat && cashier_dat.cashier) ? true : false,
-    cashier_seedid = (is_cashier) ? cashier_dat.seedid : false,
     after_poll_timeout = 15000,
-    xss_alert = "xss attempt detected",
-    stored_currencies = localStorage.getItem("bitrequest_currencies");
+    xss_alert = "xss attempt detected";
 
-let is_ios_app, // ios app fingerprint
+let scrollposition = 0,
+    is_ios_app, // ios app fingerprint
     phpsupportglobal,
     symbolcache,
     hascam,
@@ -50,13 +47,19 @@ let is_ios_app, // ios app fingerprint
     localserver,
     wakelock,
     bipv,
-    bipobj = localStorage.getItem("bitrequest_bpdat"),
+    bipobj = br_get_local("bpdat"),
     hasbip = (bipobj) ? true : false,
     bipid = (hasbip) ? JSON.parse(bipobj).id : false,
     ndef,
     blockswipe,
     ctrl,
-    gd_init = false;
+    gd_init = false,
+    cashier_dat = br_get_local("cashier", true),
+    is_cashier = (cashier_dat && cashier_dat.cashier) ? true : false,
+    cashier_seedid = (is_cashier) ? cashier_dat.seedid : false,
+    stored_currencies = br_get_local("currencies"),
+    init = br_get_local("init"),
+    io = (init) ? JSON.parse(init) : {};
 
 if (has_ndef && !inframe) {
     ndef = new NDEFReader();
@@ -67,9 +70,6 @@ $(document).ready(function() {
         "cache": false
     });
     buildsettings(); // build settings first
-
-    let init = localStorage.getItem("bitrequest_init");
-    io = (init) ? JSON.parse(init) : {};
 
     if (hostlocation != "local") { // don't add service worker on desktop
         add_serviceworker();
@@ -92,9 +92,9 @@ $(document).ready(function() {
     }
 
     //some api tests first
-    if (checkcookie === true || inframe === true) { //check for cookie support, tolerate for iframes
+    if (cookie_support || inframe === true) { //check for cookie support, tolerate for iframes
         rendersettings(); //retrieve settings from localstorage (load first to retrieve apikey)
-        if (typeof(Storage)) { //check for local storage support
+        if (ls_support) { //check for local storage support
             if (!stored_currencies) { //show startpage if no addresses are added
                 body.addClass("showstartpage");
             }
@@ -133,6 +133,7 @@ $(document).ready(function() {
     console.log({
         "config": br_config
     });
+    console.log(io);
 })
 
 function checkphp() { //check for php support by fetching fiat currencies from local api php file
@@ -152,25 +153,25 @@ function checkphp() { //check for php support by fetching fiat currencies from l
             let symbols = q_obj(result, "result.result.symbols");
             if (symbols) {
                 if (symbols.USD) {
-                    localStorage.setItem("bitrequest_symbols", JSON.stringify(symbols));
+                    br_set_local("symbols", symbols, true);
                 } else {
                     let this_error = (data.error) ? data.error : "Unable to get API data";
                     fail_dialogs("fixer", this_error);
                 }
             }
             io.phpsupport = "yes";
-            localStorage.setItem("bitrequest_init", JSON.stringify(io));
+            br_set_local("init", io, true);
             phpsupportglobal = true;
             setsymbols();
             return
         }
         io.phpsupport = "no";
-        localStorage.setItem("bitrequest_init", JSON.stringify(io));
+        br_set_local("init", io, true);
         phpsupportglobal = false;
         setsymbols();
     }).fail(function(jqXHR, textStatus, errorThrown) {
         io.phpsupport = "no";
-        localStorage.setItem("bitrequest_init", JSON.stringify(io));
+        br_set_local("init", io, true);
         phpsupportglobal = false;
         setsymbols();
     });
@@ -180,39 +181,39 @@ function setsymbols() { //fetch fiat currencies from fixer.io api
     //set globals
     local = (hostlocation == "local" && phpsupportglobal === false),
         localserver = (hostlocation == "local" && phpsupportglobal === true);
-    if (localStorage.getItem("bitrequest_symbols")) {
+    if (br_get_local("symbols")) {
         geterc20tokens();
-    } else {
-        api_proxy({
-            "api": "fixer",
-            "search": "symbols",
-            "cachetime": 86400,
-            "cachefolder": "1d",
-            "params": {
-                "method": "GET"
-            }
-        }).done(function(e) {
-            let data = br_result(e).result;
-            if (data) {
-                let symbols = data.symbols;
-                if (symbols && symbols.USD) {
-                    localStorage.setItem("bitrequest_symbols", JSON.stringify(symbols));
-                } else {
-                    let this_error = (data.error) ? data.error : "Unable to get API data";
-                    fail_dialogs("fixer", this_error);
-                }
-            }
-            geterc20tokens();
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            let content = "<h2 class='icon-bin'>Api call failed</h2><p class='doselect'>" + textStatus + "<br/>api did not respond<br/><br/><span id='proxy_dialog' class='ref'>Try other proxy</span></p>";
-            popdialog(content, "canceldialog");
-        })
+        return
     }
+    api_proxy({
+        "api": "fixer",
+        "search": "symbols",
+        "cachetime": 86400,
+        "cachefolder": "1d",
+        "params": {
+            "method": "GET"
+        }
+    }).done(function(e) {
+        let data = br_result(e).result;
+        if (data) {
+            let symbols = data.symbols;
+            if (symbols && symbols.USD) {
+                br_set_local("symbols", symbols, true);
+            } else {
+                let this_error = (data.error) ? data.error : "Unable to get API data";
+                fail_dialogs("fixer", this_error);
+            }
+        }
+        geterc20tokens();
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        let content = "<h2 class='icon-bin'>Api call failed</h2><p class='doselect'>" + textStatus + "<br/>api did not respond<br/><br/><span id='proxy_dialog' class='ref'>Try other proxy</span></p>";
+        popdialog(content, "canceldialog");
+    })
 }
 
 //* get top 600 erc20 tokens from coinmarketcap
 function geterc20tokens() {
-    if (localStorage.getItem("bitrequest_erc20tokens")) {
+    if (br_get_local("erc20tokens")) {
         setfunctions();
         return;
     }
@@ -268,7 +269,7 @@ function storecoindata(data) {
                 }
             }
         });
-        localStorage.setItem("bitrequest_erc20tokens", JSON.stringify(erc20push));
+        br_set_local("erc20tokens", erc20push, true);
     }
 }
 
@@ -285,7 +286,7 @@ function haspin() {
 function islocked() {
     let gets = geturlparameters(),
         locktime = $("#pinsettings").data("locktime"),
-        lastlock = localStorage.getItem("bitrequest_locktime"),
+        lastlock = br_get_local("locktime"),
         tsll = now() - lastlock,
         pflt = parseFloat(locktime);
     return (gets.payment) ? false : (haspin() === true && tsll > pflt) ? true : false;
@@ -730,20 +731,20 @@ function enterapp(pinval) {
     if (hashpin == savedpin) {
         if (global) {
             let nit = true;
-            localStorage.setItem("bitrequest_locktime", _now);
+            br_set_local("locktime", _now);
             finishfunctions();
             setTimeout(function() {
                 playsound(waterdrop);
                 canceloptions(true);
             }, 500);
         } else if (pinfloat.hasClass("admin")) {
-            localStorage.setItem("bitrequest_locktime", _now);
+            br_set_local("locktime", _now);
             loadpage("?p=currencies");
             $(".currenciesbttn .self").addClass("activemenu");
             playsound(waterdrop);
             canceloptions(true);
         } else if (pinfloat.hasClass("reset")) {
-            localStorage.setItem("bitrequest_locktime", _now);
+            br_set_local("locktime", _now);
             $("#pintext").text("Enter new pin");
             pinfloat.addClass("p_admin").removeClass("pinwall reset");
             playsound(waterdrop);
@@ -755,7 +756,7 @@ function enterapp(pinval) {
             if (callback) {
                 callback.func(callback.args);
             } else {
-                localStorage.setItem("bitrequest_locktime", _now);
+                br_set_local("locktime", _now);
             }
             playsound(waterdrop);
             canceloptions(true);
@@ -905,7 +906,7 @@ function ios_redirections(url) {
         isopenrequest = (paymentpopup.hasClass("active"));
     if (isrequest === true) {
         if (isopenrequest === true) {
-            if (localStorage.getItem("bitrequest_editurl") == w_loc.search) {} else {
+            if (br_get_local("editurl") == w_loc.search) {} else {
                 cancelpaymentdialog();
                 setTimeout(function() {
                     openpage(url, "", "payment");
@@ -930,7 +931,7 @@ function ios_redirections(url) {
 function ios_redirect_bitly(shorturl) {
     if (hostlocation == "local") {} else {
         let bitly_id = shorturl.split(approot)[1].split("4bR")[0],
-            getcache = sessionStorage.getItem("bitrequest_longurl_" + bitly_id);
+            getcache = br_get_session("longurl_" + bitly_id);
         if (getcache) { // check for cached values
             ios_redirections(getcache);
         } else {
@@ -956,7 +957,7 @@ function ios_redirect_bitly(shorturl) {
                         let longurl = data.long_url;
                         if (longurl) {
                             ios_redirections(longurl);
-                            sessionStorage.setItem("bitrequest_longurl_" + bitly_id, longurl); //cache token decimals
+                            br_get_session("longurl_" + bitly_id, longurl); //cache token decimals
                         } else {
                             w_loc.href = "http://bit.ly/" + bitly_id;
                         }
@@ -1325,7 +1326,7 @@ function finishtxfunction(currency, thisaddress, savedurl, title) {
         newlink = prefix + currencysymbol + "&amount=0" + "&address=" + thisaddress,
         href = (!savedurl || offline !== false) ? newlink : savedurl, //load saved url if exists
         thistitle = (title) ? title : "bitrequest";
-    localStorage.setItem("bitrequest_editurl", href); // to check if request is being edited
+    br_set_local("editurl", href); // to check if request is being edited
     remove_flip(); // reset request card facing front
     openpage(href, thistitle, "payment");
 }
@@ -1384,7 +1385,7 @@ function togglecurrency() {
             parentlistitem.attr("data-checked", "false").data("checked", false);
             currencylistitem.addClass("hide");
         } else {
-            let lscurrency = localStorage.getItem("bitrequest_cc_" + currency);
+            let lscurrency = br_get_local("cc_" + currency);
             if (lscurrency) {
                 let addresslist = get_addresslist(currency),
                     addresscount = addresslist.find("li[data-checked='true']").length;
@@ -1483,31 +1484,31 @@ function cmst_callback(parentlistitem) {
 }
 
 function add_seed_whitelist(seedid) {
-    let stored_whitelist = localStorage.getItem("bitrequest_swl"),
+    let stored_whitelist = br_get_local("swl"),
         seed_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
     if ($.inArray(seedid, seed_whitelist) === -1) {
         seed_whitelist.push(seedid);
     }
-    localStorage.setItem("bitrequest_swl", JSON.stringify(seed_whitelist));
+    br_set_local("swl", seed_whitelist, true);
 }
 
 function seed_wl(seedid) {
-    let stored_whitelist = localStorage.getItem("bitrequest_swl"),
+    let stored_whitelist = br_get_local("swl"),
         seed_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
     return ($.inArray(seedid, seed_whitelist) === -1) ? false : true;
 }
 
 function add_address_whitelist(address) {
-    let stored_whitelist = localStorage.getItem("bitrequest_awl"),
+    let stored_whitelist = br_get_local("awl"),
         address_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
     if ($.inArray(address, address_whitelist) === -1) {
         address_whitelist.push(address);
     }
-    localStorage.setItem("bitrequest_awl", JSON.stringify(address_whitelist));
+    br_set_local("awl", address_whitelist, true);
 }
 
 function addr_whitelist(address) {
-    let stored_whitelist = localStorage.getItem("bitrequest_awl"),
+    let stored_whitelist = br_get_local("awl"),
         address_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
     return ($.inArray(address, address_whitelist) === -1) ? false : true;
 }
@@ -1828,7 +1829,7 @@ function close_paymentdialog(empty) {
         if (empty === true && inframe === false && request.requesttype == "local") {
             let currency = request.payment,
                 address = request.address,
-                ls_recentrequests = localStorage.getItem("bitrequest_recent_requests"),
+                ls_recentrequests = br_get_local("recent_requests"),
                 lsrr_arr = (ls_recentrequests) ? JSON.parse(ls_recentrequests) : {},
                 request_dat = {
                     "currency": currency,
@@ -1839,10 +1840,10 @@ function close_paymentdialog(empty) {
                     "rqtime": request.rq_init
                 };
             lsrr_arr[currency] = request_dat;
-            localStorage.setItem("bitrequest_recent_requests", JSON.stringify(lsrr_arr));
+            br_set_local("recent_requests", lsrr_arr, true);
             closeloader();
             toggle_rr(true);
-            let rr_whitelist = sessionStorage.getItem("bitrequest_rrwl");
+            let rr_whitelist = br_get_session("rrwl");
             if (rr_whitelist) {
                 let rrwl_obj = JSON.parse(rr_whitelist);
                 if (rrwl_obj && rrwl_obj[currency] == address) {
@@ -1920,16 +1921,16 @@ function dismiss_payment_lookup() {
 
 function block_payment_lookup() {
     if (request) {
-        let rr_whitelist = sessionStorage.getItem("bitrequest_rrwl"),
+        let rr_whitelist = br_get_session("rrwl"),
             rrwl_arr = (rr_whitelist) ? JSON.parse(rr_whitelist) : {};
         rrwl_arr[request.payment] = request.address;
-        sessionStorage.setItem("bitrequest_rrwl", JSON.stringify(rrwl_arr));
+        br_set_session("rrwl", rrwl_arr, true);
     }
 }
 
 function request_history() {
     $(document).on("click", "#request_history", function() {
-        let ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
+        let ls_recentrequests = br_get_local("recent_requests");
         if (ls_recentrequests) {
             let lsrr_arr = JSON.parse(ls_recentrequests);
             recent_requests(lsrr_arr);
@@ -2243,7 +2244,7 @@ function submitaddresstrigger() {
 //Add erc20 token
 function add_erc20() {
     $(document).on("click", "#add_erc20, #choose_erc20", function() {
-        let tokenobject = JSON.parse(localStorage.getItem("bitrequest_erc20tokens")),
+        let tokenobject = br_get_local("erc20tokens", true),
             tokenlist = "";
         $.each(tokenobject, function(key, value) {
             tokenlist += "<span data-id='" + value.cmcid + "' data-currency='" + value.name + "' data-ccsymbol='" + value.symbol.toLowerCase() + "' data-contract='" + value.contract + "' data-pe='none'>" + value.symbol + " | " + value.name + "</span>";
@@ -2478,7 +2479,7 @@ function validateaddress(ad, vk) {
                         $("#accountsettings").data("selected", acountname).find("p").text(acountname);
                         savesettings();
                         let href = "?p=home&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0" + "&address=" + addinputval;
-                        localStorage.setItem("bitrequest_editurl", href); // to check if request is being edited
+                        br_set_local("editurl", href); // to check if request is being edited
                         openpage(href, "create " + currency + " request", "payment");
                         body.removeClass("showstartpage");
                     } else {
@@ -2845,7 +2846,7 @@ function phrase_login() {
 
 function remove_cashier() {
     if (is_cashier) {
-        localStorage.removeItem("bitrequest_cashier");
+        br_remove_local("cashier");
         cashier_dat = false,
             is_cashier = false,
             cashier_seedid = false;
@@ -2934,7 +2935,7 @@ function newrequest_cb(currency, ccsymbol, address, title) {
         return
     }
     let thishref = "?p=" + gets.p + "&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0&address=" + address;
-    localStorage.setItem("bitrequest_editurl", thishref); // to check if request is being edited
+    br_set_local("editurl", thishref); // to check if request is being edited
     canceloptions();
     remove_flip(); // reset request card facing front
     openpage(thishref, title, "payment");
@@ -3589,7 +3590,7 @@ function get_api_url(get) {
 
 function fetchsymbol(currencyname) {
     let ccsymbol = {};
-    $.each(JSON.parse(localStorage.getItem("bitrequest_erc20tokens")), function(key, value) {
+    $.each(br_get_local("erc20tokens", true), function(key, value) {
         if (value.name == currencyname) {
             ccsymbol.symbol = value.symbol;
             ccsymbol.id = value.cmcid;
@@ -3880,7 +3881,7 @@ function str_match(add1, add2) {
 function all_pinpanel(cb, top) {
     let topclass = (top) ? " ontop" : "";
     if (haspin() === true) {
-        let lastlock = localStorage.getItem("bitrequest_locktime"),
+        let lastlock = br_get_local("locktime"),
             tsll = now() - lastlock,
             pass = (tsll < 10000);
         if (cb && pass) { // keep unlocked in 10 second time window
@@ -3977,7 +3978,7 @@ function getcoindata(currency) {
     if (currencyref.length > 0) {
         return $.extend(currencyref.data(), br_config.erc20_dat.data);
     } // else lookup erc20 data
-    let tokenobject = JSON.parse(localStorage.getItem("bitrequest_erc20tokens"));
+    let tokenobject = br_get_local("erc20tokens", true);
     if (tokenobject) {
         let erc20data = $.grep(tokenobject, function(filter) {
             return filter.name == currency;
@@ -3996,7 +3997,7 @@ function getcoindata(currency) {
 }
 
 function activecoinsettings(currency) {
-    let saved_coinsettings = JSON.parse(localStorage.getItem("bitrequest_" + currency + "_settings"));
+    let saved_coinsettings = br_get_local(currency + "_settings", true);
     return (saved_coinsettings) ? saved_coinsettings : getcoinsettings(currency);
 }
 
@@ -4147,9 +4148,9 @@ function rendercurrencies() {
                 thiscmcid = data.cmcid;
             buildpage(data, false);
             render_currencysettings(thiscurrency);
-            let addresses = localStorage.getItem("bitrequest_cc_" + thiscurrency);
+            let addresses = br_get_local("cc_" + thiscurrency, true);
             if (addresses) {
-                $.each(JSON.parse(addresses).reverse(), function(index, address_data) {
+                $.each(addresses.reverse(), function(index, address_data) {
                     appendaddress(thiscurrency, address_data);
                 });
             }
@@ -4161,7 +4162,7 @@ function rendercurrencies() {
 
 // render currency settings
 function render_currencysettings(thiscurrency) {
-    let settingcache = localStorage.getItem("bitrequest_" + thiscurrency + "_settings");
+    let settingcache = br_get_local(thiscurrency + "_settings");
     if (settingcache) {
         append_coinsetting(thiscurrency, JSON.parse(settingcache), false);
     }
@@ -4193,7 +4194,7 @@ function buildsettings() {
 
 // render settings
 function rendersettings(excludes) {
-    let settingcache = localStorage.getItem("bitrequest_settings");
+    let settingcache = br_get_local("settings");
     if (settingcache) {
         $.each(JSON.parse(settingcache), function(i, value) {
             if ($.inArray(value.id, excludes) === -1) { // exclude excludes
@@ -4204,8 +4205,8 @@ function rendersettings(excludes) {
 }
 
 function renderrequests() {
-    fetchrequests("bitrequest_requests", false);
-    fetchrequests("bitrequest_archive", true);
+    fetchrequests("requests", false);
+    fetchrequests("archive", true);
     archive_button();
 }
 
@@ -4221,7 +4222,7 @@ function archive_button() {
 }
 
 function fetchrequests(cachename, archive) {
-    let requestcache = localStorage.getItem(cachename);
+    let requestcache = br_get_local(cachename);
     if (requestcache) {
         let parsevalue = JSON.parse(requestcache),
             showarchive = (archive === false && parsevalue.length > 11); // only show archive button when there are more then 11 requests
@@ -4312,9 +4313,9 @@ function buildpage(cd, ini) {
 		</div>" + settingspage);
         currency_page.data(cd).appendTo("main");
         if (erc20 === true) {
-            let coin_settings_cache = localStorage.getItem("bitrequest_" + currency + "_settings");
+            let coin_settings_cache = br_get_local(currency + "_settings");
             if (!coin_settings_cache) {
-                localStorage.setItem("bitrequest_" + currency + "_settings", JSON.stringify(br_config.erc20_dat.settings));
+                br_set_local(currency + "_settings", br_config.erc20_dat.settings, true);
             }
         }
     } else {
@@ -4854,7 +4855,7 @@ function savecurrencies(add) {
     $("#usedcurrencies li").each(function(i) {
         currenciespush.push($(this).data());
     });
-    localStorage.setItem("bitrequest_currencies", JSON.stringify(currenciespush));
+    br_set_local("currencies", currenciespush, true);
     updatechanges("currencies", add);
 }
 
@@ -4867,10 +4868,10 @@ function saveaddresses(currency, add) {
         addresses.each(function(i) {
             addressboxpush.push($(this).data());
         });
-        localStorage.setItem("bitrequest_cc_" + currency, JSON.stringify(addressboxpush));
+        br_set_local("cc_" + currency, addressboxpush, true)
     } else {
-        localStorage.removeItem("bitrequest_cc_" + currency);
-        localStorage.removeItem("bitrequest_" + currency + "_settings");
+        br_remove_local("c_" + currency);
+        br_remove_local(currency + "_settings");
     }
     updatechanges("addresses", add);
 }
@@ -4881,7 +4882,7 @@ function saverequests() {
     $("ul#requestlist > li").each(function() {
         requestpush.push($(this).data());
     });
-    localStorage.setItem("bitrequest_requests", JSON.stringify(requestpush));
+    br_set_local("requests", requestpush, true);
     updatechanges("requests", true);
 }
 
@@ -4891,7 +4892,7 @@ function savearchive() {
     $("ul#archivelist > li").each(function() {
         requestpush.push($(this).data());
     });
-    localStorage.setItem("bitrequest_archive", JSON.stringify(requestpush));
+    br_set_local("archive", requestpush, true);
 }
 
 //update settings
@@ -4899,8 +4900,8 @@ function savesettings(nit) {
     let settingsspush = [];
     $("ul#appsettings > li.render").each(function() {
         settingsspush.push($(this).data());
-    });
-    localStorage.setItem("bitrequest_settings", JSON.stringify(settingsspush));
+    });;
+    br_set_local("settings", settingsspush, true);
     updatechanges("settings", true, nit);
 }
 
@@ -4910,7 +4911,7 @@ function save_cc_settings(currency, add) {
         let thisnode = $(this);
         settingbox[thisnode.attr("data-id")] = thisnode.data();
     });
-    localStorage.setItem("bitrequest_" + currency + "_settings", JSON.stringify(settingbox));
+    br_set_local(currency + "_settings", settingbox, true);
     updatechanges("currencysettings", add);
 }
 
@@ -4934,13 +4935,13 @@ function resetchanges() {
 }
 
 function savechangesstats() {
-    localStorage.setItem("bitrequest_changes", JSON.stringify(changes));
+    br_set_local("changes", changes, true);
     change_alert();
 }
 
 // render changes
 function renderchanges() {
-    let changescache = localStorage.getItem("bitrequest_changes");
+    let changescache = br_get_local("changes");
     if (changescache) {
         changes = JSON.parse(changescache);
         setTimeout(function() { // wait for Googleauth to load
@@ -4976,7 +4977,7 @@ function detectapp() {
     if (inframe === true || is_android_app === true || is_ios_app === true) {
         return
     }
-    let show_dialog = sessionStorage.getItem("bitrequest_appstore_dialog") || localStorage.getItem("bitrequest_appstore_dialog");
+    let show_dialog = br_get_session("appstore_dialog") || br_get_local("appstore_dialog");
     if (show_dialog) {
         return
     }
@@ -5013,9 +5014,9 @@ function close_app_panel() {
         setTimeout(function() {
             $("#app_panel").html("");
         }, 800);
-        sessionStorage.setItem("bitrequest_appstore_dialog", true);
+        br_set_session("appstore_dialog", true);
         if (getdevicetype() == "Android") {
-            localStorage.setItem("bitrequest_appstore_dialog", true);
+            br_set_local("appstore_dialog", true);
         }
     });
 }
@@ -5258,12 +5259,12 @@ function init_keys(ko, set) { // set required keys
     }
     io.k = ko;
     if (set === false) {
-        localStorage.setItem("bitrequest_init", JSON.stringify(io));
+        br_set_local("init", io, true);
     }
 }
 
 function check_rr() {
-    let ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
+    let ls_recentrequests = br_get_local("recent_requests");
     if (ls_recentrequests) {
         let lsrr_arr = JSON.parse(ls_recentrequests);
         if ($.isEmptyObject(lsrr_arr)) {
