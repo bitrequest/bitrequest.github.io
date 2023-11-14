@@ -133,7 +133,6 @@ $(document).ready(function() {
     console.log({
         "config": br_config
     });
-    console.log(io);
 })
 
 function checkphp() { //check for php support by fetching fiat currencies from local api php file

@@ -3174,7 +3174,7 @@ function adjust_object(object, seedobj) {
         "seedid": seedid
     }
     if (seedid) {
-        let phrase = seedobj.pob.join(" "),
+        var phrase = seedobj.pob.join(" "),
             seed = toseed(phrase),
             rootkey = get_rootkey(seed),
             key = rootkey.slice(0, 64),
@@ -3187,7 +3187,7 @@ function adjust_object(object, seedobj) {
             keyval = "bitrequest_cc_" + currency,
             addresses = object[keyval];
         if (seedid && bip32dat.active) {
-            let root_path = bip32dat.root_path,
+            var root_path = bip32dat.root_path,
                 xpubdat = xpub_obj(currency, root_path, cc, key),
                 xpub = xpubdat.xpub,
                 xpubid = xpubdat.xpubid;
