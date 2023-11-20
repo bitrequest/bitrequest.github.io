@@ -261,7 +261,7 @@ function updateappdata() {
     if (pass) {
         let bu_id = br_get_local("backupfile_id");
         if (bu_id) {
-            let gd_timer = br_get_sessionl("gd_timer"); // prevent Ddos
+            let gd_timer = br_get_session("gd_timer"); // prevent Ddos
             if (gd_timer) {
                 let interval = 3000;
                 if ((now() - gd_timer) < interval) {
