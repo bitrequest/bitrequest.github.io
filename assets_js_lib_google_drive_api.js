@@ -194,7 +194,7 @@ function set_gatoken(e) {
             "expires_in": e.expires_in,
             "created": now()
         }
-        br_set_local("a_dat", token_object, true);
+        br_set_local("a_dat", btoa(JSON.stringify(token_object)));
         updateappdata();
         gdlogin_callbacks();
     }
