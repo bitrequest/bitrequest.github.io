@@ -42,6 +42,8 @@ $(document).ready(function() {
     //has_xpub
     //is_xpub
     //cxpub
+    //getbip32dat
+    //hasbip32
 
     // Bip 39 seed generation
     make_seed();
@@ -78,6 +80,7 @@ $(document).ready(function() {
     // Test triggers
     //derive_addone_trigger();
     //derive_addone
+    //get_latest_index
     //key_cc
     //key_cc_xpub
     //get_rootkey
@@ -139,7 +142,7 @@ function hasbigint() {
 }
 
 function istrial() {
-    let trialp = localStorage.getItem("bitrequest_tp");
+    let trialp = br_get_local("tp");
     if (trialp) {
         let twelvehours = 43200000;
         if ((now() - parseFloat(trialp)) < twelvehours) {
@@ -398,6 +401,37 @@ function cxpub(currency) {
     return false;
 }
 
+function getbip32dat(currency) {
+    let xpub_dat = cs_dat(currency, "Xpub");
+    if (xpub_dat && xpub_dat.active === true) {
+        return xpub_dat;
+    }
+    let coindata = getcoinconfig(currency);
+    if (coindata) {
+        let xpubdat = coindata.settings.Xpub;
+        if (xpubdat && xpubdat.active === true) {
+            return xpubdat;
+        }
+    }
+    return false;
+}
+
+function hasbip32(currency) {
+    let coindata = getcoinconfig(currency);
+    if (coindata) {
+        let settings = coindata.settings;
+        if (settings) {
+            let xpub = settings.Xpub;
+            if (xpub) {
+                if (xpub.active) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 // Bip 39 seed generation
 
 function make_seed() {
@@ -480,7 +514,7 @@ function manage_bip32(dat) {
         bip39(dat);
         return
     }
-    let data = (dat) ? dat : {},
+    let data = br_dobj(dat, true),
         ddat = [{
                 "div": {
                     "class": "popform",
@@ -560,7 +594,7 @@ function submit_disclaimer() {
 
 function bip39(dat) {
     phraseverified = false;
-    let data = (dat) ? dat : {},
+    let data = br_dobj(dat, true),
         phrase_obj = ls_phrase_obj(),
         edit = (data && data.edit) ? true : false,
         dtype = (data && data.type) ? data.type : null,
@@ -665,8 +699,7 @@ function seed_nav(index) {
 
 function ls_phrase_obj() {
     if (bipobj) {
-        let savedat = JSON.parse(bipobj);
-        return ls_phrase_obj_parsed(savedat);
+        return ls_phrase_obj_parsed(bipobj);
     }
     return false;
 
@@ -694,8 +727,7 @@ function ls_phrase_obj_parsed(obj) {
 
 function seed_decrypt(pin) {
     if (bipobj) {
-        let pbdat = JSON.parse(bipobj),
-            pdat_enc = pbdat.datenc;
+        let pdat_enc = bipobj.datenc;
         if (pdat_enc) {
             let pdat_dec = s_decode(pdat_enc, pin),
                 pdat_dec_dat = pdat_dec.dat;
@@ -703,7 +735,7 @@ function seed_decrypt(pin) {
                 return JSON.parse(atob(pdat_dec_dat));
             }
         } else {
-            let pdat_dat = pbdat.dat;
+            let pdat_dat = bipobj.dat;
             if (pdat_dat) {
                 return JSON.parse(atob(pdat_dat));
             }
@@ -837,12 +869,12 @@ function verify_words() {
             if (step3.hasClass("delete")) {
                 let result = confirm("Are you sure you want to delete your secret phrase?");
                 if (result === true) {
-                    localStorage.removeItem("bitrequest_bpdat");
-                    let initdat = localStorage.getItem("bitrequest_init"),
-                        iodat = (initdat) ? JSON.parse(initdat) : {};
+                    br_remove_local("bpdat");
+                    let initdat = br_get_local("init", true),
+                        iodat = br_dobj(initdat, true);
                     iodat.bipv = "no";
                     delete iodat.bipv;
-                    localStorage.setItem("bitrequest_init", JSON.stringify(iodat));
+                    br_set_local("init", iodat, true);
                     hasbip = false;
                     bipv = false;
                     bipid = false;
@@ -925,12 +957,12 @@ function seed_callback() {
             phraseid = hmacsha(seed_string, "sha256").slice(0, 8);
         seed_object.pid = phraseid;
         seed_object.pob = seed_string;
-        let savedat = JSON.stringify({
+        let savedat = {
             "id": phraseid,
             "dat": null
-        });
-        localStorage.setItem("bitrequest_bpdat", savedat);
-        localStorage.setItem("bitrequest_tp", now());
+        };
+        br_set_local("bpdat", savedat, true);
+        br_set_local("tp", now());
         bipobj = savedat,
             hasbip = true,
             bipid = phraseid;
@@ -955,10 +987,10 @@ function seed_callback() {
     }
     if (phraseverified === true) {
         // save as verified
-        let initdat = localStorage.getItem("bitrequest_init"),
-            iodat = (initdat) ? JSON.parse(initdat) : {};
+        let initdat = br_get_local("init", true),
+            iodat = br_dobj(initdat, true);
         iodat.bipv = "yes";
-        localStorage.setItem("bitrequest_init", JSON.stringify(iodat));
+        br_set_local("init", iodat, true);
         bipv = true;
         topnotify("Passphrase verified");
     } else {
@@ -996,7 +1028,7 @@ function enc_s(dat) {
             }
             if (sdat) {
                 let seedenc = btoa(JSON.stringify(sdat)),
-                    s_obj = JSON.parse(bipobj),
+                    s_obj = bipobj,
                     s_id = s_obj.id,
                     keystring = ptokey(pn, s_id),
                     encb = aes_enc(JSON.stringify(seedenc), keystring);
@@ -1005,9 +1037,8 @@ function enc_s(dat) {
                     "dat": encb
                 };
                 s_obj.dat = null;
-                let bpdat_val = JSON.stringify(s_obj);
-                localStorage.setItem("bitrequest_bpdat", bpdat_val);
-                bipobj = bpdat_val;
+                br_set_local("bpdat", s_obj, true);
+                bipobj = s_obj;
             }
         }
     }
@@ -1015,8 +1046,7 @@ function enc_s(dat) {
 
 function has_datenc() {
     if (hasbip === true) {
-        let s_obj = JSON.parse(bipobj);
-        if (s_obj.datenc) {
+        if (bipobj.datenc) {
             return true;
         }
     }
@@ -1042,6 +1072,11 @@ function ptokey(p, sid) {
 }
 
 // Test triggers
+
+function get_latest_index(alist) {
+    let index = dom_to_array(alist, "derive_index");
+    return Math.max.apply(Math, index);
+}
 
 function derive_addone_trigger() {
     $(document).on("click", ".addonexx", function() {

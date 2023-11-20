@@ -203,7 +203,7 @@ function editcurrency() {
         let currencysettings = $("#currencysettings"),
             switchmode = currencysettings.data("default"),
             currency = currencysettings.data("selected"),
-            symbolstringarray = JSON.parse(localStorage.getItem("bitrequest_symbols")),
+            symbolstringarray = br_get_local("symbols", true),
             symbollist = "";
         $.each(symbolstringarray, function(key, value) {
             if (key == "BTC") { // remove from list
@@ -1195,11 +1195,11 @@ function submit_pin_dialog() {
 }
 
 function restore_cb_init_addresses() {
-    localStorage.setItem("bitrequest_tp", now());
-    let initdat = localStorage.getItem("bitrequest_init"),
-        iodat = (initdat) ? JSON.parse(initdat) : {};
+    br_set_local("tp", now());
+    let initdat = br_get_local("init", true),
+        iodat = br_dobj(initdat, true);
     delete iodat.bipv;
-    localStorage.setItem("bitrequest_init", JSON.stringify(iodat));
+    br_set_local("init", iodat, true);
 }
 
 function restore_callback_file(pass_dat, np) {
@@ -1448,8 +1448,8 @@ function restorestorage(jsonobject, newphrase) {
 // CSV Export
 function csvexport_trigger() {
     $(document).on("click", "#csvexport", function() {
-        let rq_arr = JSON.parse(localStorage.getItem("bitrequest_requests")),
-            archive_arr = JSON.parse(localStorage.getItem("bitrequest_archive")),
+        let rq_arr = br_get_local("requests", true),
+            archive_arr = br_get_local("archive", true),
             has_requests = (rq_arr && !$.isEmptyObject(rq_arr)),
             has_archive = (archive_arr && !$.isEmptyObject(archive_arr));
         if (has_requests === true || has_archive === true) {
@@ -1552,8 +1552,8 @@ function submit_csvexport() {
 }
 
 function complile_csv() {
-    let rq_arr = JSON.parse(localStorage.getItem("bitrequest_requests")),
-        archive_arr = JSON.parse(localStorage.getItem("bitrequest_archive")),
+    let rq_arr = br_get_local("requests", true),
+        archive_arr = br_get_local("archive", true),
         has_archive = (archive_arr && !$.isEmptyObject(archive_arr)),
         csv_arr = [],
         options_li = $("#exportcsvbox #ecsv_options"),
@@ -2817,8 +2817,8 @@ function update_api_attr(thisref, thisvalue, lastinput) {
     notify("Data saved");
     savesettings();
     // update monitor
-    sessionStorage.removeItem("bitrequest_" + thisref + "_api_attempt");
-    sessionStorage.removeItem("bitrequest_txstatus");
+    br_remove_session(thisref + "_api_attempt");
+    br_remove_session("txstatus");
     cancelpaymentdialog();
 }
 
@@ -3308,8 +3308,8 @@ function check_teaminvite() {
                         bpdat_seedid = (br_dat.bitrequest_cashier) ? (br_dat.bitrequest_cashier.seedid) ? br_dat.bitrequest_cashier.seedid : false : false,
                         update = (bpdat_seedid == cashier_seedid) ? true : false,
                         master_account = (bpdat_seedid == bipid) ? true : false,
-                        teamid = localStorage.getItem("bitrequest_teamid"),
-                        teamid_arr = (teamid) ? JSON.parse(teamid) : [],
+                        teamid = br_get_local("teamid", true),
+                        teamid_arr = br_dobj(teamid),
                         is_installed = ($.inArray(ro, teamid_arr) > -1) ? true : false,
                         dialog_heading = (update) ? "Team update" : "Team invitation",
                         cf_string = (cd_format) ? "Invitation expires in " + cd_format : "File expired",
@@ -3381,10 +3381,10 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
         localStorage.setItem(key, JSON.stringify(val));
     });
     if (iid) {
-        let stored_teamids = localStorage.getItem("bitrequest_teamid"),
-            teamid_arr = (stored_teamids) ? JSON.parse(stored_teamids) : [];
+        let stored_teamids = br_get_local("teamid", true),
+            teamid_arr = br_dobj(stored_teamids);
         teamid_arr.push(iid);
-        localStorage.setItem("bitrequest_teamid", JSON.stringify(teamid_arr));
+        br_set_local("teamid", teamid_arr, true);
     }
     rendersettings(["restore", "backup"]); // exclude restore and backup settings
     let lastrestore = "last restore:<br/><span class='icon-folder-open'>Team invite " + new Date(now()).toLocaleString(language).replace(/\s+/g, "_") + "</span>";

@@ -390,7 +390,7 @@ function confirmations(tx_data, direct, ln) {
         brstatuspanel.find("span#confnumber").text(conf_text);
         if (xconf > currentconf || zero_conf === true || direct === true) {
             reset_recent();
-            sessionStorage.removeItem("bitrequest_txstatus"); // remove cached historical exchange rates
+            br_remove_session("txstatus"); // remove cached historical exchange rates
             confbox.removeClass("blob");
             setTimeout(function() {
                 confbox.addClass("blob");
@@ -477,11 +477,11 @@ function confirmations(tx_data, direct, ln) {
 
 function reset_recent() {
     if (request) {
-        let ls_recentrequests = localStorage.getItem("bitrequest_recent_requests");
+        let ls_recentrequests = br_get_local("recent_requests");
         if (ls_recentrequests) {
             let lsrr_arr = JSON.parse(ls_recentrequests);
             delete lsrr_arr[request.payment];
-            localStorage.setItem("bitrequest_recent_requests", JSON.stringify(lsrr_arr));
+            br_set_local("recent_requests", lsrr_arr, true);
             if ($.isEmptyObject(lsrr_arr)) {
                 toggle_rr(false);
             }

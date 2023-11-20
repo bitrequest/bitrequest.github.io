@@ -402,7 +402,7 @@ function loadpaymentfunction(pass) {
         return
     }
     loader();
-    symbolcache = localStorage.getItem("bitrequest_symbols");
+    symbolcache = br_get_local("symbols", true);
     if (symbolcache) {
         let gets = geturlparameters();
         if (gets.xss) { //xss detection
@@ -466,7 +466,7 @@ function loadpaymentfunction(pass) {
 }
 
 function get_tokeninfo(payment, contract) {
-    let getcache = localStorage.getItem("bitrequest_decimals_" + payment);
+    let getcache = br_get_local("decimals_" + payment);
     if (getcache) { // check for cached values
         request.decimals = getcache;
         continue_paymentfunction();
@@ -492,7 +492,7 @@ function get_tokeninfo(payment, contract) {
         let decimals = data.decimals;
         request.decimals = decimals;
         continue_paymentfunction();
-        localStorage.setItem("bitrequest_decimals_" + payment, decimals); //cache token decimals
+        br_set_local("decimals_" + payment, decimals); //cache token decimals
     }).fail(function(jqXHR, textStatus, errorThrown) {
         cancelpaymentdialog();
         let error_object = (errorThrown) ? errorThrown : jqXHR;
@@ -529,7 +529,7 @@ function continue_paymentfunction() {
         return
     }
     let api_info = check_api(payment, erc20),
-        isrequest = (localStorage.getItem("bitrequest_editurl") !== w_loc.search), // check if url is a request
+        isrequest = (br_get_local("editurl") !== w_loc.search), // check if url is a request
         coindata = request.coindata,
         coinsettings = activecoinsettings(payment),
         uoa = gets.uoa,
@@ -746,7 +746,7 @@ function lightning_setup() {
             lnurls = (ss.lnurl) ? true : false,
             lnurls_bool = (lnurls && !host) ? true : false,
             proxy_bool = (proxy == true) ? true : false,
-            saved_id = sessionStorage.getItem("bitrequest_lndpid"),
+            saved_id = br_get_session("lndpid"),
             pid = (saved_id) ? saved_id : sha_sub(now(), 10),
             use_lnurl = (lnurls_bool || proxy_bool),
             lnd = {
@@ -894,13 +894,12 @@ function proceed_pf(error) {
     }
     let ccapi = $("#cmcapisettings").data("selected"),
         apilist = "crypto_price_apis",
-        getcache = sessionStorage.getItem("bitrequest_xrates_" + request.currencysymbol);
+        getcache = br_get_session("xrates_" + request.currencysymbol, true);
     if (getcache) { //check for cached crypto rates in localstorage
         let timestamp = now(),
-            parsevalue = JSON.parse(getcache),
-            cachedtimestamp = parsevalue.timestamp,
-            thisusdrate = parsevalue.ccrate,
-            apisrc = parsevalue.apisrc,
+            cachedtimestamp = getcache.timestamp,
+            thisusdrate = getcache.ccrate,
+            apisrc = getcache.apisrc,
             cachetime = timestamp - cachedtimestamp;
         if (cachetime > cacheperiodcrypto) { //check if cached crypto rates are expired
             getccexchangerates(apilist, ccapi);
@@ -965,8 +964,7 @@ function getccexchangerates(apilist, api) {
                     ccratearray.timestamp = timestamp;
                     ccratearray.ccrate = ccrate;
                     ccratearray.apisrc = api;
-                    let storeccratestring = JSON.stringify(ccratearray);
-                    sessionStorage.setItem("bitrequest_xrates_" + request.currencysymbol, storeccratestring); //cache crypto rates in sessionstorage
+                    br_set_session("xrates_" + request.currencysymbol, ccratearray, true); //cache crypto rates in sessionstorage
                     initexchangerate(ccrate, api, 0); //pass usd amount, check for fiat rates
                     return
                 }
@@ -993,16 +991,15 @@ function initexchangerate(cc_rate, ccapi, cachetime) {
         newcurrencyparam = (newcurrency === true) ? "," + request.fiatcurrency : "",
         currencystring = localcurrencyparam + newcurrencyparam,
         currenciesstring = request.currencysymbol + "," + currencystring,
-        currencycache = sessionStorage.getItem("bitrequest_exchangerates"),
+        currencycache = br_get_session("exchangerates", true),
         fiatapi = $("#fiatapisettings").data("selected"),
         apilist = "fiat_price_apis";
     helper.currencyarray = currenciesstring.split(",");
     if (currencycache) { //check if cache exists
-        let parsevalue = JSON.parse(currencycache),
-            xratesnode = parsevalue.fiat_exchangerates,
+        let xratesnode = currencycache.fiat_exchangerates,
             thisrate = xratesnode[request.fiatcurrency];
         if (thisrate) { //check if currency is in cache
-            let xratetimestamp = parsevalue.timestamp,
+            let xratetimestamp = currencycache.timestamp,
                 timeexpired = timestamp - xratetimestamp,
                 lcrate = xratesnode[request.fiatcurrency];
             if (timeexpired > cacheperiodfiat || lcrate === undefined) { //check if cache is expired and if fiatcurrency is cached
@@ -1010,7 +1007,7 @@ function initexchangerate(cc_rate, ccapi, cachetime) {
                 return
             } //fetch cached exchange rates
             loadertext("reading fiat rates from cache");
-            rendercurrencypool(xratesnode, ccrate, ccapi, parsevalue.api, cachetime, timeexpired);
+            rendercurrencypool(xratesnode, ccrate, ccapi, currencycache.api, cachetime, timeexpired);
             return
         }
     }
@@ -1100,12 +1097,12 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
                 }
                 rendercurrencypool(rates, ccrate, ccapi, fiatapi, cachetime, "0"); // render exchangerates
                 // cache exchange rates
-                let xratestring = JSON.stringify({
+                let xratestring = {
                     "timestamp": now(),
                     "fiat_exchangerates": rates,
                     "api": fiatapi
-                });
-                sessionStorage.setItem("bitrequest_exchangerates", xratestring);
+                };
+                br_set_session("exchangerates", xratestring, true);
                 return
             }
         }
@@ -1150,8 +1147,7 @@ function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cache
         (fiatapi == "coinbase") ? "coinbase.com" :
         null,
         xratedata1 = "<div data-currency='" + request.currencysymbol + "' data-value='' data-xrate='" + ccrateeuro + "' class='cpool ccpool' data-currencyname='" + request.payment + "'><span>" + ccapi + ": <span class='ratesspan'>" + request.currencysymbol + "_" + request.uoa + ": " + (1 / (ccrateeuro / currentrate)).toFixed(8) + "</span></span></div><div class='cachetime'> (" + (cachetimecrypto / 60000).toFixed(1) + " of " + (cacheperiodcrypto / 60000).toFixed(0) + " min. in cache)</div><br/><div class='mainrate'>" + fiatapiurl + ": </div>",
-        xratedata2 = [],
-        parsedsymbols = JSON.parse(symbolcache);
+        xratedata2 = [];
     xrates_array.push({
         "currency": request.currencysymbol,
         "xrate": ccrateeuro,
@@ -1160,7 +1156,7 @@ function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cache
     $.each(data, function(thiscurrency, rate) {
         let parsedrate = (rate / currentrate).toFixed(6) / 1,
             ratesspanclass = (parsedrate === 1) ? " hide" : "",
-            currencyname = parsedsymbols[thiscurrency.toUpperCase()],
+            currencyname = symbolcache[thiscurrency.toUpperCase()],
             xratedatarray = "<div data-currency='" + thiscurrency + "' data-value='' data-xrate='" + rate + "' class='cpool' data-currencyname='" + currencyname + "'><span class='ratesspan" + ratesspanclass + "'>" + request.uoa + "_" + thiscurrency + ": " + parsedrate + "</span></div>";
         xratedata2.push(xratedatarray);
         xrates_array.push({
@@ -1399,9 +1395,9 @@ function getpayment(ccrateeuro, ccapi) {
     let ln_info = helper.lnd;
     if (ln_info) {
         if (request.lightning_id) {} else {
-            let saved_id = sessionStorage.getItem("bitrequest_lndpid");
+            let saved_id = br_get_session("lndpid");
             if (saved_id && saved_id == ln_info.pid) {} else {
-                sessionStorage.setItem("bitrequest_lndpid", ln_info.pid);
+                br_set_session("lndpid", ln_info.pid);
             }
         }
     }
@@ -2094,7 +2090,7 @@ function set_edit(url) {
         return
     }
     history.replaceState(null, null, url);
-    localStorage.setItem("bitrequest_editurl", url);
+    br_set_local("editurl", url);
 }
 
 function addaddressfromdialog() {
@@ -2252,7 +2248,7 @@ function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
         us_active = (us_settings.data("us_active") == "active");
     if (us_active === true) {
         let us_service = us_settings.data("selected"),
-            getcache = sessionStorage.getItem("bitrequest_" + us_service + "_shorturl_" + hashcode(sharedurl));
+            getcache = br_get_session(us_service + "_shorturl_" + hashcode(sharedurl));
         if (getcache) { // get existing shorturl from cache
             sharerequest(getcache, sharedtitle);
             return
@@ -2309,7 +2305,7 @@ function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
                             let shorturl = data.shortLink;
                             if (shorturl) {
                                 sharerequest(shorturl, sharedtitle);
-                                sessionStorage.setItem("bitrequest_firebase_shorturl_" + hashcode(sharedurl), shorturl);
+                                br_set_session("firebase_shorturl_" + hashcode(sharedurl), shorturl);
                                 return
                             }
                         }
@@ -2351,7 +2347,7 @@ function bitly_shorten(sharedurl, sharedtitle) {
             let linkid = data.id.split("/").pop(),
                 shorturl = data.link;
             sharerequest(shorturl, sharedtitle);
-            sessionStorage.setItem("bitrequest_bitly_shorturl_" + hashcode(sharedurl), shorturl);
+            br_set_session("bitly_shorturl_" + hashcode(sharedurl), shorturl);
             return
         }
         sharerequest(sharedurl, sharedtitle);
@@ -2561,7 +2557,7 @@ function saverequest(direct) {
         savedtxhash = request.txhash,
         requestid = (thisrequesttype == "local" && savedtxhash) ? hashcode(savedtxhash) : hashcode(unhashed),
         this_requestid,
-        requestcache = localStorage.getItem("bitrequest_requests"),
+        requestcache = br_get_local("requests", true),
         requestid_param = gets.requestid,
         checkout = (direct != "init" && thisrequesttype == "checkout"),
         this_iscrypto = (thiscurrency == currencysymbol),
@@ -2588,8 +2584,7 @@ function saverequest(direct) {
             };
     }
     if (requestcache) {
-        let requestnode = JSON.parse(requestcache);
-        this_requestid = $.grep(requestnode, function(filter) { //filter pending requests
+        this_requestid = $.grep(requestcache, function(filter) { //filter pending requests
             return filter.requestid == requestid;
         });
     }
@@ -2613,7 +2608,7 @@ function saverequest(direct) {
                     "pending": request.pending,
                     "lightning": lightning
                 };
-                sessionStorage.removeItem("bitrequest_historic_" + smart_id); // remove historic price cache
+                br_remove_session("historic_" + smart_id); // remove historic price cache
                 updaterequest(update_dat, true);
             }
         } else {
@@ -2741,11 +2736,11 @@ function saverequest(direct) {
     }
     if (thisrequesttype == "incoming") {} else {
         helper.currencylistitem.removeData("url"); // remove saved url / reset lightning id
-        localStorage.removeItem("bitrequest_editurl");
-        sessionStorage.removeItem("bitrequest_lndpid");
+        br_remove_local("editurl");
+        br_remove_session("lndpid");
     }
     if (body.hasClass("ios") || hostlocation == "local") {} else {
-        let rq_storage = localStorage.getItem("bitrequest_requests");
+        let rq_storage = br_get_local("requests");
         if (!rq_storage || rq_storage == "[]") {
             gd_init = true;
         }

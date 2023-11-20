@@ -1502,7 +1502,7 @@ function p_promt(pid) {
                     "proxy": lnurl_form(proxy, pwsha),
                     "id": pid
                 };
-            let op = (other_proxies) ? other_proxies : [],
+            let op = br_dobj(other_proxies),
                 selected_proxy = ln_dat.selected_proxy,
                 selected_id = selected_proxy.id;
             op.push(p_obj);

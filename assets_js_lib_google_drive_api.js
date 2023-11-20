@@ -54,14 +54,14 @@ function init_login_dialog(direct) {
     }
     let ctoken = cashed_token();
     if (ctoken) {
-        let oa_timer = localStorage.getItem("bitrequest_oa_timer");
+        let oa_timer = br_get_local("oa_timer");
         if (oa_timer) {
             let interval = 3600000; // show every hour
             if ((now() - oa_timer) < interval) {
                 return
             }
         }
-        localStorage.setItem("bitrequest_oa_timer", now());
+        br_set_local("oa_timer", now());
         setTimeout(function() {
             if (direct) {
                 tokenClient.requestAccessToken();
@@ -139,7 +139,7 @@ function oauth_pop(ab) {
             "elements": ddat
         });
     popdialog(content, "triggersubmit");
-    localStorage.setItem("bitrequest_oa_timer", now());
+    br_set_local("oa_timer", now());
 }
 
 function gd_login_trigger() {
@@ -194,7 +194,7 @@ function set_gatoken(e) {
             "expires_in": e.expires_in,
             "created": now()
         }
-        localStorage.setItem("bitrequest_a_dat", btoa(JSON.stringify(token_object)));
+        br_set_local("a_dat", token_object, true);
         updateappdata();
         gdlogin_callbacks();
     }
@@ -224,7 +224,7 @@ function g_logout() {
         if (token) {
             gapi.client.setToken("");
         }
-        localStorage.removeItem("bitrequest_a_dat");
+        br_remove_local("a_dat");
         gdlogout_callbacks();
     }
 }
@@ -259,16 +259,16 @@ function Drive_Backup_trigger() {
 function updateappdata() {
     let pass = GD_pass();
     if (pass) {
-        let bu_id = localStorage.getItem("bitrequest_backupfile_id");
+        let bu_id = br_get_local("backupfile_id");
         if (bu_id) {
-            let gd_timer = sessionStorage.getItem("bitrequest_gd_timer"); // prevent Ddos
+            let gd_timer = br_get_sessionl("gd_timer"); // prevent Ddos
             if (gd_timer) {
                 let interval = 3000;
                 if ((now() - gd_timer) < interval) {
                     return
                 }
             }
-            sessionStorage.setItem("bitrequest_gd_timer", now());
+            br_set_session("gd_timer", now());
             api_proxy({
                 "api_url": drivepath + "/upload/drive/v3/files/" + bu_id + "?uploadType=media&alt=json",
                 "proxy": false,
@@ -342,7 +342,7 @@ function createfile(tob) {
         xhr.onload = () => {
             let response_id = xhr.response.id,
                 response_id_string = response_id.toString();
-            localStorage.setItem("bitrequest_backupfile_id", response_id_string);
+            br_set_local("backupfile_id", response_id_string);
         };
         xhr.send(form);
     }
@@ -529,7 +529,7 @@ function a_dat() {
 }
 
 function cashed_token() {
-    let token_dat = localStorage.getItem("bitrequest_a_dat");
+    let token_dat = br_get_local("a_dat");
     if (token_dat) {
         return token_dat
     }

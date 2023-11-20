@@ -520,8 +520,8 @@ function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
                 if (status == "paid") {
                     clearpinging(inv.hash);
                     helper.currencylistitem.removeData("url");
-                    localStorage.removeItem("bitrequest_editurl");
-                    sessionStorage.removeItem("bitrequest_lndpid");
+                    br_remove_local("editurl");
+                    br_remove_session("lndpid");
                     closenotify();
                     return
                 }

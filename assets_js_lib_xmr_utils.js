@@ -627,3 +627,37 @@ function mn_random(bits) {
     }
     return out;
 }
+
+function get_vk(address) {
+    let ad_li = filter_addressli("monero", "address", address),
+        ad_dat = (ad_li.length) ? ad_li.data() : {},
+        ad_vk = ad_dat.vk;
+    if (ad_vk && ad_vk != "") {
+        return vk_obj(ad_vk);
+    }
+    return false;
+}
+
+function vk_obj(vk) {
+    if (vk.length === 64) {
+        return {
+            "account": false,
+            "vk": vk
+        }
+    }
+    if (vk.length === 159) {
+        return {
+            "account": vk.slice(0, 95),
+            "vk": vk.slice(95)
+        }
+    }
+    return false;
+}
+
+function share_vk() {
+    let vkshare = cs_dat("monero", "Share viewkey").selected;
+    if (vkshare === true) {
+        return true;
+    }
+    return false;
+}

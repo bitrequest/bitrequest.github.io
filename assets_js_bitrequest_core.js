@@ -47,9 +47,9 @@ let scrollposition = 0,
     localserver,
     wakelock,
     bipv,
-    bipobj = br_get_local("bpdat"),
+    bipobj = br_get_local("bpdat", true),
     hasbip = (bipobj) ? true : false,
-    bipid = (hasbip) ? JSON.parse(bipobj).id : false,
+    bipid = (hasbip) ? bipobj.id : false,
     ndef,
     blockswipe,
     ctrl,
@@ -57,9 +57,9 @@ let scrollposition = 0,
     cashier_dat = br_get_local("cashier", true),
     is_cashier = (cashier_dat && cashier_dat.cashier) ? true : false,
     cashier_seedid = (is_cashier) ? cashier_dat.seedid : false,
-    stored_currencies = br_get_local("currencies"),
-    init = br_get_local("init"),
-    io = (init) ? JSON.parse(init) : {};
+    stored_currencies = br_get_local("currencies", true),
+    init = br_get_local("init", true),
+    io = br_dobj(init, true);
 
 if (has_ndef && !inframe) {
     ndef = new NDEFReader();
@@ -479,54 +479,25 @@ function finishfunctions() {
     open_url();
     //get_blockcypher_apikey
     //get_infura_apikey
-    //api_proxy
-    //result
-    //get_api_url
+    //proxy_alert
     //fetchsymbol
-    //tofixedspecial
     //fixedcheck
-    //geturlparameters
-    //xss_search
     //ishome
     //triggersubmit
     //copytoclipboard
-    //getrandomnumber
-    //hashcode
     //loader
     closeloader_trigger();
     //closeloader
     //loadertext
     //settitle
-    //getcc_icon
-    //getdevicetype
-    //getplatform
-    //makedatestring
-    //short_date
-    //returntimestamp
-    //to_ts
-    //weekdays
-    //fulldateformat
-    //fulldateformatmarkup
-    //formattime
-    //playsound
-    //vibrate
-    //get_api_data
-    //str_match
     //pinpanel
     //switchpanel
-    //getcoindata
-    //activecoinsettings
-    //getcoinsettings
-    //getbip32dat
-    //getcoinconfig
     //try_next_api
     //wake
     //sleep
     //vu_block
-    //trimdecimals
     //countdown
     //countdown_format
-    //adjust_objectarray
 
     // ** Page rendering **
 
@@ -567,6 +538,14 @@ function finishfunctions() {
     renderchanges();
     //change_alert
     //get_total_changes
+    //check_currency
+    //currency_check
+    //currency_uncheck
+
+    // ** Recent requests **
+
+    check_rr();
+    //toggle_rr
 
     // ** Get_app **
 
@@ -577,7 +556,7 @@ function finishfunctions() {
     //getapp
     close_app_panel();
     //platform_icon
-    //fetch_aws
+    //shake
 
     // ** HTML rendering **
 
@@ -590,26 +569,18 @@ function finishfunctions() {
 
     // Query helpers
 
-    //now
-    //shake
     //get_setting
     //set_setting
     //get_requestli
     //get_addresslist
     //filter_addressli
     //filter_all_addressli
-    //filter_list
-    //dom_to_array
-    //get_latest_index
-    //check_currency
-    //currency_check
-    //currency_uncheck
-    //d_proxy
-    //get_vk
+    //getcoindata
+    //activecoinsettings
+    //getcoinsettings
+    //getcoinconfig
     gk();
     html.addClass("loaded");
-    check_rr();
-    //toggle_rr
 }
 
 //checks
@@ -951,16 +922,16 @@ function ios_redirect_bitly(shorturl) {
                 let data = br_result(e).result;
                 if (data.error) {
                     fail_dialogs("bitly", data.error);
-                } else {
-                    if (data) {
-                        let longurl = data.long_url;
-                        if (longurl) {
-                            ios_redirections(longurl);
-                            br_get_session("longurl_" + bitly_id, longurl); //cache token decimals
-                        } else {
-                            w_loc.href = "http://bit.ly/" + bitly_id;
-                        }
+                    return
+                }
+                if (data) {
+                    let longurl = data.long_url;
+                    if (longurl) {
+                        ios_redirections(longurl);
+                        br_get_session("longurl_" + bitly_id, longurl); //cache token decimals
+                        return
                     }
+                    w_loc.href = "http://bit.ly/" + bitly_id;
                 }
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 w_loc.href = "http://bit.ly/" + bitly_id;
@@ -1483,8 +1454,8 @@ function cmst_callback(parentlistitem) {
 }
 
 function add_seed_whitelist(seedid) {
-    let stored_whitelist = br_get_local("swl"),
-        seed_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
+    let stored_whitelist = br_get_local("swl", true),
+        seed_whitelist = br_dobj(stored_whitelist);
     if ($.inArray(seedid, seed_whitelist) === -1) {
         seed_whitelist.push(seedid);
     }
@@ -1492,14 +1463,14 @@ function add_seed_whitelist(seedid) {
 }
 
 function seed_wl(seedid) {
-    let stored_whitelist = br_get_local("swl"),
-        seed_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
+    let stored_whitelist = br_get_local("swl", true),
+        seed_whitelist = br_dobj(stored_whitelist);
     return ($.inArray(seedid, seed_whitelist) === -1) ? false : true;
 }
 
 function add_address_whitelist(address) {
-    let stored_whitelist = br_get_local("awl"),
-        address_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
+    let stored_whitelist = br_get_local("awl", true),
+        address_whitelist = br_dobj(stored_whitelist);
     if ($.inArray(address, address_whitelist) === -1) {
         address_whitelist.push(address);
     }
@@ -1507,8 +1478,8 @@ function add_address_whitelist(address) {
 }
 
 function addr_whitelist(address) {
-    let stored_whitelist = br_get_local("awl"),
-        address_whitelist = (stored_whitelist) ? JSON.parse(stored_whitelist) : [];
+    let stored_whitelist = br_get_local("awl", true),
+        address_whitelist = br_dobj(stored_whitelist);
     return ($.inArray(address, address_whitelist) === -1) ? false : true;
 }
 
@@ -1828,8 +1799,8 @@ function close_paymentdialog(empty) {
         if (empty === true && inframe === false && request.requesttype == "local") {
             let currency = request.payment,
                 address = request.address,
-                ls_recentrequests = br_get_local("recent_requests"),
-                lsrr_arr = (ls_recentrequests) ? JSON.parse(ls_recentrequests) : {},
+                ls_recentrequests = br_get_local("recent_requests", true),
+                lsrr_arr = br_dobj(ls_recentrequests, true),
                 request_dat = {
                     "currency": currency,
                     "cmcid": request.cmcid,
@@ -1842,10 +1813,9 @@ function close_paymentdialog(empty) {
             br_set_local("recent_requests", lsrr_arr, true);
             closeloader();
             toggle_rr(true);
-            let rr_whitelist = br_get_session("rrwl");
+            let rr_whitelist = br_get_session("rrwl", true);
             if (rr_whitelist) {
-                let rrwl_obj = JSON.parse(rr_whitelist);
-                if (rrwl_obj && rrwl_obj[currency] == address) {
+                if (rr_whitelist && rr_whitelist[currency] == address) {
                     continue_cpd();
                     return
                 }
@@ -1863,9 +1833,9 @@ function continue_cpd() {
             pagename = gets.p,
             set_pagename = (pagename) ? pagename : "home";
         openpage("?p=" + set_pagename, set_pagename, "loadpage");
-    } else {
-        window.history.back();
+        return
     }
+    window.history.back();
 }
 
 function payment_lookup(request_dat) {
@@ -1920,8 +1890,8 @@ function dismiss_payment_lookup() {
 
 function block_payment_lookup() {
     if (request) {
-        let rr_whitelist = br_get_session("rrwl"),
-            rrwl_arr = (rr_whitelist) ? JSON.parse(rr_whitelist) : {};
+        let rr_whitelist = br_get_session("rrwl", true),
+            rrwl_arr = br_dobj(rr_whitelist, true);
         rrwl_arr[request.payment] = request.address;
         br_set_session("rrwl", rrwl_arr, true);
     }
@@ -1929,10 +1899,9 @@ function block_payment_lookup() {
 
 function request_history() {
     $(document).on("click", "#request_history", function() {
-        let ls_recentrequests = br_get_local("recent_requests");
+        let ls_recentrequests = br_get_local("recent_requests", true);
         if (ls_recentrequests) {
-            let lsrr_arr = JSON.parse(ls_recentrequests);
-            recent_requests(lsrr_arr);
+            recent_requests(ls_recentrequests);
         }
     })
 }
@@ -3495,96 +3464,11 @@ function get_infura_apikey(rpcurl) {
         (savedkey) ? savedkey : to.if_id;
 }
 
-function api_proxy(ad, p_proxy) {
-    let custom_url = (ad.api_url) ? ad.api_url : false,
-        aud = (custom_url) ? {} :
-        get_api_url({
-            "api": ad.api,
-            "search": ad.search
-        });
-    if (aud) {
-        let proxy = ad.proxy,
-            api_key = aud.api_key,
-            set_key = (api_key) ? true : false,
-            nokey = (api_key == "no_key") ? true : false,
-            key_pass = (nokey === true || set_key === true);
-        if (proxy === false || (proxy !== true && key_pass === true)) {
-            let params = ad.params,
-                bearer = ad.bearer;
-            params.url = (custom_url) ? custom_url : aud.api_url_key;
-            if (bearer && api_key) {
-                if (params.headers) {
-                    params.headers["Authorization"] = "Bearer " + api_key;
-                } else {
-                    let auth = {
-                        "Authorization": "Bearer " + api_key
-                    }
-                    params.headers = auth;
-                }
-            }
-            return $.ajax(params);
-        }
-        // use api proxy
-        let api_location = "proxy/v1/",
-            set_proxy = (p_proxy) ? p_proxy : d_proxy(),
-            app_root = (ad.localhost) ? "" : set_proxy,
-            proxy_data = {
-                "method": "POST",
-                "cache": false,
-                "timeout": 5000,
-                "url": app_root + api_location,
-                "data": $.extend(ad, aud, {
-                    "nokey": nokey
-                })
-            };
-        return $.ajax(proxy_data);
-    }
-    return $.ajax();
-}
-
-function br_result(e) {
-    let ping = e.ping,
-        proxy = (ping) ? true : false;
-    if (proxy && ping.br_cache) {
-        let version = ping.br_cache.version;
-        if (version != proxy_version) {
-            proxy_alert(version);
-        }
-    }
-    return {
-        "proxy": proxy,
-        "result": (proxy) ? (ping.br_cache) ? ping.br_result : ping : e
-    }
-}
-
 function proxy_alert(version) {
     if (version) {
         body.addClass("haschanges");
         $("#alert > span").text("!").attr("title", "Please update your proxy server " + version + " > " + proxy_version);
     }
-}
-
-function get_api_url(get) {
-    let api = get.api,
-        ad = get_api_data(api);
-    if (ad) {
-        let search = (get.search) ? get.search : "",
-            base_url = ad.base_url,
-            key_param = (ad.key_param) ? ad.key_param : "",
-            saved_key = $("#apikeys").data(api),
-            key_val = (saved_key) ? saved_key : ad.api_key,
-            ampersand = (search) ? (search.indexOf("?") > -1 || search.indexOf("&") > -1) ? "&" : "?" : "",
-            api_param = (key_param != "bearer" && saved_key) ? ampersand + key_param + saved_key : "",
-            api_url = base_url + search;
-        return {
-            "api_url": api_url,
-            "api_url_key": api_url + api_param,
-            "api_key": key_val,
-            "ampersand": ampersand,
-            "key_param": key_param
-        }
-    }
-    return false
 }
 
 function fetchsymbol(currencyname) {
@@ -3599,16 +3483,6 @@ function fetchsymbol(currencyname) {
     return ccsymbol;
 }
 
-function tofixedspecial(str, n) {
-    if (str.indexOf("e+") < 0) {
-        return str;
-    }
-    let convert = str.replace(".", "").split("e+").reduce(function(p, b) {
-        return p + Array(b - p.length + 2).join(0);
-    }) + "." + Array(n + 1).join(0);
-    return convert.slice(0, -1);
-}
-
 function fixedcheck(livetop) {
     let headerheight = $(".showmain #header").outerHeight();
     if (livetop > headerheight) {
@@ -3616,63 +3490,6 @@ function fixedcheck(livetop) {
         return
     }
     $(".showmain").removeClass("fixednav");
-}
-
-function geturlparameters() {
-    let qstring = w_loc.search.substring(1),
-        xss = xss_search(qstring);
-    if (xss) {
-        return {
-            "xss": true
-        }
-    }
-    let getvalues = qstring.split("&"),
-        get_object = {};
-    $.each(getvalues, function(i, val) {
-        let keyval = val.split("=");
-        get_object[keyval[0]] = keyval[1];
-    });
-    let dp = get_object.d,
-        mp = get_object.m;
-    if (dp) {
-        let isxx = scanmeta(dp);
-        if (isxx) {
-            get_object.xss = true;
-        }
-    }
-    if (mp) {
-        let isxx = scanmeta(mp);
-        if (isxx) {
-            get_object.xss = true;
-        }
-    }
-    return get_object;
-}
-
-function scanmeta(val) {
-    let isd = (val && val.length > 5) ? atob(val) : false,
-        xssdat = xss_search(isd);
-    if (xssdat) { //xss detection
-        return true
-    }
-    return false
-}
-
-function xss_search(val) {
-    if (val) {
-        let val_lower = val.toLowerCase();
-        if (val_lower.indexOf("<scrip") > -1) {
-            vibrate();
-            notify(xss_alert);
-            return true
-        }
-        if (val_lower.indexOf("onerror") > -1) {
-            vibrate();
-            notify(xss_alert);
-            return true
-        }
-    }
-    return false
 }
 
 function ishome(pagename) {
@@ -3708,20 +3525,6 @@ function copytoclipboard(content, type) {
     }).blur();
 }
 
-function getrandomnumber(min, max) {
-    return Math.floor(Math.random() * (max - min + 1) + min);
-}
-
-function hashcode(str) {
-    if (str) {
-        return Math.abs(str.split("").reduce(function(a, b) {
-            a = ((a << 5) - a) + b.charCodeAt(0);
-            return a & a
-        }, 0));
-    }
-    return false;
-}
-
 function loader(top) {
     let loader = $("#loader"),
         class_string = (top === true) ? "showpu active toploader" : "showpu active";
@@ -3746,135 +3549,6 @@ function loadertext(text) {
 function settitle(title) {
     titlenode.text(title);
     ogtitle.attr("content", title);
-}
-
-function getcc_icon(cmcid, cpid, erc20) {
-    if (erc20) {
-        if (offline === true) {
-            return "<img src='" + c_icons("ph") + "' class='cmc_icon'/>";
-        }
-        return "<img src='" + cmc_icon_loc + cmcid + ".png' class='cmc_icon'/>";
-    }
-    return "<img src='" + c_icons(cpid) + "' class='cmc_icon'/>";
-}
-
-function getdevicetype() {
-    let ua = userAgent;
-    return (is_android_app === true) ? "android-app" :
-        (is_ios_app === true) ? "apple-app" :
-        (/iPad/.test(ua)) ? "iPad" :
-        (/iPhone/.test(ua)) ? "iPhone" :
-        (/Android/.test(ua)) ? "Android" :
-        (/Macintosh/.test(ua)) ? "Macintosh" :
-        (/Windows/.test(ua)) ? "Windows" :
-        "unknown";
-};
-
-function getplatform(device) {
-    return (supportsTouch === true) ?
-        (is_android_app === true || device == "Android" || device == "Windows") ? "playstore" :
-        (device == "iPhone" || device == "iPad" || device == "Macintosh" || is_ios_app === true) ? "appstore" : "unknown" :
-        (device == "Windows") ? "desktop" :
-        (device == "Macintosh") ? "desktop" : "unknown";
-}
-
-function makedatestring(datetimeparts) {
-    let split = (datetimeparts.indexOf(".") > -1) ? "." : "Z";
-    return datetimeparts[0] + " " + datetimeparts[1].split(split)[0];
-}
-
-function returntimestamp(datestring) {
-    let datetimeparts = datestring.split(" "),
-        timeparts = datetimeparts[1].split(":"),
-        dateparts = datetimeparts[0].split("-");
-    return new Date(dateparts[0], parseInt(dateparts[1], 10) - 1, dateparts[2], timeparts[0], timeparts[1], timeparts[2]);
-}
-
-function to_ts(ts) {
-    if (ts) {
-        let tstamp = ts.split("T");
-        return (tstamp) ? returntimestamp(makedatestring(tstamp)).getTime() : null;
-    }
-    return null;
-}
-
-function short_date(txtime) {
-    return new Date(txtime - timezone).toLocaleString(language, {
-        "day": "2-digit", // numeric, 2-digit
-        "month": "2-digit", // numeric, 2-digit, long, short, narrow
-        "year": "2-digit", // numeric, 2-digit
-        "hour": "numeric", // numeric, 2-digit
-        "minute": "numeric"
-    })
-}
-
-function weekdays(day) {
-    return {
-        "0": "Sunday",
-        "1": "Monday",
-        "2": "Tuesday",
-        "3": "Wednesday",
-        "4": "Thursday",
-        "5": "Friday",
-        "6": "Saturday"
-    };
-}
-
-function fulldateformat(date, lng) {
-    return weekdays()[date.getDay()] + " " + date.toLocaleString(lng, {
-        "month": "long"
-    }) + " " + date.getDate() + " | " + formattime(date);
-}
-
-function fulldateformatmarkup(date, lng) {
-    return weekdays()[date.getDay()] + " " + date.toLocaleString(lng, {
-        "month": "long"
-    }) + " " + date.getDate() + " | <div class='fdtime'>" + formattime(date) + "</div>";
-}
-
-function formattime(date) {
-    let h = date.getHours(),
-        m = date.getMinutes(),
-        s = date.getSeconds(),
-        hours = (h < 10) ? "0" + h : h,
-        minutes = (m < 10) ? "0" + m : m,
-        seconds = (s < 10) ? "0" + s : s;
-    return " " + hours + ":" + minutes + ":" + seconds;
-}
-
-function playsound(audio) {
-    let promise = audio[0].play();
-    if (promise) {
-        promise.then(_ => {
-            // Autoplay started!
-        }).catch(error => {
-            // Fallback
-        });
-    }
-}
-
-function vibrate() {
-    if (navigator.vibrate) {
-        navigator.vibrate(100);
-    }
-}
-
-function get_api_data(api_id) {
-    let apipath = br_config.apis.filter(function(val) {
-        return val.name == api_id;
-    });
-    return apipath[0];
-}
-
-function str_match(add1, add2) {
-    if (add1 && add2) {
-        let a1u = add1.toUpperCase(),
-            a2u = add2.toUpperCase();
-        if (a1u.indexOf(a2u) >= 0) {
-            return true
-        }
-    }
-    return false
 }
 
 function all_pinpanel(cb, top) {
@@ -3954,97 +3628,6 @@ function switchpanel(switchmode, mode) {
     return "<div class='switchpanel " + switchmode + mode + "'><div class='switch'></div></div>"
 }
 
-function getcoindata(currency) {
-    let coindata_object = getcoinconfig(currency);
-    if (coindata_object) {
-        let coindata = coindata_object.data,
-            settings = coindata_object.settings,
-            has_settings = (settings) ? true : false,
-            is_monitored = (settings) ? (settings.apis) ? true : false : false,
-            cd_object = {
-                "currency": coindata.currency,
-                "ccsymbol": coindata.ccsymbol,
-                "cmcid": coindata.cmcid,
-                "monitored": is_monitored,
-                "urlscheme": coindata.urlscheme,
-                "settings": has_settings,
-                "regex": coindata.address_regex,
-                "erc20": false
-            };
-        return cd_object;
-    } // if not it's probably erc20 token
-    let currencyref = $("#usedcurrencies li[data-currency='" + currency + "']"); // check if erc20 token is added
-    if (currencyref.length > 0) {
-        return $.extend(currencyref.data(), br_config.erc20_dat.data);
-    } // else lookup erc20 data
-    let tokenobject = br_get_local("erc20tokens", true);
-    if (tokenobject) {
-        let erc20data = $.grep(tokenobject, function(filter) {
-            return filter.name == currency;
-        })[0];
-        if (erc20data) {
-            let fetched_data = {
-                "currency": erc20data.name,
-                "ccsymbol": erc20data.symbol,
-                "cmcid": erc20data.cmcid.toString(),
-                "contract": erc20data.contract
-            }
-            return $.extend(fetched_data, br_config.erc20_dat.data);
-        }
-    }
-    return false;
-}
-
-function activecoinsettings(currency) {
-    let saved_coinsettings = br_get_local(currency + "_settings", true);
-    return (saved_coinsettings) ? saved_coinsettings : getcoinsettings(currency);
-}
-
-function getcoinsettings(currency) {
-    let coindata = getcoinconfig(currency);
-    if (coindata) {
-        return coindata.settings;
-    } // return erc20 settings
-    return br_config.erc20_dat.settings;
-}
-
-function getbip32dat(currency) {
-    let xpub_dat = cs_dat(currency, "Xpub");
-    if (xpub_dat && xpub_dat.active === true) {
-        return xpub_dat;
-    }
-    let coindata = getcoinconfig(currency);
-    if (coindata) {
-        let xpubdat = coindata.settings.Xpub;
-        if (xpubdat && xpubdat.active === true) {
-            return xpubdat;
-        }
-    }
-    return false;
-}
-
-function hasbip32(currency) {
-    let coindata = getcoinconfig(currency);
-    if (coindata) {
-        let settings = coindata.settings;
-        if (settings) {
-            let xpub = settings.Xpub;
-            if (xpub) {
-                if (xpub.active) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
-function getcoinconfig(currency) {
-    return $.grep(br_config.bitrequest_coin_data, function(filter) {
-        return filter.currency == currency;
-    })[0];
-}
-
 function try_next_api(apilistitem, current_apiname) {
     let apilist = br_config.apilists[apilistitem],
         next_scan = apilist[$.inArray(current_apiname, apilist) + 1],
@@ -4085,12 +3668,6 @@ function vu_block() {
     playsound(funk);
 }
 
-// Fix decimals
-function trimdecimals(amount, decimals) {
-    let round_amount = parseFloat(amount).toFixed(decimals);
-    return parseFloat(round_amount.toString());
-}
-
 // Countdown format
 
 function countdown(timestamp) {
@@ -4127,22 +3704,13 @@ function countdown_format(cd) {
     return result;
 }
 
-function adjust_objectarray(array, mods) {
-    let newarray = array;
-    $.each(mods, function(i, val) {
-        let index = array.findIndex((obj => obj.id == val.id));
-        newarray[index][val.change] = val.val;
-    });
-    return newarray;
-}
-
 // ** Page rendering **
 
 //render page from cache
 function rendercurrencies() {
     initiate();
     if (stored_currencies) {
-        $.each(JSON.parse(stored_currencies), function(index, data) {
+        $.each(stored_currencies, function(index, data) {
             let thiscurrency = data.currency,
                 thiscmcid = data.cmcid;
             buildpage(data, false);
@@ -4161,9 +3729,9 @@ function rendercurrencies() {
 
 // render currency settings
 function render_currencysettings(thiscurrency) {
-    let settingcache = br_get_local(thiscurrency + "_settings");
+    let settingcache = br_get_local(thiscurrency + "_settings", true);
     if (settingcache) {
-        append_coinsetting(thiscurrency, JSON.parse(settingcache), false);
+        append_coinsetting(thiscurrency, settingcache, false);
     }
 }
 
@@ -4193,9 +3761,9 @@ function buildsettings() {
 
 // render settings
 function rendersettings(excludes) {
-    let settingcache = br_get_local("settings");
+    let settingcache = br_get_local("settings", true);
     if (settingcache) {
-        $.each(JSON.parse(settingcache), function(i, value) {
+        $.each(settingcache, function(i, value) {
             if ($.inArray(value.id, excludes) === -1) { // exclude excludes
                 $("#" + value.id).data(value).find("p").text(value.selected);
             }
@@ -4221,11 +3789,10 @@ function archive_button() {
 }
 
 function fetchrequests(cachename, archive) {
-    let requestcache = br_get_local(cachename);
+    let requestcache = br_get_local(cachename, true);
     if (requestcache) {
-        let parsevalue = JSON.parse(requestcache),
-            showarchive = (archive === false && parsevalue.length > 11); // only show archive button when there are more then 11 requests
-        $.each(parsevalue.reverse(), function(i, value) {
+        let showarchive = (archive === false && requestcache.length > 11); // only show archive button when there are more then 11 requests
+        $.each(requestcache.reverse(), function(i, value) {
             value.archive = archive;
             value.showarchive = showarchive;
             appendrequest(value);
@@ -4940,9 +4507,9 @@ function savechangesstats() {
 
 // render changes
 function renderchanges() {
-    let changescache = br_get_local("changes");
+    let changescache = br_get_local("changes", true);
     if (changescache) {
-        changes = JSON.parse(changescache);
+        changes = changescache;
         setTimeout(function() { // wait for Googleauth to load
             change_alert();
         }, 700);
@@ -4968,6 +4535,59 @@ function get_total_changes() {
         totalchanges += parseInt(thisval);
     });
     return totalchanges;
+}
+
+function check_currency(currency) {
+    let addresscount = filter_addressli(currency, "checked", true).length;
+    if (addresscount > 0) {
+        currency_check(currency);
+        return
+    }
+    currency_uncheck(currency);
+}
+
+function currency_check(currency) {
+    let currencylistitem = $("#currencylist > li[data-currency='" + currency + "']"),
+        parentcheckbox = $("#usedcurrencies li[data-currency='" + currency + "']");
+    currencylistitem.removeClass("hide");
+    parentcheckbox.attr("data-checked", "true").data("checked", true);
+    savecurrencies(false);
+}
+
+function currency_uncheck(currency) {
+    let currencylistitem = $("#currencylist > li[data-currency='" + currency + "']"),
+        parentcheckbox = $("#usedcurrencies li[data-currency='" + currency + "']");
+    currencylistitem.addClass("hide");
+    parentcheckbox.attr("data-checked", "false").data("checked", false);
+    savecurrencies(false);
+}
+
+// Recent requests
+
+function check_rr() {
+    let ls_recentrequests = br_get_local("recent_requests", true);
+    if (ls_recentrequests) {
+        if ($.isEmptyObject(ls_recentrequests)) {
+            toggle_rr(false);
+            return
+        }
+        toggle_rr(true);
+        return
+    }
+    toggle_rr(false);
+}
+
+function toggle_rr(bool) {
+    if (bool) {
+        html.addClass("show_rr");
+        let hist_bttn = $("#request_history");
+        hist_bttn.addClass("load");
+        setTimeout(function() {
+            hist_bttn.removeClass("load");
+        }, 500);
+        return
+    }
+    html.removeClass("show_rr");
 }
 
 // ** Get_app **
@@ -5026,9 +4646,12 @@ function platform_icon(platform) {
         fetch_aws("img_button-desktop_app.png");
 }
 
-function fetch_aws(filename, bckt) {
-    let bucket = (bckt) ? bckt : aws_bucket;
-    return bucket + filename;
+function shake(node) {
+    node.addClass("shake");
+    setTimeout(function() {
+        node.removeClass("shake");
+        vibrate();
+    }, 200);
 }
 
 // HTML rendering
@@ -5090,18 +4713,6 @@ function template_dialog(ddat) {
 
 // Query helpers
 
-function now() {
-    return Date.now();
-}
-
-function shake(node) {
-    node.addClass("shake");
-    setTimeout(function() {
-        node.removeClass("shake");
-        vibrate();
-    }, 200);
-}
-
 function get_setting(setting, dat) {
     return $("#" + setting).data(dat);
 }
@@ -5138,155 +4749,64 @@ function filter_all_addressli(datakey, dataval) {
     })
 }
 
-function filter_list(list, datakey, dataval) {
-    return list.filter(function() {
-        return $(this).data(datakey) == dataval;
-    })
-}
-
-function dom_to_array(dom, dat) {
-    return dom.map(function() {
-        return $(this).data(dat);
-    }).get();
-}
-
-function get_latest_index(alist) {
-    let index = dom_to_array(alist, "derive_index");
-    return Math.max.apply(Math, index);
-}
-
-function check_currency(currency) {
-    let addresscount = filter_addressli(currency, "checked", true).length;
-    if (addresscount > 0) {
-        currency_check(currency);
-        return
-    }
-    currency_uncheck(currency);
-}
-
-function currency_check(currency) {
-    let currencylistitem = $("#currencylist > li[data-currency='" + currency + "']"),
-        parentcheckbox = $("#usedcurrencies li[data-currency='" + currency + "']");
-    currencylistitem.removeClass("hide");
-    parentcheckbox.attr("data-checked", "true").data("checked", true);
-    savecurrencies(false);
-}
-
-function currency_uncheck(currency) {
-    let currencylistitem = $("#currencylist > li[data-currency='" + currency + "']"),
-        parentcheckbox = $("#usedcurrencies li[data-currency='" + currency + "']");
-    currencylistitem.addClass("hide");
-    parentcheckbox.attr("data-checked", "false").data("checked", false);
-    savecurrencies(false);
-}
-
-function d_proxy() {
-    return $("#api_proxy").data("selected");
-}
-
-function get_vk(address) {
-    let ad_li = filter_addressli("monero", "address", address),
-        ad_dat = (ad_li.length) ? ad_li.data() : {},
-        ad_vk = ad_dat.vk;
-    if (ad_vk && ad_vk != "") {
-        return vk_obj(ad_vk);
-    }
-    return false;
-}
-
-function vk_obj(vk) {
-    if (vk.length === 64) {
-        return {
-            "account": false,
-            "vk": vk
-        }
-    }
-    if (vk.length === 159) {
-        return {
-            "account": vk.slice(0, 95),
-            "vk": vk.slice(95)
+function getcoindata(currency) {
+    let coindata_object = getcoinconfig(currency);
+    if (coindata_object) {
+        let coindata = coindata_object.data,
+            settings = coindata_object.settings,
+            has_settings = (settings) ? true : false,
+            is_monitored = (settings) ? (settings.apis) ? true : false : false,
+            cd_object = {
+                "currency": coindata.currency,
+                "ccsymbol": coindata.ccsymbol,
+                "cmcid": coindata.cmcid,
+                "monitored": is_monitored,
+                "urlscheme": coindata.urlscheme,
+                "settings": has_settings,
+                "regex": coindata.address_regex,
+                "erc20": false
+            };
+        return cd_object;
+    } // if not it's probably erc20 token
+    let currencyref = $("#usedcurrencies li[data-currency='" + currency + "']"); // check if erc20 token is added
+    if (currencyref.length > 0) {
+        return $.extend(currencyref.data(), br_config.erc20_dat.data);
+    } // else lookup erc20 data
+    let tokenobject = br_get_local("erc20tokens", true);
+    if (tokenobject) {
+        let erc20data = $.grep(tokenobject, function(filter) {
+            return filter.name == currency;
+        })[0];
+        if (erc20data) {
+            let fetched_data = {
+                "currency": erc20data.name,
+                "ccsymbol": erc20data.symbol,
+                "cmcid": erc20data.cmcid.toString(),
+                "contract": erc20data.contract
+            }
+            return $.extend(fetched_data, br_config.erc20_dat.data);
         }
     }
     return false;
 }
 
-function share_vk() {
-    let vkshare = cs_dat("monero", "Share viewkey").selected;
-    if (vkshare === true) {
-        return true;
-    }
-    return false;
+function activecoinsettings(currency) {
+    let saved_coinsettings = br_get_local(currency + "_settings", true);
+    return (saved_coinsettings) ? saved_coinsettings : getcoinsettings(currency);
 }
 
-function gk() {
-    let k = io.k;
-    if (k) {
-        let pk = JSON.parse(atob(k));
-        if (pk.if_id == "" || pk.ad_id == "" || pk.ga_id == "" || pk.bc_id == "") {
-            fk();
-            return
-        }
-        init_keys(k, true);
-        return
-    }
-    fk();
+function getcoinsettings(currency) {
+    let coindata = getcoinconfig(currency);
+    if (coindata) {
+        return coindata.settings;
+    } // return erc20 settings
+    return br_config.erc20_dat.settings;
 }
 
-function fk() {
-    api_proxy({
-        "proxy": true,
-        "custom": "gk",
-        "api_url": true
-    }).done(function(e) {
-        let ko = e.k;
-        if (ko) {
-            init_keys(ko, false);
-        }
-    }).fail(function() {
-        //init_keys();
-    });
-}
-
-function init_keys(ko, set) { // set required keys
-    let k = JSON.parse(atob(ko));
-    to = k;
-    let ga_set = (k.ga_id != "");
-    if (ga_set) {
-        setTimeout(function() {
-            gapi_load();
-        }, 1000);
-    }
-    io.k = ko;
-    if (set === false) {
-        br_set_local("init", io, true);
-    }
-}
-
-function check_rr() {
-    let ls_recentrequests = br_get_local("recent_requests");
-    if (ls_recentrequests) {
-        let lsrr_arr = JSON.parse(ls_recentrequests);
-        if ($.isEmptyObject(lsrr_arr)) {
-            toggle_rr(false);
-            return
-        }
-        toggle_rr(true);
-        return
-    }
-    toggle_rr(false);
-}
-
-function toggle_rr(bool) {
-    if (bool) {
-        html.addClass("show_rr");
-        let hist_bttn = $("#request_history");
-        hist_bttn.addClass("load");
-        setTimeout(function() {
-            hist_bttn.removeClass("load");
-        }, 500);
-        return
-    }
-    html.removeClass("show_rr");
+function getcoinconfig(currency) {
+    return $.grep(br_config.bitrequest_coin_data, function(filter) {
+        return filter.currency == currency;
+    })[0];
 }
 
 // add serviceworker

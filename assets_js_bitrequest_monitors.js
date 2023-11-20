@@ -88,13 +88,12 @@ function get_requeststates(trigger) {
             getinputs(request_data);
             return;
         }
-        let statuscache = sessionStorage.getItem("bitrequest_txstatus");
+        let statuscache = br_get_session("txstatus", true);
         if (statuscache) {
-            let parsevalue = JSON.parse(statuscache),
-                cachetime = now() - parsevalue.timestamp,
-                requeststates = parsevalue.requeststates;
+            let cachetime = now() - statuscache.timestamp,
+                requeststates = statuscache.requeststates;
             if (cachetime > 30000 || $.isEmptyObject(requeststates)) { //check if cached crypto rates are expired (check every 30 seconds on page refresh or when opening request page)
-                sessionStorage.removeItem("bitrequest_txstatus"); // remove cached transactions
+                br_remove_session("txstatus"); // remove cached transactions
                 getinputs(request_data);
                 return
             }
@@ -127,11 +126,11 @@ function get_requeststates(trigger) {
         return
     }
     if (!$.isEmptyObject(statuspush)) {
-        let statusobject = JSON.stringify({
+        let statusobject = {
             "timestamp": now(),
             "requeststates": statuspush
-        });
-        sessionStorage.setItem("bitrequest_txstatus", statusobject);
+        };
+        br_set_session("txstatus", statusobject, true);
         saverequests();
     }
 }
@@ -1636,7 +1635,7 @@ function get_rpc_inputs(rd, api_data) {
                                 tx_api_fail(thislist, statuspanel);
                                 handle_rpc_fails_list(rd, data.error, api_data, payment);
                             } else {
-	                            let txd = nano_scan_data(data, setconfirmations, ccsymbol, transactionhash);
+                                let txd = nano_scan_data(data, setconfirmations, ccsymbol, transactionhash);
                                 if (txd.ccval) {
                                     let tx_listitem = append_tx_li(txd, rqtype);
                                     if (tx_listitem) {
@@ -1895,15 +1894,13 @@ function compareamounts(rd, ln) {
                     pending_cc = "scanning";
             }
             if (recent && !iscrypto) { // get local fiat rates when request is less then 15 minutes old
-                let exchangerates = sessionStorage.getItem("bitrequest_exchangerates"),
-                    cc_xrates = sessionStorage.getItem("bitrequest_xrates_" + ccsymbol);
+                let exchangerates = br_get_session("exchangerates", true),
+                    cc_xrates = br_get_session("xrates_" + ccsymbol, true);
                 if (exchangerates && cc_xrates) {
-                    let fiat_xrate_parse = JSON.parse(exchangerates),
-                        local_xrate = (fiat_xrate_parse.fiat_exchangerates) ? fiat_xrate_parse.fiat_exchangerates[rd.fiatcurrency] : null,
-                        usd_eur_xrate = (fiat_xrate_parse.fiat_exchangerates) ? fiat_xrate_parse.fiat_exchangerates.usd : null;
+                    let local_xrate = (exchangerates.fiat_exchangerates) ? exchangerates.fiat_exchangerates[rd.fiatcurrency] : null,
+                        usd_eur_xrate = (exchangerates.fiat_exchangerates) ? exchangerates.fiat_exchangerates.usd : null;
                     if (local_xrate && usd_eur_xrate) {
-                        let cc_xrate = JSON.parse(cc_xrates),
-                            usd_rate = (cc_xrate) ? cc_xrate.ccrate : null;
+                        let usd_rate = (cc_xrates) ? cc_xrates.ccrate : null;
                         if (usd_rate) {
                             let usdval = thissum_cc * usd_rate,
                                 eurval = usdval / usd_eur_xrate,
@@ -1927,11 +1924,11 @@ function compareamounts(rd, ln) {
             return
         }
         let latestconf = (rd.no_conf === true) ? 0 : firstlist.data("confirmations"), // only update on change
-            hc_prefix = "bitrequest_historic_" + thisrequestid,
-            historiccache = sessionStorage.getItem(hc_prefix),
+            hc_prefix = "historic_" + thisrequestid,
+            historiccache = br_get_session(hc_prefix),
             cacheval = latestinput + latestconf;
         if (cacheval != historiccache) { //new input detected; call historic api
-            sessionStorage.removeItem(hc_prefix); // remove historic price cache
+            br_remove_session(hc_prefix); // remove historic price cache
             let historic_payload = $.extend(rd, {
                 "latestinput": latestinput,
                 "latestconf": latestconf,
@@ -2158,7 +2155,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 }, false);
                 let cacheval = latestinput + latestconf;
                 if (pending == "no") {} else {
-                    sessionStorage.setItem("bitrequest_historic_" + thisrequestid, cacheval); // 'cache' historic data
+                    br_set_session("historic_" + thisrequestid, cacheval); // 'cache' historic data
                 }
                 api_callback(thisrequestid);
                 return;
