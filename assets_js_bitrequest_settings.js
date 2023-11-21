@@ -814,9 +814,9 @@ function submitbackup() {
             "lastbackup": lastbackup,
             "device": "folder-open"
         }, lastsaved);
-        canceldialog();
-        savesettings();
+        savesettings("noalert");
         resetchanges();
+        canceldialog();
         notify("Downloaded: " + lastbackup);
     })
 }
@@ -1206,33 +1206,36 @@ function restore_callback_file(pass_dat, np) {
     let newphrase = (hasbip === true) ? np : true;
     restorestorage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
-    let lastrestore = "last restore:<br/><span class='icon-folder-open'>" + new Date(now()).toLocaleString(language).replace(/\s+/g, "_") + "</span>";
+    let lastrestore = "last restore: " + new Date(now()).toLocaleString(language).replace(/\s+/g, "_");
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": pass_dat.filename,
         "device": "folder-open"
     }, lastrestore);
-    savesettings();
+    savesettings("noalert");
     if (newphrase === true) {
         restore_cb_init_addresses();
     }
-    notify("file restored");
+    resetchanges();
+    notify("file restorede");
     canceldialog();
-    w_loc.href = w_loc.pathname + "?p=settings";
+    if (body.hasClass("showstartpage")) {
+        w_loc.href = w_loc.pathname + "?p=settings";
+    }
 }
 
 function restore_callback_gd(pass_dat, np) {
     let newphrase = (hasbip === true) ? np : true;
     restorestorage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
-    let lastrestore = "last restore:<br/><span class='icon-googledrive'>" + new Date(now()).toLocaleString(language).replace(/\s+/g, "_") + "</span>";
+    let lastrestore = "last restore: " + new Date(now()).toLocaleString(language).replace(/\s+/g, "_");
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": pass_dat.filename,
         "device": pass_dat.thisdevice
     }, lastrestore);
     setTimeout(function() {
-        savesettings();
+        savesettings("noalert");
         createfile(); // create new file from backup
         if (pass_dat.thisdeviceid == deviceid) {
             let pass = GD_pass();
@@ -1243,9 +1246,13 @@ function restore_callback_gd(pass_dat, np) {
         if (newphrase === true) {
             restore_cb_init_addresses();
         }
+        resetchanges();
+        notify("file restorede");
         canceldialog();
         setTimeout(function() {
-            w_loc.href = w_loc.pathname + "?p=settings";
+            if (body.hasClass("showstartpage")) {
+                w_loc.href = w_loc.pathname + "?p=settings";
+            }
         }, 300);
     }, 300);
 }

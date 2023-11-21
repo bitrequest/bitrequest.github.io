@@ -4487,6 +4487,11 @@ function updatechanges(key, add, nit) {
             cc_correct = (cc) ? cc : 0;
         changes[key] = cc_correct + 1;
         savechangesstats();
+        if (nit == "noalert") {
+            // no alert
+        } else {
+            change_alert();
+        }
     }
     if (!nit === true) {
         updateappdata();
@@ -4502,7 +4507,6 @@ function resetchanges() {
 
 function savechangesstats() {
     br_set_local("changes", changes, true);
-    change_alert();
 }
 
 // render changes
