@@ -238,6 +238,7 @@ function gdlogout_callbacks() {
         $("#changelog").slideDown(300);
         return
     }
+    resetchanges();
     canceldialog();
 }
 
