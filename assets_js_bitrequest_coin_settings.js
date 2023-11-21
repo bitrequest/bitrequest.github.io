@@ -1268,18 +1268,20 @@ function reset_coinsettings_function(trigger) {
     let currency = trigger.attr("data-currency"),
         result = confirm("Are you sure you want to reset " + currency + " settings?");
     if (result === true) {
-        let current_settings = br_get_local(currency + "_settings", true),
-            ln_settings = (currency == "bitcoin") ? current_settings["Lightning network"] : false,
-            xpub_settings = (current_settings.Xpub) ? current_settings.Xpub : false,
-            coinsettings = getcoinsettings(currency);
-        if (ln_settings) {
-            coinsettings["Lightning network"] = ln_settings; // don't reset lightning settings
+        let current_settings = br_get_local(currency + "_settings", true);
+        if (current_settings) {
+	        let ln_settings = (currency == "bitcoin") ? current_settings["Lightning network"] : false,
+	            xpub_settings = (current_settings.Xpub) ? current_settings.Xpub : false,
+	            coinsettings = getcoinsettings(currency);
+	        if (ln_settings) {
+	            coinsettings["Lightning network"] = ln_settings; // don't reset lightning settings
+	        }
+	        if (xpub_settings) {
+	            coinsettings.Xpub = xpub_settings; // don't reset xpub settings
+	        }
+	        br_set_local(currency + "_settings", coinsettings, true);
+	        append_coinsetting(currency, coinsettings, false);
         }
-        if (xpub_settings) {
-            coinsettings.Xpub = xpub_settings; // don't reset xpub settings
-        }
-        br_set_local(currency + "_settings", coinsettings, true);
-        append_coinsetting(currency, coinsettings, false);
         canceldialog();
         notify(currency + " settings reset to default");
     }
