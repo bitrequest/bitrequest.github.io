@@ -83,6 +83,8 @@ $(document).ready(function() {
     //set_uris
     //set_lnd_qr
     //set_lnd_uris
+    //btc_urlscheme
+    //bch_urlscheme
     switchaddress();
     copyaddress_dblclick();
     copyaddress();
@@ -1755,6 +1757,15 @@ function set_lnd_uris(urlscheme, amount) {
         "title": "lightning:" + urlscheme
     });
     $("#paymentaddress_lnd").text(urlscheme);
+}
+
+function btc_urlscheme(payment, address, amount, iszero) {
+    return payment + ":" + address + ((iszero === true) ? "" : "?amount=" + amount);
+}
+
+function bch_urlscheme(payment, address, amount, iszero) {
+    let c_address = (address.indexOf("bitcoincash:") > -1) ? address.split("bitcoincash:").pop() : address;
+    return "bitcoincash:" + c_address + ((iszero === true) ? "" : "?amount=" + amount);
 }
 
 function switchaddress() {

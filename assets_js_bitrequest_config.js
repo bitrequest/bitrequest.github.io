@@ -235,19 +235,13 @@ const apptitle = "Bitrequest",
                         "icon": "sphere",
                         "selected": {
                             "name": "mempool.space",
-                            "url": "memppol.space",
+                            "url": "mempool.space",
                             "api": true,
                             "display": true
                         },
                         "apis": [{
                                 "name": "mempool.space",
-                                "url": "memppol.space",
-                                "api": true,
-                                "display": true
-                            },
-                            {
-                                "name": "blockchair",
-                                "url": "blockchair.com",
+                                "url": "mempool.space",
                                 "api": true,
                                 "display": true
                             },
@@ -256,6 +250,12 @@ const apptitle = "Bitrequest",
                                 "url": "blockcypher.com",
                                 "api": true,
                                 "display": true
+                            },
+                            {
+                                "name": "blockchair",
+                                "url": "blockchair.com",
+                                "api": true,
+                                "display": false
                             }
                         ],
                         "options": []
@@ -370,12 +370,18 @@ const apptitle = "Bitrequest",
                     "apis": {
                         "icon": "sphere",
                         "selected": {
-                            "name": "blockcypher",
-                            "url": "blockcypher.com",
+                            "name": "mempool.space",
+                            "url": "litecoinspace.org",
                             "api": true,
                             "display": true
                         },
                         "apis": [{
+                                "name": "mempool.space",
+                                "url": "litecoinspace.org",
+                                "api": true,
+                                "display": true
+                            },
+                            {
                                 "name": "blockcypher",
                                 "url": "blockcypher.com",
                                 "api": true,
@@ -406,6 +412,11 @@ const apptitle = "Bitrequest",
                                 "name": "blockcypher ws",
                                 "url": main_bc_ws,
                                 "display": false
+                            },
+                            {
+                                "name": "mempool.space websocket",
+                                "url": "wss://litecoinspace.org/api/v1/ws",
+                                "display": true
                             }
                         ],
                         "options": []
@@ -1416,7 +1427,7 @@ const apptitle = "Bitrequest",
                 // "key_param": "key=",
                 "key_param": null,
                 "api_key": "no_key",
-                "sign_up": "https://mempool.space/nl/docs/api/rest"
+                "sign_up": "https://mempool.space/docs/api/rest"
             },
             {
                 "name": "coinmarketcap",
@@ -1581,12 +1592,3 @@ const apptitle = "Bitrequest",
             }
         ]
     };
-
-function btc_urlscheme(payment, address, amount, iszero) {
-    return payment + ":" + address + ((iszero === true) ? "" : "?amount=" + amount);
-}
-
-function bch_urlscheme(payment, address, amount, iszero) {
-    let c_address = (address.indexOf("bitcoincash:") > -1) ? address.split("bitcoincash:").pop() : address;
-    return "bitcoincash:" + c_address + ((iszero === true) ? "" : "?amount=" + amount);
-}

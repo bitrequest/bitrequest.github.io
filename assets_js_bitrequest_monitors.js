@@ -537,11 +537,11 @@ function get_api_inputs(rd, api_data, api_name) {
                 return
             }
             if (api_name == "mempool.space") {
+                let endpoint = "https://" + api_data.url;
                 api_proxy({ // get latest blockheight
-                    "api": api_name,
-                    "search": "blocks/tip/height",
                     "cachetime": 25,
                     "cachefolder": "1h",
+                    "api_url": endpoint + "/api/blocks/tip/height",
                     "params": {
                         "method": "GET"
                     }
@@ -551,10 +551,9 @@ function get_api_inputs(rd, api_data, api_name) {
                         setTimeout(function() {
                             if (pending == "scanning") { // scan incoming transactions on address
                                 api_proxy({
-                                    "api": api_name,
-                                    "search": "address/" + address + "/txs",
                                     "cachetime": 25,
                                     "cachefolder": "1h",
+                                    "api_url": endpoint + "/api/address/" + address + "/txs",
                                     "params": {
                                         "method": "GET"
                                     }
@@ -591,10 +590,9 @@ function get_api_inputs(rd, api_data, api_name) {
                             if (pending == "polling") { // poll mempool.space transaction id
                                 if (transactionhash) {
                                     api_proxy({
-                                        "api": api_name,
-                                        "search": "tx/" + transactionhash,
                                         "cachetime": 25,
                                         "cachefolder": "1h",
+                                        "api_url": endpoint + "/api/tx/" + transactionhash,
                                         "params": {
                                             "method": "GET"
                                         }
@@ -963,12 +961,10 @@ function get_api_inputs(rd, api_data, api_name) {
                                         let latestblock = context.state;
                                         if (latestblock) {
                                             let trxs = q_obj(data, "data." + transactionhash);
-                                            console.log(trxs);
                                             if (trxs) {
                                                 let txd = (erc20 === true) ? blockchair_erc20_poll_data(trxs, setconfirmations, ccsymbol, latestblock) :
                                                     (payment == "ethereum") ? blockchair_eth_scan_data(trxs.calls[0], setconfirmations, ccsymbol, latestblock) :
                                                     blockchair_scan_data(trxs, setconfirmations, ccsymbol, address, latestblock);
-                                                console.log(txd);
                                                 if (txd.ccval) {
                                                     let tx_listitem = append_tx_li(txd, rqtype);
                                                     if (tx_listitem) {
@@ -1250,8 +1246,10 @@ function get_api_error_data(error) {
 function api_src(thislist, api_data) {
     let api_url = api_data.url,
         api_url_short = (api_url) ? (api_url.length > 40) ? api_url.slice(0, 40) + "..." : api_url : "",
-        api_name = (api_data.name) ? api_data.name : api_url_short;
-    thislist.data("source", api_name).find(".api_source").html("<span class='src_txt' title='" + api_url_short + "'>source: " + api_name + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
+        aoi_name = (api_data.name),
+        api_title = (aoi_name == "mempool.space") ? api_url : aoi_name,
+        api_source = (api_title) ? api_title : api_url_short;
+    thislist.data("source", api_source).find(".api_source").html("<span class='src_txt' title='" + api_url_short + "'>source: " + api_source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
 }
 
 function api_callback(requestid, nocache) {
@@ -1719,8 +1717,8 @@ function handle_rpc_fails_list(rd, error, rpc_data, thispayment) {
         requestid = rd.requestid,
         nextrpc = get_next_rpc(thispayment, api_url, requestid);
     if (nextrpc === false) {
-        let api_name = rpc_data.name,
-            nextapi = get_next_api(thispayment, api_name, requestid);
+        let api_name = rpc_data.name;
+        nextapi = get_next_api(thispayment, api_name, requestid);
         if (nextapi === false) { // try next api
             let rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
                 error_data = (error === false) ? false : get_api_error_data(error);

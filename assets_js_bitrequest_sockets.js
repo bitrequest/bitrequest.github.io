@@ -55,21 +55,21 @@ function init_socket(socket_node, address, swtch, retry) {
     let payment = request.payment,
         socket_name;
     if (socket_node) {
-        let socket_name = socket_node.name;
+        socket_name = socket_node.name;
         socket_attempt[btoa(socket_node.url)] = true;
     }
     if (payment == "bitcoin") {
         if (address == "lnurl") {
             // lightning only
         } else {
-            if (socket_name == "blockcypher wss") {
+            if (socket_name == "mempool.space websocket" || socket_node.default === false) {
+                mempoolspace_btc_socket(socket_node, address);
+            } else if (socket_name == "blockcypher wss") {
                 blockcypher_websocket(socket_node, address);
             } else if (socket_name == "blockcypher ws") {
-                blockcypherws(socket_node, address)
+                blockcypherws(socket_node, address);
             } else if (socket_name == "blockchain.info websocket") {
                 blockchain_btc_socket(socket_node, address);
-            } else if (socket_name == "mempool.space websocket" || socket_node.default === false) {
-                mempoolspace_btc_socket(socket_node, address);
             } else {
                 blockcypher_websocket(socket_node, address);
             }
@@ -83,39 +83,51 @@ function init_socket(socket_node, address, swtch, retry) {
         return
     }
     if (payment == "litecoin") {
-        if (socket_node.default === false) {
+        if (socket_name == "mempool.space websocket" || socket_node.default === false) {
             mempoolspace_btc_socket(socket_node, address);
-        } else if (socket_name == "blockcypher wss") {
-            blockcypher_websocket(socket_node, address);
-        } else if (socket_name == "blockcypher ws") {
-            blockcypherws(socket_node, address)
-        } else {
-            blockcypher_websocket(socket_node, address);
+            return
         }
+        if (socket_name == "blockcypher wss") {
+            blockcypher_websocket(socket_node, address);
+            return
+        }
+        if (socket_name == "blockcypher ws") {
+            blockcypherws(socket_node, address);
+            return
+        }
+        blockcypher_websocket(socket_node, address);
         return
     }
     if (payment == "dogecoin") {
-        if (socket_node.default === false) {
+        if (socket_name == "mempool.space websocket" || socket_node.default === false) {
             mempoolspace_btc_socket(socket_node, address);
-        } else if (socket_name == "blockcypher wss") {
-            blockcypher_websocket(socket_node, address);
-        } else if (socket_name == "blockcypher ws") {
-            blockcypherws(socket_node, address)
-        } else if (socket_name == "dogechain api") {
-            dogechain_info_socket(socket_node, address);
-        } else {
-            blockcypher_websocket(socket_node, address);
+            return
         }
+        if (socket_name == "blockcypher wss") {
+            blockcypher_websocket(socket_node, address);
+            return
+        }
+        if (socket_name == "blockcypher ws") {
+            blockcypherws(socket_node, address);
+            return
+        }
+        if (socket_name == "dogechain api") {
+            dogechain_info_socket(socket_node, address);
+            return
+        }
+        blockcypher_websocket(socket_node, address);
         return
     }
     if (payment == "bitcoin-cash") {
-        if (socket_node.default === false) {
+        if (socket_name == "mempool.space websocket" || socket_node.default === false) {
             mempoolspace_btc_socket(socket_node, address);
-        } else if (socket_name == "blockchain.info websocket") {
-            blockchain_bch_socket(socket_node, address);
-        } else {
-            blockchain_bch_socket(socket_node, address);
+            return
         }
+        if (socket_name == "blockchain.info websocket") {
+            blockchain_bch_socket(socket_node, address);
+            return
+        }
+        blockchain_bch_socket(socket_node, address);
         return
     }
     if (payment == "nano") {
@@ -1189,7 +1201,7 @@ function after_poll(rq_init, next_api) {
         }
         if (api_name == "mempool.space") {
             ap_loader();
-            mempoolspace_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts, false);
+            mempoolspace_scan_poll(payment, api_data, ccsymbol, set_confirmations, address, request_ts, false);
             return
         }
         if (api_name == "blockcypher") {
@@ -1214,7 +1226,7 @@ function after_poll(rq_init, next_api) {
         if (ccsymbol == "btc" || ccsymbol == "ltc" || ccsymbol == "doge" || ccsymbol == "bch") {
             if (api_data.default === false) {
                 ap_loader();
-                mempoolspace_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts, api_data.url);
+                mempoolspace_scan_poll(payment, api_data, ccsymbol, set_confirmations, address, request_ts, api_data.url);
                 return
             }
         }
@@ -1281,7 +1293,7 @@ function nano_scan_poll(api_name, api_url, ccsymbol, set_confirmations, address,
     });
 }
 
-function mempoolspace_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts, rpc) {
+function mempoolspace_scan_poll(payment, api_data, ccsymbol, set_confirmations, address, request_ts, rpc) {
     let pload = (rpc) ? {
         "api_url": rpc + "/api/address/" + address + "/txs",
         "proxy": false,
@@ -1289,10 +1301,9 @@ function mempoolspace_scan_poll(payment, api_name, ccsymbol, set_confirmations, 
             "method": "GET"
         }
     } : {
-        "api": "mempool.space",
-        "search": "address/" + address + "/txs",
         "cachetime": 25,
         "cachefolder": "1h",
+        "api_url": "https://" + api_data.url + "/api/address/" + address + "/txs",
         "params": {
             "method": "GET"
         }
@@ -1319,9 +1330,9 @@ function mempoolspace_scan_poll(payment, api_name, ccsymbol, set_confirmations, 
             close_paymentdialog(true);
             return
         }
-        after_poll_fails(api_name);
+        after_poll_fails(api_data.name);
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        after_poll_fails(api_name);
+        after_poll_fails(api_data.name);
     });
 }
 

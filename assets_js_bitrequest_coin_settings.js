@@ -522,7 +522,7 @@ function submit_rpcnode() {
                 let optionsbox = settingsbox.find(".options"),
                     duplicates = optionsbox.find("span[data-value='" + rpc_url_input_val + "']"),
                     indexed = (duplicates.length) ? true : false;
-                if (indexed || rpc_url_input_val.indexOf("mempool.space") > -1) {
+                if (indexed || rpc_url_input_val.indexOf("mempool.space") > -1 || rpc_url_input_val.indexOf("litecoinspace.org") > -1) {
                     popnotify("error", "Node already added");
                     return
                 }

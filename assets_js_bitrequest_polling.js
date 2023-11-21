@@ -54,12 +54,12 @@ function api_monitor(txhash, tx_data, api_dat) {
                 return
             }
         }
-        api_proxy(ampl(api_name, poll_url)).done(function(e) {
+        api_proxy(ampl(api_dat, poll_url)).done(function(e) {
             let apiresult = api_result(br_result(e));
             if (apiresult) {
                 pinging[txhash + api_name] = setInterval(function() {
                     if (paymentpopup.hasClass("active")) { // only when request is visible
-                        api_proxy(ampl(api_name, poll_url)).done(function(e) {
+                        api_proxy(ampl(api_dat, poll_url)).done(function(e) {
                             api_result(br_result(e));
                         }).fail(function(jqXHR, textStatus, errorThrown) {
                             api_error(jqXHR, textStatus, errorThrown);
@@ -113,7 +113,20 @@ function api_monitor(txhash, tx_data, api_dat) {
     console.log("No API selected");
 }
 
-function ampl(api_name, poll_url) { // api_monitor payload
+function ampl(api_dat, poll_url) { // api_monitor payload
+    let api_name = api_dat.name;
+    if (api_name == "mempool.space") {
+        let endpoint = "https://" + api_dat.url;
+        return {
+            "cachetime": 10,
+            "cachefolder": "1h",
+            "api_url": endpoint + "/api/" + poll_url,
+            "params": {
+                "method": "GET",
+                "cache": true
+            }
+        }
+    }
     return {
         "api": api_name,
         "search": poll_url,
