@@ -1217,11 +1217,7 @@ function restore_callback_file(pass_dat, np) {
         restore_cb_init_addresses();
     }
     resetchanges();
-    notify("file restorede");
-    canceldialog();
-    if (body.hasClass("showstartpage")) {
-        w_loc.href = w_loc.pathname + "?p=settings";
-    }
+    w_loc.href = w_loc.pathname + "?p=settings";
 }
 
 function restore_callback_gd(pass_dat, np) {
@@ -1247,12 +1243,8 @@ function restore_callback_gd(pass_dat, np) {
             restore_cb_init_addresses();
         }
         resetchanges();
-        notify("file restorede");
-        canceldialog();
         setTimeout(function() {
-            if (body.hasClass("showstartpage")) {
-                w_loc.href = w_loc.pathname + "?p=settings";
-            }
+            w_loc.href = w_loc.pathname + "?p=settings";
         }, 300);
     }, 300);
 }
