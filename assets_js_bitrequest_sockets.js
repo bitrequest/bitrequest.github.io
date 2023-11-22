@@ -948,7 +948,7 @@ function web3_erc20_websocket(socket_node, thisaddress) {
 }
 
 function ws_check_fc(starttime, socket_node, thisaddress) {
-    if ((now() - starttime) < 2000) {
+    if ((now() - starttime) < 3000) {
         socket_info(socket_node, false);
         handle_socket_fails(socket_node, thisaddress);
         return

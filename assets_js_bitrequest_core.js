@@ -4482,6 +4482,12 @@ function save_cc_settings(currency, add) {
 }
 
 function updatechanges(key, add, nit) {
+    let pass = GD_pass();
+    if (pass && !nit === true) {
+        updateappdata();
+        return
+    }
+    init_login_dialog();
     if (add === true) {
         let cc = changes[key],
             cc_correct = (cc) ? cc : 0;
@@ -4492,9 +4498,6 @@ function updatechanges(key, add, nit) {
         } else {
             change_alert();
         }
-    }
-    if (!nit === true) {
-        updateappdata();
     }
 }
 
@@ -4523,6 +4526,9 @@ function renderchanges() {
 }
 
 function change_alert() {
+    if (is_ios_app === true) {
+        return
+    }
     let total_changes = get_total_changes();
     if (total_changes > 0) {
         $("#alert > span").text(total_changes).attr("title", "You have " + total_changes + " changes in your app");
