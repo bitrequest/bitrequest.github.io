@@ -866,7 +866,7 @@ function ios_redirections(url) {
         ios_redirect_bitly(url);
         return
     }
-    let currenturllet = w_loc.href,
+    let currenturlvar = w_loc.href,
         currenturl = currenturlvar.toUpperCase(),
         newpage = url.toUpperCase();
     if (currenturl == newpage) {
