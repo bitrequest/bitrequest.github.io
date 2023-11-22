@@ -1266,23 +1266,23 @@ function get_address_warning(id, address, pass_dat) {
     let seedstr = (pass_dat.xpubid) ? "Xpub" : "Seed",
         rest_str = (seedstr == "Seed") ? (hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + pass_dat.seedid + "'>Restore seed</div>" : "";
     return $("<div class='formbox addwarning' id='" + id + "'>\
-		<h2 class='icon-warning'>Warning!</h2>\
-		<div class='popnotify'></div>\
-		<p><strong>" + seedstr + " for '<span class='adspan'>" + address + "</span>' is missing.<br/>Are you sure you want to use this address?</strong></p>\
-		<form class='addressform popform'>\
-			<div class='inputwrap'>\
-				<div class='pk_wrap noselect'>\
-					<div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
-					<span>I own the seed / private key of this address</span>\
-				</div>\
-				<div class='pk_wrap noselect'>\
-					<div id='dontshowwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
-					<span>Don't show again</span>\
-				</div>" + rest_str +
+        <h2 class='icon-warning'>Warning!</h2>\
+        <div class='popnotify'></div>\
+        <p><strong>" + seedstr + " for '<span class='adspan'>" + address + "</span>' is missing.<br/>Are you sure you want to use this address?</strong></p>\
+        <form class='addressform popform'>\
+            <div class='inputwrap'>\
+                <div class='pk_wrap noselect'>\
+                    <div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
+                    <span>I own the seed / private key of this address</span>\
+                </div>\
+                <div class='pk_wrap noselect'>\
+                    <div id='dontshowwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
+                    <span>Don't show again</span>\
+                </div>" + rest_str +
         "</div>\
-			<input type='submit' class='submit' value='OK'>\
-		</form>\
-	</div>").data(pass_dat);
+            <input type='submit' class='submit' value='OK'>\
+        </form>\
+    </div>").data(pass_dat);
 }
 
 function finishtxfunction(currency, thisaddress, savedurl, title) {
@@ -1846,18 +1846,18 @@ function payment_lookup(request_dat) {
         blockexplorer = get_blockexplorer(currency),
         bu_url = blockexplorer_url(currency, false, request_dat.erc20) + request_dat.address,
         content = "<div class='formbox'>\
-	        <h2 class='icon-warning'><span class='icon-qrcode'/>No payment detected</h2>\
-	        <div id='ad_info_wrap'>\
-	        	<p><strong><a href='" + bu_url + "' target='_blank' class='ref check_recent'>Look for recent incoming " + currency + " payments on " + blockexplorer + " <span class='icon-new-tab'></a></strong></p>\
-		        <div class='pk_wrap noselect'>\
-					<div id='dontshowwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
-					<span>Don't show again</span>\
-				</div>\
-			</div>\
-	        <div id='backupactions'>\
-				<div id='dismiss' class='customtrigger'>DISMISS</div>\
-			</div>\
-	        </div>";
+            <h2 class='icon-warning'><span class='icon-qrcode'/>No payment detected</h2>\
+            <div id='ad_info_wrap'>\
+                <p><strong><a href='" + bu_url + "' target='_blank' class='ref check_recent'>Look for recent incoming " + currency + " payments on " + blockexplorer + " <span class='icon-new-tab'></a></strong></p>\
+                <div class='pk_wrap noselect'>\
+                    <div id='dontshowwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
+                    <span>Don't show again</span>\
+                </div>\
+            </div>\
+            <div id='backupactions'>\
+                <div id='dismiss' class='customtrigger'>DISMISS</div>\
+            </div>\
+            </div>";
     popdialog(content, "triggersubmit");
 }
 
@@ -1915,10 +1915,10 @@ function recent_requests(recent_payments) {
         <h2 class='icon-history'>Recent requests:</h2>\
         <div id='ad_info_wrap'>\
         <ul>" + addresslist + "</ul>\
-		</div>\
+        </div>\
         <div id='backupactions'>\
-			<div id='dismiss' class='customtrigger'>CANCEL</div>\
-		</div>\
+            <div id='dismiss' class='customtrigger'>CANCEL</div>\
+        </div>\
         </div>";
     popdialog(content, "triggersubmit");
 }
@@ -1944,8 +1944,8 @@ function recent_requests_list(recent_payments) {
                 rq_time = val.rqtime,
                 blockchainurl = blockexplorer_url(currency, false, erc20) + address;
             addresslist += "<li class='rp_li'>" + getcc_icon(cmcid, ccsymbol + "-" + currency, erc20) + "<strong style='opacity:0.5'>" + short_date(rq_time + timezone) + "</strong><br/>\
-			<a href='" + blockchainurl + "' target='_blank' class='ref check_recent'>\
-			<span class='select'>" + address + "</span> <span class='icon-new-tab'></a></li>";
+            <a href='" + blockchainurl + "' target='_blank' class='ref check_recent'>\
+            <span class='select'>" + address + "</span> <span class='icon-new-tab'></a></li>";
         }
     });
     return addresslist;
@@ -2100,12 +2100,12 @@ function addaddress(ad, edit) {
         vk_box = (currency == "monero") ? (has_vk) ? "" : "<div class='inputwrap'><input type='text' class='vk_input' value='" + vk_val + "' placeholder='View key'>" + scanvk + "</div>" : "",
         content = $("<div class='formbox form" + addeditclass + xpubclass + "' id='addressformbox'>" + title + pnotify + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' id='address_xpub_input' class='address' value='" + address + "' data-currency='" + currency + "' placeholder='" + xpubph + "'" + readonly + ">" + scanqr + "</div>" + vk_box + "<input type='text' class='addresslabel' value='" + label + "' placeholder='label'>\
         <div id='ad_info_wrap' style='display:none'>\
-			<ul class='td_box'>\
-			</ul>\
-			<div id='pk_confirm' class='noselect'>\
-				<div id='matchwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>The above addresses match those in my " + currency + " wallet</span>\
-			</div>\
-		</div>" + pk_checkbox +
+            <ul class='td_box'>\
+            </ul>\
+            <div id='pk_confirm' class='noselect'>\
+                <div id='matchwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>The above addresses match those in my " + currency + " wallet</span>\
+            </div>\
+        </div>" + pk_checkbox +
             "<input type='submit' class='submit' value='OK'></form>").data(ad);
     popdialog(content, "triggersubmit");
     if (supportsTouch === true) {
@@ -2224,26 +2224,26 @@ function add_erc20() {
             },
             scanqr = (hascam === true) ? "<div class='qrscanner' data-currency='ethereum' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
             content = $("\
-			<div class='formbox' id='erc20formbox'>\
-				<h2 class='icon-coin-dollar'>Add erc20 token</h2>\
-				<div class='popnotify'></div>\
-				<form id='addressform' class='popform'>\
-					<div class='selectbox'>\
-						<input type='text' value='' placeholder='Pick erc20 token' id='ac_input'/>\
-						<div class='selectarrows icon-menu2' data-pe='none'></div>\
-						<div id='ac_options' class='options'>" + tokenlist + "</div>\
-					</div>\
-					<div id='erc20_inputs'>\
-					<div class='inputwrap'><input type='text' class='address' value='' placeholder='Enter a address'/>" + scanqr + "</div>\
-					<input type='text' class='addresslabel' value='' placeholder='label'/>\
-					<div id='pk_confirm' class='noselect'>\
-						<div id='pk_confirmwrap' class='cb_wrap' data-checked='false'>\
-							<span class='checkbox'></span>\
-						</div>\
-						<span>I own the seed / private key of this address</span>\
-					</div></div>\
-					<input type='submit' class='submit' value='OK'/>\
-				</form></div>").data(nodedata);
+            <div class='formbox' id='erc20formbox'>\
+                <h2 class='icon-coin-dollar'>Add erc20 token</h2>\
+                <div class='popnotify'></div>\
+                <form id='addressform' class='popform'>\
+                    <div class='selectbox'>\
+                        <input type='text' value='' placeholder='Pick erc20 token' id='ac_input'/>\
+                        <div class='selectarrows icon-menu2' data-pe='none'></div>\
+                        <div id='ac_options' class='options'>" + tokenlist + "</div>\
+                    </div>\
+                    <div id='erc20_inputs'>\
+                    <div class='inputwrap'><input type='text' class='address' value='' placeholder='Enter a address'/>" + scanqr + "</div>\
+                    <input type='text' class='addresslabel' value='' placeholder='label'/>\
+                    <div id='pk_confirm' class='noselect'>\
+                        <div id='pk_confirmwrap' class='cb_wrap' data-checked='false'>\
+                            <span class='checkbox'></span>\
+                        </div>\
+                        <span>I own the seed / private key of this address</span>\
+                    </div></div>\
+                    <input type='submit' class='submit' value='OK'/>\
+                </form></div>").data(nodedata);
         popdialog(content, "triggersubmit");
     })
 }
@@ -2723,16 +2723,16 @@ function showoptionstrigger() {
             savedrequest = $("#requestlist li[data-address='" + ad.address + "']"),
             showrequests = (savedrequest.length > 0) ? "<li><div class='showrequests'><span class='icon-qrcode'></span> Show requests</div></li>" : "",
             newrequest = (ad.checked === true) ? "<li>\
-				<div data-rel='' class='newrequest' title='create request'>\
-					<span class='icon-plus'></span> New request</div>\
-			</li>" : "",
+                <div data-rel='' class='newrequest' title='create request'>\
+                    <span class='icon-plus'></span> New request</div>\
+            </li>" : "",
             content = $("\
-				<ul id='optionslist''>" + newrequest + showrequests +
+                <ul id='optionslist''>" + newrequest + showrequests +
                 "<li><div class='address_info'><span class='icon-info'></span> Address info</div></li>\
-                	<li><div class='editaddress'> <span class='icon-pencil'></span> Edit label</div></li>\
-					<li><div class='removeaddress'><span class='icon-bin'></span> Remove address</div></li>\
-					<li><div id='rpayments'><span class='icon-history'></span> Recent payments</div></li>\
-				</ul>").data(ad);
+                    <li><div class='editaddress'> <span class='icon-pencil'></span> Edit label</div></li>\
+                    <li><div class='removeaddress'><span class='icon-bin'></span> Remove address</div></li>\
+                    <li><div id='rpayments'><span class='icon-history'></span> Recent payments</div></li>\
+                </ul>").data(ad);
         showoptions(content);
         return false;
     });
@@ -2772,13 +2772,13 @@ function lockscreen(timer) {
         has_seedid = (hasbip || cashier_seedid) ? true : false,
         us_string = (has_seedid === true && attempts > 5) ? "<p id='seed_unlock'>Unlock with seed</p>" : "",
         content = "<h1 id='lock_heading'>Bitrequest</h1><div id='lockscreen'><h2><span class='icon-lock'></span></h2><p class='tmua'>Too many unlock attempts</p>\
-    	<p><br/>Please try again in:<br/>" + cdown_str + "</p>" + us_string +
+        <p><br/>Please try again in:<br/>" + cdown_str + "</p>" + us_string +
         "<div id='phrasewrap'>\
-	    	<p><br/>Enter your 12 word<br/>secret phrase:</p>\
-	    		<div id='bip39phrase' contenteditable='contenteditable' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' lang='en' class='noselect'></div>\
-	    		<div id='phrase_login' class='button'>Unlock</div>\
-			</div>\
-		</div>";
+            <p><br/>Enter your 12 word<br/>secret phrase:</p>\
+                <div id='bip39phrase' contenteditable='contenteditable' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' lang='en' class='noselect'></div>\
+                <div id='phrase_login' class='button'>Unlock</div>\
+            </div>\
+        </div>";
     $("#optionspop").addClass("showpu active pin ontop");
     $("#optionsbox").html(content);
     body.addClass("blurmain_options");
@@ -3070,21 +3070,21 @@ function addressinfo() {
             vkdat = (vkobj) ? (isseed && active_src) ? "derive" : vkobj.vk : false,
             pk_str = (vkdat) ? "<span id='show_vk' class='ref' data-vk='" + vkdat + "'>Show</span>" : (isseed) ? (active_src) ? "<span id='show_pk' class='ref'>Show</span>" : (a_wl === true) ? pk_verified : "Unknown" : pk_verified,
             content = $("<div id='ad_info_wrap'><h2>" + cc_icon + " <span>" + label + "</span></h2><ul>\
-	    		<li><strong>Address: </strong><span class='adbox adboxl select'>" + address + "</span>\
-	    		<div id='qrcodea' class='qrwrap flex'><div class='qrcode'></div>" + cc_icon + "</div>\
-				</li>\
-	    		<li><strong>Source: </strong>" + srcval + "</li>" +
+                <li><strong>Address: </strong><span class='adbox adboxl select'>" + address + "</span>\
+                <div id='qrcodea' class='qrwrap flex'><div class='qrcode'></div>" + cc_icon + "</div>\
+                </li>\
+                <li><strong>Source: </strong>" + srcval + "</li>" +
                 dpath_str +
                 "<li><strong>Private key: </strong>" + pk_str +
                 "<div id='pk_span'>\
-					<div class='qrwrap flex'>\
-						<div id='qrcode' class='qrcode'></div>" + cc_icon + "</div>\
-						<p id='pkspan' class='adbox adboxl select' data-type='private key'></p>\
-				</div>\
-				</li>\
-				<li><div class='showtransactions ref'><span class='icon-eye'></span> Show transactions</div></li>\
-				</ul>\
-	    	</div>").data(dd);
+                    <div class='qrwrap flex'>\
+                        <div id='qrcode' class='qrcode'></div>" + cc_icon + "</div>\
+                        <p id='pkspan' class='adbox adboxl select' data-type='private key'></p>\
+                </div>\
+                </li>\
+                <li><div class='showtransactions ref'><span class='icon-eye'></span> Show transactions</div></li>\
+                </ul>\
+            </div>").data(dd);
         popdialog(content, "canceldialog");
         $("#qrcodea .qrcode").qrcode(address);
         return false;
@@ -3573,55 +3573,55 @@ function pinpanel(pinclass, pincb) {
     let makeclass = (pinclass === undefined) ? "" : pinclass,
         headertext = (haspin() === true) ? "Please enter your pin" : "Create a 4-digit pin";
     return $("<div id='pinfloat' class='enterpin" + makeclass + "'>\
-		<p id='pintext'>" + headertext + "</p>\
-		<p id='confirmpin'>Confirm your pin</p>\
-		<input id='pininput' type='password' readonly='readonly'/>\
-		<input id='validatepin' type='password' readonly='readonly'/>\
-		<div id='pinkeypad'>\
-			<div id='pin1' class='pinpad flex'>\
-				<span class='pincell'>1</span>\
-			</div>\
-			<div id='pin2' class='pinpad'>\
-				<span class='pincell'>2</span>\
-			</div>\
-			<div id='pin3' class='pinpad'>\
-				<span class='pincell'>3</span>\
-			</div><br>\
-			<div id='pin4' class='pinpad'>\
-				<span class='pincell'>4</span>\
-			</div>\
-			<div id='pin5' class='pinpad'>\
-				<span class='pincell'>5</span>\
-			</div>\
-			<div id='pin6' class='pinpad'>\
-				<span class='pincell'>6</span>\
-			</div><br>\
-			<div id='pin7' class='pinpad'>\
-				<span class='pincell'>7</span>\
-			</div>\
-			<div id='pin8' class='pinpad'>\
-				<span class='pincell'>8</span>\
-			</div>\
-			<div id='pin9' class='pinpad'>\
-				<span class='pincell'>9</span>\
-			</div><br>\
-			<div id='locktime' class='pinpad'>\
-				<span class='icomoon'></span>\
-			</div>\
-			<div id='pin0' class='pinpad'>\
-				<span class='pincell'>0</span>\
-			</div>\
-			<div id='pinback' class='pinpad'>\
-				<span class='icomoon'></span>\
-			</div>\
-		</div>\
-		<div id='pin_admin' class='flex'>\
-			<div id='pin_admin_float'>\
-				<div id='lock_time'><span class='icomoon'></span> Lock time</div>\
-				<div id='reset_pin'>Reset pin</div>\
-			</div>\
-		</div>\
-	</div>").data("pincb", pincb);
+        <p id='pintext'>" + headertext + "</p>\
+        <p id='confirmpin'>Confirm your pin</p>\
+        <input id='pininput' type='password' readonly='readonly'/>\
+        <input id='validatepin' type='password' readonly='readonly'/>\
+        <div id='pinkeypad'>\
+            <div id='pin1' class='pinpad flex'>\
+                <span class='pincell'>1</span>\
+            </div>\
+            <div id='pin2' class='pinpad'>\
+                <span class='pincell'>2</span>\
+            </div>\
+            <div id='pin3' class='pinpad'>\
+                <span class='pincell'>3</span>\
+            </div><br>\
+            <div id='pin4' class='pinpad'>\
+                <span class='pincell'>4</span>\
+            </div>\
+            <div id='pin5' class='pinpad'>\
+                <span class='pincell'>5</span>\
+            </div>\
+            <div id='pin6' class='pinpad'>\
+                <span class='pincell'>6</span>\
+            </div><br>\
+            <div id='pin7' class='pinpad'>\
+                <span class='pincell'>7</span>\
+            </div>\
+            <div id='pin8' class='pinpad'>\
+                <span class='pincell'>8</span>\
+            </div>\
+            <div id='pin9' class='pinpad'>\
+                <span class='pincell'>9</span>\
+            </div><br>\
+            <div id='locktime' class='pinpad'>\
+                <span class='icomoon'></span>\
+            </div>\
+            <div id='pin0' class='pinpad'>\
+                <span class='pincell'>0</span>\
+            </div>\
+            <div id='pinback' class='pinpad'>\
+                <span class='icomoon'></span>\
+            </div>\
+        </div>\
+        <div id='pin_admin' class='flex'>\
+            <div id='pin_admin_float'>\
+                <div id='lock_time'><span class='icomoon'></span> Lock time</div>\
+                <div id='reset_pin'>Reset pin</div>\
+            </div>\
+        </div>\
+    </div>").data("pincb", pincb);
 }
 
 function switchpanel(switchmode, mode) {
@@ -3724,7 +3724,7 @@ function rendercurrencies() {
         });
     }
     $("ul#allcurrencies").append("<li id='choose_erc20' data-currency='erc20 token' class='start_cli' data-currency='erc20 token'><div class='liwrap'><h2><img src='" + c_icons("ph") + "'/>erc20 token</h2></div></li>\
-	<li id='rshome' class='restore start_cli' data-currency='erc20 token'><div class='liwrap'><h2><span class='icon-upload'> Restore from backup</h2></div></li><li id='start_cli_margin' class='start_cli'><div class='liwrap'><h2></h2></div></li>");
+    <li id='rshome' class='restore start_cli' data-currency='erc20 token'><div class='liwrap'><h2><span class='icon-upload'> Restore from backup</h2></div></li><li id='start_cli_margin' class='start_cli'><div class='liwrap'><h2></h2></div></li>");
 }
 
 // render currency settings
@@ -3741,20 +3741,20 @@ function buildsettings() {
     $.each(br_config.app_settings, function(i, value) {
         let setting_id = value.id,
             setting_li = (setting_id == "heading") ? $("<li class='set_heading'>\
-		  	<h2>" + value.heading + "</h2>\
-		</li>") :
+              <h2>" + value.heading + "</h2>\
+        </li>") :
             $("<li class='render' id='" + setting_id + "'>\
-		  	<div class='liwrap iconright'>\
-		     	<span class='" + value.icon + "'></span>\
-		         <div class='atext'>\
-		            <h2>" + value.heading + "</h2>\
-		            <p>" + value.selected + "</p>\
-		         </div>\
-		         <div class='iconbox'>\
-				 	<span class='icon-pencil'></span>\
-				</div>\
-		  	</div>\
-		</li>");
+              <div class='liwrap iconright'>\
+                 <span class='" + value.icon + "'></span>\
+                 <div class='atext'>\
+                    <h2>" + value.heading + "</h2>\
+                    <p>" + value.selected + "</p>\
+                 </div>\
+                 <div class='iconbox'>\
+                     <span class='icon-pencil'></span>\
+                </div>\
+              </div>\
+        </li>");
         setting_li.data(value).appendTo(appsettingslist);
     });
 }
@@ -3841,42 +3841,42 @@ function buildpage(cd, ini) {
     init = (cc_li.length === 0 && ini === true);
     if (init === true || erc20 === true) {
         let new_li = $("<li class='iconright' data-currency='" + currency + "' data-checked='" + checked + "'>\
-			<div data-rel='?p=" + currency + "' class='liwrap addcurrency'>\
-				<h2>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + "\</h2>\
-			</div>\
-			<div class='iconbox togglecurrency'>\
-				<span class='checkbox'></span>\
-			</div>\
-		</li>");
+            <div data-rel='?p=" + currency + "' class='liwrap addcurrency'>\
+                <h2>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + "\</h2>\
+            </div>\
+            <div class='iconbox togglecurrency'>\
+                <span class='checkbox'></span>\
+            </div>\
+        </li>");
         new_li.data(cd).appendTo(currencylist);
         // append currencies homepage
         let new_homeli = $("<li class='" + visibility + "' data-currency='" + currency + "'>\
-			<div class='rq_icon' data-rel='?p=home&payment=" + currency + "&uoa=' data-title='create " + currency + " request' data-currency='" + currency + "'>" +
+            <div class='rq_icon' data-rel='?p=home&payment=" + currency + "&uoa=' data-title='create " + currency + " request' data-currency='" + currency + "'>" +
             getcc_icon(cmcid, cpid, erc20) + "\
-			</div>\
-		</li>");
+            </div>\
+        </li>");
         new_homeli.data(cd).appendTo(home_currencylist);
         let settingspage = (has_settings === true) ? "\
-		<div class='page' id='" + currency + "_settings' data-erc20='" + erc20 + "'>\
-			<div class='content'>\
-				<h2 class='heading'>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + " settings</h2>\
-				<ul class='cc_settinglist settinglist applist listyle2'></ul>\
-				<div class='reset_cc_settings button' data-currency='" + currency + "'>\
-					<span>Reset</span>\
-				</div>\
-			</div>\
-		</div>" : "";
+        <div class='page' id='" + currency + "_settings' data-erc20='" + erc20 + "'>\
+            <div class='content'>\
+                <h2 class='heading'>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + " settings</h2>\
+                <ul class='cc_settinglist settinglist applist listyle2'></ul>\
+                <div class='reset_cc_settings button' data-currency='" + currency + "'>\
+                    <span>Reset</span>\
+                </div>\
+            </div>\
+        </div>" : "";
         let settingsbutton = (has_settings === true) ? "<div data-rel='?p=" + currency + "_settings' class='self icon-cog'></div>" : "",
             sendbttn = (hasbip === true) ? "<div class='button send' data-currency='" + currency + "'><span class='icon-telegram'>Send</span></div>" : "",
             currency_page = $("<div class='page' id='" + currency + "'>\
-			<div class='content'>\
-				<h2 class='heading'>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + settingsbutton + "</h2>\
-				<ul class='applist listyle2 pobox' data-currency='" + currency + "'>\
-					<div class='endli'><div class='button addaddress' data-currency='" + currency + "'><span class='icon-plus'>Add address</span></div>" + sendbttn + "</div>\
-					<div class='addone' data-currency='" + currency + "'>Add one</div>\
-				</ul>\
-			</div>\
-		</div>" + settingspage);
+            <div class='content'>\
+                <h2 class='heading'>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + settingsbutton + "</h2>\
+                <ul class='applist listyle2 pobox' data-currency='" + currency + "'>\
+                    <div class='endli'><div class='button addaddress' data-currency='" + currency + "'><span class='icon-plus'>Add address</span></div>" + sendbttn + "</div>\
+                    <div class='addone' data-currency='" + currency + "'>Add one</div>\
+                </ul>\
+            </div>\
+        </div>" + settingspage);
         currency_page.data(cd).appendTo("main");
         if (erc20 === true) {
             let coin_settings_cache = br_get_local(currency + "_settings");
@@ -3889,10 +3889,10 @@ function buildpage(cd, ini) {
         home_cc_li.data(cd).removeClass("hide").addClass(visibility);
     }
     $("ul#allcurrencies").append("<li class='start_cli choose_currency' data-currency='" + currency + "' data-checked='" + checked + "'>\
-		<div data-rel='?p=" + currency + "' class='liwrap'>\
-			<h2>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + "\</h2>\
-		</div>\
-	</li>");
+        <div data-rel='?p=" + currency + "' class='liwrap'>\
+            <h2>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + "\</h2>\
+        </div>\
+    </li>");
 }
 
 function append_coinsetting(currency, settings, init) {
@@ -3909,15 +3909,15 @@ function append_coinsetting(currency, settings, init) {
                     let switchclass = (val.custom_switch) ? " custom" : " global bool",
                         trigger = (val.switch === true) ? switchpanel(selected_string, switchclass) : "<span class='icon-pencil'></span>",
                         coinsettings_li = $("<li data-id='" + dat + "'>\
-							<div class='liwrap edit_trigger iconright' data-currency='" + currency + "'>\
-								<span class='icon-" + val.icon + "'></span>\
-								<div class='atext'>\
-									<h2>" + dat + "</h2>\
-									<p>" + ss_filter + "</p>\
-								</div>\
-								<div class='iconbox'>" + trigger + "</div>\
-								</div>\
-						</li>");
+                            <div class='liwrap edit_trigger iconright' data-currency='" + currency + "'>\
+                                <span class='icon-" + val.icon + "'></span>\
+                                <div class='atext'>\
+                                    <h2>" + dat + "</h2>\
+                                    <p>" + ss_filter + "</p>\
+                                </div>\
+                                <div class='iconbox'>" + trigger + "</div>\
+                                </div>\
+                        </li>");
                     coinsettings_li.data(val).appendTo(coinsettings_list);
                 } else {
                     check_setting_li.data(val).find("p").text(ss_filter);
@@ -3946,17 +3946,17 @@ function appendaddress(currency, ad) {
         (source == "xpub") ? (activepub && xpubid == activepub.key_id) ? " xpub xpubv" : " xpub xpubu" : "" : "",
         usedcl = (used) ? " used" : "",
         address_li = $("<li class='adli" + clasv + usedcl + "' data-index='" + index + "' data-address='" + address + "' data-checked='" + ad.checked + "'>\
-			<div class='addressinfo liwrap iconright2'>\
-				<div class='atext'>\
-					<h2><span>" + ad.label + "</span></h2>\
-					<p class='address'>" + ad_icon + "<span class='select'>" + address + "</span><span class='usedicon icon-arrow-up-right2' title='Used'></span></p>\
-				</div>\
-				<div class='iconbox'>\
-					<span class='checkbox toggleaddress'></span>\
-					<span class='popoptions icon-menu2'></span>\
-				</div>\
-			</div>\
-		</li>");
+            <div class='addressinfo liwrap iconright2'>\
+                <div class='atext'>\
+                    <h2><span>" + ad.label + "</span></h2>\
+                    <p class='address'>" + ad_icon + "<span class='select'>" + address + "</span><span class='usedicon icon-arrow-up-right2' title='Used'></span></p>\
+                </div>\
+                <div class='iconbox'>\
+                    <span class='checkbox toggleaddress'></span>\
+                    <span class='popoptions icon-menu2'></span>\
+                </div>\
+            </div>\
+        </li>");
     address_li.data(ad).prependTo(pobox);
 }
 
@@ -4017,9 +4017,9 @@ function appendrequest(rd) {
         requesticon = (checkout) ? " typeicon icon-cart" : (local) ? " icon-qrcode" : (incoming === true) ? " typeicon icon-arrow-down-right2" : " typeicon icon-arrow-up-right2",
         typeicon = "<span class='inout" + requesticon + "'></span> ",
         statusicon = "<span class='icon-checkmark' title='Confirmed transaction'></span>\
-			<span class='icon-clock' title='pending transaction'></span>\
-			<span class='icon-eye-blocked' title='unmonitored transaction'></span>\
-			<span class='icon-wifi-off' title='No network'></span>",
+            <span class='icon-clock' title='pending transaction'></span>\
+            <span class='icon-eye-blocked' title='unmonitored transaction'></span>\
+            <span class='icon-wifi-off' title='No network'></span>",
         requesttitlestring = (rqdata || requesttitle) ? (incoming === true) ? requestname : requesttitle_short : "<b>" + amount_rounded + "</b> " + currencyname + statusicon,
         requestnamestring = (rqdata || requesttitle) ? (incoming === true) ? "<strong>'" + requesttitle_short + "'</strong> (" + amount_rounded + " " + currencyname + ")" + statusicon : amount_rounded + " " + currencyname + statusicon : "",
         rqdataparam = (rqdata) ? "&d=" + rqdata : "",
@@ -4071,31 +4071,31 @@ function appendrequest(rd) {
         rc_address_title = (hybrid) ? "Fallback address" : "Receiving Address",
         address_markup = (lightning && (lnhash || hybrid === false)) ? "" : "<li><p class='address'><strong>" + rc_address_title + ":</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>",
         new_requestli = $("<li class='rqli " + requesttypeclass + expiredclass + lnclass + "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status + "' data-address='" + address + "' data-pending='" + pending + "' data-iscrypto='" + iscrypto + "'>\
-			<div class='liwrap iconright'>" + cc_logo +
+            <div class='liwrap iconright'>" + cc_logo +
             "<div class='atext'>\
-					<h2>" + requesttitlestring + "</h2>\
-					<p class='rq_subject'>" + typeicon + requestnamestring + "</p>\
-				</div>\
-				<p class='rq_date' title='" + requestdateformatted + "'>" + timeformat + "</p><br/>\
-				<div class='pmetastatus' data-count='0'>+ 0</div>\
-				<div data-rel='" + paymenturl + "' class='payrequest button" + iscryptoclass + "'>\
-					<span class='icon-qrcode'>Pay</span>\
-				</div>\
-			</div>\
-			<div class='moreinfo'>\
-				<div class='req_actions'>\
-					<div data-rel='" + paymenturl + "' class='icon-qrcode" + iscryptoclass + "'></div>\
-					<div class='icon-bin' title='delete'></div>" +
+                    <h2>" + requesttitlestring + "</h2>\
+                    <p class='rq_subject'>" + typeicon + requestnamestring + "</p>\
+                </div>\
+                <p class='rq_date' title='" + requestdateformatted + "'>" + timeformat + "</p><br/>\
+                <div class='pmetastatus' data-count='0'>+ 0</div>\
+                <div data-rel='" + paymenturl + "' class='payrequest button" + iscryptoclass + "'>\
+                    <span class='icon-qrcode'>Pay</span>\
+                </div>\
+            </div>\
+            <div class='moreinfo'>\
+                <div class='req_actions'>\
+                    <div data-rel='" + paymenturl + "' class='icon-qrcode" + iscryptoclass + "'></div>\
+                    <div class='icon-bin' title='delete'></div>" +
             archivebutton +
             "<div class='icon-undo2' title='unarchive request'></div>\
-					<div class='icon-info' title='show info'></div>" + edit_request + "</div>\
-				<ul class='metalist'>\
-					<li class='cnamemeta'><strong>Currency:</strong> " + payment + ln_emoji + "</li>" +
+                    <div class='icon-info' title='show info'></div>" + edit_request + "</div>\
+                <ul class='metalist'>\
+                    <li class='cnamemeta'><strong>Currency:</strong> " + payment + ln_emoji + "</li>" +
             requestnamebox +
             requesttitlebox +
             "<li><strong>Amount:</strong> " + amount_rounded + " " + uoa_upper + "</li>\
-					<li class='meta_status' data-conf='" + conf + "'><strong>Status:</strong><span class='status'> " + statustext + "</span> " + conf_box + "</li>\
-					<li><strong>Type:</strong> " + typetext + ismonitoredspan + "</li>" +
+                    <li class='meta_status' data-conf='" + conf + "'><strong>Status:</strong><span class='status'> " + statustext + "</span> " + conf_box + "</li>\
+                    <li><strong>Type:</strong> " + typetext + ismonitoredspan + "</li>" +
             timestampbox +
             paymentdetails +
             address_markup +
@@ -4103,18 +4103,18 @@ function appendrequest(rd) {
             ia_li +
             "<li class='receipt'><p><span class='icon-file-pdf' title='View receipt'/>Receipt</p></li>" + view_tx_markup +
             "</ul>\
-				<ul class='transactionlist'>\
-					<h2>" + tl_text + "</h2>\
-				</ul>\
-				<div class='api_source'>" + src_html + "</div>\
-			</div>\
-			<div class='brstatuspanel flex'>\
-				<img src='" + c_icons("confirmed") + "'>\
-				<h2>Payment " + direction + "</h2>\
-			</div>\
-			<div class='brmarker'></div>\
-			<div class='expired_panel'><h2>Expired</h2></div>\
-		</li>");
+                <ul class='transactionlist'>\
+                    <h2>" + tl_text + "</h2>\
+                </ul>\
+                <div class='api_source'>" + src_html + "</div>\
+            </div>\
+            <div class='brstatuspanel flex'>\
+                <img src='" + c_icons("confirmed") + "'>\
+                <h2>Payment " + direction + "</h2>\
+            </div>\
+            <div class='brmarker'></div>\
+            <div class='expired_panel'><h2>Expired</h2></div>\
+        </li>");
     new_requestli.data(rd).prependTo(requestlist);
     if (render_archive === true) {
         let transactionlist = requestlist.find("#" + requestid).find(".transactionlist");
@@ -4382,14 +4382,14 @@ function editrequest() {
             requesttitle_input = (requesttitle) ? requesttitle : "",
             formheader = (requesttitle) ? "Edit" : "Enter",
             content = "\
-			<div class='formbox' id='edit_request_formbox'>\
-				<h2 class='icon-pencil'>" + formheader + " description</h2>\
-				<div class='popnotify'></div>\
-				<div class='popform'>\
-					<input type='text' value='" + requesttitle_input + "' placeholder='description'/>\
-					<input type='submit' class='submit' value='OK' data-requestid='" + thisrequestid + "'/>\
-				</div>\
-			</div>";
+            <div class='formbox' id='edit_request_formbox'>\
+                <h2 class='icon-pencil'>" + formheader + " description</h2>\
+                <div class='popnotify'></div>\
+                <div class='popform'>\
+                    <input type='text' value='" + requesttitle_input + "' placeholder='description'/>\
+                    <input type='submit' class='submit' value='OK' data-requestid='" + thisrequestid + "'/>\
+                </div>\
+            </div>";
         popdialog(content, "triggersubmit");
     })
 }
@@ -4629,8 +4629,8 @@ function getapp(type) {
         button = (android === true) ? fetch_aws("img_button-playstore.png") : fetch_aws("img_button-appstore.png"),
         url = (android === true) ? "https://play.google.com/store/apps/details?id=" + androidpackagename + "&pcampaignid=fdl_long&url=" + approot + encodeURIComponent(w_loc.search) : "https://apps.apple.com/app/id1484815377?mt=8",
         panelcontent = "<h2>Download the app</h2>\
-			<a href='" + url + "' class='exit store_bttn'><img src='" + button + "'></a><br/>\
-			<div id='not_now'>Not now</div>";
+            <a href='" + url + "' class='exit store_bttn'><img src='" + button + "'></a><br/>\
+            <div id='not_now'>Not now</div>";
     app_panel.html(panelcontent);
     setTimeout(function() {
         body.addClass("getapp");

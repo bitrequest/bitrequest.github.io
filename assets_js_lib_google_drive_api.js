@@ -198,8 +198,7 @@ function set_gatoken(e) {
         let pass = GD_pass();
         if (pass) {
             updateappdata(pass);
-        }
-        else {
+        } else {
             init_login_dialog();
         }
         gdlogin_callbacks();
@@ -220,6 +219,7 @@ function gdlogin_callbacks() {
         $("#changelog").slideUp(300);
         return
     }
+    resetchanges();
     canceldialog();
 }
 
