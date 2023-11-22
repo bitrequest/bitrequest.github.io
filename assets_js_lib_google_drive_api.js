@@ -208,6 +208,7 @@ function set_gatoken(e) {
 function gdlogin_callbacks() {
     html.addClass("gdauth");
     notify("Successfully signed in");
+    resetchanges();
     let switch_panel = $("#popup.showpu .switchpanel");
     if (switch_panel.length) {
         switch_panel.addClass("true").removeClass("false");
@@ -219,7 +220,6 @@ function gdlogin_callbacks() {
         $("#changelog").slideUp(300);
         return
     }
-    resetchanges();
     canceldialog();
 }
 
