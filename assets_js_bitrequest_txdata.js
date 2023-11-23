@@ -110,8 +110,8 @@ function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, lates
                 }
             });
         }
-        let transactiontime = (status.block_time) ? status.block_time * 1000 : now() + timezone,
-            transactiontimeutc = (transactiontime) ? transactiontime + timezone : null,
+        let transactiontime = (status.block_time) ? (status.block_time * 1000)  + timezone : now() + timezone,
+            transactiontimeutc = (transactiontime) ? transactiontime : null,
             block_height = status.block_height,
             confs = (status.confirmed) ? setconfirmations : null,
             conf = (block_height && block_height > 10 && latestblock) ? (latestblock - block_height) + 1 : confs;
