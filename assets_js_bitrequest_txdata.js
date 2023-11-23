@@ -105,7 +105,7 @@ function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, lates
         if (outputs) {
             outputsum = 0;
             $.each(outputs, function(dat, value) {
-                if (address == value.scriptpubkey_address) {
+                if (value.scriptpubkey_address.indexOf(address) > -1) {
                     outputsum += value.value || 0; // sum of outputs
                 }
             });
