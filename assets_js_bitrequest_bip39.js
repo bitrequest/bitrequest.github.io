@@ -2,6 +2,10 @@ const test_phrase = "army van defense carry jealous true garbage claim echo medi
     expected_seed = "5b56c417303faa3fcba7e57400e120a0ca83ec5a4fc9ffba757fbe63fbd77a89a1a3be4c67196f57c39a88b76373733891bfaba16ed27a813ceed498804c0570", // expected seed used for test derive
     expected_address = "1HQ3rb7nyLPrjnuW85MUknPekwkn7poAUm", // expected addres used for test derive
     expected_bech32 = "bc1qg0azlj4w2lrq8jssrrz6eprt2fe7f7edm4vpd5", // expected bech32 addres used for test derive
+
+    expected_ltc_address = "LZakyXotaE29Pehw21SoPuU832UhvJp4LG",
+    expected_bch_cashaddr = "qp5p0eur784pk8wxy2kzlz3ctnq5whfnuqqpp78u22",
+    expected_doge_address = "DKvWg8UhQSycj1J8QVxeBDkRpbjDkw3DiW",
     expected_eth_address = "0x2161DedC3Be05B7Bb5aa16154BcbD254E9e9eb68",
     test_derive = true,
     c_derive = {
@@ -288,7 +292,6 @@ function bech32_check() {
 
 function cashaddr_check() {
     let bch_legacy = "1AVPurYZinnctgGPiXziwU6PuyZKX5rYZU",
-        expected_bch_cashaddr = "qp5p0eur784pk8wxy2kzlz3ctnq5whfnuqqpp78u22",
         bch_cashaddr = pub_to_cashaddr(bch_legacy);
     if (expected_bch_cashaddr == bch_cashaddr) {
         return true;
@@ -609,61 +612,61 @@ function bip39(dat) {
         save_str = (restore) ? "Enter your secret phrase:" : "Write down your secret phrase and put it somewhere safe.",
         verify_str = (restore) ? "<div id='restore_seed' class='button' data-seedid='" + data.seedid + "'>Restore</div>" : "<div id='cfbu2' class='button'>I've backed it up</div>",
         markup = $("<div id='seed_steps' class='panel" + step + "' data-goal='" + dtype + "'>\
-		<div id='seed_step1' class='seed_step'>\
-			<div class='ss_header'>\
-				<div class='icon-cross ssnav'></div>\
-			</div>\
-			<div class='ss_content flex'>\
-				<div class='ss_content_box'>\
-					<h2 style='color:#eeac57'>Important!</h2>\
-					<p><strong>You are about to become your own bank.</strong><br/>In the next screen, you will see your secret phrase. <strong style='color:#eeac57'>Make sure to write it down and put it somewhere safe!</strong></p>\
-					<p><strong>If you lose your device, uninstall your application or clear your browserdata, you will need your secret phrase to recover your funds!</strong></p>\
-					<p class='p_warning' style='text-transform:uppercase'><strong>If you lose your phrase,<br/>you will lose your money!</strong></p>\
-				</div>\
-			</div>\
-			<div class='ss_footer'>\
-				<div id='cfbu1' class='button'>I understand!</div>\
-			</div>\
-		</div>\
-		<div id='seed_step2' class='seed_step'>\
-			<div class='ss_header'>\
-				<div class='icon-arrow-left2 ssnav'></div>\
-				<div class='icon-cross ssnav'></div>\
-			</div>\
-			<div class='ss_content flex'>\
-				<div id='phrase_cb' class='ss_content_box" + spclass + "'>\
-					<h2 id='showphrase'><span class='icon-eye-blocked eye'></span><span class='icon-eye eye'></span>Secret Phrase:</h2>\
-					<p>" + save_str + "</p>\
-					<div id='phrasewrap'>\
-						<div id='bip39phrase' contenteditable='" + edit + "' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' lang='en' class='noselect'>" + seed + "</div>\
-						<div id='phrase_actions'>\
-							<div id='copyphrase' class='button'>Copy</div>\
-							<div id='phrase_info' title='seed info'><span class='icon-info'></span></div>\
-						</div>\
-						<div id='phraseblur'></div>\
-					</div>\
-				</div>\
-			</div>\
-			<div class='ss_footer'>" + verify_str + "</div>\
-		</div>\
-		<div id='seed_step3' class='seed_step'>\
-			<div class='ss_header'>\
-				<div class='icon-arrow-left2 ssnav'></div>\
-			</div>\
-			<div class='ss_content flex'>\
-				<div class='ss_content_box'><h2>" + verifyheader + "</h2><p id='reminder_seed_backup'>Congratulations. You are now your own bank!<br/></p>\
-				<p id='gpp'>With great power comes great responsibility.<br/><strong>Remember to backup your <span id='toseed'>Secret phrase</span>.</strong></p>" + remindp + "<div id='seed_verify_box'>\
-					</div>\
-					<div id='cfbu3_w'>\
-						<div id='cfbu3' class='button'>I do this later</div>\
-					</div>\
-				</div>\
-			</div>\
-			<div class='ss_footer'>\
-				<div id='continue_seed' class='button'>Continue</div>\
-			</div>\
-		</div>\
-	</div>").data(data);
+        <div id='seed_step1' class='seed_step'>\
+            <div class='ss_header'>\
+                <div class='icon-cross ssnav'></div>\
+            </div>\
+            <div class='ss_content flex'>\
+                <div class='ss_content_box'>\
+                    <h2 style='color:#eeac57'>Important!</h2>\
+                    <p><strong>You are about to become your own bank.</strong><br/>In the next screen, you will see your secret phrase. <strong style='color:#eeac57'>Make sure to write it down and put it somewhere safe!</strong></p>\
+                    <p><strong>If you lose your device, uninstall your application or clear your browserdata, you will need your secret phrase to recover your funds!</strong></p>\
+                    <p class='p_warning' style='text-transform:uppercase'><strong>If you lose your phrase,<br/>you will lose your money!</strong></p>\
+                </div>\
+            </div>\
+            <div class='ss_footer'>\
+                <div id='cfbu1' class='button'>I understand!</div>\
+            </div>\
+        </div>\
+        <div id='seed_step2' class='seed_step'>\
+            <div class='ss_header'>\
+                <div class='icon-arrow-left2 ssnav'></div>\
+                <div class='icon-cross ssnav'></div>\
+            </div>\
+            <div class='ss_content flex'>\
+                <div id='phrase_cb' class='ss_content_box" + spclass + "'>\
+                    <h2 id='showphrase'><span class='icon-eye-blocked eye'></span><span class='icon-eye eye'></span>Secret Phrase:</h2>\
+                    <p>" + save_str + "</p>\
+                    <div id='phrasewrap'>\
+                        <div id='bip39phrase' contenteditable='" + edit + "' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' lang='en' class='noselect'>" + seed + "</div>\
+                        <div id='phrase_actions'>\
+                            <div id='copyphrase' class='button'>Copy</div>\
+                            <div id='phrase_info' title='seed info'><span class='icon-info'></span></div>\
+                        </div>\
+                        <div id='phraseblur'></div>\
+                    </div>\
+                </div>\
+            </div>\
+            <div class='ss_footer'>" + verify_str + "</div>\
+        </div>\
+        <div id='seed_step3' class='seed_step'>\
+            <div class='ss_header'>\
+                <div class='icon-arrow-left2 ssnav'></div>\
+            </div>\
+            <div class='ss_content flex'>\
+                <div class='ss_content_box'><h2>" + verifyheader + "</h2><p id='reminder_seed_backup'>Congratulations. You are now your own bank!<br/></p>\
+                <p id='gpp'>With great power comes great responsibility.<br/><strong>Remember to backup your <span id='toseed'>Secret phrase</span>.</strong></p>" + remindp + "<div id='seed_verify_box'>\
+                    </div>\
+                    <div id='cfbu3_w'>\
+                        <div id='cfbu3' class='button'>I do this later</div>\
+                    </div>\
+                </div>\
+            </div>\
+            <div class='ss_footer'>\
+                <div id='continue_seed' class='button'>Continue</div>\
+            </div>\
+        </div>\
+    </div>").data(data);
     $("#seed_panel").html(markup).addClass(type);
     body.addClass("seed_dialog");
     if (step === 3) {
@@ -1682,27 +1685,27 @@ function phrase_info_pu(coin) {
         content = $("<div id='ad_info_wrap' class='" + singleclass + "' data-class='" + rootclass + "'>" + header_str + "<ul>" +
             sourceed_str +
             "<li id='pi_li' class='noline'>\
-    		<div id='pi_icons'>\
-    		</div>\
-    	</li>\
-    	<li class='clearfix noline' style='margin:0;padding:0'>\
-    		<ul id='segw_box'>\
-    		</ul>\
-    	<li>\
-    		<div id='d_paths'>\
-    		</div>\
-    	</li>\
-    	<li id='xpub_box' class='clearfix noline'>\
-    	</li>\
-    	<li>\
-    		<div id='bip_mi'><strong>Compatible wallets: </strong><span class='xpref ref'>hide</span></div>\
-    		<div id='bip_mibox' class='clearfix drawer'>\
-    			<div id='supported_wallets'>\
-				</div>\
+            <div id='pi_icons'>\
             </div>\
-    	</li>" + del_phr_str +
+        </li>\
+        <li class='clearfix noline' style='margin:0;padding:0'>\
+            <ul id='segw_box'>\
+            </ul>\
+        <li>\
+            <div id='d_paths'>\
+            </div>\
+        </li>\
+        <li id='xpub_box' class='clearfix noline'>\
+        </li>\
+        <li>\
+            <div id='bip_mi'><strong>Compatible wallets: </strong><span class='xpref ref'>hide</span></div>\
+            <div id='bip_mibox' class='clearfix drawer'>\
+                <div id='supported_wallets'>\
+                </div>\
+            </div>\
+        </li>" + del_phr_str +
             "</ul>\
-	</div>").data(root_dat);
+    </div>").data(root_dat);
     popdialog(content, "canceldialog");
     $.each(br_config.bitrequest_coin_data, function(i, coinconfig) {
         let currency = coinconfig.currency,
@@ -1753,28 +1756,28 @@ function phrase_info_pu(coin) {
                 secret_spend_key_to_words(get_ssk(seed, true)) : false,
                 xmr_phrase_box = (xmr_phrase) ? "<div><strong>XMR Seed words: </strong><br/><span class='adboxl adbox select' data-type='XMR Seed words'>" + xmr_phrase + "</span></div>" : "",
                 dp_node = $("<div class='d_path" + coinclass + "'>\
-				<div class='d_path_header'><strong>Derivation path: </strong><span class='ref'>" + root_path + "</span></div>" +
+                <div class='d_path_header'><strong>Derivation path: </strong><span class='ref'>" + root_path + "</span></div>" +
                     xmr_phrase_box +
                     "<div class='d_path_body drawer clearfix'>\
-    					<div class='td_bar'>\
-							<div class='td_next button'>Next</div><div class='td_prev button'>Prev</div>\
-						</div>\
-						<ul class='td_box'>" + derivelist + "</ul>\
-    				</div>\
-    			</div>").data(dp_node_dat),
+                        <div class='td_bar'>\
+                            <div class='td_next button'>Next</div><div class='td_prev button'>Prev</div>\
+                        </div>\
+                        <ul class='td_box'>" + derivelist + "</ul>\
+                    </div>\
+                </div>").data(dp_node_dat),
                 sw_node = $("<ul id='formbox_ul' class='clearfix" + coinclass + "'>" + walletlist + "</ul>"),
                 xp_node = "",
                 segw_node = "";
             if (x_pub) {
                 xp_node = $("<div class='xpub_ib clearfix" + coinclass + "' data-xpub='" + x_pub + "'>\
-	    			<div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>show</span></div>\
-						<div class='xp_span drawer'>\
-							<div class='qrwrap flex'>\
-								<div class='qrcode'></div><img src='" + icon_src + "' class='cmc_icon'>\
-							</div>\
-							<p class='adbox adboxl select' data-type='Xpub'>" + x_pub + "</p>\
-						</div>\
-					</div>");
+                    <div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>show</span></div>\
+                        <div class='xp_span drawer'>\
+                            <div class='qrwrap flex'>\
+                                <div class='qrcode'></div><img src='" + icon_src + "' class='cmc_icon'>\
+                            </div>\
+                            <p class='adbox adboxl select' data-type='Xpub'>" + x_pub + "</p>\
+                        </div>\
+                    </div>");
                 if (currency == "bitcoin" || currency == "litecoin") {
                     let hsw = (root_path.indexOf("m/84") > -1);
                     segw_node = $("<li class='clearfix" + coinclass + "' data-currency='" + currency + "'><strong>SegWit:</strong><div class='toggle_segwit ait'>" + switchpanel(hsw, " custom") + "</div></li>");
@@ -1796,17 +1799,17 @@ function compatible_wallets(coin) {
     let content = $("<div id='ad_info_wrap' class='' data-class='pd_" + coin + "'><h2><span class='icon-warning' style='color:#B33A3A'/>Bitrequest can not send funds!</span></h2><ul>\
             <li class='noline'><strong style='color:#6a6a6a'>To send funds you need to restore your <span class='show_bip39 ref'>12 word secret phrase</span> in a bip39 compatible wallet:</strong></li>\
             <li id='pi_li' class='noline'>\
-    			<div id='pi_icons'>\
-				</div>\
-			</li>\
-			<li>\
-	    		<div id='bip_mibox' class='clearfix drawer'>\
-	    			<div id='supported_wallets'>\
-					</div>\
-	            </div>\
-			</li>\
-		</ul>\
-	</div>");
+                <div id='pi_icons'>\
+                </div>\
+            </li>\
+            <li>\
+                <div id='bip_mibox' class='clearfix drawer'>\
+                    <div id='supported_wallets'>\
+                    </div>\
+                </div>\
+            </li>\
+        </ul>\
+    </div>");
     popdialog(content, "canceldialog");
     $.each(br_config.bitrequest_coin_data, function(i, coinconfig) {
         let currency = coinconfig.currency,

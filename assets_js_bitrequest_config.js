@@ -627,7 +627,7 @@ const apptitle = "Bitrequest",
                             "name": "blockchair",
                             "url": "blockchair.com",
                             "api": true,
-                            "display": false
+                            "display": true
                         }],
                         "options": []
                     },

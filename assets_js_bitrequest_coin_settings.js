@@ -76,12 +76,12 @@ function edit_confirmations() {
                 "ul": {
                     "class": "conf_options noselect",
                     "content": "<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>0</span><div class='conf_emoji'>☕</div></div></li>\
-				<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>1</span><div class='conf_emoji'>🍷 🍽</div></div></li>\
-				<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>2</span><div class='conf_emoji'>📱</div></div></li>\
-				<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>3</span><div class='conf_emoji'>🖥</div></div></li>\
-				<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>4</span><div class='conf_emoji'>🚗</div></div></li>\
-				<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>5</span><div class='conf_emoji'>🏠</div></div></li>\
-				<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>6</span><div class='conf_emoji'>🛥 💎</div></div></li>"
+                <li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>1</span><div class='conf_emoji'>🍷 🍽</div></div></li>\
+                <li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>2</span><div class='conf_emoji'>📱</div></div></li>\
+                <li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>3</span><div class='conf_emoji'>🖥</div></div></li>\
+                <li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>4</span><div class='conf_emoji'>🚗</div></div></li>\
+                <li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>5</span><div class='conf_emoji'>🏠</div></div></li>\
+                <li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>6</span><div class='conf_emoji'>🛥 💎</div></div></li>"
                 },
                 "div": {
                     "class": "popform",
@@ -279,32 +279,32 @@ function edit_rpcnode() {
             getplaceholder = get_rpc_placeholder(thiscurrency)[placeholder_id],
             placeholder = (getplaceholder) ? getplaceholder : "eg: some.local-or-remote.node:port",
             api_form = (options) ? "<div id='rpc_input_box' data-currency='" + thiscurrency + "' data-erc20='" + is_erc20t + "'>\
-					<h3 class='icon-plus'>" + header_text + "</h3>\
-					<div id='rpc_input'>\
-						<input type='text' value='' placeholder='" + placeholder + "' id='rpc_url_input'/>\
-						<div class='c_stat icon-wifi-off'></div>\
-						<div class='c_stat icon-connection'></div>\
-					</div>\
-					<input type='text' value='' placeholder='Username (optional)' id='rpc_username_input'/>\
-					<input type='password' value='' placeholder='Password (optional)' id='rpc_password_input'/>\
-				</div>" : "",
+                    <h3 class='icon-plus'>" + header_text + "</h3>\
+                    <div id='rpc_input'>\
+                        <input type='text' value='' placeholder='" + placeholder + "' id='rpc_url_input'/>\
+                        <div class='c_stat icon-wifi-off'></div>\
+                        <div class='c_stat icon-connection'></div>\
+                    </div>\
+                    <input type='text' value='' placeholder='Username (optional)' id='rpc_username_input'/>\
+                    <input type='password' value='' placeholder='Password (optional)' id='rpc_password_input'/>\
+                </div>" : "",
             selected = this_data.selected,
             selected_title = (selected.name) ? selected.name : selected.url,
             content = "\
-			<div class='formbox' id='settingsbox' data-id='" + ap_id + "'>\
-				<h2 class='icon-sphere'>Choose " + thiscurrency + " " + ap_id + "</h2>\
-				<div class='popnotify'></div>\
-				<div class='popform'>\
-					<div class='selectbox'>\
-						<input type='text' value='" + selected_title + "' placeholder='Choose RPC node' readonly='readonly' id='rpc_main_input'/>\
-						<div class='selectarrows icon-menu2' data-pe='none'></div>\
-						<div class='options'>\
-						</div>\
-					</div>" +
+            <div class='formbox' id='settingsbox' data-id='" + ap_id + "'>\
+                <h2 class='icon-sphere'>Choose " + thiscurrency + " " + ap_id + "</h2>\
+                <div class='popnotify'></div>\
+                <div class='popform'>\
+                    <div class='selectbox'>\
+                        <input type='text' value='" + selected_title + "' placeholder='Choose RPC node' readonly='readonly' id='rpc_main_input'/>\
+                        <div class='selectarrows icon-menu2' data-pe='none'></div>\
+                        <div class='options'>\
+                        </div>\
+                    </div>" +
             api_form +
             "<input type='submit' class='submit' value='OK' data-currency='" + thiscurrency + "'/>\
-				</div>\
-			</div>";
+                </div>\
+            </div>";
         popdialog(content, "triggersubmit");
         let optionlist = $("#settingsbox").find(".options");
         $.each(api_list, function(key, value) {
@@ -578,12 +578,12 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
             return
         }
         let rpcurl = get_rpc_url(rpc_data),
-            txid = (currency == "bitcoin") ? "15e10745f15593a899cef391191bdd3d7c12412cc4696b7bcb669d0feadc8521" :
-            (currency == "litecoin") ? "ce23198bbbd195e5d774cbbbc865f0565b9db9dfca5e72fa0cf00cf9801069e3" :
-            (currency == "dogecoin") ? "757d4d3fe9b3d2a65fa4c5e6c654336a90d075b432c9c787bed7364eeadbef85" :
-            (currency == "bitcoin-cash") ? "bae30e04844a2f457b7eb96f4cdf24f249f3d05d03119263f550b1add043fed8" : "",
+            testadress = (currency == "bitcoin") ? expected_bech32 :
+            (currency == "litecoin") ? expected_ltc_address :
+            (currency == "dogecoin") ? expected_doge_address :
+            (currency == "bitcoin-cash") ? expected_bch_cashaddr : "",
             pload = (is_btc) ? {
-                "api_url": rpcurl + "/api/tx/" + txid,
+                "api_url": rpcurl + "/api/address/" + testadress + "/txs",
                 "proxy": false,
                 "params": {
                     "method": "GET"
@@ -605,7 +605,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
         api_proxy(pload).done(function(e) {
             let data = br_result(e),
                 rpc_result = data.result;
-            if (rpc_result) {
+            if (rpc_result && br_issar(rpc_result)) {
                 let error = data.error || rpc_result.error;
                 if (error) {
                     rpc_input_box.addClass("offline").removeClass("live");
@@ -616,10 +616,8 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                     }
                     return
                 }
-                if (rpc_result.txid == txid || rpc_result.network == "live") {
-                    rpc_input_box.addClass("live").removeClass("offline");
-                    pass_rpc_submit(currency, rpc_data, true);
-                }
+                rpc_input_box.addClass("live").removeClass("offline");
+                pass_rpc_submit(currency, rpc_data, true);
             }
         }).fail(function(e) {
             rpc_input_box.addClass("offline").removeClass("live");
@@ -772,19 +770,19 @@ function edit_xpub_trigger() {
                     xpub = thisdat.key,
                     cc_icon = getcc_icon(coindat.cmcid, coindat.ccsymbol + "-" + thiscurrency, coindat.erc20),
                     content = $("<div id='ad_info_wrap'><h2>" + cc_icon + " BIP32 Extended public key</h2>\
-						<div class='d_ulwrap'>\
-							<ul>\
-					    		<li><strong>Key: </strong><span class='adbox adboxl select'>" + xpub + "</span>\
-					    		<div id='qrcodexp' class='qrwrap flex'><div class='qrcode'></div>" + cc_icon + "</div>\
-					    		</li>\
-					    		<li><strong>Derivation path:</strong> M/0/</li>\
-				    		</ul>\
-				    	</div>\
-						<div id='backupactions'>\
-							<div id='delete_xpub' data-currency='" + thiscurrency + "' class='util_icon icon-bin'></div>\
-							<div id='backupcd'>CANCEL</div>\
-						</div>\
-			    	</div>");
+                        <div class='d_ulwrap'>\
+                            <ul>\
+                                <li><strong>Key: </strong><span class='adbox adboxl select'>" + xpub + "</span>\
+                                <div id='qrcodexp' class='qrwrap flex'><div class='qrcode'></div>" + cc_icon + "</div>\
+                                </li>\
+                                <li><strong>Derivation path:</strong> M/0/</li>\
+                            </ul>\
+                        </div>\
+                        <div id='backupactions'>\
+                            <div id='delete_xpub' data-currency='" + thiscurrency + "' class='util_icon icon-bin'></div>\
+                            <div id='backupcd'>CANCEL</div>\
+                        </div>\
+                    </div>");
                 popdialog(content, "triggersubmit", null, true);
                 $("#qrcodexp .qrcode").qrcode(xpub);
                 return
@@ -881,19 +879,19 @@ function edit_xpub(ad) {
         address = (ad.address) ? ad.address : "",
         scanqr = (hascam === true) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
         content = $("<div class='formbox form add' id='xpubformbox'>\
-        	<h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " Add " + currency + " Xpub key</h2>\
-        	<div class='popnotify'></div>\
-        	<form class='addressform popform'>\
-        		<div class='inputwrap'><input type='text' id='xpub_input' class='address' value='" + address + "' placeholder='Enter a " + currency + " Xpub key' data-currency='" + currency + "'>" + scanqr + "</div>\
-        		<div id='ad_info_wrap' style='display:none'>\
-        			<ul class='td_box'>\
-					</ul>\
-					<div id='pk_confirm' class='noselect'>\
-						<div id='matchwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>The above addresses match those in my " + currency + " wallet</span><br/>\
-						<div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / Xpriv key</span>\
-					</div>\
-				</div>\
-        		<input type='submit' class='submit' value='OK'></form>").data(ad);
+            <h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " Add " + currency + " Xpub key</h2>\
+            <div class='popnotify'></div>\
+            <form class='addressform popform'>\
+                <div class='inputwrap'><input type='text' id='xpub_input' class='address' value='" + address + "' placeholder='Enter a " + currency + " Xpub key' data-currency='" + currency + "'>" + scanqr + "</div>\
+                <div id='ad_info_wrap' style='display:none'>\
+                    <ul class='td_box'>\
+                    </ul>\
+                    <div id='pk_confirm' class='noselect'>\
+                        <div id='matchwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>The above addresses match those in my " + currency + " wallet</span><br/>\
+                        <div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / Xpriv key</span>\
+                    </div>\
+                </div>\
+                <input type='submit' class='submit' value='OK'></form>").data(ad);
     popdialog(content, "triggersubmit");
     if (supportsTouch === true) {} else {
         $("#popup input.address").focus();
@@ -1172,31 +1170,31 @@ function xpub_info_pu(currency, xpub) {
     let ccsymbol = coindat.ccsymbol,
         cc_icon = getcc_icon(coindat.cmcid, ccsymbol + "-" + currency, coindat.erc20),
         content = $("<div id='ad_info_wrap'><h2>" + cc_icon + " <span>" + currency + " Key Derivation</span></h2><ul>\
-	    <li id='xpub_box' class='clearfix noline'>\
-	    	<div class='xpub_ib clearfix pd_" + currency + "' data-xpub='" + xpub + "'>\
-    			<div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>show</span></div>\
-					<div class='xp_span drawer'>\
-						<div class='qrwrap flex'><div class='qrcode'></div>" + cc_icon + "</div>\
-						<p class='adbox adboxl select' data-type='Xpub'>" + xpub + "</p>\
-					</div>\
-				</div>\
-	    <li>\
-			<div id='d_paths'></div>\
-		</li>\
+        <li id='xpub_box' class='clearfix noline'>\
+            <div class='xpub_ib clearfix pd_" + currency + "' data-xpub='" + xpub + "'>\
+                <div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>show</span></div>\
+                    <div class='xp_span drawer'>\
+                        <div class='qrwrap flex'><div class='qrcode'></div>" + cc_icon + "</div>\
+                        <p class='adbox adboxl select' data-type='Xpub'>" + xpub + "</p>\
+                    </div>\
+                </div>\
+        <li>\
+            <div id='d_paths'></div>\
+        </li>\
     </ul>\
-	</div>").data(root_dat);
+    </div>").data(root_dat);
     popdialog(content, "triggersubmit");
     let dp_node_dat = {
             "bip32": bip32dat,
             "currency": currency
         },
         dp_node = $("<div class='d_path pd_" + currency + "'>\
-			<div class='d_path_header'><strong>Derivation path: </strong><span class='ref'>" + root_path + "</span></div>\
-			<div class='d_path_body clearfix'>\
-				<div class='td_bar'><div class='td_next button'>Next</div><div class='td_prev button'>Prev</div></div>\
-				<ul class='td_box'>" + derivelist + "</ul>\
-			</div>\
-		</div>").data(dp_node_dat);
+            <div class='d_path_header'><strong>Derivation path: </strong><span class='ref'>" + root_path + "</span></div>\
+            <div class='d_path_body clearfix'>\
+                <div class='td_bar'><div class='td_next button'>Next</div><div class='td_prev button'>Prev</div></div>\
+                <ul class='td_box'>" + derivelist + "</ul>\
+            </div>\
+        </div>").data(dp_node_dat);
     $("#d_paths").append(dp_node);
     setTimeout(function() {
         $("#ad_info_wrap .d_path_header").trigger("click");
@@ -1218,13 +1216,13 @@ function add_apikey(api) {
         sign_up = apidata.sign_up,
         get_apikey_url = (!sign_up) ? "" : "<div id='api_signin'>Get your " + api + " API key <a href='" + sign_up + "' target='blank' class='exit'>here</a></div>",
         content = "\
-		<div class='formbox' id='add_apikey'>\
-			<h2 class='icon-key'>Set " + api + " API key</h2>\
-			<div class='popnotify'></div>\
-			<div class='popform' data-api='" + api + "'>\
-				<input type='text' value='" + api_key + "' placeholder='API key' data-apikey='" + api_key + "' data-checkchange='" + api_key + "'>\
-				<input type='submit' class='submit' value='OK'/>\
-			</div>" + get_apikey_url +
+        <div class='formbox' id='add_apikey'>\
+            <h2 class='icon-key'>Set " + api + " API key</h2>\
+            <div class='popnotify'></div>\
+            <div class='popform' data-api='" + api + "'>\
+                <input type='text' value='" + api_key + "' placeholder='API key' data-apikey='" + api_key + "' data-checkchange='" + api_key + "'>\
+                <input type='submit' class='submit' value='OK'/>\
+            </div>" + get_apikey_url +
         "</div>";
     canceldialog();
     setTimeout(function() {
@@ -1270,17 +1268,17 @@ function reset_coinsettings_function(trigger) {
     if (result === true) {
         let current_settings = br_get_local(currency + "_settings", true);
         if (current_settings) {
-	        let ln_settings = (currency == "bitcoin") ? current_settings["Lightning network"] : false,
-	            xpub_settings = (current_settings.Xpub) ? current_settings.Xpub : false,
-	            coinsettings = getcoinsettings(currency);
-	        if (ln_settings) {
-	            coinsettings["Lightning network"] = ln_settings; // don't reset lightning settings
-	        }
-	        if (xpub_settings) {
-	            coinsettings.Xpub = xpub_settings; // don't reset xpub settings
-	        }
-	        br_set_local(currency + "_settings", coinsettings, true);
-	        append_coinsetting(currency, coinsettings, false);
+            let ln_settings = (currency == "bitcoin") ? current_settings["Lightning network"] : false,
+                xpub_settings = (current_settings.Xpub) ? current_settings.Xpub : false,
+                coinsettings = getcoinsettings(currency);
+            if (ln_settings) {
+                coinsettings["Lightning network"] = ln_settings; // don't reset lightning settings
+            }
+            if (xpub_settings) {
+                coinsettings.Xpub = xpub_settings; // don't reset xpub settings
+            }
+            br_set_local(currency + "_settings", coinsettings, true);
+            append_coinsetting(currency, coinsettings, false);
         }
         canceldialog();
         notify(currency + " settings reset to default");
