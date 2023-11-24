@@ -23,8 +23,9 @@ const cookie_support = check_cookie(),
     has_ndef = ("NDEFReader" in window),
     supportsTouch = ("ontouchstart" in window || navigator.msMaxTouchPoints),
     referrer = document.referrer,
-    isrefferer = (referrer.length > 0),
-    is_android_app = (window.matchMedia("(display-mode: standalone)").matches || referrer == "android-app://" + androidpackagename || navigator.standalone), // android app fingerprint
+    exp_referrer = "android-app://" + androidpackagename,
+    matchmedia = window.matchMedia("(display-mode: standalone)").matches,
+    is_android_app = (matchmedia || (referrer.indexOf(exp_referrer) >= 0)), // android app fingerprint
     inframe = (self !== top),
     offline = (navigator.onLine === false),
     w_loc = window.location,
@@ -133,6 +134,7 @@ $(document).ready(function() {
     console.log({
         "config": br_config
     });
+    console.log(window);
 })
 
 function checkphp() { //check for php support by fetching fiat currencies from local api php file

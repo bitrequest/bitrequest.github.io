@@ -3418,19 +3418,25 @@ function check_useragent() {
                     {
                         "div": {
                             "class": "pre",
-                            "content": "isrefferer: " + isrefferer
+                            "content": "expected_referrer: " + exp_referrer
+                        }
+                    },
+                    {
+                        "div": {
+                            "class": "pre",
+                            "content": "referrer_match: " + (referrer.indexOf(exp_referrer) >= 0)
+                        }
+                    },
+                    {
+                        "div": {
+                            "class": "pre",
+                            "content": "matchmedia: " + matchmedia
                         }
                     },
                     {
                         "div": {
                             "class": "pre",
                             "content": "is_android_app: " + is_android_app
-                        }
-                    },
-                    {
-                        "div": {
-                            "class": "pre",
-                            "content": "standalone: " + navigator.standalone + "  | " + window.matchMedia("(display-mode: standalone)").matches
                         }
                     }]
                 }
