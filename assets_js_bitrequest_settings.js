@@ -3408,6 +3408,30 @@ function check_useragent() {
                             "class": "pre",
                             "content": syntaxHighlight(userAgent)
                         }
+                    },
+                    {
+                        "div": {
+                            "class": "pre",
+                            "content": "referrer: " + referrer
+                        }
+                    },
+                    {
+                        "div": {
+                            "class": "pre",
+                            "content": "isrefferer: " + isrefferer
+                        }
+                    },
+                    {
+                        "div": {
+                            "class": "pre",
+                            "content": "is_android_app: " + is_android_app
+                        }
+                    },
+                    {
+                        "div": {
+                            "class": "pre",
+                            "content": "standalone: " + navigator.standalone + "  | " + window.matchMedia("(display-mode: standalone)").matches
+                        }
                     }]
                 }
             }],
