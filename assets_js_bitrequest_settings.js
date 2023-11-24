@@ -3426,6 +3426,12 @@ function check_useragent() {
                                 "class": "pre",
                                 "content": "is_android_app: " + is_android_app
                             }
+                        },
+                        {
+                            "div": {
+                                "class": "pre",
+                                "content": "is_ios_app: " + is_ios_app
+                            }
                         }
                     ]
                 }

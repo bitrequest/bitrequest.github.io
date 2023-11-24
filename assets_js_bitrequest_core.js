@@ -40,7 +40,7 @@ const cookie_support = check_cookie(),
     xss_alert = "xss attempt detected";
 
 let scrollposition = 0,
-    is_ios_app, // ios app fingerprint
+    is_ios_app = false, // ios app fingerprint
     phpsupportglobal,
     symbolcache,
     hascam,
