@@ -25,7 +25,7 @@ const cookie_support = check_cookie(),
     referrer = document.referrer,
     exp_referrer = "android-app://" + androidpackagename,
     matchmedia = window.matchMedia("(display-mode: standalone)").matches,
-    is_android_app = (matchmedia || (referrer.indexOf(exp_referrer) >= 0)), // android app fingerprint
+    is_android_app = (matchmedia && (referrer.indexOf(exp_referrer) >= 0)), // android app fingerprint
     inframe = (self !== top),
     offline = (navigator.onLine === false),
     w_loc = window.location,

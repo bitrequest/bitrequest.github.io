@@ -1255,7 +1255,7 @@ function dphrase_dialog(pass_dat) {
                 "ul": {
                     "class": "conf_options noselect",
                     "content": "<li><div class='pick_conf'><div class='radio icon-radio-checked2'></div><span>Use seed from Backup</span></div></li>\
-			<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>Keep current seed</span></div></li>"
+            <li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>Keep current seed</span></div></li>"
                 },
                 "div": {
                     "id": "compare_seeds",
@@ -1455,71 +1455,71 @@ function csvexport_trigger() {
             let filename = "bitrequest_csv_export_" + new Date(now()).toLocaleString(language).replace(/\s+/g, "_").replace(/\:/g, "_") + ".csv",
                 show_archive = (has_requests === true) ? "false" : "true",
                 content = "<div class='formbox' id='exportcsvbox'>\
-					<h2 class='icon-table'>Export CSV</h2>\
-					<div class='popnotify'></div>\
-					<div id='ad_info_wrap'>\
-						<ul id='ecsv_options'>\
-							<li class='escv_heading'>\
-								<strong>Info</strong>\
-							</li>\
-							<li id='escv_from'>\
-								<span>From</span><div class='switchpanel true global'><div class='switch'></div></div>\
-							</li>\
-							<li id='escv_desc'>\
-								<span>Description</span><div class='switchpanel true global'><div class='switch'></div></div>\
-							</li>\
-							<li id='escv_address'>\
-								<span>Receiving address</span><div class='switchpanel true global'><div class='switch'></div></div>\
-							</li>\
-							<li class='escv_heading'>\
-								<strong>Status</strong>\
-							</li>\
-							<li id='escv_paid'>\
-								<span>Paid</span><div class='switchpanel true global'><div class='switch'></div></div>\
-							</li>\
-							<li id='escv_ins'>\
-								<span>Insufficient</span><div class='switchpanel true global'><div class='switch'></div></div>\
-							</li>\
-							<li id='escv_new'>\
-								<span>New</span><div class='switchpanel false global'><div class='switch'></div></div>\
-							</li>\
-							<li id='escv_pending'>\
-								<span>Pending</span><div class='switchpanel false global'><div class='switch'></div></div>\
-							</li>\
-							<li class='escv_heading'>\
-								<strong>Type</strong>\
-							</li>\
-							<li id='escv_pos'>\
-								<span>Point of Sale</span><div class='switchpanel true global'><div class='switch'></div></div>\
-							</li>\
-							<li id='escv_outgoing'>\
-								<span>Outgoing</span><div class='switchpanel true global'><div class='switch'></div></div>\
-							</li>\
-							<li id='escv_incoming'>\
-								<span>Incoming</span><div class='switchpanel false global'><div class='switch'></div></div>\
-							</li>\
-							<li class='noline'>\
-								<strong></strong>\
-							</li>\
-							<li id='escv_archive'>\
-								<span>Include archive</span><div class='switchpanel global " + show_archive + "'><div class='switch'></div></div>\
-							</li>\
-							<li id='escv_receipt'>\
-								<span>Include receipt (PDF download)</span><div class='switchpanel false global'><div class='switch'></div></div>\
-							</li>\
-						</ul>\
-					</div>\
-					<div id='dialogcontent'>\
-						<div id='custom_actions'>\
-							<br/>\
-							<a href='' download='" + filename + "' title='" + filename + "' id='trigger_csvexport' class='button icon-download' download>DOWNLOAD</a>\
-						</div>\
-					</div>\
-				</div>\
-				<div id='backupactions'>\
-					<div id='share_csv' data-url='' class='util_icon icon-share2'></div>\
-					<div id='backupcd'>CANCEL</div>\
-				</div>";
+                    <h2 class='icon-table'>Export CSV</h2>\
+                    <div class='popnotify'></div>\
+                    <div id='ad_info_wrap'>\
+                        <ul id='ecsv_options'>\
+                            <li class='escv_heading'>\
+                                <strong>Info</strong>\
+                            </li>\
+                            <li id='escv_from'>\
+                                <span>From</span><div class='switchpanel true global'><div class='switch'></div></div>\
+                            </li>\
+                            <li id='escv_desc'>\
+                                <span>Description</span><div class='switchpanel true global'><div class='switch'></div></div>\
+                            </li>\
+                            <li id='escv_address'>\
+                                <span>Receiving address</span><div class='switchpanel true global'><div class='switch'></div></div>\
+                            </li>\
+                            <li class='escv_heading'>\
+                                <strong>Status</strong>\
+                            </li>\
+                            <li id='escv_paid'>\
+                                <span>Paid</span><div class='switchpanel true global'><div class='switch'></div></div>\
+                            </li>\
+                            <li id='escv_ins'>\
+                                <span>Insufficient</span><div class='switchpanel true global'><div class='switch'></div></div>\
+                            </li>\
+                            <li id='escv_new'>\
+                                <span>New</span><div class='switchpanel false global'><div class='switch'></div></div>\
+                            </li>\
+                            <li id='escv_pending'>\
+                                <span>Pending</span><div class='switchpanel false global'><div class='switch'></div></div>\
+                            </li>\
+                            <li class='escv_heading'>\
+                                <strong>Type</strong>\
+                            </li>\
+                            <li id='escv_pos'>\
+                                <span>Point of Sale</span><div class='switchpanel true global'><div class='switch'></div></div>\
+                            </li>\
+                            <li id='escv_outgoing'>\
+                                <span>Outgoing</span><div class='switchpanel true global'><div class='switch'></div></div>\
+                            </li>\
+                            <li id='escv_incoming'>\
+                                <span>Incoming</span><div class='switchpanel false global'><div class='switch'></div></div>\
+                            </li>\
+                            <li class='noline'>\
+                                <strong></strong>\
+                            </li>\
+                            <li id='escv_archive'>\
+                                <span>Include archive</span><div class='switchpanel global " + show_archive + "'><div class='switch'></div></div>\
+                            </li>\
+                            <li id='escv_receipt'>\
+                                <span>Include receipt (PDF download)</span><div class='switchpanel false global'><div class='switch'></div></div>\
+                            </li>\
+                        </ul>\
+                    </div>\
+                    <div id='dialogcontent'>\
+                        <div id='custom_actions'>\
+                            <br/>\
+                            <a href='' download='" + filename + "' title='" + filename + "' id='trigger_csvexport' class='button icon-download' download>DOWNLOAD</a>\
+                        </div>\
+                    </div>\
+                </div>\
+                <div id='backupactions'>\
+                    <div id='share_csv' data-url='' class='util_icon icon-share2'></div>\
+                    <div id='backupcd'>CANCEL</div>\
+                </div>";
             popdialog(content, "triggersubmit", null, true);
             return
         }
@@ -2293,32 +2293,32 @@ function pick_api_proxy() {
             current_proxy = thisdata.selected,
             custom_proxies = thisdata.custom_proxies,
             content = "\
-			<div class='formbox' id='proxyformbox'>\
-				<h2 class='icon-sphere'>API Proxy</h2>\
-				<div class='popnotify'></div>\
-				<div class='popform validated'>\
-					<div class='selectbox'>\
-						<input type='text' value='" + current_proxy + "' placeholder='https://...' id='proxy_select_input' readonly='readonly'/>\
-						<div class='selectarrows icon-menu2' data-pe='none'></div>\
-						<div class='options'></div>\
-					</div>\
-					<div id='rpc_input_box'>\
-						<h3 class='icon-plus'>Add API Proxy</h3>\
-						<div id='proxy_info'>\
-							Control your own keys and request limits:<br/><br/>\
-							<strong>1.</strong> Host the <a href='https://github.com/bitrequest/bitrequest.github.io/tree/master/proxy' target='blank' class='exit'>API proxy folder</a> on your server (php required).<br/>\
-							<strong>2.</strong> Enter your API keys in 'config.php'.<br/>\
-							<strong>3.</strong> Enter your server address below.<br/><br/>\
-						</div>\
-						<div id='rpc_input'>\
-							<input type='text' value='' placeholder='https://...' id='proxy_url_input'/>\
-							<div class='c_stat icon-wifi-off'></div>\
-							<div class='c_stat icon-connection'></div>\
-						</div>\
-					</div>\
-					<input type='submit' class='submit' value='OK'/>\
-				</div>\
-			</div>";
+            <div class='formbox' id='proxyformbox'>\
+                <h2 class='icon-sphere'>API Proxy</h2>\
+                <div class='popnotify'></div>\
+                <div class='popform validated'>\
+                    <div class='selectbox'>\
+                        <input type='text' value='" + current_proxy + "' placeholder='https://...' id='proxy_select_input' readonly='readonly'/>\
+                        <div class='selectarrows icon-menu2' data-pe='none'></div>\
+                        <div class='options'></div>\
+                    </div>\
+                    <div id='rpc_input_box'>\
+                        <h3 class='icon-plus'>Add API Proxy</h3>\
+                        <div id='proxy_info'>\
+                            Control your own keys and request limits:<br/><br/>\
+                            <strong>1.</strong> Host the <a href='https://github.com/bitrequest/bitrequest.github.io/tree/master/proxy' target='blank' class='exit'>API proxy folder</a> on your server (php required).<br/>\
+                            <strong>2.</strong> Enter your API keys in 'config.php'.<br/>\
+                            <strong>3.</strong> Enter your server address below.<br/><br/>\
+                        </div>\
+                        <div id='rpc_input'>\
+                            <input type='text' value='' placeholder='https://...' id='proxy_url_input'/>\
+                            <div class='c_stat icon-wifi-off'></div>\
+                            <div class='c_stat icon-connection'></div>\
+                        </div>\
+                    </div>\
+                    <input type='submit' class='submit' value='OK'/>\
+                </div>\
+            </div>";
         popdialog(content, "triggersubmit");
         if (phpsupportglobal === true) {
             let protocol = (localserver) ? w_loc.protocol + "//" : "",
@@ -2534,33 +2534,33 @@ function apikeys() {
             exchangeratesapikey = (ak_data.exchangeratesapi) ? ak_data.exchangeratesapi : "",
             currencylayerkey = (ak_data.currencylayer) ? ak_data.currencylayer : "",
             content = "\
-			<div class='formbox' id='apikeyformbox'>\
-				<h2 class='icon-key'>API keys</h2>\
-				<div class='popnotify'></div>\
-				<div class='popform'>\
-					<h3>Coinmarketcap</h3>\
-					<input type='text' value='" + cmckey + "' placeholder='Coinmarketcap API key' data-ref='coinmarketcap' data-checkchange='" + cmckey + "' class='ak_input'/>\
-					<h3>Fixer</h3>\
-					<input type='text' value='" + fixerkey + "' placeholder='Fixer API key' data-ref='fixer' data-checkchange='" + fixerkey + "' class='ak_input'/>\
-					<h3>Currencylayer</h3>\
-					<input type='text' value='" + currencylayerkey + "' placeholder='Currencylayer API key' data-ref='currencylayer' data-checkchange='" + currencylayerkey + "' class='ak_input'/>\
-					<h3>Blockcypher</h3>\
-					<input type='text' value='" + blockcypherkey + "' placeholder='Blockcypher API key' data-ref='blockcypher' data-checkchange='" + blockcypherkey + "' class='ak_input'/>\
-					<h3>Ethplorer</h3>\
-					<input type='text' value='" + ethplorerkey + "' placeholder='Ethplorer API key' data-ref='ethplorer' data-checkchange='" + ethplorerkey + "' class='ak_input'/>\
-					<h3>Blockchair</h3>\
-					<input type='text' value='" + blockchairkey + "' placeholder='Blockchair API key' data-ref='blockchair' data-checkchange='" + blockchairkey + "' class='ak_input'/>\
-					<h3>Infura</h3>\
-					<input type='text' value='" + infurakey + "' placeholder='Infura Project ID' data-ref='infura' data-checkchange='" + infurakey + "' class='ak_input'/>\
-					<h3>Exchangeratesapi</h3>\
-					<input type='text' value='" + exchangeratesapikey + "' placeholder='Exchangeratesapi API key' data-ref='exchangeratesapi' data-checkchange='" + exchangeratesapikey + "' class='ak_input'/>\
-					<h3>Bitly</h3>\
-					<input type='text' value='" + bitlykey + "' placeholder='Bitly access token' data-ref='bitly' data-checkchange='" + bitlykey + "' class='ak_input'/>\
-					<h3>Firebase</h3>\
-					<input type='text' value='" + firebasekey + "' placeholder='Firebase API key' data-ref='firebase' data-checkchange='" + firebasekey + "' class='ak_input'/>\
-					<input type='submit' class='submit' value='OK' id='apisubmit'/>\
-				</div>\
-			</div>";
+            <div class='formbox' id='apikeyformbox'>\
+                <h2 class='icon-key'>API keys</h2>\
+                <div class='popnotify'></div>\
+                <div class='popform'>\
+                    <h3>Coinmarketcap</h3>\
+                    <input type='text' value='" + cmckey + "' placeholder='Coinmarketcap API key' data-ref='coinmarketcap' data-checkchange='" + cmckey + "' class='ak_input'/>\
+                    <h3>Fixer</h3>\
+                    <input type='text' value='" + fixerkey + "' placeholder='Fixer API key' data-ref='fixer' data-checkchange='" + fixerkey + "' class='ak_input'/>\
+                    <h3>Currencylayer</h3>\
+                    <input type='text' value='" + currencylayerkey + "' placeholder='Currencylayer API key' data-ref='currencylayer' data-checkchange='" + currencylayerkey + "' class='ak_input'/>\
+                    <h3>Blockcypher</h3>\
+                    <input type='text' value='" + blockcypherkey + "' placeholder='Blockcypher API key' data-ref='blockcypher' data-checkchange='" + blockcypherkey + "' class='ak_input'/>\
+                    <h3>Ethplorer</h3>\
+                    <input type='text' value='" + ethplorerkey + "' placeholder='Ethplorer API key' data-ref='ethplorer' data-checkchange='" + ethplorerkey + "' class='ak_input'/>\
+                    <h3>Blockchair</h3>\
+                    <input type='text' value='" + blockchairkey + "' placeholder='Blockchair API key' data-ref='blockchair' data-checkchange='" + blockchairkey + "' class='ak_input'/>\
+                    <h3>Infura</h3>\
+                    <input type='text' value='" + infurakey + "' placeholder='Infura Project ID' data-ref='infura' data-checkchange='" + infurakey + "' class='ak_input'/>\
+                    <h3>Exchangeratesapi</h3>\
+                    <input type='text' value='" + exchangeratesapikey + "' placeholder='Exchangeratesapi API key' data-ref='exchangeratesapi' data-checkchange='" + exchangeratesapikey + "' class='ak_input'/>\
+                    <h3>Bitly</h3>\
+                    <input type='text' value='" + bitlykey + "' placeholder='Bitly access token' data-ref='bitly' data-checkchange='" + bitlykey + "' class='ak_input'/>\
+                    <h3>Firebase</h3>\
+                    <input type='text' value='" + firebasekey + "' placeholder='Firebase API key' data-ref='firebase' data-checkchange='" + firebasekey + "' class='ak_input'/>\
+                    <input type='submit' class='submit' value='OK' id='apisubmit'/>\
+                </div>\
+            </div>";
         popdialog(content, "triggersubmit");
     })
 }
@@ -2869,19 +2869,19 @@ function edit_contactform(checkout) {
         formheader = (checkout === true) ? "Contactform / shipping" : "Contactform",
         form_subheader = (checkout === true) ? "" : "<p>Your details for online purchases.</p>",
         content = "\
-	<div class='formbox' id='contactformbox'>\
-		<h2 class='icon-sphere'>" + formheader + "</h2>" + form_subheader +
+    <div class='formbox' id='contactformbox'>\
+        <h2 class='icon-sphere'>" + formheader + "</h2>" + form_subheader +
         "<div class='popnotify'></div>\
-		<div class='popform'>\
-			<div class='cf_inputwrap empty'><input type='text' value='" + nameinput + "' placeholder='Name' class='cf_nameinput'/><span class='required'>*</span></div>\
-			<div class='cf_inputwrap empty'><input type='text' value='" + addressinput + "' placeholder='Address' class='cf_addressinput'/><span class='required'>*</span></div>\
-			<div class='cf_inputwrap empty'><input type='text' value='" + zipcodeinput + "' placeholder='Zip/postal code' class='cf_zipcodeinput'/><span class='required'>*</span></div>\
-			<div class='cf_inputwrap empty'><input type='text' value='" + cityinput + "' placeholder='City' class='cf_cityinput'/><span class='required'>*</span></div>\
-			<div class='cf_inputwrap empty'><input type='text' value='" + countryinput + "' placeholder='country' class='cf_countryinput'/><span class='required'>*</span></div>\
-			<div class='cf_inputwrap empty'><input type='text' value='" + emailinput + "' placeholder='email' class='cf_emailinput'/><span class='required'>*</span></div>\
-			<input type='submit' class='submit' value='OK'/>\
-		</div>\
-	</div>";
+        <div class='popform'>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + nameinput + "' placeholder='Name' class='cf_nameinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + addressinput + "' placeholder='Address' class='cf_addressinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + zipcodeinput + "' placeholder='Zip/postal code' class='cf_zipcodeinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + cityinput + "' placeholder='City' class='cf_cityinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + countryinput + "' placeholder='country' class='cf_countryinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + emailinput + "' placeholder='email' class='cf_emailinput'/><span class='required'>*</span></div>\
+            <input type='submit' class='submit' value='OK'/>\
+        </div>\
+    </div>";
     popdialog(content, "triggersubmit");
     check_contactform();
     if (checkout === true) {
@@ -3108,9 +3108,9 @@ function team_invite() {
             "div": {
                 "class": "popform",
                 "content": "<p><strong>Invite team members (staff, employees etc.) to make requests on your behalf.</strong><br/>\
-				This will install Bitrequest on your team member's device, pre-installed with your public keys and restricted access (cashier).<br/>\
-				Your team members are unable to access funds or make changes.</p>\
-				<div id='send_invite' data-url='" + jsonencode + "' class='button'><span class='icon-share2'/>Send invite</div>"
+                This will install Bitrequest on your team member's device, pre-installed with your public keys and restricted access (cashier).<br/>\
+                Your team members are unable to access funds or make changes.</p>\
+                <div id='send_invite' data-url='" + jsonencode + "' class='button'><span class='icon-share2'/>Send invite</div>"
             }
         }],
         content = template_dialog({
@@ -3404,41 +3404,18 @@ function check_useragent() {
                 "div": {
                     "class": "popform",
                     "content": [{
-                        "div": {
-                            "class": "pre",
-                            "content": syntaxHighlight(userAgent)
+                            "div": {
+                                "class": "pre",
+                                "content": syntaxHighlight(userAgent)
+                            }
+                        },
+                        {
+                            "div": {
+                                "class": "pre",
+                                "content": "is_android_app: " + is_android_app
+                            }
                         }
-                    },
-                    {
-                        "div": {
-                            "class": "pre",
-                            "content": "referrer: " + referrer
-                        }
-                    },
-                    {
-                        "div": {
-                            "class": "pre",
-                            "content": "expected_referrer: " + exp_referrer
-                        }
-                    },
-                    {
-                        "div": {
-                            "class": "pre",
-                            "content": "referrer_match: " + (referrer.indexOf(exp_referrer) >= 0)
-                        }
-                    },
-                    {
-                        "div": {
-                            "class": "pre",
-                            "content": "matchmedia: " + matchmedia
-                        }
-                    },
-                    {
-                        "div": {
-                            "class": "pre",
-                            "content": "is_android_app: " + is_android_app
-                        }
-                    }]
+                    ]
                 }
             }],
             content = template_dialog({
