@@ -3412,6 +3412,18 @@ function check_useragent() {
                         {
                             "div": {
                                 "class": "pre",
+                                "content": "matchmedia: " + matchmedia
+                            }
+                        },
+                        {
+                            "div": {
+                                "class": "pre",
+                                "content": "referrer: " + referrer
+                            }
+                        },
+                        {
+                            "div": {
+                                "class": "pre",
                                 "content": "is_android_app: " + is_android_app
                             }
                         }
