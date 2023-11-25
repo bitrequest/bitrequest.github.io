@@ -4609,16 +4609,18 @@ function detectapp() {
     if (inframe === true || is_android_app === true || is_ios_app === true) {
         return
     }
+    if (android_standalone === true || ios_standalone === true) {
+        return
+    }
     let local_appstore_dialog = br_get_local("appstore_dialog"),
-        localdelay = 3000000;
-    cachetime = (local_appstore_dialog) ? (now() - local_appstore_dialog) : localdelay;
+        localdelay = 3000000,
+        cachetime = (local_appstore_dialog) ? (now() - local_appstore_dialog) : localdelay;
     if (local_appstore_dialog) {
         if (localdelay > cachetime) {
             return
         }
         if (supportsTouch === true) {
             let device = getdevicetype();
-            console.log(device);
             if (device == "Android") {
                 if (/SamsungBrowser/.test(userAgent)) {
                     return // skip samsungbrowser
