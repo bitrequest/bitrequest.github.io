@@ -24,9 +24,10 @@ const cookie_support = check_cookie(),
     supportsTouch = ("ontouchstart" in window || navigator.msMaxTouchPoints),
     referrer = document.referrer,
     exp_referrer = "android-app://" + androidpackagename,
-    ref_match = (referrer.indexOf(exp_referrer) >= 0),
-    matchmedia = window.matchMedia("(display-mode: standalone)").matches,
-    is_android_app = (matchmedia && ref_match), // android app fingerprint
+    ref_match = (referrer && referrer.indexOf(exp_referrer) >= 0) ? true : false,
+    android_standalone = window.matchMedia("(display-mode: standalone)").matches,
+    ios_standalone = navigator.standalone,
+    is_android_app = (ref_match), // android app fingerprint
     inframe = (self !== top),
     offline = (navigator.onLine === false),
     w_loc = window.location,
