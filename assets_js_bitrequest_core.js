@@ -136,7 +136,6 @@ $(document).ready(function() {
     console.log({
         "config": br_config
     });
-    console.log(window);
 })
 
 function checkphp() { //check for php support by fetching fiat currencies from local api php file
@@ -4610,20 +4609,29 @@ function detectapp() {
     if (inframe === true || is_android_app === true || is_ios_app === true) {
         return
     }
-    let show_dialog = br_get_session("appstore_dialog") || br_get_local("appstore_dialog");
-    if (show_dialog) {
-        return
-    }
-    if (supportsTouch === true) {
-        let device = getdevicetype();
-        if (device == "Android") {
-            //getapp("android");
+    let local_appstore_dialog = br_get_local("appstore_dialog"),
+        localdelay = 3000000;
+    cachetime = (local_appstore_dialog) ? (now() - local_appstore_dialog) : localdelay;
+    if (local_appstore_dialog) {
+        if (localdelay > cachetime) {
             return
         }
-        if (device == "iPhone" || device == "iPad" || device == "Macintosh") {
-            getapp("apple");
+        if (supportsTouch === true) {
+            let device = getdevicetype();
+            console.log(device);
+            if (device == "Android") {
+                if (/SamsungBrowser/.test(userAgent)) {
+                    return // skip samsungbrowser
+                }
+            }
+            if (device == "iPhone" || device == "iPad" || device == "Macintosh") {
+                getapp("apple");
+            } else {
+                getapp("android");
+            }
         }
     }
+    br_set_local("appstore_dialog", now());
 }
 
 function getapp(type) {
@@ -4647,10 +4655,6 @@ function close_app_panel() {
         setTimeout(function() {
             $("#app_panel").html("");
         }, 800);
-        br_set_session("appstore_dialog", true);
-        if (getdevicetype() == "Android") {
-            br_set_local("appstore_dialog", true);
-        }
     });
 }
 
