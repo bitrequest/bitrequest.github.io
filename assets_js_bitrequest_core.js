@@ -4612,11 +4612,11 @@ function detectapp() {
     if (android_standalone === true || ios_standalone === true) {
         return
     }
-    let local_appstore_dialog = br_get_local("appstore_dialog"),
-        localdelay = 3000000,
-        cachetime = (local_appstore_dialog) ? (now() - local_appstore_dialog) : localdelay;
+    let local_appstore_dialog = br_get_local("appstore_dialog");
     if (local_appstore_dialog) {
-        if (localdelay > cachetime) {
+        let localdelay = 300000,
+            cachetime = now() - local_appstore_dialog;
+        if (cachetime < localdelay) {
             return
         }
         if (supportsTouch === true) {
@@ -4632,8 +4632,9 @@ function detectapp() {
                 getapp("android");
             }
         }
+    } else {
+        br_set_local("appstore_dialog", now());
     }
-    br_set_local("appstore_dialog", now());
 }
 
 function getapp(type) {
@@ -4649,6 +4650,7 @@ function getapp(type) {
     setTimeout(function() {
         body.addClass("getapp");
     }, 1500);
+    br_set_local("appstore_dialog", now());
 }
 
 function close_app_panel() {
