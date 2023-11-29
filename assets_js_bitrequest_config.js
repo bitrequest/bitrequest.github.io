@@ -1169,8 +1169,7 @@ const apptitle = "Bitrequest",
                                 "url": sec_kas_wss,
                                 "display": true
                             }
-                        ],
-                        "options": []
+                        ]
                     },
                     "Xpub": {
                         "active": false,
