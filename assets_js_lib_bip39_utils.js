@@ -36,6 +36,15 @@ function hextodec(val) {
     return BigInt("0x" + val);
 }
 
+function hextobin(hex) {
+    if (hex.length % 2 !== 0) throw "Hex string has invalid length!";
+    let res = uint_8Array(hex.length / 2);
+    for (let i = 0; i < hex.length / 2; ++i) {
+        res[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+    }
+    return res;
+}
+
 function str_pad(val, bytes) {
     return (bytestring.slice(0, bytes) + val).substr(-bytes);
 }
@@ -504,7 +513,34 @@ function hex_to_number(val) {
 // CashAddr
 
 function pub_to_cashaddr(legacy) {
-    return bchutils.toCashAddress(legacy).split(":")[1];
+    let c_addr = bch_cashaddr("bitcoincash", "P2PKH", legacy);
+    return c_addr.split(":")[1];
+}
+
+function bch_legacy(cadr) {
+    try {
+        let version = 0,
+            dec = cashaddr.decode(cadr),
+            bytes = dec.hash,
+            bytesarr = Array.from(bytes),
+            conc = concat_array([0], bytesarr),
+            unbuf = buf2hex(conc);
+        return b58check_encode(unbuf);
+    } catch (e) {
+        console.log(e);
+        return cadr
+    }
+}
+
+function bch_cashaddr(prefix, type, legacy) {
+    try {
+        let lbytes = b58dec_uint_array(legacy),
+            lbslice = lbytes.slice(1, 21);
+        return cashaddr.encode(prefix, type, lbslice);
+    } catch (e) {
+        console.log(e);
+        return legacy
+    }
 }
 
 // Nimiq.watch TXD

@@ -28,6 +28,8 @@ const apptitle = "Bitrequest",
     main_eth_node = "https://mainnet.infura.io/v3/",
     main_eth_socket = "wss://mainnet.infura.io/ws/v3/",
     main_nano_node = "https://www.bitrequest.app:8020",
+    main_kas_wss = "wss://api.kaspa.org",
+    sec_kas_wss = "wss://socket.kas.fyi",
     aws_bucket = "https://brq.s3.us-west-2.amazonaws.com/",
     cmc_icon_loc = "https://s2.coinmarketcap.com/static/img/coins/200x200/",
     multi_wallets = {
@@ -1094,6 +1096,107 @@ const apptitle = "Bitrequest",
                 }
             },
             {
+                "currency": "kaspa",
+                "active": true,
+                "data": {
+                    "currency": "kaspa",
+                    "ccsymbol": "kas",
+                    "cmcid": 20396,
+                    "urlscheme": function(payment, address, amount, iszero) {
+                        return btc_urlscheme(payment, address.split(":").pop(), amount, iszero);
+                    },
+                    "address_regex": "^(kaspa):([a-z0-9]{50})"
+                },
+                "wallets": {
+                    "wallet_download_page": "https://www.kaspa.org",
+                    "wallets": [{
+                        "name": "wallet.kaspanet.io",
+                        "website": "https://wallet.kaspanet.io",
+                        "appstore": null,
+                        "playstore": null,
+                        "desktop": "https://wallet.kaspanet.io",
+                        "seed": false
+                    }]
+                },
+                "settings": {
+                    "confirmations": {
+                        "icon": "clock",
+                        "selected": 0
+                    },
+                    "Use random address": {
+                        "icon": "dice",
+                        "selected": false,
+                        "switch": true,
+                    },
+                    "blockexplorers": {
+                        "icon": "eye",
+                        "selected": "explorer.kaspa.org",
+                        "options": ["explorer.kaspa.org", "kas.fyi"]
+                    },
+                    "apis": {
+                        "icon": "sphere",
+                        "selected": {
+                            "name": "kaspa.org",
+                            "api": true,
+                            "display": true
+                        },
+                        "apis": [{
+                                "name": "kaspa.org",
+                                "api": true,
+                                "display": true
+                            },
+                            {
+                                "name": "kas.fyi",
+                                "api": true,
+                                "display": true
+                            }
+                        ]
+                    },
+                    "websockets": {
+                        "icon": "tab",
+                        "selected": {
+                            "name": main_kas_wss,
+                            "url": main_kas_wss,
+                            "display": true
+                        },
+                        "apis": [{
+                                "name": main_kas_wss,
+                                "url": main_kas_wss,
+                                "display": true
+                            },
+                            {
+                                "name": sec_kas_wss,
+                                "url": sec_kas_wss,
+                                "display": true
+                            }
+                        ],
+                        "options": []
+                    },
+                    "Xpub": {
+                        "active": false,
+                        "xpub": false,
+                        "icon": "key",
+                        "switch": true,
+                        "custom_switch": true,
+                        "selected": false,
+                        "key": null,
+                        "root_path": "m/44'/972'/0'/0/",
+                        "prefix": {
+                            "pub": 0,
+                            "pubx": 76067358,
+                            "privx": 76066276
+                        },
+                        "pk_vbytes": {
+                            "wif": 128
+                        }
+                    },
+                    "Key derivations": {
+                        "icon": "cog",
+                        "selected": "Compatible wallets",
+                    }
+                }
+            },
+            {
                 "currency": "nimiq",
                 "active": true,
                 "data": {
@@ -1507,6 +1610,20 @@ const apptitle = "Bitrequest",
                 "sign_up": null
             },
             {
+                "name": "kaspa.org",
+                "base_url": "https://api.kaspa.org/",
+                "key_param": null,
+                "api_key": "no_key",
+                "sign_up": null
+            },
+            {
+                "name": "kas.fyi",
+                "base_url": "https://api-v2-do.kas.fyi/",
+                "key_param": null,
+                "api_key": "no_key",
+                "sign_up": null
+            },
+            {
                 "name": "nimiq.watch",
                 "base_url": "https://api.nimiq.watch/",
                 "key_param": null,
@@ -1564,7 +1681,7 @@ const apptitle = "Bitrequest",
             },
             {
                 "name": "nanolooker.com",
-                "url": "https://nanolooker.com",
+                "url": "https://nanolooker.com/",
                 "prefix": "",
                 "tx_prefix": "block/",
                 "address_prefix": "account/"
@@ -1574,6 +1691,20 @@ const apptitle = "Bitrequest",
                 "url": "https://ethplorer.io/",
                 "prefix": null,
                 "tx_prefix": "tx/",
+                "address_prefix": "address/"
+            },
+            {
+                "name": "explorer.kaspa.org",
+                "url": "https://explorer.kaspa.org/",
+                "prefix": null,
+                "tx_prefix": "txs/",
+                "address_prefix": "addresses/"
+            },
+            {
+                "name": "kas.fyi",
+                "url": "https://kas.fyi/",
+                "prefix": null,
+                "tx_prefix": "transaction/",
                 "address_prefix": "address/"
             },
             {

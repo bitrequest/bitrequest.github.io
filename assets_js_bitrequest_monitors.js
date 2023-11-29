@@ -1141,6 +1141,189 @@ function get_api_inputs(rd, api_data, api_name) {
                     }
                 }
             }
+            if (payment == "kaspa") {
+                if (pending == "scanning") { // scan incoming transactions on address
+                    if (api_name == "kaspa.org") {
+                        api_proxy({
+                            "api": api_name,
+                            "search": "info/virtual-chain-blue-score",
+                            "cachetime": 25,
+                            "cachefolder": "1h",
+                            "params": {
+                                "method": "GET"
+                            }
+                        }).done(function(e) {
+                            let data = br_result(e).result;
+                            if (data) {
+                                let current_bluescore = data.blueScore;
+                                if (current_bluescore) {
+                                    api_proxy({
+                                        "api": api_name,
+                                        "search": "addresses/" + address + "/full-transactions",
+                                        "cachetime": 25,
+                                        "cachefolder": "1h",
+                                        "params": {
+                                            "method": "GET"
+                                        }
+                                    }).done(function(e) {
+                                        let data = br_result(e).result;
+                                        if (data) {
+                                            if ($.isEmptyObject(data)) {
+                                                tx_api_fail(thislist, statuspanel);
+                                                handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                            } else {
+                                                $.each(data, function(dat, value) {
+                                                    let txd = kaspa_scan_data(value, address, setconfirmations, current_bluescore);
+                                                    if (txd.transactiontime > request_timestamp && txd.ccval) {
+                                                        let tx_listitem = append_tx_li(txd, rqtype);
+                                                        if (tx_listitem) {
+                                                            transactionlist.append(tx_listitem.data(txd));
+                                                            counter++;
+                                                        }
+                                                    }
+                                                });
+                                                tx_count(statuspanel, counter);
+                                                compareamounts(rd);
+                                            }
+                                            return
+                                        }
+                                        tx_api_fail(thislist, statuspanel);
+                                        handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                                        tx_api_fail(thislist, statuspanel);
+                                        let error_object = (errorThrown) ? errorThrown : jqXHR;
+                                        handle_api_fails_list(rd, error_object, api_data, payment);
+                                    }).always(function() {
+                                        api_src(thislist, api_data);
+                                    });
+                                    return
+                                }
+                            }
+                            tx_api_fail(thislist, statuspanel);
+                            handle_api_fails_list(rd, "unknown error", api_data, payment);
+                        }).fail(function(jqXHR, textStatus, errorThrown) {
+                            tx_api_fail(thislist, statuspanel);
+                            let error_object = (errorThrown) ? errorThrown : jqXHR;
+                            handle_api_fails_list(rd, error_object, api_data, payment);
+                        }).always(function() {
+                            api_src(thislist, api_data);
+                        });
+                    }
+                    return
+                }
+                if (pending == "polling") {
+                    if (transactionhash) {
+                        if (api_name == "kaspa.org") {
+                            api_proxy({
+                                "api": api_name,
+                                "search": "info/virtual-chain-blue-score",
+                                "cachetime": 25,
+                                "cachefolder": "1h",
+                                "params": {
+                                    "method": "GET"
+                                }
+                            }).done(function(e) {
+                                let data = br_result(e).result;
+                                if (data) {
+                                    let current_bluescore = data.blueScore;
+                                    if (current_bluescore) {
+                                        api_proxy({
+                                            "api": api_name,
+                                            "search": "transactions/" + transactionhash,
+                                            "cachetime": 25,
+                                            "cachefolder": "1h",
+                                            "params": {
+                                                "method": "GET"
+                                            }
+                                        }).done(function(e) {
+                                            let data = br_result(e).result;
+                                            if (data) {
+                                                if (data.error) {
+                                                    tx_api_fail(thislist, statuspanel);
+                                                    handle_api_fails_list(rd, data.error, api_data, payment);
+                                                } else {
+                                                    let txd = kaspa_scan_data(data, address, setconfirmations, current_bluescore);
+                                                    if (txd) {
+                                                        if (txd.ccval) {
+                                                            let tx_listitem = append_tx_li(txd, rqtype);
+                                                            if (tx_listitem) {
+                                                                transactionlist.append(tx_listitem.data(txd));
+                                                                tx_count(statuspanel, 1);
+                                                                compareamounts(rd);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                return
+                                            }
+                                            tx_api_fail(thislist, statuspanel);
+                                            handle_api_fails_list(rd, "unknown error", api_data, payment);
+                                        }).fail(function(jqXHR, textStatus, errorThrown) {
+                                            tx_api_fail(thislist, statuspanel);
+                                            let error_object = (errorThrown) ? errorThrown : jqXHR;
+                                            handle_api_fails_list(rd, error_object, api_data, payment);
+                                        }).always(function() {
+                                            api_src(thislist, api_data);
+                                        });
+                                        return
+                                    }
+                                }
+                                tx_api_fail(thislist, statuspanel);
+                                handle_api_fails_list(rd, "unknown error", api_data, payment);
+                            }).fail(function(jqXHR, textStatus, errorThrown) {
+                                tx_api_fail(thislist, statuspanel);
+                                let error_object = (errorThrown) ? errorThrown : jqXHR;
+                                handle_api_fails_list(rd, error_object, api_data, payment);
+                            }).always(function() {
+                                api_src(thislist, api_data);
+                            });
+                            return
+                        }
+                        if (api_name == "kas.fyi") {
+                            api_proxy({
+                                "api": api_name,
+                                "search": "transactions/" + transactionhash,
+                                "cachetime": 25,
+                                "cachefolder": "1h",
+                                "params": {
+                                    "method": "GET"
+                                }
+                            }).done(function(e) {
+                                let data = br_result(e).result;
+                                if (data) {
+                                    if (data.error) {
+                                        tx_api_fail(thislist, statuspanel);
+                                        handle_api_fails_list(rd, data.error, api_data, payment);
+                                    } else {
+                                        let txd = kaspa_poll_fyi_data(data, address, setconfirmations);
+                                        if (txd) {
+                                            if (txd.ccval) {
+                                                let tx_listitem = append_tx_li(txd, rqtype);
+                                                if (tx_listitem) {
+                                                    transactionlist.append(tx_listitem.data(txd));
+                                                    tx_count(statuspanel, 1);
+                                                    compareamounts(rd);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    return
+                                }
+                                tx_api_fail(thislist, statuspanel);
+                                handle_api_fails_list(rd, "unknown error", api_data, payment);
+                            }).fail(function(jqXHR, textStatus, errorThrown) {
+                                tx_api_fail(thislist, statuspanel);
+                                let error_object = (errorThrown) ? errorThrown : jqXHR;
+                                handle_api_fails_list(rd, error_object, api_data, payment);
+                            }).always(function() {
+                                api_src(thislist, api_data);
+                            });
+                            return
+                        }
+                    }
+                    return
+                }
+            }
         }
     }
 }

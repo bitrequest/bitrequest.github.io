@@ -82,7 +82,7 @@ function setResult(result) {
         thistype = scantype;
     if (thistype == "address") {
         let prefix = payment + ":",
-            mid_result = (result.indexOf(prefix) >= 0) ? result.split(prefix).pop() : result,
+            mid_result = (result.indexOf(prefix) >= 0 && payment != "kaspa") ? result.split(prefix).pop() : result,
             end_result = (result.indexOf("?") >= 0) ? mid_result.split("?")[0] : mid_result,
             isxpub = (end_result.length > 103),
             er_val = (payment == "nimiq") ? end_result.replace(/\s/g, "") : end_result,

@@ -487,6 +487,108 @@ function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash)
     return default_tx_data();
 }
 
+function kaspa_scan_data(data, thisaddress, setconfirmations, current_bluescore) { // scan
+    if (data) {
+        let outputs = data.outputs,
+            block_bluescore = data.accepting_block_blue_score,
+            confblocks = (current_bluescore) ? current_bluescore - block_bluescore : null;
+        if (outputs) {
+            outputsum = 0;
+            $.each(outputs, function(dat, val) {
+                let amount = val.amount,
+                    output = (val.script_public_key_address == thisaddress) ? Math.abs(amount) : 0;
+                outputsum += parseFloat(output) || 0; // sum of outputs
+            });
+        }
+        let ccval = (outputs) ? outputsum / 100000000 : null,
+            conf = (data.is_accepted) ? (confblocks > -1) ? confblocks : 0 : 0;
+        return {
+            "ccval": ccval,
+            "transactiontime": data.block_time + timezone,
+            "txhash": data.transaction_id,
+            "confirmations": conf,
+            "setconfirmations": setconfirmations,
+            "ccsymbol": "kas"
+        };
+    }
+    return default_tx_data();
+}
+
+function kaspa_poll_fyi_data(data, thisaddress, setconfirmations) { // scan
+    if (data) {
+        let outputs = data.outputs;
+        if (outputs) {
+            outputsum = 0;
+            $.each(outputs, function(dat, val) {
+                let amount = val.amount,
+                    output = (val.scriptPublicKeyAddress == thisaddress) ? Math.abs(amount) : 0;
+                outputsum += parseFloat(output) || 0; // sum of outputs
+            });
+        }
+        let ccval = (outputs) ? outputsum / 100000000 : null,
+            conf = (data.isAccepted) ? (data.confirmations) ? data.confirmations : 0 : 0;
+        return {
+            "ccval": ccval,
+            "transactiontime": parseFloat(data.blockTime) + timezone,
+            "txhash": data.transactionId,
+            "confirmations": conf,
+            "setconfirmations": setconfirmations,
+            "ccsymbol": "kas"
+        };
+    }
+    return default_tx_data();
+}
+
+function kaspa_ws_data(data, thisaddress, set_confirmations) { // scan
+    if (data) {
+        let outputs = data.outputs;
+        if (outputs) {
+            outputsum = 0;
+            $.each(outputs, function(dat, val) {
+                let amount = val[1],
+                    output = (val[0] == thisaddress) ? Math.abs(amount) : 0;
+                outputsum += parseFloat(output) || 0; // sum of outputs
+            });
+        }
+        let ccval = (outputs) ? outputsum / 100000000 : null,
+            txhash = q_obj(data, "verboseData.transactionId");
+        return {
+            "ccval": ccval,
+            "transactiontime": now() + timezone,
+            "txhash": data.txId,
+            "confirmations": null,
+            "setconfirmations": set_confirmations,
+            "ccsymbol": "kas"
+        };
+    }
+    return default_tx_data();
+}
+
+function kaspa_fyi_ws_data(data, thisaddress) { // scan
+    if (data) {
+        let outputs = data.outputs;
+        if (outputs) {
+            outputsum = 0;
+            $.each(outputs, function(dat, val) {
+                let amount = val.amount,
+                    output = (q_obj(val, "verboseData.scriptPublicKeyAddress") == thisaddress) ? Math.abs(amount) : 0;
+                outputsum += parseFloat(output) || 0; // sum of outputs
+            });
+        }
+        let ccval = (outputs) ? outputsum / 100000000 : null,
+            txhash = q_obj(data, "verboseData.transactionId");
+        return {
+            "ccval": ccval,
+            "transactiontime": now() + timezone,
+            "txhash": txhash,
+            "confirmations": false,
+            "setconfirmations": null,
+            "ccsymbol": "kas"
+        };
+    }
+    return default_tx_data();
+}
+
 // lightning
 
 function lnd_tx_data(data) { // poll

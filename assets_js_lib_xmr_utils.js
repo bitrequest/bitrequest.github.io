@@ -171,15 +171,6 @@ function secret_spend_key_to_words(ssk) {
 
 // helpers
 
-function hextobin(hex) {
-    if (hex.length % 2 !== 0) throw "Hex string has invalid length!";
-    let res = uint_8Array(hex.length / 2);
-    for (let i = 0; i < hex.length / 2; ++i) {
-        res[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
-    }
-    return res;
-}
-
 function bintohex(bin) {
     let out = [];
     for (let i = 0; i < bin.length; ++i) {

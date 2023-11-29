@@ -44,7 +44,9 @@ function api_monitor(txhash, tx_data, api_dat) {
             (api_name == "blockchair") ? (request.erc20 === true) ? "ethereum/dashboards/transaction/" + txhash + "?erc_20=true" : payment + "/dashboards/transaction/" + txhash :
             (api_name == "mempool.space") ? "tx/" + txhash :
             (api_name == "nimiq.watch") ? "transaction/" + nimiqhash(txhash) :
-            (api_name == "mopsus.com") ? "tx/" + txhash : null;
+            (api_name == "mopsus.com") ? "tx/" + txhash :
+            (api_name == "kaspa.org") ? "transactions/" + txhash :
+            (api_name == "kas.fyi") ? "transactions/" + txhash : null;
         if (tx_data) {
             confirmations(tx_data, true);
             let xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
@@ -54,28 +56,34 @@ function api_monitor(txhash, tx_data, api_dat) {
                 return
             }
         }
-        api_proxy(ampl(api_dat, poll_url)).done(function(e) {
-            let apiresult = api_result(br_result(e));
-            if (apiresult) {
-                pinging[txhash + api_name] = setInterval(function() {
-                    if (paymentpopup.hasClass("active")) { // only when request is visible
-                        api_proxy(ampl(api_dat, poll_url)).done(function(e) {
-                            api_result(br_result(e));
-                        }).fail(function(jqXHR, textStatus, errorThrown) {
-                            api_error(jqXHR, textStatus, errorThrown);
-                        });
-                        return
+        let to_time = (tx_data === false) ? 100 : 25000,
+            timeout = setTimeout(function() {
+                api_proxy(ampl(api_dat, poll_url)).done(function(e) {
+                    let apiresult = api_result(br_result(e));
+                    if (apiresult) {
+                        pinging[txhash + api_name] = setInterval(function() {
+                            if (paymentpopup.hasClass("active")) { // only when request is visible
+                                api_proxy(ampl(api_dat, poll_url)).done(function(e) {
+                                    api_result(br_result(e));
+                                }).fail(function(jqXHR, textStatus, errorThrown) {
+                                    api_error(jqXHR, textStatus, errorThrown);
+                                });
+                                return
+                            }
+                            forceclosesocket();
+                        }, 25000);
                     }
-                    forceclosesocket();
-                }, 25000);
-            }
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            api_error(jqXHR, textStatus, errorThrown);
-        });
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    api_error(jqXHR, textStatus, errorThrown);
+                });
+            }, to_time, function() {
+                clearTimeout(timeout);
+            });
 
         function api_result(result) {
             let data = result.result;
             if (data) {
+                let currentaddress = gets.address;
                 if (data.error) {
                     clearpinging();
                     handle_api_fails(false, data.error, api_name, payment, txhash, true);
@@ -85,12 +93,15 @@ function api_monitor(txhash, tx_data, api_dat) {
                     mopsus_blockheight(data, set_confirmations, txhash);
                     return true;
                 }
-                let currentaddress = gets.address,
-                    legacy = (currencysymbol == "bch") ? bchutils.toLegacyAddress(currentaddress) : currentaddress,
-                    txd = (api_name == "blockcypher") ? blockcypher_poll_data(data, set_confirmations, currencysymbol, currentaddress) :
+                if (api_name == "kaspa.org") {
+                    kaspa_blockheight(data, set_confirmations, currentaddress);
+                    return true;
+                }
+                let txd = (api_name == "blockcypher") ? blockcypher_poll_data(data, set_confirmations, currencysymbol, currentaddress) :
                     (api_name == "ethplorer") ? ethplorer_poll_data(data, set_confirmations, currencysymbol) :
                     (api_name == "mempool.space") ? mempoolspace_scan_data(data, set_confirmations, currencysymbol, currentaddress) :
                     (api_name == "nimiq.watch") ? nimiq_scan_data(data, set_confirmations) :
+                    (api_name == "kas.fyi") ? kaspa_poll_fyi_data(data, currentaddress, set_confirmations) :
                     (api_name == "blockchair") ? (request.erc20 === true) ? blockchair_erc20_poll_data(data.data[txhash], set_confirmations, currencysymbol, data.context.state) :
                     (payment == "ethereum") ? blockchair_eth_scan_data(data.data[txhash].calls[0], set_confirmations, currencysymbol, data.context.state) :
                     blockchair_scan_data(data.data[txhash], set_confirmations, currencysymbol, currentaddress, data.context.state) : false;
@@ -158,6 +169,31 @@ function mopsus_blockheight(data, set_confirmations, txhash) { // api_monitor pa
         confirmations(txd, true);
     }).fail(function(jqXHR, textStatus, errorThrown) {
         let txd = nimiq_scan_data(data, set_confirmations, null, true, txhash);
+        confirmations(txd, true);
+    });
+}
+
+function kaspa_blockheight(data, set_confirmations, address) { // api_monitor payload
+    api_proxy({
+        "api": "kaspa.org",
+        "search": "info/virtual-chain-blue-score",
+        "params": {
+            "method": "GET"
+        }
+    }).done(function(e) {
+        let res = br_result(e).result;
+        if (res) {
+            let current_bluescore = res.blueScore;
+            if (current_bluescore) {
+                let txd = kaspa_scan_data(data, address, set_confirmations, current_bluescore);
+                confirmations(txd);
+                return
+            }
+        }
+        let txd = kaspa_scan_data(data, address, set_confirmations);
+        confirmations(txd, true);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        let txd = kaspa_scan_data(data, address, set_confirmations);
         confirmations(txd, true);
     });
 }

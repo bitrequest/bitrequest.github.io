@@ -15,7 +15,8 @@ const test_phrase = "army van defense carry jealous true garbage claim echo medi
         "nano": true,
         "monero": true,
         "ethereum": true,
-        "bitcoin-cash": true
+        "bitcoin-cash": true,
+        "kaspa": false
     },
     can_xpub = {
         "bitcoin": true,
@@ -24,7 +25,8 @@ const test_phrase = "army van defense carry jealous true garbage claim echo medi
         "nano": false,
         "monero": false,
         "ethereum": true,
-        "bitcoin-cash": true
+        "bitcoin-cash": true,
+        "kaspa": false
     };
 let phrasearray,
     has_bigint = false,
@@ -975,8 +977,9 @@ function seed_callback() {
         if (body.hasClass("showstartpage")) {
             derive_all_init(savedseed, seedid);
             openpage("?p=home", "home", "loadpage");
-            let currency = $("#seed_steps").attr("data-goal");
-            $("#currencylist > li[data-currency='" + currency + "'] .rq_icon").trigger("click");
+            let currency = $("#seed_steps").attr("data-goal"),
+                homeli = get_homeli(currency);
+            homeli.find(".rq_icon").trigger("click");
         } else {
             let derivations = filter_all_addressli("seedid", seedid);
             if (derivations.length > 0) {
@@ -1163,8 +1166,10 @@ function derive_all(phrase, seedid, extra) {
 function derive_add_address(currency, ad) {
     appendaddress(currency, ad);
     saveaddresses(currency, true);
-    $("#usedcurrencies > li[data-currency='" + currency + "']").attr("data-checked", "true").data("checked", true); // each
-    $("#currencylist > li[data-currency='" + currency + "']").removeClass("hide"); // each
+    let currencyli = get_currencyli(currency),
+        homeli = get_homeli(currency);
+    currencyli.attr("data-checked", "true").data("checked", true); // each
+    homeli.removeClass("hide"); // each
 }
 
 function derive_data(currency, extra) {
@@ -1620,6 +1625,8 @@ function format_keys(seed, key_object, bip32, index, coin) {
     } else if (coin == "bitcoin-cash") {
         let legacybch = pub_to_address(vb, pubkey);
         ko.address = pub_to_cashaddr(legacybch);
+    } else if (coin == "kaspa") {
+        // waiting for pub to address script and more details about derivation path's
     } else {
         ko.address = pub_to_address(vb, pubkey);
     }

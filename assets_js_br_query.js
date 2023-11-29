@@ -42,7 +42,6 @@
 //trimdecimals
 //adjust_objectarray
 //now
-//filter_list
 //dom_to_array
 //d_proxy
 //fetch_aws
@@ -455,12 +454,6 @@ function adjust_objectarray(array, mods) {
 
 function now() {
     return Date.now();
-}
-
-function filter_list(list, datakey, dataval) {
-    return list.filter(function() {
-        return $(this).data(datakey) == dataval;
-    })
 }
 
 function dom_to_array(dom, dat) {

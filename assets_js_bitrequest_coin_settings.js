@@ -972,10 +972,11 @@ function validate_xpub(thisnode) {
                     "key_id": xpub_id
                 }).find(".switchpanel").removeClass("false").addClass("true");
                 xpubli.find("p").html("true");
-                $("#usedcurrencies > li[data-currency='" + currency + "']").attr("data-checked", "true").data("checked", true);
-                savecurrencies(true);
-                let home_icon = $("#currencylist > li[data-currency='" + currency + "']");
+                let currencyli = get_currencyli(currency),
+                    home_icon = get_homeli(currency);
+                currencyli.attr("data-checked", "true").data("checked", true);
                 home_icon.removeClass("hide");
+                savecurrencies(true);
                 save_cc_settings(currency, true);
                 let keycc = key_cc_xpub(addressinputval),
                     coindat = getcoindata(currency),

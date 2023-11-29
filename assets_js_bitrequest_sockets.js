@@ -22,8 +22,10 @@ $(document).ready(function() {
     //nano_socket
     //web3_eth_websocket
     //web3_erc20_websocket
-    //ws_check_fc
+    //kaspa_websocket
+    //kaspa_fyi_websocket
     //handle_socket_fails
+    //handle_socket_close
     //try_next_socket
     //current_socket
     reconnect();
@@ -167,6 +169,18 @@ function init_socket(socket_node, address, swtch, retry) {
             request_ts = request_ts_utc - 30000;
         clearpinging();
         nimiq_scan(address, request_ts);
+        return
+    }
+    if (payment == "kaspa") {
+        if (socket_name == main_kas_wss) {
+            kaspa_websocket(socket_node, address);
+            return
+        }
+        if (socket_name == sec_kas_wss) {
+            kaspa_fyi_websocket(socket_node, address);
+            return
+        }
+        kaspa_websocket(socket_node, address);
         return
     }
     if (request.erc20 === true) {
@@ -556,8 +570,7 @@ function lnd_poll_data_fail(pid) {
 // Websockets
 
 function blockcypher_websocket(socket_node, thisaddress) {
-    let starttime = now(),
-        provider = socket_node.url + request.currencysymbol + "/main",
+    let provider = socket_node.url + request.currencysymbol + "/main",
         websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
@@ -589,9 +602,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
         }
     };
     websocket.onclose = function(e) {
-        console.log("Disconnected");
-        txid = null;
-        ws_check_fc(starttime, socket_node, thisaddress);
+        handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress)
@@ -600,8 +611,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
 }
 
 function blockchain_btc_socket(socket_node, thisaddress) {
-    let starttime = now(),
-        provider = socket_node.url,
+    let provider = socket_node.url,
         websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
@@ -632,9 +642,7 @@ function blockchain_btc_socket(socket_node, thisaddress) {
 
     };
     websocket.onclose = function(e) {
-        console.log("Disconnected");
-        txid = null;
-        ws_check_fc(starttime, socket_node, thisaddress);
+        handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
@@ -643,8 +651,7 @@ function blockchain_btc_socket(socket_node, thisaddress) {
 }
 
 function blockchain_bch_socket(socket_node, thisaddress) {
-    let starttime = now(),
-        provider = socket_node.url,
+    let provider = socket_node.url,
         websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
@@ -666,7 +673,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
                 rconnect(txid);
                 return
             }
-            let legacy = bchutils.toLegacyAddress(thisaddress),
+            let legacy = bch_legacy(thisaddress),
                 txd = blockchain_ws_data(json, request.set_confirmations, request.currencysymbol, thisaddress, legacy);
             if (txd) {
                 txid = txhash;
@@ -676,9 +683,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
         }
     };
     websocket.onclose = function(e) {
-        console.log("Disconnected");
-        txid = null;
-        ws_check_fc(starttime, socket_node, thisaddress);
+        handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
@@ -687,8 +692,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
 }
 
 function mempoolspace_btc_socket(socket_node, thisaddress) {
-    let starttime = now(),
-        provider = socket_node.url,
+    let provider = socket_node.url,
         mps_websocket = sockets[thisaddress] = new WebSocket(provider);
     mps_websocket.onopen = function(e) {
         socket_info(socket_node, true);
@@ -723,9 +727,7 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
         }
     };
     mps_websocket.onclose = function(e) {
-        console.log("Disconnected");
-        txid = null;
-        ws_check_fc(starttime, socket_node, thisaddress);
+        handle_socket_close(socket_node);
     };
     mps_websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
@@ -734,8 +736,7 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
 }
 
 function dogechain_info_socket(socket_node, thisaddress) {
-    let starttime = now(),
-        provider = socket_node.url,
+    let provider = socket_node.url,
         websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
@@ -768,9 +769,7 @@ function dogechain_info_socket(socket_node, thisaddress) {
         }
     };
     websocket.onclose = function(e) {
-        console.log("Disconnected");
-        txid = null;
-        ws_check_fc(starttime, socket_node, thisaddress);
+        handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
@@ -779,8 +778,7 @@ function dogechain_info_socket(socket_node, thisaddress) {
 }
 
 function nano_socket(socket_node, thisaddress) {
-    let starttime = now(),
-        address_mod = (thisaddress.match("^xrb")) ? "nano_" + thisaddress.split("_").pop() : thisaddress, // change nano address prefix xrb_ to nano untill websocket support
+    let address_mod = (thisaddress.match("^xrb")) ? "nano_" + thisaddress.split("_").pop() : thisaddress, // change nano address prefix xrb_ to nano untill websocket support
         provider = socket_node.url,
         websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
@@ -817,9 +815,7 @@ function nano_socket(socket_node, thisaddress) {
         }
     };
     websocket.onclose = function(e) {
-        console.log("Disconnected");
-        txid = null;
-        ws_check_fc(starttime, socket_node, thisaddress);
+        handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
@@ -828,8 +824,7 @@ function nano_socket(socket_node, thisaddress) {
 }
 
 function web3_eth_websocket(socket_node, thisaddress) {
-    let starttime = now(),
-        provider_url = socket_node.url,
+    let provider_url = socket_node.url,
         if_id = get_infura_apikey(provider_url),
         provider = provider_url + if_id,
         websocket = sockets[thisaddress] = new WebSocket(provider);
@@ -873,9 +868,7 @@ function web3_eth_websocket(socket_node, thisaddress) {
         }
     };
     websocket.onclose = function(e) {
-        console.log("Disconnected");
-        txid = null;
-        ws_check_fc(starttime, socket_node, thisaddress);
+        handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
@@ -884,8 +877,7 @@ function web3_eth_websocket(socket_node, thisaddress) {
 }
 
 function web3_erc20_websocket(socket_node, thisaddress) {
-    let starttime = now(),
-        provider_url = socket_node.url,
+    let provider_url = socket_node.url,
         if_id = get_infura_apikey(provider_url),
         provider = provider_url + if_id,
         websocket = sockets[thisaddress] = new WebSocket(provider);
@@ -937,9 +929,7 @@ function web3_erc20_websocket(socket_node, thisaddress) {
         }
     };
     websocket.onclose = function(e) {
-        console.log("Disconnected");
-        txid = null;
-        ws_check_fc(starttime, socket_node, thisaddress);
+        handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
@@ -947,12 +937,90 @@ function web3_erc20_websocket(socket_node, thisaddress) {
     };
 }
 
-function ws_check_fc(starttime, socket_node, thisaddress) {
-    if ((now() - starttime) < 3000) {
-        socket_info(socket_node, false);
-        handle_socket_fails(socket_node, thisaddress);
+function kaspa_websocket(socket_node, thisaddress) {
+    let provider = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket",
+        websocket = sockets[thisaddress] = new WebSocket(provider);
+    websocket.onopen = function(e) {
+        socket_info(socket_node, true);
+        websocket.send("40");
+    };
+    websocket.onmessage = function(e) {
+        let dat = e.data;
+        if (dat) {
+            let datid = dat.slice(0, 2);
+            if (datid == "40") {
+                websocket.send('42["join-room","blocks"]');
+                return;
+            }
+            if (datid == "42") {
+                let newdat = dat.slice(2),
+                    data = JSON.parse(newdat),
+                    contents = data[1];
+                if (contents) {
+                    let txs = contents.txs;
+                    if (txs) {
+                        $.each(txs, function(dat, value) {
+                            let txd = kaspa_ws_data(value, thisaddress, request.set_confirmations);
+                            if (txd.ccval) {
+                                closesocket();
+                                pick_monitor(txd.txhash, txd);
+                            }
+                        });
+                    }
+                }
+            }
+        }
+    };
+    websocket.onclose = function(e) {
+        handle_socket_close(socket_node);
+    };
+    websocket.onerror = function(e) {
+        handle_socket_fails(socket_node, thisaddress)
         return
-    }
+    };
+}
+
+function kaspa_fyi_websocket(socket_node, thisaddress) {
+    let provider = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket",
+        websocket = sockets[thisaddress] = new WebSocket(provider);
+    websocket.onopen = function(e) {
+        socket_info(socket_node, true);
+        websocket.send("40");
+    };
+    websocket.onmessage = function(e) {
+        let dat = e.data;
+        if (dat) {
+            let datid = dat.slice(0, 2);
+            if (datid == "40") {
+                websocket.send('42["join-room","blocks"]');
+                return;
+            }
+            if (datid == "42") {
+                let newdat = dat.slice(2),
+                    data = JSON.parse(newdat),
+                    contents = data[1];
+                if (contents) {
+                    let txs = contents.transactions;
+                    if (txs) {
+                        $.each(txs, function(dat, value) {
+                            let txd = kaspa_fyi_ws_data(value, thisaddress);
+                            if (txd.ccval) {
+                                closesocket();
+                                pick_monitor(txd.txhash, txd);
+                            }
+                        });
+                    }
+                }
+            }
+        }
+    };
+    websocket.onclose = function(e) {
+        handle_socket_close(socket_node);
+    };
+    websocket.onerror = function(e) {
+        handle_socket_fails(socket_node, thisaddress)
+        return
+    };
 }
 
 function handle_socket_fails(socket_node, thisaddress) {
@@ -971,6 +1039,12 @@ function handle_socket_fails(socket_node, thisaddress) {
         socket_info(socket_node, false);
         notify("websocket offline", 500000, "yes");
     }
+}
+
+function handle_socket_close(socket_node) {
+    socket_info(socket_node, false);
+    console.log("Disconnected from " + socket_node.url);
+    txid = null;
 }
 
 function try_next_socket(current_socket_data) {
@@ -1222,6 +1296,11 @@ function after_poll(rq_init, next_api) {
                 erc20_scan_poll(ccsymbol, set_confirmations, address, request_ts, token_contract);
                 return
             }
+        }
+        if (payment == "kaspa") {
+            ap_loader();
+            kaspa_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts);
+            return
         }
         if (ccsymbol == "btc" || ccsymbol == "ltc" || ccsymbol == "doge" || ccsymbol == "bch") {
             if (api_data.default === false) {
@@ -1537,6 +1616,67 @@ function erc20_scan_poll(ccsymbol, set_confirmations, address, request_ts, token
     }).fail(function(jqXHR, textStatus, errorThrown) {
         after_poll_fails("ethplorer");
     });
+}
+
+function kaspa_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts) {
+    if (api_name == "kaspa.org") {
+        api_proxy({
+            "api": api_name,
+            "search": "info/virtual-chain-blue-score",
+            "cachetime": 25,
+            "cachefolder": "1h",
+            "params": {
+                "method": "GET"
+            }
+        }).done(function(e) {
+            let data = br_result(e).result;
+            if (data) {
+                let current_bluescore = data.blueScore;
+                if (current_bluescore) {
+                    api_proxy({
+                        "api": api_name,
+                        "search": "addresses/" + address + "/full-transactions",
+                        "cachetime": 25,
+                        "cachefolder": "1h",
+                        "params": {
+                            "method": "GET"
+                        }
+                    }).done(function(e) {
+                        let data = br_result(e).result;
+                        if (data) {
+                            if (data.error) {} else {
+                                if (!$.isEmptyObject(data)) {
+                                    let detect = false,
+                                        txdat;
+                                    $.each(data, function(dat, value) {
+                                        let txd = kaspa_scan_data(value, address, set_confirmations, current_bluescore);
+                                        if (txd.transactiontime > request_ts && txd.ccval) {
+                                            txdat = txd;
+                                            detect = true;
+                                            return
+                                        }
+                                    });
+                                    if (txdat && detect === true) {
+                                        pick_monitor(txdat.txhash, txdat);
+                                        return
+                                    }
+                                }
+                                close_paymentdialog(true);
+                                return
+                            }
+                        }
+                        after_poll_fails(api_name);
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        after_poll_fails(api_name);
+                    });
+                    return
+                }
+            }
+            after_poll_fails(api_name);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            after_poll_fails(api_name);
+        });
+    }
 }
 
 function after_poll_fails(api_name) {

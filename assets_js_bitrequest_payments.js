@@ -1229,134 +1229,134 @@ function getpayment(ccrateeuro, ccapi) {
         address_xmr_ia = (request.xmr_ia) ? request.xmr_ia : request.address,
         ro_attr = (request.isrequest === true && !request.iszero) ? " readonly='readonly'" : "",
         requestinfo = "\
-			<div id='requestinfo'>" +
+            <div id='requestinfo'>" +
         backbttnandtitle +
         "<div id='shareamount' class='inputbreak'>\
-					<span id='sharecryptowrap'>" + cryptologo + lndlogo +
+                    <span id='sharecryptowrap'>" + cryptologo + lndlogo +
         "<span id='sharemainccinputmirror' class='ccmirror mirrordiv'>\
-							<span>" + thiscurrencyvaluefixedplaceholder + "</span>\
-							<input value='" + thiscurrencyvaluefixedvar + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
-						</span>\
-					</span>\
-					<span id='shareinputmirror' class='fmirror mirrordiv'>\
-						<span>" + placeholder + "</span>\
-						<input value='" + valueplaceholder + "' step='" + steps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
-					</span>\
-					<span id='sharecurrency'>" + request.uoa + "</span>\
-				</div>\
-				<div id='currencynamebox'>\
-					<span id='currencyname' data-currencyname='" + currencynamestring + "'>\
-						<span class='quote'>(</span>\
-						<span id='sharelcinputmirror' class='lcmirror mirrordiv'>\
-						<span>" + fiatcurrencyvalue + "</span>\
-						<input value='" + fiatcurrencyvaluelet + "' step='" + steps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
-					</span>\
-					<span id='sharelcname'>" + currencynamestring + "</span>\
-					<span class='quote'>)</span>\
-					</span>\
-				</div>\
-				<div id='ccamountbox'>\
-					<span id='ccamount'>(" + cryptologo + lndlogo +
+                            <span>" + thiscurrencyvaluefixedplaceholder + "</span>\
+                            <input value='" + thiscurrencyvaluefixedvar + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
+                        </span>\
+                    </span>\
+                    <span id='shareinputmirror' class='fmirror mirrordiv'>\
+                        <span>" + placeholder + "</span>\
+                        <input value='" + valueplaceholder + "' step='" + steps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
+                    </span>\
+                    <span id='sharecurrency'>" + request.uoa + "</span>\
+                </div>\
+                <div id='currencynamebox'>\
+                    <span id='currencyname' data-currencyname='" + currencynamestring + "'>\
+                        <span class='quote'>(</span>\
+                        <span id='sharelcinputmirror' class='lcmirror mirrordiv'>\
+                        <span>" + fiatcurrencyvalue + "</span>\
+                        <input value='" + fiatcurrencyvaluelet + "' step='" + steps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
+                    </span>\
+                    <span id='sharelcname'>" + currencynamestring + "</span>\
+                    <span class='quote'>)</span>\
+                    </span>\
+                </div>\
+                <div id='ccamountbox'>\
+                    <span id='ccamount'>(" + cryptologo + lndlogo +
         "<span id='shareccinputmirror' class='ccmirror mirrordiv'>\
-							<span>" +
+                            <span>" +
         thiscurrencyvaluefixedplaceholder +
         "</span>\
-							<input value='" + thiscurrencyvaluefixedvar + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
-						</span> " +
+                            <input value='" + thiscurrencyvaluefixedvar + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
+                        </span> " +
         request.payment + ")\
-					</span>\
-				</div>\
-			</div>",
+                    </span>\
+                </div>\
+            </div>",
         status_text = (request.paid === true) ? (request.requesttype == "incoming") ? "Payment sent" : "Payment received" : "Waiting for payment",
         conf_section = (request.instant === true) ? "" : "<span id='statusbox'>Waiting for <span id='confnumber'></span> confirmations </span><span class='confbox'><span data-conf='0'>0</span> confirmations</span>",
         brstatuspanel = "\
-			<div class='brstatuspanel'>\
-				<img src='" + c_icons("confirmed") + "'/>\
-				<div id='mainpulse' class='pulse'></div>\
-				<div class='main_wifi_off icon-wifi-off'></div>\
-				<h2>" + status_text + "</h2>\
-				<p>\
-					<span class='paymentdate'></span><br/>\
-					<span class='receivedcrypto'></span>\
-					<span class='receivedfiat'></span><br/>\
-					<span id='ibstatus'>\
-						<span id='inlinepulse' class='pulse'></span>\
-						<span class='wifi_off icon-wifi-off'></span>" +
+            <div class='brstatuspanel'>\
+                <img src='" + c_icons("confirmed") + "'/>\
+                <div id='mainpulse' class='pulse'></div>\
+                <div class='main_wifi_off icon-wifi-off'></div>\
+                <h2>" + status_text + "</h2>\
+                <p>\
+                    <span class='paymentdate'></span><br/>\
+                    <span class='receivedcrypto'></span>\
+                    <span class='receivedfiat'></span><br/>\
+                    <span id='ibstatus'>\
+                        <span id='inlinepulse' class='pulse'></span>\
+                        <span class='wifi_off icon-wifi-off'></span>" +
         conf_section +
         "</span><br/>\
-					<span id='view_tx'>View details</span>\
-				</p>\
-			</div>",
+                    <span id='view_tx'>View details</span>\
+                </p>\
+            </div>",
         readonly_attr = (is_viewonly() === true) ? " readonly='readonly'" : "",
         fb_labelval = (has_label) ? " (" + labelvalue + ")" : "",
         fb_markup = (request.payment == "bitcoin") ? "<div id='fallback_address'>Fallback address:<br/><span id='fb_addr'>" + request.address + fb_labelval + "</span> " + switchpanel(false, " global") + "</div>" : "",
         shareform = "\
-			<div id='shareformbox'>\
-				<div id='shareformib' class='inputbreak'>\
-					<form id='shareform' disabled='' autocomplete='off' autocorrect='off' autocapitalize='sentences' spellcheck='off'>\
-						<label>What's your name?<input type='text' placeholder='Name' id='requestname' value='" + initrequestname + "' autocomplete='false'" + readonly_attr + "></label>\
-						<label>What's it for?<input type='text' placeholder='eg:  lunch  🥪' id='requesttitle' value='" + requesttitle_string + "' data-ph1=' festival tickets' data-ph2=' coffee  ☕' data-ph3=' present  🎁' data-ph4=' snowboarding  🏂' data-ph5=' movie theater  📽️' data-ph6=' lunch  🥪' data-ph7=' shopping  🛒' data-ph8=' video game  🎮' data-ph9=' drinks  🥤' data-ph10=' concert tickets  🎵' data-ph11=' camping  ⛺' data-ph12=' taxi  🚕' data-ph13=' zoo  🦒'></label>\
-					</form>" + fb_markup +
+            <div id='shareformbox'>\
+                <div id='shareformib' class='inputbreak'>\
+                    <form id='shareform' disabled='' autocomplete='off' autocorrect='off' autocapitalize='sentences' spellcheck='off'>\
+                        <label>What's your name?<input type='text' placeholder='Name' id='requestname' value='" + initrequestname + "' autocomplete='false'" + readonly_attr + "></label>\
+                        <label>What's it for?<input type='text' placeholder='eg:  lunch  🥪' id='requesttitle' value='" + requesttitle_string + "' data-ph1=' festival tickets' data-ph2=' coffee  ☕' data-ph3=' present  🎁' data-ph4=' snowboarding  🏂' data-ph5=' movie theater  📽️' data-ph6=' lunch  🥪' data-ph7=' shopping  🛒' data-ph8=' video game  🎮' data-ph9=' drinks  🥤' data-ph10=' concert tickets  🎵' data-ph11=' camping  ⛺' data-ph12=' taxi  🚕' data-ph13=' zoo  🦒'></label>\
+                    </form>" + fb_markup +
         "</div>\
-				<div id='sharebox' class='inputbreak'>" + sharebutton + "</div>\
-			</div>",
+                <div id='sharebox' class='inputbreak'>" + sharebutton + "</div>\
+            </div>",
         requestnamestring = (request.requesttype === "outgoing") ? "" : (rn_set === true) ? "To " + request.requestname + ":" : "",
         lndowbttn = (request.payment == "bitcoin") ? "<div class='button openwallet_lnd' id='openwallet_lnd' data-currency='bitcoin'><span class='icon-folder-open'>Open wallet</span></div>" : "",
         paymethods = "\
-			<div id='paymethods'>\
-				<p id='requestnamep'>" + requestnamestring + "</p>\
-				<div id='scanqrib' class='inputbreak'>\
-					<div class='button' id='scanqr'>\
-						<span class='icon-qrcode'>Show qr-code</span>\
-					</div><br/>\
-					<div class='button openwallet' id='openwallet' data-currency='" + request.payment + "'><span class='icon-folder-open'>Open wallet</span></div>" + lndowbttn +
+            <div id='paymethods'>\
+                <p id='requestnamep'>" + requestnamestring + "</p>\
+                <div id='scanqrib' class='inputbreak'>\
+                    <div class='button' id='scanqr'>\
+                        <span class='icon-qrcode'>Show qr-code</span>\
+                    </div><br/>\
+                    <div class='button openwallet' id='openwallet' data-currency='" + request.payment + "'><span class='icon-folder-open'>Open wallet</span></div>" + lndowbttn +
         "</div>\
-			</div>",
+            </div>",
         poweredby = "<div class='poweredby'>Powered by: <a href='https://www.bitrequest.io' target='_blank'>Bitrequest</a></div>",
         bottomcard = (request.isrequest === true) ? paymethods : shareform,
         ccqr = "<div id='qrcode' class='qrcode'><canvas width='256' height='256'></canvas></div>" + cryptologo,
         lndqr = (request.payment == "bitcoin") ? "<div id='qrcode_lnd' class='qrcode'><canvas width='256' height='256'></canvas></div><img src='img_logos_btc-lnd.png' class='cmc_icon' id='lnd_icon'><img src='" + c_icons("phone-icon") + "' class='cmc_icon' id='phone_icon'>" : "",
         lndow = (request.payment == "bitcoin") ? "<div class='openwallet_lnd abr icon-folder-open' data-currency='bitcoin' data-rel='0'>Open wallet</div>" : "";
     $("#request_front").prepend("<div id='cl_wrap'>" + cryptologo + "</div>\
-		<div class='actionbar clearfix'>\
-			<div id='sharerequest' class='abl icon-share2 sbactive'>Share request</div><div id='open_wallet' class='openwallet abr icon-folder-open' data-currency='" + request.payment + "' data-rel='0'>Open wallet</div>" + lndow +
+        <div class='actionbar clearfix'>\
+            <div id='sharerequest' class='abl icon-share2 sbactive'>Share request</div><div id='open_wallet' class='openwallet abr icon-folder-open' data-currency='" + request.payment + "' data-rel='0'>Open wallet</div>" + lndow +
         "</div>\
-		<div class='qrwrap flex' id='main_qrwrap'>" + ccqr + lndqr + brstatuspanel +
+        <div class='qrwrap flex' id='main_qrwrap'>" + ccqr + lndqr + brstatuspanel +
         "</div>\
         <div id='popform' data-payment='" + request.payment + "' data-currency='" + request.uoa + "' data-address='" + request.address + "' data-lcrate='" + fiatcurrencyrate + "'>\
-			<div id='rf_wrap'>\
-				<div id='amountbreak' class='inputbreak'>\
-					<span id='mainccinputmirror' class='ccmirror mirrordiv'>\
-						<span>" + thiscurrencyvaluefixedplaceholder + "</span>\
-						<input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + ">\
-					</span>\
-					<span id='amountinputmirror' class='fmirror mirrordiv'>\
-						<span>" + placeholder + "</span>\
-						<input value='" + valueplaceholder + "' data-xrate='" + currencyxrate + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + ">\
-					</span>\
-					<span id='pickcurrency'>" + request.uoa + "</span>\
-				</div>\
-				<div id='ibsat' class='inputbreak'>\
-					<span id='satinputmirror' class='mirrordiv'>\
-						<span>" + satplaceholder + "</span>\
-						<input class='satinput' value='" + satamountlet + "' data-xrate='" + ccrateeuro + "' max='10000000000000' type='number' placeholder='000000000'" + ro_attr + "/>\
-					</span> satoshis\
-				</div>\
-				<div id='iblc' class='inputbreak'>\
-					(<span id='lcinputmirror' class='lcmirror mirrordiv'>\
-						<span>" + fiatcurrencyvalue + "</span>\
-						<input value='" + fiatcurrencyvaluelet + "' data-xrate='" + fiatcurrencyrate + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
-					</span> " + request.fiatcurrency + ") \
-				</div>\
-				<div id='txibreak' class='inputbreak'> Send <span id='ccinputmirror' class='ccmirror mirrordiv'><span>" + thiscurrencyvaluefixedplaceholder + "</span><input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/></span> " + request.currencysymbol + " to" + label_markup + ": </div>\
-			</div>\
-			<div id='paymentaddress' class='copyinput' data-type='address'>" + address_xmr_ia + "</div><div id='paymentaddress_lnd' class='copyinput' data-type='lightning invoice'></div>\
-		</div>\
-		<div id='apisrc'>src: " + ccapi + "</div>" + poweredby);
+            <div id='rf_wrap'>\
+                <div id='amountbreak' class='inputbreak'>\
+                    <span id='mainccinputmirror' class='ccmirror mirrordiv'>\
+                        <span>" + thiscurrencyvaluefixedplaceholder + "</span>\
+                        <input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + ">\
+                    </span>\
+                    <span id='amountinputmirror' class='fmirror mirrordiv'>\
+                        <span>" + placeholder + "</span>\
+                        <input value='" + valueplaceholder + "' data-xrate='" + currencyxrate + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + ">\
+                    </span>\
+                    <span id='pickcurrency'>" + request.uoa + "</span>\
+                </div>\
+                <div id='ibsat' class='inputbreak'>\
+                    <span id='satinputmirror' class='mirrordiv'>\
+                        <span>" + satplaceholder + "</span>\
+                        <input class='satinput' value='" + satamountlet + "' data-xrate='" + ccrateeuro + "' max='10000000000000' type='number' placeholder='000000000'" + ro_attr + "/>\
+                    </span> satoshis\
+                </div>\
+                <div id='iblc' class='inputbreak'>\
+                    (<span id='lcinputmirror' class='lcmirror mirrordiv'>\
+                        <span>" + fiatcurrencyvalue + "</span>\
+                        <input value='" + fiatcurrencyvaluelet + "' data-xrate='" + fiatcurrencyrate + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
+                    </span> " + request.fiatcurrency + ") \
+                </div>\
+                <div id='txibreak' class='inputbreak'> Send <span id='ccinputmirror' class='ccmirror mirrordiv'><span>" + thiscurrencyvaluefixedplaceholder + "</span><input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/></span> " + request.currencysymbol + " to" + label_markup + ": </div>\
+            </div>\
+            <div id='paymentaddress' class='copyinput' data-type='address'>" + address_xmr_ia + "</div><div id='paymentaddress_lnd' class='copyinput' data-type='lightning invoice'></div>\
+        </div>\
+        <div id='apisrc'>src: " + ccapi + "</div>" + poweredby);
     paymentdialogbox.find("#request_back").html("\
-		<div class='actionbar clearfix'></div>\
-		<div id='backwraptop' class='flex'>" + requestinfo + "</div>\
-		<div id='backwrapbottom' class='flex'>" + bottomcard + brstatuspanel + "</div>" + poweredby);
+        <div class='actionbar clearfix'></div>\
+        <div id='backwraptop' class='flex'>" + requestinfo + "</div>\
+        <div id='backwrapbottom' class='flex'>" + bottomcard + brstatuspanel + "</div>" + poweredby);
     show_paymentdialog();
     rendercpool(request.amount, currencyxrate);
     renderqr(request.payment, address_xmr_ia, thiscurrencyvaluefixedvar, request.requesttitle);
@@ -1367,7 +1367,7 @@ function getpayment(ccrateeuro, ccapi) {
                 if (request.iszero === true) {
                     main_input_focus();
                 }
-                let save_request = saverequest("init");
+                save_request = saverequest("init");
             }
         }
     } else {
@@ -2028,17 +2028,17 @@ function pendingrequest() {
         let first_address = nonpending_addresslist.first(),
             fa_data = first_address.data();
         dialogcontent = "<h3>Pick another address</h3><div class='selectbox'>\
-			<input type='text' value='" + fa_data.label + " | " + fa_data.address + "' placeholder='Pick currency' readonly id='selec_address'/>\
-			<div class='selectarrows icon-menu2' data-pe='none'></div>\
-			<div class='options'>" + addresslist + "</div>\
-		</div>\
-		<input type='submit' class='submit' value='OK' id='pending_pick_address'/>";
+            <input type='text' value='" + fa_data.label + " | " + fa_data.address + "' placeholder='Pick currency' readonly id='selec_address'/>\
+            <div class='selectarrows icon-menu2' data-pe='none'></div>\
+            <div class='options'>" + addresslist + "</div>\
+        </div>\
+        <input type='submit' class='submit' value='OK' id='pending_pick_address'/>";
     } else {
         dialogcontent = "<div id='addaddress' class='button'><span class='icon-plus'>Add new " + currencysymbol + " address</span></div><input type='submit' class='submit' value='OK' id='pending_add_address'/>";
     }
     let content = "<div class='formbox' id='addresslock' data-currency='" + payment + "' data-currencysymbol='" + currencysymbol + "' data-cmcid='" + cmcid + "'><h2 class='icon-lock'>Temporarily unable to share request</h2><p>This address has a <span id='view_pending_tx' data-requestid='" + pending_requestid + "'>pending shared request</span>.<br/>Please wait for the transaction to confirm before re-using the address.</p>\
-	<div class='popnotify'></div>\
-	<div class='popform validated'>" + dialogcontent + "</div>";
+    <div class='popnotify'></div>\
+    <div class='popform validated'>" + dialogcontent + "</div>";
     popdialog(content, "triggersubmit");
 }
 
@@ -2826,7 +2826,7 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
             notify("this currency is not monitored", 500000, "yes");
             return
         }
-        pick_monitor(smart_txhash);
+        pick_monitor(smart_txhash, false);
     }
 }
 
@@ -2882,14 +2882,14 @@ function download_wallet(currency) {
         let wallet_ul = (wallets_arr) ? "<ul id='formbox_ul'></ul>" : "",
             fmw = (wdp) ? "<a href='" + wdp + "' target='_blank' class='exit formbox_href'>Find more wallets</a>" : "",
             content = "\
-			<div class='formbox' id='wdl_formbox'>\
-				<h2 class='icon-download'>Download " + currency + " wallet</h2>\
-				<div class='popnotify'></div>\
-				<div id='dialogcontent'>" + wallet_ul + fmw + "</div>\
-				<div id='backupactions'>\
-					<div class='cancel_dialog customtrigger'>CANCEL</div>\
-				</div>\
-			</div>";
+            <div class='formbox' id='wdl_formbox'>\
+                <h2 class='icon-download'>Download " + currency + " wallet</h2>\
+                <div class='popnotify'></div>\
+                <div id='dialogcontent'>" + wallet_ul + fmw + "</div>\
+                <div id='backupactions'>\
+                    <div class='cancel_dialog customtrigger'>CANCEL</div>\
+                </div>\
+            </div>";
         popdialog(content, "canceldialog");
         if (wallets_arr) {
             let walletlist = $("#formbox_ul"),

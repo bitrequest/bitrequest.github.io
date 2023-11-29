@@ -578,6 +578,9 @@ function finishfunctions() {
     //get_addresslist
     //filter_addressli
     //filter_all_addressli
+    //filter_list
+    //get_currencyli
+    //get_homeli
     //getcoindata
     //activecoinsettings
     //getcoinsettings
@@ -1353,7 +1356,7 @@ function togglecurrency() {
             coindata = parentlistitem.data(),
             currency = coindata.currency,
             checked = coindata.checked,
-            currencylistitem = $("#currencylist > li[data-currency='" + currency + "']");
+            currencylistitem = get_homeli(currency);
         if (checked === true) {
             parentlistitem.attr("data-checked", "false").data("checked", false);
             currencylistitem.addClass("hide");
@@ -1847,7 +1850,7 @@ function payment_lookup(request_dat) {
     }
     let currency = request.payment,
         blockexplorer = get_blockexplorer(currency),
-        bu_url = blockexplorer_url(currency, false, request_dat.erc20) + request_dat.address,
+        bu_url = blockexplorer_url(currency, false, request_dat.erc20) + request_dat.addres,
         content = "<div class='formbox'>\
             <h2 class='icon-warning'><span class='icon-qrcode'/>No payment detected</h2>\
             <div id='ad_info_wrap'>\
@@ -2405,8 +2408,8 @@ function validateaddress(ad, vk) {
         labelinput = labelfield.val(),
         labelinputval = (labelinput) ? labelinput : "";
     if (addressinputval) {
-        let addinputval = (addressinputval.indexOf(":") > -1) ? addressinputval.split(":").pop() : addressinputval,
-            addressduplicate = currentaddresslist.children("li[data-address=" + addinputval + "]").length > 0,
+        let addinputval = (currency == "bitcoin-cash" && addressinputval.indexOf(":") > -1) ? addressinputval.split(":").pop() : addressinputval,
+            addressduplicate = (filter_addressli(currency, "address", addinputval).length > 0),
             address = ad.address,
             label = ad.label;
         if (addressduplicate === true && address !== addinputval) {
@@ -2952,12 +2955,13 @@ function removeaddressfunction(trigger) {
             currency = ad.currency,
             address = ad.address,
             erc20 = ad.erc20,
-            currentaddresslist = get_addresslist(currency);
-        currentaddresslist.children("li[data-address='" + address + "']").remove();
-        if (currentaddresslist.children("li").length) {} else {
+            current_entry = filter_addressli(currency, "address", address);
+        current_entry.remove();
+        let currentaddresslist = get_addresslist(currency).children("li");
+        if (currentaddresslist.length) {} else {
             loadpage("?p=currencies");
-            let currencyli = $("#usedcurrencies > li[data-currency='" + currency + "']"),
-                homeli = $("#currencylist > li[data-currency='" + currency + "']");
+            let currencyli = get_currencyli(currency),
+                homeli = get_homeli(currency);
             if (erc20 === true) {
                 $("#" + currency + ".page").remove();
                 currencyli.remove();
@@ -3065,7 +3069,8 @@ function addressinfo() {
             dpath = dsplit.join("/");
         }
         dd.dpath = dpath,
-            dd.bip32dat = bip32dat;
+            dd.bip32dat = bip32dat,
+            dd.address = address;
         let cc_icon = getcc_icon(dd.cmcid, dd.ccsymbol + "-" + currency, dd.erc20),
             dpath_str = (isseed) ? "<li><strong>Derivation path:</strong> " + dpath + "</li>" : "",
             pk_verified = "Unknown <span class='icon-checkmark'></span>",
@@ -4439,7 +4444,7 @@ function saveaddresses(currency, add) {
         });
         br_set_local("cc_" + currency, addressboxpush, true)
     } else {
-        br_remove_local("c_" + currency);
+        br_remove_local("cc_" + currency);
         br_remove_local(currency + "_settings");
     }
     updatechanges("addresses", add);
@@ -4560,16 +4565,16 @@ function check_currency(currency) {
 }
 
 function currency_check(currency) {
-    let currencylistitem = $("#currencylist > li[data-currency='" + currency + "']"),
-        parentcheckbox = $("#usedcurrencies li[data-currency='" + currency + "']");
+    let currencylistitem = get_homeli(currency),
+        parentcheckbox = get_currencyli(currency);
     currencylistitem.removeClass("hide");
     parentcheckbox.attr("data-checked", "true").data("checked", true);
     savecurrencies(false);
 }
 
 function currency_uncheck(currency) {
-    let currencylistitem = $("#currencylist > li[data-currency='" + currency + "']"),
-        parentcheckbox = $("#usedcurrencies li[data-currency='" + currency + "']");
+    let currencylistitem = get_homeli(currency),
+        parentcheckbox = get_currencyli(currency);
     currencylistitem.addClass("hide");
     parentcheckbox.attr("data-checked", "false").data("checked", false);
     savecurrencies(false);
@@ -4759,16 +4764,25 @@ function get_addresslist(currency) {
 
 function filter_addressli(currency, datakey, dataval) {
     let addressli = get_addresslist(currency).children("li");
-    return addressli.filter(function() {
+    return filter_list(addressli, datakey, dataval);
+}
+
+function filter_all_addressli(datakey, dataval) {
+    return filter_list($(".adli"), datakey, dataval);
+}
+
+function filter_list(list, datakey, dataval) {
+    return list.filter(function() {
         return $(this).data(datakey) == dataval;
     })
 }
 
-function filter_all_addressli(datakey, dataval) {
-    let all_addressli = $(".adli");
-    return all_addressli.filter(function() {
-        return $(this).data(datakey) == dataval;
-    })
+function get_currencyli(currency) {
+    return $("#usedcurrencies > li[data-currency='" + currency + "']");
+}
+
+function get_homeli(currency) {
+    return $("#currencylist > li[data-currency='" + currency + "']");
 }
 
 function getcoindata(currency) {
@@ -4790,7 +4804,7 @@ function getcoindata(currency) {
             };
         return cd_object;
     } // if not it's probably erc20 token
-    let currencyref = $("#usedcurrencies li[data-currency='" + currency + "']"); // check if erc20 token is added
+    let currencyref = get_currencyli(currency); // check if erc20 token is added
     if (currencyref.length > 0) {
         return $.extend(currencyref.data(), br_config.erc20_dat.data);
     } // else lookup erc20 data
