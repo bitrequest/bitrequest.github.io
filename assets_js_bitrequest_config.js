@@ -1188,10 +1188,6 @@ const apptitle = "Bitrequest",
                         "pk_vbytes": {
                             "wif": 128
                         }
-                    },
-                    "Key derivations": {
-                        "icon": "cog",
-                        "selected": "Compatible wallets",
                     }
                 }
             },
