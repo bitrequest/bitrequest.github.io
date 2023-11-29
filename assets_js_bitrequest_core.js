@@ -62,7 +62,8 @@ let scrollposition = 0,
     cashier_seedid = (is_cashier) ? cashier_dat.seedid : false,
     stored_currencies = br_get_local("currencies", true),
     init = br_get_local("init", true),
-    io = br_dobj(init, true);
+    io = br_dobj(init, true),
+    new_address; // prevent double address entries
 
 if (has_ndef && !inframe) {
     ndef = new NDEFReader();
@@ -2417,6 +2418,10 @@ function validateaddress(ad, vk) {
             addressfield.select();
             return
         }
+        if (addinputval == new_address) { // prevent double address entries
+            console.log("already added");
+            return
+        }
         let valid = check_address(addinputval, currencycheck);
         if (valid === true) {
             let validlabel = check_address(labelinputval, currencycheck);
@@ -2460,6 +2465,7 @@ function validateaddress(ad, vk) {
                         loadpage("?p=" + currency);
                     }
                 }
+                new_address = addinputval;
                 ad.address = addinputval,
                     ad.label = labelinputval,
                     ad.a_id = ccsymbol + index,
@@ -2972,6 +2978,7 @@ function removeaddressfunction(trigger) {
             }
             savecurrencies(true);
         }
+        new_address = null; // prevent double entries
         canceldialog();
         canceloptions();
         notify("Address deleted 🗑");
