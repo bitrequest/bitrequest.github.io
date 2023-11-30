@@ -266,51 +266,53 @@ function Drive_Backup_trigger() {
 function updateappdata(pass) {
     let bu_id = br_get_local("backupfile_id");
     if (bu_id) {
-        let gd_timer = br_get_session("gd_timer"); // prevent Ddos
-        if (gd_timer) {
-            let interval = 3000;
-            if ((now() - gd_timer) < interval) {
-                return
+        if (pass.token) {
+            let gd_timer = br_get_session("gd_timer"); // prevent Ddos
+            if (gd_timer) {
+                let interval = 3000;
+                if ((now() - gd_timer) < interval) {
+                    return
+                }
             }
-        }
-        br_set_session("gd_timer", now());
-        api_proxy({
-            "api_url": drivepath + "/upload/drive/v3/files/" + bu_id + "?uploadType=media&alt=json",
-            "proxy": false,
-            "params": {
-                "method": "PATCH",
-                "dataType": "json",
-                "contentType": "application/json",
-                "headers": {
-                    "Authorization": "Bearer " + pass.token
-                },
-                "data": complilebackup()
-            }
-        }).done(function(e) {}).fail(function(jqXHR, textStatus, errorThrown) {
-            if (textStatus == "error") {
-                let error_object = jqXHR;
-                if (error_object) {
-                    let resp_obj = error_object.responseJSON;
-                    if (resp_obj) {
-                        let resp = resp_obj.error;
-                        if (resp) {
-                            console.log(resp);
-                            if (resp.code == 401) {
-                                //oauth_pop(true); // log in
-                                notify("Unauthorized");
-                                return
-                            }
-                            if (resp.code == 404) {
-                                createfile(pass); // create file
-                                return
+            br_set_session("gd_timer", now());
+            api_proxy({
+                "api_url": drivepath + "/upload/drive/v3/files/" + bu_id + "?uploadType=media&alt=json",
+                "proxy": false,
+                "params": {
+                    "method": "PATCH",
+                    "dataType": "json",
+                    "contentType": "application/json",
+                    "headers": {
+                        "Authorization": "Bearer " + pass.token
+                    },
+                    "data": complilebackup()
+                }
+            }).done(function(e) {}).fail(function(jqXHR, textStatus, errorThrown) {
+                if (textStatus == "error") {
+                    let error_object = jqXHR;
+                    if (error_object) {
+                        let resp_obj = error_object.responseJSON;
+                        if (resp_obj) {
+                            let resp = resp_obj.error;
+                            if (resp) {
+                                console.log(resp);
+                                if (resp.code == 401) {
+                                    //oauth_pop(true); // log in
+                                    notify("Unauthorized");
+                                    return
+                                }
+                                if (resp.code == 404) {
+                                    createfile(pass); // create file
+                                    return
+                                }
                             }
                         }
                     }
+                    notify("error");
                 }
-                notify("error");
-            }
-        });
-        return
+            });
+            return
+        }
     }
     createfile(pass) // create file
 }
