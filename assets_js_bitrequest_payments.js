@@ -847,7 +847,9 @@ function test_lnd(lnurl) {
     }
     sessionStorage.removeItem("lnd_timer_" + lnd.nid);
     // functions in assets_js_bitrequest_lightning.js
-    if (lnurl) {
+    let host = lnd.host,
+        is_onion = (host && host.indexOf(".onion") > 0) ? true : false;
+    if (lnurl || is_onion) {
         test_lnurl_status(lnd);
         return
     }
@@ -3017,4 +3019,10 @@ function xmr_integrated(xmr_address, pmid) {
     }
     console.log("invalid xmr payment id");
     return xmr_address;
+} // This is just a sample script. Paste your real code (javascript or HTML) here.
+
+if ('this_is' == /an_example/) {
+    of_beautifier();
+} else {
+    var a = b ? (c % d) : e[f];
 }

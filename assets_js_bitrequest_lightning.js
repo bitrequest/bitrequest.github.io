@@ -98,71 +98,71 @@ function lm_function(replace) {
             node_name = (current_node) ? current_node.name : "",
             c_node_id = (current_node) ? current_node.node_id : "",
             proxy_select = (has_proxy) ? "<div class='selectbox' id='lnd_proxy_select_input'>\
-			<input type='text' value='" + cp_format + "' data-pid='" + cp_id + "' placeholder='https://...' readonly='readonly'/>\
-				<div class='selectarrows icon-menu2' data-pe='none'></div>\
-				<div class='options'></div>\
-			</div><div id='add_proxy'><span class='ref'>Add RPC proxy</span></div>" : "",
+            <input type='text' value='" + cp_format + "' data-pid='" + cp_id + "' placeholder='https://...' readonly='readonly'/>\
+                <div class='selectarrows icon-menu2' data-pe='none'></div>\
+                <div class='options'></div>\
+            </div><div id='add_proxy'><span class='ref'>Add RPC proxy</span></div>" : "",
             ln_markup = "\
-			<div class='popform" + n_class + p_class + "'>\
-				<div id='select_ln_node' class='selectbox' data-nodeid='" + c_node_id + "'>\
-					<input type='text' value='" + node_name + "' placeholder='Select lightning node' readonly='readonly' id='ln_nodeselect'/>\
-					<div class='selectarrows icon-menu2' data-pe='none'></div>\
-					<div id='ln_nodelist' class='options'></div>\
-				</div>\
-				<div id='ad_info_wrap'>\
-					<ul>\
-						<li><div class='d_trigger' id='add_lndnode_trigger'><span class='ref'><span class='icon-power'></span>Add node</span></div>\
-							<div class='drawer2' id='adln_drawer'>\
-								<div class='selectbox'>\
-									<input type='text' value='' placeholder='Implementation' id='lnd_select_input' readonly='readonly'/>\
-									<div class='selectarrows icon-menu2' data-pe='none'></div>\
-									<div class='options' id='implements'>\
-										<span data-value='lnd' class='imp_select'><img src='" + c_icons("lnd") + "' class='lnd_icon'> LND</span>\
-										<span data-value='eclair' class='imp_select'><img src='" + c_icons("eclair") + "' class='lnd_icon'> Eclair</span>\
-										<span data-value='c-lightning' class='imp_select'><img src='" + c_icons("c-lightning") + "' class='lnd_icon'> c-lightning</span>\
-										<span data-value='lnbits' class='imp_select'><img src='" + c_icons("lnbits") + "' class='lnd_icon'> LNbits</span>\
-									</div>\
-								</div>\
-								<div id='lnd_credentials'>\
-									<div class='lndcd cs_lnd'>\
-										<input class='lnd_host' type='text' value='' placeholder='REST Host'/>\
-										<input class='invoice_macaroon (hex)' type='text' value='' placeholder='Invoice macaroon'/>\
-									</div>\
-									<div class='lndcd cs_eclair'>\
-										<input class='lnd_host' type='text' value='' placeholder='REST Host'/>\
-										<input class='invoice_macaroon (hex)' type='text' value='' placeholder='Password'/>\
-									</div>\
-									<div class='lndcd cs_c-lightning'>\
-										<input class='lnd_host' type='text' value='' placeholder='REST Host'/>\
-										<input class='invoice_macaroon' type='text' value='' placeholder='Invoice macaroon'/>\
-									</div>\
-									<div class='lndcd cs_lnbits'>\
-										<input class='lnd_host' type='text' value='' placeholder='REST Host'/>\
-										<input class='invoice_macaroon' type='text' value='' placeholder='Invoice/read key'/>\
-									</div>\
-								</div>\
-								<div class='switch_wrap'>\
-									<div id='lnurl_s'><span id='toggle_lnd' class='ref'>RPC proxy</span>" + switchpanel(has_proxies, " custom") + "</div>\
-								</div>\
-							</div>\
-						</li>\
-						<li><div class='d_trigger' id='add_proxy_trigger'><span class='ref'><span class='icon-sphere'></span>RPC proxy</span></div>\
-							<div class='drawer2" + p_class + "' id='add_proxy_drawer'>" + proxy_select +
+            <div class='popform" + n_class + p_class + "'>\
+                <div id='select_ln_node' class='selectbox' data-nodeid='" + c_node_id + "'>\
+                    <input type='text' value='" + node_name + "' placeholder='Select lightning node' readonly='readonly' id='ln_nodeselect'/>\
+                    <div class='selectarrows icon-menu2' data-pe='none'></div>\
+                    <div id='ln_nodelist' class='options'></div>\
+                </div>\
+                <div id='ad_info_wrap'>\
+                    <ul>\
+                        <li><div class='d_trigger' id='add_lndnode_trigger'><span class='ref'><span class='icon-power'></span>Add node</span></div>\
+                            <div class='drawer2' id='adln_drawer'>\
+                                <div class='selectbox'>\
+                                    <input type='text' value='' placeholder='Implementation' id='lnd_select_input' readonly='readonly'/>\
+                                    <div class='selectarrows icon-menu2' data-pe='none'></div>\
+                                    <div class='options' id='implements'>\
+                                        <span data-value='lnd' class='imp_select'><img src='" + c_icons("lnd") + "' class='lnd_icon'> LND</span>\
+                                        <span data-value='eclair' class='imp_select'><img src='" + c_icons("eclair") + "' class='lnd_icon'> Eclair</span>\
+                                        <span data-value='c-lightning' class='imp_select'><img src='" + c_icons("c-lightning") + "' class='lnd_icon'> c-lightning</span>\
+                                        <span data-value='lnbits' class='imp_select'><img src='" + c_icons("lnbits") + "' class='lnd_icon'> LNbits</span>\
+                                    </div>\
+                                </div>\
+                                <div id='lnd_credentials'>\
+                                    <div class='lndcd cs_lnd'>\
+                                        <input class='lnd_host' type='text' value='' placeholder='REST Host'/>\
+                                        <input class='invoice_macaroon (hex)' type='text' value='' placeholder='Invoice macaroon'/>\
+                                    </div>\
+                                    <div class='lndcd cs_eclair'>\
+                                        <input class='lnd_host' type='text' value='' placeholder='REST Host'/>\
+                                        <input class='invoice_macaroon (hex)' type='text' value='' placeholder='Password'/>\
+                                    </div>\
+                                    <div class='lndcd cs_c-lightning'>\
+                                        <input class='lnd_host' type='text' value='' placeholder='REST Host'/>\
+                                        <input class='invoice_macaroon' type='text' value='' placeholder='Invoice macaroon'/>\
+                                    </div>\
+                                    <div class='lndcd cs_lnbits'>\
+                                        <input class='lnd_host' type='text' value='' placeholder='REST Host'/>\
+                                        <input class='invoice_macaroon' type='text' value='' placeholder='Invoice/read key'/>\
+                                    </div>\
+                                </div>\
+                                <div class='switch_wrap'>\
+                                    <div id='lnurl_s'><span id='toggle_lnd' class='ref'>RPC proxy</span>" + switchpanel(has_proxies, " custom") + "</div>\
+                                </div>\
+                            </div>\
+                        </li>\
+                        <li><div class='d_trigger' id='add_proxy_trigger'><span class='ref'><span class='icon-sphere'></span>RPC proxy</span></div>\
+                            <div class='drawer2" + p_class + "' id='add_proxy_drawer'>" + proxy_select +
             "<div id='lnurl_proxy_drawer' class='lpd'>\
-									<p id='lnurls_info'>\
-										Control your own lightning node and keys:<br/><br/>\
-										<strong>1.</strong> Host the <a href='https://github.com/bitrequest/bitrequest.github.io/tree/master/proxy' target='blank' class='exit ref'>proxy folder</a> on your webserver.<br/>\
-										<strong>2.</strong> Enter your lightning node's REST host and keys in 'config.php'.<br/>\
-										<strong>3.</strong> Enter your server address below.<br/><br/>\
-									</p>\
-									<input type='text' value='' placeholder='https://...' id='lnd_proxy_url_input'/>\
-									<input type='password' value='' placeholder='API key' id='proxy_pw_input'/>\
-								</div>\
-							</div>\
-						</li>\
-					<ul>\
-				</div>\
-			</div>",
+                                    <p id='lnurls_info'>\
+                                        Control your own lightning node and keys:<br/><br/>\
+                                        <strong>1.</strong> Host the <a href='https://github.com/bitrequest/bitrequest.github.io/tree/master/proxy' target='blank' class='exit ref'>proxy folder</a> on your webserver.<br/>\
+                                        <strong>2.</strong> Enter your lightning node's REST host and keys in 'config.php'.<br/>\
+                                        <strong>3.</strong> Enter your server address below.<br/><br/>\
+                                    </p>\
+                                    <input type='text' value='' placeholder='https://...' id='lnd_proxy_url_input'/>\
+                                    <input type='password' value='' placeholder='API key' id='proxy_pw_input'/>\
+                                </div>\
+                            </div>\
+                        </li>\
+                    <ul>\
+                </div>\
+            </div>",
             content = template_dialog_temp({
                 "id": "lnsettingsbox",
                 "icon": "icon-power",
@@ -282,11 +282,12 @@ function node_option_li(value, selected, fn, proxy, pw) {
 }
 
 function test_lnd_option_li(value, selected, fn) {
-    let host = value.host;
+    let host = value.host,
+        proxy = (host.indexOf(".onion") > 0) ? true : false;
     loader(true);
     loadertext("connecting to " + host);
     api_proxy({
-        "proxy": false,
+        "proxy": proxy,
         "api_url": host + "/v1/invoices",
         "params": {
             "method": "GET",
@@ -329,11 +330,12 @@ function test_lnd_option_li(value, selected, fn) {
 }
 
 function test_c_lightning_option_li(value, selected, fn) {
-    let host = value.host;
+    let host = value.host,
+        proxy = (host.indexOf(".onion") > 0) ? true : false;
     loader(true);
     loadertext("connecting to " + host);
     api_proxy({
-        "proxy": false,
+        "proxy": proxy,
         "api_url": host + "/v1/invoice/listInvoices",
         "params": {
             "method": "GET",
@@ -377,11 +379,12 @@ function test_c_lightning_option_li(value, selected, fn) {
 }
 
 function test_eclair_option_li(value, selected, fn) {
-    let host = value.host;
+    let host = value.host,
+        proxy = (host.indexOf(".onion") > 0) ? true : false;
     loader(true);
     loadertext("connecting to " + host);
     api_proxy({
-        "proxy": false,
+        "proxy": proxy,
         "api_url": host + "/listinvoices",
         "params": {
             "method": "POST",
@@ -434,11 +437,12 @@ function test_eclair_option_li(value, selected, fn) {
 }
 
 function test_lnbits_option_li(value, selected, fn) {
-    let host = value.host;
+    let host = value.host,
+        proxy = (host.indexOf(".onion") > 0) ? true : false;
     loader(true);
     loadertext("connecting to " + host);
     api_proxy({
-        "proxy": false,
+        "proxy": proxy,
         "api_url": host + "/api/v1/wallet",
         "params": {
             "method": "GET",
@@ -533,28 +537,28 @@ function lightning_option_li(live, value, selected, invoices, proxy) {
         lnurl_markup = (lnurls_bool) ? "<strong><img src='" + icon_loc + "' class='lnd_icon' style='opacity:0'/> Proxy server: </strong>" + proxy_val + "</br/>" : "",
         proxy_markup = (lnurls_bool) ? "" : "<strong><img src='" + icon_loc + "' class='lnd_icon' style='opacity:0'/> Proxy: </strong><span class='inline_pval'>" + proxy_val + "</span></br/>",
         info_markup = $("<li class='noln_ref" + hideclass + lnurls_class + "' data-id='" + node_id + "' data-pid='" + proxy_id + "'>\
-    	<div class='d_trigger'>\
-			<span class='ref'><span class='icon-info'></span>Info</span>\
-		</div>\
-		<div class='drawer2 infodrawer' style='display:block'>\
-			<div class='ln_info_wrap clearfix" + liveclass + "'>\
-				<div class='lni_dat'>\
-					<img src='" + icon_loc + "' class='lnd_icon'/> <strong>" + imp + " Node: </strong>" + node_name + "<br/>" +
+        <div class='d_trigger'>\
+            <span class='ref'><span class='icon-info'></span>Info</span>\
+        </div>\
+        <div class='drawer2 infodrawer' style='display:block'>\
+            <div class='ln_info_wrap clearfix" + liveclass + "'>\
+                <div class='lni_dat'>\
+                    <img src='" + icon_loc + "' class='lnd_icon'/> <strong>" + imp + " Node: </strong>" + node_name + "<br/>" +
             lnurl_markup + proxy_markup +
             "<strong><img src='" + icon_loc + "' class='lnd_icon' style='opacity:0'/> Status: </strong><span class='online_stat'> Online <span class='icon-connection'></span></span><span class='offline_stat'> Offline <span class='icon-wifi-off'></span></span><span class='locked_stat'> <span id='pw_unlock_info' data-pid='" + proxy_id + "' class='ref'>Locked</span> <span class='icon-lock'></span></span></br/>\
-				</div>\
-				<div class='lnurl_p'>Proxy" + switchpanel(proxy_bool, " custom") + "</div>\
-			</div>\
-		</div>\
-	</li>"),
+                </div>\
+                <div class='lnurl_p'>Proxy" + switchpanel(proxy_bool, " custom") + "</div>\
+            </div>\
+        </div>\
+    </li>"),
         invoice_markup = $("<li class='noln_ref" + hideclass + "' data-id='" + node_id + "'>\
-		<div class='d_trigger'>\
-			<span class='ref'><span class='icon-files-empty'></span>Invoices</span>\
-		</div>\
-		<div class='drawer2'>\
-			<div class='invoice_list'>" + invoiceslist + "</div>\
-		</div>\
-	</li>");
+        <div class='d_trigger'>\
+            <span class='ref'><span class='icon-files-empty'></span>Invoices</span>\
+        </div>\
+        <div class='drawer2'>\
+            <div class='invoice_list'>" + invoiceslist + "</div>\
+        </div>\
+    </li>");
     $("#lnsettingsbox #ad_info_wrap > ul").prepend(info_markup, invoice_markup);
     setTimeout(function() {
         $("#ad_info_wrap .node_selected").slideDown(300);
@@ -1060,8 +1064,9 @@ function add_custom_proxy(value) {
 }
 
 function test_create_invoice(imp, proxydat, host, key) {
-    let p_arr = (proxydat) ? lnurl_deform(proxydat.proxy) : false,
-        proxy = (p_arr) ? p_arr.url : false,
+    let is_onion = (host && host.indexOf(".onion") > 0) ? true : false,
+        p_arr = (proxydat) ? lnurl_deform(proxydat.proxy) : false,
+        proxy = (p_arr) ? p_arr.url : (is_onion) ? d_proxy() : false,
         pw = (p_arr) ? p_arr.k : false,
         lnli = lndli(),
         ln_dat = lnli.data(),

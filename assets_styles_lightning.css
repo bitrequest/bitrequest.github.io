@@ -186,6 +186,10 @@ pre .key {color: #b9c97e;}
 	margin:0;
 }
 
+#add_proxy_drawer p#lnurls_info {
+	font-size:75%!important;
+}
+
 #lnsettingsbox .popform.haslnurls #lnd_credentials, 
 #lnsettingsbox .popform.haslnurls #lnurl_proxy_drawer {
 	display:none;
