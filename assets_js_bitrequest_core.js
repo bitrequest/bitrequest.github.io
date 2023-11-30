@@ -4499,7 +4499,7 @@ function save_cc_settings(currency, add) {
 function updatechanges(key, add, nit) {
     let pass = GD_pass();
     if (pass && !nit === true) {
-        updateappdata();
+        updateappdata(pass);
         return
     }
     init_login_dialog();

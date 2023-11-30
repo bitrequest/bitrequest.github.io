@@ -266,7 +266,7 @@ function Drive_Backup_trigger() {
 function updateappdata(pass) {
     let bu_id = br_get_local("backupfile_id");
     if (bu_id) {
-        if (pass.token) {
+        if (pass) {
             let gd_timer = br_get_session("gd_timer"); // prevent Ddos
             if (gd_timer) {
                 let interval = 3000;
