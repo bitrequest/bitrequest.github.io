@@ -808,7 +808,7 @@ function lnd_select_implementation() {
             cd_box_select = $("#lnd_credentials .cs_" + imp),
             proxy_switch = $("#lnsettingsbox #lnurl_s .switchpanel.custom"),
             hasproxy = (proxy_switch.hasClass("true")) ? true : false;
-        if (imp == "lnd" || imp == "eclair" || imp == "c-lightning") {
+        /*if (imp == "lnd" || imp == "eclair" || imp == "c-lightning") {
             if (hasproxy === false || has_proxies === false) {
                 popnotify("error", imp + " requires a proxy server");
                 $("#add_proxy_drawer").slideDown(200);
@@ -816,7 +816,7 @@ function lnd_select_implementation() {
                 cs_boxes.hide();
                 return
             }
-        }
+        }*/
         $("#add_proxy_drawer").slideUp(200);
         $("#lnd_proxy_url_input").blur();
         cs_boxes.not(cd_box_select).hide();
@@ -915,10 +915,10 @@ function trigger_ln() {
         }
         let lndcd = $("#lnd_credentials");
         if (lndcd.is(":visible")) {
-            if (imp == "lnd" || imp == "eclair" || imp == "c-lightning") {
+            /*if (imp == "lnd" || imp == "eclair" || imp == "c-lightning") {
                 popnotify("error", imp + " requires a proxy server");
                 return
-            }
+            }*/
             let lnd_host_input = $("#lnd_credentials .cs_" + imp + ":visible .lnd_host"),
                 lnd_key_input = $("#lnd_credentials .cs_" + imp + ":visible .invoice_macaroon"),
                 lnd_host_val = lnd_host_input.val(),
@@ -1139,7 +1139,7 @@ function test_create_invoice(imp, proxydat, host, key) {
                 "cache": false,
                 "contentType": "application/json",
                 "data": JSON.stringify({
-                    "amount": 10000,
+                    "value": 10000,
                     "memo": "test invoice LND direct",
                     "expiry": 180
                 }),
