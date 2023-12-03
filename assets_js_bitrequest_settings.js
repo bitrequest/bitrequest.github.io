@@ -174,7 +174,6 @@ function editaccount() {
                 "elements": ddat
             });
         popdialog(content, "triggersubmit");
-        console.log(x_pub);
     })
 }
 
@@ -1860,7 +1859,7 @@ function urlshortener() {
                                         {
                                             "div": {
                                                 "class": "options",
-                                                "content": "<span data-pe='none'>firebase</span><span data-pe='none'>bitly</span>"
+                                                "content": "<span data-pe='none'>firebase</span><span data-pe='none'>bitly</span><span data-pe='none'>" + d_proxy() + "</span>"
                                             }
                                         }
                                     ]
@@ -2329,7 +2328,7 @@ function pick_api_proxy() {
                 proxies.push(fixed_url);
             }
         }
-        if ($.inArray(hosted_proxy, proxies) === -1) { // always keey default proxy
+        if ($.inArray(hosted_proxy, proxies) === -1) { // always keep default proxy
             proxies.push(hosted_proxy);
         }
         let optionlist = $("#proxyformbox").find(".options");

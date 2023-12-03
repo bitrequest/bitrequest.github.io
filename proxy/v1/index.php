@@ -50,7 +50,12 @@ if (isset($proxyheaders) || $method == "POST" || $bearer) {
 // Add Authorization header if needed
 if ($bearer) {
     if ($auth_token) {
-	    $postheaders[] = "Authorization: Bearer " . $auth_token;
+	    if ($bearer == "amberdata") {
+        	$postheaders[] = "x-api-key: " . $auth_token;
+    	}
+    	else {
+	    	$postheaders[] = "Authorization: Bearer " . $auth_token;
+    	}
     }
     if ($bearer == "tls_wildcard") {
         $postheaders["tls_wildcard"] = true;
@@ -67,6 +72,7 @@ if ($custom) {
     if ($custom == "gk") {
         $key_array = base64_encode(
             json_encode([
+                "ad_id" => $keys["amberdata"],
                 "if_id" => $keys["infura"],
                 "ga_id" => $keys["googleauth"],
                 "bc_id" => $keys["blockcypher"],

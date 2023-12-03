@@ -108,7 +108,9 @@ $(document).ready(function() {
     sharebutton();
     //share
     //shorten_url
+    //custom_shorten
     //bitly_shorten
+    //randomId
     //sharerequest
     //sharefallback
     whatsappshare();
@@ -2261,8 +2263,11 @@ function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
         us_active = (us_settings.data("us_active") == "active");
     if (us_active === true) {
         let us_service = us_settings.data("selected"),
-            getcache = br_get_session(us_service + "_shorturl_" + hashcode(sharedurl));
+            is_custom = (us_service.indexOf("https://") >= 0),
+            cache_prefix = (is_custom) ? "custom" : us_service,
+            getcache = br_get_session(cache_prefix + "_shorturl_" + hashcode(sharedurl));
         if (getcache) { // get existing shorturl from cache
+            console.log("in session cache");
             sharerequest(getcache, sharedtitle);
             return
         }
@@ -2312,7 +2317,7 @@ function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
                         let data = br_result(e).result;
                         if (data) {
                             if (data.error) {
-                                bitly_shorten(sharedurl, sharedtitle);
+                                custom_shorten(false, sharedurl, sharedtitle, sitethumb);
                                 return
                             }
                             let shorturl = data.shortLink;
@@ -2322,22 +2327,64 @@ function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
                                 return
                             }
                         }
-                        bitly_shorten(sharedurl, sharedtitle);
+                        custom_shorten(false, sharedurl, sharedtitle, sitethumb);
                     }).fail(function(jqXHR, textStatus, errorThrown) {
-                        bitly_shorten(sharedurl, sharedtitle);
+                        custom_shorten(false, sharedurl, sharedtitle, sitethumb);
                     });
                     return
                 }
             }
-            bitly_shorten(sharedurl, sharedtitle);
+            custom_shorten(false, sharedurl, sharedtitle, sitethumb);
             return
         }
         if (us_service == "bitly") {
             bitly_shorten(sharedurl, sharedtitle);
             return
         }
+        if (is_custom) {
+            custom_shorten(us_service, sharedurl, sharedtitle, sitethumb);
+            return
+        }
     }
     sharerequest(sharedurl, sharedtitle);
+}
+
+function custom_shorten(service, sharedurl, sharedtitle, sitethumb) {
+    let serv = (service) ? service : d_proxy(),
+        rqdat = btoa(JSON.stringify({
+            "sharedurl": sharedurl,
+            "sharedtitle": sharedtitle,
+            "sitethumb": sitethumb
+        })),
+        shorturl = randomId(),
+        payload = {
+            "function": "post",
+            "longurl": rqdat,
+            "shorturl": shorturl
+        };
+    $.ajax({
+        "method": "POST",
+        "cache": false,
+        "timeout": 5000,
+        "url": serv + "proxy/v1/inv/api/",
+        "data": payload
+    }).done(function(e) {
+        let data = br_result(e).result;
+        if (data) {
+            let rqid = data.shorturl;
+            if (rqid) {
+                let index = proxy_list.indexOf(serv),
+                    isdefault = (index > -1),
+                    shurl = (isdefault) ? approot + "?i=" + index.toString() + rqid : serv + "proxy/v1/inv/" + "4bR" + rqid;
+                sharerequest(shurl, sharedtitle);
+                br_set_session("custom_shorturl_" + hashcode(sharedurl), shurl);
+                return
+            }
+        }
+        bitly_shorten(sharedurl, sharedtitle);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        bitly_shorten(sharedurl, sharedtitle);
+    });
 }
 
 function bitly_shorten(sharedurl, sharedtitle) {
@@ -2367,6 +2414,11 @@ function bitly_shorten(sharedurl, sharedtitle) {
     }).fail(function(jqXHR, textStatus, errorThrown) {
         sharerequest(sharedurl, sharedtitle);
     });
+}
+
+function randomId() {
+    let uint32 = crypto.getRandomValues(new Uint32Array(1))[0];
+    return uint32.toString(16);
 }
 
 function sharerequest(sharedurl, sharedtitle) {

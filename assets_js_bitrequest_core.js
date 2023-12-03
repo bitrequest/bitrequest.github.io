@@ -588,6 +588,8 @@ function finishfunctions() {
     //getcoinconfig
     gk();
     html.addClass("loaded");
+    expand_shoturl();
+    //makelocal
 }
 
 //checks
@@ -935,7 +937,7 @@ function ios_redirect_bitly(shorturl) {
                     let longurl = data.long_url;
                     if (longurl) {
                         ios_redirections(longurl);
-                        br_get_session("longurl_" + bitly_id, longurl); //cache token decimals
+                        br_set_session("longurl_" + bitly_id, longurl);
                         return
                     }
                     w_loc.href = "http://bit.ly/" + bitly_id;
@@ -4864,4 +4866,65 @@ function add_serviceworker() {
                 });
         }
     }
+}
+
+function expand_shoturl() {
+    let gets = geturlparameters(),
+        i_param = gets.i,
+        getcache = br_get_session("longurl_" + i_param);
+    if (getcache) { // check for cached values
+        ios_redirections(getcache);
+        return
+    }
+    if (i_param) {
+        let p_index = i_param.slice(0, 1),
+            shortid = i_param.slice(1),
+            proxy = proxy_list[p_index],
+            is_url = (proxy.indexOf("https://") >= 0);
+        if (is_url) {
+            let payload = {
+                "function": "fetch",
+                "shortid": shortid
+            };
+            $.ajax({
+                "method": "POST",
+                "cache": false,
+                "timeout": 5000,
+                "url": proxy + "proxy/v1/inv/api/",
+                "data": payload
+            }).done(function(e) {
+                let data = br_result(e).result;
+                if (data) {
+                    let status = data.status;
+                    if (status) {
+                        if (status == "file not found") {
+                            let content = "<h2 class='icon-warning'>Request not found or expired</h2>";
+                            popdialog(content, "canceldialog");
+                            closeloader();
+                            return
+                        }
+                        if (status == "file exists") {
+                            let longurl = data.sharedurl;
+                            if (longurl) {
+                                let to_localurl = makelocal(longurl);
+                                ios_redirections(to_localurl);
+                                br_set_session("longurl_" + i_param, to_localurl);
+                                return
+                            }
+                        }
+                    }
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                let content = "<h2 class='icon-warning'>Failed to fetch request</h2>";
+                popdialog(content, "canceldialog");
+                closeloader();
+                return
+            });
+        }
+    }
+}
+
+function makelocal(url) {
+    let pathname = w_loc.pathname;
+    return (local || localserver) ? (url.indexOf("?") >= 0) ? "file://" + pathname + "?" + url.split("?")[1] : pathname : url;
 }

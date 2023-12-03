@@ -967,7 +967,7 @@ function r_objl2($dat) {
 		[
 			"ping" => [
 				"br_cache" => [
-					"version" => $version,
+					"version" => $GLOBALS["version"],
 				],
 				"br_result" => $dat
 			],
