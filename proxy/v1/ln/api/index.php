@@ -857,8 +857,8 @@ function invoice_status($imp, $dat, $pid, $type, $expiry) {
 			$conf = ($br_state == "paid") ? 1 : 0;
 			$inv_txcreated = isset($dat["expires_at"]) ? ((int)$dat["expires_at"] - $expiry) * 1000 : 0;
 			$inv_txtime = isset($dat["paid_at"]) ? (int)$dat["paid_at"] * 1000 : 0;
-			$inv_amount = isset($dat["msatoshi"]) ? (int)$dat["msatoshi"] : 0;
-			$inv_amount_paid = isset($dat["msatoshi_received"]) ? (int)$dat["msatoshi_received"] : 0;
+			$inv_amount = isset($dat["amount_msat"]) ? (int)$dat["amount_msat"] : 0;
+			$inv_amount_paid = isset($dat["amount_received_msat"]) ? (int)$dat["amount_received_msat"] : 0;
 			$inv_hash = isset($dat["payment_hash"]) ? $dat["payment_hash"] : null;
 			return [
 				"pid" => $pid,
