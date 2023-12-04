@@ -2371,6 +2371,11 @@ function custom_shorten(service, sharedurl, sharedtitle, sitethumb) {
     }).done(function(e) {
         let data = br_result(e).result;
         if (data) {
+            if (data.error) {
+                notify(data.error, 500000, "yes");
+                bitly_shorten(sharedurl, sharedtitle);
+                return
+            }
             let rqid = data.shorturl;
             if (rqid) {
                 let index = proxy_list.indexOf(serv),

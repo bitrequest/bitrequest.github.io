@@ -24,12 +24,24 @@ if ($pdat) {
 			if ($rqdat) {
 				$put_result = api(null, $rqdat, null, 604800, $ct, null, $shorturl);
 				if ($put_result) {
-					$status_cont = [
-						"status" => "file cached",
-						"shorturl" => $shorturl
-					];
-					echo r_objl2($status_cont);
-					return;
+					$p_result = $put_result["br_result"];
+					if ($p_result) {
+						if ($p_result["error"]) {
+							$err_cont = [
+								"error" => $p_result["error"]["message"]
+							];
+							echo r_objl2($err_cont);
+							return;
+						}
+					}
+					if ($put_result["br_cache"]) {
+						$status_cont = [
+							"status" => "file cached",
+							"shorturl" => $shorturl
+						];
+						echo r_objl2($status_cont);
+						return;
+					}
 				}
 			}
 		}
