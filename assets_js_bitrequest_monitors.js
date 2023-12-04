@@ -1,3 +1,5 @@
+let monitor_timer;
+
 $(document).ready(function() {
     updaterequeststatestrigger();
     updaterequeststatesrefresh();
@@ -49,6 +51,10 @@ $(document).ready(function() {
 
 function updaterequeststatestrigger() {
     $(document).on("click", ".requestsbttn .self", function() {
+        let is_scanning = br_get_session("scanning");
+        if (is_scanning) { // prevent over scanning
+            return
+        }
         trigger_requeststates(true);
     })
 }
@@ -60,7 +66,7 @@ function updaterequeststatesrefresh() {
     }
     if (gets.p == "requests") { // only trigger on "requests page"
         setTimeout(function() {
-            trigger_requeststates();
+            trigger_requeststates("delay");
         }, 300);
     }
 }
@@ -81,11 +87,13 @@ function trigger_requeststates(trigger) {
 }
 
 function get_requeststates(trigger) {
+    let d_lay = (trigger == "delay") ? true : false;
     //requestincoming
     let request_data = $("#requestlist li.rqli.scan").first().data();
     if (request_data) {
         if (trigger == "loop") {
-            getinputs(request_data);
+            br_set_session("scanning", true);
+            getinputs(request_data, d_lay);
             return;
         }
         let statuscache = br_get_session("txstatus", true);
@@ -94,7 +102,7 @@ function get_requeststates(trigger) {
                 requeststates = statuscache.requeststates;
             if (cachetime > 30000 || $.isEmptyObject(requeststates)) { //check if cached crypto rates are expired (check every 30 seconds on page refresh or when opening request page)
                 br_remove_session("txstatus"); // remove cached transactions
-                getinputs(request_data);
+                getinputs(request_data, d_lay);
                 return
             }
             if (trigger === true) {} else { // only update on page refresh
@@ -122,7 +130,7 @@ function get_requeststates(trigger) {
             }
             return
         }
-        getinputs(request_data);
+        getinputs(request_data, d_lay);
         return
     }
     if (!$.isEmptyObject(statuspush)) {
@@ -131,11 +139,22 @@ function get_requeststates(trigger) {
             "requeststates": statuspush
         };
         br_set_session("txstatus", statusobject, true);
+        br_remove_session("scanning");
         saverequests();
     }
 }
 
-function getinputs(rd) {
+function getinputs(rd, dl) {
+    if (dl) {
+        let delay = 10000,
+            monitor_timer = br_get_session("monitor_timer"),
+            timelapsed = (monitor_timer) ? now() - monitor_timer : delay;
+        br_remove_session("scanning");
+        if (timelapsed < delay) { // prevent over scanning
+            return
+        }
+        br_set_session("monitor_timer", now());
+    }
     let thislist = $("#" + rd.requestid),
         iserc20 = rd.erc20,
         api_info = check_api(rd.payment, iserc20),
