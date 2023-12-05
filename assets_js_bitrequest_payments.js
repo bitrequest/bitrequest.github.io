@@ -2372,7 +2372,7 @@ function custom_shorten(service, sharedurl, sharedtitle, sitethumb) {
         let data = br_result(e).result;
         if (data) {
             if (data.error) {
-                notify(data.error, 500000, "yes");
+                notify(serv + ": " + data.error, 500000, "yes");
                 bitly_shorten(sharedurl, sharedtitle);
                 return
             }

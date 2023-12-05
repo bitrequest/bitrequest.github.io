@@ -871,6 +871,11 @@ function ios_init() {
 }
 
 function ios_redirections(url) {
+    if (url.indexOf("?i=") >= 0) {
+        let shortid = url.split("?i=")[1];
+        expand_shoturl(shortid);
+        return
+    }
     if (url.endsWith("4bR")) { // handle bitly shortlink
         ios_redirect_bitly(url);
         return
@@ -4868,9 +4873,9 @@ function add_serviceworker() {
     }
 }
 
-function expand_shoturl() {
+function expand_shoturl(pr) {
     let gets = geturlparameters(),
-        i_param = gets.i,
+        i_param = (pr) ? pr : gets.i,
         getcache = br_get_session("longurl_" + i_param);
     if (getcache) { // check for cached values
         ios_redirections(getcache);
