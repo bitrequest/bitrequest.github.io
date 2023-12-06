@@ -2,7 +2,8 @@ let sockets = {},
     pinging = {},
     lnd_confirm = false,
     ndef_processing,
-    ndef_timer = 0;
+    ndef_timer = 0,
+    ws_timer = 0;
 
 $(document).ready(function() {
     //init_socket
@@ -26,6 +27,7 @@ $(document).ready(function() {
     //kaspa_fyi_websocket
     //handle_socket_fails
     //handle_socket_close
+    //ws_recon
     //try_next_socket
     //current_socket
     reconnect();
@@ -941,6 +943,7 @@ function kaspa_websocket(socket_node, thisaddress) {
     let provider = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket",
         websocket = sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
+        ws_timer = now();
         socket_info(socket_node, true);
         websocket.send("40");
     };
@@ -972,6 +975,12 @@ function kaspa_websocket(socket_node, thisaddress) {
         }
     };
     websocket.onclose = function(e) {
+        ws_recon({ // reconnect if ws closes
+            "function": kaspa_websocket,
+            "node": socket_node,
+            "address": thisaddress,
+            "trigger": e.code
+        });
         handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
@@ -1015,6 +1024,12 @@ function kaspa_fyi_websocket(socket_node, thisaddress) {
         }
     };
     websocket.onclose = function(e) {
+        ws_recon({ // reconnect if ws closes
+            "function": kaspa_fyi_websocket,
+            "node": socket_node,
+            "address": thisaddress,
+            "trigger": e.code
+        });
         handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
@@ -1044,7 +1059,28 @@ function handle_socket_fails(socket_node, thisaddress) {
 function handle_socket_close(socket_node) {
     socket_info(socket_node, false);
     console.log("Disconnected from " + socket_node.url);
-    txid = null;
+    txid = null,
+        ws_timer = 0;
+}
+
+function ws_recon(recon) {
+    if (recon && recon.address) {
+        if (paymentdialogbox.attr("data-status") == "new") {
+            let c_time = now() - ws_timer,
+                ws_block = (c_time < 10000),
+                trigger = (recon.trigger == 1005) ? true : false; // detect click event
+            if (trigger || ws_block) {
+                return
+            }
+            let timeout = setTimeout(function() {
+                if (paymentpopup.hasClass("active")) {
+                    recon.function(recon.node, recon.address);
+                }
+            }, 2000, function() {
+                clearTimeout(timeout);
+            });
+        }
+    }
 }
 
 function try_next_socket(current_socket_data) {
