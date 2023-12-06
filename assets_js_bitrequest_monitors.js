@@ -1,4 +1,5 @@
-let monitor_timer;
+let monitor_timer = 0,
+    scan_timer = 0;
 
 $(document).ready(function() {
     updaterequeststatestrigger();
@@ -51,8 +52,13 @@ $(document).ready(function() {
 
 function updaterequeststatestrigger() {
     $(document).on("click", ".requestsbttn .self", function() {
-        let is_scanning = br_get_session("scanning");
-        if (is_scanning) { // prevent over scanning
+        let scan_timer = br_get_session("scanning") ?? 0,
+            scan_int = parseFloat(scan_timer);
+        if (scan_int > 0) {
+            let timelapsed = now() - scan_int;
+            if (timelapsed > 10000) {
+                br_set_session("scanning", 0);
+            }
             return
         }
         trigger_requeststates(true);
@@ -92,7 +98,7 @@ function get_requeststates(trigger) {
     let request_data = $("#requestlist li.rqli.scan").first().data();
     if (request_data) {
         if (trigger == "loop") {
-            br_set_session("scanning", true);
+            br_set_session("scanning", now());
             getinputs(request_data, d_lay);
             return;
         }
@@ -139,18 +145,17 @@ function get_requeststates(trigger) {
             "requeststates": statuspush
         };
         br_set_session("txstatus", statusobject, true);
-        br_remove_session("scanning");
+        br_set_session("scanning", 0);
         saverequests();
     }
 }
 
 function getinputs(rd, dl) {
     if (dl) {
-        let delay = 10000,
-            monitor_timer = br_get_session("monitor_timer"),
-            timelapsed = (monitor_timer) ? now() - monitor_timer : delay;
-        br_remove_session("scanning");
-        if (timelapsed < delay) { // prevent over scanning
+        let monitor_timer = br_get_session("monitor_timer") ?? 10000,
+            timelapsed = now() - monitor_timer;
+        br_set_session("scanning", 0);
+        if (timelapsed < 10000) { // prevent over scanning
             return
         }
         br_set_session("monitor_timer", now());
