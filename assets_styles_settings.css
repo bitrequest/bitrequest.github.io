@@ -325,20 +325,6 @@ ul.conf_options li .conf_emoji {
 	color: #3498db;
 }
 
-#donate {
-	margin: 0.3em 0 0.8em 0;
-	color: #FFF;
-}
-
-body.ios #donate {
-	display:none;
-}
-
-#donate>span {
-	color: #FFF;
-}
-
-
 /* Pinpanel */
 
 #pinfloat {
