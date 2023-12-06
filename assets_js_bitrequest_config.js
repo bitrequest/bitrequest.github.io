@@ -19,7 +19,7 @@ const apptitle = "Bitrequest",
         "https://www.bitrequest.io/",
         "https://www.bitrequest.app/"
     ],
-    proxy_version = "0.007",
+    proxy_version = "0.008",
     firebase_dynamic_link_domain = "bitrequest.page.link",
     firebase_shortlink = "https://" + firebase_dynamic_link_domain + "/",
     androidpackagename = "io.bitrequest.app",
