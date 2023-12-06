@@ -6,7 +6,7 @@ header("Access-Control-Allow-Headers: Cache-Control, Pragma");
 include "../../api.php";
 $pdat = $_POST;
 if ($pdat) {
-	$ct = "1h";
+	$ct = "2m";
 	$function = $pdat["function"];
 	if ($function == "post") {
 		$shorturl = $pdat["shorturl"];
@@ -22,7 +22,7 @@ if ($pdat) {
 			}
 			$rqdat = $pdat["longurl"];
 			if ($rqdat) {
-				$put_result = api(null, $rqdat, null, 604800, $ct, null, $shorturl);
+				$put_result = api(null, $rqdat, null, 6220800, $ct, null, $shorturl);
 				if ($put_result) {
 					$p_result = $put_result["br_result"];
 					if ($p_result) {

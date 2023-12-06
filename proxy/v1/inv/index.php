@@ -1,6 +1,6 @@
 <?php
 $inv = $_GET["invoice"];
-	$ct = "1h";
+	$ct = "2m";
 	$path = "api/cache/" . $ct . "/" . $inv;
 	$message = NULL;
 	$mcontent = "⚠️ Request not found or expired";

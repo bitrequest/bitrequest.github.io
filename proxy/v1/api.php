@@ -12,7 +12,7 @@ function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
         ];
         return $m_contents;
     }
-    $cache_refresh = ($cf == "1w" || $cf == "tx") ? 604800 : ($cf == "1d" ? 86400 : ($cf == "1h" ? 3600 : 3600));
+    $cache_refresh = ($cf == "2m") ? 6220800 : (($cf == "1w" || $cf == "tx") ? 604800 : ($cf == "1d" ? 86400 : ($cf == "1h" ? 3600 : 3600)));
     $ctime = $ct ? $ct : ($ct == 0 ? 0 : $cache_refresh);
     $cache_folder = "cache/" . $cf . "/";
     $filename = $fn ? $fn : md5($data . $url);
