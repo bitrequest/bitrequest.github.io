@@ -1,8 +1,8 @@
 <?php
 // PROXY
-$GLOBALS["version"] = "0.007";
+$GLOBALS["version"] = "0.008";
 function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
-    $version = "0.007";
+    $version = "0.008";
     $cf = isset($cfd) ? $cfd : false;
     if (!$cf) {
         $curl_result = curl_get($url, $data, $headers);

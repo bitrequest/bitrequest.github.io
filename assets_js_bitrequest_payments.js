@@ -2353,7 +2353,6 @@ function custom_shorten(service, sharedurl, sharedtitle, sitethumb) {
     let serv = (service) ? service : d_proxy(),
         rqdat = btoa(JSON.stringify({
             "sharedurl": sharedurl,
-            "sharedtitle": sharedtitle,
             "sitethumb": sitethumb
         })),
         shorturl = randomId(),

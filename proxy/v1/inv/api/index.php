@@ -55,11 +55,9 @@ if ($pdat) {
 				if ($get_content) {
 					$contents = json_decode(base64_decode($get_content), true);
 					$sharedurl = $contents["sharedurl"];
-					$sharedtitle = $contents["sharedtitle"];
 					$status_cont = [
 						"status" => "file exists",
-						"sharedurl" => $sharedurl,
-						"sharedtitle" => $sharedtitle
+						"sharedurl" => $sharedurl
 					];
 					echo r_objl2($status_cont);
 					return;

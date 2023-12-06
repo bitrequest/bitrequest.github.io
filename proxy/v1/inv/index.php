@@ -12,7 +12,6 @@ $inv = $_GET["invoice"];
 			if ($content) {
 				$longurl = $content["sharedurl"];
 				$thumb = $content["sitethumb"];
-				$sharedtitle = $content["sharedtitle"];
 			}
 			
 		}

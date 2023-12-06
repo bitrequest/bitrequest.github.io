@@ -9,6 +9,11 @@ Replace the 'v1' folder, make sure you leave the config.php file.
 * Enter your API keys in the config.php file.
 * In the bitrequest app go to Settings -> Advanced -> API Proxy and connect to your webserver.
 
+## URL Shortener
+
+* Use your webserver for your personal shortlinks.
+* In the bitrequest app go to Settings -> Advanced -> URL Shortener and connect to your proxy server.
+
 ## Lightning RPC proxy
 
 * Connect your lightning node to the bitrequest app securely.
@@ -28,7 +33,7 @@ Replace the 'v1' folder, make sure you leave the config.php file.
 
 ### Settings:
 
-* **API key:**  Secure your for your lightning proxy calls with your personal key. (optional)  
+* **API key:**  Secure your lightning proxy calls with your personal key. (optional)  
 * **successAction:**  Display a personal message in your clients wallet after a succesfull payment. (optional)  
 * **callback:**  Set callback url to receive status updates. [Documentation and sample templates](https://github.com/bitrequest/webshop-integration/). (optional)  
 * **local_tracking:**  receive callbacks for point of sale requests.
