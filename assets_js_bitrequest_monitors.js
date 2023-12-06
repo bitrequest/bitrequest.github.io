@@ -1,9 +1,9 @@
-let monitor_timer = 0,
-    scan_timer = 0;
+let monitor_timer = 0;
 
 $(document).ready(function() {
     updaterequeststatestrigger();
     updaterequeststatesrefresh();
+    //is_scanning
     //trigger_requeststates
     //get_requeststates
     //getinputs
@@ -52,13 +52,9 @@ $(document).ready(function() {
 
 function updaterequeststatestrigger() {
     $(document).on("click", ".requestsbttn .self", function() {
-        let scan_timer = br_get_session("scanning") ?? 0,
-            scan_int = parseFloat(scan_timer);
-        if (scan_int > 0) {
-            let timelapsed = now() - scan_int;
-            if (timelapsed > 10000) {
-                br_set_session("scanning", 0);
-            }
+        let scanning = is_scanning();
+        if (scanning) {
+            playsound(funk);
             return
         }
         trigger_requeststates(true);
@@ -77,6 +73,10 @@ function updaterequeststatesrefresh() {
     }
 }
 
+function is_scanning() {
+    return ($("#requestlist li.rqli.scan").length) ? true : false;
+}
+
 function trigger_requeststates(trigger) {
     if (offline === true || inframe === true) {
         return // do nothing when offline
@@ -88,17 +88,16 @@ function trigger_requeststates(trigger) {
     let active_requests = $("#requestlist .rqli").filter(function() {
         return $(this).data("pending") != "unknown";
     });
-    active_requests.addClass("scan");
-    get_requeststates(trigger);
+    active_requests.addClass("open");
+    get_requeststates(trigger, active_requests);
 }
 
-function get_requeststates(trigger) {
+function get_requeststates(trigger, active_requests) {
     let d_lay = (trigger == "delay") ? true : false;
     //requestincoming
-    let request_data = $("#requestlist li.rqli.scan").first().data();
+    let request_data = $("#requestlist li.rqli.open").first().data();
     if (request_data) {
         if (trigger == "loop") {
-            br_set_session("scanning", now());
             getinputs(request_data, d_lay);
             return;
         }
@@ -107,6 +106,7 @@ function get_requeststates(trigger) {
             let cachetime = now() - statuscache.timestamp,
                 requeststates = statuscache.requeststates;
             if (cachetime > 30000 || $.isEmptyObject(requeststates)) { //check if cached crypto rates are expired (check every 30 seconds on page refresh or when opening request page)
+                active_requests.addClass("scan");
                 br_remove_session("txstatus"); // remove cached transactions
                 getinputs(request_data, d_lay);
                 return
@@ -136,6 +136,7 @@ function get_requeststates(trigger) {
             }
             return
         }
+        active_requests.addClass("scan");
         getinputs(request_data, d_lay);
         return
     }
@@ -145,17 +146,19 @@ function get_requeststates(trigger) {
             "requeststates": statuspush
         };
         br_set_session("txstatus", statusobject, true);
-        br_set_session("scanning", 0);
         saverequests();
     }
 }
 
 function getinputs(rd, dl) {
     if (dl) {
-        let monitor_timer = br_get_session("monitor_timer") ?? 10000,
+        let delay = 10000,
+            mtlc = br_get_session("monitor_timer"),
+            monitor_timer = (mtlc) ? parseInt(mtlc) : delay,
             timelapsed = now() - monitor_timer;
-        br_set_session("scanning", 0);
-        if (timelapsed < 10000) { // prevent over scanning
+        if (timelapsed < delay) { // prevent over scanning
+            playsound(funk);
+            $("#requestlist .rqli").removeClass("scan"); // prevent triggerblock
             return
         }
         br_set_session("monitor_timer", now());
@@ -1462,7 +1465,7 @@ function api_src(thislist, api_data) {
 function api_callback(requestid, nocache) {
     let thislist = $("#" + requestid);
     if (thislist.hasClass("scan")) {
-        thislist.removeClass("scan").addClass("pmstatloaded");
+        thislist.removeClass("scan open").addClass("pmstatloaded");
         if (nocache === true) {} else {
             let transactionlist = thislist.find(".transactionlist"),
                 transactionli = transactionlist.find("li");
