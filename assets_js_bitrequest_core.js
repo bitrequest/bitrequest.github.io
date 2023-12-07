@@ -1,7 +1,6 @@
 //globals
 
-const cookie_support = check_cookie(),
-    ls_support = check_local(),
+const ls_support = check_local(),
     language = navigator.language || navigator.userLanguage,
     userAgent = navigator.userAgent || navigator.vendor || window.opera,
     titlenode = $("title"),
@@ -96,29 +95,24 @@ $(document).ready(function() {
     }
 
     //some api tests first
-    if (cookie_support || inframe === true) { //check for cookie support, tolerate for iframes
-        rendersettings(); //retrieve settings from localstorage (load first to retrieve apikey)
-        if (ls_support) { //check for local storage support
-            if (!stored_currencies) { //show startpage if no addresses are added
-                body.addClass("showstartpage");
-            }
-            let bipverified = io.bipv,
-                phpsupport = io.phpsupport;
-            if (bipverified && hasbip === true) {
-                bipv = true;
-            }
-            if (phpsupport) {
-                phpsupportglobal = (phpsupport == "yes") ? true : false;
-                setsymbols();
-            } else {
-                checkphp();
-            }
+    rendersettings(); //retrieve settings from localstorage (load first to retrieve apikey)
+    if (ls_support) { //check for local storage support
+        if (!stored_currencies) { //show startpage if no addresses are added
+            body.addClass("showstartpage");
+        }
+        let bipverified = io.bipv,
+            phpsupport = io.phpsupport;
+        if (bipverified && hasbip === true) {
+            bipv = true;
+        }
+        if (phpsupport) {
+            phpsupportglobal = (phpsupport == "yes") ? true : false;
+            setsymbols();
         } else {
-            let content = "<h2 class='icon-bin'>Sorry!</h2><p>No Web Storage support..</p>";
-            popdialog(content, "canceldialog");
+            checkphp();
         }
     } else {
-        let content = "<h2 class='icon-bin'>Sorry!</h2><p>Seems like your browser does not allow cookies...<br/>Please enable cookies if you want to continue using this app.</p>";
+        let content = "<h2 class='icon-bin'>Sorry!</h2><p>No Web Storage support..</p>";
         popdialog(content, "canceldialog");
     }
     $("#fixednav").html($("#relnav").html()); // copy nav

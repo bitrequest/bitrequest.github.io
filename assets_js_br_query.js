@@ -1,6 +1,5 @@
 // Manage local storage
 
-//check_cookie
 //check_local
 //br_set_local
 //br_set_session
@@ -47,14 +46,6 @@
 //fetch_aws
 
 // Manage local storage
-
-function check_cookie() {
-    if (navigator.cookieEnabled) { // Cookie support
-        return true;
-    }
-    alert("Seems like your browser does not allow cookies... Please enable cookies if you want to continue using this app.");
-    return false;
-}
 
 function check_local() {
     let tdat = "testdat"; // Local storage
