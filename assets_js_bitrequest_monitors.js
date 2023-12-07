@@ -1,5 +1,3 @@
-let monitor_timer = 0;
-
 $(document).ready(function() {
     updaterequeststatestrigger();
     updaterequeststatesrefresh();
