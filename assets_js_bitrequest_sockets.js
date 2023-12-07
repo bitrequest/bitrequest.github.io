@@ -963,7 +963,8 @@ function kaspa_websocket(socket_node, thisaddress) {
                     let txs = contents.txs;
                     if (txs) {
                         $.each(txs, function(dat, value) {
-                            let txd = kaspa_ws_data(value, thisaddress, request.set_confirmations);
+                            let set_confirmations = (request.set_confirmations) ?? 0,
+                                txd = kaspa_ws_data(value, thisaddress, set_confirmations);
                             if (txd.ccval) {
                                 closesocket();
                                 pick_monitor(txd.txhash, txd);
@@ -1064,21 +1065,26 @@ function handle_socket_close(socket_node) {
 }
 
 function ws_recon(recon) {
-    if (recon && recon.address) {
-        if (paymentdialogbox.attr("data-status") == "new") {
-            let c_time = now() - ws_timer,
-                ws_block = (c_time < 10000),
-                trigger = (recon.trigger == 1005) ? true : false; // detect click event
-            if (trigger || ws_block) {
-                return
-            }
-            let timeout = setTimeout(function() {
-                if (paymentpopup.hasClass("active")) {
-                    recon.function(recon.node, recon.address);
+    if (recon) {
+        let trigger = recon.trigger;
+        if (trigger == 1000) { // normal socket close
+            let address = recon.address;
+            if (address) {
+                if (paymentdialogbox.attr("data-status") == "new") {
+                    let c_time = now() - ws_timer,
+                        ws_block = (c_time < 10000);
+                    if (ws_block) {
+                        return
+                    }
+                    let timeout = setTimeout(function() {
+                        if (paymentpopup.hasClass("active")) {
+                            recon.function(recon.node, recon.address);
+                        }
+                    }, 2000, function() {
+                        clearTimeout(timeout);
+                    });
                 }
-            }, 2000, function() {
-                clearTimeout(timeout);
-            });
+            }
         }
     }
 }
