@@ -1156,7 +1156,6 @@ function cancel_url_dialogs() {
 }
 
 function loadpageevent(pagename) {
-    console.log(pagename);
     $("html, body").animate({
         "scrollTop": 0
     }, 400);
