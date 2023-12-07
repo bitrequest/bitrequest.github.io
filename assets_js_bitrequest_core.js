@@ -1156,6 +1156,7 @@ function cancel_url_dialogs() {
 }
 
 function loadpageevent(pagename) {
+    console.log(pagename);
     $("html, body").animate({
         "scrollTop": 0
     }, 400);
@@ -4914,6 +4915,9 @@ function expand_shoturl(pr) {
                                 let to_localurl = makelocal(longurl);
                                 ios_redirections(to_localurl);
                                 br_set_session("longurl_" + i_param, to_localurl);
+                                check_teaminvite(); // open if teaminvite
+                                check_systembu(); // check for systembackup
+                                check_csvexport(); // check for csv export
                                 return
                             }
                         }
