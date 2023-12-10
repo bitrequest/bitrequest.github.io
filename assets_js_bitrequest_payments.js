@@ -523,7 +523,7 @@ function continue_paymentfunction() {
         dataobject = (isdata === true) ? JSON.parse(atob(data)) : null, // decode data param if exists;
         ln = (dataobject && dataobject.imp) ? true : false, // check for lightning;
         lnd_only = (address == "lnurl") ? true : false,
-        valid = (lnd_only && ln) ? true : check_address(address, currencycheck); // validate address   
+        valid = (lnd_only) ? true : check_address(address, currencycheck); // validate address 
     if (valid === false) {
         let error_message = (address == "undefined") ? "Undefined address, please ask for a new request" :
             "Invalid " + payment + " address",
@@ -1293,7 +1293,7 @@ function getpayment(ccrateeuro, ccapi) {
             </div>",
         readonly_attr = (is_viewonly() === true) ? " readonly='readonly'" : "",
         fb_labelval = (has_label) ? " (" + labelvalue + ")" : "",
-        fb_markup = (request.payment == "bitcoin") ? "<div id='fallback_address'>Fallback address:<br/><span id='fb_addr'>" + request.address + fb_labelval + "</span> " + switchpanel(false, " global") + "</div>" : "",
+        fb_markup = (request.payment == "bitcoin" && !helper.lnd_only) ? "<div id='fallback_address'>Fallback address:<br/><span id='fb_addr'>" + request.address + fb_labelval + "</span> " + switchpanel(false, " global") + "</div>" : "",
         shareform = "\
             <div id='shareformbox'>\
                 <div id='shareformib' class='inputbreak'>\
@@ -2267,7 +2267,6 @@ function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
             cache_prefix = (is_custom) ? "custom" : us_service,
             getcache = br_get_session(cache_prefix + "_shorturl_" + hashcode(sharedurl));
         if (getcache) { // get existing shorturl from cache
-            console.log("in session cache");
             sharerequest(getcache, sharedtitle);
             return
         }

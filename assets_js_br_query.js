@@ -18,7 +18,12 @@
 //br_result
 //get_api_url
 //tofixedspecial
+//renderlnconnect_url
+//get_search
+//renderlnconnect
+//b64urldecode
 //geturlparameters
+//renderparameters
 //scanmeta
 //xss_search
 //getrandomnumber
@@ -229,15 +234,55 @@ function tofixedspecial(str, n) {
     return convert.slice(0, -1);
 }
 
-function geturlparameters() {
-    let qstring = w_loc.search.substring(1),
-        xss = xss_search(qstring);
+function renderlnconnect_url(str, imp) {
+    let str_obj = renderlnconnect(str, imp),
+        implementation = (str_obj.imp) ? "&imp=" + str_obj.imp : "",
+        lnconnecturl = w_loc.pathname + "?resturl=" + str_obj.resturl + "&macaroon=" + str_obj.macaroon + implementation;
+    return lnconnecturl;
+}
+
+function renderlnconnect(str, imp) {
+    let spitsearch = str.split("?"),
+        url = spitsearch[0],
+        s_string = spitsearch[1],
+        proto = (url.indexOf("https://") > -1) ? "https://" : (url.indexOf("http://") > -1) ? "http://" : "://",
+        search = (s_string) ? renderparameters(s_string) : false,
+        bare_url = url.split(proto).pop(),
+        rest_url = (search.lnconnect) ? atob(search.lnconnect) : (proto == "://") ? "https://" + bare_url : proto + bare_url;
+    search.resturl = rest_url;
+    if (imp) {
+        search.imp = imp;
+    }
+    return search;
+}
+
+function b64urldecode(str) {
+    if (is_hex(str) === true) {
+        return str;
+    }
+    try {
+        return frombits(sjcl.codec.base64url.toBits(str));
+    } catch (e) {
+        return false;
+    }
+}
+
+function get_search(str) {
+    return (str.indexOf("?") > -1) ? "?" + str.split("?").pop() : false;
+}
+
+function geturlparameters(str) {
+    return renderparameters(w_loc.search.substring(1));
+}
+
+function renderparameters(str) {
+    let xss = xss_search(str);
     if (xss) {
         return {
             "xss": true
         }
     }
-    let getvalues = qstring.split("&"),
+    let getvalues = str.split("&"),
         get_object = {};
     $.each(getvalues, function(i, val) {
         let keyval = val.split("=");

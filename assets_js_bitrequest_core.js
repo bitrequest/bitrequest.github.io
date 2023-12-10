@@ -412,6 +412,7 @@ function finishfunctions() {
     //active_derives
     get_wallet();
     submitaddresstrigger();
+    add_lightning();
     add_erc20();
     autocomplete_erc20token();
     pickerc20select();
@@ -583,7 +584,6 @@ function finishfunctions() {
     gk();
     html.addClass("loaded");
     expand_shoturl();
-    //makelocal
 }
 
 //checks
@@ -1230,7 +1230,7 @@ function triggertxfunction(thislink) {
             if (addr_whitelist(thisaddress) === true) {} else {
                 let pass_dat = {
                         "currency": currency,
-                        "address": thisaddress,
+                        "address": "thisaddress",
                         "url": savedurl,
                         "title": title,
                         "seedid": seedid
@@ -2217,6 +2217,14 @@ function submitaddresstrigger() {
     })
 }
 
+// Connect lightning node
+function add_lightning() {
+    $(document).on("click", "#connectln", function() {
+        lnd_popup();
+        return
+    })
+}
+
 //Add erc20 token
 function add_erc20() {
     $(document).on("click", "#add_erc20, #choose_erc20", function() {
@@ -2733,7 +2741,12 @@ function cancelsharedialog() {
 function showoptionstrigger() {
     $(document).on("click", ".popoptions", function(e) {
         let ad = $(this).closest("li").data(),
-            savedrequest = $("#requestlist li[data-address='" + ad.address + "']"),
+            address = ad.address;
+        if (address == "lnurl") {
+            playsound(funk);
+            return
+        }
+        let savedrequest = $("#requestlist li[data-address='" + address + "']"),
             showrequests = (savedrequest.length > 0) ? "<li><div class='showrequests'><span class='icon-qrcode'></span> Show requests</div></li>" : "",
             newrequest = (ad.checked === true) ? "<li>\
                 <div data-rel='' class='newrequest' title='create request'>\
@@ -2747,7 +2760,7 @@ function showoptionstrigger() {
                     <li><div id='rpayments'><span class='icon-history'></span> Recent payments</div></li>\
                 </ul>").data(ad);
         showoptions(content);
-        return false;
+        return
     });
 }
 
@@ -3739,8 +3752,8 @@ function rendercurrencies() {
             }
         });
     }
-    $("ul#allcurrencies").append("<li id='choose_erc20' data-currency='erc20 token' class='start_cli' data-currency='erc20 token'><div class='liwrap'><h2><img src='" + c_icons("ph") + "'/>erc20 token</h2></div></li>\
-    <li id='rshome' class='restore start_cli' data-currency='erc20 token'><div class='liwrap'><h2><span class='icon-upload'> Restore from backup</h2></div></li><li id='start_cli_margin' class='start_cli'><div class='liwrap'><h2></h2></div></li>");
+    $("ul#allcurrencies").append("<li id='choose_erc20' data-currency='erc20 token' class='start_cli'><div class='liwrap'><h2><img src='" + c_icons("ph") + "'/>erc20 token</h2></div></li>\
+    <li id='rshome' class='restore start_cli' data-currency='erc20 token'><div class='liwrap'><h2><span class='icon-upload'> Restore from backup</h2></div></li><li id='start_cli_margin' class='start_cli'><div class='liwrap'><h2></h2></div></li>").prepend("<li id='connectln' data-currency='bitcoin' class='start_cli'><div class='liwrap'><h2><img src='img_logos_btc-lnd.png'/>Lightning</h2></div></li>");
 }
 
 // render currency settings
@@ -4452,8 +4465,11 @@ function saveaddresses(currency, add) {
         });
         br_set_local("cc_" + currency, addressboxpush, true)
     } else {
-        br_remove_local("cc_" + currency);
-        br_remove_local(currency + "_settings");
+        if (ln_service) { // keep lightning settings  
+        } else {
+            br_remove_local("cc_" + currency);
+            br_remove_local(currency + "_settings");
+        }
     }
     updatechanges("addresses", add);
 }

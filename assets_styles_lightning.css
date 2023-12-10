@@ -199,6 +199,10 @@ pre .key {color: #b9c97e;}
 	display:none;
 }
 
+#lnsettingsbox .popform.nocam #lnd_credentials .qrscanner {
+	display:none;
+}
+
 #add_proxy {
 	text-align: right;
 	padding-right:1em;

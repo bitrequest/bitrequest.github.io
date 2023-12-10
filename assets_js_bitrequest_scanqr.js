@@ -80,7 +80,25 @@ function setResult(result) {
     scanner.stop();
     let payment = currencyscan,
         thistype = scantype;
-    if (thistype == "address") {
+    if (thistype == "lnconnect") {
+        let params_url = renderlnconnect(result);
+        if (params_url) {
+            let resturl = params_url.resturl,
+                macaroon = params_url.macaroon;
+            if (resturl && macaroon) {
+                let macval = b64urldecode(macaroon);
+                if (macval) {
+                    let lnd_host_input = $("#lnd_credentials .cs_" + payment + ":visible .lnd_host"),
+                        lnd_key_input = $("#lnd_credentials .cs_" + payment + ":visible .invoice_macaroon");
+                    lnd_host_input.val(resturl);
+                    lnd_key_input.val(macval);
+                    trigger_ln();
+                }
+            } else {
+                popnotify("error", "unable to decode qr");
+            }
+        }
+    } else if (thistype == "address") {
         let prefix = payment + ":",
             mid_result = (result.indexOf(prefix) >= 0 && payment != "kaspa") ? result.split(prefix).pop() : result,
             end_result = (result.indexOf("?") >= 0) ? mid_result.split("?")[0] : mid_result,

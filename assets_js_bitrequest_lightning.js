@@ -19,6 +19,7 @@ $(document).ready(function() {
     lnd_select_node();
     lnd_select_proxy();
     lnd_select_implementation();
+    scan_lnqr();
     toggle_invoices();
     //trigger_ln
     //test_lnd_proxy
@@ -95,6 +96,7 @@ function lm_function(replace) {
             cp_id = (current_proxy) ? current_proxy.id : false,
             p_class = (has_proxies) ? " haslnurls" : "",
             n_class = (has_nodes) ? "" : " noln",
+            camclass = (hascam) ? "" : " nocam",
             node_name = (current_node) ? current_node.name : "",
             c_node_id = (current_node) ? current_node.node_id : "",
             proxy_select = (has_proxy) ? "<div class='selectbox' id='lnd_proxy_select_input'>\
@@ -103,7 +105,7 @@ function lm_function(replace) {
                 <div class='options'></div>\
             </div><div id='add_proxy'><span class='ref'>Add RPC proxy</span></div>" : "",
             ln_markup = "\
-            <div class='popform" + n_class + p_class + "'>\
+            <div class='popform" + n_class + p_class + camclass + "'>\
                 <div id='select_ln_node' class='selectbox' data-nodeid='" + c_node_id + "'>\
                     <input type='text' value='" + node_name + "' placeholder='Select lightning node' readonly='readonly' id='ln_nodeselect'/>\
                     <div class='selectarrows icon-menu2' data-pe='none'></div>\
@@ -119,26 +121,26 @@ function lm_function(replace) {
                                     <div class='options' id='implements'>\
                                         <span data-value='lnd' class='imp_select'><img src='" + c_icons("lnd") + "' class='lnd_icon'> LND</span>\
                                         <span data-value='eclair' class='imp_select'><img src='" + c_icons("eclair") + "' class='lnd_icon'> Eclair</span>\
-                                        <span data-value='c-lightning' class='imp_select'><img src='" + c_icons("c-lightning") + "' class='lnd_icon'> c-lightning</span>\
+                                        <span data-value='c-lightning' class='imp_select'><img src='" + c_icons("c-lightning") + "' class='lnd_icon'> c-lightning </span>\
                                         <span data-value='lnbits' class='imp_select'><img src='" + c_icons("lnbits") + "' class='lnd_icon'> LNbits</span>\
                                     </div>\
                                 </div>\
                                 <div id='lnd_credentials'>\
                                     <div class='lndcd cs_lnd'>\
-                                        <input class='lnd_host' type='text' value='' placeholder='REST Host'/>\
-                                        <input class='invoice_macaroon (hex)' type='text' value='' placeholder='Invoice macaroon'/>\
+                                        <div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host'/><div class='qrscanner' data-currency='lnd' data-id='lnconnect' title='scan qr-code'><span class='icon-qrcode'></span></div></div>\
+                                        <div class='inputwrap'><input class='invoice_macaroon (hex)' type='text' value='' placeholder='Invoice macaroon'/><div class='qrscanner' data-currency='lnd' data-id='lnconnect' title='scan qr-code'><span class='icon-qrcode'></span></div></div>\
                                     </div>\
                                     <div class='lndcd cs_eclair'>\
-                                        <input class='lnd_host' type='text' value='' placeholder='REST Host'/>\
-                                        <input class='invoice_macaroon (hex)' type='text' value='' placeholder='Password'/>\
+                                        <div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host'/></div>\
+                                        <div class='inputwrap'><input class='invoice_macaroon (hex)' type='text' value='' placeholder='Password'/></div>\
                                     </div>\
                                     <div class='lndcd cs_c-lightning'>\
-                                        <input class='lnd_host' type='text' value='' placeholder='REST Host'/>\
-                                        <input class='invoice_macaroon' type='text' value='' placeholder='Invoice macaroon'/>\
+                                        <div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host'/><div class='qrscanner' data-currency='c-lightning' data-id='lnconnect' title='scan qr-code'><span class='icon-qrcode'></span></div></div>\
+                                        <div class='inputwrap'><input class='invoice_macaroon' type='text' value='' placeholder='Invoice macaroon'/><div class='qrscanner' data-currency='c-lightning' data-id='lnconnect' title='scan qr-code'><span class='icon-qrcode'></span></div></div>\
                                     </div>\
                                     <div class='lndcd cs_lnbits'>\
-                                        <input class='lnd_host' type='text' value='' placeholder='REST Host'/>\
-                                        <input class='invoice_macaroon' type='text' value='' placeholder='Invoice/read key'/>\
+                                        <div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host'/></div>\
+                                        <div class='inputwrap'><input class='invoice_macaroon' type='text' value='' placeholder='Invoice/read key'/></div>\
                                     </div>\
                                 </div>\
                                 <div class='switch_wrap'>\
@@ -659,9 +661,7 @@ function proxy_switch() {
             lnd_imp_input = $("#lnd_select_input"),
             imp = lnd_imp_input.data("value");
         if (this_switch.hasClass("true")) {
-            if (imp == "lnd" || imp == "eclair" || imp == "c-lightning") {} else {
-                ldc.slideDown(200);
-            }
+            ldc.slideDown(200);
             this_switch.removeClass("true").addClass("false");
         } else {
             ldc.slideUp(200);
@@ -670,7 +670,9 @@ function proxy_switch() {
         if (lpd.hasClass("haslnurls")) {
             return
         }
-        if (lpd.is(":visible")) {} else {
+        if (lpd.is(":visible")) {
+            lpd.slideUp(200);
+        } else {
             lpd.slideDown(200);
             lpd_input.focus();
         }
@@ -723,7 +725,7 @@ function lnd_proxy_switch() {
             if (result === true) {
                 current_node.proxy = false;
                 this_switch.removeClass("true").addClass("false");
-                let p_text = "false";
+                p_text = "false";
             } else {
                 return
             }
@@ -732,7 +734,7 @@ function lnd_proxy_switch() {
             if (result === true) {
                 current_node.proxy = true;
                 this_switch.removeClass("false").addClass("true");
-                let p_text = set_proxy_val;
+                p_text = set_proxy_val;
             } else {
                 return
             }
@@ -802,7 +804,7 @@ function lnd_select_proxy() {
 }
 
 function lnd_select_implementation() {
-    $(document).on("click", "#implements .imp_select", function() {
+    $(document).on("click", "#implements .imp_select", function(e) {
         let thisnode = $(this),
             this_data = lndli().data();
         lnd_proxy_list = this_data.proxies,
@@ -825,6 +827,12 @@ function lnd_select_implementation() {
         $("#lnd_proxy_url_input").blur();
         cs_boxes.not(cd_box_select).hide();
         cd_box_select.show();
+    })
+}
+
+function scan_lnqr() {
+    $(document).on("click", "#implements .qrscanner", function(e) {
+
     })
 }
 
@@ -1142,14 +1150,12 @@ function test_create_invoice(imp, proxydat, host, key) {
             "params": {
                 "method": "POST",
                 "cache": false,
-                "contentType": "application/json",
                 "data": JSON.stringify({
                     "value": 10000,
                     "memo": "test invoice LND direct",
                     "expiry": 180
                 }),
                 "headers": {
-                    "contentType": "application/json",
                     "Grpc-Metadata-macaroon": key
                 }
             }
@@ -1346,6 +1352,33 @@ function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
         lm_function(true);
     })
     cancelpd();
+    if (body.hasClass("showstartpage")) {
+        let currency = "bitcoin",
+            acountname = $("#eninput").val();
+        $("#accountsettings").data("selected", acountname).find("p").text(acountname);
+        savesettings();
+        let ad = {
+                "currency": "bitcoin",
+                "ccsymbol": "btc",
+                "cmcid": 1,
+                "erc20": false,
+                "checked": true,
+                "address": "lnurl", // dummy address for lightning
+                "label": "Lightning node",
+                "a_id": "btc1",
+                "vk": false
+            },
+            href = "?p=home&payment=bitcoin&uoa=btc&amount=0" + "&address=lnurl";
+        appendaddress(currency, ad);
+        saveaddresses(currency, true);
+        currency_check(currency);
+        canceldialog();
+        canceloptions();
+        clear_savedurl();
+        br_set_local("editurl", href); // to check if request is being edited
+        openpage(href, "create " + currency + " request", "both");
+        body.removeClass("showstartpage");
+    }
 }
 
 function remove_rpc_proxy() {

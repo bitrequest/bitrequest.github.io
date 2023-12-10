@@ -36,6 +36,10 @@ function hextodec(val) {
     return BigInt("0x" + val);
 }
 
+function is_hex(str) {
+    return new RegExp("([0-9A-Fa-f])+$").test(str);
+}
+
 function hextobin(hex) {
     if (hex.length % 2 !== 0) throw "Hex string has invalid length!";
     let res = uint_8Array(hex.length / 2);
