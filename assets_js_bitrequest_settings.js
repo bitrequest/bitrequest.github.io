@@ -1682,7 +1682,7 @@ function share_csv() {
     })
 }
 
-function check_csvexport() {
+function check_csvexport(csv) {
     let ro_dat = stripb64(csv),
         ro_id = ro_dat.ro,
         ro_proxy = ro_dat.proxy;
