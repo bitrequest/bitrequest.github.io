@@ -1352,6 +1352,7 @@ function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
             let acountname = $("#eninput").val();
             $("#accountsettings").data("selected", acountname).find("p").text(acountname);
             savesettings();
+            openpage("?p=home", "home", "loadpage");
             body.removeClass("showstartpage");
         }
         let ad = {
