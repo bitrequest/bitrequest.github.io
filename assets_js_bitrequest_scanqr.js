@@ -88,7 +88,7 @@ function setResult(result) {
             if (resturl && macaroon) {
                 let macval = b64urldecode(macaroon);
                 if (macval) {
-                    let set_vals = set_ln_fields(payment, resturl, macaroon);
+                    let set_vals = set_ln_fields(payment, resturl, macval);
                     if (set_vals) {
                         trigger_ln();
                     }
