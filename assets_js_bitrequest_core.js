@@ -4975,17 +4975,26 @@ function ln_connect() {
         macaroon = gets.macaroon,
         imp = gets.imp;
     if (macaroon && imp) {
-        openpage("?p=bitcoin_settings", "bitcoin_settings", "loadpage");
-        let resturl = atob(lnconnect),
-            set_vals = set_ln_fields(imp, resturl, macaroon);
-        if (set_vals) {
-            $("#adln_drawer").show();
-            let cs_boxes = $("#lnd_credentials .lndcd"),
-                cd_box_select = $("#lnd_credentials .cs_" + imp);
-            $("#lnd_select_input").data("value", imp).val(imp);
-            cs_boxes.not(cd_box_select).hide();
-            cd_box_select.show();
-            trigger_ln();
+        let macval = b64urldecode(macaroon);
+        if (macval) {
+            openpage("?p=bitcoin_settings", "bitcoin_settings", "loadpage");
+            let resturl = atob(lnconnect),
+                set_vals = set_ln_fields(imp, resturl, macval);
+            if (set_vals) {
+                $("#adln_drawer").show();
+                let cs_boxes = $("#lnd_credentials .lndcd"),
+                    cd_box_select = $("#lnd_credentials .cs_" + imp);
+                $("#lnd_select_input").data("value", imp).val(imp);
+                cs_boxes.not(cd_box_select).hide();
+                cd_box_select.show();
+                trigger_ln();
+                return
+            }
+            notify("Unable to set data");
+            return
         }
+        notify("Invalid macaroon format");
+        return
     }
+    notify("Invalid format");
 }

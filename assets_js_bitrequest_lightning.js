@@ -941,6 +941,11 @@ function trigger_ln() {
                 lnd_key_input.focus();
                 return
             }
+            if (key_length > 300) { // invoice macaroons should be less then 300 characters
+                popnotify("error", "Please enter 'invoice' macaroon");
+                lnd_key_input.focus();
+                return
+            }
             test_create_invoice(imp, cp_dat, lnd_host_val, lnd_key_val);
             return
         }
