@@ -583,7 +583,10 @@ function finishfunctions() {
     //getcoinconfig
     gk();
     html.addClass("loaded");
-    expand_shoturl();
+    check_params();
+    //expand_shoturl
+    //makelocal
+    //ln_connect
 }
 
 //checks
@@ -1230,7 +1233,7 @@ function triggertxfunction(thislink) {
             if (addr_whitelist(thisaddress) === true) {} else {
                 let pass_dat = {
                         "currency": currency,
-                        "address": "thisaddress",
+                        "address": thisaddress,
                         "url": savedurl,
                         "title": title,
                         "seedid": seedid
@@ -2220,7 +2223,7 @@ function submitaddresstrigger() {
 // Connect lightning node
 function add_lightning() {
     $(document).on("click", "#connectln", function() {
-        lnd_popup();
+        lm_function();
         return
     })
 }
@@ -4465,11 +4468,8 @@ function saveaddresses(currency, add) {
         });
         br_set_local("cc_" + currency, addressboxpush, true)
     } else {
-        if (ln_service) { // keep lightning settings  
-        } else {
-            br_remove_local("cc_" + currency);
-            br_remove_local(currency + "_settings");
-        }
+        br_remove_local("cc_" + currency);
+        br_remove_local(currency + "_settings");
     }
     updatechanges("addresses", add);
 }
@@ -4883,10 +4883,32 @@ function add_serviceworker() {
     }
 }
 
-function expand_shoturl(pr) {
-    let gets = geturlparameters(),
-        i_param = (pr) ? pr : gets.i,
-        getcache = br_get_session("longurl_" + i_param);
+function check_params() {
+    let gets = geturlparameters();
+    if (gets.xss) {
+        return
+    }
+    if (gets.i) {
+        expand_shoturl(gets.i);
+        return
+    }
+    if (gets.p == "settings") {
+        if (gets.ro) {
+            check_teaminvite(gets.ro);
+        } else if (gets.sbu) {
+            check_systembu(gets.sbu);
+        } else if (gets.csv) {
+            check_csvexport(gets.csv);
+        }
+    }
+    if (gets.lnconnect) {
+        lm_function();
+        ln_connect();
+    }
+}
+
+function expand_shoturl(i_param) {
+    let getcache = br_get_session("longurl_" + i_param);
     if (getcache) { // check for cached values
         ios_redirections(getcache);
         return
@@ -4945,4 +4967,26 @@ function expand_shoturl(pr) {
 function makelocal(url) {
     let pathname = w_loc.pathname;
     return (local || localserver) ? (url.indexOf("?") >= 0) ? "file://" + pathname + "?" + url.split("?")[1] : pathname : url;
+}
+
+function ln_connect() {
+    let gets = geturlparameters(),
+        lnconnect = gets.lnconnect,
+        macaroon = gets.macaroon,
+        imp = gets.imp;
+    if (macaroon && imp) {
+        let href = "?p=bitcoin_settings&lnconnect=" + lnconnect + "&macaroon=" + macaroon + "&imp=" + imp;
+        openpage(href, "bitcoin_settings", "loadpage");
+        let resturl = atob(lnconnect),
+            set_vals = set_ln_fields(imp, resturl, macaroon);
+        if (set_vals) {
+            $("#adln_drawer").show();
+            let cs_boxes = $("#lnd_credentials .lndcd"),
+                cd_box_select = $("#lnd_credentials .cs_" + imp);
+            $("#lnd_select_input").data("value", imp).val(imp);
+            cs_boxes.not(cd_box_select).hide();
+            cd_box_select.show();
+            trigger_ln();
+        }
+    }
 }

@@ -19,7 +19,6 @@ $(document).ready(function() {
     lnd_select_node();
     lnd_select_proxy();
     lnd_select_implementation();
-    scan_lnqr();
     toggle_invoices();
     //trigger_ln
     //test_lnd_proxy
@@ -830,12 +829,6 @@ function lnd_select_implementation() {
     })
 }
 
-function scan_lnqr() {
-    $(document).on("click", "#implements .qrscanner", function(e) {
-
-    })
-}
-
 function toggle_invoices() {
     $(document).on("click", "#lnsettingsbox .invoice_memo", function() {
         let thistrigger = $(this),
@@ -1352,12 +1345,12 @@ function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
         lm_function(true);
     })
     cancelpd();
-    if (body.hasClass("showstartpage")) {
-        let currency = "bitcoin",
-            acountname = $("#eninput").val();
-        $("#accountsettings").data("selected", acountname).find("p").text(acountname);
-        savesettings();
-        let ad = {
+    let startpage = (body.hasClass("showstartpage")) ? true : false,
+        gets = geturlparameters(),
+        lnconnect = (gets.lnconnect && gets.macaroon && gets.imp) ? true : false;
+    if (startpage || lnconnect) {
+        let currency = "bitcoin";
+        ad = {
                 "currency": "bitcoin",
                 "ccsymbol": "btc",
                 "cmcid": 1,
@@ -1369,8 +1362,16 @@ function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
                 "vk": false
             },
             href = "?p=home&payment=bitcoin&uoa=btc&amount=0" + "&address=lnurl";
-        appendaddress(currency, ad);
-        saveaddresses(currency, true);
+        if (startpage) {
+            let acountname = $("#eninput").val();
+            $("#accountsettings").data("selected", acountname).find("p").text(acountname);
+            savesettings();
+        }
+        let pobox = get_addresslist(currency).children("li");
+        if (!pobox.length) {
+            appendaddress(currency, ad);
+            saveaddresses(currency, true);
+        }
         currency_check(currency);
         canceldialog();
         canceloptions();
@@ -1887,4 +1888,19 @@ function check_lnbits_status(lnd) {
             error_data = get_api_error_data(error_object);
         proceed_pf(error_data);
     });
+}
+
+function set_ln_fields(imp, rest, mac) {
+    if (imp && rest && mac) {
+        if (imp == "lnd" || imp == "c-lightning") {
+            let lnd_host_input = $("#lnd_credentials .cs_" + imp + " .lnd_host"),
+                lnd_key_input = $("#lnd_credentials .cs_" + imp + " .invoice_macaroon");
+            if (lnd_host_input.length && lnd_key_input.length) {
+                lnd_host_input.val(rest);
+                lnd_key_input.val(mac);
+                return true;
+            }
+        }
+    }
+    return false;
 }

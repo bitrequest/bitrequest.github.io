@@ -88,11 +88,10 @@ function setResult(result) {
             if (resturl && macaroon) {
                 let macval = b64urldecode(macaroon);
                 if (macval) {
-                    let lnd_host_input = $("#lnd_credentials .cs_" + payment + ":visible .lnd_host"),
-                        lnd_key_input = $("#lnd_credentials .cs_" + payment + ":visible .invoice_macaroon");
-                    lnd_host_input.val(resturl);
-                    lnd_key_input.val(macval);
-                    trigger_ln();
+                    let set_vals = set_ln_fields(payment, resturl, macaroon);
+                    if (set_vals) {
+                        trigger_ln();
+                    }
                 }
             } else {
                 popnotify("error", "unable to decode qr");

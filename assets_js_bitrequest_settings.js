@@ -29,7 +29,7 @@ $(document).ready(function() {
     //complile_csv
     //render_csv
     share_csv();
-    check_csvexport();
+    //check_csvexport
     submit_csvdownload();
 
     // Bip32 passphrase
@@ -47,7 +47,7 @@ $(document).ready(function() {
     //backupdatabase
     sbu_switch();
     sharebu();
-    check_systembu();
+    //check_systembu
     //stripb64
     //systembu_expired
     restore_systembu();
@@ -133,7 +133,7 @@ $(document).ready(function() {
     //complile_teaminvite
     //adjust_object
     share_teaminvite()
-    check_teaminvite();
+    //check_teaminvite
     install_teaminvite_trigger()
     //install_teaminvite
     check_useragent();
@@ -608,110 +608,101 @@ function sharebu() {
     })
 }
 
-function check_systembu() {
-    let url_params = geturlparameters();
-    if (url_params.xss) {
-        return
-    }
-    if (url_params.p == "settings") {
-        let sbu = url_params.sbu;
-        if (sbu) {
-            let ro_dat = stripb64(sbu),
-                ro_id = ro_dat.ro,
-                ro_proxy = ro_dat.proxy;
-            api_proxy({
-                "custom": "get_system_bu",
-                "api_url": true,
-                "proxy": true,
-                "params": ro_id
-            }, ro_proxy).done(function(e) {
-                let ping = e.ping;
-                if (ping) {
-                    let br_cache = ping.br_cache,
-                        server_time = br_cache.utc_timestamp,
-                        filetime = br_cache.created_utc,
-                        filetimesec = (filetime) ? filetime * 1000 : now(),
-                        filetime_format = new Date(filetimesec).toLocaleString(language),
-                        br_result = ping.br_result,
-                        base64 = br_result.base64,
-                        account = atob(br_result.account),
-                        sharedtitle = "System Backup " + account + " (" + filetime_format + ")",
-                        bu_date = filetime_format.replace(/\s+/g, "_").replace(/\:/g, "_"),
-                        cache_time = br_cache.cache_time,
-                        expires_in = (filetime + cache_time) - server_time,
-                        filename = "bitrequest_system_backup_" + encodeURIComponent(account) + "_" + bu_date + ".json",
-                        cd = countdown(expires_in * 1000),
-                        cd_format = countdown_format(cd),
-                        cf_string = (cd_format) ? "Expires in " + cd_format : "File expired",
-                        ddat = [{
-                            "div": {
-                                "id": "dialogcontent",
-                                "content": [{
-                                        "h1": {
-                                            "content": sharedtitle
-                                        },
-                                        "div": {
-                                            "class": "error",
-                                            "attr": {
-                                                "style": "margin-top:1em;padding:0.3em 1em"
-                                            },
-                                            "content": cf_string
-                                        }
+function check_systembu(sbu) {
+    let ro_dat = stripb64(sbu),
+        ro_id = ro_dat.ro,
+        ro_proxy = ro_dat.proxy;
+    api_proxy({
+        "custom": "get_system_bu",
+        "api_url": true,
+        "proxy": true,
+        "params": ro_id
+    }, ro_proxy).done(function(e) {
+        let ping = e.ping;
+        if (ping) {
+            let br_cache = ping.br_cache,
+                server_time = br_cache.utc_timestamp,
+                filetime = br_cache.created_utc,
+                filetimesec = (filetime) ? filetime * 1000 : now(),
+                filetime_format = new Date(filetimesec).toLocaleString(language),
+                br_result = ping.br_result,
+                base64 = br_result.base64,
+                account = atob(br_result.account),
+                sharedtitle = "System Backup " + account + " (" + filetime_format + ")",
+                bu_date = filetime_format.replace(/\s+/g, "_").replace(/\:/g, "_"),
+                cache_time = br_cache.cache_time,
+                expires_in = (filetime + cache_time) - server_time,
+                filename = "bitrequest_system_backup_" + encodeURIComponent(account) + "_" + bu_date + ".json",
+                cd = countdown(expires_in * 1000),
+                cd_format = countdown_format(cd),
+                cf_string = (cd_format) ? "Expires in " + cd_format : "File expired",
+                ddat = [{
+                    "div": {
+                        "id": "dialogcontent",
+                        "content": [{
+                                "h1": {
+                                    "content": sharedtitle
+                                },
+                                "div": {
+                                    "class": "error",
+                                    "attr": {
+                                        "style": "margin-top:1em;padding:0.3em 1em"
                                     },
-                                    {
+                                    "content": cf_string
+                                }
+                            },
+                            {
+                                "div": {
+                                    "id": "changelog",
+                                    "content": [{
                                         "div": {
-                                            "id": "changelog",
+                                            "id": "custom_actions",
                                             "content": [{
+                                                "br": {
+                                                    "close": true
+                                                },
+                                                "a": {
+                                                    "id": "triggerdownload",
+                                                    "class": "button icon-download",
+                                                    "attr": {
+                                                        "href": "data:text/json;charset=utf-16le;base64," + base64,
+                                                        "download": filename,
+                                                        "title": filename,
+                                                        "data-date": bu_date,
+                                                        "data-lastbackup": filename
+                                                    },
+                                                    "content": "DOWNLOAD BACKUP"
+                                                },
                                                 "div": {
-                                                    "id": "custom_actions",
-                                                    "content": [{
-                                                        "br": {
-                                                            "close": true
-                                                        },
-                                                        "a": {
-                                                            "id": "triggerdownload",
-                                                            "class": "button icon-download",
-                                                            "attr": {
-                                                                "href": "data:text/json;charset=utf-16le;base64," + base64,
-                                                                "download": filename,
-                                                                "title": filename,
-                                                                "data-date": bu_date,
-                                                                "data-lastbackup": filename
-                                                            },
-                                                            "content": "DOWNLOAD BACKUP"
-                                                        },
-                                                        "div": {
-                                                            "id": "restore_bu",
-                                                            "class": "button icon-share2",
-                                                            "attr": {
-                                                                "data-base64": base64,
-                                                                "data-filename": filename
-                                                            },
-                                                            "content": "INSTALL BACKUP"
-                                                        }
-                                                    }]
+                                                    "id": "restore_bu",
+                                                    "class": "button icon-share2",
+                                                    "attr": {
+                                                        "data-base64": base64,
+                                                        "data-filename": filename
+                                                    },
+                                                    "content": "INSTALL BACKUP"
                                                 }
                                             }]
                                         }
-                                    }
-                                ]
+                                    }]
+                                }
                             }
-                        }],
-                        content = template_dialog({
-                            "id": "system_backupformbox",
-                            "icon": "icon-download",
-                            "title": "System Backup",
-                            "elements": ddat
-                        }) + "<div id='backupactions'><div id='backupcd'>CANCEL</div></div>";
-                    popdialog(content, "triggersubmit", null, true);
-                } else {
-                    systembu_expired();
-                }
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                systembu_expired();
-            });
+                        ]
+                    }
+                }],
+                content = template_dialog({
+                    "id": "system_backupformbox",
+                    "icon": "icon-download",
+                    "title": "System Backup",
+                    "elements": ddat
+                }) + "<div id='backupactions'><div id='backupcd'>CANCEL</div></div>";
+            popdialog(content, "triggersubmit", null, true);
+        } else {
+            systembu_expired();
         }
-    }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        systembu_expired();
+    });
 }
 
 function stripb64(ab) {
@@ -1692,100 +1683,91 @@ function share_csv() {
 }
 
 function check_csvexport() {
-    let url_params = geturlparameters();
-    if (url_params.xss) {
-        return
-    }
-    if (url_params.p == "settings") {
-        let csv = url_params.csv;
-        if (csv) {
-            let ro_dat = stripb64(csv),
-                ro_id = ro_dat.ro,
-                ro_proxy = ro_dat.proxy;
-            api_proxy({
-                "custom": "get_system_bu",
-                "api_url": true,
-                "proxy": true,
-                "params": ro_id
-            }, ro_proxy).done(function(e) {
-                let ping = e.ping;
-                if (ping) {
-                    let br_cache = ping.br_cache,
-                        server_time = br_cache.utc_timestamp,
-                        filetime = br_cache.created_utc,
-                        filetimesec = (filetime) ? filetime * 1000 : now(),
-                        filetime_format = new Date(filetimesec).toLocaleString(language),
-                        br_result = ping.br_result,
-                        base64 = br_result.base64,
-                        account = atob(br_result.account),
-                        sharedtitle = "CSV Export " + account + " (" + filetime_format + ")",
-                        bu_date = filetime_format.replace(/\s+/g, "_").replace(/\:/g, "_"),
-                        cache_time = br_cache.cache_time,
-                        expires_in = (filetime + cache_time) - server_time,
-                        filename = "bitrequest_csv_export_" + encodeURIComponent(account) + "_" + bu_date + ".csv",
-                        cd = countdown(expires_in * 1000),
-                        cd_format = countdown_format(cd),
-                        cf_string = (cd_format) ? "Expires in " + cd_format : "File expired",
-                        ddat = [{
-                            "div": {
-                                "id": "dialogcontent",
-                                "content": [{
-                                        "h1": {
-                                            "content": sharedtitle
-                                        },
-                                        "div": {
-                                            "class": "error",
-                                            "attr": {
-                                                "style": "margin-top:1em;padding:0.3em 1em"
-                                            },
-                                            "content": cf_string
-                                        }
+    let ro_dat = stripb64(csv),
+        ro_id = ro_dat.ro,
+        ro_proxy = ro_dat.proxy;
+    api_proxy({
+        "custom": "get_system_bu",
+        "api_url": true,
+        "proxy": true,
+        "params": ro_id
+    }, ro_proxy).done(function(e) {
+        let ping = e.ping;
+        if (ping) {
+            let br_cache = ping.br_cache,
+                server_time = br_cache.utc_timestamp,
+                filetime = br_cache.created_utc,
+                filetimesec = (filetime) ? filetime * 1000 : now(),
+                filetime_format = new Date(filetimesec).toLocaleString(language),
+                br_result = ping.br_result,
+                base64 = br_result.base64,
+                account = atob(br_result.account),
+                sharedtitle = "CSV Export " + account + " (" + filetime_format + ")",
+                bu_date = filetime_format.replace(/\s+/g, "_").replace(/\:/g, "_"),
+                cache_time = br_cache.cache_time,
+                expires_in = (filetime + cache_time) - server_time,
+                filename = "bitrequest_csv_export_" + encodeURIComponent(account) + "_" + bu_date + ".csv",
+                cd = countdown(expires_in * 1000),
+                cd_format = countdown_format(cd),
+                cf_string = (cd_format) ? "Expires in " + cd_format : "File expired",
+                ddat = [{
+                    "div": {
+                        "id": "dialogcontent",
+                        "content": [{
+                                "h1": {
+                                    "content": sharedtitle
+                                },
+                                "div": {
+                                    "class": "error",
+                                    "attr": {
+                                        "style": "margin-top:1em;padding:0.3em 1em"
                                     },
-                                    {
+                                    "content": cf_string
+                                }
+                            },
+                            {
+                                "div": {
+                                    "id": "changelog",
+                                    "content": [{
                                         "div": {
-                                            "id": "changelog",
+                                            "id": "custom_actions",
                                             "content": [{
-                                                "div": {
-                                                    "id": "custom_actions",
-                                                    "content": [{
-                                                        "br": {
-                                                            "close": true
-                                                        },
-                                                        "a": {
-                                                            "id": "trigger_csvdownload",
-                                                            "class": "button icon-download",
-                                                            "attr": {
-                                                                "href": "data:text/json;charset=utf-16le;base64," + base64,
-                                                                "download": filename,
-                                                                "title": filename,
-                                                                "data-date": bu_date,
-                                                                "data-lastbackup": filename
-                                                            },
-                                                            "content": "DOWNLOAD CSV"
-                                                        }
-                                                    }]
+                                                "br": {
+                                                    "close": true
+                                                },
+                                                "a": {
+                                                    "id": "trigger_csvdownload",
+                                                    "class": "button icon-download",
+                                                    "attr": {
+                                                        "href": "data:text/json;charset=utf-16le;base64," + base64,
+                                                        "download": filename,
+                                                        "title": filename,
+                                                        "data-date": bu_date,
+                                                        "data-lastbackup": filename
+                                                    },
+                                                    "content": "DOWNLOAD CSV"
                                                 }
                                             }]
                                         }
-                                    }
-                                ]
+                                    }]
+                                }
                             }
-                        }],
-                        content = template_dialog({
-                            "id": "system_backupformbox",
-                            "icon": "icon-download",
-                            "title": "CSV Export",
-                            "elements": ddat
-                        }) + "<div id='backupactions'><div id='backupcd'>CANCEL</div></div>";
-                    popdialog(content, "triggersubmit", null, true);
-                    return
-                }
-                systembu_expired();
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                systembu_expired();
-            });
+                        ]
+                    }
+                }],
+                content = template_dialog({
+                    "id": "system_backupformbox",
+                    "icon": "icon-download",
+                    "title": "CSV Export",
+                    "elements": ddat
+                }) + "<div id='backupactions'><div id='backupcd'>CANCEL</div></div>";
+            popdialog(content, "triggersubmit", null, true);
+            return
         }
-    }
+        systembu_expired();
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        systembu_expired();
+    });
 }
 
 function submit_csvdownload() {
@@ -3268,88 +3250,79 @@ function share_teaminvite() {
     })
 }
 
-function check_teaminvite() {
-    let url_params = geturlparameters();
-    if (url_params.xss) {
-        return
-    }
-    if (url_params.p == "settings") {
-        let ro = url_params.ro;
-        if (ro) {
-            let ro_dat = stripb64(ro),
-                ro_id = ro_dat.ro,
-                ro_proxy = ro_dat.proxy;
-            api_proxy({
-                "custom": "get_system_bu",
-                "api_url": true,
-                "proxy": true,
-                "params": ro_id
-            }, ro_proxy).done(function(e) {
-                let ping = e.ping;
-                if (ping) {
-                    let br_cache = ping.br_cache,
-                        server_time = br_cache.utc_timestamp,
-                        filetime = br_cache.created_utc,
-                        filetimesec = (filetime) ? filetime * 1000 : now(),
-                        filetime_format = new Date(filetimesec).toLocaleString(language),
-                        br_result = ping.br_result,
-                        base64 = br_result.base64,
-                        account = atob(br_result.account),
-                        br_dat = JSON.parse(atob(base64)),
-                        sharedtitle = "Team invite " + account + " (" + filetime_format + ")",
-                        bu_date = filetime_format.replace(/\s+/g, '_').replace(/\:/g, '_'),
-                        cache_time = br_cache.cache_time,
-                        expires_in = (filetime + cache_time) - server_time,
-                        filename = "bitrequest_team_invite" + encodeURIComponent(account) + "_" + bu_date + ".json",
-                        cd = countdown(expires_in * 1000),
-                        cd_format = countdown_format(cd),
-                        bpdat_seedid = (br_dat.bitrequest_cashier) ? (br_dat.bitrequest_cashier.seedid) ? br_dat.bitrequest_cashier.seedid : false : false,
-                        update = (bpdat_seedid == cashier_seedid) ? true : false,
-                        master_account = (bpdat_seedid == bipid) ? true : false,
-                        teamid = br_get_local("teamid", true),
-                        teamid_arr = br_dobj(teamid),
-                        is_installed = ($.inArray(ro, teamid_arr) > -1) ? true : false,
-                        dialog_heading = (update) ? "Team update" : "Team invitation",
-                        cf_string = (cd_format) ? "Invitation expires in " + cd_format : "File expired",
-                        dialogtext = (is_installed) ? "<p>Installation already completed!</p>" : (update) ? "<p>" + account + " wants you to update bitrequest with his latest public keys!</p>" : "<p>" + account + " wants to team up and make requests together with you!<br/><br/>By clicking on install, bitrequest will be installed on your device with " + account + "'s public keys and restricted access.</p>",
-                        button_text = (update) ? "UPDATE" : "INSTALL",
-                        install_button = (is_installed) ? "" : "<div id='install_teaminvite' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-download' data-update='" + update + "' data-ismaster='" + master_account + "'data-installid='" + ro + "'>" + button_text + "</div>",
-                        ddat = [{
-                            "div": {
-                                "id": "dialogcontent",
-                                "content": [{
-                                        "div": {
-                                            "class": "error",
-                                            "attr": {
-                                                "style": "margin-top:1em;padding:0.3em 1em"
-                                            },
-                                            "content": cf_string
-                                        }
+function check_teaminvite(ro) {
+    let ro_dat = stripb64(ro),
+        ro_id = ro_dat.ro,
+        ro_proxy = ro_dat.proxy;
+    api_proxy({
+        "custom": "get_system_bu",
+        "api_url": true,
+        "proxy": true,
+        "params": ro_id
+    }, ro_proxy).done(function(e) {
+        let ping = e.ping;
+        if (ping) {
+            let br_cache = ping.br_cache,
+                server_time = br_cache.utc_timestamp,
+                filetime = br_cache.created_utc,
+                filetimesec = (filetime) ? filetime * 1000 : now(),
+                filetime_format = new Date(filetimesec).toLocaleString(language),
+                br_result = ping.br_result,
+                base64 = br_result.base64,
+                account = atob(br_result.account),
+                br_dat = JSON.parse(atob(base64)),
+                sharedtitle = "Team invite " + account + " (" + filetime_format + ")",
+                bu_date = filetime_format.replace(/\s+/g, '_').replace(/\:/g, '_'),
+                cache_time = br_cache.cache_time,
+                expires_in = (filetime + cache_time) - server_time,
+                filename = "bitrequest_team_invite" + encodeURIComponent(account) + "_" + bu_date + ".json",
+                cd = countdown(expires_in * 1000),
+                cd_format = countdown_format(cd),
+                bpdat_seedid = (br_dat.bitrequest_cashier) ? (br_dat.bitrequest_cashier.seedid) ? br_dat.bitrequest_cashier.seedid : false : false,
+                update = (bpdat_seedid == cashier_seedid) ? true : false,
+                master_account = (bpdat_seedid == bipid) ? true : false,
+                teamid = br_get_local("teamid", true),
+                teamid_arr = br_dobj(teamid),
+                is_installed = ($.inArray(ro, teamid_arr) > -1) ? true : false,
+                dialog_heading = (update) ? "Team update" : "Team invitation",
+                cf_string = (cd_format) ? "Invitation expires in " + cd_format : "File expired",
+                dialogtext = (is_installed) ? "<p>Installation already completed!</p>" : (update) ? "<p>" + account + " wants you to update bitrequest with his latest public keys!</p>" : "<p>" + account + " wants to team up and make requests together with you!<br/><br/>By clicking on install, bitrequest will be installed on your device with " + account + "'s public keys and restricted access.</p>",
+                button_text = (update) ? "UPDATE" : "INSTALL",
+                install_button = (is_installed) ? "" : "<div id='install_teaminvite' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-download' data-update='" + update + "' data-ismaster='" + master_account + "'data-installid='" + ro + "'>" + button_text + "</div>",
+                ddat = [{
+                    "div": {
+                        "id": "dialogcontent",
+                        "content": [{
+                                "div": {
+                                    "class": "error",
+                                    "attr": {
+                                        "style": "margin-top:1em;padding:0.3em 1em"
                                     },
-                                    {
-                                        "div": {
-                                            "id": "changelog",
-                                            "content": dialogtext + "<div id='custom_actions'>" + install_button + "</div>"
-                                        }
-                                    }
-                                ]
+                                    "content": cf_string
+                                }
+                            },
+                            {
+                                "div": {
+                                    "id": "changelog",
+                                    "content": dialogtext + "<div id='custom_actions'>" + install_button + "</div>"
+                                }
                             }
-                        }],
-                        content = template_dialog({
-                            "id": "system_backupformbox",
-                            "icon": "icon-users",
-                            "title": dialog_heading,
-                            "elements": ddat
-                        }) + "<div id='backupactions'><div id='backupcd'>CANCEL</div></div>";
-                    popdialog(content, "triggersubmit", null, true);
-                    return
-                }
-                systembu_expired();
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                systembu_expired();
-            });
+                        ]
+                    }
+                }],
+                content = template_dialog({
+                    "id": "system_backupformbox",
+                    "icon": "icon-users",
+                    "title": dialog_heading,
+                    "elements": ddat
+                }) + "<div id='backupactions'><div id='backupcd'>CANCEL</div></div>";
+            popdialog(content, "triggersubmit", null, true);
+            return
         }
-    }
+        systembu_expired();
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        systembu_expired();
+    });
 }
 
 function install_teaminvite_trigger() {
