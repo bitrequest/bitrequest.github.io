@@ -4975,8 +4975,7 @@ function ln_connect() {
         macaroon = gets.macaroon,
         imp = gets.imp;
     if (macaroon && imp) {
-        let href = "?p=bitcoin_settings&lnconnect=" + lnconnect + "&macaroon=" + macaroon + "&imp=" + imp;
-        openpage(href, "bitcoin_settings", "loadpage");
+        openpage("?p=bitcoin_settings", "bitcoin_settings", "loadpage");
         let resturl = atob(lnconnect),
             set_vals = set_ln_fields(imp, resturl, macaroon);
         if (set_vals) {
