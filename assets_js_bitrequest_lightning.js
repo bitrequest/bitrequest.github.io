@@ -127,7 +127,7 @@ function lm_function(replace) {
                                 <div id='lnd_credentials'>\
                                     <div class='lndcd cs_lnd'>\
                                         <div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host'/><div class='qrscanner' data-currency='lnd' data-id='lnconnect' title='scan qr-code'><span class='icon-qrcode'></span></div></div>\
-                                        <div class='inputwrap'><input class='invoice_macaroon (hex)' type='text' value='' placeholder='Invoice macaroon'/><div class='qrscanner' data-currency='lnd' data-id='lnconnect' title='scan qr-code'><span class='icon-qrcode'></span></div></div>\
+                                        <div class='inputwrap'><input class='invoice_macaroon (hex)' type='text' value='' placeholder='Invoice macaroon'/></div>\
                                     </div>\
                                     <div class='lndcd cs_eclair'>\
                                         <div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host'/></div>\
@@ -135,7 +135,7 @@ function lm_function(replace) {
                                     </div>\
                                     <div class='lndcd cs_c-lightning'>\
                                         <div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host'/><div class='qrscanner' data-currency='c-lightning' data-id='lnconnect' title='scan qr-code'><span class='icon-qrcode'></span></div></div>\
-                                        <div class='inputwrap'><input class='invoice_macaroon' type='text' value='' placeholder='Invoice macaroon'/><div class='qrscanner' data-currency='c-lightning' data-id='lnconnect' title='scan qr-code'><span class='icon-qrcode'></span></div></div>\
+                                        <div class='inputwrap'><input class='invoice_macaroon' type='text' value='' placeholder='Invoice macaroon'/></div>\
                                     </div>\
                                     <div class='lndcd cs_lnbits'>\
                                         <div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host'/></div>\
@@ -1345,13 +1345,16 @@ function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
         lm_function(true);
     })
     cancelpd();
-    let startpage = (body.hasClass("showstartpage")) ? true : false,
-        gets = geturlparameters(),
-        lnconnect = (gets.lnconnect && gets.macaroon && gets.imp) ? true : false;
-    if (startpage || lnconnect) {
-        let currency = "bitcoin";
-        ad = {
-                "currency": "bitcoin",
+    let currency = "bitcoin",
+        pobox = get_addresslist(currency).children("li");
+    if (!pobox.length) {
+        if (body.hasClass("showstartpage")) {
+            let acountname = $("#eninput").val();
+            $("#accountsettings").data("selected", acountname).find("p").text(acountname);
+            savesettings();
+        }
+        let ad = {
+                "currency": currency,
                 "ccsymbol": "btc",
                 "cmcid": 1,
                 "erc20": false,
@@ -1362,16 +1365,8 @@ function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
                 "vk": false
             },
             href = "?p=home&payment=bitcoin&uoa=btc&amount=0" + "&address=lnurl";
-        if (startpage) {
-            let acountname = $("#eninput").val();
-            $("#accountsettings").data("selected", acountname).find("p").text(acountname);
-            savesettings();
-        }
-        let pobox = get_addresslist(currency).children("li");
-        if (!pobox.length) {
-            appendaddress(currency, ad);
-            saveaddresses(currency, true);
-        }
+        appendaddress(currency, ad);
+        saveaddresses(currency, true);
         currency_check(currency);
         canceldialog();
         canceloptions();
