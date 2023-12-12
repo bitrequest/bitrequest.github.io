@@ -1352,28 +1352,22 @@ function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
             let acountname = $("#eninput").val();
             $("#accountsettings").data("selected", acountname).find("p").text(acountname);
             savesettings();
+            body.removeClass("showstartpage");
         }
         let ad = {
-                "currency": currency,
-                "ccsymbol": "btc",
-                "cmcid": 1,
-                "erc20": false,
-                "checked": true,
-                "address": "lnurl", // dummy address for lightning
-                "label": "Lightning node",
-                "a_id": "btc1",
-                "vk": false
-            },
-            href = "?p=home&payment=bitcoin&uoa=btc&amount=0" + "&address=lnurl";
+            "currency": currency,
+            "ccsymbol": "btc",
+            "cmcid": 1,
+            "erc20": false,
+            "checked": true,
+            "address": "lnurl", // dummy address for lightning
+            "label": "Lightning node",
+            "a_id": "btc1",
+            "vk": false
+        };
         appendaddress(currency, ad);
         saveaddresses(currency, true);
         currency_check(currency);
-        canceldialog();
-        canceloptions();
-        clear_savedurl();
-        br_set_local("editurl", href); // to check if request is being edited
-        openpage(href, "create " + currency + " request", "both");
-        body.removeClass("showstartpage");
     }
 }
 
