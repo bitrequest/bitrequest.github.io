@@ -586,7 +586,7 @@ function finishfunctions() {
     check_params();
     //expand_shoturl
     //makelocal
-    //ln_connect
+    //ln_connect  
 }
 
 //checks

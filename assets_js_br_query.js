@@ -21,6 +21,7 @@
 //renderlnconnect_url
 //get_search
 //renderlnconnect
+//cleanb64
 //b64urldecode
 //geturlparameters
 //renderparameters
@@ -256,12 +257,17 @@ function renderlnconnect(str, imp) {
     return search;
 }
 
+function cleanb64(str) {
+    return str.replace(/\+/g, "-").replace(/\//g, "_");
+}
+
 function b64urldecode(str) {
-    if (is_hex(str) === true) {
-        return str;
+    let cstr = cleanb64(str);
+    if (is_hex(cstr) === true) {
+        return cstr;
     }
     try {
-        return frombits(sjcl.codec.base64url.toBits(str));
+        return frombits(sjcl.codec.base64url.toBits(cstr));
     } catch (e) {
         return false;
     }

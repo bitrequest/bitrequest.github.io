@@ -37,7 +37,7 @@ function hextodec(val) {
 }
 
 function is_hex(str) {
-    return new RegExp("([0-9A-Fa-f])+$").test(str);
+    return new RegExp("^[a-fA-F0-9]+$").test(str);
 }
 
 function hextobin(hex) {
@@ -47,6 +47,14 @@ function hextobin(hex) {
         res[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
     }
     return res;
+}
+
+function bintohex(bin) {
+    let out = [];
+    for (let i = 0; i < bin.length; ++i) {
+        out.push(("0" + bin[i].toString(16)).slice(-2));
+    }
+    return out.join("");
 }
 
 function str_pad(val, bytes) {

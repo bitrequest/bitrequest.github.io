@@ -927,26 +927,30 @@ function trigger_ln() {
             let lnd_host_input = $("#lnd_credentials .cs_" + imp + ":visible .lnd_host"),
                 lnd_key_input = $("#lnd_credentials .cs_" + imp + ":visible .invoice_macaroon"),
                 lnd_host_val = lnd_host_input.val(),
-                lnd_key_val = lnd_key_input.val(),
-                host_length = (lnd_host_val) ? lnd_host_val.length : -1,
-                key_length = (lnd_key_val) ? lnd_key_val.length : -1;
+                lnd_key_v = lnd_key_input.val(),
+                host_length = (lnd_host_val) ? lnd_host_val.length : -1;
             if (host_length < 10) {
                 popnotify("error", "Select " + imp + " Host");
                 lnd_host_input.focus();
                 return
             }
-            if (key_length < 5) {
-                let key_name = (imp == "lnbits") ? "API key" : (imp == "eclair") ? "Password" : "Invoice Macaroon";
-                popnotify("error", "Select " + imp + " " + key_name);
-                lnd_key_input.focus();
-                return
+            let lnd_key_val = b64urldecode(lnd_key_v);
+            if (lnd_key_val) {
+                let key_length = lnd_key_val.length;
+                if (key_length < 5) {
+                    let key_name = (imp == "lnbits") ? "API key" : (imp == "eclair") ? "Password" : "Invoice Macaroon";
+                    popnotify("error", "Select " + imp + " " + key_name);
+                    lnd_key_input.focus();
+                    return
+                }
+                if (key_length > 300) { // invoice macaroons should be less then 300 characters
+                    popnotify("error", "Please enter 'invoice' macaroon");
+                    return
+                }
+                test_create_invoice(imp, cp_dat, lnd_host_val, lnd_key_val);
+            } else {
+                popnotify("error", "Invalid key format");
             }
-            if (key_length > 300) { // invoice macaroons should be less then 300 characters
-                popnotify("error", "Please enter 'invoice' macaroon");
-                lnd_key_input.focus();
-                return
-            }
-            test_create_invoice(imp, cp_dat, lnd_host_val, lnd_key_val);
             return
         }
         lndcd.slideDown(200);

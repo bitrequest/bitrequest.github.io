@@ -171,14 +171,6 @@ function secret_spend_key_to_words(ssk) {
 
 // helpers
 
-function bintohex(bin) {
-    let out = [];
-    for (let i = 0; i < bin.length; ++i) {
-        out.push(("0" + bin[i].toString(16)).slice(-2));
-    }
-    return out.join("");
-}
-
 function uint32hex(value) {
     let h = value.toString(16);
     if (h.length > 8) throw "value must not equal or exceed 2^32";
