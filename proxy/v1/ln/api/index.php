@@ -530,9 +530,6 @@ function create_invoice($imp, $pid, $host, $key, $amount, $memo, $type, $pingtes
 		$pl = [];
 		if ($memo) {
 			$pl["description"] = $memo;
-			if ($src == "lnurl" && $desc_hash) {
-				$pl["description_hash"] = $desc_hash;
-			}
 		}
 		if ($amount) {
 			$pl["amountMsat"] = $amount;
