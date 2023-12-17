@@ -584,6 +584,7 @@ function finishfunctions() {
     gk();
     html.addClass("loaded");
     check_params();
+    check_intents();
     //expand_shoturl
     //makelocal
     //ln_connect  
@@ -4900,10 +4901,57 @@ function check_params() {
         } else if (gets.csv) {
             check_csvexport(gets.csv);
         }
+        return
     }
     if (gets.lnconnect) {
         lm_function();
         ln_connect();
+    }
+}
+
+function check_intents() {
+    let gets = geturlparameters();
+    if (gets.xss) {
+        return
+    }
+    if (gets.p == "home") {
+        if (gets.scheme) {
+            let scheme = gets.scheme;
+            scheme_url = atob(scheme),
+                proto = scheme_url.split(":")[0];
+            if (proto == "eclair" || proto == "acinq" || proto == "lnbits") {
+                let content = "<h2 class='icon-warning'>" + proto + ": connect not available at the moment</h2>";
+                popdialog(content, "canceldialog");
+                return
+            }
+            if (proto == "lndconnect" || proto == "c-lightning-rest") {
+                imp = (proto == "lndconnect") ? "lnd" : (proto == "c-lightning-rest") ? "c-lightning" : proto,
+                    scheme_obj = renderlnconnect(scheme_url, imp);
+                if (scheme_obj) {
+                    let resturl = scheme_obj.resturl,
+                        macaroon = scheme_obj.macaroon;
+                    if (resturl && macaroon) {
+                        let lnd_url = "?p=bitcoin_settings&lnconnect=" + btoa(resturl) + "&macaroon=" + macaroon + "&imp=" + imp
+                        openpage(lnd_url, "bitcoin_settings", "loadpage");
+                        lm_function();
+                        ln_connect();
+                    } else {
+                        popnotify("error", "unable to decode qr");
+                    }
+                }
+            } else {
+                if (proto.length < 1) {
+                    let content = "<h2 class='icon-warning'>Invalid URL scheme</h2>";
+                    popdialog(content, "canceldialog");
+                    return
+                }
+                if (proto && proto.length > 0) {
+                    let content = "<h2 class='icon-warning'>URL scheme '" + proto + ":' is not supported</h2>";
+                    popdialog(content, "canceldialog");
+                    return
+                }
+            }
+        }
     }
 }
 

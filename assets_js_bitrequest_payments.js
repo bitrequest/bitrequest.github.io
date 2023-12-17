@@ -2231,7 +2231,7 @@ function share(thisbutton) {
             sharedtitle = (thisdata === true) ? thisrequestname_uppercase + " sent a " + payment_name + " payment request of " + thisamount + " " + thiscurrency.toUpperCase() + " for '" + thisrequesttitle + "'" : "You have a " + payment_name + " payment request of " + thisamount + " " + thiscurrency,
             encodedurl = encodeURIComponent(sharedurl),
             firebase_dynamiclink = firebase_shortlink + "?link=" + encodedurl + "&apn=" + androidpackagename + "&afl=" + encodedurl,
-            share_icon = (lightning) ? "https://bitrequest.github.io/img_logos_btc-lnd.png" : cmc_icon_loc + cmcid + ".png";
+            share_icon = (lightning) ? localhostname + "/img_logos_btc-lnd.png" : cmc_icon_loc + cmcid + ".png";
         if (isipfs) {
             sharerequest(sharedurl, sharedtitle);
             setlocales();
