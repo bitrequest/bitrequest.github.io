@@ -885,7 +885,7 @@ function ios_redirections(url) {
     let pagename = gets.p;
     if (pagename == "home") {
         if (gets.scheme) {
-            ln_connect(gets);
+            check_intents(gets);
             return
         }
     }
@@ -4915,14 +4915,14 @@ function check_params() {
     }
 }
 
-function check_intents() {
-    let gets = geturlparameters();
-    if (gets.xss) {
+function check_intents(gets) {
+    let lesgets (gets) ? gets : geturlparameters();
+    if (lesgets.xss) {
         return
     }
-    if (gets.p == "home") {
-        if (gets.scheme) {
-            let scheme = gets.scheme;
+    if (lesgets.p == "home") {
+        if (lesgets.scheme) {
+            let scheme = lesgets.scheme;
             scheme_url = atob(scheme),
                 proto = scheme_url.split(":")[0];
             if (proto == "eclair" || proto == "acinq" || proto == "lnbits") {
@@ -5023,11 +5023,11 @@ function makelocal(url) {
     return (local || localserver) ? (url.indexOf("?") >= 0) ? "file://" + pathname + "?" + url.split("?")[1] : pathname : url;
 }
 
-function ln_connect(gets) {
-    let letgets = (gets) ? gets : geturlparameters(),
-        lnconnect = letgets.lnconnect,
-        macaroon = letgets.macaroon,
-        imp = letgets.imp;
+function ln_connect() {
+    let gets = geturlparameters(),
+        lnconnect = gets.lnconnect,
+        macaroon = gets.macaroon,
+        imp = gets.imp;
     if (macaroon && imp) {
         let macval = b64urldecode(macaroon);
         if (macval) {
