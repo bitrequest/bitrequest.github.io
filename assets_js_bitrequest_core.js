@@ -5025,9 +5025,9 @@ function makelocal(url) {
 
 function ln_connect(gets) {
     let letgets = (gets) ? gets : geturlparameters(),
-        lnconnect = gets.lnconnect,
-        macaroon = gets.macaroon,
-        imp = gets.imp;
+        lnconnect = letgets.lnconnect,
+        macaroon = letgets.macaroon,
+        imp = letgets.imp;
     if (macaroon && imp) {
         let macval = b64urldecode(macaroon);
         if (macval) {
