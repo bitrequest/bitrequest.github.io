@@ -587,7 +587,7 @@ function finishfunctions() {
     check_intents();
     //expand_shoturl
     //makelocal
-    //ln_connect  
+    //ln_connect
 }
 
 //checks
@@ -869,19 +869,28 @@ function ios_init() {
 }
 
 function ios_redirections(url) {
-    if (url.indexOf("?i=") >= 0) {
-        let shortid = url.split("?i=")[1];
-        expand_shoturl(shortid);
-        return
-    }
-    if (url.endsWith("4bR")) { // handle bitly shortlink
-        ios_redirect_bitly(url);
-        return
-    }
     let currenturlvar = w_loc.href,
         currenturl = currenturlvar.toUpperCase(),
         newpage = url.toUpperCase();
     if (currenturl == newpage) {
+        return
+    }
+    let search = get_search(url),
+        gets = renderparameters(search);
+    if (gets.i) {
+        let shortid = gets.i;
+        expand_shoturl(shortid);
+        return
+    }
+    let pagename = gets.p;
+    if (pagename == "home") {
+        if (gets.scheme) {
+            ln_connect(gets);
+            return
+        }
+    }
+    if (url.endsWith("4bR")) { // handle bitly shortlink
+        ios_redirect_bitly(url);
         return
     }
     let isrequest = (newpage.indexOf("PAYMENT=") >= 0),
@@ -897,17 +906,14 @@ function ios_redirections(url) {
         } else {
             openpage(url, "", "payment");
         }
+        updaterequeststatesrefresh();
     } else {
         if (isopenrequest === true) {} else {
-            let pageparam = url.lastIndexOf("?p=");
-            if (pageparam > 10) {
-                let slice = url.slice(pageparam + 3),
-                    pagename = (slice.indexOf("&") >= 0) ? slice.substr(0, slice.indexOf("&")) : slice;
+            if (pagename) {
                 openpage(url, pagename, "page");
             }
         }
     }
-    updaterequeststatesrefresh();
 }
 
 function ios_redirect_bitly(shorturl) {
@@ -5017,8 +5023,8 @@ function makelocal(url) {
     return (local || localserver) ? (url.indexOf("?") >= 0) ? "file://" + pathname + "?" + url.split("?")[1] : pathname : url;
 }
 
-function ln_connect() {
-    let gets = geturlparameters(),
+function ln_connect(gets) {
+    let letgets = (gets) ? gets : geturlparameters(),
         lnconnect = gets.lnconnect,
         macaroon = gets.macaroon,
         imp = gets.imp;

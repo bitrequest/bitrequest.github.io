@@ -274,7 +274,7 @@ function b64urldecode(str) {
 }
 
 function get_search(str) {
-    return (str.indexOf("?") > -1) ? "?" + str.split("?").pop() : false;
+    return (str.indexOf("?") > -1) ? str.split("?").pop() : false;
 }
 
 function geturlparameters(str) {

@@ -59,12 +59,12 @@ function updaterequeststatestrigger() {
     })
 }
 
-function updaterequeststatesrefresh() {
-    let gets = geturlparameters();
-    if (gets.xss) {
+function updaterequeststatesrefresh(gets) {
+    let lesgets = (gets) ? gets : geturlparameters();
+    if (lesgets.xss) {
         return
     }
-    if (gets.p == "requests") { // only trigger on "requests page"
+    if (lesgets.p == "requests") { // only trigger on "requests page"
         setTimeout(function() {
             trigger_requeststates("delay");
         }, 300);
