@@ -4916,7 +4916,7 @@ function check_params() {
 }
 
 function check_intents(gets) {
-    let lesgets (gets) ? gets : geturlparameters();
+    let lesgets = (gets) ? gets : geturlparameters();
     if (lesgets.xss) {
         return
     }
