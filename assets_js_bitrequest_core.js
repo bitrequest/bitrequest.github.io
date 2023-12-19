@@ -5017,7 +5017,7 @@ function ln_connect() {
         if (macval) {
             let resturl = atob(lnconnect),
                 set_vals = set_ln_fields(imp, resturl, macval);
-            if (set_vals) {
+            if (set_vals === true) {
                 $("#adln_drawer").show();
                 let cs_boxes = $("#lnd_credentials .lndcd"),
                     cd_box_select = $("#lnd_credentials .cs_" + imp);
@@ -5027,10 +5027,7 @@ function ln_connect() {
                 trigger_ln();
                 return
             }
-            else {
-                notify("Unable to set data");
-                return
-            }
+            notify("Unable to set data");
             return
         }
         notify("Invalid macaroon format");
