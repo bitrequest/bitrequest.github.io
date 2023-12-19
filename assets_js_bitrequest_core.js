@@ -898,17 +898,15 @@ function ios_redirections(url) {
         if (gets.i) {
             // expand shorturl don't open page
         } else {
-            let pagename = (gets.p) ? gets.p : "";
+            let pagename = (gets.p) ? gets.p : "prompt";
             openpage(url, pagename, "page");
         }
         if (is_opendialog() === true) {
             canceldialog();
-            setTimeout(function() {
-                check_params(gets);
-            }, 1000);
-            return
         }
-        check_params(gets);
+        setTimeout(function() {
+            check_params(gets);
+        }, 1000);
     }
 }
 
@@ -4884,10 +4882,12 @@ function check_intents(scheme) {
             let resturl = scheme_obj.resturl,
                 macaroon = scheme_obj.macaroon;
             if (resturl && macaroon) {
-                let lnd_url = "?p=bitcoin_settings&lnconnect=" + btoa(resturl) + "&macaroon=" + macaroon + "&imp=" + imp
-                openpage(lnd_url, "bitcoin_settings", "loadpage");
                 lm_function();
-                ln_connect();
+                ln_connect({
+                    "lnconnect": btoa(resturl),
+                    "macaroon": macaroon,
+                    "imp": imp
+                });
                 return
             }
             popnotify("error", "unable to decode qr");
@@ -5007,11 +5007,11 @@ function expand_bitly(i_param) {
     });
 }
 
-function ln_connect() {
-    let gets = geturlparameters(),
-        lnconnect = gets.lnconnect,
-        macaroon = gets.macaroon,
-        imp = gets.imp;
+function ln_connect(gets) {
+    let lgets = (gets) ? gets : geturlparameters(),
+        lnconnect = lgets.lnconnect,
+        macaroon = lgets.macaroon,
+        imp = lgets.imp;
     if (macaroon && imp) {
         let macval = b64urldecode(macaroon);
         if (macval) {
@@ -5025,6 +5025,10 @@ function ln_connect() {
                 cs_boxes.not(cd_box_select).hide();
                 cd_box_select.show();
                 trigger_ln();
+                openpage("?p=bitcoin_settings", "bitcoin_settings", "loadpage");
+                return
+            }
+            if (is_ios_app === true) {
                 return
             }
             notify("Unable to set data");
