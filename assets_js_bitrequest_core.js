@@ -4888,7 +4888,6 @@ function check_intents(scheme) {
                 openpage(lnd_url, "bitcoin_settings", "loadpage");
                 lm_function();
                 ln_connect();
-                console.log("connect");
                 return
             }
             popnotify("error", "unable to decode qr");
@@ -5028,7 +5027,10 @@ function ln_connect() {
                 trigger_ln();
                 return
             }
-            notify("Unable to set data");
+            else {
+                notify("Unable to set data");
+                return
+            }
             return
         }
         notify("Invalid macaroon format");
