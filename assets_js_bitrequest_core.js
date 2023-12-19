@@ -580,7 +580,8 @@ function finishfunctions() {
     //getcoinconfig
     gk();
     html.addClass("loaded");
-    //opendialog
+    //is_opendialog
+    //is_openrequest
 
     // ** Check params **//
 
@@ -896,12 +897,11 @@ function ios_redirections(url) {
         }
         if (gets.i) {
             // expand shorturl don't open page
-        }
-        else {
+        } else {
             let pagename = (gets.p) ? gets.p : "";
             openpage(url, pagename, "page");
         }
-        if (opendialog() === true) {
+        if (is_opendialog() === true) {
             canceldialog();
             setTimeout(function() {
                 check_params(gets);
@@ -2001,9 +2001,6 @@ function popnotify(result, message) { // notifications in dialogs
 
 //dialogs
 function popdialog(content, functionname, trigger, custom, replace) {
-    if (opendialog() === true) { // prevent double load
-        return
-    }
     if (custom) {
         $("#popup #actions").addClass("custom");
     }
@@ -4829,8 +4826,12 @@ function getcoinconfig(currency) {
     })[0];
 }
 
-function opendialog() {
+function is_opendialog() {
     return ($("#dialogbody > div.formbox").length) ? true : false;
+}
+
+function is_openrequest() {
+    return ($("#request_front").length) ? true : false;
 }
 
 // ** Check params **//
@@ -4885,12 +4886,9 @@ function check_intents(scheme) {
             if (resturl && macaroon) {
                 let lnd_url = "?p=bitcoin_settings&lnconnect=" + btoa(resturl) + "&macaroon=" + macaroon + "&imp=" + imp
                 openpage(lnd_url, "bitcoin_settings", "loadpage");
-                let timeout = setTimeout(function() {
-                    lm_function();
-                    ln_connect();
-                }, 1000, function() {
-                    clearTimeout(timeout);
-                });
+                lm_function();
+                ln_connect();
+                console.log("connect");
                 return
             }
             popnotify("error", "unable to decode qr");
@@ -4952,9 +4950,6 @@ function expand_shoturl(i_param) {
                                 let to_localurl = makelocal(longurl);
                                 ios_redirections(to_localurl);
                                 br_set_session("longurl_" + i_param, to_localurl);
-                                check_teaminvite(); // open if teaminvite
-                                check_systembu(); // check for systembackup
-                                check_csvexport(); // check for csv export
                                 return
                             }
                         }
@@ -5021,7 +5016,6 @@ function ln_connect() {
     if (macaroon && imp) {
         let macval = b64urldecode(macaroon);
         if (macval) {
-            openpage("?p=bitcoin_settings", "bitcoin_settings", "loadpage");
             let resturl = atob(lnconnect),
                 set_vals = set_ln_fields(imp, resturl, macval);
             if (set_vals) {

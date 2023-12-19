@@ -402,7 +402,7 @@ function face_back() {
 //loadpayment (check for crypto rates)
 
 function loadpaymentfunction(pass) {
-    if ($("#request_front").length > 0) { // prevent double load
+    if (is_openrequest() === true) { // prevent double load
         return
     }
     loader();

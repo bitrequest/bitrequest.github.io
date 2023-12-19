@@ -1349,11 +1349,6 @@ function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
     };
     lnli.data(newdat).find(".switchpanel").removeClass("false").addClass("true");
     save_cc_settings("bitcoin", true);
-    notify("Data saved");
-    $("#dialogbody").slideUp(300, function() {
-        lm_function(true);
-    })
-    cancelpd();
     let currency = "bitcoin",
         pobox = get_addresslist(currency).children("li");
     if (!pobox.length) {
@@ -1379,6 +1374,11 @@ function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
         saveaddresses(currency, true);
         currency_check(currency);
     }
+    notify("Data saved");
+    $("#dialogbody").slideUp(300, function() {
+        lm_function(true);
+    })
+    cancelpd();
 }
 
 function remove_rpc_proxy() {
@@ -1587,7 +1587,7 @@ function is_local_node(host) {
 }
 
 function cancelpd() {
-    if ($("#request_front").length > 0) { // update request dialog
+    if (is_openrequest() === true) { // update request dialog
         cancelpaymentdialog();
     }
 }
