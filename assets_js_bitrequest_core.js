@@ -580,6 +580,7 @@ function finishfunctions() {
     //getcoinconfig
     gk();
     html.addClass("loaded");
+    //opendialog
 
     // ** Check params **//
 
@@ -863,7 +864,53 @@ function ios_init() {
     body.addClass("ios"); // ios app fingerprint
 }
 
-
+function ios_redirections(url) {
+    if (url) {
+        let search = get_search(url),
+            gets = renderparameters(search);
+        if (gets.xss) {
+            return
+        }
+        let currenturlvar = w_loc.href,
+            currenturl = currenturlvar.toUpperCase(),
+            newpage = url.toUpperCase();
+        if (currenturl == newpage) {
+            return
+        }
+        if (br_get_local("editurl") == w_loc.search) {
+            return
+        }
+        let isrequest = (newpage.indexOf("PAYMENT=") >= 0),
+            isopenrequest = (paymentpopup.hasClass("active"));
+        if (isrequest) {
+            if (isopenrequest) {
+                cancelpaymentdialog();
+                setTimeout(function() {
+                    openpage(url, "", "payment");
+                }, 1000);
+                return
+            }
+            openpage(url, "", "payment");
+            updaterequeststatesrefresh();
+            return
+        }
+        if (gets.i) {
+            // expand shorturl don't open page
+        }
+        else {
+            let pagename = (gets.p) ? gets.p : "";
+            openpage(url, pagename, "page");
+        }
+        if (opendialog() === true) {
+            canceldialog();
+            setTimeout(function() {
+                check_params(gets);
+            }, 1000);
+            return
+        }
+        check_params(gets);
+    }
+}
 
 // ** Intropage **
 
@@ -1954,6 +2001,9 @@ function popnotify(result, message) { // notifications in dialogs
 
 //dialogs
 function popdialog(content, functionname, trigger, custom, replace) {
+    if (opendialog() === true) { // prevent double load
+        return
+    }
     if (custom) {
         $("#popup #actions").addClass("custom");
     }
@@ -4779,43 +4829,11 @@ function getcoinconfig(currency) {
     })[0];
 }
 
-// ** Check params **//
-
-function ios_redirections(url) {
-    if (url) {
-        let search = get_search(url),
-            gets = renderparameters(search);
-        if (gets.xss) {
-            return
-        }
-        let currenturlvar = w_loc.href,
-            currenturl = currenturlvar.toUpperCase(),
-            newpage = url.toUpperCase();
-        if (currenturl == newpage) {
-            return
-        }
-        if (br_get_local("editurl") == w_loc.search) {
-            return
-        }
-        let isrequest = (newpage.indexOf("PAYMENT=") >= 0),
-            isopenrequest = (paymentpopup.hasClass("active"));
-        if (isrequest) {
-            if (isopenrequest) {
-                cancelpaymentdialog();
-                setTimeout(function() {
-                    openpage(url, "", "payment");
-                }, 1000);
-                return
-            }
-            openpage(url, "", "payment");
-            updaterequeststatesrefresh();
-            return
-        }
-        let pagename = (gets.p) ? gets.p : "";
-        openpage(url, pagename, "page");
-        check_params(gets);
-    }
+function opendialog() {
+    return ($("#dialogbody > div.formbox").length) ? true : false;
 }
+
+// ** Check params **//
 
 function check_params(gets) {
     let lgets = (gets) ? gets : geturlparameters();
