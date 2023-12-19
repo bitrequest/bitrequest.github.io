@@ -4885,23 +4885,27 @@ function check_intents(scheme) {
             if (resturl && macaroon) {
                 let lnd_url = "?p=bitcoin_settings&lnconnect=" + btoa(resturl) + "&macaroon=" + macaroon + "&imp=" + imp
                 openpage(lnd_url, "bitcoin_settings", "loadpage");
-                lm_function();
-                ln_connect();
-            } else {
-                popnotify("error", "unable to decode qr");
+                let timeout = setTimeout(function() {
+                    lm_function();
+                    ln_connect();
+                }, 1000, function() {
+                    clearTimeout(timeout);
+                });
+                return
             }
+            popnotify("error", "unable to decode qr");
         }
-    } else {
-        if (proto.length < 1) {
-            let content = "<h2 class='icon-warning'>Invalid URL scheme</h2>";
-            popdialog(content, "canceldialog");
-            return
-        }
-        if (proto && proto.length > 0) {
-            let content = "<h2 class='icon-warning'>URL scheme '" + proto + ":' is not supported</h2>";
-            popdialog(content, "canceldialog");
-            return
-        }
+        return
+    }
+    if (proto.length < 1) {
+        let content = "<h2 class='icon-warning'>Invalid URL scheme</h2>";
+        popdialog(content, "canceldialog");
+        return
+    }
+    if (proto && proto.length > 0) {
+        let content = "<h2 class='icon-warning'>URL scheme '" + proto + ":' is not supported</h2>";
+        popdialog(content, "canceldialog");
+        return
     }
 }
 
