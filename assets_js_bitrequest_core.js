@@ -330,7 +330,6 @@ function finishfunctions() {
 
     //ios_init
     //ios_redirections
-    //ios_redirect_bitly
 
     // ** Intropage **
 
@@ -586,6 +585,7 @@ function finishfunctions() {
     check_params();
     check_intents();
     //expand_shoturl
+    //expand_bitly
     //makelocal
     //ln_connect
 }
@@ -889,72 +889,28 @@ function ios_redirections(url) {
             return
         }
     }
-    if (url.endsWith("4bR")) { // handle bitly shortlink
-        ios_redirect_bitly(url);
-        return
-    }
     let isrequest = (newpage.indexOf("PAYMENT=") >= 0),
         isopenrequest = (paymentpopup.hasClass("active"));
     if (isrequest === true) {
         if (isopenrequest === true) {
-            if (br_get_local("editurl") == w_loc.search) {} else {
-                cancelpaymentdialog();
-                setTimeout(function() {
-                    openpage(url, "", "payment");
-                }, 1000);
+            if (br_get_local("editurl") == w_loc.search) {
+                return
             }
-        } else {
-            openpage(url, "", "payment");
+            cancelpaymentdialog();
+            setTimeout(function() {
+                openpage(url, "", "payment");
+            }, 1000);
+            return
         }
+        openpage(url, "", "payment");
         updaterequeststatesrefresh();
-    } else {
-        if (isopenrequest === true) {} else {
-            if (pagename) {
-                openpage(url, pagename, "page");
-            }
-        }
+        return
     }
-}
-
-function ios_redirect_bitly(shorturl) {
-    if (hostlocation == "local") {} else {
-        let bitly_id = shorturl.split(approot)[1].split("4bR")[0],
-            getcache = br_get_session("longurl_" + bitly_id);
-        if (getcache) { // check for cached values
-            ios_redirections(getcache);
-        } else {
-            api_proxy({
-                "api": "bitly",
-                "search": "expand",
-                "cachetime": 84600,
-                "cachefolder": "1d",
-                "bearer": true,
-                "params": {
-                    "method": "POST",
-                    "contentType": "application/json",
-                    "data": JSON.stringify({
-                        "bitlink_id": "bit.ly/" + bitly_id
-                    })
-                }
-            }).done(function(e) {
-                let data = br_result(e).result;
-                if (data.error) {
-                    fail_dialogs("bitly", data.error);
-                    return
-                }
-                if (data) {
-                    let longurl = data.long_url;
-                    if (longurl) {
-                        ios_redirections(longurl);
-                        br_set_session("longurl_" + bitly_id, longurl);
-                        return
-                    }
-                    w_loc.href = "http://bit.ly/" + bitly_id;
-                }
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                w_loc.href = "http://bit.ly/" + bitly_id;
-            });
-        }
+    if (isopenrequest === true) {
+        return
+    }
+    if (pagename) {
+        openpage(url, pagename, "page");
     }
 }
 
@@ -4923,7 +4879,10 @@ function check_intents(gets) {
     if (lesgets.p == "home") {
         if (lesgets.scheme) {
             let scheme = lesgets.scheme;
-            scheme_url = atob(scheme),
+            if (scheme == "false") {
+                return
+            }
+            let scheme_url = atob(scheme),
                 proto = scheme_url.split(":")[0];
             if (proto == "eclair" || proto == "acinq" || proto == "lnbits") {
                 let content = "<h2 class='icon-warning'>" + proto + ": connect not available at the moment</h2>";
@@ -4962,6 +4921,10 @@ function check_intents(gets) {
 }
 
 function expand_shoturl(i_param) {
+    if (i_param.startsWith("4bR")) { // handle bitly shortlink
+        expand_bitly(i_param);
+        return
+    }
     let getcache = br_get_session("longurl_" + i_param);
     if (getcache) { // check for cached values
         ios_redirections(getcache);
@@ -5016,6 +4979,49 @@ function expand_shoturl(i_param) {
             });
         }
     }
+}
+
+function expand_bitly(i_param) {
+    if (hostlocation == "local") {
+        return
+    }
+    let bitly_id = i_param.slice(3),
+        getcache = br_get_session("longurl_" + bitly_id);
+    if (getcache) { // check for cached values
+        ios_redirections(getcache);
+        return
+    }
+    api_proxy({
+        "api": "bitly",
+        "search": "expand",
+        "cachetime": 84600,
+        "cachefolder": "1d",
+        "bearer": true,
+        "params": {
+            "method": "POST",
+            "contentType": "application/json",
+            "data": JSON.stringify({
+                "bitlink_id": "bit.ly/" + bitly_id
+            })
+        }
+    }).done(function(e) {
+        let data = br_result(e).result;
+        if (data.error) {
+            w_loc.href = "http://bit.ly/" + bitly_id;
+            return
+        }
+        if (data) {
+            let longurl = data.long_url;
+            if (longurl) {
+                ios_redirections(longurl);
+                br_set_session("longurl_" + bitly_id, longurl);
+                return
+            }
+            w_loc.href = "http://bit.ly/" + bitly_id;
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        w_loc.href = "http://bit.ly/" + bitly_id;
+    });
 }
 
 function makelocal(url) {

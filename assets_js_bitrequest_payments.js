@@ -2378,7 +2378,7 @@ function custom_shorten(service, sharedurl, sharedtitle, sitethumb) {
             if (rqid) {
                 let index = proxy_list.indexOf(serv),
                     isdefault = (index > -1),
-                    shurl = (isdefault) ? approot + "?i=" + index.toString() + rqid : serv + "proxy/v1/inv/" + "4bR" + rqid;
+                    shurl = (isdefault) ? approot + "?i=" + index.toString() + rqid : serv + "proxy/v1/inv/4bR" + rqid;
                 sharerequest(shurl, sharedtitle);
                 br_set_session("custom_shorturl_" + hashcode(sharedurl), shurl);
                 return
@@ -2408,9 +2408,9 @@ function bitly_shorten(sharedurl, sharedtitle) {
         let data = br_result(e).result;
         if (data.id) {
             let linkid = data.id.split("/").pop(),
-                shorturl = data.link;
-            sharerequest(shorturl, sharedtitle);
-            br_set_session("bitly_shorturl_" + hashcode(sharedurl), shorturl);
+                shurl = approot + "?i=4bR" + linkid;
+            sharerequest(shurl, sharedtitle);
+            br_set_session("bitly_shorturl_" + hashcode(sharedurl), shurl);
             return
         }
         sharerequest(sharedurl, sharedtitle);
