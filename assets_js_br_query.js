@@ -41,6 +41,7 @@
 //fulldateformatmarkup
 //formattime
 //playsound
+//shake
 //vibrate
 //get_api_data
 //str_match
@@ -50,6 +51,9 @@
 //dom_to_array
 //d_proxy
 //fetch_aws
+//fk
+//init_keys
+//makelocal
 
 // Manage local storage
 
@@ -456,6 +460,14 @@ function playsound(audio) {
     }
 }
 
+function shake(node) {
+    node.addClass("shake");
+    setTimeout(function() {
+        node.removeClass("shake");
+        vibrate();
+    }, 200);
+}
+
 function vibrate() {
     if (navigator.vibrate) {
         navigator.vibrate(100);
@@ -555,4 +567,9 @@ function init_keys(ko, set) { // set required keys
     if (set === false) {
         br_set_local("init", io, true);
     }
+}
+
+function makelocal(url) {
+    let pathname = w_loc.pathname;
+    return (local || localserver) ? (url.indexOf("?") >= 0) ? "file://" + pathname + "?" + url.split("?")[1] : pathname : url;
 }

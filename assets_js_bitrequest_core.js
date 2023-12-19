@@ -1,5 +1,4 @@
 //globals
-
 const ls_support = check_local(),
     language = navigator.language || navigator.userLanguage,
     userAgent = navigator.userAgent || navigator.vendor || window.opera,
@@ -196,12 +195,12 @@ function setsymbols() { //fetch fiat currencies from fixer.io api
             let symbols = data.symbols;
             if (symbols && symbols.USD) {
                 br_set_local("symbols", symbols, true);
-            } else {
-                let this_error = (data.error) ? data.error : "Unable to get API data";
-                fail_dialogs("fixer", this_error);
+                geterc20tokens();
+                return
             }
+            let this_error = (data.error) ? data.error : "Unable to get API data";
+            fail_dialogs("fixer", this_error);
         }
-        geterc20tokens();
     }).fail(function(jqXHR, textStatus, errorThrown) {
         let content = "<h2 class='icon-bin'>Api call failed</h2><p class='doselect'>" + textStatus + "<br/>api did not respond<br/><br/><span id='proxy_dialog' class='ref'>Try other proxy</span></p>";
         popdialog(content, "canceldialog");
@@ -229,7 +228,7 @@ function geterc20tokens() {
             storecoindata(data);
             return
         }
-        geterc20tokens_local(); // get localy stored coindata
+        geterc20tokens_local(); // get locally stored coindata
     }).fail(function(jqXHR, textStatus, errorThrown) {
         geterc20tokens_local();
     }).always(function() {
@@ -291,7 +290,6 @@ function islocked() {
 
 function setfunctions() {
     setlocales(); //set meta attribute
-    //settheme();
     setpermissions();
 
     // ** Pincode **
@@ -370,12 +368,14 @@ function finishfunctions() {
     toggleaddress();
     confirm_missing_seed_toggle();
     //cmst_callback
-    //cmst_callback
     //add_seed_whitelist
     //seed_wl
     //add_address_whitelist
     //addr_whitelist
     check_pk();
+    //check_currency
+    //currency_check
+    //currency_uncheck
     toggleswitch();
     closeselectbox();
     radio_select();
@@ -471,6 +471,58 @@ function finishfunctions() {
     //unarchivefunction
     removerequest();
     //removerequestfunction
+    //amountshort
+    editrequest();
+    submit_request_description();
+
+    // ** Services **
+
+    receipt();
+    download_receipt();
+    share_receipt();
+    //lnd_lookup_invoice
+    //get_pdf_url
+
+    // ** Page rendering **
+
+    rendercurrencies();
+    setTimeout(function() {
+        loadurl(); //initiate page
+    }, 100);
+    //render_currencysettings
+    //rendersettings
+    renderrequests();
+    //archive_button
+    //fetchrequests
+    //initiate
+    //buildpage
+    //append_coinsetting
+    //appendaddress
+    //appendrequest
+
+    // ** Store data in localstorage **
+
+    //savecurrencies
+    //saveaddresses
+    //saverequests
+    //savearchive
+    //savesettings
+    //save_cc_settings
+    //updatechanges
+    //resetchanges
+    //savechangesstats
+    renderchanges();
+    //change_alert
+    //get_total_changes
+
+    // ** HTML rendering **
+
+    //render_html
+    //render_attributes
+
+    // ** HTML templates **
+
+    //template_dialog
 
     // ** Helpers **
 
@@ -497,49 +549,6 @@ function finishfunctions() {
     //countdown
     //countdown_format
 
-    // ** Page rendering **
-
-    rendercurrencies();
-    setTimeout(function() {
-        loadurl(); //initiate page
-    }, 100);
-    //render_currencysettings
-    //rendersettings
-    renderrequests();
-    //archive_button
-    //fetchrequests
-    //initiate
-    //buildpage
-    //append_coinsetting
-    //appendaddress
-    //appendrequest
-    receipt();
-    download_receipt();
-    share_receipt();
-    //lnd_lookup_invoice
-    //get_pdf_url;
-    //amountshort
-    editrequest();
-    submit_request_description();
-
-    // ** Store data in localstorage **
-
-    //savecurrencies
-    //saveaddresses
-    //saverequests
-    //savearchive
-    //savesettings
-    //save_cc_settings
-    //updatechanges
-    //resetchanges
-    //savechangesstats
-    renderchanges();
-    //change_alert
-    //get_total_changes
-    //check_currency
-    //currency_check
-    //currency_uncheck
-
     // ** Recent requests **
 
     check_rr();
@@ -550,22 +559,11 @@ function finishfunctions() {
     setTimeout(function() { // wait for ios app detection
         detectapp();
     }, 700);
-
     //getapp
     close_app_panel();
     //platform_icon
-    //shake
 
-    // ** HTML rendering **
-
-    //render_html
-    //render_attributes
-
-    // ** HTML templates **
-
-    //template_dialog
-
-    // Query helpers
+    // ** Query helpers **//
 
     //get_setting
     //set_setting
@@ -582,12 +580,16 @@ function finishfunctions() {
     //getcoinconfig
     gk();
     html.addClass("loaded");
+
+    // ** Check params **//
+
     check_params();
-    check_intents();
+    //check_intents;
     //expand_shoturl
     //expand_bitly
-    //makelocal
     //ln_connect
+
+    //add_serviceworker
 }
 
 //checks
@@ -596,13 +598,6 @@ function setlocales() {
     html.attr("lang", language);
     $("meta[property='og:locale']").attr("content", language);
     $("meta[property='og:url']").attr("content", w_loc.href);
-}
-
-function settheme() {
-    let theme_settings = $("#themesettings").data("selected");
-    if (theme_settings) {
-        $("#theme").attr("href", "assets/styles/themes/" + theme_settings);
-    }
 }
 
 function setpermissions() {
@@ -868,51 +863,7 @@ function ios_init() {
     body.addClass("ios"); // ios app fingerprint
 }
 
-function ios_redirections(url) {
-    let currenturlvar = w_loc.href,
-        currenturl = currenturlvar.toUpperCase(),
-        newpage = url.toUpperCase();
-    if (currenturl == newpage) {
-        return
-    }
-    let search = get_search(url),
-        gets = renderparameters(search);
-    if (gets.i) {
-        let shortid = gets.i;
-        expand_shoturl(shortid);
-        return
-    }
-    let pagename = gets.p;
-    if (pagename == "home") {
-        if (gets.scheme) {
-            check_intents(gets);
-            return
-        }
-    }
-    let isrequest = (newpage.indexOf("PAYMENT=") >= 0),
-        isopenrequest = (paymentpopup.hasClass("active"));
-    if (isrequest === true) {
-        if (isopenrequest === true) {
-            if (br_get_local("editurl") == w_loc.search) {
-                return
-            }
-            cancelpaymentdialog();
-            setTimeout(function() {
-                openpage(url, "", "payment");
-            }, 1000);
-            return
-        }
-        openpage(url, "", "payment");
-        updaterequeststatesrefresh();
-        return
-    }
-    if (isopenrequest === true) {
-        return
-    }
-    if (pagename) {
-        openpage(url, pagename, "page");
-    }
-}
+
 
 // ** Intropage **
 
@@ -1087,6 +1038,7 @@ function popstate() {
         cancel_url_dialogs();
     }
 }
+
 //activate page
 function loadfunction(pagename, thisevent) {
     if (thisevent == "payment") { //load paymentpopup if payment is set
@@ -1469,6 +1421,31 @@ function check_pk() {
     });
 }
 
+function check_currency(currency) {
+    let addresscount = filter_addressli(currency, "checked", true).length;
+    if (addresscount > 0) {
+        currency_check(currency);
+        return
+    }
+    currency_uncheck(currency);
+}
+
+function currency_check(currency) {
+    let currencylistitem = get_homeli(currency),
+        parentcheckbox = get_currencyli(currency);
+    currencylistitem.removeClass("hide");
+    parentcheckbox.attr("data-checked", "true").data("checked", true);
+    savecurrencies(false);
+}
+
+function currency_uncheck(currency) {
+    let currencylistitem = get_homeli(currency),
+        parentcheckbox = get_currencyli(currency);
+    currencylistitem.addClass("hide");
+    parentcheckbox.attr("data-checked", "false").data("checked", false);
+    savecurrencies(false);
+}
+
 function toggleswitch() {
     $(document).on("mousedown", ".switchpanel.global", function() {
         let thistoggle = $(this);
@@ -1635,7 +1612,7 @@ function dragend() {
 
 function keyup() {
     $(document).keyup(function(e) {
-        if (e.keyCode == 39) {
+        if (e.keyCode == 39) { // ArrowRight
             if (body.hasClass("showstartpage")) {
                 e.preventDefault();
                 startnext($(".panelactive"));
@@ -1667,7 +1644,7 @@ function keyup() {
             sa_timer = now();
             return
         }
-        if (e.keyCode == 37) {
+        if (e.keyCode == 37) { // ArrowLeft
             if (body.hasClass("showstartpage")) {
                 e.preventDefault();
                 startprev($(".panelactive"));
@@ -1699,11 +1676,11 @@ function keyup() {
             sa_timer = now();
             return
         }
-        if (e.keyCode == 27) {
+        if (e.keyCode == 27) { // Escape
             escapeandback();
             return
         }
-        if (e.keyCode == 13) {
+        if (e.keyCode == 13) { // Enter
             if ($("#popup").hasClass("active")) {
                 $("#popup #execute").trigger("click");
             }
@@ -1882,19 +1859,18 @@ function request_history() {
 
 function recent_requests(recent_payments) {
     let addresslist = recent_requests_list(recent_payments);
-    if (!addresslist.length) {
-        return
+    if (addresslist.length) {
+        let content = "<div class='formbox'>\
+            <h2 class='icon-history'>Recent requests:</h2>\
+            <div id='ad_info_wrap'>\
+            <ul>" + addresslist + "</ul>\
+            </div>\
+            <div id='backupactions'>\
+                <div id='dismiss' class='customtrigger'>CANCEL</div>\
+            </div>\
+            </div>";
+        popdialog(content, "triggersubmit");
     }
-    let content = "<div class='formbox'>\
-        <h2 class='icon-history'>Recent requests:</h2>\
-        <div id='ad_info_wrap'>\
-        <ul>" + addresslist + "</ul>\
-        </div>\
-        <div id='backupactions'>\
-            <div id='dismiss' class='customtrigger'>CANCEL</div>\
-        </div>\
-        </div>";
-    popdialog(content, "triggersubmit");
 }
 
 function recent_requests_list(recent_payments) {
@@ -1959,7 +1935,7 @@ function topnotify(message) {
     });
 }
 
-function popnotify(result, message) {
+function popnotify(result, message) { // notifications in dialogs
     let notify = $(".popnotify");
     if (result == "error") {
         notify.removeClass("success warning").addClass("error");
@@ -2982,34 +2958,36 @@ function showtransaction_trigger() {
             thislist = thisnode.closest("li"),
             rqli = thisnode.closest("li.rqli"),
             rqldat = rqli.data(),
-            txhash = (thisnode.hasClass("tx_val")) ? thislist.data("txhash") : rqldat.txhash,
-            lnhash = (txhash && txhash.slice(0, 9) == "lightning") ? true : false;
-        if (lnhash) {
-            let lightning = rqldat.lightning,
-                imp = lightning.imp,
-                invoice = lightning.invoice;
-            if (invoice) {
-                let hash = invoice.hash;
-                if (hash) {
-                    let result = confirm("Open invoice: " + hash + "?");
-                    if (result === true) {
-                        let proxy = lightning.proxy_host,
-                            nid = lightning.nid,
-                            pid = lightning.pid,
-                            pw = lightning.pw;
-                        lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw);
-                        return;
+            txhash = (thisnode.hasClass("tx_val")) ? thislist.data("txhash") : rqldat.txhash;
+        if (txhash) {
+            let lnhash = (txhash.slice(0, 9) == "lightning") ? true : false;
+            if (lnhash) {
+                let lightning = rqldat.lightning,
+                    imp = lightning.imp,
+                    invoice = lightning.invoice;
+                if (invoice) {
+                    let hash = invoice.hash;
+                    if (hash) {
+                        let result = confirm("Open invoice: " + hash + "?");
+                        if (result === true) {
+                            let proxy = lightning.proxy_host,
+                                nid = lightning.nid,
+                                pid = lightning.pid,
+                                pw = lightning.pw;
+                            lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw);
+                            return;
+                        }
                     }
                 }
+                playsound(funk);
+                return
             }
-            playsound(funk);
-            return
-        }
-        let currency = rqli.data("payment"),
-            erc20 = rqli.data("erc20"),
-            blockchainurl = blockexplorer_url(currency, true, erc20);
-        if (blockchainurl === undefined || txhash === undefined) {} else {
-            open_blockexplorer_url(blockchainurl + txhash);
+            let currency = rqli.data("payment"),
+                erc20 = rqli.data("erc20"),
+                blockchainurl = blockexplorer_url(currency, true, erc20);
+            if (blockchainurl) {
+                open_blockexplorer_url(blockchainurl + txhash);
+            }
         }
     })
 }
@@ -3019,7 +2997,7 @@ function showtransactions() {
         e.preventDefault();
         let ad = $("#ad_info_wrap").data(),
             blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20);
-        if (blockchainurl === undefined) {} else {
+        if (blockchainurl) {
             open_blockexplorer_url(blockchainurl + ad.address);
         }
     })
@@ -3195,20 +3173,20 @@ function blockexplorer_url(currency, tx, erc20) {
     if (erc20 == "true" || erc20 === true) {
         let tx_prefix = (tx === true) ? "tx/" : "address/";
         return "https://ethplorer.io/" + tx_prefix;
-    } else {
-        let blockexplorer = get_blockexplorer(currency);
-        if (blockexplorer) {
-            let blockdata = $.grep(br_config.blockexplorers, function(filter) { //filter pending requests	
-                    return filter.name == blockexplorer;
-                })[0],
-                be_prefix = blockdata.prefix,
-                coindata = getcoindata(currency),
-                pfix = (be_prefix == "currencysymbol") ? coindata.ccsymbol : (be_prefix == "currency") ? currency : be_prefix,
-                prefix = (pfix) ? pfix + "/" : "",
-                prefix_type = (tx === true) ? blockdata.tx_prefix : blockdata.address_prefix;
-            return blockdata.url + prefix + prefix_type;
-        }
     }
+    let blockexplorer = get_blockexplorer(currency);
+    if (blockexplorer) {
+        let blockdata = $.grep(br_config.blockexplorers, function(filter) { //filter pending requests	
+                return filter.name == blockexplorer;
+            })[0],
+            be_prefix = blockdata.prefix,
+            coindata = getcoindata(currency),
+            pfix = (be_prefix == "currencysymbol") ? coindata.ccsymbol : (be_prefix == "currency") ? currency : be_prefix,
+            prefix = (pfix) ? pfix + "/" : "",
+            prefix_type = (tx === true) ? blockdata.tx_prefix : blockdata.address_prefix;
+        return blockdata.url + prefix + prefix_type;
+    }
+    return false;
 }
 
 function get_blockexplorer(currency) {
@@ -3424,243 +3402,290 @@ function removerequestfunction() {
     }
 }
 
-// ** Helpers **
+function amountshort(amount, receivedamount, fiatvalue, iscrypto) {
+    let amount_recieved = (iscrypto === true) ? receivedamount : fiatvalue,
+        amount_short = amount - amount_recieved;
+    return (iscrypto === true) ? trimdecimals(amount_short, 5) : trimdecimals(amount_short, 2);
+}
 
-function open_url() {
-    $(document).on("click", "a.exit", function(e) {
-        e.preventDefault();
-        let this_href = $(this),
-            target = this_href.attr("target"),
-            url = this_href.attr("href");
-        loader(true);
-        loadertext("Loading " + url);
-        if (is_ios_app === true) {
-            cancelpaymentdialog();
+function editrequest() {
+    $(document).on("click", ".editrequest", function() {
+        let thisnode = $(this),
+            thisrequestid = thisnode.attr("data-requestid"),
+            requestlist = $("#" + thisrequestid),
+            requesttitle = requestlist.data("requesttitle"),
+            requesttitle_input = (requesttitle) ? requesttitle : "",
+            formheader = (requesttitle) ? "Edit" : "Enter",
+            content = "\
+            <div class='formbox' id='edit_request_formbox'>\
+                <h2 class='icon-pencil'>" + formheader + " description</h2>\
+                <div class='popnotify'></div>\
+                <div class='popform'>\
+                    <input type='text' value='" + requesttitle_input + "' placeholder='description'/>\
+                    <input type='submit' class='submit' value='OK' data-requestid='" + thisrequestid + "'/>\
+                </div>\
+            </div>";
+        popdialog(content, "triggersubmit");
+    })
+}
+
+function submit_request_description() {
+    $(document).on("click", "#edit_request_formbox input.submit", function(e) {
+        let thisnode = $(this),
+            this_requestid = thisnode.attr("data-requestid"),
+            this_requesttitle = thisnode.prev("input").val(),
+            requesttitle_val = (this_requesttitle) ? this_requesttitle : "empty";
+        if (this_requesttitle) {
+            updaterequest({
+                "requestid": this_requestid,
+                "requesttitle": requesttitle_val
+            }, true);
+            canceldialog();
+            notify("Request saved");
+            return
         }
-        setTimeout(function() {
+        popnotify("error", "Description is a required field");
+    })
+}
+
+// ** Services **
+
+function receipt() {
+    $(document).on("click", ".receipt > p", function() {
+        let thisnode = $(this),
+            requestli = thisnode.closest(".rqli"),
+            rqdat = requestli.data(),
+            requestid = rqdat.requestid,
+            receipt_url = get_pdf_url(rqdat),
+            receipt_title = "bitrequest_receipt_" + requestid + ".pdf",
+            ddat = [{
+                "div": {
+                    "class": "popform"
+                },
+                "div": {
+                    "id": "backupactions",
+                    "content": [{
+                            "div": {
+                                "id": "share_receipt",
+                                "class": "util_icon icon-share2",
+                                "attr": {
+                                    "data-receiptdat": receipt_url,
+                                    "data-requestid": requestid
+                                }
+                            }
+                        },
+                        {
+                            "a": {
+                                "id": "dl_receipt",
+                                "class": "util_icon icon-download",
+                                "attr": {
+                                    "href": receipt_url,
+                                    "target": "_blank",
+                                    "title": "Download " + receipt_title,
+                                    "download": receipt_title
+                                }
+                            }
+                        },
+                        {
+                            "a": {
+                                "id": "receipt_link",
+                                "class": "customtrigger",
+                                "attr": {
+                                    "href": receipt_url,
+                                    "target": "_blank",
+                                    "download": receipt_title
+                                },
+                                "content": "OK"
+                            }
+                        },
+                        {
+                            "div": {
+                                "id": "canceldialog",
+                                "class": "customtrigger",
+                                "content": "CANCEL"
+                            }
+                        }
+                    ]
+                }
+            }],
+            content = template_dialog({
+                "id": "invoiceformbox",
+                "icon": "icon-file-pdf",
+                "title": "bitrequest_receipt_" + requestid + ".pdf",
+                "elements": ddat
+            });
+        popdialog(content, "triggersubmit");
+    })
+}
+
+function download_receipt() {
+    $(document).on("click", "#dl_receipt", function(e) {
+        let thisbttn = $(this),
+            href = thisbttn.attr("href"),
+            title = thisbttn.attr("title"),
+            result = confirm(title + "?");
+        if (result === false) {
+            e.preventDefault();
+            return false;
+        }
+    })
+}
+
+function share_receipt() {
+    $(document).on("click", "#share_receipt", function() {
+        let thisbttn = $(this),
+            href = thisbttn.attr("data-receiptdat"),
+            requestid = thisbttn.attr("data-requestid"),
+            filename = "bitrequest_receipt_" + requestid + ".pdf",
+            result = confirm("Share " + filename + "?");
+        if (result === true) {
+            loader(true);
+            loadertext("generate receipt");
+            let accountname = $("#accountsettings").data("selected"),
+                sharedtitle = "bitrequest_receipt_" + requestid + ".pdf";
+            shorten_url(sharedtitle, href, fetch_aws("img_receipt_icon.png"), true);
             closeloader();
-            if (target == "_blank") {
-                window.open(url);
-            } else {
-                w_loc.href = url;
-            }
-        }, 500);
+        }
     })
 }
 
-function get_blockcypher_apikey() {
-    let savedkey = $("#apikeys").data("blockcypher");
-    return (savedkey) ? savedkey : to.bc_id;
-}
-
-function get_infura_apikey(rpcurl) {
-    let savedkey = $("#apikeys").data("infura");
-    return (/^[A-Za-z0-9]+$/.test(rpcurl.slice(rpcurl.length - 15))) ? "" : // check if rpcurl already contains apikey
-        (savedkey) ? savedkey : to.if_id;
-}
-
-function proxy_alert(version) {
-    if (version) {
-        body.addClass("haschanges");
-        $("#alert > span").text("!").attr("title", "Please update your proxy server " + version + " > " + proxy_version);
-    }
-}
-
-function fetchsymbol(currencyname) {
-    let ccsymbol = {};
-    $.each(br_get_local("erc20tokens", true), function(key, value) {
-        if (value.name == currencyname) {
-            ccsymbol.symbol = value.symbol;
-            ccsymbol.id = value.cmcid;
-            return
-        }
-    });
-    return ccsymbol;
-}
-
-function fixedcheck(livetop) {
-    let headerheight = $(".showmain #header").outerHeight();
-    if (livetop > headerheight) {
-        $(".showmain").addClass("fixednav");
-        return
-    }
-    $(".showmain").removeClass("fixednav");
-}
-
-function ishome(pagename) {
-    let page = (pagename) ? pagename : geturlparameters().p;
-    return (!page || page == "home");
-}
-
-function triggersubmit(trigger) {
-    trigger.parent("#actions").prev("#dialogbody").find("input.submit").trigger("click");
-}
-
-function copytoclipboard(content, type) {
-    let copy_api = navigator.clipboard;
-    if (copy_api) {
-        navigator.clipboard.writeText(content);
-        notify(type + " copied to clipboard", 2500, "no");
-        return
-    }
-    copycontent.val(content);
-    copycontent[0].setSelectionRange(0, 999);
-    try {
-        let success = document.execCommand("copy");
-        if (success) {
-            notify(type + " copied to clipboard", 2500, "no");
-        } else {
-            notify("Unable to copy " + type, 2500, "no");
-        }
-    } catch (err) {
-        notify("Unable to copy " + type, 2500, "no");
-    }
-    copycontent.val("").data({
-        "type": false
-    }).blur();
-}
-
-function loader(top) {
-    let loader = $("#loader"),
-        class_string = (top === true) ? "showpu active toploader" : "showpu active";
-    $("#loader").addClass(class_string);
-}
-
-function closeloader_trigger() {
-    $(document).on("click", "#loader", function() {
-        closeloader();
-    })
-}
-
-function closeloader() {
-    $("#loader").removeClass("showpu active toploader");
-    loadertext("loading");
-}
-
-function loadertext(text) {
-    $("#loader #loadtext > span").text(text);
-}
-
-function settitle(title) {
-    titlenode.text(title);
-    ogtitle.attr("content", title);
-}
-
-function all_pinpanel(cb, top) {
-    let topclass = (top) ? " ontop" : "";
-    if (haspin() === true) {
-        let lastlock = br_get_local("locktime"),
-            tsll = now() - lastlock,
-            pass = (tsll < 10000);
-        if (cb && pass) { // keep unlocked in 10 second time window
-            cb.func(cb.args);
-            return
-        }
-        let content = pinpanel(" pinwall", cb);
-        showoptions(content, "pin" + topclass);
-        return
-    }
-    let content = pinpanel("", cb);
-    showoptions(content, "pin" + topclass);
-}
-
-function pinpanel(pinclass, pincb) {
-    let makeclass = (pinclass === undefined) ? "" : pinclass,
-        headertext = (haspin() === true) ? "Please enter your pin" : "Create a 4-digit pin";
-    return $("<div id='pinfloat' class='enterpin" + makeclass + "'>\
-        <p id='pintext'>" + headertext + "</p>\
-        <p id='confirmpin'>Confirm your pin</p>\
-        <input id='pininput' type='password' readonly='readonly'/>\
-        <input id='validatepin' type='password' readonly='readonly'/>\
-        <div id='pinkeypad'>\
-            <div id='pin1' class='pinpad flex'>\
-                <span class='pincell'>1</span>\
-            </div>\
-            <div id='pin2' class='pinpad'>\
-                <span class='pincell'>2</span>\
-            </div>\
-            <div id='pin3' class='pinpad'>\
-                <span class='pincell'>3</span>\
-            </div><br>\
-            <div id='pin4' class='pinpad'>\
-                <span class='pincell'>4</span>\
-            </div>\
-            <div id='pin5' class='pinpad'>\
-                <span class='pincell'>5</span>\
-            </div>\
-            <div id='pin6' class='pinpad'>\
-                <span class='pincell'>6</span>\
-            </div><br>\
-            <div id='pin7' class='pinpad'>\
-                <span class='pincell'>7</span>\
-            </div>\
-            <div id='pin8' class='pinpad'>\
-                <span class='pincell'>8</span>\
-            </div>\
-            <div id='pin9' class='pinpad'>\
-                <span class='pincell'>9</span>\
-            </div><br>\
-            <div id='locktime' class='pinpad'>\
-                <span class='icomoon'></span>\
-            </div>\
-            <div id='pin0' class='pinpad'>\
-                <span class='pincell'>0</span>\
-            </div>\
-            <div id='pinback' class='pinpad'>\
-                <span class='icomoon'></span>\
-            </div>\
-        </div>\
-        <div id='pin_admin' class='flex'>\
-            <div id='pin_admin_float'>\
-                <div id='lock_time'><span class='icomoon'></span> Lock time</div>\
-                <div id='reset_pin'>Reset pin</div>\
-            </div>\
-        </div>\
-    </div>").data("pincb", pincb);
-}
-
-function switchpanel(switchmode, mode) {
-    return "<div class='switchpanel " + switchmode + mode + "'><div class='switch'></div></div>"
-}
-
-function try_next_api(apilistitem, current_apiname) {
-    let apilist = br_config.apilists[apilistitem],
-        next_scan = apilist[$.inArray(current_apiname, apilist) + 1],
-        next_api = (next_scan) ? next_scan : apilist[0];
-    if (api_attempt[apilistitem][next_api] === true) {
-        return false;
-    }
-    return next_api;
-}
-
-function wake() {
-    if (wl) {
-        const requestwakelock = async () => {
-            try {
-                wakelock = await wl.request("screen");
-                wakelock.addEventListener("release", (e) => {
-                    //console.log(e);
-                });
-            } catch (e) {
-                //console.error(e.name, e.message);
+function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
+    let p_arr = lnurl_deform(proxy),
+        proxy_host = p_arr.url,
+        pk = (pw) ? pw : p_arr.k,
+        proxy_url = proxy_host + "proxy/v1/ln/api/",
+        postdata = {
+            "method": "POST",
+            "cache": false,
+            "timeout": 5000,
+            "url": proxy_url,
+            "data": {
+                "fn": "ln-invoice-decode",
+                "imp": imp,
+                "hash": hash,
+                "nid": nid,
+                "callback": "no",
+                "id": pid,
+                "x-api": pk
             }
         };
-        requestwakelock();
-    }
-}
-
-function sleep() {
-    if (wl) {
-        if (wakelock) {
-            wakelock.release();
+    loader(true);
+    loadertext("connecting to " + lnurl_encode("lnurl", proxy_host));
+    $.ajax(postdata).done(function(e) {
+        if (e) {
+            let error = e.error;
+            if (error) {
+                popdialog("<h2 class='icon-blocked'>" + error.message + "</h2>", "canceldialog");
+                closeloader();
+                return;
+            }
+            let ddat = [{
+                    "div": {
+                        "class": "popform",
+                        "content": [{
+                                "div": {
+                                    "class": "invoice_body",
+                                    "content": "<pre>" + syntaxHighlight(e) + "</pre><div class='inv_pb'><img src='" + c_icons(imp) + "' class='lnd_icon' title='" + imp + "'/> Powered by " + imp + "</div>"
+                                }
+                            },
+                            {
+                                "input": {
+                                    "class": "submit",
+                                    "attr": {
+                                        "type": "submit",
+                                        "value": "OK"
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }],
+                content = template_dialog({
+                    "id": "invoiceformbox",
+                    "icon": "icon-power",
+                    "title": "Invoice",
+                    "elements": ddat
+                });
+            popdialog(content, "canceldialog");
+            closeloader();
+            return
         }
-        wakelock = null;
-    }
+        notify("Unable to fetch invoice");
+        closeloader();
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        notify("Unable to fetch invoice");
+        closeloader();
+    });
 }
 
-function vu_block() {
-    notify("Not allowed in cashier mode");
-    playsound(funk);
+function get_pdf_url(rqdat) {
+    let requestid = rqdat.requestid,
+        currencyname = rqdat.currencyname,
+        requestname = rqdat.requestname,
+        requesttitle = rqdat.requesttitle,
+        ismonitored = rqdat.monitored,
+        status = rqdat.status,
+        statustext = (status == "new") ? "Waiting for payment" : status,
+        txhash = rqdat.txhash,
+        lnhash = (txhash && txhash.slice(0, 9) == "lightning") ? true : false,
+        lightning = rqdat.lightning,
+        hybrid = (lightning && lightning.hybrid === true),
+        paymenttimestamp = rqdat.paymenttimestamp,
+        ptsformatted = fulldateformat(new Date(paymenttimestamp - timezone), "en-us"),
+        amount = rqdat.amount,
+        fiatvalue = rqdat.fiatvalue,
+        receivedamount = rqdat.receivedamount,
+        receivedamount_rounded = trimdecimals(receivedamount, 6),
+        fiatvalue_rounded = trimdecimals(fiatvalue, 2),
+        requesttype = rqdat.requesttype,
+        incoming = (requesttype == "incoming"),
+        outgoing = (requesttype == "outgoing"),
+        local = (requesttype == "local"),
+        checkout = (requesttype == "checkout"),
+        typetext = (incoming === true) ? (checkout) ? "online purchase" : "incoming" : (local === true) ? "point of sale" : "outgoing",
+        iscrypto = rqdat.iscrypto,
+        deter = (iscrypto === true) ? 6 : 2,
+        amount_rounded = trimdecimals(amount, deter),
+        uoa = rqdat.uoa,
+        uoa_upper = uoa.toUpperCase(),
+        requestdate = rqdat.requestdate,
+        timestamp = rqdat.timestamp,
+        utc = timestamp - timezone,
+        localtime = (requestdate) ? requestdate - timezone : utc,
+        localtimeobject = new Date(localtime),
+        requestdateformatted = fulldateformat(localtimeobject, "en-us"),
+        created = (requestdate) ? requestdateformatted : "unknown",
+        utc_format = fulldateformat(new Date(utc)),
+        invd = {},
+        lnd_string = (lnhash) ? " (lightning)" : "";
+    invd["Request ID"] = requestid;
+    invd.Currency = rqdat.payment + lnd_string;
+    if (exists(requestname)) {
+        invd.From = requestname;
+    }
+    if (exists(requesttitle)) {
+        invd.Title = "'" + requesttitle + "'";
+    }
+    invd.Amount = amount_rounded + " " + uoa_upper,
+        invd.Status = statustext,
+        invd.Type = typetext;
+    if (incoming === true) {
+        invd["Created"] = created;
+        invd["First viewed"] = utc_format;
+    }
+    invd.Address = rqdat.address;
+    if (status === "paid") {
+        invd["Paid on"] = ptsformatted,
+            invd["Amount received"] = receivedamount_rounded + " " + rqdat.payment;
+        if (iscrypto === true) {} else {
+            invd["Fiat value on " + ptsformatted] = fiatvalue_rounded + " " + currencyname;
+        }
+    }
+    if (exists(txhash)) {
+        invd["TxID"] = txhash;
+    }
+    let set_proxy = d_proxy();
+    return set_proxy + "proxy/v1/receipt/?data=" + btoa(JSON.stringify(invd));
 }
 
 // Countdown format
@@ -4124,290 +4149,6 @@ function appendrequest(rd) {
     }
 }
 
-function receipt() {
-    $(document).on("click", ".receipt > p", function() {
-        let thisnode = $(this),
-            requestli = thisnode.closest(".rqli"),
-            rqdat = requestli.data(),
-            requestid = rqdat.requestid,
-            receipt_url = get_pdf_url(rqdat),
-            receipt_title = "bitrequest_receipt_" + requestid + ".pdf",
-            ddat = [{
-                "div": {
-                    "class": "popform"
-                },
-                "div": {
-                    "id": "backupactions",
-                    "content": [{
-                            "div": {
-                                "id": "share_receipt",
-                                "class": "util_icon icon-share2",
-                                "attr": {
-                                    "data-receiptdat": receipt_url,
-                                    "data-requestid": requestid
-                                }
-                            }
-                        },
-                        {
-                            "a": {
-                                "id": "dl_receipt",
-                                "class": "util_icon icon-download",
-                                "attr": {
-                                    "href": receipt_url,
-                                    "target": "_blank",
-                                    "title": "Download " + receipt_title,
-                                    "download": receipt_title
-                                }
-                            }
-                        },
-                        {
-                            "a": {
-                                "id": "receipt_link",
-                                "class": "customtrigger",
-                                "attr": {
-                                    "href": receipt_url,
-                                    "target": "_blank",
-                                    "download": receipt_title
-                                },
-                                "content": "OK"
-                            }
-                        },
-                        {
-                            "div": {
-                                "id": "canceldialog",
-                                "class": "customtrigger",
-                                "content": "CANCEL"
-                            }
-                        }
-                    ]
-                }
-            }],
-            content = template_dialog({
-                "id": "invoiceformbox",
-                "icon": "icon-file-pdf",
-                "title": "bitrequest_receipt_" + requestid + ".pdf",
-                "elements": ddat
-            });
-        popdialog(content, "triggersubmit");
-    })
-}
-
-function get_pdf_url(rqdat) {
-    let requestid = rqdat.requestid,
-        currencyname = rqdat.currencyname,
-        requestname = rqdat.requestname,
-        requesttitle = rqdat.requesttitle,
-        ismonitored = rqdat.monitored,
-        status = rqdat.status,
-        statustext = (status == "new") ? "Waiting for payment" : status,
-        txhash = rqdat.txhash,
-        lnhash = (txhash && txhash.slice(0, 9) == "lightning") ? true : false,
-        lightning = rqdat.lightning,
-        hybrid = (lightning && lightning.hybrid === true),
-        paymenttimestamp = rqdat.paymenttimestamp,
-        ptsformatted = fulldateformat(new Date(paymenttimestamp - timezone), "en-us"),
-        amount = rqdat.amount,
-        fiatvalue = rqdat.fiatvalue,
-        receivedamount = rqdat.receivedamount,
-        receivedamount_rounded = trimdecimals(receivedamount, 6),
-        fiatvalue_rounded = trimdecimals(fiatvalue, 2),
-        requesttype = rqdat.requesttype,
-        incoming = (requesttype == "incoming"),
-        outgoing = (requesttype == "outgoing"),
-        local = (requesttype == "local"),
-        checkout = (requesttype == "checkout"),
-        typetext = (incoming === true) ? (checkout) ? "online purchase" : "incoming" : (local === true) ? "point of sale" : "outgoing",
-        iscrypto = rqdat.iscrypto,
-        deter = (iscrypto === true) ? 6 : 2,
-        amount_rounded = trimdecimals(amount, deter),
-        uoa = rqdat.uoa,
-        uoa_upper = uoa.toUpperCase(),
-        requestdate = rqdat.requestdate,
-        timestamp = rqdat.timestamp,
-        utc = timestamp - timezone,
-        localtime = (requestdate) ? requestdate - timezone : utc,
-        localtimeobject = new Date(localtime),
-        requestdateformatted = fulldateformat(localtimeobject, "en-us"),
-        created = (requestdate) ? requestdateformatted : "unknown",
-        utc_format = fulldateformat(new Date(utc)),
-        invd = {},
-        lnd_string = (lnhash) ? " (lightning)" : "";
-    invd["Request ID"] = requestid;
-    invd.Currency = rqdat.payment + lnd_string;
-    if (exists(requestname)) {
-        invd.From = requestname;
-    }
-    if (exists(requesttitle)) {
-        invd.Title = "'" + requesttitle + "'";
-    }
-    invd.Amount = amount_rounded + " " + uoa_upper,
-        invd.Status = statustext,
-        invd.Type = typetext;
-    if (incoming === true) {
-        invd["Created"] = created;
-        invd["First viewed"] = utc_format;
-    }
-    invd.Address = rqdat.address;
-    if (status === "paid") {
-        invd["Paid on"] = ptsformatted,
-            invd["Amount received"] = receivedamount_rounded + " " + rqdat.payment;
-        if (iscrypto === true) {} else {
-            invd["Fiat value on " + ptsformatted] = fiatvalue_rounded + " " + currencyname;
-        }
-    }
-    if (exists(txhash)) {
-        invd["TxID"] = txhash;
-    }
-    let set_proxy = d_proxy();
-    return set_proxy + "proxy/v1/receipt/?data=" + btoa(JSON.stringify(invd));
-}
-
-function download_receipt() {
-    $(document).on("click", "#dl_receipt", function(e) {
-        let thisbttn = $(this),
-            href = thisbttn.attr("href"),
-            title = thisbttn.attr("title"),
-            result = confirm(title + "?");
-        if (result === false) {
-            e.preventDefault();
-            return false;
-        }
-    })
-}
-
-function share_receipt() {
-    $(document).on("click", "#share_receipt", function() {
-        let thisbttn = $(this),
-            href = thisbttn.attr("data-receiptdat"),
-            requestid = thisbttn.attr("data-requestid"),
-            filename = "bitrequest_receipt_" + requestid + ".pdf",
-            result = confirm("Share " + filename + "?");
-        if (result === true) {
-            loader(true);
-            loadertext("generate receipt");
-            let accountname = $("#accountsettings").data("selected"),
-                sharedtitle = "bitrequest_receipt_" + requestid + ".pdf";
-            shorten_url(sharedtitle, href, fetch_aws("img_receipt_icon.png"), true);
-            closeloader();
-        }
-    })
-}
-
-function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
-    let p_arr = lnurl_deform(proxy),
-        proxy_host = p_arr.url,
-        pk = (pw) ? pw : p_arr.k,
-        proxy_url = proxy_host + "proxy/v1/ln/api/",
-        postdata = {
-            "method": "POST",
-            "cache": false,
-            "timeout": 5000,
-            "url": proxy_url,
-            "data": {
-                "fn": "ln-invoice-decode",
-                "imp": imp,
-                "hash": hash,
-                "nid": nid,
-                "callback": "no",
-                "id": pid,
-                "x-api": pk
-            }
-        };
-    loader(true);
-    loadertext("connecting to " + lnurl_encode("lnurl", proxy_host));
-    $.ajax(postdata).done(function(e) {
-        if (e) {
-            let error = e.error;
-            if (error) {
-                popdialog("<h2 class='icon-blocked'>" + error.message + "</h2>", "canceldialog");
-                closeloader();
-                return;
-            }
-            let ddat = [{
-                    "div": {
-                        "class": "popform",
-                        "content": [{
-                                "div": {
-                                    "class": "invoice_body",
-                                    "content": "<pre>" + syntaxHighlight(e) + "</pre><div class='inv_pb'><img src='" + c_icons(imp) + "' class='lnd_icon' title='" + imp + "'/> Powered by " + imp + "</div>"
-                                }
-                            },
-                            {
-                                "input": {
-                                    "class": "submit",
-                                    "attr": {
-                                        "type": "submit",
-                                        "value": "OK"
-                                    }
-                                }
-                            }
-                        ]
-                    }
-                }],
-                content = template_dialog({
-                    "id": "invoiceformbox",
-                    "icon": "icon-power",
-                    "title": "Invoice",
-                    "elements": ddat
-                });
-            popdialog(content, "canceldialog");
-            closeloader();
-            return
-        }
-        notify("Unable to fetch invoice");
-        closeloader();
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        notify("Unable to fetch invoice");
-        closeloader();
-    });
-}
-
-function amountshort(amount, receivedamount, fiatvalue, iscrypto) {
-    let amount_recieved = (iscrypto === true) ? receivedamount : fiatvalue,
-        amount_short = amount - amount_recieved;
-    return (iscrypto === true) ? trimdecimals(amount_short, 5) : trimdecimals(amount_short, 2);
-}
-
-function editrequest() {
-    $(document).on("click", ".editrequest", function() {
-        let thisnode = $(this),
-            thisrequestid = thisnode.attr("data-requestid"),
-            requestlist = $("#" + thisrequestid),
-            requesttitle = requestlist.data("requesttitle"),
-            requesttitle_input = (requesttitle) ? requesttitle : "",
-            formheader = (requesttitle) ? "Edit" : "Enter",
-            content = "\
-            <div class='formbox' id='edit_request_formbox'>\
-                <h2 class='icon-pencil'>" + formheader + " description</h2>\
-                <div class='popnotify'></div>\
-                <div class='popform'>\
-                    <input type='text' value='" + requesttitle_input + "' placeholder='description'/>\
-                    <input type='submit' class='submit' value='OK' data-requestid='" + thisrequestid + "'/>\
-                </div>\
-            </div>";
-        popdialog(content, "triggersubmit");
-    })
-}
-
-function submit_request_description() {
-    $(document).on("click", "#edit_request_formbox input.submit", function(e) {
-        let thisnode = $(this),
-            this_requestid = thisnode.attr("data-requestid"),
-            this_requesttitle = thisnode.prev("input").val(),
-            requesttitle_val = (this_requesttitle) ? this_requesttitle : "empty";
-        if (this_requesttitle) {
-            updaterequest({
-                "requestid": this_requestid,
-                "requesttitle": requesttitle_val
-            }, true);
-            canceldialog();
-            notify("Request saved");
-            return
-        }
-        popnotify("error", "Description is a required field");
-    })
-}
-
 // ** Store data in localstorage **
 
 //update used cryptocurrencies
@@ -4542,29 +4283,300 @@ function get_total_changes() {
     return totalchanges;
 }
 
-function check_currency(currency) {
-    let addresscount = filter_addressli(currency, "checked", true).length;
-    if (addresscount > 0) {
-        currency_check(currency);
+// HTML rendering
+
+function render_html(dat) {
+    let result = "";
+    $.each(dat, function(i, value) {
+        $.each(value, function(key, val) {
+            let id = (val.id) ? " id='" + val.id + "'" : "",
+                clas = (val.class) ? " class='" + val.class + "'" : "",
+                attr = (val.attr) ? render_attributes(val.attr) : "",
+                cval = val.content,
+                content = (cval) ? (typeof cval == "object") ? render_html(cval) : cval : "",
+                close = (val.close) ? "/>" : ">" + content + "</" + key + ">";
+            result += "<" + key + id + clas + attr + close;
+        });
+    });
+    return result;
+}
+
+function render_attributes(attr) {
+    let attributes = "";
+    $.each(attr, function(key, value) {
+        attributes += " " + key + "='" + value + "'";
+    });
+    return attributes;
+}
+
+// HTML templates
+
+function template_dialog(ddat) {
+    let validated_class = (ddat.validated) ? " validated" : "",
+        dialog_object = [{
+            "div": {
+                "id": ddat.id,
+                "class": "formbox",
+                "content": [{
+                        "h2": {
+                            "class": ddat.icon,
+                            "content": ddat.title
+                        }
+                    },
+                    {
+                        "div": {
+                            "class": "popnotify"
+                        }
+                    },
+                    {
+                        "div": {
+                            "class": "pfwrap",
+                            "content": render_html(ddat.elements)
+                        }
+                    }
+                ]
+            }
+        }]
+    return render_html(dialog_object);
+}
+
+// ** Helpers **
+
+function open_url() {
+    $(document).on("click", "a.exit", function(e) {
+        e.preventDefault();
+        let this_href = $(this),
+            target = this_href.attr("target"),
+            url = this_href.attr("href");
+        loader(true);
+        loadertext("Loading " + url);
+        if (is_ios_app === true) {
+            cancelpaymentdialog();
+        }
+        setTimeout(function() {
+            closeloader();
+            if (target == "_blank") {
+                window.open(url);
+            } else {
+                w_loc.href = url;
+            }
+        }, 500);
+    })
+}
+
+function get_blockcypher_apikey() {
+    let savedkey = $("#apikeys").data("blockcypher");
+    return (savedkey) ? savedkey : to.bc_id;
+}
+
+function get_infura_apikey(rpcurl) {
+    let savedkey = $("#apikeys").data("infura");
+    return (/^[A-Za-z0-9]+$/.test(rpcurl.slice(rpcurl.length - 15))) ? "" : // check if rpcurl already contains apikey
+        (savedkey) ? savedkey : to.if_id;
+}
+
+function proxy_alert(version) {
+    if (version) {
+        body.addClass("haschanges");
+        $("#alert > span").text("!").attr("title", "Please update your proxy server " + version + " > " + proxy_version);
+    }
+}
+
+function fetchsymbol(currencyname) {
+    let ccsymbol = {};
+    $.each(br_get_local("erc20tokens", true), function(key, value) {
+        if (value.name == currencyname) {
+            ccsymbol.symbol = value.symbol;
+            ccsymbol.id = value.cmcid;
+            return
+        }
+    });
+    return ccsymbol;
+}
+
+function fixedcheck(livetop) {
+    let headerheight = $(".showmain #header").outerHeight();
+    if (livetop > headerheight) {
+        $(".showmain").addClass("fixednav");
         return
     }
-    currency_uncheck(currency);
+    $(".showmain").removeClass("fixednav");
 }
 
-function currency_check(currency) {
-    let currencylistitem = get_homeli(currency),
-        parentcheckbox = get_currencyli(currency);
-    currencylistitem.removeClass("hide");
-    parentcheckbox.attr("data-checked", "true").data("checked", true);
-    savecurrencies(false);
+function ishome(pagename) {
+    let page = (pagename) ? pagename : geturlparameters().p;
+    return (!page || page == "home");
 }
 
-function currency_uncheck(currency) {
-    let currencylistitem = get_homeli(currency),
-        parentcheckbox = get_currencyli(currency);
-    currencylistitem.addClass("hide");
-    parentcheckbox.attr("data-checked", "false").data("checked", false);
-    savecurrencies(false);
+function triggersubmit(trigger) {
+    trigger.parent("#actions").prev("#dialogbody").find("input.submit").trigger("click");
+}
+
+function copytoclipboard(content, type) {
+    let copy_api = navigator.clipboard;
+    if (copy_api) {
+        navigator.clipboard.writeText(content);
+        notify(type + " copied to clipboard", 2500, "no");
+        return
+    }
+    copycontent.val(content);
+    copycontent[0].setSelectionRange(0, 999);
+    try {
+        let success = document.execCommand("copy");
+        if (success) {
+            notify(type + " copied to clipboard", 2500, "no");
+        } else {
+            notify("Unable to copy " + type, 2500, "no");
+        }
+    } catch (err) {
+        notify("Unable to copy " + type, 2500, "no");
+    }
+    copycontent.val("").data({
+        "type": false
+    }).blur();
+}
+
+function loader(top) {
+    let loader = $("#loader"),
+        class_string = (top === true) ? "showpu active toploader" : "showpu active";
+    $("#loader").addClass(class_string);
+}
+
+function closeloader_trigger() {
+    $(document).on("click", "#loader", function() {
+        closeloader();
+    })
+}
+
+function closeloader() {
+    $("#loader").removeClass("showpu active toploader");
+    loadertext("loading");
+}
+
+function loadertext(text) {
+    $("#loader #loadtext > span").text(text);
+}
+
+function settitle(title) {
+    titlenode.text(title);
+    ogtitle.attr("content", title);
+}
+
+function all_pinpanel(cb, top) {
+    let topclass = (top) ? " ontop" : "";
+    if (haspin() === true) {
+        let lastlock = br_get_local("locktime"),
+            tsll = now() - lastlock,
+            pass = (tsll < 10000);
+        if (cb && pass) { // keep unlocked in 10 second time window
+            cb.func(cb.args);
+            return
+        }
+        let content = pinpanel(" pinwall", cb);
+        showoptions(content, "pin" + topclass);
+        return
+    }
+    let content = pinpanel("", cb);
+    showoptions(content, "pin" + topclass);
+}
+
+function pinpanel(pinclass, pincb) {
+    let makeclass = (pinclass === undefined) ? "" : pinclass,
+        headertext = (haspin() === true) ? "Please enter your pin" : "Create a 4-digit pin";
+    return $("<div id='pinfloat' class='enterpin" + makeclass + "'>\
+        <p id='pintext'>" + headertext + "</p>\
+        <p id='confirmpin'>Confirm your pin</p>\
+        <input id='pininput' type='password' readonly='readonly'/>\
+        <input id='validatepin' type='password' readonly='readonly'/>\
+        <div id='pinkeypad'>\
+            <div id='pin1' class='pinpad flex'>\
+                <span class='pincell'>1</span>\
+            </div>\
+            <div id='pin2' class='pinpad'>\
+                <span class='pincell'>2</span>\
+            </div>\
+            <div id='pin3' class='pinpad'>\
+                <span class='pincell'>3</span>\
+            </div><br>\
+            <div id='pin4' class='pinpad'>\
+                <span class='pincell'>4</span>\
+            </div>\
+            <div id='pin5' class='pinpad'>\
+                <span class='pincell'>5</span>\
+            </div>\
+            <div id='pin6' class='pinpad'>\
+                <span class='pincell'>6</span>\
+            </div><br>\
+            <div id='pin7' class='pinpad'>\
+                <span class='pincell'>7</span>\
+            </div>\
+            <div id='pin8' class='pinpad'>\
+                <span class='pincell'>8</span>\
+            </div>\
+            <div id='pin9' class='pinpad'>\
+                <span class='pincell'>9</span>\
+            </div><br>\
+            <div id='locktime' class='pinpad'>\
+                <span class='icomoon'></span>\
+            </div>\
+            <div id='pin0' class='pinpad'>\
+                <span class='pincell'>0</span>\
+            </div>\
+            <div id='pinback' class='pinpad'>\
+                <span class='icomoon'></span>\
+            </div>\
+        </div>\
+        <div id='pin_admin' class='flex'>\
+            <div id='pin_admin_float'>\
+                <div id='lock_time'><span class='icomoon'></span> Lock time</div>\
+                <div id='reset_pin'>Reset pin</div>\
+            </div>\
+        </div>\
+    </div>").data("pincb", pincb);
+}
+
+function switchpanel(switchmode, mode) {
+    return "<div class='switchpanel " + switchmode + mode + "'><div class='switch'></div></div>"
+}
+
+function try_next_api(apilistitem, current_apiname) {
+    let apilist = br_config.apilists[apilistitem],
+        next_scan = apilist[$.inArray(current_apiname, apilist) + 1],
+        next_api = (next_scan) ? next_scan : apilist[0];
+    if (api_attempt[apilistitem][next_api] === true) {
+        return false;
+    }
+    return next_api;
+}
+
+function wake() {
+    if (wl) {
+        const requestwakelock = async () => {
+            try {
+                wakelock = await wl.request("screen");
+                wakelock.addEventListener("release", (e) => {
+                    //console.log(e);
+                });
+            } catch (e) {
+                //console.error(e.name, e.message);
+            }
+        };
+        requestwakelock();
+    }
+}
+
+function sleep() {
+    if (wl) {
+        if (wakelock) {
+            wakelock.release();
+        }
+        wakelock = null;
+    }
+}
+
+function vu_block() {
+    notify("Not allowed in cashier mode");
+    playsound(funk);
 }
 
 // Recent requests
@@ -4660,72 +4672,7 @@ function platform_icon(platform) {
         fetch_aws("img_button-desktop_app.png");
 }
 
-function shake(node) {
-    node.addClass("shake");
-    setTimeout(function() {
-        node.removeClass("shake");
-        vibrate();
-    }, 200);
-}
-
-// HTML rendering
-
-function render_html(dat) {
-    let result = "";
-    $.each(dat, function(i, value) {
-        $.each(value, function(key, val) {
-            let id = (val.id) ? " id='" + val.id + "'" : "",
-                clas = (val.class) ? " class='" + val.class + "'" : "",
-                attr = (val.attr) ? render_attributes(val.attr) : "",
-                cval = val.content,
-                content = (cval) ? (typeof cval == "object") ? render_html(cval) : cval : "",
-                close = (val.close) ? "/>" : ">" + content + "</" + key + ">";
-            result += "<" + key + id + clas + attr + close;
-        });
-    });
-    return result;
-}
-
-function render_attributes(attr) {
-    let attributes = "";
-    $.each(attr, function(key, value) {
-        attributes += " " + key + "='" + value + "'";
-    });
-    return attributes;
-}
-
-// HTML templates
-
-function template_dialog(ddat) {
-    let validated_class = (ddat.validated) ? " validated" : "",
-        dialog_object = [{
-            "div": {
-                "id": ddat.id,
-                "class": "formbox",
-                "content": [{
-                        "h2": {
-                            "class": ddat.icon,
-                            "content": ddat.title
-                        }
-                    },
-                    {
-                        "div": {
-                            "class": "popnotify"
-                        }
-                    },
-                    {
-                        "div": {
-                            "class": "pfwrap",
-                            "content": render_html(ddat.elements)
-                        }
-                    }
-                ]
-            }
-        }]
-    return render_html(dialog_object);
-}
-
-// Query helpers
+// ** Query helpers **//
 
 function get_setting(setting, dat) {
     return $("#" + setting).data(dat);
@@ -4832,90 +4779,110 @@ function getcoinconfig(currency) {
     })[0];
 }
 
-// add serviceworker
-function add_serviceworker() {
-    if ("serviceWorker" in navigator) {
-        if (!navigator.serviceWorker.controller) {
-            navigator.serviceWorker.register(approot + "serviceworker.js", {
-                    "scope": "./"
-                })
-                .then(function(reg) {
-                    // console.log("Service worker has been registered for scope: " + reg.scope);
-                });
+// ** Check params **//
+
+function ios_redirections(url) {
+    if (url) {
+        let search = get_search(url),
+            gets = renderparameters(search);
+        if (gets.xss) {
+            return
         }
+        let currenturlvar = w_loc.href,
+            currenturl = currenturlvar.toUpperCase(),
+            newpage = url.toUpperCase();
+        if (currenturl == newpage) {
+            return
+        }
+        if (br_get_local("editurl") == w_loc.search) {
+            return
+        }
+        let isrequest = (newpage.indexOf("PAYMENT=") >= 0),
+            isopenrequest = (paymentpopup.hasClass("active"));
+        if (isrequest) {
+            if (isopenrequest) {
+                cancelpaymentdialog();
+                setTimeout(function() {
+                    openpage(url, "", "payment");
+                }, 1000);
+                return
+            }
+            openpage(url, "", "payment");
+            updaterequeststatesrefresh();
+            return
+        }
+        let pagename = (gets.p) ? gets.p : "";
+        openpage(url, pagename, "page");
+        check_params(gets);
     }
 }
 
-function check_params() {
-    let gets = geturlparameters();
-    if (gets.xss) {
+function check_params(gets) {
+    let lgets = (gets) ? gets : geturlparameters();
+    if (lgets.xss) {
         return
     }
-    if (gets.i) {
-        expand_shoturl(gets.i);
+    if (lgets.i) {
+        expand_shoturl(lgets.i);
         return
     }
-    if (gets.p == "settings") {
-        if (gets.ro) {
-            check_teaminvite(gets.ro);
-        } else if (gets.sbu) {
-            check_systembu(gets.sbu);
-        } else if (gets.csv) {
-            check_csvexport(gets.csv);
+    let page = lgets.p;
+    if (page == "settings") {
+        if (lgets.ro) {
+            check_teaminvite(lgets.ro);
+        } else if (lgets.sbu) {
+            check_systembu(lgets.sbu);
+        } else if (lgets.csv) {
+            check_csvexport(lgets.csv);
         }
         return
     }
-    if (gets.lnconnect) {
+    if (lgets.scheme) {
+        check_intents(lgets.scheme);
+        return
+    }
+    if (lgets.lnconnect) {
         lm_function();
         ln_connect();
     }
 }
 
-function check_intents(gets) {
-    let lesgets = (gets) ? gets : geturlparameters();
-    if (lesgets.xss) {
+function check_intents(scheme) {
+    if (scheme == "false") {
         return
     }
-    if (lesgets.p == "home") {
-        if (lesgets.scheme) {
-            let scheme = lesgets.scheme;
-            if (scheme == "false") {
-                return
-            }
-            let scheme_url = atob(scheme),
-                proto = scheme_url.split(":")[0];
-            if (proto == "eclair" || proto == "acinq" || proto == "lnbits") {
-                let content = "<h2 class='icon-warning'>" + proto + ": connect not available at the moment</h2>";
-                popdialog(content, "canceldialog");
-                return
-            }
-            if (proto == "lndconnect" || proto == "c-lightning-rest") {
-                imp = (proto == "lndconnect") ? "lnd" : (proto == "c-lightning-rest") ? "c-lightning" : proto,
-                    scheme_obj = renderlnconnect(scheme_url, imp);
-                if (scheme_obj) {
-                    let resturl = scheme_obj.resturl,
-                        macaroon = scheme_obj.macaroon;
-                    if (resturl && macaroon) {
-                        let lnd_url = "?p=bitcoin_settings&lnconnect=" + btoa(resturl) + "&macaroon=" + macaroon + "&imp=" + imp
-                        openpage(lnd_url, "bitcoin_settings", "loadpage");
-                        lm_function();
-                        ln_connect();
-                    } else {
-                        popnotify("error", "unable to decode qr");
-                    }
-                }
+    let scheme_url = atob(scheme),
+        proto = scheme_url.split(":")[0];
+    if (proto == "eclair" || proto == "acinq" || proto == "lnbits") {
+        let content = "<h2 class='icon-warning'>" + proto + ": connect not available at the moment</h2>";
+        popdialog(content, "canceldialog");
+        return
+    }
+    if (proto == "lndconnect" || proto == "c-lightning-rest") {
+        imp = (proto == "lndconnect") ? "lnd" : (proto == "c-lightning-rest") ? "c-lightning" : proto,
+            scheme_obj = renderlnconnect(scheme_url, imp);
+        if (scheme_obj) {
+            let resturl = scheme_obj.resturl,
+                macaroon = scheme_obj.macaroon;
+            if (resturl && macaroon) {
+                let lnd_url = "?p=bitcoin_settings&lnconnect=" + btoa(resturl) + "&macaroon=" + macaroon + "&imp=" + imp
+                openpage(lnd_url, "bitcoin_settings", "loadpage");
+                lm_function();
+                ln_connect();
             } else {
-                if (proto.length < 1) {
-                    let content = "<h2 class='icon-warning'>Invalid URL scheme</h2>";
-                    popdialog(content, "canceldialog");
-                    return
-                }
-                if (proto && proto.length > 0) {
-                    let content = "<h2 class='icon-warning'>URL scheme '" + proto + ":' is not supported</h2>";
-                    popdialog(content, "canceldialog");
-                    return
-                }
+                popnotify("error", "unable to decode qr");
             }
+        }
+    } else {
+        if (proto.length < 1) {
+            let content = "<h2 class='icon-warning'>Invalid URL scheme</h2>";
+            popdialog(content, "canceldialog");
+            return
+        }
+        if (proto && proto.length > 0) {
+            let content = "<h2 class='icon-warning'>URL scheme '" + proto + ":' is not supported</h2>";
+            popdialog(content, "canceldialog");
+            return
         }
     }
 }
@@ -5024,11 +4991,6 @@ function expand_bitly(i_param) {
     });
 }
 
-function makelocal(url) {
-    let pathname = w_loc.pathname;
-    return (local || localserver) ? (url.indexOf("?") >= 0) ? "file://" + pathname + "?" + url.split("?")[1] : pathname : url;
-}
-
 function ln_connect() {
     let gets = geturlparameters(),
         lnconnect = gets.lnconnect,
@@ -5057,4 +5019,18 @@ function ln_connect() {
         return
     }
     notify("Invalid format");
+}
+
+// add serviceworker
+function add_serviceworker() {
+    if ("serviceWorker" in navigator) {
+        if (!navigator.serviceWorker.controller) {
+            navigator.serviceWorker.register(approot + "serviceworker.js", {
+                    "scope": "./"
+                })
+                .then(function(reg) {
+                    // console.log("Service worker has been registered for scope: " + reg.scope);
+                });
+        }
+    }
 }
