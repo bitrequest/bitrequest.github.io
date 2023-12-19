@@ -903,10 +903,12 @@ function ios_redirections(url) {
         }
         if (is_opendialog() === true) {
             canceldialog();
+            setTimeout(function() {
+                check_params(gets);
+            }, 1000);
+            return
         }
-        setTimeout(function() {
-            check_params(gets);
-        }, 1000);
+        check_params(gets);
     }
 }
 
@@ -4876,7 +4878,7 @@ function check_intents(scheme) {
         return
     }
     if (proto == "lndconnect" || proto == "c-lightning-rest") {
-        imp = (proto == "lndconnect") ? "lnd" : (proto == "c-lightning-rest") ? "c-lightning" : proto,
+        let imp = (proto == "lndconnect") ? "lnd" : (proto == "c-lightning-rest") ? "c-lightning" : proto,
             scheme_obj = renderlnconnect(scheme_url, imp);
         if (scheme_obj) {
             let resturl = scheme_obj.resturl,
