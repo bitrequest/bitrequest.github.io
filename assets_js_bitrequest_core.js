@@ -5030,10 +5030,7 @@ function ln_connect(gets) {
                 openpage("?p=bitcoin_settings", "bitcoin_settings", "loadpage");
                 return
             }
-            if (is_ios_app === true) {
-                return
-            }
-            notify("Unable to set data");
+            console.log("Unable to set data");
             return
         }
         notify("Invalid macaroon format");
