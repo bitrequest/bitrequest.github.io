@@ -4879,7 +4879,7 @@ function check_intents(scheme) {
     }
     if (proto == "lndconnect" || proto == "c-lightning-rest") {
         let imp = (proto == "lndconnect") ? "lnd" : (proto == "c-lightning-rest") ? "c-lightning" : proto,
-            scheme_obj = renderlnconnect(scheme_url, imp);
+            scheme_obj = renderlnconnect(scheme_url);
         if (scheme_obj) {
             let resturl = scheme_obj.resturl,
                 macaroon = scheme_obj.macaroon;

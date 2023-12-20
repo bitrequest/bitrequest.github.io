@@ -18,7 +18,6 @@
 //br_result
 //get_api_url
 //tofixedspecial
-//renderlnconnect_url
 //get_search
 //renderlnconnect
 //cleanb64
@@ -239,14 +238,7 @@ function tofixedspecial(str, n) {
     return convert.slice(0, -1);
 }
 
-function renderlnconnect_url(str, imp) {
-    let str_obj = renderlnconnect(str, imp),
-        implementation = (str_obj.imp) ? "&imp=" + str_obj.imp : "",
-        lnconnecturl = w_loc.pathname + "?resturl=" + str_obj.resturl + "&macaroon=" + str_obj.macaroon + implementation;
-    return lnconnecturl;
-}
-
-function renderlnconnect(str, imp) {
+function renderlnconnect(str) {
     let spitsearch = str.split("?"),
         url = spitsearch[0],
         s_string = spitsearch[1],
@@ -255,9 +247,6 @@ function renderlnconnect(str, imp) {
         bare_url = url.split(proto).pop(),
         rest_url = (search.lnconnect) ? atob(search.lnconnect) : (proto == "://") ? "https://" + bare_url : proto + bare_url;
     search.resturl = rest_url;
-    if (imp) {
-        search.imp = imp;
-    }
     return search;
 }
 

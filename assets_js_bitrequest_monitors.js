@@ -1925,8 +1925,8 @@ function handle_rpc_fails_list(rd, error, rpc_data, thispayment) {
         requestid = rd.requestid,
         nextrpc = get_next_rpc(thispayment, api_url, requestid);
     if (nextrpc === false) {
-        let api_name = rpc_data.name;
-        nextapi = get_next_api(thispayment, api_name, requestid);
+        let api_name = rpc_data.name,
+            nextapi = get_next_api(thispayment, api_name, requestid);
         if (nextapi === false) { // try next api
             let rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
                 error_data = (error === false) ? false : get_api_error_data(error);
