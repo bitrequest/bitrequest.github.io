@@ -1,3 +1,4 @@
 proxy/v1/cache/
 proxy/v1/ln/api/cache
+proxy/v1/inv/api/cache
 .DS_Store
