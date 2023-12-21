@@ -230,8 +230,8 @@ const apptitle = "Bitrequest",
                     },
                     "blockexplorers": {
                         "icon": "eye",
-                        "selected": "blockchain.com",
-                        "options": ["blockchain.com", "blockchair.com"]
+                        "selected": "mempool.space",
+                        "options": ["mempool.space", "blockchain.com", "blockchair.com"]
                     },
                     "apis": {
                         "icon": "sphere",
@@ -367,7 +367,8 @@ const apptitle = "Bitrequest",
                     },
                     "blockexplorers": {
                         "icon": "eye",
-                        "selected": "blockchair.com"
+                        "selected": "litecoinspace.org",
+                        "options": ["litecoinspace.org", "blockchair.com"]
                     },
                     "apis": {
                         "icon": "sphere",
@@ -1665,6 +1666,20 @@ const apptitle = "Bitrequest",
                 "url": "https://www.blockchair.com/",
                 "prefix": "currency",
                 "tx_prefix": "transaction/",
+                "address_prefix": "address/"
+            },
+            {
+                "name": "mempool.space",
+                "url": "https://mempool.space/",
+                "prefix": "",
+                "tx_prefix": "tx/",
+                "address_prefix": "address/"
+            },
+            {
+                "name": "litecoinspace.org",
+                "url": "https://litecoinspace.org/",
+                "prefix": "",
+                "tx_prefix": "tx/",
                 "address_prefix": "address/"
             },
             {
