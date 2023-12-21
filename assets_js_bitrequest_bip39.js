@@ -388,12 +388,9 @@ function has_xpub(currency) {
 
 function is_xpub(currency) {
     if (cxpub(currency)) {
-        let xpubli = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']");
-        if (xpubli) {
-            let xpubli_dat = xpubli.data();
-            if (xpubli_dat) {
-                return xpubli_dat;
-            }
+        let xpubli_dat = cs_node(currency, "Xpub", true);
+        if (xpubli_dat) {
+            return xpubli_dat;
         }
     }
     return false;
@@ -407,7 +404,7 @@ function cxpub(currency) {
 }
 
 function getbip32dat(currency) {
-    let xpub_dat = cs_dat(currency, "Xpub");
+    let xpub_dat = cs_node(currency, "Xpub", true);
     if (xpub_dat && xpub_dat.active === true) {
         return xpub_dat;
     }
@@ -1010,11 +1007,13 @@ function deactivate_xpubs() {
         let bip32 = coinconfig.settings.Xpub;
         if (bip32.xpub === true) {
             let currency = coinconfig.currency,
-                thislist = $("#" + currency + "_settings .cc_settinglist li[data-id='Xpub']"),
-                this_switch = thislist.find(".switchpanel.custom");
-            thislist.data("selected", false).find("p").text("false");
-            this_switch.removeClass("true").addClass("false");
-            save_cc_settings(currency);
+                thislist = cs_node(currency, "Xpub");
+            if (thislist) {
+                let this_switch = thislist.find(".switchpanel.custom");
+                thislist.data("selected", false).find("p").text("false");
+                this_switch.removeClass("true").addClass("false");
+                save_cc_settings(currency);
+            }
         }
     });
 }

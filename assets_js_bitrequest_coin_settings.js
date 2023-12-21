@@ -59,8 +59,6 @@ $(document).ready(function() {
 
     reset_coinsettings();
     //reset_coinsettings_function
-    //cs_node
-    //cs_dat
 });
 
 // ** Currency Settings **
@@ -1285,23 +1283,4 @@ function reset_coinsettings_function(trigger) {
         canceldialog();
         notify(currency + " settings reset to default");
     }
-}
-
-function cs_node(currency, id) {
-    let coinnode = $("#" + currency + "_settings .cc_settinglist li[data-id='" + id + "']");
-    if (coinnode.length) {
-        return coinnode;
-    }
-    return false
-}
-
-function cs_dat(currency, id) {
-    let cnode = cs_node(currency, id);
-    if (cnode) {
-        let coindata = cnode.data();
-        if (coindata) {
-            return coindata;
-        }
-    }
-    return false
 }

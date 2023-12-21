@@ -638,7 +638,7 @@ function vk_obj(vk) {
 }
 
 function share_vk() {
-    let vkshare = cs_dat("monero", "Share viewkey").selected;
+    let vkshare = cs_node("monero", "Share viewkey", true).selected;
     if (vkshare === true) {
         return true;
     }

@@ -574,6 +574,7 @@ function finishfunctions() {
     //filter_list
     //get_currencyli
     //get_homeli
+    //cs_node
     //getcoindata
     //activecoinsettings
     //getcoinsettings
@@ -1176,7 +1177,7 @@ function triggertxfunction(thislink) {
         triggertxfunction(thislink);
         return
     }
-    let pick_random = cs_dat(currency, "Use random address").selected,
+    let pick_random = cs_node(currency, "Use random address", true).selected,
         derives = check_derivations(currency),
         addresslist = filter_addressli(currency, "checked", true),
         firstlist = addresslist.first(),
@@ -3237,7 +3238,7 @@ function blockexplorer_url(currency, tx, erc20) {
 }
 
 function get_blockexplorer(currency) {
-    return cs_dat(currency, "blockexplorers").selected;
+    return cs_node(currency, "blockexplorers", true).selected;
 }
 
 function apisrc_shortcut() {
@@ -4764,6 +4765,20 @@ function get_currencyli(currency) {
 
 function get_homeli(currency) {
     return $("#currencylist > li[data-currency='" + currency + "']");
+}
+
+function cs_node(currency, id, data) {
+    let coinnode = $("#" + currency + "_settings .cc_settinglist li[data-id='" + id + "']");
+    if (coinnode.length) {
+        if (data) {
+            let coindat = coinnode.data();
+            if (coindat) {
+                return coindat;
+            }
+        }
+        return coinnode;
+    }
+    return false
 }
 
 function getcoindata(currency) {

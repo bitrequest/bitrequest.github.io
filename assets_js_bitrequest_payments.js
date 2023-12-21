@@ -591,7 +591,7 @@ function continue_paymentfunction() {
         showclass = (iscrypto === true) ? (uoa == "btc") ? " showsat showlc showcc" : " showlc showcc" : (uoa == fiatcurrency) ? "" : " showlc",
         statusattr = (status) ? status : "unknown",
         statusclass = (status) ? " " + status : " unknown",
-        satclass = (payment == "bitcoin" && cs_dat("bitcoin", "showsatoshis").selected === true) ? true : false,
+        satclass = (payment == "bitcoin" && cs_node("bitcoin", "showsatoshis", true).selected === true) ? true : false,
         typeclass = " " + requesttype,
         offlineclass = (offline === true) ? " br_offline" : "",
         pendingclass = (ispending === true && monitored === true && requesttype == "local") ? "ispending" : "",
@@ -3055,7 +3055,7 @@ function updaterequest(ua, save) {
 }
 
 function get_xmrpid() {
-    let use_integrated = cs_dat("monero", "Integrated addresses").selected;
+    let use_integrated = cs_node("monero", "Integrated addresses", true).selected;
     if (use_integrated) {
         return xmr_pid();
     }

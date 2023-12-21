@@ -1568,7 +1568,7 @@ function p_promt(pid) {
 /* helpers */
 
 function lndli() {
-    return $("#bitcoin_settings .cc_settinglist li[data-id='Lightning network']");
+    return cs_node("bitcoin", "Lightning network");
 }
 
 function lnd_pick_proxy() {

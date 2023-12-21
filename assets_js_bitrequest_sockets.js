@@ -1739,10 +1739,9 @@ function rconnect(tid) {
 }
 
 function get_next_scan_api(api_name) {
-    let rpc_settings_li = $("#" + request.payment + "_settings .cc_settinglist li[data-id='apis']");
-    if (rpc_settings_li) {
-        let rpc_settings = rpc_settings_li.data(),
-            apirpc = rpc_settings.apis,
+    let rpc_settings = cs_node(request.payment, "apis", true);
+    if (rpc_settings) {
+        let apirpc = rpc_settings.apis,
             apilist = $.grep(apirpc, function(filter) {
                 return filter.api;
             })

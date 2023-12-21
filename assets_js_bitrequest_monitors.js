@@ -174,7 +174,7 @@ function getinputs(rd, dl) {
 }
 
 function check_api(payment, iserc20) {
-    let api_data = $("#" + payment + "_settings .cc_settinglist li[data-id='apis']").data();
+    let api_data = cs_node(payment, "apis", true);
     if (api_data) {
         let selected = api_data.selected;
         if (selected.api === true) {
@@ -1411,10 +1411,9 @@ function handle_api_fails_list(rd, error, api_data, thispayment) {
 }
 
 function get_next_api(this_payment, api_name, requestid) {
-    let rpc_settings_li = $("#" + this_payment + "_settings .cc_settinglist li[data-id='apis']");
-    if (rpc_settings_li) {
-        let rpc_settings = rpc_settings_li.data(),
-            apirpc = rpc_settings.apis,
+    let rpc_settings = cs_node(this_payment, "apis", true);
+    if (rpc_settings) {
+        let apirpc = rpc_settings.apis,
             apilist = $.grep(apirpc, function(filter) {
                 return filter.api;
             })
@@ -1953,10 +1952,9 @@ function handle_rpc_fails_list(rd, error, rpc_data, thispayment) {
 }
 
 function get_next_rpc(this_payment, api_url, requestid) {
-    let rpc_settings_li = $("#" + this_payment + "_settings .cc_settinglist li[data-id='apis']");
-    if (rpc_settings_li) {
-        let rpc_settings = rpc_settings_li.data(),
-            apilist = rpc_settings.apis,
+    let rpc_settings = cs_node(this_payment, "apis", true);
+    if (rpc_settings) {
+        let apilist = rpc_settings.apis,
             rpclist = rpc_settings.options,
             apirpc = $.grep(apilist, function(filter) {
                 return !filter.api;
