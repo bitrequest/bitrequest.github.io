@@ -255,11 +255,8 @@ function get_api_inputs(rd, api_data, api_name) {
             counter = 0,
             lnd = rd.lightning,
             ln_only = (lnd && lnd.hybrid === false) ? true : false,
-            
             rqtype = rd.requesttype;
         thislist.removeClass("no_network");
-        console.log(pending);
-        console.log(canceled);
         if (pending == "no" || pending == "incoming" || thislist.hasClass("expired")) {
             transactionlist.find("li").each(function(i) {
                 tx_list.push($(this).data("txhash"));
@@ -280,7 +277,6 @@ function get_api_inputs(rd, api_data, api_name) {
                     imp = lnd.imp,
                     default_error = "unable to connect";
                 if (pending == "scanning") {
-                    console.log("lets scan!");
                     $.ajax({
                         "method": "POST",
                         "cache": false,
@@ -2372,7 +2368,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     br_set_session("historic_" + thisrequestid, cacheval); // 'cache' historic data
                 }
                 api_callback(thisrequestid);
-                return;
+                return
             }
         }
         let next_historic = try_next_api(apilist, api);
