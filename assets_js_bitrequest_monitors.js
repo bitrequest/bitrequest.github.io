@@ -237,7 +237,6 @@ function get_api_inputs(rd, api_data, api_name) {
     if (thislist.hasClass("scan")) {
         api_attempts[requestid + api_name] = true;
         let payment = rd.payment,
-            pending = rd.pending,
             address = rd.address,
             requestdate = (rd.inout == "incoming") ? rd.timestamp : rd.requestdate,
             request_timestamp = requestdate - 30000, // 30 seconds compensation for unexpected results
@@ -246,6 +245,8 @@ function get_api_inputs(rd, api_data, api_name) {
             getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
             setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
             rq_status = rd.status,
+            canceled = (rq_status == "canceled") ? true : false,
+            pending = (canceled) ? "scanning" : rd.pending,
             statuspanel = thislist.find(".pmetastatus"),
             transactionlist = thislist.find("ul.transactionlist"),
             transactionhash = rd.txhash,
@@ -254,9 +255,11 @@ function get_api_inputs(rd, api_data, api_name) {
             counter = 0,
             lnd = rd.lightning,
             ln_only = (lnd && lnd.hybrid === false) ? true : false,
-            canceled = (rq_status == "canceled") ? true : false,
+            
             rqtype = rd.requesttype;
         thislist.removeClass("no_network");
+        console.log(pending);
+        console.log(canceled);
         if (pending == "no" || pending == "incoming" || thislist.hasClass("expired")) {
             transactionlist.find("li").each(function(i) {
                 tx_list.push($(this).data("txhash"));
@@ -264,7 +267,7 @@ function get_api_inputs(rd, api_data, api_name) {
             api_callback(requestid, true);
             return
         }
-        if (pending == "scanning" || pending == "polling" || canceled) {
+        if (pending == "scanning" || pending == "polling") {
             transactionlist.html("");
             if (lnd) {
                 let metalist = thislist.find(".metalist"),
@@ -276,7 +279,8 @@ function get_api_inputs(rd, api_data, api_name) {
                     nid = lnd.nid,
                     imp = lnd.imp,
                     default_error = "unable to connect";
-                if (pending == "scanning" || canceled) {
+                if (pending == "scanning") {
+                    console.log("lets scan!");
                     $.ajax({
                         "method": "POST",
                         "cache": false,
@@ -345,8 +349,11 @@ function get_api_inputs(rd, api_data, api_name) {
                                                                 "status": "canceled",
                                                                 "confirmations": 0
                                                             }, false);
+                                                            api_callback(requestid);
                                                         }
-                                                        compareamounts(rd, true);
+                                                        else {
+                                                            compareamounts(rd, true);
+                                                        }
                                                     }
                                                 }
                                             }
@@ -395,7 +402,7 @@ function get_api_inputs(rd, api_data, api_name) {
                         return
                     }
                 }
-                if (pending == "polling" && lnhash) {
+                else if (pending == "polling" && lnhash) {
                     let invoice = lnd.invoice;
                     if (invoice) {
                         if (transactionhash) {
@@ -432,8 +439,11 @@ function get_api_inputs(rd, api_data, api_name) {
                                                     "status": "canceled",
                                                     "confirmations": 0
                                                 }, true);
+                                                api_callback(requestid);
                                             }
-                                            compareamounts(rd, true);
+                                            else {
+                                                compareamounts(rd, true);
+                                            }
                                         }
                                     }
                                 }
