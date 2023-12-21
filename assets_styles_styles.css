@@ -1282,7 +1282,6 @@ html.dragmode .currentpage .applist li.dragging {
 }
 
 .requestlist li.requestincoming[data-pending="incoming"] .req_actions .icon-qrcode,
-.requestlist li.lightning.requestoutgoing .req_actions .icon-qrcode,
 .requestlist li.rqli[data-status="paid"] .req_actions .icon-qrcode,
 .requestlist li.rqli.expired .req_actions .icon-qrcode {
 	display: none;
