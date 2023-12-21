@@ -1384,7 +1384,7 @@ function handle_api_fails_list(rd, error, api_data, thispayment) {
         requestid = rd.requestid;
     if (!api_data) {
         api_eror_msg(false, error_data);
-        api_callback(requestid, true);
+        api_callback(requestid);
         return
     }
     let api_name = api_data.name,
@@ -1395,7 +1395,7 @@ function handle_api_fails_list(rd, error, api_data, thispayment) {
         if (nextrpc === false) { // try next api
             let rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown";
             api_eror_msg(rpc_id, error_data);
-            api_callback(requestid, true);
+            api_callback(requestid);
             return
         }
     }
