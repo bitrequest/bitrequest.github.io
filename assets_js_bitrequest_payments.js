@@ -51,11 +51,11 @@ $(document).ready(function() {
     //test_lnd
     //proceed_pf
     //getccexchangerates
+    //cc_fail
     //initexchangerate
     //get_fiat_exchangerate
     //rendercurrencypool
     //getpayment
-    //cc_fail
     //show_paymentdialog
     //main_input_focus
     lnd_switch_function();
@@ -95,7 +95,6 @@ $(document).ready(function() {
     validatesteps();
     fliprequest();
     revealtitle();
-    //check_pending
     //pendingrequest
     view_pending_tx();
     pickaddressfromdialog();
@@ -311,12 +310,10 @@ function flip_left2() {
 
 function flip_reset1() {
     paymentdialogbox.css("-webkit-transform", "");
-    //face_back();
 }
 
 function flip_reset2() {
     paymentdialogbox.css("-webkit-transform", "rotateY(0deg)");
-    //face_front();
 }
 
 function add_flip() {
@@ -425,7 +422,7 @@ function loadpaymentfunction(pass) {
         if (coindata) {
             let iserc20 = (coindata.erc20 === true),
                 request_start_time = now(),
-                exact = (gets.exact !== undefined);
+                exact = exists(gets.exact);
             request = {
                     "received": false,
                     "rq_init": request_start_time,
@@ -442,6 +439,7 @@ function loadpaymentfunction(pass) {
                 },
                 api_attempt["crypto_price_apis"] = {},
                 api_attempt["fiat_price_apis"] = {},
+                proxy_attempts = {},
                 socket_attempt = {};
             if (iserc20 === true) {
                 let token_contract = coindata.contract;
@@ -498,6 +496,11 @@ function get_tokeninfo(payment, contract) {
         continue_paymentfunction();
         br_set_local("decimals_" + payment, decimals); //cache token decimals
     }).fail(function(jqXHR, textStatus, errorThrown) {
+        let next_proxy = get_next_proxy();
+        if (next_proxy) {
+            get_tokeninfo(payment, contract);
+            return
+        }
         cancelpaymentdialog();
         let error_object = (errorThrown) ? errorThrown : jqXHR;
         fail_dialogs("ethplorer", error_object);
@@ -556,8 +559,7 @@ function continue_paymentfunction() {
     }
     let currencysymbol = coindata.ccsymbol,
         requesttype = (isrequest === true) ? (type) ? type :
-        (inframe === true) ? "checkout" :
-        "incoming" : "local",
+        (inframe === true) ? "checkout" : "incoming" : "local",
         typecode = (requesttype == "local") ? 1 :
         (requesttype == "outgoing" || requesttype == "incoming") ? 2 :
         (requesttype == "checkout") ? 3 : 4,
@@ -569,7 +571,10 @@ function continue_paymentfunction() {
         paid = (status) ? (status == "paid") ? true : false : null,
         cmcid = coindata.cmcid,
         cpid = currencysymbol + "-" + payment,
-        ispending = check_pending(xmr_ia, cmcid),
+        ispending = ch_pending({
+            "address": xmr_ia,
+            "cmcid": cmcid
+        }),
         monitored = (viewkey) ? true : coindata.monitored,
         pendingparam = gets.pending,
         pending = (pendingparam) ? pendingparam : (monitored === true) ? "incoming" : "unknown",
@@ -790,6 +795,7 @@ function lightning_setup() {
 
 function lnd_put(proxy, key, pl, lnurl) {
     let rqtype = (request.requesttype == "local") ? undefined : request.requesttype;
+    proxy_attempts[proxy] = true;
     $.ajax({
         "method": "POST",
         "cache": false,
@@ -827,6 +833,17 @@ function lnd_put(proxy, key, pl, lnurl) {
         }
         proceed_pf();
     }).fail(function(jqXHR, textStatus, errorThrown) {
+        let is_proxy = q_obj(helper, "lnd.lnurl");
+        if (is_proxy === false) {
+            let saved_proxy = s_lnd_proxy();
+            if (saved_proxy === false) {
+                let next_proxy = get_next_proxy();
+                if (next_proxy) {
+                    lightning_setup();
+                    return
+                }
+            }
+        }
         console.log(jqXHR);
         console.log(textStatus);
         console.log(errorThrown);
@@ -925,27 +942,31 @@ function getccexchangerates(apilist, api) {
     let payment = request.payment,
         contract = request.token_contract,
         iserc = (request.erc20 === true) ? true : false,
-        payload = (api == "coinmarketcap") ? "v1/cryptocurrency/quotes/latest?id=" + request.cmcid :
+        search = (api == "coinmarketcap") ? "v1/cryptocurrency/quotes/latest?id=" + request.cmcid :
         (api == "coinpaprika") ? request.currencysymbol + "-" + payment :
         (api == "coingecko") ? (iserc) ? "simple/token_price/ethereum?contract_addresses=" + contract + "&vs_currencies=usd" : "simple/price?ids=" + payment + "&vs_currencies=usd" :
         false;
-    if (payload === false) {
+    if (search === false) {
         loadertext("api error");
         closeloader();
         cancelpaymentdialog();
         fail_dialogs(api, "Crypto price API not defined");
         return
     }
-    api_proxy({
+    let payload = {
         "api": api,
-        "search": payload,
+        "search": search,
         "cachetime": 90,
         "cachefolder": "1h",
         "params": {
             "method": "GET",
             "cache": true
         },
-    }).done(function(e) {
+    };
+    if (api == "coinmarketcap") {
+        payload.proxy = true;
+    }
+    api_proxy(payload).done(function(e) {
         let data = br_result(e).result;
         if (data) {
             if (!$.isEmptyObject(data)) {
@@ -984,6 +1005,24 @@ function getccexchangerates(apilist, api) {
         let error_object = (errorThrown) ? errorThrown : jqXHR;
         cc_fail(apilist, api, error_object);
     });
+}
+
+function cc_fail(apilist, api, error_val) {
+    let nextccapi = try_next_api(apilist, api);
+    if (nextccapi) {
+        getccexchangerates(apilist, nextccapi);
+        return
+    }
+    let next_proxy = get_next_proxy();
+    if (next_proxy) {
+        api_attempt[apilist] = {};
+        getccexchangerates(apilist, api);
+        return
+    }
+    loadertext("api error");
+    closeloader();
+    cancelpaymentdialog();
+    fail_dialogs(api, error_val);
 }
 
 function initexchangerate(cc_rate, ccapi, cachetime) {
@@ -1025,13 +1064,13 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
     api_attempt[apilist][fiatapi] = true;
     loadertext("fetching fiat rates from " + fiatapi);
     // set apipath
-    let payload = (fiatapi == "fixer") ? "latest" :
+    let search = (fiatapi == "fixer") ? "latest" :
         (fiatapi == "coingecko") ? "exchange_rates" :
         (fiatapi == "exchangeratesapi") ? "latest" :
         (fiatapi == "currencylayer") ? "live" :
         (fiatapi == "coinbase") ? "exchange-rates" :
         false;
-    if (payload === false) {
+    if (search === false) {
         loadertext("error");
         closeloader();
         cancelpaymentdialog();
@@ -1040,7 +1079,7 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
     }
     api_proxy({
         "api": fiatapi,
-        "search": payload,
+        "search": search,
         "cachetime": 540,
         "cachefolder": "1h",
         "params": {
@@ -1133,6 +1172,12 @@ function next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, c
     let nextfiatapi = try_next_api(apilist, fiatapi);
     if (nextfiatapi) {
         get_fiat_exchangerate(apilist, nextfiatapi, ccrate, currencystring, ccapi, cachetime);
+        return
+    }
+    let next_proxy = get_next_proxy();
+    if (next_proxy) {
+        api_attempt[apilist] = {};
+        get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, cachetime);
         return
     }
     loadertext("error");
@@ -1407,18 +1452,6 @@ function getpayment(ccrateeuro, ccapi) {
             }
         }
     }
-}
-
-function cc_fail(apilist, api, error_val) {
-    let nextccapi = try_next_api(apilist, api);
-    if (nextccapi) {
-        getccexchangerates(apilist, nextccapi);
-        return
-    }
-    loadertext("api error");
-    closeloader();
-    cancelpaymentdialog();
-    fail_dialogs(api, error_val);
 }
 
 function show_paymentdialog() {
@@ -1804,7 +1837,10 @@ function switchaddress() {
             set_edit(href);
             $("#paymentaddress").text(newaddress);
             $(this).text(newaddresslabel);
-            let ispending = check_pending(newaddress, newaddressid);
+            let ispending = ch_pending({
+                "address": newaddress,
+                "cmcid": newaddressid
+            });
             if (ispending === true && request.monitored === true) {
                 paymentdialogbox.attr("data-pending", "ispending"); // prevent share because of pending transaction
             } else {
@@ -2006,10 +2042,6 @@ function revealtitle() {
     });
 }
 
-function check_pending(cp_address, cp_cmcid) {
-    return $("#requestlist li[data-address='" + cp_address + "'][data-pending='scanning'][data-cmcid='" + cp_cmcid + "']").length > 0;
-}
-
 function pendingrequest() {
     let thisaddress = request.address,
         payment = request.payment,
@@ -2019,7 +2051,10 @@ function pendingrequest() {
         pending_requestid = pending_tx.data("requestid"),
         nonpending_addresslist = filter_addressli(payment, "checked", true).filter(function() {
             let thisnode = $(this);
-            return $("#requestlist li[data-address='" + thisnode.data("address") + "'][data-pending='scanning'][data-cmcid='" + thisnode.data("cmcid") + "']").length === 0;
+            return (ch_pending({
+                "address": thisnode.data("address"),
+                "cmcid": thisnode.data("cmcid")
+            }) === false);
         }),
         has_addresses = nonpending_addresslist.length > 0,
         dialogcontent;
@@ -2054,8 +2089,6 @@ function view_pending_tx() {
             open_tx($("#" + $(this).attr("data-requestid")));
             canceldialog();
             cancelpaymentdialog();
-        } else {
-            return false;
         }
     });
 }
@@ -2094,8 +2127,6 @@ function pickaddressfromdialog() {
             set_edit(href);
             paymentdialogbox.attr("data-pending", "");
             canceldialog();
-        } else {
-            return false;
         }
     });
 }
@@ -2229,8 +2260,6 @@ function share(thisbutton) {
             paymentupper = payment.substr(0, 1).toUpperCase() + payment.substr(1),
             payment_name = (lightning) ? "Lightning" : paymentupper,
             sharedtitle = (thisdata === true) ? thisrequestname_uppercase + " sent a " + payment_name + " payment request of " + thisamount + " " + thiscurrency.toUpperCase() + " for '" + thisrequesttitle + "'" : "You have a " + payment_name + " payment request of " + thisamount + " " + thiscurrency,
-            encodedurl = encodeURIComponent(sharedurl),
-            firebase_dynamiclink = firebase_shortlink + "?link=" + encodedurl + "&apn=" + androidpackagename + "&afl=" + encodedurl,
             share_icon = (lightning) ? localhostname + "/img_logos_btc-lnd.png" : cmc_icon_loc + cmcid + ".png";
         if (isipfs) {
             sharerequest(sharedurl, sharedtitle);
@@ -2815,12 +2844,12 @@ function saverequest(direct) {
     }
 }
 
-function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
+function pendingdialog(pr) { // show pending dialog if tx is pending
     request.received = true;
-    let prdata = pendingrequest.data(),
+    let prdata = pr.data(),
         status = prdata.status,
         txhash = prdata.txhash,
-        tl_txhash = pendingrequest.find(".transactionlist li:first").data("txhash"),
+        tl_txhash = pr.find(".transactionlist li:first").data("txhash"),
         smart_txhash = (txhash) ? txhash : tl_txhash,
         typestate = prdata.requesttype,
         send_receive = (typestate == "incoming") ? "sent" : "received",
@@ -2830,7 +2859,7 @@ function pendingdialog(pendingrequest) { // show pending dialog if tx is pending
         thispayment = prdata.payment,
         lightning = prdata.lightning;
     viewtx.attr("data-txhash", smart_txhash);
-    if (pendingrequest.hasClass("expired")) {
+    if (pr.hasClass("expired")) {
         if (status == "new" || status == "insufficient") {
             adjust_paymentdialog("expired", "no", "Request expired");
             paymentdialogbox.find("span#view_tx").hide();

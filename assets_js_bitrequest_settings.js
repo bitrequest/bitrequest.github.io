@@ -64,7 +64,6 @@ $(document).ready(function() {
     submitrestore();
     //restore
     //check_backup
-    //isteaminvite
     submit_GD_restore();
     //scan_restore
     //restore_algo
@@ -136,6 +135,7 @@ $(document).ready(function() {
     //check_teaminvite
     install_teaminvite_trigger()
     //install_teaminvite
+    //isteaminvite
     check_useragent();
 });
 
@@ -943,18 +943,12 @@ function restore(jsonobject, bu_filename) {
 }
 
 function check_backup(jsonobject) {
-    let cashier_entry = jsonobject.bitrequest_cashier,
-        is_team_invite = (cashier_entry && cashier_entry.cashier) ? true : false;
+    let is_team_invite = isteaminvite(jsonobject);
     if (cashier_dat && cashier_dat.cashier && !is_team_invite) {
         notify("Backup type not allowed in cashiers mode");
         return false;
     }
     return true;
-}
-
-function isteaminvite(jsonobject) {
-    let cashier_entry = jsonobject.bitrequest_cashier;
-    return (cashier_entry && cashier_entry.cashier) ? true : false;
 }
 
 function submit_GD_restore() {
@@ -1802,9 +1796,10 @@ function urlshortener() {
             us_active = us_data.us_active,
             us_is_active = (us_active == "active"),
             shformclass = (us_is_active === true) ? "" : " hide",
-            firebase_class = (us_val == "bitly") ? " hide" : "",
-            bitly_class = (us_val == "firebase") ? " hide" : "",
-            headericon = (us_val == "firebase") ? "icon-firebase" : "icon-bitly",
+            firebase_class = (us_val == "firebase") ? "" : " hide",
+            bitly_class = (us_val == "bitly") ? "" : " hide",
+            headericon = (us_val == "firebase") ? "icon-firebase" :
+            (us_val == "bitly") ? "icon-bitly" : "",
             ddat = [{
                     "div": {
                         "id": "toggle_urlshortener",
@@ -1939,10 +1934,14 @@ function pick_urlshortener_select() {
             firebase_api_input.removeClass("hide");
             bitly_api_input.addClass("hide");
             dialogheader.attr("class", "icon-firebase");
-        } else {
+        } else if (thisvalue == "bitly") {
             firebase_api_input.addClass("hide");
             bitly_api_input.removeClass("hide");
-            dialogheader.attr("class", "icon-bitly")
+            dialogheader.attr("class", "icon-bitly");
+        } else {
+            firebase_api_input.addClass("hide");
+            bitly_api_input.addClass("hide");
+            dialogheader.attr("class", "");
         }
     })
 }
@@ -2268,11 +2267,8 @@ function trigger_proxy_dialog() {
 // Api Proxy
 function pick_api_proxy() {
     $(document).on("click", "#api_proxy", function() {
-        let thisnode = $(this),
-            thisdata = thisnode.data(),
-            proxies = proxy_list, // (bitrequest_config.js)
-            current_proxy = thisdata.selected,
-            custom_proxies = thisdata.custom_proxies,
+        let proxies = all_proxies(),
+            current_proxy = d_proxy(),
             content = "\
             <div class='formbox' id='proxyformbox'>\
                 <h2 class='icon-sphere'>API Proxy</h2>\
@@ -2317,10 +2313,6 @@ function pick_api_proxy() {
         $.each(proxies, function(key, value) {
             let selected = (value == current_proxy);
             test_append_proxy(optionlist, key, value, selected, true);
-        });
-        $.each(custom_proxies, function(key, value) {
-            let selected = (value == current_proxy);
-            test_append_proxy(optionlist, key, value, selected, false);
         });
     })
 }
@@ -2670,7 +2662,13 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                 "longDynamicLink": firebase_shortlink + "?link=" + approot + "?p=request"
             }
         }
-        let postdata = {
+        let postdata = (thisref == "coinmarketcap") ? {
+            "api": "coinmarketcap",
+            "search": search,
+            "cachetime": 0,
+            "cachefolder": "1h",
+            "params": params
+        } : {
             "api": thisref,
             "search": search,
             "cachetime": 0,
@@ -2678,7 +2676,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
             "api_url": api_url,
             "proxy": false,
             "params": params
-        }
+        };
         api_proxy(postdata).done(function(e) {
             let data = br_result(e).result;
             if (thisref == "bitly" && data.status_code === 500) {
@@ -3368,6 +3366,11 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
     notify("Installation complete!");
     canceldialog();
     w_loc.href = w_loc.pathname + "?p=home";
+}
+
+function isteaminvite(jsonobject) {
+    let cashier_entry = jsonobject.bitrequest_cashier;
+    return (cashier_entry && cashier_entry.cashier) ? true : false;
 }
 
 function check_useragent() {

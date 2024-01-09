@@ -216,7 +216,7 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
     let payment = request.payment,
         rpcurl = rpcdata.url;
     rpc_attempts["pollings" + rpcurl] = true;
-    if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin" || payment == "bitcoin-cash") {
+    if (is_btchain(payment) === true) {
         if (tx_data) {
             confirmations(tx_data, true);
             pinging[txhash] = setInterval(function() {

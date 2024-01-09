@@ -61,7 +61,8 @@ let scrollposition = 0,
     stored_currencies = br_get_local("currencies", true),
     init = br_get_local("init", true),
     io = br_dobj(init, true),
-    new_address; // prevent double address entries
+    new_address, // prevent double address entries
+    proxy_attempts = {};
 
 if (has_ndef && !inframe) {
     ndef = new NDEFReader();
@@ -202,6 +203,11 @@ function setsymbols() { //fetch fiat currencies from fixer.io api
             fail_dialogs("fixer", this_error);
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
+        let next_proxy = get_next_proxy();
+        if (next_proxy) {
+            setsymbols();
+            return
+        }
         let content = "<h2 class='icon-bin'>Api call failed</h2><p class='doselect'>" + textStatus + "<br/>api did not respond<br/><br/><span id='proxy_dialog' class='ref'>Try other proxy</span></p>";
         popdialog(content, "canceldialog");
     })
@@ -568,6 +574,7 @@ function finishfunctions() {
     //get_setting
     //set_setting
     //get_requestli
+    //ch_pending
     //get_addresslist
     //filter_addressli
     //filter_all_addressli
@@ -4738,6 +4745,10 @@ function get_requestli(datakey, dataval) {
     return $("#requestlist li.rqli").filter(function() {
         return $(this).data(datakey) == dataval;
     })
+}
+
+function ch_pending(dat) {
+    return ($("#requestlist li.rqli[data-address='" + dat.address + "'][data-pending='scanning'][data-cmcid='" + dat.cmcid + "']").length > 0) ? true : false;
 }
 
 function get_addresslist(currency) {

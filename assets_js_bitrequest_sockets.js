@@ -1174,6 +1174,11 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
             }, pingtime);
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
+        let next_proxy = get_next_proxy();
+        if (next_proxy) {
+            init_xmr_node(cachetime, address, vk, request_ts, txhash, start);
+            return
+        }
         console.log(jqXHR);
         console.log(textStatus);
         console.log(errorThrown);

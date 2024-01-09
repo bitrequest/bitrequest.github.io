@@ -262,14 +262,14 @@ function edit_rpcnode() {
             this_data = current_li.data(),
             options = this_data.options,
             api_list = this_data.apis;
-        if (options === undefined && api_list === undefined) {
+        if (exists(options) === false && exists(api_list) === false) {
             return
         }
         let thiscurrency = current_li.children(".liwrap").attr("data-currency");
         ap_id = current_li.attr("data-id"),
             test_rpc_call = this_data.rpc_test_command,
             is_erc20t = ($("#" + thiscurrency + "_settings").attr("data-erc20") == "true"),
-            is_btc = (thiscurrency == "bitcoin" || thiscurrency == "litecoin" || thiscurrency == "dogecoin" || thiscurrency == "bitcoin-cash");
+            is_btc = (is_btchain(currency) === true);
         let h_hint = (is_btc) ? "mempool.space" : (thiscurrency == "ethereum" || is_erc20t === true) ? "Infura" : "",
             header_text = (ap_id === "websockets") ? "Add " + h_hint + " websocket" : "Add " + h_hint + " RPC",
             currencycode = (thiscurrency == "ethereum" || is_erc20t === true) ? "eth" : thiscurrency,
@@ -380,7 +380,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
             "username": value.username,
             "password": value.password
         });
-        let pload = (is_btc) ? {
+        let pload = (is_btc) ? { // mempoolspace API
             "api_url": value.url + "/api/v1/difficulty-adjustment",
             "proxy": false,
             "params": {

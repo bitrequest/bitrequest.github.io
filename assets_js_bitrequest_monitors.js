@@ -81,6 +81,7 @@ function trigger_requeststates(trigger) {
     }
     api_attempts = {}, // reset cache and index
         rpc_attempts = {},
+        proxy_attempts = {},
         tx_list = [], // reset transaction index
         statuspush = [];
     let active_requests = $("#requestlist .rqli").filter(function() {
@@ -346,8 +347,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                                                 "confirmations": 0
                                                             }, false);
                                                             api_callback(requestid);
-                                                        }
-                                                        else {
+                                                        } else {
                                                             compareamounts(rd, true);
                                                         }
                                                     }
@@ -397,8 +397,7 @@ function get_api_inputs(rd, api_data, api_name) {
                     if (ln_only) {
                         return
                     }
-                }
-                else if (pending == "polling" && lnhash) {
+                } else if (pending == "polling" && lnhash) {
                     let invoice = lnd.invoice;
                     if (invoice) {
                         if (transactionhash) {
@@ -436,8 +435,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                                     "confirmations": 0
                                                 }, true);
                                                 api_callback(requestid);
-                                            }
-                                            else {
+                                            } else {
                                                 compareamounts(rd, true);
                                             }
                                         }
@@ -1393,6 +1391,11 @@ function handle_api_fails_list(rd, error, api_data, thispayment) {
         let api_url = api_data.url,
             nextrpc = get_next_rpc(thispayment, api_url, requestid);
         if (nextrpc === false) { // try next api
+            let next_proxy = get_next_proxy();
+            if (next_proxy) {
+                get_api_inputs(rd, api_data, api_name);
+                return;
+            }
             let rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown";
             api_eror_msg(rpc_id, error_data);
             api_callback(requestid);
@@ -1575,7 +1578,7 @@ function get_rpc_inputs(rd, api_data) {
         }
         if (pending == "scanning" || pending == "polling") {
             transactionlist.html("");
-            if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin" || payment == "bitcoin-cash") {
+            if (is_btchain(payment) === true) {
                 api_proxy({ // get latest blockheight
                     "api_url": url + "/api/blocks/tip/height",
                     "proxy": false,
@@ -1780,13 +1783,7 @@ function get_rpc_inputs(rd, api_data) {
                         let data = br_result(e).result;
                         if (data) {
                             let nano_data = data.data;
-                            if ($.isEmptyObject(nano_data)) {
-                                tx_api_fail(thislist, statuspanel);
-                                handle_rpc_fails_list(rd, {
-                                    "error": "nano node offline",
-                                    "console": true
-                                }, api_data, payment);
-                            } else {
+                            if (nano_data) {
                                 let pending_array_node = (nano_data[0]) ? nano_data[0].pending : [],
                                     pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
                                     history_array_node = (nano_data[1]) ? nano_data[1].history : [],
@@ -1933,10 +1930,15 @@ function handle_rpc_fails_list(rd, error, rpc_data, thispayment) {
         let api_name = rpc_data.name,
             nextapi = get_next_api(thispayment, api_name, requestid);
         if (nextapi === false) { // try next api
+            let next_proxy = get_next_proxy();
+            if (next_proxy) {
+                get_rpc_inputs(rd, rpc_data, api_name);
+                return
+            }
             let rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
-                error_data = (error === false) ? false : get_api_error_data(error);
+                error_data = get_api_error_data(error);
             api_eror_msg(rpc_id, error_data);
-            api_callback(requestid, true);
+            api_callback(requestid);
             return
         }
     }

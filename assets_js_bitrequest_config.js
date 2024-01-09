@@ -12,13 +12,13 @@ const apptitle = "Bitrequest",
     root = "/",
     localhostname = (hostname.indexOf("http") > -1) ? hostname.split("://").pop() : hostname,
     approot = "https://" + localhostname + root,
-    hosted_proxy = "https://app.bitrequest.io/",
     ln_socket = "wss://bitrequest.app:8030",
     proxy_list = [
-        hosted_proxy,
+        "https://app.bitrequest.io/",
         "https://www.bitrequest.io/",
         "https://www.bitrequest.app/"
     ],
+    hosted_proxy = random_array_item(proxy_list), // load balance proxies
     proxy_version = "0.008",
     firebase_dynamic_link_domain = "bitrequest.page.link",
     firebase_shortlink = "https://" + firebase_dynamic_link_domain + "/",

@@ -17,6 +17,7 @@
 //api_proxy
 //br_result
 //get_api_url
+//get_next_proxy
 //tofixedspecial
 //get_search
 //renderlnconnect
@@ -27,6 +28,7 @@
 //scanmeta
 //xss_search
 //getrandomnumber
+//random_array_item
 //hashcode
 //getcc_icon
 //getdevicetype
@@ -48,7 +50,9 @@
 //adjust_objectarray
 //now
 //dom_to_array
+//proxy_dat
 //d_proxy
+//all_proxies
 //fetch_aws
 //fk
 //init_keys
@@ -96,6 +100,13 @@ function br_remove_session(pref) {
 }
 
 // Helpers
+
+function is_btchain(currency) {
+    if (currency == "bitcoin" || currency == "litecoin" || currency == "dogecoin" || currency == "bitcoin-cash") {
+        return true;
+    }
+    return false;
+}
 
 function br_dobj(object, obj) { // Default object
     if (object) {
@@ -185,6 +196,7 @@ function api_proxy(ad, p_proxy) {
                     "nokey": nokey
                 })
             };
+        proxy_attempts[set_proxy] = true;
         return $.ajax(proxy_data);
     }
     return $.ajax();
@@ -226,6 +238,25 @@ function get_api_url(get) {
         }
     }
     return false
+}
+
+function get_next_proxy() {
+    let proxies = all_proxies(),
+        current_proxy = d_proxy(),
+        c_index = proxies.indexOf(current_proxy),
+        cc_index = (c_index == -1) ? 0 : c_index,
+        next_i = proxies[cc_index + 1],
+        next_p = (next_i) ? next_i : proxies[0];
+    if (proxy_attempts[next_p] !== true) {
+        api_attempts = {}, // reset cache and index
+            rpc_attempts = {};
+        set_setting("api_proxy", { // save next proxy
+            "selected": next_p
+        }, next_p);
+        savesettings();
+        return next_p;
+    }
+    return false;
 }
 
 function tofixedspecial(str, n) {
@@ -332,6 +363,10 @@ function xss_search(val) {
 
 function getrandomnumber(min, max) {
     return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+function random_array_item(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
 }
 
 function hashcode(str) {
@@ -505,8 +540,18 @@ function dom_to_array(dom, dat) {
     }).get();
 }
 
+function proxy_dat() {
+    return $("#api_proxy").data();
+}
+
 function d_proxy() {
-    return $("#api_proxy").data("selected");
+    return proxy_dat().selected;
+}
+
+function all_proxies() {
+    let pdat = proxy_dat(),
+        cproxies = pdat.custom_proxies;
+    return proxy_list.concat(cproxies);
 }
 
 function fetch_aws(filename, bckt) {
