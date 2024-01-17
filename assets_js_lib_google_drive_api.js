@@ -1,8 +1,9 @@
 const scope = "https://www.googleapis.com/auth/drive.appdata",
     drivepath = "https://content.googleapis.com",
-    redirect_uri = approot + "?p=settings";
+    redirect_uri = w_loc.origin + w_loc.pathname + "?p=settings";
 
 $(document).ready(function() {
+    console.log(redirect_uri);
     init_access();
     // t_expired
     // fetch_creds
@@ -106,14 +107,14 @@ function fetch_creds(k) {
                             gdlogin_callbacks();
                             if (body.hasClass("showstartpage")) { // only show when logged in
                                 trigger_restore();
-                                let timeout = setTimeout(function() {
-                                    history.pushState({
-                                        "pagename": "settings"
-                                    }, "", redirect_uri);
-                                }, 5000, function() {
-                                    clearTimeout(timeout);
-                                });
                             }
+                            let timeout = setTimeout(function() {
+                                history.pushState({
+                                    "pagename": "settings"
+                                }, "", redirect_uri);
+                            }, 5000, function() {
+                                clearTimeout(timeout);
+                            });
                         }
                     }
                 }
