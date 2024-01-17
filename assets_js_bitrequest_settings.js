@@ -768,7 +768,7 @@ function complilebackup() {
             key == "bitrequest_init" ||
             key == "bitrequest_k" ||
             key == "bitrequest_awl" ||
-            key == "bitrequest_a_dat" ||
+            key == "bitrequest_dat" ||
             key == "bitrequest_tp") {} else if (key == "bitrequest_bpdat") { // only backup ecrypted seed
             let not_verified = (io.bipv != "yes"); // add to google drive when not verified
             if (not_verified || (test_derive === true && get_setting("backup", "sbu") === true)) {
@@ -3124,7 +3124,7 @@ function complile_teaminvite() {
             key == "bitrequest_tp" ||
             key == "bitrequest_requests" ||
             key == "bitrequest_archive" ||
-            key == "bitrequest_a_dat" ||
+            key == "bitrequest_dat" ||
             key == "bitrequest_rt" ||
             key == "bitrequest_bpdat") {} else {
             let pval = JSON.parse(value);

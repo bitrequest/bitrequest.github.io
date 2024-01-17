@@ -95,7 +95,7 @@ function fetch_creds(k) {
                             jt.active = true;
                             jt.access_token = ga_token;
                             jt.expires_in = result.expires_in;
-                            br_set_local("a_dat", JSON.stringify(jt));
+                            br_set_local("dat", JSON.stringify(jt));
                             let rt = result.refresh_token;
                             if (rt) {
                                 let jtobj = {
@@ -153,7 +153,7 @@ function fetch_access(rt, callback) {
                                 bdat.expires_in = result.expires_in;
                                 bdat.created = now();
                                 bdat.active = true;
-                                br_set_local("a_dat", JSON.stringify(bdat));
+                                br_set_local("dat", JSON.stringify(bdat));
                                 refcb(callback);
                             }
                         }
@@ -183,7 +183,7 @@ function refcb(cb) {
 }
 
 function lca_obj() {
-    let bdat = br_get_local("a_dat", true);
+    let bdat = br_get_local("dat", true);
     if (bdat) {
         return bdat;
     }
@@ -371,7 +371,7 @@ function activate() {
     let bdat = lca_obj();
     if (bdat) {
         bdat.active = true;
-        br_set_local("a_dat", JSON.stringify(bdat));
+        br_set_local("dat", JSON.stringify(bdat));
     }
 }
 
@@ -379,7 +379,7 @@ function deactivate() {
     let bdat = lca_obj();
     if (bdat) {
         bdat.active = false;
-        br_set_local("a_dat", JSON.stringify(bdat));
+        br_set_local("dat", JSON.stringify(bdat));
     }
 }
 
