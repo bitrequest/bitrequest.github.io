@@ -2666,17 +2666,6 @@ function cancelpaymentdialog() {
     }, 2500, function() {
         clearTimeout(wstimeout);
     });
-    if (gd_init === true) {
-        gd_init = false;
-        if (hostlocation == "local") {
-            return
-        }
-        let pass = GD_pass();
-        if (pass) {
-            return
-        }
-        oauth_pop();
-    }
 }
 
 function closesocket(s_id) {
@@ -4273,22 +4262,20 @@ function save_cc_settings(currency, add) {
 }
 
 function updatechanges(key, add, nit) {
-    let pass = GD_pass();
-    if (pass && !nit === true) {
-        updateappdata(pass);
+    let p = GD_pass();
+    if (p && !nit === true) {
+        init_uad(p);
         return
     }
-    init_login_dialog();
     if (add === true) {
         let cc = changes[key],
             cc_correct = (cc) ? cc : 0;
         changes[key] = cc_correct + 1;
         savechangesstats();
         if (nit == "noalert") {
-            // no alert
-        } else {
-            change_alert();
+            return
         }
+        change_alert();
     }
 }
 
@@ -4879,6 +4866,8 @@ function check_params(gets) {
             check_systembu(lgets.sbu);
         } else if (lgets.csv) {
             check_csvexport(lgets.csv);
+        } else if (lgets.code) {
+            init_access(lgets.code);
         }
         return
     }

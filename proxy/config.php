@@ -12,7 +12,8 @@ $keys = array(
 	"currencylayer" => "",
 	"infura" => "",
 	"exchangeratesapi" => "",
-	"googleauth" => ""
+	"googleauth" => "",
+	"google_secret" => ""
 );
 
 /* Sign up:

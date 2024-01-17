@@ -1,84 +1,237 @@
-var gapi, // Keep var
-    google,
-    tokenClient;
 const scope = "https://www.googleapis.com/auth/drive.appdata",
-    drivepath = "https://content.googleapis.com";
+    drivepath = "https://content.googleapis.com",
+    redirect_uri = approot + "?p=settings";
 
 $(document).ready(function() {
-    // gapi_load
+    init_access();
+    // t_expired
+    // fetch_creds
+    // fetch_access
+    // refcb
+    // lca_obj
     // init_login_dialog
     // oauth_pop
     gd_login_trigger();
     submit_gdbu_dialog();
     // g_login
-    // set_gatoken
     // gdlogin_callbacks
+    // adjust_sp
     // g_logout
+    // activate
+    // deactivate
     // gdlogout_callbacks
     Drive_Backup_trigger();
+    // init_uad
     // updateappdata
     // createfile
     lad_trigger();
     // listappdata
-    deletefiletrigger();
+    deletefiletrigger()
     // deletefile
     // GD_pass
-    // has_token
-    // a_dat
-    // cashed_token
 });
 
 // ** Google api **
 
-function gapi_load() {
-    if (hostlocation == "local") {
+function init_access(ak) {
+    if (ak) {
+        fetch_creds(ak);
         return
     }
-    tokenClient = google.accounts.oauth2.initTokenClient({
-        "client_id": to.ga_id,
-        "scope": scope,
-        "callback": set_gatoken
-    });
-    if (gapi) {
-        gapi.load("client:auth2", function() {
-            gapi.client.init({
-                "discoveryDocs": ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"]
-            });
+    let p = GD_pass();
+    if (p.pass) {
+        html.addClass("gdauth");
+        return
+    }
+    if (!p.active) {
+        return
+    }
+    let expired = p.expired;
+    if (expired) {
+        t_expired(expired);
+        return
+    }
+}
+
+function t_expired(expired, callback) {
+    if (expired == "norefresh") {
+        canceldialog();
+        let timeout = setTimeout(function() {
+            oauth_pop(true);
+        }, 1000, function() {
+            clearTimeout(timeout);
+        });
+        return
+    }
+    fetch_access(lnurl_decode_c(expired), callback);
+}
+
+function fetch_creds(k) {
+    if (k) {
+        api_proxy({
+            "custom": "fetch_creds",
+            "api_url": true,
+            "proxy": true,
+            "code": decodeURIComponent(k),
+            "redirect_uri": redirect_uri
+        }).done(function(e) {
+            if (e) {
+                let data = br_result(e);
+                if (data) {
+                    let result = data.result;
+                    if (result) {
+                        let error = result.error;
+                        if (error) {
+                            let ed = result.error_description,
+                                em = (ed) ? " || " + ed : "";
+                            console.log(result);
+                            notify(error + em);
+                            return
+                        }
+                        let ga_token = result.access_token;
+                        if (ga_token) {
+                            let jt = {};
+                            jt.created = now();
+                            jt.active = true;
+                            jt.access_token = ga_token;
+                            jt.expires_in = result.expires_in;
+                            br_set_local("a_dat", JSON.stringify(jt));
+                            let rt = result.refresh_token;
+                            if (rt) {
+                                let jtobj = {
+                                    "d": lnurl_encode("xz", rt)
+                                }
+                                br_set_local("rt", JSON.stringify(jtobj));
+                            }
+                            gdlogin_callbacks();
+                            if (body.hasClass("showstartpage")) { // only show when logged in
+                                trigger_restore();
+                                let timeout = setTimeout(function() {
+                                    history.pushState({
+                                        "pagename": "settings"
+                                    }, "", redirect_uri);
+                                }, 5000, function() {
+                                    clearTimeout(timeout);
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }).fail(function(e) {
+            console.log(e);
+        }).always(function(e) {});
+    }
+}
+
+function fetch_access(rt, callback) {
+    if (rt) {
+        api_proxy({
+            "custom": "fetch_access",
+            "api_url": true,
+            "proxy": true,
+            "refresh_token": rt
+        }).done(function(e) {
+            if (e) {
+                let data = br_result(e);
+                if (data) {
+                    let result = data.result;
+                    if (result) {
+                        let error = result.error;
+                        if (error) {
+                            let ed = result.error_description,
+                                em = (ed) ? " || " + ed : "";
+                            console.log(result);
+                            notify(error + em);
+                            return
+                        }
+                        let access_token = result.access_token;
+                        if (access_token) {
+                            let bdat = lca_obj();
+                            if (bdat) {
+                                bdat.access_token = access_token;
+                                bdat.expires_in = result.expires_in;
+                                bdat.created = now();
+                                bdat.active = true;
+                                br_set_local("a_dat", JSON.stringify(bdat));
+                                refcb(callback);
+                            }
+                        }
+                    }
+                }
+            }
+        }).fail(function(e) {
+            console.log(e);
         });
     }
 }
 
-function init_login_dialog(direct) {
-    if (hostlocation == "local") {
-        return
-    }
-    let ctoken = cashed_token();
-    if (ctoken) {
-        let oa_timer = br_get_local("oa_timer");
-        if (oa_timer) {
-            let interval = 3600000; // show every hour
-            if ((now() - oa_timer) < interval) {
+function refcb(cb) {
+    html.addClass("gdauth");
+    if (cb) {
+        if (cb == "uad") {
+            let p = GD_pass();
+            if (p.pass) {
+                updateappdata(p);
                 return
             }
         }
-        br_set_local("oa_timer", now());
-        setTimeout(function() {
-            if (direct) {
-                tokenClient.requestAccessToken();
-                return
-            }
-            if ($("#popup").hasClass("showpu") || paymentpopup.hasClass("showpu")) {
-                return
-            }
-            oauth_pop(true);
-        }, 5000);
+        if (cb == "gcb") {
+            adjust_sp();
+        }
     }
 }
 
-function oauth_pop(ab) {
-    if (body.hasClass("showstartpage")) { // only show when logged in
+function lca_obj() {
+    let bdat = br_get_local("a_dat", true);
+    if (bdat) {
+        return bdat;
+    }
+    return false;
+}
+
+function rt_obj() {
+    let rtdat = br_get_local("rt", true);
+    if (rtdat) {
+        return rtdat.d;
+    }
+    return false;
+}
+
+function init_login_dialog(cb) {
+    if (hostlocation == "local") {
+        notify("GoogleAuth unavailable on localhost");
         return
     }
+    let p = GD_pass();
+    if (p.pass) {
+        return
+    }
+    if (p.expired) {
+        t_expired(p.expired, "gcb");
+        return
+    }
+    let active = p.active;
+    if (active === false) {
+        if (p.token) {
+            activate();
+            gdlogin_callbacks();
+            return
+        }
+    }
+    if ($("#popup").hasClass("showpu")) {
+        canceldialog();
+        let timeout = setTimeout(function() {
+            oauth_pop(cb);
+        }, 1000, function() {
+            clearTimeout(timeout);
+        });
+        return
+    }
+    oauth_pop(cb);
+}
+
+function oauth_pop(ab) {
     let cbx = (ab) ? render_html([{
             "div": {
                 "id": "pk_confirmwrap",
@@ -109,7 +262,7 @@ function oauth_pop(ab) {
                         {
                             "div": {
                                 "class": "inputwrap",
-                                "content": "<div id='oauth_onload'><span class='icon-google2'></span>Back up now</div>"
+                                "content": "<div id='oauth_onload'><span class='icon-google2'></span>Sign in</div>"
                             }
                         }
                     ]
@@ -139,13 +292,11 @@ function oauth_pop(ab) {
             "elements": ddat
         });
     popdialog(content, "triggersubmit");
-    br_set_local("oa_timer", now());
 }
 
 function gd_login_trigger() {
     $(document).on("click", "#oauth_onload", function() {
-        let pass = GD_pass();
-        g_login(pass);
+        g_login();
     })
 }
 
@@ -159,56 +310,42 @@ function submit_gdbu_dialog() {
             g_logout();
             return
         }
-        let pass = GD_pass();
-        g_login(pass);
+        g_login();
     })
 }
 
-function g_login(tob) {
+function g_login() {
     if (hostlocation == "local") {
         notify("GoogleAuth not available");
         return
     }
-    if (tob && tob.cached === false) {
-        tokenClient.requestAccessToken({
-            "prompt": "none"
-        });
+    let p = GD_pass();
+    if (p.pass) {
+        gdlogin_callbacks();
         return
     }
-    tokenClient.requestAccessToken();
-}
-
-function set_gatoken(e) {
-    if (e.error) {
-        if (e.error == "interaction_required") {
-            notify("error: access denied");
+    if (!p.active && !p.expired) {
+        if (p.token) {
+            activate();
+            gdlogin_callbacks();
             return
         }
-        notify("error");
-        return
     }
-    let access_token = e.access_token;
-    if (access_token) {
-        let token_object = {
-            "access_token": access_token,
-            "expires_in": e.expires_in,
-            "created": now()
-        }
-        br_set_local("a_dat", btoa(JSON.stringify(token_object)));
-        let pass = GD_pass();
-        if (pass) {
-            updateappdata(pass);
-        } else {
-            init_login_dialog();
-        }
-        gdlogin_callbacks();
-    }
+    let login_uri = "https://accounts.google.com/o/oauth2/auth?client_id=" + to.ga_id + "&redirect_uri=" + redirect_uri + "&response_type=code&scope=" + scope + "&access_type=offline";
+    w_loc.href = login_uri;
 }
 
-function gdlogin_callbacks() {
+function gdlogin_callbacks(close) {
     html.addClass("gdauth");
     notify("Successfully signed in");
     resetchanges();
+    adjust_sp();
+    if (close) {
+        canceldialog();
+    }
+}
+
+function adjust_sp() {
     let switch_panel = $("#popup.showpu .switchpanel");
     if (switch_panel.length) {
         switch_panel.addClass("true").removeClass("false");
@@ -220,18 +357,29 @@ function gdlogin_callbacks() {
         $("#changelog").slideUp(300);
         return
     }
-    canceldialog();
 }
 
 function g_logout() {
     let result = confirm("Are you sure you want to stop using Google Drive Backup?");
     if (result === true) {
-        let token = has_token();
-        if (token) {
-            gapi.client.setToken("");
-        }
-        br_remove_local("a_dat");
+        deactivate();
         gdlogout_callbacks();
+    }
+}
+
+function activate() {
+    let bdat = lca_obj();
+    if (bdat) {
+        bdat.active = true;
+        br_set_local("a_dat", JSON.stringify(bdat));
+    }
+}
+
+function deactivate() {
+    let bdat = lca_obj();
+    if (bdat) {
+        bdat.active = false;
+        br_set_local("a_dat", JSON.stringify(bdat));
     }
 }
 
@@ -250,32 +398,45 @@ function gdlogout_callbacks() {
 
 function Drive_Backup_trigger() {
     $(document).on("click", "#gdtrigger .switchpanel", function() {
-        if (body.hasClass("ios")) {
-            notify("GoogleAuth unavailable for IOS App at the moment");
-            return
-        }
-        let pass = GD_pass();
-        if (pass) {
+        let p = GD_pass();
+        if (p.pass) {
             g_logout();
             return
         }
-        g_login(pass);
+        init_login_dialog();
     })
 }
 
-function updateappdata(pass) {
-    let bu_id = br_get_local("backupfile_id");
-    if (bu_id) {
-        if (pass) {
-            let gd_timer = br_get_session("gd_timer"); // prevent Ddos
-            if (gd_timer) {
-                let interval = 3000;
-                if ((now() - gd_timer) < interval) {
-                    return
-                }
-            }
+function init_uad(p) {
+    let active = p.active;
+    if (active === false) {
+        return
+    }
+    if (p.pass) {
+        updateappdata(p);
+        return
+    }
+    let expired = p.expired;
+    if (expired) {
+        t_expired(expired, "uad");
+        return
+    }
+}
+
+function updateappdata(p) {
+    let gd_timer = br_get_session("gd_timer"); // prevent Ddos
+    if (gd_timer) {
+        let interval = 3000;
+        if ((now() - gd_timer) < interval) {
+            return
+        }
+    }
+    let token = p.token;
+    if (token) {
+        let bu_id = br_get_local("backupfile_id");
+        if (bu_id) {
             br_set_session("gd_timer", now());
-            api_proxy({
+            let ddat = {
                 "api_url": drivepath + "/upload/drive/v3/files/" + bu_id + "?uploadType=media&alt=json",
                 "proxy": false,
                 "params": {
@@ -283,11 +444,15 @@ function updateappdata(pass) {
                     "dataType": "json",
                     "contentType": "application/json",
                     "headers": {
-                        "Authorization": "Bearer " + pass.token
+                        "Authorization": "Bearer " + token
                     },
                     "data": complilebackup()
                 }
-            }).done(function(e) {}).fail(function(jqXHR, textStatus, errorThrown) {
+            };
+            api_proxy(ddat).done(function(e) {}).fail(function(jqXHR, textStatus, errorThrown) {
+                console.log(jqXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
                 if (textStatus == "error") {
                     let error_object = jqXHR;
                     if (error_object) {
@@ -295,14 +460,12 @@ function updateappdata(pass) {
                         if (resp_obj) {
                             let resp = resp_obj.error;
                             if (resp) {
-                                console.log(resp);
                                 if (resp.code == 401) {
-                                    //oauth_pop(true); // log in
                                     notify("Unauthorized");
                                     return
                                 }
                                 if (resp.code == 404) {
-                                    createfile(pass); // create file
+                                    createfile(token); // create file
                                     return
                                 }
                             }
@@ -313,12 +476,15 @@ function updateappdata(pass) {
             });
             return
         }
+        createfile(token) // create file   
     }
-    createfile(pass) // create file
 }
 
-function createfile(tob) {
-    let pass = (tob) ? tob : GD_pass();
+function createfile(token) {
+    let jt = GD_pass(),
+        jtp = jt.pass,
+        pass = (token) ? token : (jtp) ? jt.token : false,
+        backup = complilebackup();
     if (pass) {
         let file = new Blob([complilebackup()], {
                 "type": "text/plain"
@@ -341,7 +507,7 @@ function createfile(tob) {
         }));
         form.append("file", file);
         xhr.open("post", "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id");
-        xhr.setRequestHeader("Authorization", "Bearer " + pass.token);
+        xhr.setRequestHeader("Authorization", "Bearer " + pass);
         xhr.responseType = "json";
         xhr.onload = () => {
             let response_id = xhr.response.id,
@@ -363,8 +529,8 @@ function listappdata() {
         notify("GoogleAuth unavailable for IOS App at the moment");
         return false;
     }
-    let pass = GD_pass();
-    if (pass) {
+    let p = GD_pass();
+    if (p.pass) {
         let thistrigger = $("#listappdata .switchpanel"),
             backuplist = $("#gd_backuplist"),
             importjsonlist = $("#importjson");
@@ -386,7 +552,7 @@ function listappdata() {
             "params": {
                 "method": "GET",
                 "headers": {
-                    "Authorization": "Bearer " + pass.token
+                    "Authorization": "Bearer " + p.token
                 }
             }
         }).done(function(e) {
@@ -434,18 +600,18 @@ function listappdata() {
         });
         return
     }
-    g_login(pass);
+    init_login_dialog();
 }
 
 function deletefiletrigger() {
     $(document).on("click", ".purge_bu", function() {
-        let pass = GD_pass();
-        if (pass) {
+        let p = GD_pass();
+        if (p.pass) {
             let thislist = $(this).parent("li"),
                 fileid = thislist.attr("data-gdbu_id"),
                 result = confirm("Delete " + thislist.text() + "?");
             if (result === true) {
-                deletefile(fileid, thislist, pass);
+                deletefile(fileid, thislist, p.token);
             }
             return
         }
@@ -453,14 +619,14 @@ function deletefiletrigger() {
     })
 }
 
-function deletefile(fileId, thislist, tob) {
+function deletefile(fileId, thislist, pass) {
     api_proxy({
         "api_url": drivepath + "/drive/v3/files/" + fileId,
         "proxy": false,
         "params": {
             "method": "DELETE",
             "headers": {
-                "Authorization": "Bearer " + tob.token
+                "Authorization": "Bearer " + pass
             }
         }
     }).done(function(e) {
@@ -480,62 +646,34 @@ function deletefile(fileId, thislist, tob) {
 }
 
 function GD_pass() {
-    if (gapi) {
-        if (gapi.client) {
-            let token = has_token();
-            if (token) {
-                html.addClass("gdauth");
-                return {
-                    "token": token,
-                    "cached": false,
-                    "expired": false
-                }
-            }
-            let s_token = a_dat();
-            if (s_token) {
-                html.addClass("gdauth");
-                return s_token
-            }
-        }
-    }
-    html.removeClass("gdauth");
-    return false;
-}
-
-function has_token() {
-    let token = gapi.client.getToken();
-    if (token) {
-        if (token.access_token) {
-            return token.access_token;
-        }
-    }
-    return false
-}
-
-function a_dat() {
-    let token_dat = cashed_token();
-    if (token_dat) {
-        let token_object = JSON.parse(atob(token_dat)),
-            ga_token = token_object.access_token;
-        if (ga_token) {
-            let expired = (now() - token_object.created) > (token_object.expires_in * 1000);
+    let jt = {
+            "token": false,
+            "active": false,
+            "expired": false,
+            "pass": false
+        },
+        bdat = lca_obj();
+    if (bdat) {
+        let token = bdat.access_token,
+            expired = ((now() - bdat.created) + 60000) > (bdat.expires_in * 1000),
+            active = bdat.active;
+        if (token) {
+            jt.token = token;
             if (expired) {
-                return false;
+                let rtoken = rt_obj(),
+                    can_refresh = (rtoken) ? rtoken : "norefresh";
+                jt.expired = can_refresh;
             }
-            return {
-                "token": ga_token,
-                "cached": true,
-                "expired": expired
-            };
+            if (active) {
+                jt.active = true;
+            }
+        }
+        if (token && expired === false && active) {
+            html.addClass("gdauth");
+            jt.pass = true;
+        } else {
+            html.removeClass("gdauth");
         }
     }
-    return false;
-}
-
-function cashed_token() {
-    let token_dat = br_get_local("a_dat");
-    if (token_dat) {
-        return token_dat
-    }
-    return false;
+    return jt;
 }

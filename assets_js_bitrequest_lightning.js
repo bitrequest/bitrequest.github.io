@@ -47,6 +47,7 @@ $(document).ready(function() {
     //lnurl_encode_save
     //lnurl_encode
     //lnurl_decode
+    //lnurl_decode_c
 });
 
 function lightning_management() {
@@ -1665,6 +1666,10 @@ function lnurl_encode(hrp, url) {
 
 function lnurl_decode(lnurl) {
     return utf8Decoder.decode(uint_8Array(fromWords(lnurl_decodeb32(lnurl).data)));
+}
+
+function lnurl_decode_c(lnurl) {
+    return clean_str(lnurl_decode(lnurl));
 }
 
 /* Tools */

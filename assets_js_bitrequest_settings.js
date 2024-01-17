@@ -454,7 +454,7 @@ function backupdatabase() {
             changespush.push("<li>" + value + " changes in '" + key + "'</li>");
         }
     });
-    let gd_active = (GD_pass()) ? true : false,
+    let gd_active = (GD_pass().pass) ? true : false,
         alert_icon = $("#alert > span"),
         nr_changes = alert_icon.text(),
         alert_title = alert_icon.attr("title"),
@@ -532,6 +532,12 @@ function backupdatabase() {
                                 "attr": {
                                     "data-url": jsonencode
                                 }
+                            }
+                        },
+                        {
+                            "div": {
+                                "id": "backupcd",
+                                "content": "OK"
                             }
                         },
                         {
@@ -763,7 +769,6 @@ function complilebackup() {
             key == "bitrequest_k" ||
             key == "bitrequest_awl" ||
             key == "bitrequest_a_dat" ||
-            key == "bitrequest_oa_timer" ||
             key == "bitrequest_tp") {} else if (key == "bitrequest_bpdat") { // only backup ecrypted seed
             let not_verified = (io.bipv != "yes"); // add to google drive when not verified
             if (not_verified || (test_derive === true && get_setting("backup", "sbu") === true)) {
@@ -830,7 +835,7 @@ function trigger_restore() {
         lastbudevice = backupnode.data("device"),
         lastbackupdevice = (lastbudevice == "folder-open") ? "" : "google-drive",
         lastbackupstring = (lastbackup) ? "<p class='icon-" + lastbackupdevice + "'>Last backup:<br/><span class='icon-" + lastbudevice + "'>" + lastbackup + "</span></p>" : "",
-        gd_active = (GD_pass()) ? true : false,
+        gd_active = (GD_pass().pass) ? true : false,
         showhidegd = (gd_active === true) ? "display:none" : "display:block",
         ddat = [{
                 "div": {
@@ -958,8 +963,8 @@ function submit_GD_restore() {
             result = confirm("Restore " + thisfield.text() + " from " + thisdevice + " device?");
         if (result === true) {
             let thisfileid = thisfield.attr("data-gdbu_id"),
-                pass = GD_pass();
-            if (pass) {
+                p = GD_pass();
+            if (p.pass) {
                 api_proxy({
                     "api_url": "https://www.googleapis.com/drive/v3/files/" + thisfileid + "?alt=media",
                     "proxy": false,
@@ -967,7 +972,7 @@ function submit_GD_restore() {
                         "method": "GET",
                         "mimeType": "text/plain",
                         "headers": {
-                            "Authorization": "Bearer " + pass.token
+                            "Authorization": "Bearer " + p.token
                         }
                     }
                 }).done(function(e) {
@@ -1007,7 +1012,7 @@ function scan_restore(jsonobject) {
     let bpdat = jsonobject.bitrequest_bpdat;
     if (bpdat) {
         resd.sbu = true;
-        let can_dec = (bpdat.dat) ? s_decode(bpdat) : s_decode(bpdat.datenc);
+        let can_dec = (bpdat.dat) ? s_decode(bpdat) : (bpdat.datenc) ? s_decode(bpdat.datenc) : false;
         resd.samebip = (bpdat.id == bipid);
         resd.bpdat = can_dec;
     }
@@ -1057,7 +1062,7 @@ function restore_callback(pass_dat, newphrase) {
 
 function s_decode(pdat, phash) {
     let pinhash = (phash) ? phash : $("#pinsettings").data("pinhash");
-    if (pinhash) {
+    if (pinhash && pdat) {
         let keystring = ptokey(pinhash, pdat.id),
             decrypt = aes_dec(pdat.dat, keystring);
         if (decrypt) {
@@ -1218,9 +1223,9 @@ function restore_callback_gd(pass_dat, np) {
         savesettings("noalert");
         createfile(); // create new file from backup
         if (pass_dat.thisdeviceid == deviceid) {
-            let pass = GD_pass();
-            if (pass) {
-                deletefile(pass_dat.thisfileid, null, pass); // delete old backup file
+            let p = GD_pass();
+            if (p.pass) {
+                deletefile(pass_dat.thisfileid, null, p.token); // delete old backup file
             }
         }
         if (newphrase === true) {
@@ -3120,7 +3125,7 @@ function complile_teaminvite() {
             key == "bitrequest_requests" ||
             key == "bitrequest_archive" ||
             key == "bitrequest_a_dat" ||
-            key == "bitrequest_oa_timer" ||
+            key == "bitrequest_rt" ||
             key == "bitrequest_bpdat") {} else {
             let pval = JSON.parse(value);
             if (key == "bitrequest_settings") {

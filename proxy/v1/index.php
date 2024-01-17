@@ -72,7 +72,6 @@ if ($custom) {
     if ($custom == "gk") {
         $key_array = base64_encode(
             json_encode([
-                "ad_id" => $keys["amberdata"],
                 "if_id" => $keys["infura"],
                 "ga_id" => $keys["googleauth"],
                 "bc_id" => $keys["blockcypher"],
@@ -109,6 +108,35 @@ if ($custom) {
     }
     if ($custom == "get_system_bu") {
         $result = api(null, null, null, 604800, "1w", null, $params);
+        echo json_encode([
+            "ping" => $result
+        ]);
+        return;
+    }
+    if ($custom == "fetch_creds") {
+	    $dat = [
+		    "MIME-type" => "application/x-www-form-urlencoded; charset=UTF-8",
+		    "client_id" => $keys["googleauth"],
+		    "client_secret" => $keys["google_secret"],
+		    "code" => $postdata["code"],
+		    "redirect_uri" => $postdata["redirect_uri"],
+		    "grant_type" => "authorization_code"
+		];
+		$result = api("https://oauth2.googleapis.com/token", $dat, null, 0, "1d", null, null);
+        echo json_encode([
+            "ping" => $result
+        ]);
+        return;
+    }
+    if ($custom == "fetch_access") {
+	    $dat = [
+		    "MIME-type" => "application/x-www-form-urlencoded; charset=UTF-8",
+		    "client_id" => $keys["googleauth"],
+		    "client_secret" => $keys["google_secret"],
+		    "refresh_token" => $postdata["refresh_token"],
+		    "grant_type" => "refresh_token"
+		];
+		$result = api("https://oauth2.googleapis.com/token", $dat, null, 0, "1d", null, null);
         echo json_encode([
             "ping" => $result
         ]);
