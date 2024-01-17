@@ -949,6 +949,7 @@ function finish_seed() {
 
 function seed_callback() {
     if (hasbip === true) {
+        hide_seed_panel();
         return
     }
     let seed_object = {},
