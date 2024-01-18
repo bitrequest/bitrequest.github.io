@@ -201,7 +201,7 @@ function rt_obj() {
 
 function init_login_dialog(cb) {
     if (hostlocation == "local") {
-        notify("GoogleAuth unavailable on localhost");
+        notify("GoogleAuth not available");
         return
     }
     let p = GD_pass();
@@ -526,10 +526,6 @@ function lad_trigger() {
 }
 
 function listappdata() {
-    if (body.hasClass("ios")) {
-        notify("GoogleAuth unavailable for IOS App at the moment");
-        return false;
-    }
     let p = GD_pass();
     if (p.pass) {
         let thistrigger = $("#listappdata .switchpanel"),

@@ -949,42 +949,42 @@ function finish_seed() {
 
 function seed_callback() {
     if (hasbip === true) {
-        hide_seed_panel();
-        return
     }
-    let seed_object = {},
-        seed_string = btoa(JSON.stringify(phrasearray)),
-        phraseid = hmacsha(seed_string, "sha256").slice(0, 8);
-    seed_object.pid = phraseid;
-    seed_object.pob = seed_string;
-    let savedat = {
-        "id": phraseid,
-        "dat": null
-    };
-    br_set_local("bpdat", savedat, true);
-    br_set_local("tp", now());
-    bipobj = savedat,
-        hasbip = true,
-        bipid = phraseid;
-    notify("🎉 Congratulations. You are now your own bank! 🎉");
-    let seedid = phraseid,
-        savedseed = phrasearray.join(" ");
-    if (body.hasClass("showstartpage")) {
-        derive_all_init(savedseed, seedid);
-        openpage("?p=home", "home", "loadpage");
-        let currency = $("#seed_steps").attr("data-goal"),
-            homeli = get_homeli(currency);
-        homeli.find(".rq_icon").trigger("click");
-    } else {
-        let derivations = filter_all_addressli("seedid", seedid);
-        if (derivations.length > 0) {
-            move_seed_cb();
+    else {
+        let seed_object = {},
+            seed_string = btoa(JSON.stringify(phrasearray)),
+            phraseid = hmacsha(seed_string, "sha256").slice(0, 8);
+        seed_object.pid = phraseid;
+        seed_object.pob = seed_string;
+        let savedat = {
+            "id": phraseid,
+            "dat": null
+        };
+        br_set_local("bpdat", savedat, true);
+        br_set_local("tp", now());
+        bipobj = savedat,
+            hasbip = true,
+            bipid = phraseid;
+        notify("🎉 Congratulations. You are now your own bank! 🎉");
+        let seedid = phraseid,
+            savedseed = phrasearray.join(" ");
+        if (body.hasClass("showstartpage")) {
+            derive_all_init(savedseed, seedid);
+            openpage("?p=home", "home", "loadpage");
+            let currency = $("#seed_steps").attr("data-goal"),
+                homeli = get_homeli(currency);
+            homeli.find(".rq_icon").trigger("click");
+        } else {
+            let derivations = filter_all_addressli("seedid", seedid);
+            if (derivations.length > 0) {
+                move_seed_cb();
+            }
+            deactivate_xpubs();
+            derive_all(savedseed, seedid);
+            savecurrencies(true);
         }
-        deactivate_xpubs();
-        derive_all(savedseed, seedid);
-        savecurrencies(true);
+        enc_s(seed_object);
     }
-    enc_s(seed_object);
     if (phraseverified === true) {
         // save as verified
         let initdat = br_get_local("init", true),

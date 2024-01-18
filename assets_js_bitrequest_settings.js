@@ -1,6 +1,7 @@
 //globals
 const deviceid = hashcode(getdevicetype() + navigator.appName + navigator.appCodeName);
 let caches,
+    backup_active,
     resd = {};
 
 $(document).ready(function() {
@@ -835,7 +836,7 @@ function trigger_restore() {
         lastbudevice = backupnode.data("device"),
         lastbackupdevice = (lastbudevice == "folder-open") ? "" : "google-drive",
         lastbackupstring = (lastbackup) ? "<p class='icon-" + lastbackupdevice + "'>Last backup:<br/><span class='icon-" + lastbudevice + "'>" + lastbackup + "</span></p>" : "",
-        gd_active = (GD_pass().pass) ? true : false,
+        gd_active = GD_pass().pass,
         showhidegd = (gd_active === true) ? "display:none" : "display:block",
         ddat = [{
                 "div": {
@@ -888,10 +889,9 @@ function restorebackup() {
             filetype = file.type;
         backup_filename = file.name;
         if (filesize > 5242880) {
-            let filesizewarningtext = "Filesize too big";
-            topnotify(filesizewarningtext);
-            popnotify(filesizewarningtext);
-            return false;
+            n.preventDefault();
+            popnotify("error", "Filesize too big");
+            return
         }
         if (filetype == "application/json") {
             let reader = new FileReader();
@@ -903,8 +903,7 @@ function restorebackup() {
             return
         }
         let filetypewarningtext = "Filetype '" + filetype + "' not supported";
-        topnotify(filetypewarningtext);
-        return false;
+        popnotify("error", filetypewarningtext);
     })
 }
 
