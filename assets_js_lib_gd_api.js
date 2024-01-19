@@ -84,10 +84,10 @@ function fetch_creds(k) {
                         let ga_token = result.access_token;
                         if (ga_token) {
                             let jt = {
-	                            "created": now(),
-	                            "active": true,
-	                            "access_token": ga_token,
-	                            "expires_in": result.expires_in
+                                "created": now(),
+                                "active": true,
+                                "access_token": ga_token,
+                                "expires_in": result.expires_in
                             };
                             br_set_local("dat", JSON.stringify(jt));
                             let rt = result.refresh_token;
@@ -121,7 +121,7 @@ function fetch_creds(k) {
 function fetch_access(rt, callback) {
     if (rt) {
         api_proxy({
-	        "custom": "fetch_creds",
+            "custom": "fetch_creds",
             "api_url": true,
             "proxy": true,
             "refresh_token": rt,
@@ -134,14 +134,14 @@ function fetch_access(rt, callback) {
                     if (result) {
                         let ga_token = result.access_token;
                         if (ga_token) {
-	                        let jt = {
-	                            "created": now(),
-	                            "active": true,
-	                            "access_token": ga_token,
-	                            "expires_in": result.expires_in
+                            let jt = {
+                                "created": now(),
+                                "active": true,
+                                "access_token": ga_token,
+                                "expires_in": result.expires_in
                             };
                             br_set_local("dat", JSON.stringify(jt));
-							refcb(callback);
+                            refcb(callback);
                         }
                         let error = result.error;
                         if (error) {
@@ -684,6 +684,6 @@ function refresh_t() {
     }
     let rt = rt_obj();
     if (rt) {
-	    fetch_access(lnurl_decode_c(rt));
+        fetch_access(lnurl_decode_c(rt));
     }
 }
