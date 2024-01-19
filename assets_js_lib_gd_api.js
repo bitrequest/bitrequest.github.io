@@ -3,7 +3,6 @@ const scope = "https://www.googleapis.com/auth/drive.appdata",
     redirect_uri = w_loc.origin + w_loc.pathname + "?p=settings";
 
 $(document).ready(function() {
-    console.log(redirect_uri);
     init_access();
     // t_expired
     // fetch_creds
@@ -30,6 +29,7 @@ $(document).ready(function() {
     deletefiletrigger()
     // deletefile
     // GD_pass
+    refresh_t();
 });
 
 // ** Google api **
@@ -45,11 +45,6 @@ function init_access(ak) {
         return
     }
     if (!p.active) {
-        return
-    }
-    let expired = p.expired;
-    if (expired) {
-        t_expired(expired);
         return
     }
 }
@@ -92,11 +87,12 @@ function fetch_creds(k) {
                         }
                         let ga_token = result.access_token;
                         if (ga_token) {
-                            let jt = {};
-                            jt.created = now();
-                            jt.active = true;
-                            jt.access_token = ga_token;
-                            jt.expires_in = result.expires_in;
+                            let jt = {
+	                            "created": now(),
+	                            "active": true,
+	                            "access_token": ga_token,
+	                            "expires_in": result.expires_in
+                            };
                             br_set_local("dat", JSON.stringify(jt));
                             let rt = result.refresh_token;
                             if (rt) {
@@ -129,7 +125,7 @@ function fetch_creds(k) {
 function fetch_access(rt, callback) {
     if (rt) {
         api_proxy({
-            "custom": "fetch_creds",
+	        "custom": "fetch_creds",
             "api_url": true,
             "proxy": true,
             "refresh_token": rt,
@@ -148,17 +144,16 @@ function fetch_access(rt, callback) {
                             notify(error + em);
                             return
                         }
-                        let access_token = result.access_token;
-                        if (access_token) {
-                            let bdat = lca_obj();
-                            if (bdat) {
-                                bdat.access_token = access_token;
-                                bdat.expires_in = result.expires_in;
-                                bdat.created = now();
-                                bdat.active = true;
-                                br_set_local("dat", JSON.stringify(bdat));
-                                refcb(callback);
-                            }
+                        let ga_token = result.access_token;
+                        if (ga_token) {
+	                        let jt = {
+	                            "created": now(),
+	                            "active": true,
+	                            "access_token": ga_token,
+	                            "expires_in": result.expires_in
+                            };
+                            br_set_local("dat", JSON.stringify(jt));
+							refcb(callback);
                         }
                     }
                 }
@@ -675,4 +670,15 @@ function GD_pass() {
         }
     }
     return jt;
+}
+
+function refresh_t() {
+    let lca = lca_obj();
+    if (lca) {
+        return
+    }
+    let rt = rt_obj();
+    if (rt) {
+	    fetch_access(lnurl_decode_c(rt));
+    }
 }

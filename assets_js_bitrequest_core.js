@@ -4263,7 +4263,7 @@ function save_cc_settings(currency, add) {
 
 function updatechanges(key, add, nit) {
     let p = GD_pass();
-    if (p && !nit === true) {
+    if (p.pass && !nit === true) {
         init_uad(p);
         return
     }
@@ -4309,10 +4309,18 @@ function change_alert() {
     }
     let total_changes = get_total_changes();
     if (total_changes > 0) {
-        $("#alert > span").text(total_changes).attr("title", "You have " + total_changes + " changes in your app");
+	    $("#alert > span").text(total_changes).attr("title", "You have " + total_changes + " changes in your app");
         setTimeout(function() {
             body.addClass("haschanges");
         }, 2500);
+        if (total_changes == 20 || total_changes == 50 || total_changes == 150 || total_changes == 200 || total_changes == 250) {
+	        canceldialog();
+	        let timeout = setTimeout(function() {
+	             backupdatabase();
+	        }, 3000, function() {
+	            clearTimeout(timeout);
+	        });
+        }
     }
 }
 
