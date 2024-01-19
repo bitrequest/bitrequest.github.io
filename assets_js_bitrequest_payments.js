@@ -1298,7 +1298,7 @@ function getpayment(ccrateeuro, ccapi) {
                         <span class='quote'>(</span>\
                         <span id='sharelcinputmirror' class='lcmirror mirrordiv'>\
                         <span>" + fiatcurrencyvalue + "</span>\
-                        <input value='" + fiatcurrencyvaluelet + "' step='" + steps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
+                        <input value='" + fiatcurrencyvaluelet + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
                     </span>\
                     <span id='sharelcname'>" + currencynamestring + "</span>\
                     <span class='quote'>)</span>\
@@ -1978,29 +1978,34 @@ function validatesteps() {
             playsound(funk);
             blocktyping = false;
             e.preventDefault();
-            return false;
+            return
         }
         let thisnode = $(this),
             thisvalue = thisnode.val(),
             keycode = e.keyCode;
-        if (keycode === 188 || keycode === 190 || keycode === 110) { // prevent double commas and dots
+        if (keycode === 188 || keycode === 190 || keycode === 108 || keycode === 110) { // prevent double commas and dots
+            if (thisvalue.indexOf(".") > 0 || thisvalue.indexOf(",") > 0) {
+                e.preventDefault();
+                return
+            }
             if (e.target.validity.valid === false || thisnode.hasClass("satinput")) { //test input patern and steps attributes
                 e.preventDefault();
-                return false;
+                return
             }
         } else {
-            if (keycode === 8 || keycode === 39 || keycode === 37 || keycode === 91 || keycode === 17 || e.metaKey || e.ctrlKey) { //alow backspace, comma and period, arrowright, arrowleft, command, ctrl
+            if (keycode === 8 || keycode === 37 || keycode === 39 || keycode === 91 || keycode === 17 || e.metaKey || e.ctrlKey) { //alow backspace, arrowright, arrowleft, comma and period, command, ctrl
             } else {
                 if ((keycode > 47 && keycode < 58) || (keycode >= 96 && keycode < 106)) { //only allow numbers
                     if (e.target.validity.valid === false) { //test input patern and steps attributes
-                        if (document.getSelection().toString().replace(",", ".") !== thisvalue.replace(",", ".")) {
+                        let stostr = document.getSelection().toString();
+                        if (stostr.replace(",", ".") !== thisvalue.replace(",", ".")) {
                             e.preventDefault();
-                            return false;
+                            return
                         }
                     }
                 } else {
                     e.preventDefault();
-                    return false;
+                    return
                 }
             }
         }
