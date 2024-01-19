@@ -34,7 +34,7 @@ $auth_token = $apikey ? $apikey : $accestoken;
 
 // Construct headers
 if (isset($proxyheaders) || $method == "POST" || $bearer) {
-	$postheaders = array(
+    $postheaders = array(
         "Content-Type: application/json"
     );
     if (isset($payload)) {
@@ -50,12 +50,12 @@ if (isset($proxyheaders) || $method == "POST" || $bearer) {
 // Add Authorization header if needed
 if ($bearer) {
     if ($auth_token) {
-	    if ($bearer == "amberdata") {
-        	$postheaders[] = "x-api-key: " . $auth_token;
-    	}
-    	else {
-	    	$postheaders[] = "Authorization: Bearer " . $auth_token;
-    	}
+        if ($bearer == "amberdata") {
+            $postheaders[] = "x-api-key: " . $auth_token;
+        }
+        else {
+            $postheaders[] = "Authorization: Bearer " . $auth_token;
+        }
     }
     if ($bearer == "tls_wildcard") {
         $postheaders["tls_wildcard"] = true;
@@ -84,7 +84,7 @@ if ($custom) {
         return;
     }
     if ($custom == "add") {
-	    $result = api(null, json_encode($postdata), null, 0, "1d", null, null);
+        $result = api(null, json_encode($postdata), null, 0, "1d", null, null);
         echo json_encode([
             "ping" => $result
         ]);
@@ -114,29 +114,10 @@ if ($custom) {
         return;
     }
     if ($custom == "fetch_creds") {
-	    $dat = [
-		    "MIME-type" => "application/x-www-form-urlencoded; charset=UTF-8",
-		    "client_id" => $keys["googleauth"],
-		    "client_secret" => $keys["google_secret"],
-		    "code" => $postdata["code"],
-		    "redirect_uri" => $postdata["redirect_uri"],
-		    "grant_type" => "authorization_code"
-		];
-		$result = api("https://oauth2.googleapis.com/token", $dat, null, 0, "1d", null, null);
-        echo json_encode([
-            "ping" => $result
-        ]);
-        return;
-    }
-    if ($custom == "fetch_access") {
-	    $dat = [
-		    "MIME-type" => "application/x-www-form-urlencoded; charset=UTF-8",
-		    "client_id" => $keys["googleauth"],
-		    "client_secret" => $keys["google_secret"],
-		    "refresh_token" => $postdata["refresh_token"],
-		    "grant_type" => "refresh_token"
-		];
-		$result = api("https://oauth2.googleapis.com/token", $dat, null, 0, "1d", null, null);
+        $postdata["MIME-type"] = "application/x-www-form-urlencoded; charset=UTF-8";
+        $postdata["client_id"] = $keys["googleauth"];
+        $postdata["client_secret"] = $keys["google_secret"];
+        $result = api("https://oauth2.googleapis.com/token", $postdata, null, 0, "1d", null, null);
         echo json_encode([
             "ping" => $result
         ]);

@@ -74,7 +74,8 @@ function fetch_creds(k) {
             "api_url": true,
             "proxy": true,
             "code": decodeURIComponent(k),
-            "redirect_uri": redirect_uri
+            "redirect_uri": redirect_uri,
+            "grant_type": "authorization_code"
         }).done(function(e) {
             if (e) {
                 let data = br_result(e);
@@ -128,10 +129,11 @@ function fetch_creds(k) {
 function fetch_access(rt, callback) {
     if (rt) {
         api_proxy({
-            "custom": "fetch_access",
+            "custom": "fetch_creds",
             "api_url": true,
             "proxy": true,
-            "refresh_token": rt
+            "refresh_token": rt,
+            "grant_type": "refresh_token"
         }).done(function(e) {
             if (e) {
                 let data = br_result(e);
