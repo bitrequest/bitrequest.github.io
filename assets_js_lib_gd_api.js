@@ -10,6 +10,7 @@ $(document).ready(function() {
     // refcb
     // lca_obj
     // init_login_dialog
+    // oauth_pop_delay
     // oauth_pop
     gd_login_trigger();
     submit_gdbu_dialog();
@@ -51,12 +52,7 @@ function init_access(ak) {
 
 function t_expired(expired, callback) {
     if (expired == "norefresh") {
-        canceldialog();
-        let timeout = setTimeout(function() {
-            oauth_pop(true);
-        }, 1000, function() {
-            clearTimeout(timeout);
-        });
+        oauth_pop_delay(true);
         return
     }
     fetch_access(lnurl_decode_c(expired), callback);
@@ -136,14 +132,6 @@ function fetch_access(rt, callback) {
                 if (data) {
                     let result = data.result;
                     if (result) {
-                        let error = result.error;
-                        if (error) {
-                            let ed = result.error_description,
-                                em = (ed) ? " || " + ed : "";
-                            console.log(result);
-                            notify(error + em);
-                            return
-                        }
                         let ga_token = result.access_token;
                         if (ga_token) {
 	                        let jt = {
@@ -154,6 +142,19 @@ function fetch_access(rt, callback) {
                             };
                             br_set_local("dat", JSON.stringify(jt));
 							refcb(callback);
+                        }
+                        let error = result.error;
+                        if (error) {
+                            let ed = result.error_description,
+                                em = (ed) ? " || " + ed : "";
+                            console.log(result);
+                            if (ed.indexOf("expired") >= 0 || ed.indexOf("revoked") >= 0) {
+                                br_remove_local("rt");
+                                oauth_pop_delay();
+                                return;
+                            }
+                            notify(error + em);
+                            return
                         }
                     }
                 }
@@ -218,15 +219,19 @@ function init_login_dialog(cb) {
         }
     }
     if ($("#popup").hasClass("showpu")) {
-        canceldialog();
-        let timeout = setTimeout(function() {
-            oauth_pop(cb);
-        }, 1000, function() {
-            clearTimeout(timeout);
-        });
+        oauth_pop_delay(cb);
         return
     }
     oauth_pop(cb);
+}
+
+function oauth_pop_delay(ab) {
+    canceldialog();
+    let timeout = setTimeout(function() {
+        oauth_pop(ab);
+    }, 1200, function() {
+        clearTimeout(timeout);
+    });
 }
 
 function oauth_pop(ab) {
