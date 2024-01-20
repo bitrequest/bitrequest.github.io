@@ -1983,8 +1983,7 @@ function validatesteps() {
         let thisnode = $(this),
             thisvalue = thisnode.val(),
             keycode = e.keyCode;
-        alert(keycode);
-        if (keycode === 188 || keycode === 190 || keycode === 108 || keycode === 110) { // prevent double commas and dots
+        if (keycode === 188 || keycode === 190 || keycode === 108 || keycode === 110 || keycode === 229) { // prevent double commas and dots
             if (thisvalue.indexOf(".") > 0 || thisvalue.indexOf(",") > 0) {
                 e.preventDefault();
                 return
