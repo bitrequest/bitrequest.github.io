@@ -3384,8 +3384,9 @@ function check_useragent() {
             pass = pdat.expired,
             expiresin = pdat.expires_in,
             rtoken = rt_obj(),
-            ei_str = (expiresin > 0) ? " || expires: <span class='number'>" + Math.floor(expiresin / 1000) + " sec </span>" : ""
-            rtstring = (rtoken) ? " || rt: <span class='number'>" + lnurl_decode_c(rtoken).slice("0, 8") + "... </span>" : "",
+            ei_str = (expiresin > 0) ? " || expires: <span class='number'>" + Math.floor(expiresin / 1000) + " sec </span>" : "",
+            hastoken = (rtoken) ? "true" : "false",
+            rtstring = " || rt: <span class='number'> " + hastoken + "</span>",
             ddat = [{
                 "div": {
                     "class": "popform",
