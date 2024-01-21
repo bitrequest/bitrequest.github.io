@@ -4263,9 +4263,7 @@ function save_cc_settings(currency, add) {
 
 function updatechanges(key, add, nit) {
     let p = GD_pass();
-    if (p.active === false) {
-    }
-    else {
+    if (p.active === false) {} else {
         if (p.pass) {
             updateappdata(p);
             return
@@ -4274,16 +4272,16 @@ function updatechanges(key, add, nit) {
             t_expired(p.expired, "uad");
             return
         }
-        if (add === true) {
-            let cc = changes[key],
-                cc_correct = (cc) ? cc : 0;
-            changes[key] = cc_correct + 1;
-            savechangesstats();
-            if (nit == "noalert") {
-                return
-            }
-            change_alert();
+    }
+    if (add === true) {
+        let cc = changes[key],
+            cc_correct = (cc) ? cc : 0;
+        changes[key] = cc_correct + 1;
+        savechangesstats();
+        if (nit == "noalert") {
+            return
         }
+        change_alert();
     }
 }
 

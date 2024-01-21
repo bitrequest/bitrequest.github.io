@@ -198,32 +198,23 @@ function rt_obj() {
     return false;
 }
 
-function init_login_dialog(cb) {
+function init_login_dialog(p) {
     if (hostlocation == "local") {
         notify("GoogleAuth not available");
-        return
-    }
-    let p = GD_pass();
-    if (p.pass) {
         return
     }
     if (p.expired) {
         t_expired(p.expired, "gcb");
         return
     }
-    let active = p.active;
-    if (active === false) {
-        if (p.token) {
-            activate();
-            gdlogin_callbacks();
-            return
-        }
-    }
-    if ($("#popup").hasClass("showpu")) {
-        oauth_pop_delay(cb);
+    if (p.active) {
+        g_login();
         return
     }
-    oauth_pop(cb);
+    if (p.token) {
+        activate();
+        gdlogin_callbacks();
+    }
 }
 
 function oauth_pop_delay(ab) {
@@ -407,7 +398,7 @@ function Drive_Backup_trigger() {
             g_logout();
             return
         }
-        init_login_dialog();
+        init_login_dialog(p);
     })
 }
 
@@ -584,7 +575,7 @@ function listappdata() {
         });
         return
     }
-    init_login_dialog();
+    init_login_dialog(p);
 }
 
 function deletefiletrigger() {
@@ -599,7 +590,7 @@ function deletefiletrigger() {
             }
             return
         }
-        init_login_dialog();
+        init_login_dialog(p);
     })
 }
 
