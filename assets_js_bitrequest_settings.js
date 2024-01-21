@@ -3380,6 +3380,8 @@ function isteaminvite(jsonobject) {
 function check_useragent() {
     $(document).on("click", "#ua", function() {
         let refmatch = (ref_match) ? "<span class='number'>" + referrer + "</span>" : "<span class='number'>" + false + "</span>",
+            rtoken = rt_obj(),
+            rtstring = (rtoken) ? " || rt: <span class='number'>" + rtoken.slice("0, 8") + "... </span>" : "",
             ddat = [{
                 "div": {
                     "class": "popform",
@@ -3392,7 +3394,7 @@ function check_useragent() {
                         {
                             "div": {
                                 "class": "pre",
-                                "content": "android_standalone : <span class='number'>" + android_standalone + "</span> || ios_standalone : <span class='number'>" + ios_standalone + "</span> || referrer : " + refmatch + " || is_android_app: <span class='number'>" + is_android_app + "</span> || is_ios_app: <span class='number'>" + is_ios_app + "</span>"
+                                "content": "android_standalone : <span class='number'>" + android_standalone + "</span> || ios_standalone : <span class='number'>" + ios_standalone + "</span> || referrer : " + refmatch + " || is_android_app: <span class='number'>" + is_android_app + "</span> || is_ios_app: <span class='number'>" + is_ios_app + "</span>" + rtstring
                             }
                         }
                     ]

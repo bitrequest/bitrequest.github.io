@@ -49,6 +49,9 @@ function init_access(ak) {
 }
 
 function t_expired(expired, callback) {
+    if (hostlocation == "local") {
+        return
+    }
     if (expired == "norefresh") {
         oauth_pop_delay(true);
         return
