@@ -3380,8 +3380,12 @@ function isteaminvite(jsonobject) {
 function check_useragent() {
     $(document).on("click", "#ua", function() {
         let refmatch = (ref_match) ? "<span class='number'>" + referrer + "</span>" : "<span class='number'>" + false + "</span>",
+            pdat = GD_pass(),
+            pass = pdat.expired,
+            expiresin = pdat.expires_in,
             rtoken = rt_obj(),
-            rtstring = (rtoken) ? " || rt: <span class='number'>" + rtoken.slice("0, 8") + "... </span>" : "",
+            ei_str = (expiresin > 0) ? " || expires: <span class='number'>" + Math.floor(expiresin / 1000) + " sec </span>" : ""
+            rtstring = (rtoken) ? " || rt: <span class='number'>" + lnurl_decode_c(rtoken).slice("0, 8") + "... </span>" : "",
             ddat = [{
                 "div": {
                     "class": "popform",
@@ -3394,7 +3398,7 @@ function check_useragent() {
                         {
                             "div": {
                                 "class": "pre",
-                                "content": "android_standalone : <span class='number'>" + android_standalone + "</span> || ios_standalone : <span class='number'>" + ios_standalone + "</span> || referrer : " + refmatch + " || is_android_app: <span class='number'>" + is_android_app + "</span> || is_ios_app: <span class='number'>" + is_ios_app + "</span>" + rtstring
+                                "content": "android_standalone : <span class='number'>" + android_standalone + "</span> || ios_standalone : <span class='number'>" + ios_standalone + "</span> || referrer : " + refmatch + " || is_android_app: <span class='number'>" + is_android_app + "</span> || is_ios_app: <span class='number'>" + is_ios_app + "</span>" + ei_str + rtstring
                             }
                         }
                     ]

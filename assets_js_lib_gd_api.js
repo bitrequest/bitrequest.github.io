@@ -641,10 +641,14 @@ function GD_pass() {
         can_refresh = (rtoken) ? rtoken : "norefresh";
     if (bdat) {
         let token = bdat.access_token,
-            expired = ((now() - bdat.created) + 60000) > (bdat.expires_in * 1000),
+            ttime = (now() - bdat.created) + 60000,
+            extime = bdat.expires_in * 1000,
+            expired = (ttime > extime),
+            expirin = (extime - ttime),
             active = bdat.active;
         if (token) {
             jt.token = token;
+            jt.expires_in = expirin;
             if (expired) {
                 jt.expired = can_refresh;
             }
