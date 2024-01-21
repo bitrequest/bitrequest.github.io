@@ -22,7 +22,6 @@ $(document).ready(function() {
     // deactivate
     // gdlogout_callbacks
     Drive_Backup_trigger();
-    // init_uad
     // updateappdata
     // createfile
     lad_trigger();
@@ -30,7 +29,6 @@ $(document).ready(function() {
     deletefiletrigger()
     // deletefile
     // GD_pass
-    refresh_t();
 });
 
 // ** Google api **
@@ -410,22 +408,6 @@ function Drive_Backup_trigger() {
     })
 }
 
-function init_uad(p) {
-    let active = p.active;
-    if (active === false) {
-        return
-    }
-    if (p.pass) {
-        updateappdata(p);
-        return
-    }
-    let expired = p.expired;
-    if (expired) {
-        t_expired(expired, "uad");
-        return
-    }
-}
-
 function updateappdata(p) {
     let gd_timer = br_get_session("gd_timer"); // prevent Ddos
     if (gd_timer) {
@@ -651,7 +633,9 @@ function GD_pass() {
             "expired": false,
             "pass": false
         },
-        bdat = lca_obj();
+        bdat = lca_obj(),
+        rtoken = rt_obj(),
+        can_refresh = (rtoken) ? rtoken : "norefresh";
     if (bdat) {
         let token = bdat.access_token,
             expired = ((now() - bdat.created) + 60000) > (bdat.expires_in * 1000),
@@ -659,8 +643,6 @@ function GD_pass() {
         if (token) {
             jt.token = token;
             if (expired) {
-                let rtoken = rt_obj(),
-                    can_refresh = (rtoken) ? rtoken : "norefresh";
                 jt.expired = can_refresh;
             }
             if (active) {
@@ -673,17 +655,8 @@ function GD_pass() {
         } else {
             html.removeClass("gdauth");
         }
+    } else {
+        jt.expired = can_refresh;
     }
     return jt;
-}
-
-function refresh_t() {
-    let lca = lca_obj();
-    if (lca) {
-        return
-    }
-    let rt = rt_obj();
-    if (rt) {
-        fetch_access(lnurl_decode_c(rt));
-    }
 }

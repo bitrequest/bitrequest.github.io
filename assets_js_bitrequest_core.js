@@ -4263,8 +4263,14 @@ function save_cc_settings(currency, add) {
 
 function updatechanges(key, add, nit) {
     let p = GD_pass();
-    if (p.pass && !nit === true) {
-        init_uad(p);
+    if (p.pass) {
+        if (p.active === false) {} else {
+            updateappdata(p);
+            return
+        }
+    }
+    if (p.expired) {
+        t_expired(p.expired, "uad");
         return
     }
     if (add === true) {
@@ -4295,9 +4301,6 @@ function renderchanges() {
     let changescache = br_get_local("changes", true);
     if (changescache) {
         changes = changescache;
-        setTimeout(function() { // wait for Googleauth to load
-            change_alert();
-        }, 700);
         return
     }
     changes = {};
