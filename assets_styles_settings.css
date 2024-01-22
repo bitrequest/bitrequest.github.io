@@ -1223,7 +1223,10 @@ body.seed_dialog #seed_panel {
 }
 
 #ua {
+	display:inline-block;
 	cursor:pointer;
+	padding:0.6em 0;
+	font-size:110%;
 }
 
 #uabox .number {color: #88a8c5;}
