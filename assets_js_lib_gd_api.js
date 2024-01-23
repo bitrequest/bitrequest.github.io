@@ -53,7 +53,7 @@ function t_expired(expired, callback) {
         return
     }
     if (expired == "norefresh") {
-        if (callback = "gcb") {
+        if (callback == "gcb") {
             g_login();
             return
         }
