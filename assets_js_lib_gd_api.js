@@ -53,6 +53,10 @@ function t_expired(expired, callback) {
         return
     }
     if (expired == "norefresh") {
+        if (callback = "gcb") {
+            g_login();
+            return
+        }
         oauth_pop_delay(true);
         return
     }
@@ -326,7 +330,8 @@ function g_login() {
             return
         }
     }
-    let login_uri = "https://accounts.google.com/o/oauth2/auth?client_id=" + to.ga_id + "&redirect_uri=" + redirect_uri + "&response_type=code&scope=" + scope + "&access_type=offline";
+    let consent = (p.expired == "norefresh") ? "&prompt=consent" : "",
+        login_uri = "https://accounts.google.com/o/oauth2/auth?client_id=" + to.ga_id + "&redirect_uri=" + redirect_uri + "&response_type=code&scope=" + scope + "&access_type=offline" + consent;
     w_loc.href = login_uri;
 }
 
