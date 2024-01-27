@@ -598,7 +598,7 @@ function finishfunctions() {
     //expand_shoturl
     //expand_bitly
     //ln_connect
-
+    //click_pop
     //add_serviceworker
 }
 
@@ -4869,6 +4869,9 @@ function check_params(gets) {
         expand_shoturl(lgets.i);
         return
     }
+    if (lgets.cl) {
+        click_pop(lgets.cl);
+    }
     let page = lgets.p;
     if (page == "settings") {
         if (lgets.ro) {
@@ -5063,6 +5066,14 @@ function ln_connect(gets) {
         return
     }
     notify("Invalid format");
+}
+
+function click_pop(fn) {
+    let timeout = setTimeout(function() {
+        $("#" + fn).trigger("click");
+    }, 1200, function() {
+        clearTimeout(timeout);
+    });
 }
 
 // add serviceworker

@@ -770,8 +770,8 @@ function complilebackup() {
             key == "bitrequest_k" ||
             key == "bitrequest_awl" ||
             key == "bitrequest_dat" ||
-            key == "bitrequest_tp") {} else if (key == "bitrequest_bpdat") { // only backup ecrypted seed
-            let not_verified = (io.bipv != "yes"); // add to google drive when not verified
+            key == "bitrequest_tp") {} else if (key == "bitrequest_bpdat") { // only backup encrypted seed
+            let not_verified = (io.bipv != "yes"); // backup when not verified
             if (not_verified || (test_derive === true && get_setting("backup", "sbu") === true)) {
                 let val_obj = JSON.parse(value);
                 val_obj.dat = null;
