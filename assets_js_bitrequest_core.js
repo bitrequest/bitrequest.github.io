@@ -4091,7 +4091,7 @@ function appendrequest(rd) {
         timeformat = "<span class='rq_month'>" + localtimeobject.toLocaleString("en-us", {
             "month": "short"
         }) + "</span> <span class='rq_day'>" + localtimeobject.getDate() + "</span>",
-        ptsformatted = fulldateformatmarkup(new Date(paymenttimestamp - timezone), "en-us"),
+        ptsformatted = fulldateformat(new Date(paymenttimestamp - timezone), "en-us", true),
         amount_short_rounded = amountshort(amount, receivedamount, fiatvalue, iscrypto),
         amount_short_span = (insufficient === true) ? " (" + amount_short_rounded + " " + uoa_upper + " short)" : "",
         amount_short_cc_span = (iscrypto === true) ? amount_short_span : "",

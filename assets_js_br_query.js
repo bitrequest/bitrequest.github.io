@@ -452,10 +452,15 @@ function weekdays(day) {
     };
 }
 
-function fulldateformat(date, lng) {
-    return weekdays()[date.getDay()] + " " + date.toLocaleString(lng, {
+function fulldateformat(date, lng, markup) {
+    let year = date.getFullYear(),
+        currentyear = new Date().getFullYear(),
+        yearstring = (year == currentyear) ? "" : ", " + year,
+        time = formattime(date),
+        time_str = (markup) ? " | <div class='fdtime'>" + time + "</div>" : " | " + time;
+    return weekdays()[date.getDay()] + ", " + date.toLocaleString(lng, {
         "month": "long"
-    }) + " " + date.getDate() + " | " + formattime(date);
+    }) + " " + date.getDate() + yearstring + time_str;
 }
 
 function fulldateformatmarkup(date, lng) {
