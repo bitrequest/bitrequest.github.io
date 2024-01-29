@@ -3017,9 +3017,9 @@ function updaterequest(ua, save) {
         metalist.find(".payday.pd_fiat .fiatvalue").text(" " + trimdecimals(ua.fiatvalue, 2));
     }
     if (ua.paymenttimestamp) {
-        let fulldateformat = fulldateformat(new Date(ua.paymenttimestamp - timezone), "en-us", true);
-        metalist.find(".payday.pd_paydate span.paydate").html(" " + fulldateformat);
-        metalist.find(".payday.pd_fiat strong span.pd_fiat").html(" " + fulldateformat);
+        let fdf = fulldateformat(new Date(ua.paymenttimestamp - timezone), "en-us", true);
+        metalist.find(".payday.pd_paydate span.paydate").html(" " + fdf);
+        metalist.find(".payday.pd_fiat strong span.pd_fiat").html(" " + fdf);
     }
     if (ua.confirmations) {
         let meta_status = metalist.find("li.meta_status"),
