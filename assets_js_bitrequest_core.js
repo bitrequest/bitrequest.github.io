@@ -1265,6 +1265,7 @@ function get_address_warning(id, address, pass_dat) {
 }
 
 function finishtxfunction(currency, thisaddress, savedurl, title) {
+    prevkey = false;
     let gets = geturlparameters();
     if (gets.xss) {
         return

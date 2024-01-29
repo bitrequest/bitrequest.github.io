@@ -20,7 +20,8 @@ let txid,
     helper = null,
     request_timer,
     blocktyping = false,
-    lnd_ph = false;
+    lnd_ph = false,
+    prevkey = false;
 
 $(document).ready(function() {
     wake_panel();
@@ -1984,31 +1985,41 @@ function validatesteps() {
             thisvalue = thisnode.val(),
             keycode = e.keyCode;
         if (keycode === 188 || keycode === 190 || keycode === 108 || keycode === 110 || keycode === 229) { // prevent double commas and dots
-            if (thisvalue.indexOf(".") > 0 || thisvalue.indexOf(",") > 0) {
-                e.preventDefault();
-                return
-            }
-            if (e.target.validity.valid === false || thisnode.hasClass("satinput")) { //test input patern and steps attributes
-                e.preventDefault();
-                return
-            }
-        } else {
-            if (keycode === 8 || keycode === 37 || keycode === 39 || keycode === 91 || keycode === 17 || e.metaKey || e.ctrlKey) { //alow backspace, arrowright, arrowleft, comma and period, command, ctrl
-            } else {
-                if ((keycode > 47 && keycode < 58) || (keycode >= 96 && keycode < 106)) { //only allow numbers
-                    if (e.target.validity.valid === false) { //test input patern and steps attributes
-                        let stostr = document.getSelection().toString();
-                        if (stostr.replace(",", ".") !== thisvalue.replace(",", ".")) {
-                            e.preventDefault();
-                            return
-                        }
-                    }
-                } else {
+            let v_length = thisvalue.length;
+            if (v_length) {
+                if (prevkey || thisvalue.indexOf(".") > -1 || thisvalue.indexOf(",") > -1 || e.target.validity.valid === false || thisnode.hasClass("satinput")) {
                     e.preventDefault();
-                    return
+                }
+                prevkey = true;
+                return
+            }
+            e.preventDefault();
+            return
+        }
+        if (keycode === 8) { // alow backspace
+            prevkey = false;
+            return
+        }
+        let command = (keycode === 91 || keycode === 17 || e.metaKey || e.ctrlKey);
+        if (command) {
+            if (keycode === 65) { // unblock comma on select all
+                prevkey = false;
+            }
+            return
+        }
+        if (keycode === 37 || keycode === 39) { // arrowleft, arrowright
+            return
+        }
+        if ((keycode > 47 && keycode < 58) || (keycode >= 96 && keycode < 106)) { //only allow numbers
+            if (e.target.validity.valid === false) { //test input patern and steps attributes
+                let stostr = document.getSelection().toString();
+                if (stostr.replace(",", ".") !== thisvalue.replace(",", ".")) {
+                    e.preventDefault();
                 }
             }
+            return
         }
+        e.preventDefault();
     })
 }
 
