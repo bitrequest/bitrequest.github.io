@@ -2841,12 +2841,6 @@ function saverequest(direct) {
         br_remove_local("editurl");
         br_remove_session("lndpid");
     }
-    if (body.hasClass("ios") || hostlocation == "local") {} else {
-        let rq_storage = br_get_local("requests");
-        if (!rq_storage || rq_storage == "[]") {
-            gd_init = true;
-        }
-    }
 }
 
 function pendingdialog(pr) { // show pending dialog if tx is pending
