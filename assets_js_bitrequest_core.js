@@ -447,7 +447,6 @@ function finishfunctions() {
     newrequest_alias();
     newrequest();
     confirm_ms_newrequest();
-    //newrequest_cb
     showrequests();
     showrequests_inlne();
     editaddresstrigger();
@@ -1267,11 +1266,15 @@ function get_address_warning(id, address, pass_dat) {
 }
 
 function finishtxfunction(currency, thisaddress, savedurl, title) {
+    let gets = geturlparameters();
+    if (gets.xss) {
+        return
+    }
     let cd = getcoindata(currency),
         currencysettings = $("#currencysettings").data(),
         c_default = currencysettings.default,
         currencysymbol = (c_default === true && offline === false) ? currencysettings.currencysymbol : cd.ccsymbol,
-        currentpage = geturlparameters().p,
+        currentpage = gets.p,
         currentpage_correct = (currentpage) ? "?p=" + currentpage + "&payment=" : "?payment=",
         prefix = currentpage_correct + currency + "&uoa=",
         newlink = prefix + currencysymbol + "&amount=0" + "&address=" + thisaddress,
@@ -2882,7 +2885,8 @@ function newrequest() {
                 }
             }
         }
-        newrequest_cb(currency, ccsymbol, address, title);
+        canceloptions();
+        finishtxfunction(currency, address, null, title);
     });
 }
 
@@ -2904,21 +2908,9 @@ function confirm_ms_newrequest() {
         }
         canceloptions();
         canceldialog();
-        newrequest_cb(d_dat.currency, d_dat.ccsymbol, d_dat.address, d_dat.title);
+        finishtxfunction(d_dat.currency, d_dat.address, null, d_dat.title);
         return
     })
-}
-
-function newrequest_cb(currency, ccsymbol, address, title) {
-    let gets = geturlparameters();
-    if (gets.xss) {
-        return
-    }
-    let thishref = "?p=" + gets.p + "&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0&address=" + address;
-    br_set_local("editurl", thishref); // to check if request is being edited
-    canceloptions();
-    remove_flip(); // reset request card facing front
-    openpage(thishref, title, "payment");
 }
 
 function showrequests() {
