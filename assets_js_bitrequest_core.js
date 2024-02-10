@@ -2474,7 +2474,7 @@ function validateaddress(ad, vk) {
                         loadpage("?p=" + currency);
                     }
                 }
-                new_address = addinputval;
+                new_address = addinputval + currency;
                 ad.address = addinputval,
                     ad.label = labelinputval,
                     ad.a_id = ccsymbol + index,
