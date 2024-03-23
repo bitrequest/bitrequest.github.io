@@ -1925,10 +1925,10 @@ function eth_params(set_url, cachetime, method, params) {
 function handle_rpc_fails_list(rd, error, rpc_data, thispayment) {
     let api_url = rpc_data.url,
         requestid = rd.requestid,
-        nextrpc = get_next_rpc(thispayment, api_url, requestid);
+        nextrpc = get_next_rpc(thispayment, api_url, requestid),
+        api_name = rpc_data.name,
+        nextapi = get_next_api(thispayment, api_name, requestid);
     if (nextrpc === false) {
-        let api_name = rpc_data.name,
-            nextapi = get_next_api(thispayment, api_name, requestid);
         if (nextapi === false) { // try next api
             let next_proxy = get_next_proxy();
             if (next_proxy) {
