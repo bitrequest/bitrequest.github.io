@@ -772,7 +772,7 @@ function get_api_inputs(rd, api_data, api_name) {
                 if (pending == "scanning") { // scan incoming transactions on address
                     api_proxy({
                         "api": api_name,
-                        "search": "getAddressHistory/" + address + "?token=" + rd.token_contract + "&type=transfer",
+                        "search": "getAddressHistory/" + address,
                         "cachetime": 25,
                         "cachefolder": "1h",
                         "params": {
@@ -788,7 +788,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                 $.each(data.operations, function(dat, value) {
                                     let txd = ethplorer_scan_data(value, setconfirmations, ccsymbol),
                                         rt_compensate = (rd.inout == "local" && rd.status == "insufficient") ? request_timestamp - 30000 : request_timestamp; // substract extra 30 seconds (extra compensation)
-                                    if ((str_match(value.to, address) === true) && (txd.transactiontime > rt_compensate) && txd.ccval) {
+                                    if ((str_match(value.to, address) === true) && (txd.transactiontime > rt_compensate) && (rd.token_contract == q_obj(value, "tokenInfo.address")) && txd.ccval) {
                                         let tx_listitem = append_tx_li(txd, rqtype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
