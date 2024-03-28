@@ -1429,7 +1429,7 @@ function getpayment(ccrateeuro, ccapi) {
         set_request_timer();
     }
     if (request.monitored === false) {
-        notify("this currency is not monitored", 500000, "yes");
+        notify("this address is not monitored", 500000, "yes");
     }
     // close loading screen when in iframe
     if (inframe === true) {
@@ -2919,7 +2919,7 @@ function pendingdialog(pr) { // show pending dialog if tx is pending
                 init_xmr_node(34, account, viewkey, null, smart_txhash, true);
                 return
             }
-            notify("this currency is not monitored", 500000, "yes");
+            notify("this address is not monitored", 500000, "yes");
             return
         }
         pick_monitor(smart_txhash, false);

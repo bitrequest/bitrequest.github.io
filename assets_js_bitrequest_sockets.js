@@ -1336,13 +1336,10 @@ function after_poll(rq_init, next_api) {
             blockchair_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts, erc);
             return
         }
-        if (api_name == "ethplorer") {
-            let token_contract = request.token_contract;
-            if (token_contract) {
-                ap_loader();
-                erc20_scan_poll(ccsymbol, set_confirmations, address, request_ts, token_contract);
-                return
-            }
+        if (api_name == "ethplorer" || api_name == "binplorer") {
+            ap_loader();
+            erc20_scan_poll(api_name, ccsymbol, set_confirmations, address, request_ts);
+            return
         }
         if (payment == "kaspa") {
             ap_loader();
@@ -1627,10 +1624,10 @@ function blockchair_scan_poll(payment, api_name, ccsymbol, set_confirmations, ad
     });
 }
 
-function erc20_scan_poll(ccsymbol, set_confirmations, address, request_ts, token_contract) {
+function erc20_scan_poll(api_name, ccsymbol, set_confirmations, address, request_ts) {
     api_proxy({
-        "api": "ethplorer",
-        "search": "getAddressHistory/" + address + "?token=" + token_contract + "&type=transfer",
+        "api": api_name,
+        "search": "getAddressHistory/" + address + "?type=transfer",
         "cachetime": 25,
         "cachefolder": "1h",
         "params": {
@@ -1645,7 +1642,7 @@ function erc20_scan_poll(ccsymbol, set_confirmations, address, request_ts, token
                     txdat;
                 $.each(items, function(dat, value) {
                     let txd = ethplorer_scan_data(value, set_confirmations, ccsymbol);
-                    if ((txd.transactiontime > request_ts) && (str_match(value.to, address) === true) && txd.ccval) {
+                    if ((txd.transactiontime > request_ts) && (str_match(value.to, address) === true) && (str_match(ccsymbol, q_obj(value, "tokenInfo.symbol"))) && txd.ccval) {
                         txdat = txd;
                         detect = true;
                         return
@@ -1655,13 +1652,21 @@ function erc20_scan_poll(ccsymbol, set_confirmations, address, request_ts, token
                     pick_monitor(txdat.txhash, txdat);
                     return
                 }
+                else {
+                    if (api_name == "binplorer") { // don't rescan on last L2 api
+                    }
+                    else {
+                        after_poll_fails(api_name); // scan l2's
+                        return
+                    }
+                }
             }
             close_paymentdialog(true);
             return
         }
-        after_poll_fails("ethplorer");
+        after_poll_fails(api_name);
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        after_poll_fails("ethplorer");
+        after_poll_fails(api_name);
     });
 }
 

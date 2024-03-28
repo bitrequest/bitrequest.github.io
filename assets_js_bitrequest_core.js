@@ -503,6 +503,7 @@ function finishfunctions() {
     //append_coinsetting
     //appendaddress
     //appendrequest
+    //getnetwork
 
     // ** Store data in localstorage **
 
@@ -1853,7 +1854,7 @@ function payment_lookup(request_dat) {
     }
     let currency = request.payment,
         blockexplorer = get_blockexplorer(currency),
-        bu_url = blockexplorer_url(currency, false, request_dat.erc20) + request_dat.addres,
+        bu_url = blockexplorer_url(currency, false, request_dat.erc20) + request_dat.address,
         content = "<div class='formbox'>\
             <h2 class='icon-warning'><span class='icon-qrcode'/>No payment detected</h2>\
             <div id='ad_info_wrap'>\
@@ -1950,7 +1951,8 @@ function recent_requests_list(recent_payments) {
                 cmcid = val.cmcid,
                 erc20 = val.erc20,
                 rq_time = val.rqtime,
-                blockchainurl = blockexplorer_url(currency, false, erc20) + address;
+                source = val.source,
+                blockchainurl = blockexplorer_url(currency, false, erc20, source) + address;
             addresslist += "<li class='rp_li'>" + getcc_icon(cmcid, ccsymbol + "-" + currency, erc20) + "<strong style='opacity:0.5'>" + short_date(rq_time + timezone) + "</strong><br/>\
             <a href='" + blockchainurl + "' target='_blank' class='ref check_recent'>\
             <span class='select'>" + address + "</span> <span class='icon-new-tab'></a></li>";
@@ -2981,7 +2983,7 @@ function removeaddressfunction(trigger) {
 function rec_payments() {
     $(document).on("click", "#rpayments", function() {
         let ad = $(this).closest("ul").data(),
-            blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20);
+            blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20, ad.source);
         if (blockchainurl === undefined) {} else {
             open_blockexplorer_url(blockchainurl + ad.address);
         }
@@ -3020,7 +3022,8 @@ function showtransaction_trigger() {
             }
             let currency = rqli.data("payment"),
                 erc20 = rqli.data("erc20"),
-                blockchainurl = blockexplorer_url(currency, true, erc20);
+                source = rqli.data("source"),
+                blockchainurl = blockexplorer_url(currency, true, erc20, source);
             if (blockchainurl) {
                 open_blockexplorer_url(blockchainurl + txhash);
             }
@@ -3032,7 +3035,7 @@ function showtransactions() {
     $(document).on("click", ".showtransactions", function(e) {
         e.preventDefault();
         let ad = $("#ad_info_wrap").data(),
-            blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20);
+            blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20, ad.source);
         if (blockchainurl) {
             open_blockexplorer_url(blockchainurl + ad.address);
         }
@@ -3205,10 +3208,12 @@ function open_blockexplorer_url(be_link) {
     }
 }
 
-function blockexplorer_url(currency, tx, erc20) {
+function blockexplorer_url(currency, tx, erc20, source) {
+    console.log(source);
     if (erc20 == "true" || erc20 === true) {
-        let tx_prefix = (tx === true) ? "tx/" : "address/";
-        return "https://ethplorer.io/" + tx_prefix;
+        let tx_prefix = (tx === true) ? "tx/" : "address/",
+            b_explorer = (source == "binplorer") ? "https://binplorer.com/" : "https://ethplorer.io/";
+        return b_explorer + tx_prefix;
     }
     let blockexplorer = get_blockexplorer(currency);
     if (blockexplorer) {
@@ -3683,6 +3688,7 @@ function get_pdf_url(rqdat) {
         deter = (iscrypto === true) ? 6 : 2,
         amount_rounded = trimdecimals(amount, deter),
         uoa = rqdat.uoa,
+        source = rqdat.source,
         uoa_upper = uoa.toUpperCase(),
         requestdate = rqdat.requestdate,
         timestamp = rqdat.timestamp,
@@ -3719,6 +3725,10 @@ function get_pdf_url(rqdat) {
     }
     if (exists(txhash)) {
         invd["TxID"] = txhash;
+    }
+    let network = getnetwork(source);
+    if (network) {
+        invd["Network"] = network;
     }
     let set_proxy = d_proxy();
     return set_proxy + "proxy/v1/receipt/?data=" + btoa(JSON.stringify(invd));
@@ -4126,6 +4136,8 @@ function appendrequest(rd) {
         cc_logo = (lightning) ? (txhash && !lnhash) ? cclogo : ln_logo : cclogo,
         rc_address_title = (hybrid) ? "Fallback address" : "Receiving Address",
         address_markup = (lightning && (lnhash || hybrid === false)) ? "" : "<li><p class='address'><strong>" + rc_address_title + ":</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>",
+        network = getnetwork(source),
+        source_markup = (network) ? "<li><p><strong>Network:</strong> " + network + "</p></li>" : "",
         new_requestli = $("<li class='rqli " + requesttypeclass + expiredclass + lnclass + "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status + "' data-address='" + address + "' data-pending='" + pending + "' data-iscrypto='" + iscrypto + "'>\
             <div class='liwrap iconright'>" + cc_logo +
             "<div class='atext'>\
@@ -4155,6 +4167,7 @@ function appendrequest(rd) {
             timestampbox +
             paymentdetails +
             address_markup +
+            source_markup +
             pid_li +
             ia_li +
             "<li class='receipt'><p><span class='icon-file-pdf' title='View receipt'/>Receipt</p></li>" + view_tx_markup +
@@ -4183,6 +4196,10 @@ function appendrequest(rd) {
             }
         });
     }
+}
+
+function getnetwork(source) {
+    return (source == "binplorer") ? "bnb smart chain" : false;
 }
 
 // ** Store data in localstorage **

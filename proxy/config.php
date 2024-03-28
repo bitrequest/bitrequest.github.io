@@ -5,6 +5,7 @@ $keys = array(
 	"coinmarketcap" => "",
 	"fixer" => "",
 	"ethplorer" => "",
+	"binplorer" => "",
 	"blockcypher" => "",
 	"bitly" => "",
 	"firebase" => "",

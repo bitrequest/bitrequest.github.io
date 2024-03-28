@@ -768,11 +768,11 @@ function get_api_inputs(rd, api_data, api_name) {
                 }
                 return
             }
-            if (api_name == "ethplorer") {
+            if (api_name == "ethplorer" || api_name == "binplorer") {
                 if (pending == "scanning") { // scan incoming transactions on address
                     api_proxy({
                         "api": api_name,
-                        "search": "getAddressHistory/" + address,
+                        "search": "getAddressHistory/" + address + "?type=transfer",
                         "cachetime": 25,
                         "cachefolder": "1h",
                         "params": {
@@ -788,16 +788,24 @@ function get_api_inputs(rd, api_data, api_name) {
                                 $.each(data.operations, function(dat, value) {
                                     let txd = ethplorer_scan_data(value, setconfirmations, ccsymbol),
                                         rt_compensate = (rd.inout == "local" && rd.status == "insufficient") ? request_timestamp - 30000 : request_timestamp; // substract extra 30 seconds (extra compensation)
-                                    if ((str_match(value.to, address) === true) && (txd.transactiontime > rt_compensate) && (rd.token_contract == q_obj(value, "tokenInfo.address")) && txd.ccval) {
+                                    if ((str_match(value.to, address) === true) && (txd.transactiontime > rt_compensate) && (str_match(ccsymbol, q_obj(value, "tokenInfo.symbol")) === true) && txd.ccval) {
                                         let tx_listitem = append_tx_li(txd, rqtype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
                                             counter++;
                                         }
+                                        tx_count(statuspanel, counter);
+                                        compareamounts(rd);
                                     }
-                                });
-                                tx_count(statuspanel, counter);
-                                compareamounts(rd);
+                                    else {
+                                        if (api_name == "binplorer") { // don't rescan on last L2 api
+                                        }
+                                        else {
+                                            handle_api_fails_list(rd, "scan", api_data, payment); // scan l2's
+                                            return
+                                        }
+                                    }
+                                });  
                             }
                             return
                         }
@@ -841,6 +849,7 @@ function get_api_inputs(rd, api_data, api_name) {
                                         },
                                         txd = infura_erc20_poll_data(txdata, setconfirmations, ccsymbol);
                                     if (txd.ccval) {
+                                        api_src(thislist, api_data); // !!overwrite
                                         let tx_listitem = append_tx_li(txd, rqtype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
@@ -1386,7 +1395,8 @@ function handle_api_fails_list(rd, error, api_data, thispayment) {
         return
     }
     let api_name = api_data.name,
-        nextapi = get_next_api(thispayment, api_name, requestid);
+        nextapi = get_next_api(thispayment, api_name, requestid),
+        nextrpc;
     if (nextapi === false) {
         let api_url = api_data.url,
             nextrpc = get_next_rpc(thispayment, api_url, requestid);
@@ -1937,8 +1947,11 @@ function handle_rpc_fails_list(rd, error, rpc_data, thispayment) {
             }
             let rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
                 error_data = get_api_error_data(error);
-            api_eror_msg(rpc_id, error_data);
             api_callback(requestid);
+            if (error == "scan") {
+                return
+            }
+            api_eror_msg(rpc_id, error_data);
             return
         }
     }

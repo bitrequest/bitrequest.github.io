@@ -1333,6 +1333,12 @@ const apptitle = "Bitrequest",
                             "display": true
                         },
                         {
+                            "name": "binplorer",
+                            "url": "binplorer.com",
+                            "api": true,
+                            "display": false
+                        },
+                        {
                             "name": "blockchair",
                             "url": "blockchair.com",
                             "api": true,
@@ -1506,6 +1512,13 @@ const apptitle = "Bitrequest",
             {
                 "name": "ethplorer",
                 "base_url": "https://api.ethplorer.io/",
+                "key_param": "apiKey=",
+                "api_key": null,
+                "sign_up": "https://ethplorer.io/wallet/#"
+            },
+            {
+                "name": "binplorer",
+                "base_url": "https://api.binplorer.com/",
                 "key_param": "apiKey=",
                 "api_key": null,
                 "sign_up": "https://ethplorer.io/wallet/#"
@@ -1699,6 +1712,13 @@ const apptitle = "Bitrequest",
             {
                 "name": "ethplorer.io",
                 "url": "https://ethplorer.io/",
+                "prefix": null,
+                "tx_prefix": "tx/",
+                "address_prefix": "address/"
+            },
+            {
+                "name": "binplorer.com",
+                "url": "https://binplorer.com/",
                 "prefix": null,
                 "tx_prefix": "tx/",
                 "address_prefix": "address/"
