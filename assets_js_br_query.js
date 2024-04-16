@@ -15,6 +15,7 @@
 //br_issar
 //q_obj
 //api_proxy
+//c_apiname
 //br_result
 //get_api_url
 //get_next_proxy
@@ -157,9 +158,10 @@ function q_obj(obj, path) {
 
 function api_proxy(ad, p_proxy) {
     let custom_url = (ad.api_url) ? ad.api_url : false,
+        apiname = ad.api,
         aud = (custom_url) ? {} :
         get_api_url({
-            "api": ad.api,
+            "api": apiname,
             "search": ad.search
         });
     if (aud) {
@@ -185,6 +187,7 @@ function api_proxy(ad, p_proxy) {
             return $.ajax(params);
         }
         // use api proxy
+        ad.api = c_apiname(apiname);
         let api_location = "proxy/v1/",
             set_proxy = (p_proxy) ? p_proxy : d_proxy(),
             app_root = (ad.localhost) ? "" : set_proxy,
@@ -201,6 +204,11 @@ function api_proxy(ad, p_proxy) {
         return $.ajax(proxy_data);
     }
     return $.ajax();
+}
+
+function c_apiname(apiname) {
+    return (apiname == "arbitrum") ? "infura" :
+        (apiname == "binplorer") ? "ethplorer" : apiname;
 }
 
 function br_result(e) {

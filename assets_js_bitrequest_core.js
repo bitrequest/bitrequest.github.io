@@ -534,6 +534,8 @@ function finishfunctions() {
     open_url();
     //get_blockcypher_apikey
     //get_infura_apikey
+    //get_arbiscan_apikey
+    //get_alchemy_apikey
     //proxy_alert
     //fetchsymbol
     //fixedcheck
@@ -3209,11 +3211,15 @@ function open_blockexplorer_url(be_link) {
 }
 
 function blockexplorer_url(currency, tx, erc20, source) {
-    console.log(source);
+    let tx_prefix = (tx === true) ? "tx/" : "address/";
+    if (source == "binplorer") {
+        return "https://binplorer.com/" + tx_prefix;
+    }
+    if (source == "arbiscan") {
+        return "https://arbiscan.io/" + tx_prefix;
+    }
     if (erc20 == "true" || erc20 === true) {
-        let tx_prefix = (tx === true) ? "tx/" : "address/",
-            b_explorer = (source == "binplorer") ? "https://binplorer.com/" : "https://ethplorer.io/";
-        return b_explorer + tx_prefix;
+        return "https://ethplorer.io/" + tx_prefix;
     }
     let blockexplorer = get_blockexplorer(currency);
     if (blockexplorer) {
@@ -3789,7 +3795,7 @@ function rendercurrencies() {
             }
         });
     }
-    $("ul#allcurrencies").append("<li id='choose_erc20' data-currency='erc20 token' class='start_cli'><div class='liwrap'><h2><img src='" + c_icons("ph") + "'/>erc20 token</h2></div></li>\
+    $("ul#allcurrencies").append("<li id='choose_erc20' data-currency='erc20 token' class='start_cli'><div class='liwrap'><h2><img src='" + c_icons("ph") + "'/>More...</h2></div></li>\
     <li id='rshome' class='restore start_cli' data-currency='erc20 token'><div class='liwrap'><h2><span class='icon-upload'> Restore from backup</h2></div></li><li id='start_cli_margin' class='start_cli'><div class='liwrap'><h2></h2></div></li>").prepend("<li id='connectln' data-currency='bitcoin' class='start_cli'><div class='liwrap'><h2><img src='img_logos_btc-lnd.png'/>Lightning</h2></div></li>");
 }
 
@@ -4199,7 +4205,8 @@ function appendrequest(rd) {
 }
 
 function getnetwork(source) {
-    return (source == "binplorer") ? "bnb smart chain" : false;
+    return (source == "binplorer") ? "BNB smart chain" :
+        (source == main_arbitrum_node || source == "arbiscan") ? "Arbitrum" : false;
 }
 
 // ** Store data in localstorage **
@@ -4435,6 +4442,16 @@ function get_infura_apikey(rpcurl) {
     let savedkey = $("#apikeys").data("infura");
     return (/^[A-Za-z0-9]+$/.test(rpcurl.slice(rpcurl.length - 15))) ? "" : // check if rpcurl already contains apikey
         (savedkey) ? savedkey : to.if_id;
+}
+
+function get_arbiscan_apikey() {
+    let savedkey = $("#apikeys").data("arbiscan");
+    return (savedkey) ? savedkey : to.as_id;
+}
+
+function get_alchemy_apikey() {
+    let savedkey = $("#apikeys").data("alchemy");
+    return (savedkey) ? savedkey : to.al_id;
 }
 
 function proxy_alert(version) {

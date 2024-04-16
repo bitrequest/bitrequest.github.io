@@ -57,7 +57,10 @@ function init_socket(socket_node, address, swtch, retry) {
     }
     scan_attempts = {};
     let payment = request.payment,
-        socket_name;
+        socket_name,
+        rq_init = request.rq_init,
+        request_ts_utc = rq_init + timezone,
+        request_ts = request_ts_utc - 30000;
     if (socket_node) {
         socket_name = socket_node.name;
         socket_attempt[btoa(socket_node.url)] = true;
@@ -139,7 +142,16 @@ function init_socket(socket_node, address, swtch, retry) {
         return
     }
     if (payment == "ethereum") {
-        web3_eth_websocket(socket_node, address);
+        if (socket_node.url == main_alchemy_socket) {
+            alchemy_eth_websocket(socket_node, address); // L1 Alchemy
+            arbi_scan(address, request_ts); // L2 Arbitrum
+            return
+        }
+        web3_eth_websocket(socket_node, address, main_eth_node); // L1 Infura
+        web3_eth_websocket({
+            "name": main_arbitrum_socket,
+            "url": main_arbitrum_socket
+        }, address, main_arbitrum_node); // L2 Infura Arbitrum
         return
     }
     if (payment == "monero") {
@@ -166,9 +178,6 @@ function init_socket(socket_node, address, swtch, retry) {
         return
     }
     if (payment == "nimiq") {
-        let rq_init = request.rq_init,
-            request_ts_utc = rq_init + timezone,
-            request_ts = request_ts_utc - 30000;
         clearpinging();
         nimiq_scan(address, request_ts);
         return
@@ -187,7 +196,18 @@ function init_socket(socket_node, address, swtch, retry) {
     }
     if (request.erc20 === true) {
         clearpinging();
-        web3_erc20_websocket(socket_node, address);
+        web3_erc20_websocket(socket_node, address, request.token_contract);
+        let ccsymbol = request.currencysymbol;
+        bnb_scan(address, request_ts, ccsymbol);
+        // arbitrum:
+        let arb_contract = contracts(ccsymbol, "arbitrum");
+        if (arb_contract) {
+            web3_erc20_websocket({
+                "name": main_arbitrum_socket,
+                "url": main_arbitrum_socket
+            }, address, arb_contract);
+            return
+        }
         return
     }
     notify("this request is not monitored", 500000, "yes")
@@ -825,11 +845,11 @@ function nano_socket(socket_node, thisaddress) {
     };
 }
 
-function web3_eth_websocket(socket_node, thisaddress) {
+function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
     let provider_url = socket_node.url,
         if_id = get_infura_apikey(provider_url),
         provider = provider_url + if_id,
-        websocket = sockets[thisaddress] = new WebSocket(provider);
+        websocket = sockets[provider_url] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         let ping_event = JSON.stringify({
@@ -848,24 +868,24 @@ function web3_eth_websocket(socket_node, thisaddress) {
             result = q_obj(data, "params.result");
         if (result) {
             if (result.hash) {
-                let api_dat = q_obj(helper, "api_info.data"),
-                    rpc_url = (api_dat.default === false) ? api_dat.url : main_eth_node;
-                api_proxy(eth_params(rpc_url, 25, "eth_getBlockByHash", [result.hash, true])).done(function(res) {
-                    let rslt = inf_result(res),
-                        transactions = rslt.transactions;
-                    if (transactions) {
-                        $.each(transactions, function(i, val) {
-                            if (str_match(val.to, thisaddress) === true) {
-                                let txd = infura_block_data(val, request.set_confirmations, request.currencysymbol, result.timestamp);
-                                closesocket();
-                                pick_monitor(val.hash, txd, api_dat);
-                                return
-                            }
-                        });
-                    }
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    handle_socket_fails(socket_node, thisaddress);
-                });
+                let api_dat = (helper) ? q_obj(helper, "api_info.data") : null;
+                if (api_dat) {
+                    let rpc_url = (api_dat.default === false) ? api_dat.url : rpcurl;
+                    api_proxy(eth_params(rpc_url, 25, "eth_getBlockByHash", [result.hash, true])).done(function(res) {
+                        let rslt = inf_result(res),
+                            transactions = rslt.transactions;
+                        if (transactions) {
+                            $.each(transactions, function(i, val) {
+                                if (str_match(val.to, thisaddress) === true) {
+                                    let txd = infura_block_data(val, request.set_confirmations, request.currencysymbol, result.timestamp);
+                                    closesocket();
+                                    pick_monitor(val.hash, txd, api_dat);
+                                    return
+                                }
+                            });
+                        }
+                    })
+                }
             }
         }
     };
@@ -878,11 +898,11 @@ function web3_eth_websocket(socket_node, thisaddress) {
     };
 }
 
-function web3_erc20_websocket(socket_node, thisaddress) {
+function web3_erc20_websocket(socket_node, thisaddress, contract) {
     let provider_url = socket_node.url,
         if_id = get_infura_apikey(provider_url),
         provider = provider_url + if_id,
-        websocket = sockets[thisaddress] = new WebSocket(provider);
+        websocket = sockets[contract] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         let ping_event = JSON.stringify({
@@ -892,7 +912,7 @@ function web3_erc20_websocket(socket_node, thisaddress) {
             "params": [
                 "logs",
                 {
-                    "address": request.token_contract,
+                    "address": contract,
                     "topics": []
                 }
             ]
@@ -937,6 +957,146 @@ function web3_erc20_websocket(socket_node, thisaddress) {
         handle_socket_fails(socket_node, thisaddress);
         return
     };
+}
+
+function bnb_scan(address, request_ts, ccsymbol) {
+    pinging[address] = setInterval(function() {
+        ping_bnb(address, request_ts, ccsymbol);
+    }, 7000);
+}
+
+function ping_bnb(address, request_ts, ccsymbol) {
+    if (paymentpopup.hasClass("active")) { // only when request is visible
+        api_proxy({
+            "api": "binplorer",
+            "search": "getAddressHistory/" + address + "?type=transfer",
+            "params": {
+                "method": "GET"
+            }
+        }).done(function(e) {
+            let data = br_result(e).result;
+            if (data) {
+                let setconf = request.set_confirmations;
+                $.each(data.operations, function(dat, value) {
+                    let txd = ethplorer_scan_data(value, setconf, ccsymbol);
+                    if (txd.transactiontime > request_ts && txd.ccval) {
+                        clearpinging();
+                        let requestlist = $("#requestlist > li.rqli"),
+                            txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
+                        if (txid_match.length) {
+                            return
+                        }
+                        if (setconf > 0) {
+                            pick_monitor(txd.txhash, txd);
+                            return
+                        }
+                        confirmations(txd, true);
+                    }
+                });
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            clearpinging();
+            let error_object = (errorThrown) ? errorThrown : jqXHR;
+            handle_api_fails(false, error_object, "binplorer", request.payment);
+        });
+        return
+    }
+    forceclosesocket();
+}
+
+function alchemy_eth_websocket(socket_node, thisaddress) {
+    let provider_url = socket_node.url,
+        al_id = get_alchemy_apikey(),
+        provider = provider_url + al_id,
+        websocket = sockets[provider_url] = new WebSocket(provider);
+    websocket.onopen = function(e) {
+        socket_info(socket_node, true);
+        let ping_event = JSON.stringify({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "eth_subscribe",
+            "params": ["alchemy_pendingTransactions", {
+                "toAddress": [thisaddress],
+                "hashesOnly": false
+            }]
+        });
+        websocket.send(ping_event);
+        pinging[thisaddress] = setInterval(function() {
+            websocket.send(ping_event);
+        }, 55000);
+    };
+    websocket.onmessage = function(e) {
+        let data = JSON.parse(e.data),
+            result = q_obj(data, "params.result");
+        if (result) {
+            if (result.hash) {
+                if (str_match(result.to, thisaddress)) {
+                    let txd = infura_block_data(result, request.set_confirmations, request.currencysymbol, result.timestamp);
+                    closesocket();
+                    let api_dat = (helper) ? q_obj(helper, "api_info.data") : null;
+                    pick_monitor(result.hash, txd, api_dat);
+                    return
+                }
+            }
+        }
+    };
+    websocket.onclose = function(e) {
+        handle_socket_close(socket_node);
+    };
+    websocket.onerror = function(e) {
+        handle_socket_fails(socket_node, thisaddress);
+        return
+    };
+}
+
+function arbi_scan(address, request_ts) {
+    pinging[address] = setInterval(function() {
+        ping_arbiscan(address, request_ts);
+    }, 7000);
+}
+
+function ping_arbiscan(address, request_ts) {
+    if (paymentpopup.hasClass("active")) { // only when request is visible
+        let apikeytoken = get_arbiscan_apikey();
+        api_proxy({
+            "api": "arbiscan",
+            "search": "?module=account&action=txlist&address=" + address + "&startblock=0&endblock=latest&page=1&offset=10&sort=desc&apikey=" + apikeytoken,
+            "params": {
+                "method": "GET"
+            }
+        }).done(function(e) {
+            let data = br_result(e).result;
+            if (data) {
+                let result = data.result;
+                if (result && br_issar(result)) {
+                    let setconf = request.set_confirmations;
+                    let match = false;
+                    $.each(result, function(dat, value) {
+                        let txd = arbiscan_scan_data_eth(value, setconf);
+                        if (txd.transactiontime > request_ts && txd.ccval) {
+                            clearpinging();
+                            let requestlist = $("#requestlist > li.rqli"),
+                                txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
+                            if (txid_match.length) {
+                                return
+                            }
+                            if (setconf > 0) {
+                                pick_monitor(txd.txhash, txd);
+                                return
+                            }
+                            confirmations(txd, true);
+                        }
+                    });
+                }
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            clearpinging();
+            let error_object = (errorThrown) ? errorThrown : jqXHR;
+            handle_api_fails(false, error_object, "arbiscan", request.payment);
+        });
+        return
+    }
+    forceclosesocket();
 }
 
 function kaspa_websocket(socket_node, thisaddress) {
@@ -1290,7 +1450,7 @@ function ping_nimiq(address, request_ts) {
         }).fail(function(jqXHR, textStatus, errorThrown) {
             clearpinging();
             let error_object = (errorThrown) ? errorThrown : jqXHR;
-            handle_api_fails(false, error_object, "nimiq.watch", request.payment, txhash);
+            handle_api_fails(false, error_object, "nimiq.watch", request.payment);
         });
         return
     }
@@ -1336,7 +1496,7 @@ function after_poll(rq_init, next_api) {
             blockchair_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts, erc);
             return
         }
-        if (api_name == "ethplorer" || api_name == "binplorer") {
+        if (request.erc20 === true) {
             ap_loader();
             erc20_scan_poll(api_name, ccsymbol, set_confirmations, address, request_ts);
             return
@@ -1651,11 +1811,9 @@ function erc20_scan_poll(api_name, ccsymbol, set_confirmations, address, request
                 if (txdat && detect === true) {
                     pick_monitor(txdat.txhash, txdat);
                     return
-                }
-                else {
+                } else {
                     if (api_name == "binplorer") { // don't rescan on last L2 api
-                    }
-                    else {
+                    } else {
                         after_poll_fails(api_name); // scan l2's
                         return
                     }

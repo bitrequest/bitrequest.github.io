@@ -22,3 +22,31 @@ function c_icons(cpid) {
         result = (fetch) ? fetch : notfound;
     return "data:image/png;base64," + result;
 }
+
+function contracts(ccsymbol, network) {
+    const nw_list = [{
+                "usdt": {
+                    "arbitrum": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"
+                }
+            },
+            {
+                "usdc": {
+                    "arbitrum": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+                }
+            },
+            {
+                "shib": {
+                    "arbitrum": "0x5033833c9fe8B9d3E09EEd2f73d2aaF7E3872fd1"
+                }
+            },
+            {
+                "link": {
+                    "arbitrum": "0xf97f4df75117a78c1A5a0DBb814Af92458539FB4"
+                }
+            }
+        ],
+        nll = nw_list.filter(function(val) {
+            return val[ccsymbol];
+        })[0];
+    return (nll) ? q_obj(nll, ccsymbol + "." + network) : false;
+}

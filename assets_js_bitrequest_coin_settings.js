@@ -31,6 +31,9 @@ $(document).ready(function() {
     remove_rpcnode();
     //get_rpc_url
 
+    // Layer 2's
+    edit_l2();
+    submit_l2();
 
     // Xpub settings
     edit_xpub_trigger();
@@ -753,6 +756,90 @@ function get_rpc_url(rpc_data) {
         hasprefix = (url.indexOf("http") > -1),
         urlsplit = (hasprefix === true) ? url.split("://") : url;
     return (hasprefix === true) ? urlsplit[0] + "://" + login_param + urlsplit[1] : url;
+}
+
+// Layer 2's
+function edit_l2() {
+    $(document).on("click", ".cc_settinglist li[data-id='layer2']", function() {
+        let current_li = $(this),
+            this_data = current_li.data(),
+            options = this_data.options;
+        if (options) {
+            let thiscurrency = current_li.children(".liwrap").attr("data-currency"),
+                selected = this_data.selected,
+                ddat = [{
+                    "div": {
+                        "class": "popform",
+                        "content": [{
+                            "div": {
+                                "class": "selectbox",
+                                "content": [{
+                                        "input": {
+                                            "attr": {
+                                                "type": "text",
+                                                "value": selected,
+                                                "placeholder": "Layer 2",
+                                                "readonly": "readonly"
+                                            },
+                                            "close": true
+                                        },
+                                        "div": {
+                                            "class": "selectarrows icon-menu2",
+                                            "attr": {
+                                                "data-pe": "none"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "div": {
+                                            "class": "options"
+                                        }
+                                    }
+                                ]
+                            },
+                            "input": {
+                                "class": "submit",
+                                "attr": {
+                                    "type": "submit",
+                                    "value": "OK",
+                                    "data-currency": thiscurrency
+                                }
+                            }
+                        }]
+                    }
+                }],
+                content = template_dialog({
+                    "id": "l2_formbox",
+                    "icon": "icon-new-tab",
+                    "title": "Layer 2",
+                    "elements": ddat
+                });
+            popdialog(content, "triggersubmit");
+            let optionlist = $("#l2_formbox").find(".options"),
+                ccsymbol = fetchsymbol(thiscurrency),
+                arb_contract = contracts(ccsymbol.symbol, "arbitrum");
+            $.each(options, function(i, value) {
+                if (value == "Arbitrum (L2)" && arb_contract === false && thiscurrency != "ethereum") {} else {
+                    optionlist.append("<span data-pe='none'>" + value + "</span>");
+                }
+            });
+        }
+    })
+}
+
+function submit_l2() {
+    $(document).on("click", "#l2_formbox input.submit", function(e) {
+        e.preventDefault();
+        let thiscurrency = $(this).attr("data-currency"),
+            thisvalue = $("#l2_formbox").find("input:first").val(),
+            csnode = cs_node(thiscurrency, "layer2");
+        if (csnode) {
+            csnode.data("selected", thisvalue).find("p").html(thisvalue);
+            canceldialog();
+            notify("Data saved");
+            save_cc_settings(thiscurrency, true);
+        }
+    })
 }
 
 // Xpub settings

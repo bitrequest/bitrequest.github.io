@@ -5,7 +5,6 @@ $keys = array(
 	"coinmarketcap" => "",
 	"fixer" => "",
 	"ethplorer" => "",
-	"binplorer" => "",
 	"blockcypher" => "",
 	"bitly" => "",
 	"firebase" => "",
@@ -14,7 +13,9 @@ $keys = array(
 	"infura" => "",
 	"exchangeratesapi" => "",
 	"googleauth" => "",
-	"google_secret" => ""
+	"google_secret" => "",
+	"arbiscan" => "",
+	"alchemy" => ""
 );
 
 /* Sign up:
@@ -29,6 +30,8 @@ $keys = array(
 	infura: https://infura.io/register
 	exchangeratesapi: https://exchangeratesapi.io/
 	googleauth: https://developers.google.com/
+	arbiscan: https://arbiscan.io/register/
+	alchemy: https://auth.alchemy.com/signup/
 */
 
 // enter lightning node keys here

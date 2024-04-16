@@ -2504,41 +2504,47 @@ function c_proxy() {
 function apikeys() {
     $(document).on("click", "#apikeys", function() {
         let ak_data = $(this).data(),
+            alchemykey = (ak_data.alchemy) ? ak_data.alchemy : "",
+            arbiscankey = (ak_data.arbiscan) ? ak_data.arbiscan : "",
             bitlykey = (ak_data.bitly) ? ak_data.bitly : "",
-            firebasekey = (ak_data.firebase) ? ak_data.firebase : "",
-            cmckey = (ak_data.coinmarketcap) ? ak_data.coinmarketcap : "",
-            fixerkey = (ak_data.fixer) ? ak_data.fixer : "",
-            blockcypherkey = (ak_data.blockcypher) ? ak_data.blockcypher : "",
-            ethplorerkey = (ak_data.ethplorer) ? ak_data.ethplorer : "",
             blockchairkey = (ak_data.blockchair) ? ak_data.blockchair : "",
-            infurakey = (ak_data.infura) ? ak_data.infura : "",
-            exchangeratesapikey = (ak_data.exchangeratesapi) ? ak_data.exchangeratesapi : "",
+            blockcypherkey = (ak_data.blockcypher) ? ak_data.blockcypher : "",
+            cmckey = (ak_data.coinmarketcap) ? ak_data.coinmarketcap : "",
             currencylayerkey = (ak_data.currencylayer) ? ak_data.currencylayer : "",
+            ethplorerkey = (ak_data.ethplorer) ? ak_data.ethplorer : "",
+            exchangeratesapikey = (ak_data.exchangeratesapi) ? ak_data.exchangeratesapi : "",
+            firebasekey = (ak_data.firebase) ? ak_data.firebase : "",
+            fixerkey = (ak_data.fixer) ? ak_data.fixer : "",
+            infurakey = (ak_data.infura) ? ak_data.infura : "",
             content = "\
             <div class='formbox' id='apikeyformbox'>\
                 <h2 class='icon-key'>API keys</h2>\
                 <div class='popnotify'></div>\
                 <div class='popform'>\
-                    <h3>Coinmarketcap</h3>\
-                    <input type='text' value='" + cmckey + "' placeholder='Coinmarketcap API key' data-ref='coinmarketcap' data-checkchange='" + cmckey + "' class='ak_input'/>\
-                    <h3>Fixer</h3>\
-                    <input type='text' value='" + fixerkey + "' placeholder='Fixer API key' data-ref='fixer' data-checkchange='" + fixerkey + "' class='ak_input'/>\
-                    <h3>Currencylayer</h3>\
-                    <input type='text' value='" + currencylayerkey + "' placeholder='Currencylayer API key' data-ref='currencylayer' data-checkchange='" + currencylayerkey + "' class='ak_input'/>\
-                    <h3>Blockcypher</h3>\
-                    <input type='text' value='" + blockcypherkey + "' placeholder='Blockcypher API key' data-ref='blockcypher' data-checkchange='" + blockcypherkey + "' class='ak_input'/>\
-                    <h3>Ethplorer</h3>\
-                    <input type='text' value='" + ethplorerkey + "' placeholder='Ethplorer API key' data-ref='ethplorer' data-checkchange='" + ethplorerkey + "' class='ak_input'/>\
-                    <h3>Blockchair</h3>\
-                    <input type='text' value='" + blockchairkey + "' placeholder='Blockchair API key' data-ref='blockchair' data-checkchange='" + blockchairkey + "' class='ak_input'/>\
-                    <h3>Infura</h3>\
-                    <input type='text' value='" + infurakey + "' placeholder='Infura Project ID' data-ref='infura' data-checkchange='" + infurakey + "' class='ak_input'/>\
-                    <h3>Exchangeratesapi</h3>\
-                    <input type='text' value='" + exchangeratesapikey + "' placeholder='Exchangeratesapi API key' data-ref='exchangeratesapi' data-checkchange='" + exchangeratesapikey + "' class='ak_input'/>\
+                    <h3>Alchemy</h3>\
+                    <input type='text' value='" + alchemykey + "' placeholder='Alchemy API key' data-ref='alchemy' data-checkchange='" + alchemykey + "' class='ak_input'/>\
+                    <h3>Arbiscan</h3>\
+                    <input type='text' value='" + arbiscankey + "' placeholder='Arbiscan API key' data-ref='arbiscan' data-checkchange='" + arbiscankey + "' class='ak_input'/>\
                     <h3>Bitly</h3>\
                     <input type='text' value='" + bitlykey + "' placeholder='Bitly access token' data-ref='bitly' data-checkchange='" + bitlykey + "' class='ak_input'/>\
+                    <h3>Blockchair</h3>\
+                    <input type='text' value='" + blockchairkey + "' placeholder='Blockchair API key' data-ref='blockchair' data-checkchange='" + blockchairkey + "' class='ak_input'/>\
+                    <h3>Blockcypher</h3>\
+                    <input type='text' value='" + blockcypherkey + "' placeholder='Blockcypher API key' data-ref='blockcypher' data-checkchange='" + blockcypherkey + "' class='ak_input'/>\
+                    <h3>Coinmarketcap</h3>\
+                    <input type='text' value='" + cmckey + "' placeholder='Coinmarketcap API key' data-ref='coinmarketcap' data-checkchange='" + cmckey + "' class='ak_input'/>\
+                    <h3>Currencylayer</h3>\
+                    <input type='text' value='" + currencylayerkey + "' placeholder='Currencylayer API key' data-ref='currencylayer' data-checkchange='" + currencylayerkey + "' class='ak_input'/>\
+                    <h3>Ethplorer</h3>\
+                    <input type='text' value='" + ethplorerkey + "' placeholder='Ethplorer API key' data-ref='ethplorer' data-checkchange='" + ethplorerkey + "' class='ak_input'/>\
+                    <h3>Exchangeratesapi</h3>\
+                    <input type='text' value='" + exchangeratesapikey + "' placeholder='Exchangeratesapi API key' data-ref='exchangeratesapi' data-checkchange='" + exchangeratesapikey + "' class='ak_input'/>\
                     <h3>Firebase</h3>\
                     <input type='text' value='" + firebasekey + "' placeholder='Firebase API key' data-ref='firebase' data-checkchange='" + firebasekey + "' class='ak_input'/>\
+                    <h3>Fixer</h3>\
+                    <input type='text' value='" + fixerkey + "' placeholder='Fixer API key' data-ref='fixer' data-checkchange='" + fixerkey + "' class='ak_input'/>\
+                    <h3>Infura</h3>\
+                    <input type='text' value='" + infurakey + "' placeholder='Infura Project ID' data-ref='infura' data-checkchange='" + infurakey + "' class='ak_input'/>\
                     <input type='submit' class='submit' value='OK' id='apisubmit'/>\
                 </div>\
             </div>";
@@ -2585,37 +2591,41 @@ function submitapi() {
 }
 
 function checkapikey(thisref, apikeyval, lastinput) {
-    let token_data = (thisref == "firebase") ? {
-            "keylength": 20,
-            "payload": "shortLinks?key="
-        } :
-        (thisref == "coinmarketcap") ? {
-            "keylength": 20,
-            "payload": "v1/cryptocurrency/quotes/latest?id=1&CMC_PRO_API_KEY="
-        } :
-        (thisref == "fixer") ? {
-            "keylength": 20,
-            "payload": "symbols?access_key="
-        } :
-        (thisref == "blockcypher") ? {
+    let token_data = (thisref == "arbiscan") ? {
             "keylength": 6,
-            "payload": "btc/main/addrs/1rundZJCMJhUiWQNFS5uT3BvisBuLxkAp/balance?token="
-        } :
-        (thisref == "ethplorer") ? {
-            "keylength": 6,
-            "payload": "getTop?apiKey="
+            "payload": "?module=block&action=getblockreward&blockno=131049&apikey="
         } :
         (thisref == "blockchair") ? {
             "keylength": 6,
             "payload": "stats?key="
         } :
+        (thisref == "blockcypher") ? {
+            "keylength": 6,
+            "payload": "btc/main/addrs/1rundZJCMJhUiWQNFS5uT3BvisBuLxkAp/balance?token="
+        } :
+        (thisref == "coinmarketcap") ? {
+            "keylength": 20,
+            "payload": "v1/cryptocurrency/quotes/latest?id=1&CMC_PRO_API_KEY="
+        } :
         (thisref == "currencylayer") ? {
             "keylength": 6,
             "payload": "live?access_key="
         } :
+        (thisref == "ethplorer") ? {
+            "keylength": 6,
+            "payload": "getTop?apiKey="
+        } :
         (thisref == "exchangeratesapi") ? {
             "keylength": 6,
             "payload": "v1/latest?access_key="
+        } :
+        (thisref == "firebase") ? {
+            "keylength": 20,
+            "payload": "shortLinks?key="
+        } :
+        (thisref == "fixer") ? {
+            "keylength": 20,
+            "payload": "symbols?access_key="
         } : null,
         keylength = (token_data) ? token_data.keylength : 6,
         payload = (token_data) ? token_data.payload : null;
@@ -2624,8 +2634,9 @@ function checkapikey(thisref, apikeyval, lastinput) {
 
 function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
     if (apikeyval.length > keylength) {
-        if (thisref == "infura") {
+        if (thisref == "infura" || thisref == "alchemy") {
             let txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
+                base_url = (thisref == "infura") ? main_eth_node : main_alchemy_node,
                 payload = {
                     "jsonrpc": "2.0",
                     "id": 3,
@@ -2633,8 +2644,8 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                     "params": [txhash]
                 };
             api_proxy({
-                "api": "infura",
-                "api_url": main_eth_node + apikeyval,
+                "api": thisref,
+                "api_url": base_url + apikeyval,
                 "proxy": false,
                 "params": {
                     "method": "POST",
@@ -2687,16 +2698,25 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
         };
         api_proxy(postdata).done(function(e) {
             let data = br_result(e).result;
+            if (thisref == "arbiscan" && data.status != 1) {
+                if (data.result == "Invalid API Key") {
+                    api_fail(thisref, apikeyval);
+                } else {
+                    notify("API call error");
+                    let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.message + "</p>";
+                    popdialog(content, "canceldialog");
+                }
+                return
+            }
             if (thisref == "bitly" && data.status_code === 500) {
                 api_fail(thisref, apikeyval);
                 return
             }
-            if (thisref == "coinmarketcap" && data.status.error_code === 1001) {
-                api_fail(thisref, apikeyval);
-                return
-            }
-            if (thisref == "fixer" && data.success === false) {
-                if (data.error.code === 101) {
+            if (thisref == "blockchair") {
+                let context_code = data.context.code;
+                if (context_code === 200) {
+                    update_api_attr(thisref, apikeyval, lastinput);
+                } else if (context_code === 402) {
                     api_fail(thisref, apikeyval);
                 } else {
                     notify("API call error");
@@ -2710,6 +2730,20 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                     update_api_attr(thisref, apikeyval, lastinput);
                 } else {
                     api_fail(thisref, apikeyval);
+                }
+                return
+            }
+            if (thisref == "coinmarketcap" && data.status.error_code === 1001) {
+                api_fail(thisref, apikeyval);
+                return
+            }
+            if (thisref == "currencylayer" && data.success === false) {
+                if (data.error.code === 101) {
+                    api_fail(thisref, apikeyval);
+                } else {
+                    notify("API call error");
+                    let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
+                    popdialog(content, "canceldialog");
                 }
                 return
             }
@@ -2727,29 +2761,6 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                 }
                 return
             }
-            if (thisref == "blockchair") {
-                let context_code = data.context.code;
-                if (context_code === 200) {
-                    update_api_attr(thisref, apikeyval, lastinput);
-                } else if (context_code === 402) {
-                    api_fail(thisref, apikeyval);
-                } else {
-                    notify("API call error");
-                    let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
-                    popdialog(content, "canceldialog");
-                }
-                return
-            }
-            if (thisref == "currencylayer" && data.success === false) {
-                if (data.error.code === 101) {
-                    api_fail(thisref, apikeyval);
-                } else {
-                    notify("API call error");
-                    let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
-                    popdialog(content, "canceldialog");
-                }
-                return
-            }
             if (thisref == "exchangeratesapi" && !data.success) {
                 let ec = q_obj(data, "error.code");
                 if (ec) {
@@ -2762,6 +2773,16 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                     }
                     return
                 }
+            }
+            if (thisref == "fixer" && data.success === false) {
+                if (data.error.code === 101) {
+                    api_fail(thisref, apikeyval);
+                } else {
+                    notify("API call error");
+                    let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
+                    popdialog(content, "canceldialog");
+                }
+                return
             }
             update_api_attr(thisref, apikeyval, lastinput);
         }).fail(function(jqXHR, textStatus, errorThrown) {

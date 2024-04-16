@@ -11,6 +11,7 @@ $(document).ready(function() {
 
     //get_api_inputs_init
     //get_api_inputs
+    //get_api_inputs_select
     //match_xmr_pid
     //fail_dialogs
     //handle_api_fails_list
@@ -23,8 +24,6 @@ $(document).ready(function() {
 
     //get_rpc_inputs_init
     //get_rpc_inputs
-    //eth_params
-    //inf_err
     //handle_rpc_fails_list
     //get_next_rpc
     //scan_tx_li
@@ -208,7 +207,7 @@ function check_api(payment, iserc20) {
 
 function choose_api_inputs(rd, api_data) {
     if (api_data) {
-        get_api_inputs_init(rd, api_data, api_data.name);
+        get_api_inputs_init(rd, api_data);
         return
     }
     console.log("no api data available");
@@ -221,1146 +220,81 @@ function get_api_inputs_defaults(rd, api_data) {
     }
     let payment = rd.payment;
     if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin" || payment == "ethereum") {
-        get_api_inputs_init(rd, api_data, "blockcypher");
+        api_data.name = "blockcypher";
+    }
+    get_api_inputs_init(rd, api_data);
+}
+
+function get_api_inputs_init(rd, api_data) {
+    api_attempts[rd.requestid + api_data.name] = null; // reset api attempts
+    get_api_inputs(rd, api_data);
+}
+
+function get_api_inputs(rd, api_data) {
+    get_api_inputs_select(rd, api_data);
+    return
+    if (api_data.name == "arbiscan") {
+        let timeout = setTimeout(function() { // set timeout arbiscan has 5 second rate limit
+            get_api_inputs_select(rd, api_data);
+        }, 10000, function() {
+            clearTimeout(timeout);
+        });
         return
     }
-    get_api_inputs_init(rd, api_data, api_data.name);
+    get_api_inputs_select(rd, api_data)
 }
 
-function get_api_inputs_init(rd, api_data, api_name) {
-    api_attempts[rd.requestid + api_name] = null; // reset api attempts
-    get_api_inputs(rd, api_data, api_name);
-}
-
-function get_api_inputs(rd, api_data, api_name) {
-    let requestid = rd.requestid,
-        thislist = $("#" + requestid);
+function get_api_inputs_select(rd, api_data) {
+    let rdo = tx_data(rd), // fetchblocks.js
+        thislist = rdo.thislist;
     if (thislist.hasClass("scan")) {
-        api_attempts[requestid + api_name] = true;
-        let payment = rd.payment,
-            address = rd.address,
-            requestdate = (rd.inout == "incoming") ? rd.timestamp : rd.requestdate,
-            request_timestamp = requestdate - 30000, // 30 seconds compensation for unexpected results
-            ccsymbol = rd.currencysymbol,
-            getconfirmations = rd.set_confirmations,
-            getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
-            setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
-            rq_status = rd.status,
-            canceled = (rq_status == "canceled") ? true : false,
-            pending = (canceled) ? "scanning" : rd.pending,
-            statuspanel = thislist.find(".pmetastatus"),
-            transactionlist = thislist.find("ul.transactionlist"),
-            transactionhash = rd.txhash,
-            lnhash = (transactionhash && transactionhash.slice(0, 9) == "lightning") ? true : false,
-            erc20 = (rd.erc20 === true),
-            counter = 0,
-            lnd = rd.lightning,
-            ln_only = (lnd && lnd.hybrid === false) ? true : false,
-            rqtype = rd.requesttype;
+        let transactionlist = rdo.transactionlist;
+        api_attempts[rd.requestid + api_data.name] = true;
         thislist.removeClass("no_network");
-        if (pending == "no" || pending == "incoming" || thislist.hasClass("expired")) {
+        if (rdo.pending == "no" || rdo.pending == "incoming" || thislist.hasClass("expired")) {
             transactionlist.find("li").each(function(i) {
                 tx_list.push($(this).data("txhash"));
             });
-            api_callback(requestid, true);
+            api_callback(rd.requestid, true);
             return
         }
-        if (pending == "scanning" || pending == "polling") {
+        if (rdo.pending == "scanning" || rdo.pending == "polling") {
             transactionlist.html("");
-            if (lnd) {
-                let metalist = thislist.find(".metalist"),
-                    status_field = metalist.find(".status"),
-                    p_arr = lnurl_deform(lnd.proxy_host),
-                    proxy_host = p_arr.url,
-                    pk = (lnd.pw) ? lnd.pw : p_arr.k,
-                    pid = lnd.pid,
-                    nid = lnd.nid,
-                    imp = lnd.imp,
-                    default_error = "unable to connect";
-                if (pending == "scanning") {
-                    $.ajax({
-                        "method": "POST",
-                        "cache": false,
-                        "timeout": 5000,
-                        "url": proxy_host + "proxy/v1/ln/api/",
-                        "data": {
-                            "fn": "ln-request-status",
-                            "id": pid,
-                            "x-api": pk
-                        }
-                    }).done(function(r) {
-                        let error = r.error;
-                        if (error) {
-                            let message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
-                            tx_api_fail(thislist, statuspanel);
-                            handle_api_fails_list(rd, {
-                                "error": message,
-                                "console": true
-                            }, false, payment);
-                            status_field.text(" " + message);
-                        } else {
-                            let inv_status = r.status;
-                            status_field.text(" " + inv_status);
-                            if (r.pid == lnd.pid) {
-                                if (r.bolt11) {
-                                    $.ajax({
-                                        "method": "POST",
-                                        "cache": false,
-                                        "timeout": 5000,
-                                        "url": proxy_host + "proxy/v1/ln/api/",
-                                        "data": {
-                                            "fn": "ln-invoice-status",
-                                            "imp": imp,
-                                            "hash": r.hash,
-                                            "id": pid,
-                                            "nid": nid,
-                                            "callback": "no",
-                                            "type": rqtype,
-                                            "x-api": pk
-                                        }
-                                    }).done(function(e) {
-                                        let inv_error = e.error;
-                                        if (inv_error) {
-                                            let err_message = (inv_error.message) ? inv_error.message : (typeof inv_error == "string") ? inv_error : default_error;
-                                            tx_api_fail(thislist, statuspanel);
-                                            handle_api_fails_list(rd, {
-                                                "error": err_message,
-                                                "console": true
-                                            }, false, payment);
-                                            status_field.text(" " + err_message);
-                                        } else {
-                                            let status = e.status;
-                                            if (status) {
-                                                lnd.invoice = e;
-                                                status_field.text(" " + status);
-                                                rd.lightning = lnd; // push invoice
-                                                let txd = lnd_tx_data(e);
-                                                if (txd.ccval) {
-                                                    let tx_listitem = append_tx_li(txd, rqtype, true);
-                                                    if (tx_listitem) {
-                                                        transactionlist.append(tx_listitem.data(txd));
-                                                        tx_count(statuspanel, txd.confirmations);
-                                                        if (status == "canceled") {
-                                                            updaterequest({
-                                                                "requestid": requestid,
-                                                                "status": "canceled",
-                                                                "confirmations": 0
-                                                            }, false);
-                                                            api_callback(requestid);
-                                                        } else {
-                                                            compareamounts(rd, true);
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                                        tx_api_fail(thislist, statuspanel);
-                                        let error_object = (errorThrown) ? errorThrown : jqXHR;
-                                        handle_api_fails_list(rd, error_object, false, payment);
-                                    });
-                                } else {
-                                    tx_count(statuspanel, 0);
-                                    handle_api_fails_list(rd, {
-                                        "error": "invoice not found",
-                                        "console": true
-                                    }, false, payment);
-                                }
-                            } else {
-                                if (inv_status == "not found") {
-                                    updaterequest({
-                                        "requestid": requestid,
-                                        "status": "expired",
-                                        "pending": "no",
-                                        "confirmations": 0
-                                    }, true);
-                                }
-                                handle_api_fails_list(rd, {
-                                    "error": "payment id not found",
-                                    "console": true
-                                }, false, payment);
-                            }
-                        }
-                        let version = r.version;
-                        if (version != proxy_version) {
-                            proxy_alert(version);
-                        }
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        tx_api_fail(thislist, statuspanel);
-                        let error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails_list(rd, error_object, false, payment);
-                    }).always(function() {
-                        api_src(thislist, {
-                            "name": "proxy"
-                        });
-                    });
-                    if (ln_only) {
-                        return
-                    }
-                } else if (pending == "polling" && lnhash) {
-                    let invoice = lnd.invoice;
-                    if (invoice) {
-                        if (transactionhash) {
-                            $.ajax({
-                                "method": "POST",
-                                "cache": false,
-                                "timeout": 5000,
-                                "url": proxy_host + "proxy/v1/ln/api/",
-                                "data": {
-                                    "fn": "ln-invoice-status",
-                                    "imp": imp,
-                                    "hash": transactionhash.slice(9),
-                                    "id": pid,
-                                    "nid": nid,
-                                    "callback": "no",
-                                    "type": rqtype,
-                                    "x-api": pk
-                                }
-                            }).done(function(e) {
-                                let status = e.status;
-                                if (status) {
-                                    lnd.invoice = e;
-                                    status_field.text(" " + status);
-                                    rd.lightning = lnd; // push invoice
-                                    let txd = lnd_tx_data(e);
-                                    if (txd.ccval) {
-                                        let tx_listitem = append_tx_li(txd, rqtype, true);
-                                        if (tx_listitem) {
-                                            transactionlist.append(tx_listitem.data(txd));
-                                            tx_count(statuspanel, txd.confirmations);
-                                            if (status == "canceled") {
-                                                updaterequest({
-                                                    "requestid": requestid,
-                                                    "status": "canceled",
-                                                    "confirmations": 0
-                                                }, true);
-                                                api_callback(requestid);
-                                            } else {
-                                                compareamounts(rd, true);
-                                            }
-                                        }
-                                    }
-                                }
-                            }).fail(function(jqXHR, textStatus, errorThrown) {
-                                tx_api_fail(thislist, statuspanel);
-                                let error_object = (errorThrown) ? errorThrown : jqXHR;
-                                handle_api_fails_list(rd, error_object, false, payment);
-                            }).always(function() {
-                                api_src(thislist, {
-                                    "name": "proxy"
-                                });
-                            });
-                            return
-                        }
-                    }
-                    handle_api_fails_list(rd, {
-                        "error": "invoice not found",
-                        "console": true
-                    }, false, payment);
-                    return
-                }
+            let api_name = api_data.name;
+            if (rd.lightning) {
+                lightning_fetch(rd, api_data, rdo);
             }
-            if (payment == "monero") {
-                let vk = rd.viewkey;
-                if (vk) {
-                    let account = (vk.account) ? vk.account : address,
-                        viewkey = vk.vk,
-                        payload = JSON.stringify({
-                            "address": account,
-                            "view_key": viewkey,
-                            "create_account": true,
-                            "generated_locally": false
-                        });
-                    api_proxy({
-                        "api": api_name,
-                        "search": "login",
-                        "cachetime": 25,
-                        "cachefolder": "1h",
-                        "proxy": true,
-                        "params": {
-                            "method": "POST",
-                            "data": payload,
-                            "headers": {
-                                "Content-Type": "application/json"
-                            }
-                        }
-                    }).done(function(e) {
-                        let data = br_result(e).result;
-                        if (data.start_height > -1) { // success!
-                            let pl = {
-                                "address": account,
-                                "view_key": viewkey
-                            };
-                            api_proxy({
-                                "api": api_name,
-                                "search": "get_address_txs",
-                                "cachetime": 25,
-                                "cachefolder": "1h",
-                                "proxy": true,
-                                "params": {
-                                    "method": "POST",
-                                    "data": JSON.stringify(pl),
-                                    "headers": {
-                                        "Content-Type": "application/json"
-                                    }
-                                }
-                            }).done(function(e) {
-                                let data = br_result(e).result,
-                                    transactions = data.transactions;
-                                if (transactions) {
-                                    let txflip = transactions.reverse();
-                                    $.each(txflip, function(dat, value) {
-                                        let txd = xmr_scan_data(value, setconfirmations, "xmr", data.blockchain_height);
-                                        if (txd) {
-                                            let xid_match = match_xmr_pid(rd.xmr_ia, rd.payment_id, txd.payment_id); // match xmr payment_id if set
-                                            if (xid_match === true) {
-                                                if (pending == "polling") {
-                                                    if (txd.txhash == transactionhash && txd.ccval) {
-                                                        let tx_listitem = append_tx_li(txd, rqtype);
-                                                        if (tx_listitem) {
-                                                            transactionlist.append(tx_listitem.data(txd));
-                                                            counter++;
-                                                        }
-                                                        return
-                                                    }
-                                                }
-                                                if (pending == "scanning") {
-                                                    if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                                        let tx_listitem = append_tx_li(txd, rqtype);
-                                                        if (tx_listitem) {
-                                                            transactionlist.append(tx_listitem.data(txd));
-                                                            counter++;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    });
-                                    tx_count(statuspanel, counter);
-                                    compareamounts(rd);
-                                }
-                            }).fail(function(jqXHR, textStatus, errorThrown) {
-                                tx_api_fail(thislist, statuspanel);
-                                let error_object = (errorThrown) ? errorThrown : jqXHR;
-                                handle_api_fails_list(rd, error_object, api_data, payment);
-                            });
-                            return
-                        }
-                        tx_api_fail(thislist, statuspanel);
-                        let errormessage = data.Error,
-                            error_object = (errormessage) ? errormessage : {
-                                "error": "Unable to connect to mymonero api",
-                                "console": true
-                            };
-                        handle_api_fails_list(rd, error_object, api_data, payment);
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        tx_api_fail(thislist, statuspanel);
-                        let error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails_list(rd, error_object, api_data, payment);
-                    }).always(function() {
-                        api_src(thislist, {
-                            "name": "mymonero api"
-                        });
-                    });
-                }
+            if (rd.payment == "monero") {
+                monero_fetch(rd, api_data, rdo);
                 return
             }
             if (api_name == "mempool.space") {
-                let endpoint = "https://" + api_data.url;
-                api_proxy({ // get latest blockheight
-                    "cachetime": 25,
-                    "cachefolder": "1h",
-                    "api_url": endpoint + "/api/blocks/tip/height",
-                    "params": {
-                        "method": "GET"
-                    }
-                }).done(function(lb) {
-                    let latestblock = br_result(lb).result;
-                    if (latestblock) {
-                        setTimeout(function() {
-                            if (pending == "scanning") { // scan incoming transactions on address
-                                api_proxy({
-                                    "cachetime": 25,
-                                    "cachefolder": "1h",
-                                    "api_url": endpoint + "/api/address/" + address + "/txs",
-                                    "params": {
-                                        "method": "GET"
-                                    }
-                                }).done(function(e) {
-                                    let data = br_result(e).result;
-                                    if (data) {
-                                        if (br_issar(data)) {
-                                            $.each(data, function(dat, value) {
-                                                if (value.txid) { // filter outgoing transactions
-                                                    let txd = mempoolspace_scan_data(value, setconfirmations, ccsymbol, address, latestblock);
-                                                    if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                                        let tx_listitem = append_tx_li(txd, rqtype);
-                                                        if (tx_listitem) {
-                                                            transactionlist.append(tx_listitem.data(txd));
-                                                            counter++;
-                                                        }
-                                                    }
-                                                }
-                                            });
-                                            tx_count(statuspanel, counter);
-                                            compareamounts(rd);
-                                            return
-                                        }
-                                    }
-                                    tx_api_fail(thislist, statuspanel);
-                                    handle_api_fails_list(rd, "unknown error", api_data, payment);
-                                }).fail(function(jqXHR, textStatus, errorThrown) {
-                                    tx_api_fail(thislist, statuspanel);
-                                    let error_object = (errorThrown) ? errorThrown : jqXHR;
-                                    handle_api_fails_list(rd, error_object, api_data, payment);
-                                });
-                                return
-                            }
-                            if (pending == "polling") { // poll mempool.space transaction id
-                                if (transactionhash) {
-                                    api_proxy({
-                                        "cachetime": 25,
-                                        "cachefolder": "1h",
-                                        "api_url": endpoint + "/api/tx/" + transactionhash,
-                                        "params": {
-                                            "method": "GET"
-                                        }
-                                    }).done(function(e) {
-                                        let data = br_result(e).result;
-                                        if (data) {
-                                            let txd = mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, latestblock);
-                                            if (txd) {
-                                                if (txd.ccval) {
-                                                    let tx_listitem = append_tx_li(txd, rqtype);
-                                                    if (tx_listitem) {
-                                                        transactionlist.append(tx_listitem.data(txd));
-                                                        tx_count(statuspanel, 1);
-                                                        compareamounts(rd);
-                                                    }
-                                                }
-                                            }
-                                            return
-                                        }
-                                        tx_api_fail(thislist, statuspanel);
-                                        handle_api_fails_list(rd, "unknown error", api_data, payment);
-                                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                                        tx_api_fail(thislist, statuspanel);
-                                        let error_object = (errorThrown) ? errorThrown : jqXHR;
-                                        handle_api_fails_list(rd, error_object, api_data, payment);
-                                    });
-                                }
-                            }
-                        }, 500);
-                        return
-                    }
-                    tx_api_fail(thislist, statuspanel);
-                    handle_api_fails_list(rd, "unknown error", api_data, payment);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    tx_api_fail(thislist, statuspanel);
-                    let error_object = (errorThrown) ? errorThrown : jqXHR;
-                    handle_api_fails_list(rd, error_object, api_data, payment);
-                }).always(function() {
-                    api_src(thislist, api_data);
-                });
+                mempoolspace_fetch(rd, api_data, rdo);
                 return
             }
             if (api_name == "blockcypher") {
-                if (pending == "scanning") { // scan incoming transactions on address
-                    api_proxy({
-                        "api": api_name,
-                        "search": ccsymbol + "/main/addrs/" + address,
-                        "cachetime": 25,
-                        "cachefolder": "1h",
-                        "params": {
-                            "method": "GET"
-                        }
-                    }).done(function(e) {
-                        let data = br_result(e).result;
-                        if (data) {
-                            if (data.error) {
-                                tx_api_fail(thislist, statuspanel);
-                                handle_api_fails_list(rd, data.error, api_data, payment);
-                            } else {
-                                if (payment == "ethereum") {
-                                    $.each(data.txrefs, function(dat, value) {
-                                        let txd = blockcypher_scan_data(value, setconfirmations, ccsymbol, payment);
-                                        if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                            let tx_listitem = append_tx_li(txd, rqtype);
-                                            if (tx_listitem) {
-                                                transactionlist.append(tx_listitem.data(txd));
-                                                counter++;
-                                            }
-                                        }
-                                    });
-                                } else {
-                                    let conf_tx = data.txrefs,
-                                        unconf_tx = data.unconfirmed_txrefs,
-                                        all_tx = (unconf_tx && conf_tx) ? unconf_tx.concat(conf_tx) : conf_tx;
-                                    if (all_tx) {
-                                        $.each(all_tx, function(dat, value) {
-                                            if (value.spent !== undefined) { // filter outgoing transactions
-                                                let txd = blockcypher_scan_data(value, setconfirmations, ccsymbol, payment);
-                                                if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                                    let tx_listitem = append_tx_li(txd, rqtype);
-                                                    if (tx_listitem) {
-                                                        transactionlist.append(tx_listitem.data(txd));
-                                                        counter++;
-                                                    }
-                                                }
-                                            }
-                                        });
-                                    }
-                                }
-                                tx_count(statuspanel, counter);
-                                compareamounts(rd);
-                            }
-                            return
-                        }
-                        tx_api_fail(thislist, statuspanel);
-                        handle_api_fails_list(rd, "unknown error", api_data, payment);
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        tx_api_fail(thislist, statuspanel);
-                        let error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails_list(rd, error_object, api_data, payment);
-                    }).always(function() {
-                        api_src(thislist, api_data);
-                    });
-                }
-                if (pending == "polling") { // poll transaction id
-                    if (transactionhash) {
-                        api_proxy({
-                            "api": api_name,
-                            "search": ccsymbol + "/main/txs/" + transactionhash,
-                            "cachetime": 25,
-                            "cachefolder": "1h",
-                            "params": {
-                                "method": "GET"
-                            }
-                        }).done(function(e) {
-                            let data = br_result(e).result;
-                            if (data) {
-                                if (data.error) {
-                                    tx_api_fail(thislist, statuspanel);
-                                    handle_api_fails_list(rd, data.error, api_data, payment);
-                                } else {
-                                    let txd = blockcypher_poll_data(data, setconfirmations, ccsymbol, address);
-                                    if (txd.ccval) {
-                                        let tx_listitem = append_tx_li(txd, rqtype);
-                                        if (tx_listitem) {
-                                            transactionlist.append(tx_listitem.data(txd));
-                                            tx_count(statuspanel, 1);
-                                            compareamounts(rd);
-                                        }
-                                    }
-                                }
-                                return
-                            }
-                            tx_api_fail(thislist, statuspanel);
-                            handle_api_fails_list(rd, "unknown error", api_data, payment);
-                        }).fail(function(jqXHR, textStatus, errorThrown) {
-                            tx_api_fail(thislist, statuspanel);
-                            let error_object = (errorThrown) ? errorThrown : jqXHR;
-                            handle_api_fails_list(rd, error_object, api_data, payment);
-                        }).always(function() {
-                            api_src(thislist, api_data);
-                        });
-                    }
-                }
+                blockcypher_fetch(rd, api_data, rdo);
                 return
             }
             if (api_name == "ethplorer" || api_name == "binplorer") {
-                if (pending == "scanning") { // scan incoming transactions on address
-                    api_proxy({
-                        "api": api_name,
-                        "search": "getAddressHistory/" + address + "?type=transfer",
-                        "cachetime": 25,
-                        "cachefolder": "1h",
-                        "params": {
-                            "method": "GET"
-                        }
-                    }).done(function(e) {
-                        let data = br_result(e).result;
-                        if (data) {
-                            if (data.error) {
-                                tx_api_fail(thislist, statuspanel);
-                                handle_api_fails_list(rd, data.error, api_data, payment);
-                            } else {
-                                $.each(data.operations, function(dat, value) {
-                                    let txd = ethplorer_scan_data(value, setconfirmations, ccsymbol),
-                                        rt_compensate = (rd.inout == "local" && rd.status == "insufficient") ? request_timestamp - 30000 : request_timestamp; // substract extra 30 seconds (extra compensation)
-                                    if ((str_match(value.to, address) === true) && (txd.transactiontime > rt_compensate) && (str_match(ccsymbol, q_obj(value, "tokenInfo.symbol")) === true) && txd.ccval) {
-                                        let tx_listitem = append_tx_li(txd, rqtype);
-                                        if (tx_listitem) {
-                                            transactionlist.append(tx_listitem.data(txd));
-                                            counter++;
-                                        }
-                                        tx_count(statuspanel, counter);
-                                        compareamounts(rd);
-                                    }
-                                    else {
-                                        if (api_name == "binplorer") { // don't rescan on last L2 api
-                                        }
-                                        else {
-                                            handle_api_fails_list(rd, "scan", api_data, payment); // scan l2's
-                                            return
-                                        }
-                                    }
-                                });  
-                            }
-                            return
-                        }
-                        tx_api_fail(thislist, statuspanel);
-                        handle_api_fails_list(rd, "unknown error", api_data, payment);
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        tx_api_fail(thislist, statuspanel);
-                        let error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails_list(rd, error_object, api_data, payment);
-                    }).always(function() {
-                        api_src(thislist, api_data);
-                    });
-                }
-                if (pending == "polling") { // poll transaction id
-                    if (transactionhash) {
-                        api_proxy({
-                            "api": api_name,
-                            "search": "getTxInfo/" + transactionhash,
-                            "cachetime": 25,
-                            "cachefolder": "1h",
-                            "params": {
-                                "method": "GET"
-                            }
-                        }).done(function(e) {
-                            let data = br_result(e).result;
-                            if (data) {
-                                if (data.error) {
-                                    tx_api_fail(thislist, statuspanel);
-                                    handle_api_fails_list(rd, data.error, api_data, payment);
-                                } else {
-                                    let input = data.input,
-                                        amount_hex = input.slice(74, input.length),
-                                        tokenValue = hexToNumberString(amount_hex),
-                                        conf_correct = (data.confirmations < 0) ? 0 : data.confirmations,
-                                        txdata = {
-                                            "timestamp": data.timestamp,
-                                            "hash": transactionhash,
-                                            "confirmations": conf_correct,
-                                            "value": tokenValue,
-                                            "decimals": rd.decimals
-                                        },
-                                        txd = infura_erc20_poll_data(txdata, setconfirmations, ccsymbol);
-                                    if (txd.ccval) {
-                                        api_src(thislist, api_data); // !!overwrite
-                                        let tx_listitem = append_tx_li(txd, rqtype);
-                                        if (tx_listitem) {
-                                            transactionlist.append(tx_listitem.data(txd));
-                                            tx_count(statuspanel, 1);
-                                            compareamounts(rd);
-                                        }
-                                    }
-                                }
-                                return
-                            }
-                            tx_api_fail(thislist, statuspanel);
-                            handle_api_fails_list(rd, "unknown error", api_data, payment);
-                        }).fail(function(jqXHR, textStatus, errorThrown) {
-                            tx_api_fail(thislist, statuspanel);
-                            let error_object = (errorThrown) ? errorThrown : jqXHR;
-                            handle_api_fails_list(rd, error_object, api_data, payment);
-                        }).always(function() {
-                            api_src(thislist, api_data);
-                        });
-                    }
-                }
+                ethplorer_fetch(rd, api_data, rdo);
+                return
+            }
+            if (api_name == "arbiscan") {
+                arbiscan_fetch(rd, api_data, rdo);
                 return
             }
             if (api_name == "blockchair") {
-                if (pending == "scanning") { // scan incoming transactions on address
-                    let scan_url = (erc20 === true) ? "ethereum/erc-20/" + rd.token_contract + "/dashboards/address/" + address : payment + "/dashboards/address/" + address;
-                    api_proxy({
-                        "api": api_name,
-                        "search": scan_url,
-                        "cachetime": 25,
-                        "cachefolder": "1h",
-                        "params": {
-                            "method": "GET"
-                        }
-                    }).done(function(e) {
-                        let data = br_result(e).result;
-                        if (data) {
-                            if (data.error) {
-                                tx_api_fail(thislist, statuspanel);
-                                handle_api_fails_list(rd, data.error, api_data, payment);
-                            } else {
-                                let context = data.context;
-                                if (context.error) {
-                                    tx_api_fail(thislist, statuspanel);
-                                    handle_api_fails_list(rd, context.error, api_data, payment);
-                                } else {
-                                    let latestblock = context.state;
-                                    if (erc20 === true) {
-                                        $.each(data.data, function(dat, value) {
-                                            $.each(value.transactions, function(dt, val) {
-                                                let txd = blockchair_erc20_scan_data(val, setconfirmations, ccsymbol, latestblock);
-                                                if ((txd.transactiontime > request_timestamp) && (str_match(txd.recipient, address) === true) && (str_match(txd.token_symbol, ccsymbol) === true) && txd.ccval) {
-                                                    let tx_listitem = append_tx_li(txd, rqtype);
-                                                    if (tx_listitem) {
-                                                        transactionlist.append(tx_listitem.data(txd));
-                                                        counter++;
-                                                    }
-                                                }
-                                            });
-                                        });
-                                        tx_count(statuspanel, counter);
-                                        compareamounts(rd);
-                                    } else {
-                                        if (payment == "ethereum") {
-                                            $.each(data.data, function(dat, value) {
-                                                $.each(value.calls, function(dt, val) {
-                                                    let txd = blockchair_eth_scan_data(val, setconfirmations, ccsymbol, latestblock);
-                                                    if ((txd.transactiontime > request_timestamp) && (str_match(txd.recipient, address) === true) && txd.ccval) {
-                                                        let tx_listitem = append_tx_li(txd, rqtype);
-                                                        if (tx_listitem) {
-                                                            transactionlist.append(tx_listitem.data(txd));
-                                                            counter++;
-                                                        }
-                                                    }
-                                                });
-                                            });
-                                            tx_count(statuspanel, counter);
-                                            compareamounts(rd);
-                                        } else {
-                                            let txarray = data.data[address].transactions; // get transactions
-                                            if ($.isEmptyObject(txarray)) {} else {
-                                                api_proxy({
-                                                    "api": api_name,
-                                                    "search": payment + "/dashboards/transactions/" + txarray.slice(0, 6), // get last 5 transactions
-                                                    "cachetime": 25,
-                                                    "cachefolder": "1h",
-                                                    "params": {
-                                                        "method": "GET"
-                                                    }
-                                                }).done(function(e) {
-                                                    let dat = br_result(e).result;
-                                                    $.each(dat.data, function(dt, val) {
-                                                        let txd = blockchair_scan_data(val, setconfirmations, ccsymbol, address, latestblock);
-                                                        if (txd.transactiontime > request_timestamp && txd.ccval) { // get all transactions after requestdate
-                                                            let tx_listitem = append_tx_li(txd, rqtype);
-                                                            if (tx_listitem) {
-                                                                transactionlist.append(tx_listitem.data(txd));
-                                                                counter++;
-                                                            }
-                                                        }
-                                                    });
-                                                    tx_count(statuspanel, counter);
-                                                    compareamounts(rd);
-                                                }).fail(function(jqXHR, textStatus, errorThrown) {
-                                                    tx_api_fail(thislist, statuspanel);
-                                                    let error_object = (errorThrown) ? errorThrown : jqXHR;
-                                                    handle_api_fails_list(rd, error_object, api_data, payment);
-                                                });
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            return
-                        }
-                        tx_api_fail(thislist, statuspanel);
-                        handle_api_fails_list(rd, "unknown error", api_data, payment);
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        tx_api_fail(thislist, statuspanel);
-                        let error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails_list(rd, error_object, api_data, payment);
-                    }).always(function() {
-                        api_src(thislist, api_data);
-                    });
-                }
-                if (pending == "polling") { // poll transaction id
-                    if (transactionhash) {
-                        let poll_url = (erc20 === true) ? "ethereum/dashboards/transaction/" + transactionhash + "?erc_20=true" : payment + "/dashboards/transaction/" + transactionhash;
-                        api_proxy({
-                            "api": api_name,
-                            "search": poll_url,
-                            "cachetime": 25,
-                            "cachefolder": "1h",
-                            "params": {
-                                "method": "GET"
-                            }
-                        }).done(function(e) {
-                            let data = br_result(e).result;
-                            if (data) {
-                                let context = data.context;
-                                if (context) {
-                                    if (context.error) {
-                                        tx_api_fail(thislist, statuspanel);
-                                        handle_api_fails_list(rd, context.error, api_data, payment);
-                                        return
-                                    } else {
-                                        let latestblock = context.state;
-                                        if (latestblock) {
-                                            let trxs = q_obj(data, "data." + transactionhash);
-                                            if (trxs) {
-                                                let txd = (erc20 === true) ? blockchair_erc20_poll_data(trxs, setconfirmations, ccsymbol, latestblock) :
-                                                    (payment == "ethereum") ? blockchair_eth_scan_data(trxs.calls[0], setconfirmations, ccsymbol, latestblock) :
-                                                    blockchair_scan_data(trxs, setconfirmations, ccsymbol, address, latestblock);
-                                                if (txd.ccval) {
-                                                    let tx_listitem = append_tx_li(txd, rqtype);
-                                                    if (tx_listitem) {
-                                                        transactionlist.append(tx_listitem.data(txd));
-                                                        tx_count(statuspanel, 1);
-                                                        compareamounts(rd);
-                                                        return
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            tx_api_fail(thislist, statuspanel);
-                            handle_api_fails_list(rd, "unknown error", api_data, payment);
-                        }).fail(function(jqXHR, textStatus, errorThrown) {
-                            tx_api_fail(thislist, statuspanel);
-                            let error_object = (errorThrown) ? errorThrown : jqXHR;
-                            handle_api_fails_list(rd, error_object, api_data, payment);
-                        }).always(function() {
-                            api_src(thislist, api_data);
-                        });
-                    }
-                }
+                blockchair_fetch(rd, api_data, rdo);
                 return
             }
             if (api_name == "nimiq.watch" || api_name == "mopsus.com") {
-                if (pending == "scanning") { // scan incoming transactions on address
-                    api_proxy({
-                        "api": "nimiq.watch",
-                        "search": "account-transactions/" + address,
-                        "cachetime": 25,
-                        "cachefolder": "1h",
-                        "params": {
-                            "method": "GET"
-                        }
-                    }).done(function(e) {
-                        let data = br_result(e).result;
-                        if (data) {
-                            if ($.isEmptyObject(data)) {
-                                tx_api_fail(thislist, statuspanel);
-                                handle_api_fails_list(rd, "unknown error", api_data, payment);
-                            } else {
-                                $.each(data, function(dat, value) {
-                                    let r_address = value.receiver_address.replace(/\s/g, "");
-                                    if (r_address == address) { // filter outgoing transactions
-                                        let txd = nimiq_scan_data(value, setconfirmations);
-                                        if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                            let tx_listitem = append_tx_li(txd, rqtype);
-                                            if (tx_listitem) {
-                                                transactionlist.append(tx_listitem.data(txd));
-                                                counter++;
-                                            }
-                                        }
-                                    }
-                                });
-                                tx_count(statuspanel, counter);
-                                compareamounts(rd);
-                            }
-                            return
-                        }
-                        tx_api_fail(thislist, statuspanel);
-                        handle_api_fails_list(rd, "unknown error", api_data, payment);
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        tx_api_fail(thislist, statuspanel);
-                        let error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_api_fails_list(rd, error_object, api_data, payment);
-                    }).always(function() {
-                        api_src(thislist, api_data);
-                    });
-                }
-                if (pending == "polling") {
-                    if (transactionhash) {
-                        if (api_name == "nimiq.watch") { // poll nimiq.watch transaction id
-                            api_proxy({
-                                "api": api_name,
-                                "search": "transaction/" + nimiqhash(transactionhash),
-                                "cachetime": 25,
-                                "cachefolder": "1h",
-                                "params": {
-                                    "method": "GET"
-                                }
-                            }).done(function(e) {
-                                let data = br_result(e).result;
-                                if (data) {
-                                    if (data.error) {
-                                        tx_api_fail(thislist, statuspanel);
-                                        handle_api_fails_list(rd, data.error, api_data, payment);
-                                    } else {
-                                        let txd = nimiq_scan_data(data, setconfirmations);
-                                        if (txd) {
-                                            if (txd.ccval) {
-                                                let tx_listitem = append_tx_li(txd, rqtype);
-                                                if (tx_listitem) {
-                                                    transactionlist.append(tx_listitem.data(txd));
-                                                    tx_count(statuspanel, 1);
-                                                    compareamounts(rd);
-                                                }
-                                            }
-                                        }
-                                    }
-                                    return
-                                }
-                                tx_api_fail(thislist, statuspanel);
-                                handle_api_fails_list(rd, "unknown error", api_data, payment);
-                            }).fail(function(jqXHR, textStatus, errorThrown) {
-                                tx_api_fail(thislist, statuspanel);
-                                let error_object = (errorThrown) ? errorThrown : jqXHR;
-                                handle_api_fails_list(rd, error_object, api_data, payment);
-                            }).always(function() {
-                                api_src(thislist, api_data);
-                            });
-                            return
-                        }
-                        if (api_name == "mopsus.com") { // poll mopsus.com transaction id
-                            api_proxy({
-                                "api": api_name,
-                                "search": "tx/" + transactionhash,
-                                "cachetime": 25,
-                                "cachefolder": "1h",
-                                "params": {
-                                    "method": "GET"
-                                }
-                            }).done(function(e) {
-                                let data = br_result(e).result;
-                                if (data) {
-                                    if (data.error) {
-                                        tx_api_fail(thislist, statuspanel);
-                                        handle_api_fails_list(rd, data.error, api_data, payment);
-                                    } else {
-                                        api_proxy({
-                                            "api": api_name,
-                                            "search": "quick-stats/",
-                                            "cachetime": 25,
-                                            "cachefolder": "1h",
-                                            "params": {
-                                                "method": "GET"
-                                            }
-                                        }).done(function(res) {
-                                            let e = br_result(res),
-                                                bh = q_obj(e, "result.latest_block.height");
-                                            if (bh) {
-                                                let txd = nimiq_scan_data(data, setconfirmations, bh, null, transactionhash);
-                                                if (txd) {
-                                                    if (txd.ccval) {
-                                                        let tx_listitem = append_tx_li(txd, rqtype);
-                                                        if (tx_listitem) {
-                                                            transactionlist.append(tx_listitem.data(txd));
-                                                            tx_count(statuspanel, 1);
-                                                            compareamounts(rd);
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }).fail(function(jqXHR, textStatus, errorThrown) {
-                                            tx_api_fail(thislist, statuspanel);
-                                            let error_object = (errorThrown) ? errorThrown : jqXHR;
-                                            handle_api_fails_list(rd, error_object, api_data, payment);
-                                        });
-                                    }
-                                    return
-                                }
-                                tx_api_fail(thislist, statuspanel);
-                                handle_api_fails_list(rd, "unknown error", api_data, payment);
-                            }).fail(function(jqXHR, textStatus, errorThrown) {
-                                tx_api_fail(thislist, statuspanel);
-                                let error_object = (errorThrown) ? errorThrown : jqXHR;
-                                handle_api_fails_list(rd, error_object, api_data, payment);
-                            }).always(function() {
-                                api_src(thislist, api_data);
-                            });
-                        }
-                    }
-                }
+                nimiq_fetch(rd, api_data, rdo);
+                return
             }
-            if (payment == "kaspa") {
-                if (pending == "scanning") { // scan incoming transactions on address
-                    if (api_name == "kaspa.org") {
-                        api_proxy({
-                            "api": api_name,
-                            "search": "info/virtual-chain-blue-score",
-                            "cachetime": 25,
-                            "cachefolder": "1h",
-                            "params": {
-                                "method": "GET"
-                            }
-                        }).done(function(e) {
-                            let data = br_result(e).result;
-                            if (data) {
-                                let current_bluescore = data.blueScore;
-                                if (current_bluescore) {
-                                    api_proxy({
-                                        "api": api_name,
-                                        "search": "addresses/" + address + "/full-transactions",
-                                        "cachetime": 25,
-                                        "cachefolder": "1h",
-                                        "params": {
-                                            "method": "GET"
-                                        }
-                                    }).done(function(e) {
-                                        let data = br_result(e).result;
-                                        if (data) {
-                                            if ($.isEmptyObject(data)) {
-                                                tx_api_fail(thislist, statuspanel);
-                                                handle_api_fails_list(rd, "unknown error", api_data, payment);
-                                            } else {
-                                                $.each(data, function(dat, value) {
-                                                    let txd = kaspa_scan_data(value, address, setconfirmations, current_bluescore);
-                                                    if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                                        let tx_listitem = append_tx_li(txd, rqtype);
-                                                        if (tx_listitem) {
-                                                            transactionlist.append(tx_listitem.data(txd));
-                                                            counter++;
-                                                        }
-                                                    }
-                                                });
-                                                tx_count(statuspanel, counter);
-                                                compareamounts(rd);
-                                            }
-                                            return
-                                        }
-                                        tx_api_fail(thislist, statuspanel);
-                                        handle_api_fails_list(rd, "unknown error", api_data, payment);
-                                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                                        tx_api_fail(thislist, statuspanel);
-                                        let error_object = (errorThrown) ? errorThrown : jqXHR;
-                                        handle_api_fails_list(rd, error_object, api_data, payment);
-                                    }).always(function() {
-                                        api_src(thislist, api_data);
-                                    });
-                                    return
-                                }
-                            }
-                            tx_api_fail(thislist, statuspanel);
-                            handle_api_fails_list(rd, "unknown error", api_data, payment);
-                        }).fail(function(jqXHR, textStatus, errorThrown) {
-                            tx_api_fail(thislist, statuspanel);
-                            let error_object = (errorThrown) ? errorThrown : jqXHR;
-                            handle_api_fails_list(rd, error_object, api_data, payment);
-                        }).always(function() {
-                            api_src(thislist, api_data);
-                        });
-                    }
-                    return
-                }
-                if (pending == "polling") {
-                    if (transactionhash) {
-                        if (api_name == "kaspa.org") {
-                            api_proxy({
-                                "api": api_name,
-                                "search": "info/virtual-chain-blue-score",
-                                "cachetime": 25,
-                                "cachefolder": "1h",
-                                "params": {
-                                    "method": "GET"
-                                }
-                            }).done(function(e) {
-                                let data = br_result(e).result;
-                                if (data) {
-                                    let current_bluescore = data.blueScore;
-                                    if (current_bluescore) {
-                                        api_proxy({
-                                            "api": api_name,
-                                            "search": "transactions/" + transactionhash,
-                                            "cachetime": 25,
-                                            "cachefolder": "1h",
-                                            "params": {
-                                                "method": "GET"
-                                            }
-                                        }).done(function(e) {
-                                            let data = br_result(e).result;
-                                            if (data) {
-                                                if (data.error) {
-                                                    tx_api_fail(thislist, statuspanel);
-                                                    handle_api_fails_list(rd, data.error, api_data, payment);
-                                                } else {
-                                                    let txd = kaspa_scan_data(data, address, setconfirmations, current_bluescore);
-                                                    if (txd) {
-                                                        if (txd.ccval) {
-                                                            let tx_listitem = append_tx_li(txd, rqtype);
-                                                            if (tx_listitem) {
-                                                                transactionlist.append(tx_listitem.data(txd));
-                                                                tx_count(statuspanel, 1);
-                                                                compareamounts(rd);
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                                return
-                                            }
-                                            tx_api_fail(thislist, statuspanel);
-                                            handle_api_fails_list(rd, "unknown error", api_data, payment);
-                                        }).fail(function(jqXHR, textStatus, errorThrown) {
-                                            tx_api_fail(thislist, statuspanel);
-                                            let error_object = (errorThrown) ? errorThrown : jqXHR;
-                                            handle_api_fails_list(rd, error_object, api_data, payment);
-                                        }).always(function() {
-                                            api_src(thislist, api_data);
-                                        });
-                                        return
-                                    }
-                                }
-                                tx_api_fail(thislist, statuspanel);
-                                handle_api_fails_list(rd, "unknown error", api_data, payment);
-                            }).fail(function(jqXHR, textStatus, errorThrown) {
-                                tx_api_fail(thislist, statuspanel);
-                                let error_object = (errorThrown) ? errorThrown : jqXHR;
-                                handle_api_fails_list(rd, error_object, api_data, payment);
-                            }).always(function() {
-                                api_src(thislist, api_data);
-                            });
-                            return
-                        }
-                        if (api_name == "kas.fyi") {
-                            api_proxy({
-                                "api": api_name,
-                                "search": "transactions/" + transactionhash,
-                                "cachetime": 25,
-                                "cachefolder": "1h",
-                                "params": {
-                                    "method": "GET"
-                                }
-                            }).done(function(e) {
-                                let data = br_result(e).result;
-                                if (data) {
-                                    if (data.error) {
-                                        tx_api_fail(thislist, statuspanel);
-                                        handle_api_fails_list(rd, data.error, api_data, payment);
-                                    } else {
-                                        let txd = kaspa_poll_fyi_data(data, address, setconfirmations);
-                                        if (txd) {
-                                            if (txd.ccval) {
-                                                let tx_listitem = append_tx_li(txd, rqtype);
-                                                if (tx_listitem) {
-                                                    transactionlist.append(tx_listitem.data(txd));
-                                                    tx_count(statuspanel, 1);
-                                                    compareamounts(rd);
-                                                }
-                                            }
-                                        }
-                                    }
-                                    return
-                                }
-                                tx_api_fail(thislist, statuspanel);
-                                handle_api_fails_list(rd, "unknown error", api_data, payment);
-                            }).fail(function(jqXHR, textStatus, errorThrown) {
-                                tx_api_fail(thislist, statuspanel);
-                                let error_object = (errorThrown) ? errorThrown : jqXHR;
-                                handle_api_fails_list(rd, error_object, api_data, payment);
-                            }).always(function() {
-                                api_src(thislist, api_data);
-                            });
-                            return
-                        }
-                    }
-                    return
-                }
+            if (rd.payment == "kaspa") {
+                kaspa_fetch(rd, api_data, rdo);
+                return
             }
         }
     }
@@ -1386,7 +320,7 @@ function fail_dialogs(apisrc, error) {
     api_eror_msg(apisrc, error_data)
 }
 
-function handle_api_fails_list(rd, error, api_data, thispayment) {
+function handle_api_fails_list(rd, error, api_data) {
     let error_data = get_api_error_data(error),
         requestid = rd.requestid;
     if (!api_data) {
@@ -1395,25 +329,27 @@ function handle_api_fails_list(rd, error, api_data, thispayment) {
         return
     }
     let api_name = api_data.name,
-        nextapi = get_next_api(thispayment, api_name, requestid),
+        nextapi = get_next_api(rd.payment, api_name, requestid),
         nextrpc;
     if (nextapi === false) {
         let api_url = api_data.url,
-            nextrpc = get_next_rpc(thispayment, api_url, requestid);
-        if (nextrpc === false) { // try next api
-            let next_proxy = get_next_proxy();
-            if (next_proxy) {
-                get_api_inputs(rd, api_data, api_name);
-                return;
+            nextrpc = get_next_rpc(rd.payment, api_url, requestid);
+        if (nextrpc === false) { // try next proxy
+            if (error == "scan") {} else {
+                let next_proxy = get_next_proxy();
+                if (next_proxy) {
+                    get_api_inputs(rd, api_data);
+                    return;
+                }
+                let rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown";
+                api_eror_msg(rpc_id, error_data);
             }
-            let rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown";
-            api_eror_msg(rpc_id, error_data);
-            api_callback(requestid);
-            return
         }
+        api_callback(requestid);
+        return
     }
     if (nextapi) {
-        get_api_inputs(rd, nextapi, nextapi.name);
+        get_api_inputs(rd, nextapi);
     } else if (nextrpc) {
         get_rpc_inputs(rd, nextrpc);
     }
@@ -1557,327 +493,35 @@ function get_rpc_inputs_init(rd, api_data) {
 }
 
 function get_rpc_inputs(rd, api_data) {
-    let requestid = rd.requestid,
-        thislist = $("#" + requestid);
+    let rdo = tx_data(rd),
+        thislist = rdo.thislist,
+        transactionlist = rdo.transactionlist;
     if (thislist.hasClass("scan")) {
-        rpc_attempts[requestid + api_data.url] = true;
-        let payment = rd.payment,
-            pending = rd.pending,
-            address = rd.address,
-            requestdate = (rd.inout == "incoming") ? rd.timestamp : rd.requestdate,
-            request_timestamp = requestdate - 30000, // 30 seconds compensation for unexpected results
-            ccsymbol = rd.currencysymbol,
-            getconfirmations = rd.set_confirmations,
-            getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
-            setconfirmations = (getconfint) ? getconfint : 1, // set minimum confirmations to 1
-            statuspanel = thislist.find(".pmetastatus"),
-            transactionlist = thislist.find("ul.transactionlist"),
-            transactionhash = rd.txhash,
-            counter = 0,
-            url = api_data.url,
-            rpcurl = get_rpc_url(api_data), // (bitrequest_coin_settings.js)
-            erc20 = (rd.erc20 === true),
-            rqtype = rd.requesttype;
+        rpc_attempts[rd.requestid + api_data.url] = true;
         thislist.removeClass("no_network");
-        if (pending == "no" || pending == "incoming" || thislist.hasClass("expired")) {
+        if (rdo.pending == "no" || rdo.pending == "incoming" || thislist.hasClass("expired")) {
             transactionlist.find("li").each(function() {
                 tx_list.push($(this).data("txhash"));
             });
-            api_callback(requestid, true);
+            api_callback(rd.requestid, true);
             return
         }
-        if (pending == "scanning" || pending == "polling") {
+        if (rdo.pending == "scanning" || rdo.pending == "polling") {
             transactionlist.html("");
-            if (is_btchain(payment) === true) {
-                api_proxy({ // get latest blockheight
-                    "api_url": url + "/api/blocks/tip/height",
-                    "proxy": false,
-                    "params": {
-                        "method": "GET"
-                    }
-                }).done(function(lb) {
-                    let latestblock = br_result(lb).result;
-                    if (latestblock) {
-                        setTimeout(function() {
-                            if (pending == "scanning") { // scan incoming transactions on address
-                                api_proxy({
-                                    "api_url": url + "/api/address/" + address + "/txs",
-                                    "proxy": false,
-                                    "params": {
-                                        "method": "GET"
-                                    }
-                                }).done(function(e) {
-                                    let data = br_result(e).result;
-                                    if (data) {
-                                        if ($.isEmptyObject(data)) {} else {
-                                            $.each(data, function(dat, value) {
-                                                if (value.txid) { // filter outgoing transactions
-                                                    let txd = mempoolspace_scan_data(value, setconfirmations, ccsymbol, address, latestblock);
-                                                    if (txd.transactiontime > request_timestamp && txd.ccval) {
-                                                        let tx_listitem = append_tx_li(txd, rqtype);
-                                                        if (tx_listitem) {
-                                                            transactionlist.append(tx_listitem.data(txd));
-                                                            counter++;
-                                                        }
-                                                    }
-                                                }
-                                            });
-                                            tx_count(statuspanel, counter);
-                                            compareamounts(rd);
-                                        }
-                                        return
-                                    }
-                                    tx_api_fail(thislist, statuspanel);
-                                    handle_rpc_fails_list(rd, {
-                                        "error": "No results found",
-                                        "console": true
-                                    }, api_data, payment);
-                                }).fail(function(jqXHR, textStatus, errorThrown) {
-                                    tx_api_fail(thislist, statuspanel);
-                                    let error_object = (errorThrown) ? errorThrown : jqXHR;
-                                    handle_rpc_fails_list(rd, error_object, api_data, payment);
-                                });
-                                return
-                            }
-                            api_proxy({ // poll mempool.space transaction id
-                                "api_url": url + "/api/tx/" + transactionhash,
-                                "proxy": false,
-                                "params": {
-                                    "method": "GET"
-                                }
-                            }).done(function(e) {
-                                let data = br_result(e).result;
-                                if (data) {
-                                    let txd = mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, latestblock);
-                                    if (txd) {
-                                        if (txd.ccval) {
-                                            let tx_listitem = append_tx_li(txd, rqtype);
-                                            if (tx_listitem) {
-                                                transactionlist.append(tx_listitem.data(txd));
-                                                tx_count(statuspanel, 1);
-                                                compareamounts(rd);
-                                            }
-                                        }
-                                    }
-                                    return
-                                }
-                                tx_api_fail(thislist, statuspanel);
-                                handle_rpc_fails_list(rd, "unknown error", api_data, payment);
-                            }).fail(function(jqXHR, textStatus, errorThrown) {
-                                tx_api_fail(thislist, statuspanel);
-                                let error_object = (errorThrown) ? errorThrown : jqXHR;
-                                handle_rpc_fails_list(rd, error_object, api_data, payment);
-                            });
-                        }, 500);
-                        return
-                    }
-                    tx_api_fail(thislist, statuspanel);
-                    handle_rpc_fails_list(rd, "unknown error", api_data, payment);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    tx_api_fail(thislist, statuspanel);
-                    let error_object = (errorThrown) ? errorThrown : jqXHR;
-                    handle_rpc_fails_list(rd, error_object, api_data, payment);
-                }).always(function() {
-                    api_src(thislist, api_data);
-                });
+            if (is_btchain(rd.payment) === true) {
+                mempoolspace_rpc(rd, api_data, rdo);
                 return
             }
-            if (payment == "ethereum" || erc20 === true) {
-                if (pending == "scanning") { // scan incoming transactions on address
-                    handle_rpc_fails_list(rd, false, api_data, payment); // use api instead
+            if (rd.payment == "ethereum" || rd.erc20 === true) {
+                if (rdo.pending == "scanning") { // scan incoming transactions on address
+                    handle_rpc_fails_list(rd, false, api_data, rd.payment); // use api instead
                     return
                 }
-                let set_url = (rpcurl) ? rpcurl : main_eth_node;
-                api_proxy(eth_params(set_url, 25, "eth_blockNumber", [])).done(function(a) {
-                    let r_1 = inf_result(a);
-                    if (r_1) {
-                        api_proxy(eth_params(set_url, 25, "eth_getTransactionByHash", [transactionhash])).done(function(b) {
-                            let r_2 = inf_result(b);
-                            if (r_2) {
-                                let this_bn = r_2.blockNumber;
-                                api_proxy(eth_params(set_url, 25, "eth_getBlockByNumber", [this_bn, false])).done(function(c) {
-                                    let r_3 = inf_result(c);
-                                    if (r_3) {
-                                        let tbn = Number(this_bn),
-                                            cbn = Number(r_1),
-                                            conf = cbn - tbn,
-                                            conf_correct = (conf < 0) ? 0 : conf,
-                                            txd;
-                                        if (erc20 === true) {
-                                            let input = r_2.input;
-                                            if (str_match(input, address.slice(3)) === true) {
-                                                let signature_hex = input.slice(2, 10),
-                                                    address_hex = input.slice(10, 74),
-                                                    amount_hex = input.slice(74, input.length),
-                                                    tokenValue = hexToNumberString(amount_hex),
-                                                    txdata = {
-                                                        "timestamp": r_3.timestamp,
-                                                        "hash": transactionhash,
-                                                        "confirmations": conf_correct,
-                                                        "value": tokenValue,
-                                                        "decimals": rd.decimals
-                                                    },
-                                                    txd = infura_erc20_poll_data(txdata, setconfirmations, ccsymbol);
-                                            } else {
-                                                tx_api_fail(thislist, statuspanel);
-                                                handle_rpc_fails_list(rd, inf_err(set_url), api_data, payment);
-                                                return
-                                            }
-                                        } else {
-                                            let txdata = {
-                                                    "timestamp": Number(r_3.timestamp),
-                                                    "hash": transactionhash,
-                                                    "confirmations": conf_correct,
-                                                    "value": Number(r_2.value)
-                                                },
-                                                txd = infura_eth_poll_data(txdata, setconfirmations, ccsymbol);
-                                        }
-                                        if (txd.ccval) {
-                                            let tx_listitem = append_tx_li(txd, rqtype);
-                                            if (tx_listitem) {
-                                                transactionlist.append(tx_listitem.data(txd));
-                                            }
-                                            tx_count(statuspanel, 1);
-                                            compareamounts(rd);
-                                            return
-                                        }
-                                    }
-                                    tx_api_fail(thislist, statuspanel);
-                                    handle_rpc_fails_list(rd, inf_err(set_url), api_data, payment);
-                                }).fail(function(jqXHR, textStatus, errorThrown) {
-                                    tx_api_fail(thislist, statuspanel);
-                                    handle_rpc_fails_list(rd, errorThrown, api_data, payment);
-                                });
-                                return
-                            }
-                            tx_api_fail(thislist, statuspanel);
-                            handle_rpc_fails_list(rd, inf_err(set_url), api_data, payment);
-                        }).fail(function(jqXHR, textStatus, errorThrown) {
-                            tx_api_fail(thislist, statuspanel);
-                            handle_rpc_fails_list(rd, errorThrown, api_data, payment);
-                        });
-                        return
-                    }
-                    tx_api_fail(thislist, statuspanel);
-                    handle_rpc_fails_list(rd, inf_err(set_url), api_data, payment);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    tx_api_fail(thislist, statuspanel);
-                    handle_rpc_fails_list(rd, errorThrown, api_data, payment);
-                }).always(function() {
-                    api_src(thislist, api_data);
-                });
+                infura_txd_rpc(rd, api_data, rdo);
                 return
             }
-            if (payment == "nano") {
-                if (pending == "scanning") { // scan incoming transactions on address
-                    api_proxy({
-                        "api": "nano",
-                        "search": "account",
-                        "cachetime": 25,
-                        "cachefolder": "1h",
-                        "custom": "nano_txd",
-                        "api_url": api_data.url,
-                        "proxy": true,
-                        "params": {
-                            "method": "POST",
-                            "cache": true,
-                            "data": JSON.stringify({
-                                "action": "accounts_pending",
-                                "accounts": [address],
-                                "sorting": true,
-                                "include_active": true,
-                                "count": 100
-                            })
-                        }
-                    }).done(function(e) {
-                        let data = br_result(e).result;
-                        if (data) {
-                            let nano_data = data.data;
-                            if (nano_data) {
-                                let pending_array_node = (nano_data[0]) ? nano_data[0].pending : [],
-                                    pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
-                                    history_array_node = (nano_data[1]) ? nano_data[1].history : [],
-                                    history_array = $.isEmptyObject(history_array_node) ? [] : history_array_node,
-                                    merged_array = pending_array.concat(history_array).sort(function(x, y) { // merge and sort arrays
-                                        return y.local_timestamp - x.local_timestamp;
-                                    });
-                                $.each(merged_array, function(data, value) {
-                                    let txd = nano_scan_data(value, setconfirmations, ccsymbol);
-                                    if ((txd.transactiontime > request_timestamp) && txd.ccval && (value.type === undefined || value.type == "receive")) {
-                                        let tx_listitem = append_tx_li(txd, rqtype);
-                                        if (tx_listitem) {
-                                            transactionlist.append(tx_listitem.data(txd));
-                                            counter++;
-                                        }
-                                    }
-                                });
-                                tx_count(statuspanel, counter);
-                                compareamounts(rd);
-                            }
-                            return
-                        }
-                        tx_api_fail(thislist, statuspanel);
-                        handle_rpc_fails_list(rd, {
-                            "error": "No results found",
-                            "console": true
-                        }, api_data, payment);
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        tx_api_fail(thislist, statuspanel);
-                        let error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_rpc_fails_list(rd, error_object, api_data, payment);
-                    }).always(function() {
-                        api_src(thislist, api_data);
-                    });
-                    return
-                }
-                if (pending == "polling") {
-                    api_proxy({
-                        "api": "nano",
-                        "search": "block",
-                        "cachetime": 25,
-                        "cachefolder": "1h",
-                        "api_url": api_data.url,
-                        "params": {
-                            "method": "POST",
-                            "cache": true,
-                            "data": JSON.stringify({
-                                "action": "block_info",
-                                "json_block": true,
-                                "hash": transactionhash
-                            })
-                        }
-                    }).done(function(e) {
-                        let data = br_result(e).result;
-                        if (data) {
-                            if (data.error) {
-                                tx_api_fail(thislist, statuspanel);
-                                handle_rpc_fails_list(rd, data.error, api_data, payment);
-                            } else {
-                                let txd = nano_scan_data(data, setconfirmations, ccsymbol, transactionhash);
-                                if (txd.ccval) {
-                                    let tx_listitem = append_tx_li(txd, rqtype);
-                                    if (tx_listitem) {
-                                        transactionlist.append(tx_listitem.data(txd));
-                                    }
-                                    tx_count(statuspanel, 1);
-                                    compareamounts(rd);
-                                }
-                            }
-                            return
-                        }
-                        tx_api_fail(thislist, statuspanel);
-                        handle_rpc_fails_list(rd, {
-                            "error": "No results found",
-                            "console": true
-                        }, api_data, payment);
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        tx_api_fail(thislist, statuspanel);
-                        let error_object = (errorThrown) ? errorThrown : jqXHR;
-                        handle_rpc_fails_list(rd, error_object, api_data, payment);
-                    }).always(function() {
-                        api_src(thislist, api_data);
-                    });
-                }
+            if (rd.payment == "nano") {
+                nano_rpc(rd, api_data, rdo);
                 return
             }
             get_api_inputs_defaults(rd, rpc_data);
@@ -1885,80 +529,34 @@ function get_rpc_inputs(rd, api_data) {
     }
 }
 
-function inf_result(r) {
-    let ir1 = br_result(r);
-    if (ir1) {
-        let ir2 = ir1.result;
-        if (ir2) {
-            return ir2.result;
-        }
-    }
-    return false;
-}
-
-function inf_err(set_url) {
-    return "error fetching data from " + set_url;
-}
-
-function eth_params(set_url, cachetime, method, params) {
-    let payload = {
-        "cachetime": cachetime,
-        "cachefolder": "1h",
-        "params": {
-            "method": "POST",
-            "data": JSON.stringify({
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": method,
-                "params": params
-            }),
-            "headers": {
-                "Content-Type": "application/json"
-            }
-        }
-    }
-    if (set_url == main_eth_node) {
-        $.extend(payload, {
-            "api": "infura"
-        });
-    } else {
-        $.extend(payload, {
-            "api_url": set_url,
-            "proxy": false
-        });
-    }
-    return payload;
-}
-
 // RPC error handling
 
-function handle_rpc_fails_list(rd, error, rpc_data, thispayment) {
+function handle_rpc_fails_list(rd, error, rpc_data) {
     let api_url = rpc_data.url,
         requestid = rd.requestid,
-        nextrpc = get_next_rpc(thispayment, api_url, requestid),
+        nextrpc = get_next_rpc(rd.payment, api_url, requestid),
         api_name = rpc_data.name,
-        nextapi = get_next_api(thispayment, api_name, requestid);
+        nextapi = get_next_api(rd.payment, api_name, requestid);
     if (nextrpc === false) {
-        if (nextapi === false) { // try next api
-            let next_proxy = get_next_proxy();
-            if (next_proxy) {
-                get_rpc_inputs(rd, rpc_data, api_name);
-                return
+        if (nextapi === false) { // try next proxy
+            if (error == "scan") {} else {
+                let next_proxy = get_next_proxy();
+                if (next_proxy) {
+                    get_rpc_inputs(rd, rpc_data);
+                    return
+                }
+                let rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
+                    error_data = get_api_error_data(error);
+                api_eror_msg(rpc_id, error_data);
             }
-            let rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
-                error_data = get_api_error_data(error);
-            api_callback(requestid);
-            if (error == "scan") {
-                return
-            }
-            api_eror_msg(rpc_id, error_data);
-            return
         }
+        api_callback(requestid);
+        return
     }
     if (nextrpc) {
         get_rpc_inputs(rd, nextrpc);
     } else if (nextapi) {
-        get_api_inputs(rd, nextapi, nextapi.name);
+        get_api_inputs(rd, nextapi);
     }
 }
 
@@ -2148,7 +746,9 @@ function compareamounts(rd, ln) {
             api_callback(thisrequestid);
             return
         }
-        let latestconf = (rd.no_conf === true) ? 0 : firstlist.data("confirmations"), // only update on change
+        let conf = firstlist.data("confirmations"),
+            confcor = (conf) ? conf : 0,
+            latestconf = (rd.no_conf === true) ? 0 : confcor, // only update on change
             hc_prefix = "historic_" + thisrequestid,
             historiccache = br_get_session(hc_prefix),
             cacheval = latestinput + latestconf;

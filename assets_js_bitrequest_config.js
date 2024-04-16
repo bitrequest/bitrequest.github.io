@@ -19,14 +19,18 @@ const apptitle = "Bitrequest",
         "https://www.bitrequest.app/"
     ],
     hosted_proxy = random_array_item(proxy_list), // load balance proxies
-    proxy_version = "0.009",
+    proxy_version = "0.010",
     firebase_dynamic_link_domain = "bitrequest.page.link",
     firebase_shortlink = "https://" + firebase_dynamic_link_domain + "/",
     androidpackagename = "io.bitrequest.app",
     main_bc_ws = "ws://socket.blockcypher.com/v1/",
     main_bc_wss = "wss://socket.blockcypher.com/v1/",
     main_eth_node = "https://mainnet.infura.io/v3/",
+    main_arbitrum_node = "https://arbitrum-mainnet.infura.io/v3/",
+    main_alchemy_node = "https://eth-mainnet.g.alchemy.com/v2/",
     main_eth_socket = "wss://mainnet.infura.io/ws/v3/",
+    main_arbitrum_socket = "wss://arbitrum-mainnet.infura.io/ws/v3/",
+    main_alchemy_socket = "wss://eth-mainnet.g.alchemy.com/v2/",
     main_nano_node = "https://www.bitrequest.app:8020",
     main_kas_wss = "wss://api.kaspa.org",
     sec_kas_wss = "wss://socket.kas.fyi",
@@ -746,6 +750,12 @@ const apptitle = "Bitrequest",
                                 "display": true
                             },
                             {
+                                "name": "arbiscan",
+                                "url": "arbiscan.io",
+                                "api": true,
+                                "display": true
+                            },
+                            {
                                 "name": "blockchair",
                                 "url": "blockchair.com",
                                 "api": true,
@@ -765,16 +775,21 @@ const apptitle = "Bitrequest",
                     "websockets": {
                         "icon": "tab",
                         "selected": {
-                            "name": main_eth_socket,
-                            "url": main_eth_socket,
+                            "name": main_alchemy_socket,
+                            "url": main_alchemy_socket,
                             "display": true
                         },
                         "apis": [{
-                            "name": main_eth_socket,
-                            "url": main_eth_socket,
+                            "name": main_alchemy_socket,
+                            "url": main_alchemy_socket,
                             "display": true
                         }],
                         "options": []
+                    },
+                    "layer2": {
+                        "icon": "new-tab",
+                        "selected": "Ethereum (L1)",
+                        "options": ["Ethereum (L1)", "Arbitrum (L2)"]
                     },
                     "Xpub": {
                         "active": true,
@@ -1333,10 +1348,16 @@ const apptitle = "Bitrequest",
                             "display": true
                         },
                         {
+                            "name": "arbiscan",
+                            "url": "arbiscan.io",
+                            "api": true,
+                            "display": true
+                        },
+                        {
                             "name": "binplorer",
                             "url": "binplorer.com",
                             "api": true,
-                            "display": false
+                            "display": true
                         },
                         {
                             "name": "blockchair",
@@ -1347,6 +1368,11 @@ const apptitle = "Bitrequest",
                         {
                             "name": main_eth_node,
                             "url": main_eth_node,
+                            "display": true
+                        },
+                        {
+                            "name": main_arbitrum_node,
+                            "url": main_arbitrum_node,
                             "display": true
                         }
                     ],
@@ -1368,6 +1394,11 @@ const apptitle = "Bitrequest",
                         "display": true
                     }],
                     "options": []
+                },
+                "layer2": {
+                    "icon": "new-tab",
+                    "selected": "Ethereum (L1)",
+                    "options": ["Ethereum (L1)", "Arbitrum (L2)", "BNB smart chain (L2)"]
                 }
             }
         },
@@ -1466,16 +1497,18 @@ const apptitle = "Bitrequest",
                 "heading": "API Keys",
                 "selected": "Api Keys",
                 "icon": "icon-key",
+                "alchemy": null,
+                "arbiscan": null,
                 "bitly": null,
-                "firebase": null,
-                "coinmarketcap": null,
-                "fixer": null,
-                "blockcypher": null,
-                "ethplorer": null,
                 "blockchair": null,
+                "blockcypher": null,
+                "coinmarketcap": null,
                 "currencylayer": null,
-                "infura": null,
-                "exchangeratesapi": null
+                "ethplorer": null,
+                "exchangeratesapi": null,
+                "firebase": null,
+                "fixer": null,
+                "infura": null
             },
             {
                 "id": "contactform",
@@ -1515,6 +1548,20 @@ const apptitle = "Bitrequest",
                 "key_param": "apiKey=",
                 "api_key": null,
                 "sign_up": "https://ethplorer.io/wallet/#"
+            },
+            {
+                "name": "arbiscan",
+                "base_url": "https://api.arbiscan.io/api",
+                "key_param": "apikey=",
+                "api_key": null,
+                "sign_up": "https://arbiscan.io/register/"
+            },
+            {
+                "name": "alchemy",
+                "base_url": main_alchemy_node,
+                "key_param": null,
+                "api_key": null,
+                "sign_up": "https://auth.alchemy.com/signup/"
             },
             {
                 "name": "binplorer",
@@ -1654,6 +1701,13 @@ const apptitle = "Bitrequest",
                 "sign_up": "https://infura.io/register"
             },
             {
+                "name": "arbitrum",
+                "base_url": main_arbitrum_node,
+                "key_param": null,
+                "api_key": null,
+                "sign_up": "https://infura.io/register"
+            },
+            {
                 "name": "google_auth",
                 "base_url": null,
                 "key_param": null,
@@ -1719,6 +1773,13 @@ const apptitle = "Bitrequest",
             {
                 "name": "binplorer.com",
                 "url": "https://binplorer.com/",
+                "prefix": null,
+                "tx_prefix": "tx/",
+                "address_prefix": "address/"
+            },
+            {
+                "name": "arbiscan.io",
+                "url": "https://arbiscan.io/",
                 "prefix": null,
                 "tx_prefix": "tx/",
                 "address_prefix": "address/"
