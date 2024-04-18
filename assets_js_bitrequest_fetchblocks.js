@@ -196,8 +196,8 @@ function lightning_fetch(rd, api_data, rdo) {
                 "name": "proxy"
             });
         });
-        if (rdo.ln_only) {
-            return
+        if (ln_only) {
+            return "exit";
         }
     } else if (rdo.pending == "polling" && lnhash) {
         let invoice = lnd.invoice;
@@ -252,14 +252,14 @@ function lightning_fetch(rd, api_data, rdo) {
                         "name": "proxy"
                     });
                 });
-                return
+                return "exit";
             }
         }
         handle_api_fails_list(rd, {
             "error": "invoice not found",
             "console": true
         }, false);
-        return
+        return "exit";
     }
 }
 

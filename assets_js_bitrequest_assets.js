@@ -26,22 +26,2498 @@ function c_icons(cpid) {
 function contracts(ccsymbol, network) {
     const nw_list = [{
                 "usdt": {
+                    "main": "0xdac17f958d2ee523a2206206994597c13d831ec7",
                     "arbitrum": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"
                 }
             },
             {
                 "usdc": {
+                    "main": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
                     "arbitrum": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
                 }
             },
             {
                 "shib": {
+                    "main": "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce",
                     "arbitrum": "0x5033833c9fe8B9d3E09EEd2f73d2aaF7E3872fd1"
                 }
             },
             {
                 "link": {
+                    "main": "0x514910771af9ca656af840dff83e8264ecf986ca",
                     "arbitrum": "0xf97f4df75117a78c1A5a0DBb814Af92458539FB4"
+                }
+            },
+            {
+                "leo": {
+                    "main": "0x2af5d2ad76741191d15dfe7bf6ac92d4bd912ca3",
+                    "arbitrum": false
+                }
+            },
+            {
+                "dai": {
+                    "main": "0x6b175474e89094c44da98b954eedeac495271d0f",
+                    "arbitrum": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
+                }
+            },
+            {
+                "uni": {
+                    "main": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+                    "arbitrum": "0xFa7F8980b0f1E64A2062791cc3b0871572f1F7f0"
+                }
+            },
+            {
+                "fdusd": {
+                    "main": "0xc5f0f7b66764F6ec8C8Dff7BA683102295E16409",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mnt": {
+                    "main": "0x3c3a81e81dc49a522a592e7622a7e711c06bf354",
+                    "arbitrum": "0x9c1a1C7bA9c2602123FD7EF3eb41a769edf6C53A"
+                }
+            },
+            {
+                "okb": {
+                    "main": "0x75231f58b43240c9718dd58b4967c5114342a86c",
+                    "arbitrum": "0x4a06B3297fF3ef7F13113d6274A5A1737bdB49AC"
+                }
+            },
+            {
+                "rndr": {
+                    "main": "0x6de037ef9ad2725eb40118bb1702ebb27e4aeb24",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mkr": {
+                    "main": "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
+                    "arbitrum": false
+                }
+            },
+            {
+                "imx": {
+                    "main": "0xf57e7e7c23978c3caec3c3548e3d615c346e79ff",
+                    "arbitrum": false
+                }
+            },
+            {
+                "grt": {
+                    "main": "0xc944e90c64b2c07662a292be6244bdf05cda44a7",
+                    "arbitrum": "0x9623063377AD1B27544C965cCd7342f7EA7e88C7"
+                }
+            },
+            {
+                "pepe": {
+                    "main": "0x6982508145454ce325ddbe47a25d4ec3d2311933",
+                    "arbitrum": "0x25d887Ce7a35172C62FeBFD67a1856F20FaEbB00"
+                }
+            },
+            {
+                "ldo": {
+                    "main": "0x5a98fcbea516cf06857215779fd812ca3bef1b32",
+                    "arbitrum": "0x13Ad51ed4F1B7e9Dc168d8a00cB3f4dDD85EfA60"
+                }
+            },
+            {
+                "bgb": {
+                    "main": "0x19de6b897ed14a376dda0fe53a5420d2ac828a28",
+                    "arbitrum": false
+                }
+            },
+            {
+                "pendle": {
+                    "main": "0x808507121b80c02388fad14726482e061b8da827",
+                    "arbitrum": "0x0c880f6761F1af8d9Aa9C466984b80DAb9a8c9e8"
+                }
+            },
+            {
+                "beam": {
+                    "main": "0x62D0A8458eD7719FDAF978fe5929C6D342B0bFcE",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ena": {
+                    "main": "0x57e114B691Db790C35207b2e685D4A43181e6061",
+                    "arbitrum": false
+                }
+            },
+            {
+                "floki": {
+                    "main": "0xcf0c122c6b73ff809c693db761e7baebe62b6a2e",
+                    "arbitrum": false
+                }
+            },
+            {
+                "gala": {
+                    "main": "0xd1d2Eb1B1e90B638588728b4130137D262C87cae",
+                    "arbitrum": false
+                }
+            },
+            {
+                "aave": {
+                    "main": "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
+                    "arbitrum": false
+                }
+            },
+            {
+                "qnt": {
+                    "main": "0x4a220e6096b25eadb88358cb44068a3248254675",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ondo": {
+                    "main": "0xfAbA6f8e4a5E8Ab82F62fe7C39859FA577269BE3",
+                    "arbitrum": false
+                }
+            },
+            {
+                "agix": {
+                    "main": "0x5B7533812759B45C2B44C19e320ba2cD2681b542",
+                    "arbitrum": false
+                }
+            },
+            {
+                "axs": {
+                    "main": "0xbb0e17ef65f82ab018d8edd776e8dd940327b28b",
+                    "arbitrum": false
+                }
+            },
+            {
+                "sand": {
+                    "main": "0x3845badAde8e6dFF049820680d1F14bD3903a5d0",
+                    "arbitrum": false
+                }
+            },
+            {
+                "snx": {
+                    "main": "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f",
+                    "arbitrum": false
+                }
+            },
+            {
+                "strk": {
+                    "main": "0xCa14007Eff0dB1f8135f4C25B34De49AB0d42766",
+                    "arbitrum": false
+                }
+            },
+            {
+                "wld": {
+                    "main": "0x163f8c2467924be0ae7b5347228cabf260318753",
+                    "arbitrum": false
+                }
+            },
+            {
+                "chz": {
+                    "main": "0x3506424f91fd33084466f402d5d97f05f8e3b4af",
+                    "arbitrum": false
+                }
+            },
+            {
+                "gno": {
+                    "main": "0x6810e776880c02933d47db1b9fc05908e5386b96",
+                    "arbitrum": "0xa0b862F60edEf4452F25B4160F177db44DeB6Cf1"
+                }
+            },
+            {
+                "jasmy": {
+                    "main": "0x7420B4b9a0110cdC71fB720908340C03F9Bc03EC",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mana": {
+                    "main": "0x0f5d2fb29fb7d3cfee444a200298f468908cc942",
+                    "arbitrum": false
+                }
+            },
+            {
+                "kcs": {
+                    "main": "0xf34960d9d60be18cc1d5afc1a6f012a723a28811",
+                    "arbitrum": false
+                }
+            },
+            {
+                "usdd": {
+                    "main": "0x0c10bf8fcb7bf5412187a595ab97a3609160b5c6",
+                    "arbitrum": "0x680447595e8b7b3Aa1B43beB9f6098C79ac2Ab3f"
+                }
+            },
+            {
+                "ape": {
+                    "main": "0x4d224452801aced8b2f0aebe155379bb5d594381",
+                    "arbitrum": false
+                }
+            },
+            {
+                "prime": {
+                    "main": "0xb23d80f5fefcddaa212212f028021b41ded428cf",
+                    "arbitrum": false
+                }
+            },
+            {
+                "nexo": {
+                    "main": "0xb62132e35a6c13ee1ee0f84dc5d40bad8d815206",
+                    "arbitrum": false
+                }
+            },
+            {
+                "kava": {
+                    "main": "0x0C356B7fD36a5357E5A017EF11887ba100C9AB76",
+                    "arbitrum": false
+                }
+            },
+            {
+                "axl": {
+                    "main": "0x467719aD09025FcC6cF6F8311755809d45a5E5f3",
+                    "arbitrum": "0x23ee2343B892b1BB63503a4FAbc840E0e2C6810f"
+                }
+            },
+            {
+                "cake": {
+                    "main": "0x152649eA73beAb28c5b49B26eb48f7EAD6d4c898",
+                    "arbitrum": false
+                }
+            },
+            {
+                "gt": {
+                    "main": "0xe66747a101bff2dba3697199dcce5b743b454759",
+                    "arbitrum": false
+                }
+            },
+            {
+                "om": {
+                    "main": "0x3593d125a4f7849a1b059e64f4517a86dd60c95d",
+                    "arbitrum": false
+                }
+            },
+            {
+                "rose": {
+                    "main": "0x26B80FBfC01b71495f477d5237071242e0d959d7",
+                    "arbitrum": false
+                }
+            },
+            {
+                "rbn": {
+                    "main": "0x6123b0049f904d730db3c36a31167d9d4121fa6b",
+                    "arbitrum": false
+                }
+            },
+            {
+                "blur": {
+                    "main": "0x5283d291dbcf85356a21ba090e6db59121208b44",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ethdydx": {
+                    "main": "0x92d6c1e31e14520e676a687f0a93788b716beff5",
+                    "arbitrum": false
+                }
+            },
+            {
+                "xaut": {
+                    "main": "0x68749665FF8D2d112Fa859AA293F07A622782F38",
+                    "arbitrum": false
+                }
+            },
+            {
+                "woo": {
+                    "main": "0x4691937a7508860f876c9c0a2a617e7d9e945d4b",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mx": {
+                    "main": "0x11eef04c884e24d9b7b4760e7476d06ddf797f36",
+                    "arbitrum": false
+                }
+            },
+            {
+                "crv": {
+                    "main": "0xD533a949740bb3306d119CC777fa900bA034cd52",
+                    "arbitrum": "0x11cDb42B0EB46D95f990BeDD4695A6e3fA034978"
+                }
+            },
+            {
+                "tusd": {
+                    "main": "0x0000000000085d4780B73119b644AE5ecd22b376",
+                    "arbitrum": "0x4D15a3A2286D883AF0AA1B3f21367843FAc63E07"
+                }
+            },
+            {
+                "skl": {
+                    "main": "0x00c83aecc790e8a4453e5dd3b0b4b3680501a7a7",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ocean": {
+                    "main": "0x967da4048cd07ab37855c090aaf366e4ce1b9f48",
+                    "arbitrum": false
+                }
+            },
+            {
+                "1inch": {
+                    "main": "0x111111111117dc0aa78b770fa6a738034120c302",
+                    "arbitrum": false
+                }
+            },
+            {
+                "nft": {
+                    "main": "0x198d14f2ad9ce69e76ea330b374de4957c3f850a",
+                    "arbitrum": false
+                }
+            },
+            {
+                "gmt": {
+                    "main": "0xe3c408bd53c31c085a1746af401a4042954ff740",
+                    "arbitrum": false
+                }
+            },
+            {
+                "super": {
+                    "main": "0xe53ec727dbdeb9e2d5456c3be40cff031ab40a55",
+                    "arbitrum": false
+                }
+            },
+            {
+                "paxg": {
+                    "main": "0x45804880de22913dafe09f4980848ece6ecbaf78",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ethfi": {
+                    "main": "0xFe0c30065B384F05761f15d0CC899D4F9F9Cc0eB",
+                    "arbitrum": false
+                }
+            },
+            {
+                "alt": {
+                    "main": "0x8457CA5040ad67fdebbCC8EdCE889A335Bc0fbFB",
+                    "arbitrum": false
+                }
+            },
+            {
+                "dexe": {
+                    "main": "0xde4EE8057785A7e8e800Db58F9784845A5C2Cbd6",
+                    "arbitrum": false
+                }
+            },
+            {
+                "comp": {
+                    "main": "0xc00e94cb662c3520282e6f5717214004a7f26888",
+                    "arbitrum": "0x354A6dA3fcde098F8389cad84b0182725c6C91dE"
+                }
+            },
+            {
+                "ankr": {
+                    "main": "0x8290333cef9e6d528dd5618fb97a76f268f3edd4",
+                    "arbitrum": false
+                }
+            },
+            {
+                "gal": {
+                    "main": "0x5fAa989Af96Af85384b8a938c2EdE4A7378D9875",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ens": {
+                    "main": "0xC18360217D8F7Ab5e7c516566761Ea12Ce7F9D72",
+                    "arbitrum": false
+                }
+            },
+            {
+                "rpl": {
+                    "main": "0xd33526068d116ce69f19a9ee46f0bd304f21a51f",
+                    "arbitrum": false
+                }
+            },
+            {
+                "zrx": {
+                    "main": "0xe41d2489571d322189246dafa5ebde1f4699f498",
+                    "arbitrum": false
+                }
+            },
+            {
+                "elf": {
+                    "main": "0xbf2179859fc6D5BEE9Bf9158632Dc51678a4100e",
+                    "arbitrum": false
+                }
+            },
+            {
+                "lpt": {
+                    "main": "0x58b6a8a3302369daec383334672404ee733ab239",
+                    "arbitrum": "0x289ba1701C2F088cf0faf8B3705246331cB8A839"
+                }
+            },
+            {
+                "hot": {
+                    "main": "0x6c6ee5e31d828de241282b9606c8e98ea48526e2",
+                    "arbitrum": false
+                }
+            },
+            {
+                "fxs": {
+                    "main": "0x3432b6a60d23ca0dfca7761b7ab56459d9c964d0",
+                    "arbitrum": "0x9d2F299715D94d8A7E6F5eaa8E654E8c74a988A7"
+                }
+            },
+            {
+                "ssv": {
+                    "main": "0x9D65fF81a3c488d585bBfb0Bfe3c7707c7917f54",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ant": {
+                    "main": "0xa117000000f279d81a1d3cc75430faa017fa5a2e",
+                    "arbitrum": false
+                }
+            },
+            {
+                "trac": {
+                    "main": "0xaa7a9ca87d3694b5755f213b5d04094b8d0f0a6f",
+                    "arbitrum": false
+                }
+            },
+            {
+                "glm": {
+                    "main": "0x7DD9c5Cba05E151C895FDe1CF355C9A1D5DA6429",
+                    "arbitrum": false
+                }
+            },
+            {
+                "bico": {
+                    "main": "0xf17e65822b568b3903685a7c9f496cf7656cc6c2",
+                    "arbitrum": false
+                }
+            },
+            {
+                "bat": {
+                    "main": "0x0d8775f648430679a709e98d2b0cb6250d2887ef",
+                    "arbitrum": false
+                }
+            },
+            {
+                "id": {
+                    "main": "0x2dfF88A56767223A5529eA5960Da7A3F5f766406",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ilv": {
+                    "main": "0x767fe9edc9e0df98e07454847909b5e959d7ca0e",
+                    "arbitrum": false
+                }
+            },
+            {
+                "lrc": {
+                    "main": "0xbbbbca6a901c926f240b89eacb641d8aec7aeafd",
+                    "arbitrum": "0x46d0cE7de6247b0A95f67b43B589b4041BaE7fbE"
+                }
+            },
+            {
+                "zeta": {
+                    "main": "0xf091867ec603a6628ed83d274e835539d82e9cc8",
+                    "arbitrum": false
+                }
+            },
+            {
+                "arkm": {
+                    "main": "0x6e2a43be0b1d33b726f0ca3b8de60b3482b8b050",
+                    "arbitrum": false
+                }
+            },
+            {
+                "pixel": {
+                    "main": "0x3429d03c6F7521AeC737a0BBF2E5ddcef2C3Ae31",
+                    "arbitrum": false
+                }
+            },
+            {
+                "t": {
+                    "main": "0xCdF7028ceAB81fA0C6971208e83fa7872994beE5",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mask": {
+                    "main": "0x69af81e73a73b40adf4f3d4223cd9b1ece623074",
+                    "arbitrum": false
+                }
+            },
+            {
+                "meme": {
+                    "main": "0xb131f4a55907b10d1f0a50d8ab8fa09ec342cd74",
+                    "arbitrum": false
+                }
+            },
+            {
+                "metis": {
+                    "main": "0x9E32b13ce7f2E80A01932B42553652E053D6ed8e",
+                    "arbitrum": false
+                }
+            },
+            {
+                "amp": {
+                    "main": "0xff20817765cb7f73d4bde2e66e067e58d11095c2",
+                    "arbitrum": false
+                }
+            },
+            {
+                "rsr": {
+                    "main": "0x320623b8e4ff03373931769a31fc52a4e78b5d70",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ygg": {
+                    "main": "0x25f8087ead173b73d6e8b84329989a8eea16cf73",
+                    "arbitrum": false
+                }
+            },
+            {
+                "steth": {
+                    "main": "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+                    "arbitrum": false
+                }
+            },
+            {
+                "wbtc": {
+                    "main": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+                    "arbitrum": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f"
+                }
+            },
+            {
+                "wbeth": {
+                    "main": "0xa2E3356610840701BDf5611a53974510Ae27E2e1",
+                    "arbitrum": false
+                }
+            },
+            {
+                "usde": {
+                    "main": "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
+                    "arbitrum": false
+                }
+            },
+            {
+                "weeth": {
+                    "main": "0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee",
+                    "arbitrum": false
+                }
+            },
+            {
+                "reth": {
+                    "main": "0xae78736cd615f374d3085123a210448e74fc6393",
+                    "arbitrum": false
+                }
+            },
+            {
+                "zbu": {
+                    "main": "0x8f9b4525681F3Ea6E43b8E0a57BFfF86c0A1dd2e",
+                    "arbitrum": false
+                }
+            },
+            {
+                "msol": {
+                    "main": "0x756bFb452cFE36A5Bc82e4F5f4261A89a18c242b",
+                    "arbitrum": false
+                }
+            },
+            {
+                "frax": {
+                    "main": "0x853d955acef822db058eb8505911ed77f175b99e",
+                    "arbitrum": "0x17FC002b466eEc40DaE837Fc4bE5c67993ddBd6F"
+                }
+            },
+            {
+                "cbeth": {
+                    "main": "0xbe9895146f7af43049ca1c1ae358b0541ea49704",
+                    "arbitrum": false
+                }
+            },
+            {
+                "orbr": {
+                    "main": "0xdA30f261a962d5AAe94C9ecd170544600d193766",
+                    "arbitrum": false
+                }
+            },
+            {
+                "rlb": {
+                    "main": "0x046eee2cc3188071c02bfc1745a6b17c656e3f3d",
+                    "arbitrum": false
+                }
+            },
+            {
+                "pro": {
+                    "main": "0x226bb599a12c826476e3a771454697ea52e9e220",
+                    "arbitrum": false
+                }
+            },
+            {
+                "hex": {
+                    "main": "0x2b591e99afe9f32eaa6214f7b7629768c40eeb39",
+                    "arbitrum": false
+                }
+            },
+            {
+                "paal": {
+                    "main": "0x14fee680690900ba0cccfc76ad70fd1b95d10e16",
+                    "arbitrum": false
+                }
+            },
+            {
+                "tel": {
+                    "main": "0x467bccd9d29f223bce8043b84e8c8b282827790f",
+                    "arbitrum": false
+                }
+            },
+            {
+                "tribe": {
+                    "main": "0xc7283b66Eb1EB5FB86327f08e1B5816b0720212B",
+                    "arbitrum": false
+                }
+            },
+            {
+                "chr": {
+                    "main": "0x8a2279d4a90b6fe1c4b30fa660cc9f926797baa2",
+                    "arbitrum": false
+                }
+            },
+            {
+                "0x0": {
+                    "main": "0x5a3e6a77ba2f983ec0d371ea3b475f8bc0811ad5",
+                    "arbitrum": false
+                }
+            },
+            {
+                "cvx": {
+                    "main": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b",
+                    "arbitrum": false
+                }
+            },
+            {
+                "babydoge": {
+                    "main": "0xac57de9c1a09fec648e93eb98875b212db0d460b",
+                    "arbitrum": false
+                }
+            },
+            {
+                "yfi": {
+                    "main": "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e",
+                    "arbitrum": "0x82e3A8F066a6989666b031d916c43672085b1582"
+                }
+            },
+            {
+                "sushi": {
+                    "main": "0x6b3595068778dd592e39a122f4f5a5cf09c90fe2",
+                    "arbitrum": "0xd4d42F0b6DEF4CE0383636770eF773390d85c61A"
+                }
+            },
+            {
+                "ator": {
+                    "main": "0x0f7b3f5a8fed821c5eb60049538a548db2d479ce",
+                    "arbitrum": false
+                }
+            },
+            {
+                "wild": {
+                    "main": "0x2a3bff78b79a009976eea096a51a948a3dc00e34",
+                    "arbitrum": false
+                }
+            },
+            {
+                "audio": {
+                    "main": "0x18aaa7115705e8be94bffebde57af9bfc265b998",
+                    "arbitrum": false
+                }
+            },
+            {
+                "bal": {
+                    "main": "0xba100000625a3754423978a60c9317c58a424e3D",
+                    "arbitrum": "0x040d1EdC9569d4Bab2D15287Dc5A4F10F56a56B8"
+                }
+            },
+            {
+                "storj": {
+                    "main": "0xb64ef51c888972c908cfacf59b47c1afbc0ab8ac",
+                    "arbitrum": false
+                }
+            },
+            {
+                "hbtc": {
+                    "main": "0x0316EB71485b0Ab14103307bf65a021042c6d380",
+                    "arbitrum": false
+                }
+            },
+            {
+                "lcx": {
+                    "main": "0x037a54aab062628c9bbae1fdb1583c195585fe41",
+                    "arbitrum": false
+                }
+            },
+            {
+                "uma": {
+                    "main": "0x04Fa0d235C4abf4BcF4787aF4CF447DE572eF828",
+                    "arbitrum": "0xd693Ec944A85eeca4247eC1c3b130DCa9B0C3b22"
+                }
+            },
+            {
+                "abt": {
+                    "main": "0xb98d4c97425d9908e66e53a6fdf673acca0be986",
+                    "arbitrum": false
+                }
+            },
+            {
+                "c98": {
+                    "main": "0xae12c5930881c53715b369cec7606b70d8eb229f",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ach": {
+                    "main": "0xed04915c23f00a313a544955524eb7dbd823143d",
+                    "arbitrum": false
+                }
+            },
+            {
+                "band": {
+                    "main": "0xba11d00c5f74255f56a5e366f4f77f5a186d7f55",
+                    "arbitrum": false
+                }
+            },
+            {
+                "api3": {
+                    "main": "0x0b38210ea11411557c13457D4dA7dC6ea731B88a",
+                    "arbitrum": false
+                }
+            },
+            {
+                "borg": {
+                    "main": "0x64d0f55cd8c7133a9d7102b13987235f486f2224",
+                    "arbitrum": false
+                }
+            },
+            {
+                "trump": {
+                    "main": "0x576e2BeD8F7b46D34016198911Cdf9886f78bea7",
+                    "arbitrum": false
+                }
+            },
+            {
+                "pyusd": {
+                    "main": "0x6c3ea9036406852006290770bedfcaba0e23a0e8",
+                    "arbitrum": false
+                }
+            },
+            {
+                "gf": {
+                    "main": "0xaaef88cea01475125522e117bfe45cf32044e238",
+                    "arbitrum": false
+                }
+            },
+            {
+                "rss3": {
+                    "main": "0xc98d64da73a6616c42117b582e832812e7b8d57f",
+                    "arbitrum": false
+                }
+            },
+            {
+                "syn": {
+                    "main": "0x0f2D719407FdBeFF09D87557AbB7232601FD9F29",
+                    "arbitrum": "0x080F6AEd32Fc474DD5717105Dba5ea57268F46eb"
+                }
+            },
+            {
+                "celr": {
+                    "main": "0x4f9254c83eb525f9fcf346490bbb3ed28a81c667",
+                    "arbitrum": "0x3a8B787f78D775AECFEEa15706D4221B40F345AB"
+                }
+            },
+            {
+                "vanry": {
+                    "main": "0x8DE5B80a0C1B02Fe4976851D030B36122dbb8624",
+                    "arbitrum": false
+                }
+            },
+            {
+                "vvs": {
+                    "main": "0x839e71613f9aA06E5701CF6de63E303616B0DDE3",
+                    "arbitrum": false
+                }
+            },
+            {
+                "flex": {
+                    "main": "0xfcf8eda095e37a41e002e266daad7efc1579bc0a",
+                    "arbitrum": false
+                }
+            },
+            {
+                "pond": {
+                    "main": "0x57b946008913b82e4df85f501cbaed910e58d26c",
+                    "arbitrum": "0xdA0a57B710768ae17941a9Fa33f8B720c8bD9ddD"
+                }
+            },
+            {
+                "aevo": {
+                    "main": "0xB528edBef013aff855ac3c50b381f253aF13b997",
+                    "arbitrum": false
+                }
+            },
+            {
+                "prom": {
+                    "main": "0xfc82bb4ba86045af6f327323a46e80412b91b27d",
+                    "arbitrum": false
+                }
+            },
+            {
+                "btrst": {
+                    "main": "0x799ebfabe77a6e34311eeee9825190b9ece32824",
+                    "arbitrum": false
+                }
+            },
+            {
+                "rlc": {
+                    "main": "0x607f4c5bb672230e8672085532f7e901544a7375",
+                    "arbitrum": false
+                }
+            },
+            {
+                "agi": {
+                    "main": "0x7dA2641000Cbb407C329310C461b2cB9c70C3046",
+                    "arbitrum": false
+                }
+            },
+            {
+                "dao": {
+                    "main": "0x0f51bb10119727a7e5ea3538074fb341f56b09ad",
+                    "arbitrum": false
+                }
+            },
+            {
+                "cyber": {
+                    "main": "0x14778860e937f509e651192a90589de711fb88a9",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mog": {
+                    "main": "0xaaeE1A9723aaDB7afA2810263653A34bA2C21C7a",
+                    "arbitrum": false
+                }
+            },
+            {
+                "noia": {
+                    "main": "0xa8c8CfB141A3bB59FEA1E2ea6B79b5ECBCD7b6ca",
+                    "arbitrum": false
+                }
+            },
+            {
+                "zcx": {
+                    "main": "0xc52c326331e9ce41f04484d3b5e5648158028804",
+                    "arbitrum": false
+                }
+            },
+            {
+                "slp": {
+                    "main": "0xCC8Fa225D80b9c7D42F96e9570156c65D6cAAa25",
+                    "arbitrum": false
+                }
+            },
+            {
+                "iq": {
+                    "main": "0x579cea1889991f68acc35ff5c3dd0621ff29b0c9",
+                    "arbitrum": false
+                }
+            },
+            {
+                "cvc": {
+                    "main": "0x41e5560054824ea6b0732e656e3ad64e20e94e45",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ctsi": {
+                    "main": "0x491604c0fdf08347dd1fa4ee062a822a5dd06b5d",
+                    "arbitrum": "0x319f865b287fCC10b30d8cE6144e8b6D1b476999"
+                }
+            },
+            {
+                "dusk": {
+                    "main": "0x940a2db1b7008b6c776d4faaca729d6d4a4aa551",
+                    "arbitrum": false
+                }
+            },
+            {
+                "bigtime": {
+                    "main": "0x64Bc2cA1Be492bE7185FAA2c8835d9b824c8a194",
+                    "arbitrum": false
+                }
+            },
+            {
+                "cqt": {
+                    "main": "0xD417144312DbF50465b1C641d016962017Ef6240",
+                    "arbitrum": false
+                }
+            },
+            {
+                "powr": {
+                    "main": "0x595832f8fc6bf59c85c527fec3740a1b7a361269",
+                    "arbitrum": false
+                }
+            },
+            {
+                "nmr": {
+                    "main": "0x1776e1F26f98b1A5dF9cD347953a26dd3Cb46671",
+                    "arbitrum": false
+                }
+            },
+            {
+                "wmt": {
+                    "main": "0x263b6b028f3e4ed8c4329eb2b5f409ee38d97296",
+                    "arbitrum": false
+                }
+            },
+            {
+                "keep": {
+                    "main": "0x85eee30c52b0b379b046fb0f85f4f3dc3009afec",
+                    "arbitrum": false
+                }
+            },
+            {
+                "portal": {
+                    "main": "0x1bbe973bef3a977fc51cbed703e8ffdefe001fed",
+                    "arbitrum": false
+                }
+            },
+            {
+                "gog": {
+                    "main": "0x9AB7bb7FdC60f4357ECFef43986818A2A3569c62",
+                    "arbitrum": false
+                }
+            },
+            {
+                "snt": {
+                    "main": "0x744d70fdbe2ba4cf95131626614a1763df805b9e",
+                    "arbitrum": false
+                }
+            },
+            {
+                "pundix": {
+                    "main": "0x0fd10b9899882a6f2fcb5c371e17e70fdee00c38",
+                    "arbitrum": false
+                }
+            },
+            {
+                "crvusd": {
+                    "main": "0xf939e0a03fb07f59a73314e73794be0e57ac1b4e",
+                    "arbitrum": false
+                }
+            },
+            {
+                "usdp": {
+                    "main": "0x8e870d67f660d95d5be530380d0ec0bd388289e1",
+                    "arbitrum": false
+                }
+            },
+            {
+                "orai": {
+                    "main": "0x4c11249814f11b9346808179cf06e71ac328c1b5",
+                    "arbitrum": false
+                }
+            },
+            {
+                "sure": {
+                    "main": "0xcb86c6a22cb56b6cf40cafedb06ba0df188a416e",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mvl": {
+                    "main": "0xa849eaae994fb86afa73382e9bd88c2b6b18dc71",
+                    "arbitrum": false
+                }
+            },
+            {
+                "pyr": {
+                    "main": "0x430ef9263e76dae63c84292c3409d61c598e9682",
+                    "arbitrum": false
+                }
+            },
+            {
+                "gmt": {
+                    "main": "0x7Ddc52c4De30e94Be3A6A0A2b259b2850f421989",
+                    "arbitrum": false
+                }
+            },
+            {
+                "trb": {
+                    "main": "0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0",
+                    "arbitrum": "0xd58D345Fd9c82262E087d2D0607624B410D88242"
+                }
+            },
+            {
+                "blz": {
+                    "main": "0x5732046a883704404f284ce41ffadd5b007fd668",
+                    "arbitrum": false
+                }
+            },
+            {
+                "sov": {
+                    "main": "0xbdab72602e9ad40fc6a6852caf43258113b8f7a5",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ngl": {
+                    "main": "0x12652c6d93fdb6f4f37d48a8687783c782bb0d10",
+                    "arbitrum": false
+                }
+            },
+            {
+                "bone": {
+                    "main": "0x9813037ee2218799597d83D4a5B6F3b6778218d9",
+                    "arbitrum": false
+                }
+            },
+            {
+                "eurs": {
+                    "main": "0xdb25f211ab05b1c97d595516f45794528a807ad8",
+                    "arbitrum": false
+                }
+            },
+            {
+                "sdex": {
+                    "main": "0x5de8ab7e27f6e7a1fff3e5b337584aa43961beef",
+                    "arbitrum": "0xabD587f2607542723b17f14d00d99b987C29b074"
+                }
+            },
+            {
+                "tru": {
+                    "main": "0x4c19596f5aaff459fa38b0f7ed92f11ae6543784",
+                    "arbitrum": false
+                }
+            },
+            {
+                "dent": {
+                    "main": "0x3597bfd533a99c9aa083587b074434e61eb0a258",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mubi": {
+                    "main": "0x38e382f74dfb84608f3c1f10187f6bef5951de93",
+                    "arbitrum": false
+                }
+            },
+            {
+                "nxra": {
+                    "main": "0x644192291cc835a93d6330b24ea5f5fedd0eef9e",
+                    "arbitrum": false
+                }
+            },
+            {
+                "nym": {
+                    "main": "0x525A8F6F3Ba4752868cde25164382BfbaE3990e1",
+                    "arbitrum": false
+                }
+            },
+            {
+                "gpu": {
+                    "main": "0x1258d60b224c0c5cd888d37bbf31aa5fcfb7e870",
+                    "arbitrum": false
+                }
+            },
+            {
+                "req": {
+                    "main": "0x8f8221afbb33998d8584a2b05749ba73c37a938a",
+                    "arbitrum": false
+                }
+            },
+            {
+                "vr": {
+                    "main": "0x7d5121505149065b562c789a0145ed750e6e8cdd",
+                    "arbitrum": false
+                }
+            },
+            {
+                "orbs": {
+                    "main": "0xff56cc6b1e6ded347aa0b7676c85ab0b3d08b0fa",
+                    "arbitrum": "0xf3C091ed43de9c270593445163a41A876A0bb3dd"
+                }
+            },
+            {
+                "aurora": {
+                    "main": "0xaaaaaa20d9e0e2461697782ef11675f668207961",
+                    "arbitrum": false
+                }
+            },
+            {
+                "dione": {
+                    "main": "0x89b69f2d1adffa9a253d40840b6baa7fc903d697",
+                    "arbitrum": false
+                }
+            },
+            {
+                "dka": {
+                    "main": "0x5dc60C4D5e75D22588FA17fFEB90A63E535efCE0",
+                    "arbitrum": false
+                }
+            },
+            {
+                "people": {
+                    "main": "0x7a58c0be72be218b41c608b7fe7c5bb630736c71",
+                    "arbitrum": false
+                }
+            },
+            {
+                "apex": {
+                    "main": "0x52A8845DF664D76C69d2EEa607CD793565aF42B8",
+                    "arbitrum": false
+                }
+            },
+            {
+                "bmx": {
+                    "main": "0x986EE2B944c42D017F52Af21c4c69B84DBeA35d8",
+                    "arbitrum": false
+                }
+            },
+            {
+                "hft": {
+                    "main": "0xb3999F658C0391d94A37f7FF328F3feC942BcADC",
+                    "arbitrum": false
+                }
+            },
+            {
+                "gusd": {
+                    "main": "0x056Fd409E1d7A124BD7017459dFEa2F387b6d5Cd",
+                    "arbitrum": false
+                }
+            },
+            {
+                "myria": {
+                    "main": "0xa0ef786bf476fe0810408caba05e536ac800ff86",
+                    "arbitrum": false
+                }
+            },
+            {
+                "lusd": {
+                    "main": "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0",
+                    "arbitrum": false
+                }
+            },
+            {
+                "gfi": {
+                    "main": "0xdab396ccf3d84cf2d07c4454e10c8a6f5b008d2b",
+                    "arbitrum": false
+                }
+            },
+            {
+                "high": {
+                    "main": "0x71Ab77b7dbB4fa7e017BC15090b2163221420282",
+                    "arbitrum": false
+                }
+            },
+            {
+                "elon": {
+                    "main": "0x761d38e5ddf6ccf6cf7c55759d5210750b5d60f3",
+                    "arbitrum": false
+                }
+            },
+            {
+                "pol": {
+                    "main": "0x455e53cbb86018ac2b8092fdcd39d8444affc3f6",
+                    "arbitrum": false
+                }
+            },
+            {
+                "zig": {
+                    "main": "0xb2617246d0c6c0087f18703d576831899ca94f01",
+                    "arbitrum": false
+                }
+            },
+            {
+                "xyo": {
+                    "main": "0x55296f69f40ea6d20e478533c15a6b08b654e758",
+                    "arbitrum": false
+                }
+            },
+            {
+                "looks": {
+                    "main": "0xf4d2888d29d722226fafa5d9b24f9164c092421e",
+                    "arbitrum": false
+                }
+            },
+            {
+                "knc": {
+                    "main": "0xdeFA4e8a7bcBA345F687a2f1456F5Edd9CE97202",
+                    "arbitrum": "0xe4DDDfe67E7164b0FE14E218d80dC4C08eDC01cB"
+                }
+            },
+            {
+                "stg": {
+                    "main": "0xaf5191b0de278c7286d6c7cc6ab6bb8a73ba2cd6",
+                    "arbitrum": "0x6694340fc020c5E6B96567843da2df01b2CE1eb6"
+                }
+            },
+            {
+                "ladys": {
+                    "main": "0x12970e6868f88f6557b76120662c1b3e50a646bf",
+                    "arbitrum": "0x3b60FF35D3f7F62d636b067dD0dC0dFdAd670E4E"
+                }
+            },
+            {
+                "ankreth": {
+                    "main": "0xe95a203b1a91a908f9b9ce46459d101078c2c3cb",
+                    "arbitrum": false
+                }
+            },
+            {
+                "oxt": {
+                    "main": "0x4575f41308EC1483f3d399aa9a2826d74Da13Deb",
+                    "arbitrum": false
+                }
+            },
+            {
+                "cudos": {
+                    "main": "0x817bbDbC3e8A1204f3691d14bB44992841e3dB35",
+                    "arbitrum": false
+                }
+            },
+            {
+                "auction": {
+                    "main": "0xa9b1eb5908cfc3cdf91f9b8b3a74108598009096",
+                    "arbitrum": false
+                }
+            },
+            {
+                "tet": {
+                    "main": "0x68A47Fe1CF42eBa4a030a10CD4D6a1031Ca3CA0a",
+                    "arbitrum": false
+                }
+            },
+            {
+                "hifi": {
+                    "main": "0x4b9278b94a1112cAD404048903b8d343a810B07e",
+                    "arbitrum": false
+                }
+            },
+            {
+                "lon": {
+                    "main": "0x0000000000095413afc295d19edeb1ad7b71c952",
+                    "arbitrum": "0x55678cd083fcDC2947a0Df635c93C838C89454A3"
+                }
+            },
+            {
+                "rari": {
+                    "main": "0xfca59cd816ab1ead66534d82bc21e7515ce441cf",
+                    "arbitrum": false
+                }
+            },
+            {
+                "stpt": {
+                    "main": "0xde7d85157d9714eadf595045cc12ca4a5f3e2adb",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mapo": {
+                    "main": "0x9E976F211daea0D652912AB99b0Dc21a7fD728e4",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ht": {
+                    "main": "0x6f259637dcd74c767781e37bc6133cd6a68aa161",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ton": {
+                    "main": "0x2be5e8c109e2197D077D13A82dAead6a9b3433C5",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mtl": {
+                    "main": "0xF433089366899D83a9f26A773D59ec7eCF30355e",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mav": {
+                    "main": "0x7448c7456a97769F6cD04F1E83A4a23cCdC46aBD",
+                    "arbitrum": false
+                }
+            },
+            {
+                "rdnt": {
+                    "main": "0x137dDB47Ee24EaA998a535Ab00378d6BFa84F893",
+                    "arbitrum": "0x3082CC23568eA640225c2467653dB90e9250AaA0"
+                }
+            },
+            {
+                "alpha": {
+                    "main": "0xa1faa113cbe53436df28ff0aee54275c13b40975",
+                    "arbitrum": "0xC9CBf102c73fb77Ec14f8B4C8bd88e050a6b2646"
+                }
+            },
+            {
+                "bfc": {
+                    "main": "0x0c7D5ae016f806603CB1782bEa29AC69471CAb9c",
+                    "arbitrum": false
+                }
+            },
+            {
+                "lqty": {
+                    "main": "0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ern": {
+                    "main": "0xbbc2ae13b23d715c30720f079fcd9b4a74093505",
+                    "arbitrum": false
+                }
+            },
+            {
+                "poly": {
+                    "main": "0x9992ec3cf6a55b00978cddf2b27bc6882d88d1ec",
+                    "arbitrum": false
+                }
+            },
+            {
+                "dodo": {
+                    "main": "0x43dfc4159d86f3a37a5a4b3d4580b888ad7d4ddd",
+                    "arbitrum": "0x69Eb4FA4a2fbd498C257C57Ea8b7655a2559A581"
+                }
+            },
+            {
+                "loom": {
+                    "main": "0x42476F744292107e34519F9c357927074Ea3F75D",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ghx": {
+                    "main": "0x728f30fa2f100742c7949d1961804fa8e0b1387d",
+                    "arbitrum": false
+                }
+            },
+            {
+                "bnt": {
+                    "main": "0x1f573d6fb3f13d689ff844b4ce37794d79a7ff1c",
+                    "arbitrum": false
+                }
+            },
+            {
+                "xchng": {
+                    "main": "0xb712d62fE84258292d1961B5150a19bC4Ab49026",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mavia": {
+                    "main": "0x24fcFC492C1393274B6bcd568ac9e225BEc93584",
+                    "arbitrum": false
+                }
+            },
+            {
+                "omg": {
+                    "main": "0xd26114cd6ee289accf82350c8d8487fedb8a0c07",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ghst": {
+                    "main": "0x3F382DbD960E3a9bbCeaE22651E88158d2791550",
+                    "arbitrum": false
+                }
+            },
+            {
+                "banana": {
+                    "main": "0x38e68a37e401f7271568cecaac63c6b1e19130b4",
+                    "arbitrum": false
+                }
+            },
+            {
+                "spell": {
+                    "main": "0x090185f2135308bad17527004364ebcc2d37e5f6",
+                    "arbitrum": "0x3E6648C5a70A150A88bCE65F4aD4d506Fe15d2AF"
+                }
+            },
+            {
+                "arpa": {
+                    "main": "0xba50933c268f567bdc86e1ac131be072c6b0b71a",
+                    "arbitrum": false
+                }
+            },
+            {
+                "cream": {
+                    "main": "0x2ba592f78db6436527729929aaf6c908497cb200",
+                    "arbitrum": "0xf4D48Ce3ee1Ac3651998971541bAdbb9A14D7234"
+                }
+            },
+            {
+                "ogn": {
+                    "main": "0x8207c1ffc5b6804f6024322ccf34f29c3541ae26",
+                    "arbitrum": false
+                }
+            },
+            {
+                "bzr": {
+                    "main": "0x8d96B4ab6C741a4C8679AE323a100d74f085BA8F",
+                    "arbitrum": false
+                }
+            },
+            {
+                "agld": {
+                    "main": "0x32353a6c91143bfd6c7d363b546e62a9a2489a20",
+                    "arbitrum": false
+                }
+            },
+            {
+                "raca": {
+                    "main": "0x12BB890508c125661E03b09EC06E404bc9289040",
+                    "arbitrum": false
+                }
+            },
+            {
+                "qkc": {
+                    "main": "0xea26c4ac16d4a5a106820bc8aee85fd0b7b2b664",
+                    "arbitrum": false
+                }
+            },
+            {
+                "sidus": {
+                    "main": "0x549020a9Cb845220D66d3E9c6D9F9eF61C981102",
+                    "arbitrum": false
+                }
+            },
+            {
+                "dar": {
+                    "main": "0x081131434f93063751813c619ecca9c4dc7862a3",
+                    "arbitrum": false
+                }
+            },
+            {
+                "hpo": {
+                    "main": "0xfE39C384D702914127a005523f9915ADDB9bd59b",
+                    "arbitrum": false
+                }
+            },
+            {
+                "badger": {
+                    "main": "0x3472a5a71965499acd81997a54bba8d852c6e53d",
+                    "arbitrum": "0xBfa641051Ba0a0Ad1b0AcF549a89536A0D76472E"
+                }
+            },
+            {
+                "alice": {
+                    "main": "0xAC51066d7bEC65Dc4589368da368b212745d63E8",
+                    "arbitrum": false
+                }
+            },
+            {
+                "wnxm": {
+                    "main": "0x0d438f3b5175bebc262bf23753c1e53d03432bde",
+                    "arbitrum": false
+                }
+            },
+            {
+                "rare": {
+                    "main": "0xba5BDe662c17e2aDFF1075610382B9B691296350",
+                    "arbitrum": false
+                }
+            },
+            {
+                "atlas": {
+                    "main": "0xb9F747162AB1E95d07361f9048BcDF6eDdA9eEA7",
+                    "arbitrum": false
+                }
+            },
+            {
+                "pols": {
+                    "main": "0x83e6f1e41cdd28eaceb20cb649155049fac3d5aa",
+                    "arbitrum": false
+                }
+            },
+            {
+                "gtc": {
+                    "main": "0xde30da39c46104798bb5aa3fe8b9e0e1f348163f",
+                    "arbitrum": false
+                }
+            },
+            {
+                "cpool": {
+                    "main": "0x66761fa41377003622aee3c7675fc7b5c1c2fac5",
+                    "arbitrum": false
+                }
+            },
+            {
+                "pork": {
+                    "main": "0xb9f599ce614Feb2e1BBe58F180F370D05b39344E",
+                    "arbitrum": false
+                }
+            },
+            {
+                "dmtr": {
+                    "main": "0x51cb253744189f11241becb29bedd3f1b5384fdb",
+                    "arbitrum": false
+                }
+            },
+            {
+                "stmx": {
+                    "main": "0xa62cc35625b0c8dc1faea39d33625bb4c15bd71c",
+                    "arbitrum": false
+                }
+            },
+            {
+                "lever": {
+                    "main": "0x4B5f49487ea7B3609b1aD05459BE420548789f1f",
+                    "arbitrum": false
+                }
+            },
+            {
+                "front": {
+                    "main": "0xf8C3527CC04340b208C854E985240c02F7B7793f",
+                    "arbitrum": false
+                }
+            },
+            {
+                "agrs": {
+                    "main": "0x738865301a9b7dd80dc3666dd48cf034ec42bdda",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mpl": {
+                    "main": "0x33349b282065b0284d756f0577fb39c158f935e6",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ali": {
+                    "main": "0x6b0b3a982b4634ac68dd83a4dbf02311ce324181",
+                    "arbitrum": false
+                }
+            },
+            {
+                "trade": {
+                    "main": "0x6e5970DBd6fc7eb1f29C6D2eDF2bC4c36124C0C1",
+                    "arbitrum": false
+                }
+            },
+            {
+                "math": {
+                    "main": "0x08d967bb0134f2d07f7cfb6e246680c53927dd30",
+                    "arbitrum": "0x99F40b01BA9C469193B360f72740E416B17Ac332"
+                }
+            },
+            {
+                "perp": {
+                    "main": "0xbc396689893d065f41bc2c6ecbee5e0085233447",
+                    "arbitrum": "0x753D224bCf9AAFaCD81558c32341416df61D3DAC"
+                }
+            },
+            {
+                "brise": {
+                    "main": "0xF2B2f7b47715256Ce4eA43363a867fdce9353e3A",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ata": {
+                    "main": "0xa2120b9e674d3fc3875f415a7df52e382f141225",
+                    "arbitrum": "0xAC9Ac2C17cdFED4AbC80A53c5553388575714d03"
+                }
+            },
+            {
+                "bitcoin": {
+                    "main": "0x72e4f9f808c49a2a61de9c5896298920dc4eeea9",
+                    "arbitrum": false
+                }
+            },
+            {
+                "beta": {
+                    "main": "0xbe1a001fe942f96eea22ba08783140b9dcc09d28",
+                    "arbitrum": false
+                }
+            },
+            {
+                "vai": {
+                    "main": "0xD13cfD3133239a3c73a9E535A5c4DadEE36b395c",
+                    "arbitrum": false
+                }
+            },
+            {
+                "lmwr": {
+                    "main": "0x628a3b2e302c7e896acc432d2d0dd22b6cb9bc88",
+                    "arbitrum": false
+                }
+            },
+            {
+                "boson": {
+                    "main": "0xC477D038d5420C6A9e0b031712f61c5120090de9",
+                    "arbitrum": false
+                }
+            },
+            {
+                "dext": {
+                    "main": "0xfb7b4564402e5500db5bb6d63ae671302777c75a",
+                    "arbitrum": false
+                }
+            },
+            {
+                "dora": {
+                    "main": "0x70b790d0948a760e80bc3f892b142F7779b538B2",
+                    "arbitrum": false
+                }
+            },
+            {
+                "uos": {
+                    "main": "0xd13c7342e1ef687c5ad21b27c2b65d772cab5c8c",
+                    "arbitrum": false
+                }
+            },
+            {
+                "tomi": {
+                    "main": "0x4385328cc4d643ca98dfea734360c0f596c83449",
+                    "arbitrum": false
+                }
+            },
+            {
+                "rly": {
+                    "main": "0xf1f955016EcbCd7321c7266BccFB96c68ea5E49b",
+                    "arbitrum": false
+                }
+            },
+            {
+                "cbk": {
+                    "main": "0xD85a6Ae55a7f33B0ee113C234d2EE308EdeAF7fD",
+                    "arbitrum": false
+                }
+            },
+            {
+                "tlm": {
+                    "main": "0x888888848B652B3E3a0f34c96E00EEC0F3a23F72",
+                    "arbitrum": false
+                }
+            },
+            {
+                "fx": {
+                    "main": "0x8c15ef5b4b21951d50e53e4fbda8298ffad25057",
+                    "arbitrum": false
+                }
+            },
+            {
+                "forth": {
+                    "main": "0x77fba179c79de5b7653f68b5039af940ada60ce0",
+                    "arbitrum": false
+                }
+            },
+            {
+                "uqc": {
+                    "main": "0x8806926ab68eb5a7b909dcaf6fdbe5d93271d6e2",
+                    "arbitrum": false
+                }
+            },
+            {
+                "sweat": {
+                    "main": "0xb4b9dc1c77bdbb135ea907fd5a08094d98883a35",
+                    "arbitrum": false
+                }
+            },
+            {
+                "aeur": {
+                    "main": "0xA40640458FBc27b6EefEdeA1E9C9E17d4ceE7a21",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ren": {
+                    "main": "0x408e41876cccdc0f92210600ef50372656052a38",
+                    "arbitrum": false
+                }
+            },
+            {
+                "cre": {
+                    "main": "0x115eC79F1de567eC68B7AE7eDA501b406626478e",
+                    "arbitrum": false
+                }
+            },
+            {
+                "gods": {
+                    "main": "0xccc8cb5229b0ac8069c51fd58367fd1e622afd97",
+                    "arbitrum": false
+                }
+            },
+            {
+                "propc": {
+                    "main": "0x9ff58067Bd8D239000010c154C6983A325Df138E",
+                    "arbitrum": false
+                }
+            },
+            {
+                "clv": {
+                    "main": "0x80C62FE4487E1351b47Ba49809EBD60ED085bf52",
+                    "arbitrum": false
+                }
+            },
+            {
+                "palm": {
+                    "main": "0xf1df7305E4BAB3885caB5B1e4dFC338452a67891",
+                    "arbitrum": false
+                }
+            },
+            {
+                "npt": {
+                    "main": "0x306ee01a6bA3b4a8e993fA2C1ADC7ea24462000c",
+                    "arbitrum": false
+                }
+            },
+            {
+                "num": {
+                    "main": "0x3496b523e5c00a4b4150d6721320cddb234c3079",
+                    "arbitrum": false
+                }
+            },
+            {
+                "pandora": {
+                    "main": "0x9e9fbde7c7a83c43913bddc8779158f1368f0413",
+                    "arbitrum": false
+                }
+            },
+            {
+                "dnt": {
+                    "main": "0x0abdace70d3790235af448c88547603b945604ea",
+                    "arbitrum": false
+                }
+            },
+            {
+                "bel": {
+                    "main": "0xa91ac63d040deb1b7a5e4d4134ad23eb0ba07e14",
+                    "arbitrum": false
+                }
+            },
+            {
+                "fun": {
+                    "main": "0x419d0d8bdd9af5e606ae2232ed285aff190e711b",
+                    "arbitrum": false
+                }
+            },
+            {
+                "lyra": {
+                    "main": "0x01ba67aac7f75f647d94220cc98fb30fcc5105bf",
+                    "arbitrum": "0x079504b86d38119F859c4194765029F692b7B7aa"
+                }
+            },
+            {
+                "alcx": {
+                    "main": "0xdbdb4d16eda451d0503b854cf79d55697f90c8df",
+                    "arbitrum": false
+                }
+            },
+            {
+                "data": {
+                    "main": "0x8f693ca8d21b157107184d29d398a8d082b38b76",
+                    "arbitrum": false
+                }
+            },
+            {
+                "root": {
+                    "main": "0xa3d4BEe77B05d4a0C943877558Ce21A763C4fa29",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mln": {
+                    "main": "0xec67005c4e498ec7f55e092bd1d35cbc47c91892",
+                    "arbitrum": false
+                }
+            },
+            {
+                "dpi": {
+                    "main": "0x1494ca1f11d487c2bbe4543e90080aeba4ba3c2b",
+                    "arbitrum": false
+                }
+            },
+            {
+                "grok": {
+                    "main": "0x8390a1da07e376ef7add4be859ba74fb83aa02d5",
+                    "arbitrum": false
+                }
+            },
+            {
+                "orn": {
+                    "main": "0x0258F474786DdFd37ABCE6df6BBb1Dd5dfC4434a",
+                    "arbitrum": false
+                }
+            },
+            {
+                "vra": {
+                    "main": "0xf411903cbc70a74d22900a5de66a2dda66507255",
+                    "arbitrum": false
+                }
+            },
+            {
+                "hunt": {
+                    "main": "0x9aab071b4129b083b01cb5a0cb513ce7eca26fa5",
+                    "arbitrum": false
+                }
+            },
+            {
+                "cah": {
+                    "main": "0x8e0e57dcb1ce8d9091df38ec1bfc3b224529754a",
+                    "arbitrum": false
+                }
+            },
+            {
+                "idia": {
+                    "main": "0x0b15ddf19d47e6a86a56148fb4afffc6929bcb89",
+                    "arbitrum": "0xD91903D548f19C0FC0a6B9ED09D2F72b4dFe7144"
+                }
+            },
+            {
+                "copi": {
+                    "main": "0x42Baf1f659D765C65ADE5BB7E08eb2C680360d9d",
+                    "arbitrum": false
+                }
+            },
+            {
+                "5ire": {
+                    "main": "0x3bd7d4F524D09F4e331577247A048D56e4b67a7F",
+                    "arbitrum": false
+                }
+            },
+            {
+                "niza": {
+                    "main": "0xb58E26ac9cc14c0422C2b419b0CA555Ee4DcB7CB",
+                    "arbitrum": false
+                }
+            },
+            {
+                "strk": {
+                    "main": "0x74232704659ef37c08995e386a2e26cc27a8d7b1",
+                    "arbitrum": false
+                }
+            },
+            {
+                "sdao": {
+                    "main": "0x993864e43caa7f7f12953ad6feb1d1ca635b875f",
+                    "arbitrum": false
+                }
+            },
+            {
+                "dia": {
+                    "main": "0x84ca8bc7997272c7cfb4d0cd3d55cd942b3c9419",
+                    "arbitrum": "0x39f91452a6E9994762876e1EDd87Be28a46d5c99"
+                }
+            },
+            {
+                "xcn": {
+                    "main": "0xA2cd3D43c775978A96BdBf12d733D5A1ED94fb18",
+                    "arbitrum": false
+                }
+            },
+            {
+                "farm": {
+                    "main": "0xa0246c9032bC3A600820415aE600c6388619A14D",
+                    "arbitrum": false
+                }
+            },
+            {
+                "aog": {
+                    "main": "0x8578530205cecbe5db83f7f29ecfeec860c297c2",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mdt": {
+                    "main": "0x814e0908b12a99fecf5bc101bb5d0b8b5cdf7d26",
+                    "arbitrum": false
+                }
+            },
+            {
+                "susd": {
+                    "main": "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51",
+                    "arbitrum": false
+                }
+            },
+            {
+                "deai": {
+                    "main": "0x1495bc9e44Af1F8BCB62278D2bEC4540cF0C05ea",
+                    "arbitrum": false
+                }
+            },
+            {
+                "fct": {
+                    "main": "0xe1bad922f84b198a08292fb600319300ae32471b",
+                    "arbitrum": false
+                }
+            },
+            {
+                "opul": {
+                    "main": "0x80d55c03180349fff4a229102f62328220a96444",
+                    "arbitrum": "0x0c5fa0E07949F941A6c2C29a008252db1527d6EE"
+                }
+            },
+            {
+                "idex": {
+                    "main": "0xb705268213d593b8fd88d3fdeff93aff5cbdcfae",
+                    "arbitrum": false
+                }
+            },
+            {
+                "paid": {
+                    "main": "0x1614F18Fc94f47967A3Fbe5FfcD46d4e7Da3D787",
+                    "arbitrum": false
+                }
+            },
+            {
+                "combo": {
+                    "main": "0xc03fbf20a586fa89c2a5f6f941458e1fbc40c661",
+                    "arbitrum": false
+                }
+            },
+            {
+                "white": {
+                    "main": "0x5f0e628b693018f639d10e4a4f59bd4d8b2b6b44",
+                    "arbitrum": false
+                }
+            },
+            {
+                "rsv": {
+                    "main": "0x196f4727526eA7FB1e17b2071B3d8eAA38486988",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mnw": {
+                    "main": "0xd3E4Ba569045546D09CF021ECC5dFe42b1d7f6E4",
+                    "arbitrum": false
+                }
+            },
+            {
+                "pda": {
+                    "main": "0x0D3CbED3f69EE050668ADF3D9Ea57241cBa33A2B",
+                    "arbitrum": false
+                }
+            },
+            {
+                "utk": {
+                    "main": "0xdc9Ac3C20D1ed0B540dF9b1feDC10039Df13F99c",
+                    "arbitrum": false
+                }
+            },
+            {
+                "lina": {
+                    "main": "0x3e9bc21c9b189c09df3ef1b824798658d5011937",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ramp": {
+                    "main": "0x33D0568941C0C64ff7e0FB4fbA0B11BD37deEd9f",
+                    "arbitrum": false
+                }
+            },
+            {
+                "eurc": {
+                    "main": "0x1abaea1f7c830bd89acc67ec4af516284b1bc33c",
+                    "arbitrum": false
+                }
+            },
+            {
+                "dego": {
+                    "main": "0x3da932456d082cba208feb0b096d49b202bf89c8",
+                    "arbitrum": false
+                }
+            },
+            {
+                "cheq": {
+                    "main": "0x70edf1c215d0ce69e7f16fd4e6276ba0d99d4de7",
+                    "arbitrum": false
+                }
+            },
+            {
+                "asm": {
+                    "main": "0x2565ae0385659badcada1031db704442e1b69982",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ceek": {
+                    "main": "0xb056c38f6b7dc4064367403e26424cd2c60655e1",
+                    "arbitrum": false
+                }
+            },
+            {
+                "planet": {
+                    "main": "0x2ad9addd0d97ec3cdba27f92bf6077893b76ab0b",
+                    "arbitrum": false
+                }
+            },
+            {
+                "loka": {
+                    "main": "0x61e90a50137e1f645c9ef4a0d3a4f01477738406",
+                    "arbitrum": false
+                }
+            },
+            {
+                "leash": {
+                    "main": "0x27c70cd1946795b66be9d954418546998b546634",
+                    "arbitrum": false
+                }
+            },
+            {
+                "vega": {
+                    "main": "0xcb84d72e61e383767c4dfeb2d8ff7f4fb89abc6e",
+                    "arbitrum": false
+                }
+            },
+            {
+                "alt": {
+                    "main": "0x1BD55090B8878630E57FAE6eBd11FD61d16DFC9f",
+                    "arbitrum": false
+                }
+            },
+            {
+                "crts": {
+                    "main": "0x678e840c640f619e17848045d23072844224dd37",
+                    "arbitrum": false
+                }
+            },
+            {
+                "upp": {
+                    "main": "0xc86d054809623432210c107af2e3f619dcfbf652",
+                    "arbitrum": false
+                }
+            },
+            {
+                "cere": {
+                    "main": "0x2da719db753dfa10a62e140f436e1d67f2ddb0d6",
+                    "arbitrum": false
+                }
+            },
+            {
+                "coval": {
+                    "main": "0x3d658390460295fb963f54dc0899cfb1c30776df",
+                    "arbitrum": false
+                }
+            },
+            {
+                "isikc": {
+                    "main": "0x4339befb55cfa65344ef6f4bb7f05fae3458670a",
+                    "arbitrum": false
+                }
+            },
+            {
+                "hai": {
+                    "main": "0x05Fb86775Fd5c16290f1E838F5caaa7342bD9a63",
+                    "arbitrum": false
+                }
+            },
+            {
+                "moc": {
+                    "main": "0xBeE20B9Df360B8442534Ed8059f3e5bAEeB74EaF",
+                    "arbitrum": false
+                }
+            },
+            {
+                "botto": {
+                    "main": "0x9dfad1b7102d46b1b197b90095b5c4e9f5845bba",
+                    "arbitrum": false
+                }
+            },
+            {
+                "lit": {
+                    "main": "0xb59490ab09a0f526cc7305822ac65f2ab12f9723",
+                    "arbitrum": false
+                }
+            },
+            {
+                "route": {
+                    "main": "0x16eccfdbb4ee1a85a33f3a9b21175cd7ae753db4",
+                    "arbitrum": "0x5298060A95205BE6Dd4aBc21910A4bB23D6DCD8b"
+                }
+            },
+            {
+                "dep": {
+                    "main": "0x1a3496c18d558bd9c6c8f609e1b129f67ab08163",
+                    "arbitrum": false
+                }
+            },
+            {
+                "el": {
+                    "main": "0x2781246fe707bb15cee3e5ea354e2154a2877b16",
+                    "arbitrum": false
+                }
+            },
+            {
+                "exrd": {
+                    "main": "0x6468e79A80C0eaB0F9A2B574c8d5bC374Af59414",
+                    "arbitrum": false
+                }
+            },
+            {
+                "kishu": {
+                    "main": "0xA2b4C0Af19cC16a6CfAcCe81F192B024d625817D",
+                    "arbitrum": false
+                }
+            },
+            {
+                "hopr": {
+                    "main": "0xf5581dfefd8fb0e4aec526be659cfab1f8c781da",
+                    "arbitrum": false
+                }
+            },
+            {
+                "eurt": {
+                    "main": "0xc581b735a1688071a1746c968e0798d642ede491",
+                    "arbitrum": false
+                }
+            },
+            {
+                "aleph": {
+                    "main": "0x27702a26126e0b3702af63ee09ac4d1a084ef628",
+                    "arbitrum": false
+                }
+            },
+            {
+                "cel": {
+                    "main": "0xaaaebe6fe48e54f431b0c390cfaf0b017d09d42d",
+                    "arbitrum": false
+                }
+            },
+            {
+                "xcad": {
+                    "main": "0x7659ce147d0e714454073a5dd7003544234b6aa0",
+                    "arbitrum": false
+                }
+            },
+            {
+                "nct": {
+                    "main": "0x9e46a38f5daabe8683e10793b06749eef7d733d1",
+                    "arbitrum": false
+                }
+            },
+            {
+                "vxv": {
+                    "main": "0x7D29A64504629172a429e64183D6673b9dAcbFCe",
+                    "arbitrum": false
+                }
+            },
+            {
+                "lmr": {
+                    "main": "0x4b1d0b9f081468d780ca1d5d79132b64301085d1",
+                    "arbitrum": false
+                }
+            },
+            {
+                "aqt": {
+                    "main": "0x2a9bDCFF37aB68B95A53435ADFd8892e86084F93",
+                    "arbitrum": false
+                }
+            },
+            {
+                "slg": {
+                    "main": "0xFc0B60E0DF5Dc9d4B72D957cA2d251ceE308019a",
+                    "arbitrum": false
+                }
+            },
+            {
+                "xsgd": {
+                    "main": "0x70e8de73ce538da2beed35d14187f6959a8eca96",
+                    "arbitrum": false
+                }
+            },
+            {
+                "gel": {
+                    "main": "0x15b7c0c907e4C6b9AdaAaabC300C08991D6CEA05",
+                    "arbitrum": false
+                }
+            },
+            {
+                "sync": {
+                    "main": "0xa41d2f8Ee4F47D3B860A149765A7dF8c3287b7F0",
+                    "arbitrum": false
+                }
+            },
+            {
+                "mcb": {
+                    "main": "0x4e352cf164e64adcbad318c3a1e222e9eba4ce42",
+                    "arbitrum": "0x4e352cF164E64ADCBad318C3a1e222E9EBa4Ce42"
+                }
+            },
+            {
+                "pstake": {
+                    "main": "0xfB5c6815cA3AC72Ce9F5006869AE67f18bF77006",
+                    "arbitrum": false
+                }
+            },
+            {
+                "wrld": {
+                    "main": "0xd5d86fc8d5c0ea1ac1ac5dfab6e529c9967a45e9",
+                    "arbitrum": false
+                }
+            },
+            {
+                "stos": {
+                    "main": "0x08c32b0726C5684024ea6e141C50aDe9690bBdcc",
+                    "arbitrum": false
+                }
+            },
+            {
+                "key": {
+                    "main": "0x4cc19356f2d37338b9802aa8e8fc58b0373296e7",
+                    "arbitrum": false
+                }
+            },
+            {
+                "prq": {
+                    "main": "0x362bc847A3a9637d3af6624EeC853618a43ed7D2",
+                    "arbitrum": false
+                }
+            },
+            {
+                "avinoc": {
+                    "main": "0xf1ca9cb74685755965c7458528a36934df52a3ef",
+                    "arbitrum": false
+                }
+            },
+            {
+                "turbo": {
+                    "main": "0xa35923162c49cf95e6bf26623385eb431ad920d3",
+                    "arbitrum": false
+                }
+            },
+            {
+                "fox": {
+                    "main": "0xc770eefad204b5180df6a14ee197d99d808ee52d",
+                    "arbitrum": false
+                }
+            },
+            {
+                "asd": {
+                    "main": "0xff742d05420b6aca4481f635ad8341f81a6300c2",
+                    "arbitrum": false
+                }
+            },
+            {
+                "sln": {
+                    "main": "0xdb82c0d91e057e05600c8f8dc836beb41da6df14",
+                    "arbitrum": false
+                }
+            },
+            {
+                "shx": {
+                    "main": "0xee7527841a932d2912224e20a405e1a1ff747084",
+                    "arbitrum": false
+                }
+            },
+            {
+                "kp3r": {
+                    "main": "0x1ceb5cb57c4d4e2b2433641b95dd330a33185a44",
+                    "arbitrum": false
+                }
+            },
+            {
+                "rvf": {
+                    "main": "0x2fb652314C3d850E9049057bBE9813F1eEe882d3",
+                    "arbitrum": false
+                }
+            },
+            {
+                "wncg": {
+                    "main": "0xf203Ca1769ca8e9e8FE1DA9D147DB68B6c919817",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ava": {
+                    "main": "0xa6C0c097741D55ECd9a3A7DeF3A8253fD022ceB9",
+                    "arbitrum": false
+                }
+            },
+            {
+                "open": {
+                    "main": "0x4123a133ae3c521fd134d7b13a2dec35b56c2463",
+                    "arbitrum": false
+                }
+            },
+            {
+                "acx": {
+                    "main": "0x44108f0223A3C3028F5Fe7AEC7f9bb2E66beF82F",
+                    "arbitrum": "0x53691596d1BCe8CEa565b84d4915e69e03d9C99d"
+                }
+            },
+            {
+                "fis": {
+                    "main": "0xef3a930e1ffffacd2fc13434ac81bd278b0ecc8d",
+                    "arbitrum": false
+                }
+            },
+            {
+                "caga": {
+                    "main": "0xbddc20ed7978b7d59ef190962f441cd18c14e19f",
+                    "arbitrum": false
+                }
+            },
+            {
+                "stc": {
+                    "main": "0x15b543e986b8c34074dfc9901136d9355a537e7e",
+                    "arbitrum": false
+                }
+            },
+            {
+                "tava": {
+                    "main": "0xdebe620609674F21B1089042527F420372eA98A5",
+                    "arbitrum": false
+                }
+            },
+            {
+                "onit": {
+                    "main": "0x410e731c2970Dce3AdD351064AcF5cE9E33FDBf0",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ait": {
+                    "main": "0x89d584A1EDB3A70B3B07963F9A3eA5399E38b136",
+                    "arbitrum": false
+                }
+            },
+            {
+                "quick": {
+                    "main": "0x6c28aef8977c9b773996d0e8376d2ee379446f2f",
+                    "arbitrum": false
+                }
+            },
+            {
+                "aura": {
+                    "main": "0xc0c293ce456ff0ed870add98a0828dd4d2903dbf",
+                    "arbitrum": "0x1509706a6c66CA549ff0cB464de88231DDBe213B"
+                }
+            },
+            {
+                "uft": {
+                    "main": "0x0202Be363B8a4820f3F4DE7FaF5224fF05943AB1",
+                    "arbitrum": false
+                }
+            },
+            {
+                "kata": {
+                    "main": "0x2e85ae1C47602f7927bCabc2Ff99C40aA222aE15",
+                    "arbitrum": false
+                }
+            },
+            {
+                "pxp": {
+                    "main": "0x95aa5d2dbd3c16ee3fdea82d5c6ec3e38ce3314f",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ncdt": {
+                    "main": "0xe0c8b298db4cffe05d1bea0bb1ba414522b33c1b",
+                    "arbitrum": false
+                }
+            },
+            {
+                "adx": {
+                    "main": "0xade00c28244d5ce17d72e40330b1c318cd12b7c3",
+                    "arbitrum": false
+                }
+            },
+            {
+                "bst": {
+                    "main": "0x509a38b7a1cc0dcd83aa9d06214663d9ec7c7f4a",
+                    "arbitrum": false
+                }
+            },
+            {
+                "qorpo": {
+                    "main": "0x22514fFb0d7232a56F0c24090E7B68f179FAA940",
+                    "arbitrum": false
+                }
+            },
+            {
+                "bifi": {
+                    "main": "0xB1F1ee126e9c96231Cc3d3fAD7C08b4cf873b1f1",
+                    "arbitrum": false
+                }
+            },
+            {
+                "tsuka": {
+                    "main": "0xc5fb36dd2fb59d3b98deff88425a3f425ee469ed",
+                    "arbitrum": false
+                }
+            },
+            {
+                "akro": {
+                    "main": "0x8ab7404063ec4dbcfd4598215992dc3f8ec853d7",
+                    "arbitrum": false
+                }
+            },
+            {
+                "derc": {
+                    "main": "0x9fa69536d1cda4a04cfb50688294de75b505a9ae",
+                    "arbitrum": false
+                }
+            },
+            {
+                "shido": {
+                    "main": "0xe2512A2f19F0388aD3D7A5263eaA82AcD564827b",
+                    "arbitrum": false
+                }
+            },
+            {
+                "isk": {
+                    "main": "0x17d2628D30F8e9E966c9Ba831c9B9b01ea8Ea75C",
+                    "arbitrum": false
+                }
+            },
+            {
+                "hello": {
+                    "main": "0x411099C0b413f4fedDb10Edf6a8be63BD321311C",
+                    "arbitrum": false
+                }
+            },
+            {
+                "pdt": {
+                    "main": "0x375abb85c329753b1ba849a601438ae77eec9893",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ampl": {
+                    "main": "0xd46ba6d942050d489dbd938a2c909a5d5039a161",
+                    "arbitrum": false
+                }
+            },
+            {
+                "suku": {
+                    "main": "0x0763fdCCF1aE541A5961815C0872A8c5Bc6DE4d7",
+                    "arbitrum": false
+                }
+            },
+            {
+                "smt": {
+                    "main": "0xb17548c7b510427baac4e267bea62e800b247173",
+                    "arbitrum": false
+                }
+            },
+            {
+                "ctx": {
+                    "main": "0x321c2fe4446c7c963dc41dd58879af648838f98d",
+                    "arbitrum": false
                 }
             }
         ],

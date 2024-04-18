@@ -262,7 +262,10 @@ function get_api_inputs_select(rd, api_data) {
             transactionlist.html("");
             let api_name = api_data.name;
             if (rd.lightning) {
-                lightning_fetch(rd, api_data, rdo);
+                const l_fetch = lightning_fetch(rd, api_data, rdo);
+                if (l_fetch == "exit") {
+                    return
+                }
             }
             if (rd.payment == "monero") {
                 monero_fetch(rd, api_data, rdo);
