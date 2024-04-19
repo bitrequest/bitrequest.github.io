@@ -153,7 +153,7 @@ function init_socket(socket_node, address, swtch, retry) {
                 "url": main_arbitrum_socket
             }, address, main_arbitrum_node); // L2 Infura Arbitrum
         }
-        notify("networks: ETH, Arbitrum", 50000, "yes");
+        notify("networks: ETH, Arbitrum", 500000, "yes");
         return
     }
     if (payment == "monero") {
@@ -211,7 +211,7 @@ function init_socket(socket_node, address, swtch, retry) {
             }, address, arb_contract);
             var arbtxt = " Arbitrum,";
         }
-        notify("networks: ETH," + arbtxt + " <span class='nowrap'>BNB smart chain</span>", 50000, "yes");
+        notify("networks: ETH," + arbtxt + " <span class='nowrap'>BNB smart chain</span>", 500000, "yes");
         return
     }
     notify("this request is not monitored", 500000, "yes")
