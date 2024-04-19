@@ -145,13 +145,15 @@ function init_socket(socket_node, address, swtch, retry) {
         if (socket_node.url == main_alchemy_socket) {
             alchemy_eth_websocket(socket_node, address); // L1 Alchemy
             arbi_scan(address, request_ts); // L2 Arbitrum
-            return
         }
-        web3_eth_websocket(socket_node, address, main_eth_node); // L1 Infura
-        web3_eth_websocket({
-            "name": main_arbitrum_socket,
-            "url": main_arbitrum_socket
-        }, address, main_arbitrum_node); // L2 Infura Arbitrum
+        else {
+            web3_eth_websocket(socket_node, address, main_eth_node); // L1 Infura
+            web3_eth_websocket({
+                "name": main_arbitrum_socket,
+                "url": main_arbitrum_socket
+            }, address, main_arbitrum_node); // L2 Infura Arbitrum
+        }
+        notify("networks: ETH, Arbitrum", 50000, "yes");
         return
     }
     if (payment == "monero") {
@@ -201,13 +203,15 @@ function init_socket(socket_node, address, swtch, retry) {
         bnb_scan(address, request_ts, ccsymbol);
         // arbitrum:
         let arb_contract = contracts(ccsymbol, "arbitrum");
+        var arbtxt = "";
         if (arb_contract) {
             web3_erc20_websocket({
                 "name": main_arbitrum_socket,
                 "url": main_arbitrum_socket
             }, address, arb_contract);
-            return
+            var arbtxt = " Arbitrum,";
         }
+        notify("networks: ETH," + arbtxt + " <span class='nowrap'>BNB smart chain</span>", 50000, "yes");
         return
     }
     notify("this request is not monitored", 500000, "yes")

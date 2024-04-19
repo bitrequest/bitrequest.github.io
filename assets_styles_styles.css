@@ -1407,6 +1407,10 @@ html.dragmode .currentpage .applist li.dragging {
 	white-space: nowrap;
 }
 
+.nowrap {
+	white-space: nowrap;
+}
+
 .requestlist li[data-status="insufficient"] .metalist li .amountshort.show_as {
 	display: inline;
 }
