@@ -403,6 +403,11 @@ function loadpaymentfunction(pass) {
     if (is_openrequest() === true) { // prevent double load
         return
     }
+    if (!$.isEmptyObject(sockets)) {
+        playsound(funk);
+        notify("Closing sockets...");
+        return
+    }
     loader();
     symbolcache = br_get_local("symbols", true);
     if (symbolcache) {

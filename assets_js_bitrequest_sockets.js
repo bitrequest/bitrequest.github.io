@@ -853,7 +853,8 @@ function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
     let provider_url = socket_node.url,
         if_id = get_infura_apikey(provider_url),
         provider = provider_url + if_id,
-        websocket = sockets[provider_url] = new WebSocket(provider);
+        ws_id = sha_sub(provider, 10),
+        websocket = sockets[ws_id] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         let ping_event = JSON.stringify({
@@ -897,7 +898,7 @@ function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
         handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress);
+        handle_socket_fails(socket_node, thisaddress, ws_id);
         return
     };
 }
@@ -907,6 +908,7 @@ function web3_erc20_websocket(socket_node, thisaddress, contract) {
         if_id = get_infura_apikey(provider_url),
         provider = provider_url + if_id,
         websocket = sockets[contract] = new WebSocket(provider);
+    console.log(sockets);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         let ping_event = JSON.stringify({
@@ -958,7 +960,7 @@ function web3_erc20_websocket(socket_node, thisaddress, contract) {
         handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress);
+        handle_socket_fails(socket_node, thisaddress, contract);
         return
     };
 }
@@ -1012,7 +1014,8 @@ function alchemy_eth_websocket(socket_node, thisaddress) {
     let provider_url = socket_node.url,
         al_id = get_alchemy_apikey(),
         provider = provider_url + al_id,
-        websocket = sockets[provider_url] = new WebSocket(provider);
+        ws_id = sha_sub(provider, 10),
+        websocket = sockets[ws_id] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         let ping_event = JSON.stringify({
@@ -1048,7 +1051,7 @@ function alchemy_eth_websocket(socket_node, thisaddress) {
         handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress);
+        handle_socket_fails(socket_node, thisaddress, ws_id);
         return
     };
 }
@@ -1203,14 +1206,15 @@ function kaspa_fyi_websocket(socket_node, thisaddress) {
     };
 }
 
-function handle_socket_fails(socket_node, thisaddress) {
+function handle_socket_fails(socket_node, thisaddress, socketid) {
     if (paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
         return
     }
     if (paymentpopup.hasClass("active")) { // only when request is visible
         let next_socket = try_next_socket(socket_node);
         if (next_socket) {
-            closesocket(thisaddress);
+            let wsid = (socketid) ? socketid : thisaddress;
+            closesocket(wsid);
             init_socket(next_socket, thisaddress, null, true);
             return
         }
