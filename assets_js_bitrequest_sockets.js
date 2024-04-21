@@ -908,7 +908,6 @@ function web3_erc20_websocket(socket_node, thisaddress, contract) {
         if_id = get_infura_apikey(provider_url),
         provider = provider_url + if_id,
         websocket = sockets[contract] = new WebSocket(provider);
-    console.log(sockets);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         let ping_event = JSON.stringify({

@@ -2595,6 +2595,10 @@ function checkapikey(thisref, apikeyval, lastinput) {
             "keylength": 6,
             "payload": "?module=block&action=getblockreward&blockno=131049&apikey="
         } :
+        (thisref == "bitly") ? {
+            "keylength": 6,
+            "payload": "expand"
+        } :
         (thisref == "blockchair") ? {
             "keylength": 6,
             "payload": "stats?key="
@@ -2668,123 +2672,136 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
         }
         let api_data = get_api_data(thisref),
             base_url = api_data.base_url,
-            method = (thisref == "firebase") ? "POST" : "GET",
+            method = (thisref == "firebase" || thisref == "bitly") ? "POST" : "GET",
             params = {
                 "method": method,
                 "cache": true
-            },
-            search = payload + apikeyval,
-            api_url = (thisref == "bitly") ? "https://api-ssl.bitly.com/v3/shorten?access_token=" + apikeyval + "&longUrl=http%3A%2F%2Fgoogle.com%2F" :
-            base_url + search;
+            };
+        var search = payload + apikeyval;
         if (thisref == "firebase") {
             params.data = {
                 "longDynamicLink": firebase_shortlink + "?link=" + approot + "?p=request"
             }
         }
-        let postdata = (thisref == "coinmarketcap") ? {
-            "api": "coinmarketcap",
-            "search": search,
-            "cachetime": 0,
-            "cachefolder": "1h",
-            "params": params
-        } : {
-            "api": thisref,
-            "search": search,
-            "cachetime": 0,
-            "cachefolder": "1h",
-            "api_url": api_url,
-            "proxy": false,
-            "params": params
-        };
+        if (thisref == "bitly") {
+            var search = payload;
+            params.headers = {
+                "Authorization": "Bearer " + apikeyval,
+                "Content-Type": "application/json"
+            };
+            params.data = JSON.stringify({
+                "bitlink_id": "bit.ly/12a4b6c"
+            })
+        }
+        let api_url = base_url + search,
+            postdata = (thisref == "coinmarketcap") ? {
+                "api": "coinmarketcap",
+                "search": search,
+                "cachetime": 0,
+                "cachefolder": "1h",
+                "params": params
+            } : {
+                "api": thisref,
+                "search": search,
+                "cachetime": 0,
+                "cachefolder": "1h",
+                "api_url": api_url,
+                "proxy": false,
+                "params": params
+            };
         api_proxy(postdata).done(function(e) {
             let data = br_result(e).result;
-            if (thisref == "arbiscan" && data.status != 1) {
-                if (data.result == "Invalid API Key") {
-                    api_fail(thisref, apikeyval);
-                } else {
-                    notify("API call error");
-                    let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.message + "</p>";
-                    popdialog(content, "canceldialog");
+            if (data) {
+                if (thisref == "arbiscan" && data.status != 1) {
+                    if (data.result == "Invalid API Key") {
+                        api_fail(thisref, apikeyval);
+                    } else {
+                        notify("API call error");
+                        let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.message + "</p>";
+                        popdialog(content, "canceldialog");
+                    }
+                    return
                 }
-                return
-            }
-            if (thisref == "bitly" && data.status_code === 500) {
-                api_fail(thisref, apikeyval);
-                return
-            }
-            if (thisref == "blockchair") {
-                let context_code = data.context.code;
-                if (context_code === 200) {
-                    update_api_attr(thisref, apikeyval, lastinput);
-                } else if (context_code === 402) {
+                if (thisref == "bitly" && data.status_code === 500) {
                     api_fail(thisref, apikeyval);
-                } else {
-                    notify("API call error");
-                    let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
-                    popdialog(content, "canceldialog");
+                    return
                 }
-                return
-            }
-            if (thisref == "blockcypher") {
-                if (data.address) {
-                    update_api_attr(thisref, apikeyval, lastinput);
-                } else {
-                    api_fail(thisref, apikeyval);
-                }
-                return
-            }
-            if (thisref == "coinmarketcap" && data.status.error_code === 1001) {
-                api_fail(thisref, apikeyval);
-                return
-            }
-            if (thisref == "currencylayer" && data.success === false) {
-                if (data.error.code === 101) {
-                    api_fail(thisref, apikeyval);
-                } else {
-                    notify("API call error");
-                    let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
-                    popdialog(content, "canceldialog");
-                }
-                return
-            }
-            if (thisref == "ethplorer") {
-                if (data.tokens) {
-                    update_api_attr(thisref, apikeyval, lastinput);
-                } else {
-                    if (data.error.code === 1) {
+                if (thisref == "blockchair") {
+                    let context_code = data.context.code;
+                    if (context_code === 200) {
+                        update_api_attr(thisref, apikeyval, lastinput);
+                    } else if (context_code === 402) {
                         api_fail(thisref, apikeyval);
                     } else {
                         notify("API call error");
                         let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
+                    return
                 }
-                return
-            }
-            if (thisref == "exchangeratesapi" && !data.success) {
-                let ec = q_obj(data, "error.code");
-                if (ec) {
-                    if (ec == "invalid_access_key") {
+                if (thisref == "blockcypher") {
+                    if (data.address) {
+                        update_api_attr(thisref, apikeyval, lastinput);
+                    } else {
+                        api_fail(thisref, apikeyval);
+                    }
+                    return
+                }
+                if (thisref == "coinmarketcap" && data.status.error_code === 1001) {
+                    api_fail(thisref, apikeyval);
+                    return
+                }
+                if (thisref == "currencylayer" && data.success === false) {
+                    if (data.error.code === 101) {
                         api_fail(thisref, apikeyval);
                     } else {
                         notify("API call error");
-                        let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + ec + "</p>";
+                        let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
                     return
                 }
-            }
-            if (thisref == "fixer" && data.success === false) {
-                if (data.error.code === 101) {
-                    api_fail(thisref, apikeyval);
-                } else {
-                    notify("API call error");
-                    let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
-                    popdialog(content, "canceldialog");
+                if (thisref == "ethplorer") {
+                    if (data.tokens) {
+                        update_api_attr(thisref, apikeyval, lastinput);
+                    } else {
+                        if (data.error.code === 1) {
+                            api_fail(thisref, apikeyval);
+                        } else {
+                            notify("API call error");
+                            let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
+                            popdialog(content, "canceldialog");
+                        }
+                    }
+                    return
                 }
-                return
+                if (thisref == "exchangeratesapi" && !data.success) {
+                    let ec = q_obj(data, "error.code");
+                    if (ec) {
+                        if (ec == "invalid_access_key") {
+                            api_fail(thisref, apikeyval);
+                        } else {
+                            notify("API call error");
+                            let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + ec + "</p>";
+                            popdialog(content, "canceldialog");
+                        }
+                        return
+                    }
+                }
+                if (thisref == "fixer" && data.success === false) {
+                    if (data.error.code === 101) {
+                        api_fail(thisref, apikeyval);
+                    } else {
+                        notify("API call error");
+                        let content = "<h2 class='icon-blocked'>Api call failed</h2><p class='doselect'>" + data.error + "</p>";
+                        popdialog(content, "canceldialog");
+                    }
+                    return
+                }
+                update_api_attr(thisref, apikeyval, lastinput);
+                return;
             }
-            update_api_attr(thisref, apikeyval, lastinput);
+            api_fail(thisref, apikeyval);
         }).fail(function(jqXHR, textStatus, errorThrown) {
             api_fail(thisref, apikeyval);
         });
