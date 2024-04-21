@@ -35,12 +35,16 @@ function api_monitor(txhash, tx_data, api_dat) {
         if (gets.xss) {
             return
         }
+        if (api_name == "arbiscan" || api_name == main_eth_node || api_name == main_arbitrum_node) {
+            rpc_monitor(txhash, tx_data, api_dat);
+            return
+        }
         api_attempts["pollings" + api_name] = true;
         let payment = request.payment,
             currencysymbol = request.currencysymbol,
             set_confirmations = request.set_confirmations,
             poll_url = (api_name == "blockcypher") ? currencysymbol + "/main/txs/" + txhash :
-            (api_name == "ethplorer") ? "getTxInfo/" + txhash :
+            (api_name == "ethplorer" || api_name == "binplorer") ? "getTxInfo/" + txhash :
             (api_name == "blockchair") ? (request.erc20 === true) ? "ethereum/dashboards/transaction/" + txhash + "?erc_20=true" : payment + "/dashboards/transaction/" + txhash :
             (api_name == "mempool.space") ? "tx/" + txhash :
             (api_name == "nimiq.watch") ? "transaction/" + nimiqhash(txhash) :
@@ -317,8 +321,8 @@ function rmpl(payment, rpcurl, txhash) { // rpc_monitor payload
 
 function ping_eth_node(rpcdata, txhash, erc20) {
     if (paymentpopup.hasClass("active")) { // only when request is visible
-        let url = rpcdata.url,
-            set_url = (url) ? url : main_eth_node;
+        let url = get_rpc_url(rpcdata),
+            set_url = (rpcdata.name == "arbiscan") ? main_arbitrum_node : (rpcurl) ? rpcurl : main_eth_node;
         api_proxy(eth_params(set_url, 10, "eth_blockNumber", [])).done(function(a) {
             let r_1 = inf_result(a);
             if (r_1) {
@@ -332,8 +336,8 @@ function ping_eth_node(rpcdata, txhash, erc20) {
                                 let tbn = Number(this_bn),
                                     cbn = Number(r_1),
                                     conf = cbn - tbn,
-                                    conf_correct = (conf < 0) ? 0 : conf,
-                                    txd;
+                                    conf_correct = (conf < 0) ? 0 : conf;
+                                var txd;
                                 if (erc20 === true) {
                                     let input = r_2.input;
                                     if (str_match(input, request.address.slice(3)) === true) {
@@ -346,8 +350,8 @@ function ping_eth_node(rpcdata, txhash, erc20) {
                                                 "confirmations": conf_correct,
                                                 "value": tokenValue,
                                                 "decimals": request.decimals
-                                            },
-                                            txd = infura_erc20_poll_data(txdata, request.set_confirmations, request.currencysymbol);
+                                            };
+                                        var txd = infura_erc20_poll_data(txdata, request.set_confirmations, request.currencysymbol);
                                     } else {
                                         clearpinging();
                                         handle_rpc_fails(rpcdata, inf_err(set_url), txhash);
@@ -355,12 +359,12 @@ function ping_eth_node(rpcdata, txhash, erc20) {
                                     }
                                 } else {
                                     let txdata = {
-                                            "timestamp": Number(r_3.timestamp),
-                                            "hash": txhash,
-                                            "confirmations": conf_correct,
-                                            "value": Number(r_2.value)
-                                        },
-                                        txd = infura_eth_poll_data(txdata, request.set_confirmations, request.currencysymbol);
+                                        "timestamp": Number(r_3.timestamp),
+                                        "hash": txhash,
+                                        "confirmations": conf_correct,
+                                        "value": Number(r_2.value)
+                                    };
+                                    var txd = infura_eth_poll_data(txdata, request.set_confirmations, request.currencysymbol);
                                 }
                                 if (txd.ccval) {
                                     confirmations(txd);
