@@ -848,7 +848,8 @@ function blockchair_fetch(rd, api_data, rdo) {
         statuspanel = rdo.statuspanel,
         counter = 0;
     if (rdo.pending == "scanning") { // scan incoming transactions on address
-        let scan_url = (rdo.erc20 === true) ? "ethereum/erc-20/" + rdo.token_contract + "/dashboards/address/" + rd.address : rd.payment + "/dashboards/address/" + rd.address;
+        let contract = q_obj(rd, "coindata.contract"),
+            scan_url = (rdo.erc20 === true && contract) ? "ethereum/erc-20/" + contract + "/dashboards/address/" + rd.address : rd.payment + "/dashboards/address/" + rd.address;
         api_proxy({
             "api": api_name,
             "search": scan_url,

@@ -1314,8 +1314,8 @@ function payrequest() {
             insufficient = (rl_status == "insufficient"),
             midstring = thisnode.attr("data-rel"),
             endstring = "&status=" + rl_status + "&type=" + rl_requesttype,
-            amount_short_rounded = amountshort(rl_amount, rl_receivedamount, rl_fiatvalue, rl_iscrypto),
-            paymenturl_amount = (insufficient === true) ? amount_short_rounded : rl_amount,
+            amount_short_rounded = amountshort(rl_amount, rl_receivedamount, rl_fiatvalue, rl_iscrypto);
+        let paymenturl_amount = (amount_short_rounded && insufficient === true) ? amount_short_rounded : rl_amount,
             lightning = rldata.lightning,
             d = (lightning && lightning.invoice) ? "&d=" + btoa(JSON.stringify({
                 "imp": lightning.imp,
@@ -3451,8 +3451,9 @@ function removerequestfunction() {
 
 function amountshort(amount, receivedamount, fiatvalue, iscrypto) {
     let amount_recieved = (iscrypto === true) ? receivedamount : fiatvalue,
-        amount_short = amount - amount_recieved;
-    return (iscrypto === true) ? trimdecimals(amount_short, 5) : trimdecimals(amount_short, 2);
+        amount_short = amount - amount_recieved,
+        numberamount = (iscrypto === true) ? trimdecimals(amount_short, 5) : trimdecimals(amount_short, 2);
+    return (isNaN(numberamount)) ? null : numberamount;
 }
 
 function editrequest() {

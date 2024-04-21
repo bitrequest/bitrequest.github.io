@@ -671,7 +671,7 @@ function compareamounts(rd, ln) {
             firstlist = requestli.find(".transactionlist li:first"),
             latestinput = firstlist.data("transactiontime"),
             offset = Math.abs(now() - (firstinput - timezone)),
-            recent = (offset < 900000); // Only lookup hystorical data after 15 minutes
+            recent = (offset < 300000); // Only lookup hystorical data after 5 minutes
         if (iscrypto || recent) {
             let thissum_cc = 0,
                 txhash_cc,
@@ -934,7 +934,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     historic_price = historic_object.price;
                 thisnode.data("historic", historic_object);
                 conf = tn_dat.confirmations, // check confirmations
-                    paymenttimestamp = tn_dat.transactiontime,
+                    paymenttimestamp = thistimestamp,
                     txhash = tn_dat.txhash,
                     receivedcc += parseFloat(thisvalue) || 0; // sum of outputs CC
                 let thisusdsum = receivedusd += parseFloat(historic_price * thisvalue) || 0;
