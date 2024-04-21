@@ -728,8 +728,7 @@ function arbiscan_fetch(rd, api_data, rdo) {
         transactionlist = rdo.transactionlist,
         statuspanel = rdo.statuspanel,
         counter = 0;
-    //let apikeytoken = "YourApiKeyToken";
-    let apikeytoken = "FVV649M5FRXKG787DNN4AATCV6PY943E5N";
+    let apikeytoken = get_arbiscan_apikey();
     if (rdo.pending == "scanning") { // scan incoming transactions on address
         if (rd.payment == "ethereum") {
             api_proxy({
@@ -964,6 +963,10 @@ function blockchair_fetch(rd, api_data, rdo) {
         });
     }
     if (rdo.pending == "polling") { // poll transaction id
+        if (api_name == "arbiscan" || api_name == "alchemy" || api_name == "binplorer") {
+            handle_api_fails_list(rd, "scan", api_data);
+            return
+        }
         if (rd.txhash) {
             let poll_url = (rdo.erc20 === true) ? "ethereum/dashboards/transaction/" + rd.txhash + "?erc_20=true" : rd.payment + "/dashboards/transaction/" + rd.txhash;
             api_proxy({
