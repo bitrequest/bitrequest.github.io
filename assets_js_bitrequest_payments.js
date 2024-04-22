@@ -1595,10 +1595,8 @@ function pickcurrency() {
         $("#shareinputmirror > input").val(newccvaluevar).prev("span").text(newccvalueplaceholder);
         paymentdialogbox.attr("class", helper.requestclass + dialogclass + helper.iszeroclass);
         main_input_focus();
-        if (request.iszero_request === true) {} else {
-            set_edit(href);
-            settitle(title);
-        }
+        set_edit(href);
+        settitle(title);
         rendercpooltext(newccsymbol, newccrate);
     });
 }
@@ -1739,19 +1737,17 @@ function updatecpool(thisamount, thisrate, ccvalue) {
         address = gets.address,
         address_xmr_ia = (request.xmr_ia) ? request.xmr_ia : address;
     renderqr(payment, address_xmr_ia, ccvalue);
-    if (request.iszero_request === true) {} else {
-        let page = gets.p,
-            currency = gets.uoa,
-            data = (gets.d) ? "&d=" + gets.d : "",
-            starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
-            href = starturl + payment + "&uoa=" + currency + "&amount=" + thisamount + "&address=" + address + data,
-            pagename = payment + " request for " + thisamount + " " + currency,
-            title = pagename + " | " + apptitle;
-        helper.currencylistitem.data("url", href);
-        request.amount = thisamount;
-        set_edit(href);
-        settitle(title);
-    }
+    let page = gets.p,
+        currency = gets.uoa,
+        data = (gets.d) ? "&d=" + gets.d : "",
+        starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
+        href = starturl + payment + "&uoa=" + currency + "&amount=" + thisamount + "&address=" + address + data,
+        pagename = payment + " request for " + thisamount + " " + currency,
+        title = pagename + " | " + apptitle;
+    helper.currencylistitem.data("url", href);
+    request.amount = thisamount;
+    set_edit(href);
+    settitle(title);
     blocktyping = false;
 }
 
@@ -1785,7 +1781,8 @@ function set_uris(urlscheme, amount) {
 
 function set_lnd_qr(a, title) {
     let ln = helper.lnd,
-        rt = (title) ? title : $("#paymentdialog input#requesttitle").val(),
+        srt = (title) ? title : $("#paymentdialog input#requesttitle").val(),
+        rt = (srt) ? srt : request.requesttitle,
         m = (rt && rt.length > 1) ? "&m=" + encodeURIComponent(rt) : "",
         nid = (ln.lnurl === false) ? ln.nid : "",
         url = lnd_ph + "proxy/v1/ln/?i=" + ln.imp + "&id=" + request.typecode + ln.pid + nid + "&a=" + (a * 100000000000).toFixed(0) + m,
@@ -2153,9 +2150,6 @@ function pickaddressfromdialog() {
 }
 
 function set_edit(url) {
-    if (request.iszero_request === true) {
-        return
-    }
     history.replaceState(null, null, url);
     br_set_local("editurl", url);
 }
