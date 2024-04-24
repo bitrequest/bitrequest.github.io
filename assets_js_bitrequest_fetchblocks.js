@@ -16,7 +16,6 @@ $(document).ready(function() {
 
     //mempoolspace_rpc
     //infura_txd_rpc
-    //handle_inf_fails_list
     //inf_result
     //inf_err
     //eth_params
@@ -727,19 +726,30 @@ function arbiscan_fetch(rd, api_data, rdo) {
         thislist = rdo.thislist,
         transactionlist = rdo.transactionlist,
         statuspanel = rdo.statuspanel,
-        counter = 0;
-    let apikeytoken = get_arbiscan_apikey();
+        counter = 0,
+        arb_contract = contracts(rd.currencysymbol, "arbitrum"),
+        apikeytoken = get_arbiscan_apikey(),
+        eth_payload = {
+            "api": api_name,
+            "search": "?module=account&action=txlist&address=" + rd.address + "&startblock=0&endblock=latest&page=1&offset=10&sort=desc&apikey=" + apikeytoken,
+            "cachetime": 25,
+            "cachefolder": "1h",
+            "params": {
+                "method": "GET"
+            }
+        },
+        erc20_payload = {
+            "api": api_name,
+            "search": "?module=account&action=tokentx&contractaddress=" + arb_contract + "&address=" + rd.address + "&page=1&offset=100&startblock=0&endblock=99999999&sort=asc&apikey=" + apikeytoken,
+            "cachetime": 25,
+            "cachefolder": "1h",
+            "params": {
+                "method": "GET"
+            }
+        }
     if (rdo.pending == "scanning") { // scan incoming transactions on address
         if (rd.payment == "ethereum") {
-            api_proxy({
-                "api": api_name,
-                "search": "?module=account&action=txlist&address=" + rd.address + "&startblock=0&endblock=latest&page=1&offset=10&sort=desc&apikey=" + apikeytoken,
-                "cachetime": 25,
-                "cachefolder": "1h",
-                "params": {
-                    "method": "GET"
-                }
-            }).done(function(e) {
+            api_proxy(eth_payload).done(function(e) {
                 let data = br_result(e).result;
                 if (data) {
                     let result = data.result;
@@ -778,17 +788,8 @@ function arbiscan_fetch(rd, api_data, rdo) {
             });
             return
         }
-        let arb_contract = contracts(rd.currencysymbol, "arbitrum");
         if (arb_contract) {
-            api_proxy({
-                "api": api_name,
-                "search": "?module=account&action=tokentx&contractaddress=" + arb_contract + "&address=" + rd.address + "&page=1&offset=100&startblock=0&endblock=99999999&sort=asc&apikey=" + apikeytoken,
-                "cachetime": 25,
-                "cachefolder": "1h",
-                "params": {
-                    "method": "GET"
-                }
-            }).done(function(e) {
+            api_proxy(erc20_payload).done(function(e) {
                 let data = br_result(e).result;
                 if (data) {
                     let result = data.result;
@@ -829,11 +830,82 @@ function arbiscan_fetch(rd, api_data, rdo) {
         }
         tx_api_fail(thislist, statuspanel);
         handle_api_fails_list(rd, "scan", api_data);
+        return
     }
     if (rdo.pending == "polling") { // poll transaction id
         if (rd.txhash) {
-            infura_txd_rpc(rd, api_data, rdo); // use infura api
-            return
+            if (rd.payment == "ethereum") {
+                api_proxy(eth_payload).done(function(e) {
+                    let data = br_result(e).result;
+                    if (data) {
+                        let result = data.result;
+                        if (result && br_issar(result)) {
+                            let match = false;
+                            $.each(result, function(dat, value) {
+                                if (value.hash == rd.txhash) {
+                                    let txd = arbiscan_scan_data_eth(value, rdo.setconfirmations);
+                                    if (txd.ccval) {
+                                        let tx_listitem = append_tx_li(txd, rd.requesttype);
+                                        if (tx_listitem) {
+                                            transactionlist.append(tx_listitem.data(txd));
+                                            tx_count(statuspanel, 1);
+                                            compareamounts(rd);
+                                        }
+                                    }
+                                    return
+                                }
+                            });
+                            return
+                        }
+                    }
+                    tx_api_fail(thislist, statuspanel);
+                    handle_api_fails_list(rd, "scan", api_data);
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    tx_api_fail(thislist, statuspanel);
+                    let error_object = (errorThrown) ? errorThrown : jqXHR;
+                    handle_api_fails_list(rd, error_object, api_data);
+                }).always(function() {
+                    api_src(thislist, api_data);
+                });
+                return
+            }
+            if (arb_contract) {
+                api_proxy(erc20_payload).done(function(e) {
+                    let data = br_result(e).result;
+                    if (data) {
+                        let result = data.result;
+                        if (result && br_issar(result)) {
+                            let match = false;
+                            $.each(result, function(dat, value) {
+                                if (value.txhash == rd.txhash) {
+                                    let txd = arbiscan_scan_data(value, rdo.setconfirmations, rd.currencysymbol);
+                                    if (txd.ccval) {
+                                        let tx_listitem = append_tx_li(txd, rd.requesttype);
+                                        if (tx_listitem) {
+                                            transactionlist.append(tx_listitem.data(txd));
+                                            tx_count(statuspanel, 1);
+                                            compareamounts(rd);
+                                        }
+                                    }
+                                    return
+                                }
+                            });
+                            return
+                        }
+                    }
+                    tx_api_fail(thislist, statuspanel);
+                    handle_api_fails_list(rd, "scan", api_data);
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    tx_api_fail(thislist, statuspanel);
+                    let error_object = (errorThrown) ? errorThrown : jqXHR;
+                    handle_api_fails_list(rd, error_object, api_data);
+                }).always(function() {
+                    api_src(thislist, api_data);
+                });
+                return
+            }
+            tx_api_fail(thislist, statuspanel);
+            handle_api_fails_list(rd, "scan", api_data);
         }
     }
 }
@@ -841,8 +913,12 @@ function arbiscan_fetch(rd, api_data, rdo) {
 // ** blockchair API **
 
 function blockchair_fetch(rd, api_data, rdo) {
-    let api_name = api_data.name,
-        thislist = rdo.thislist,
+    let api_name = api_data.name;
+    if (api_name == "arbiscan" || api_name == "alchemy" || api_name == "binplorer") { // no layer 2's for now
+        handle_api_fails_list(rd, "scan", api_data);
+        return
+    }
+    let thislist = rdo.thislist,
         transactionlist = rdo.transactionlist,
         statuspanel = rdo.statuspanel,
         counter = 0;
@@ -963,10 +1039,6 @@ function blockchair_fetch(rd, api_data, rdo) {
         });
     }
     if (rdo.pending == "polling") { // poll transaction id
-        if (api_name == "arbiscan" || api_name == "alchemy" || api_name == "binplorer") {
-            handle_api_fails_list(rd, "scan", api_data);
-            return
-        }
         if (rd.txhash) {
             let poll_url = (rdo.erc20 === true) ? "ethereum/dashboards/transaction/" + rd.txhash + "?erc_20=true" : rd.payment + "/dashboards/transaction/" + rd.txhash;
             api_proxy({
@@ -1509,7 +1581,7 @@ function infura_txd_rpc(rd, api_data, rdo) {
                                 var txd = infura_erc20_poll_data(txdata, rdo.setconfirmations, rd.currencysymbol);
                             } else {
                                 tx_api_fail(thislist, statuspanel);
-                                handle_inf_fails_list(rd, "scan", api_data); // scan l2's
+                                handle_rpc_fails_list(rd, "scan", api_data); // scan l2's
                                 return
                             }
                         } else {
@@ -1532,33 +1604,25 @@ function infura_txd_rpc(rd, api_data, rdo) {
                         }
                     }
                     tx_api_fail(thislist, statuspanel);
-                    handle_inf_fails_list(rd, "scan", api_data); // scan l2's
+                    handle_rpc_fails_list(rd, "scan", api_data); // scan l2's
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     tx_api_fail(thislist, statuspanel);
-                    handle_inf_fails_list(rd, errorThrown, api_data);
+                    handle_rpc_fails_list(rd, errorThrown, api_data);
                 });
                 return
             }
             tx_api_fail(thislist, statuspanel);
-            handle_inf_fails_list(rd, "scan", api_data); // scan l2's
+            handle_rpc_fails_list(rd, "scan", api_data); // scan l2's
         }).fail(function(jqXHR, textStatus, errorThrown) {
             tx_api_fail(thislist, statuspanel);
-            handle_inf_fails_list(rd, errorThrown, api_data);
+            handle_rpc_fails_list(rd, errorThrown, api_data);
         });
     }).fail(function(jqXHR, textStatus, errorThrown) {
         tx_api_fail(thislist, statuspanel);
-        handle_inf_fails_list(rd, errorThrown, api_data);
+        handle_rpc_fails_list(rd, errorThrown, api_data);
     }).always(function() {
         api_src(thislist, api_data);
     });
-}
-
-function handle_inf_fails_list(rd, error, api_data) {
-    if (api_data.name == "arbiscan") {
-        handle_api_fails_list(rd, error, api_data);
-        return
-    }
-    handle_rpc_fails_list(rd, error, api_data);
 }
 
 function inf_result(r) {

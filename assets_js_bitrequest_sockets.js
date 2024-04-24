@@ -145,8 +145,7 @@ function init_socket(socket_node, address, swtch, retry) {
         if (socket_node.url == main_alchemy_socket) {
             alchemy_eth_websocket(socket_node, address); // L1 Alchemy
             arbi_scan(address, request_ts); // L2 Arbitrum
-        }
-        else {
+        } else {
             web3_eth_websocket(socket_node, address, main_eth_node); // L1 Infura
             web3_eth_websocket({
                 "name": main_arbitrum_socket,
