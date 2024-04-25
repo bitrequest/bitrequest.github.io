@@ -39,7 +39,7 @@ function contracts(ccsymbol, network) {
             {
                 "shib": {
                     "main": "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce",
-                    "arbitrum": "0x5033833c9fe8B9d3E09EEd2f73d2aaF7E3872fd1"
+                    "arbitrum": false
                 }
             },
             {
