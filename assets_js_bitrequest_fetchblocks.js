@@ -875,9 +875,8 @@ function arbiscan_fetch(rd, api_data, rdo) {
                     if (data) {
                         let result = data.result;
                         if (result && br_issar(result)) {
-                            let match = false;
                             $.each(result, function(dat, value) {
-                                if (value.txhash == rd.txhash) {
+                                if (value.hash == rd.txhash) {
                                     let txd = arbiscan_scan_data(value, rdo.setconfirmations, rd.currencysymbol);
                                     if (txd.ccval) {
                                         let tx_listitem = append_tx_li(txd, rd.requesttype);
