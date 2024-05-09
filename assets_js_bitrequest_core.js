@@ -3170,7 +3170,7 @@ function show_vk() {
             return
         }
         $("#optionsbox").html("");
-        let x_ko = {};
+        var x_ko = {};
         if (vk == "derive") {
             let addat = $("#ad_info_wrap").data(),
                 keycc = key_cc(),
@@ -3181,10 +3181,10 @@ function show_vk() {
                 },
                 x_keys_dat = derive_x(dx_dat),
                 rootkey = x_keys_dat.key,
-                ssk = sc_reduce32(fasthash(rootkey)),
-                x_ko = xmr_getpubs(ssk, addat.derive_index);
+                ssk = sc_reduce32(fasthash(rootkey));
+            var x_ko = xmr_getpubs(ssk, addat.derive_index);
         } else {
-            x_ko = {
+            var x_ko = {
                 "stat": true,
                 "svk": vk
             }
