@@ -42,7 +42,6 @@ $(document).ready(function() {
     //mempoolspace_scan_poll
     //blockcypher_scan_poll
     //blockchair_scan_poll
-    //erc20_scan_poll
     //after_poll_fails
     //rconnect
     //get_next_scan_api
@@ -51,6 +50,7 @@ $(document).ready(function() {
 // Websockets / Pollfunctions
 
 function init_socket(socket_node, address, swtch, retry) {
+    clearpinging();
     if (offline === true) {
         notify("You are currently offline, request is not monitored");
         return
@@ -156,7 +156,6 @@ function init_socket(socket_node, address, swtch, retry) {
         return
     }
     if (payment == "monero") {
-        clearpinging();
         let vk = (swtch) ? get_vk(address) : request.viewkey;
         if (vk) {
             trigger_requeststates(); // update outgoing
@@ -179,7 +178,6 @@ function init_socket(socket_node, address, swtch, retry) {
         return
     }
     if (payment == "nimiq") {
-        clearpinging();
         nimiq_scan(address, request_ts);
         return
     }
@@ -196,7 +194,6 @@ function init_socket(socket_node, address, swtch, retry) {
         return
     }
     if (request.erc20 === true) {
-        clearpinging();
         web3_erc20_websocket(socket_node, address, request.token_contract);
         let ccsymbol = request.currencysymbol;
         bnb_scan(address, request_ts, ccsymbol);
@@ -964,7 +961,7 @@ function web3_erc20_websocket(socket_node, thisaddress, contract) {
 }
 
 function bnb_scan(address, request_ts, ccsymbol) {
-    pinging[address] = setInterval(function() {
+    pinging["bnb" + address] = setInterval(function() {
         ping_bnb(address, request_ts, ccsymbol);
     }, 7000);
 }
@@ -999,7 +996,7 @@ function ping_bnb(address, request_ts, ccsymbol) {
                 });
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            clearpinging();
+            clearpinging("bnb" + address);
             let error_object = (errorThrown) ? errorThrown : jqXHR;
             handle_api_fails(false, error_object, "binplorer", request.payment);
         });
@@ -1055,7 +1052,7 @@ function alchemy_eth_websocket(socket_node, thisaddress) {
 }
 
 function arbi_scan(address, request_ts) {
-    pinging[address] = setInterval(function() {
+    pinging["arbi" + address] = setInterval(function() {
         ping_arbiscan(address, request_ts);
     }, 7000);
 }
@@ -1095,7 +1092,7 @@ function ping_arbiscan(address, request_ts) {
                 }
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            clearpinging();
+            clearpinging("arbi" + address);
             let error_object = (errorThrown) ? errorThrown : jqXHR;
             handle_api_fails(false, error_object, "arbiscan", request.payment);
         });
@@ -1408,7 +1405,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
                 });
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            clearpinging();
+            clearpinging(address);
             let error_object = (errorThrown) ? errorThrown : jqXHR;
             handle_api_fails(false, error_object, "mymonero api", request.payment, txhash);
         });
@@ -1454,7 +1451,7 @@ function ping_nimiq(address, request_ts) {
                 });
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            clearpinging();
+            clearpinging(address);
             let error_object = (errorThrown) ? errorThrown : jqXHR;
             handle_api_fails(false, error_object, "nimiq.watch", request.payment);
         });
@@ -1477,7 +1474,7 @@ function after_poll(rq_init, next_api) {
         request_ts = request_ts_utc - 30000; // 30 seconds compensation for unexpected results
     scan_attempts[api_name] = true;
     if (input_val.length) {
-        if (ccsymbol == "xmr" || ccsymbol == "nim") {
+        if (ccsymbol == "xmr" || ccsymbol == "nim" || request.erc20 === true) {
             close_paymentdialog();
             return
         }
@@ -1500,11 +1497,6 @@ function after_poll(rq_init, next_api) {
             let erc = (request.erc20 === true) ? true : false;
             ap_loader();
             blockchair_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts, erc);
-            return
-        }
-        if (request.erc20 === true) {
-            ap_loader();
-            erc20_scan_poll(api_name, ccsymbol, set_confirmations, address, request_ts);
             return
         }
         if (payment == "kaspa") {
@@ -1783,50 +1775,6 @@ function blockchair_scan_poll(payment, api_name, ccsymbol, set_confirmations, ad
                     return
                 }
             }
-        }
-        after_poll_fails(api_name);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        after_poll_fails(api_name);
-    });
-}
-
-function erc20_scan_poll(api_name, ccsymbol, set_confirmations, address, request_ts) {
-    api_proxy({
-        "api": api_name,
-        "search": "getAddressHistory/" + address + "?type=transfer",
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "params": {
-            "method": "GET"
-        }
-    }).done(function(e) {
-        let data = br_result(e).result;
-        if (data) {
-            let items = data.operations;
-            if (!$.isEmptyObject(items)) {
-                let detect = false,
-                    txdat;
-                $.each(items, function(dat, value) {
-                    let txd = ethplorer_scan_data(value, set_confirmations, ccsymbol);
-                    if ((txd.transactiontime > request_ts) && (str_match(value.to, address) === true) && (str_match(ccsymbol, q_obj(value, "tokenInfo.symbol"))) && txd.ccval) {
-                        txdat = txd;
-                        detect = true;
-                        return
-                    }
-                });
-                if (txdat && detect === true) {
-                    pick_monitor(txdat.txhash, txdat);
-                    return
-                } else {
-                    if (api_name == "binplorer") { // don't rescan on last L2 api
-                    } else {
-                        after_poll_fails(api_name); // scan l2's
-                        return
-                    }
-                }
-            }
-            close_paymentdialog(true);
-            return
         }
         after_poll_fails(api_name);
     }).fail(function(jqXHR, textStatus, errorThrown) {

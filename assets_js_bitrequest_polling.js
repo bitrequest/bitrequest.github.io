@@ -15,7 +15,7 @@ function pick_monitor(txhash, tx_data, api_dat) {
 }
 
 function api_monitor_init(txhash, tx_data, api_data) {
-    let api_info = (api_data) ? api_data : (helper.api_info) ? helper.api_info.data : false;
+    let api_info = (api_data) ? api_data : q_obj(helper, "api_info.data");
     if (api_info) {
         if (api_info.api) {
             api_monitor(txhash, tx_data, api_info);
@@ -23,9 +23,9 @@ function api_monitor_init(txhash, tx_data, api_data) {
             rpc_monitor(txhash, tx_data, api_info);
         }
         paymentdialogbox.addClass("transacting");
-    } else {
-        console.log("missing api info");
+        return
     }
+    console.log("missing api info");
 }
 
 function api_monitor(txhash, tx_data, api_dat) {
@@ -34,6 +34,15 @@ function api_monitor(txhash, tx_data, api_dat) {
         let gets = geturlparameters();
         if (gets.xss) {
             return
+        }
+        if (tx_data) {
+            confirmations(tx_data, true);
+            let xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
+                setconfirmations = tx_data.setconfirmations,
+                zero_conf = (xconf === false || setconfirmations == 0 || setconfirmations == "undefined" || setconfirmations === undefined);
+            if (zero_conf) {
+                return
+            }
         }
         if (api_name == "arbiscan" || api_name == main_eth_node || api_name == main_arbitrum_node) {
             rpc_monitor(txhash, tx_data, api_dat);
@@ -50,17 +59,8 @@ function api_monitor(txhash, tx_data, api_dat) {
             (api_name == "nimiq.watch") ? "transaction/" + nimiqhash(txhash) :
             (api_name == "mopsus.com") ? "tx/" + txhash :
             (api_name == "kaspa.org") ? "transactions/" + txhash :
-            (api_name == "kas.fyi") ? "transactions/" + txhash : null;
-        if (tx_data) {
-            confirmations(tx_data, true);
-            let xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
-                setconfirmations = tx_data.setconfirmations,
-                zero_conf = (xconf === false || setconfirmations == 0 || setconfirmations == "undefined" || setconfirmations === undefined);
-            if (zero_conf) {
-                return
-            }
-        }
-        let to_time = (tx_data === false) ? 100 : 25000,
+            (api_name == "kas.fyi") ? "transactions/" + txhash : null,
+            to_time = (tx_data === false) ? 100 : 25000;
             timeout = setTimeout(function() {
                 api_proxy(ampl(api_dat, poll_url)).done(function(e) {
                     let apiresult = api_result(br_result(e));
