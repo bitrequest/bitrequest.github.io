@@ -11,7 +11,6 @@ $(document).ready(function() {
 
     //get_api_inputs_init
     //get_api_inputs
-    //get_api_inputs_select
     //match_xmr_pid
     //fail_dialogs
     //handle_api_fails_list
@@ -231,20 +230,6 @@ function get_api_inputs_init(rd, api_data) {
 }
 
 function get_api_inputs(rd, api_data) {
-    get_api_inputs_select(rd, api_data);
-    return
-    if (api_data.name == "arbiscan") {
-        let timeout = setTimeout(function() { // set timeout arbiscan has 5 second rate limit
-            get_api_inputs_select(rd, api_data);
-        }, 10000, function() {
-            clearTimeout(timeout);
-        });
-        return
-    }
-    get_api_inputs_select(rd, api_data)
-}
-
-function get_api_inputs_select(rd, api_data) {
     let rdo = tx_data(rd), // fetchblocks.js
         thislist = rdo.thislist;
     if (thislist.hasClass("scan")) {
@@ -944,7 +929,6 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                         status = "paid",
                             pending = "no";
                         thisnode.addClass("exceed").nextAll().addClass("exceed");
-                        return
                     }
                 } else {
                     confirmed = false;
@@ -980,7 +964,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     "confirmations": conf,
                     "pending": pending,
                     "lightning": lnd
-                }, false);
+                }, true);
                 let cacheval = latestinput + latestconf;
                 if (pending == "no") {} else {
                     br_set_session("historic_" + thisrequestid, cacheval); // 'cache' historic data

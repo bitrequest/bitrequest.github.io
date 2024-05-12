@@ -447,7 +447,9 @@ function blockcypher_fetch(rd, api_data, rdo) {
     let thislist = rdo.thislist,
         transactionlist = rdo.transactionlist,
         statuspanel = rdo.statuspanel,
-        counter = 0;
+        counter = 0,
+        match = false,
+        txdat = false;
     if (rdo.pending == "scanning") { // scan incoming transactions on address
         api_proxy({
             "api": "blockcypher",
@@ -466,9 +468,7 @@ function blockcypher_fetch(rd, api_data, rdo) {
                 }
                 let conf_tx = data.txrefs,
                     unconf_tx = data.unconfirmed_txrefs,
-                    all_tx = (unconf_tx && conf_tx) ? unconf_tx.concat(conf_tx) : conf_tx,
-                    match = false,
-                    txdat = false;
+                    all_tx = (unconf_tx && conf_tx) ? unconf_tx.concat(conf_tx) : conf_tx;
                 if (all_tx && !$.isEmptyObject(all_tx)) {
                     $.each(all_tx, function(dat, value) {
                         if (value.spent) { // filter outgoing transactions
@@ -517,15 +517,18 @@ function blockcypher_fetch(rd, api_data, rdo) {
                     } else {
                         let txd = blockcypher_poll_data(data, rdo.setconfirmations, rd.currencysymbol, rd.address);
                         if (txd.ccval) {
+                            match = true;
                             let tx_listitem = append_tx_li(txd, rd.requesttype);
                             if (tx_listitem) {
                                 transactionlist.append(tx_listitem.data(txd));
-                                tx_count(statuspanel, 1);
-                                compareamounts(rd);
                             }
                         }
                     }
-                    return
+                    if (match) {
+                        tx_count(statuspanel, 1);
+                        compareamounts(rd);
+                        return
+                    }
                 }
                 tx_api_fail(thislist, statuspanel);
                 handle_api_fails_list(rd, "scan", api_data);
@@ -790,7 +793,6 @@ function arbiscan_fetch(rd, api_data, rdo) {
                                     return
                                 }
                             });
-                            return
                         }
                     }
                     if (match) {
