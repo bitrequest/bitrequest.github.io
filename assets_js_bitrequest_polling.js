@@ -61,28 +61,28 @@ function api_monitor(txhash, tx_data, api_dat) {
             (api_name == "kaspa.org") ? "transactions/" + txhash :
             (api_name == "kas.fyi") ? "transactions/" + txhash : null,
             to_time = (tx_data === false) ? 100 : 25000;
-            timeout = setTimeout(function() {
-                api_proxy(ampl(api_dat, poll_url)).done(function(e) {
-                    let apiresult = api_result(br_result(e));
-                    if (apiresult) {
-                        pinging[txhash + api_name] = setInterval(function() {
-                            if (paymentpopup.hasClass("active")) { // only when request is visible
-                                api_proxy(ampl(api_dat, poll_url)).done(function(e) {
-                                    api_result(br_result(e));
-                                }).fail(function(jqXHR, textStatus, errorThrown) {
-                                    api_error(jqXHR, textStatus, errorThrown);
-                                });
-                                return
-                            }
-                            forceclosesocket();
-                        }, 25000);
-                    }
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    api_error(jqXHR, textStatus, errorThrown);
-                });
-            }, to_time, function() {
-                clearTimeout(timeout);
+        timeout = setTimeout(function() {
+            api_proxy(ampl(api_dat, poll_url)).done(function(e) {
+                let apiresult = api_result(br_result(e));
+                if (apiresult) {
+                    pinging[txhash + api_name] = setInterval(function() {
+                        if (paymentpopup.hasClass("active")) { // only when request is visible
+                            api_proxy(ampl(api_dat, poll_url)).done(function(e) {
+                                api_result(br_result(e));
+                            }).fail(function(jqXHR, textStatus, errorThrown) {
+                                api_error(jqXHR, textStatus, errorThrown);
+                            });
+                            return
+                        }
+                        forceclosesocket();
+                    }, 25000);
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                api_error(jqXHR, textStatus, errorThrown);
             });
+        }, to_time, function() {
+            clearTimeout(timeout);
+        });
 
         function api_result(result) {
             let data = result.result;
@@ -102,7 +102,7 @@ function api_monitor(txhash, tx_data, api_dat) {
                     return true;
                 }
                 let txd = (api_name == "blockcypher") ? blockcypher_poll_data(data, set_confirmations, currencysymbol, currentaddress) :
-                    (api_name == "ethplorer") ? ethplorer_poll_data(data, set_confirmations, currencysymbol) :
+                    (api_name == "ethplorer" || api_name == "binplorer") ? ethplorer_poll_data(data, set_confirmations, currencysymbol) :
                     (api_name == "mempool.space") ? mempoolspace_scan_data(data, set_confirmations, currencysymbol, currentaddress) :
                     (api_name == "nimiq.watch") ? nimiq_scan_data(data, set_confirmations) :
                     (api_name == "kas.fyi") ? kaspa_poll_fyi_data(data, currentaddress, set_confirmations) :

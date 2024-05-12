@@ -38,10 +38,6 @@ $(document).ready(function() {
     //ping_xmr_node
     //after_poll
     //ap_loader
-    //nano_scan_poll
-    //mempoolspace_scan_poll
-    //blockcypher_scan_poll
-    //blockchair_scan_poll
     //after_poll_fails
     //rconnect
     //get_next_scan_api
@@ -1466,12 +1462,20 @@ function after_poll(rq_init, next_api) {
         api_info = helper.api_info,
         api_data = (next_api) ? next_api : api_info.data,
         api_name = api_data.name,
-        payment = request.payment,
         ccsymbol = request.currencysymbol,
-        address = $("#paymentaddress").text(),
-        set_confirmations = request.set_confirmations,
         request_ts_utc = rq_init + timezone,
-        request_ts = request_ts_utc - 30000; // 30 seconds compensation for unexpected results
+        request_ts = request_ts_utc - 30000, // 30 seconds compensation for unexpected results
+        thislist = $("#" + request.requestid),
+        statuspanel = thislist.find(".pmetastatus");
+    rdo = {
+        "thislist": thislist,
+        "statuspanel": statuspanel,
+        "request_timestamp": request_ts,
+        "setconfirmations": request.set_confirmations,
+        "pending": "scanning",
+        "erc20": request.erc20,
+        "source": "afterscan"
+    }
     scan_attempts[api_name] = true;
     if (input_val.length) {
         if (ccsymbol == "xmr" || ccsymbol == "nim" || request.erc20 === true) {
@@ -1480,34 +1484,35 @@ function after_poll(rq_init, next_api) {
         }
         if (ccsymbol == "xno") {
             ap_loader();
-            nano_scan_poll(api_name, api_data.url, ccsymbol, set_confirmations, address, request_ts);
+            nano_rpc(request, api_data, rdo);
             return
         }
         if (api_name == "mempool.space") {
             ap_loader();
-            mempoolspace_scan_poll(payment, api_data, ccsymbol, set_confirmations, address, request_ts, false);
+            mempoolspace_rpc(request, api_data, rdo, false);
             return
         }
         if (api_name == "blockcypher") {
             ap_loader();
-            blockcypher_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts);
+            blockcypher_fetch(request, api_data, rdo);
             return
         }
         if (api_name == "blockchair") {
             let erc = (request.erc20 === true) ? true : false;
             ap_loader();
-            blockchair_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts, erc);
+            blockchair_fetch(request, api_data, rdo);
             return
         }
         if (payment == "kaspa") {
             ap_loader();
-            kaspa_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts);
+            kaspa_fetch(request, api_data, rdo);
             return
         }
+        let ccsymbol = request.currencysymbol;
         if (ccsymbol == "btc" || ccsymbol == "ltc" || ccsymbol == "doge" || ccsymbol == "bch") {
             if (api_data.default === false) {
                 ap_loader();
-                mempoolspace_scan_poll(payment, api_data, ccsymbol, set_confirmations, address, request_ts, api_data.url);
+                mempoolspace_rpc(request, api_data, rdo, true);
                 return
             }
         }
@@ -1518,329 +1523,6 @@ function after_poll(rq_init, next_api) {
 function ap_loader() {
     loader(true);
     loadertext("Closing request / scanning for incoming transactions");
-}
-
-function nano_scan_poll(api_name, api_url, ccsymbol, set_confirmations, address, request_ts) {
-    api_proxy({
-        "api": "nano",
-        "search": "account",
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "custom": "nano_txd",
-        "api_url": api_url,
-        "proxy": true,
-        "params": {
-            "method": "POST",
-            "cache": true,
-            "data": JSON.stringify({
-                "action": "accounts_pending",
-                "accounts": [address],
-                "sorting": true,
-                "include_active": true,
-                "count": 100
-            })
-        }
-    }).done(function(e) {
-        let data = br_result(e).result;
-        if (data) {
-            let nano_data = data.data;
-            if (!$.isEmptyObject(nano_data)) {
-                let detect = false,
-                    txdat,
-                    pending_array_node = (nano_data[0]) ? nano_data[0].pending : [],
-                    pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
-                    history_array_node = (nano_data[1]) ? nano_data[1].history : [],
-                    history_array = $.isEmptyObject(history_array_node) ? [] : history_array_node,
-                    merged_array = pending_array.concat(history_array).sort(function(x, y) { // merge and sort arrays
-                        return y.local_timestamp - x.local_timestamp;
-                    });
-                $.each(merged_array, function(data, value) {
-                    let txd = nano_scan_data(value, set_confirmations, ccsymbol);
-                    if ((txd.transactiontime > request_ts) && txd.ccval && (value.type === undefined || value.type == "receive")) {
-                        txdat = txd;
-                        detect = true;
-                        return
-                    }
-                });
-                if (txdat && detect === true) {
-                    pick_monitor(txdat.txhash, txdat);
-                    return
-                }
-            }
-        }
-        close_paymentdialog(true);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        close_paymentdialog(true);
-    });
-}
-
-function mempoolspace_scan_poll(payment, api_data, ccsymbol, set_confirmations, address, request_ts, rpc) {
-    let pload = (rpc) ? {
-        "api_url": rpc + "/api/address/" + address + "/txs",
-        "proxy": false,
-        "params": {
-            "method": "GET"
-        }
-    } : {
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "api_url": "https://" + api_data.url + "/api/address/" + address + "/txs",
-        "params": {
-            "method": "GET"
-        }
-    };
-    api_proxy(pload).done(function(e) {
-        let data = br_result(e).result;
-        if (data) {
-            if (!$.isEmptyObject(data)) {
-                let detect = false,
-                    txdat;
-                $.each(data, function(dat, value) {
-                    let txd = mempoolspace_scan_data(value, set_confirmations, ccsymbol, address);
-                    if (txd.transactiontime > request_ts && txd.ccval) {
-                        txdat = txd;
-                        detect = true;
-                        return
-                    }
-                });
-                if (txdat && detect === true) {
-                    pick_monitor(txdat.txhash, txdat);
-                    return
-                }
-            }
-            close_paymentdialog(true);
-            return
-        }
-        after_poll_fails(api_data.name);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        after_poll_fails(api_data.name);
-    });
-}
-
-function blockcypher_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts) {
-    api_proxy({
-        "api": "blockcypher",
-        "search": ccsymbol + "/main/addrs/" + address,
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "params": {
-            "method": "GET"
-        }
-    }).done(function(e) {
-        let data = br_result(e).result;
-        if (data) {
-            if (data.error) {} else {
-                let items = data.txrefs;
-                if (items) {
-                    if (!$.isEmptyObject(items)) {
-                        let detect = false,
-                            txdat;
-                        if (payment == "ethereum") {
-                            $.each(items, function(dat, value) {
-                                let txd = blockcypher_scan_data(value, set_confirmations, ccsymbol, payment);
-                                if (txd.transactiontime > request_ts && txd.ccval) {
-                                    txdat = txd;
-                                    detect = true;
-                                    return
-                                }
-                            });
-                        } else {
-                            $.each(items, function(dat, value) {
-                                if (value.spent !== undefined) { // filter outgoing transactions
-                                    let txd = blockcypher_scan_data(value, set_confirmations, ccsymbol, payment);
-                                    if (txd.transactiontime > request_ts && txd.ccval) {
-                                        txdat = txd;
-                                        detect = true;
-                                        return
-                                    }
-                                }
-                            });
-                        }
-                        if (txdat && detect === true) {
-                            pick_monitor(txdat.txhash, txdat);
-                            return
-                        }
-                    }
-                    close_paymentdialog(true);
-                    return
-                }
-            }
-        }
-        after_poll_fails(api_name);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        after_poll_fails(api_name);
-    });
-}
-
-function blockchair_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts, erc) {
-    let scan_url = (erc === true) ? "ethereum/erc-20/" + request.token_contract + "/dashboards/address/" + address : payment + "/dashboards/address/" + address;
-    api_proxy({
-        "api": api_name,
-        "search": scan_url,
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "params": {
-            "method": "GET"
-        }
-    }).done(function(e) {
-        let data = br_result(e).result;
-        if (data && !data.error) {
-            let context = data.context;
-            if (context && !context.error) {
-                let latestblock = context.state,
-                    detect = false,
-                    txdat,
-                    records = data.data;
-                if (records) {
-                    if (!$.isEmptyObject(records)) {
-                        if (erc) {
-                            $.each(records, function(dat, value) {
-                                let transactions = value.transactions;
-                                if (transactions && !$.isEmptyObject(transactions)) {
-                                    $.each(transactions, function(dt, val) {
-                                        let txd = blockchair_erc20_scan_data(val, set_confirmations, ccsymbol, latestblock);
-                                        if ((txd.transactiontime > request_ts) && (str_match(txd.recipient, address) === true) && (str_match(txd.token_symbol, ccsymbol) === true) && txd.ccval) {
-                                            txdat = txd;
-                                            detect = true;
-                                            return
-                                        }
-                                    });
-                                }
-                            });
-                            if (txdat && detect === true) {
-                                pick_monitor(txdat.txhash, txdat);
-                                return
-                            }
-                        } else {
-                            if (payment == "ethereum") {
-                                $.each(records, function(dat, value) {
-                                    let transactions = value.calls;
-                                    if (transactions && !$.isEmptyObject(transactions)) {
-                                        $.each(vtransactions, function(dt, val) {
-                                            let txd = blockchair_eth_scan_data(val, set_confirmations, ccsymbol, latestblock);
-                                            if ((txd.transactiontime > request_ts) && (str_match(txd.recipient, address) === true) && txd.ccval) {
-                                                txdat = txd;
-                                                detect = true;
-                                                return
-                                            }
-                                        });
-                                    }
-                                });
-                                if (txdat && detect === true) {
-                                    pick_monitor(txdat.txhash, txdat);
-                                    return
-                                }
-                            } else {
-                                let addr_txs = records[address];
-                                if (addr_txs) {
-                                    let txarray = addr_txs.transactions; // get transactions
-                                    if (txarray) {
-                                        if (!$.isEmptyObject(txarray)) {
-                                            api_proxy({
-                                                "api": api_name,
-                                                "search": payment + "/dashboards/transactions/" + txarray.slice(0, 6), // get last 5 transactions
-                                                "cachetime": 25,
-                                                "cachefolder": "1h",
-                                                "params": {
-                                                    "method": "GET"
-                                                }
-                                            }).done(function(e) {
-                                                let dat = br_result(e).result;
-                                                $.each(dat.data, function(dt, val) {
-                                                    let txd = blockchair_scan_data(val, set_confirmations, ccsymbol, address, latestblock);
-                                                    if (txd.transactiontime > request_ts && txd.ccval) { // get all transactions after requestdate
-                                                        txdat = txd;
-                                                        detect = true;
-                                                        return
-                                                    }
-                                                });
-                                                if (txdat && detect === true) {
-                                                    pick_monitor(txdat.txhash, txdat);
-                                                    return
-                                                }
-                                                close_paymentdialog(true);
-                                                return
-                                            }).fail(function(jqXHR, textStatus, errorThrown) {
-                                                after_poll_fails(api_name);
-                                            });
-                                        }
-                                    }
-                                }
-                                after_poll_fails(api_name);
-                                return
-                            }
-                        }
-                    }
-                    close_paymentdialog(true);
-                    return
-                }
-            }
-        }
-        after_poll_fails(api_name);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        after_poll_fails(api_name);
-    });
-}
-
-function kaspa_scan_poll(payment, api_name, ccsymbol, set_confirmations, address, request_ts) {
-    if (api_name == "kaspa.org") {
-        api_proxy({
-            "api": api_name,
-            "search": "info/virtual-chain-blue-score",
-            "cachetime": 25,
-            "cachefolder": "1h",
-            "params": {
-                "method": "GET"
-            }
-        }).done(function(e) {
-            let data = br_result(e).result;
-            if (data) {
-                let current_bluescore = data.blueScore;
-                if (current_bluescore) {
-                    api_proxy({
-                        "api": api_name,
-                        "search": "addresses/" + address + "/full-transactions",
-                        "cachetime": 25,
-                        "cachefolder": "1h",
-                        "params": {
-                            "method": "GET"
-                        }
-                    }).done(function(e) {
-                        let data = br_result(e).result;
-                        if (data) {
-                            if (data.error) {} else {
-                                if (!$.isEmptyObject(data)) {
-                                    let detect = false,
-                                        txdat;
-                                    $.each(data, function(dat, value) {
-                                        let txd = kaspa_scan_data(value, address, set_confirmations, current_bluescore);
-                                        if (txd.transactiontime > request_ts && txd.ccval) {
-                                            txdat = txd;
-                                            detect = true;
-                                            return
-                                        }
-                                    });
-                                    if (txdat && detect === true) {
-                                        pick_monitor(txdat.txhash, txdat);
-                                        return
-                                    }
-                                }
-                                close_paymentdialog(true);
-                                return
-                            }
-                        }
-                        after_poll_fails(api_name);
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        after_poll_fails(api_name);
-                    });
-                    return
-                }
-            }
-            after_poll_fails(api_name);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            after_poll_fails(api_name);
-        });
-    }
 }
 
 function after_poll_fails(api_name) {

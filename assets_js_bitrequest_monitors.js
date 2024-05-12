@@ -272,7 +272,7 @@ function get_api_inputs_select(rd, api_data) {
                 return
             }
             if (api_name == "mempool.space") {
-                mempoolspace_fetch(rd, api_data, rdo);
+                mempoolspace_rpc(rd, api_data, rdo, false)
                 return
             }
             if (api_name == "blockcypher") {
@@ -512,7 +512,7 @@ function get_rpc_inputs(rd, api_data) {
         if (rdo.pending == "scanning" || rdo.pending == "polling") {
             transactionlist.html("");
             if (is_btchain(rd.payment) === true) {
-                mempoolspace_rpc(rd, api_data, rdo);
+                mempoolspace_rpc(rd, api_data, rdo, true);
                 return
             }
             if (rd.payment == "ethereum" || rd.erc20 === true) {
