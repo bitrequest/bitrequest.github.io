@@ -998,7 +998,7 @@ function ping_bnb(address, request_ts, ccsymbol) {
                         if (txid_match.length) {
                             return
                         }
-                        if (setconf > 0) {
+                        if (set_cc > 0) {
                             pick_monitor(txd.txhash, txd);
                             return
                         }
@@ -1096,7 +1096,7 @@ function ping_arbiscan(address, request_ts) {
                             if (txid_match.length) {
                                 return
                             }
-                            if (setconf > 0) {
+                            if (set_cc > 0) {
                                 pick_monitor(txd.txhash, txd);
                                 return
                             }
@@ -1407,7 +1407,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
                                     return
                                 }
                                 clearpinging();
-                                if (setconf > 0) {
+                                if (set_cc > 0) {
                                     confirmations(txd, true);
                                     pinging[address] = setInterval(function() {
                                         ping_xmr_node(34, address, vk, request_ts, txd.txhash);
@@ -1459,7 +1459,7 @@ function ping_nimiq(address, request_ts) {
                         if (txid_match.length) {
                             return
                         }
-                        if (setconf > 0) {
+                        if (set_cc > 0) {
                             pick_monitor(txd.txhash, txd);
                             return
                         }
