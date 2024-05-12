@@ -399,8 +399,8 @@ function blockcypher_fetch(rd, api_data, rdo) {
                 }
                 let conf_tx = data.txrefs,
                     unconf_tx = data.unconfirmed_txrefs,
-                    all_tx = (unconf_tx && conf_tx) ? unconf_tx.concat(conf_tx) : conf_tx;
-                var match = false,
+                    all_tx = (unconf_tx && conf_tx) ? unconf_tx.concat(conf_tx) : conf_tx,
+                    match = false,
                     txdat = false;
                 if (all_tx && !$.isEmptyObject(all_tx)) {
                     $.each(all_tx, function(dat, value) {
@@ -408,8 +408,7 @@ function blockcypher_fetch(rd, api_data, rdo) {
                         } else {
                             let txd = blockcypher_scan_data(value, rdo.setconfirmations, rd.currencysymbol, rd.payment);
                             if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
-                                var match = true,
-                                    txdat = txd;
+                                match = true, txdat = txd;
                                 if (rdo.source == "list") {
                                     let tx_listitem = append_tx_li(txd, rd.requesttype);
                                     if (tx_listitem) {
@@ -712,7 +711,6 @@ function arbiscan_fetch(rd, api_data, rdo) {
                     if (data) {
                         let result = data.result;
                         if (result && br_issar(result)) {
-                            let match = false;
                             $.each(result, function(dat, value) {
                                 if (value.hash == rd.txhash) {
                                     let txd = arbiscan_scan_data_eth(value, rdo.setconfirmations);
@@ -815,16 +813,15 @@ function blockchair_fetch(rd, api_data, rdo) {
                     tx_api_scan_fail(rd, rdo, api_data, "scan");
                     return
                 }
-                let latestblock = context.state;
-                var match = false,
+                let latestblock = context.state,
+                    match = false,
                     txdat = false;
                 if (rdo.erc20 === true) {
                     $.each(data.data, function(dat, value) {
                         $.each(value.transactions, function(dt, val) {
                             let txd = blockchair_erc20_scan_data(val, rdo.setconfirmations, rd.currencysymbol, latestblock);
                             if ((txd.transactiontime > rdo.request_timestamp) && (str_match(txd.recipient, rd.address) === true) && (str_match(txd.token_symbol, rd.currencysymbol) === true) && txd.ccval) {
-                                var match = true,
-                                    txdat = txd;
+                                match = true, txdat = txd;
                                 if (rdo.source == "list") {
                                     let tx_listitem = append_tx_li(txd, rd.requesttype);
                                     if (tx_listitem) {
@@ -843,8 +840,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                         $.each(value.calls, function(dt, val) {
                             let txd = blockchair_eth_scan_data(val, rdo.setconfirmations, rd.currencysymbol, latestblock);
                             if ((txd.transactiontime > rdo.request_timestamp) && (str_match(txd.recipient, rd.address) === true) && txd.ccval) {
-                                var match = true,
-                                    txdat = txd;
+                                match = true, txdat = txd;
                                 if (rdo.source == "list") {
                                     let tx_listitem = append_tx_li(txd, rd.requesttype);
                                     if (tx_listitem) {
@@ -873,8 +869,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                         $.each(dat.data, function(dt, val) {
                             let txd = blockchair_scan_data(val, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
                             if (txd.transactiontime > rdo.request_timestamp && txd.ccval) { // get all transactions after requestdate
-                                var match = true,
-                                    txdat = txd;
+                                match = true, txdat = txd;
                                 if (rdo.source == "list") {
                                     let tx_listitem = append_tx_li(txd, rd.requesttype);
                                     if (tx_listitem) {
@@ -1120,8 +1115,8 @@ function kaspa_fetch(rd, api_data, rdo) {
         thislist = rdo.thislist,
         transactionlist = rdo.transactionlist,
         statuspanel = rdo.statuspanel,
-        counter = 0;
-    var match = false,
+        counter = 0,
+        match = false,
         txdat = false;
     if (rdo.pending == "scanning") { // scan incoming transactions on address
         if (api_name == "kaspa.org") {
@@ -1576,14 +1571,13 @@ function nano_rpc(rd, api_data, rdo) {
                         history_array = $.isEmptyObject(history_array_node) ? [] : history_array_node,
                         merged_array = pending_array.concat(history_array).sort(function(x, y) { // merge and sort arrays
                             return y.local_timestamp - x.local_timestamp;
-                        });
-                    var match = false,
+                        }),
+                        match = false,
                         txdat = false;
                     $.each(merged_array, function(data, value) {
                         let txd = nano_scan_data(value, rdo.setconfirmations, rd.currencysymbol);
                         if ((txd.transactiontime > rdo.request_timestamp) && txd.ccval && (value.type === undefined || value.type == "receive")) {
-                            var match = true,
-                                txdat = txd;
+                            match = true, txdat = txd;
                             if (rdo.source == "list") {
                                 let tx_listitem = append_tx_li(txd, rd.requesttype);
                                 if (tx_listitem) {
