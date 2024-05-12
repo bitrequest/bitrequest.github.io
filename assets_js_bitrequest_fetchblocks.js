@@ -661,6 +661,7 @@ function ethplorer_fetch(rd, api_data, rdo) {
 
 function arbiscan_fetch(rd, api_data, rdo) {
     let api_name = api_data.name,
+        match = false,
         thislist = rdo.thislist,
         transactionlist = rdo.transactionlist,
         statuspanel = rdo.statuspanel,
@@ -692,7 +693,6 @@ function arbiscan_fetch(rd, api_data, rdo) {
                 if (data) {
                     let result = data.result;
                     if (result && br_issar(result)) {
-                        let match = false;
                         $.each(result, function(dat, value) {
                             let txd = arbiscan_scan_data_eth(value, rdo.setconfirmations),
                                 rt_compensate = (rd.inout == "local" && rd.status == "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
@@ -732,7 +732,6 @@ function arbiscan_fetch(rd, api_data, rdo) {
                 if (data) {
                     let result = data.result;
                     if (result && br_issar(result)) {
-                        let match = false;
                         $.each(result, function(dat, value) {
                             let txd = arbiscan_scan_data(value, rdo.setconfirmations, rd.currencysymbol),
                                 rt_compensate = (rd.inout == "local" && rd.status == "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
@@ -782,11 +781,10 @@ function arbiscan_fetch(rd, api_data, rdo) {
                                 if (value.hash == rd.txhash) {
                                     let txd = arbiscan_scan_data_eth(value, rdo.setconfirmations);
                                     if (txd.ccval) {
+                                        match = true;
                                         let tx_listitem = append_tx_li(txd, rd.requesttype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
-                                            tx_count(statuspanel, 1);
-                                            compareamounts(rd);
                                         }
                                     }
                                     return
@@ -794,6 +792,11 @@ function arbiscan_fetch(rd, api_data, rdo) {
                             });
                             return
                         }
+                    }
+                    if (match) {
+                        tx_count(statuspanel, 1);
+                        compareamounts(rd);
+                        return
                     }
                     tx_api_fail(thislist, statuspanel);
                     handle_api_fails_list(rd, "scan", api_data);
@@ -816,18 +819,21 @@ function arbiscan_fetch(rd, api_data, rdo) {
                                 if (value.hash == rd.txhash) {
                                     let txd = arbiscan_scan_data(value, rdo.setconfirmations, rd.currencysymbol);
                                     if (txd.ccval) {
+                                        match = true;
                                         let tx_listitem = append_tx_li(txd, rd.requesttype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
-                                            tx_count(statuspanel, 1);
-                                            compareamounts(rd);
                                         }
                                     }
                                     return
                                 }
                             });
-                            return
                         }
+                    }
+                    if (match) {
+                        tx_count(statuspanel, 1);
+                        compareamounts(rd);
+                        return
                     }
                     tx_api_fail(thislist, statuspanel);
                     handle_api_fails_list(rd, "scan", api_data);
