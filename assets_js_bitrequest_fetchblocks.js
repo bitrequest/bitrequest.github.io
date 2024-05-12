@@ -4,6 +4,7 @@ $(document).ready(function() {
 
     //lightning_fetch
     //monero_fetch
+    //blockchair_xmr_poll
     //blockcypher_fetch
     //ethplorer_fetch
     //arbiscan_fetch
@@ -268,6 +269,10 @@ function lightning_fetch(rd, api_data, rdo) {
 // ** MyMonero API **
 
 function monero_fetch(rd, api_data, rdo) {
+    if (rdo.pending == "polling") {
+        blockchair_xmr_poll(rd, api_data, rdo); // use blockchair api for tx lookup
+        return
+    }
     let api_name = api_data.name,
         thislist = rdo.thislist,
         transactionlist = rdo.transactionlist,
@@ -322,7 +327,8 @@ function monero_fetch(rd, api_data, rdo) {
                     let data = br_result(e).result,
                         transactions = data.transactions;
                     if (transactions) {
-                        let txflip = transactions.reverse();
+                        let txflip = transactions.reverse(),
+                            match = false;
                         $.each(txflip, function(dat, value) {
                             let txd = xmr_scan_data(value, rdo.setconfirmations, "xmr", data.blockchain_height);
                             if (txd) {
@@ -330,6 +336,7 @@ function monero_fetch(rd, api_data, rdo) {
                                 if (xid_match === true) {
                                     if (rdo.pending == "polling") {
                                         if (txd.txhash == rd.txhash && txd.ccval) {
+                                            match = true;
                                             let tx_listitem = append_tx_li(txd, rd.requesttype);
                                             if (tx_listitem) {
                                                 transactionlist.append(tx_listitem.data(txd));
@@ -340,6 +347,7 @@ function monero_fetch(rd, api_data, rdo) {
                                     }
                                     if (rdo.pending == "scanning") {
                                         if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
+                                            match = true;
                                             let tx_listitem = append_tx_li(txd, rd.requesttype);
                                             if (tx_listitem) {
                                                 transactionlist.append(tx_listitem.data(txd));
@@ -350,8 +358,12 @@ function monero_fetch(rd, api_data, rdo) {
                                 }
                             }
                         });
-                        tx_count(statuspanel, counter);
-                        compareamounts(rd);
+                        if (match) {
+                            tx_count(statuspanel, counter);
+                            compareamounts(rd);
+                            return
+                        }
+                        api_callback(rd.requestid);
                     }
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     tx_api_fail(thislist, statuspanel);
@@ -369,6 +381,61 @@ function monero_fetch(rd, api_data, rdo) {
         }).always(function() {
             scan_callback(rdo, {
                 "name": "mymonero api"
+            });
+        });
+    }
+}
+
+// ** MyMonero API **
+
+function blockchair_xmr_poll(rd, api_data, rdo) {
+    let txhash = rd.txhash,
+        thislist = rdo.thislist,
+        transactionlist = rdo.transactionlist,
+        statuspanel = rdo.statuspanel,
+        counter = 0,
+        vk = rd.viewkey,
+        xmr_ia = rd.xmr_ia;
+    if (vk) {
+        let account = (vk.account) ? vk.account : rd.address,
+            viewkey = vk.vk;
+        api_proxy({
+            "api_url": "https://api.blockchair.com/monero/raw/outputs?txprove=0&txhash=" + txhash + "&address=" + account + "&viewkey=" + viewkey,
+            "cachetime": 25,
+            "cachefolder": "1h",
+            "proxy": true,
+            "params": {
+                "method": "GET"
+            }
+        }).done(function(e) {
+            let data = br_result(e).result,
+                dat = data.data;
+            if (dat) {
+                let match = false,
+                    txd = blockchair_xmr_data(dat, rdo.setconfirmations);
+                if (txd.txhash == txhash && txd.ccval) {
+                    match = true;
+                    let tx_listitem = append_tx_li(txd, rd.requesttype);
+                    if (tx_listitem) {
+                        transactionlist.append(tx_listitem.data(txd));
+                        counter++;
+                    }
+                }
+                if (match) {
+                    tx_count(statuspanel, counter);
+                    compareamounts(rd);
+                    return
+                }
+            }
+            tx_api_fail(thislist, statuspanel);
+            handle_api_fails_list(rd, "scan", api_data);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            tx_api_fail(thislist, statuspanel);
+            let error_object = (errorThrown) ? errorThrown : jqXHR;
+            handle_api_fails_list(rd, error_object, api_data);
+        }).always(function() {
+            scan_callback(rdo, {
+                "name": "blockchair api"
             });
         });
     }
@@ -2165,6 +2232,32 @@ function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
             "confirmations": conf,
             "setconfirmations": setconfirmations,
             "ccsymbol": ccsymbol,
+            "payment_id": payment_id
+        };
+    }
+    return default_tx_data();
+}
+
+function blockchair_xmr_data(data, setconfirmations) {
+    if (data) {
+        let transactiontime = (data.tx_timestamp) ? (data.tx_timestamp * 1000) + timezone : null,
+            outputs = data.outputs,
+            outputsum = 0;
+        if (outputs) {
+            $.each(outputs, function(dat, value) {
+                if (value.match) {
+                    outputsum += value.amount; // sum of outputs
+                }
+            });
+        }
+        let payment_id = (data.payment_id) ? data.payment_id : false;
+        return {
+            "ccval": outputsum / 1000000000000,
+            "transactiontime": transactiontime,
+            "txhash": data.tx_hash,
+            "confirmations": data.tx_confirmations,
+            "setconfirmations": setconfirmations,
+            "ccsymbol": "xmr",
             "payment_id": payment_id
         };
     }

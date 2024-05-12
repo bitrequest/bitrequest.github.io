@@ -16,6 +16,7 @@ $(document).ready(function() {
     //abort_ndef
     //init_xmr_node
     //ping_xmr_node
+    //ping_blockchair_xmr_node
     //blockcypher_websocket
     //blockchain_btc_socket
     //blockchain_bch_socket
@@ -1314,6 +1315,14 @@ function reconnect() {
 // XMR Poll
 
 function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
+    if (txhash) {
+        clearpinging(address);
+        ping_blockchair_xmr_node(34, address, vk, txhash);
+        pinging[address] = setInterval(function() {
+            ping_blockchair_xmr_node(34, address, vk, txhash);
+        }, 35000);
+        return
+    }
     let payload = {
         "address": address,
         "view_key": vk,
@@ -1394,27 +1403,32 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
                     let txd = xmr_scan_data(value, set_cc, "xmr", data.blockchain_height);
                     if (txd) {
                         if (txd.ccval) {
+                            let tx_hash = txd.txhash;
                             if (txhash) {
-                                if (txhash == txd.txhash) {
+                                if (txhash == tx_hash) {
                                     confirmations(txd);
                                 }
                                 return
                             }
                             if (txd.transactiontime > request_ts) {
                                 let requestlist = $("#requestlist > li.rqli"),
-                                    txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
+                                    txid_match = filter_list(requestlist, "txhash", tx_hash); // check if txhash already exists
                                 if (txid_match.length) {
                                     return
                                 }
-                                clearpinging();
-                                if (set_cc > 0) {
+                                if (tx_hash) {
                                     confirmations(txd, true);
-                                    pinging[address] = setInterval(function() {
-                                        ping_xmr_node(34, address, vk, request_ts, txd.txhash);
-                                    }, 35000);
-                                    return
+                                    if (set_cc > 0) {
+                                        clearpinging(address);
+                                        pinging[address] = setInterval(function() { // use blockchair api instead of mymonero api for tx lookup
+                                            ping_blockchair_xmr_node(34, address, vk, tx_hash);
+                                        }, 35000);
+                                        return
+                                        pinging[address] = setInterval(function() {
+                                            ping_xmr_node(34, address, vk, request_ts, txhash);
+                                        }, 35000);
+                                    }
                                 }
-                                confirmations(txd, true);
                             }
                         }
                     }
@@ -1424,6 +1438,38 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
             clearpinging(address);
             let error_object = (errorThrown) ? errorThrown : jqXHR;
             handle_api_fails(false, error_object, "mymonero api", request.payment, txhash);
+        });
+        return
+    }
+    forceclosesocket();
+}
+
+function ping_blockchair_xmr_node(cachetime, address, vk, txhash) {
+    if (paymentpopup.hasClass("active")) { // only when request is visible
+        api_proxy({
+            "api_url": "https://api.blockchair.com/monero/raw/outputs?txprove=0&txhash=" + txhash + "&address=" + address + "&viewkey=" + vk,
+            "cachetime": 25,
+            "cachefolder": "1h",
+            "proxy": true,
+            "params": {
+                "method": "GET"
+            }
+        }).done(function(e) {
+            let data = br_result(e).result,
+                dat = data.data;
+            if (dat) {
+                let match = false,
+                    set_confirmations = request.set_confirmations ?? 0,
+                    set_cc = (set_confirmations) ? set_confirmations : 0,
+                    txd = blockchair_xmr_data(dat, set_cc);
+                if (txd.txhash == txhash && txd.ccval) {
+                    confirmations(txd, true);
+                }
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            clearpinging(address);
+            let error_object = (errorThrown) ? errorThrown : jqXHR;
+            handle_api_fails(false, error_object, "blockchair api", request.payment, txhash);
         });
         return
     }
