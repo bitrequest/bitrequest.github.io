@@ -1521,7 +1521,6 @@ function after_poll(rq_init, next_api) {
             return
         }
         if (api_name == "blockchair") {
-            let erc = (request.erc20 === true) ? true : false;
             ap_loader();
             blockchair_fetch(request, api_data, rdo);
             return
