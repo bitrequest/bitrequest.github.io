@@ -435,7 +435,7 @@ function blockcypher_fetch(rd, api_data, rdo) {
     if (rdo.pending == "polling") { // poll transaction id
         if (rd.txhash) {
             api_proxy({
-                "api":  "blockcypher",
+                "api": "blockcypher",
                 "search": rd.currencysymbol + "/main/txs/" + rd.txhash,
                 "cachetime": 25,
                 "cachefolder": "1h",
@@ -1121,6 +1121,8 @@ function kaspa_fetch(rd, api_data, rdo) {
         transactionlist = rdo.transactionlist,
         statuspanel = rdo.statuspanel,
         counter = 0;
+    var match = false,
+        txdat = false;
     if (rdo.pending == "scanning") { // scan incoming transactions on address
         if (api_name == "kaspa.org") {
             api_proxy({
@@ -1151,13 +1153,10 @@ function kaspa_fetch(rd, api_data, rdo) {
                                     tx_api_scan_fail(rd, rdo, api_data, "scan");
                                     return
                                 }
-                                var match = false,
-                                    txdat = false;
                                 $.each(data, function(dat, value) {
                                     let txd = kaspa_scan_data(value, rd.address, rdo.setconfirmations, current_bluescore);
                                     if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
-                                        var match = true,
-                                            txdat = txd;
+                                        match = true, txdat = txd;
                                         if (rdo.source == "list") {
                                             let tx_listitem = append_tx_li(txd, rd.requesttype);
                                             if (tx_listitem) {
