@@ -1121,7 +1121,7 @@ function kaspa_websocket(socket_node, thisaddress) {
                     let txs = contents.txs;
                     if (txs) {
                         $.each(txs, function(dat, value) {
-                            let set_confirmations = (request.set_confirmations) ?? 0,
+                            let set_confirmations = (request.set_confirmations) ? request.set_confirmations : 0,
                                 txd = kaspa_ws_data(value, thisaddress, set_confirmations);
                             if (txd.ccval) {
                                 closesocket();
