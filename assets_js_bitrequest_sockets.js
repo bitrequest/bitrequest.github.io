@@ -614,7 +614,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
                 }
                 txid = txhash;
                 closesocket();
-                let set_confirmations = q_obj(request, "set_confirmations"),
+                let set_confirmations = request.set_confirmations,
                     set_cc = (set_confirmations) ? set_confirmations : 0,
                     txd = blockcypher_poll_data(data, set_cc, request.currencysymbol, thisaddress);
                 pick_monitor(txhash, txd);
@@ -652,7 +652,7 @@ function blockchain_btc_socket(socket_node, thisaddress) {
                 rconnect(txid);
                 return
             }
-            let set_confirmations = q_obj(request, "set_confirmations"),
+            let set_confirmations = request.set_confirmations,
                 set_cc = (set_confirmations) ? set_confirmations : 0,
                 txd = blockchain_ws_data(json, set_cc, request.currencysymbol, thisaddress);
             if (txd) {
@@ -696,7 +696,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
                 return
             }
             let legacy = bch_legacy(thisaddress),
-                set_confirmations = q_obj(request, "set_confirmations"),
+                set_confirmations = request.set_confirmations,
                 set_cc = (set_confirmations) ? set_confirmations : 0,
                 txd = blockchain_ws_data(json, set_cc, request.currencysymbol, thisaddress, legacy);
             if (txd) {
@@ -740,7 +740,7 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
                         rconnect(txid);
                         return
                     }
-                    let set_confirmations = q_obj(request, "set_confirmations"),
+                    let set_confirmations = request.set_confirmations,
                         set_cc = (set_confirmations) ? set_confirmations : 0,
                         txd = mempoolspace_ws_data(json, set_cc, request.currencysymbol, thisaddress);
                     if (txd) {
@@ -785,7 +785,7 @@ function dogechain_info_socket(socket_node, thisaddress) {
                     rconnect(txid);
                     return
                 }
-                let set_confirmations = q_obj(request, "set_confirmations"),
+                let set_confirmations = request.set_confirmations,
                     set_cc = (set_confirmations) ? set_confirmations : 0,
                     txd = dogechain_ws_data(data, set_cc, request.currencysymbol, thisaddress);
                 if (txd) {
@@ -882,7 +882,7 @@ function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
                         let rslt = inf_result(res),
                             transactions = rslt.transactions;
                         if (transactions) {
-                            let set_confirmations = q_obj(request, "set_confirmations"),
+                            let set_confirmations = request.set_confirmations,
                                 set_cc = (set_confirmations) ? set_confirmations : 0;
                             $.each(transactions, function(i, val) {
                                 if (str_match(val.to, thisaddress) === true) {
@@ -943,7 +943,7 @@ function web3_erc20_websocket(socket_node, thisaddress, contract) {
                             ccval = parseFloat((token_value / Math.pow(10, token_decimals)).toFixed(8));
                         if (ccval === Infinity) {} else {
                             let tx_hash = result.transactionHash,
-                                set_confirmations = q_obj(request, "set_confirmations"),
+                                set_confirmations = request.set_confirmations,
                                 set_cc = (set_confirmations) ? set_confirmations : 0;
                             txd = {
                                 "ccval": ccval,
@@ -987,7 +987,7 @@ function ping_bnb(address, request_ts, ccsymbol) {
         }).done(function(e) {
             let data = br_result(e).result;
             if (data) {
-                let set_confirmations = q_obj(request, "set_confirmations"),
+                let set_confirmations = request.set_confirmations,
                     set_cc = (set_confirmations) ? set_confirmations : 0;
                 $.each(data.operations, function(dat, value) {
                     let txd = ethplorer_scan_data(value, set_cc, ccsymbol);
@@ -1044,7 +1044,7 @@ function alchemy_eth_websocket(socket_node, thisaddress) {
         if (result) {
             if (result.hash) {
                 if (str_match(result.to, thisaddress)) {
-                    let set_confirmations = q_obj(request, "set_confirmations"),
+                    let set_confirmations = request.set_confirmations,
                         set_cc = (set_confirmations) ? set_confirmations : 0;
                     txd = infura_block_data(result, set_cc, request.currencysymbol, result.timestamp);
                     closesocket();
@@ -1084,7 +1084,7 @@ function ping_arbiscan(address, request_ts) {
             if (data) {
                 let result = data.result;
                 if (result && br_issar(result)) {
-                    let set_confirmations = q_obj(request, "set_confirmations"),
+                    let set_confirmations = request.set_confirmations,
                         set_cc = (set_confirmations) ? set_confirmations : 0,
                         match = false;
                     $.each(result, function(dat, value) {
@@ -1137,7 +1137,7 @@ function kaspa_websocket(socket_node, thisaddress) {
                     contents = data[1];
                 if (contents) {
                     let txs = contents.txs,
-                        set_confirmations = q_obj(request, "set_confirmations"),
+                        set_confirmations = request.set_confirmations,
                         set_cc = (set_confirmations) ? set_confirmations : 0;
                     if (txs) {
                         $.each(txs, function(dat, value) {
@@ -1387,7 +1387,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
             let data = br_result(e).result,
                 transactions = data.transactions;
             if (transactions) {
-                let set_confirmations = q_obj(request, "set_confirmations"),
+                let set_confirmations = request.set_confirmations,
                     set_cc = (set_confirmations) ? set_confirmations : 0,
                     txflip = transactions.reverse();
                 $.each(txflip, function(dat, value) {
@@ -1447,7 +1447,7 @@ function ping_nimiq(address, request_ts) {
         }).done(function(e) {
             let transactions = br_result(e).result;
             if (transactions) {
-                let set_confirmations = q_obj(request, "set_confirmations"),
+                let set_confirmations = request.set_confirmations,
                     set_cc = (set_confirmations) ? set_confirmations : 0,
                     txflip = transactions.reverse();
                 $.each(txflip, function(dat, value) {
@@ -1488,7 +1488,7 @@ function after_poll(rq_init, next_api) {
         request_ts = request_ts_utc - 30000, // 30 seconds compensation for unexpected results
         thislist = $("#" + request.requestid),
         statuspanel = thislist.find(".pmetastatus"),
-        set_confirmations = q_obj(request, "set_confirmations"),
+        set_confirmations = request.set_confirmations,
         set_cc = (set_confirmations) ? set_confirmations : 0,
         rdo = {
             "thislist": thislist,
