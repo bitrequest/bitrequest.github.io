@@ -6,8 +6,6 @@ $(document).ready(function() {
     //get_requeststates
     //getinputs
     //check_api
-    //choose_api_inputs
-    //get_api_inputs_defaults
 
     //get_api_inputs_init
     //get_api_inputs
@@ -91,12 +89,11 @@ function trigger_requeststates(trigger) {
 
 function get_requeststates(trigger, active_requests) {
     let d_lay = (trigger == "delay") ? true : false;
-    //requestincoming
     let request_data = $("#requestlist li.rqli.open").first().data();
     if (request_data) {
         if (trigger == "loop") {
             getinputs(request_data, d_lay);
-            return;
+            return
         }
         let statuscache = br_get_session("txstatus", true);
         if (statuscache) {
@@ -166,7 +163,7 @@ function getinputs(rd, dl) {
         selected = api_info.data;
     thislist.removeClass("pmstatloaded");
     if (api_info.api === true) {
-        choose_api_inputs(rd, selected);
+        get_api_inputs_init(rd, selected);
         return
     }
     get_rpc_inputs_init(rd, selected);
@@ -204,29 +201,13 @@ function check_api(payment, iserc20) {
     }
 }
 
-function choose_api_inputs(rd, api_data) {
+function get_api_inputs_init(rd, api_data) {
     if (api_data) {
-        get_api_inputs_init(rd, api_data);
+        api_attempts[rd.requestid + api_data.name] = null; // reset api attempts
+        get_api_inputs(rd, api_data);
         return
     }
     console.log("no api data available");
-}
-
-function get_api_inputs_defaults(rd, api_data) {
-    if (rd.erc20 === true) {
-        get_api_inputs_init(rd, api_data, "ethplorer");
-        return
-    }
-    let payment = rd.payment;
-    if (payment == "bitcoin" || payment == "litecoin" || payment == "dogecoin" || payment == "ethereum") {
-        api_data.name = "blockcypher";
-    }
-    get_api_inputs_init(rd, api_data);
-}
-
-function get_api_inputs_init(rd, api_data) {
-    api_attempts[rd.requestid + api_data.name] = null; // reset api attempts
-    get_api_inputs(rd, api_data);
 }
 
 function get_api_inputs(rd, api_data) {
@@ -512,7 +493,7 @@ function get_rpc_inputs(rd, api_data) {
                 nano_rpc(rd, api_data, rdo);
                 return
             }
-            get_api_inputs_defaults(rd, rpc_data);
+            get_api_inputs_init(rd, rpc_data);
         }
     }
 }
@@ -964,7 +945,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     "confirmations": conf,
                     "pending": pending,
                     "lightning": lnd
-                }, true);
+                }, false);
                 let cacheval = latestinput + latestconf;
                 if (pending == "no") {} else {
                     br_set_session("historic_" + thisrequestid, cacheval); // 'cache' historic data
