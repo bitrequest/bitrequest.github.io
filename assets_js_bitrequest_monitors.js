@@ -661,8 +661,6 @@ function compareamounts(rd, ln) {
                 if (confirmations_cc >= setconfirmations || rd.no_conf === true || confirmations_cc === false) { // check all confirmations + whitelist for currencies unable to fetch confirmation
                     confirmed_cc = true;
                     if (thissum_cc >= cc_amount * margin) { // compensation for small fluctuations in rounding amount
-                        status_cc = "paid",
-                            pending_cc = "no";
                         thisnode.addClass("exceed").nextAll().addClass("exceed");
                         return
                     }
@@ -680,6 +678,10 @@ function compareamounts(rd, ln) {
                 if (confirmed_cc === false) { // check confirmations outside the loop
                     status_cc = "pending",
                         pending_cc = (tx_counter === 1) ? "polling" : pendingstatus; // switch to tx polling if there's only one transaction
+                }
+                else {
+                    status_cc = "paid",
+                        pending_cc = "no";
                 }
             } else {
                 status_cc = "insufficient",
@@ -785,8 +787,8 @@ function get_historical_fiat_data(rd, apilist, fiatapi, ln) {
                         get_lcrate = q_obj(data, "rates." + lcsymbol);
                 }
                 if (usdrate && get_lcrate) {
-                    let lcrate = (lcsymbol == "EUR") ? 1 : get_lcrate;
-                    let historic_api = $("#cmcapisettings").data("selected"),
+                    let lcrate = (lcsymbol == "EUR") ? 1 : get_lcrate,
+                        historic_api = $("#cmcapisettings").data("selected"),
                         picked_historic_api = (historic_api == "coinmarketcap") ? "coingecko" : historic_api, // default to "coingecko api"
                         init_apilist = "historic_crypto_price_apis";
                     api_attempt[init_apilist] = {};
@@ -907,8 +909,6 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 if (historic_price && (conf >= setconfirmations || rd.no_conf === true || conf === false)) { // check all confirmations + whitelist for currencies unable to fetch confirmations
                     confirmed = true;
                     if (thisusdsum >= historicusdvalue * margin) { //minus 5% dollar for volatility compensation
-                        status = "paid",
-                            pending = "no";
                         thisnode.addClass("exceed").nextAll().addClass("exceed");
                     }
                 } else {
@@ -926,6 +926,10 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     if (confirmed === false) { // check confirmations outside the loop
                         status = "pending",
                             pending = (tx_counter === 1) ? "polling" : pending; // switch to tx polling if there's only one transaction
+                    }
+                    else {
+                        status = "paid",
+                            pending = "no";
                     }
                 } else {
                     if (receivedusd === 0) {
