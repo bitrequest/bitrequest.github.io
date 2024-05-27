@@ -1,3 +1,4 @@
+let block_scan = 0;
 $(document).ready(function() {
     updaterequeststatestrigger();
     updaterequeststatesrefresh();
@@ -5,6 +6,7 @@ $(document).ready(function() {
     //trigger_requeststates
     //get_requeststates
     //getinputs
+    //clearscan
     //check_api
 
     //get_api_inputs_init
@@ -29,6 +31,7 @@ $(document).ready(function() {
     //historic_data_title
 
     //compareamounts
+    //init_historical_fiat_data
     //get_historical_fiat_data
     //get_historic_fiatprice_api_payload
     //form_date
@@ -48,6 +51,7 @@ function updaterequeststatestrigger() {
     $(document).on("click", ".requestsbttn .self", function() {
         let scanning = is_scanning();
         if (scanning) {
+            block_scan = block_scan + 1;
             playsound(funk);
             return
         }
@@ -68,6 +72,9 @@ function updaterequeststatesrefresh() {
 }
 
 function is_scanning() {
+    if (block_scan > 5) {
+        clearscan();
+    }
     return ($("#requestlist li.rqli.scan").length) ? true : false;
 }
 
@@ -152,7 +159,7 @@ function getinputs(rd, dl) {
             timelapsed = now() - monitor_timer;
         if (timelapsed < delay) { // prevent over scanning
             playsound(funk);
-            $("#requestlist .rqli").removeClass("scan"); // prevent triggerblock
+            clearscan();
             return
         }
         br_set_session("monitor_timer", now());
@@ -167,6 +174,11 @@ function getinputs(rd, dl) {
         return
     }
     get_rpc_inputs_init(rd, selected);
+}
+
+function clearscan() {
+    $("#requestlist .rqli").removeClass("scan"); // prevent triggerblock
+    block_scan = 0;
 }
 
 function check_api(payment, iserc20) {
@@ -587,6 +599,7 @@ function append_tx_li(txd, rqtype, ln) {
         }
         tx_list.push(txhash);
         return tx_listitem;
+        clearscan();
     }
     return null;
 }
@@ -623,118 +636,108 @@ function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, 
 function compareamounts(rd, ln) {
     let thisrequestid = rd.requestid,
         requestli = $("#" + thisrequestid),
-        lastlist = requestli.find(".transactionlist li:last"),
-        firstinput = lastlist.data("transactiontime");
-    if (firstinput) {
-        let requestdate = rd.requestdate,
-            iscrypto = rd.iscrypto,
-            thispayment = rd.payment,
-            ccsymbol = rd.currencysymbol,
-            pendingstatus = rd.pending,
-            getconfirmations = rd.set_confirmations,
-            getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
-            setconfirmations = (ln == true) ? 1 : (getconfint) ? getconfint : 1, // set minimum confirmations to 1
-            firstlist = requestli.find(".transactionlist li:first"),
-            latestinput = firstlist.data("transactiontime"),
-            offset = Math.abs(now() - (firstinput - timezone)),
-            recent = (offset < 300000); // Only lookup hystorical data after 5 minutes
-        if (iscrypto || recent) {
-            let thissum_cc = 0,
-                txhash_cc,
-                paymenttimestamp_cc,
-                confirmations_cc = 0,
-                status_cc = "pending",
-                pending_cc = pendingstatus,
-                confirmed_cc = false,
-                tx_counter = 0,
-                cc_amount = parseFloat(rd.cc_amount),
-                fiatvalue = rd.fiatvalue,
-                margin = 0.95;
-            $(requestli.find(".transactionlist li").get().reverse()).each(function(i) {
-                tx_counter++;
-                let thisnode = $(this),
-                    tn_dat = thisnode.data();
-                confirmations_cc = tn_dat.confirmations,
-                    paymenttimestamp_cc = tn_dat.transactiontime,
-                    txhash_cc = tn_dat.txhash,
-                    thissum_cc += parseFloat(tn_dat.ccval) || 0; // sum of outputs
-                if (confirmations_cc >= setconfirmations || rd.no_conf === true || confirmations_cc === false) { // check all confirmations + whitelist for currencies unable to fetch confirmation
-                    confirmed_cc = true;
-                    if (thissum_cc >= cc_amount * margin) { // compensation for small fluctuations in rounding amount
-                        thisnode.addClass("exceed").nextAll().addClass("exceed");
-                        return
+        txlist = requestli.find(".transactionlist li"),
+        txlist_length = txlist.length;
+    if (txlist_length) {
+        let lastlist = txlist.last(),
+            firstinput = lastlist.data("transactiontime");
+        if (firstinput) {
+            let requestdate = rd.requestdate,
+                iscrypto = rd.iscrypto,
+                thispayment = rd.payment,
+                ccsymbol = rd.currencysymbol,
+                pendingstatus = rd.pending,
+                getconfirmations = rd.set_confirmations,
+                getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
+                setconfirmations = (ln == true) ? 1 : (getconfint) ? getconfint : 1, // set minimum confirmations to 1
+                firstlist = txlist.first(),
+                conf = firstlist.data("confirmations"),
+                latestinput = firstlist.data("transactiontime"),
+                offset = Math.abs(now() - (firstinput - timezone)),
+                recent = (offset < 300000 && txlist_length === 1); // Only lookup historical data after 5 minutes with one transaction
+            if (recent) {
+                let thissum_cc = 0,
+                    txhash_cc,
+                    paymenttimestamp_cc,
+                    confirmations_cc = 0,
+                    status_cc = "pending",
+                    pending_cc = pendingstatus,
+                    confirmed_cc = false,
+                    tx_counter = 0,
+                    cc_amount = parseFloat(rd.cc_amount),
+                    margin = 0.95,
+                    fiatvalue = rd.fiatvalue,
+                    txreverse = (txlist_length > 1) ? txlist.get().reverse() : txlist;
+                txreverse.each(function(i) {
+                    tx_counter++;
+                    let thisnode = $(this),
+                        tn_dat = thisnode.data();
+                    confirmations_cc = tn_dat.confirmations,
+                        paymenttimestamp_cc = tn_dat.transactiontime,
+                        txhash_cc = tn_dat.txhash,
+                        thissum_cc += parseFloat(tn_dat.ccval) || 0; // sum of outputs
+                    if (confirmations_cc >= setconfirmations || rd.no_conf === true || confirmations_cc === false) { // check all confirmations + whitelist for currencies unable to fetch confirmation
+                        confirmed_cc = true;
+                        if (thissum_cc >= cc_amount * margin) { // compensation for small fluctuations in rounding amount
+                            thisnode.addClass("exceed").nextAll().addClass("exceed");
+                            return
+                        }
+                    } else {
+                        confirmed_cc = false;
+                    }
+                    let confbar = thisnode.find(".confbar");
+                    if (confbar.length > 0) {
+                        confbar.each(function(i) {
+                            animate_confbar($(this), i);
+                        });
+                    };
+                });
+                if (thissum_cc >= cc_amount * margin) { // compensation for small fluctuations in rounding amount
+                    if (confirmed_cc === false) { // check confirmations outside the loop
+                        status_cc = "pending",
+                            pending_cc = (tx_counter === 1) ? "polling" : pendingstatus; // switch to tx polling if there's only one transaction
+                    } else {
+                        status_cc = "paid",
+                            pending_cc = "no";
                     }
                 } else {
-                    confirmed_cc = false;
+                    status_cc = "insufficient",
+                        pending_cc = "scanning";
                 }
-                let confbar = thisnode.find(".confbar");
-                if (confbar.length > 0) {
-                    confbar.each(function(i) {
-                        animate_confbar($(this), i);
-                    });
-                };
-            });
-            if (thissum_cc >= cc_amount * margin) { // compensation for small fluctuations in rounding amount
-                if (confirmed_cc === false) { // check confirmations outside the loop
-                    status_cc = "pending",
-                        pending_cc = (tx_counter === 1) ? "polling" : pendingstatus; // switch to tx polling if there's only one transaction
-                }
-                else {
-                    status_cc = "paid",
-                        pending_cc = "no";
-                }
-            } else {
-                status_cc = "insufficient",
-                    pending_cc = "scanning";
-            }
-            if (recent && !iscrypto) { // get local fiat rates when request is less then 15 minutes old
-                let exchangerates = br_get_session("exchangerates", true),
-                    cc_xrates = br_get_session("xrates_" + ccsymbol, true);
-                if (exchangerates && cc_xrates) {
-                    let local_xrate = (exchangerates.fiat_exchangerates) ? exchangerates.fiat_exchangerates[rd.fiatcurrency] : null,
-                        usd_eur_xrate = (exchangerates.fiat_exchangerates) ? exchangerates.fiat_exchangerates.usd : null;
-                    if (local_xrate && usd_eur_xrate) {
-                        let usd_rate = (cc_xrates) ? cc_xrates.ccrate : null;
-                        if (usd_rate) {
-                            let usdval = thissum_cc * usd_rate,
-                                eurval = usdval / usd_eur_xrate,
+                if (!iscrypto) { // get local fiat rates when request is less then 15 minutes old
+                    let exchangerates = br_get_session("exchangerates", true),
+                        cc_xrates = br_get_session("xrates_" + ccsymbol, true);
+                    if (exchangerates && cc_xrates) {
+                        let local_xrate = (exchangerates.fiat_exchangerates) ? exchangerates.fiat_exchangerates[rd.fiatcurrency] : null,
+                            usd_eur_xrate = (exchangerates.fiat_exchangerates) ? exchangerates.fiat_exchangerates.usd : null;
+                        if (local_xrate && usd_eur_xrate) {
+                            let usd_rate = (cc_xrates) ? cc_xrates.ccrate : null;
+                            if (usd_rate) {
+                                let usdval = thissum_cc * usd_rate,
+                                    eurval = usdval / usd_eur_xrate;
                                 fiatvalue = eurval * local_xrate;
+                            }
                         }
+                    } else {
+                        init_historical_fiat_data(rd, conf, latestinput, firstinput, ln);
+                        return
                     }
                 }
+                updaterequest({
+                    "requestid": thisrequestid,
+                    "status": status_cc,
+                    "receivedamount": thissum_cc,
+                    "fiatvalue": fiatvalue,
+                    "paymenttimestamp": paymenttimestamp_cc,
+                    "txhash": txhash_cc,
+                    "confirmations": confirmations_cc,
+                    "pending": pending_cc,
+                    "lightning": rd.lightning
+                }, false);
+                api_callback(thisrequestid);
+                return
             }
-            updaterequest({
-                "requestid": thisrequestid,
-                "status": status_cc,
-                "receivedamount": thissum_cc,
-                "fiatvalue": fiatvalue,
-                "paymenttimestamp": paymenttimestamp_cc,
-                "txhash": txhash_cc,
-                "confirmations": confirmations_cc,
-                "pending": pending_cc,
-                "lightning": rd.lightning
-            }, false);
-            api_callback(thisrequestid);
-            return
-        }
-        let conf = firstlist.data("confirmations"),
-            confcor = (conf) ? conf : 0,
-            latestconf = (rd.no_conf === true) ? 0 : confcor, // only update on change
-            hc_prefix = "historic_" + thisrequestid,
-            historiccache = br_get_session(hc_prefix),
-            cacheval = latestinput + latestconf;
-        if (cacheval != historiccache) { //new input detected; call historic api
-            br_remove_session(hc_prefix); // remove historic price cache
-            let historic_payload = $.extend(rd, {
-                "latestinput": latestinput,
-                "latestconf": latestconf,
-                "firstinput": firstinput
-            });
-            let apilist = "historic_fiat_price_apis",
-                fiatapi = $("#fiatapisettings").data("selected"),
-                fiatapi_default = (fiatapi == "coingecko" || fiatapi == "coinbase") ? "fixer" : fiatapi; // exclude coingecko api"
-            api_attempt[apilist] = {}; // reset global historic fiat price api attempt
-            get_historical_fiat_data(historic_payload, apilist, fiatapi_default, ln);
+            init_historical_fiat_data(rd, conf, latestinput, firstinput, ln);
             return
         }
     }
@@ -742,6 +745,28 @@ function compareamounts(rd, ln) {
 }
 
 // get historic crypto rates
+
+function init_historical_fiat_data(rd, conf, latestinput, firstinput, ln) {
+    let thisrequestid = rd.requestid,
+        confcor = (conf) ? conf : 0,
+        latestconf = (rd.no_conf === true) ? 0 : confcor, // only update on change
+        hc_prefix = "historic_" + thisrequestid,
+        historiccache = br_get_session(hc_prefix),
+        cacheval = latestinput + latestconf;
+    if (cacheval != historiccache) { //new input detected; call historic api
+        br_remove_session(hc_prefix); // remove historic price cache
+        let historic_payload = $.extend(rd, {
+            "latestinput": latestinput,
+            "latestconf": latestconf,
+            "firstinput": firstinput
+        });
+        let apilist = "historic_fiat_price_apis",
+            fiatapi = $("#fiatapisettings").data("selected"),
+            fiatapi_default = (fiatapi == "coingecko" || fiatapi == "coinbase") ? "fixer" : fiatapi; // exclude coingecko api"
+        api_attempt[apilist] = {}; // reset global historic fiat price api attempt
+        get_historical_fiat_data(historic_payload, apilist, fiatapi_default, ln);
+    }
+}
 
 function get_historical_fiat_data(rd, apilist, fiatapi, ln) {
     api_attempt[apilist][fiatapi] = true;
@@ -926,8 +951,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     if (confirmed === false) { // check confirmations outside the loop
                         status = "pending",
                             pending = (tx_counter === 1) ? "polling" : pending; // switch to tx polling if there's only one transaction
-                    }
-                    else {
+                    } else {
                         status = "paid",
                             pending = "no";
                     }
