@@ -72,7 +72,7 @@ function updaterequeststatesrefresh() {
 }
 
 function is_scanning() {
-    if (block_scan > 5) {
+    if (block_scan > 4) {
         clearscan();
     }
     return ($("#requestlist li.rqli.scan").length) ? true : false;
