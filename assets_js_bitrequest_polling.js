@@ -494,6 +494,7 @@ function confirmations(tx_data, direct, ln) {
                         let status_text = (requesttype == "incoming") ? "Payment sent" : "Payment received";
                         pmd.addClass("transacting").attr("data-status", "paid");
                         brheader.text(status_text);
+                        request.status = "paid",
                         request.pending = "polling";
                         saverequest(direct);
                         $("span#ibstatus").fadeOut(500);
