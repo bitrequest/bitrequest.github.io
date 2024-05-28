@@ -1057,6 +1057,7 @@ function compare_historic_prices(api, values, price_array, thistimestamp) {
                 values["timestamp"] = historic_timestamp,
                     values["price"] = historic_price,
                     values["fetched"] = true;
+                return false;
             }
         }
     });
