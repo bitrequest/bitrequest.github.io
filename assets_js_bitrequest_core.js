@@ -954,7 +954,7 @@ function startnext(thisnode) {
         $("#eninput").blur();
         return
     }
-    topnotify("Please enter your name");
+    topnotify(T.fld.name.error);
 }
 
 function startprev(thisnode) {
