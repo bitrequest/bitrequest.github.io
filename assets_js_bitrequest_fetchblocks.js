@@ -154,7 +154,7 @@ function lightning_fetch(rd, api_data, rdo) {
                                                 }, false);
                                                 api_callback(rd.requestid);
                                             } else {
-                                                compareamounts(rd, true);
+                                                compareamounts(rd);
                                             }
                                         }
                                     }
@@ -242,7 +242,7 @@ function lightning_fetch(rd, api_data, rdo) {
                                     }, true);
                                     api_callback(rd.requestid);
                                 } else {
-                                    compareamounts(rd, true);
+                                    compareamounts(rd);
                                 }
                             }
                         }
