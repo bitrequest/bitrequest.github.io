@@ -655,7 +655,7 @@ function compareamounts(rd, ln) {
                 latestinput = firstlist.data("transactiontime"),
                 offset = Math.abs(now() - (firstinput - timezone)),
                 recent = (offset < 300000 && txlist_length === 1); // Only lookup historical data after 5 minutes with one transaction
-            if (recent) {
+            if (recent || iscrypto) {
                 let thissum_cc = 0,
                     txhash_cc,
                     paymenttimestamp_cc,
@@ -666,7 +666,6 @@ function compareamounts(rd, ln) {
                     tx_counter = 0,
                     cc_amount = parseFloat(rd.cc_amount),
                     margin = 0.95,
-                    fiatvalue = rd.fiatvalue,
                     txreverse = (txlist_length > 1) ? txlist.get().reverse() : txlist;
                 txreverse.each(function(i) {
                     tx_counter++;
@@ -704,6 +703,7 @@ function compareamounts(rd, ln) {
                     status_cc = "insufficient",
                         pending_cc = "scanning";
                 }
+                let fiatvalue = rd.fiatvalue;
                 if (!iscrypto) { // get local fiat rates when request is less then 15 minutes old
                     let exchangerates = br_get_session("exchangerates", true),
                         cc_xrates = br_get_session("xrates_" + ccsymbol, true);
