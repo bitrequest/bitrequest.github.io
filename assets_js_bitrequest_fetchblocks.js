@@ -573,8 +573,8 @@ function ethplorer_fetch(rd, api_data, rdo) {
                 }
                 let operations = data.operations;
                 if (operations) {
-                    const sortlist = sort_by_date(ethplorer_scan_data, operations),
-                        match = false;
+                    const sortlist = sort_by_date(ethplorer_scan_data, operations);
+                    let match = false;
                     $.each(sortlist, function(dat, value) {
                         const txd = ethplorer_scan_data(value, rdo.setconfirmations, rd.currencysymbol),
                             rt_compensate = (rd.inout == "local" && rd.status == "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)

@@ -4814,6 +4814,13 @@ function cs_node(currency, id, data) {
         }
         return coinnode;
     }
+    let coindata = getcoinsettings(currency);
+    if (coindata) {
+        let apis = coindata.apis;
+        if (apis) {
+            return apis;
+        }
+    }
     return false
 }
 
