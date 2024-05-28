@@ -281,7 +281,8 @@ function monero_fetch(rd, api_data, rdo) {
         counter = 0,
         vk = rd.viewkey,
         xmr_ia = rd.xmr_ia,
-        payment_id = rd.payment_id;
+        payment_id = rd.payment_id,
+        match = false;
     if (vk) {
         let account = (vk.account) ? vk.account : rd.address,
             viewkey = vk.vk,
@@ -329,7 +330,6 @@ function monero_fetch(rd, api_data, rdo) {
                         transactions = data.transactions;
                     if (transactions) {
                         const sortlist = sort_by_date(xmr_scan_data, transactions);
-                        match = false;
                         $.each(sortlist, function(dat, value) {
                             const txd = xmr_scan_data(value, rdo.setconfirmations, "xmr", data.blockchain_height);
                             if (txd) {
@@ -396,7 +396,8 @@ function blockchair_xmr_poll(rd, api_data, rdo) {
         statuspanel = rdo.statuspanel,
         counter = 0,
         vk = rd.viewkey,
-        xmr_ia = rd.xmr_ia;
+        xmr_ia = rd.xmr_ia,
+        match = false;
     if (vk) {
         let account = (vk.account) ? vk.account : rd.address,
             viewkey = vk.vk;
@@ -412,8 +413,7 @@ function blockchair_xmr_poll(rd, api_data, rdo) {
             let data = br_result(e).result,
                 dat = data.data;
             if (dat) {
-                let match = false,
-                    txd = blockchair_xmr_data(dat, rdo.setconfirmations);
+                const txd = blockchair_xmr_data(dat, rdo.setconfirmations);
                 if (txd.txhash == txhash && txd.ccval) {
                     match = true;
                     let tx_listitem = append_tx_li(txd, rd.requesttype);
@@ -552,7 +552,8 @@ function ethplorer_fetch(rd, api_data, rdo) {
         thislist = rdo.thislist,
         transactionlist = rdo.transactionlist,
         statuspanel = rdo.statuspanel,
-        counter = 0;
+        counter = 0,
+        match = false;
     if (rdo.pending == "scanning") { // scan incoming transactions on address
         api_proxy({
             "api": api_name,
@@ -574,7 +575,6 @@ function ethplorer_fetch(rd, api_data, rdo) {
                 let operations = data.operations;
                 if (operations) {
                     const sortlist = sort_by_date(ethplorer_scan_data, operations);
-                    let match = false;
                     $.each(sortlist, function(dat, value) {
                         const txd = ethplorer_scan_data(value, rdo.setconfirmations, rd.currencysymbol),
                             rt_compensate = (rd.inout == "local" && rd.status == "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
@@ -874,7 +874,9 @@ function blockchair_fetch(rd, api_data, rdo) {
         return
     }
     let transactionlist = rdo.transactionlist,
-        counter = 0;
+        counter = 0,
+        match = false,
+        txdat = false;
     if (rdo.pending == "scanning") { // scan incoming transactions on address
         let contract = q_obj(rd, "coindata.contract"),
             scan_url = (rdo.erc20 === true && contract) ? "ethereum/erc-20/" + contract + "/dashboards/address/" + rd.address : rd.payment + "/dashboards/address/" + rd.address;
@@ -898,9 +900,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                     tx_api_scan_fail(rd, rdo, api_data, "scan");
                     return
                 }
-                let latestblock = context.state,
-                    match = false,
-                    txdat = false;
+                let latestblock = context.state;
                 if (rdo.erc20 === true) {
                     let erc20dat = data.data;
                     if (erc20dat) {
@@ -1412,7 +1412,9 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc) {
         statuspanel = rdo.statuspanel,
         counter = 0,
         url = api_data.url,
-        endpoint = (rpc) ? url : "https://" + url;
+        endpoint = (rpc) ? url : "https://" + url,
+        match = false,
+        txdat = false;
     api_proxy({ // get latest blockheight
         "api_url": endpoint + "/api/blocks/tip/height",
         "proxy": false,
@@ -1433,16 +1435,13 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc) {
                     }).done(function(e) {
                         let data = br_result(e).result;
                         if (data) {
-                            var match = false,
-                                txdat = false;
                             if ($.isEmptyObject(data)) {} else {
                                 const sortlist = sort_by_date(mempoolspace_scan_data, data);
                                 $.each(sortlist, function(dat, value) {
                                     if (value.txid) { // filter outgoing transactions
                                         const txd = mempoolspace_scan_data(value, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
                                         if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
-                                            var match = true,
-                                                txdat = txd;
+                                            match = true, txdat = txd;
                                             if (rdo.source == "list") {
                                                 let tx_listitem = append_tx_li(txd, rd.requesttype);
                                                 if (tx_listitem) {
@@ -1645,7 +1644,9 @@ function eth_params(set_url, cachetime, method, params) {
 function nano_rpc(rd, api_data, rdo) {
     let transactionlist = rdo.transactionlist,
         statuspanel = rdo.statuspanel,
-        counter = 0;
+        counter = 0,
+        match = false,
+        txdat = false;
     if (rdo.pending == "scanning") { // scan incoming transactions on address
         api_proxy({
             "api": "nano",
@@ -1678,8 +1679,6 @@ function nano_rpc(rd, api_data, rdo) {
                         merged_array = pending_array.concat(history_array).sort(function(x, y) { // merge and sort arrays
                             return y.local_timestamp - x.local_timestamp;
                         }),
-                        match = false,
-                        txdat = false,
                         sortlist = sort_by_date(nano_scan_data, merged_array);
                     $.each(sortlist, function(data, value) {
                         const txd = nano_scan_data(value, rdo.setconfirmations, rd.currencysymbol);
