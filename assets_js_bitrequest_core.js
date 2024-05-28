@@ -1,6 +1,5 @@
 //globals
 const ls_support = check_local(),
-    language = navigator.language || navigator.userLanguage,
     userAgent = navigator.userAgent || navigator.vendor || window.opera,
     titlenode = $("title"),
     ogtitle = $("meta[property='og:title']"),
@@ -38,7 +37,9 @@ const ls_support = check_local(),
     after_poll_timeout = 15000,
     xss_alert = "xss attempt detected";
 
+OmnI18n.init(["en", "fr"], "dictionary_$.i18n");
 let scrollposition = 0,
+    language = OmnI18n.locale,
     is_ios_app = false, // ios app fingerprint
     phpsupportglobal,
     symbolcache,
@@ -62,6 +63,11 @@ let scrollposition = 0,
     io = br_dobj(init, true),
     new_address, // prevent double address entries
     proxy_attempts = {};
+
+OmnI18n.onLocaleChange(function(newLanguage) {
+    language = newLanguage;
+    setlocales();
+})
 
 if (has_ndef && !inframe) {
     ndef = new NDEFReader();

@@ -3025,3 +3025,23 @@ html[data-role='cashier'] #show_vk {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
+
+#locales-list {
+	z-index: 9999;
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+#locales-list .name {
+	display: none;
+}
+
+#locales-list button {
+	background-color: transparent;
+	border: 0;
+}
+
+#locales-list button.selected {
+	background-color: rgba(255, 255, 255, 0.15);
+}

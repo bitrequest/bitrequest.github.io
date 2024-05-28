@@ -34,6 +34,38 @@
 		<link rel="stylesheet" type="text/css" media="screen" href="assets_styles_themes_default.css?v=0.180" id="theme"/>
 	</head>
 	<body>
+		<audio id="funk"><source src="assets_styles_sounds_funk.mp3"></audio>
+		<audio id="cashier"><source src="assets_styles_sounds_cashier.mp3"></audio>
+		<audio id="blip"><source src="assets_styles_sounds_blip.mp3"></audio>
+		<audio id="waterdrop"><source src="assets_styles_sounds_waterdrop.mp3"></audio>
+		<audio id="howl"><source src="assets_styles_sounds_howl.mp3"></audio>
+		<script src="assets_js_lib_omni18n.js?v=0.180"></script>
+		<script src="assets_js_bitrequest_assets.js?v=0.180"></script>
+		<script src="assets_js_lib_cashaddr.js?v=0.180"></script>
+		<script src="assets_js_lib_sha3.min.js?v=0.180"></script>
+		<script src="assets_js_lib_jquery.js?v=0.180"></script>
+		<script src="assets_js_br_query.js?v=0.180"></script>
+		<script src="assets_js_bitrequest_config.js?v=0.180"></script>
+		<script src="assets_js_lib_biginteger.js?v=0.180"></script>
+		<script src="assets_js_lib_noble-secp256k1.js?v=0.180"></script>
+		<script src="assets_js_lib_sjcl.js?v=0.180"></script>
+		<script src="assets_js_lib_bip39_utils.js?v=0.180"></script>
+		<script src="assets_js_bitrequest_bip39.js?v=0.180"></script>
+		<script src="assets_js_lib_xmr_utils.js?v=0.180"></script>
+		<script src="assets_js_lib_nanocurrency-web.js?v=0.180"></script>
+		<script src="assets_js_bitrequest_core.js?v=0.180"></script>
+		<script src="assets_js_lib_gd_api.js?v=0.180"></script>
+		<script src="assets_js_bitrequest_settings.js?v=0.180"></script>
+		<script src="assets_js_bitrequest_coin_settings.js?v=0.180"></script>
+		<script src="assets_js_bitrequest_lightning.js?v=0.180"></script>
+		<script src="assets_js_bitrequest_sockets.js?v=0.180"></script>
+		<script src="assets_js_bitrequest_polling.js?v=0.180"></script>
+		<script src="assets_js_bitrequest_payments.js?v=0.180"></script>
+		<script src="assets_js_bitrequest_fetchblocks.js?v=0.180"></script>
+		<script src="assets_js_bitrequest_monitors.js?v=0.180"></script>
+		<script src="assets_js_lib_jquery.qrcode.min.js?v=0.180"></script>
+		<script src="assets_js_bitrequest_scanqr.js" type="module"></script>
+		<div id="locales-list"></div>
 		<div id="mainwrap">
 			<header>
 				<div id="header">
@@ -119,7 +151,7 @@
 					<div class="panelwrap flex">
 						<div class="startcenter">
 							<h1>Bitrequest</h1>
-							<h2>Accept crypto anywhere</h2>
+							<h2 data-i18n="page.subtitle">Accept crypto anywhere</h2>
 						</div>
 					</div>
 					<div class="proceed icon-arrow-right2"></div>
@@ -132,8 +164,8 @@
 								<span id="usericon"><div id="lettercount">20</div></span>
 							</div>
 							<div class="div">
-								<div class="mirrordiv"><span>Enter your name</span>
-									<input id="eninput" type="text" placeholder="Your name" data-min="2" data-max="30" spellcheck="false" cap/>
+								<div class="mirrordiv"><span data-i18n="fld.name">Enter your name</span>
+									<input id="eninput" type="text" placeholder="Your name" data-i18n="placeholder: fld.name.placeholder" data-min="2" data-max="30" spellcheck="false" cap/>
 								</div>
 							</div>
 						</div>
@@ -214,7 +246,7 @@
 			<div class="panelwrap flex">
 				<div class="startcenter">
 					<h1>Bitrequest</h1>
-					<h2>Accept crypto anywhere</h2>
+					<h2 data-i18n="page.subtitle">Accept crypto anywhere</h2>
 					<div id="startloader">
 						<div class="lds-ring"><div></div><div></div><div></div><div></div></div>
 					</div>
@@ -234,35 +266,5 @@
 			</div>
 			<div id="closecam" class="icon-cross"></div>
 		</div>
-		<audio id="funk"><source src="assets_styles_sounds_funk.mp3"></audio>
-		<audio id="cashier"><source src="assets_styles_sounds_cashier.mp3"></audio>
-		<audio id="blip"><source src="assets_styles_sounds_blip.mp3"></audio>
-		<audio id="waterdrop"><source src="assets_styles_sounds_waterdrop.mp3"></audio>
-		<audio id="howl"><source src="assets_styles_sounds_howl.mp3"</audio>
-		<script src="assets_js_bitrequest_assets.js?v=0.180"></script>
-		<script src="assets_js_lib_cashaddr.js?v=0.180"></script>
-		<script src="assets_js_lib_sha3.min.js?v=0.180"></script>
-		<script src="assets_js_lib_jquery.js?v=0.180"></script>
-		<script src="assets_js_br_query.js?v=0.180"></script>
-		<script src="assets_js_bitrequest_config.js?v=0.180"></script>
-		<script src="assets_js_lib_biginteger.js?v=0.180"></script>
-		<script src="assets_js_lib_noble-secp256k1.js?v=0.180"></script>
-		<script src="assets_js_lib_sjcl.js?v=0.180"></script>
-		<script src="assets_js_lib_bip39_utils.js?v=0.180"></script>
-		<script src="assets_js_bitrequest_bip39.js?v=0.180"></script>
-		<script src="assets_js_lib_xmr_utils.js?v=0.180"></script>
-		<script src="assets_js_lib_nanocurrency-web.js?v=0.180"></script>
-		<script src="assets_js_bitrequest_core.js?v=0.180"></script>
-		<script src="assets_js_lib_gd_api.js?v=0.180"></script>
-		<script src="assets_js_bitrequest_settings.js?v=0.180"></script>
-		<script src="assets_js_bitrequest_coin_settings.js?v=0.180"></script>
-		<script src="assets_js_bitrequest_lightning.js?v=0.180"></script>
-		<script src="assets_js_bitrequest_sockets.js?v=0.180"></script>
-		<script src="assets_js_bitrequest_polling.js?v=0.180"></script>
-		<script src="assets_js_bitrequest_payments.js?v=0.180"></script>
-		<script src="assets_js_bitrequest_fetchblocks.js?v=0.180"></script>
-		<script src="assets_js_bitrequest_monitors.js?v=0.180"></script>
-		<script src="assets_js_lib_jquery.qrcode.min.js?v=0.180"></script>
-		<script src="assets_js_bitrequest_scanqr.js" type="module"></script>
 	</body>
 </html>
