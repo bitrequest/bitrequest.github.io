@@ -206,7 +206,6 @@ function lightning_fetch(rd, api_data, rdo) {
     } else if (rdo.pending == "polling" && lnhash) {
         let invoice = lnd.invoice;
         if (invoice) {
-            console.log(transactionhash);
             if (transactionhash) {
                 $.ajax({
                     "method": "POST",
