@@ -32,7 +32,6 @@ $(document).ready(function() {
     //default_tx_data
     //blockchain_ws_data
     //mempoolspace_ws_data
-    //blockchair_scan_data
     //mempoolspace_scan_data
     //dogechain_ws_data
     //blockcypher_scan_data
@@ -983,8 +982,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                     let dat = br_result(e).result;
                     let bcdat = dat.data;
                     if (bcdat) {
-                        const sortlist = sort_by_date(blockchair_scan_data, bcdat);
-                        $.each(sortlist, function(dt, val) {
+                        $.each(bcdat, function(dt, val) {
                             const txd = blockchair_scan_data(val, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
                             if (txd.transactiontime > rdo.request_timestamp && txd.ccval) { // get all transactions after requestdate
                                 match = true, txdat = txd;
@@ -2083,7 +2081,8 @@ function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestb
             if (setconfirmations == "sort") {
                 return transactiontime;
             }
-            let conf = (transaction.block_id && transaction.block_id > 10 && latestblock) ? (latestblock - transaction.block_id) + 1 : null,
+            let block_id = transaction.block_id,
+                conf = (block_id && block_id > 10 && latestblock) ? (latestblock - block_id) + 1 : null,
                 outputs = data.outputs;
             if (outputs) {
                 outputsum = 0;
