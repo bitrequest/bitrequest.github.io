@@ -363,7 +363,7 @@ function lang_fr(id, data) {
         "confirmpkownership": "Confirmer la propriété de la clé privée",
         "invalidxpub": "PAS une clé " + data.currency + " Xpub valide / prise en charge.",
         "xpubsaved": "XPub enregistré",
-        "resetnotify": "les paramètres" + data.currency + "sont réinitialisés par défaut.",
+        "resetnotify": "les paramètres " + data.currency + "sont réinitialisés par défaut.",
         // confirm
         "reusewarningalert": "Êtes-vous sûr de vouloir générer de nouvelles adresses " + data.thiscurrency + "? ils peuvent ne pas apparaître dans certains portefeuilles.",
         "reusealert": "Êtes-vous sûr de vouloir réutiliser les adresses " + data.thiscurrency + "?",
