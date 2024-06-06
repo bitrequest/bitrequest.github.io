@@ -48,7 +48,7 @@ function abort_cam(reason) {
 function cam_trigger() {
     $(document).on("click", ".qrscanner", function() {
         loader(true);
-        loadertext("Loading camera");
+        loadertext(translate("loadingcamera"));
         let thisqr = $(this),
             currency = thisqr.attr("data-currency"),
             type = thisqr.attr("data-id");

@@ -61,7 +61,7 @@ function lnd_cc_switch() {
         let this_switch = $(this),
             lnli = lndli();
         if (this_switch.hasClass("true")) {
-            let result = confirm("Disable lightning payments?");
+            let result = confirm(translate("disablelightning"));
             if (result === true) {
                 lnli.data("selected", false);
                 this_switch.removeClass("true").addClass("false");
@@ -87,7 +87,7 @@ function lm_function(replace) {
             has_nodes = ($.isEmptyObject(node_list)) ? false : true,
             lnd_proxy_list = this_data.proxies,
             has_proxies = ($.isEmptyObject(lnd_proxy_list)) ? false : true,
-            node_title = (has_nodes) ? "lightning node" : "Add lightning node",
+            node_title = (has_nodes) ? translate("lightningnode") : translate("addlightningnode"),
             current_node = this_data.selected_service,
             current_proxy = this_data.selected_proxy,
             has_proxy = (current_proxy) ? true : false,
@@ -103,7 +103,7 @@ function lm_function(replace) {
             <input type='text' value='" + cp_format + "' data-pid='" + cp_id + "' placeholder='https://...' readonly='readonly'/>\
                 <div class='selectarrows icon-menu2' data-pe='none'></div>\
                 <div class='options'></div>\
-            </div><div id='add_proxy'><span class='ref'>Add RPC proxy</span></div>" : "",
+            </div><div id='add_proxy'><span class='ref'>" + translate("addrpcproxy") + "</span></div>" : "",
             ln_markup = "\
             <div class='popform" + n_class + p_class + camclass + "'>\
                 <div id='select_ln_node' class='selectbox' data-nodeid='" + c_node_id + "'>\
@@ -113,10 +113,10 @@ function lm_function(replace) {
                 </div>\
                 <div id='ad_info_wrap'>\
                     <ul>\
-                        <li><div class='d_trigger' id='add_lndnode_trigger'><span class='ref'><span class='icon-power'></span>Add node</span></div>\
+                        <li><div class='d_trigger' id='add_lndnode_trigger'><span class='ref'><span class='icon-power'></span>" + translate("addnode") + "</span></div>\
                             <div class='drawer2' id='adln_drawer'>\
                                 <div class='selectbox'>\
-                                    <input type='text' value='' placeholder='Implementation' id='lnd_select_input' readonly='readonly'/>\
+                                    <input type='text' value='' placeholder='" + translate("implementation") + "' id='lnd_select_input' readonly='readonly'/>\
                                     <div class='selectarrows icon-menu2' data-pe='none'></div>\
                                     <div class='options' id='implements'>\
                                         <span data-value='lnd' class='imp_select'><img src='" + c_icons("lnd") + "' class='lnd_icon'> LND</span>\
@@ -151,11 +151,10 @@ function lm_function(replace) {
                         <li><div class='d_trigger' id='add_proxy_trigger'><span class='ref'><span class='icon-sphere'></span>RPC proxy</span></div>\
                             <div class='drawer2" + p_class + "' id='add_proxy_drawer'>" + proxy_select +
             "<div id='lnurl_proxy_drawer' class='lpd'>\
-                                    <p id='lnurls_info'>\
-                                        Control your own lightning node and keys:<br/><br/>\
-                                        <strong>1.</strong> Host the <a href='https://github.com/bitrequest/bitrequest.github.io/tree/master/proxy' target='blank' class='exit ref'>proxy folder</a> on your webserver.<br/>\
-                                        <strong>2.</strong> Enter your lightning node's REST host and keys in 'config.php'.<br/>\
-                                        <strong>3.</strong> Enter your server address below.<br/><br/>\
+                                    <p id='lnurls_info'>" + translate("controlyourlnkeys") + "<br/><br/>\
+                                        <strong>1.</strong> " + translate("lnnodestep1") + "<br/>\
+                                        <strong>2.</strong> " + translate("lnnodestep2") + "<br/>\
+                                        <strong>3.</strong> " + translate("lnnodestep3") + "<br/><br/>\
                                     </p>\
                                     <input type='text' value='' placeholder='https://...' id='lnd_proxy_url_input'/>\
                                     <input type='password' value='' placeholder='API key' id='proxy_pw_input'/>\
@@ -215,9 +214,10 @@ function lm_function(replace) {
 
 function node_option_li(value, selected, fn, proxy, pw) {
     loader(true);
-    loadertext("connecting to " + proxy);
+    loadertext(translate("connecttolnur", {
+        "url": proxy
+    }));
     let imp = value.imp,
-        default_error = "unable to connect",
         locked = null,
         postdata = {
             "method": "POST",
@@ -237,7 +237,8 @@ function node_option_li(value, selected, fn, proxy, pw) {
         let invoices = e.invoices,
             error = e.error;
         if (error) {
-            let message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error,
+            let default_error = translate("unabletoconnect"),
+                message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error,
                 code = error.code,
                 locked = (code && (code == 1 || code == 2)) ? "locked" : null;
             if (fn == "append") {
@@ -287,7 +288,9 @@ function test_lnd_option_li(value, selected, fn) {
     let host = value.host,
         proxy = (host.indexOf(".onion") > 0) ? true : false;
     loader(true);
-    loadertext("connecting to " + host);
+    loadertext(translate("connecttolnur", {
+        "url": host
+    }));
     api_proxy({
         "proxy": proxy,
         "api_url": host + "/v1/invoices",
@@ -335,7 +338,9 @@ function test_c_lightning_option_li(value, selected, fn) {
     let host = value.host,
         proxy = (host.indexOf(".onion") > 0) ? true : false;
     loader(true);
-    loadertext("connecting to " + host);
+    loadertext(translate("connecttolnur", {
+        "url": host
+    }));
     api_proxy({
         "proxy": proxy,
         "api_url": host + "/v1/invoice/listInvoices",
@@ -384,7 +389,9 @@ function test_eclair_option_li(value, selected, fn) {
     let host = value.host,
         proxy = (host.indexOf(".onion") > 0) ? true : false;
     loader(true);
-    loadertext("connecting to " + host);
+    loadertext(translate("connecttolnur", {
+        "url": host
+    }));
     api_proxy({
         "proxy": proxy,
         "api_url": host + "/listinvoices",
@@ -442,7 +449,9 @@ function test_lnbits_option_li(value, selected, fn) {
     let host = value.host,
         proxy = (host.indexOf(".onion") > 0) ? true : false;
     loader(true);
-    loadertext("connecting to " + host);
+    loadertext(translate("connecttolnur", {
+        "url": host
+    }));
     api_proxy({
         "proxy": proxy,
         "api_url": host + "/api/v1/wallet",
@@ -526,8 +535,10 @@ function lightning_option_li(live, value, selected, invoices, proxy) {
             invoiceslist += "<div class='ivli'><div class='invoice_memo clearfix'><div class='iv_title'>" + icon_span + " " + inv_title + "</div><div class='iv_date'>" + inv_date + "</div></div><div class='invoice_body'><pre>" + syntaxHighlight(value) + "</pre></div></div>";
         });
     } else {
-        let invoice_msg = (locked) ? "Node proxy locked, unable to fetch invoices.<br/>Please enter your proxy <span id='pw_unlock_invoices' data-pid='" + proxy_id + "' class='ref'>API key</span>." : (live === true) ? "No invoices found." : "Node offline, unable to fetch invoices.",
-            invoiceslist = "<p>" + invoice_msg + "</p>";
+        let invoice_msg = (locked) ? translate("invoiceslocked", {
+            "proxy_id": proxy_id
+        }) : (live === true) ? translate("noinvoicesfound") : translate("invoiceoffline");
+        invoiceslist = "<p>" + invoice_msg + "</p>";
     }
     let host = value.host,
         proxy_bool = (value.proxy) ? true : false,
@@ -594,7 +605,9 @@ function lnd_append_proxy(optionlist, key, value, selected) { // make test api c
         p_arr = lnurl_deform(value.proxy),
         proxy = p_arr.url;
     loader(true);
-    loadertext("connecting to " + proxy);
+    loadertext(translate("connecttolnur", {
+        "url": proxy
+    }));
     $.ajax({
         "method": "POST",
         "cache": false,
@@ -704,7 +717,7 @@ function lnd_proxy_switch() {
             this_id = this_li.data("id"),
             current_node = fetch_node(nodelist, this_id);
         if (!current_node) {
-            popnotify("error", "Node not found");
+            popnotify("error", translate("nodenotfound"));
             return
         }
         let lnd_proxy_list = ln_dat.proxies,
@@ -716,12 +729,14 @@ function lnd_proxy_switch() {
             pw = p_arr.k,
             p_text = "";
         if (!set_proxy_val) {
-            popnotify("error", "Proxy not found");
+            popnotify("error", translate("proxynotfound"));
             return
         }
         let filtered_nodelist = fetch_other_nodes(nodelist, this_id);
         if (this_switch.hasClass("true")) {
-            let result = confirm("Disable proxy " + set_proxy_val + "?");
+            let result = confirm(translate("disableproxy", {
+                "set_proxy_val": set_proxy_val
+            }));
             if (result === true) {
                 current_node.proxy = false;
                 this_switch.removeClass("true").addClass("false");
@@ -730,7 +745,9 @@ function lnd_proxy_switch() {
                 return
             }
         } else {
-            let result = confirm("Enable proxy " + set_proxy_val + "?");
+            let result = confirm(translate("enableproxy", {
+                "set_proxy_val": set_proxy_val
+            }));
             if (result === true) {
                 current_node.proxy = true;
                 this_switch.removeClass("false").addClass("true");
@@ -866,12 +883,12 @@ function trigger_ln() {
             let cp_dat = get_proxy;
             save_cc_settings("bitcoin", true);
         } else {
-            notify("Proxy not found");
+            notify(translate("proxynotfound"));
         }
     }
     if ($("#lnurl_proxy_drawer").is(":visible")) {
         if (lndpu_val.length < 10) {
-            topnotify("Please enter server address");
+            topnotify(translate("enterserver"));
             lnd_pu_input.val("").focus();
             playsound(funk);
             return
@@ -879,19 +896,21 @@ function trigger_ln() {
         let fixed_url = complete_url(lndpu_val),
             is_default = ($.inArray(fixed_url, proxy_list) === -1) ? false : true;
         if (is_default) {
-            popnotify("error", fixed_url + " is a default proxy");
+            popnotify("error", translate("defaultproxy", {
+                "fixed_url": fixed_url
+            }));
             return
         }
         let proxy_id = sha_sub(fixed_url, 6),
             proxie_exists = fetch_proxy(lnd_proxy_list, proxy_id);
         if (proxie_exists) {
-            topnotify("Proxy already added");
+            topnotify(translate("proxyexists"));
             $("#lnd_proxy_url_input").focus();
             playsound(funk);
             return
         }
         if (fixed_url.indexOf("http") < 0) {
-            topnotify("Invalid url");
+            topnotify(translate("invalidurl"));
             $("#lnd_proxy_url_input").focus();
             playsound(funk);
             return
@@ -900,7 +919,7 @@ function trigger_ln() {
             pwsha = (p_key) ? sha_sub(p_key, 10) : false;
         test_lnd_proxy(fixed_url, proxy_id, pwsha);
         if (no_change || !cp_dat) {} else {
-            notify("Data saved");
+            notify(translate("datasaved"));
         }
         return
     }
@@ -909,7 +928,7 @@ function trigger_ln() {
             lnd_imp = lnd_select.data(),
             imp = lnd_imp.value;
         if (!imp) {
-            popnotify("error", "Select implementation");
+            popnotify("error", translate("selectimplementation"));
             lnd_select.focus();
             return
         }
@@ -931,7 +950,9 @@ function trigger_ln() {
                 lnd_key_v = lnd_key_input.val(),
                 host_length = (lnd_host_val) ? lnd_host_val.length : -1;
             if (host_length < 10) {
-                popnotify("error", "Select " + imp + " Host");
+                popnotify("error", translate("selectlnhost", {
+                    "imp": imp
+                }));
                 lnd_host_input.focus();
                 return
             }
@@ -939,18 +960,21 @@ function trigger_ln() {
             if (lnd_key_val) {
                 let key_length = lnd_key_val.length;
                 if (key_length < 5) {
-                    let key_name = (imp == "lnbits") ? "API key" : (imp == "eclair") ? "Password" : "Invoice Macaroon";
-                    popnotify("error", "Select " + imp + " " + key_name);
+                    let key_name = (imp == "lnbits") ? "API key" : (imp == "eclair") ? "Password" : "Invoice Macaroon",
+                        impkeyname = imp + " " + key_name;
+                    popnotify("error", translate("selectkeyname", {
+                        "impkeyname": impkeyname
+                    }));
                     lnd_key_input.focus();
                     return
                 }
                 if (key_length > 300) { // invoice macaroons should be less then 300 characters
-                    popnotify("error", "Please enter 'invoice' macaroon");
+                    popnotify("error", translate("entermacaroon"));
                     return
                 }
                 test_create_invoice(imp, cp_dat, lnd_host_val, lnd_key_val);
             } else {
-                popnotify("error", "Invalid key format");
+                popnotify("error", translate("invalidkeyformat"));
             }
             return
         }
@@ -977,13 +1001,13 @@ function trigger_ln() {
                 }).find(".switchpanel").removeClass("false").addClass("true");
                 canceldialog();
                 console.log("shift");
-                notify("Data saved");
+                notify(translate("datasaved"));
                 save_cc_settings("bitcoin", true);
                 cancelpd();
                 return
             }
             if (thisval.live == "lock") {
-                notify("Current node proxy is locked, please enter your API key");
+                notify(translate("proxylocked"));
                 playsound(funk);
                 return
             }
@@ -994,7 +1018,9 @@ function trigger_ln() {
             let spanel = $("#lnsettingsbox #ad_info_wrap .noln_ref:visible .switchpanel"),
                 switch_val = (spanel.hasClass("true")) ? true : false,
                 proxy_message = (switch_val) ? "disabling" : "enabling";
-            notify("Current node is offline, try " + proxy_message + " proxy");
+            notify(translate("proxyoffline", {
+                "proxy_message": proxy_message
+            }));
             playsound(funk);
         }
     }
@@ -1002,7 +1028,9 @@ function trigger_ln() {
 
 function test_lnd_proxy(value, pid, pw) { // make test api call
     loader(true);
-    loadertext("connecting to " + value);
+    loadertext(translate("connecttolnur", {
+        "url": value
+    }));
     $.ajax({
         "method": "POST",
         "cache": false,
@@ -1018,8 +1046,9 @@ function test_lnd_proxy(value, pid, pw) { // make test api call
             result = api_result.result,
             error = result.error;
         if (error) {
-            let message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error,
-                msg = (message == "no write acces") ? "Unable to write to cache, please check your folder permissions." : message,
+            let default_error = translate("unabletoconnect"),
+                message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error,
+                msg = (message == "no write acces") ? translate("folderpermissions") : message,
                 code = error.code;
             popnotify("error", msg);
             if (code && (code == 1 || code == 2)) {
@@ -1043,17 +1072,19 @@ function test_lnd_proxy(value, pid, pw) { // make test api call
                 "selected_proxy": p_obj
             });
             save_cc_settings("bitcoin", true);
-            notify("Proxy added");
+            notify(translate("proxyadded"));
             $("#dialogbody").slideUp(300, function() {
                 lm_function(true);
             });
             add_custom_proxy(value);
             return
         }
-        popnotify("error", "Unable to connect to " + value);
+        popnotify("error", translate("unabletoconnectto", {
+            "value": value
+        }));
     }).fail(function(jqXHR, textStatus, errorThrown) {
         closeloader();
-        popnotify("error", "Unable to connect");
+        popnotify("error", translate("unabletoconnect"));
         console.log(jqXHR);
         console.log(textStatus);
         console.log(errorThrown);
@@ -1085,15 +1116,19 @@ function test_create_invoice(imp, proxydat, host, key) {
         nid_src = (host) ? (imp == "lnbits") ? key : host : proxy + imp,
         node_id = sha_sub(nid_src, 10),
         n_exists = node_exists(nodelist, node_id),
-        default_error = "unable to connect",
+        default_error = translate("unabletoconnect"),
         pid = sha_sub(now(), 10);
     if (n_exists) {
-        popnotify("error", imp + " node already added");
+        popnotify("error", translate("proxynameexists", {
+            "imp": imp
+        }));
         return
     }
     if (proxy) {
         loader(true);
-        loadertext("connecting to " + proxy);
+        loadertext(translate("connecttolnur", {
+            "url": proxy
+        }));
         $.ajax({
             "method": "POST",
             "cache": false,
@@ -1375,7 +1410,7 @@ function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
         saveaddresses(currency, true);
         currency_check(currency);
     }
-    notify("Data saved");
+    notify(translate("datasaved"));
     $("#dialogbody").slideUp(300, function() {
         lm_function(true);
     })
@@ -1387,7 +1422,9 @@ function remove_rpc_proxy() {
         let thisnode = $(this),
             thisoption = thisnode.closest(".optionwrap"),
             thisval = thisoption.data(),
-            result = confirm("Are you sure you want to remove '" + thisval.value + "'?");
+            result = confirm(translate("confirmremovenode", {
+                "thisval": thisval.value
+            }));
         if (result === true) {
             let lnli = lndli(),
                 ln_dat = lnli.data(),
@@ -1396,7 +1433,10 @@ function remove_rpc_proxy() {
                     return value.proxy_id == pid;
                 })[0];
             if (hosted_nodes) {
-                popnotify("error", hosted_nodes.imp + ": '" + hosted_nodes.name + "' uses this proxy, remove it first");
+                popnotify("error", translate("proxyinuse", {
+                    "imp": hosted_nodes.imp,
+                    "name": hosted_nodes.name
+                }));
                 return
             }
             let proxylist = ln_dat.proxies,
@@ -1421,7 +1461,7 @@ function remove_rpc_proxy() {
                 });
             }
             save_cc_settings("bitcoin", true);
-            notify("RPC proxy removed");
+            notify(translate("proxyremoved"));
             cancelpd();
         }
     })
@@ -1432,7 +1472,9 @@ function remove_lnd() {
         let thisnode = $(this),
             thisoption = thisnode.closest(".optionwrap"),
             thisval = thisoption.data(),
-            result = confirm("Are you sure you want to remove '" + thisval.name + "'?");
+            result = confirm(translate("confirmremovenode", {
+                "thisval": thisval.name
+            }));
         if (result === true) {
             let lnli = lndli(),
                 ln_dat = lnli.data(),
@@ -1463,7 +1505,7 @@ function remove_lnd() {
                     lm_function(true);
                 });
             }
-            notify("Service removed");
+            notify(translate("serviceremoved"));
             cancelpd();
         }
     })
@@ -1510,12 +1552,14 @@ function p_promt(pid) {
         this_proxy = fetch_proxy(proxylist, pid),
         empty_arr = ($.isEmptyObject(this_proxy));
     if (empty_arr) {
-        popnotify("error", "Unknown proxy server");
+        popnotify("error", translate("unknownproxy"));
         return
     }
     let p_arr = lnurl_deform(this_proxy.proxy),
         proxy = p_arr.url,
-        password = prompt("Enter proxy API key to unlock '" + proxy + "'"),
+        password = prompt(translate("enterlnapikey", {
+            "proxy": proxy
+        })),
         pwsha = (password) ? sha_sub(password, 10) : false;
     $.ajax({
         "method": "POST",
@@ -1531,7 +1575,8 @@ function p_promt(pid) {
             result = api_result.result,
             error = result.error;
         if (error) {
-            let message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
+            let default_error = translate("unabletoconnect"),
+                message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
             popnotify("error", message);
             return
         }
@@ -1551,15 +1596,17 @@ function p_promt(pid) {
                 lnli.data("selected_proxy", p_obj);
             }
             save_cc_settings("bitcoin", true);
-            notify("Proxy unlocked!");
+            notify(translate("proxyunlocked"));
             $("#dialogbody").slideUp(300, function() {
                 lm_function(true);
             });
             return
         }
-        popnotify("error", "Unable to connect to " + proxy);
+        popnotify("error", translate("unabletoconnectto", {
+            "value": proxy
+        }));
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        popnotify("error", "Unable to connect");
+        popnotify("error", translate("unabletoconnect"));
         console.log(jqXHR);
         console.log(textStatus);
         console.log(errorThrown);
@@ -1713,7 +1760,7 @@ function test_lnurl_status(lnd) {
         pk = p_arr.k,
         proxy_url = proxy_host + "proxy/v1/ln/api/";
     if (!proxy_host) {
-        notify("Proxy data missing");
+        notify(translate("proxydatamissing"));
         return
     }
     $.ajax({
@@ -1731,14 +1778,14 @@ function test_lnurl_status(lnd) {
             "x-api": pk
         }
     }).done(function(e) {
-        let error = e.error,
-            default_error = "unable to connect";
+        let error = e.error;
         if (error) {
-            let message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
+            let default_error = translate("unabletoconnect"),
+                message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
             if (request.isrequest) {
                 if (helper.lnd_only) {
                     topnotify(message);
-                    notify("this request is not monitored", 500000, "yes");
+                    notify(translate("notmonitored"), 500000, "yes");
                 }
             } else {
                 notify(message);

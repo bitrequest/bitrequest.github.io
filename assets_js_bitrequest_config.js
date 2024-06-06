@@ -318,7 +318,7 @@ const apptitle = "Bitrequest",
                     },
                     "Key derivations": {
                         "icon": "cog",
-                        "selected": "Compatible wallets",
+                        "selected": "compatiblewallets",
                         "segwit": true
                     }
                 }
@@ -450,7 +450,7 @@ const apptitle = "Bitrequest",
                     },
                     "Key derivations": {
                         "icon": "cog",
-                        "selected": "Compatible wallets",
+                        "selected": "compatiblewallets",
                         "segwit": true
                     }
                 }
@@ -566,7 +566,7 @@ const apptitle = "Bitrequest",
                     },
                     "Key derivations": {
                         "icon": "cog",
-                        "selected": "Compatible wallets",
+                        "selected": "compatiblewallets",
                     }
                 }
             },
@@ -672,7 +672,7 @@ const apptitle = "Bitrequest",
                     },
                     "Key derivations": {
                         "icon": "cog",
-                        "selected": "Compatible wallets",
+                        "selected": "compatiblewallets",
                     }
                 }
             },
@@ -811,7 +811,7 @@ const apptitle = "Bitrequest",
                     },
                     "Key derivations": {
                         "icon": "cog",
-                        "selected": "Compatible wallets",
+                        "selected": "compatiblewallets",
                     }
                 }
             },
@@ -996,7 +996,7 @@ const apptitle = "Bitrequest",
                     },
                     "Key derivations": {
                         "icon": "cog",
-                        "selected": "Compatible wallets",
+                        "selected": "compatiblewallets",
                     }
                 }
             },
@@ -1107,7 +1107,7 @@ const apptitle = "Bitrequest",
                     },
                     "Key derivations": {
                         "icon": "cog",
-                        "selected": "Compatible wallets",
+                        "selected": "compatiblewallets",
                     }
                 }
             },
@@ -1417,13 +1417,19 @@ const apptitle = "Bitrequest",
                 "default": false
             },
             {
+                "id": "langsettings",
+                "heading": "Language",
+                "selected": "",
+                "icon": "icon-bubble2"
+            },
+            {
                 "id": "heading",
-                "heading": "Security"
+                "heading": "security"
             },
             {
                 "id": "pinsettings",
                 "heading": "Passcode Lock",
-                "selected": "pincode disabled",
+                "selected": "pincodedisabled",
                 "icon": "icon-lock",
                 "locktime": 0,
                 "pinhash": null,
@@ -1454,7 +1460,7 @@ const apptitle = "Bitrequest",
             },
             {
                 "id": "heading",
-                "heading": "Advanced"
+                "heading": "advanced"
             },
             {
                 "id": "csvexport",
@@ -1495,7 +1501,7 @@ const apptitle = "Bitrequest",
             {
                 "id": "apikeys",
                 "heading": "API Keys",
-                "selected": "Api Keys",
+                "selected": "",
                 "icon": "icon-key",
                 "alchemy": null,
                 "arbiscan": null,
@@ -1513,7 +1519,7 @@ const apptitle = "Bitrequest",
             {
                 "id": "contactform",
                 "heading": "Contact form",
-                "selected": "Contact form",
+                "selected": "",
                 "icon": "icon-file-text",
                 "name": "",
                 "address": "",

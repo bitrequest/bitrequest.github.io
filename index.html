@@ -47,10 +47,10 @@
 				<nav id="relnav" class="navstyle">
 					<ul class="nav">
 						<li class="currenciesbttn">
-							<div data-rel="?p=currencies" class="self icon-coin-dollar"><span>currencies</span></div>
+							<div data-rel="?p=currencies" class="self icon-coin-dollar"><span class="tl_page1">currencies</span></div>
 						</li>
 						<li class="requestsbttn">
-							<div data-rel="?p=requests" class="self icon-qrcode"><span>requests</span></div>
+							<div data-rel="?p=requests" class="self icon-qrcode"><span class="tl_page2">requests</span></div>
 						</li>
 						<li class="settingsbttn">
 							<div data-rel="?p=settings" class="self icomoon"><span></span></div>
@@ -70,7 +70,7 @@
 				</div>
 				<div class="page" id="currencies">
 					<div class="content">
-						<h2 class="heading">Currencies</h2>
+						<h2 class="heading tl_page1">Currencies</h2>
 						<ul id="usedcurrencies" class="applist">
 						</ul>
 						<div id="add_erc20" class="button">
@@ -80,7 +80,7 @@
 				</div>
 				<div class="page" id="settings">
 					<div class="content">
-						<h2 class="heading">Settings</h2>
+						<h2 class="heading tl_page3">Settings</h2>
 						<ul id="appsettings" class="settinglist applist listyle2">	
 						</ul>
 						<div id="app_info">
@@ -94,7 +94,7 @@
 				</div>
 				<div class="page" id="requests">
 					<div class="content">
-						<h2 class="heading">Requests</h2>
+						<h2 class="heading tl_page2">Requests</h2>
 						<ul id="requestlist" class="requestlist">
 						</ul>
 						<div data-rel="?p=archive" id="viewarchive" data-title="View archive" class="self button">
@@ -119,7 +119,7 @@
 					<div class="panelwrap flex">
 						<div class="startcenter">
 							<h1>Bitrequest</h1>
-							<h2>Accept crypto anywhere</h2>
+							<h2 class="tl_page4">Accept crypto anywhere</h2>
 						</div>
 					</div>
 					<div class="proceed icon-arrow-right2"></div>
@@ -133,7 +133,7 @@
 							</div>
 							<div class="div">
 								<div class="mirrordiv"><span>Enter your name</span>
-									<input id="eninput" type="text" placeholder="Your name" data-min="2" data-max="30" spellcheck="false" cap/>
+									<input id="eninput" class="tl_page5" type="text" placeholder="Your name" data-min="2" data-max="30" spellcheck="false" cap/>
 								</div>
 							</div>
 						</div>
@@ -143,7 +143,7 @@
 				<div id="choosecurrency" class="startpanel" data-prev="entername">
 					<div class="panelwrap">
 						<div class="startcenter">
-							<h2>I would like to get paid in:</h2>
+							<h2 class="tl_page6">I would like to get paid in:</h2>
 							<ul id="allcurrencies" class="applist">
 							</ul>
 						</div>
@@ -214,7 +214,7 @@
 			<div class="panelwrap flex">
 				<div class="startcenter">
 					<h1>Bitrequest</h1>
-					<h2>Accept crypto anywhere</h2>
+					<h2 class="tl_page4">Accept crypto anywhere</h2>
 					<div id="startloader">
 						<div class="lds-ring"><div></div><div></div><div></div><div></div></div>
 					</div>
@@ -243,6 +243,10 @@
 		<script src="assets_js_lib_cashaddr.js?v=0.184"></script>
 		<script src="assets_js_lib_sha3.min.js?v=0.184"></script>
 		<script src="assets_js_lib_jquery.js?v=0.184"></script>
+		<script src="assets_js_bitrequest_lang_en.js?v=0.184"></script>
+		<script src="assets_js_bitrequest_lang_nl.js?v=0.184"></script>
+		<script src="assets_js_bitrequest_lang_fr.js?v=0.184"></script>
+		<script src="assets_js_bitrequest_lang_controller.js?v=0.184"></script>
 		<script src="assets_js_br_query.js?v=0.184"></script>
 		<script src="assets_js_bitrequest_config.js?v=0.184"></script>
 		<script src="assets_js_lib_biginteger.js?v=0.184"></script>

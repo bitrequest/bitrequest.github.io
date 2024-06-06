@@ -392,7 +392,7 @@ function api_src(thislist, api_data) {
         aoi_name = (api_data.name),
         api_title = (aoi_name == "mempool.space") ? api_url : aoi_name,
         api_source = (api_title) ? api_title : api_url_short;
-    thislist.data("source", api_source).find(".api_source").html("<span class='src_txt' title='" + api_url_short + "'>source: " + api_source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
+    thislist.data("source", api_source).find(".api_source").html("<span class='src_txt' title='" + api_url_short + "'>" + translate("source") + ": " + api_source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
 }
 
 function api_callback(requestid, nocache) {
@@ -457,9 +457,11 @@ function api_eror_msg(apisrc, error) {
     }
     if (apisrc) {
         let keyfail = (error.apikey === true),
-            api_bttn = (keyfail === true) ? "<div id='add_api' data-api='" + apisrc + "' class='button'>Add " + apisrc + " Api key</div>" : "",
-            t_op = (apisrc) ? "<span id='proxy_dialog' class='ref'>Try other proxy</span>" : "",
-            content = "<h2 class='icon-blocked'>" + errorcode + "</h2><p class='doselect'><strong>Error: " + errormessage + "<br/><br/>" + t_op + "</p>" + api_bttn;
+            api_bttn = (keyfail === true) ? "<div id='add_api' data-api='" + apisrc + "' class='button'>" + translate("addapikey", {
+                "apisrc": apisrc
+            }) + "</div>" : "",
+            t_op = (apisrc) ? "<span id='proxy_dialog' class='ref'>" + translate("tryotherproxy") + "</span>" : "",
+            content = "<h2 class='icon-blocked'>" + errorcode + "</h2><p class='doselect'><strong>" + translate("error") + ": " + errormessage + "<br/><br/>" + t_op + "</p>" + api_bttn;
         popdialog(content, "canceldialog");
     }
 }
@@ -576,7 +578,7 @@ function append_tx_li(txd, rqtype, ln) {
             valstr = (ln && !conf) ? "" : ccval_rounded + " " + set_ccsymbol + lnstr,
             date_format = (transactiontime) ? short_date(transactiontime) : "",
             confirmed = (conf && conf >= setconfirmations),
-            conftitle = (conf === false) ? "Confirmed transaction" : conf + " / " + setconfirmations + " confirmations",
+            conftitle = (conf === false) ? "Confirmed transaction" : conf + " / " + setconfirmations + " " + translate("confirmations"),
             checked_span = "<span class='icon-checkmark' title='" + conftitle + "'></span>",
             confspan = (conf) ? (confirmed) ? checked_span :
             "<div class='txli_conf' title='" + conftitle + "'><div class='confbar'></div><span>" + conftitle + "</span></div>" :
@@ -626,9 +628,11 @@ function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, 
             localrate = (lc_upper == "USD") ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(6) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2),
             conf_var = (conf === false) ? "Confirmed" : (conf && setconfirmations) ? conf + "/" + setconfirmations : "",
             cf_info = "\nConfirmations: " + conf_var;
-        return "Historic data (" + fulldateformat(new Date((timestamp - timezone)), "en-us") + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(6) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src + cf_info;
+        return "Historic data (" + fulldateformat(new Date((timestamp - timezone)), langcode) + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(6) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src + cf_info;
     }
-    let resp = "Failed to get historical " + ccsymbol + " price data";
+    let resp = translate("failedhistoric", {
+        "ccsymbol": ccsymbol
+    });
     notify(resp);
     return resp;
 }
@@ -653,15 +657,17 @@ function compareamounts(rd) {
                 offset = Math.abs(now() - (firstinput - timezone)),
                 one_tx = (txlist_length === 1) ? true : false,
                 recent = (offset < 300000 && one_tx),
-                recent_dat = false;
-            if (iscrypto) {
-                let confirmations_cc = 0,
-                    paymenttimestamp_cc,
-                    txhash_cc,
-                    thissum_cc = 0,
-                    status_cc = "pending",
-                    pending_cc = pendingstatus,
-                    confirmed_cc = false,
+                recent_dat = false,
+                cc_amount = parseFloat(rd.cc_amount),
+                thissum_cc = 0,
+                status_cc = "pending",
+                paymenttimestamp_cc,
+                txhash_cc,
+                confirmations_cc = 0,
+                pending_cc = pendingstatus,
+                margin = 0.95;
+            if (iscrypto || recent) {
+                let confirmed_cc = false,
                     tx_counter = 0,
                     txreverse = (txlist_length > 1) ? txlist.get().reverse() : txlist;
                 $(txreverse).each(function(i) {
@@ -688,8 +694,6 @@ function compareamounts(rd) {
                         });
                     };
                 });
-                let cc_amount = parseFloat(rd.cc_amount),
-                    margin = 0.95;
                 if (thissum_cc >= cc_amount * margin) { // compensation for small fluctuations in rounding amount
                     if (confirmed_cc === false) { // check confirmations outside the loop
                         status_cc = "pending",
@@ -709,7 +713,7 @@ function compareamounts(rd) {
                     exchangerates = br_get_session("exchangerates", true),
                     cc_xrates = br_get_session("xrates_" + ccsymbol, true);
                 if (exchangerates && cc_xrates) {
-                    let fiat_exchangerates = xchangerates.fiat_exchangerates,
+                    let fiat_exchangerates = exchangerates.fiat_exchangerates,
                         local_xrate = (fiat_exchangerates) ? fiat_exchangerates[rd.fiatcurrency] : null,
                         usd_eur_xrate = (fiat_exchangerates) ? fiat_exchangerates.usd : null;
                     if (local_xrate && usd_eur_xrate) {
@@ -884,6 +888,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
     api_proxy({
         "api": api,
         "search": search,
+        "proxy": true,
         "cachetime": 86400,
         "cachefolder": "1d",
         "params": {
@@ -928,7 +933,8 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                         "apisrc": api,
                         "lcrate": lcrate,
                         "usdrate": usdrate,
-                        "lcsymbol": lcsymbol
+                        "lcsymbol": lcsymbol,
+                        "fetched": false
                     },
                     historic_object = compare_historic_prices(api, values, data, thistimestamp),
                     historic_price = historic_object.price;
@@ -1054,24 +1060,25 @@ function compare_historic_prices(api, values, price_array, thistimestamp) {
             let historic_timestamp = historic_object.timestamp,
                 historic_price = historic_object.price;
             if (historic_timestamp > thistimestamp) {
-                values["timestamp"] = historic_timestamp,
-                    values["price"] = historic_price,
-                    values["fetched"] = true;
+                values.timestamp = historic_timestamp,
+                    values.price = historic_price,
+                    values.fetched = true;
                 return false;
             }
         }
     });
-    let fetched = values.fetched;
-    if (fetched && fetched === true) {
+    if (values.fetched) {
         // check if historical prices are fetched succesfully, if true do nothing
     } else { // if no matching timestamp get latest
         let lastitem = price_array[price_array.length - 1],
             last_historic_object = (api == "coincodex") ? get_historic_object_coincodex(lastitem) :
             (api == "coingecko") ? get_historic_object_coingecko(lastitem) :
             get_historic_object_coinpaprika(lastitem);
-        values.timestamp = last_historic_object.timestamp,
-            values.price = last_historic_object.price,
-            values.fetched = false;
+        if (last_historic_object) {
+            values.timestamp = last_historic_object.timestamp,
+                values.price = last_historic_object.price,
+                values.fetched = false;
+        }
     }
     return values;
 }

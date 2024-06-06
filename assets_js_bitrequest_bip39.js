@@ -440,7 +440,7 @@ function make_seed() {
     $(document).on("click", "#option_makeseed", function() {
         let currency = $(this).attr("data-currency");
         if (hasbip === true) {
-            topnotify("You already have a seed");
+            topnotify(translate("alreadyhavesecretphrase"));
             return
         }
         canceldialog();
@@ -460,7 +460,7 @@ function restore_seed() {
         if (hasbip === true) {
             return false;
         }
-        let result = confirm("Restore seed?");
+        let result = confirm(translate("resoresecretphrase") + "?");
         if (result === true) {
             let seedid = $(this).attr("data-seedid");
             canceloptions();
@@ -498,7 +498,7 @@ function restore_seed_verify() {
                 return
             }
             shake($("#bip39phrase"));
-            topnotify("wrong seed");
+            topnotify(translate("wrongsecretphrase"));
             return
         }
         topnotify(verify);
@@ -521,7 +521,7 @@ function manage_bip32(dat) {
                     "content": [{
                         "div": {
                             "class": "inputwrap",
-                            "content": "<p>Funds received by addresses generated from your secret phrase can not be spend by Bitrequest.<br/>To spend your funds you wil need to restore your secret phrase in a <a href='https://www.bitrequest.io/compatible-wallets' target='_blank' class='ref'>compatible wallet.</a></p>"
+                            "content": "<p>" + translate("cannotbespend") + "</p>"
                         },
                     }]
                 }
@@ -544,7 +544,7 @@ function manage_bip32(dat) {
                             }]
                         },
                         "span": {
-                            "content": "I understand and am ok with this."
+                            "content": translate("understandandok")
                         }
 
                     }]
@@ -563,7 +563,7 @@ function manage_bip32(dat) {
         content = $(template_dialog({
             "id": "disclaimer_dialog",
             "icon": "icon-warning",
-            "title": "Disclaimer!",
+            "title": translate("disclaimer"),
             "elements": ddat
         })).data(data);
     if ($("#option_makeseed").length) {
@@ -587,7 +587,7 @@ function submit_disclaimer() {
             canceldialog();
             bip39(data);
         } else {
-            popnotify("error", "Please consent to continue.");
+            popnotify("error", translate("consent"));
         }
     })
 }
@@ -604,10 +604,10 @@ function bip39(dat) {
         spclass = (type == "nobip") ? " showphrase" : " hidephrase",
         savedseed = (hasbip === true) ? (phrase_obj) ? phrase_obj.pob.join(" ") : false : false,
         seed = (restore) ? "" : (savedseed) ? savedseed : newseed(12),
-        remindp = (dtype == "restore") ? "<p>Make sure to backup your current <span id='toseed'>Secret phrase</span>. It will be overwritten.</p>" : "<p>Please verify your secret phrase.</p>",
-        verifyheader = (dtype == "restore") ? "Verify Current seed phrase:" : "Verify Backup:",
-        save_str = (restore) ? "Enter your secret phrase:" : "Write down your secret phrase and put it somewhere safe.",
-        verify_str = (restore) ? "<div id='restore_seed' class='button' data-seedid='" + data.seedid + "'>Restore</div>" : "<div id='cfbu2' class='button'>I've backed it up</div>",
+        remindp = (dtype == "restore") ? "<p>" + translate("overwritten") + "</p>" : "<p>" + translate("pleaseverify") + "</p>",
+        verifyheader = (dtype == "restore") ? translate("verifycurrent") : translate("verifybackup"),
+        save_str = (restore) ? translate("entersecretphrase") : translate("writedownsecretphrase"),
+        verify_str = (restore) ? "<div id='restore_seed' class='button' data-seedid='" + data.seedid + "'>" + translate("restorebttn") + "</div>" : "<div id='cfbu2' class='button'>" + translate("ivebackeditup") + "</div>",
         markup = $("<div id='seed_steps' class='panel" + step + "' data-goal='" + dtype + "'>\
         <div id='seed_step1' class='seed_step'>\
             <div class='ss_header'>\
@@ -615,14 +615,14 @@ function bip39(dat) {
             </div>\
             <div class='ss_content flex'>\
                 <div class='ss_content_box'>\
-                    <h2 style='color:#eeac57'>Important!</h2>\
-                    <p><strong>You are about to become your own bank.</strong><br/>In the next screen, you will see your secret phrase. <strong style='color:#eeac57'>Make sure to write it down and put it somewhere safe!</strong></p>\
-                    <p><strong>If you lose your device, uninstall your application or clear your browserdata, you will need your secret phrase to recover your funds!</strong></p>\
-                    <p class='p_warning' style='text-transform:uppercase'><strong>If you lose your phrase,<br/>you will lose your money!</strong></p>\
+                    <h2 style='color:#eeac57'>" + translate("important") + "</h2>\
+                    <p><strong>" + translate("abouttobecome") + "</strong><br/>" + translate("inthenextscreen") + " <strong style='color:#eeac57'>" + translate("makesure") + "</strong></p>\
+                    <p><strong>" + translate("ifyouloseyourdevice") + "</strong></p>\
+                    <p class='p_warning' style='text-transform:uppercase'><strong>" + translate("ifyouloseyourphrase") + "</strong></p>\
                 </div>\
             </div>\
             <div class='ss_footer'>\
-                <div id='cfbu1' class='button'>I understand!</div>\
+                <div id='cfbu1' class='button'>" + translate("understand") + "</div>\
             </div>\
         </div>\
         <div id='seed_step2' class='seed_step'>\
@@ -632,12 +632,12 @@ function bip39(dat) {
             </div>\
             <div class='ss_content flex'>\
                 <div id='phrase_cb' class='ss_content_box" + spclass + "'>\
-                    <h2 id='showphrase'><span class='icon-eye-blocked eye'></span><span class='icon-eye eye'></span>Secret Phrase:</h2>\
+                    <h2 id='showphrase'><span class='icon-eye-blocked eye'></span><span class='icon-eye eye'></span>" + translate("bip39_passphrase") + ":</h2>\
                     <p>" + save_str + "</p>\
                     <div id='phrasewrap'>\
                         <div id='bip39phrase' contenteditable='" + edit + "' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' lang='en' class='noselect'>" + seed + "</div>\
                         <div id='phrase_actions'>\
-                            <div id='copyphrase' class='button'>Copy</div>\
+                            <div id='copyphrase' class='button'>" + translate("copy") + "</div>\
                             <div id='phrase_info' title='seed info'><span class='icon-info'></span></div>\
                         </div>\
                         <div id='phraseblur'></div>\
@@ -651,11 +651,11 @@ function bip39(dat) {
                 <div class='icon-arrow-left2 ssnav'></div>\
             </div>\
             <div class='ss_content flex'>\
-                <div class='ss_content_box'><h2>" + verifyheader + "</h2><p id='reminder_seed_backup'>Congratulations. You are now your own bank!<br/></p>\
-                <p id='gpp'>With great power comes great responsibility.<br/><strong>Remember to backup your <span id='toseed'>Secret phrase</span>.</strong></p>" + remindp + "<div id='seed_verify_box'>\
+                <div class='ss_content_box'><h2>" + verifyheader + "</h2><p id='reminder_seed_backup'>" + translate("congratulations") + "<br/></p>\
+                <p id='gpp'>" + translate("withgreatpower") + "<br/><strong>" + translate("remember") + "</strong></p>" + remindp + "<div id='seed_verify_box'>\
                     </div>\
                     <div id='cfbu3_w'>\
-                        <div id='cfbu3' class='button'>I do this later</div>\
+                        <div id='cfbu3' class='button'>" + translate("idothislater") + "</div>\
                     </div>\
                 </div>\
             </div>\
@@ -766,19 +766,21 @@ function check_phrase(phrase) {
         words = phrase.split(" "),
         phraselength = words.length;
     if (phraselength < 2) {
-        return "Blank mnemonic";
+        return translate("emptyphrase");
     }
     if (phraselength === 12) {
         if (checkmnemonic(phrase) === false) {
             let missing_word = missing_words(words);
             if (missing_word) {
-                return missing_word + " not in wordlist";
+                return translate("notinwordlist", {
+                    "missing_word": missing_word
+                });
             }
-            return "Secret phrase not Bip39 compatible";
+            return translate("notbip39compatible");
         }
         return true;
     }
-    return "Secret phrase must be 12 characters";
+    return translate("mustbe12characters");
 }
 
 function get_phrase() {
@@ -829,7 +831,7 @@ function verify_phrase(words, count) {
         let word = word_obj.word,
             index = word_obj.index,
             af_attr = (i === 0) ? " autofocus" : "",
-            input = "<div class='checkword_box uncheck'><input type='text' placeholder='word #" + index + "' data-word='" + word + "'" + af_attr + " autocorrect='off' autocapitalize='none'/><span class='icon-checkmark'></span></div>";
+            input = "<div class='checkword_box uncheck'><input type='text' placeholder='" + translate("word") + " #" + index + "' data-word='" + word + "'" + af_attr + " autocorrect='off' autocapitalize='none'/><span class='icon-checkmark'></span></div>";
         verify_box.append(input);
     });
 }
@@ -864,7 +866,7 @@ function verify_words() {
             }
             let step3 = $("#seed_step3");
             if (step3.hasClass("delete")) {
-                let result = confirm("Are you sure you want to delete your secret phrase?");
+                let result = confirm(translate("areyousuredfp"));
                 if (result === true) {
                     br_remove_local("bpdat");
                     let initdat = br_get_local("init", true),
@@ -877,12 +879,12 @@ function verify_words() {
                     bipid = false;
                     move_seed_cb();
                     hide_seed_panel();
-                    notify("Secret phrase deleted");
+                    notify(translate("secretphrasedeleted"));
                 }
                 return
             }
             if (step3.hasClass("replace")) {
-                let result = confirm("Are you sure you want to restore your seed from backup? Your current seed will be erased.");
+                let result = confirm(translate("restoresecretphrasefrombackup"));
                 if (result === true) {
                     let bu_dat = $("#seed_steps").data().dat;
                     restore_callback(bu_dat, true);
@@ -929,14 +931,14 @@ function continue_seed() {
 
 function skip_verify() {
     $(document).on("click", "#cfbu3", function() {
-        let content = "<h2><span class='icon-warning' style='color:#B33A3A'></span>Warning! Continue at your own risk.</h2><p><strong>If you lose your device, uninstall your application or clear your browserdata, you'll need your secret phrase to recover your funds!</strong></p>";
+        let content = "<h2><span class='icon-warning' style='color:#B33A3A'></span>" + translate("continueatownrisk") + "</h2><p><strong>" + translate("ifyouloseyourdevice") + "</strong></p>";
         popdialog(content, "finish_seed");
     })
 }
 
 function finish_seed() {
     canceldialog();
-    if (haspin() === true) {
+    if (haspin(true) === true) {
         seed_callback();
         return
     }
@@ -948,9 +950,7 @@ function finish_seed() {
 }
 
 function seed_callback() {
-    if (hasbip === true) {
-    }
-    else {
+    if (hasbip === true) {} else {
         let seed_object = {},
             seed_string = btoa(JSON.stringify(phrasearray)),
             phraseid = hmacsha(seed_string, "sha256").slice(0, 8);
@@ -965,7 +965,7 @@ function seed_callback() {
         bipobj = savedat,
             hasbip = true,
             bipid = phraseid;
-        notify("🎉 Congratulations. You are now your own bank! 🎉");
+        notify("🎉 " + translate("congratulations") + " 🎉");
         let seedid = phraseid,
             savedseed = phrasearray.join(" ");
         if (body.hasClass("showstartpage")) {
@@ -992,9 +992,9 @@ function seed_callback() {
         iodat.bipv = "yes";
         br_set_local("init", iodat, true);
         bipv = true;
-        topnotify("Passphrase verified");
+        topnotify(translate("passphraseverified"));
     } else {
-        notify("Please backup your secret phrase asap");
+        notify(translate("backupasap"));
     }
     hide_seed_panel();
 }
@@ -1272,11 +1272,12 @@ function get_uniques(arr) {
 function copy_phrase() {
     $(document).on("click", "#copyphrase", function() {
         let phrase = get_phrase(),
-            verify = check_phrase(phrase);
+            verify = check_phrase(phrase),
+            secret = translate("bip39_passphrase");
         if (verify === true) {
-            let result = confirm("Copy secret phrase?");
+            let result = confirm(translate("copy") + " " + secret + "?");
             if (result === true) {
-                copytoclipboard(phrase, "secret phrase");
+                copytoclipboard(phrase, secret);
             }
         } else {
             topnotify(verify);
@@ -1298,7 +1299,7 @@ function show_phrase() {
             }
             all_pinpanel({
                 "func": show_phrase_callback
-            })
+            }, null, true)
             return
         }
         show_phrase_callback();
@@ -1311,7 +1312,7 @@ function show_phrase_callback() {
 
 function delete_phrase_trigger() {
     $(document).on("click", "#deletephrase", function() {
-        let content = "<h2 style='color:#B33A3A'><span class='icon-warning'></span>Warning! Deleting your seed may result in lost of funds.</h2><p><strong>Continue only if you have a backup of your secret phrase.</strong></p>";
+        let content = "<h2 style='color:#B33A3A'><span class='icon-warning'></span>" + translate("deletingyoursecretphrase") + "</h2><p><strong>" + translate("continuewithbackup") + "</strong></p>";
         popdialog(content, "delete_phrase_verify");
     });
 }
@@ -1678,12 +1679,12 @@ function phrase_info_pu(coin) {
         },
         singleclass = (coin) ? "single" : "",
         rootclass = (coin) ? "pd_" + coin : "pd_bitcoin",
-        sourceed_str = (coin) ? "<li><strong>Source: </strong> Seed</li>" : "<li><strong>BIP39 Seed: </strong><span class='adboxl adbox select' data-type='BIP39 Seed'>" + seed + "</span></li>",
+        sourceed_str = (coin) ? "<li><strong>" + translate("source") + ": </strong> Seed</li>" : "<li><strong>BIP39 Seed: </strong><span class='adboxl adbox select' data-type='BIP39 Seed'>" + seed + "</span></li>",
         coindat = (coin) ? getcoindata(coin) : null,
         cc_icon = (coin) ? getcc_icon(coindat.cmcid, coindat.ccsymbol + "-" + coin, coindat.erc20) : "",
         header_str = (coin) ? "<h2>" + cc_icon + " <span>" + coin + " Key Derivation</span></h2>" : "",
         sbu_val = get_setting("backup", "sbu"),
-        sbu_str = (has_datenc() === true) ? "<li class='clearfix'><strong>Backup seed:</strong><div id='toggle_sbu_span' class='ait'>" + switchpanel(sbu_val, " global") + "</div></li>" : "",
+        sbu_str = (has_datenc() === true) ? "<li class='clearfix'><strong>" + translate("backupsecretphrase") + ":</strong><div id='toggle_sbu_span' class='ait'>" + switchpanel(sbu_val, " global") + "</div></li>" : "",
         del_phr_str = (coin) ? "" : (hasbip === true) ? sbu_str + "<li class='clearfix'><div id='deletephrase' class='icon-bin'></div></li>" : "",
         content = $("<div id='ad_info_wrap' class='" + singleclass + "' data-class='" + rootclass + "'>" + header_str + "<ul>" +
             sourceed_str +
@@ -1701,7 +1702,7 @@ function phrase_info_pu(coin) {
         <li id='xpub_box' class='clearfix noline'>\
         </li>\
         <li>\
-            <div id='bip_mi'><strong>Compatible wallets: </strong><span class='xpref ref'>hide</span></div>\
+            <div id='bip_mi'><strong>" + translate("compatiblewallets") + ": </strong><span class='xpref ref'>" + translate("hide") + "</span></div>\
             <div id='bip_mibox' class='clearfix drawer'>\
                 <div id='supported_wallets'>\
                 </div>\
@@ -1759,11 +1760,11 @@ function phrase_info_pu(coin) {
                 secret_spend_key_to_words(get_ssk(seed, true)) : false,
                 xmr_phrase_box = (xmr_phrase) ? "<div><strong>XMR Seed words: </strong><br/><span class='adboxl adbox select' data-type='XMR Seed words'>" + xmr_phrase + "</span></div>" : "",
                 dp_node = $("<div class='d_path" + coinclass + "'>\
-                <div class='d_path_header'><strong>Derivation path: </strong><span class='ref'>" + root_path + "</span></div>" +
+                <div class='d_path_header'><strong>" + translate("derivationpath") + ": </strong><span class='ref'>" + root_path + "</span></div>" +
                     xmr_phrase_box +
                     "<div class='d_path_body drawer clearfix'>\
                         <div class='td_bar'>\
-                            <div class='td_next button'>Next</div><div class='td_prev button'>Prev</div>\
+                            <div class='td_next button'>" + translate("next") + "</div><div class='td_prev button'>" + translate("prev") + "</div>\
                         </div>\
                         <ul class='td_box'>" + derivelist + "</ul>\
                     </div>\
@@ -1773,7 +1774,7 @@ function phrase_info_pu(coin) {
                 segw_node = "";
             if (x_pub) {
                 xp_node = $("<div class='xpub_ib clearfix" + coinclass + "' data-xpub='" + x_pub + "'>\
-                    <div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>show</span></div>\
+                    <div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>" + translate("show") + "</span></div>\
                         <div class='xp_span drawer'>\
                             <div class='qrwrap flex'>\
                                 <div class='qrcode'></div><img src='" + icon_src + "' class='cmc_icon'>\
@@ -1799,8 +1800,8 @@ function phrase_info_pu(coin) {
 }
 
 function compatible_wallets(coin) {
-    let content = $("<div id='ad_info_wrap' class='' data-class='pd_" + coin + "'><h2><span class='icon-warning' style='color:#B33A3A'/>Bitrequest can not send funds!</span></h2><ul>\
-            <li class='noline'><strong style='color:#6a6a6a'>To send funds you need to restore your <span class='show_bip39 ref'>12 word secret phrase</span> in a bip39 compatible wallet:</strong></li>\
+    let content = $("<div id='ad_info_wrap' class='' data-class='pd_" + coin + "'><h2><span class='icon-warning' style='color:#B33A3A'/>" + translate("cannotsendfunds") + "</span></h2><ul>\
+            <li class='noline'><strong style='color:#6a6a6a'>" + translate("importtosend") + "</strong></li>\
             <li id='pi_li' class='noline'>\
                 <div id='pi_icons'>\
                 </div>\
@@ -1867,7 +1868,7 @@ function toggle_dpaths() {
             d_body.slideDown(200);
             $(".drawer").not(d_body).slideUp(200);
         }
-        $(".xpref").text("show");
+        $(".xpref").text(translate("show"));
     })
 }
 
@@ -1933,14 +1934,14 @@ function phrase_moreinfo() {
             show_cp = thisbttn.find(".xpref"),
             bmb = $("#bip_mibox");
         if (bmb.is(":visible")) {
-            show_cp.text("show");
+            show_cp.text(translate("show"));
             bmb.slideUp(200);
         } else {
-            show_cp.text("hide");
+            show_cp.text(translate("hide"));
             bmb.slideDown(200);
             $(".drawer").not(bmb).slideUp(200);
         }
-        $(".xpref").not(show_cp).text("show");
+        $(".xpref").not(show_cp).text(translate("show"));
     })
 }
 
@@ -1952,7 +1953,7 @@ function phrase_showxp() {
             show_cp = xpub_box.find(".xpref"),
             bmb = $(".xp_span");
         if (bmb.is(":visible")) {
-            show_cp.text("show");
+            show_cp.text(translate("show"));
             bmb.slideUp(200);
         } else {
             if (xpub_box.hasClass("rendered")) {} else {
@@ -1964,10 +1965,10 @@ function phrase_showxp() {
                 });
                 xpub_box.addClass("rendered");
             }
-            show_cp.text("hide");
+            show_cp.text(translate("hide"));
             bmb.slideDown(200);
             $(".drawer").not(bmb).slideUp(200);
         }
-        $(".xpref").not(show_cp).text("show");
+        $(".xpref").not(show_cp).text(translate("show"));
     })
 }

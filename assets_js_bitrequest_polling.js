@@ -428,7 +428,7 @@ function confirmations(tx_data, direct, ln) {
                 "status": "canceled",
                 "confirmations": 0
             }, true);
-            notify("Invoice canceled", 500000);
+            notify(translate("invoicecanceled"), 500000);
             forceclosesocket();
             return
         }
@@ -474,7 +474,7 @@ function confirmations(tx_data, direct, ln) {
                 "confirmations": xconf,
                 "set_confirmations": setconfirmations
             });
-            brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), "en-us"));
+            brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), langcode));
             if (iscrypto) {} else {
                 brstatuspanel.find("span.receivedcrypto").text(rccf + " " + currencysymbol);
             }
@@ -491,11 +491,11 @@ function confirmations(tx_data, direct, ln) {
                         } else {
                             playsound(cashier);
                         }
-                        let status_text = (requesttype == "incoming") ? "Payment sent" : "Payment received";
+                        let status_text = (requesttype == "incoming") ? translate("paymentsent") : translate("paymentreceived");
                         pmd.addClass("transacting").attr("data-status", "paid");
                         brheader.text(status_text);
                         request.status = "paid",
-                        request.pending = "polling";
+                            request.pending = "polling";
                         saverequest(direct);
                         $("span#ibstatus").fadeOut(500);
                         closenotify();
@@ -504,7 +504,7 @@ function confirmations(tx_data, direct, ln) {
                             playsound(blip);
                         }
                         pmd.addClass("transacting").attr("data-status", "pending");
-                        let bctext = (ln) ? "Waiting for payment" : "Transaction broadcasted";
+                        let bctext = (ln) ? translate("waitingforpayment") : translate("txbroadcasted");
                         brheader.text(bctext);
                         request.status = "pending",
                             request.pending = "polling";
@@ -514,7 +514,7 @@ function confirmations(tx_data, direct, ln) {
                     return
                 }
                 if (exact) {} else {
-                    brheader.text("Insufficient amount");
+                    brheader.text(translate("insufficientamount"));
                     pmd.addClass("transacting").attr("data-status", "insufficient");
                     request.status = "insufficient",
                         request.pending = "scanning";

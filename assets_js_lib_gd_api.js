@@ -82,7 +82,6 @@ function fetch_creds(k) {
                         if (error) {
                             let ed = result.error_description,
                                 em = (ed) ? " || " + ed : "";
-                            console.log(result);
                             notify(error + em);
                             return
                         }
@@ -152,7 +151,6 @@ function fetch_access(rt, callback) {
                         if (error) {
                             let ed = result.error_description,
                                 em = (ed) ? " || " + ed : "";
-                            console.log(result);
                             if (ed.indexOf("expired") >= 0 || ed.indexOf("revoked") >= 0) {
                                 br_remove_local("rt");
                                 oauth_pop_delay();
@@ -204,7 +202,7 @@ function rt_obj() {
 
 function init_login_dialog(p) {
     if (hostlocation == "local") {
-        notify("GoogleAuth not available");
+        notify(translate("ganot"));
         return
     }
     if (p.expired) {
@@ -245,7 +243,7 @@ function oauth_pop(ab) {
                 }]
             },
             "span": {
-                "content": "Stop using Google Drive Backup."
+                "content": translate("stopgauth")
             }
 
         }]) : "",
@@ -255,13 +253,13 @@ function oauth_pop(ab) {
                     "content": [{
                             "div": {
                                 "class": "inputwrap",
-                                "content": "<p><strong>Safely backup your appdata.</strong><br/>Sync your data securely with Google Drive.</p>"
+                                "content": "<p><strong>" + translate("gauthsafely") + "</strong><br/>" + translate("gauthsync") + "</p>"
                             },
                         },
                         {
                             "div": {
                                 "class": "inputwrap",
-                                "content": "<div id='oauth_onload'><span class='icon-google2'></span>Sign in</div>"
+                                "content": "<div id='oauth_onload'><span class='icon-google2'></span>" + translate("signin") + "</div>"
                             }
                         }
                     ]
@@ -279,7 +277,7 @@ function oauth_pop(ab) {
                     "class": "submit",
                     "attr": {
                         "type": "submit",
-                        "value": "ok"
+                        "value": translate("okbttn")
                     }
                 }
             }
@@ -287,7 +285,7 @@ function oauth_pop(ab) {
         content = template_dialog({
             "id": "gdbu_dialog",
             "icon": "icon-googledrive",
-            "title": "Back up to Google Drive",
+            "title": translate("backuptogd"),
             "elements": ddat
         });
     popdialog(content, "triggersubmit");
@@ -315,7 +313,7 @@ function submit_gdbu_dialog() {
 
 function g_login() {
     if (hostlocation == "local") {
-        notify("GoogleAuth not available");
+        notify(translate("ganot"));
         return
     }
     let p = GD_pass();
@@ -337,7 +335,7 @@ function g_login() {
 
 function gdlogin_callbacks(close) {
     html.addClass("gdauth");
-    notify("Successfully signed in");
+    notify(translate("gdsignedin"));
     resetchanges();
     adjust_sp();
     if (close) {
@@ -360,7 +358,7 @@ function adjust_sp() {
 }
 
 function g_logout() {
-    let result = confirm("Are you sure you want to stop using Google Drive Backup?");
+    let result = confirm(translate("stopgdalert"));
     if (result === true) {
         deactivate();
         gdlogout_callbacks();
@@ -385,7 +383,7 @@ function deactivate() {
 
 function gdlogout_callbacks() {
     html.removeClass("gdauth");
-    notify("Successfully signed out");
+    notify(translate("gdsignedout"));
     let switch_panel = $("#popup.showpu .switchpanel");
     if (switch_panel.length) {
         switch_panel.removeClass("true").addClass("false");
@@ -445,7 +443,7 @@ function updateappdata(p) {
                             let resp = resp_obj.error;
                             if (resp) {
                                 if (resp.code == 401) {
-                                    notify("Unauthorized");
+                                    notify(translate("unauthorized"));
                                     return
                                 }
                                 if (resp.code == 404) {
@@ -455,7 +453,7 @@ function updateappdata(p) {
                             }
                         }
                     }
-                    notify("error");
+                    notify(translate("error"));
                 }
             });
             return
@@ -568,14 +566,14 @@ function listappdata() {
                     thistrigger.removeClass("true");
                     backuplist.slideUp(300);
                     importjsonlist.slideDown(300);
-                    notify("Unauthorized");
+                    notify(translate("unauthorized"));
                     return
                 }
                 if (errorThrown == "Not Found") {
                     createfile(); // create file
                     return
                 }
-                notify("error");
+                notify(translate("error"));
             }
         });
         return
@@ -589,7 +587,9 @@ function deletefiletrigger() {
         if (p.pass) {
             let thislist = $(this).parent("li"),
                 fileid = thislist.attr("data-gdbu_id"),
-                result = confirm("Delete " + thislist.text() + "?");
+                result = confirm(translate("deletefile", {
+                    "file": thislist.text()
+                }));
             if (result === true) {
                 deletefile(fileid, thislist, p.token);
             }
@@ -612,15 +612,15 @@ function deletefile(fileId, thislist, pass) {
     }).done(function(e) {
         if (thislist) {
             thislist.slideUp(300);
-            notify("File deleted");
+            notify(translate("filedeleted"));
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         if (textStatus == "error") {
             if (errorThrown == "Not Found") {
-                notify("Error: File not found");
+                notify(translate("error") + ": " + translate("filenotfound"));
                 return
             }
-            notify("error");
+            notify(translate("error"));
         }
     });
 }

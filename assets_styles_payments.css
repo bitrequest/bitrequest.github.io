@@ -976,6 +976,7 @@ html.inframe #request_back {
 	color: #707070;
 	padding: 0 0 0.6em 0;
 	width: 100%;
+	text-transform: capitalize;
 }
 
 #scanqrib {

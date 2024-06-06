@@ -36,7 +36,8 @@ const ls_support = check_local(),
     (thishostname == localhostname) ? "selfhosted" : "unknown",
     wl = navigator.wakeLock,
     after_poll_timeout = 15000,
-    xss_alert = "xss attempt detected";
+    xss_alert = "xss attempt detected",
+    langcode = setlangcode(); // set saved or system language
 
 let scrollposition = 0,
     is_ios_app = false, // ios app fingerprint
@@ -207,7 +208,7 @@ function setsymbols() { //fetch fiat currencies from fixer.io api
             setsymbols();
             return
         }
-        let content = "<h2 class='icon-bin'>Api call failed</h2><p class='doselect'>" + textStatus + "<br/>api did not respond<br/><br/><span id='proxy_dialog' class='ref'>Try other proxy</span></p>";
+        let content = "<h2 class='icon-bin'>" + translate("apicallfailed") + "</h2><p class='doselect'>" + textStatus + "<br/>" + translate("apididnotrespond") + "<br/><br/><span id='proxy_dialog' class='ref'>" + translate("tryotherproxy") + "</span></p>";
         popdialog(content, "canceldialog");
     })
 }
@@ -248,7 +249,7 @@ function geterc20tokens_local() {
             storecoindata(data);
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        let content = "<h2 class='icon-bin'>Api call failed</h2><p class='doselect'>Unable to fetch tokeninfo</p>";
+        let content = "<h2 class='icon-bin'>" + translate("apicallfailed") + "</h2><p class='doselect'>" + translate("nofetchtokeninfo") + "</p>";
         popdialog(content, "canceldialog");
     });
 }
@@ -274,12 +275,21 @@ function storecoindata(data) {
     }
 }
 
-function haspin() {
-    let pinsettings = $("#pinsettings").data(),
+function haspin(set) {
+    const pinsettings = $("#pinsettings").data(),
         pinhash = pinsettings.pinhash;
     if (pinhash) {
-        let pinstring = pinhash.toString();
-        return (pinstring.length > 3 && pinsettings.locktime != "never");
+        const pinstring = pinhash.toString(),
+            plength = (pinstring.length > 3) ? true : false;
+        if (plength) {
+            if (set) {
+                return true;
+            }
+            if (pinsettings.locktime == "never") {
+                return false;
+            }
+            return true;
+        }
     }
     return false;
 }
@@ -606,8 +616,8 @@ function finishfunctions() {
 //checks
 
 function setlocales() {
-    html.attr("lang", language);
-    $("meta[property='og:locale']").attr("content", language);
+    html.attr("lang", langcode);
+    $("meta[property='og:locale']").attr("content", langcode);
     $("meta[property='og:url']").attr("content", w_loc.href);
 }
 
@@ -821,11 +831,11 @@ function pinvalidate(thispad) {
             if (callback) {
                 callback.func(callback.args);
             }
-            notify("Data saved");
+            notify(translate("datasaved"));
             enc_s(seed_decrypt(current_pin));
         } else {
             let pinfloat = $("#pinfloat");
-            topnotify("pincode does not match");
+            topnotify(translate("pinmatch"));
             if (navigator.vibrate) {} else {
                 playsound(funk);
             }
@@ -948,7 +958,7 @@ function startnext(thisnode) {
         $("#eninput").blur();
         return
     }
-    topnotify("Please enter your name");
+    topnotify(translate("enteryourname"));
 }
 
 function startprev(thisnode) {
@@ -1109,7 +1119,7 @@ function loadfunction(pagename, thisevent) {
         return
     }
     loadpageevent(pagename);
-    let title = pagename + " | " + apptitle;
+    let title = translate(pagename) + " | " + apptitle;
     settitle(title);
     cancel_url_dialogs();
 }
@@ -1232,7 +1242,7 @@ function confirm_missing_seed() {
             ds_checkbox = thisdialog.find("#dontshowwrap"),
             ds_checked = ds_checkbox.data("checked");
         if (pk_checked == true) {} else {
-            popnotify("error", "Confirm privatekey ownership");
+            popnotify("error", translate("confirmpkownership"));
             return false
         }
         if (ds_checked == true) { // whitlist seed id
@@ -1246,23 +1256,27 @@ function confirm_missing_seed() {
 
 function get_address_warning(id, address, pass_dat) {
     let seedstr = (pass_dat.xpubid) ? "Xpub" : "Seed",
-        rest_str = (seedstr == "Seed") ? (hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + pass_dat.seedid + "'>Restore seed</div>" : "";
+        rest_str = (seedstr == "Seed") ? (hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + pass_dat.seedid + "'>" + translate("resoresecretphrase") + "</div>" : "",
+        seedstrtitle = (seedstr == "Seed") ? translate("bip39_passphrase") : seedstr;
     return $("<div class='formbox addwarning' id='" + id + "'>\
-        <h2 class='icon-warning'>Warning!</h2>\
+        <h2 class='icon-warning'>" + translate("warning") + "</h2>\
         <div class='popnotify'></div>\
-        <p><strong>" + seedstr + " for '<span class='adspan'>" + address + "</span>' is missing.<br/>Are you sure you want to use this address?</strong></p>\
+        <p><strong>" + translate("missingkeywarning", {
+            "seedstrtitle": seedstrtitle,
+            "address": address
+        }) + "</strong></p>\
         <form class='addressform popform'>\
             <div class='inputwrap'>\
                 <div class='pk_wrap noselect'>\
                     <div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
-                    <span>I own the seed / private key of this address</span>\
+                    <span>" + translate("pkownership") + "</span>\
                 </div>\
                 <div class='pk_wrap noselect'>\
                     <div id='dontshowwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
-                    <span>Don't show again</span>\
+                    <span>" + translate("dontshowagain") + "</span>\
                 </div>" + rest_str +
         "</div>\
-            <input type='submit' class='submit' value='OK'>\
+            <input type='submit' class='submit' value='" + translate("okbttn") + "'>\
         </form>\
     </div>").data(pass_dat);
 }
@@ -1298,7 +1312,7 @@ function payrequest() {
         let thisnode = $(this);
         if (offline === true && thisnode.hasClass("isfiat")) {
             // do not trigger fiat request when offline because of unknown exchange rate
-            notify("Unable to get exchange rate");
+            notify(translate("xratesx"));
             return
         }
         let thisrequestlist = thisnode.closest("li.rqli"),
@@ -1419,7 +1433,7 @@ function confirm_missing_seed_toggle() {
             ds_checkbox = thisdialog.find("#dontshowwrap"),
             ds_checked = ds_checkbox.data("checked");
         if (pk_checked == true) {} else {
-            popnotify("error", "Confirm privatekey ownership");
+            popnotify("error", translate("confirmpkownership"));
             return
         }
         if (ds_checked == true) { // whitlist seed id
@@ -1858,16 +1872,20 @@ function payment_lookup(request_dat) {
         blockexplorer = get_blockexplorer(currency),
         bu_url = blockexplorer_url(currency, false, request_dat.erc20) + request_dat.address,
         content = "<div class='formbox'>\
-            <h2 class='icon-warning'><span class='icon-qrcode'/>No payment detected</h2>\
+            <h2 class='icon-warning'><span class='icon-qrcode'/>" + translate("nodetection") + "</h2>\
             <div id='ad_info_wrap'>\
-                <p><strong><a href='" + bu_url + "' target='_blank' class='ref check_recent'>Look for recent incoming " + currency + " payments on " + blockexplorer + " <span class='icon-new-tab'></a></strong></p>\
+                <p><strong>" + translate("lookuppayment", {
+            "bu_url": bu_url,
+            "currency": currency,
+            "blockexplorer": blockexplorer
+        }) + "</strong></p>\
                 <div class='pk_wrap noselect'>\
                     <div id='dontshowwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
-                    <span>Don't show again</span>\
+                    <span>" + translate("dontshowagain") + "</span>\
                 </div>\
             </div>\
             <div id='backupactions'>\
-                <div id='dismiss' class='customtrigger'>DISMISS</div>\
+                <div id='dismiss' class='customtrigger'>" + translate("dismiss") + "</div>\
             </div>\
             </div>";
     popdialog(content, "triggersubmit");
@@ -1878,7 +1896,9 @@ function check_recent() {
         e.preventDefault();
         let thisnode = $(this),
             thisurl = thisnode.attr("href"),
-            result = confirm("Open " + thisurl + "?");
+            result = confirm(translate("openurl", {
+                "url": thisurl
+            }));
         if (result === true) {
             open_share_url("location", thisurl);
         }
@@ -1922,12 +1942,12 @@ function recent_requests(recent_payments) {
     let addresslist = recent_requests_list(recent_payments);
     if (addresslist.length) {
         let content = "<div class='formbox'>\
-            <h2 class='icon-history'>Recent requests:</h2>\
+            <h2 class='icon-history'>" + translate("recentrequests") + ":</h2>\
             <div id='ad_info_wrap'>\
             <ul>" + addresslist + "</ul>\
             </div>\
             <div id='backupactions'>\
-                <div id='dismiss' class='customtrigger'>CANCEL</div>\
+                <div id='dismiss' class='customtrigger'>" + cancelbttn + "</div>\
             </div>\
             </div>";
         popdialog(content, "triggersubmit");
@@ -2096,29 +2116,37 @@ function addaddress(ad, edit) {
         derived = (ad.seedid || ad.xpubid),
         readonly = (edit === true) ? " readonly" : "",
         nopub = (test_derive === false) ? true : (is_xpub(currency) === false || has_xpub(currency) !== false),
-        choose_wallet_str = "<span id='get_wallet' class='address_option' data-currency='" + currency + "'>I don't have a " + currency + " address yet</span>",
-        derive_seed_str = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>Generate address from secret phrase</span>",
+        choose_wallet_str = "<span id='get_wallet' class='address_option' data-currency='" + currency + "'>" + translate("noaddressyet", {
+            "currency": currency
+        }) + "</span>",
+        derive_seed_str = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>" + translate("generatewallet") + "</span>",
         options = (hasbip === true) ? choose_wallet_str : (test_derive === true && c_derive[currency]) ? (hasbip32(currency) === true) ? derive_seed_str : choose_wallet_str : choose_wallet_str,
         pnotify = (body.hasClass("showstartpage")) ? "<div class='popnotify' style='display:block'>" + options + "</div>" : "<div class='popnotify'></div>",
         scanqr = (hascam === true && edit === false) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
-        title = (edit === true) ? "<h2 class='icon-pencil'>Edit label</h2>" : "<h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " Add " + currency + " address</h2>",
-        pk_checkbox = (edit === true) ? "" : "<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / private key of this address</span></div>",
+        title = (edit === true) ? "<h2 class='icon-pencil'>" + translate("editlabel") + "</h2>" : "<h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " " + translate("addcoinaddress", {
+            "currency": currency
+        }) + "</h2>",
+        pk_checkbox = (edit === true) ? "" : "<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + translate("pkownership") + "</span></div>",
         addeditclass = (edit === true) ? "edit" : "add",
         xpubclass = (nopub) ? " hasxpub" : " noxpub",
-        xpubph = (nopub) ? "Enter a " + currency + " address" : "Address / Xpub",
+        xpubph = (nopub) ? translate("entercoinaddress", {
+            "currency": currency
+        }) : translate("nopub"),
         vk_val = (ad.vk) ? ad.vk : "",
         has_vk = (vk_val != ""),
         scanvk = (hascam === true) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
-        vk_box = (currency == "monero") ? (has_vk) ? "" : "<div class='inputwrap'><input type='text' class='vk_input' value='" + vk_val + "' placeholder='Secret view key'>" + scanvk + "</div>" : "",
+        vk_box = (currency == "monero") ? (has_vk) ? "" : "<div class='inputwrap'><input type='text' class='vk_input' value='" + vk_val + "' placeholder='" + translate("secretviewkey") + "'>" + scanvk + "</div>" : "",
         content = $("<div class='formbox form" + addeditclass + xpubclass + "' id='addressformbox'>" + title + pnotify + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' id='address_xpub_input' class='address' value='" + address + "' data-currency='" + currency + "' placeholder='" + xpubph + "'" + readonly + ">" + scanqr + "</div>" + vk_box + "<input type='text' class='addresslabel' value='" + label + "' placeholder='label'>\
         <div id='ad_info_wrap' style='display:none'>\
             <ul class='td_box'>\
             </ul>\
             <div id='pk_confirm' class='noselect'>\
-                <div id='matchwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>The above addresses match those in my " + currency + " wallet</span>\
+                <div id='matchwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + translate("xpubmatch", {
+                "currency": currency
+            }) + "</span>\
             </div>\
         </div>" + pk_checkbox +
-            "<input type='submit' class='submit' value='OK'></form>").data(ad);
+            "<input type='submit' class='submit' value='" + translate("okbttn") + "'></form>").data(ad);
     popdialog(content, "triggersubmit");
     if (supportsTouch === true) {
         return
@@ -2245,24 +2273,24 @@ function add_erc20() {
             scanqr = (hascam === true) ? "<div class='qrscanner' data-currency='ethereum' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
             content = $("\
             <div class='formbox' id='erc20formbox'>\
-                <h2 class='icon-coin-dollar'>Add erc20 token</h2>\
+                <h2 class='icon-coin-dollar'>" + translate("adderc20token") + "</h2>\
                 <div class='popnotify'></div>\
                 <form id='addressform' class='popform'>\
                     <div class='selectbox'>\
-                        <input type='text' value='' placeholder='Pick erc20 token' id='ac_input'/>\
+                        <input type='text' value='' placeholder='" + translate("erc20placeholder") + "' id='ac_input'/>\
                         <div class='selectarrows icon-menu2' data-pe='none'></div>\
                         <div id='ac_options' class='options'>" + tokenlist + "</div>\
                     </div>\
                     <div id='erc20_inputs'>\
-                    <div class='inputwrap'><input type='text' class='address' value='' placeholder='Enter a address'/>" + scanqr + "</div>\
+                    <div class='inputwrap'><input type='text' class='address' value='' placeholder='" + translate("enteraddress") + "'/>" + scanqr + "</div>\
                     <input type='text' class='addresslabel' value='' placeholder='label'/>\
                     <div id='pk_confirm' class='noselect'>\
                         <div id='pk_confirmwrap' class='cb_wrap' data-checked='false'>\
                             <span class='checkbox'></span>\
                         </div>\
-                        <span>I own the seed / private key of this address</span>\
+                        <span>" + translate("pkownership") + "</span>\
                     </div></div>\
-                    <input type='submit' class='submit' value='OK'/>\
+                    <input type='submit' class='submit' value='" + translate("okbttn") + "'/>\
                 </form></div>").data(nodedata);
         popdialog(content, "triggersubmit");
     })
@@ -2320,7 +2348,9 @@ function initaddressform(coin_data) {
         labelfield = erc20formbox.find("input.addresslabel");
     addressfield.add(labelfield).val("");
     erc20formbox.data(coin_data);
-    addressfield.attr("placeholder", "Enter a " + coin_data.currency + " address");
+    addressfield.attr("placeholder", translate("entercoinaddress", {
+        "currency": coin_data.currency
+    }));
     if (erc20_inputs.is(":visible")) {} else {
         erc20_inputs.slideDown(300);
         addressfield.focus();
@@ -2339,7 +2369,9 @@ function validateaddress_vk(ad) {
         addressfield = $("#addressform .address"),
         addressinputval = addressfield.val();
     if (addressinputval) {} else {
-        let errormessage = "Enter a " + currency + " address";
+        let errormessage = translate("entercoinaddress", {
+            "currency": currency
+        });
         popnotify("error", errormessage);
         addressfield.focus();
         return
@@ -2350,16 +2382,18 @@ function validateaddress_vk(ad) {
             vklength = vkinputval.length;
         if (vklength) {
             if (vklength !== 64) {
-                popnotify("error", "Invalid Viewkey");
+                popnotify("error", translate("invalidvk"));
                 return
             }
             if (check_vk(vkinputval)) {} else {
-                popnotify("error", "Invalid Viewkey");
+                popnotify("error", translate("invalidvk"));
                 return
             }
             let valid = check_address(addressinputval, currency);
             if (valid === true) {} else {
-                let errormessage = addressinputval + " is NOT a valid " + currency + " address";
+                let errormessage = addressinputval + " " + translate("novalidaddress", {
+                    "currency": currency
+                });
                 popnotify("error", errormessage);
                 return
             }
@@ -2385,7 +2419,7 @@ function validateaddress_vk(ad) {
                 let data = br_result(e).result,
                     errormessage = data.Error;
                 if (errormessage) {
-                    let error = (errormessage) ? errormessage : "Invalid Viewkey";
+                    let error = (errormessage) ? errormessage : translate("invalidvk");
                     popnotify("error", error);
                     return
                 }
@@ -2397,14 +2431,14 @@ function validateaddress_vk(ad) {
                 console.log(jqXHR);
                 console.log(textStatus);
                 console.log(errorThrown);
-                popnotify("error", "Error verifying Viewkey");
+                popnotify("error", translate("errorvk"));
             });
             return
         }
         validateaddress(ad, false);
         return
     }
-    popnotify("error", "Pick a currency");
+    popnotify("error", translate("pickacurrency"));
 }
 
 function validateaddress(ad, vk) {
@@ -2427,7 +2461,7 @@ function validateaddress(ad, vk) {
             address = ad.address,
             label = ad.label;
         if (addressduplicate === true && address !== addinputval) {
-            popnotify("error", "address already exists");
+            popnotify("error", translate("alreadyexists"));
             addressfield.select();
             return
         }
@@ -2439,7 +2473,7 @@ function validateaddress(ad, vk) {
         if (valid === true) {
             let validlabel = check_address(labelinputval, currencycheck);
             if (validlabel === true) {
-                popnotify("error", "invalid label");
+                popnotify("error", translate("invalidlabel"));
                 labelfield.val(label).select();
                 return
             }
@@ -2492,16 +2526,20 @@ function validateaddress(ad, vk) {
                 clear_savedurl();
                 return
             }
-            popnotify("error", "Confirm privatekey ownership");
+            popnotify("error", translate("confirmpkownership"));
             return
         }
-        popnotify("error", addressinputval + " is NOT a valid " + currency + " address");
+        popnotify("error", addressinputval + " " + translate("novalidaddress", {
+            "currency": currency
+        }));
         setTimeout(function() {
             addressfield.select();
         }, 10);
         return
     }
-    popnotify("error", "Enter a " + currency + " address");
+    popnotify("error", translate("entercoinaddress", {
+        "currency": currency
+    }));
     addressfield.focus();
 }
 
@@ -2740,17 +2778,17 @@ function showoptionstrigger() {
             return
         }
         let savedrequest = $("#requestlist li[data-address='" + address + "']"),
-            showrequests = (savedrequest.length > 0) ? "<li><div class='showrequests'><span class='icon-qrcode'></span> Show requests</div></li>" : "",
+            showrequests = (savedrequest.length > 0) ? "<li><div class='showrequests'><span class='icon-qrcode'></span> " + translate("showrequests") + "</div></li>" : "",
             newrequest = (ad.checked === true) ? "<li>\
                 <div data-rel='' class='newrequest' title='create request'>\
-                    <span class='icon-plus'></span> New request</div>\
+                    <span class='icon-plus'></span>" + translate("newrequest") + "</div>\
             </li>" : "",
             content = $("\
                 <ul id='optionslist''>" + newrequest + showrequests +
-                "<li><div class='address_info'><span class='icon-info'></span> Address info</div></li>\
-                    <li><div class='editaddress'> <span class='icon-pencil'></span> Edit label</div></li>\
-                    <li><div class='removeaddress'><span class='icon-bin'></span> Remove address</div></li>\
-                    <li><div id='rpayments'><span class='icon-history'></span> Recent payments</div></li>\
+                "<li><div class='address_info'><span class='icon-info'></span> " + translate("addressinfo") + "</div></li>\
+                    <li><div class='editaddress'> <span class='icon-pencil'></span> " + translate("editlabel") + "</div></li>\
+                    <li><div class='removeaddress'><span class='icon-bin'></span> " + translate("removeaddress") + "</div></li>\
+                    <li><div id='rpayments'><span class='icon-history'></span> " + translate("recentpayments") + "</div></li>\
                 </ul>").data(ad);
         showoptions(content);
         return
@@ -2782,18 +2820,18 @@ function showoptions(content, addclass, callback) {
 function lockscreen(timer) {
     let timeleft = timer - now(),
         cd = countdown(timeleft),
-        dstr = (cd.days) ? cd.days + " days<br/>" : "",
-        hstr = (cd.hours) ? cd.hours + " hours<br/>" : "",
-        mstr = (cd.minutes) ? cd.minutes + " minutes<br/>" : "",
-        sstr = (cd.seconds) ? cd.seconds + " seconds" : "",
+        dstr = (cd.days) ? cd.days + " " + translate("days") + "<br/>" : "",
+        hstr = (cd.hours) ? cd.hours + " " + translate("hours") + "<br/>" : "",
+        mstr = (cd.minutes) ? cd.minutes + " " + translate("minutes") + "<br/>" : "",
+        sstr = (cd.seconds) ? cd.seconds + " " + translate("seconds") : "",
         cdown_str = dstr + hstr + mstr + sstr,
         attempts = $("#pinsettings").data("attempts"),
         has_seedid = (hasbip || cashier_seedid) ? true : false,
-        us_string = (has_seedid === true && attempts > 5) ? "<p id='seed_unlock'>Unlock with seed</p>" : "",
-        content = "<h1 id='lock_heading'>Bitrequest</h1><div id='lockscreen'><h2><span class='icon-lock'></span></h2><p class='tmua'>Too many unlock attempts</p>\
-        <p><br/>Please try again in:<br/>" + cdown_str + "</p>" + us_string +
+        us_string = (has_seedid === true && attempts > 5) ? "<p id='seed_unlock'>" + translate("unlockwithsecretphrase") + "</p>" : "",
+        content = "<h1 id='lock_heading'>Bitrequest</h1><div id='lockscreen'><h2><span class='icon-lock'></span></h2><p class='tmua'>" + translate("tomanyunlocks") + "</p>\
+        <p><br/>" + translate("tryagainin") + "<br/>" + cdown_str + "</p>" + us_string +
         "<div id='phrasewrap'>\
-            <p><br/>Enter your 12 word<br/>secret phrase:</p>\
+            <p><br/>" + translate("enter12words") + "</p>\
                 <div id='bip39phrase' contenteditable='contenteditable' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' lang='en' class='noselect'></div>\
                 <div id='phrase_login' class='button'>Unlock</div>\
             </div>\
@@ -2846,7 +2884,7 @@ function newrequest_alias() {
             active_currencies = currencylist.find("li").not(".hide"),
             active_currency_count = active_currencies.length;
         if (active_currency_count === 0) {
-            notify("no active currencies");
+            notify(translate("noactivecurrencies"));
             return
         }
         if (active_currency_count > 1) {
@@ -2904,7 +2942,7 @@ function confirm_ms_newrequest() {
             ds_checkbox = thisdialog.find("#dontshowwrap"),
             ds_checked = ds_checkbox.data("checked");
         if (pk_checked == true) {} else {
-            popnotify("error", "Confirm privatekey ownership");
+            popnotify("error", translate("confirmpkownership"));
             return
         }
         if (ds_checked == true) { // whitlist seed id
@@ -2928,7 +2966,9 @@ function showrequests() {
 function showrequests_inlne() {
     $(document).on("click", ".applist.pobox li .usedicon", function() {
         let address = $(this).prev("span").text(),
-            result = confirm("Show requests for " + address + "?");
+            result = confirm(translate("showrequestsfor", {
+                "address": address
+            }));
         if (result === true) {
             loadpage("?p=requests&filteraddress=" + address);
         }
@@ -2945,12 +2985,12 @@ function editaddresstrigger() {
 function removeaddress() {
     $(document).on("click", ".removeaddress", function(e) {
         e.preventDefault();
-        popdialog("<h2 class='icon-bin'>Remove address?</h2>", "removeaddressfunction", $(this));
+        popdialog("<h2 class='icon-bin'>" + translate("removeaddress") + "</h2>", "removeaddressfunction", $(this));
     })
 }
 
 function removeaddressfunction(trigger) {
-    let result = confirm("Are you sure?");
+    let result = confirm(translate("areyousure"));
     if (result === true) {
         let optionslist = trigger.closest("ul#optionslist"),
             ad = optionslist.data(),
@@ -2977,7 +3017,7 @@ function removeaddressfunction(trigger) {
         new_address = null; // prevent double entries
         canceldialog();
         canceloptions();
-        notify("Address deleted 🗑");
+        notify(translate("addressremoved") + " 🗑");
         saveaddresses(currency, true);
     }
 }
@@ -3008,7 +3048,9 @@ function showtransaction_trigger() {
                 if (invoice) {
                     let hash = invoice.hash;
                     if (hash) {
-                        let result = confirm("Open invoice: " + hash + "?");
+                        let result = confirm(translate("openinvoice", {
+                            "hash": hash
+                        }));
                         if (result === true) {
                             let proxy = lightning.proxy_host,
                                 nid = lightning.nid,
@@ -3063,7 +3105,7 @@ function addressinfo() {
             (isxpub) ? (activepub && xpubid == activepub.key_id) : false,
             address = dd.address,
             a_wl = addr_whitelist(address),
-            restore = (isseed) ? (hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + seedid + "'>Restore</div>" : "",
+            restore = (isseed) ? (hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + seedid + "'>" + translate("resoresecretphrase") + "</div>" : "",
             srcval = (source) ? (active_src) ? source + " <span class='icon-checkmark'>" :
             source + " (Unavailable)" + restore : "external",
             d_index = dd.derive_index,
@@ -3078,25 +3120,26 @@ function addressinfo() {
             dd.bip32dat = bip32dat,
             dd.address = address;
         let cc_icon = getcc_icon(dd.cmcid, dd.ccsymbol + "-" + currency, dd.erc20),
-            dpath_str = (isseed) ? "<li><strong>Derivation path:</strong> " + dpath + "</li>" : "",
+            dpath_str = (isseed) ? "<li><strong>" + translate("derivationpath") + ":</strong> " + dpath + "</li>" : "",
             pk_verified = "Unknown <span class='icon-checkmark'></span>",
             vkobj = (dd.vk) ? vk_obj(dd.vk) : false,
             vkdat = (vkobj) ? (isseed && active_src) ? "derive" : vkobj.vk : false,
-            pk_str = (vkdat) ? "<span id='show_vk' class='ref' data-vk='" + vkdat + "'>Show</span>" : (isseed) ? (active_src) ? "<span id='show_pk' class='ref'>Show</span>" : (a_wl === true) ? pk_verified : "Unknown" : pk_verified,
+            showtl = translate("show"),
+            pk_str = (vkdat) ? "<span id='show_vk' class='ref' data-vk='" + vkdat + "'>" + showtl + "</span>" : (isseed) ? (active_src) ? "<span id='show_pk' class='ref'>" + showtl + "</span>" : (a_wl === true) ? pk_verified : "Unknown" : pk_verified,
             content = $("<div id='ad_info_wrap'><h2>" + cc_icon + " <span>" + label + "</span></h2><ul>\
-                <li><strong>Address: </strong><span class='adbox adboxl select'>" + address + "</span>\
+                <li><strong>" + translate("address") + ": </strong><span class='adbox adboxl select'>" + address + "</span>\
                 <div id='qrcodea' class='qrwrap flex'><div class='qrcode'></div>" + cc_icon + "</div>\
                 </li>\
-                <li><strong>Source: </strong>" + srcval + "</li>" +
+                <li><strong>" + translate("source") + ": </strong>" + srcval + "</li>" +
                 dpath_str +
-                "<li><strong>Private key: </strong>" + pk_str +
+                "<li><strong>" + translate("privatekey") + ": </strong>" + pk_str +
                 "<div id='pk_span'>\
                     <div class='qrwrap flex'>\
                         <div id='qrcode' class='qrcode'></div>" + cc_icon + "</div>\
                         <p id='pkspan' class='adbox adboxl select' data-type='private key'></p>\
                 </div>\
                 </li>\
-                <li><div class='showtransactions ref'><span class='icon-eye'></span> Show transactions</div></li>\
+                <li><div class='showtransactions ref'><span class='icon-eye'></span>" + translate("showtransactions") + "</div></li>\
                 </ul>\
             </div>").data(dd);
         popdialog(content, "canceldialog");
@@ -3115,12 +3158,12 @@ function show_pk() {
             pkspan = $("#pk_span");
         if (pkspan.is(":visible")) {
             pkspan.slideUp(200);
-            thisbttn.text("show");
+            thisbttn.text(translate("show"));
             return
         }
         if (pkspan.hasClass("shwpk")) {
             pkspan.slideDown(200);
-            thisbttn.text("hide");
+            thisbttn.text(translate("hide"));
             return
         }
         $("#optionsbox").html("");
@@ -3143,7 +3186,7 @@ function show_pk() {
 }
 
 function show_pk_cb(pk) {
-    $("#show_pk").text("hide");
+    $("#show_pk").text(translate("hide"));
     $("#pkspan").text(pk);
     $("#qrcode").qrcode(pk);
     $("#pk_span").addClass("shwpk").slideDown(200);
@@ -3198,13 +3241,15 @@ function show_vk() {
 
 function show_vk_cb(kd) {
     let stat = kd.stat,
-        ststr = (stat) ? "" : "<br/><strong style='color:#8d8d8d'>Spendkey</strong> <span class='adbox adboxl select' data-type='Spendkey'>" + kd.ssk + "</span><br/>";
+        ststr = (stat) ? "" : "<br/><strong style='color:#8d8d8d'>" + translate("secretviewkey") + "</strong> <span class='adbox adboxl select' data-type='Viewkey'>" + kd.svk + "</span><br/>";
     $("#show_vk").text("hide");
-    $("#pk_span").html(ststr + "<br/><strong style='color:#8d8d8d'>Viewkey</strong> <span class='adbox adboxl select' data-type='Viewkey'>" + kd.svk + "</span>").addClass("shwpk").slideDown(200);
+    $("#pk_span").html(ststr + "<br/><strong style='color:#8d8d8d'>" + translate("secretspendkey") + "</strong> <span class='adbox adboxl select' data-type='Spendkey'>" + kd.ssk + "</span>").addClass("shwpk").slideDown(200);
 }
 
 function open_blockexplorer_url(be_link) {
-    let result = confirm("Open " + be_link + "?");
+    let result = confirm(translate("openurl", {
+        "url": be_link
+    }));
     if (result === true) {
         w_loc.href = be_link;
     }
@@ -3380,7 +3425,7 @@ function hide_transaction_meta() {
 
 function archive() {
     $(document).on("click", "#requestlist .req_actions .icon-folder-open", function() {
-        popdialog("<h2 class='icon-folder-open'>Archive request?</h2>", "archivefunction", $(this));
+        popdialog("<h2 class='icon-folder-open'>" + translate("archiverequest") + "</h2>", "archivefunction", $(this));
     })
 }
 
@@ -3403,12 +3448,12 @@ function archivefunction() {
     }, 350);
     archive_button();
     canceldialog();
-    notify("Moved to archive");
+    notify(translate("movedtoarchive"));
 }
 
 function unarchive() {
     $(document).on("click", "#archivelist .req_actions .icon-undo2", function() {
-        popdialog("<h2 class='icon-undo2'>Unarchive request?</h2>", "unarchivefunction", $(this));
+        popdialog("<h2 class='icon-undo2'>" + translate("unarchiverequest") + "</h2>", "unarchivefunction", $(this));
     })
 }
 
@@ -3425,17 +3470,17 @@ function unarchivefunction() {
         archive_button();
     }, 350);
     canceldialog();
-    notify("Request restored");
+    notify(translate("requestrestored"));
 }
 
 function removerequest() {
     $(document).on("click", ".req_actions .icon-bin", function() {
-        popdialog("<h2 class='icon-bin'>Delete request?</h2>", "removerequestfunction", $(this));
+        popdialog("<h2 class='icon-bin'>" + translate("deleterequest") + "?</h2>", "removerequestfunction", $(this));
     })
 }
 
 function removerequestfunction() {
-    let result = confirm("Are you sure?");
+    let result = confirm(translate("areyousure"));
     if (result === true) {
         let visiblerequest = $(".requestlist > li.visible_request");
         visiblerequest.slideUp(300);
@@ -3445,7 +3490,7 @@ function removerequestfunction() {
             savearchive();
         }, 350);
         canceldialog();
-        notify("Request deleted 🗑");
+        notify(translate("requestdeleted") + " 🗑");
     }
 }
 
@@ -3463,14 +3508,14 @@ function editrequest() {
             requestlist = $("#" + thisrequestid),
             requesttitle = requestlist.data("requesttitle"),
             requesttitle_input = (requesttitle) ? requesttitle : "",
-            formheader = (requesttitle) ? "Edit" : "Enter",
+            formheader = (requesttitle) ? translate("edit") : translate("enter"),
             content = "\
             <div class='formbox' id='edit_request_formbox'>\
-                <h2 class='icon-pencil'>" + formheader + " description</h2>\
+                <h2 class='icon-pencil'>" + formheader + " " + translate("title") + "</h2>\
                 <div class='popnotify'></div>\
                 <div class='popform'>\
-                    <input type='text' value='" + requesttitle_input + "' placeholder='description'/>\
-                    <input type='submit' class='submit' value='OK' data-requestid='" + thisrequestid + "'/>\
+                    <input type='text' value='" + requesttitle_input + "' placeholder='" + translate("title") + "'/>\
+                    <input type='submit' class='submit' value='" + translate("okbttn") + "' data-requestid='" + thisrequestid + "'/>\
                 </div>\
             </div>";
         popdialog(content, "triggersubmit");
@@ -3489,10 +3534,10 @@ function submit_request_description() {
                 "requesttitle": requesttitle_val
             }, true);
             canceldialog();
-            notify("Request saved");
+            notify(translate("requestsaved"));
             return
         }
-        popnotify("error", "Description is a required field");
+        popnotify("error", translate("title") + " " + translate("requiredfield"));
     })
 }
 
@@ -3504,8 +3549,8 @@ function receipt() {
             requestli = thisnode.closest(".rqli"),
             rqdat = requestli.data(),
             requestid = rqdat.requestid,
-            receipt_url = get_pdf_url(rqdat),
-            receipt_title = "bitrequest_receipt_" + requestid + ".pdf",
+            receipt_url = get_pdf_url(rqdat);
+        let receipt_title = "bitrequest_" + translate("receipt") + "_" + requestid + ".pdf",
             ddat = [{
                 "div": {
                     "class": "popform"
@@ -3550,7 +3595,7 @@ function receipt() {
                             "div": {
                                 "id": "canceldialog",
                                 "class": "customtrigger",
-                                "content": "CANCEL"
+                                "content": cancelbttn
                             }
                         }
                     ]
@@ -3559,7 +3604,7 @@ function receipt() {
             content = template_dialog({
                 "id": "invoiceformbox",
                 "icon": "icon-file-pdf",
-                "title": "bitrequest_receipt_" + requestid + ".pdf",
+                "title": receipt_title,
                 "elements": ddat
             });
         popdialog(content, "triggersubmit");
@@ -3585,10 +3630,12 @@ function share_receipt() {
             href = thisbttn.attr("data-receiptdat"),
             requestid = thisbttn.attr("data-requestid"),
             filename = "bitrequest_receipt_" + requestid + ".pdf",
-            result = confirm("Share " + filename + "?");
+            result = confirm(translate("sharefile", {
+                "filename": filename
+            }));
         if (result === true) {
             loader(true);
-            loadertext("generate receipt");
+            loadertext(translate("generatereceipt"));
             let accountname = $("#accountsettings").data("selected"),
                 sharedtitle = "bitrequest_receipt_" + requestid + ".pdf";
             shorten_url(sharedtitle, href, fetch_aws("img_receipt_icon.png"), true);
@@ -3618,7 +3665,9 @@ function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
             }
         };
     loader(true);
-    loadertext("connecting to " + lnurl_encode("lnurl", proxy_host));
+    loadertext(translate("connecttolnur", {
+        "url": lnurl_encode("lnurl", proxy_host)
+    }));
     $.ajax(postdata).done(function(e) {
         if (e) {
             let error = e.error;
@@ -3658,10 +3707,10 @@ function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
             closeloader();
             return
         }
-        notify("Unable to fetch invoice");
+        notify(translate("nofetchincoice"));
         closeloader();
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        notify("Unable to fetch invoice");
+        notify(translate("nofetchincoice"));
         closeloader();
     });
 }
@@ -3679,7 +3728,7 @@ function get_pdf_url(rqdat) {
         lightning = rqdat.lightning,
         hybrid = (lightning && lightning.hybrid === true),
         paymenttimestamp = rqdat.paymenttimestamp,
-        ptsformatted = fulldateformat(new Date(paymenttimestamp - timezone), "en-us"),
+        ptsformatted = fulldateformat(new Date(paymenttimestamp - timezone), langcode),
         amount = rqdat.amount,
         fiatvalue = rqdat.fiatvalue,
         receivedamount = rqdat.receivedamount,
@@ -3702,32 +3751,32 @@ function get_pdf_url(rqdat) {
         utc = timestamp - timezone,
         localtime = (requestdate) ? requestdate - timezone : utc,
         localtimeobject = new Date(localtime),
-        requestdateformatted = fulldateformat(localtimeobject, "en-us"),
+        requestdateformatted = fulldateformat(localtimeobject, langcode),
         created = (requestdate) ? requestdateformatted : "unknown",
         utc_format = fulldateformat(new Date(utc)),
         invd = {},
         lnd_string = (lnhash) ? " (lightning)" : "";
     invd["Request ID"] = requestid;
-    invd.Currency = rqdat.payment + lnd_string;
+    invd[transclear("currency")] = clear_accents(rqdat.payment + lnd_string);
     if (exists(requestname)) {
-        invd.From = requestname;
+        invd[transclear("from")] = clear_accents(requestname);
     }
     if (exists(requesttitle)) {
-        invd.Title = "'" + requesttitle + "'";
+        invd[transclear("title")] = "'" + clear_accents(requesttitle) + "'";
     }
-    invd.Amount = amount_rounded + " " + uoa_upper,
-        invd.Status = statustext,
-        invd.Type = typetext;
+    invd[transclear("amount")] = amount_rounded + " " + uoa_upper,
+        invd[transclear("status")] = transclear(statustext),
+        invd[transclear("type")] = transclear(typetext);
     if (incoming === true) {
-        invd["Created"] = created;
-        invd["First viewed"] = utc_format;
+        invd[transclear("created")] = created;
+        invd[transclear("firstviewed")] = utc_format;
     }
-    invd.Address = rqdat.address;
+    invd[transclear("receivingaddress")] = rqdat.address;
     if (status === "paid") {
-        invd["Paid on"] = ptsformatted,
-            invd["Amount received"] = receivedamount_rounded + " " + rqdat.payment;
+        invd[transclear("paidon")] = ptsformatted,
+            invd[transclear("amountreceived")] = receivedamount_rounded + " " + rqdat.payment;
         if (iscrypto === true) {} else {
-            invd["Fiat value on " + ptsformatted] = fiatvalue_rounded + " " + currencyname;
+            invd[transclear("fiatvalueon") + " " + ptsformatted] = fiatvalue_rounded + " " + currencyname;
         }
     }
     if (exists(txhash)) {
@@ -3735,7 +3784,7 @@ function get_pdf_url(rqdat) {
     }
     let network = getnetwork(source);
     if (network) {
-        invd["Network"] = network;
+        invd[transclear("network")] = network;
     }
     let set_proxy = d_proxy();
     return set_proxy + "proxy/v1/receipt/?data=" + btoa(JSON.stringify(invd));
@@ -3766,13 +3815,13 @@ function countdown_format(cd) {
         hours = cd.hours,
         minutes = cd.minutes,
         seconds = cd.seconds,
-        daynode = (days) ? (days < 2) ? days + " day" : days + " days" : "",
+        daynode = (days) ? (days < 2) ? days + " " + translate("day") : days + " " + translate("days") : "",
         hs = (days) ? ", " : "",
-        hournode = (hours) ? (hours < 2) ? hs + hours + " hour" : hs + hours + " hours" : "",
+        hournode = (hours) ? (hours < 2) ? hs + hours + " " + translate("hour") : hs + hours + " " + translate("hours") : "",
         ms = (hours) ? ", " : "",
-        minutenode = (minutes) ? (minutes < 2) ? ms + minutes + " minute" : ms + minutes + " minutes" : "",
-        ss = (minutes) ? " and " : "",
-        secondnode = (seconds) ? ss + seconds + " seconds" : "",
+        minutenode = (minutes) ? (minutes < 2) ? ms + minutes + " " + translate("minute") : ms + minutes + " " + translate("minutes") : "",
+        ss = (minutes) ? " " + translate("and") + " " : "",
+        secondnode = (seconds) ? ss + seconds + " " + translate("seconds") : "",
         result = (cd) ? daynode + hournode + minutenode + secondnode : false;
     return result;
 }
@@ -3796,8 +3845,8 @@ function rendercurrencies() {
             }
         });
     }
-    $("ul#allcurrencies").append("<li id='choose_erc20' data-currency='erc20 token' class='start_cli'><div class='liwrap'><h2><img src='" + c_icons("ph") + "'/>More...</h2></div></li>\
-    <li id='rshome' class='restore start_cli' data-currency='erc20 token'><div class='liwrap'><h2><span class='icon-upload'> Restore from backup</h2></div></li><li id='start_cli_margin' class='start_cli'><div class='liwrap'><h2></h2></div></li>").prepend("<li id='connectln' data-currency='bitcoin' class='start_cli'><div class='liwrap'><h2><img src='img_logos_btc-lnd.png'/>Lightning</h2></div></li>");
+    $("ul#allcurrencies").append("<li id='choose_erc20' data-currency='erc20 token' class='start_cli'><div class='liwrap'><h2><img src='" + c_icons("ph") + "'/>" + translate("more") + "...</h2></div></li>\
+    <li id='rshome' class='restore start_cli' data-currency='erc20 token'><div class='liwrap'><h2><span class='icon-upload'> " + translate("restorefrombackup") + "</h2></div></li><li id='start_cli_margin' class='start_cli'><div class='liwrap'><h2></h2></div></li>").prepend("<li id='connectln' data-currency='bitcoin' class='start_cli'><div class='liwrap'><h2><img src='img_logos_btc-lnd.png'/>Lightning</h2></div></li>");
 }
 
 // render currency settings
@@ -3813,15 +3862,18 @@ function buildsettings() {
     let appsettingslist = $("#appsettings");
     $.each(br_config.app_settings, function(i, value) {
         let setting_id = value.id,
+            selected = value.selected,
+            value_tl = translate(selected),
+            setval = (value_tl) ? value_tl : selected,
             setting_li = (setting_id == "heading") ? $("<li class='set_heading'>\
-              <h2>" + value.heading + "</h2>\
+              <h2>" + translate(value.heading) + "</h2>\
         </li>") :
             $("<li class='render' id='" + setting_id + "'>\
               <div class='liwrap iconright'>\
                  <span class='" + value.icon + "'></span>\
                  <div class='atext'>\
-                    <h2>" + value.heading + "</h2>\
-                    <p>" + value.selected + "</p>\
+                    <h2>" + translate(setting_id) + "</h2>\
+                    <p>" + setval + "</p>\
                  </div>\
                  <div class='iconbox'>\
                      <span class='icon-pencil'></span>\
@@ -3837,8 +3889,12 @@ function rendersettings(excludes) {
     let settingcache = br_get_local("settings", true);
     if (settingcache) {
         $.each(settingcache, function(i, value) {
-            if ($.inArray(value.id, excludes) === -1) { // exclude excludes
-                $("#" + value.id).data(value).find("p").text(value.selected);
+            const settings_id = value.id;
+            if ($.inArray(settings_id, excludes) === -1) { // exclude excludes
+                let selected = value.selected,
+                    value_tl = translate(selected),
+                    setval = (settings_id == "accountsettings") ? selected : (value_tl) ? value_tl : selected; // Exclude translations
+                $("#" + value.id).data(value).find("p").text(setval);
             }
         });
     }
@@ -3932,20 +3988,20 @@ function buildpage(cd, ini) {
         let settingspage = (has_settings === true) ? "\
         <div class='page' id='" + currency + "_settings' data-erc20='" + erc20 + "'>\
             <div class='content'>\
-                <h2 class='heading'>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + " settings</h2>\
+                <h2 class='heading'>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + " " + translate("settings") + "</h2>\
                 <ul class='cc_settinglist settinglist applist listyle2'></ul>\
                 <div class='reset_cc_settings button' data-currency='" + currency + "'>\
-                    <span>Reset</span>\
+                    <span>" + translate("resetbutton") + "</span>\
                 </div>\
             </div>\
         </div>" : "";
         let settingsbutton = (has_settings === true) ? "<div data-rel='?p=" + currency + "_settings' class='self icon-cog'></div>" : "",
-            sendbttn = (hasbip === true) ? "<div class='button send' data-currency='" + currency + "'><span class='icon-telegram'>Send</span></div>" : "",
+            sendbttn = (hasbip === true) ? "<div class='button send' data-currency='" + currency + "'><span class='icon-telegram'>" + translate("send") + "</span></div>" : "",
             currency_page = $("<div class='page' id='" + currency + "'>\
             <div class='content'>\
                 <h2 class='heading'>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + settingsbutton + "</h2>\
                 <ul class='applist listyle2 pobox' data-currency='" + currency + "'>\
-                    <div class='endli'><div class='button addaddress' data-currency='" + currency + "'><span class='icon-plus'>Add address</span></div>" + sendbttn + "</div>\
+                    <div class='endli'><div class='button addaddress' data-currency='" + currency + "'><span class='icon-plus'>" + translate("addaddress") + "</span></div>" + sendbttn + "</div>\
                     <div class='addone' data-currency='" + currency + "'>Add one</div>\
                 </ul>\
             </div>\
@@ -3977,6 +4033,8 @@ function append_coinsetting(currency, settings, init) {
             if (selected_val !== undefined) {
                 let selected_string = selected_val.toString(),
                     ss_filter = (selected_string == "true" || selected_string == "false") ? "" : selected_string,
+                    ss_tl = translate(ss_filter),
+                    ss_translate = (ss_tl) ? ss_tl : ss_filter,
                     check_setting_li = coinsettings_list.children("li[data-id='" + dat + "']");
                 if (check_setting_li.length === 0) {
                     let switchclass = (val.custom_switch) ? " custom" : " global bool",
@@ -3985,15 +4043,15 @@ function append_coinsetting(currency, settings, init) {
                             <div class='liwrap edit_trigger iconright' data-currency='" + currency + "'>\
                                 <span class='icon-" + val.icon + "'></span>\
                                 <div class='atext'>\
-                                    <h2>" + dat + "</h2>\
-                                    <p>" + ss_filter + "</p>\
+                                    <h2>" + translate(dat) + "</h2>\
+                                    <p>" + ss_translate + "</p>\
                                 </div>\
                                 <div class='iconbox'>" + trigger + "</div>\
                                 </div>\
                         </li>");
                     coinsettings_li.data(val).appendTo(coinsettings_list);
                 } else {
-                    check_setting_li.data(val).find("p").text(ss_filter);
+                    check_setting_li.data(val).find("p").text(ss_translate);
                     if (val.switch === true) {
                         check_setting_li.find(".switchpanel").removeClass("true false").addClass(selected_string);
                     }
@@ -4087,6 +4145,7 @@ function appendrequest(rd) {
         outgoing = (requesttype == "outgoing"),
         direction = (incoming === true) ? "sent" : "received",
         typetext = (checkout) ? "online purchase" : (local) ? "point of sale" : requesttype,
+        typetext_translate = translate(typetext),
         requesticon = (checkout) ? " typeicon icon-cart" : (local) ? " icon-qrcode" : (incoming === true) ? " typeicon icon-arrow-down-right2" : " typeicon icon-arrow-up-right2",
         typeicon = "<span class='inout" + requesticon + "'></span> ",
         statusicon = "<span class='icon-checkmark' title='Confirmed transaction'></span>\
@@ -4104,81 +4163,82 @@ function appendrequest(rd) {
         isexpired = (status == "expired" || (now() - localtime) >= expirytime && (lnd_expire || status == "new" || insufficient === true)),
         expiredclass = (isexpired === true) ? " expired" : "",
         localtimeobject = new Date(localtime),
-        requestdateformatted = fulldateformat(localtimeobject, "en-us"),
-        timeformat = "<span class='rq_month'>" + localtimeobject.toLocaleString("en-us", {
+        requestdateformatted = fulldateformat(localtimeobject, langcode),
+        timeformat = "<span class='rq_month'>" + localtimeobject.toLocaleString(langcode, {
             "month": "short"
         }) + "</span> <span class='rq_day'>" + localtimeobject.getDate() + "</span>",
-        ptsformatted = fulldateformat(new Date(paymenttimestamp - timezone), "en-us", true),
+        ptsformatted = fulldateformat(new Date(paymenttimestamp - timezone), langcode, true),
         amount_short_rounded = amountshort(amount, receivedamount, fiatvalue, iscrypto),
         amount_short_span = (insufficient === true) ? " (" + amount_short_rounded + " " + uoa_upper + " short)" : "",
         amount_short_cc_span = (iscrypto === true) ? amount_short_span : "",
         created = (requestdate) ? requestdateformatted : "<strong>unknown</strong>",
-        fiatvaluebox = (iscrypto === true || !fiatvalue) ? "" : "<li class='payday pd_fiat'><strong>Fiat value on<span class='pd_fiat'> " + ptsformatted + "</span> :</strong><span class='fiatvalue'> " + fiatvalue_rounded + "</span> " + currencyname + "<div class='show_as amountshort'>" + amount_short_span + "</div></li>",
-        paymentdetails = "<li class='payday pd_paydate'><strong>Paid on:</strong><span class='paydate'> " + ptsformatted + "</span></li><li class='receivedamount'><strong>Amount received:</strong><span> " + receivedamount_rounded + "</span> " + payment + "<div class='show_as amountshort'>" + amount_short_cc_span + "</div></li>" + fiatvaluebox,
-        requestnamebox = (incoming === true) ? (rqdata) ? "<li><strong>From:</strong> " + requestname + "</li>" : "<li><strong>From: unknown</strong></li>" : "",
-        requesttitlebox = (requesttitle) ? "<li><strong>Title:</strong> '<span class='requesttitlebox'>" + requesttitle + "</span>'</li>" : "",
+        fiatvaluebox = (iscrypto === true || !fiatvalue) ? "" : "<li class='payday pd_fiat'><strong>" + translate("fiatvalueon") + "<span class='pd_fiat'> " + ptsformatted + "</span> :</strong><span class='fiatvalue'> " + fiatvalue_rounded + "</span> " + currencyname + "<div class='show_as amountshort'>" + amount_short_span + "</div></li>",
+        paymentdetails = "<li class='payday pd_paydate'><strong>" + translate("paidon") + ":</strong><span class='paydate'> " + ptsformatted + "</span></li><li class='receivedamount'><strong>" + translate("amountreceived") + ":</strong><span> " + receivedamount_rounded + "</span> " + payment + "<div class='show_as amountshort'>" + amount_short_cc_span + "</div></li>" + fiatvaluebox,
+        requestnamebox = (incoming === true) ? (rqdata) ? "<li><strong>" + translate("from") + ":</strong> " + requestname + "</li>" : "<li><strong>From: unknown</strong></li>" : "",
+        requesttitlebox = (requesttitle) ? "<li><strong>" + translate("title") + ":</strong> '<span class='requesttitlebox'>" + requesttitle + "</span>'</li>" : "",
         ismonitoredspan = (ismonitored === false) ? " (unmonitored transaction)" : "",
-        timestampbox = (incoming === true) ? "<li><strong>Created:</strong> " + created + "</li><li><strong>First viewed:</strong> " + fulldateformat(new Date(utc), "en-us") + "</li>" :
-        (outgoing === true) ? "<li><strong>Request send on:</strong> " + requestdateformatted + "</li>" :
-        (local === true) ? "<li><strong>Created:</strong> " + requestdateformatted + "</li>" : "",
+        timestampbox = (incoming === true) ? "<li><strong>" + translate("created") + ":</strong> " + created + "</li><li><strong>" + translate("firstviewed") + ":</strong> " + fulldateformat(new Date(utc), langcode) + "</li>" :
+        (outgoing === true) ? "<li><strong>" + translate("sendon") + ":</strong> " + requestdateformatted + "</li>" :
+        (local === true) ? "<li><strong>" + translate("created") + ":</strong> " + requestdateformatted + "</li>" : "",
         paymenturl = "&address=" + address + rqdataparam + rqmetaparam + "&requestid=" + requestid,
         islabel = $("main #" + payment + " li[data-address='" + address + "']").data("label"),
         requestlabel = (islabel) ? " <span class='requestlabel'>(" + islabel + ")</span>" : "",
         conf_box = (ismonitored === false) ? "<div class='txli_conf' data-conf='0'><span>Unmonitored transaction</span></div>" :
-        (conf > 0) ? "<div class='txli_conf'><div class='confbar'></div><span>" + conf + " / " + set_confirmations + " confirmations</span></div>" :
+        (conf > 0) ? "<div class='txli_conf'><div class='confbar'></div><span>" + conf + " / " + set_confirmations + " " + translate("confirmations") + "</span></div>" :
         (conf === 0) ? "<div class='txli_conf' data-conf='0'><div class='confbar'></div><span>Unconfirmed transaction<span></div>" : "",
-        view_tx_markup = (lnhash) ? "<li><strong class='show_tx'><span class='icon-power'></span><span class='ref'>View invoice</span></strong></li>" : (txhash) ? "<li><strong class='show_tx'><span class='icon-eye'></span>View on blockchain</strong></li>" : "",
+        view_tx_markup = (lnhash) ? "<li><strong class='show_tx'><span class='icon-power'></span><span class='ref'>" + translate("viewinvoice") + "</span></strong></li>" : (txhash) ? "<li><strong class='show_tx'><span class='icon-eye'></span>" + translate("viewon") + " blockchain</strong></li>" : "",
         statustext = (ismonitored === false) ? "" : (status == "new") ? "Waiting for payment" : status,
-        src_html = (source) ? "<span class='src_txt'>source: " + source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>" : "",
+        src_html = (source) ? "<span class='src_txt'>" + translate("source") + ": " + source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>" : "",
         iscryptoclass = (iscrypto === true) ? "" : " isfiat",
         archivebutton = (showarchive === true) ? "<div class='icon-folder-open' title='archive request'></div>" : "",
         render_archive = (txhistory && (pending == "no" || archive === true)),
-        tl_text = (render_archive === true) ? "Transactions:" : "",
+        tl_text = (render_archive === true) ? translate("transactions") : "",
         edit_request = (local === true) ? "<div class='editrequest icon-pencil' title='edit request' data-requestid='" + requestid + "'></div>" : "",
-        pid_li = (payment_id) ? "<li><strong>Payment ID:</strong> <span class='select' data-type='payment ID'>" + payment_id + "</span></li>" : "",
-        ia_li = (xmr_ia) ? "<li><p class='address'><strong>Integrated Address:</strong> <span class='requestaddress select'>" + xmr_ia + "</span></p></li>" : "",
+        pid_li = (payment_id) ? "<li><strong>" + translate("paymentid") + ":</strong> <span class='select' data-type='payment ID'>" + payment_id + "</span></li>" : "",
+        ia_li = (xmr_ia) ? "<li><p class='address'><strong>" + translate("integratedaddress") + ":</strong> <span class='requestaddress select'>" + xmr_ia + "</span></p></li>" : "",
         ln_emoji = (lnhash) ? " <span class='icon-power'></span>" : "",
         ln_logo = "<img src='img_logos_btc-lnd.png' class='cmc_icon'><img src='img_logos_btc-lnd.png' class='cmc_icon'>",
         cclogo = getcc_icon(cmcid, cpid, erc20) + getcc_icon(cmcid, cpid, erc20),
         cc_logo = (lightning) ? (txhash && !lnhash) ? cclogo : ln_logo : cclogo,
-        rc_address_title = (hybrid) ? "Fallback address" : "Receiving Address",
+        rc_address_title = (hybrid) ? translate("fallbackaddress") : translate("receivingaddress"),
         address_markup = (lightning && (lnhash || hybrid === false)) ? "" : "<li><p class='address'><strong>" + rc_address_title + ":</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>",
         network = getnetwork(source),
-        source_markup = (network) ? "<li><p><strong>Network:</strong> " + network + "</p></li>" : "",
-        new_requestli = $("<li class='rqli " + requesttypeclass + expiredclass + lnclass + "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status + "' data-address='" + address + "' data-pending='" + pending + "' data-iscrypto='" + iscrypto + "'>\
+        source_markup = (network) ? "<li><p><strong>" + translate("network") + ":</strong> " + network + "</p></li>" : "",
+        tlstat = (direction == "sent") ? translate("paymentsent") : translate("paymentreceived");
+    new_requestli = $("<li class='rqli " + requesttypeclass + expiredclass + lnclass + "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status + "' data-address='" + address + "' data-pending='" + pending + "' data-iscrypto='" + iscrypto + "'>\
             <div class='liwrap iconright'>" + cc_logo +
-            "<div class='atext'>\
+        "<div class='atext'>\
                     <h2>" + requesttitlestring + "</h2>\
                     <p class='rq_subject'>" + typeicon + requestnamestring + "</p>\
                 </div>\
                 <p class='rq_date' title='" + requestdateformatted + "'>" + timeformat + "</p><br/>\
                 <div class='pmetastatus' data-count='0'>+ 0</div>\
                 <div data-rel='" + paymenturl + "' class='payrequest button" + iscryptoclass + "'>\
-                    <span class='icon-qrcode'>Pay</span>\
+                    <span class='icon-qrcode'>" + translate("pay") + "</span>\
                 </div>\
             </div>\
             <div class='moreinfo'>\
                 <div class='req_actions'>\
                     <div data-rel='" + paymenturl + "' class='icon-qrcode" + iscryptoclass + "'></div>\
                     <div class='icon-bin' title='delete'></div>" +
-            archivebutton +
-            "<div class='icon-undo2' title='unarchive request'></div>\
+        archivebutton +
+        "<div class='icon-undo2' title='unarchive request'></div>\
                     <div class='icon-info' title='show info'></div>" + edit_request + "</div>\
                 <ul class='metalist'>\
-                    <li class='cnamemeta'><strong>Currency:</strong> " + payment + ln_emoji + "</li>" +
-            requestnamebox +
-            requesttitlebox +
-            "<li><strong>Amount:</strong> " + amount_rounded + " " + uoa_upper + "</li>\
-                    <li class='meta_status' data-conf='" + conf + "'><strong>Status:</strong><span class='status'> " + statustext + "</span> " + conf_box + "</li>\
-                    <li><strong>Type:</strong> " + typetext + ismonitoredspan + "</li>" +
-            timestampbox +
-            paymentdetails +
-            address_markup +
-            source_markup +
-            pid_li +
-            ia_li +
-            "<li class='receipt'><p><span class='icon-file-pdf' title='View receipt'/>Receipt</p></li>" + view_tx_markup +
-            "</ul>\
+                    <li class='cnamemeta'><strong>" + translate("currency") + ":</strong> " + payment + ln_emoji + "</li>" +
+        requestnamebox +
+        requesttitlebox +
+        "<li><strong>" + translate("amount") + ":</strong> " + amount_rounded + " " + uoa_upper + "</li>\
+                    <li class='meta_status' data-conf='" + conf + "'><strong>" + translate("status") + ":</strong><span class='status'> " + translate(statustext) + "</span> " + conf_box + "</li>\
+                    <li><strong>" + translate("type") + ":</strong> " + typetext_translate + ismonitoredspan + "</li>" +
+        timestampbox +
+        paymentdetails +
+        address_markup +
+        source_markup +
+        pid_li +
+        ia_li +
+        "<li class='receipt'><p><span class='icon-file-pdf' title='View receipt'/>" + translate("receipt") + "</p></li>" + view_tx_markup +
+        "</ul>\
                 <ul class='transactionlist'>\
                     <h2>" + tl_text + "</h2>\
                 </ul>\
@@ -4186,10 +4246,10 @@ function appendrequest(rd) {
             </div>\
             <div class='brstatuspanel flex'>\
                 <img src='" + c_icons("confirmed") + "'>\
-                <h2>Payment " + direction + "</h2>\
+                <h2>" + tlstat + "</h2>\
             </div>\
             <div class='brmarker'></div>\
-            <div class='expired_panel'><h2>Expired</h2></div>\
+            <div class='expired_panel'><h2>" + translate("expired") + "</h2></div>\
         </li>");
     new_requestli.data(rd).prependTo(requestlist);
     if (render_archive === true) {
@@ -4219,7 +4279,7 @@ function savecurrencies(add) {
         currenciespush.push($(this).data());
     });
     br_set_local("currencies", currenciespush, true);
-    updatechanges("currencies", add);
+    updatechanges(translate("currencies"), add);
 }
 
 //update addresses in localstorage
@@ -4236,7 +4296,7 @@ function saveaddresses(currency, add) {
         br_remove_local("cc_" + currency);
         br_remove_local(currency + "_settings");
     }
-    updatechanges("addresses", add);
+    updatechanges(translate("addresses"), add);
 }
 
 //update requests
@@ -4246,7 +4306,7 @@ function saverequests() {
         requestpush.push($(this).data());
     });
     br_set_local("requests", requestpush, true);
-    updatechanges("requests", true);
+    updatechanges(translate("requests"), true);
 }
 
 //update archive
@@ -4265,7 +4325,7 @@ function savesettings(nit) {
         settingsspush.push($(this).data());
     });;
     br_set_local("settings", settingsspush, true);
-    updatechanges("settings", true, nit);
+    updatechanges(translate("settings"), true, nit);
 }
 
 function save_cc_settings(currency, add) {
@@ -4275,7 +4335,7 @@ function save_cc_settings(currency, add) {
         settingbox[thisnode.attr("data-id")] = thisnode.data();
     });
     br_set_local(currency + "_settings", settingbox, true);
-    updatechanges("currencysettings", add);
+    updatechanges(translate("coinsettings"), add);
 }
 
 function updatechanges(key, add, nit) {
@@ -4306,7 +4366,7 @@ function resetchanges() {
     changes = {};
     savechangesstats();
     body.removeClass("haschanges");
-    $("#alert > span").text("0").attr("title", "You have 0 changes in your app");
+    $("#alert > span").text("0").attr("title", translate("nochanges"));
 }
 
 function savechangesstats() {
@@ -4329,7 +4389,9 @@ function change_alert() {
     }
     let total_changes = get_total_changes();
     if (total_changes > 0) {
-        $("#alert > span").text(total_changes).attr("title", "You have " + total_changes + " changes in your app");
+        $("#alert > span").text(total_changes).attr("title", translate("totalchanges", {
+            "total_changes": total_changes
+        }));
         setTimeout(function() {
             body.addClass("haschanges");
         }, 2500);
@@ -4419,7 +4481,9 @@ function open_url() {
             target = this_href.attr("target"),
             url = this_href.attr("href");
         loader(true);
-        loadertext("Loading " + url);
+        loadertext(translate("loadurl", {
+            "url": url
+        }));
         if (is_ios_app === true) {
             cancelpaymentdialog();
         }
@@ -4458,7 +4522,10 @@ function get_alchemy_apikey() {
 function proxy_alert(version) {
     if (version) {
         body.addClass("haschanges");
-        $("#alert > span").text("!").attr("title", "Please update your proxy server " + version + " > " + proxy_version);
+        $("#alert > span").text("!").attr("title", translate("updateproxy", {
+            "version": version,
+            "proxy_version": proxy_version
+        }));
     }
 }
 
@@ -4496,7 +4563,7 @@ function copytoclipboard(content, type) {
     let copy_api = navigator.clipboard;
     if (copy_api) {
         navigator.clipboard.writeText(content);
-        notify(type + " copied to clipboard", 2500, "no");
+        notify(type + " " + translate("copied"), 2500, "no");
         return
     }
     copycontent.val(content);
@@ -4504,12 +4571,12 @@ function copytoclipboard(content, type) {
     try {
         let success = document.execCommand("copy");
         if (success) {
-            notify(type + " copied to clipboard", 2500, "no");
+            notify(type + " " + translate("copied"), 2500, "no");
         } else {
-            notify("Unable to copy " + type, 2500, "no");
+            notify(translate("xcopy") + " " + type, 2500, "no");
         }
     } catch (err) {
-        notify("Unable to copy " + type, 2500, "no");
+        notify(translate("xcopy") + " " + type, 2500, "no");
     }
     copycontent.val("").data({
         "type": false
@@ -4530,7 +4597,7 @@ function closeloader_trigger() {
 
 function closeloader() {
     $("#loader").removeClass("showpu active toploader");
-    loadertext("loading");
+    loadertext(translate("loading"));
 }
 
 function loadertext(text) {
@@ -4542,9 +4609,9 @@ function settitle(title) {
     ogtitle.attr("content", title);
 }
 
-function all_pinpanel(cb, top) {
+function all_pinpanel(cb, top, set) {
     let topclass = (top) ? " ontop" : "";
-    if (haspin() === true) {
+    if (haspin(set) === true) {
         let lastlock = br_get_local("locktime"),
             tsll = now() - lastlock,
             pass = (tsll < 10000);
@@ -4552,7 +4619,7 @@ function all_pinpanel(cb, top) {
             cb.func(cb.args);
             return
         }
-        let content = pinpanel(" pinwall", cb);
+        let content = pinpanel(" pinwall", cb, set);
         showoptions(content, "pin" + topclass);
         return
     }
@@ -4560,12 +4627,12 @@ function all_pinpanel(cb, top) {
     showoptions(content, "pin" + topclass);
 }
 
-function pinpanel(pinclass, pincb) {
+function pinpanel(pinclass, pincb, set) {
     let makeclass = (pinclass === undefined) ? "" : pinclass,
-        headertext = (haspin() === true) ? "Please enter your pin" : "Create a 4-digit pin";
+        headertext = (haspin(set) === true) ? translate("pleaseenter") : translate("createpin");
     return $("<div id='pinfloat' class='enterpin" + makeclass + "'>\
         <p id='pintext'>" + headertext + "</p>\
-        <p id='confirmpin'>Confirm your pin</p>\
+        <p id='confirmpin'>" + translate("confirmyourpin") + "</p>\
         <input id='pininput' type='password' readonly='readonly'/>\
         <input id='validatepin' type='password' readonly='readonly'/>\
         <div id='pinkeypad'>\
@@ -4608,8 +4675,8 @@ function pinpanel(pinclass, pincb) {
         </div>\
         <div id='pin_admin' class='flex'>\
             <div id='pin_admin_float'>\
-                <div id='lock_time'><span class='icomoon'></span> Lock time</div>\
-                <div id='reset_pin'>Reset pin</div>\
+                <div id='lock_time'><span class='icomoon'></span> " + translate("locktime") + "</div>\
+                <div id='reset_pin'> " + translate("resetpin") + "</div>\
             </div>\
         </div>\
     </div>").data("pincb", pincb);
@@ -4655,7 +4722,7 @@ function sleep() {
 }
 
 function vu_block() {
-    notify("Not allowed in cashier mode");
+    notify(translate("cashiernotallowed"));
     playsound(funk);
 }
 
@@ -4936,7 +5003,9 @@ function check_intents(scheme) {
     let scheme_url = atob(scheme),
         proto = scheme_url.split(":")[0];
     if (proto == "eclair" || proto == "acinq" || proto == "lnbits") {
-        let content = "<h2 class='icon-warning'>" + proto + ": connect not available at the moment</h2>";
+        let content = "<h2 class='icon-warning'>" + translate("proto", {
+            "proto": proto
+        }) + "</h2>";
         popdialog(content, "canceldialog");
         return
     }
@@ -4955,17 +5024,17 @@ function check_intents(scheme) {
                 });
                 return
             }
-            popnotify("error", "unable to decode qr");
+            popnotify("error", translate("decodeqr"));
         }
         return
     }
     if (proto.length < 1) {
-        let content = "<h2 class='icon-warning'>Invalid URL scheme</h2>";
+        let content = "<h2 class='icon-warning'>" + translate("invalidurlscheme") + "</h2>";
         popdialog(content, "canceldialog");
         return
     }
     if (proto && proto.length > 0) {
-        let content = "<h2 class='icon-warning'>URL scheme '" + proto + ":' is not supported</h2>";
+        let content = "<h2 class='icon-warning'>" + translate("usnotsupported") + "</h2>";
         popdialog(content, "canceldialog");
         return
     }
@@ -5003,7 +5072,7 @@ function expand_shoturl(i_param) {
                     let status = data.status;
                     if (status) {
                         if (status == "file not found") {
-                            let content = "<h2 class='icon-warning'>Request not found or expired</h2>";
+                            let content = "<h2 class='icon-warning'>" + translate("shorturlnotfound") + "</h2>";
                             popdialog(content, "canceldialog");
                             closeloader();
                             return
@@ -5020,7 +5089,7 @@ function expand_shoturl(i_param) {
                     }
                 }
             }).fail(function(jqXHR, textStatus, errorThrown) {
-                let content = "<h2 class='icon-warning'>Failed to fetch request</h2>";
+                let content = "<h2 class='icon-warning'>" + translate("failedtofetchrequest") + "</h2>";
                 popdialog(content, "canceldialog");
                 closeloader();
                 return
@@ -5096,10 +5165,10 @@ function ln_connect(gets) {
             console.log("Unable to set data");
             return
         }
-        notify("Invalid macaroon format");
+        notify(translate("invalidmacaroon"));
         return
     }
-    notify("Invalid format");
+    notify(translate("invalidformat"));
 }
 
 function click_pop(fn) {

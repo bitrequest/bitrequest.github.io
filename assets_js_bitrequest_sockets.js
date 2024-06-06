@@ -49,7 +49,7 @@ $(document).ready(function() {
 function init_socket(socket_node, address, swtch, retry) {
     clearpinging();
     if (offline === true) {
-        notify("You are currently offline, request is not monitored");
+        notify(translate("youareoffline") + ". " + translate("notmonitored"));
         return
     }
     scan_attempts = {};
@@ -149,7 +149,7 @@ function init_socket(socket_node, address, swtch, retry) {
                 "url": main_arbitrum_socket
             }, address, main_arbitrum_node); // L2 Infura Arbitrum
         }
-        notify("networks: ETH, Arbitrum", 500000, "yes");
+        notify(translate("networks") + ": ETH, Arbitrum", 500000, "yes");
         return
     }
     if (payment == "monero") {
@@ -171,7 +171,7 @@ function init_socket(socket_node, address, swtch, retry) {
         }
         request.monitored = false;
         request.viewkey = false;
-        notify("this address is not monitored", 500000, "yes");
+        notify(translate("notmonitored"), 500000, "yes");
         return
     }
     if (payment == "nimiq") {
@@ -204,10 +204,10 @@ function init_socket(socket_node, address, swtch, retry) {
             }, address, arb_contract);
             var arbtxt = " Arbitrum,";
         }
-        notify("networks: ETH," + arbtxt + " <span class='nowrap'>BNB smart chain</span>", 500000, "yes");
+        notify(translate("networks") + ": ETH," + arbtxt + " <span class='nowrap'>BNB smart chain</span>", 500000, "yes");
         return
     }
-    notify("this request is not monitored", 500000, "yes")
+    notify(translate("notmonitored"), 500000, "yes")
 }
 
 function blockcypherws(socket_node, address) {
@@ -251,7 +251,7 @@ function lightning_socket(lnd) {
             if (result.status == "confirm" && !lnd_confirm) {
                 lnd_confirm = true;
                 paymentdialogbox.addClass("accept_lnd");
-                notify("Accept the payment in your lightning app...", 500000);
+                notify(translate("acceptthepayment"), 500000);
                 vibrate();
                 playsound(blip);
             }
@@ -282,7 +282,7 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
             ndef.onreading = event => {
                 if ((now() - 6000) < ndef_timer) { // prevent too many taps
                     playsound(funk);
-                    notify("Tapped too quick", 6000);
+                    notify(translate("ndeftablimit"), 6000);
                     return;
                 }
                 ndef_timer = now();
@@ -305,7 +305,7 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                 milli_sats = (ccraw * 100000000000).toFixed(0);
                                             if (ccraw <= 0) {
                                                 playsound(funk);
-                                                notify("Please enter amount", 5000);
+                                                notify(translate("enteramount"), 5000);
                                                 return
                                             }
                                             if (ndef_processing) {
@@ -346,14 +346,16 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                 }
                                                 if (milli_sats > result.maxWithdrawable) {
                                                     playsound(funk);
-                                                    notify("Request exceeds card's maximum", 5000);
+                                                    notify(translate("cardmax"), 5000);
                                                     paymentdialogbox.removeClass("accept_lnd");
                                                     ndef_processing = false;
                                                     return
                                                 }
                                                 if (milli_sats < result.minWithdrawable) {
                                                     playsound(funk);
-                                                    notify("Minimum request amount is " + result.minWithdrawable, 5000);
+                                                    notify(translate("minamount", {
+                                                        "min": result.minWithdrawable
+                                                    }), 5000);
                                                     paymentdialogbox.removeClass("accept_lnd");
                                                     ndef_processing = false;
                                                     return
@@ -467,7 +469,7 @@ function ndef_errormg(message) {
     closenotify();
     setTimeout(function() {
         pmd.removeClass("accept_lnd transacting pd_error");
-        brheader.text("Waiting for payment");
+        brheader.text(translate("waitingforpayment"));
     }, 5000);
 }
 
@@ -488,7 +490,7 @@ function abort_ndef() {
 
 function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
     if (paymentpopup.hasClass("active")) { // only when request is visible
-        let default_error = "unable to connect";
+        let default_error = translate("unabletoconnect");
         $.ajax({
             "method": "POST",
             "cache": false,
@@ -521,7 +523,7 @@ function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
                 if (e.status == "confirm" && !lnd_confirm) {
                     lnd_confirm = true;
                     paymentdialogbox.addClass("accept_lnd");
-                    notify("Accept the payment in your lightning app...", 500000);
+                    notify(translate("acceptthepayment"), 500000);
                     playsound(blip);
                 }
                 return
@@ -557,7 +559,7 @@ function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
             let status = e.status;
             if (status) {
                 request.address = "lnurl"; // make it a lightning request
-                notify("Waiting for payment", 500000);
+                notify(translate("waitingforpayment"), 500000);
                 helper.lnd.invoice = e;
                 let txd = lnd_tx_data(e);
                 confirmations(txd, true, true);
@@ -583,7 +585,7 @@ function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
 
 function lnd_poll_data_fail(pid) {
     clearpinging(pid);
-    notify("this request is not monitored", 500000, "yes");
+    notify(translate("notmonitored"), 500000, "yes");
 }
 
 // Websockets
@@ -1232,7 +1234,7 @@ function handle_socket_fails(socket_node, thisaddress, socketid) {
         let error_message = "unable to connect to " + socket_node.name;
         console.log(error_message);
         socket_info(socket_node, false);
-        notify("websocket offline", 500000, "yes");
+        notify(translate("websocketoffline"), 500000, "yes");
     }
 }
 
@@ -1346,7 +1348,7 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
         let data = br_result(e).result,
             errormessage = data.Error;
         if (errormessage) {
-            let error = (errormessage) ? errormessage : "Invalid Viewkey";
+            let error = (errormessage) ? errormessage : translate("invalidvk");
             popnotify("error", error);
             return
         }
@@ -1369,7 +1371,7 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
         console.log(jqXHR);
         console.log(textStatus);
         console.log(errorThrown);
-        notify("Error verifying Viewkey");
+        notify(translate("errorvk"));
     });
 }
 
@@ -1589,7 +1591,7 @@ function after_poll(rq_init, next_api) {
 
 function ap_loader() {
     loader(true);
-    loadertext("Closing request / scanning for incoming transactions");
+    loadertext(translate("closingrequest") + " / " + translate("scanningforincoming"));
 }
 
 function after_poll_fails(api_name) {

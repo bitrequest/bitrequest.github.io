@@ -345,7 +345,7 @@ function face_front() {
                 return
             }
             setTimeout(function() {
-                requesttitle.attr("placeholder", "eg: " + requesttitle.attr("data-ph" + getrandomnumber(1, 13)));
+                requesttitle.attr("placeholder", translate("forexample") + ":" + requesttitle.attr("data-ph" + getrandomnumber(1, 13)));
                 amountinput.focus();
             }, 300);
             return
@@ -405,7 +405,7 @@ function loadpaymentfunction(pass) {
     }
     if (!$.isEmptyObject(sockets)) {
         playsound(funk);
-        notify("Closing sockets...");
+        notify(translate("closingsockets"));
         return
     }
     loader();
@@ -454,7 +454,7 @@ function loadpaymentfunction(pass) {
                     get_tokeninfo(payment, token_contract);
                     return
                 }
-                let content = "<h2 class='icon-blocked'>Unable to get token data</h2>";
+                let content = "<h2 class='icon-blocked'>" + translate("nofetchtokeninfo") + "</h2>";
                 popdialog(content, "canceldialog");
                 closeloader();
                 return
@@ -462,7 +462,9 @@ function loadpaymentfunction(pass) {
             continue_paymentfunction();
             return
         }
-        let content = "<h2 class='icon-blocked'>Currency not supported</h2>";
+        let content = "<h2 class='icon-blocked'>" + translate("currencynotsupported", {
+            "currency": payment
+        }) + "</h2>";
         popdialog(content, "canceldialog");
         closeloader();
         return
@@ -480,7 +482,7 @@ function get_tokeninfo(payment, contract) {
         continue_paymentfunction();
         return
     }
-    loadertext("get token info");
+    loadertext(translate("gettokeninfo"));
     api_proxy({
         "api": "ethplorer",
         "search": "getTokenInfo/" + contract,
@@ -534,8 +536,9 @@ function continue_paymentfunction() {
         lnd_only = (address == "lnurl") ? true : false,
         valid = (lnd_only) ? true : check_address(address, currencycheck); // validate address 
     if (valid === false) {
-        let error_message = (address == "undefined") ? "Undefined address, please ask for a new request" :
-            "Invalid " + payment + " address",
+        let error_message = (address == "undefined") ? translate("undefinedaddress") : translate("invalidaddress", {
+                "payment": payment
+            }),
             content = "<h2 class='icon-blocked'>" + error_message + "</h2>";
         popdialog(content, "canceldialog");
         closeloader();
@@ -594,7 +597,17 @@ function continue_paymentfunction() {
         set_confirmations = (dataobject && dataobject.c) ? parseFloat(dataobject.c) : (no_conf === true) ? 0 : current_conf.selected,
         instant = (!set_confirmations),
         pagenameccparam = (iscrypto === true) ? "" : payment + " ",
-        pagename = (requestname) ? requestname + " sent a " + pagenameccparam + "payment request of " + amount + " " + uoa + " for " + requesttitle : pagenameccparam + "payment request for " + amount + " " + uoa,
+        pagename = (requestname) ? translate("sharetitlename", {
+            "requestname": requestname,
+            "pagenameccparam": pagenameccparam,
+            "amount": amount,
+            "uoa": uoa,
+            "requesttitle": requesttitle
+        }) : translate("sharetitle", {
+            "pagenameccparam": pagenameccparam,
+            "amount": amount,
+            "uoa": uoa
+        }),
         requestclass = (isrequest === true) ? "request" : "norequest", //set classnames for request
         iszero = (amount === 0 || isNaN(amount)),
         iszero_request = (isrequest === true && iszero === true),
@@ -680,7 +693,9 @@ function lightning_setup() {
         if (dataobject) {
             let imp = dataobject.imp;
             if (imp) { //lightning request
-                loadertext("check " + imp + " lightning status");
+                loadertext(translate("checklightningstatus", {
+                    "imp": imp
+                }));
                 let phd = dataobject.proxy,
                     host = dataobject.host,
                     key = dataobject.key,
@@ -744,7 +759,9 @@ function lightning_setup() {
         ss = ln_dat.selected_service;
     if (ss) {
         let imp = ss.imp;
-        loadertext("check " + imp + " lightning status");
+        loadertext(translate("checklightningstatus", {
+            "imp": imp
+        }));
         let node_id = ss.node_id,
             proxies = ln_dat.proxies,
             proxy_id = ss.proxy_id,
@@ -820,17 +837,17 @@ function lnd_put(proxy, key, pl, lnurl) {
             return
         }
         if (stat == "no write acces") {
-            notify("LNurl proxy access denied, check folder permissions");
+            notify(translate("nowriteaccess"));
         }
         let data = br_result(e).result,
             error = data.error,
-            default_error = "unable to connect";
+            default_error = translate("unabletoconnect");
         if (error) {
             let message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
             if (request.isrequest) {
                 if (helper.lnd_only) {
                     topnotify(message);
-                    notify("this request is not monitored");
+                    notify(translate("notmonitored"));
                 }
             } else {
                 notify(message);
@@ -899,7 +916,7 @@ function test_lnd(lnurl) {
 function proceed_pf(error) {
     if (helper.lnd_status === false && helper.lnd_only) {
         request.monitored = false;
-        let error_message = (helper.lnd_only) ? (error) ? error.errorcode + ": " + error.errormessage : "Unable to connect with lightning node" : $("#rq_errlog > .rq_err").text(),
+        let error_message = (helper.lnd_only) ? (error) ? error.errorcode + ": " + error.errormessage : translate("unabletoconnectln") : $("#rq_errlog > .rq_err").text(),
             content = "<h2 class='icon-blocked'>" + error_message + "</h2>";
         cancelpaymentdialog();
         popdialog(content, "canceldialog");
@@ -934,7 +951,9 @@ function proceed_pf(error) {
             getccexchangerates(apilist, ccapi);
             return
         } //fetch cache
-        loadertext("reading " + request.currencysymbol + " rate from cache");
+        loadertext(translate("readingfromcache", {
+            "ccsymbol": request.currencysymbol
+        }));
         initexchangerate(thisusdrate, apisrc, cachetime); //check for fiat rates and pass usd amount
         return
     }
@@ -944,7 +963,10 @@ function proceed_pf(error) {
 //get crypto rates
 function getccexchangerates(apilist, api) {
     api_attempt[apilist][api] = true;
-    loadertext("get " + request.currencysymbol + " rates from " + api);
+    loadertext(translate("getccrates", {
+        "ccsymbol": request.currencysymbol,
+        "api": api
+    }));
     let payment = request.payment,
         contract = request.token_contract,
         iserc = (request.erc20 === true) ? true : false,
@@ -953,7 +975,7 @@ function getccexchangerates(apilist, api) {
         (api == "coingecko") ? (iserc) ? "simple/token_price/ethereum?contract_addresses=" + contract + "&vs_currencies=usd" : "simple/price?ids=" + payment + "&vs_currencies=usd" :
         false;
     if (search === false) {
-        loadertext("api error");
+        loadertext(translate("apierror"));
         closeloader();
         cancelpaymentdialog();
         fail_dialogs(api, "Crypto price API not defined");
@@ -991,7 +1013,7 @@ function getccexchangerates(apilist, api) {
                     (api == "coingecko") ? q_obj(data, pnode + ".usd") :
                     null;
                 if (ccrate) {
-                    loadertext("success");
+                    loadertext(translate("success"));
                     let timestamp = now(),
                         ccratearray = {};
                     ccratearray.timestamp = timestamp;
@@ -1025,14 +1047,14 @@ function cc_fail(apilist, api, error_val) {
         getccexchangerates(apilist, api);
         return
     }
-    loadertext("api error");
+    loadertext(translate("apierror"));
     closeloader();
     cancelpaymentdialog();
     fail_dialogs(api, error_val);
 }
 
 function initexchangerate(cc_rate, ccapi, cachetime) {
-    loadertext("get fiat rates");
+    loadertext(translate("getfiatrates"));
     let ccrate = 1 / cc_rate,
         timestamp = now(),
         newcurrency = (request.fiatcurrency != request.localcurrency && request.fiatcurrency != "eur" && request.fiatcurrency != "usd" && request.fiatcurrency != request.currencysymbol), //check if currency request is other then usd, eur or localcurrency
@@ -1057,7 +1079,7 @@ function initexchangerate(cc_rate, ccapi, cachetime) {
                 get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, cachetime);
                 return
             } //fetch cached exchange rates
-            loadertext("reading fiat rates from cache");
+            loadertext(translate("readingfiatratesfromcache"));
             rendercurrencypool(xratesnode, ccrate, ccapi, currencycache.api, cachetime, timeexpired);
             return
         }
@@ -1068,7 +1090,9 @@ function initexchangerate(cc_rate, ccapi, cachetime) {
 //get fiat rates
 function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, cachetime) {
     api_attempt[apilist][fiatapi] = true;
-    loadertext("fetching fiat rates from " + fiatapi);
+    loadertext(translate("fetchingfiatrates", {
+        "fiatapi": fiatapi
+    }));
     // set apipath
     let search = (fiatapi == "fixer") ? "latest" :
         (fiatapi == "coingecko") ? "exchange_rates" :
@@ -1077,7 +1101,7 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
         (fiatapi == "coinbase") ? "exchange-rates" :
         false;
     if (search === false) {
-        loadertext("error");
+        loadertext(translate("error"));
         closeloader();
         cancelpaymentdialog();
         fail_dialogs(fiatapi, "Fiat price API not defined");
@@ -1100,7 +1124,7 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
             (fiatapi == "coinbase") ? data.data.rates :
             null;
         if (ratesnode) {
-            loadertext("success");
+            loadertext(translate("success"));
             let fiatsymbol = request.fiatcurrency,
                 localupper = fiatsymbol.toUpperCase(),
                 rates = {
@@ -1135,7 +1159,7 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
                         localval = localkey * usdval;
                 }
             } else {
-                loadertext("error");
+                loadertext(translate("error"));
                 closeloader();
                 cancelpaymentdialog();
                 fail_dialogs(fiatapi, "Fiat price API not defined");
@@ -1159,7 +1183,7 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
         }
         let nextfiatapi = try_next_api(apilist, fiatapi);
         if (nextfiatapi === false) {
-            loadertext("error");
+            loadertext(translate("error"));
             closeloader();
             cancelpaymentdialog();
             let errorcode = (data.error) ? data.error : "Failed to load data from " + fiatapi;
@@ -1186,7 +1210,7 @@ function next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, c
         get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, cachetime);
         return
     }
-    loadertext("error");
+    loadertext(translate("error"));
     closeloader();
     cancelpaymentdialog();
     fail_dialogs(fiatapi, error_object);
@@ -1273,7 +1297,7 @@ function getpayment(ccrateeuro, ccapi) {
         sharebuttonclass = (rn_set === true && rt_set === true) ? " sbactive" : "",
         cryptologo = getcc_icon(request.cmcid, request.cpid, request.erc20),
         lndlogo = (request.payment == "bitcoin") ? "<img src='img_logos_btc-lnd.png' class='cmc_icon icon_lnd'>" : "",
-        sharebutton = "<div class='button" + sharebuttonclass + "' id='sharebutton'><span class='icon-share2'>Share request</span></div>",
+        sharebutton = "<div class='button" + sharebuttonclass + "' id='sharebutton'><span class='icon-share2'>" + translate("sharerequestbutton") + "</span></div>",
         initrequestname = (rn_set === true) ? request.requestname : $("#accountsettings").data("selected"),
         sharetitle_exceed = (request.requesttitle && request.requesttitle.length > 65),
         exceedclass = (sharetitle_exceed === true) ? "title_exceed" : "",
@@ -1322,8 +1346,9 @@ function getpayment(ccrateeuro, ccapi) {
                     </span>\
                 </div>\
             </div>",
-        status_text = (request.paid === true) ? (request.requesttype == "incoming") ? "Payment sent" : "Payment received" : "Waiting for payment",
-        conf_section = (request.instant === true) ? "" : "<span id='statusbox'>Waiting for <span id='confnumber'></span> confirmations </span><span class='confbox'><span data-conf='0'>0</span> confirmations</span>",
+        status_text = (request.paid === true) ? (request.requesttype == "incoming") ? translate("paymentsent") : translate("paymentreceived") : translate("waitingforpayment"),
+        conftl = translate("confirmations"),
+        conf_section = (request.instant === true) ? "" : "<span id='statusbox'>" + translate("waitingfor") + " <span id='confnumber'></span> " + conftl + " </span><span class='confbox'><span data-conf='0'>0</span> " + conftl + "</span>",
         brstatuspanel = "\
             <div class='brstatuspanel'>\
                 <img src='" + c_icons("confirmed") + "'/>\
@@ -1339,7 +1364,7 @@ function getpayment(ccrateeuro, ccapi) {
                         <span class='wifi_off icon-wifi-off'></span>" +
         conf_section +
         "</span><br/>\
-                    <span id='view_tx'>View details</span>\
+                    <span id='view_tx'>" + translate("viewdetails") + "</span>\
                 </p>\
             </div>",
         readonly_attr = (is_viewonly() === true) ? " readonly='readonly'" : "",
@@ -1349,32 +1374,33 @@ function getpayment(ccrateeuro, ccapi) {
             <div id='shareformbox'>\
                 <div id='shareformib' class='inputbreak'>\
                     <form id='shareform' disabled='' autocomplete='off' autocorrect='off' autocapitalize='sentences' spellcheck='off'>\
-                        <label>What's your name?<input type='text' placeholder='Name' id='requestname' value='" + initrequestname + "' autocomplete='false'" + readonly_attr + "></label>\
-                        <label>What's it for?<input type='text' placeholder='eg:  lunch  🥪' id='requesttitle' value='" + requesttitle_string + "' data-ph1=' festival tickets' data-ph2=' coffee  ☕' data-ph3=' present  🎁' data-ph4=' snowboarding  🏂' data-ph5=' movie theater  📽️' data-ph6=' lunch  🥪' data-ph7=' shopping  🛒' data-ph8=' video game  🎮' data-ph9=' drinks  🥤' data-ph10=' concert tickets  🎵' data-ph11=' camping  ⛺' data-ph12=' taxi  🚕' data-ph13=' zoo  🦒'></label>\
+                        <label>" + translate("whatsyourname") + "<input type='text' placeholder='Name' id='requestname' value='" + initrequestname + "' autocomplete='false'" + readonly_attr + "></label>\
+                        <label>" + translate("whatsitfor") + "<input type='text' placeholder='" + translate("forexample") + ": " + translate("lunch") + " 🥪' id='requesttitle' value='" + requesttitle_string + "' data-ph1=' " + translate("festivaltickets") + "' data-ph2=' " + translate("coffee") + " ☕' data-ph3=' " + translate("present") + " 🎁' data-ph4=' " + translate("snowboarding") + " 🏂' data-ph5=' " + translate("movietheater") + " 📽️' data-ph6=' " + translate("lunch") + " 🥪' data-ph7=' " + translate("shopping") + " 🛒' data-ph8=' " + translate("videogame") + " 🎮' data-ph9=' " + translate("drinks") + " 🥤' data-ph10=' " + translate("concerttickets") + " 🎵' data-ph11=' " + translate("camping") + " ⛺' data-ph12=' " + translate("taxi") + " 🚕' data-ph13=' " + translate("zoo") + " 🦒'></label>\
                     </form>" + fb_markup +
         "</div>\
                 <div id='sharebox' class='inputbreak'>" + sharebutton + "</div>\
             </div>",
-        requestnamestring = (request.requesttype === "outgoing") ? "" : (rn_set === true) ? "To " + request.requestname + ":" : "",
-        lndowbttn = (request.payment == "bitcoin") ? "<div class='button openwallet_lnd' id='openwallet_lnd' data-currency='bitcoin'><span class='icon-folder-open'>Open wallet</span></div>" : "",
+        requestnamestring = (request.requesttype === "outgoing") ? "" : (rn_set === true) ? translate("to") + " " + request.requestname + ":" : "",
+        openwtl = translate("openwallet"),
+        lndowbttn = (request.payment == "bitcoin") ? "<div class='button openwallet_lnd' id='openwallet_lnd' data-currency='bitcoin'><span class='icon-folder-open'>" + openwtl + "</span></div>" : "",
         paymethods = "\
             <div id='paymethods'>\
                 <p id='requestnamep'>" + requestnamestring + "</p>\
                 <div id='scanqrib' class='inputbreak'>\
                     <div class='button' id='scanqr'>\
-                        <span class='icon-qrcode'>Show qr-code</span>\
+                        <span class='icon-qrcode'>" + translate("showqr") + "</span>\
                     </div><br/>\
-                    <div class='button openwallet' id='openwallet' data-currency='" + request.payment + "'><span class='icon-folder-open'>Open wallet</span></div>" + lndowbttn +
+                    <div class='button openwallet' id='openwallet' data-currency='" + request.payment + "'><span class='icon-folder-open'>" + openwtl + "</span></div>" + lndowbttn +
         "</div>\
             </div>",
         poweredby = "<div class='poweredby'>Powered by: <a href='https://www.bitrequest.io' target='_blank'>Bitrequest</a></div>",
         bottomcard = (request.isrequest === true) ? paymethods : shareform,
         ccqr = "<div id='qrcode' class='qrcode'><canvas width='256' height='256'></canvas></div>" + cryptologo,
         lndqr = (request.payment == "bitcoin") ? "<div id='qrcode_lnd' class='qrcode'><canvas width='256' height='256'></canvas></div><img src='img_logos_btc-lnd.png' class='cmc_icon' id='lnd_icon'><img src='" + c_icons("phone-icon") + "' class='cmc_icon' id='phone_icon'>" : "",
-        lndow = (request.payment == "bitcoin") ? "<div class='openwallet_lnd abr icon-folder-open' data-currency='bitcoin' data-rel='0'>Open wallet</div>" : "";
+        lndow = (request.payment == "bitcoin") ? "<div class='openwallet_lnd abr icon-folder-open' data-currency='bitcoin' data-rel='0'>" + openwtl + "</div>" : "";
     $("#request_front").prepend("<div id='cl_wrap'>" + cryptologo + "</div>\
         <div class='actionbar clearfix'>\
-            <div id='sharerequest' class='abl icon-share2 sbactive'>Share request</div><div id='open_wallet' class='openwallet abr icon-folder-open' data-currency='" + request.payment + "' data-rel='0'>Open wallet</div>" + lndow +
+            <div id='sharerequest' class='abl icon-share2 sbactive'>" + translate("sharerequest") + "</div><div id='open_wallet' class='openwallet abr icon-folder-open' data-currency='" + request.payment + "' data-rel='0'>" + translate("openwallet") + "</div>" + lndow +
         "</div>\
         <div class='qrwrap flex' id='main_qrwrap'>" + ccqr + lndqr + brstatuspanel +
         "</div>\
@@ -1403,11 +1429,11 @@ function getpayment(ccrateeuro, ccapi) {
                         <input value='" + fiatcurrencyvaluelet + "' data-xrate='" + fiatcurrencyrate + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
                     </span> " + request.fiatcurrency + ") \
                 </div>\
-                <div id='txibreak' class='inputbreak'> Send <span id='ccinputmirror' class='ccmirror mirrordiv'><span>" + thiscurrencyvaluefixedplaceholder + "</span><input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/></span> " + request.currencysymbol + " to" + label_markup + ": </div>\
+                <div id='txibreak' class='inputbreak'> " + translate("send") + " <span id='ccinputmirror' class='ccmirror mirrordiv'><span>" + thiscurrencyvaluefixedplaceholder + "</span><input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/></span> " + request.currencysymbol + " " + translate("to") + label_markup + ": </div>\
             </div>\
-            <div id='paymentaddress' class='copyinput' data-type='address'>" + address_xmr_ia + "</div><div id='paymentaddress_lnd' class='copyinput' data-type='lightning invoice'></div>\
+            <div id='paymentaddress' class='copyinput'>" + address_xmr_ia + "</div><div id='paymentaddress_lnd' class='copyinput' data-type='lightning invoice'></div>\
         </div>\
-        <div id='apisrc'>src: " + ccapi + "</div>" + poweredby);
+        <div id='apisrc'>" + translate("source") + ": " + ccapi + "</div>" + poweredby);
     paymentdialogbox.find("#request_back").html("\
         <div class='actionbar clearfix'></div>\
         <div id='backwraptop' class='flex'>" + requestinfo + "</div>\
@@ -1434,14 +1460,14 @@ function getpayment(ccrateeuro, ccapi) {
         set_request_timer();
     }
     if (request.monitored === false) {
-        notify("this address is not monitored", 500000, "yes");
+        notify(translate("notmonitored"), 500000, "yes");
     }
     // close loading screen when in iframe
     if (inframe === true) {
         parent.postMessage("close_loader", "*");
     }
     let title_node = $("#requesttitle");
-    title_node.attr("placeholder", "eg: " + title_node.attr("data-ph" + getrandomnumber(1, 13)));
+    title_node.attr("placeholder", translate("forexample") + ":" + title_node.attr("data-ph" + getrandomnumber(1, 13)));
     console.log({
         "request_object": request
     });
@@ -1491,7 +1517,7 @@ function lnd_switch_function() {
                 lnd_statusx();
                 return
             }
-            let result = confirm("Enable lightning payments?");
+            let result = confirm(translate("enablelightning"));
             if (result === true) {
                 let lnli = lndli();
                 lnli.data("selected", true);
@@ -1502,7 +1528,7 @@ function lnd_switch_function() {
                     paymentdialogbox.attr("data-lswitch", "lnd_ao");
                     return
                 }
-                notify("<span id='lnd_offline'>Lightning node is offline</span>", 200000, "yes");
+                notify("<span id='lnd_offline'>" + translate("lnoffline") + "</span>", 200000, "yes");
                 return
             }
             playsound(funk);
@@ -1518,7 +1544,7 @@ function lnd_switch_function() {
 
 function ndef_switch_function() {
     $(document).on("click", "#paymentdialogbox #ndef_switch", function() {
-        notify("Please tap your Boltcard to the back of this device", 10000);
+        notify(translate("tabyourboldcard"), 10000);
     });
 }
 
@@ -1535,7 +1561,7 @@ function lnd_statusx() {
         playsound(funk);
         return
     }
-    notify("<span id='lnd_offline'>Lightning node is offline</span>", 200000, "yes");
+    notify("<span id='lnd_offline'>" + translate("lnoffline") + "</span>", 200000, "yes");
 }
 
 function lnd_offline() {
@@ -1548,7 +1574,7 @@ function lnd_ni() {
     $(document).on("click", "#paymentdialogbox #current_lndnode #lnd_nodeinfo_trigger", function(e) {
         e.stopPropagation();
         lnd_popup();
-        topnotify("Add Lightning node");
+        topnotify(translate("addlightningnode"));
     });
 }
 
@@ -1567,6 +1593,7 @@ function pickcurrency() {
             newccsymbol = newccnode.attr("data-currency"),
             newccname = newccnode.attr("data-currencyname"),
             newccvalue = newccnode.attr("data-value"),
+            nccvalstrip = newccvalue.replace(/\.00$/, ""),
             newccrate = newccnode.attr("data-xrate"),
             sharelcname = (newccname == "Euro") ? "" : (newccnode.hasClass("ccpool")) ? request.fiatcurrencyname : newccname,
             mirrordiv = thisnode.prev("#amountinputmirror"),
@@ -1574,8 +1601,8 @@ function pickcurrency() {
             amountinputvalue = amountinput.val(),
             number = Number(amountinputvalue),
             this_iszero = (number === 0 || isNaN(number)),
-            newccvaluevar = (this_iszero === true) ? "" : newccvalue,
-            newccvalueplaceholder = (this_iszero === true) ? zeroplaceholder : newccvalue,
+            newccvaluevar = (this_iszero === true) ? "" : nccvalstrip,
+            newccvalueplaceholder = (this_iszero === true) ? zeroplaceholder : nccvalstrip,
             iscrypto = (newccsymbol == request.currencysymbol),
             dialogclass = (iscrypto === true) ? (newccsymbol == "btc") ? " showsat showlc showcc" : " showlc showcc" : (newccsymbol == request.fiatcurrency) ? "" : " showlc", // set classnames for hiding / showing inputs
             gets = geturlparameters(),
@@ -1583,11 +1610,15 @@ function pickcurrency() {
             address = gets.address,
             data = (gets.d && gets.d.length > 5) ? "&d=" + gets.d : "",
             starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
-            href = starturl + payment + "&uoa=" + newccsymbol + "&amount=" + newccvalue + "&address=" + address + data,
-            pagename = payment + " request for " + newccvalue + " " + newccsymbol,
+            href = starturl + payment + "&uoa=" + newccsymbol + "&amount=" + nccvalstrip + "&address=" + address + data,
+            pagename = translate("sharetitlechange", {
+                "payment": payment,
+                "newccvalue": nccvalstrip,
+                "newccsymbol": newccsymbol
+            }),
             title = pagename + " | " + apptitle;
         request.uoa = nextcurrency,
-            request.amount = newccvalue,
+            request.amount = nccvalstrip,
             request.iscrypto = iscrypto;
         thisnode.add("#sharecurrency").text(newccsymbol);
         $("#sharelcname").text(sharelcname);
@@ -1742,7 +1773,11 @@ function updatecpool(thisamount, thisrate, ccvalue) {
         data = (gets.d) ? "&d=" + gets.d : "",
         starturl = (page) ? "?p=" + page + "&payment=" : "?payment=",
         href = starturl + payment + "&uoa=" + currency + "&amount=" + thisamount + "&address=" + address + data,
-        pagename = payment + " request for " + thisamount + " " + currency,
+        pagename = translate("sharetitlechange", {
+            "payment": payment,
+            "newccvalue": thisamount,
+            "newccsymbol": currency
+        }),
         title = pagename + " | " + apptitle;
     helper.currencylistitem.data("url", href);
     request.amount = thisamount;
@@ -1873,11 +1908,11 @@ function copyaddress_dblclick() {
     $(document).on("dblclick", "#paymentaddress, #paymentaddress_lnd, .select", function() {
         let thisnode = $(this),
             type = thisnode.attr("data-type"),
-            typeval = (type) ? type : "address";
+            typeval = (type) ? type : translate("address");
         copycontent.val(thisnode.text()).data({
             "type": typeval
         });
-        notify("<span id='copyaddress'>Copy " + typeval + "?</span>", 40000, "yes");
+        notify("<span id='copyaddress'>" + translate("copy") + " " + typeval + "?</span>", 40000, "yes");
     });
 }
 
@@ -1896,13 +1931,15 @@ function copyinputs() {
         copycontent.val(thisval).data({
             "type": typeval
         });
-        notify("<span id='copyaddress'>Copy " + typeval + "?</span>", 40000, "yes");
+        notify("<span id='copyaddress'>" + translate("copy") + " " + +"?</span>", 40000, "yes");
     });
 }
 
 function xmrsettings() {
     $(document).on("click", "#xmrsettings", function() {
-        let result = confirm("Open XMR settings?");
+        let result = confirm(translate("opencoinsettings", {
+            "currency": "Monero"
+        }));
         if (result === true) {
             let page_title = "monero_settings";
             openpage("?p=" + page_title, page_title, "loadpage");
@@ -2034,7 +2071,7 @@ function fliprequest() {
         let is_lnd = (paymentdialogbox.attr("data-lswitch") == "lnd_ao");
         if (paymentdialogbox.attr("data-pending") == "ispending" && !is_lnd) {
             if (request.payment == "monero") {
-                notify("Address in use. <span id='xmrsettings'>Activate integrated addresses?</span>", 40000, "yes");
+                notify(translate("addressinuse") + ". <span id='xmrsettings'>" + translate("activateintegrated") + "?</span>", 40000, "yes");
                 return
             }
             pendingrequest();
@@ -2084,16 +2121,20 @@ function pendingrequest() {
         });
         let first_address = nonpending_addresslist.first(),
             fa_data = first_address.data();
-        dialogcontent = "<h3>Pick another address</h3><div class='selectbox'>\
+        dialogcontent = "<h3>" + translate("pickanotheraddress") + "</h3><div class='selectbox'>\
             <input type='text' value='" + fa_data.label + " | " + fa_data.address + "' placeholder='Pick currency' readonly id='selec_address'/>\
             <div class='selectarrows icon-menu2' data-pe='none'></div>\
             <div class='options'>" + addresslist + "</div>\
         </div>\
-        <input type='submit' class='submit' value='OK' id='pending_pick_address'/>";
+        <input type='submit' class='submit' value='" + translate("okbttn") + "' id='pending_pick_address'/>";
     } else {
-        dialogcontent = "<div id='addaddress' class='button'><span class='icon-plus'>Add new " + currencysymbol + " address</span></div><input type='submit' class='submit' value='OK' id='pending_add_address'/>";
+        dialogcontent = "<div id='addaddress' class='button'><span class='icon-plus'>" + translate("addcoinaddress", {
+            "currency": currencysymbol
+        }) + "</span></div><input type='submit' class='submit' value='" + translate("okbttn") + "' id='pending_add_address'/>";
     }
-    let content = "<div class='formbox' id='addresslock' data-currency='" + payment + "' data-currencysymbol='" + currencysymbol + "' data-cmcid='" + cmcid + "'><h2 class='icon-lock'>Temporarily unable to share request</h2><p>This address has a <span id='view_pending_tx' data-requestid='" + pending_requestid + "'>pending shared request</span>.<br/>Please wait for the transaction to confirm before re-using the address.</p>\
+    let content = "<div class='formbox' id='addresslock' data-currency='" + payment + "' data-currencysymbol='" + currencysymbol + "' data-cmcid='" + cmcid + "'><h2 class='icon-lock'>" + translate("sharelocktitle") + "</h2><p>" + translate("sharelockttext", {
+        "pending_requestid": pending_requestid
+    }) + "<br/>" + translate("waitforconfirm") + "</p>\
     <div class='popnotify'></div>\
     <div class='popform validated'>" + dialogcontent + "</div>";
     popdialog(content, "triggersubmit");
@@ -2101,7 +2142,7 @@ function pendingrequest() {
 
 function view_pending_tx() {
     $(document).on("click", "#view_pending_tx", function() {
-        let result = confirm("View pending request?");
+        let result = confirm(translate("viewpendingrequest"));
         if (result === true) {
             openpage("?p=requests", "requests", "loadpage");
             open_tx($("#" + $(this).attr("data-requestid")));
@@ -2116,7 +2157,9 @@ function pickaddressfromdialog() {
         e.preventDefault();
         let thisinput = $("#selec_address"),
             thisinputvalue = thisinput.val();
-        let result = confirm("Use '" + thisinputvalue + "' instead?");
+        let result = confirm(translate("useinstead", {
+            "thisinputvalue": thisinputvalue
+        }));
         if (result === true) {
             let gets = geturlparameters();
             if (gets.xss) {
@@ -2175,7 +2218,10 @@ function addaddressfromdialog() {
             vk_box = (payment == "monero") ? "<div class='inputwrap'><input type='text' class='vk_input' value='' placeholder='View key'>" + scanvk + "</div>" : "",
             der_src = (dd) ? (dd.xpubid) ? " from Xpub" : " from seed" : "",
             seedstr = (dd) ? "<div class='popnotify' style='display:block'><span id='addfromseed' class='address_option'>Generate address" + der_src + "</span></div>" : "<div class='popnotify'></div>",
-            content = $("<div class='formbox form add' id='addressformbox'><h2>" + getcc_icon(cmcid, request.cpid, erc20) + " Add " + payment + " address</h2>" + seedstr + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' class='address' value='' placeholder='Enter a " + payment + " address'>" + scanqr + "</div>" + vk_box + "<input type='text' class='addresslabel' value='' placeholder='label'><div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>I own the seed / private key of this address</span></div><input type='submit' class='submit' value='OK'></form></div>").data(ad);
+            content = $("<div class='formbox form add' id='addressformbox'><h2>" + getcc_icon(cmcid, request.cpid, erc20) + " " + translate("addcoinaddress", {
+                "currency": payment
+            }) + "</h2>" + seedstr + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' class='address' value='' placeholder='" + translate("nopub") + "'>" + scanqr + "</div>" + vk_box + "<input type='text' class='addresslabel' value='' placeholder='label'><div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + translate("pkownership") + "</span></div><input type='submit' class='submit' value='" + translate("okbttn") + "'></form></div>").data(ad);
+        console.log(ad);
         formbox.parent("#dialogbody").html(content);
     });
 }
@@ -2187,7 +2233,9 @@ function add_from_seed() {
             dd = ad.dd;
         if (currency && dd) {
             if (dd.address) {
-                let result = confirm("Are you sure you want to generate a new " + currency + " address? It may not show up in some wallets");
+                let result = confirm(translate("generatenewaddress", {
+                    "currency": currency
+                }));
                 if (result === true) {
                     derive_add_address(currency, dd);
                     canceldialog();
@@ -2274,7 +2322,18 @@ function share(thisbutton) {
             thisrequestname_uppercase = thisrequestname.substr(0, 1).toUpperCase() + thisrequestname.substr(1), // capitalize requestname
             paymentupper = payment.substr(0, 1).toUpperCase() + payment.substr(1),
             payment_name = (lightning) ? "Lightning" : paymentupper,
-            sharedtitle = (thisdata === true) ? thisrequestname_uppercase + " sent a " + payment_name + " payment request of " + thisamount + " " + thiscurrency.toUpperCase() + " for '" + thisrequesttitle + "'" : "You have a " + payment_name + " payment request of " + thisamount + " " + thiscurrency,
+            sharedtitle = (thisdata === true) ? translate("sharetitlename", {
+                "requestname": thisrequestname_uppercase,
+                "pagenameccparam": payment_name,
+                "amount": thisamount,
+                "uoa": thiscurrency.toUpperCase(),
+                "requesttitle": thisrequesttitle
+            }) : translate("sharetitle", {
+                "pagenameccparam": payment_name,
+                "amount": thisamount,
+                "uoa": thiscurrency
+            }),
+            //sharedtitle = (thisdata === true) ? thisrequestname_uppercase + " sent a " + payment_name + " payment request of " + thisamount + " " + thiscurrency.toUpperCase() + " for '" + thisrequesttitle + "'" : "You have a " + payment_name + " payment request of " + thisamount + " " + thiscurrency,
             share_icon = (lightning) ? localhostname + "/img_logos_btc-lnd.png" : cmc_icon_loc + cmcid + ".png";
         if (isipfs) {
             sharerequest(sharedurl, sharedtitle);
@@ -2290,9 +2349,9 @@ function share(thisbutton) {
         requesttitle = $("#requesttitle"),
         name_check = requestname.val().length,
         title_check = requesttitle.val().length,
-        name_check_message = (name_check < 1) ? "Please enter your name" : (name_check < 3) ? "Name should have minimal 3 characters" : "Please check your form",
-        title_check_message = (title_check < 1) ? "Please enter a description" : (title_check < 2) ? "Description should have minimal 2 characters" : "Please check your form",
-        check_message = (name_check < 3) ? name_check_message : (title_check < 2) ? title_check_message : "Please fill in required fields";
+        name_check_message = (name_check < 1) ? translate("enteryourname") : (name_check < 3) ? translate("minimal3") : translate("checkyourform"),
+        title_check_message = (title_check < 1) ? translate("entertitle") : (title_check < 2) ? translate("minimal2") : translate("checkyourform"),
+        check_message = (name_check < 3) ? name_check_message : (title_check < 2) ? title_check_message : translate("requiredfields");
     topnotify(check_message);
     if (name_check < 3) {
         requestname.focus();
@@ -2302,7 +2361,7 @@ function share(thisbutton) {
 }
 
 function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
-    loadertext("Generating link");
+    loadertext(translate("generatelink"));
     let us_settings = $("#url_shorten_settings"),
         us_active = (us_settings.data("us_active") == "active");
     if (us_active === true) {
@@ -2571,7 +2630,7 @@ function sharecallback() {
         canceldialog();
     }
     cancelsharedialog();
-    notify("Successful share! 🎉");
+    notify(translate("successshare") + " 🎉");
 }
 
 function open_share_url(type, url) {
@@ -2739,8 +2798,9 @@ function saverequest(direct) {
                     request.received = true;
                     let txhash_state = rldata.txhash,
                         typestate = rldata.requesttype,
-                        send_receive = (typestate == "incoming") ? "sent" : "received";
-                    adjust_paymentdialog("paid", "no", "Payment " + send_receive);
+                        send_receive = (typestate == "incoming") ? "sent" : "received",
+                        tlstat = (send_receive == "sent") ? translate("paymentsent") : translate("paymentreceived");
+                    adjust_paymentdialog("paid", "no", tlstat);
                     paymentdialogbox.find("span#view_tx").attr("data-txhash", txhash_state);
                     return "nosocket";
                 }
@@ -2870,7 +2930,7 @@ function pendingdialog(pr) { // show pending dialog if tx is pending
     viewtx.attr("data-txhash", smart_txhash);
     if (pr.hasClass("expired")) {
         if (status == "new" || status == "insufficient") {
-            adjust_paymentdialog("expired", "no", "Request expired");
+            adjust_paymentdialog("expired", "no", translate("txexpired"));
             paymentdialogbox.find("span#view_tx").hide();
         }
         return
@@ -2879,11 +2939,12 @@ function pendingdialog(pr) { // show pending dialog if tx is pending
         let invoice = lightning.invoice;
         if (invoice) {
             if (invoice.status == "paid") {
-                adjust_paymentdialog("paid", "no", "Payment " + send_receive);
+                let tlstat = (send_receive == "sent") ? translate("paymentsent") : translate("paymentreceived");
+                adjust_paymentdialog("paid", "no", tlstat);
                 return
             }
             if (invoice.status == "pending") {
-                adjust_paymentdialog("pending", "polling", "Waiting for payment");
+                adjust_paymentdialog("pending", "polling", translate("waitingforpayment"));
                 return
             }
             return
@@ -2891,23 +2952,24 @@ function pendingdialog(pr) { // show pending dialog if tx is pending
     }
     if (thispayment == "nano") { // 0 confirmation so payment must be sent
         if (status == "insufficient") {
-            adjust_paymentdialog("insufficient", "scanning", "Insufficient amount");
+            adjust_paymentdialog("insufficient", "scanning", translate("insufficientamount"));
             return
         }
-        adjust_paymentdialog("paid", "no", "Payment " + send_receive);
+        let tlstat = (send_receive == "sent") ? translate("paymentsent") : translate("paymentreceived");
+        adjust_paymentdialog("paid", "no", tlstat);
         return
     }
     if (smart_txhash) {
         add_flip();
         if (pending == "scanning") {
             if (status == "insufficient") {
-                adjust_paymentdialog("insufficient", "scanning", "Insufficient amount");
+                adjust_paymentdialog("insufficient", "scanning", translate("insufficientamount"));
                 return
             }
-            adjust_paymentdialog("pending", "scanning", "Pending request");
+            adjust_paymentdialog("pending", "scanning", translate("pendingrequest"));
             return
         }
-        adjust_paymentdialog("pending", "polling", "Transaction broadcasted");
+        adjust_paymentdialog("pending", "polling", translate("txbroadcasted"));
         if (thispayment == "monero") {
             let address = prdata.address,
                 vk = request.viewkey;
@@ -2918,7 +2980,7 @@ function pendingdialog(pr) { // show pending dialog if tx is pending
                 init_xmr_node(34, account, viewkey, null, smart_txhash, true);
                 return
             }
-            notify("this address is not monitored", 500000, "yes");
+            notify(translate("notmonitored"), 500000, "yes");
             return
         }
         pick_monitor(smart_txhash, false);
@@ -2945,7 +3007,9 @@ function openwallet() {
             this_url = thisnode.attr("title"),
             lndurl = (this_url && this_url.slice(0, 9) == "lightning"),
             lnd_ref = (lndurl) ? "lightning" : thiscurrency,
-            content = "<div class='formbox' id='backupformbox'><h2 class='icon-folder-open'>Do you have a " + lnd_ref + " wallet on this device?</h2><div class='popnotify'></div><div id='backupactions'><a href='" + this_url + "' class='customtrigger' id='openwalleturl'>Yes</a><div id='dw_trigger' class='customtrigger' data-currency='" + lnd_ref + "'>No</div></div>";
+            content = "<div class='formbox' id='backupformbox'><h2 class='icon-folder-open'>" + translate("havewallet", {
+                "lnd_ref": lnd_ref
+            }) + "</h2><div class='popnotify'></div><div id='backupactions'><a href='" + this_url + "' class='customtrigger' id='openwalleturl'>" + translate("yes") + "</a><div id='dw_trigger' class='customtrigger' data-currency='" + lnd_ref + "'>" + translate("no") + "</div></div>";
         popdialog(content, "triggersubmit");
     });
 }
@@ -2975,14 +3039,16 @@ function download_wallet(currency) {
         wallets_arr = wallets.wallets;
     if (wdp || wallets_arr) {
         let wallet_ul = (wallets_arr) ? "<ul id='formbox_ul'></ul>" : "",
-            fmw = (wdp) ? "<a href='" + wdp + "' target='_blank' class='exit formbox_href'>Find more wallets</a>" : "",
+            fmw = (wdp) ? "<a href='" + wdp + "' target='_blank' class='exit formbox_href'>" + translate("findmorewallets") + "</a>" : "",
             content = "\
             <div class='formbox' id='wdl_formbox'>\
-                <h2 class='icon-download'>Download " + currency + " wallet</h2>\
+                <h2 class='icon-download'>" + translate("downloadwallet", {
+                "currency": currency
+            }) + "</h2>\
                 <div class='popnotify'></div>\
                 <div id='dialogcontent'>" + wallet_ul + fmw + "</div>\
                 <div id='backupactions'>\
-                    <div class='cancel_dialog customtrigger'>CANCEL</div>\
+                    <div class='cancel_dialog customtrigger'>" + cancelbttn + "</div>\
                 </div>\
             </div>";
         popdialog(content, "canceldialog");
@@ -3016,14 +3082,14 @@ function updaterequest(ua, save) {
         metalist.find(".payday.pd_fiat .fiatvalue").text(" " + trimdecimals(ua.fiatvalue, 2));
     }
     if (ua.paymenttimestamp) {
-        let fdf = fulldateformat(new Date(ua.paymenttimestamp - timezone), "en-us", true);
+        let fdf = fulldateformat(new Date(ua.paymenttimestamp - timezone), langcode, true);
         metalist.find(".payday.pd_paydate span.paydate").html(" " + fdf);
         metalist.find(".payday.pd_fiat strong span.pd_fiat").html(" " + fdf);
     }
     if (ua.confirmations) {
         let meta_status = metalist.find("li.meta_status"),
             set_confirmations = (rldata && rldata.set_confirmations) ? rldata.set_confirmations : 1,
-            conftext = (ua.confirmations == 0) ? "Unconfirmed transaction" : ua.confirmations + " / " + set_confirmations + " confirmations";
+            conftext = (ua.confirmations == 0) ? translate("unconfirmedtx") : ua.confirmations + " / " + set_confirmations + " " + translate("confirmations");
         meta_status.attr("data-conf", ua.confirmations).find(".txli_conf > span").text(conftext);
         let confbar = meta_status.find(".txli_conf > .confbar");
         if (confbar.length > 0) {
@@ -3069,7 +3135,7 @@ function updaterequest(ua, save) {
                 rl_iscrypto = rldata.iscrypto,
                 rl_uoa = rldata.uoa,
                 amount_short_rounded = amountshort(rl_amount, ua.receivedamount, ua.fiatvalue, rl_iscrypto),
-                amount_short_span_text = " (" + amount_short_rounded + " " + rl_uoa.toUpperCase() + " short)";
+                amount_short_span_text = " (" + amount_short_rounded + " " + rl_uoa.toUpperCase() + " " + translate("amountshort");
             amount_short_span.text(amount_short_span_text).addClass("show_as");
         } else {
             amount_short_span.removeClass("show_as");
