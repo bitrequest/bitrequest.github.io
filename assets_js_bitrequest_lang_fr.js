@@ -494,7 +494,7 @@ function lang_fr(id, data) {
         "unlockwithsecretphrase": "Débloquez avec votre phrase secrète",
         "tomanyunlocks": "Trop de tentatives de déverrouillage",
         "enter12words": "Entrez votre phrase secrète de 12 mots:",
-        "tryagainin": "Please try again in",
+        "tryagainin": "Veuillez réessayer dans",
         "unlock": "Ouvrir",
 
         // BUTTONS AND PANELS
