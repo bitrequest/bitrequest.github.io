@@ -3105,7 +3105,7 @@ function updaterequest(ua, save) {
         let this_status = ua.status;
         if (this_status != "archive_pending") { // don't update if status is archive_pending
             requestlist.attr("data-status", this_status);
-            metalist.find(".status").text(" " + this_status);
+            metalist.find(".status").text(" " + translate(this_status));
         }
         if (this_status == "paid" || this_status == "archive_pending") {
             if (this_status == "paid") {
