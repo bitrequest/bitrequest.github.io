@@ -1,3 +1,5 @@
+const html_node = $("html");
+
 $(document).ready(function() {
     checkout();
     window.addEventListener("message", crossframe);
@@ -54,7 +56,7 @@ function result_callback(post_data) {
 }
 
 function showframe() {
-    $("html").addClass("showframe zoomframe");
+    html_node.addClass("showframe zoomframe");
 }
 
 function closeframe_confirm() {
@@ -65,7 +67,6 @@ function closeframe_confirm() {
 }
 
 function closeframe() {
-    let html_node = $("html");
     if (html_node.hasClass("zoomframe")) {
         html_node.removeClass("zoomframe");
         setTimeout(function() {
@@ -76,7 +77,7 @@ function closeframe() {
 }
 
 function showloader() {
-    $("html").addClass("slide_loader fade_loader");
+    html_node.addClass("slide_loader fade_loader");
 }
 
 function closeloader_trigger() {
@@ -86,7 +87,6 @@ function closeloader_trigger() {
 }
 
 function closeloader() {
-    let html_node = $("html");
     if (html_node.hasClass("fade_loader")) {
         html_node.removeClass("fade_loader");
         setTimeout(function() {
@@ -98,11 +98,11 @@ function closeloader() {
 function keyup() {
     $(document).keyup(function(e) {
         if (e.keyCode == 27) {
-            if (html.hasClass("slide_loader")) {
+            if (html_node.hasClass("slide_loader")) {
                 closeloader();
                 return false;
             }
-            if (html.hasClass("showframe")) {
+            if (html_node.hasClass("showframe")) {
                 closeframe_confirm();
                 return false;
             }

@@ -15,15 +15,15 @@ $(document).ready(function() {
 });
 
 function init_scan() {
-    if (inframe === true) {
-        hascam = false;
+    if (glob_inframe === true) {
+        glob_hascam = false;
         return
     }
     QrScanner.hasCamera().then(hasCamera => detect_cam(hasCamera));
 }
 
 function detect_cam(result) {
-    hascam = result;
+    glob_hascam = result;
 }
 
 function start_scan(currency, type) {
@@ -67,11 +67,11 @@ function close_cam_trigger() {
 }
 
 function show_cam() {
-    body.addClass("showcam");
+    glob_body.addClass("showcam");
 }
 
 function close_cam() {
-    body.removeClass("showcam");
+    glob_body.removeClass("showcam");
     scanner.stop();
     currencyscan = null;
 }
@@ -108,7 +108,7 @@ function setResult(result) {
         clear_xpub_inputs();
         if (validate === true) {
             $("#popup .formbox input.address").val(er_val);
-            if (supportsTouch === true) {} else {
+            if (glob_supportsTouch) {} else {
                 $("#popup .formbox input.addresslabel").focus();
             }
             if (isxpub) {
@@ -130,7 +130,7 @@ function setResult(result) {
         let validate = (result.length === 64) ? check_vk(result) : false;
         if (validate === true) {
             $("#popup .formbox input.vk_input").val(result);
-            if (supportsTouch === true) {} else {
+            if (glob_supportsTouch) {} else {
                 $("#popup .formbox input.addresslabel").focus();
             }
         } else {

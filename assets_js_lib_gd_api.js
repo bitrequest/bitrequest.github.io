@@ -1,6 +1,6 @@
-const scope = "https://www.googleapis.com/auth/drive.appdata",
-    drivepath = "https://content.googleapis.com",
-    redirect_uri = w_loc.origin + w_loc.pathname + "?p=settings";
+const glob_scope = "https://www.googleapis.com/auth/drive.appdata",
+    glob_drivepath = "https://content.googleapis.com",
+    glob_redirect_uri = glob_w_loc.origin + glob_w_loc.pathname + "?p=settings";
 
 $(document).ready(function() {
     init_access();
@@ -40,7 +40,7 @@ function init_access(ak) {
     }
     let p = GD_pass();
     if (p.pass) {
-        html.addClass("gdauth");
+        glob_html.addClass("gdauth");
         return
     }
     if (!p.active) {
@@ -49,7 +49,7 @@ function init_access(ak) {
 }
 
 function t_expired(expired, callback) {
-    if (hostlocation == "local") {
+    if (glob_hostlocation == "local") {
         return
     }
     if (expired == "norefresh") {
@@ -70,7 +70,7 @@ function fetch_creds(k) {
             "api_url": true,
             "proxy": true,
             "code": decodeURIComponent(k),
-            "redirect_uri": redirect_uri,
+            "redirect_uri": glob_redirect_uri,
             "grant_type": "authorization_code"
         }).done(function(e) {
             if (e) {
@@ -102,13 +102,13 @@ function fetch_creds(k) {
                                 br_set_local("rt", JSON.stringify(jtobj));
                             }
                             gdlogin_callbacks();
-                            if (body.hasClass("showstartpage")) { // only show when logged in
+                            if (glob_body.hasClass("showstartpage")) { // only show when logged in
                                 trigger_restore();
                             }
                             let timeout = setTimeout(function() {
                                 history.pushState({
                                     "pagename": "settings"
-                                }, "", redirect_uri);
+                                }, "", glob_redirect_uri);
                             }, 5000, function() {
                                 clearTimeout(timeout);
                             });
@@ -169,7 +169,7 @@ function fetch_access(rt, callback) {
 }
 
 function refcb(cb) {
-    html.addClass("gdauth");
+    glob_html.addClass("gdauth");
     if (cb) {
         if (cb == "uad") {
             let p = GD_pass();
@@ -201,7 +201,7 @@ function rt_obj() {
 }
 
 function init_login_dialog(p) {
-    if (hostlocation == "local") {
+    if (glob_hostlocation == "local") {
         notify(translate("ganot"));
         return
     }
@@ -312,7 +312,7 @@ function submit_gdbu_dialog() {
 }
 
 function g_login() {
-    if (hostlocation == "local") {
+    if (glob_hostlocation == "local") {
         notify(translate("ganot"));
         return
     }
@@ -329,12 +329,12 @@ function g_login() {
         }
     }
     let consent = (p.expired == "norefresh") ? "&prompt=consent" : "",
-        login_uri = "https://accounts.google.com/o/oauth2/auth?client_id=" + to.ga_id + "&redirect_uri=" + redirect_uri + "&response_type=code&scope=" + scope + "&access_type=offline" + consent;
-    w_loc.href = login_uri;
+        login_uri = "https://accounts.google.com/o/oauth2/auth?client_id=" + to.ga_id + "&redirect_uri=" + glob_redirect_uri + "&response_type=code&scope=" + glob_scope + "&access_type=offline" + consent;
+    glob_w_loc.href = login_uri;
 }
 
 function gdlogin_callbacks(close) {
-    html.addClass("gdauth");
+    glob_html.addClass("gdauth");
     notify(translate("gdsignedin"));
     resetchanges();
     adjust_sp();
@@ -382,7 +382,7 @@ function deactivate() {
 }
 
 function gdlogout_callbacks() {
-    html.removeClass("gdauth");
+    glob_html.removeClass("gdauth");
     notify(translate("gdsignedout"));
     let switch_panel = $("#popup.showpu .switchpanel");
     if (switch_panel.length) {
@@ -419,7 +419,7 @@ function updateappdata(p) {
         if (bu_id) {
             br_set_session("gd_timer", now());
             let ddat = {
-                "api_url": drivepath + "/upload/drive/v3/files/" + bu_id + "?uploadType=media&alt=json",
+                "api_url": glob_drivepath + "/upload/drive/v3/files/" + bu_id + "?uploadType=media&alt=json",
                 "proxy": false,
                 "params": {
                     "method": "PATCH",
@@ -472,9 +472,9 @@ function createfile(token) {
                 "type": "text/plain"
             }),
             description = {
-                "modified": now() + timezone,
+                "modified": now_utc(),
                 "device": getdevicetype(),
-                "deviceid": deviceid
+                "deviceid": glob_deviceid
             },
             metadata = {
                 "name": complilefilename(),
@@ -525,7 +525,7 @@ function listappdata() {
             return
         }
         api_proxy({
-            "api_url": drivepath + "/drive/v3/files?pageSize=10&spaces=appDataFolder&fields=*",
+            "api_url": glob_drivepath + "/drive/v3/files?pageSize=10&spaces=appDataFolder&fields=*",
             "proxy": false,
             "params": {
                 "method": "GET",
@@ -550,7 +550,7 @@ function listappdata() {
                         device_id = description.deviceid,
                         dmod = short_date(description.modified),
                         mod = short_date(to_ts(value.modifiedTime)),
-                        trash = (device_id == deviceid) ? "<div class='purge_bu icon-bin'></div>" : "",
+                        trash = (device_id == glob_deviceid) ? "<div class='purge_bu icon-bin'></div>" : "",
                         gdbackups = "<li data-gdbu_id='" + value.id + "' data-device-id='" + device_id + "' data-device='" + device + "'><div class='restorefile icon-" + device + "' title='" + device + " (Created: " + dmod + ")'>" + mod + "<span class='lmodified'> (" + (value.size / 1000).toFixed(0) + " KB)</div>" + trash + "</li>";
                     gdbackuppush.push(gdbackups);
                 });
@@ -601,7 +601,7 @@ function deletefiletrigger() {
 
 function deletefile(fileId, thislist, pass) {
     api_proxy({
-        "api_url": drivepath + "/drive/v3/files/" + fileId,
+        "api_url": glob_drivepath + "/drive/v3/files/" + fileId,
         "proxy": false,
         "params": {
             "method": "DELETE",
@@ -653,10 +653,10 @@ function GD_pass() {
             }
         }
         if (token && expired === false && active) {
-            html.addClass("gdauth");
+            glob_html.addClass("gdauth");
             jt.pass = true;
         } else {
-            html.removeClass("gdauth");
+            glob_html.removeClass("gdauth");
         }
     } else {
         jt.expired = can_refresh;

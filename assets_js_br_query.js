@@ -50,6 +50,7 @@
 //trimdecimals
 //adjust_objectarray
 //now
+//now_utc
 //dom_to_array
 //proxy_dat
 //d_proxy
@@ -201,7 +202,7 @@ function api_proxy(ad, p_proxy) {
                     "nokey": nokey
                 })
             };
-        proxy_attempts[set_proxy] = true;
+        glob_proxy_attempts[set_proxy] = true;
         return $.ajax(proxy_data);
     }
     return $.ajax();
@@ -217,7 +218,7 @@ function br_result(e) {
         proxy = (ping) ? true : false;
     if (proxy && ping.br_cache) {
         let version = ping.br_cache.version;
-        if (version != proxy_version) {
+        if (version != glob_proxy_version) {
             proxy_alert(version);
         }
     }
@@ -257,9 +258,9 @@ function get_next_proxy() {
         cc_index = (c_index == -1) ? 0 : c_index,
         next_i = proxies[cc_index + 1],
         next_p = (next_i) ? next_i : proxies[0];
-    if (proxy_attempts[next_p] !== true) {
-        api_attempts = {}, // reset cache and index
-            rpc_attempts = {};
+    if (glob_proxy_attempts[next_p] !== true) {
+        glob_api_attempts = {}, // reset cache and index
+            glob_rpc_attempts = {};
         set_setting("api_proxy", { // save next proxy
             "selected": next_p
         }, next_p);
@@ -312,7 +313,7 @@ function get_search(str) {
 }
 
 function geturlparameters(str) {
-    return renderparameters(w_loc.search.substring(1));
+    return renderparameters(glob_w_loc.search.substring(1));
 }
 
 function renderparameters(str) {
@@ -359,12 +360,12 @@ function xss_search(val) {
         let val_lower = val.toLowerCase();
         if (val_lower.indexOf("<scrip") > -1) {
             vibrate();
-            notify(xss_alert);
+            notify(glob_xss_alert);
             return true
         }
         if (val_lower.indexOf("onerror") > -1) {
             vibrate();
-            notify(xss_alert);
+            notify(glob_xss_alert);
             return true
         }
     }
@@ -391,18 +392,18 @@ function hashcode(str) {
 
 function getcc_icon(cmcid, cpid, erc20) {
     if (erc20) {
-        if (offline === true) {
+        if (glob_offline === true) {
             return "<img src='" + c_icons("ph") + "' class='cmc_icon'/>";
         }
-        return "<img src='" + cmc_icon_loc + cmcid + ".png' class='cmc_icon'/>";
+        return "<img src='" + glob_cmc_icon_loc + cmcid + ".png' class='cmc_icon'/>";
     }
     return "<img src='" + c_icons(cpid) + "' class='cmc_icon'/>";
 }
 
 function getdevicetype() {
-    let ua = userAgent;
-    return (is_android_app === true) ? "android-app" :
-        (is_ios_app === true) ? "apple-app" :
+    let ua = glob_userAgent;
+    return (glob_is_android_app === true) ? "android-app" :
+        (glob_is_ios_app === true) ? "apple-app" :
         (/iPad/.test(ua)) ? "iPad" :
         (/iPhone/.test(ua)) ? "iPhone" :
         (/Android/.test(ua)) ? "Android" :
@@ -412,8 +413,8 @@ function getdevicetype() {
 };
 
 function getplatform(device) {
-    return (supportsTouch === true) ?
-        (is_android_app === true || device == "Android" || device == "Windows") ? "playstore" :
+    return (glob_supportsTouch) ?
+        (glob_is_android_app === true || device == "Android" || device == "Windows") ? "playstore" :
         (device == "iPhone" || device == "iPad" || device == "Macintosh" || is_ios_app === true) ? "appstore" : "unknown" :
         (device == "Windows") ? "desktop" :
         (device == "Macintosh") ? "desktop" : "unknown";
@@ -440,7 +441,7 @@ function to_ts(ts) {
 }
 
 function short_date(txtime) {
-    return new Date(txtime - timezone).toLocaleString(language, {
+    return new Date(txtime - glob_timezone).toLocaleString(glob_langcode, {
         "day": "2-digit", // numeric, 2-digit
         "month": "2-digit", // numeric, 2-digit, long, short, narrow
         "year": "2-digit", // numeric, 2-digit
@@ -514,7 +515,7 @@ function vibrate() {
 }
 
 function get_api_data(api_id) {
-    let apipath = br_config.apis.filter(function(val) {
+    let apipath = glob_br_config.apis.filter(function(val) {
         return val.name == api_id;
     });
     return apipath[0];
@@ -549,6 +550,10 @@ function now() {
     return Date.now();
 }
 
+function now_utc() {
+    return Date.now() + glob_timezone;
+}
+
 function dom_to_array(dom, dat) {
     return dom.map(function() {
         return $(this).data(dat);
@@ -566,16 +571,16 @@ function d_proxy() {
 function all_proxies() {
     let pdat = proxy_dat(),
         cproxies = pdat.custom_proxies;
-    return proxy_list.concat(cproxies);
+    return glob_proxy_list.concat(cproxies);
 }
 
 function fetch_aws(filename, bckt) {
-    let bucket = (bckt) ? bckt : aws_bucket;
+    let bucket = (bckt) ? bckt : glob_aws_bucket;
     return bucket + filename;
 }
 
 function gk() {
-    let k = io.k;
+    let k = glob_io.k;
     if (k) {
         let pk = JSON.parse(atob(k));
         if (pk.if_id == "" || pk.ad_id == "" || pk.ga_id == "" || pk.bc_id == "") {
@@ -606,15 +611,15 @@ function fk() {
 function init_keys(ko, set) { // set required keys
     let k = JSON.parse(atob(ko));
     to = k;
-    io.k = ko;
+    glob_io.k = ko;
     if (set === false) {
-        br_set_local("init", io, true);
+        br_set_local("init", glob_io, true);
     }
 }
 
 function makelocal(url) {
-    let pathname = w_loc.pathname;
-    return (local || localserver) ? (url.indexOf("?") >= 0) ? "file://" + pathname + "?" + url.split("?")[1] : pathname : url;
+    let pathname = glob_w_loc.pathname;
+    return (glob_local || glob_localserver) ? (url.indexOf("?") >= 0) ? "file://" + pathname + "?" + url.split("?")[1] : pathname : url;
 }
 
 function clean_str(string) {

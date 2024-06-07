@@ -9,8 +9,8 @@
 
 // pick API / RPC
 function pick_monitor(txhash, tx_data, api_dat) {
-    api_attempts = {};
-    rpc_attempts = {};
+    glob_api_attempts = {};
+    glob_rpc_attempts = {};
     api_monitor_init(txhash, tx_data, api_dat);
 }
 
@@ -22,7 +22,7 @@ function api_monitor_init(txhash, tx_data, api_data) {
         } else {
             rpc_monitor(txhash, tx_data, api_info);
         }
-        paymentdialogbox.addClass("transacting");
+        glob_paymentdialogbox.addClass("transacting");
         return
     }
     console.log("missing api info");
@@ -44,11 +44,11 @@ function api_monitor(txhash, tx_data, api_dat) {
                 return
             }
         }
-        if (api_name == "arbiscan" || api_name == main_eth_node || api_name == main_arbitrum_node) {
+        if (api_name == "arbiscan" || api_name == glob_main_eth_node || api_name == glob_main_arbitrum_node) {
             rpc_monitor(txhash, tx_data, api_dat);
             return
         }
-        api_attempts["pollings" + api_name] = true;
+        glob_api_attempts["pollings" + api_name] = true;
         let payment = request.payment,
             currencysymbol = request.currencysymbol,
             set_confirmations = request.set_confirmations,
@@ -65,8 +65,8 @@ function api_monitor(txhash, tx_data, api_dat) {
             api_proxy(ampl(api_dat, poll_url)).done(function(e) {
                 let apiresult = api_result(br_result(e));
                 if (apiresult) {
-                    pinging[txhash + api_name] = setInterval(function() {
-                        if (paymentpopup.hasClass("active")) { // only when request is visible
+                    glob_pinging[txhash + api_name] = setInterval(function() {
+                        if (glob_paymentpopup.hasClass("active")) { // only when request is visible
                             api_proxy(ampl(api_dat, poll_url)).done(function(e) {
                                 api_result(br_result(e));
                             }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -219,12 +219,12 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
     }
     let payment = request.payment,
         rpcurl = rpcdata.url;
-    rpc_attempts["pollings" + rpcurl] = true;
+    glob_rpc_attempts["pollings" + rpcurl] = true;
     if (is_btchain(payment) === true) {
         if (tx_data) {
             confirmations(tx_data, true);
-            pinging[txhash] = setInterval(function() {
-                if (paymentpopup.hasClass("active")) { // only when request is visible
+            glob_pinging[txhash] = setInterval(function() {
+                if (glob_paymentpopup.hasClass("active")) { // only when request is visible
                     api_proxy(rmpl(payment, rpcurl, txhash)).done(function(e) {
                         rpc_result(br_result(e));
                     }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -238,8 +238,8 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
         }
         api_proxy(rmpl(payment, rpcurl, txhash)).done(function(e) {
             rpc_result(br_result(e));
-            pinging[txhash] = setInterval(function() {
-                if (paymentpopup.hasClass("active")) { // only when request is visible
+            glob_pinging[txhash] = setInterval(function() {
+                if (glob_paymentpopup.hasClass("active")) { // only when request is visible
                     api_proxy(rmpl(payment, rpcurl, txhash)).done(function(e) {
                         rpc_result(br_result(e));
                     }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -283,7 +283,7 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
         } else {
             ping_eth_node(rpcdata, txhash);
         }
-        pinging[txhash] = setInterval(function() {
+        glob_pinging[txhash] = setInterval(function() {
             ping_eth_node(rpcdata, txhash);
         }, 25000);
         return
@@ -294,7 +294,7 @@ function rpc_monitor(txhash, tx_data, rpcdata) {
         } else {
             ping_eth_node(rpcdata, txhash, true);
         }
-        pinging[txhash] = setInterval(function() {
+        glob_pinging[txhash] = setInterval(function() {
             ping_eth_node(rpcdata, txhash, true);
         }, 25000);
         return
@@ -320,9 +320,9 @@ function rmpl(payment, rpcurl, txhash) { // rpc_monitor payload
 }
 
 function ping_eth_node(rpcdata, txhash, erc20) {
-    if (paymentpopup.hasClass("active")) { // only when request is visible
+    if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         let url = get_rpc_url(rpcdata),
-            set_url = (rpcdata.name == "arbiscan") ? main_arbitrum_node : (rpcurl) ? rpcurl : main_eth_node;
+            set_url = (rpcdata.name == "arbiscan") ? glob_main_arbitrum_node : (rpcurl) ? rpcurl : glob_main_eth_node;
         api_proxy(eth_params(set_url, 10, "eth_blockNumber", [])).done(function(a) {
             let r_1 = inf_result(a);
             if (r_1) {
@@ -414,7 +414,7 @@ function handle_rpc_fails(rpcdata, error, txhash) {
 
 function confirmations(tx_data, direct, ln) {
     closeloader();
-    clearTimeout(request_timer);
+    clearTimeout(glob_request_timer);
     if (tx_data && tx_data.ccval) {
         let pmd = $("#paymentdialogbox"),
             brstatuspanel = pmd.find(".brstatuspanel"),
@@ -452,7 +452,7 @@ function confirmations(tx_data, direct, ln) {
             let amount_rel = $("#open_wallet").attr("data-rel"),
                 cc_raw = (amount_rel && amount_rel.length) ? parseFloat(amount_rel) : 0,
                 receivedutc = tx_data.transactiontime,
-                receivedtime = receivedutc - timezone,
+                receivedtime = receivedutc - glob_timezone,
                 receivedcc = tx_data.ccval,
                 rccf = parseFloat(receivedcc.toFixed(6)),
                 payment = request.payment,
@@ -474,7 +474,7 @@ function confirmations(tx_data, direct, ln) {
                 "confirmations": xconf,
                 "set_confirmations": setconfirmations
             });
-            brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), langcode));
+            brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), glob_langcode));
             if (iscrypto) {} else {
                 brstatuspanel.find("span.receivedcrypto").text(rccf + " " + currencysymbol);
             }
@@ -487,9 +487,9 @@ function confirmations(tx_data, direct, ln) {
                     if (xconf >= setconfirmations || zero_conf === true) {
                         forceclosesocket();
                         if (payment == "dogecoin") {
-                            playsound(howl);
+                            playsound(glob_howl);
                         } else {
-                            playsound(cashier);
+                            playsound(glob_cashier);
                         }
                         let status_text = (requesttype == "incoming") ? translate("paymentsent") : translate("paymentreceived");
                         pmd.addClass("transacting").attr("data-status", "paid");
@@ -501,7 +501,7 @@ function confirmations(tx_data, direct, ln) {
                         closenotify();
                     } else {
                         if (ln) {} else {
-                            playsound(blip);
+                            playsound(glob_blip);
                         }
                         pmd.addClass("transacting").attr("data-status", "pending");
                         let bctext = (ln) ? translate("waitingforpayment") : translate("txbroadcasted");
@@ -521,7 +521,7 @@ function confirmations(tx_data, direct, ln) {
                     saverequest(direct);
                     brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
                 }
-                playsound(funk);
+                playsound(glob_funk);
             }
             return
         }

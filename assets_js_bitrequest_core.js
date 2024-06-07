@@ -1,71 +1,69 @@
 //globals
-const ls_support = check_local(),
-    language = navigator.language || navigator.userLanguage,
-    userAgent = navigator.userAgent || navigator.vendor || window.opera,
-    titlenode = $("title"),
-    ogtitle = $("meta[property='og:title']"),
-    html = $("html"),
-    body = $("body"),
-    main = $("main"),
-    paymentpopup = $("#payment"),
-    paymentdialogbox = $("#paymentdialogbox"),
-    copycontent = $("#copyinput"),
-    funk = $("#funk"), // funk sound effect
-    cashier = $("#cashier"), // cashier sound effect
-    collect = $("#collect"), // collect sound effect
-    blip = $("#blip"), // blip sound effect
-    waterdrop = $("#waterdrop"), // waterdrop sound effect
-    howl = $("#howl"), // howl sound effect
-    timezoneoffset = new Date().getTimezoneOffset(),
-    timezone = timezoneoffset * 60000,
-    has_ndef = ("NDEFReader" in window),
-    supportsTouch = ("ontouchstart" in window || navigator.msMaxTouchPoints),
-    referrer = document.referrer,
-    exp_referrer = "android-app://" + androidpackagename,
-    ref_match = (referrer && referrer.indexOf(exp_referrer) >= 0) ? true : false,
-    android_standalone = window.matchMedia("(display-mode: standalone)").matches,
-    ios_standalone = navigator.standalone,
-    is_android_app = (ref_match), // android app fingerprint
-    inframe = (self !== top),
-    offline = (navigator.onLine === false),
-    w_loc = window.location,
-    c_host = w_loc.origin + w_loc.pathname,
-    thishostname = w_loc.hostname,
-    hostlocation = (thishostname == "" || thishostname == "localhost" || thishostname === "127.0.0.1") ? "local" :
-    (thishostname == "bitrequest.github.io") ? "hosted" :
-    (thishostname == localhostname) ? "selfhosted" : "unknown",
-    wl = navigator.wakeLock,
-    after_poll_timeout = 15000,
-    xss_alert = "xss attempt detected",
-    langcode = setlangcode(); // set saved or system language
+const glob_ls_support = check_local(),
+    glob_language = navigator.language || navigator.userLanguage,
+    glob_userAgent = navigator.userAgent || navigator.vendor || window.opera,
+    glob_titlenode = $("title"),
+    glob_ogtitle = $("meta[property='og:title']"),
+    glob_html = $("html"),
+    glob_body = $("body"),
+    glob_paymentpopup = $("#payment"),
+    glob_paymentdialogbox = $("#paymentdialogbox"),
+    glob_copycontent = $("#copyinput"),
+    glob_funk = $("#funk"), // funk sound effect
+    glob_cashier = $("#cashier"), // cashier sound effect
+    glob_collect = $("#collect"), // collect sound effect
+    glob_blip = $("#blip"), // blip sound effect
+    glob_waterdrop = $("#waterdrop"), // waterdrop sound effect
+    glob_howl = $("#howl"), // howl sound effect
+    glob_timezoneoffset = new Date().getTimezoneOffset(),
+    glob_timezone = glob_timezoneoffset * 60000,
+    glob_has_ndef = ("NDEFReader" in window),
+    glob_supportsTouch = ("ontouchstart" in window || navigator.msMaxTouchPoints) ? true : false,
+    glob_referrer = document.referrer,
+    glob_exp_referrer = "android-app://" + glob_androidpackagename,
+    glob_ref_match = (glob_referrer && glob_referrer.indexOf(glob_exp_referrer) >= 0) ? true : false,
+    glob_android_standalone = window.matchMedia("(display-mode: standalone)").matches,
+    glob_ios_standalone = navigator.standalone,
+    glob_is_android_app = (glob_ref_match), // android app fingerprint
+    glob_inframe = (self !== top),
+    glob_offline = (navigator.onLine === false),
+    glob_w_loc = window.location,
+    glob_c_host = glob_w_loc.origin + glob_w_loc.pathname,
+    glob_thishostname = glob_w_loc.hostname,
+    glob_hostlocation = (glob_thishostname == "" || glob_thishostname == "localhost" || glob_thishostname === "127.0.0.1") ? "local" :
+    (glob_thishostname == "bitrequest.github.io") ? "hosted" :
+    (glob_thishostname == glob_localhostname) ? "selfhosted" : "unknown",
+    glob_wl = navigator.wakeLock,
+    glob_after_poll_timeout = 15000,
+    glob_xss_alert = "xss attempt detected",
+    glob_langcode = setlangcode(); // set saved or system language
 
-let scrollposition = 0,
-    is_ios_app = false, // ios app fingerprint
-    phpsupportglobal,
-    symbolcache,
-    hascam,
-    cp_timer,
-    local,
-    localserver,
-    wakelock,
-    bipv,
-    bipobj = br_get_local("bpdat", true),
-    hasbip = (bipobj) ? true : false,
-    bipid = (hasbip) ? bipobj.id : false,
-    ndef,
-    blockswipe,
-    ctrl,
-    cashier_dat = br_get_local("cashier", true),
-    is_cashier = (cashier_dat && cashier_dat.cashier) ? true : false,
-    cashier_seedid = (is_cashier) ? cashier_dat.seedid : false,
-    stored_currencies = br_get_local("currencies", true),
-    init = br_get_local("init", true),
-    io = br_dobj(init, true),
-    new_address, // prevent double address entries
-    proxy_attempts = {};
+let glob_scrollposition = 0,
+    glob_is_ios_app = false, // ios app fingerprint
+    glob_phpsupport,
+    glob_symbolcache,
+    glob_hascam,
+    glob_cp_timer,
+    glob_local,
+    glob_localserver,
+    glob_wakelock,
+    glob_bipv,
+    glob_bipobj = br_get_local("bpdat", true),
+    glob_hasbip = (glob_bipobj) ? true : false,
+    glob_bipid = (glob_hasbip) ? glob_bipobj.id : false,
+    glob_ndef,
+    glob_ctrl,
+    glob_cashier_dat = br_get_local("cashier", true),
+    glob_is_cashier = (glob_cashier_dat && glob_cashier_dat.cashier) ? true : false,
+    glob_cashier_seedid = (glob_is_cashier) ? glob_cashier_dat.seedid : false,
+    glob_stored_currencies = br_get_local("currencies", true),
+    glob_init = br_get_local("init", true),
+    glob_io = br_dobj(glob_init, true),
+    glob_new_address, // prevent double address entries
+    glob_proxy_attempts = {};
 
-if (has_ndef && !inframe) {
-    ndef = new NDEFReader();
+if (glob_has_ndef && !glob_inframe) {
+    glob_ndef = new NDEFReader();
 }
 
 $(document).ready(function() {
@@ -74,7 +72,7 @@ $(document).ready(function() {
     });
     buildsettings(); // build settings first
 
-    if (hostlocation != "local") { // don't add service worker on desktop
+    if (glob_hostlocation != "local") { // don't add service worker on desktop
         add_serviceworker();
     }
 
@@ -83,30 +81,30 @@ $(document).ready(function() {
     clearpinging();
 
     //Set classname for ios app	
-    if (is_ios_app === true) {
-        body.addClass("ios");
+    if (glob_is_ios_app === true) {
+        glob_body.addClass("ios");
     }
 
     //Set classname for iframe	
-    if (inframe === true) {
-        html.addClass("inframe hide_app");
+    if (glob_inframe === true) {
+        glob_html.addClass("inframe hide_app");
     } else {
-        html.addClass("noframe");
+        glob_html.addClass("noframe");
     }
 
     //some api tests first
     rendersettings(); //retrieve settings from localstorage (load first to retrieve apikey)
-    if (ls_support) { //check for local storage support
-        if (!stored_currencies) { //show startpage if no addresses are added
-            body.addClass("showstartpage");
+    if (glob_ls_support) { //check for local storage support
+        if (!glob_stored_currencies) { //show startpage if no addresses are added
+            glob_body.addClass("showstartpage");
         }
-        let bipverified = io.bipv,
-            phpsupport = io.phpsupport;
-        if (bipverified && hasbip === true) {
-            bipv = true;
+        let bipverified = glob_io.bipv,
+            phpsupport = glob_io.phpsupport;
+        if (bipverified && glob_hasbip === true) {
+            glob_bipv = true;
         }
         if (phpsupport) {
-            phpsupportglobal = (phpsupport == "yes") ? true : false;
+            glob_phpsupport = (phpsupport == "yes") ? true : false;
             setsymbols();
         } else {
             checkphp();
@@ -129,7 +127,7 @@ $(document).ready(function() {
     pickselect();
     canceldialogtrigger();
     console.log({
-        "config": br_config
+        "config": glob_br_config
     });
 })
 
@@ -156,28 +154,28 @@ function checkphp() { //check for php support by fetching fiat currencies from l
                     fail_dialogs("fixer", this_error);
                 }
             }
-            io.phpsupport = "yes";
-            br_set_local("init", io, true);
-            phpsupportglobal = true;
+            glob_io.phpsupport = "yes";
+            br_set_local("init", glob_io, true);
+            glob_phpsupport = true;
             setsymbols();
             return
         }
-        io.phpsupport = "no";
-        br_set_local("init", io, true);
-        phpsupportglobal = false;
+        glob_io.phpsupport = "no";
+        br_set_local("init", glob_io, true);
+        glob_phpsupport = false;
         setsymbols();
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        io.phpsupport = "no";
-        br_set_local("init", io, true);
-        phpsupportglobal = false;
+        glob_io.phpsupport = "no";
+        br_set_local("init", glob_io, true);
+        glob_phpsupport = false;
         setsymbols();
     });
 }
 
 function setsymbols() { //fetch fiat currencies from fixer.io api
     //set globals
-    local = (hostlocation == "local" && phpsupportglobal === false),
-        localserver = (hostlocation == "local" && phpsupportglobal === true);
+    glob_local = (glob_hostlocation == "local" && glob_phpsupport === false),
+        glob_localserver = (glob_hostlocation == "local" && glob_phpsupport === true);
     if (br_get_local("symbols")) {
         geterc20tokens();
         return
@@ -243,7 +241,7 @@ function geterc20tokens() {
 }
 
 function geterc20tokens_local() {
-    let apiurl = approot + "assets_data_erc20.json";
+    let apiurl = glob_approot + "assets_data_erc20.json";
     $.getJSON(apiurl, function(data) {
         if (data) {
             storecoindata(data);
@@ -598,7 +596,7 @@ function finishfunctions() {
     //getcoinsettings
     //getcoinconfig
     gk();
-    html.addClass("loaded");
+    glob_html.addClass("loaded");
     //is_opendialog
     //is_openrequest
 
@@ -616,14 +614,14 @@ function finishfunctions() {
 //checks
 
 function setlocales() {
-    html.attr("lang", langcode);
-    $("meta[property='og:locale']").attr("content", langcode);
-    $("meta[property='og:url']").attr("content", w_loc.href);
+    glob_html.attr("lang", glob_langcode);
+    $("meta[property='og:locale']").attr("content", glob_langcode);
+    $("meta[property='og:url']").attr("content", glob_w_loc.href);
 }
 
 function setpermissions() {
     let permission = $("#permissions").data("selected");
-    html.attr("data-role", permission);
+    glob_html.attr("data-role", permission);
 }
 
 function is_viewonly() {
@@ -727,20 +725,20 @@ function enterapp(pinval) {
             br_set_local("locktime", _now);
             finishfunctions();
             setTimeout(function() {
-                playsound(waterdrop);
+                playsound(glob_waterdrop);
                 canceloptions(true);
             }, 500);
         } else if (pinfloat.hasClass("admin")) {
             br_set_local("locktime", _now);
             loadpage("?p=currencies");
             $(".currenciesbttn .self").addClass("activemenu");
-            playsound(waterdrop);
+            playsound(glob_waterdrop);
             canceloptions(true);
         } else if (pinfloat.hasClass("reset")) {
             br_set_local("locktime", _now);
             $("#pintext").text("Enter new pin");
             pinfloat.addClass("p_admin").removeClass("pinwall reset");
-            playsound(waterdrop);
+            playsound(glob_waterdrop);
             setTimeout(function() {
                 $("#pininput").val("");
             }, 200);
@@ -751,7 +749,7 @@ function enterapp(pinval) {
             } else {
                 br_set_local("locktime", _now);
             }
-            playsound(waterdrop);
+            playsound(glob_waterdrop);
             canceloptions(true);
         }
         pinsettings.attempts = 0;
@@ -759,7 +757,7 @@ function enterapp(pinval) {
         remove_cashier();
     } else {
         if (navigator.vibrate) {} else {
-            playsound(funk);
+            playsound(glob_funk);
         }
         shake(pinfloat);
         setTimeout(function() {
@@ -825,7 +823,7 @@ function pinvalidate(thispad) {
                 "selected": titlepin
             }).find("p").text(titlepin);
             savesettings();
-            playsound(waterdrop);
+            playsound(glob_waterdrop);
             canceloptions(true);
             let callback = pinfloat.data("pincb");
             if (callback) {
@@ -837,7 +835,7 @@ function pinvalidate(thispad) {
             let pinfloat = $("#pinfloat");
             topnotify(translate("pinmatch"));
             if (navigator.vibrate) {} else {
-                playsound(funk);
+                playsound(glob_funk);
             }
             shake(pinfloat);
             pininput.val("");
@@ -880,8 +878,8 @@ function pinback(pininput) {
 //Set classname for ios app
 
 function ios_init() {
-    is_ios_app = true;
-    body.addClass("ios"); // ios app fingerprint
+    glob_is_ios_app = true;
+    glob_body.addClass("ios"); // ios app fingerprint
 }
 
 function ios_redirections(url) {
@@ -891,17 +889,17 @@ function ios_redirections(url) {
         if (gets.xss) {
             return
         }
-        let currenturlvar = w_loc.href,
+        let currenturlvar = glob_w_loc.href,
             currenturl = currenturlvar.toUpperCase(),
             newpage = url.toUpperCase();
         if (currenturl == newpage) {
             return
         }
-        if (br_get_local("editurl") == w_loc.search) {
+        if (br_get_local("editurl") == glob_w_loc.search) {
             return
         }
         let isrequest = (newpage.indexOf("PAYMENT=") >= 0),
-            isopenrequest = (paymentpopup.hasClass("active"));
+            isopenrequest = (glob_paymentpopup.hasClass("active"));
         if (isrequest) {
             if (isopenrequest) {
                 cancelpaymentdialog();
@@ -984,7 +982,7 @@ function lettercountkeydown() { // Character limit on input field
             return
         }
         if (lettersleft === 0) {
-            playsound(funk);
+            playsound(glob_funk);
             e.preventDefault();
         }
     });
@@ -1030,7 +1028,7 @@ function choosecurrency() {
 
 function togglenav() {
     $(document).on("click", "#header", function() {
-        if (html.hasClass("showmain")) {
+        if (glob_html.hasClass("showmain")) {
             loadpage("?p=home");
             $(".navstyle li .self").removeClass("activemenu");
             return
@@ -1058,7 +1056,7 @@ function loadurl() {
     }
     let page = gets.p,
         payment = gets.payment,
-        url = w_loc.search,
+        url = glob_w_loc.search,
         event = (payment) ? "both" : "loadpage";
     if (url) {
         openpage(url, page, event);
@@ -1119,16 +1117,16 @@ function loadfunction(pagename, thisevent) {
         return
     }
     loadpageevent(pagename);
-    let title = translate(pagename) + " | " + apptitle;
+    let title = translate(pagename) + " | " + glob_apptitle;
     settitle(title);
     cancel_url_dialogs();
 }
 
 function cancel_url_dialogs() {
-    if (paymentpopup.hasClass("active")) {
+    if (glob_paymentpopup.hasClass("active")) {
         cancelpaymentdialog();
     }
-    if (body.hasClass("showcam")) {
+    if (glob_body.hasClass("showcam")) {
         $("#closecam").trigger("click");
     }
 }
@@ -1152,11 +1150,11 @@ function loadpageevent(pagename) {
 
 function shownav(pagename) { // show / hide navigation
     if (ishome(pagename) === true) {
-        html.removeClass("showmain").addClass("hidemain");
+        glob_html.removeClass("showmain").addClass("hidemain");
         $("#relnav .nav").slideUp(300);
         return
     }
-    html.addClass("showmain").removeClass("hidemain")
+    glob_html.addClass("showmain").removeClass("hidemain")
     $("#relnav .nav").slideDown(300);
 }
 
@@ -1171,7 +1169,7 @@ function activemenu() {
 
 function fixednav() {
     $(document).scroll(function(e) {
-        if (html.hasClass("paymode")) {
+        if (glob_html.hasClass("paymode")) {
             e.preventDefault();
             return
         }
@@ -1210,7 +1208,7 @@ function triggertxfunction(thislink) {
         savedurl = thislink.data("url"),
         seedid = a_data.seedid;
     if (seedid) {
-        if (seedid != bipid) {
+        if (seedid != glob_bipid) {
             if (addr_whitelist(thisaddress) === true) {} else {
                 let pass_dat = {
                         "currency": currency,
@@ -1256,7 +1254,7 @@ function confirm_missing_seed() {
 
 function get_address_warning(id, address, pass_dat) {
     let seedstr = (pass_dat.xpubid) ? "Xpub" : "Seed",
-        rest_str = (seedstr == "Seed") ? (hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + pass_dat.seedid + "'>" + translate("resoresecretphrase") + "</div>" : "",
+        rest_str = (seedstr == "Seed") ? (glob_hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + pass_dat.seedid + "'>" + translate("resoresecretphrase") + "</div>" : "",
         seedstrtitle = (seedstr == "Seed") ? translate("bip39_passphrase") : seedstr;
     return $("<div class='formbox addwarning' id='" + id + "'>\
         <h2 class='icon-warning'>" + translate("warning") + "</h2>\
@@ -1282,7 +1280,7 @@ function get_address_warning(id, address, pass_dat) {
 }
 
 function finishtxfunction(currency, thisaddress, savedurl, title) {
-    prevkey = false;
+    glob_prevkey = false;
     let gets = geturlparameters();
     if (gets.xss) {
         return
@@ -1290,12 +1288,12 @@ function finishtxfunction(currency, thisaddress, savedurl, title) {
     let cd = getcoindata(currency),
         currencysettings = $("#currencysettings").data(),
         c_default = currencysettings.default,
-        currencysymbol = (c_default === true && offline === false) ? currencysettings.currencysymbol : cd.ccsymbol,
+        currencysymbol = (c_default === true && glob_offline === false) ? currencysettings.currencysymbol : cd.ccsymbol,
         currentpage = gets.p,
         currentpage_correct = (currentpage) ? "?p=" + currentpage + "&payment=" : "?payment=",
         prefix = currentpage_correct + currency + "&uoa=",
         newlink = prefix + currencysymbol + "&amount=0" + "&address=" + thisaddress,
-        href = (!savedurl || offline !== false) ? newlink : savedurl, //load saved url if exists
+        href = (!savedurl || glob_offline !== false) ? newlink : savedurl, //load saved url if exists
         thistitle = (title) ? title : "bitrequest";
     br_set_local("editurl", href); // to check if request is being edited
     remove_flip(); // reset request card facing front
@@ -1310,7 +1308,7 @@ function payrequest() {
     $(document).on("click", "#requestlist .req_actions .icon-qrcode, #requestlist .payrequest", function(e) {
         e.preventDefault();
         let thisnode = $(this);
-        if (offline === true && thisnode.hasClass("isfiat")) {
+        if (glob_offline === true && thisnode.hasClass("isfiat")) {
             // do not trigger fiat request when offline because of unknown exchange rate
             notify(translate("xratesx"));
             return
@@ -1626,7 +1624,7 @@ function drag(thisli, dialogheight, startheight, thisindex) {
     $(document).on("mousemove touchmove", ".currentpage .applist li", function(e) {
         e.preventDefault();
         thisli.addClass("dragging");
-        html.addClass("dragmode");
+        glob_html.addClass("dragmode");
         let currentheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY,
             dragdistance = currentheight - startheight;
         thisli.addClass("dragging").css({
@@ -1679,7 +1677,7 @@ function dragend() {
             }
             thisunit.removeClass("before after dragging").attr("style", "");
             $(".currentpage .applist li").removeClass("hovered").attr("style", "");
-            html.removeClass("dragmode");
+            glob_html.removeClass("dragmode");
             clear_savedurl();
         }
     })
@@ -1688,67 +1686,67 @@ function dragend() {
 function keyup() {
     $(document).keyup(function(e) {
         if (e.keyCode == 39) { // ArrowRight
-            if (body.hasClass("showstartpage")) {
+            if (glob_body.hasClass("showstartpage")) {
                 e.preventDefault();
                 startnext($(".panelactive"));
                 return
             }
-            if (paymentdialogbox.find("input").is(":focus")) {
-                playsound(funk);
+            if (glob_paymentdialogbox.find("input").is(":focus")) {
+                playsound(glob_funk);
                 return
             }
-            let timelapsed = now() - sa_timer;
+            let timelapsed = now() - glob_sa_timer;
             if (timelapsed < 500) { // prevent clicking too fast
-                playsound(funk);
+                playsound(glob_funk);
                 return
             }
-            paymentpopup.removeClass("flipping");
-            if (paymentdialogbox.hasClass("flipped")) {
+            glob_paymentpopup.removeClass("flipping");
+            if (glob_paymentdialogbox.hasClass("flipped")) {
                 flip_right2();
                 setTimeout(function() {
-                    paymentpopup.addClass("flipping");
-                    paymentdialogbox.css("-webkit-transform", "");
+                    glob_paymentpopup.addClass("flipping");
+                    glob_paymentdialogbox.css("-webkit-transform", "");
                 }, 400);
                 return
             }
-            if (paymentdialogbox.hasClass("norequest") && (paymentdialogbox.attr("data-pending") == "ispending" || (offline === true))) {
-                playsound(funk);
+            if (glob_paymentdialogbox.hasClass("norequest") && (glob_paymentdialogbox.attr("data-pending") == "ispending" || (glob_offline === true))) {
+                playsound(glob_funk);
                 return
             }
             flip_right1();
-            sa_timer = now();
+            glob_sa_timer = now();
             return
         }
         if (e.keyCode == 37) { // ArrowLeft
-            if (body.hasClass("showstartpage")) {
+            if (glob_body.hasClass("showstartpage")) {
                 e.preventDefault();
                 startprev($(".panelactive"));
                 return
             }
-            if (paymentdialogbox.find("input").is(":focus")) {
-                playsound(funk);
+            if (glob_paymentdialogbox.find("input").is(":focus")) {
+                playsound(glob_funk);
                 return
             }
-            let timelapsed = now() - sa_timer;
+            let timelapsed = now() - glob_sa_timer;
             if (timelapsed < 500) { // prevent clicking too fast
-                playsound(funk);
+                playsound(glob_funk);
                 return
             }
-            paymentpopup.removeClass("flipping");
-            if (paymentdialogbox.hasClass("flipped")) {
+            glob_paymentpopup.removeClass("flipping");
+            if (glob_paymentdialogbox.hasClass("flipped")) {
                 flip_left2();
                 return
             }
-            if (paymentdialogbox.hasClass("norequest") && (paymentdialogbox.attr("data-pending") == "ispending" || (offline === true))) {
-                playsound(funk);
+            if (glob_paymentdialogbox.hasClass("norequest") && (glob_paymentdialogbox.attr("data-pending") == "ispending" || (glob_offline === true))) {
+                playsound(glob_funk);
                 return
             }
             flip_left1();
             setTimeout(function() {
-                paymentpopup.addClass("flipping");
-                paymentdialogbox.css("-webkit-transform", "rotateY(180deg)");
+                glob_paymentpopup.addClass("flipping");
+                glob_paymentdialogbox.css("-webkit-transform", "rotateY(180deg)");
             }, 400);
-            sa_timer = now();
+            glob_sa_timer = now();
             return
         }
         if (e.keyCode == 27) { // Escape
@@ -1765,7 +1763,7 @@ function keyup() {
 }
 
 function escapeandback() {
-    if (body.hasClass("showcam")) {
+    if (glob_body.hasClass("showcam")) {
         window.history.back();
         return
     }
@@ -1793,15 +1791,15 @@ function escapeandback() {
         canceloptions();
         return
     }
-    if (body.hasClass("seed_dialog")) {
+    if (glob_body.hasClass("seed_dialog")) {
         hide_seed_panel();
         return
     }
-    if (body.hasClass("showstartpage")) {
+    if (glob_body.hasClass("showstartpage")) {
         startprev($(".panelactive"));
     }
-    if (paymentpopup.hasClass("active")) {
-        if (paymentdialogbox.hasClass("flipped") && paymentdialogbox.hasClass("norequest")) {
+    if (glob_paymentpopup.hasClass("active")) {
+        if (glob_paymentdialogbox.hasClass("flipped") && glob_paymentdialogbox.hasClass("norequest")) {
             remove_flip();
         } else {
             if (request) {
@@ -1822,7 +1820,7 @@ function escapeandback() {
 
 function close_paymentdialog(empty) {
     if (request) {
-        if (empty === true && inframe === false && request.requesttype == "local") {
+        if (empty === true && glob_inframe === false && request.requesttype == "local") {
             let currency = request.payment,
                 address = request.address,
                 ls_recentrequests = br_get_local("recent_requests", true),
@@ -1854,7 +1852,7 @@ function close_paymentdialog(empty) {
 }
 
 function continue_cpd() {
-    if (html.hasClass("firstload")) {
+    if (glob_html.hasClass("firstload")) {
         let gets = geturlparameters(),
             pagename = gets.p,
             set_pagename = (pagename) ? pagename : "home";
@@ -1914,7 +1912,7 @@ function dismiss_payment_lookup() {
             block_payment_lookup();
         }
         canceldialog();
-        if (paymentpopup.hasClass("active")) {
+        if (glob_paymentpopup.hasClass("active")) {
             close_paymentdialog();
         }
     })
@@ -1975,7 +1973,7 @@ function recent_requests_list(recent_payments) {
                 rq_time = val.rqtime,
                 source = val.source,
                 blockchainurl = blockexplorer_url(currency, false, erc20, source) + address;
-            addresslist += "<li class='rp_li'>" + getcc_icon(cmcid, ccsymbol + "-" + currency, erc20) + "<strong style='opacity:0.5'>" + short_date(rq_time + timezone) + "</strong><br/>\
+            addresslist += "<li class='rp_li'>" + getcc_icon(cmcid, ccsymbol + "-" + currency, erc20) + "<strong style='opacity:0.5'>" + short_date(rq_time + glob_timezone) + "</strong><br/>\
             <a href='" + blockchainurl + "' target='_blank' class='ref check_recent'>\
             <span class='select'>" + address + "</span> <span class='icon-new-tab'></a></li>";
         }
@@ -2044,13 +2042,13 @@ function popdialog(content, functionname, trigger, custom, replace) {
     } else {
         $("#dialogbody").append(content);
     }
-    body.addClass("blurmain");
+    glob_body.addClass("blurmain");
     $("#popup").addClass("active showpu");
     let thistrigger = (trigger) ? trigger : $("#popup #execute");
     if (functionname) {
         execute(thistrigger, functionname);
     }
-    if (supportsTouch === true) {} else {
+    if (glob_supportsTouch) {} else {
         $("#dialogbody input:first").focus();
     }
 }
@@ -2115,14 +2113,14 @@ function addaddress(ad, edit) {
         label = (ad.label) ? ad.label : "",
         derived = (ad.seedid || ad.xpubid),
         readonly = (edit === true) ? " readonly" : "",
-        nopub = (test_derive === false) ? true : (is_xpub(currency) === false || has_xpub(currency) !== false),
+        nopub = (glob_test_derive === false) ? true : (is_xpub(currency) === false || has_xpub(currency) !== false),
         choose_wallet_str = "<span id='get_wallet' class='address_option' data-currency='" + currency + "'>" + translate("noaddressyet", {
             "currency": currency
         }) + "</span>",
         derive_seed_str = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>" + translate("generatewallet") + "</span>",
-        options = (hasbip === true) ? choose_wallet_str : (test_derive === true && c_derive[currency]) ? (hasbip32(currency) === true) ? derive_seed_str : choose_wallet_str : choose_wallet_str,
-        pnotify = (body.hasClass("showstartpage")) ? "<div class='popnotify' style='display:block'>" + options + "</div>" : "<div class='popnotify'></div>",
-        scanqr = (hascam === true && edit === false) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+        options = (glob_hasbip === true) ? choose_wallet_str : (glob_test_derive === true && glob_c_derive[currency]) ? (hasbip32(currency) === true) ? derive_seed_str : choose_wallet_str : choose_wallet_str,
+        pnotify = (glob_body.hasClass("showstartpage")) ? "<div class='popnotify' style='display:block'>" + options + "</div>" : "<div class='popnotify'></div>",
+        scanqr = (glob_hascam === true && edit === false) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
         title = (edit === true) ? "<h2 class='icon-pencil'>" + translate("editlabel") + "</h2>" : "<h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " " + translate("addcoinaddress", {
             "currency": currency
         }) + "</h2>",
@@ -2134,7 +2132,7 @@ function addaddress(ad, edit) {
         }) : translate("nopub"),
         vk_val = (ad.vk) ? ad.vk : "",
         has_vk = (vk_val != ""),
-        scanvk = (hascam === true) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+        scanvk = (glob_hascam === true) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
         vk_box = (currency == "monero") ? (has_vk) ? "" : "<div class='inputwrap'><input type='text' class='vk_input' value='" + vk_val + "' placeholder='" + translate("secretviewkey") + "'>" + scanvk + "</div>" : "",
         content = $("<div class='formbox form" + addeditclass + xpubclass + "' id='addressformbox'>" + title + pnotify + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' id='address_xpub_input' class='address' value='" + address + "' data-currency='" + currency + "' placeholder='" + xpubph + "'" + readonly + ">" + scanqr + "</div>" + vk_box + "<input type='text' class='addresslabel' value='" + label + "' placeholder='label'>\
         <div id='ad_info_wrap' style='display:none'>\
@@ -2148,7 +2146,7 @@ function addaddress(ad, edit) {
         </div>" + pk_checkbox +
             "<input type='submit' class='submit' value='" + translate("okbttn") + "'></form>").data(ad);
     popdialog(content, "triggersubmit");
-    if (supportsTouch === true) {
+    if (glob_supportsTouch) {
         return
     }
     if (edit === true) {
@@ -2194,7 +2192,7 @@ function active_derives(currency, derive) {
         }
     }
     if (derive == "seed") {
-        let active_sder = filter_list(addresslist, "seedid", bipid).not(".used");
+        let active_sder = filter_list(addresslist, "seedid", glob_bipid).not(".used");
         if (active_sder.length) {
             let check_p = ch_pending(active_sder.first().data());
             if (check_p === true) {
@@ -2270,7 +2268,7 @@ function add_erc20() {
                 "monitored": true,
                 "checked": true
             },
-            scanqr = (hascam === true) ? "<div class='qrscanner' data-currency='ethereum' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+            scanqr = (glob_hascam === true) ? "<div class='qrscanner' data-currency='ethereum' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
             content = $("\
             <div class='formbox' id='erc20formbox'>\
                 <h2 class='icon-coin-dollar'>" + translate("adderc20token") + "</h2>\
@@ -2465,7 +2463,7 @@ function validateaddress(ad, vk) {
             addressfield.select();
             return
         }
-        if (addinputval == new_address) { // prevent double address entries
+        if (addinputval == glob_new_address) { // prevent double address entries
             console.log("already added");
             return
         }
@@ -2498,21 +2496,21 @@ function validateaddress(ad, vk) {
                 if (index === 1) {
                     if (iserc20 === true) {
                         buildpage(ad, true);
-                        append_coinsetting(currency, br_config.erc20_dat.settings, false);
+                        append_coinsetting(currency, glob_br_config.erc20_dat.settings);
                     }
-                    if (body.hasClass("showstartpage")) {
+                    if (glob_body.hasClass("showstartpage")) {
                         let acountname = $("#eninput").val();
                         $("#accountsettings").data("selected", acountname).find("p").text(acountname);
                         savesettings();
                         let href = "?p=home&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0" + "&address=" + addinputval;
                         br_set_local("editurl", href); // to check if request is being edited
                         openpage(href, "create " + currency + " request", "payment");
-                        body.removeClass("showstartpage");
+                        glob_body.removeClass("showstartpage");
                     } else {
                         loadpage("?p=" + currency);
                     }
                 }
-                new_address = addinputval + currency;
+                glob_new_address = addinputval + currency;
                 ad.address = addinputval,
                     ad.label = labelinputval,
                     ad.a_id = ccsymbol + index,
@@ -2554,11 +2552,11 @@ function check_vk(vk) {
 
 function send_trigger() {
     $(document).on("click", ".send", function() {
-        if (hasbip === true) {
+        if (glob_hasbip === true) {
             compatible_wallets($(this).attr("data-currency"));
             return
         }
-        playsound(funk);
+        playsound(glob_funk);
     })
 }
 
@@ -2597,7 +2595,7 @@ function canceldialogtrigger() {
 }
 
 function canceldialog(pass) {
-    if (inframe === true) {
+    if (glob_inframe === true) {
         if (pass === true) {} else {
             if ($("#contactformbox").length > 0) {
                 return false;
@@ -2605,7 +2603,7 @@ function canceldialog(pass) {
         }
     }
     let popup = $("#popup");
-    body.removeClass("blurmain themepu");
+    glob_body.removeClass("blurmain themepu");
     popup.removeClass("active");
     let timeout = setTimeout(function() {
         popup.removeClass("showpu");
@@ -2624,11 +2622,11 @@ function canceldialog(pass) {
 
 function blockcancelpaymentdialog() {
     $(document).on("mousedown", "#payment", function(e) {
-        blockswipe = false;
+        glob_blockswipe = false;
         if (e.target == this) {
-            let inputs = paymentdialogbox.find("input");
+            let inputs = glob_paymentdialogbox.find("input");
             if (inputs.is(":focus")) {
-                blockswipe = true;
+                glob_blockswipe = true;
             }
         }
     })
@@ -2636,33 +2634,33 @@ function blockcancelpaymentdialog() {
 
 function cancelpaymentdialogtrigger() {
     $(document).on("mouseup", "#payment", function(e) {
-        if (blockswipe === true) {
+        if (glob_blockswipe === true) {
             unfocus_inputs();
             return
         }
-        if (html.hasClass("flipmode")) { // prevent closing request when flipping
+        if (glob_html.hasClass("flipmode")) { // prevent closing request when flipping
             return
         }
-        let timelapsed = now() - cp_timer;
+        let timelapsed = now() - glob_cp_timer;
         if (timelapsed < 1500) { // prevent clicking too fast
-            playsound(funk);
+            playsound(glob_funk);
             console.log("clicking too fast");
             return
         }
         if (e.target == this) {
             escapeandback();
-            cp_timer = now();
+            glob_cp_timer = now();
         }
     });
 }
 
 function unfocus_inputs() {
-    let inputs = paymentdialogbox.find("input");
+    let inputs = glob_paymentdialogbox.find("input");
     inputs.blur();
 }
 
 function cpd_pollcheck() {
-    if (paymentdialogbox.attr("data-lswitch") == "lnd_ao") {
+    if (glob_paymentdialogbox.attr("data-lswitch") == "lnd_ao") {
         close_paymentdialog();
         return
     }
@@ -2671,7 +2669,7 @@ function cpd_pollcheck() {
             let rq_init = request.rq_init,
                 rq_timer = request.rq_timer,
                 rq_time = now() - rq_timer;
-            if (rq_time > after_poll_timeout) {
+            if (rq_time > glob_after_poll_timeout) {
                 after_poll(rq_init);
                 return
             }
@@ -2681,29 +2679,29 @@ function cpd_pollcheck() {
 }
 
 function cancelpaymentdialog() {
-    if (html.hasClass("hide_app")) {
+    if (glob_html.hasClass("hide_app")) {
         closeloader();
         parent.postMessage("close_request", "*");
         return
     }
-    paymentpopup.removeClass("active");
-    html.removeClass("blurmain_payment");
+    glob_paymentpopup.removeClass("active");
+    glob_html.removeClass("blurmain_payment");
     let timeout = setTimeout(function() {
-        paymentpopup.removeClass("showpu outgoing");
-        html.removeClass("paymode firstload");
+        glob_paymentpopup.removeClass("showpu outgoing");
+        glob_html.removeClass("paymode firstload");
         $(".showmain #mainwrap").css("-webkit-transform", "translate(0, 0)"); // restore fake scroll position
-        $(".showmain").closest(document).scrollTop(scrollposition); // restore real scroll position
+        $(".showmain").closest(document).scrollTop(glob_scrollposition); // restore real scroll position
         remove_flip(); // reset request facing front
-        paymentdialogbox.html(""); // remove html
+        glob_paymentdialogbox.html(""); // remove html
         clearTimeout(timeout);
     }, 600);
     closeloader();
-    clearTimeout(request_timer);
+    clearTimeout(glob_request_timer);
     clearpinging();
     closenotify();
     sleep();
     abort_ndef();
-    lnd_ph = false,
+    glob_lnd_ph = false,
         request = null,
         helper = null;
     let wstimeout = setTimeout(function() {
@@ -2715,17 +2713,17 @@ function cancelpaymentdialog() {
 
 function closesocket(s_id) {
     if (s_id) { // close this socket
-        if (sockets[s_id]) {
-            sockets[s_id].close();
-            delete sockets[s_id];
+        if (glob_sockets[s_id]) {
+            glob_sockets[s_id].close();
+            delete glob_sockets[s_id];
         }
     } else { // close all sockets
-        $.each(sockets, function(key, value) {
+        $.each(glob_sockets, function(key, value) {
             value.close();
         });
-        sockets = {};
+        glob_sockets = {};
     }
-    txid = null;
+    glob_txid = null;
 }
 
 function forceclosesocket() {
@@ -2736,17 +2734,17 @@ function forceclosesocket() {
 
 function clearpinging(s_id) {
     if (s_id) { // close this interval
-        if (pinging[s_id]) {
-            clearInterval(pinging[s_id]);
-            delete pinging[s_id]
+        if (glob_pinging[s_id]) {
+            clearInterval(glob_pinging[s_id]);
+            delete glob_pinging[s_id]
         }
         return
     }
-    if ($.isEmptyObject(pinging)) {} else {
-        $.each(pinging, function(key, value) {
+    if ($.isEmptyObject(glob_pinging)) {} else {
+        $.each(glob_pinging, function(key, value) {
             clearInterval(value);
         });
-        pinging = {};
+        glob_pinging = {};
     }
 }
 
@@ -2761,7 +2759,7 @@ function cancelsharedialogtrigger() {
 function cancelsharedialog() {
     let sharepopup = $("#sharepopup");
     sharepopup.removeClass("active");
-    body.removeClass("sharemode");
+    glob_body.removeClass("sharemode");
     let timeout = setTimeout(function() {
         sharepopup.removeClass("showpu");
     }, 500, function() {
@@ -2774,7 +2772,7 @@ function showoptionstrigger() {
         let ad = $(this).closest("li").data(),
             address = ad.address;
         if (address == "lnurl") {
-            playsound(funk);
+            playsound(glob_funk);
             return
         }
         let savedrequest = $("#requestlist li[data-address='" + address + "']"),
@@ -2814,7 +2812,7 @@ function showoptions(content, addclass, callback) {
     let plusclass = (addclass) ? " " + addclass : "";
     $("#optionspop").addClass("showpu active" + plusclass);
     $("#optionsbox").html(content);
-    body.addClass("blurmain_options");
+    glob_body.addClass("blurmain_options");
 }
 
 function lockscreen(timer) {
@@ -2826,7 +2824,7 @@ function lockscreen(timer) {
         sstr = (cd.seconds) ? cd.seconds + " " + translate("seconds") : "",
         cdown_str = dstr + hstr + mstr + sstr,
         attempts = $("#pinsettings").data("attempts"),
-        has_seedid = (hasbip || cashier_seedid) ? true : false,
+        has_seedid = (glob_hasbip || glob_cashier_seedid) ? true : false,
         us_string = (has_seedid === true && attempts > 5) ? "<p id='seed_unlock'>" + translate("unlockwithsecretphrase") + "</p>" : "",
         content = "<h1 id='lock_heading'>Bitrequest</h1><div id='lockscreen'><h2><span class='icon-lock'></span></h2><p class='tmua'>" + translate("tomanyunlocks") + "</p>\
         <p><br/>" + translate("tryagainin") + "<br/>" + cdown_str + "</p>" + us_string +
@@ -2838,7 +2836,7 @@ function lockscreen(timer) {
         </div>";
     $("#optionspop").addClass("showpu active pin ontop");
     $("#optionsbox").html(content);
-    body.addClass("blurmain_options");
+    glob_body.addClass("blurmain_options");
 }
 
 function seed_unlock_trigger() {
@@ -2854,9 +2852,9 @@ function phrase_login() {
             seedobject = ls_phrase_obj(),
             savedid = seedobject.pid,
             phraseid = get_seedid(b39txt.split(" "));
-        if (phraseid == savedid || phraseid == cashier_seedid) {
+        if (phraseid == savedid || phraseid == glob_cashier_seedid) {
             clearpinlock();
-            if (html.hasClass("loaded")) {} else {
+            if (glob_html.hasClass("loaded")) {} else {
                 finishfunctions();
             }
             let content = pinpanel(" reset");
@@ -2870,11 +2868,11 @@ function phrase_login() {
 }
 
 function remove_cashier() {
-    if (is_cashier) {
+    if (glob_is_cashier) {
         br_remove_local("cashier");
-        cashier_dat = false,
-            is_cashier = false,
-            cashier_seedid = false;
+        glob_cashier_dat = false,
+            glob_is_cashier = false,
+            glob_cashier_seedid = false;
     }
 }
 
@@ -2907,7 +2905,7 @@ function newrequest() {
             title = thislink.attr("title"),
             seedid = ad.seedid;
         if (seedid) {
-            if (seedid != bipid) {
+            if (seedid != glob_bipid) {
                 if (addr_whitelist(address) === true) {} else {
                     let pass_dat = {
                             "currency": currency,
@@ -3014,7 +3012,7 @@ function removeaddressfunction(trigger) {
             }
             savecurrencies(true);
         }
-        new_address = null; // prevent double entries
+        glob_new_address = null; // prevent double entries
         canceldialog();
         canceloptions();
         notify(translate("addressremoved") + " 🗑");
@@ -3061,7 +3059,7 @@ function showtransaction_trigger() {
                         }
                     }
                 }
-                playsound(funk);
+                playsound(glob_funk);
                 return
             }
             let currency = rqli.data("payment"),
@@ -3101,11 +3099,11 @@ function addressinfo() {
             isseed = (source == "seed"),
             isxpub = (source == "xpub"),
             activepub = active_xpub(currency),
-            active_src = (isseed) ? (seedid == bipid) :
+            active_src = (isseed) ? (seedid == glob_bipid) :
             (isxpub) ? (activepub && xpubid == activepub.key_id) : false,
             address = dd.address,
             a_wl = addr_whitelist(address),
-            restore = (isseed) ? (hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + seedid + "'>" + translate("resoresecretphrase") + "</div>" : "",
+            restore = (isseed) ? (glob_hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + seedid + "'>" + translate("resoresecretphrase") + "</div>" : "",
             srcval = (source) ? (active_src) ? source + " <span class='icon-checkmark'>" :
             source + " (Unavailable)" + restore : "external",
             d_index = dd.derive_index,
@@ -3251,7 +3249,7 @@ function open_blockexplorer_url(be_link) {
         "url": be_link
     }));
     if (result === true) {
-        w_loc.href = be_link;
+        glob_w_loc.href = be_link;
     }
 }
 
@@ -3268,7 +3266,7 @@ function blockexplorer_url(currency, tx, erc20, source) {
     }
     let blockexplorer = get_blockexplorer(currency);
     if (blockexplorer) {
-        let blockdata = $.grep(br_config.blockexplorers, function(filter) { //filter pending requests	
+        let blockdata = $.grep(glob_br_config.blockexplorers, function(filter) { //filter pending requests	
                 return filter.name == blockexplorer;
             })[0],
             be_prefix = blockdata.prefix,
@@ -3316,7 +3314,7 @@ function canceloptions(pass) {
             return
         }
         if (ishome() === true) {} else {
-            if (html.hasClass("loaded")) {} else {
+            if (glob_html.hasClass("loaded")) {} else {
                 shake(optionspop);
                 return
             }
@@ -3329,7 +3327,7 @@ function clearoptions() {
     let optionspop = $("#optionspop");
     optionspop.addClass("fadebg");
     optionspop.removeClass("active");
-    body.removeClass("blurmain_options");
+    glob_body.removeClass("blurmain_options");
     let timeout = setTimeout(function() {
         optionspop.removeClass("showpu pin fadebg ontop");
         $("#optionsbox").html("");
@@ -3728,7 +3726,7 @@ function get_pdf_url(rqdat) {
         lightning = rqdat.lightning,
         hybrid = (lightning && lightning.hybrid === true),
         paymenttimestamp = rqdat.paymenttimestamp,
-        ptsformatted = fulldateformat(new Date(paymenttimestamp - timezone), langcode),
+        ptsformatted = fulldateformat(new Date(paymenttimestamp - glob_timezone), glob_langcode),
         amount = rqdat.amount,
         fiatvalue = rqdat.fiatvalue,
         receivedamount = rqdat.receivedamount,
@@ -3748,10 +3746,10 @@ function get_pdf_url(rqdat) {
         uoa_upper = uoa.toUpperCase(),
         requestdate = rqdat.requestdate,
         timestamp = rqdat.timestamp,
-        utc = timestamp - timezone,
-        localtime = (requestdate) ? requestdate - timezone : utc,
+        utc = timestamp - glob_timezone,
+        localtime = (requestdate) ? requestdate - glob_timezone : utc,
         localtimeobject = new Date(localtime),
-        requestdateformatted = fulldateformat(localtimeobject, langcode),
+        requestdateformatted = fulldateformat(localtimeobject, glob_langcode),
         created = (requestdate) ? requestdateformatted : "unknown",
         utc_format = fulldateformat(new Date(utc)),
         invd = {},
@@ -3831,8 +3829,8 @@ function countdown_format(cd) {
 //render page from cache
 function rendercurrencies() {
     initiate();
-    if (stored_currencies) {
-        $.each(stored_currencies, function(index, data) {
+    if (glob_stored_currencies) {
+        $.each(glob_stored_currencies, function(index, data) {
             let thiscurrency = data.currency,
                 thiscmcid = data.cmcid;
             buildpage(data, false);
@@ -3853,14 +3851,14 @@ function rendercurrencies() {
 function render_currencysettings(thiscurrency) {
     let settingcache = br_get_local(thiscurrency + "_settings", true);
     if (settingcache) {
-        append_coinsetting(thiscurrency, settingcache, false);
+        append_coinsetting(thiscurrency, settingcache);
     }
 }
 
 // build settings
 function buildsettings() {
     let appsettingslist = $("#appsettings");
-    $.each(br_config.app_settings, function(i, value) {
+    $.each(glob_br_config.app_settings, function(i, value) {
         let setting_id = value.id,
             selected = value.selected,
             value_tl = translate(selected),
@@ -3931,7 +3929,7 @@ function fetchrequests(cachename, archive) {
 
 //initiate page when there's no cache
 function initiate() {
-    $.each(br_config.bitrequest_coin_data, function(dat, val) {
+    $.each(glob_br_config.bitrequest_coin_data, function(dat, val) {
         if (val.active === true) {
             let settings = val.settings,
                 has_settings = (settings) ? true : false,
@@ -3948,7 +3946,7 @@ function initiate() {
                     "urlscheme": cd.urlscheme
                 };
             buildpage(coindata, true);
-            append_coinsetting(val.currency, settings, true);
+            append_coinsetting(val.currency, settings);
         }
     });
 }
@@ -3967,8 +3965,8 @@ function buildpage(cd, ini) {
         home_cc_li = home_currencylist.children("li[data-currency='" + currency + "']"),
         visibility = (checked === true) ? "" : "hide",
         has_settings = (cd.settings === true || erc20 === true);
-    init = (cc_li.length === 0 && ini === true);
-    if (init === true || erc20 === true) {
+    glob_init = (cc_li.length === 0 && ini === true);
+    if (glob_init === true || erc20 === true) {
         let new_li = $("<li class='iconright' data-currency='" + currency + "' data-checked='" + checked + "'>\
             <div data-rel='?p=" + currency + "' class='liwrap addcurrency'>\
                 <h2>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + "\</h2>\
@@ -3996,7 +3994,7 @@ function buildpage(cd, ini) {
             </div>\
         </div>" : "";
         let settingsbutton = (has_settings === true) ? "<div data-rel='?p=" + currency + "_settings' class='self icon-cog'></div>" : "",
-            sendbttn = (hasbip === true) ? "<div class='button send' data-currency='" + currency + "'><span class='icon-telegram'>" + translate("send") + "</span></div>" : "",
+            sendbttn = (glob_hasbip === true) ? "<div class='button send' data-currency='" + currency + "'><span class='icon-telegram'>" + translate("send") + "</span></div>" : "",
             currency_page = $("<div class='page' id='" + currency + "'>\
             <div class='content'>\
                 <h2 class='heading'>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + settingsbutton + "</h2>\
@@ -4010,7 +4008,7 @@ function buildpage(cd, ini) {
         if (erc20 === true) {
             let coin_settings_cache = br_get_local(currency + "_settings");
             if (!coin_settings_cache) {
-                br_set_local(currency + "_settings", br_config.erc20_dat.settings, true);
+                br_set_local(currency + "_settings", glob_br_config.erc20_dat.settings, true);
             }
         }
     } else {
@@ -4024,7 +4022,7 @@ function buildpage(cd, ini) {
     </li>");
 }
 
-function append_coinsetting(currency, settings, init) {
+function append_coinsetting(currency, settings) {
     let coinsettings_list = $("#" + currency + "_settings ul.cc_settinglist");
     $.each(settings, function(dat, val) {
         if (val.xpub === false) {} else {
@@ -4073,7 +4071,7 @@ function appendaddress(currency, ad) {
         ad_id_str = (addressid) ? "address_ID: " + addressid + "\n" : "",
         ad_icon = (source) ? (source == "seed") ? "<span title='" + ad_id_str + "seed_ID: " + seedid + "' class='srcicon' data-seedid='" + seedid + "'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 888 899' class='srcseed'><path d='M852.9 26.3c.5-3.5-28.7 14.8-28.2 14.1-.9 1.1-25.3 23.4-195.1 46-71.4 9.5-120.3 37.2-145.3 82.4-40.3 72.6-1.1 161 .6 164.7l1.6 3.5c-7.8 16.8-14.1 34.2-19.3 51.9-11.6-27.1-26.5-50.9-44.8-71.4 4.8-20.2 5-45.5-3.8-77.1-21.1-76.1-73.8-104.4-114.2-114.7-42.3-10.8-79.6-4.1-81.2-3.9l-.7.1c-1.8.4-44.8 10-90.8 38.1C69.2 198.3 31 252.7 21.3 317.2L16 353.5l35-11.1c2.7-.8 66.4-20.2 150.4 29.6 32.6 19.3 68.6 29 102 29 30.8 0 59.4-8.2 81.1-24.8 5.4-4.1 11.5-9.6 17.3-16.8 24.5 33 40.5 75.2 47.9 126.3-.8 9.5-1.3 19-1.7 28.4-70.6 10.5-187.2 47.6-280.8 173 0 0 59.9 179.7 264.3 183.3 204.4 3.5 194.6 0 194.6 0s137.6-7 126.6-183.3-241.3-176.6-241.3-176.6-5.9-.5-16.3-.4c-.2-2.7-.4-5.4-.7-8.1 3.2-52.1 13.1-97.9 29.5-136.7 38.8 24.8 75.7 37.3 110.6 37.3 18.5 0 36.4-3.5 53.7-10.5C824 336.9 862.7 78.4 866.5 50.6c.3-1.6-6.6 14.4.5-4.9s-14.1-19.4-14.1-19.4zM356.8 339.8C326.5 363 271 360 224.9 332.6c-54.8-32.5-103.6-40.3-137.8-40.3-4.4 0-8.6.1-12.5.4 34.8-95.2 149.9-124.1 157.2-125.8 8.8-1.5 114.1-16.6 142.6 85.9 2.3 8.3 4.2 17.5 4.9 26.9-93-63.9-206.9-45.3-210.2-45-31.7 13.8-17.6 42 7.1 41.7 24.4-.4 113.8-18 193.8 49.1-3.4 5.3-7.7 10.1-13.2 14.3zm314.2 9.9c-36 14.6-78.2 6.2-125.6-25 8.2-12.9 17.4-24.7 27.6-35.3 40.2-41.9 84-53.8 96.3-56.4.9-.1 2-.2 3.3-.6h.2c17-5.6 25.1-43.8-6-45.4-.6-2-66.2 9.2-124.4 68.3-9.2 9.4-17.6 19.3-25.2 29.6-6.1-25.6-9.9-63 7.3-94 17.7-31.7 55.1-51.6 111.2-59 79.7-10.6 138.5-23.2 176.8-37.9-18.8 88.1-63.2 223.8-141.5 255.7z' fill='#B33A3A'/></svg></span>" : "<span class='srcicon icon-key' title='" + ad_id_str + "derived from Xpub: #" + xpubid + "'></span>" : (currency == "monero") ? (ad.vk) ? "<span class='srcicon icon-eye' title='Monitored address'></span>" : "<span class='srcicon icon-eye-blocked' title='Unmonitored address'></span>" : "",
         activepub = active_xpub(currency),
-        clasv = (source) ? (source == "seed") ? (seedid == bipid) ? " seed seedv" : " seed seedu" :
+        clasv = (source) ? (source == "seed") ? (seedid == glob_bipid) ? " seed seedv" : " seed seedu" :
         (source == "xpub") ? (activepub && xpubid == activepub.key_id) ? " xpub xpubv" : " xpub xpubu" : "" : "",
         usedcl = (used) ? " used" : "",
         address_li = $("<li class='adli" + clasv + usedcl + "' data-index='" + index + "' data-address='" + address + "' data-checked='" + ad.checked + "'>\
@@ -4136,8 +4134,8 @@ function appendrequest(rd) {
         receivedamount_rounded = trimdecimals(receivedamount, 6),
         fiatvalue_rounded = trimdecimals(fiatvalue, 2),
         requestlist = (archive === true) ? $("#archivelist") : $("#requestlist"),
-        utc = timestamp - timezone,
-        localtime = (requestdate) ? requestdate - timezone : utc, // timezone correction
+        utc = timestamp - glob_timezone,
+        localtime = (requestdate) ? requestdate - glob_timezone : utc, // timezone correction
         paymenttimestamp = (rd.paymenttimestamp) ? rd.paymenttimestamp : requestdate,
         incoming = (requesttype == "incoming"),
         local = (requesttype == "local"),
@@ -4163,11 +4161,11 @@ function appendrequest(rd) {
         isexpired = (status == "expired" || (now() - localtime) >= expirytime && (lnd_expire || status == "new" || insufficient === true)),
         expiredclass = (isexpired === true) ? " expired" : "",
         localtimeobject = new Date(localtime),
-        requestdateformatted = fulldateformat(localtimeobject, langcode),
-        timeformat = "<span class='rq_month'>" + localtimeobject.toLocaleString(langcode, {
+        requestdateformatted = fulldateformat(localtimeobject, glob_langcode),
+        timeformat = "<span class='rq_month'>" + localtimeobject.toLocaleString(glob_langcode, {
             "month": "short"
         }) + "</span> <span class='rq_day'>" + localtimeobject.getDate() + "</span>",
-        ptsformatted = fulldateformat(new Date(paymenttimestamp - timezone), langcode, true),
+        ptsformatted = fulldateformat(new Date(paymenttimestamp - glob_timezone), glob_langcode, true),
         amount_short_rounded = amountshort(amount, receivedamount, fiatvalue, iscrypto),
         amount_short_span = (insufficient === true) ? " (" + amount_short_rounded + " " + uoa_upper + " short)" : "",
         amount_short_cc_span = (iscrypto === true) ? amount_short_span : "",
@@ -4177,7 +4175,7 @@ function appendrequest(rd) {
         requestnamebox = (incoming === true) ? (rqdata) ? "<li><strong>" + translate("from") + ":</strong> " + requestname + "</li>" : "<li><strong>From: unknown</strong></li>" : "",
         requesttitlebox = (requesttitle) ? "<li><strong>" + translate("title") + ":</strong> '<span class='requesttitlebox'>" + requesttitle + "</span>'</li>" : "",
         ismonitoredspan = (ismonitored === false) ? " (unmonitored transaction)" : "",
-        timestampbox = (incoming === true) ? "<li><strong>" + translate("created") + ":</strong> " + created + "</li><li><strong>" + translate("firstviewed") + ":</strong> " + fulldateformat(new Date(utc), langcode) + "</li>" :
+        timestampbox = (incoming === true) ? "<li><strong>" + translate("created") + ":</strong> " + created + "</li><li><strong>" + translate("firstviewed") + ":</strong> " + fulldateformat(new Date(utc), glob_langcode) + "</li>" :
         (outgoing === true) ? "<li><strong>" + translate("sendon") + ":</strong> " + requestdateformatted + "</li>" :
         (local === true) ? "<li><strong>" + translate("created") + ":</strong> " + requestdateformatted + "</li>" : "",
         paymenturl = "&address=" + address + rqdataparam + rqmetaparam + "&requestid=" + requestid,
@@ -4267,7 +4265,7 @@ function appendrequest(rd) {
 
 function getnetwork(source) {
     return (source == "binplorer") ? "BNB smart chain" :
-        (source == main_arbitrum_node || source == "arbiscan") ? "Arbitrum" : false;
+        (source == glob_main_arbitrum_node || source == "arbiscan") ? "Arbitrum" : false;
 }
 
 // ** Store data in localstorage **
@@ -4351,9 +4349,9 @@ function updatechanges(key, add, nit) {
         }
     }
     if (add === true) {
-        let cc = changes[key],
+        let cc = glob_changes[key],
             cc_correct = (cc) ? cc : 0;
-        changes[key] = cc_correct + 1;
+        glob_changes[key] = cc_correct + 1;
         savechangesstats();
         if (nit == "noalert") {
             return
@@ -4363,28 +4361,28 @@ function updatechanges(key, add, nit) {
 }
 
 function resetchanges() {
-    changes = {};
+    glob_changes = {};
     savechangesstats();
-    body.removeClass("haschanges");
+    glob_body.removeClass("haschanges");
     $("#alert > span").text("0").attr("title", translate("nochanges"));
 }
 
 function savechangesstats() {
-    br_set_local("changes", changes, true);
+    br_set_local("changes", glob_changes, true);
 }
 
 // render changes
 function renderchanges() {
     let changescache = br_get_local("changes", true);
     if (changescache) {
-        changes = changescache;
+        glob_changes = changescache;
         return
     }
-    changes = {};
+    glob_changes = {};
 }
 
 function change_alert() {
-    if (is_ios_app === true) {
+    if (glob_is_ios_app === true) {
         return
     }
     let total_changes = get_total_changes();
@@ -4393,7 +4391,7 @@ function change_alert() {
             "total_changes": total_changes
         }));
         setTimeout(function() {
-            body.addClass("haschanges");
+            glob_body.addClass("haschanges");
         }, 2500);
         if (total_changes == 20 || total_changes == 50 || total_changes == 150 || total_changes == 200 || total_changes == 250) {
             canceldialog();
@@ -4408,7 +4406,7 @@ function change_alert() {
 
 function get_total_changes() {
     let totalchanges = 0;
-    $.each(changes, function(key, value) {
+    $.each(glob_changes, function(key, value) {
         let thisval = (value) ? value : 0;
         totalchanges += parseInt(thisval);
     });
@@ -4484,7 +4482,7 @@ function open_url() {
         loadertext(translate("loadurl", {
             "url": url
         }));
-        if (is_ios_app === true) {
+        if (glob_is_ios_app === true) {
             cancelpaymentdialog();
         }
         setTimeout(function() {
@@ -4492,7 +4490,7 @@ function open_url() {
             if (target == "_blank") {
                 window.open(url);
             } else {
-                w_loc.href = url;
+                glob_w_loc.href = url;
             }
         }, 500);
     })
@@ -4521,10 +4519,10 @@ function get_alchemy_apikey() {
 
 function proxy_alert(version) {
     if (version) {
-        body.addClass("haschanges");
+        glob_body.addClass("haschanges");
         $("#alert > span").text("!").attr("title", translate("updateproxy", {
             "version": version,
-            "proxy_version": proxy_version
+            "proxy_version": glob_proxy_version
         }));
     }
 }
@@ -4566,7 +4564,7 @@ function copytoclipboard(content, type) {
         notify(type + " " + translate("copied"), 2500, "no");
         return
     }
-    copycontent.val(content);
+    glob_copycontent.val(content);
     copycontent[0].setSelectionRange(0, 999);
     try {
         let success = document.execCommand("copy");
@@ -4578,7 +4576,7 @@ function copytoclipboard(content, type) {
     } catch (err) {
         notify(translate("xcopy") + " " + type, 2500, "no");
     }
-    copycontent.val("").data({
+    glob_copycontent.val("").data({
         "type": false
     }).blur();
 }
@@ -4605,8 +4603,8 @@ function loadertext(text) {
 }
 
 function settitle(title) {
-    titlenode.text(title);
-    ogtitle.attr("content", title);
+    glob_titlenode.text(title);
+    glob_ogtitle.attr("content", title);
 }
 
 function all_pinpanel(cb, top, set) {
@@ -4687,21 +4685,21 @@ function switchpanel(switchmode, mode) {
 }
 
 function try_next_api(apilistitem, current_apiname) {
-    let apilist = br_config.apilists[apilistitem],
+    let apilist = glob_br_config.apilists[apilistitem],
         next_scan = apilist[$.inArray(current_apiname, apilist) + 1],
         next_api = (next_scan) ? next_scan : apilist[0];
-    if (api_attempt[apilistitem][next_api] === true) {
+    if (glob_api_attempt[apilistitem][next_api] === true) {
         return false;
     }
     return next_api;
 }
 
 function wake() {
-    if (wl) {
+    if (glob_wl) {
         const requestwakelock = async () => {
             try {
-                wakelock = await wl.request("screen");
-                wakelock.addEventListener("release", (e) => {
+                glob_wakelock = await glob_wl.request("screen");
+                glob_wakelock.addEventListener("release", (e) => {
                     //console.log(e);
                 });
             } catch (e) {
@@ -4713,17 +4711,17 @@ function wake() {
 }
 
 function sleep() {
-    if (wl) {
-        if (wakelock) {
-            wakelock.release();
+    if (glob_wl) {
+        if (glob_wakelock) {
+            glob_wakelock.release();
         }
-        wakelock = null;
+        glob_wakelock = null;
     }
 }
 
 function vu_block() {
     notify(translate("cashiernotallowed"));
-    playsound(funk);
+    playsound(glob_funk);
 }
 
 // Recent requests
@@ -4743,7 +4741,7 @@ function check_rr() {
 
 function toggle_rr(bool) {
     if (bool) {
-        html.addClass("show_rr");
+        glob_html.addClass("show_rr");
         let hist_bttn = $("#request_history");
         hist_bttn.addClass("load");
         setTimeout(function() {
@@ -4751,16 +4749,16 @@ function toggle_rr(bool) {
         }, 500);
         return
     }
-    html.removeClass("show_rr");
+    glob_html.removeClass("show_rr");
 }
 
 // ** Get_app **
 
 function detectapp() {
-    if (inframe === true || is_android_app === true || is_ios_app === true) {
+    if (glob_inframe === true || glob_is_android_app === true || glob_is_ios_app === true) {
         return
     }
-    if (android_standalone === true || ios_standalone === true) {
+    if (glob_android_standalone === true || glob_ios_standalone === true) {
         return
     }
     let local_appstore_dialog = br_get_local("appstore_dialog");
@@ -4770,10 +4768,10 @@ function detectapp() {
         if (cachetime < localdelay) {
             return
         }
-        if (supportsTouch === true) {
+        if (glob_supportsTouch) {
             let device = getdevicetype();
             if (device == "Android") {
-                if (/SamsungBrowser/.test(userAgent)) {
+                if (/SamsungBrowser/.test(glob_userAgent)) {
                     return // skip samsungbrowser
                 }
             }
@@ -4793,20 +4791,20 @@ function getapp(type) {
     app_panel.html("");
     let android = (type == "android"),
         button = (android === true) ? fetch_aws("img_button-playstore.png") : fetch_aws("img_button-appstore.png"),
-        url = (android === true) ? "https://play.google.com/store/apps/details?id=" + androidpackagename + "&pcampaignid=fdl_long&url=" + approot + encodeURIComponent(w_loc.search) : "https://apps.apple.com/app/id1484815377?mt=8",
+        url = (android === true) ? "https://play.google.com/store/apps/details?id=" + glob_androidpackagename + "&pcampaignid=fdl_long&url=" + glob_approot + encodeURIComponent(glob_w_loc.search) : "https://apps.apple.com/app/id1484815377?mt=8",
         panelcontent = "<h2>Download the app</h2>\
             <a href='" + url + "' class='exit store_bttn'><img src='" + button + "'></a><br/>\
             <div id='not_now'>Not now</div>";
     app_panel.html(panelcontent);
     setTimeout(function() {
-        body.addClass("getapp");
+        glob_body.addClass("getapp");
     }, 1500);
     br_set_local("appstore_dialog", now());
 }
 
 function close_app_panel() {
     $(document).on("click", "#not_now", function() {
-        body.removeClass("getapp");
+        glob_body.removeClass("getapp");
         setTimeout(function() {
             $("#app_panel").html("");
         }, 800);
@@ -4912,7 +4910,7 @@ function getcoindata(currency) {
     } // if not it's probably erc20 token
     let currencyref = get_currencyli(currency); // check if erc20 token is added
     if (currencyref.length > 0) {
-        return $.extend(currencyref.data(), br_config.erc20_dat.data);
+        return $.extend(currencyref.data(), glob_br_config.erc20_dat.data);
     } // else lookup erc20 data
     let tokenobject = br_get_local("erc20tokens", true);
     if (tokenobject) {
@@ -4926,7 +4924,7 @@ function getcoindata(currency) {
                 "cmcid": erc20data.cmcid.toString(),
                 "contract": erc20data.contract
             }
-            return $.extend(fetched_data, br_config.erc20_dat.data);
+            return $.extend(fetched_data, glob_br_config.erc20_dat.data);
         }
     }
     return false;
@@ -4942,11 +4940,11 @@ function getcoinsettings(currency) {
     if (coindata) {
         return coindata.settings;
     } // return erc20 settings
-    return br_config.erc20_dat.settings;
+    return glob_br_config.erc20_dat.settings;
 }
 
 function getcoinconfig(currency) {
-    return $.grep(br_config.bitrequest_coin_data, function(filter) {
+    return $.grep(glob_br_config.bitrequest_coin_data, function(filter) {
         return filter.currency == currency;
     })[0];
 }
@@ -5053,7 +5051,7 @@ function expand_shoturl(i_param) {
     if (i_param) {
         let p_index = i_param.slice(0, 1),
             shortid = i_param.slice(1),
-            proxy = proxy_list[p_index],
+            proxy = glob_proxy_list[p_index],
             is_url = (proxy.indexOf("https://") >= 0);
         if (is_url) {
             let payload = {
@@ -5099,7 +5097,7 @@ function expand_shoturl(i_param) {
 }
 
 function expand_bitly(i_param) {
-    if (hostlocation == "local") {
+    if (glob_hostlocation == "local") {
         return
     }
     let bitly_id = i_param.slice(3),
@@ -5124,7 +5122,7 @@ function expand_bitly(i_param) {
     }).done(function(e) {
         let data = br_result(e).result;
         if (data.error) {
-            w_loc.href = "http://bit.ly/" + bitly_id;
+            glob_w_loc.href = "http://bit.ly/" + bitly_id;
             return
         }
         if (data) {
@@ -5134,10 +5132,10 @@ function expand_bitly(i_param) {
                 br_set_session("longurl_" + bitly_id, longurl);
                 return
             }
-            w_loc.href = "http://bit.ly/" + bitly_id;
+            glob_w_loc.href = "http://bit.ly/" + bitly_id;
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        w_loc.href = "http://bit.ly/" + bitly_id;
+        glob_w_loc.href = "http://bit.ly/" + bitly_id;
     });
 }
 
@@ -5183,7 +5181,7 @@ function click_pop(fn) {
 function add_serviceworker() {
     if ("serviceWorker" in navigator) {
         if (!navigator.serviceWorker.controller) {
-            navigator.serviceWorker.register(approot + "serviceworker.js", {
+            navigator.serviceWorker.register(glob_approot + "serviceworker.js", {
                     "scope": "./"
                 })
                 .then(function(reg) {

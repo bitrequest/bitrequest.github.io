@@ -1,8 +1,7 @@
 //globals
-const deviceid = hashcode(getdevicetype() + navigator.appName + navigator.appCodeName);
-let caches,
-    backup_active,
-    resd = {};
+const glob_deviceid = hashcode(getdevicetype() + navigator.appName + navigator.appCodeName);
+let glob_backup_active,
+    glob_resd = {};
 
 $(document).ready(function() {
 
@@ -349,10 +348,10 @@ function submitcurrency() {
 function editlanguage() {
     $(document).on("click", "#langsettings", function() {
         let translation = translate("obj"),
-            current_lang = q_obj(translation, langcode + ".lang"),
-            current_flag = q_obj(translation, langcode + ".flag"),
+            current_lang = q_obj(translation, glob_langcode + ".lang"),
+            current_flag = q_obj(translation, glob_langcode + ".flag"),
             cf_string = (current_flag) ? current_flag + " " : "";
-        let current_val = cf_string + current_lang + " (" + langcode + ")",
+        let current_val = cf_string + current_lang + " (" + glob_langcode + ")",
             langlist = "";
         $.each(translation, function(key, value) {
             let cflag = (value.flag) ? value.flag + " " : ""
@@ -362,7 +361,7 @@ function editlanguage() {
                 "div": {
                     "class": "popform validated",
                     "attr": {
-                        "data-currentlang": langcode
+                        "data-currentlang": glob_langcode
                     },
                     "content": [{
                             "div": {
@@ -422,16 +421,16 @@ function submitlang() {
             thisinput = thisform.find("input"),
             thisvalue = thisinput.val(),
             lc1 = thisvalue.split(")")[0],
-            langcode = lc1.split("(")[1];
-        if (langcode == currentlang) {
+            lc2 = lc1.split("(")[1];
+        if (lc2 == currentlang) {
             canceldialog();
             return
         }
         set_setting("langsettings", {
-            "selected": langcode
+            "selected": lc2
         }, thisvalue);
         savesettings();
-        w_loc.href = w_loc.pathname + "?p=settings";
+        glob_w_loc.href = glob_w_loc.pathname + "?p=settings";
         return false;
     })
 }
@@ -514,7 +513,7 @@ function submit_locktime() {
 // Bip32 passphrase
 function trigger_bip32() {
     $(document).on("click", "#bip39_passphrase", function() {
-        if (hasbip === true) {
+        if (glob_hasbip === true) {
             all_pinpanel({
                 "func": manage_bip32
             }, null, true);
@@ -531,7 +530,7 @@ function hide_seed_panel_trigger() {
 }
 
 function hide_seed_panel() {
-    body.removeClass("seed_dialog");
+    glob_body.removeClass("seed_dialog");
     $("#seed_panel").attr("class", "");
     sleep();
 }
@@ -553,7 +552,7 @@ function backupdatabase() {
     let jsonencode = complilebackup(),
         filename = complilefilename(),
         changespush = [];
-    $.each(changes, function(key, value) {
+    $.each(glob_changes, function(key, value) {
         if (value > 0) {
             let nrchanges = (value == 1) ? translate("changein") : translate("changesin");
             changespush.push("<li>" + value + " " + nrchanges + " '" + key + "'</li>");
@@ -567,7 +566,7 @@ function backupdatabase() {
             "nr_changes": nr_changes
         }) + "</p>",
         showhidechangelog = (gd_active === true) ? "display:none" : "display:block",
-        changenotification = (gd_active === false && body.hasClass("haschanges")) ? alert_txt : "",
+        changenotification = (gd_active === false && glob_body.hasClass("haschanges")) ? alert_txt : "",
         ddat = [{
                 "div": {
                     "id": "dialogcontent",
@@ -617,7 +616,7 @@ function backupdatabase() {
                                         "attr": {
                                             "href": "data:text/json;charset=utf-16le;base64," + jsonencode + "' download='" + filename,
                                             "title": filename,
-                                            "data-date": new Date(now()).toLocaleString(language).replace(/\s+/g, '_').replace(/\:/g, '_'),
+                                            "data-date": new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, '_').replace(/\:/g, '_'),
                                             "data-lastbackup": filename,
                                             "download": "download"
                                         },
@@ -703,14 +702,14 @@ function sharebu() {
                 let br_cache = e.ping.br_cache,
                     filetime = br_cache.created_utc,
                     filetimesec = (filetime) ? filetime * 1000 : now(),
-                    filetime_format = new Date(filetimesec).toLocaleString(language),
+                    filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
                     sharedtitle = translate("systembackup") + " " + accountname + " (" + filetime_format + ")",
                     set_proxy = c_proxy(),
                     r_dat = btoa(JSON.stringify({
                         "ro": br_cache.filename,
                         "proxy": set_proxy
                     }));
-                shorten_url(sharedtitle, approot + "?p=settings&sbu=" + r_dat, fetch_aws("img_system_backup.png"), true);
+                shorten_url(sharedtitle, glob_approot + "?p=settings&sbu=" + r_dat, fetch_aws("img_system_backup.png"), true);
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 console.log(jqXHR);
                 console.log(textStatus);
@@ -737,7 +736,7 @@ function check_systembu(sbu) {
                 server_time = br_cache.utc_timestamp,
                 filetime = br_cache.created_utc,
                 filetimesec = (filetime) ? filetime * 1000 : now(),
-                filetime_format = new Date(filetimesec).toLocaleString(language),
+                filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
                 br_result = ping.br_result,
                 base64 = br_result.base64,
                 account = atob(br_result.account),
@@ -745,7 +744,7 @@ function check_systembu(sbu) {
                 bu_date = filetime_format.replace(/\s+/g, "_").replace(/\:/g, "_"),
                 cache_time = br_cache.cache_time,
                 expires_in = (filetime + cache_time) - server_time,
-                filename = "bitrequest_system_backup_" + langcode + "_" + encodeURIComponent(account) + "_" + bu_date + ".json",
+                filename = "bitrequest_system_backup_" + glob_langcode + "_" + encodeURIComponent(account) + "_" + bu_date + ".json",
                 cd = countdown(expires_in * 1000),
                 cd_format = countdown_format(cd),
                 cf_string = (cd_format) ? translate("expiresin") + cd_format : translate("fileexpired"),
@@ -877,8 +876,8 @@ function complilebackup() {
             key == "bitrequest_awl" ||
             key == "bitrequest_dat" ||
             key == "bitrequest_tp") {} else if (key == "bitrequest_bpdat") { // only backup encrypted seed
-            let not_verified = (io.bipv != "yes"); // backup when not verified
-            if (not_verified || (test_derive === true && get_setting("backup", "sbu") === true)) {
+            let not_verified = (glob_io.bipv != "yes"); // backup when not verified
+            if (not_verified || (glob_test_derive === true && get_setting("backup", "sbu") === true)) {
                 let val_obj = JSON.parse(value);
                 val_obj.dat = null;
                 jsonfile.push('"' + key + '":' + JSON.stringify(val_obj));
@@ -891,12 +890,12 @@ function complilebackup() {
 }
 
 function complilefilename() {
-    return "bitrequest_backup_" + langcode + "_" + new Date(now()).toLocaleString(language).replace(/\s+/g, "_").replace(/\:/g, "_") + ".json";
+    return "bitrequest_backup_" + glob_langcode + "_" + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_").replace(/\:/g, "_") + ".json";
 }
 
 function submitbackup() {
     $(document).on("click", "#triggerdownload", function(e) {
-        if (body.hasClass("ios")) {
+        if (glob_body.hasClass("ios")) {
             e.preventDefault();
             notify(translate("noiosbu"));
             return
@@ -935,7 +934,7 @@ function restorefrombackup() {
 }
 
 function trigger_restore() {
-    backup_active = false;
+    glob_backup_active = false;
     let restorenode = $("#restore"),
         backupnode = $("#backup"),
         lastfileused = restorenode.data("fileused"),
@@ -1007,7 +1006,7 @@ function restorebackup() {
             let reader = new FileReader();
             reader.onload = function(e) {
                 backup_result = e.target.result,
-                    backup_active = true;
+                    glob_backup_active = true;
             };
             reader.readAsDataURL(file);
             return
@@ -1027,7 +1026,7 @@ function submitrestore() {
             topnotify(translate("selectbackup"));
             return
         }
-        if (backup_active === true) {
+        if (glob_backup_active === true) {
             let jsonobject = JSON.parse(atob(backup_result.substr(backup_result.indexOf(",") + 1)));
             restore(jsonobject, backup_filename);
             return
@@ -1062,7 +1061,7 @@ function restore(jsonobject, bu_filename) {
 
 function check_backup(jsonobject) {
     let is_team_invite = isteaminvite(jsonobject);
-    if (cashier_dat && cashier_dat.cashier && !is_team_invite) {
+    if (glob_cashier_dat && glob_cashier_dat.cashier && !is_team_invite) {
         notify(translate("cashiernotallowed"));
         return false;
     }
@@ -1122,15 +1121,15 @@ function submit_GD_restore() {
 }
 
 function scan_restore(jsonobject) {
-    resd = {
+    glob_resd = {
         "pcnt": 0
     }
     let bpdat = jsonobject.bitrequest_bpdat;
     if (bpdat) {
-        resd.sbu = true;
+        glob_resd.sbu = true;
         let can_dec = (bpdat.dat) ? s_decode(bpdat) : (bpdat.datenc) ? s_decode(bpdat.datenc) : false;
-        resd.samebip = (bpdat.id == bipid);
-        resd.bpdat = can_dec;
+        glob_resd.samebip = (bpdat.id == glob_bipid);
+        glob_resd.bpdat = can_dec;
     }
 }
 
@@ -1140,16 +1139,16 @@ function restore_algo(pass_dat) {
     if (cbu === false) {
         return false
     }
-    if (resd.sbu) { // has seed backup
-        if (resd.samebip === true) {
+    if (glob_resd.sbu) { // has seed backup
+        if (glob_resd.samebip === true) {
             // keep existing phrase
             restore_callback(pass_dat, false);
         } else {
-            if (hasbip === true) {
+            if (glob_hasbip === true) {
                 dphrase_dialog(pass_dat);
             } else {
                 // import and check decode
-                if (resd.bpdat) {
+                if (glob_resd.bpdat) {
                     restore_callback(pass_dat, true);
                 } else {
                     pin_dialog(pass_dat, "restore_callback");
@@ -1260,11 +1259,11 @@ function submit_pin_dialog() {
                     pbdat_eq = (pbdat.dat) ? pbdat : pbdat.datenc,
                     can_dec = s_decode(pbdat_eq, hashcode(thisvalue));
                 if (can_dec) {
-                    resd.pcnt = 0;
+                    glob_resd.pcnt = 0;
                     let callback = pdat.cb;
                     clearpinlock();
                     if (callback) {
-                        resd.bpdat = can_dec;
+                        glob_resd.bpdat = can_dec;
                         if (callback == "restore_callback") {
                             restore_callback(pass_dat, true);
                         } else if (callback == "bu_oldseed") {
@@ -1276,17 +1275,17 @@ function submit_pin_dialog() {
                     notify(translate("success") + "!");
                     return
                 }
-                if (resd.pcnt > 1) {
+                if (glob_resd.pcnt > 1) {
                     $("#pinsettings").data("timeout", now() + 300000); // 5 minutes
                     topnotify(translate("maxattempts"));
                     let result = confirm(translate("restorewithoutsecretphrase") + "?");
                     if (result === true) {
                         restore_callback(pass_dat, false);
                     }
-                    resd.pcnt = 0;
+                    glob_resd.pcnt = 0;
                     canceldialog();
                 } else {
-                    resd.pcnt = resd.pcnt + 1;
+                    glob_resd.pcnt = glob_resd.pcnt + 1;
                 }
                 savesettings();
                 shake(dialog);
@@ -1308,10 +1307,10 @@ function restore_cb_init_addresses() {
 }
 
 function restore_callback_file(pass_dat, np) {
-    let newphrase = (hasbip === true) ? np : true;
+    let newphrase = (glob_hasbip === true) ? np : true;
     restorestorage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
-    let lastrestore = "last restore: " + new Date(now()).toLocaleString(language).replace(/\s+/g, "_");
+    let lastrestore = "last restore: " + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_");
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": pass_dat.filename,
@@ -1322,14 +1321,14 @@ function restore_callback_file(pass_dat, np) {
         restore_cb_init_addresses();
     }
     resetchanges();
-    w_loc.href = w_loc.pathname + "?p=settings";
+    glob_w_loc.href = glob_w_loc.pathname + "?p=settings";
 }
 
 function restore_callback_gd(pass_dat, np) {
-    let newphrase = (hasbip === true) ? np : true;
+    let newphrase = (glob_hasbip === true) ? np : true;
     restorestorage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
-    let lastrestore = "last restore: " + new Date(now()).toLocaleString(language).replace(/\s+/g, "_");
+    let lastrestore = "last restore: " + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_");
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": pass_dat.filename,
@@ -1338,7 +1337,7 @@ function restore_callback_gd(pass_dat, np) {
     setTimeout(function() {
         savesettings("noalert");
         createfile(); // create new file from backup
-        if (pass_dat.thisdeviceid == deviceid) {
+        if (pass_dat.thisdeviceid == glob_deviceid) {
             let p = GD_pass();
             if (p.pass) {
                 deletefile(pass_dat.thisfileid, null, p.token); // delete old backup file
@@ -1349,7 +1348,7 @@ function restore_callback_gd(pass_dat, np) {
         }
         resetchanges();
         setTimeout(function() {
-            w_loc.href = w_loc.pathname + "?p=settings";
+            glob_w_loc.href = glob_w_loc.pathname + "?p=settings";
         }, 300);
     }, 300);
 }
@@ -1450,7 +1449,7 @@ function keep_current_seed() {
 function restore_bu_seed() {
     let is_dialog = $("#importseedbox"),
         bu_dat = is_dialog.data();
-    if (resd.bpdat) {} else {
+    if (glob_resd.bpdat) {} else {
         if (is_dialog.hasClass("verified")) {} else {
             pin_dialog(bu_dat, "bu_oldseed")
             return false;
@@ -1489,11 +1488,11 @@ function compare_seeds() {
                 let pbdat = jasobj.bitrequest_bpdat,
                     pbdat_eq = (pbdat.dat) ? pbdat : pbdat.datenc;
                 if (pbdat_eq) {
-                    if (resd.bpdat) {} else {
+                    if (glob_resd.bpdat) {} else {
                         let enterpin = prompt(translate("fourdigitpin")),
                             can_dec = s_decode(pbdat_eq, hashcode(enterpin));
                         if (can_dec) {
-                            resd.bpdat = can_dec;
+                            glob_resd.bpdat = can_dec;
                             is_dialog.addClass("verified");
                             cs_callback(true)
                         } else {
@@ -1513,7 +1512,7 @@ function compare_seeds() {
 
 function cs_callback(pass) {
     let existing_so = ls_phrase_obj(),
-        backup_so = ls_phrase_obj_parsed(resd.bpdat),
+        backup_so = ls_phrase_obj_parsed(glob_resd.bpdat),
         compare = {
             "s1": existing_so.pob.slice(0, 3),
             "s2": backup_so.pob.slice(0, 3)
@@ -1537,9 +1536,9 @@ function compare_seeds_callback(compare) {
 function restorestorage(jsonobject, newphrase) {
     $.each(jsonobject, function(key, value) {
         if (key == "bitrequest_bpdat") {
-            if (test_derive === true && newphrase === true) {
-                if (resd.bpdat) {
-                    localStorage.setItem(key, JSON.stringify(resd.bpdat));
+            if (glob_test_derive === true && newphrase === true) {
+                if (glob_resd.bpdat) {
+                    localStorage.setItem(key, JSON.stringify(glob_resd.bpdat));
                 }
             }
         } else {
@@ -1548,7 +1547,7 @@ function restorestorage(jsonobject, newphrase) {
     });
     localStorage.removeItem("bitrequest_cashier");
     localStorage.removeItem("bitrequest_teamid");
-    resd = {};
+    glob_resd = {};
 }
 
 // CSV Export
@@ -1559,7 +1558,7 @@ function csvexport_trigger() {
             has_requests = (rq_arr && !$.isEmptyObject(rq_arr)),
             has_archive = (archive_arr && !$.isEmptyObject(archive_arr));
         if (has_requests === true || has_archive === true) {
-            let filename = "bitrequest_csv_export_" + new Date(now()).toLocaleString(language).replace(/\s+/g, "_").replace(/\:/g, "_") + ".csv",
+            let filename = "bitrequest_csv_export_" + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_").replace(/\:/g, "_") + ".csv",
                 show_archive = (has_requests === true) ? "false" : "true",
                 content = "<div class='formbox' id='exportcsvbox'>\
                     <h2 class='icon-table'>" + translate("csvexport") + "</h2>\
@@ -1630,14 +1629,14 @@ function csvexport_trigger() {
             popdialog(content, "triggersubmit", null, true);
             return
         }
-        playsound(funk);
+        playsound(glob_funk);
         notify(translate("nocsvexports"));
     })
 }
 
 function submit_csvexport() {
     $(document).on("click", "#trigger_csvexport", function(e) {
-        if (body.hasClass("ios")) {
+        if (glob_body.hasClass("ios")) {
             e.preventDefault();
             notify(translate("noiosbu"));
             return false;
@@ -1792,14 +1791,14 @@ function share_csv() {
                 let br_cache = e.ping.br_cache,
                     filetime = br_cache.created_utc,
                     filetimesec = (filetime) ? filetime * 1000 : now(),
-                    filetime_format = new Date(filetimesec).toLocaleString(language),
+                    filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
                     sharedtitle = "CSV Export " + accountname + " (" + filetime_format + ")",
                     set_proxy = c_proxy(),
                     r_dat = btoa(JSON.stringify({
                         "ro": br_cache.filename,
                         "proxy": set_proxy
                     }));
-                shorten_url(sharedtitle, approot + "?p=settings&csv=" + r_dat, fetch_aws("img_system_backup.png"), true);
+                shorten_url(sharedtitle, glob_approot + "?p=settings&csv=" + r_dat, fetch_aws("img_system_backup.png"), true);
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 closeloader();
             });
@@ -1823,7 +1822,7 @@ function check_csvexport(csv) {
                 server_time = br_cache.utc_timestamp,
                 filetime = br_cache.created_utc,
                 filetimesec = (filetime) ? filetime * 1000 : now(),
-                filetime_format = new Date(filetimesec).toLocaleString(language),
+                filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
                 br_result = ping.br_result,
                 base64 = br_result.base64,
                 account = atob(br_result.account),
@@ -1897,7 +1896,7 @@ function check_csvexport(csv) {
 
 function submit_csvdownload() {
     $(document).on("click", "#trigger_csvdownload", function(e) {
-        if (body.hasClass("ios")) {
+        if (glob_body.hasClass("ios")) {
             e.preventDefault();
             notify(translate("noiosbu"));
             return false;
@@ -2145,7 +2144,7 @@ function editccapi() {
             cmcapikey = cc_apisettings.cmcapikey,
             cmcapikeyval = (cc_apisettings.cmcapikey) ? cc_apisettings.cmcapikey : "",
             cmcapikeyclass = (ccapisrc == "coinmarketcap") ? "" : "hide",
-            options = "<span data-pe='none'>" + br_config.apilists.crypto_price_apis.join("</span><span data-pe='none'>") + "</span>",
+            options = "<span data-pe='none'>" + glob_br_config.apilists.crypto_price_apis.join("</span><span data-pe='none'>") + "</span>",
             ddat = [{
                 "div": {
                     "class": "popform",
@@ -2270,7 +2269,7 @@ function editfiatxrapi() {
         let thisdata = $(this).data(),
             fiatxrapisrc = thisdata.selected,
             fiatxrapikey = (thisdata.fxapikey) ? thisdata.fxapikey : "",
-            options = "<span data-pe='none'>" + br_config.apilists.fiat_price_apis.join("</span><span data-pe='none'>") + "</span>",
+            options = "<span data-pe='none'>" + glob_br_config.apilists.fiat_price_apis.join("</span><span data-pe='none'>") + "</span>",
             fiatxrapikeyclass = (fiatxrapisrc == "fixer") ? "" : "hide",
             ddat = [{
                 "div": {
@@ -2431,17 +2430,17 @@ function pick_api_proxy() {
                 </div>\
             </div>";
         popdialog(content, "triggersubmit");
-        if (phpsupportglobal === true) {
-            let protocol = (localserver) ? w_loc.protocol + "//" : "",
-                port = w_loc.port,
+        if (glob_phpsupport === true) {
+            let protocol = (glob_localserver) ? glob_w_loc.protocol + "//" : "",
+                port = glob_w_loc.port,
                 pval = (port.length) ? ":" + port : "",
-                fixed_url = complete_url(protocol + thishostname + pval + location.pathname);
+                fixed_url = complete_url(protocol + glob_thishostname + pval + location.pathname);
             if ($.inArray(fixed_url, proxies) === -1) {
                 proxies.push(fixed_url);
             }
         }
-        if ($.inArray(hosted_proxy, proxies) === -1) { // always keep default proxy
-            proxies.push(hosted_proxy);
+        if ($.inArray(glob_hosted_proxy, proxies) === -1) { // always keep default proxy
+            proxies.push(glob_hosted_proxy);
         }
         let optionlist = $("#proxyformbox").find(".options");
         $.each(proxies, function(key, value) {
@@ -2532,7 +2531,7 @@ function test_custom_proxy(value) { // make test api call
         proxy_node_data = proxy_node.data(),
         custom_proxies = proxy_node_data.custom_proxies,
         fixed_url = complete_url(value);
-    if ($.inArray(fixed_url, custom_proxies) !== -1 || $.inArray(fixed_url, proxy_list) !== -1) {
+    if ($.inArray(fixed_url, custom_proxies) !== -1 || $.inArray(fixed_url, glob_proxy_list) !== -1) {
         popnotify("error", translate("proxyexists"));
         return false;
     }
@@ -2596,7 +2595,7 @@ function remove_proxy() {
                 default_node = (thisoption.hasClass("default")),
                 thisval = thisoption.find("> span").attr("data-value");
             if (default_node === true) {
-                playsound(funk);
+                playsound(glob_funk);
                 topnotify(translate("removedefaultnode"));
             } else {
                 let result = confirm(translate("confirmremovenode", {
@@ -2772,7 +2771,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
     if (apikeyval.length > keylength) {
         if (thisref == "infura" || thisref == "alchemy") {
             let txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
-                base_url = (thisref == "infura") ? main_eth_node : main_alchemy_node,
+                base_url = (thisref == "infura") ? glob_main_eth_node : glob_main_alchemy_node,
                 payload = {
                     "jsonrpc": "2.0",
                     "id": 3,
@@ -2812,7 +2811,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
         var search = payload + apikeyval;
         if (thisref == "firebase") {
             params.data = {
-                "longDynamicLink": firebase_shortlink + "?link=" + approot + "?p=request"
+                "longDynamicLink": glob_firebase_shortlink + "?link=" + glob_approot + "?p=request"
             }
         }
         if (thisref == "bitly") {
@@ -3048,7 +3047,7 @@ function edit_contactform(checkout) {
     if (checkout === true) {
         $("#popup #execute").text("CONTINUE");
         $("#popup #canceldialog").hide();
-        if (inframe === true) {
+        if (glob_inframe === true) {
             parent.postMessage("close_loader", "*");
         }
     }
@@ -3234,7 +3233,7 @@ function submit_permissions() {
         set_setting("permissions", {
             "selected": thisvalue
         }, thisvalue);
-        html.attr("data-role", thisvalue);
+        glob_html.attr("data-role", thisvalue);
         canceldialog();
         notify(translate("datasaved"));
         savesettings();
@@ -3246,7 +3245,7 @@ function submit_permissions() {
 
 function team_invite_trigger() {
     $(document).on("click", "#teaminvite", function() {
-        if (hasbip && !bipv) {
+        if (glob_hasbip && !glob_bipv) {
             bipv_pass();
             notify(translate("pleaseverify"));
             return
@@ -3316,7 +3315,7 @@ function complile_teaminvite() {
             }
         }
     }
-    let seedobj = (hasbip === true) ? ls_phrase_obj() : {
+    let seedobj = (glob_hasbip === true) ? ls_phrase_obj() : {
             "pid": false,
             "pob": false
         },
@@ -3338,7 +3337,7 @@ function adjust_object(object, seedobj) {
             key = rootkey.slice(0, 64),
             cc = rootkey.slice(64);
     }
-    $.each(br_config.bitrequest_coin_data, function(i, coinconfig) {
+    $.each(glob_br_config.bitrequest_coin_data, function(i, coinconfig) {
         let currency = coinconfig.currency,
             default_coinsettings = coinconfig.settings,
             bip32dat = default_coinsettings.Xpub,
@@ -3419,7 +3418,7 @@ function share_teaminvite() {
                         "ro": br_cache.filename,
                         "proxy": set_proxy
                     }));
-                shorten_url(sharedtitle, approot + "?p=settings&ro=" + r_dat, approot + "/img_icons_apple-touch-icon.png", true);
+                shorten_url(sharedtitle, glob_approot + "?p=settings&ro=" + r_dat, glob_approot + "/img_icons_apple-touch-icon.png", true);
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 console.log(jqXHR);
                 console.log(textStatus);
@@ -3446,7 +3445,7 @@ function check_teaminvite(ro) {
                 server_time = br_cache.utc_timestamp,
                 filetime = br_cache.created_utc,
                 filetimesec = (filetime) ? filetime * 1000 : now(),
-                filetime_format = new Date(filetimesec).toLocaleString(language),
+                filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
                 br_result = ping.br_result,
                 base64 = br_result.base64,
                 account = atob(br_result.account),
@@ -3459,8 +3458,8 @@ function check_teaminvite(ro) {
                 cd = countdown(expires_in * 1000),
                 cd_format = countdown_format(cd),
                 bpdat_seedid = (br_dat.bitrequest_cashier) ? (br_dat.bitrequest_cashier.seedid) ? br_dat.bitrequest_cashier.seedid : false : false,
-                update = (bpdat_seedid == cashier_seedid) ? true : false,
-                master_account = (bpdat_seedid == bipid) ? true : false,
+                update = (bpdat_seedid == glob_cashier_seedid) ? true : false,
+                master_account = (bpdat_seedid == glob_bipid) ? true : false,
                 teamid = br_get_local("teamid", true),
                 teamid_arr = br_dobj(teamid),
                 is_installed = ($.inArray(ro, teamid_arr) > -1) ? true : false,
@@ -3521,7 +3520,7 @@ function install_teaminvite_trigger() {
         }
         let update = this_bttn.attr("data-update"),
             installid = this_bttn.attr("data-installid"),
-            installed = (stored_currencies) ? true : false,
+            installed = (glob_stored_currencies) ? true : false,
             result_text = (update == "true") ? translate("updatealert") : translate("installalert"),
             result = (installed === true) ? confirm(result_text) : true;
         if (result === true) {
@@ -3544,7 +3543,7 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
         br_set_local("teamid", teamid_arr, true);
     }
     rendersettings(["restore", "backup"]); // exclude restore and backup settings
-    let lastrestore = translate("lastrestore") + "<br/><span class='icon-folder-open'>" + translate("teaminvite") + " " + new Date(now()).toLocaleString(language).replace(/\s+/g, "_") + "</span>";
+    let lastrestore = translate("lastrestore") + "<br/><span class='icon-folder-open'>" + translate("teaminvite") + " " + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_") + "</span>";
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": bu_filename,
@@ -3553,7 +3552,7 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
     savesettings();
     notify(translate("installcomplete"));
     canceldialog();
-    w_loc.href = w_loc.pathname + "?p=home";
+    glob_w_loc.href = glob_w_loc.pathname + "?p=home";
 }
 
 function isteaminvite(jsonobject) {
@@ -3563,7 +3562,7 @@ function isteaminvite(jsonobject) {
 
 function check_useragent() {
     $(document).on("click", "#ua", function() {
-        let refmatch = (ref_match) ? "<span class='number'>" + referrer + "</span>" : "<span class='number'>" + false + "</span>",
+        let refmatch = (glob_ref_match) ? "<span class='number'>" + glob_referrer + "</span>" : "<span class='number'>" + false + "</span>",
             pdat = GD_pass(),
             pass = pdat.expired,
             expiresin = pdat.expires_in,
@@ -3577,13 +3576,13 @@ function check_useragent() {
                     "content": [{
                             "div": {
                                 "class": "pre",
-                                "content": syntaxHighlight(userAgent)
+                                "content": syntaxHighlight(glob_userAgent)
                             }
                         },
                         {
                             "div": {
                                 "class": "pre",
-                                "content": "android_standalone : <span class='number'>" + android_standalone + "</span> || ios_standalone : <span class='number'>" + ios_standalone + "</span> || referrer : " + refmatch + " || is_android_app: <span class='number'>" + is_android_app + "</span> || is_ios_app: <span class='number'>" + is_ios_app + "</span>" + ei_str + rtstring
+                                "content": "android_standalone : <span class='number'>" + glob_android_standalone + "</span> || ios_standalone : <span class='number'>" + glob_ios_standalone + "</span> || referrer : " + refmatch + " || is_android_app: <span class='number'>" + glob_is_android_app + "</span> || is_ios_app: <span class='number'>" + glob_is_ios_app + "</span>" + ei_str + rtstring
                             }
                         }
                     ]

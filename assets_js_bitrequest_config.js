@@ -1,42 +1,41 @@
 let socket_attempt = {},
-    api_attempt = {},
-    api_attempts = {},
-    scan_attempts = {},
-    statuspush = [],
-    tx_list = [],
-    rpc_attempts = {},
-    changes = {};
+    glob_api_attempt = {},
+    glob_api_attempts = {},
+    glob_scan_attempts = {},
+    glob_statuspush = [],
+    glob_tx_list = [],
+    glob_rpc_attempts = {},
+    glob_changes = {};
 
-const apptitle = "Bitrequest",
-    hostname = "bitrequest.github.io", // change if self hosted
-    root = "/",
-    localhostname = (hostname.indexOf("http") > -1) ? hostname.split("://").pop() : hostname,
-    approot = "https://" + localhostname + root,
-    ln_socket = "wss://bitrequest.app:8030",
-    proxy_list = [
+const glob_apptitle = "Bitrequest",
+    glob_hostname = "bitrequest.github.io", // change if self hosted
+    glob_localhostname = (glob_hostname.indexOf("http") > -1) ? glob_hostname.split("://").pop() : glob_hostname,
+    glob_approot = "https://" + glob_localhostname + "/",
+    glob_ln_socket = "wss://bitrequest.app:8030",
+    glob_proxy_list = [
         "https://app.bitrequest.io/",
         "https://www.bitrequest.io/",
         "https://www.bitrequest.app/"
     ],
-    hosted_proxy = random_array_item(proxy_list), // load balance proxies
-    proxy_version = "0.010",
-    firebase_dynamic_link_domain = "bitrequest.page.link",
-    firebase_shortlink = "https://" + firebase_dynamic_link_domain + "/",
-    androidpackagename = "io.bitrequest.app",
-    main_bc_ws = "ws://socket.blockcypher.com/v1/",
-    main_bc_wss = "wss://socket.blockcypher.com/v1/",
-    main_eth_node = "https://mainnet.infura.io/v3/",
-    main_arbitrum_node = "https://arbitrum-mainnet.infura.io/v3/",
-    main_alchemy_node = "https://eth-mainnet.g.alchemy.com/v2/",
-    main_eth_socket = "wss://mainnet.infura.io/ws/v3/",
-    main_arbitrum_socket = "wss://arbitrum-mainnet.infura.io/ws/v3/",
-    main_alchemy_socket = "wss://eth-mainnet.g.alchemy.com/v2/",
-    main_nano_node = "https://www.bitrequest.app:8020",
-    main_kas_wss = "wss://api.kaspa.org",
-    sec_kas_wss = "wss://socket.kas.fyi",
-    aws_bucket = "https://brq.s3.us-west-2.amazonaws.com/",
-    cmc_icon_loc = "https://s2.coinmarketcap.com/static/img/coins/200x200/",
-    multi_wallets = {
+    glob_hosted_proxy = random_array_item(glob_proxy_list), // load balance proxies
+    glob_proxy_version = "0.010",
+    glob_firebase_dynamic_link_domain = "bitrequest.page.link",
+    glob_firebase_shortlink = "https://" + glob_firebase_dynamic_link_domain + "/",
+    glob_androidpackagename = "io.bitrequest.app",
+    glob_main_bc_ws = "ws://socket.blockcypher.com/v1/",
+    glob_main_bc_wss = "wss://socket.blockcypher.com/v1/",
+    glob_main_eth_node = "https://mainnet.infura.io/v3/",
+    glob_main_arbitrum_node = "https://arbitrum-mainnet.infura.io/v3/",
+    glob_main_alchemy_node = "https://eth-mainnet.g.alchemy.com/v2/",
+    glob_main_eth_socket = "wss://mainnet.infura.io/ws/v3/",
+    glob_main_arbitrum_socket = "wss://arbitrum-mainnet.infura.io/ws/v3/",
+    glob_main_alchemy_socket = "wss://eth-mainnet.g.alchemy.com/v2/",
+    glob_main_nano_node = "https://www.bitrequest.app:8020",
+    glob_main_kas_wss = "wss://api.kaspa.org",
+    glob_sec_kas_wss = "wss://socket.kas.fyi",
+    glob_aws_bucket = "https://brq.s3.us-west-2.amazonaws.com/",
+    glob_cmc_icon_loc = "https://s2.coinmarketcap.com/static/img/coins/200x200/",
+    glob_multi_wallets = {
         "exodus": {
             "name": "exodus",
             "website": "https://www.exodus.io",
@@ -94,7 +93,7 @@ const apptitle = "Bitrequest",
             "seed": true
         }
     },
-    br_config = {
+    glob_br_config = {
         "bitrequest_coin_data": [{
                 "currency": "bitcoin",
                 "active": true,
@@ -110,11 +109,11 @@ const apptitle = "Bitrequest",
                 "wallets": {
                     "wallet_download_page": "https://bitcoin.org/en/choose-your-wallet",
                     "wallets": [
-                        multi_wallets.exodus,
-                        multi_wallets.coinomi,
-                        multi_wallets.trezor,
-                        multi_wallets.ledger,
-                        multi_wallets.trustwallet,
+                        glob_multi_wallets.exodus,
+                        glob_multi_wallets.coinomi,
+                        glob_multi_wallets.trezor,
+                        glob_multi_wallets.ledger,
+                        glob_multi_wallets.trustwallet,
                         {
                             "name": "electrum",
                             "website": "https://electrum.org",
@@ -270,17 +269,17 @@ const apptitle = "Bitrequest",
                         "icon": "tab",
                         "selected": {
                             "name": "blockcypher wss",
-                            "url": main_bc_wss,
+                            "url": glob_main_bc_wss,
                             "display": true
                         },
                         "apis": [{
                                 "name": "blockcypher wss",
-                                "url": main_bc_wss,
+                                "url": glob_main_bc_wss,
                                 "display": true
                             },
                             {
                                 "name": "blockcypher ws",
-                                "url": main_bc_ws,
+                                "url": glob_main_bc_ws,
                                 "display": false
                             },
                             {
@@ -338,11 +337,11 @@ const apptitle = "Bitrequest",
                 "wallets": {
                     "wallet_download_page": "https://litecoin.org",
                     "wallets": [
-                        multi_wallets.exodus,
-                        multi_wallets.coinomi,
-                        multi_wallets.trezor,
-                        multi_wallets.ledger,
-                        multi_wallets.keepkey,
+                        glob_multi_wallets.exodus,
+                        glob_multi_wallets.coinomi,
+                        glob_multi_wallets.trezor,
+                        glob_multi_wallets.ledger,
+                        glob_multi_wallets.keepkey,
                         {
                             "name": "electrum",
                             "website": "https://electrum-ltc.org",
@@ -407,17 +406,17 @@ const apptitle = "Bitrequest",
                         "icon": "tab",
                         "selected": {
                             "name": "blockcypher wss",
-                            "url": main_bc_wss,
+                            "url": glob_main_bc_wss,
                             "display": true
                         },
                         "apis": [{
                                 "name": "blockcypher wss",
-                                "url": main_bc_wss,
+                                "url": glob_main_bc_wss,
                                 "display": true
                             },
                             {
                                 "name": "blockcypher ws",
-                                "url": main_bc_ws,
+                                "url": glob_main_bc_ws,
                                 "display": false
                             },
                             {
@@ -470,12 +469,12 @@ const apptitle = "Bitrequest",
                 "wallets": {
                     "wallet_download_page": "https://dogecoin.com/getting-started/",
                     "wallets": [
-                        multi_wallets.exodus,
-                        multi_wallets.coinomi,
-                        multi_wallets.trezor,
-                        multi_wallets.ledger,
-                        multi_wallets.trustwallet,
-                        multi_wallets.keepkey
+                        glob_multi_wallets.exodus,
+                        glob_multi_wallets.coinomi,
+                        glob_multi_wallets.trezor,
+                        glob_multi_wallets.ledger,
+                        glob_multi_wallets.trustwallet,
+                        glob_multi_wallets.keepkey
                     ]
                 },
                 "settings": {
@@ -525,17 +524,17 @@ const apptitle = "Bitrequest",
                         "icon": "tab",
                         "selected": {
                             "name": "blockcypher wss",
-                            "url": main_bc_wss,
+                            "url": glob_main_bc_wss,
                             "display": true
                         },
                         "apis": [{
                                 "name": "blockcypher wss",
-                                "url": main_bc_wss,
+                                "url": glob_main_bc_wss,
                                 "display": true
                             },
                             {
                                 "name": "blockcypher ws",
-                                "url": main_bc_ws,
+                                "url": glob_main_bc_ws,
                                 "display": false
                             },
                             {
@@ -585,12 +584,12 @@ const apptitle = "Bitrequest",
                 "wallets": {
                     "wallet_download_page": "https://bch.info/en/wallets",
                     "wallets": [
-                        multi_wallets.exodus,
-                        multi_wallets.coinomi,
-                        multi_wallets.trezor,
-                        multi_wallets.ledger,
-                        multi_wallets.trustwallet,
-                        multi_wallets.atomicwallet,
+                        glob_multi_wallets.exodus,
+                        glob_multi_wallets.coinomi,
+                        glob_multi_wallets.trezor,
+                        glob_multi_wallets.ledger,
+                        glob_multi_wallets.trustwallet,
+                        glob_multi_wallets.atomicwallet,
                         {
                             "name": "electron-cash",
                             "website": "https://electroncash.org",
@@ -692,11 +691,11 @@ const apptitle = "Bitrequest",
                 "wallets": {
                     "wallet_download_page": "https://ethereum.org/en/wallets/",
                     "wallets": [
-                        multi_wallets.exodus,
-                        multi_wallets.trezor,
-                        multi_wallets.ledger,
-                        multi_wallets.trustwallet,
-                        multi_wallets.keepkey,
+                        glob_multi_wallets.exodus,
+                        glob_multi_wallets.trezor,
+                        glob_multi_wallets.ledger,
+                        glob_multi_wallets.trustwallet,
+                        glob_multi_wallets.keepkey,
                         {
                             "name": "myetherwallet",
                             "website": "https://www.mewwallet.com",
@@ -762,8 +761,8 @@ const apptitle = "Bitrequest",
                                 "display": false
                             },
                             {
-                                "name": main_eth_node,
-                                "url": main_eth_node,
+                                "name": glob_main_eth_node,
+                                "url": glob_main_eth_node,
                                 "display": true
                             }
                         ],
@@ -775,13 +774,13 @@ const apptitle = "Bitrequest",
                     "websockets": {
                         "icon": "tab",
                         "selected": {
-                            "name": main_alchemy_socket,
-                            "url": main_alchemy_socket,
+                            "name": glob_main_alchemy_socket,
+                            "url": glob_main_alchemy_socket,
                             "display": true
                         },
                         "apis": [{
-                            "name": main_alchemy_socket,
-                            "url": main_alchemy_socket,
+                            "name": glob_main_alchemy_socket,
+                            "url": glob_main_alchemy_socket,
                             "display": true
                         }],
                         "options": []
@@ -831,7 +830,7 @@ const apptitle = "Bitrequest",
                 "wallets": {
                     "wallet_download_page": "https://nanowallets.guide",
                     "wallets": [
-                        multi_wallets.trustwallet,
+                        glob_multi_wallets.trustwallet,
                         {
                             "name": "nautilus",
                             "website": "https://nautilus.io",
@@ -894,14 +893,14 @@ const apptitle = "Bitrequest",
                         "icon": "sphere",
                         "selected": {
                             "name": "bitrequest.app",
-                            "url": main_nano_node,
+                            "url": glob_main_nano_node,
                             "username": "",
                             "password": "",
                             "display": true
                         },
                         "apis": [{
                                 "name": "bitrequest.app",
-                                "url": main_nano_node,
+                                "url": glob_main_nano_node,
                                 "username": "",
                                 "password": "",
                                 "display": true
@@ -1015,7 +1014,7 @@ const apptitle = "Bitrequest",
                 "wallets": {
                     "wallet_download_page": "https://www.getmonero.org/downloads/",
                     "wallets": [
-                        multi_wallets.coinomi,
+                        glob_multi_wallets.coinomi,
                         {
                             "name": "monerujo",
                             "website": "https://www.monerujo.io",
@@ -1171,18 +1170,18 @@ const apptitle = "Bitrequest",
                     "websockets": {
                         "icon": "tab",
                         "selected": {
-                            "name": main_kas_wss,
-                            "url": main_kas_wss,
+                            "name": glob_main_kas_wss,
+                            "url": glob_main_kas_wss,
                             "display": true
                         },
                         "apis": [{
-                                "name": main_kas_wss,
-                                "url": main_kas_wss,
+                                "name": glob_main_kas_wss,
+                                "url": glob_main_kas_wss,
                                 "display": true
                             },
                             {
-                                "name": sec_kas_wss,
-                                "url": sec_kas_wss,
+                                "name": glob_sec_kas_wss,
+                                "url": glob_sec_kas_wss,
                                 "display": true
                             }
                         ]
@@ -1222,7 +1221,7 @@ const apptitle = "Bitrequest",
                 "wallets": {
                     "wallet_download_page": "https://www.nimiq.com",
                     "wallets": [
-                        multi_wallets.atomicwallet,
+                        glob_multi_wallets.atomicwallet,
                         {
                             "name": "wallet.nimiq.com",
                             "website": "https://wallet.nimiq.com",
@@ -1366,13 +1365,13 @@ const apptitle = "Bitrequest",
                             "display": true
                         },
                         {
-                            "name": main_eth_node,
-                            "url": main_eth_node,
+                            "name": glob_main_eth_node,
+                            "url": glob_main_eth_node,
                             "display": true
                         },
                         {
-                            "name": main_arbitrum_node,
-                            "url": main_arbitrum_node,
+                            "name": glob_main_arbitrum_node,
+                            "url": glob_main_arbitrum_node,
                             "display": true
                         }
                     ],
@@ -1384,13 +1383,13 @@ const apptitle = "Bitrequest",
                 "websockets": {
                     "icon": "tab",
                     "selected": {
-                        "name": main_eth_socket,
-                        "url": main_eth_socket,
+                        "name": glob_main_eth_socket,
+                        "url": glob_main_eth_socket,
                         "display": true
                     },
                     "apis": [{
-                        "name": main_eth_socket,
-                        "url": main_eth_socket,
+                        "name": glob_main_eth_socket,
+                        "url": glob_main_eth_socket,
                         "display": true
                     }],
                     "options": []
@@ -1494,7 +1493,7 @@ const apptitle = "Bitrequest",
             {
                 "id": "api_proxy",
                 "heading": "API Proxy",
-                "selected": hosted_proxy,
+                "selected": glob_hosted_proxy,
                 "custom_proxies": [],
                 "icon": "icon-sphere"
             },
@@ -1564,7 +1563,7 @@ const apptitle = "Bitrequest",
             },
             {
                 "name": "alchemy",
-                "base_url": main_alchemy_node,
+                "base_url": glob_main_alchemy_node,
                 "key_param": null,
                 "api_key": null,
                 "sign_up": "https://auth.alchemy.com/signup/"
@@ -1701,14 +1700,14 @@ const apptitle = "Bitrequest",
             },
             {
                 "name": "infura",
-                "base_url": main_eth_node,
+                "base_url": glob_main_eth_node,
                 "key_param": null,
                 "api_key": null,
                 "sign_up": "https://infura.io/register"
             },
             {
                 "name": "arbitrum",
-                "base_url": main_arbitrum_node,
+                "base_url": glob_main_arbitrum_node,
                 "key_param": null,
                 "api_key": null,
                 "sign_up": "https://infura.io/register"

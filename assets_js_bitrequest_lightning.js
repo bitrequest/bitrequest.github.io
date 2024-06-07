@@ -96,7 +96,7 @@ function lm_function(replace) {
             cp_id = (current_proxy) ? current_proxy.id : false,
             p_class = (has_proxies) ? " haslnurls" : "",
             n_class = (has_nodes) ? "" : " noln",
-            camclass = (hascam) ? "" : " nocam",
+            camclass = (glob_hascam) ? "" : " nocam",
             node_name = (current_node) ? current_node.name : "",
             c_node_id = (current_node) ? current_node.node_id : "",
             proxy_select = (has_proxy) ? "<div class='selectbox' id='lnd_proxy_select_input'>\
@@ -529,7 +529,7 @@ function lightning_option_li(live, value, selected, invoices, proxy) {
                 (value.serialized) ? " " + value.serialized.slice(0, 16) : "",
                 inv_title = (value.memo) ? value.memo : (value.description) ? value.description : "invoice" + inv_id,
                 timestamp = (value.creation_date) ? value.creation_date : (value.timestamp) ? value.timestamp : false,
-                inv_date = (timestamp) ? short_date(parseInt((timestamp) * 1000) + timezone) : "",
+                inv_date = (timestamp) ? short_date(parseInt((timestamp) * 1000) + glob_timezone) : "",
                 settle_icon = (value.settled === true || value.status == "paid") ? "icon-checkmark" : (value.settled === false || value.status == "expired") ? "icon-clock" : false,
                 icon_span = (settle_icon) ? "<span class='" + settle_icon + "'></span>" : "<img src='" + icon_loc + "' class='lnd_icon'>";
             invoiceslist += "<div class='ivli'><div class='invoice_memo clearfix'><div class='iv_title'>" + icon_span + " " + inv_title + "</div><div class='iv_date'>" + inv_date + "</div></div><div class='invoice_body'><pre>" + syntaxHighlight(value) + "</pre></div></div>";
@@ -709,7 +709,7 @@ function lnd_proxy_switch() {
             ln_dat = lnli.data(),
             nodelist = ln_dat.services;
         if ($.isEmptyObject(nodelist)) {
-            playsound(funk)
+            playsound(glob_funk)
             return
         }
         let this_switch = $(this),
@@ -788,7 +788,7 @@ function lnd_select_node() {
     $(document).on("click", "#ln_nodelist .optionwrap", function() {
         let thisnode = $(this);
         if (thisnode.hasClass("offline")) {
-            playsound(funk);
+            playsound(glob_funk);
         }
         let alloptions = $("#ln_nodelist .optionwrap");
         alloptions.not(thisnode).removeClass("show");
@@ -807,7 +807,7 @@ function lnd_select_proxy() {
     $(document).on("click", "#lnd_proxy_select_input .optionwrap", function() {
         let thisnode = $(this);
         if (thisnode.hasClass("offline")) {
-            playsound(funk);
+            playsound(glob_funk);
             return
         }
         let this_data = thisnode.data(),
@@ -823,8 +823,8 @@ function lnd_select_proxy() {
 function lnd_select_implementation() {
     $(document).on("click", "#implements .imp_select", function(e) {
         let thisnode = $(this),
-            this_data = lndli().data();
-        lnd_proxy_list = this_data.proxies,
+            this_data = lndli().data(),
+            lnd_proxy_list = this_data.proxies,
             has_proxies = ($.isEmptyObject(lnd_proxy_list)) ? false : true,
             imp = thisnode.attr("data-value"),
             cs_boxes = $("#lnd_credentials .lndcd"),
@@ -890,11 +890,11 @@ function trigger_ln() {
         if (lndpu_val.length < 10) {
             topnotify(translate("enterserver"));
             lnd_pu_input.val("").focus();
-            playsound(funk);
+            playsound(glob_funk);
             return
         }
         let fixed_url = complete_url(lndpu_val),
-            is_default = ($.inArray(fixed_url, proxy_list) === -1) ? false : true;
+            is_default = ($.inArray(fixed_url, glob_proxy_list) === -1) ? false : true;
         if (is_default) {
             popnotify("error", translate("defaultproxy", {
                 "fixed_url": fixed_url
@@ -906,13 +906,13 @@ function trigger_ln() {
         if (proxie_exists) {
             topnotify(translate("proxyexists"));
             $("#lnd_proxy_url_input").focus();
-            playsound(funk);
+            playsound(glob_funk);
             return
         }
         if (fixed_url.indexOf("http") < 0) {
             topnotify(translate("invalidurl"));
             $("#lnd_proxy_url_input").focus();
-            playsound(funk);
+            playsound(glob_funk);
             return
         }
         let p_key = $("#proxy_pw_input").val(),
@@ -1008,7 +1008,7 @@ function trigger_ln() {
             }
             if (thisval.live == "lock") {
                 notify(translate("proxylocked"));
-                playsound(funk);
+                playsound(glob_funk);
                 return
             }
             if ($.isEmptyObject(thisval)) {
@@ -1021,7 +1021,7 @@ function trigger_ln() {
             notify(translate("proxyoffline", {
                 "proxy_message": proxy_message
             }));
-            playsound(funk);
+            playsound(glob_funk);
         }
     }
 }
@@ -1095,7 +1095,7 @@ function add_custom_proxy(value) {
     let proxy_node = $("#api_proxy"),
         proxy_node_data = proxy_node.data(),
         custom_proxies = proxy_node_data.custom_proxies;
-    if ($.inArray(value, custom_proxies) !== -1 || $.inArray(value, proxy_list) !== -1) {
+    if ($.inArray(value, custom_proxies) !== -1 || $.inArray(value, glob_proxy_list) !== -1) {
         return false;
     }
     custom_proxies.push(value);
@@ -1388,12 +1388,12 @@ function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
     let currency = "bitcoin",
         pobox = get_addresslist(currency).children("li");
     if (!pobox.length) {
-        if (body.hasClass("showstartpage")) {
+        if (glob_body.hasClass("showstartpage")) {
             let acountname = $("#eninput").val();
             $("#accountsettings").data("selected", acountname).find("p").text(acountname);
             savesettings();
             openpage("?p=home", "home", "loadpage");
-            body.removeClass("showstartpage");
+            glob_body.removeClass("showstartpage");
         }
         let ad = {
             "currency": currency,

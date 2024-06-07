@@ -56,7 +56,7 @@ function setlangcode() {
 }
 
 function systemlang() { // get system language
-    const lang = lang_dat(language),
+    const lang = lang_dat(glob_language),
         lang_lower = lang.lower,
         lang_single = lang.single,
         translation = translate("obj"),
@@ -89,7 +89,7 @@ function translate(id, dat) {
         return languages;
     }
     try {
-        const lang_string = languages[langcode].obj;
+        const lang_string = languages[glob_langcode].obj;
         if (lang_string) {
             return lang_string;
         }

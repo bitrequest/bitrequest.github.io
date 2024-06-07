@@ -1,9 +1,10 @@
-let sockets = {},
-    pinging = {},
-    lnd_confirm = false,
-    ndef_processing,
-    ndef_timer = 0,
-    ws_timer = 0;
+let glob_sockets = {},
+    glob_pinging = {},
+    glob_lnd_confirm = false,
+    glob_txid,
+    glob_ndef_processing,
+    glob_ndef_timer = 0,
+    glob_ws_timer = 0;
 
 $(document).ready(function() {
     //init_socket
@@ -48,19 +49,19 @@ $(document).ready(function() {
 
 function init_socket(socket_node, address, swtch, retry) {
     clearpinging();
-    if (offline === true) {
+    if (glob_offline === true) {
         notify(translate("youareoffline") + ". " + translate("notmonitored"));
         return
     }
-    scan_attempts = {};
+    glob_scan_attempts = {};
     let payment = request.payment,
         socket_name,
         rq_init = request.rq_init,
-        request_ts_utc = rq_init + timezone,
+        request_ts_utc = rq_init + glob_timezone,
         request_ts = request_ts_utc - 30000;
     if (socket_node) {
         socket_name = socket_node.name;
-        socket_attempt[btoa(socket_node.url)] = true;
+        glob_socket_attempt[btoa(socket_node.url)] = true;
     }
     if (payment == "bitcoin") {
         if (address == "lnurl") {
@@ -139,15 +140,15 @@ function init_socket(socket_node, address, swtch, retry) {
         return
     }
     if (payment == "ethereum") {
-        if (socket_node.url == main_alchemy_socket) {
+        if (socket_node.url == glob_main_alchemy_socket) {
             alchemy_eth_websocket(socket_node, address); // L1 Alchemy
             arbi_scan(address, request_ts); // L2 Arbitrum
         } else {
-            web3_eth_websocket(socket_node, address, main_eth_node); // L1 Infura
+            web3_eth_websocket(socket_node, address, glob_main_eth_node); // L1 Infura
             web3_eth_websocket({
-                "name": main_arbitrum_socket,
-                "url": main_arbitrum_socket
-            }, address, main_arbitrum_node); // L2 Infura Arbitrum
+                "name": glob_main_arbitrum_socket,
+                "url": glob_main_arbitrum_socket
+            }, address, glob_main_arbitrum_node); // L2 Infura Arbitrum
         }
         notify(translate("networks") + ": ETH, Arbitrum", 500000, "yes");
         return
@@ -159,7 +160,7 @@ function init_socket(socket_node, address, swtch, retry) {
             let account = (vk.account) ? vk.account : address,
                 viewkey = vk.vk,
                 rq_init = request.rq_init,
-                request_ts_utc = rq_init + timezone,
+                request_ts_utc = rq_init + glob_timezone,
                 request_ts = request_ts_utc - 30000; // 30 seconds compensation for unexpected results
             request.monitored = true;
             if (swtch) {
@@ -179,11 +180,11 @@ function init_socket(socket_node, address, swtch, retry) {
         return
     }
     if (payment == "kaspa") {
-        if (socket_name == main_kas_wss) {
+        if (socket_name == glob_main_kas_wss) {
             kaspa_websocket(socket_node, address);
             return
         }
-        if (socket_name == sec_kas_wss) {
+        if (socket_name == glob_sec_kas_wss) {
             kaspa_fyi_websocket(socket_node, address);
             return
         }
@@ -199,8 +200,8 @@ function init_socket(socket_node, address, swtch, retry) {
         var arbtxt = "";
         if (arb_contract) {
             web3_erc20_websocket({
-                "name": main_arbitrum_socket,
-                "url": main_arbitrum_socket
+                "name": glob_main_arbitrum_socket,
+                "url": glob_main_arbitrum_socket
             }, address, arb_contract);
             var arbtxt = " Arbitrum,";
         }
@@ -211,7 +212,7 @@ function init_socket(socket_node, address, swtch, retry) {
 }
 
 function blockcypherws(socket_node, address) {
-    if (local === true) {
+    if (glob_local === true) {
         blockcypher_websocket(socket_node, address);
     } else {
         handle_socket_fails(socket_node, address)
@@ -219,21 +220,21 @@ function blockcypherws(socket_node, address) {
 }
 
 function lightning_socket(lnd) {
-    lnd_confirm = false;
+    glob_lnd_confirm = false;
     let p_arr = lnurl_deform(lnd.proxy_host),
         proxy_host = p_arr.url,
         pk = (lnd.pw) ? lnd.pw : p_arr.k,
         pid = lnd.pid,
         nid = lnd.nid,
         imp = lnd.imp,
-        socket = sockets[pid] = new WebSocket(ln_socket);
+        socket = glob_sockets[pid] = new WebSocket(glob_ln_socket);
     socket.onopen = function(e) {
-        console.log("Connected: " + ln_socket);
+        console.log("Connected: " + glob_ln_socket);
         let ping_event = JSON.stringify({
             "id": pid
         });
         socket.send(ping_event);
-        pinging[pid] = setInterval(function() {
+        glob_pinging[pid] = setInterval(function() {
             socket.send(ping_event);
         }, 55000);
     };
@@ -244,16 +245,16 @@ function lightning_socket(lnd) {
                 clearpinging(pid);
                 closesocket(pid);
                 lnd_poll_invoice(proxy_host, pk, imp, result, pid, nid);
-                pinging[result.hash] = setInterval(function() {
+                glob_pinging[result.hash] = setInterval(function() {
                     lnd_poll_invoice(proxy_host, pk, imp, result, pid, nid);
                 }, 5000);
             }
-            if (result.status == "confirm" && !lnd_confirm) {
-                lnd_confirm = true;
-                paymentdialogbox.addClass("accept_lnd");
+            if (result.status == "confirm" && !glob_lnd_confirm) {
+                glob_lnd_confirm = true;
+                glob_paymentdialogbox.addClass("accept_lnd");
                 notify(translate("acceptthepayment"), 500000);
                 vibrate();
-                playsound(blip);
+                playsound(glob_blip);
             }
             set_request_timer();
             return
@@ -263,8 +264,8 @@ function lightning_socket(lnd) {
         console.log("Disconnected");
     };
     socket.onerror = function(e) {
-        lnd_confirm = false;
-        pinging[pid] = setInterval(function() {
+        glob_lnd_confirm = false;
+        glob_pinging[pid] = setInterval(function() {
             lnd_poll_data(proxy_host, pk, pid, nid, imp);
         }, 5000);
     };
@@ -272,20 +273,20 @@ function lightning_socket(lnd) {
 }
 
 async function ln_ndef(proxy_host, pk, pid, nid, imp) {
-    if (ndef) {
-        ndef_processing = false;
+    if (glob_ndef) {
+        glob_ndef_processing = false;
         try {
             ndef_controller();
-            await ndef.scan({
-                "signal": ctrl.signal
+            await glob_ndef.scan({
+                "signal": glob_ctrl.signal
             });
-            ndef.onreading = event => {
-                if ((now() - 6000) < ndef_timer) { // prevent too many taps
-                    playsound(funk);
+            glob_ndef.onreading = event => {
+                if ((now() - 6000) < glob_ndef_timer) { // prevent too many taps
+                    playsound(glob_funk);
                     notify(translate("ndeftablimit"), 6000);
                     return;
                 }
-                ndef_timer = now();
+                glob_ndef_timer = now();
                 closenotify();
                 let message = event.message;
                 if (message) {
@@ -304,22 +305,22 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                 ccraw = (amount_rel.length) ? parseFloat(amount_rel) : 0,
                                                 milli_sats = (ccraw * 100000000000).toFixed(0);
                                             if (ccraw <= 0) {
-                                                playsound(funk);
+                                                playsound(glob_funk);
                                                 notify(translate("enteramount"), 5000);
                                                 return
                                             }
-                                            if (ndef_processing) {
-                                                playsound(funk);
+                                            if (glob_ndef_processing) {
+                                                playsound(glob_funk);
                                                 console.log("already processing");
-                                                console.log(ndef_processing);
+                                                console.log(glob_ndef_processing);
                                                 return
                                             }
-                                            playsound(blip);
+                                            playsound(glob_blip);
                                             notify("Processing...", 50000);
-                                            paymentdialogbox.addClass("accept_lnd");
+                                            glob_paymentdialogbox.addClass("accept_lnd");
                                             set_request_timer();
                                             let lnurl_http = "https://" + prefix[1];
-                                            ndef_processing = true;
+                                            glob_ndef_processing = true;
                                             api_proxy({
                                                 "api_url": lnurl_http,
                                                 "params": {
@@ -329,35 +330,35 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                             }, proxy_host).done(function(e) {
                                                 let result = br_result(e).result;
                                                 if (result.status == "ERROR") {
-                                                    playsound(funk);
+                                                    playsound(glob_funk);
                                                     let error_message = result.reason;
                                                     notify(error_message, 5000);
-                                                    paymentdialogbox.removeClass("accept_lnd");
-                                                    ndef_processing = false;
+                                                    glob_paymentdialogbox.removeClass("accept_lnd");
+                                                    glob_ndef_processing = false;
                                                     return
                                                 }
                                                 if (result.error) {
-                                                    playsound(funk);
+                                                    playsound(glob_funk);
                                                     api_eror_msg(null, get_api_error_data(result.error));
-                                                    paymentdialogbox.removeClass("accept_lnd");
+                                                    glob_paymentdialogbox.removeClass("accept_lnd");
                                                     closenotify();
-                                                    ndef_processing = false;
+                                                    glob_ndef_processing = false;
                                                     return
                                                 }
                                                 if (milli_sats > result.maxWithdrawable) {
-                                                    playsound(funk);
+                                                    playsound(glob_funk);
                                                     notify(translate("cardmax"), 5000);
-                                                    paymentdialogbox.removeClass("accept_lnd");
-                                                    ndef_processing = false;
+                                                    glob_paymentdialogbox.removeClass("accept_lnd");
+                                                    glob_ndef_processing = false;
                                                     return
                                                 }
                                                 if (milli_sats < result.minWithdrawable) {
-                                                    playsound(funk);
+                                                    playsound(glob_funk);
                                                     notify(translate("minamount", {
                                                         "min": result.minWithdrawable
                                                     }), 5000);
-                                                    paymentdialogbox.removeClass("accept_lnd");
-                                                    ndef_processing = false;
+                                                    glob_paymentdialogbox.removeClass("accept_lnd");
+                                                    glob_ndef_processing = false;
                                                     return
                                                 }
                                                 let callback = result.callback;
@@ -385,7 +386,7 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                         }).done(function(inv1) {
                                                             let invoice = inv1.bolt11;
                                                             if (invoice) {
-                                                                paymentdialogbox.addClass("transacting blockd").attr("data-status", "pending");
+                                                                glob_paymentdialogbox.addClass("transacting blockd").attr("data-status", "pending");
                                                                 $("#paymentdialogbox .brstatuspanel #confnumber").text("1");
                                                                 notify("Monitoring...", 50000);
                                                                 let ampersand = (callback.indexOf("?") > 0) ? "&" : "?",
@@ -409,7 +410,7 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                                         closesocket(pid);
                                                                         abort_ndef();
                                                                         lnd_poll_invoice(proxy_host, pk, imp, inv1, pid, nid);
-                                                                        pinging[inv1.hash] = setInterval(function() {
+                                                                        glob_pinging[inv1.hash] = setInterval(function() {
                                                                             lnd_poll_invoice(proxy_host, pk, imp, inv1, pid, nid);
                                                                         }, 3000);
                                                                         return
@@ -423,12 +424,12 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                         }).fail(function(jqXHR, textStatus, errorThrown) {
                                                             ndef_apifail(jqXHR, textStatus, errorThrown);
                                                         }).always(function() {
-                                                            ndef_processing = false;
+                                                            glob_ndef_processing = false;
                                                         });
                                                         return
                                                     }
                                                 }
-                                                ndef_processing = false;
+                                                glob_ndef_processing = false;
                                             }).fail(function(jqXHR, textStatus, errorThrown) {
                                                 ndef_apifail(jqXHR, textStatus, errorThrown);
                                             });
@@ -454,9 +455,9 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
 function ndef_apifail(jqXHR, textStatus, errorThrown) {
     let error_object = (errorThrown) ? errorThrown : jqXHR;
     api_eror_msg(null, get_api_error_data(error_object));
-    paymentdialogbox.removeClass("accept_lnd transacting");
+    glob_paymentdialogbox.removeClass("accept_lnd transacting");
     closenotify();
-    ndef_processing = false;
+    glob_ndef_processing = false;
 }
 
 function ndef_errormg(message) {
@@ -465,7 +466,7 @@ function ndef_errormg(message) {
         brheader = brstatuspanel.find("h2");
     brheader.text(message);
     pmd.addClass("accept_lnd transacting pd_error");
-    playsound(funk);
+    playsound(glob_funk);
     closenotify();
     setTimeout(function() {
         pmd.removeClass("accept_lnd transacting pd_error");
@@ -474,22 +475,22 @@ function ndef_errormg(message) {
 }
 
 function ndef_controller() {
-    ctrl = new AbortController();
+    glob_ctrl = new AbortController();
     console.log("Waiting for NDEF messages.");
-    ctrl.signal.onabort = () => {
+    glob_ctrl.signal.onabort = () => {
         console.log("Done waiting for NDEF messages.");
     };
 }
 
 function abort_ndef() {
-    if (ndef && ctrl) {
-        ctrl.abort();
-        ctrl = null;
+    if (glob_ndef && glob_ctrl) {
+        glob_ctrl.abort();
+        glob_ctrl = null;
     }
 }
 
 function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
-    if (paymentpopup.hasClass("active")) { // only when request is visible
+    if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         let default_error = translate("unabletoconnect");
         $.ajax({
             "method": "POST",
@@ -508,23 +509,23 @@ function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
                 console.log(message);
             }
             let version = e.version;
-            if (version != proxy_version) {
+            if (version != glob_proxy_version) {
                 proxy_alert(version);
             }
             if (e.pid == pid) {
                 if (e.status == "pending" && e.bolt11) {
                     clearpinging(pid);
                     set_request_timer();
-                    pinging[e.hash] = setInterval(function() {
+                    glob_pinging[e.hash] = setInterval(function() {
                         lnd_poll_invoice(proxy_host, pk, imp, e, pid, nid);
                     }, 5000);
                     return
                 }
-                if (e.status == "confirm" && !lnd_confirm) {
-                    lnd_confirm = true;
-                    paymentdialogbox.addClass("accept_lnd");
+                if (e.status == "confirm" && !glob_lnd_confirm) {
+                    glob_lnd_confirm = true;
+                    glob_paymentdialogbox.addClass("accept_lnd");
                     notify(translate("acceptthepayment"), 500000);
-                    playsound(blip);
+                    playsound(glob_blip);
                 }
                 return
             }
@@ -538,7 +539,7 @@ function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
 }
 
 function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
-    if (paymentpopup.hasClass("active")) { // only when request is visible
+    if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         let default_error = "unable to connect";
         $.ajax({
             "method": "POST",
@@ -563,7 +564,7 @@ function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
                 helper.lnd.invoice = e;
                 let txd = lnd_tx_data(e);
                 confirmations(txd, true, true);
-                paymentdialogbox.removeClass("blockd");
+                glob_paymentdialogbox.removeClass("blockd");
                 if (status == "paid") {
                     clearpinging(inv.hash);
                     helper.currencylistitem.removeData("url");
@@ -592,7 +593,7 @@ function lnd_poll_data_fail(pid) {
 
 function blockcypher_websocket(socket_node, thisaddress) {
     let provider = socket_node.url + request.currencysymbol + "/main",
-        websocket = sockets[thisaddress] = new WebSocket(provider);
+        websocket = glob_sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         let ping_event = JSON.stringify({
@@ -602,7 +603,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
             "confirmations": 10
         });
         websocket.send(ping_event);
-        pinging[thisaddress] = setInterval(function() {
+        glob_pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
         }, 55000);
     };
@@ -611,11 +612,11 @@ function blockcypher_websocket(socket_node, thisaddress) {
         if (data.event == "pong") {} else {
             let txhash = data.hash;
             if (txhash) {
-                if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
-                    rconnect(txid);
+                if (glob_paymentdialogbox.hasClass("transacting") && glob_txid != txhash) {
+                    rconnect(glob_txid);
                     return
                 }
-                txid = txhash;
+                glob_txid = txhash;
                 closesocket();
                 let set_confirmations = request.set_confirmations ?? 0,
                     set_cc = (set_confirmations) ? set_confirmations : 0,
@@ -635,7 +636,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
 
 function blockchain_btc_socket(socket_node, thisaddress) {
     let provider = socket_node.url,
-        websocket = sockets[thisaddress] = new WebSocket(provider);
+        websocket = glob_sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         let ping_event = JSON.stringify({
@@ -643,7 +644,7 @@ function blockchain_btc_socket(socket_node, thisaddress) {
             "addr": thisaddress
         });
         websocket.send(ping_event);
-        pinging[thisaddress] = setInterval(function() {
+        glob_pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
         }, 55000);
     };
@@ -651,15 +652,15 @@ function blockchain_btc_socket(socket_node, thisaddress) {
         let json = JSON.parse(e.data).x,
             txhash = json.hash;
         if (txhash) {
-            if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
-                rconnect(txid);
+            if (glob_paymentdialogbox.hasClass("transacting") && glob_txid != txhash) {
+                rconnect(glob_txid);
                 return
             }
             let set_confirmations = request.set_confirmations ?? 0,
                 set_cc = (set_confirmations) ? set_confirmations : 0,
                 txd = blockchain_ws_data(json, set_cc, request.currencysymbol, thisaddress);
             if (txd) {
-                txid = txhash;
+                glob_txid = txhash;
                 closesocket();
                 pick_monitor(txhash, txd);
             }
@@ -677,7 +678,7 @@ function blockchain_btc_socket(socket_node, thisaddress) {
 
 function blockchain_bch_socket(socket_node, thisaddress) {
     let provider = socket_node.url,
-        websocket = sockets[thisaddress] = new WebSocket(provider);
+        websocket = glob_sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         let c_address = (thisaddress.indexOf("bitcoincash:") > -1) ? thisaddress.split("bitcoincash:").pop() : thisaddress,
@@ -686,7 +687,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
                 "addr": "bitcoincash:" + c_address
             });
         websocket.send(ping_event);
-        pinging[thisaddress] = setInterval(function() {
+        glob_pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
         }, 55000);
     };
@@ -694,8 +695,8 @@ function blockchain_bch_socket(socket_node, thisaddress) {
         let json = JSON.parse(e.data).x,
             txhash = json.hash;
         if (txhash) {
-            if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
-                rconnect(txid);
+            if (glob_paymentdialogbox.hasClass("transacting") && glob_txid != txhash) {
+                rconnect(glob_txid);
                 return
             }
             let legacy = bch_legacy(thisaddress),
@@ -703,7 +704,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
                 set_cc = (set_confirmations) ? set_confirmations : 0,
                 txd = blockchain_ws_data(json, set_cc, request.currencysymbol, thisaddress, legacy);
             if (txd) {
-                txid = txhash;
+                glob_txid = txhash;
                 closesocket();
                 pick_monitor(txhash, txd);
             }
@@ -720,14 +721,14 @@ function blockchain_bch_socket(socket_node, thisaddress) {
 
 function mempoolspace_btc_socket(socket_node, thisaddress) {
     let provider = socket_node.url,
-        mps_websocket = sockets[thisaddress] = new WebSocket(provider);
+        mps_websocket = glob_sockets[thisaddress] = new WebSocket(provider);
     mps_websocket.onopen = function(e) {
         socket_info(socket_node, true);
         let ping_event = JSON.stringify({
             "track-address": thisaddress
         });
         mps_websocket.send(ping_event);
-        pinging[thisaddress] = setInterval(function() {
+        glob_pinging[thisaddress] = setInterval(function() {
             mps_websocket.send(ping_event);
         }, 55000);
     };
@@ -739,15 +740,15 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
             if (json) {
                 let txhash = json.txid;
                 if (txhash) {
-                    if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
-                        rconnect(txid);
+                    if (glob_paymentdialogbox.hasClass("transacting") && glob_txid != txhash) {
+                        rconnect(glob_txid);
                         return
                     }
                     let set_confirmations = request.set_confirmations ?? 0,
                         set_cc = (set_confirmations) ? set_confirmations : 0,
                         txd = mempoolspace_ws_data(json, set_cc, request.currencysymbol, thisaddress);
                     if (txd) {
-                        txid = txhash;
+                        glob_txid = txhash;
                         closesocket();
                         pick_monitor(txhash, txd);
                     }
@@ -766,7 +767,7 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
 
 function dogechain_info_socket(socket_node, thisaddress) {
     let provider = socket_node.url,
-        websocket = sockets[thisaddress] = new WebSocket(provider);
+        websocket = glob_sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         let ping_event = JSON.stringify({
@@ -774,7 +775,7 @@ function dogechain_info_socket(socket_node, thisaddress) {
             "addr": thisaddress
         });
         websocket.send(ping_event);
-        pinging[thisaddress] = setInterval(function() {
+        glob_pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
         }, 55000);
     };
@@ -784,15 +785,15 @@ function dogechain_info_socket(socket_node, thisaddress) {
         if (data) {
             let txhash = data.hash;
             if (txhash) {
-                if (paymentdialogbox.hasClass("transacting") && txid != txhash) {
-                    rconnect(txid);
+                if (glob_paymentdialogbox.hasClass("transacting") && glob_txid != txhash) {
+                    rconnect(glob_txid);
                     return
                 }
                 let set_confirmations = request.set_confirmations ?? 0,
                     set_cc = (set_confirmations) ? set_confirmations : 0,
                     txd = dogechain_ws_data(data, set_cc, request.currencysymbol, thisaddress);
                 if (txd) {
-                    txid = txhash;
+                    glob_txid = txhash;
                     closesocket();
                     pick_monitor(txhash, txd);
                 }
@@ -811,7 +812,7 @@ function dogechain_info_socket(socket_node, thisaddress) {
 function nano_socket(socket_node, thisaddress) {
     let address_mod = (thisaddress.match("^xrb")) ? "nano_" + thisaddress.split("_").pop() : thisaddress, // change nano address prefix xrb_ to nano untill websocket support
         provider = socket_node.url,
-        websocket = sockets[thisaddress] = new WebSocket(provider);
+        websocket = glob_sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         let ping_event = JSON.stringify({
@@ -824,12 +825,12 @@ function nano_socket(socket_node, thisaddress) {
             "ack": true
         });
         websocket.send(ping_event);
-        pinging[thisaddress] = setInterval(function() {
+        glob_pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
         }, 55000);
     };
     websocket.onmessage = function(e) {
-        let now_utc = now() + timezone,
+        let utc = now_utc(),
             json = JSON.parse(e.data),
             data = (json.message) ? json.message : (json.account) ? json : null;
         if (data) {
@@ -838,7 +839,7 @@ function nano_socket(socket_node, thisaddress) {
             }
             let txd = nano_scan_data(data, undefined, request.currencysymbol),
                 tx_timestamp = txd.transactiontime,
-                timestamp_difference = Math.abs(tx_timestamp - now_utc);
+                timestamp_difference = Math.abs(tx_timestamp - utc);
             if (timestamp_difference < 60000) { // filter transactions longer then a minute ago
                 closesocket();
                 pick_monitor(data.hash, txd);
@@ -859,7 +860,7 @@ function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
         if_id = get_infura_apikey(provider_url),
         provider = provider_url + if_id,
         ws_id = sha_sub(provider, 10),
-        websocket = sockets[ws_id] = new WebSocket(provider);
+        websocket = glob_sockets[ws_id] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         let ping_event = JSON.stringify({
@@ -869,7 +870,7 @@ function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
             "params": ["newHeads"]
         });
         websocket.send(ping_event);
-        pinging[thisaddress] = setInterval(function() {
+        glob_pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
         }, 55000);
     };
@@ -914,7 +915,7 @@ function web3_erc20_websocket(socket_node, thisaddress, contract) {
     let provider_url = socket_node.url,
         if_id = get_infura_apikey(provider_url),
         provider = provider_url + if_id,
-        websocket = sockets[contract] = new WebSocket(provider);
+        websocket = glob_sockets[contract] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         let ping_event = JSON.stringify({
@@ -950,7 +951,7 @@ function web3_erc20_websocket(socket_node, thisaddress, contract) {
                                 set_cc = (set_confirmations) ? set_confirmations : 0;
                             txd = {
                                 "ccval": ccval,
-                                "transactiontime": now() + timezone,
+                                "transactiontime": now_utc(),
                                 "txhash": tx_hash,
                                 "confirmations": 0,
                                 "setconfirmations": set_cc,
@@ -974,13 +975,13 @@ function web3_erc20_websocket(socket_node, thisaddress, contract) {
 }
 
 function bnb_scan(address, request_ts, ccsymbol) {
-    pinging["bnb" + address] = setInterval(function() {
+    glob_pinging["bnb" + address] = setInterval(function() {
         ping_bnb(address, request_ts, ccsymbol);
     }, 7000);
 }
 
 function ping_bnb(address, request_ts, ccsymbol) {
-    if (paymentpopup.hasClass("active")) { // only when request is visible
+    if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         api_proxy({
             "api": "binplorer",
             "search": "getAddressHistory/" + address + "?type=transfer",
@@ -1024,7 +1025,7 @@ function alchemy_eth_websocket(socket_node, thisaddress) {
         al_id = get_alchemy_apikey(),
         provider = provider_url + al_id,
         ws_id = sha_sub(provider, 10),
-        websocket = sockets[ws_id] = new WebSocket(provider);
+        websocket = glob_sockets[ws_id] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         let ping_event = JSON.stringify({
@@ -1037,7 +1038,7 @@ function alchemy_eth_websocket(socket_node, thisaddress) {
             }]
         });
         websocket.send(ping_event);
-        pinging[thisaddress] = setInterval(function() {
+        glob_pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
         }, 55000);
     };
@@ -1068,13 +1069,13 @@ function alchemy_eth_websocket(socket_node, thisaddress) {
 }
 
 function arbi_scan(address, request_ts) {
-    pinging["arbi" + address] = setInterval(function() {
+    glob_pinging["arbi" + address] = setInterval(function() {
         ping_arbiscan(address, request_ts);
     }, 7000);
 }
 
 function ping_arbiscan(address, request_ts) {
-    if (paymentpopup.hasClass("active")) { // only when request is visible
+    if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         let apikeytoken = get_arbiscan_apikey();
         api_proxy({
             "api": "arbiscan",
@@ -1120,9 +1121,9 @@ function ping_arbiscan(address, request_ts) {
 
 function kaspa_websocket(socket_node, thisaddress) {
     let provider = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket",
-        websocket = sockets[thisaddress] = new WebSocket(provider);
+        websocket = glob_sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
-        ws_timer = now();
+        glob_ws_timer = now();
         socket_info(socket_node, true);
         websocket.send("40");
     };
@@ -1172,7 +1173,7 @@ function kaspa_websocket(socket_node, thisaddress) {
 
 function kaspa_fyi_websocket(socket_node, thisaddress) {
     let provider = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket",
-        websocket = sockets[thisaddress] = new WebSocket(provider);
+        websocket = glob_sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         websocket.send("40");
@@ -1220,10 +1221,10 @@ function kaspa_fyi_websocket(socket_node, thisaddress) {
 }
 
 function handle_socket_fails(socket_node, thisaddress, socketid) {
-    if (paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
+    if (glob_paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
         return
     }
-    if (paymentpopup.hasClass("active")) { // only when request is visible
+    if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         let next_socket = try_next_socket(socket_node);
         if (next_socket) {
             let wsid = (socketid) ? socketid : thisaddress;
@@ -1241,8 +1242,8 @@ function handle_socket_fails(socket_node, thisaddress, socketid) {
 function handle_socket_close(socket_node) {
     socket_info(socket_node, false);
     console.log("Disconnected from " + socket_node.url);
-    txid = null,
-        ws_timer = 0;
+    glob_txid = null,
+        glob_ws_timer = 0;
 }
 
 function ws_recon(recon) {
@@ -1251,14 +1252,14 @@ function ws_recon(recon) {
         if (trigger == 1000) { // normal socket close
             let address = recon.address;
             if (address) {
-                if (paymentdialogbox.attr("data-status") == "new") {
-                    let c_time = now() - ws_timer,
+                if (glob_paymentdialogbox.attr("data-status") == "new") {
+                    let c_time = now() - glob_ws_timer,
                         ws_block = (c_time < 10000);
                     if (ws_block) {
                         return
                     }
                     let timeout = setTimeout(function() {
-                        if (paymentpopup.hasClass("active")) {
+                        if (glob_paymentpopup.hasClass("active")) {
                             recon.function(recon.node, recon.address);
                         }
                     }, 2000, function() {
@@ -1284,7 +1285,7 @@ function try_next_socket(current_socket_data) {
         if (socket_index > -1) {
             let next_scan = socketlist[socket_index + 1],
                 next_socket = (next_scan) ? next_scan : socketlist[0];
-            if (socket_attempt[btoa(next_socket.url)] === true) {
+            if (glob_socket_attempt[btoa(next_socket.url)] === true) {
                 return false;
             }
             if (next_socket) {
@@ -1320,7 +1321,7 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
     if (txhash) {
         clearpinging(address);
         ping_blockchair_xmr_node(34, address, vk, txhash);
-        pinging[address] = setInterval(function() {
+        glob_pinging[address] = setInterval(function() {
             ping_blockchair_xmr_node(34, address, vk, txhash);
         }, 35000);
         return
@@ -1358,7 +1359,7 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
             if (start === true) {
                 ping_xmr_node(cachetime, address, vk, request_ts, txhash);
             }
-            pinging[address] = setInterval(function() {
+            glob_pinging[address] = setInterval(function() {
                 ping_xmr_node(cachetime, address, vk, request_ts, txhash);
             }, pingtime);
         }
@@ -1376,7 +1377,7 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
 }
 
 function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
-    if (paymentpopup.hasClass("active")) { // only when request is visible
+    if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         let payload = {
             "address": address,
             "view_key": vk
@@ -1422,11 +1423,11 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
                                     confirmations(txd, true);
                                     if (set_cc > 0) {
                                         clearpinging(address);
-                                        pinging[address] = setInterval(function() { // use blockchair api instead of mymonero api for tx lookup
+                                        glob_pinging[address] = setInterval(function() { // use blockchair api instead of mymonero api for tx lookup
                                             ping_blockchair_xmr_node(34, address, vk, tx_hash);
                                         }, 35000);
                                         return
-                                        pinging[address] = setInterval(function() {
+                                        glob_pinging[address] = setInterval(function() {
                                             ping_xmr_node(34, address, vk, request_ts, txhash);
                                         }, 35000);
                                     }
@@ -1447,7 +1448,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
 }
 
 function ping_blockchair_xmr_node(cachetime, address, vk, txhash) {
-    if (paymentpopup.hasClass("active")) { // only when request is visible
+    if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         api_proxy({
             "api_url": "https://api.blockchair.com/monero/raw/outputs?txprove=0&txhash=" + txhash + "&address=" + address + "&viewkey=" + vk,
             "cachetime": 25,
@@ -1479,13 +1480,13 @@ function ping_blockchair_xmr_node(cachetime, address, vk, txhash) {
 }
 
 function nimiq_scan(address, request_ts) {
-    pinging[address] = setInterval(function() {
+    glob_pinging[address] = setInterval(function() {
         ping_nimiq(address, request_ts);
     }, 5000);
 }
 
 function ping_nimiq(address, request_ts) {
-    if (paymentpopup.hasClass("active")) { // only when request is visible
+    if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         api_proxy({
             "api": "nimiq.watch",
             "search": "account-transactions/" + address,
@@ -1532,7 +1533,7 @@ function after_poll(rq_init, next_api) {
         api_data = (next_api) ? next_api : api_info.data,
         ccsymbol = request.currencysymbol,
         api_name = api_data.name,
-        request_ts_utc = rq_init + timezone,
+        request_ts_utc = rq_init + glob_timezone,
         request_ts = request_ts_utc - 30000, // 30 seconds compensation for unexpected results
         thislist = $("#" + request.requestid),
         statuspanel = thislist.find(".pmetastatus"),
@@ -1547,7 +1548,7 @@ function after_poll(rq_init, next_api) {
             "erc20": request.erc20,
             "source": "afterscan"
         };
-    scan_attempts[api_name] = true;
+    glob_scan_attempts[api_name] = true;
     if (input_val.length) {
         if (ccsymbol == "xmr" || ccsymbol == "nim" || request.erc20 === true) {
             close_paymentdialog();
@@ -1604,7 +1605,7 @@ function after_poll_fails(api_name) {
 }
 
 function rconnect(tid) {
-    paymentdialogbox.removeClass("transacting");
+    glob_paymentdialogbox.removeClass("transacting");
     let bttn = (tid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + tid + "'>Reconnect</span></div></p>" : "",
         content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + bttn;
     closesocket();
@@ -1621,7 +1622,7 @@ function get_next_scan_api(api_name) {
         if (!$.isEmptyObject(apilist)) {
             let next_scan = apilist[apilist.findIndex(option => option.name == api_name) + 1],
                 next_api = (next_scan) ? next_scan : apilist[0];
-            if (scan_attempts[next_api.name] !== true) {
+            if (glob_scan_attempts[next_api.name] !== true) {
                 return next_api;
             }
         }

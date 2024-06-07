@@ -1,4 +1,4 @@
-let block_scan = 0;
+let glob_block_scan = 0;
 $(document).ready(function() {
     updaterequeststatestrigger();
     updaterequeststatesrefresh();
@@ -51,8 +51,8 @@ function updaterequeststatestrigger() {
     $(document).on("click", ".requestsbttn .self", function() {
         let scanning = is_scanning();
         if (scanning) {
-            block_scan = block_scan + 1;
-            playsound(funk);
+            glob_block_scan = glob_block_scan + 1;
+            playsound(glob_funk);
             return
         }
         trigger_requeststates(true);
@@ -72,21 +72,21 @@ function updaterequeststatesrefresh() {
 }
 
 function is_scanning() {
-    if (block_scan > 9) {
+    if (glob_block_scan > 9) {
         clearscan();
     }
     return ($("#requestlist li.rqli.scan").length) ? true : false;
 }
 
 function trigger_requeststates(trigger) {
-    if (offline === true || inframe === true) {
+    if (glob_offline === true || glob_inframe === true) {
         return // do nothing when offline
     }
-    api_attempts = {}, // reset cache and index
-        rpc_attempts = {},
-        proxy_attempts = {},
-        tx_list = [], // reset transaction index
-        statuspush = [];
+    glob_api_attempts = {}, // reset cache and index
+        glob_rpc_attempts = {},
+        glob_proxy_attempts = {},
+        glob_tx_list = [], // reset transaction index
+        glob_statuspush = [];
     let active_requests = $("#requestlist .rqli").filter(function() {
         return $(this).data("pending") != "unknown";
     });
@@ -141,10 +141,10 @@ function get_requeststates(trigger, active_requests) {
         getinputs(request_data, d_lay);
         return
     }
-    if (!$.isEmptyObject(statuspush)) {
+    if (!$.isEmptyObject(glob_statuspush)) {
         let statusobject = {
             "timestamp": now(),
-            "requeststates": statuspush
+            "requeststates": glob_statuspush
         };
         br_set_session("txstatus", statusobject, true);
         saverequests();
@@ -158,7 +158,7 @@ function getinputs(rd, dl) {
             monitor_timer = (mtlc) ? parseInt(mtlc) : delay,
             timelapsed = now() - monitor_timer;
         if (timelapsed < delay) { // prevent over scanning
-            playsound(funk);
+            playsound(glob_funk);
             clearscan();
             return
         }
@@ -178,7 +178,7 @@ function getinputs(rd, dl) {
 
 function clearscan() {
     $("#requestlist .rqli").removeClass("scan"); // prevent triggerblock
-    block_scan = 0;
+    glob_block_scan = 0;
 }
 
 function check_api(payment, iserc20) {
@@ -215,7 +215,7 @@ function check_api(payment, iserc20) {
 
 function get_api_inputs_init(rd, api_data) {
     if (api_data) {
-        api_attempts[rd.requestid + api_data.name] = null; // reset api attempts
+        glob_api_attempts[rd.requestid + api_data.name] = null; // reset api attempts
         get_api_inputs(rd, api_data);
         return
     }
@@ -227,11 +227,11 @@ function get_api_inputs(rd, api_data) {
         thislist = rdo.thislist;
     if (thislist.hasClass("scan")) {
         let transactionlist = rdo.transactionlist;
-        api_attempts[rd.requestid + api_data.name] = true;
+        glob_api_attempts[rd.requestid + api_data.name] = true;
         thislist.removeClass("no_network");
         if (rdo.pending == "no" || rdo.pending == "incoming" || thislist.hasClass("expired")) {
             transactionlist.find("li").each(function(i) {
-                tx_list.push($(this).data("txhash"));
+                glob_tx_list.push($(this).data("txhash"));
             });
             api_callback(rd.requestid, true);
             return
@@ -347,7 +347,7 @@ function get_next_api(this_payment, api_name, requestid) {
             let next_scan = apilist[apilist.findIndex(option => option.name == api_name) + 1],
                 next_api = (next_scan) ? next_scan : apilist[0],
                 rqid = (requestid) ? requestid : "";
-            if (api_attempts[rqid + next_api.name] !== true) {
+            if (glob_api_attempts[rqid + next_api.name] !== true) {
                 return next_api;
             }
         }
@@ -422,14 +422,14 @@ function api_callback(requestid, nocache) {
                         "status": statuspanel.attr("data-count"),
                         "transactions": transactionpush
                     };
-                statuspush.push(statusbox);
+                glob_statuspush.push(statusbox);
             } else {
                 let statusbox = {
                     "requestid": requestid,
                     "status": 0,
                     "transactions": []
                 };
-                statuspush.push(statusbox);
+                glob_statuspush.push(statusbox);
             }
         }
         get_requeststates("loop");
@@ -471,7 +471,7 @@ function tx_count(statuspanel, count) {
 }
 
 function get_rpc_inputs_init(rd, api_data) {
-    rpc_attempts[rd.requestid + api_data.url] = null; // reset api attempts
+    glob_rpc_attempts[rd.requestid + api_data.url] = null; // reset api attempts
     get_rpc_inputs(rd, api_data);
 }
 
@@ -480,11 +480,11 @@ function get_rpc_inputs(rd, api_data) {
         thislist = rdo.thislist,
         transactionlist = rdo.transactionlist;
     if (thislist.hasClass("scan")) {
-        rpc_attempts[rd.requestid + api_data.url] = true;
+        glob_rpc_attempts[rd.requestid + api_data.url] = true;
         thislist.removeClass("no_network");
         if (rdo.pending == "no" || rdo.pending == "incoming" || thislist.hasClass("expired")) {
             transactionlist.find("li").each(function() {
-                tx_list.push($(this).data("txhash"));
+                glob_tx_list.push($(this).data("txhash"));
             });
             api_callback(rd.requestid, true);
             return
@@ -556,7 +556,7 @@ function get_next_rpc(this_payment, api_url, requestid) {
             let next_scan = restlist[restlist.findIndex(option => option.url == api_url) + 1],
                 next_rpc = (next_scan) ? next_scan : restlist[0],
                 rqid = (requestid) ? requestid : "";
-            if (rpc_attempts[rqid + next_rpc.url] !== true) {
+            if (glob_rpc_attempts[rqid + next_rpc.url] !== true) {
                 return next_rpc;
             }
         }
@@ -593,13 +593,13 @@ function append_tx_li(txd, rqtype, ln) {
         if (rqtype === false) {
             return tx_listitem;
         }
-        if ($.inArray(txhash, tx_list) !== -1) { // check for indexed transaction id's
+        if ($.inArray(txhash, glob_tx_list) !== -1) { // check for indexed transaction id's
             if (rqtype == "outgoing") {
                 return null;
             }
             return tx_listitem;
         }
-        tx_list.push(txhash);
+        glob_tx_list.push(txhash);
         return tx_listitem;
         clearscan();
     }
@@ -628,7 +628,7 @@ function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, 
             localrate = (lc_upper == "USD") ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(6) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2),
             conf_var = (conf === false) ? "Confirmed" : (conf && setconfirmations) ? conf + "/" + setconfirmations : "",
             cf_info = "\nConfirmations: " + conf_var;
-        return "Historic data (" + fulldateformat(new Date((timestamp - timezone)), langcode) + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(6) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src + cf_info;
+        return "Historic data (" + fulldateformat(new Date((timestamp - glob_timezone)), glob_langcode) + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(6) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src + cf_info;
     }
     let resp = translate("failedhistoric", {
         "ccsymbol": ccsymbol
@@ -654,7 +654,7 @@ function compareamounts(rd) {
                 firstlist = txlist.first(),
                 conf = firstlist.data("confirmations"),
                 latestinput = firstlist.data("transactiontime"),
-                offset = Math.abs(now() - (firstinput - timezone)),
+                offset = Math.abs(now() - (firstinput - glob_timezone)),
                 one_tx = (txlist_length === 1) ? true : false,
                 recent = (offset < 300000 && one_tx),
                 recent_dat = false,
@@ -771,13 +771,13 @@ function init_historical_fiat_data(rd, conf, latestinput, firstinput) {
         let apilist = "historic_fiat_price_apis",
             fiatapi = $("#fiatapisettings").data("selected"),
             fiatapi_default = (fiatapi == "coingecko" || fiatapi == "coinbase") ? "fixer" : fiatapi; // exclude coingecko api"
-        api_attempt[apilist] = {}; // reset global historic fiat price api attempt
+        glob_api_attempt[apilist] = {}; // reset global historic fiat price api attempt
         get_historical_fiat_data(historic_payload, apilist, fiatapi_default);
     }
 }
 
 function get_historical_fiat_data(rd, apilist, fiatapi) {
-    api_attempt[apilist][fiatapi] = true;
+    glob_api_attempt[apilist][fiatapi] = true;
     let thisrequestid = rd.requestid,
         fiatcurrency = rd.fiatcurrency;
     if (fiatcurrency) {
@@ -824,7 +824,7 @@ function get_historical_fiat_data(rd, apilist, fiatapi) {
                         historic_api = $("#cmcapisettings").data("selected"),
                         picked_historic_api = (historic_api == "coinmarketcap") ? "coingecko" : historic_api, // default to "coingecko api"
                         init_apilist = "historic_crypto_price_apis";
-                    api_attempt[init_apilist] = {};
+                    glob_api_attempt[init_apilist] = {};
                     get_historical_crypto_data(rd, fiatapi, init_apilist, picked_historic_api, lcrate, usdrate, lcsymbol);
                     return
                 }
@@ -870,7 +870,7 @@ function form_date(latestinput) {
 }
 
 function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, lcsymbol) {
-    api_attempt[apilist][api] = true;
+    glob_api_attempt[apilist][api] = true;
     let thispayment = rd.payment,
         ccsymbol = rd.currencysymbol,
         latestinput = rd.latestinput,
@@ -878,8 +878,8 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
         coin_id = (api == "coincodex") ? ccsymbol : // coincodex id
         (api == "coingecko") ? thispayment : // coingecko id
         ccsymbol + "-" + thispayment, // coinpaprika id
-        starttimesec = (firstinput - timezone) / 1000,
-        endtimesec = (latestinput - timezone) / 1000,
+        starttimesec = (firstinput - glob_timezone) / 1000,
+        endtimesec = (latestinput - glob_timezone) / 1000,
         erc20_contract = rd.token_contract,
         history_api = api,
         search = (history_api == "coincodex") ? get_payload_historic_coincodex(coin_id, starttimesec, endtimesec) :
@@ -1086,7 +1086,7 @@ function compare_historic_prices(api, values, price_array, thistimestamp) {
 function get_historic_object_coincodex(value) {
     if (value) {
         return {
-            "timestamp": ((value[0] * 1000) + timezone) + 60000, // add 1 minute for compensation margin
+            "timestamp": ((value[0] * 1000) + glob_timezone) + 60000, // add 1 minute for compensation margin
             "price": value[1]
         }
     }
@@ -1096,7 +1096,7 @@ function get_historic_object_coincodex(value) {
 function get_historic_object_coingecko(value) {
     if (value) {
         return {
-            "timestamp": (value[0] + timezone) + 60000, // add 1 minute for compensation margin
+            "timestamp": (value[0] + glob_timezone) + 60000, // add 1 minute for compensation margin
             "price": value[1]
         }
     }

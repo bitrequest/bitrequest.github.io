@@ -1,7 +1,7 @@
-let ap_id,
-    test_rpc_call,
-    is_erc20t,
-    is_btc;
+let glob_ap_id,
+    glob_test_rpc_call,
+    glob_is_erc20t,
+    glob_is_btc;
 
 $(document).ready(function() {
 
@@ -274,21 +274,21 @@ function edit_rpcnode() {
             return
         }
         let thiscurrency = current_li.children(".liwrap").attr("data-currency");
-        ap_id = current_li.attr("data-id"),
-            test_rpc_call = this_data.rpc_test_command,
-            is_erc20t = ($("#" + thiscurrency + "_settings").attr("data-erc20") == "true"),
-            is_btc = (is_btchain(thiscurrency) === true);
-        let h_hint = (is_btc) ? "mempool.space" : (thiscurrency == "ethereum" || is_erc20t === true) ? "Infura" : "",
-            header_text = (ap_id === "websockets") ? translate("addwebsocket", {
+        glob_ap_id = current_li.attr("data-id"),
+            glob_test_rpc_call = this_data.rpc_test_command,
+            glob_is_erc20t = ($("#" + thiscurrency + "_settings").attr("data-erc20") == "true"),
+            glob_is_btc = (is_btchain(thiscurrency) === true);
+        let h_hint = (glob_is_btc) ? "mempool.space" : (thiscurrency == "ethereum" || glob_is_erc20t === true) ? "Infura" : "",
+            header_text = (glob_ap_id === "websockets") ? translate("addwebsocket", {
                 "h_hint": h_hint
             }) : translate("addapi", {
                 "h_hint": h_hint
             }),
-            currencycode = (thiscurrency == "ethereum" || is_erc20t === true) ? "eth" : thiscurrency,
-            placeholder_id = ap_id + currencycode + getrandomnumber(1, 3),
+            currencycode = (thiscurrency == "ethereum" || glob_is_erc20t === true) ? "eth" : thiscurrency,
+            placeholder_id = glob_ap_id + currencycode + getrandomnumber(1, 3),
             getplaceholder = get_rpc_placeholder(thiscurrency)[placeholder_id],
             placeholder = (getplaceholder) ? getplaceholder : "eg: some.local-or-remote.node:port",
-            api_form = (options) ? "<div id='rpc_input_box' data-currency='" + thiscurrency + "' data-erc20='" + is_erc20t + "'>\
+            api_form = (options) ? "<div id='rpc_input_box' data-currency='" + thiscurrency + "' data-erc20='" + glob_is_erc20t + "'>\
                     <h3 class='icon-plus'>" + header_text + "</h3>\
                     <div id='rpc_input'>\
                         <input type='text' value='' placeholder='" + placeholder + "' id='rpc_url_input'/>\
@@ -301,8 +301,8 @@ function edit_rpcnode() {
             selected = this_data.selected,
             selected_title = (selected.name) ? selected.name : selected.url,
             content = "\
-            <div class='formbox' id='settingsbox' data-id='" + ap_id + "'>\
-                <h2 class='icon-sphere'>" + translate("choose") + " " + thiscurrency + " " + ap_id + "</h2>\
+            <div class='formbox' id='settingsbox' data-id='" + glob_ap_id + "'>\
+                <h2 class='icon-sphere'>" + translate("choose") + " " + thiscurrency + " " + glob_ap_id + "</h2>\
                 <div class='popnotify'></div>\
                 <div class='popform'>\
                     <div class='selectbox'>\
@@ -356,8 +356,8 @@ function get_rpc_placeholder(currency) {
 }
 
 function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
-    if (ap_id == "apis") {
-        if (thiscurrency == "ethereum" || is_erc20t === true) {
+    if (glob_ap_id == "apis") {
+        if (thiscurrency == "ethereum" || glob_is_erc20t === true) {
             let txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
                 payload = {
                     "jsonrpc": "2.0",
@@ -392,7 +392,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
             "username": value.username,
             "password": value.password
         });
-        let pload = (is_btc) ? { // mempoolspace API
+        let pload = (glob_is_btc) ? { // mempoolspace API
             "api_url": value.url + "/api/v1/difficulty-adjustment",
             "proxy": false,
             "params": {
@@ -406,7 +406,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
             "api_url": rpcurl,
             "params": {
                 "method": "POST",
-                "data": JSON.stringify(test_rpc_call),
+                "data": JSON.stringify(glob_test_rpc_call),
                 "headers": {
                     "Content-Type": "text/plain"
                 }
@@ -422,14 +422,14 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
         });
         return
     }
-    if (ap_id == "websockets") {
+    if (glob_ap_id == "websockets") {
         let provider = value.url,
             provider_name = (value.name) ? value.name : provider,
             ping_event = "heartbeat";
         if (provider_name == "blockcypher wss") {
             provider = value.url + "btc/main";
         }
-        if (is_btc) {
+        if (glob_is_btc) {
             ping_event = JSON.stringify({
                 "action": "want",
                 "data": ["stats"]
@@ -447,7 +447,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                 "ack": true
             });
         }
-        if (thiscurrency == "ethereum" || is_erc20t === true) {
+        if (thiscurrency == "ethereum" || glob_is_erc20t === true) {
             let if_id = get_infura_apikey(provider);
             provider = provider + if_id,
                 ping_event = JSON.stringify({
@@ -460,7 +460,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                     }]
                 });
         }
-        let web_socket = sockets["ws_test"] = new WebSocket(provider);
+        let web_socket = glob_sockets["ws_test"] = new WebSocket(provider);
         web_socket.onopen = function(e) {
             web_socket.send(ping_event);
             console.log("Connected: " + provider);
@@ -506,7 +506,7 @@ function test_rpcnode() {
         let thisoption = $(this),
             thisdata = thisoption.data();
         if (thisoption.hasClass("offline")) {
-            playsound(funk);
+            playsound(glob_funk);
             topnotify(translate("unabletoconnect"));
             return
         }
@@ -555,8 +555,8 @@ function submit_rpcnode() {
 
 function test_rpc(rpc_input_box, rpc_data, currency) {
     let cant_connect = translate("unabletoconnect");
-    if (ap_id == "apis") {
-        if (currency == "ethereum" || is_erc20t === true) {
+    if (glob_ap_id == "apis") {
+        if (currency == "ethereum" || glob_is_erc20t === true) {
             let txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
                 payload = {
                     "jsonrpc": "2.0",
@@ -594,7 +594,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
             (currency == "litecoin") ? expected_ltc_address :
             (currency == "dogecoin") ? expected_doge_address :
             (currency == "bitcoin-cash") ? expected_bch_cashaddr : "",
-            pload = (is_btc) ? {
+            pload = (glob_is_btc) ? {
                 "api_url": rpcurl + "/api/address/" + testadress + "/txs",
                 "proxy": false,
                 "params": {
@@ -608,7 +608,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                 "api_url": rpcurl,
                 "params": {
                     "method": "POST",
-                    "data": JSON.stringify(test_rpc_call),
+                    "data": JSON.stringify(glob_test_rpc_call),
                     "headers": {
                         "Content-Type": "text/plain"
                     }
@@ -637,10 +637,10 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
         });
         return
     }
-    if (ap_id == "websockets") {
+    if (glob_ap_id == "websockets") {
         let provider = rpc_data.url,
             ping_event;
-        if (is_btc) {
+        if (glob_is_btc) {
             ping_event = JSON.stringify({
                 "action": "ping"
             });
@@ -657,7 +657,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                 "ack": true
             });
         }
-        if (currency == "ethereum" || is_erc20t === true) {
+        if (currency == "ethereum" || glob_is_erc20t === true) {
             ping_event = JSON.stringify({
                 "jsonrpc": "2.0",
                 "id": 1,
@@ -668,7 +668,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                 }]
             });
         }
-        let w_socket = sockets["ws_submit"] = new WebSocket(provider);
+        let w_socket = glob_sockets["ws_submit"] = new WebSocket(provider);
         w_socket.onopen = function(e) {
             w_socket.send(ping_event);
             console.log("Connected: " + provider);
@@ -699,7 +699,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
 }
 
 function pass_rpc_submit(thiscurrency, thisvalue, newnode) {
-    let rpc_setting_li = cs_node(thiscurrency, ap_id),
+    let rpc_setting_li = cs_node(thiscurrency, glob_ap_id),
         options = rpc_setting_li.data("options"),
         node_name = (thisvalue.name) ? thisvalue.name : thisvalue.url;
     rpc_setting_li.data("selected", thisvalue).find("p").html(node_name);
@@ -721,7 +721,7 @@ function remove_rpcnode() {
         let thistrigger = $(this),
             settingsbox = $("#settingsbox"),
             thiscurrency = settingsbox.find("#rpc_input_box").attr("data-currency"),
-            rpc_setting_li = cs_node(thiscurrency, ap_id),
+            rpc_setting_li = cs_node(thiscurrency, glob_ap_id),
             options = rpc_setting_li.data("options");
         if (options.length) {
             let thisoption = thistrigger.closest(".optionwrap"),
@@ -732,7 +732,7 @@ function remove_rpcnode() {
                 duplicates = optionsbox.find("span[data-value='" + thisurl + "']"),
                 is_duplicate = (duplicates.length > 1);
             if (default_node === true && is_duplicate === false) {
-                playsound(funk);
+                playsound(glob_funk);
                 topnotify(translate("removedefaultnode"));
                 return
             }
@@ -857,7 +857,7 @@ function submit_l2() {
 // Xpub settings
 function edit_xpub_trigger() {
     $(document).on("click", ".cc_settinglist li[data-id='Xpub'] .atext", function() {
-        if (test_derive === true) {
+        if (glob_test_derive === true) {
             let thisnode = $(this),
                 thislist = thisnode.closest("li"),
                 thisdat = thislist.data();
@@ -886,7 +886,7 @@ function edit_xpub_trigger() {
                 return
             }
         }
-        playsound(funk)
+        playsound(glob_funk)
     })
 }
 
@@ -932,7 +932,7 @@ function add_xpub_cb(currency, x_pubid) {
 
 function xpub_cc_switch() {
     $(document).on("mouseup", ".cc_settinglist li[data-id='Xpub'] .switchpanel.custom", function() {
-        if (test_derive === true) {
+        if (glob_test_derive === true) {
             let this_switch = $(this),
                 thislist = this_switch.closest("li"),
                 thisliwrap = this_switch.closest(".liwrap"),
@@ -967,7 +967,7 @@ function xpub_cc_switch() {
             edit_xpub(ad);
             return
         }
-        playsound(funk);
+        playsound(glob_funk);
     })
 }
 
@@ -975,7 +975,7 @@ function edit_xpub(ad) {
     let currency = ad.currency,
         cpid = ad.ccsymbol + "-" + currency,
         address = (ad.address) ? ad.address : "",
-        scanqr = (hascam === true) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+        scanqr = (glob_hascam === true) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
         addxpub = translate("addxpub", {
             "currency": currency
         }),
@@ -996,7 +996,7 @@ function edit_xpub(ad) {
                 </div>\
                 <input type='submit' class='submit' value='" + translate("okbttn") + "'></form>").data(ad);
     popdialog(content, "triggersubmit");
-    if (supportsTouch === true) {} else {
+    if (glob_supportsTouch) {} else {
         $("#popup input.address").focus();
     }
 }
@@ -1090,12 +1090,12 @@ function validate_xpub(thisnode) {
                 }
                 canceldialog();
                 clear_savedurl();
-                if (body.hasClass("showstartpage")) {
+                if (glob_body.hasClass("showstartpage")) {
                     let acountname = $("#eninput").val();
                     $("#accountsettings").data("selected", acountname).find("p").html(acountname);
                     savesettings();
                     openpage("?p=home", "home", "loadpage");
-                    body.removeClass("showstartpage");
+                    glob_body.removeClass("showstartpage");
                     home_icon.find(".rq_icon").trigger("click");
                     return
                 }
@@ -1189,7 +1189,7 @@ function key_management() {
             xpub_info_pu(thiscurrency, activepub.key);
             return
         }
-        if (hasbip === true) {
+        if (glob_hasbip === true) {
             if (thiscurrency == "monero") {
                 if (is_viewonly() === false) {
                     all_pinpanel({

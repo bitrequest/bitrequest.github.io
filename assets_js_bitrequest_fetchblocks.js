@@ -187,7 +187,7 @@ function lightning_fetch(rd, api_data, rdo) {
                 }
             }
             let version = r.version;
-            if (version != proxy_version) {
+            if (version != glob_proxy_version) {
                 proxy_alert(version);
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -1551,7 +1551,7 @@ function infura_txd_rpc(rd, api_data, rdo) {
         statuspanel = rdo.statuspanel,
         counter = 0,
         rpcurl = get_rpc_url(api_data),
-        set_url = (api_data.name == "arbiscan") ? main_arbitrum_node : (rpcurl) ? rpcurl : main_eth_node;
+        set_url = (api_data.name == "arbiscan") ? glob_main_arbitrum_node : (rpcurl) ? rpcurl : glob_main_eth_node;
     api_proxy(eth_params(set_url, 25, "eth_blockNumber", [])).done(function(a) {
         let r_1 = inf_result(a);
         api_proxy(eth_params(set_url, 25, "eth_getTransactionByHash", [rd.txhash])).done(function(b) {
@@ -1661,11 +1661,11 @@ function eth_params(set_url, cachetime, method, params) {
             }
         }
     }
-    if (set_url == main_eth_node) {
+    if (set_url == glob_main_eth_node) {
         $.extend(payload, {
             "api": "infura"
         });
-    } else if (set_url == main_arbitrum_node) {
+    } else if (set_url == glob_main_arbitrum_node) {
         $.extend(payload, {
             "api": "arbitrum"
         });
@@ -1885,7 +1885,7 @@ function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) {
                 });
             }
             let transactiontime = (data.time) ? data.time * 1000 : null,
-                transactiontime_utc = (transactiontime) ? transactiontime + timezone : null;
+                transactiontime_utc = (transactiontime) ? transactiontime + glob_timezone : null;
             return {
                 "ccval": (outputsum) ? outputsum / 100000000 : null,
                 "transactiontime": transactiontime_utc,
@@ -1918,7 +1918,7 @@ function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) { // po
                 });
             }
             let transactiontime = (data.firstSeen) ? data.firstSeen * 1000 : null,
-                transactiontime_utc = (transactiontime) ? transactiontime + timezone : null;
+                transactiontime_utc = (transactiontime) ? transactiontime + glob_timezone : null;
             return {
                 "ccval": (outputsum) ? outputsum / 100000000 : null,
                 "transactiontime": transactiontime_utc,
@@ -1940,7 +1940,7 @@ function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, lates
         try {
             let status = data.status,
                 transactiontime = (status.block_time) ? status.block_time * 1000 : now(),
-                transactiontime_utc = (transactiontime) ? transactiontime + timezone : null;
+                transactiontime_utc = (transactiontime) ? transactiontime + glob_timezone : null;
             if (setconfirmations == "sort") {
                 return transactiontime_utc;
             }
@@ -1989,7 +1989,7 @@ function dogechain_ws_data(data, setconfirmations, ccsymbol, address) { // poll 
                 });
             }
             let transactiontime = (data.time) ? data.time * 1000 : null,
-                transactiontime_utc = (transactiontime) ? transactiontime + timezone : null;
+                transactiontime_utc = (transactiontime) ? transactiontime + glob_timezone : null;
             return {
                 "ccval": (outputsum) ? outputsum / 100000000 : null,
                 "transactiontime": transactiontime_utc,
@@ -2201,7 +2201,7 @@ function arbiscan_scan_data(data, setconfirmations, ccsymbol) { // scan
     if (data) {
         try {
             let transactiontime = (data.timeStamp) ? data.timeStamp * 1000 : null,
-                transactiontime_utc = (transactiontime) ? transactiontime + timezone : null;
+                transactiontime_utc = (transactiontime) ? transactiontime + glob_timezone : null;
             if (setconfirmations == "sort") {
                 return transactiontime_utc;
             }
@@ -2227,7 +2227,7 @@ function arbiscan_scan_data_eth(data, setconfirmations) { // scan
     if (data) {
         try {
             let transactiontime = (data.timeStamp) ? data.timeStamp * 1000 : null,
-                transactiontime_utc = (transactiontime) ? transactiontime + timezone : null;
+                transactiontime_utc = (transactiontime) ? transactiontime + glob_timezone : null;
             if (setconfirmations == "sort") {
                 return transactiontime_utc;
             }
@@ -2255,7 +2255,7 @@ function ethplorer_scan_data(data, setconfirmations, ccsymbol) { // scan
     if (data) {
         try {
             let transactiontime = (data.timestamp) ? data.timestamp * 1000 : null,
-                transactiontime_utc = (transactiontime) ? transactiontime + timezone : null;
+                transactiontime_utc = (transactiontime) ? transactiontime + glob_timezone : null;
             if (setconfirmations == "sort") {
                 return transactiontime_utc;
             }
@@ -2280,7 +2280,7 @@ function ethplorer_scan_data(data, setconfirmations, ccsymbol) { // scan
 function ethplorer_poll_data(data, setconfirmations, ccsymbol) { // poll
     if (data) {
         try {
-            let transactiontime = (data.timestamp) ? (data.timestamp * 1000) + timezone : null,
+            let transactiontime = (data.timestamp) ? (data.timestamp * 1000) + glob_timezone : null,
                 txhash = (data.hash) ? data.hash : (data.transactionHash) ? data.transactionHash : null,
                 conf = (data.confirmations) ? data.confirmations : null,
                 operations = (data.operations) ? data.operations[0] : null,
@@ -2309,8 +2309,8 @@ function ethplorer_poll_data(data, setconfirmations, ccsymbol) { // poll
 function nano_scan_data(data, setconfirmations, ccsymbol, txhash) { // scan/poll
     if (data) {
         try {
-            let transactiontime = (data.local_timestamp) ? (data.local_timestamp * 1000) + timezone : null,
-                transactiontime_utc = (transactiontime) ? transactiontime : now() + timezone;
+            let transactiontime = (data.local_timestamp) ? (data.local_timestamp * 1000) + glob_timezone : null,
+                transactiontime_utc = (transactiontime) ? transactiontime : now_utc();
             if (setconfirmations == "sort") {
                 return transactiontime_utc;
             }
@@ -2335,7 +2335,7 @@ function nano_scan_data(data, setconfirmations, ccsymbol, txhash) { // scan/poll
 function bitcoin_rpc_data(data, setconfirmations, ccsymbol, address) { // poll
     if (data) {
         try {
-            let transactiontime = (data.time) ? (data.time * 1000) + timezone : null,
+            let transactiontime = (data.time) ? (data.time * 1000) + glob_timezone : null,
                 outputs = data.vout;
             if (outputs) {
                 outputsum = 0;
@@ -2367,7 +2367,7 @@ function bitcoin_rpc_data(data, setconfirmations, ccsymbol, address) { // poll
 function infura_eth_poll_data(data, setconfirmations, ccsymbol) { // poll
     if (data) {
         try {
-            let transactiontime = (data.timestamp) ? (data.timestamp * 1000) + timezone : null,
+            let transactiontime = (data.timestamp) ? (data.timestamp * 1000) + glob_timezone : null,
                 ethvalue = (data.value) ? parseFloat((data.value / Math.pow(10, 18)).toFixed(8)) : null,
                 txhash = (data.hash) ? data.hash : null,
                 conf = (data.confirmations) ? data.confirmations : null;
@@ -2393,7 +2393,7 @@ function infura_erc20_poll_data(data, setconfirmations, ccsymbol) { // poll
             let tokenValue = (data.value) ? data.value : null,
                 decimals = (data.decimals) ? data.decimals : null,
                 ccval = (decimals) ? parseFloat((tokenValue / Math.pow(10, decimals)).toFixed(8)) : null,
-                transactiontime = (data.timestamp) ? (data.timestamp * 1000) + timezone : null,
+                transactiontime = (data.timestamp) ? (data.timestamp * 1000) + glob_timezone : null,
                 txhash = (data.hash) ? data.hash : null,
                 conf = (data.confirmations) ? data.confirmations : null;
             return {
@@ -2416,7 +2416,7 @@ function infura_block_data(data, setconfirmations, ccsymbol, ts) {
     if (data) {
         try {
             let ccval = (data.value) ? parseFloat((Number(data.value) / Math.pow(10, 18)).toFixed(8)) : null,
-                transactiontime = (ts) ? (Number(ts) * 1000) + timezone : null;
+                transactiontime = (ts) ? (Number(ts) * 1000) + glob_timezone : null;
             return {
                 "ccval": ccval,
                 "transactiontime": transactiontime,
@@ -2465,7 +2465,7 @@ function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
 function blockchair_xmr_data(data, setconfirmations) {
     if (data) {
         try {
-            let transactiontime = (data.tx_timestamp) ? (data.tx_timestamp * 1000) + timezone : null,
+            let transactiontime = (data.tx_timestamp) ? (data.tx_timestamp * 1000) + glob_timezone : null,
                 outputs = data.outputs,
                 outputsum = 0;
             if (outputs) {
@@ -2496,7 +2496,7 @@ function blockchair_xmr_data(data, setconfirmations) {
 function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash) { // scan
     if (data) {
         try {
-            let transactiontime = (data.timestamp) ? (data.timestamp * 1000) + timezone : now() + timezone;
+            let transactiontime = (data.timestamp) ? (data.timestamp * 1000) + glob_timezone : now_utc();
             if (setconfirmations == "sort") {
                 return transactiontime;
             }
@@ -2525,7 +2525,7 @@ function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash)
 function kaspa_scan_data(data, thisaddress, setconfirmations, current_bluescore) { // scan
     if (data) {
         try {
-            let transactiontime = data.block_time + timezone;
+            let transactiontime = data.block_time + glob_timezone;
             if (setconfirmations == "sort") {
                 return transactiontime;
             }
@@ -2574,7 +2574,7 @@ function kaspa_poll_fyi_data(data, thisaddress, setconfirmations) { // scan
                 conf = (data.isAccepted) ? (data.confirmations) ? data.confirmations : 0 : 0;
             return {
                 "ccval": ccval,
-                "transactiontime": parseFloat(data.blockTime) + timezone,
+                "transactiontime": parseFloat(data.blockTime) + glob_timezone,
                 "txhash": data.transactionId,
                 "confirmations": conf,
                 "setconfirmations": setconfirmations,
@@ -2604,7 +2604,7 @@ function kaspa_ws_data(data, thisaddress, set_confirmations) { // scan
                 txhash = q_obj(data, "verboseData.transactionId");
             return {
                 "ccval": ccval,
-                "transactiontime": now() + timezone,
+                "transactiontime": now_utc(),
                 "txhash": data.txId,
                 "confirmations": null,
                 "setconfirmations": set_confirmations,
@@ -2634,7 +2634,7 @@ function kaspa_fyi_ws_data(data, thisaddress) { // scan
                 txhash = q_obj(data, "verboseData.transactionId");
             return {
                 "ccval": ccval,
-                "transactiontime": now() + timezone,
+                "transactiontime": now_utc(),
                 "txhash": txhash,
                 "confirmations": false,
                 "setconfirmations": null,
@@ -2655,7 +2655,7 @@ function lnd_tx_data(data) { // poll
         amount = parseFloat(data.amount / 100000000000);
     return {
         "ccval": Math.abs(amount),
-        "transactiontime": txtime + timezone,
+        "transactiontime": txtime + glob_timezone,
         "txhash": "lightning" + data.hash,
         "confirmations": data.conf,
         "setconfirmations": 1,
