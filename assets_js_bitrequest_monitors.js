@@ -645,7 +645,7 @@ function append_tx_li(txd, rqtype, ln) {
             confspan = (conf) ? (confirmed) ? checked_span :
             "<div class='txli_conf' title='" + conftitle + "'><div class='confbar'></div><span>" + conftitle + "</span></div>" :
             (conf === false) ? checked_span :
-            "<div class='txli_conf' title='Unconfirmed transaction'><div class='confbar'></div><span>Unconfirmed</span></div>",
+            "<div class='txli_conf' title='" + translate("unconfirmedtx") + "'><div class='confbar'></div><span>" + translate("unconfirmedtx") + "</span></div>",
             tx_listitem = $("<li><div class='txli_content'>" + date_format + confspan + "<div class='txli_conf txl_canceled'><span class='icon-blocked'></span>Canceled</div><span class='tx_val'> + " + valstr + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>"),
             historic = txd.historic;
         if (historic) {

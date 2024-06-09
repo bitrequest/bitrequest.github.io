@@ -323,10 +323,10 @@ function monero_fetch(rd, api_data, rdo) {
                 }).done(function(e) {
                     const data = br_result(e).result,
                         transactions = data.transactions;
-                    let counter = 0,
-                        match = false,
-                        txdat = false;
                     if (transactions) {
+                        let counter = 0,
+                            match = false,
+                            txdat = false;
                         const sortlist = sort_by_date(xmr_scan_data, transactions);
                         $.each(sortlist, function(dat, value) {
                             const txd = xmr_scan_data(value, rdo.setconfirmations, "xmr", data.blockchain_height);
@@ -362,7 +362,7 @@ function monero_fetch(rd, api_data, rdo) {
                         scan_match(rd, api_data, rdo, counter, txdat, match);
                         return
                     }
-                    tx_api_scan_fail(rd, rdo, api_data, default_error);
+                    api_callback(rd.requestid);
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     const error_object = (errorThrown) ? errorThrown : jqXHR;
                     tx_api_scan_fail(rd, rdo, api_data, error_object);
@@ -595,7 +595,7 @@ function ethplorer_fetch(rd, api_data, rdo) {
                 if (data) {
                     const error = data.error;
                     if (error) {
-                        tx_api_scan_fail(rd, rdo, api_data, default_error);
+                        tx_api_scan_fail(rd, rdo, api_data, error);
                         return
                     }
                     const input = data.input,
@@ -728,7 +728,7 @@ function arbiscan_fetch(rd, api_data, rdo) {
             });
             return
         }
-        tx_api_scan_fail(rd, rdo, api_data, default_error);
+        api_callback(rd.requestid);
         return
     }
     if (rdo.pending == "polling") { // poll transaction id
@@ -799,7 +799,7 @@ function arbiscan_fetch(rd, api_data, rdo) {
                 });
                 return
             }
-            tx_api_scan_fail(rd, rdo, api_data, default_error);
+            api_callback(rd.requestid);
         }
     }
 }
@@ -865,7 +865,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                         scan_match(rd, api_data, rdo, counter, txdat, match, true);
                         return
                     }
-                    tx_api_scan_fail(rd, rdo, api_data, default_error);
+                    api_callback(rd.requestid);
                     return
                 }
                 if (rd.payment == "ethereum") {
@@ -893,7 +893,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                         scan_match(rd, api_data, rdo, counter, txdat, match, true);
                         return
                     }
-                    tx_api_scan_fail(rd, rdo, api_data, default_error);
+                    api_callback(rd.requestid);
                     return
                 }
                 const txarray = q_obj(data, "data." + rd.address + ".transactions");
@@ -929,7 +929,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                         scan_match(rd, api_data, rdo, counter, txdat, match);
                         return
                     }
-                    tx_api_scan_fail(rd, rdo, api_data, default_error);
+                    api_callback(rd.requestid);
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     const error_object = (errorThrown) ? errorThrown : jqXHR;
                     tx_api_scan_fail(rd, rdo, api_data, error_object);
@@ -1130,7 +1130,7 @@ function nimiq_fetch(rd, api_data, rdo) {
                                 scan_match(rd, api_data, rdo, counter, txdat, match);
                                 return
                             }
-                            tx_api_scan_fail(rd, rdo, api_data, default_error);
+                            api_callback(rd.requestid);
                         }).fail(function(jqXHR, textStatus, errorThrown) {
                             const error_object = (errorThrown) ? errorThrown : jqXHR;
                             tx_api_scan_fail(rd, rdo, api_data, error_object);
