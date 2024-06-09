@@ -1922,11 +1922,11 @@ function copyaddress() {
 function copyinputs() {
     $(document).on("dblclick", "#paymentdialogbox.request .mirrordiv input", function() {
         let thisval = $(this).val(),
-            typeval = "amount";
+            typeval = translate("amount");
         glob_copycontent.val(thisval).data({
             "type": typeval
         });
-        notify("<span id='copyaddress'>" + translate("copy") + " " + +"?</span>", 40000, "yes");
+        notify("<span id='copyaddress'>" + translate("copy") + " " + typeval + "?</span>", 40000, "yes");
     });
 }
 

@@ -3124,17 +3124,18 @@ function addressinfo() {
             vkdat = (vkobj) ? (isseed && active_src) ? "derive" : vkobj.vk : false,
             showtl = translate("show"),
             pk_str = (vkdat) ? "<span id='show_vk' class='ref' data-vk='" + vkdat + "'>" + showtl + "</span>" : (isseed) ? (active_src) ? "<span id='show_pk' class='ref'>" + showtl + "</span>" : (a_wl === true) ? pk_verified : "Unknown" : pk_verified,
+            tlpk = translate("privatekey"),
             content = $("<div id='ad_info_wrap'><h2>" + cc_icon + " <span>" + label + "</span></h2><ul>\
                 <li><strong>" + translate("address") + ": </strong><span class='adbox adboxl select'>" + address + "</span>\
                 <div id='qrcodea' class='qrwrap flex'><div class='qrcode'></div>" + cc_icon + "</div>\
                 </li>\
                 <li><strong>" + translate("source") + ": </strong>" + srcval + "</li>" +
                 dpath_str +
-                "<li><strong>" + translate("privatekey") + ": </strong>" + pk_str +
+                "<li><strong>" + tlpk + ": </strong>" + pk_str +
                 "<div id='pk_span'>\
                     <div class='qrwrap flex'>\
                         <div id='qrcode' class='qrcode'></div>" + cc_icon + "</div>\
-                        <p id='pkspan' class='adbox adboxl select' data-type='private key'></p>\
+                        <p id='pkspan' class='adbox adboxl select' data-type='" + tlpk  + "'></p>\
                 </div>\
                 </li>\
                 <li><div class='showtransactions ref'><span class='icon-eye'></span>" + translate("showtransactions") + "</div></li>\
