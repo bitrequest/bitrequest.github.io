@@ -426,7 +426,7 @@ function lang_nl(id, data) {
 
         // BIP39
         "disclaimer": "Disclaimer!",
-        "cannotbespend": "Ontvangen bedragen naar adressen die zijn gegenereerd vanuit je geheime zin kunnen niet worden verstuurd met bitrequest.<br/>Om je crypto te versturen zul je je geheime zin moeten invoeren in een <a href='https://www.bitrequest.io/compatible-wallets' target='_blank' class='ref'>ondersteunde wallet.</a>",
+        "cannotbespend": "Ontvangen bedragen op adressen die zijn gegenereerd vanuit je geheime zin kunnen niet worden verstuurd met bitrequest.<br/>Om je crypto te versturen zul je je geheime zin moeten invoeren in een <a href='https://www.bitrequest.io/compatible-wallets' target='_blank' class='ref'>ondersteunde wallet.</a>",
         "compatiblewallets": "Ondersteunde wallets",
         "important": "Belangrijk!",
         "abouttobecome": "Je staat op het punt om je eigen bank te worden.",
