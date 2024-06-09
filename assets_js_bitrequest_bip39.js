@@ -286,9 +286,8 @@ function test_derivation() {
 
 function bech32_check() {
     let bip84_pub = "03bb4a626f63436a64d7cf1e441713cc964c0d53289a5b17acb1b9c262be57cb17",
-        expected_bip84_bech32 = glob_expected_bech32,
         bip84_bech32 = pub_to_address_bech32("bc", bip84_pub);
-    if (expected_bip84_bech32 == bip84_bech32) {
+    if (glob_expected_bech32 == bip84_bech32) {
         return true;
     }
     return false;

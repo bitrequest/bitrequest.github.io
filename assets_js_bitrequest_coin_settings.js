@@ -455,7 +455,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                     "id": 1,
                     "method": "eth_subscribe",
                     "params": ["logs", {
-                        "address": expected_eth_address,
+                        "address": glob_expected_eth_address,
                         "topics": []
                     }]
                 });
@@ -590,10 +590,10 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
             return
         }
         let rpcurl = get_rpc_url(rpc_data),
-            testadress = (currency == "bitcoin") ? expected_bech32 :
-            (currency == "litecoin") ? expected_ltc_address :
-            (currency == "dogecoin") ? expected_doge_address :
-            (currency == "bitcoin-cash") ? expected_bch_cashaddr : "",
+            testadress = (currency == "bitcoin") ? glob_expected_bech32 :
+            (currency == "litecoin") ? glob_expected_ltc_address :
+            (currency == "dogecoin") ? glob_expected_doge_address :
+            (currency == "bitcoin-cash") ? glob_expected_bch_cashaddr : "",
             pload = (glob_is_btc) ? {
                 "api_url": rpcurl + "/api/address/" + testadress + "/txs",
                 "proxy": false,
@@ -663,7 +663,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                 "id": 1,
                 "method": "eth_subscribe",
                 "params": ["logs", {
-                    "address": expected_eth_address,
+                    "address": glob_expected_eth_address,
                     "topics": []
                 }]
             });

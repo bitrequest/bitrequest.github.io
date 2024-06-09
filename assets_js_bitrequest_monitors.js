@@ -13,13 +13,17 @@ $(document).ready(function() {
     //get_api_inputs
     //match_xmr_pid
     //fail_dialogs
+    //scan_match
+    //tx_count
+    //tx_api_scan_fail
+    //tx_api_fail
     //handle_api_fails_list
     //get_next_api
-    //get_api_error_data
-    //api_src
-    //tx_api_fail
     //api_eror_msg
-    //tx_count
+    //get_api_error_data
+    //set_api_src
+    //api_src
+    //api_callback
 
     //get_rpc_inputs_init
     //get_rpc_inputs
@@ -223,10 +227,10 @@ function get_api_inputs_init(rd, api_data) {
 }
 
 function get_api_inputs(rd, api_data) {
-    let rdo = tx_data(rd), // fetchblocks.js
+    const rdo = tx_data(rd), // fetchblocks.js
         thislist = rdo.thislist;
     if (thislist.hasClass("scan")) {
-        let transactionlist = rdo.transactionlist;
+        const transactionlist = rdo.transactionlist;
         glob_api_attempts[rd.requestid + api_data.name] = true;
         thislist.removeClass("no_network");
         if (rdo.pending == "no" || rdo.pending == "incoming" || thislist.hasClass("expired")) {
@@ -238,7 +242,7 @@ function get_api_inputs(rd, api_data) {
         }
         if (rdo.pending == "scanning" || rdo.pending == "polling") {
             transactionlist.html("");
-            let api_name = api_data.name;
+            const api_name = api_data.name;
             if (rd.lightning) {
                 const l_fetch = lightning_fetch(rd, api_data, rdo);
                 if (l_fetch == "exit") {
@@ -297,12 +301,74 @@ function match_xmr_pid(xmria, xmrpid, xmr_pid) {
 // API error handling
 
 function fail_dialogs(apisrc, error) {
-    let error_data = get_api_error_data(error);
+    const error_data = get_api_error_data(error);
     api_eror_msg(apisrc, error_data)
 }
 
-function handle_api_fails_list(rd, error, api_data) {
-    let error_data = get_api_error_data(error),
+function scan_match(rd, api_data, rdo, counter, txdat, match, l2) {
+    const src = rdo.source;
+    if (src == "list") {
+        tx_count(rdo.statuspanel, counter);
+    }
+    if (match) {
+        if (src == "list") {
+            compareamounts(rd);
+            return
+        }
+        if (txdat) {
+            pick_monitor(txdat.txhash, txdat);
+        }
+        return
+    }
+    if (src == "list") {
+        if (l2) { // scan l2's
+            const console_l2 = {
+                "error": "Sacanning next l2 rpc",
+                "console": true
+            };
+            if (api_data.api) {
+                handle_api_fails_list(rd, console_l2, api_data);
+                return
+            }
+            handle_rpc_fails_list(rd, console_l2, api_data);
+            return
+        }
+        api_callback(rd.requestid);
+        return
+    }
+    close_paymentdialog(true);
+}
+
+function tx_count(statuspanel, count) {
+    statuspanel.attr("data-count", count).text("+ " + count);
+}
+
+function tx_api_scan_fail(rd, rdo, api_data, error_data, all_proxys) {
+    const src = rdo.source;
+    if (src == "list") {
+        const thislist = rdo.thislist;
+        if (thislist) {
+            tx_api_fail(thislist, rdo.statuspanel);
+        }
+        if (api_data.api) {
+            handle_api_fails_list(rd, error_data, api_data, all_proxys);
+            return
+        }
+        handle_rpc_fails_list(rd, error_data, api_data, all_proxys);
+        return
+    }
+    if (rdo.pending == "scanning") {
+        after_poll_fails(api_data.name);
+    }
+}
+
+function tx_api_fail(thislist, statuspanel) {
+    thislist.addClass("no_network");
+    statuspanel.attr("data-count", 0).text("?");
+}
+
+function handle_api_fails_list(rd, error, api_data, all_proxys) {
+    const error_data = get_api_error_data(error),
         requestid = rd.requestid;
     if (!api_data) {
         api_eror_msg(false, error_data);
@@ -313,18 +379,16 @@ function handle_api_fails_list(rd, error, api_data) {
         nextapi = get_next_api(rd.payment, api_name, requestid),
         nextrpc;
     if (nextapi === false) {
-        let api_url = api_data.url,
+        const api_url = api_data.url,
             nextrpc = get_next_rpc(rd.payment, api_url, requestid);
-        if (nextrpc === false) { // try next proxy
-            if (error == "scan") {} else {
-                let next_proxy = get_next_proxy();
-                if (next_proxy) {
-                    get_api_inputs(rd, api_data);
-                    return;
-                }
-                let rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown";
-                api_eror_msg(rpc_id, error_data);
+        if (nextrpc === false && all_proxys) { // try next proxy
+            const next_proxy = get_next_proxy();
+            if (next_proxy) {
+                get_api_inputs(rd, api_data);
+                return;
             }
+            const rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown";
+            api_eror_msg(rpc_id, error_data);
         }
         api_callback(requestid);
         return
@@ -337,14 +401,14 @@ function handle_api_fails_list(rd, error, api_data) {
 }
 
 function get_next_api(this_payment, api_name, requestid) {
-    let rpc_settings = cs_node(this_payment, "apis", true);
+    const rpc_settings = cs_node(this_payment, "apis", true);
     if (rpc_settings) {
-        let apirpc = rpc_settings.apis,
+        const apirpc = rpc_settings.apis,
             apilist = $.grep(apirpc, function(filter) {
                 return filter.api;
             })
         if (!$.isEmptyObject(apilist)) {
-            let next_scan = apilist[apilist.findIndex(option => option.name == api_name) + 1],
+            const next_scan = apilist[apilist.findIndex(option => option.name == api_name) + 1],
                 next_api = (next_scan) ? next_scan : apilist[0],
                 rqid = (requestid) ? requestid : "";
             if (glob_api_attempts[rqid + next_api.name] !== true) {
@@ -355,8 +419,33 @@ function get_next_api(this_payment, api_name, requestid) {
     return false;
 }
 
+function api_eror_msg(apisrc, error) {
+    let error_dat = (error) ? error : {
+            "errormessage": "errormessage",
+            "errorcode": null
+        },
+        errormessage = error_dat.errormessage,
+        errorcode = (error_dat.errorcode) ? "Error: " + error_dat.errorcode : "";
+    if (error.console) {
+        console.log(errorcode + errormessage);
+        return
+    }
+    if ($("#dialogbody .doselect").length) {
+        return
+    }
+    if (apisrc) {
+        const keyfail = (error.apikey === true),
+            api_bttn = (keyfail === true) ? "<div id='add_api' data-api='" + apisrc + "' class='button'>" + translate("addapikey", {
+                "apisrc": apisrc
+            }) + "</div>" : "",
+            t_op = (apisrc) ? "<span id='proxy_dialog' class='ref'>" + translate("tryotherproxy") + "</span>" : "",
+            content = "<h2 class='icon-blocked'>" + errorcode + "</h2><p class='doselect'><strong>" + translate("error") + ": " + errormessage + "<br/><br/>" + t_op + "</p>" + api_bttn;
+        popdialog(content, "canceldialog");
+    }
+}
+
 function get_api_error_data(error) {
-    let error_type = typeof error,
+    const error_type = typeof error,
         errorcode = (error.code) ? error.code :
         (error.status) ? error.status :
         (error.error_code) ? error.error_code : "",
@@ -366,12 +455,12 @@ function get_api_error_data(error) {
         (error.error_message) ? error.error_message :
         (error.statusText) ? error.statusText : error,
         stringcheck = (error_type == "string"),
-        skcheck, // string key check
         cons = error.console;
+    let skcheck; // string key check
     if (stringcheck === true) {
-        let skcheck = ((error.indexOf("API calls limits have been reached") >= 0)); // blockcypher
+        skcheck = ((error.indexOf("API calls limits have been reached") >= 0)); // blockcypher
     }
-    let apikey = ((errorcode === 101) || // fixer
+    const apikey = ((errorcode === 101) || // fixer
             (errorcode === 402) || // blockchair
             (errorcode === 403 || errorcode === 1) || // ethplorer => invalid or missing API key
             (errorcode === 1001) || // coinmarketcap => invalid API key
@@ -386,8 +475,15 @@ function get_api_error_data(error) {
     return error_object;
 }
 
+function set_api_src(rdo, api_data) {
+    const src = rdo.source;
+    if (src == "list") {
+        api_src(rdo.thislist, api_data);
+    }
+}
+
 function api_src(thislist, api_data) {
-    let api_url = api_data.url,
+    const api_url = api_data.url,
         api_url_short = (api_url) ? (api_url.length > 40) ? api_url.slice(0, 40) + "..." : api_url : "",
         aoi_name = (api_data.name),
         api_title = (aoi_name == "mempool.space") ? api_url : aoi_name,
@@ -396,27 +492,27 @@ function api_src(thislist, api_data) {
 }
 
 function api_callback(requestid, nocache) {
-    let thislist = $("#" + requestid);
+    const thislist = $("#" + requestid);
     if (thislist.hasClass("scan")) {
         thislist.removeClass("scan open").addClass("pmstatloaded");
         if (nocache === true) {} else {
-            let transactionlist = thislist.find(".transactionlist"),
+            const transactionlist = thislist.find(".transactionlist"),
                 transactionli = transactionlist.find("li");
             if (transactionli.length) {
-                transactionpush = [];
+                const transactionpush = [];
                 transactionli.each(function() {
-                    let thisnode = $(this),
+                    const thisnode = $(this),
                         thisdata = thisnode.data(),
                         historic = thisdata.historic,
                         conf = thisdata.confirmations,
                         setconfirmations = thisdata.setconfirmations;
                     transactionpush.push(thisdata);
                     if (!historic || $.isEmptyObject(historic)) {} else {
-                        let h_string = historic_data_title(thisdata.ccsymbol, thisdata.ccval, historic, setconfirmations, conf, false);
+                        const h_string = historic_data_title(thisdata.ccsymbol, thisdata.ccval, historic, setconfirmations, conf, false);
                         thisnode.append(hs_for(h_string)).attr("title", h_string);
                     }
                 });
-                let statuspanel = thislist.find(".pmetastatus"),
+                const statuspanel = thislist.find(".pmetastatus"),
                     statusbox = {
                         "requestid": requestid,
                         "status": statuspanel.attr("data-count"),
@@ -424,7 +520,7 @@ function api_callback(requestid, nocache) {
                     };
                 glob_statuspush.push(statusbox);
             } else {
-                let statusbox = {
+                const statusbox = {
                     "requestid": requestid,
                     "status": 0,
                     "transactions": []
@@ -436,47 +532,13 @@ function api_callback(requestid, nocache) {
     }
 }
 
-function tx_api_fail(thislist, statuspanel) {
-    thislist.addClass("no_network");
-    statuspanel.attr("data-count", 0).text("?");
-}
-
-function api_eror_msg(apisrc, error) {
-    let error_dat = (error) ? error : {
-            "errormessage": "errormessage",
-            "errorcode": null
-        },
-        errormessage = error_dat.errormessage,
-        errorcode = (error_dat.errorcode) ? "Error: " + error_dat.errorcode : "";
-    if (error.console) {
-        console.log(errorcode + errormessage);
-        return false;
-    }
-    if ($("#dialogbody .doselect").length) {
-        return
-    }
-    if (apisrc) {
-        let keyfail = (error.apikey === true),
-            api_bttn = (keyfail === true) ? "<div id='add_api' data-api='" + apisrc + "' class='button'>" + translate("addapikey", {
-                "apisrc": apisrc
-            }) + "</div>" : "",
-            t_op = (apisrc) ? "<span id='proxy_dialog' class='ref'>" + translate("tryotherproxy") + "</span>" : "",
-            content = "<h2 class='icon-blocked'>" + errorcode + "</h2><p class='doselect'><strong>" + translate("error") + ": " + errormessage + "<br/><br/>" + t_op + "</p>" + api_bttn;
-        popdialog(content, "canceldialog");
-    }
-}
-
-function tx_count(statuspanel, count) {
-    statuspanel.attr("data-count", count).text("+ " + count);
-}
-
 function get_rpc_inputs_init(rd, api_data) {
     glob_rpc_attempts[rd.requestid + api_data.url] = null; // reset api attempts
     get_rpc_inputs(rd, api_data);
 }
 
 function get_rpc_inputs(rd, api_data) {
-    let rdo = tx_data(rd),
+    const rdo = tx_data(rd),
         thislist = rdo.thislist,
         transactionlist = rdo.transactionlist;
     if (thislist.hasClass("scan")) {
@@ -515,7 +577,7 @@ function get_rpc_inputs(rd, api_data) {
 // RPC error handling
 
 function handle_rpc_fails_list(rd, error, rpc_data) {
-    let api_url = rpc_data.url,
+    const api_url = rpc_data.url,
         requestid = rd.requestid,
         nextrpc = get_next_rpc(rd.payment, api_url, requestid),
         api_name = rpc_data.name,
@@ -523,12 +585,12 @@ function handle_rpc_fails_list(rd, error, rpc_data) {
     if (nextrpc === false) {
         if (nextapi === false) { // try next proxy
             if (error == "scan") {} else {
-                let next_proxy = get_next_proxy();
+                const next_proxy = get_next_proxy();
                 if (next_proxy) {
                     get_rpc_inputs(rd, rpc_data);
                     return
                 }
-                let rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
+                const rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
                     error_data = get_api_error_data(error);
                 api_eror_msg(rpc_id, error_data);
             }
@@ -544,16 +606,16 @@ function handle_rpc_fails_list(rd, error, rpc_data) {
 }
 
 function get_next_rpc(this_payment, api_url, requestid) {
-    let rpc_settings = cs_node(this_payment, "apis", true);
+    const rpc_settings = cs_node(this_payment, "apis", true);
     if (rpc_settings) {
-        let apilist = rpc_settings.apis,
+        const apilist = rpc_settings.apis,
             rpclist = rpc_settings.options,
             apirpc = $.grep(apilist, function(filter) {
                 return !filter.api;
             }),
             restlist = (apirpc && rpclist) ? $.merge(apirpc, rpclist) : apirpc;
         if (!$.isEmptyObject(restlist)) {
-            let next_scan = restlist[restlist.findIndex(option => option.url == api_url) + 1],
+            const next_scan = restlist[restlist.findIndex(option => option.url == api_url) + 1],
                 next_rpc = (next_scan) ? next_scan : restlist[0],
                 rqid = (requestid) ? requestid : "";
             if (glob_rpc_attempts[rqid + next_rpc.url] !== true) {
@@ -565,9 +627,9 @@ function get_next_rpc(this_payment, api_url, requestid) {
 }
 
 function append_tx_li(txd, rqtype, ln) {
-    let txhash = txd.txhash;
+    const txhash = txd.txhash;
     if (txhash) {
-        let ccval = txd.ccval,
+        const ccval = txd.ccval,
             ccval_rounded = trimdecimals(ccval, 6),
             transactiontime = txd.transactiontime,
             conf = txd.confirmations,
@@ -587,7 +649,7 @@ function append_tx_li(txd, rqtype, ln) {
             tx_listitem = $("<li><div class='txli_content'>" + date_format + confspan + "<div class='txli_conf txl_canceled'><span class='icon-blocked'></span>Canceled</div><span class='tx_val'> + " + valstr + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>"),
             historic = txd.historic;
         if (historic) {
-            let h_string = historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, true);
+            const h_string = historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, true);
             tx_listitem.append(hs_for(h_string)).attr("title", h_string);
         }
         if (rqtype === false) {
@@ -611,10 +673,10 @@ function hs_for(dat) {
 }
 
 function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, fromcache) {
-    let timestamp = historic.timestamp,
+    const timestamp = historic.timestamp,
         price = historic.price;
     if (timestamp && price) {
-        let fiatsrc = historic.fiatapisrc,
+        const fiatsrc = historic.fiatapisrc,
             src = historic.apisrc,
             lcsymbol = historic.lcsymbol,
             lc_eur_rate = historic.lcrate,
@@ -630,7 +692,7 @@ function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, 
             cf_info = "\nConfirmations: " + conf_var;
         return "Historic data (" + fulldateformat(new Date((timestamp - glob_timezone)), glob_langcode) + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(6) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src + cf_info;
     }
-    let resp = translate("failedhistoric", {
+    const resp = translate("failedhistoric", {
         "ccsymbol": ccsymbol
     });
     notify(resp);
@@ -638,15 +700,15 @@ function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, 
 }
 
 function compareamounts(rd) {
-    let thisrequestid = rd.requestid,
+    const thisrequestid = rd.requestid,
         requestli = $("#" + thisrequestid),
         txlist = requestli.find(".transactionlist li"),
         txlist_length = txlist.length;
     if (txlist_length) {
-        let lastlist = txlist.last(),
+        const lastlist = txlist.last(),
             firstinput = lastlist.data("transactiontime");
         if (firstinput) {
-            let iscrypto = rd.iscrypto,
+            const iscrypto = rd.iscrypto,
                 pendingstatus = rd.pending,
                 getconfirmations = rd.set_confirmations,
                 getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
@@ -657,22 +719,23 @@ function compareamounts(rd) {
                 offset = Math.abs(now() - (firstinput - glob_timezone)),
                 one_tx = (txlist_length === 1) ? true : false,
                 recent = (offset < 300000 && one_tx),
-                recent_dat = false,
                 cc_amount = parseFloat(rd.cc_amount),
-                thissum_cc = 0,
+                margin = 0.95;
+            let recent_dat = false,
+                tx_counter = 0,
                 status_cc = "pending",
+                pending_cc = pendingstatus,
+                confirmed_cc = false,
+                confirmations_cc = 0,
                 paymenttimestamp_cc,
                 txhash_cc,
-                confirmations_cc = 0,
-                pending_cc = pendingstatus,
-                margin = 0.95;
+                thissum_cc = 0,
+                fiatvalue = rd.fiatvalue;
             if (iscrypto || recent) {
-                let confirmed_cc = false,
-                    tx_counter = 0,
-                    txreverse = (txlist_length > 1) ? txlist.get().reverse() : txlist;
+                const txreverse = (txlist_length > 1) ? txlist.get().reverse() : txlist;
                 $(txreverse).each(function(i) {
                     tx_counter++;
-                    let thisnode = $(this),
+                    const thisnode = $(this),
                         tn_dat = thisnode.data();
                     confirmations_cc = tn_dat.confirmations,
                         paymenttimestamp_cc = tn_dat.transactiontime,
@@ -706,20 +769,19 @@ function compareamounts(rd) {
                     status_cc = "insufficient",
                         pending_cc = "scanning";
                 }
-                let fiatvalue = rd.fiatvalue;
             }
             if (recent && !iscrypto) { // get local fiat rates when request is less then 15 minutes old
-                let ccsymbol = rd.currencysymbol,
+                const ccsymbol = rd.currencysymbol,
                     exchangerates = br_get_session("exchangerates", true),
                     cc_xrates = br_get_session("xrates_" + ccsymbol, true);
                 if (exchangerates && cc_xrates) {
-                    let fiat_exchangerates = exchangerates.fiat_exchangerates,
+                    const fiat_exchangerates = exchangerates.fiat_exchangerates,
                         local_xrate = (fiat_exchangerates) ? fiat_exchangerates[rd.fiatcurrency] : null,
                         usd_eur_xrate = (fiat_exchangerates) ? fiat_exchangerates.usd : null;
                     if (local_xrate && usd_eur_xrate) {
-                        let usd_rate = (cc_xrates) ? cc_xrates.ccrate : null;
+                        const usd_rate = (cc_xrates) ? cc_xrates.ccrate : null;
                         if (usd_rate) {
-                            let usdval = thissum_cc * usd_rate,
+                            const usdval = thissum_cc * usd_rate,
                                 eurval = usdval / usd_eur_xrate;
                             fiatvalue = eurval * local_xrate,
                                 recent_dat = true;
@@ -755,7 +817,7 @@ function compareamounts(rd) {
 // get historic crypto rates
 
 function init_historical_fiat_data(rd, conf, latestinput, firstinput) {
-    let thisrequestid = rd.requestid,
+    const thisrequestid = rd.requestid,
         confcor = (conf) ? conf : 0,
         latestconf = (rd.no_conf === true) ? 0 : confcor, // only update on change
         hc_prefix = "historic_" + thisrequestid,
@@ -763,25 +825,27 @@ function init_historical_fiat_data(rd, conf, latestinput, firstinput) {
         cacheval = latestinput + latestconf;
     if (cacheval != historiccache) { //new input detected; call historic api
         br_remove_session(hc_prefix); // remove historic price cache
-        let historic_payload = $.extend(rd, {
+        const historic_payload = $.extend(rd, {
             "latestinput": latestinput,
             "latestconf": latestconf,
             "firstinput": firstinput
         });
-        let apilist = "historic_fiat_price_apis",
+        const apilist = "historic_fiat_price_apis",
             fiatapi = $("#fiatapisettings").data("selected"),
             fiatapi_default = (fiatapi == "coingecko" || fiatapi == "coinbase") ? "fixer" : fiatapi; // exclude coingecko api"
         glob_api_attempt[apilist] = {}; // reset global historic fiat price api attempt
         get_historical_fiat_data(historic_payload, apilist, fiatapi_default);
+        return
     }
+    api_callback(thisrequestid);
 }
 
 function get_historical_fiat_data(rd, apilist, fiatapi) {
     glob_api_attempt[apilist][fiatapi] = true;
-    let thisrequestid = rd.requestid,
+    const thisrequestid = rd.requestid,
         fiatcurrency = rd.fiatcurrency;
     if (fiatcurrency) {
-        let lcsymbol = fiatcurrency.toUpperCase(),
+        const lcsymbol = fiatcurrency.toUpperCase(),
             payload = get_historic_fiatprice_api_payload(fiatapi, lcsymbol, rd.latestinput);
         api_proxy({
             "api": fiatapi,
@@ -792,10 +856,10 @@ function get_historical_fiat_data(rd, apilist, fiatapi) {
                 "method": "GET"
             }
         }).done(function(e) {
-            let data = br_result(e).result;
+            const data = br_result(e).result;
             if (data) {
                 if (data.error) {
-                    let next_historic = try_next_api(apilist, fiatapi);
+                    const next_historic = try_next_api(apilist, fiatapi);
                     if (next_historic) {
                         get_historical_fiat_data(rd, apilist, next_historic);
                         return
@@ -820,7 +884,7 @@ function get_historical_fiat_data(rd, apilist, fiatapi) {
                         get_lcrate = q_obj(data, "rates." + lcsymbol);
                 }
                 if (usdrate && get_lcrate) {
-                    let lcrate = (lcsymbol == "EUR") ? 1 : get_lcrate,
+                    const lcrate = (lcsymbol == "EUR") ? 1 : get_lcrate,
                         historic_api = $("#cmcapisettings").data("selected"),
                         picked_historic_api = (historic_api == "coinmarketcap") ? "coingecko" : historic_api, // default to "coingecko api"
                         init_apilist = "historic_crypto_price_apis";
@@ -828,7 +892,7 @@ function get_historical_fiat_data(rd, apilist, fiatapi) {
                     get_historical_crypto_data(rd, fiatapi, init_apilist, picked_historic_api, lcrate, usdrate, lcsymbol);
                     return
                 }
-                let next_historic = try_next_api(apilist, fiatapi);
+                const next_historic = try_next_api(apilist, fiatapi);
                 if (next_historic) {
                     get_historical_fiat_data(rd, apilist, next_historic);
                     return
@@ -837,12 +901,12 @@ function get_historical_fiat_data(rd, apilist, fiatapi) {
             fail_dialogs(fiatapi, "unable to fetch " + lcsymbol + " exchange rate");
             api_callback(thisrequestid);
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            let next_historic = try_next_api(apilist, fiatapi);
+            const next_historic = try_next_api(apilist, fiatapi);
             if (next_historic) {
                 get_historical_fiat_data(rd, apilist, next_historic);
                 return
             }
-            let error_object = (errorThrown) ? errorThrown : jqXHR;
+            const error_object = (errorThrown) ? errorThrown : jqXHR;
             fail_dialogs(fiatapi, error_object);
             api_callback(thisrequestid);
         });
@@ -852,7 +916,7 @@ function get_historical_fiat_data(rd, apilist, fiatapi) {
 }
 
 function get_historic_fiatprice_api_payload(fiatapi, lcsymbol, latestinput) {
-    let dateformat = form_date(latestinput),
+    const dateformat = form_date(latestinput),
         payload = (fiatapi == "fixer") ? dateformat + "?symbols=" + lcsymbol + ",USD" :
         (fiatapi == "currencylayer") ? "historical?date=" + dateformat :
         dateformat + "?base=EUR"; // <- exchangeratesapi
@@ -860,7 +924,7 @@ function get_historic_fiatprice_api_payload(fiatapi, lcsymbol, latestinput) {
 }
 
 function form_date(latestinput) {
-    let dateobject = new Date(parseFloat(latestinput)),
+    const dateobject = new Date(parseFloat(latestinput)),
         getmonth = dateobject.getUTCMonth() + 1,
         getday = dateobject.getUTCDate(),
         year = dateobject.getUTCFullYear(),
@@ -871,7 +935,7 @@ function form_date(latestinput) {
 
 function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, lcsymbol) {
     glob_api_attempt[apilist][api] = true;
-    let thispayment = rd.payment,
+    const thispayment = rd.payment,
         ccsymbol = rd.currencysymbol,
         latestinput = rd.latestinput,
         firstinput = rd.firstinput,
@@ -895,11 +959,11 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
             "method": "GET"
         }
     }).done(function(e) {
-        let api_result = br_result(e).result,
+        const api_result = br_result(e).result,
             data = (api == "coingecko") ? (api_result) ? api_result.prices : null :
             (api == "coincodex") ? (api_result) ? api_result[ccsymbol.toUpperCase()] : null : api_result;
         if (data && !data.error) {
-            let thisrequestid = rd.requestid,
+            const thisrequestid = rd.requestid,
                 requestli = $("#" + thisrequestid),
                 txlist = requestli.find(".transactionlist li"),
                 txlist_length = txlist.length,
@@ -910,21 +974,21 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
                 lnd = rd.lightning,
                 setconfirmations = (lnd) ? 1 : (getconfint) ? getconfint : 1, // set minimum confirmations to 1
-                pending = rd.pending,
                 iserc20 = rd.erc20,
-                receivedusd = 0,
-                receivedcc = 0,
-                txhash,
-                paymenttimestamp,
-                conf = 0,
-                status = "pending",
-                confirmed = false,
                 historicusdvalue = (thisamount / lcrate) * usdrate,
-                tx_counter = 0,
                 margin = (historicusdvalue < 2) ? 0.60 : 0.95; // be flexible with small amounts
+            let tx_counter = 0,
+                conf = 0,
+                paymenttimestamp,
+                txhash,
+                receivedcc = 0,
+                receivedusd = 0,
+                confirmed = false,
+                status = "pending",
+                pending = rd.pending;
             $(txreverse).each(function(i) {
                 tx_counter++;
-                let thisnode = $(this),
+                const thisnode = $(this),
                     tn_dat = thisnode.data(),
                     thistimestamp = tn_dat.transactiontime,
                     thisvalue = tn_dat.ccval,
@@ -952,7 +1016,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 } else {
                     confirmed = false;
                 }
-                let confbar = thisnode.find(".confbar");
+                const confbar = thisnode.find(".confbar");
                 if (confbar.length > 0) {
                     confbar.each(function(i) {
                         animate_confbar($(this), i);
@@ -987,7 +1051,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     "pending": pending,
                     "lightning": lnd
                 }, false);
-                let cacheval = latestinput + latestconf;
+                const cacheval = latestinput + latestconf;
                 if (pending == "no") {} else {
                     br_set_session("historic_" + thisrequestid, cacheval); // 'cache' historic data
                 }
@@ -995,7 +1059,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 return
             }
         }
-        let next_historic = try_next_api(apilist, api);
+        const next_historic = try_next_api(apilist, api);
         if (next_historic) {
             get_historical_crypto_data(rd, fiatapi, apilist, next_historic, lcrate, usdrate, lcsymbol);
             return
@@ -1003,19 +1067,19 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
         fail_dialogs(api, "error retrieving historical price data");
         api_callback(thisrequestid);
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        let next_historic = try_next_api(apilist, api);
+        const next_historic = try_next_api(apilist, api);
         if (next_historic) {
             get_historical_crypto_data(rd, fiatapi, apilist, next_historic, lcrate, usdrate, lcsymbol);
             return
         }
-        let error_object = (errorThrown) ? errorThrown : jqXHR;
+        const error_object = (errorThrown) ? errorThrown : jqXHR;
         fail_dialogs(api, error_object);
         api_callback(thisrequestid);
     })
 }
 
 function get_payload_historic_coingecko(coin_id, starttime, endtime, erc20_contract) {
-    let time_range = Math.abs(endtime - starttime),
+    const time_range = Math.abs(endtime - starttime),
         start_time = (time_range < 3600) ? 5200 : 3600; // compensation for minimum range
     if (erc20_contract) {
         return "coins/ethereum/contract/" + erc20_contract + "/market_chart/range?vs_currency=usd&from=" + (starttime - start_time) + "&to=" + (endtime + 3600); // expand range with one hour for error margin
@@ -1024,7 +1088,7 @@ function get_payload_historic_coingecko(coin_id, starttime, endtime, erc20_contr
 }
 
 function get_payload_historic_coinpaprika(coin_id, starttime, endtime) {
-    let ts_start = starttime - 36000,
+    const ts_start = starttime - 36000,
         ts_end = endtime + 36000, // add ten hours flex both ways otherwise api can return empty result
         timespan = (ts_end - ts_start),
         // api limit = 1000 rows (default)
@@ -1041,7 +1105,7 @@ function get_payload_historic_coinpaprika(coin_id, starttime, endtime) {
 }
 
 function get_payload_historic_coincodex(coin_id, starttime, endtime) {
-    let st_format = cx_date(starttime),
+    const st_format = cx_date(starttime),
         et_format = cx_date(endtime),
         tquery = (starttime == endtime) ? st_format + "/" + st_format : st_format + "/" + et_format;
     return "get_coin_history/" + coin_id + "/" + tquery + "/" + 1000;
@@ -1053,11 +1117,11 @@ function cx_date(ts) {
 
 function compare_historic_prices(api, values, price_array, thistimestamp) {
     $.each(price_array, function(i, value) {
-        let historic_object = (api == "coincodex") ? get_historic_object_coincodex(value) :
+        const historic_object = (api == "coincodex") ? get_historic_object_coincodex(value) :
             (api == "coingecko") ? get_historic_object_coingecko(value) :
             get_historic_object_coinpaprika(value);
         if (historic_object) {
-            let historic_timestamp = historic_object.timestamp,
+            const historic_timestamp = historic_object.timestamp,
                 historic_price = historic_object.price;
             if (historic_timestamp > thistimestamp) {
                 values.timestamp = historic_timestamp,
@@ -1070,7 +1134,7 @@ function compare_historic_prices(api, values, price_array, thistimestamp) {
     if (values.fetched) {
         // check if historical prices are fetched succesfully, if true do nothing
     } else { // if no matching timestamp get latest
-        let lastitem = price_array[price_array.length - 1],
+        const lastitem = price_array[price_array.length - 1],
             last_historic_object = (api == "coincodex") ? get_historic_object_coincodex(lastitem) :
             (api == "coingecko") ? get_historic_object_coingecko(lastitem) :
             get_historic_object_coinpaprika(lastitem);

@@ -1,4 +1,4 @@
-let socket_attempt = {},
+let glob_socket_attempt = {},
     glob_api_attempt = {},
     glob_api_attempts = {},
     glob_scan_attempts = {},
