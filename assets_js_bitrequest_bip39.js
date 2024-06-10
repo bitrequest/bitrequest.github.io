@@ -1086,10 +1086,12 @@ function derive_addone_trigger() {
 }
 
 function derive_addone(currency, extra) {
-    let dd = derive_data(currency, extra);
+    const dd = derive_data(currency, extra);
     if (dd) {
         derive_add_address(currency, dd);
+        return true;
     }
+    return false;
 }
 
 function key_cc() {

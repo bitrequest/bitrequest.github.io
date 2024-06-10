@@ -2092,8 +2092,7 @@ function derive_first_check(currency) {
         if (derives) {
             let has_derives = active_derives(currency, derives);
             if (has_derives === false) {
-                derive_addone(currency);
-                return true;
+                return derive_addone(currency);
             }
         }
     }
@@ -3135,7 +3134,7 @@ function addressinfo() {
                 "<div id='pk_span'>\
                     <div class='qrwrap flex'>\
                         <div id='qrcode' class='qrcode'></div>" + cc_icon + "</div>\
-                        <p id='pkspan' class='adbox adboxl select' data-type='" + tlpk  + "'></p>\
+                        <p id='pkspan' class='adbox adboxl select' data-type='" + tlpk + "'></p>\
                 </div>\
                 </li>\
                 <li><div class='showtransactions ref'><span class='icon-eye'></span>" + translate("showtransactions") + "</div></li>\

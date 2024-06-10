@@ -323,7 +323,7 @@ function scan_match(rd, api_data, rdo, counter, txdat, match, l2) {
     if (src == "list") {
         if (l2) { // scan l2's
             const console_l2 = {
-                "error": "Sacanning next l2 rpc",
+                "error": "Scanning next l2 rpc",
                 "console": true
             };
             if (api_data.api) {
@@ -379,19 +379,20 @@ function handle_api_fails_list(rd, error, api_data, all_proxys) {
         nextapi = get_next_api(rd.payment, api_name, requestid),
         nextrpc;
     if (nextapi === false) {
-        const api_url = api_data.url,
-            nextrpc = get_next_rpc(rd.payment, api_url, requestid);
-        if (nextrpc === false && all_proxys) { // try next proxy
-            const next_proxy = get_next_proxy();
-            if (next_proxy) {
-                get_api_inputs(rd, api_data);
-                return;
+        const api_url = api_data.url;
+        nextrpc = get_next_rpc(rd.payment, api_url, requestid);
+        if (nextrpc === false) { // try next proxy
+            if (all_proxys === true) { // try next proxy
+                const next_proxy = get_next_proxy();
+                if (next_proxy) {
+                    get_api_inputs(rd, api_data);
+                    return;
+                }
             }
             const rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown";
             api_eror_msg(rpc_id, error_data);
+            return
         }
-        api_callback(requestid);
-        return
     }
     if (nextapi) {
         get_api_inputs(rd, nextapi);
@@ -420,6 +421,10 @@ function get_next_api(this_payment, api_name, requestid) {
 }
 
 function api_eror_msg(apisrc, error) {
+    if (error == false) {
+        console.log("no error data");
+        return
+    }
     let error_dat = (error) ? error : {
             "errormessage": "errormessage",
             "errorcode": null
@@ -445,6 +450,9 @@ function api_eror_msg(apisrc, error) {
 }
 
 function get_api_error_data(error) {
+    if (error == false) {
+        return false;
+    }
     const error_type = typeof error,
         errorcode = (error.code) ? error.code :
         (error.status) ? error.status :
@@ -559,7 +567,7 @@ function get_rpc_inputs(rd, api_data) {
             }
             if (rd.payment == "ethereum" || rd.erc20 === true) {
                 if (rdo.pending == "scanning") { // scan incoming transactions on address
-                    handle_rpc_fails_list(rd, false, api_data, rd.payment); // use api instead
+                    handle_rpc_fails_list(rd, false, api_data, "scanl2"); // use api instead
                     return
                 }
                 infura_txd_rpc(rd, api_data, rdo);
@@ -576,27 +584,30 @@ function get_rpc_inputs(rd, api_data) {
 
 // RPC error handling
 
-function handle_rpc_fails_list(rd, error, rpc_data) {
+function handle_rpc_fails_list(rd, error, rpc_data, all_proxys) {
     const api_url = rpc_data.url,
         requestid = rd.requestid,
         nextrpc = get_next_rpc(rd.payment, api_url, requestid),
         api_name = rpc_data.name,
         nextapi = get_next_api(rd.payment, api_name, requestid);
     if (nextrpc === false) {
-        if (nextapi === false) { // try next proxy
-            if (error == "scan") {} else {
+        if (nextapi === false) {
+            if (all_proxys === true) { // try next proxy
                 const next_proxy = get_next_proxy();
                 if (next_proxy) {
                     get_rpc_inputs(rd, rpc_data);
                     return
                 }
-                const rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
-                    error_data = get_api_error_data(error);
-                api_eror_msg(rpc_id, error_data);
             }
+            if (all_proxys === "scanl2") { // goo to next request when scanning for L2's
+                api_callback(rd.requestid);
+                return
+            }
+            const rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
+                error_data = get_api_error_data(error);
+            api_eror_msg(rpc_id, error_data);
+            return
         }
-        api_callback(requestid);
-        return
     }
     if (nextrpc) {
         get_rpc_inputs(rd, nextrpc);
