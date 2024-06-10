@@ -985,7 +985,6 @@ function blockchair_fetch(rd, api_data, rdo) {
                                     const tx_listitem = append_tx_li(txd, rd.requesttype);
                                     if (tx_listitem) {
                                         transactionlist.append(tx_listitem.data(txd));
-                                        return
                                     }
                                 }
                             }
@@ -1421,7 +1420,6 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc) {
                                 const tx_listitem = append_tx_li(txd, rd.requesttype);
                                 if (tx_listitem) {
                                     transactionlist.append(tx_listitem.data(txd));
-                                    return
                                 }
                             }
                         }
