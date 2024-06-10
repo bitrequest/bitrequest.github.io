@@ -500,6 +500,10 @@ function api_src(thislist, api_data) {
 }
 
 function api_callback(requestid, nocache) {
+    if (nocache == "afterscan") {
+        close_paymentdialog(true);
+        return
+    }
     const thislist = $("#" + requestid);
     if (thislist.hasClass("scan")) {
         thislist.removeClass("scan open").addClass("pmstatloaded");
