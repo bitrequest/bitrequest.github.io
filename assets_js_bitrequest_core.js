@@ -1117,8 +1117,9 @@ function loadfunction(pagename, thisevent) {
         return
     }
     loadpageevent(pagename);
-    let title = translate(pagename) + " | " + glob_apptitle;
-    settitle(title);
+    const page_tl = translate(pagename),
+        page_title = (page_tl) ? page_tl : pagename;
+    settitle(page_title);
     cancel_url_dialogs();
 }
 
@@ -4167,7 +4168,7 @@ function appendrequest(rd) {
         }) + "</span> <span class='rq_day'>" + localtimeobject.getDate() + "</span>",
         ptsformatted = fulldateformat(new Date(paymenttimestamp - glob_timezone), glob_langcode, true),
         amount_short_rounded = amountshort(amount, receivedamount, fiatvalue, iscrypto),
-        amount_short_span = (insufficient === true) ? " (" + amount_short_rounded + " " + uoa_upper + " short)" : "",
+        amount_short_span = (insufficient === true) ? " (" + amount_short_rounded + " " + uoa_upper + " " + translate("amountshort") + ")" : "",
         amount_short_cc_span = (iscrypto === true) ? amount_short_span : "",
         created = (requestdate) ? requestdateformatted : "<strong>unknown</strong>",
         fiatvaluebox = (iscrypto === true || !fiatvalue) ? "" : "<li class='payday pd_fiat'><strong>" + translate("fiatvalueon") + "<span class='pd_fiat'> " + ptsformatted + "</span> :</strong><span class='fiatvalue'> " + fiatvalue_rounded + "</span> " + currencyname + "<div class='show_as amountshort'>" + amount_short_span + "</div></li>",
@@ -4603,8 +4604,9 @@ function loadertext(text) {
 }
 
 function settitle(title) {
-    glob_titlenode.text(title);
-    glob_ogtitle.attr("content", title);
+    const page_title = title + " | " + glob_apptitle;
+    glob_titlenode.text(page_title);
+    glob_ogtitle.attr("content", page_title);
 }
 
 function all_pinpanel(cb, top, set) {

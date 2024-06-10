@@ -667,7 +667,7 @@ function continue_paymentfunction() {
         },
         lnd_switch = (payment == "bitcoin") ? (isrequest && !ln) ? "" : "<div id='lightning_switch' title='lightning' class='lnswitch'><span class='icon-power'></span></div>" : "",
         ndef_switch = (payment == "bitcoin" && glob_ndef) ? "<div id='ndef_switch' title='Tap to pay' class='lnswitch'><span class='icon-connection'></span></div>" : "";
-    settitle(pagename + " | " + glob_apptitle);
+    settitle(pagename);
     glob_paymentdialogbox.append("<div id='request_back' class='share_request dialogstyle'></div><div id='request_front' class='dialogstyle'><div id='xratestats'><span id='rq_errlog'></span></div>" + ndef_switch + lnd_switch + "</div>").attr(payment_attributes);
     // Extend global request object
     $.extend(request, extend_data);
@@ -1610,8 +1610,7 @@ function pickcurrency() {
                 "payment": payment,
                 "newccvalue": nccvalstrip,
                 "newccsymbol": newccsymbol
-            }),
-            title = pagename + " | " + glob_apptitle;
+            });
         request.uoa = nextcurrency,
             request.amount = nccvalstrip,
             request.iscrypto = iscrypto;
@@ -1622,7 +1621,7 @@ function pickcurrency() {
         glob_paymentdialogbox.attr("class", helper.requestclass + dialogclass + helper.iszeroclass);
         main_input_focus();
         set_edit(href);
-        settitle(title);
+        settitle(pagename);
         rendercpooltext(newccsymbol, newccrate);
     });
 }
@@ -1772,12 +1771,11 @@ function updatecpool(thisamount, thisrate, ccvalue) {
             "payment": payment,
             "newccvalue": thisamount,
             "newccsymbol": currency
-        }),
-        title = pagename + " | " + glob_apptitle;
+        });
     helper.currencylistitem.data("url", href);
     request.amount = thisamount;
     set_edit(href);
-    settitle(title);
+    settitle(pagename);
     glob_blocktyping = false;
 }
 
@@ -3130,7 +3128,7 @@ function updaterequest(ua, save) {
                 rl_iscrypto = rldata.iscrypto,
                 rl_uoa = rldata.uoa,
                 amount_short_rounded = amountshort(rl_amount, ua.receivedamount, ua.fiatvalue, rl_iscrypto),
-                amount_short_span_text = " (" + amount_short_rounded + " " + rl_uoa.toUpperCase() + " " + translate("amountshort");
+                amount_short_span_text = " (" + amount_short_rounded + " " + rl_uoa.toUpperCase() + " " + translate("amountshort") + ")";
             amount_short_span.text(amount_short_span_text).addClass("show_as");
         } else {
             amount_short_span.removeClass("show_as");
