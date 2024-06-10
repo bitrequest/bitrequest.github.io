@@ -560,7 +560,7 @@ function lang_nl(id, data) {
         "loadingcamera": "Camera aan het laden",
         "generatebu": "Genereer systeem backup",
         "installationpackage": "Genereer installatie pakket",
-        "closingrequest": "Verzoek aan het afsluitn",
+        "closingrequest": "Verzoek aan het afsluiten",
         "scanningforincoming": "scannen naar inkomende transacties",
 
         // RANDOM TERMS
