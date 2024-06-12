@@ -1195,7 +1195,7 @@ function key_management() {
                     all_pinpanel({
                         "func": phrase_info_pu,
                         "args": thiscurrency
-                    }, true);
+                    }, true, true);
                     return
                 }
             }

@@ -736,7 +736,7 @@ function enterapp(pinval) {
             canceloptions(true);
         } else if (pinfloat.hasClass("reset")) {
             br_set_local("locktime", _now);
-            $("#pintext").text("Enter new pin");
+            $("#pintext").text(translate("enternewpin"));
             pinfloat.addClass("p_admin").removeClass("pinwall reset");
             playsound(glob_waterdrop);
             setTimeout(function() {
@@ -1873,11 +1873,10 @@ function payment_lookup(request_dat) {
         content = "<div class='formbox'>\
             <h2 class='icon-warning'><span class='icon-qrcode'/>" + translate("nodetection") + "</h2>\
             <div id='ad_info_wrap'>\
-                <p><strong>" + translate("lookuppayment", {
-            "bu_url": bu_url,
-            "currency": currency,
-            "blockexplorer": blockexplorer
-        }) + "</strong></p>\
+                <p><strong><a href='" + bu_url + "' target='_blank' class='ref check_recent'>" + translate("lookuppayment", {
+                    "currency": currency,
+                    "blockexplorer": blockexplorer
+                }) + " <span class='icon-new-tab'></span></a></strong></p>\
                 <div class='pk_wrap noselect'>\
                     <div id='dontshowwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
                     <span>" + translate("dontshowagain") + "</span>\
@@ -3180,7 +3179,7 @@ function show_pk() {
         all_pinpanel({
             "func": show_pk_cb,
             "args": privkey
-        }, true)
+        }, true, true)
     })
 }
 
@@ -3234,7 +3233,7 @@ function show_vk() {
         all_pinpanel({
             "func": show_vk_cb,
             "args": x_ko
-        }, true)
+        }, true, true)
     })
 }
 
