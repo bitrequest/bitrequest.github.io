@@ -58,17 +58,17 @@ function lightning_management() {
 
 function lnd_cc_switch() {
     $(document).on("mouseup", ".cc_settinglist li[data-id='Lightning network'] .switchpanel.custom", function() {
-        let this_switch = $(this),
+        const this_switch = $(this),
             lnli = lndli();
         if (this_switch.hasClass("true")) {
-            let result = confirm(translate("disablelightning"));
+            const result = confirm(translate("disablelightning"));
             if (result === true) {
                 lnli.data("selected", false);
                 this_switch.removeClass("true").addClass("false");
                 save_cc_settings("bitcoin", true);
             }
         } else {
-            let selected = lnli.data("selected_service");
+            const selected = lnli.data("selected_service");
             if (selected) {
                 lnli.data("selected", true);
                 this_switch.removeClass("false").addClass("true");
@@ -81,9 +81,9 @@ function lnd_cc_switch() {
 }
 
 function lm_function(replace) {
-    let this_data = lndli().data();
+    const this_data = lndli().data();
     if (this_data) {
-        let node_list = this_data.services,
+        const node_list = this_data.services,
             has_nodes = ($.isEmptyObject(node_list)) ? false : true,
             lnd_proxy_list = this_data.proxies,
             has_proxies = ($.isEmptyObject(lnd_proxy_list)) ? false : true,
@@ -174,11 +174,11 @@ function lm_function(replace) {
         popdialog(content, trigger, null, null, replace);
         if (has_nodes) {
             $.each(node_list, function(key, value) {
-                let nselect = (value.node_id == c_node_id),
+                const nselect = (value.node_id == c_node_id),
                     imp = value.imp,
                     lnurl = value.lnurl;
                 if (lnurl || value.proxy) {
-                    let fetchproxy = (has_proxies) ? fetch_proxy(lnd_proxy_list, value.proxy_id) : false,
+                    const fetchproxy = (has_proxies) ? fetch_proxy(lnd_proxy_list, value.proxy_id) : false,
                         proxy_dat = (fetchproxy) ? fetchproxy.proxy : (current_proxy) ? current_proxy.proxy : d_proxy(),
                         p_arr = lnurl_deform(proxy_dat),
                         proxy = p_arr.url,
@@ -200,9 +200,9 @@ function lm_function(replace) {
             });
         };
         if (has_proxies) {
-            let proxylist = $("#lnsettingsbox #add_proxy_drawer .options");
+            const proxylist = $("#lnsettingsbox #add_proxy_drawer .options");
             $.each(lnd_proxy_list, function(key, value) {
-                let current_p = (value.id == cp_id);
+                const current_p = (value.id == cp_id);
                 lnd_append_proxy(proxylist, key, value, current_p);
             });
         }
@@ -217,7 +217,7 @@ function node_option_li(value, selected, fn, proxy, pw) {
     loadertext(translate("connecttolnur", {
         "url": proxy
     }));
-    let imp = value.imp,
+    const imp = value.imp,
         locked = null,
         postdata = {
             "method": "POST",
@@ -234,10 +234,10 @@ function node_option_li(value, selected, fn, proxy, pw) {
         };
     $.ajax(postdata).done(function(e) {
         closeloader();
-        let invoices = e.invoices,
+        const invoices = e.invoices,
             error = e.error;
         if (error) {
-            let default_error = translate("unabletoconnect"),
+            const default_error = translate("unabletoconnect"),
                 message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error,
                 code = error.code,
                 locked = (code && (code == 1 || code == 2)) ? "locked" : null;
@@ -253,7 +253,7 @@ function node_option_li(value, selected, fn, proxy, pw) {
             }
             return
         }
-        let mdat = e.mdat,
+        const mdat = e.mdat,
             connected = mdat.connected;
         if (fn == "append") {
             if (e && connected) {
@@ -285,7 +285,7 @@ function node_option_li(value, selected, fn, proxy, pw) {
 }
 
 function test_lnd_option_li(value, selected, fn) {
-    let host = value.host,
+    const host = value.host,
         proxy = (host.indexOf(".onion") > 0) ? true : false;
     loader(true);
     loadertext(translate("connecttolnur", {
@@ -304,7 +304,7 @@ function test_lnd_option_li(value, selected, fn) {
         }
     }).done(function(e) {
         closeloader();
-        let data = br_result(e).result;
+        const data = br_result(e).result;
         if (fn == "append") {
             if (data && data.invoices) {
                 lightning_option_li(true, value, selected, data.invoices);
@@ -335,7 +335,7 @@ function test_lnd_option_li(value, selected, fn) {
 }
 
 function test_c_lightning_option_li(value, selected, fn) {
-    let host = value.host,
+    const host = value.host,
         proxy = (host.indexOf(".onion") > 0) ? true : false;
     loader(true);
     loadertext(translate("connecttolnur", {
@@ -355,7 +355,7 @@ function test_c_lightning_option_li(value, selected, fn) {
         }
     }).done(function(e) {
         closeloader();
-        let data = br_result(e).result;
+        const data = br_result(e).result;
         if (fn == "append") {
             if (data && data.invoices) {
                 lightning_option_li(true, value, selected, data.invoices);
@@ -386,7 +386,7 @@ function test_c_lightning_option_li(value, selected, fn) {
 }
 
 function test_eclair_option_li(value, selected, fn) {
-    let host = value.host,
+    const host = value.host,
         proxy = (host.indexOf(".onion") > 0) ? true : false;
     loader(true);
     loadertext(translate("connecttolnur", {
@@ -407,7 +407,7 @@ function test_eclair_option_li(value, selected, fn) {
         }
     }).done(function(e) {
         closeloader();
-        let data = br_result(e).result;
+        const data = br_result(e).result;
         if (fn == "append") {
             if (data) {
                 if (data.error) {
@@ -446,7 +446,7 @@ function test_eclair_option_li(value, selected, fn) {
 }
 
 function test_lnbits_option_li(value, selected, fn) {
-    let host = value.host,
+    const host = value.host,
         proxy = (host.indexOf(".onion") > 0) ? true : false;
     loader(true);
     loadertext(translate("connecttolnur", {
@@ -465,7 +465,7 @@ function test_lnbits_option_li(value, selected, fn) {
         }
     }).done(function(e) {
         closeloader();
-        let data = br_result(e).result;
+        const data = br_result(e).result;
         if (fn == "append") {
             if (data && data.balance > -1) {
                 lightning_option_li(true, value, selected, data.invoices);
@@ -496,7 +496,7 @@ function test_lnbits_option_li(value, selected, fn) {
 }
 
 function tconnectcb(add) {
-    let pnode = $("#lnsettingsbox .ln_info_wrap:visible");
+    const pnode = $("#lnsettingsbox .ln_info_wrap:visible");
     if (add) {
         pnode.addClass("live");
         $("#ln_nodeselect").data("live", "connection");
@@ -507,9 +507,8 @@ function tconnectcb(add) {
 }
 
 function lightning_option_li(live, value, selected, invoices, proxy) {
-    let has_invoices = (invoices && invoices != "locked") ? true : false,
+    const has_invoices = (invoices && invoices != "locked") ? true : false,
         locked = (invoices && invoices == "locked") ? true : false,
-        invoiceslist = "",
         liveclass = (locked) ? " locked" : (live === true) ? " live" : "",
         selected_class = (selected === true) ? " show" : "",
         node_id = value.node_id,
@@ -521,11 +520,12 @@ function lightning_option_li(live, value, selected, invoices, proxy) {
         icon_loc = c_icons(imp),
         lnurl_icon = (lnurls_bool) ? "<div class='opt_icon icon-sphere' data-pe='none'></div>" : "",
         option = $("<div class='optionwrap" + liveclass + selected_class + "' style='display:none' data-pe='none'><span data-value='" + node_id + "' data-live='" + icon + "'><img src='" + icon_loc + "' class='lnd_icon'/> " + name + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon icon-bin' data-pe='none'></div><div class='opt_icon c_stat icon-" + icon + "' data-pe='none'></div>" + lnurl_icon + "</div>");
+    let invoiceslist = "";
     option.data(value).appendTo($("#ln_nodelist"));
     option.slideDown(500);
     if (has_invoices) {
         $.each(invoices.reverse(), function(key, value) {
-            let inv_id = (value.payment_request) ? " " + value.payment_request.slice(0, 16) :
+            const inv_id = (value.payment_request) ? " " + value.payment_request.slice(0, 16) :
                 (value.serialized) ? " " + value.serialized.slice(0, 16) : "",
                 inv_title = (value.memo) ? value.memo : (value.description) ? value.description : "invoice" + inv_id,
                 timestamp = (value.creation_date) ? value.creation_date : (value.timestamp) ? value.timestamp : false,
@@ -535,12 +535,12 @@ function lightning_option_li(live, value, selected, invoices, proxy) {
             invoiceslist += "<div class='ivli'><div class='invoice_memo clearfix'><div class='iv_title'>" + icon_span + " " + inv_title + "</div><div class='iv_date'>" + inv_date + "</div></div><div class='invoice_body'><pre>" + syntaxHighlight(value) + "</pre></div></div>";
         });
     } else {
-        let invoice_msg = (locked) ? translate("invoiceslocked", {
+        const invoice_msg = (locked) ? translate("invoiceslocked", {
             "proxy_id": proxy_id
         }) : (live === true) ? translate("noinvoicesfound") : translate("invoiceoffline");
         invoiceslist = "<p>" + invoice_msg + "</p>";
     }
-    let host = value.host,
+    const host = value.host,
         proxy_bool = (value.proxy) ? true : false,
         proxy_val = (proxy_bool) ? (proxy) ? proxy : false : false,
         missing_proxy = (lnurls_bool && !proxy_val),
@@ -601,7 +601,7 @@ function syntaxHighlight(json) {
 }
 
 function lnd_append_proxy(optionlist, key, value, selected) { // make test api call
-    let locked = false,
+    const locked = false,
         p_arr = lnurl_deform(value.proxy),
         proxy = p_arr.url;
     loader(true);
@@ -619,11 +619,11 @@ function lnd_append_proxy(optionlist, key, value, selected) { // make test api c
         }
     }).done(function(e) {
         closeloader();
-        let api_result = br_result(e),
+        const api_result = br_result(e),
             result = api_result.result,
             error = result.error;
         if (error) {
-            let code = error.code,
+            const code = error.code,
                 locked = (code && (code == 1 || code == 2)) ? true : false;
             lnd_proxy_option_li(optionlist, false, key, value, selected, proxy, locked);
             return
@@ -643,7 +643,7 @@ function lnd_append_proxy(optionlist, key, value, selected) { // make test api c
 }
 
 function lnd_proxy_option_li(optionlist, live, key, value, selected, proxy_name, locked) {
-    let liveclass = (live === true) ? " live" : " offline",
+    const liveclass = (live === true) ? " live" : " offline",
         icon = (locked) ? "lock" : (live === true) ? "connection" : "wifi-off",
         selected_class = (selected === true) ? " show" : "",
         option = $("<div class='optionwrap" + liveclass + selected_class + "' style='display:none' data-pe='none' data-value='" + proxy_name + "' data-pid='" + value.id + "'><span data-pe='none'>" + proxy_name + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon c_stat icon-" + icon + "' data-pe='none'></div><div class='opt_icon icon-bin' data-pe='none'></div></div>");
@@ -653,7 +653,7 @@ function lnd_proxy_option_li(optionlist, live, key, value, selected, proxy_name,
 
 function toggle_ln_proxy() {
     $(document).on("click", "#lnsettingsbox #toggle_lnd", function() {
-        let lpd = $("#add_proxy_drawer");
+        const lpd = $("#add_proxy_drawer");
         lpd_input = $("#lnd_proxy_url_input");
         if (lpd.is(":visible")) {
             lpd_input.blur();
@@ -667,7 +667,7 @@ function toggle_ln_proxy() {
 
 function proxy_switch() {
     $(document).on("mouseup", "#lnsettingsbox #lnurl_s .switchpanel.custom", function() {
-        let this_switch = $(this),
+        const this_switch = $(this),
             lpd = $("#add_proxy_drawer"),
             ldc = $("#lnd_credentials"),
             lpd_input = $("#lnd_proxy_url_input"),
@@ -694,7 +694,7 @@ function proxy_switch() {
 
 function toggle_add_proxy() {
     $(document).on("click", "#lnsettingsbox #add_proxy .ref", function() {
-        let lupd = $("#lnurl_proxy_drawer");
+        const lupd = $("#lnurl_proxy_drawer");
         if (lupd.is(":visible")) {
             lupd.slideUp(200);
         } else {
@@ -705,14 +705,14 @@ function toggle_add_proxy() {
 
 function lnd_proxy_switch() {
     $(document).on("mouseup", "#lnsettingsbox .lnurl_p .switchpanel.custom", function() {
-        let lnli = lndli(),
+        const lnli = lndli(),
             ln_dat = lnli.data(),
             nodelist = ln_dat.services;
         if ($.isEmptyObject(nodelist)) {
             playsound(glob_funk)
             return
         }
-        let this_switch = $(this),
+        const this_switch = $(this),
             this_li = this_switch.closest(".noln_ref"),
             this_id = this_li.data("id"),
             current_node = fetch_node(nodelist, this_id);
@@ -720,7 +720,7 @@ function lnd_proxy_switch() {
             popnotify("error", translate("nodenotfound"));
             return
         }
-        let lnd_proxy_list = ln_dat.proxies,
+        const lnd_proxy_list = ln_dat.proxies,
             this_pid = this_li.data("pid"),
             current_proxy = fetch_proxy(lnd_proxy_list, this_pid),
             select_proxy = (current_proxy) ? current_proxy.proxy : (ln_dat.selected_proxy) ? ln_dat.selected_proxy.proxy : d_proxy(),
@@ -732,9 +732,9 @@ function lnd_proxy_switch() {
             popnotify("error", translate("proxynotfound"));
             return
         }
-        let filtered_nodelist = fetch_other_nodes(nodelist, this_id);
+        const filtered_nodelist = fetch_other_nodes(nodelist, this_id);
         if (this_switch.hasClass("true")) {
-            let result = confirm(translate("disableproxy", {
+            const result = confirm(translate("disableproxy", {
                 "set_proxy_val": set_proxy_val
             }));
             if (result === true) {
@@ -745,7 +745,7 @@ function lnd_proxy_switch() {
                 return
             }
         } else {
-            let result = confirm(translate("enableproxy", {
+            const result = confirm(translate("enableproxy", {
                 "set_proxy_val": set_proxy_val
             }));
             if (result === true) {
@@ -763,7 +763,7 @@ function lnd_proxy_switch() {
             "services": filtered_nodelist
         });
         save_cc_settings("bitcoin", true);
-        let inline_pval = this_li.find(".inline_pval");
+        const inline_pval = this_li.find(".inline_pval");
         inline_pval.text(p_text);
         cancelpd();
     })
@@ -773,7 +773,7 @@ function test_pconnect(value, proxy, pw) {
     if (value.lnurl || value.proxy) {
         node_option_li(value, null, "test_connect", proxy, pw);
     } else {
-        let imp = value.imp;
+        const imp = value.imp;
         if (imp == "lnd") {
             test_lnd_option_li(value, null, "test_connect");
         } else if (imp == "eclair") {
@@ -786,14 +786,14 @@ function test_pconnect(value, proxy, pw) {
 
 function lnd_select_node() {
     $(document).on("click", "#ln_nodelist .optionwrap", function() {
-        let thisnode = $(this);
+        const thisnode = $(this);
         if (thisnode.hasClass("offline")) {
             playsound(glob_funk);
         }
-        let alloptions = $("#ln_nodelist .optionwrap");
+        const alloptions = $("#ln_nodelist .optionwrap");
         alloptions.not(thisnode).removeClass("show");
         thisnode.addClass("show");
-        let this_data = thisnode.data(),
+        const this_data = thisnode.data(),
             node_id = this_data.node_id,
             allrefs = $("#lnsettingsbox #ad_info_wrap .noln_ref"),
             refs = $("#lnsettingsbox #ad_info_wrap .noln_ref[data-id='" + node_id + "']");
@@ -805,12 +805,12 @@ function lnd_select_node() {
 
 function lnd_select_proxy() {
     $(document).on("click", "#lnd_proxy_select_input .optionwrap", function() {
-        let thisnode = $(this);
+        const thisnode = $(this);
         if (thisnode.hasClass("offline")) {
             playsound(glob_funk);
             return
         }
-        let this_data = thisnode.data(),
+        const this_data = thisnode.data(),
             p_id = this_data.pid,
             alloptions = $("#lnd_proxy_select_input .optionwrap"),
             p_inpt = $("#lnd_proxy_select_input > input");
@@ -822,7 +822,7 @@ function lnd_select_proxy() {
 
 function lnd_select_implementation() {
     $(document).on("click", "#implements .imp_select", function(e) {
-        let thisnode = $(this),
+        const thisnode = $(this),
             this_data = lndli().data(),
             lnd_proxy_list = this_data.proxies,
             has_proxies = ($.isEmptyObject(lnd_proxy_list)) ? false : true,
@@ -849,7 +849,7 @@ function lnd_select_implementation() {
 
 function toggle_invoices() {
     $(document).on("click", "#lnsettingsbox .invoice_memo", function() {
-        let thistrigger = $(this),
+        const thistrigger = $(this),
             drawer = thistrigger.next(".invoice_body");
         if (drawer.is(":visible")) {
             drawer.slideUp(200);
@@ -861,11 +861,11 @@ function toggle_invoices() {
 }
 
 function trigger_ln() {
-    let imp,
-        lnli = lndli(),
-        ln_dat = lnli.data(),
-        cp_dat = ln_dat.selected_proxy,
-        lnd_proxy_list = ln_dat.proxies,
+    const lnli = lndli(),
+        ln_dat = lnli.data();
+    let cp_dat = ln_dat.selected_proxy,
+        imp;
+    const lnd_proxy_list = ln_dat.proxies,
         lnd_pu_input = $("#lnd_proxy_url_input"),
         lnd_sb_input = $("#lnd_proxy_select_input > input"),
         lndpu_val = lnd_pu_input.val(),
@@ -874,13 +874,13 @@ function trigger_ln() {
         current_proxy = (p_arr) ? p_arr.url : false,
         no_change = (cp_dat && current_proxy == lndsb_val);
     if (no_change || !cp_dat) {} else {
-        let pid_select = lnd_sb_input.attr("data-pid"),
+        const pid_select = lnd_sb_input.attr("data-pid"),
             get_proxy = fetch_proxy(lnd_proxy_list, pid_select);
         if (get_proxy) {
             lnli.data({
                 "selected_proxy": get_proxy
             });
-            let cp_dat = get_proxy;
+            cp_dat = get_proxy;
             save_cc_settings("bitcoin", true);
         } else {
             notify(translate("proxynotfound"));
@@ -893,7 +893,7 @@ function trigger_ln() {
             playsound(glob_funk);
             return
         }
-        let fixed_url = complete_url(lndpu_val),
+        const fixed_url = complete_url(lndpu_val),
             is_default = ($.inArray(fixed_url, glob_proxy_list) === -1) ? false : true;
         if (is_default) {
             popnotify("error", translate("defaultproxy", {
@@ -901,7 +901,7 @@ function trigger_ln() {
             }));
             return
         }
-        let proxy_id = sha_sub(fixed_url, 6),
+        const proxy_id = sha_sub(fixed_url, 6),
             proxie_exists = fetch_proxy(lnd_proxy_list, proxy_id);
         if (proxie_exists) {
             topnotify(translate("proxyexists"));
@@ -915,7 +915,7 @@ function trigger_ln() {
             playsound(glob_funk);
             return
         }
-        let p_key = $("#proxy_pw_input").val(),
+        const p_key = $("#proxy_pw_input").val(),
             pwsha = (p_key) ? sha_sub(p_key, 10) : false;
         test_lnd_proxy(fixed_url, proxy_id, pwsha);
         if (no_change || !cp_dat) {} else {
@@ -924,27 +924,27 @@ function trigger_ln() {
         return
     }
     if ($("#adln_drawer").is(":visible")) {
-        let lnd_select = $("#lnd_select_input"),
-            lnd_imp = lnd_select.data(),
-            imp = lnd_imp.value;
+        const lnd_select = $("#lnd_select_input"),
+            lnd_imp = lnd_select.data();
+        imp = lnd_imp.value;
         if (!imp) {
             popnotify("error", translate("selectimplementation"));
             lnd_select.focus();
             return
         }
-        let proxy_switch = $("#lnurl_s .switchpanel"),
+        const proxy_switch = $("#lnurl_s .switchpanel"),
             use_lnurl = (proxy_switch.hasClass("true")) ? true : false;
         if (use_lnurl && cp_dat) {
             test_create_invoice(imp, cp_dat, null, null);
             return
         }
-        let lndcd = $("#lnd_credentials");
+        const lndcd = $("#lnd_credentials");
         if (lndcd.is(":visible")) {
             /*if (imp == "lnd" || imp == "eclair" || imp == "c-lightning") {
                 popnotify("error", imp + " requires a proxy server");
                 return
             }*/
-            let lnd_host_input = $("#lnd_credentials .cs_" + imp + ":visible .lnd_host"),
+            const lnd_host_input = $("#lnd_credentials .cs_" + imp + ":visible .lnd_host"),
                 lnd_key_input = $("#lnd_credentials .cs_" + imp + ":visible .invoice_macaroon"),
                 lnd_host_val = lnd_host_input.val(),
                 lnd_key_v = lnd_key_input.val(),
@@ -956,11 +956,11 @@ function trigger_ln() {
                 lnd_host_input.focus();
                 return
             }
-            let lnd_key_val = b64urldecode(lnd_key_v);
+            const lnd_key_val = b64urldecode(lnd_key_v);
             if (lnd_key_val) {
-                let key_length = lnd_key_val.length;
+                const key_length = lnd_key_val.length;
                 if (key_length < 5) {
-                    let key_name = (imp == "lnbits") ? "API key" : (imp == "eclair") ? "Password" : "Invoice Macaroon",
+                    const key_name = (imp == "lnbits") ? "API key" : (imp == "eclair") ? "Password" : "Invoice Macaroon",
                         impkeyname = imp + " " + key_name;
                     popnotify("error", translate("selectkeyname", {
                         "impkeyname": impkeyname
@@ -981,15 +981,15 @@ function trigger_ln() {
         lndcd.slideDown(200);
         proxy_switch.removeClass("true").addClass("false");
     } else {
-        let thisval = $("#ln_nodeselect").data();
+        const thisval = $("#ln_nodeselect").data();
         if (thisval) {
             if (thisval.live == "connection") {
-                let nodelist = ln_dat.services;
+                const nodelist = ln_dat.services;
                 if ($.isEmptyObject(nodelist)) {
                     canceldialog();
                     return
                 }
-                let selected_service = fetch_node(nodelist, thisval.value),
+                const selected_service = fetch_node(nodelist, thisval.value),
                     current_id = $("#select_ln_node").data("nodeid");
                 if (!selected_service || (current_id == selected_service.node_id)) {
                     canceldialog();
@@ -1015,7 +1015,7 @@ function trigger_ln() {
                 canceldialog();
                 return
             }
-            let spanel = $("#lnsettingsbox #ad_info_wrap .noln_ref:visible .switchpanel"),
+            const spanel = $("#lnsettingsbox #ad_info_wrap .noln_ref:visible .switchpanel"),
                 switch_val = (spanel.hasClass("true")) ? true : false,
                 proxy_message = (switch_val) ? "disabling" : "enabling";
             notify(translate("proxyoffline", {
@@ -1042,11 +1042,11 @@ function test_lnd_proxy(value, pid, pw) { // make test api call
         }
     }).done(function(e) {
         closeloader();
-        let api_result = br_result(e),
+        const api_result = br_result(e),
             result = api_result.result,
             error = result.error;
         if (error) {
-            let default_error = translate("unabletoconnect"),
+            const default_error = translate("unabletoconnect"),
                 message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error,
                 msg = (message == "no write acces") ? translate("folderpermissions") : message,
                 code = error.code;
@@ -1059,7 +1059,7 @@ function test_lnd_proxy(value, pid, pw) { // make test api call
             return
         }
         if (result.add) {
-            let lnli = lndli(),
+            const lnli = lndli(),
                 lnlidat = lnli.data(),
                 this_proxy_list = lnlidat.proxies,
                 p_obj = {
@@ -1092,7 +1092,7 @@ function test_lnd_proxy(value, pid, pw) { // make test api call
 }
 
 function add_custom_proxy(value) {
-    let proxy_node = $("#api_proxy"),
+    const proxy_node = $("#api_proxy"),
         proxy_node_data = proxy_node.data(),
         custom_proxies = proxy_node_data.custom_proxies;
     if ($.inArray(value, custom_proxies) !== -1 || $.inArray(value, glob_proxy_list) !== -1) {
@@ -1106,7 +1106,7 @@ function add_custom_proxy(value) {
 }
 
 function test_create_invoice(imp, proxydat, host, key) {
-    let is_onion = (host && host.indexOf(".onion") > 0) ? true : false,
+    const is_onion = (host && host.indexOf(".onion") > 0) ? true : false,
         p_arr = (proxydat) ? lnurl_deform(proxydat.proxy) : false,
         proxy = (p_arr) ? p_arr.url : (is_onion) ? d_proxy() : false,
         pw = (p_arr) ? p_arr.k : false,
@@ -1149,9 +1149,9 @@ function test_create_invoice(imp, proxydat, host, key) {
         }).done(function(e) {
             closeloader();
             if (e) {
-                let error = e.error;
+                const error = e.error;
                 if (error) {
-                    let message = (error.message) ? error.message : (typeof error == "string") ? error : default_error,
+                    const message = (error.message) ? error.message : (typeof error == "string") ? error : default_error,
                         code = error.code;
                     popnotify("error", message);
                     if (code && (code == 1 || code == 2)) {
@@ -1162,7 +1162,7 @@ function test_create_invoice(imp, proxydat, host, key) {
                     return
                 }
                 if (e.bolt11) {
-                    let ptype = e.type,
+                    const ptype = e.type,
                         lnurl = (ptype == "lnurl") ? true : false;
                     add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl);
                     return
@@ -1200,13 +1200,13 @@ function test_create_invoice(imp, proxydat, host, key) {
         }).done(function(e) {
             closeloader();
             if (e) {
-                let error = e.error;
+                const error = e.error;
                 if (error) {
-                    let message = (error.message) ? error.message : (typeof error == "string") ? error : default_error;
+                    const message = (error.message) ? error.message : (typeof error == "string") ? error : default_error;
                     popnotify("error", message);
                     return
                 }
-                let connected = e.r_hash;
+                const connected = e.r_hash;
                 if (connected) {
                     add_ln_imp(nodelist, node_id, "lnd", false, host, key, false);
                     return
@@ -1246,13 +1246,13 @@ function test_create_invoice(imp, proxydat, host, key) {
         }).done(function(e) {
             closeloader();
             if (e) {
-                let error = e.error;
+                const error = e.error;
                 if (error) {
-                    let message = (error.message) ? error.message : (typeof error == "string") ? error : default_error;
+                    const message = (error.message) ? error.message : (typeof error == "string") ? error : default_error;
                     popnotify("error", message);
                     return
                 }
-                let connected = e.payment_hash;
+                const connected = e.payment_hash;
                 if (connected) {
                     add_ln_imp(nodelist, node_id, "c-lightning", false, host, key, false);
                     return
@@ -1291,13 +1291,13 @@ function test_create_invoice(imp, proxydat, host, key) {
         }).done(function(e) {
             closeloader();
             if (e) {
-                let error = e.error;
+                const error = e.error;
                 if (error) {
-                    let message = (error.message) ? error.message : (typeof error == "string") ? error : default_error;
+                    const message = (error.message) ? error.message : (typeof error == "string") ? error : default_error;
                     popnotify("error", message);
                     return
                 }
-                let connected = e.paymentHash;
+                const connected = e.paymentHash;
                 if (connected) {
                     add_ln_imp(nodelist, node_id, "eclair", false, host, key, false);
                     return
@@ -1335,13 +1335,13 @@ function test_create_invoice(imp, proxydat, host, key) {
         }).done(function(e) {
             closeloader();
             if (e) {
-                let error = e.error;
+                const error = e.error;
                 if (error) {
-                    let message = (error.message) ? error.message : (typeof error == "string") ? error : default_error;
+                    const message = (error.message) ? error.message : (typeof error == "string") ? error : default_error;
                     popnotify("error", message);
                     return
                 }
-                let connected = e.payment_hash;
+                const connected = e.payment_hash;
                 if (connected) {
                     add_ln_imp(nodelist, node_id, "lnbits", false, host, key, false);
                     return
@@ -1361,7 +1361,7 @@ function test_create_invoice(imp, proxydat, host, key) {
 }
 
 function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
-    let has_proxy = (proxydat) ? true : false,
+    const has_proxy = (proxydat) ? true : false,
         p_arr = (has_proxy) ? lnurl_deform(proxydat.proxy) : false,
         proxy = (has_proxy) ? p_arr.url : false,
         proxy_id = (has_proxy) ? proxydat.id : false,
@@ -1378,24 +1378,24 @@ function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
             "lnurl": lnurl
         };
     nodelist.push(new_service);
-    let newdat = {
+    const newdat = {
         "selected": true,
         "selected_service": new_service,
         "services": nodelist
     };
     lnli.data(newdat).find(".switchpanel").removeClass("false").addClass("true");
     save_cc_settings("bitcoin", true);
-    let currency = "bitcoin",
+    const currency = "bitcoin",
         pobox = get_addresslist(currency).children("li");
     if (!pobox.length) {
         if (glob_body.hasClass("showstartpage")) {
-            let acountname = $("#eninput").val();
+            const acountname = $("#eninput").val();
             $("#accountsettings").data("selected", acountname).find("p").text(acountname);
             savesettings();
             openpage("?p=home", "home", "loadpage");
             glob_body.removeClass("showstartpage");
         }
-        let ad = {
+        const ad = {
             "currency": currency,
             "ccsymbol": "btc",
             "cmcid": 1,
@@ -1419,14 +1419,14 @@ function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
 
 function remove_rpc_proxy() {
     $(document).on("click", "#lnd_proxy_select_input .options .opt_icon_box .icon-bin", function() {
-        let thisnode = $(this),
+        const thisnode = $(this),
             thisoption = thisnode.closest(".optionwrap"),
             thisval = thisoption.data(),
             result = confirm(translate("confirmremovenode", {
                 "thisval": thisval.value
             }));
         if (result === true) {
-            let lnli = lndli(),
+            const lnli = lndli(),
                 ln_dat = lnli.data(),
                 pid = thisval.pid,
                 hosted_nodes = $.grep(ln_dat.services, function(value) {
@@ -1439,7 +1439,7 @@ function remove_rpc_proxy() {
                 }));
                 return
             }
-            let proxylist = ln_dat.proxies,
+            const proxylist = ln_dat.proxies,
                 selected_proxy = ln_dat.selected_proxy,
                 new_array = fetch_other_proxies(proxylist, pid),
                 empty_arr = ($.isEmptyObject(new_array)),
@@ -1469,14 +1469,14 @@ function remove_rpc_proxy() {
 
 function remove_lnd() {
     $(document).on("click", "#select_ln_node .options .opt_icon_box .icon-bin", function() {
-        let thisnode = $(this),
+        const thisnode = $(this),
             thisoption = thisnode.closest(".optionwrap"),
             thisval = thisoption.data(),
             result = confirm(translate("confirmremovenode", {
                 "thisval": thisval.name
             }));
         if (result === true) {
-            let lnli = lndli(),
+            const lnli = lndli(),
                 ln_dat = lnli.data(),
                 services = ln_dat.services,
                 new_array = fetch_other_nodes(services, thisval.node_id),
@@ -1484,7 +1484,7 @@ function remove_lnd() {
             thisoption.slideUp(500, function() {
                 $(this).remove();
             });
-            let services_array = (empty_arr) ? [] : new_array,
+            const services_array = (empty_arr) ? [] : new_array,
                 select_service = (empty_arr) ? false : new_array[0],
                 selected = (empty_arr) ? false : true;
             lnli.data({
@@ -1513,7 +1513,7 @@ function remove_lnd() {
 
 function unlock_proxy1() {
     $(document).on("click", "#lnd_proxy_select_input .options .opt_icon_box .icon-lock", function() {
-        let thisnode = $(this),
+        const thisnode = $(this),
             thisoption = thisnode.closest(".optionwrap"),
             thisval = thisoption.data();
         p_promt(thisval.pid);
@@ -1522,7 +1522,7 @@ function unlock_proxy1() {
 
 function unlock_proxy2() {
     $(document).on("click", "#select_ln_node .options .opt_icon_box .icon-lock", function() {
-        let thisnode = $(this),
+        const thisnode = $(this),
             thisoption = thisnode.closest(".optionwrap"),
             thisval = thisoption.data();
         p_promt(thisval.proxy_id);
@@ -1531,7 +1531,7 @@ function unlock_proxy2() {
 
 function unlock_proxy3() {
     $(document).on("click", "#lnsettingsbox #pw_unlock_info", function() {
-        let thisnode = $(this),
+        const thisnode = $(this),
             pid = thisnode.attr("data-pid");
         p_promt(pid);
     })
@@ -1539,14 +1539,14 @@ function unlock_proxy3() {
 
 function unlock_proxy4() {
     $(document).on("click", "#lnsettingsbox #pw_unlock_invoices", function() {
-        let thisnode = $(this),
+        const thisnode = $(this),
             pid = thisnode.attr("data-pid");
         p_promt(pid);
     })
 }
 
 function p_promt(pid) {
-    let lnli = lndli(),
+    const lnli = lndli(),
         ln_dat = lnli.data(),
         proxylist = ln_dat.proxies,
         this_proxy = fetch_proxy(proxylist, pid),
@@ -1555,7 +1555,7 @@ function p_promt(pid) {
         popnotify("error", translate("unknownproxy"));
         return
     }
-    let p_arr = lnurl_deform(this_proxy.proxy),
+    const p_arr = lnurl_deform(this_proxy.proxy),
         proxy = p_arr.url,
         password = prompt(translate("enterlnapikey", {
             "proxy": proxy
@@ -1571,26 +1571,26 @@ function p_promt(pid) {
             "x-api": pwsha
         }
     }).done(function(e) {
-        let api_result = br_result(e),
+        const api_result = br_result(e),
             result = api_result.result,
             error = result.error;
         if (error) {
-            let default_error = translate("unabletoconnect"),
+            const default_error = translate("unabletoconnect"),
                 message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
             popnotify("error", message);
             return
         }
         if (result == "pong") {
-            let other_proxies = fetch_other_proxies(proxylist, pid),
+            const other_proxies = fetch_other_proxies(proxylist, pid),
                 p_obj = {
                     "proxy": lnurl_form(proxy, pwsha),
                     "id": pid
                 };
-            let op = br_dobj(other_proxies),
+            const op = br_dobj(other_proxies),
                 selected_proxy = ln_dat.selected_proxy,
                 selected_id = selected_proxy.id;
             op.push(p_obj);
-            let is_current = (selected_id == pid) ? true : false;
+            const is_current = (selected_id == pid) ? true : false;
             lnli.data("proxies", op);
             if (is_current) {
                 lnli.data("selected_proxy", p_obj);
@@ -1620,12 +1620,12 @@ function lndli() {
 }
 
 function lnd_pick_proxy() {
-    let saved_proxy = s_lnd_proxy();
+    const saved_proxy = s_lnd_proxy();
     return (saved_proxy) ? saved_proxy.proxy : d_proxy();
 }
 
 function s_lnd_proxy() {
-    let lnli = lndli(),
+    const lnli = lndli(),
         ln_dat = lnli.data();
     return (ln_dat.selected_proxy) ? ln_dat.selected_proxy : false;
 }
@@ -1644,7 +1644,7 @@ function node_exists(nodelist, node_id) {
     if ($.isEmptyObject(nodelist)) {
         return false
     }
-    let lnd_exists = false;
+    const lnd_exists = false;
     $.each(nodelist, function(key, value) {
         if (value.node_id == node_id) {
             lnd_exists = true;
@@ -1678,7 +1678,7 @@ function fetch_other_proxies(list, pid) {
 }
 
 function lnurl_form(url, pw) {
-    let get = (pw) ? "#" + pw : "",
+    const get = (pw) ? "#" + pw : "",
         lnurl = url + get;
     return lnurl_encode("lnurl", lnurl);
 }
@@ -1689,7 +1689,7 @@ function lnurl_deform(lrl) {
         return false;
     }
     if (lrl.match("^lnurl")) {
-        let dec = lnurl_decode(lrl).replace(/\0/g, ""),
+        const dec = lnurl_decode(lrl).replace(/\0/g, ""),
             arr = dec.split("#"),
             k = (arr[1]) ? arr[1] : false;
         return {
@@ -1722,7 +1722,7 @@ function lnurl_decode_c(lnurl) {
 /* Tools */
 
 function template_dialog_temp(ddat) {
-    let validated_class = (ddat.validated) ? " validated" : "",
+    const validated_class = (ddat.validated) ? " validated" : "",
         dialog_object = [{
             "div": {
                 "id": ddat.id,
@@ -1751,7 +1751,7 @@ function template_dialog_temp(ddat) {
 }
 
 function test_lnurl_status(lnd) {
-    let imp = (lnd.imp) ? lnd.imp : null,
+    const imp = (lnd.imp) ? lnd.imp : null,
         host = (lnd.host) ? lnd.host : null,
         key = (lnd.key) ? lnd.key : null,
         node_id = (lnd.nid) ? lnd.nid : null,
@@ -1778,9 +1778,9 @@ function test_lnurl_status(lnd) {
             "x-api": pk
         }
     }).done(function(e) {
-        let error = e.error;
+        const error = e.error;
         if (error) {
-            let default_error = translate("unabletoconnect"),
+            const default_error = translate("unabletoconnect"),
                 message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
             if (request.isrequest) {
                 if (helper.lnd_only) {
@@ -1792,9 +1792,9 @@ function test_lnurl_status(lnd) {
                 $("#rq_errlog").append("<span class='rq_err'>" + message + "</span>");
             }
         }
-        let mdat = e.mdat;
+        const mdat = e.mdat;
         if (mdat) {
-            let connected = mdat.connected;
+            const connected = mdat.connected;
             if (connected) {
                 helper.lnd_status = true;
                 if (node_id) {
@@ -1805,7 +1805,7 @@ function test_lnurl_status(lnd) {
         proceed_pf();
         return
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        let error_object = (errorThrown) ? errorThrown : jqXHR,
+        const error_object = (errorThrown) ? errorThrown : jqXHR,
             error_data = get_api_error_data(error_object);
         proceed_pf(error_data);
     });
@@ -1824,7 +1824,7 @@ function check_lnd_status(lnd) {
             }
         }
     }).done(function(e) {
-        let data = br_result(e).result;
+        const data = br_result(e).result;
         if (data) {
             if (data.invoices) {
                 helper.lnd_status = true;
@@ -1836,7 +1836,7 @@ function check_lnd_status(lnd) {
         proceed_pf();
         return
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        let error_object = (errorThrown) ? errorThrown : jqXHR,
+        const error_object = (errorThrown) ? errorThrown : jqXHR,
             error_data = get_api_error_data(error_object);
         proceed_pf(error_data);
     });
@@ -1856,7 +1856,7 @@ function check_c_lightning_status(lnd) {
             }
         }
     }).done(function(e) {
-        let data = br_result(e).result;
+        const data = br_result(e).result;
         if (data) {
             if (data.invoices) {
                 helper.lnd_status = true;
@@ -1868,7 +1868,7 @@ function check_c_lightning_status(lnd) {
         proceed_pf();
         return
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        let error_object = (errorThrown) ? errorThrown : jqXHR,
+        const error_object = (errorThrown) ? errorThrown : jqXHR,
             error_data = get_api_error_data(error_object);
         proceed_pf(error_data);
     });
@@ -1889,10 +1889,10 @@ function check_eclair_status(lnd) {
             }
         }
     }).done(function(e) {
-        let data = br_result(e).result;
+        const data = br_result(e).result;
         if (data) {
             if (data.error) {
-                let error_data = get_api_error_data(data.error);
+                const error_data = get_api_error_data(data.error);
                 proceed_pf(error_data);
                 return
             }
@@ -1904,7 +1904,7 @@ function check_eclair_status(lnd) {
         proceed_pf();
         return
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        let error_object = (errorThrown) ? errorThrown : jqXHR,
+        const error_object = (errorThrown) ? errorThrown : jqXHR,
             error_data = get_api_error_data(error_object);
         proceed_pf(error_data);
     });
@@ -1923,7 +1923,7 @@ function check_lnbits_status(lnd) {
             }
         }
     }).done(function(e) {
-        let data = br_result(e).result;
+        const data = br_result(e).result;
         if (data) {
             if (data.balance > -1) {
                 helper.lnd_status = true;
@@ -1935,7 +1935,7 @@ function check_lnbits_status(lnd) {
         proceed_pf();
         return
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        let error_object = (errorThrown) ? errorThrown : jqXHR,
+        const error_object = (errorThrown) ? errorThrown : jqXHR,
             error_data = get_api_error_data(error_object);
         proceed_pf(error_data);
     });
@@ -1944,7 +1944,7 @@ function check_lnbits_status(lnd) {
 function set_ln_fields(imp, rest, mac) {
     if (imp && rest && mac) {
         if (imp == "lnd" || imp == "c-lightning") {
-            let lnd_host_input = $("#lnd_credentials .cs_" + imp + " .lnd_host"),
+            const lnd_host_input = $("#lnd_credentials .cs_" + imp + " .lnd_host"),
                 lnd_key_input = $("#lnd_credentials .cs_" + imp + " .invoice_macaroon");
             if (lnd_host_input.length && lnd_key_input.length) {
                 lnd_host_input.val(rest);

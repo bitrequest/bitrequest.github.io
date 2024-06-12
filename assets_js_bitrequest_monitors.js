@@ -53,7 +53,7 @@ $(document).ready(function() {
 
 function updaterequeststatestrigger() {
     $(document).on("click", ".requestsbttn .self", function() {
-        let scanning = is_scanning();
+        const scanning = is_scanning();
         if (scanning) {
             glob_block_scan = glob_block_scan + 1;
             playsound(glob_funk);
@@ -64,7 +64,7 @@ function updaterequeststatestrigger() {
 }
 
 function updaterequeststatesrefresh() {
-    let gets = geturlparameters();
+    const gets = geturlparameters();
     if (gets.xss) {
         return
     }
@@ -91,7 +91,7 @@ function trigger_requeststates(trigger) {
         glob_proxy_attempts = {},
         glob_tx_list = [], // reset transaction index
         glob_statuspush = [];
-    let active_requests = $("#requestlist .rqli").filter(function() {
+    const active_requests = $("#requestlist .rqli").filter(function() {
         return $(this).data("pending") != "unknown";
     });
     active_requests.addClass("open");
@@ -99,16 +99,16 @@ function trigger_requeststates(trigger) {
 }
 
 function get_requeststates(trigger, active_requests) {
-    let d_lay = (trigger == "delay") ? true : false;
-    let request_data = $("#requestlist li.rqli.open").first().data();
+    const d_lay = (trigger == "delay") ? true : false;
+    const request_data = $("#requestlist li.rqli.open").first().data();
     if (request_data) {
         if (trigger == "loop") {
             getinputs(request_data, d_lay);
             return
         }
-        let statuscache = br_get_session("txstatus", true);
+        const statuscache = br_get_session("txstatus", true);
         if (statuscache) {
-            let cachetime = now() - statuscache.timestamp,
+            const cachetime = now() - statuscache.timestamp,
                 requeststates = statuscache.requeststates;
             if (cachetime > 30000 || $.isEmptyObject(requeststates)) { //check if cached crypto rates are expired (check every 30 seconds on page refresh or when opening request page)
                 active_requests.addClass("scan");
@@ -119,17 +119,17 @@ function get_requeststates(trigger, active_requests) {
             if (trigger === true) {} else { // only update on page refresh
                 // parse cached transaction data
                 $.each(requeststates, function(i, value) {
-                    let thislist = $("#" + value.requestid),
+                    const thislist = $("#" + value.requestid),
                         thisdata = thislist.data();
                     if (thisdata) {
-                        let pendingstatus = thisdata.pending;
+                        const pendingstatus = thisdata.pending;
                         if (pendingstatus == "scanning" || pendingstatus == "polling") {
-                            let statuspanel = thislist.find(".pmetastatus"),
+                            const statuspanel = thislist.find(".pmetastatus"),
                                 transactionlist = thislist.find(".transactionlist");
                             statuspanel.text(value.status);
                             transactionlist.html("");
                             $.each(value.transactions, function(data, value) {
-                                let tx_listitem = append_tx_li(value, false);
+                                const tx_listitem = append_tx_li(value, false);
                                 if (tx_listitem) {
                                     transactionlist.append(tx_listitem.data(value));
                                 }
@@ -146,7 +146,7 @@ function get_requeststates(trigger, active_requests) {
         return
     }
     if (!$.isEmptyObject(glob_statuspush)) {
-        let statusobject = {
+        const statusobject = {
             "timestamp": now(),
             "requeststates": glob_statuspush
         };
@@ -157,7 +157,7 @@ function get_requeststates(trigger, active_requests) {
 
 function getinputs(rd, dl) {
     if (dl) {
-        let delay = 10000,
+        const delay = 10000,
             mtlc = br_get_session("monitor_timer"),
             monitor_timer = (mtlc) ? parseInt(mtlc) : delay,
             timelapsed = now() - monitor_timer;
@@ -168,7 +168,7 @@ function getinputs(rd, dl) {
         }
         br_set_session("monitor_timer", now());
     }
-    let thislist = $("#" + rd.requestid),
+    const thislist = $("#" + rd.requestid),
         iserc20 = rd.erc20,
         api_info = check_api(rd.payment, iserc20),
         selected = api_info.data;
@@ -186,9 +186,9 @@ function clearscan() {
 }
 
 function check_api(payment, iserc20) {
-    let api_data = cs_node(payment, "apis", true);
+    const api_data = cs_node(payment, "apis", true);
     if (api_data) {
-        let selected = api_data.selected;
+        const selected = api_data.selected;
         if (selected.api === true) {
             return {
                 "api": true,
@@ -375,9 +375,9 @@ function handle_api_fails_list(rd, error, api_data, all_proxys) {
         api_callback(requestid);
         return
     }
-    let api_name = api_data.name,
-        nextapi = get_next_api(rd.payment, api_name, requestid),
-        nextrpc;
+    const api_name = api_data.name,
+        nextapi = get_next_api(rd.payment, api_name, requestid);
+    let nextrpc;
     if (nextapi === false) {
         const api_url = api_data.url;
         nextrpc = get_next_rpc(rd.payment, api_url, requestid);
@@ -425,7 +425,7 @@ function api_eror_msg(apisrc, error) {
         console.log("no error data");
         return
     }
-    let error_dat = (error) ? error : {
+    const error_dat = (error) ? error : {
             "errormessage": "errormessage",
             "errorcode": null
         },
@@ -588,27 +588,33 @@ function get_rpc_inputs(rd, api_data) {
 
 // RPC error handling
 
-function handle_rpc_fails_list(rd, error, rpc_data, all_proxys) {
+function handle_rpc_fails_list(rd, error, api_data, all_proxys) {
+    const error_data = get_api_error_data(error),
+        requestid = rd.requestid;
+    if (!api_data) {
+        api_eror_msg(false, error_data);
+        api_callback(requestid);
+        return
+    }
     const api_url = rpc_data.url,
-        requestid = rd.requestid,
-        nextrpc = get_next_rpc(rd.payment, api_url, requestid),
-        api_name = rpc_data.name,
-        nextapi = get_next_api(rd.payment, api_name, requestid);
+        nextrpc = get_next_rpc(rd.payment, api_url, requestid);
+    let nextapi;
     if (nextrpc === false) {
-        if (nextapi === false) {
+        const api_name = api_data.name;
+        nextapi = get_next_api(rd.payment, api_name, requestid);
+        if (nextapi === false) { // try next proxy
             if (all_proxys === true) { // try next proxy
                 const next_proxy = get_next_proxy();
                 if (next_proxy) {
-                    get_rpc_inputs(rd, rpc_data);
-                    return
+                    get_api_inputs(rd, api_data);
+                    return;
                 }
             }
             if (all_proxys === "scanl2") { // goo to next request when scanning for L2's
                 api_callback(rd.requestid);
                 return
             }
-            const rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown",
-                error_data = get_api_error_data(error);
+            const rpc_id = (api_name) ? api_name : (api_url) ? api_url : "unknown";
             api_eror_msg(rpc_id, error_data);
             return
         }
@@ -765,7 +771,7 @@ function compareamounts(rd) {
                     } else {
                         confirmed_cc = false;
                     }
-                    let confbar = thisnode.find(".confbar");
+                    const confbar = thisnode.find(".confbar");
                     if (confbar.length > 0) {
                         confbar.each(function(i) {
                             animate_confbar($(this), i);

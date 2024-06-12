@@ -64,7 +64,7 @@ $(document).ready(function() {
 // ** Lightning RPC **
 
 function lightning_fetch(rd, api_data, rdo) {
-    let api_name = api_data.name,
+    const api_name = api_data.name,
         thislist = rdo.thislist,
         transactionlist = rdo.transactionlist,
         statuspanel = rdo.statuspanel,
@@ -94,9 +94,9 @@ function lightning_fetch(rd, api_data, rdo) {
                 "x-api": pk
             }
         }).done(function(r) {
-            let error = r.error;
+            const error = r.error;
             if (error) {
-                let message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
+                const message = (error) ? (error.message) ? error.message : (typeof error == "string") ? error : default_error : default_error;
                 tx_api_fail(thislist, statuspanel);
                 handle_api_fails_list(rd, {
                     "error": message,
@@ -104,7 +104,7 @@ function lightning_fetch(rd, api_data, rdo) {
                 }, false);
                 status_field.text(" " + message);
             } else {
-                let inv_status = r.status;
+                const inv_status = r.status;
                 status_field.text(" " + inv_status);
                 if (r.pid == lnd.pid) {
                     if (r.bolt11) {
@@ -124,9 +124,9 @@ function lightning_fetch(rd, api_data, rdo) {
                                 "x-api": pk
                             }
                         }).done(function(e) {
-                            let inv_error = e.error;
+                            const inv_error = e.error;
                             if (inv_error) {
-                                let err_message = (inv_error.message) ? inv_error.message : (typeof inv_error == "string") ? inv_error : default_error;
+                                const err_message = (inv_error.message) ? inv_error.message : (typeof inv_error == "string") ? inv_error : default_error;
                                 tx_api_fail(thislist, statuspanel);
                                 handle_api_fails_list(rd, {
                                     "error": err_message,
@@ -134,14 +134,14 @@ function lightning_fetch(rd, api_data, rdo) {
                                 }, false);
                                 status_field.text(" " + err_message);
                             } else {
-                                let status = e.status;
+                                const status = e.status;
                                 if (status) {
                                     lnd.invoice = e;
                                     status_field.text(" " + status);
                                     rd.lightning = lnd; // push invoice
                                     const txd = lnd_tx_data(e);
                                     if (txd.ccval) {
-                                        let tx_listitem = append_tx_li(txd, rd.requesttype, true);
+                                        const tx_listitem = append_tx_li(txd, rd.requesttype, true);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
                                             tx_count(statuspanel, txd.confirmations);
@@ -186,7 +186,7 @@ function lightning_fetch(rd, api_data, rdo) {
                     }, false);
                 }
             }
-            let version = r.version;
+            const version = r.version;
             if (version != glob_proxy_version) {
                 proxy_alert(version);
             }
@@ -203,7 +203,7 @@ function lightning_fetch(rd, api_data, rdo) {
             return "exit";
         }
     } else if (rdo.pending == "polling" && lnhash) {
-        let invoice = lnd.invoice;
+        const invoice = lnd.invoice;
         if (invoice) {
             if (transactionhash) {
                 $.ajax({
@@ -222,14 +222,14 @@ function lightning_fetch(rd, api_data, rdo) {
                         "x-api": pk
                     }
                 }).done(function(e) {
-                    let status = e.status;
+                    const status = e.status;
                     if (status) {
                         lnd.invoice = e;
                         status_field.text(" " + status);
                         rd.lightning = lnd; // push invoice
                         const txd = lnd_tx_data(e);
                         if (txd.ccval) {
-                            let tx_listitem = append_tx_li(txd, rd.requesttype, true);
+                            const tx_listitem = append_tx_li(txd, rd.requesttype, true);
                             if (tx_listitem) {
                                 transactionlist.append(tx_listitem.data(txd));
                                 tx_count(statuspanel, txd.confirmations);
@@ -301,7 +301,7 @@ function monero_fetch(rd, api_data, rdo) {
                 }
             }
         }).done(function(e) {
-            let data = br_result(e).result;
+            const data = br_result(e).result;
             if (data.start_height > -1) { // success!
                 const pl = {
                     "address": account,
@@ -325,10 +325,10 @@ function monero_fetch(rd, api_data, rdo) {
                         transactions = data.transactions,
                         source = rdo.source;
                     if (transactions) {
+                        const sortlist = sort_by_date(xmr_scan_data, transactions);
                         let counter = 0,
                             match = false,
                             txdat = false;
-                        const sortlist = sort_by_date(xmr_scan_data, transactions);
                         $.each(sortlist, function(dat, value) {
                             const txd = xmr_scan_data(value, rdo.setconfirmations, "xmr", data.blockchain_height);
                             if (txd) {
@@ -385,7 +385,7 @@ function monero_fetch(rd, api_data, rdo) {
 // ** MyMonero API **
 
 function blockchair_xmr_poll(rd, api_data, rdo) {
-    let vk = rd.viewkey;
+    const vk = rd.viewkey;
     if (vk) {
         const txhash = rd.txhash,
             xmr_ia = rd.xmr_ia,
@@ -400,10 +400,10 @@ function blockchair_xmr_poll(rd, api_data, rdo) {
                 "method": "GET"
             }
         }).done(function(e) {
+            const data = br_result(e).result;
             let counter = 0,
                 match = false,
-                txdat = false,
-                data = br_result(e).result;
+                txdat = false;
             if (data) {
                 const dat = data.data;
                 if (dat) {
@@ -592,7 +592,7 @@ function ethplorer_fetch(rd, api_data, rdo) {
                     "method": "GET"
                 }
             }).done(function(e) {
-                let data = br_result(e).result;
+                const data = br_result(e).result;
                 if (data) {
                     const error = data.error;
                     if (error) {
@@ -669,7 +669,7 @@ function arbiscan_fetch(rd, api_data, rdo) {
             api_proxy(eth_payload).done(function(e) {
                 const data = br_result(e).result;
                 if (data) {
-                    let result = data.result;
+                    const result = data.result;
                     if (result && br_issar(result)) {
                         const sortlist = sort_by_date(arbiscan_scan_data_eth, result);
                         $.each(sortlist, function(dat, value) {
@@ -843,7 +843,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                     tx_api_scan_fail(rd, rdo, api_data, data.error);
                     return
                 }
-                let context = data.context;
+                const context = data.context;
                 if (context.error) {
                     tx_api_scan_fail(rd, rdo, api_data, data.context);
                     return
@@ -1025,7 +1025,7 @@ function nimiq_fetch(rd, api_data, rdo) {
                 "method": "GET"
             }
         }).done(function(e) {
-            let data = br_result(e).result;
+            const data = br_result(e).result;
             if (data) {
                 if ($.isEmptyObject(data)) {
                     api_callback(requestid, source);
@@ -1578,7 +1578,7 @@ function eth_params(set_url, cachetime, method, params) {
 // ** Nano RPC **
 
 function nano_rpc(rd, api_data, rdo) {
-    let transactionlist = rdo.transactionlist;
+    const transactionlist = rdo.transactionlist;
     let counter = 0,
         match = false,
         txdat = false;
@@ -1603,11 +1603,11 @@ function nano_rpc(rd, api_data, rdo) {
                 })
             }
         }).done(function(e) {
-            let data = br_result(e).result;
+            const data = br_result(e).result;
             if (data) {
-                let nano_data = data.data;
+                const nano_data = data.data;
                 if (nano_data) {
-                    let pending_array_node = (nano_data[0]) ? nano_data[0].pending : [],
+                    const pending_array_node = (nano_data[0]) ? nano_data[0].pending : [],
                         pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
                         history_array_node = (nano_data[1]) ? nano_data[1].history : [],
                         history_array = $.isEmptyObject(history_array_node) ? [] : history_array_node,
@@ -1620,7 +1620,7 @@ function nano_rpc(rd, api_data, rdo) {
                         if ((txd.transactiontime > rdo.request_timestamp) && txd.ccval && (value.type === undefined || value.type == "receive")) {
                             match = true, txdat = txd;
                             if (rdo.source == "list") {
-                                let tx_listitem = append_tx_li(txd, rd.requesttype);
+                                const tx_listitem = append_tx_li(txd, rd.requesttype);
                                 if (tx_listitem) {
                                     transactionlist.append(tx_listitem.data(txd));
                                     counter++;
@@ -1658,7 +1658,7 @@ function nano_rpc(rd, api_data, rdo) {
                 })
             }
         }).done(function(e) {
-            let data = br_result(e).result;
+            const data = br_result(e).result;
             if (data) {
                 if (data.error) {
                     tx_api_scan_fail(rd, rdo, api_data, data.error);
@@ -1667,7 +1667,7 @@ function nano_rpc(rd, api_data, rdo) {
                 const txd = nano_scan_data(data, rdo.setconfirmations, rd.currencysymbol, rd.txhash);
                 if (txd.ccval) {
                     match = true, txdat = txd, counter = 1;
-                    let tx_listitem = append_tx_li(txd, rd.requesttype);
+                    const tx_listitem = append_tx_li(txd, rd.requesttype);
                     if (tx_listitem) {
                         transactionlist.append(tx_listitem.data(txd));
                     }
@@ -1689,7 +1689,7 @@ function nano_rpc(rd, api_data, rdo) {
 
 function sort_by_date(func, list, rdo, rd) {
     return $(list).sort(function(a, b) {
-        let txd1 = func(a, "sort"),
+        const txd1 = func(a, "sort"),
             txd2 = func(b, "sort");
         return txd2 - txd1; // descending order
     });
@@ -1714,8 +1714,8 @@ function default_tx_data() {
 function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) { // poll blockchain.info websocket data
     if (data) {
         try {
-            let outputs = data.out,
-                outputsum;
+            const outputs = data.out;
+            let outputsum;
             if (outputs) {
                 outputsum = 0;
                 $.each(outputs, function(dat, value) {
@@ -1724,7 +1724,7 @@ function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) {
                     }
                 });
             }
-            let transactiontime = (data.time) ? data.time * 1000 : null,
+            const transactiontime = (data.time) ? data.time * 1000 : null,
                 transactiontime_utc = (transactiontime) ? transactiontime + glob_timezone : null;
             return {
                 "ccval": (outputsum) ? outputsum / 100000000 : null,
@@ -1747,8 +1747,8 @@ function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) {
 function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) { // poll mempool.space websocket data
     if (data) {
         try {
-            let outputs = data.vout,
-                outputsum;
+            const outputs = data.vout;
+            let outputsum;
             if (outputs) {
                 outputsum = 0;
                 $.each(outputs, function(dat, value) {
@@ -1757,7 +1757,7 @@ function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) { // po
                     }
                 });
             }
-            let transactiontime = (data.firstSeen) ? data.firstSeen * 1000 : null,
+            const transactiontime = (data.firstSeen) ? data.firstSeen * 1000 : null,
                 transactiontime_utc = (transactiontime) ? transactiontime + glob_timezone : null;
             return {
                 "ccval": (outputsum) ? outputsum / 100000000 : null,
@@ -1778,14 +1778,14 @@ function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) { // po
 function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, latestblock) { // scan/poll mempool.space api data
     if (data) {
         try {
-            let status = data.status,
+            const status = data.status,
                 transactiontime = (status.block_time) ? status.block_time * 1000 : now(),
                 transactiontime_utc = (transactiontime) ? transactiontime + glob_timezone : null;
             if (setconfirmations == "sort") {
                 return transactiontime_utc;
             }
-            let outputs = data.vout,
-                outputsum;
+            const outputs = data.vout;
+            let outputsum;
             if (outputs) {
                 outputsum = 0;
                 $.each(outputs, function(dat, value) {
@@ -1794,7 +1794,7 @@ function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, lates
                     }
                 });
             }
-            let block_height = status.block_height,
+            const block_height = status.block_height,
                 confs = (status.confirmed) ? setconfirmations : null,
                 conf = (block_height && block_height > 10 && latestblock) ? (latestblock - block_height) + 1 : confs;
             return {
@@ -1818,8 +1818,8 @@ function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, lates
 function dogechain_ws_data(data, setconfirmations, ccsymbol, address) { // poll blockchain.info websocket data
     if (data) {
         try {
-            let outputs = data.outputs,
-                outputsum;
+            const outputs = data.outputs;
+            let outputsum;
             if (outputs) {
                 outputsum = 0;
                 $.each(outputs, function(dat, value) {
@@ -1828,7 +1828,7 @@ function dogechain_ws_data(data, setconfirmations, ccsymbol, address) { // poll 
                     }
                 });
             }
-            let transactiontime = (data.time) ? data.time * 1000 : null,
+            const transactiontime = (data.time) ? data.time * 1000 : null,
                 transactiontime_utc = (transactiontime) ? transactiontime + glob_timezone : null;
             return {
                 "ccval": (outputsum) ? outputsum / 100000000 : null,
@@ -1851,12 +1851,12 @@ function dogechain_ws_data(data, setconfirmations, ccsymbol, address) { // poll 
 function blockcypher_scan_data(data, setconfirmations, ccsymbol) { // scan
     if (data) {
         try {
-            let datekey = (data.confirmed) ? data.confirmed : (data.received) ? data.received : false,
+            const datekey = (data.confirmed) ? data.confirmed : (data.received) ? data.received : false,
                 transactiontime = to_ts(datekey);
             if (setconfirmations == "sort") {
                 return transactiontime;
             }
-            let is_eth = (ccsymbol == "eth"),
+            const is_eth = (ccsymbol == "eth"),
                 ccval = (data.value) ? (is_eth === true) ? parseFloat((data.value / Math.pow(10, 18)).toFixed(8)) : data.value / 100000000 : null,
                 txhash = data.tx_hash,
                 txhash_mod = (txhash) ? (is_eth === true) ? (txhash.match("^0x")) ? txhash : "0x" + txhash : txhash : null,
@@ -1880,18 +1880,19 @@ function blockcypher_scan_data(data, setconfirmations, ccsymbol) { // scan
 function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) { // poll
     if (data) {
         try {
-            let is_eth = (ccsymbol == "eth"),
+            const is_eth = (ccsymbol == "eth"),
                 transactiontime = to_ts(data.received),
                 outputs = data.outputs;
+            let outputsum;
             if (outputs) {
                 outputsum = 0;
                 $.each(outputs, function(dat, value) {
-                    let satval = value.value;
+                    const satval = value.value;
                     output = (str_match(address, value.addresses[0].slice(3)) === true) ? Math.abs(satval) : 0;
                     outputsum += parseFloat(output) || 0; // sum of outputs
                 });
             }
-            let ccval = (outputs) ? (is_eth === true) ? parseFloat((outputsum / Math.pow(10, 18)).toFixed(8)) : outputsum / 100000000 : null,
+            const ccval = (outputs) ? (is_eth === true) ? parseFloat((outputsum / Math.pow(10, 18)).toFixed(8)) : outputsum / 100000000 : null,
                 txhash = data.hash,
                 txhash_mod = (txhash) ? (is_eth === true) ? (txhash.match("^0x")) ? txhash : "0x" + txhash : txhash : null,
                 conf = (data.confirmations) ? data.confirmations : null;
@@ -1916,23 +1917,24 @@ function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) { // p
 function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestblock) { // scan/poll
     if (data) {
         try {
-            let transaction = data.transaction,
+            const transaction = data.transaction,
                 transactiontime = (transaction) ? returntimestamp(transaction.time).getTime() : null;
             if (setconfirmations == "sort") {
                 return transactiontime;
             }
-            let block_id = transaction.block_id,
+            const block_id = transaction.block_id,
                 conf = (block_id && block_id > 10 && latestblock) ? (latestblock - block_id) + 1 : null,
                 outputs = data.outputs;
+            let outputsum;
             if (outputs) {
                 outputsum = 0;
                 $.each(outputs, function(dat, val) {
-                    let satval = val.value,
+                    const satval = val.value,
                         output = (val.recipient == address) ? Math.abs(satval) : 0;
                     outputsum += parseFloat(output) || 0; // sum of outputs
                 });
             }
-            let ccval = (outputs) ? outputsum / 100000000 : null,
+            const ccval = (outputs) ? outputsum / 100000000 : null,
                 txhash = (transaction) ? transaction.hash : null;
             return {
                 "ccval": ccval,
@@ -1953,11 +1955,11 @@ function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestb
 function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan/poll
     if (data) {
         try {
-            let transactiontime = (data.time) ? returntimestamp(data.time).getTime() : null;
+            const transactiontime = (data.time) ? returntimestamp(data.time).getTime() : null;
             if (setconfirmations == "sort") {
                 return transactiontime;
             }
-            let ethvalue = (data.value) ? parseFloat((data.value / Math.pow(10, 18)).toFixed(8)) : null,
+            const ethvalue = (data.value) ? parseFloat((data.value / Math.pow(10, 18)).toFixed(8)) : null,
                 txhash = (data.transaction_hash) ? data.transaction_hash : null,
                 conf = (data.block_id && latestblock) ? latestblock - data.block_id : null,
                 recipient = (data.recipient) ? data.recipient : null;
@@ -1981,11 +1983,11 @@ function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latestblock)
 function blockchair_erc20_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
     if (data) {
         try {
-            let transactiontime = (data.time) ? returntimestamp(data.time).getTime() : null;
+            const transactiontime = (data.time) ? returntimestamp(data.time).getTime() : null;
             if (setconfirmations == "sort") {
                 return transactiontime;
             }
-            let erc20value = (data.value) ? parseFloat((data.value / Math.pow(10, data.token_decimals)).toFixed(8)) : null,
+            const erc20value = (data.value) ? parseFloat((data.value / Math.pow(10, data.token_decimals)).toFixed(8)) : null,
                 txhash = (data.transaction_hash) ? data.transaction_hash : null,
                 conf = (data.block_id && latestblock) ? latestblock - data.block_id : null,
                 recipient = (data.recipient) ? data.recipient : null,
@@ -2011,10 +2013,10 @@ function blockchair_erc20_scan_data(data, setconfirmations, ccsymbol, latestbloc
 function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latestblock) { // poll
     if (data) {
         try {
-            let transaction = data.transaction,
+            const transaction = data.transaction,
                 tokendata = data.layer_2.erc_20[0];
             if (transaction && tokendata) {
-                let transactiontime = (transaction.time) ? returntimestamp(transaction.time).getTime() : null,
+                const transactiontime = (transaction.time) ? returntimestamp(transaction.time).getTime() : null,
                     erc20value = (tokendata.value) ? parseFloat((tokendata.value / Math.pow(10, tokendata.token_decimals)).toFixed(8)) : null,
                     txhash = (transaction.hash) ? transaction.hash : null,
                     conf = (transaction.block_id && latestblock) ? latestblock - transaction.block_id : null;
@@ -2040,12 +2042,12 @@ function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latestbloc
 function arbiscan_scan_data(data, setconfirmations, ccsymbol) { // scan
     if (data) {
         try {
-            let transactiontime = (data.timeStamp) ? data.timeStamp * 1000 : null,
+            const transactiontime = (data.timeStamp) ? data.timeStamp * 1000 : null,
                 transactiontime_utc = (transactiontime) ? transactiontime + glob_timezone : null;
             if (setconfirmations == "sort") {
                 return transactiontime_utc;
             }
-            let erc20value = (data.value) ? parseFloat((data.value / Math.pow(10, data.tokenDecimal)).toFixed(8)) : null,
+            const erc20value = (data.value) ? parseFloat((data.value / Math.pow(10, data.tokenDecimal)).toFixed(8)) : null,
                 txhash = (data.hash) ? data.hash : null;
             return {
                 "ccval": erc20value,
@@ -2066,12 +2068,12 @@ function arbiscan_scan_data(data, setconfirmations, ccsymbol) { // scan
 function arbiscan_scan_data_eth(data, setconfirmations) { // scan
     if (data) {
         try {
-            let transactiontime = (data.timeStamp) ? data.timeStamp * 1000 : null,
+            const transactiontime = (data.timeStamp) ? data.timeStamp * 1000 : null,
                 transactiontime_utc = (transactiontime) ? transactiontime + glob_timezone : null;
             if (setconfirmations == "sort") {
                 return transactiontime_utc;
             }
-            let ethvalue = (data.value) ? parseFloat((data.value / Math.pow(10, 18)).toFixed(8)) : null,
+            const ethvalue = (data.value) ? parseFloat((data.value / Math.pow(10, 18)).toFixed(8)) : null,
                 txhash = (data.hash) ? data.hash : null;
             return {
                 "ccval": ethvalue,
@@ -2094,12 +2096,12 @@ function arbiscan_scan_data_eth(data, setconfirmations) { // scan
 function ethplorer_scan_data(data, setconfirmations, ccsymbol) { // scan
     if (data) {
         try {
-            let transactiontime = (data.timestamp) ? data.timestamp * 1000 : null,
+            const transactiontime = (data.timestamp) ? data.timestamp * 1000 : null,
                 transactiontime_utc = (transactiontime) ? transactiontime + glob_timezone : null;
             if (setconfirmations == "sort") {
                 return transactiontime_utc;
             }
-            let erc20value = (data.value) ? parseFloat((data.value / Math.pow(10, data.tokenInfo.decimals)).toFixed(8)) : null,
+            const erc20value = (data.value) ? parseFloat((data.value / Math.pow(10, data.tokenInfo.decimals)).toFixed(8)) : null,
                 txhash = (data.transactionHash) ? data.transactionHash : null;
             return {
                 "ccval": erc20value,
@@ -2120,7 +2122,7 @@ function ethplorer_scan_data(data, setconfirmations, ccsymbol) { // scan
 function ethplorer_poll_data(data, setconfirmations, ccsymbol) { // poll
     if (data) {
         try {
-            let transactiontime = (data.timestamp) ? (data.timestamp * 1000) + glob_timezone : null,
+            const transactiontime = (data.timestamp) ? (data.timestamp * 1000) + glob_timezone : null,
                 txhash = (data.hash) ? data.hash : (data.transactionHash) ? data.transactionHash : null,
                 conf = (data.confirmations) ? data.confirmations : null,
                 operations = (data.operations) ? data.operations[0] : null,
@@ -2149,12 +2151,12 @@ function ethplorer_poll_data(data, setconfirmations, ccsymbol) { // poll
 function nano_scan_data(data, setconfirmations, ccsymbol, txhash) { // scan/poll
     if (data) {
         try {
-            let transactiontime = (data.local_timestamp) ? (data.local_timestamp * 1000) + glob_timezone : null,
+            const transactiontime = (data.local_timestamp) ? (data.local_timestamp * 1000) + glob_timezone : null,
                 transactiontime_utc = (transactiontime) ? transactiontime : now_utc();
             if (setconfirmations == "sort") {
                 return transactiontime_utc;
             }
-            let ccval = (data.amount) ? parseFloat((data.amount / Math.pow(10, 30)).toFixed(8)) : null, // convert Mnano to nano
+            const ccval = (data.amount) ? parseFloat((data.amount / Math.pow(10, 30)).toFixed(8)) : null, // convert Mnano to nano
                 tx_hash = (data.hash) ? data.hash : (txhash) ? txhash : null;
             return {
                 "ccval": ccval,
@@ -2175,17 +2177,18 @@ function nano_scan_data(data, setconfirmations, ccsymbol, txhash) { // scan/poll
 function bitcoin_rpc_data(data, setconfirmations, ccsymbol, address) { // poll
     if (data) {
         try {
-            let transactiontime = (data.time) ? (data.time * 1000) + glob_timezone : null,
+            const transactiontime = (data.time) ? (data.time * 1000) + glob_timezone : null,
                 outputs = data.vout;
+            let outputsum;
             if (outputs) {
                 outputsum = 0;
                 $.each(outputs, function(dat, value) {
-                    let satval = value.value * 100000000,
+                    const satval = value.value * 100000000,
                         output = (value.scriptPubKey.addresses[0] == address) ? Math.abs(satval) : 0;
                     outputsum += parseFloat(output) || 0; // sum of outputs
                 });
             }
-            let ccval = (outputs) ? outputsum / 100000000 : null,
+            const ccval = (outputs) ? outputsum / 100000000 : null,
                 txhash = (data.txid) ? data.txid : null,
                 conf = (data.confirmations) ? data.confirmations : null;
             return {
@@ -2207,7 +2210,7 @@ function bitcoin_rpc_data(data, setconfirmations, ccsymbol, address) { // poll
 function infura_eth_poll_data(data, setconfirmations, ccsymbol) { // poll
     if (data) {
         try {
-            let transactiontime = (data.timestamp) ? (data.timestamp * 1000) + glob_timezone : null,
+            const transactiontime = (data.timestamp) ? (data.timestamp * 1000) + glob_timezone : null,
                 ethvalue = (data.value) ? parseFloat((data.value / Math.pow(10, 18)).toFixed(8)) : null,
                 txhash = (data.hash) ? data.hash : null,
                 conf = (data.confirmations) ? data.confirmations : null;
@@ -2230,7 +2233,7 @@ function infura_eth_poll_data(data, setconfirmations, ccsymbol) { // poll
 function infura_erc20_poll_data(data, setconfirmations, ccsymbol) { // poll
     if (data) {
         try {
-            let tokenValue = (data.value) ? data.value : null,
+            const tokenValue = (data.value) ? data.value : null,
                 decimals = (data.decimals) ? data.decimals : null,
                 ccval = (decimals) ? parseFloat((tokenValue / Math.pow(10, decimals)).toFixed(8)) : null,
                 transactiontime = (data.timestamp) ? (data.timestamp * 1000) + glob_timezone : null,
@@ -2255,7 +2258,7 @@ function infura_erc20_poll_data(data, setconfirmations, ccsymbol) { // poll
 function infura_block_data(data, setconfirmations, ccsymbol, ts) {
     if (data) {
         try {
-            let ccval = (data.value) ? parseFloat((Number(data.value) / Math.pow(10, 18)).toFixed(8)) : null,
+            const ccval = (data.value) ? parseFloat((Number(data.value) / Math.pow(10, 18)).toFixed(8)) : null,
                 transactiontime = (ts) ? (Number(ts) * 1000) + glob_timezone : null;
             return {
                 "ccval": ccval,
@@ -2276,11 +2279,11 @@ function infura_block_data(data, setconfirmations, ccsymbol, ts) {
 function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
     if (data) {
         try {
-            let transactiontime = to_ts(data.timestamp);
+            const transactiontime = to_ts(data.timestamp);
             if (setconfirmations == "sort") {
                 return transactiontime;
             }
-            let recieved = data.total_received,
+            const recieved = data.total_received,
                 height = (data.height) ? data.height : latestblock,
                 blocks = latestblock - height,
                 conf = (blocks < 0) ? 0 : blocks,
@@ -2305,17 +2308,18 @@ function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
 function blockchair_xmr_data(data, setconfirmations) {
     if (data) {
         try {
-            let transactiontime = (data.tx_timestamp) ? (data.tx_timestamp * 1000) + glob_timezone : null,
-                outputs = data.outputs,
-                outputsum = 0;
+            const transactiontime = (data.tx_timestamp) ? (data.tx_timestamp * 1000) + glob_timezone : null,
+                outputs = data.outputs;
+            let outputsum;
             if (outputs) {
+                outputsum = 0;
                 $.each(outputs, function(dat, value) {
                     if (value.match) {
                         outputsum += value.amount; // sum of outputs
                     }
                 });
             }
-            let payment_id = (data.payment_id) ? data.payment_id : false;
+            const payment_id = (data.payment_id) ? data.payment_id : false;
             return {
                 "ccval": outputsum / 1000000000000,
                 "transactiontime": transactiontime,
@@ -2336,11 +2340,11 @@ function blockchair_xmr_data(data, setconfirmations) {
 function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash) { // scan
     if (data) {
         try {
-            let transactiontime = (data.timestamp) ? (data.timestamp * 1000) + glob_timezone : now_utc();
+            const transactiontime = (data.timestamp) ? (data.timestamp * 1000) + glob_timezone : now_utc();
             if (setconfirmations == "sort") {
                 return transactiontime;
             }
-            let confval = (confirmed) ? false :
+            const confval = (confirmed) ? false :
                 (data.confirmations) ? data.confirmations :
                 (latestblock && data.height) ? latestblock - data.height : 0,
                 conf = (confval < 0) ? 0 : confval,
@@ -2365,22 +2369,23 @@ function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash)
 function kaspa_scan_data(data, thisaddress, setconfirmations, current_bluescore) { // scan
     if (data) {
         try {
-            let transactiontime = data.block_time + glob_timezone;
+            const transactiontime = data.block_time + glob_timezone;
             if (setconfirmations == "sort") {
                 return transactiontime;
             }
-            let outputs = data.outputs,
+            const outputs = data.outputs,
                 block_bluescore = data.accepting_block_blue_score,
                 confblocks = (current_bluescore) ? current_bluescore - block_bluescore : null;
+            let outputsum;
             if (outputs) {
                 outputsum = 0;
                 $.each(outputs, function(dat, val) {
-                    let amount = val.amount,
+                    const amount = val.amount,
                         output = (val.script_public_key_address == thisaddress) ? Math.abs(amount) : 0;
                     outputsum += parseFloat(output) || 0; // sum of outputs
                 });
             }
-            let ccval = (outputs) ? outputsum / 100000000 : null,
+            const ccval = (outputs) ? outputsum / 100000000 : null,
                 conf = (data.is_accepted) ? (confblocks > -1) ? confblocks : 0 : 0;
             return {
                 "ccval": ccval,
@@ -2401,16 +2406,17 @@ function kaspa_scan_data(data, thisaddress, setconfirmations, current_bluescore)
 function kaspa_poll_fyi_data(data, thisaddress, setconfirmations) { // scan
     if (data) {
         try {
-            let outputs = data.outputs;
+            const outputs = data.outputs;
+            let outputsum;
             if (outputs) {
                 outputsum = 0;
                 $.each(outputs, function(dat, val) {
-                    let amount = val.amount,
+                    const amount = val.amount,
                         output = (val.scriptPublicKeyAddress == thisaddress) ? Math.abs(amount) : 0;
                     outputsum += parseFloat(output) || 0; // sum of outputs
                 });
             }
-            let ccval = (outputs) ? outputsum / 100000000 : null,
+            const ccval = (outputs) ? outputsum / 100000000 : null,
                 conf = (data.isAccepted) ? (data.confirmations) ? data.confirmations : 0 : 0;
             return {
                 "ccval": ccval,
@@ -2431,16 +2437,17 @@ function kaspa_poll_fyi_data(data, thisaddress, setconfirmations) { // scan
 function kaspa_ws_data(data, thisaddress, set_confirmations) { // scan
     if (data) {
         try {
-            let outputs = data.outputs;
+            const outputs = data.outputs;
+            let outputsum;
             if (outputs) {
                 outputsum = 0;
                 $.each(outputs, function(dat, val) {
-                    let amount = val[1],
+                    const amount = val[1],
                         output = (val[0] == thisaddress) ? Math.abs(amount) : 0;
                     outputsum += parseFloat(output) || 0; // sum of outputs
                 });
             }
-            let ccval = (outputs) ? outputsum / 100000000 : null,
+            const ccval = (outputs) ? outputsum / 100000000 : null,
                 txhash = q_obj(data, "verboseData.transactionId");
             return {
                 "ccval": ccval,
@@ -2461,16 +2468,17 @@ function kaspa_ws_data(data, thisaddress, set_confirmations) { // scan
 function kaspa_fyi_ws_data(data, thisaddress) { // scan
     if (data) {
         try {
-            let outputs = data.outputs;
+            const outputs = data.outputs;
+            let outputsum;
             if (outputs) {
                 outputsum = 0;
                 $.each(outputs, function(dat, val) {
-                    let amount = val.amount,
+                    const amount = val.amount,
                         output = (q_obj(val, "verboseData.scriptPublicKeyAddress") == thisaddress) ? Math.abs(amount) : 0;
                     outputsum += parseFloat(output) || 0; // sum of outputs
                 });
             }
-            let ccval = (outputs) ? outputsum / 100000000 : null,
+            const ccval = (outputs) ? outputsum / 100000000 : null,
                 txhash = q_obj(data, "verboseData.transactionId");
             return {
                 "ccval": ccval,
@@ -2491,7 +2499,7 @@ function kaspa_fyi_ws_data(data, thisaddress) { // scan
 // lightning
 
 function lnd_tx_data(data) { // poll
-    let txtime = (data.txtime) ? data.txtime : data.timestamp,
+    const txtime = (data.txtime) ? data.txtime : data.timestamp,
         amount = parseFloat(data.amount / 100000000000);
     return {
         "ccval": Math.abs(amount),
@@ -2507,7 +2515,7 @@ function lnd_tx_data(data) { // poll
 // ** Format request data **
 
 function tx_data(rd) {
-    let thislist = $("#" + rd.requestid),
+    const thislist = $("#" + rd.requestid),
         requestdate = (rd.inout == "incoming") ? rd.timestamp : rd.requestdate,
         request_timestamp = requestdate - 30000, // 30 seconds compensation for unexpected results
         getconfirmations = rd.set_confirmations,

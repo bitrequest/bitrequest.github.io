@@ -42,7 +42,7 @@ function is_hex(str) {
 
 function hextobin(hex) {
     if (hex.length % 2 !== 0) throw "Hex string has invalid length!";
-    let res = uint_8Array(hex.length / 2);
+    const res = uint_8Array(hex.length / 2);
     for (let i = 0; i < hex.length / 2; ++i) {
         res[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
     }
@@ -50,7 +50,7 @@ function hextobin(hex) {
 }
 
 function bintohex(bin) {
-    let out = [];
+    const out = [];
     for (let i = 0; i < bin.length; ++i) {
         out.push(("0" + bin[i].toString(16)).slice(-2));
     }
@@ -102,18 +102,18 @@ function normalizestring(str) {
 }
 
 function mnemonicToBinaryString(mnemonic) {
-    let mm = splitwords(mnemonic);
+    const mm = splitwords(mnemonic);
     if (mm.length == 0 || mm.length % 3 > 0) {
         return null;
     }
-    let idx = [];
+    const idx = [];
     for (let i = 0; i < mm.length; i++) {
-        let word = mm[i],
+        const word = mm[i],
             wordIndex = wordlist.indexOf(word);
         if (wordIndex == -1) {
             return null;
         }
-        let binaryIndex = zfill(wordIndex.toString(2), 11);
+        const binaryIndex = zfill(wordIndex.toString(2), 11);
         idx.push(binaryIndex);
     }
     return idx.join("");
@@ -132,7 +132,7 @@ function binaryStringToWordArray(binary) {
 }
 
 function byteArrayToWordArray(data) {
-    let a = [];
+    const a = [];
     for (let i = 0; i < data.length / 4; i++) {
         v = 0;
         v += data[i * 4 + 0] << 8 * 3;
@@ -164,7 +164,7 @@ function hexStringToBinaryString(hexString) {
 // https://gist.github.com/diafygi/90a3e80ca1c2793220e5/
 
 function b58enc(enc, encode) {
-    let bytestring = (encode = "hex") ? hextobin(enc) : buffer(enc);
+    const bytestring = (encode = "hex") ? hextobin(enc) : buffer(enc);
     return b58enc_uint_array(bytestring);
 }
 
@@ -188,7 +188,7 @@ function b58enc_uint_array(u) {
 }
 
 function b58dec(dec, decode) {
-    let buffer = b58dec_uint_array(dec);
+    const buffer = b58dec_uint_array(dec);
     return (decode == "hex") ? buf2hex(buffer) : unbuffer(buffer, "utf-8");
 }
 
@@ -214,12 +214,12 @@ function b58dec_uint_array(dec) {
 
 // base58check
 function b58check_encode(payload) {
-    let full_bytes = payload + hmacsha(hmacsha(payload, "sha256", "hex"), "sha256", "hex").slice(0, 8);
+    const full_bytes = payload + hmacsha(hmacsha(payload, "sha256", "hex"), "sha256", "hex").slice(0, 8);
     return b58enc(full_bytes, "hex");
 }
 
 function b58check_decode(val) {
-    let full_bytes = b58dec(val, "hex"),
+    const full_bytes = b58dec(val, "hex"),
         bytes = full_bytes.substring(0, full_bytes.length - 8);
     return bytes;
 }
@@ -227,7 +227,7 @@ function b58check_decode(val) {
 //LNurl
 
 function toWords(bytes) {
-    let res = convert(bytes, 8, 5, true);
+    const res = convert(bytes, 8, 5, true);
     if (Array.isArray(res)) {
         return res
     }
@@ -235,7 +235,7 @@ function toWords(bytes) {
 }
 
 function fromWords(bytes) {
-    let res = convert(bytes, 5, 8, true);
+    const res = convert(bytes, 5, 8, true);
     if (Array.isArray(res)) {
         return res
     }
@@ -273,13 +273,13 @@ function convert(data, inBits, outBits, pad) {
 //hashing
 
 function hmac_bits(message, key, encode) {
-    let enc_msg = (encode == "hex") ? hextobits(message) : message,
+    const enc_msg = (encode == "hex") ? hextobits(message) : message,
         hmac = new sjcl.misc.hmac(key, sjcl.hash.sha512);
     return frombits(hmac.encrypt(enc_msg));
 }
 
 function hmacsha(key, hash, encode) {
-    let enc_key = (encode == "hex") ? hextobits(key) : key;
+    const enc_key = (encode == "hex") ? hextobits(key) : key;
     return frombits(hmacsha_bits(enc_key, hash));
 }
 
@@ -288,7 +288,7 @@ function hmacsha_bits(key, hash) {
 }
 
 function privkey_wif(versionbytes, hexkey, comp) {
-    let compressed = (comp) ? "01" : "";
+    const compressed = (comp) ? "01" : "";
     return b58check_encode(versionbytes + hexkey + compressed);
 }
 
@@ -305,7 +305,7 @@ function pub_to_address(versionbytes, pub) {
 }
 
 function pub_to_eth_address(pub) {
-    let xp_pub = expand_pub(pub),
+    const xp_pub = expand_pub(pub),
         keccak = "0x" + keccak_256(hextobin(xp_pub.slice(2))),
         addr = "0x" + keccak.slice(26);
     return toChecksumAddress(addr);
@@ -340,7 +340,7 @@ function toChecksumAddress(e) {
 // Bech 32
 
 function pub_to_address_bech32(hrp, pubkey) {
-    let step1 = hash160(pubkey),
+    const step1 = hash160(pubkey),
         step2 = hexStringToBinaryString(step1),
         step3 = step2.match(/.{1,5}/g),
         step4 = bech32_dec_array(step3);
@@ -348,7 +348,7 @@ function pub_to_address_bech32(hrp, pubkey) {
 }
 
 function bech32_dec_array(bitarr) {
-    let hexstr = [0];
+    const hexstr = [0];
     $.each(bitarr, function(i, bits) {
         hexstr.push(parseInt(bits, 2));
     });
@@ -372,8 +372,8 @@ function polymod(values) {
 }
 
 function hrpExpand(hrp) {
-    let ret = [],
-        p;
+    const ret = [];
+    let p;
     for (p = 0; p < hrp.length; ++p) {
         ret.push(hrp.charCodeAt(p) >> 5);
     }
@@ -389,7 +389,7 @@ function verifyChecksum(hrp, data) {
 }
 
 function createChecksum(hrp, data) {
-    let values = hrpExpand(hrp).concat(data).concat([0, 0, 0, 0, 0, 0]),
+    const values = hrpExpand(hrp).concat(data).concat([0, 0, 0, 0, 0, 0]),
         mod = polymod(values) ^ 1,
         ret = [];
     for (let p = 0; p < 6; ++p) {
@@ -426,14 +426,14 @@ function bech32_decode(bechString) { // unused
         return null;
     }
     bechString = bechString.toLowerCase();
-    let pos = bechString.lastIndexOf("1");
+    const pos = bechString.lastIndexOf("1");
     if (pos < 1 || pos + 7 > bechString.length || bechString.length > 90) {
         return null;
     }
-    let hrp = bechString.substring(0, pos),
+    const hrp = bechString.substring(0, pos),
         data = [];
     for (p = pos + 1; p < bechString.length; ++p) {
-        let d = b32ab.indexOf(bechString.charAt(p));
+        const d = b32ab.indexOf(bechString.charAt(p));
         if (d === -1) {
             return null;
         }
@@ -466,12 +466,12 @@ function lnurl_decodeb32(lnurl) {
     if (has_lower && has_upper) {
         return null;
     }
-    let lnurlow = lnurl.toLowerCase(),
+    const lnurlow = lnurl.toLowerCase(),
         pos = lnurlow.lastIndexOf("1"),
         hrp = lnurlow.substring(0, pos),
         data = [];
     for (p = pos + 1; p < lnurlow.length; ++p) {
-        let d = b32ab.indexOf(lnurlow.charAt(p));
+        const d = b32ab.indexOf(lnurlow.charAt(p));
         if (d === -1) {
             return null;
         }
@@ -487,7 +487,7 @@ function lnurl_decodeb32(lnurl) {
 }
 
 function aes_enc(params, keyString) {
-    let buffer = uint_8Array(16),
+    const buffer = uint_8Array(16),
         iv = byteArrayToWordArray(crypto.getRandomValues(buffer)),
         key = sjcl.codec.base64.toBits(keyString),
         cipher = new sjcl.cipher.aes(key),
@@ -499,14 +499,14 @@ function aes_enc(params, keyString) {
 }
 
 function aes_dec(content, keyst) {
-    let bitArray = sjcl.codec.base64.toBits(content),
+    const bitArray = sjcl.codec.base64.toBits(content),
         bitArrayCopy = bitArray.slice(0),
         ivdec = bitArrayCopy.slice(0, 4),
         encryptedBitArray = bitArray.slice(4),
         key = sjcl.codec.base64.toBits(keyst),
         cipher = new sjcl.cipher.aes(key);
     try {
-        let data = sjcl.mode.gcm.decrypt(cipher, encryptedBitArray, ivdec, {}, 128);
+        const data = sjcl.mode.gcm.decrypt(cipher, encryptedBitArray, ivdec, {}, 128);
         return sjcl.codec.utf8String.fromBits(data);
     } catch (err) {
         console.log(err.message);
@@ -525,13 +525,13 @@ function hex_to_number(val) {
 // CashAddr
 
 function pub_to_cashaddr(legacy) {
-    let c_addr = bch_cashaddr("bitcoincash", "P2PKH", legacy);
+    const c_addr = bch_cashaddr("bitcoincash", "P2PKH", legacy);
     return c_addr.split(":")[1];
 }
 
 function bch_legacy(cadr) {
     try {
-        let version = 0,
+        const version = 0,
             dec = cashaddr.decode(cadr),
             bytes = dec.hash,
             bytesarr = Array.from(bytes),
@@ -546,7 +546,7 @@ function bch_legacy(cadr) {
 
 function bch_cashaddr(prefix, type, legacy) {
     try {
-        let lbytes = b58dec_uint_array(legacy),
+        const lbytes = b58dec_uint_array(legacy),
             lbslice = lbytes.slice(1, 21);
         return cashaddr.encode(prefix, type, lbslice);
     } catch (e) {

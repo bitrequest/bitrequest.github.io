@@ -69,7 +69,7 @@ $(document).ready(function() {
 // Confirmations
 function edit_confirmations() {
     $(document).on("click", ".cc_settinglist li[data-id='confirmations'] .edit_trigger", function() {
-        let thistrigger = $(this),
+        const thistrigger = $(this),
             thiscurrency = thistrigger.attr("data-currency"),
             thisli = thistrigger.closest("li"),
             confsrc = thisli.data("selected"),
@@ -114,7 +114,7 @@ function edit_confirmations() {
                 "elements": ddat
             });
         popdialog(content, "triggersubmit");
-        let currentli = $("#conf_formbox ul.conf_options li").filter(function() {
+        const currentli = $("#conf_formbox ul.conf_options li").filter(function() {
             return $(this).find("span").text() == confsrc;
         });
         currentli.find(".radio").removeClass("icon-radio-unchecked").addClass("icon-radio-checked2");
@@ -124,7 +124,7 @@ function edit_confirmations() {
 function submit_confirmations() {
     $(document).on("click", "#conf_formbox input.submit", function(e) {
         e.preventDefault();
-        let thistrigger = $(this),
+        const thistrigger = $(this),
             thiscurrency = thistrigger.attr("data-currency"),
             thisvalue = thistrigger.prev("input").val(),
             csnode = cs_node(thiscurrency, "confirmations");
@@ -140,7 +140,7 @@ function submit_confirmations() {
 // Reuse addresses
 function reuse_address_trigger() {
     $(document).on("mouseup", ".cc_settinglist li[data-id='Reuse address'] .switchpanel.custom", function() {
-        let this_switch = $(this),
+        const this_switch = $(this),
             thislist = this_switch.closest("li"),
             thisliwrap = this_switch.closest(".liwrap"),
             thiscurrency = thisliwrap.attr("data-currency"),
@@ -148,7 +148,7 @@ function reuse_address_trigger() {
         if (this_switch.hasClass("true")) {
             let xresult = true;
             if (warning) {
-                let xresult = confirm(translate("reusewarningalert", {
+                xresult = confirm(translate("reusewarningalert", {
                     "thiscurrency": thiscurrency
                 }));
             }
@@ -159,7 +159,7 @@ function reuse_address_trigger() {
             }
             return
         }
-        let result = confirm(translate("reusealert", {
+        const result = confirm(translate("reusealert", {
             "thiscurrency": thiscurrency
         }));
         if (result === true) {
@@ -172,7 +172,7 @@ function reuse_address_trigger() {
 
 function cc_switch() {
     $(document).on("mouseup", ".cc_settinglist li .switchpanel.bool", function() {
-        let thistrigger = $(this),
+        const thistrigger = $(this),
             thislist = thistrigger.closest("li"),
             thisliwrap = thistrigger.closest(".liwrap"),
             thiscurrency = thisliwrap.attr("data-currency"),
@@ -185,11 +185,11 @@ function cc_switch() {
 // Choose blockexplorer
 function edit_blockexplorer() {
     $(document).on("click", ".cc_settinglist li[data-id='blockexplorers']", function() {
-        let current_li = $(this),
+        const current_li = $(this),
             this_data = current_li.data(),
             options = this_data.options;
         if (options) {
-            let thiscurrency = current_li.children(".liwrap").attr("data-currency"),
+            const thiscurrency = current_li.children(".liwrap").attr("data-currency"),
                 selected = this_data.selected,
                 choosebe = translate("chooseblockexplorer"),
                 ddat = [{
@@ -240,7 +240,7 @@ function edit_blockexplorer() {
                     "elements": ddat
                 });
             popdialog(content, "triggersubmit");
-            let optionlist = $("#be_formbox").find(".options");
+            const optionlist = $("#be_formbox").find(".options");
             $.each(options, function(i, value) {
                 optionlist.append("<span data-pe='none'>" + value + "</span>");
             });
@@ -251,7 +251,7 @@ function edit_blockexplorer() {
 function submit_blockexplorer() {
     $(document).on("click", "#be_formbox input.submit", function(e) {
         e.preventDefault();
-        let thiscurrency = $(this).attr("data-currency"),
+        const thiscurrency = $(this).attr("data-currency"),
             thisvalue = $("#be_formbox").find("input:first").val(),
             csnode = cs_node(thiscurrency, "blockexplorers");
         if (csnode) {
@@ -266,19 +266,19 @@ function submit_blockexplorer() {
 // RPC node / Websockets
 function edit_rpcnode() {
     $(document).on("click", ".cc_settinglist li[data-id='apis'], .cc_settinglist li[data-id='websockets']", function() {
-        let current_li = $(this),
+        const current_li = $(this),
             this_data = current_li.data(),
             options = this_data.options,
             api_list = this_data.apis;
         if (exists(options) === false && exists(api_list) === false) {
             return
         }
-        let thiscurrency = current_li.children(".liwrap").attr("data-currency");
+        const thiscurrency = current_li.children(".liwrap").attr("data-currency");
         glob_ap_id = current_li.attr("data-id"),
             glob_test_rpc_call = this_data.rpc_test_command,
             glob_is_erc20t = ($("#" + thiscurrency + "_settings").attr("data-erc20") == "true"),
             glob_is_btc = (is_btchain(thiscurrency) === true);
-        let h_hint = (glob_is_btc) ? "mempool.space" : (thiscurrency == "ethereum" || glob_is_erc20t === true) ? "Infura" : "",
+        const h_hint = (glob_is_btc) ? "mempool.space" : (thiscurrency == "ethereum" || glob_is_erc20t === true) ? "Infura" : "",
             header_text = (glob_ap_id === "websockets") ? translate("addwebsocket", {
                 "h_hint": h_hint
             }) : translate("addapi", {
@@ -316,7 +316,7 @@ function edit_rpcnode() {
                 </div>\
             </div>";
         popdialog(content, "triggersubmit");
-        let optionlist = $("#settingsbox").find(".options");
+        const optionlist = $("#settingsbox").find(".options");
         $.each(api_list, function(key, value) {
             if (value.display === true) {
                 let selected = (value.url == selected_title || value.name == selected_title);
@@ -358,7 +358,7 @@ function get_rpc_placeholder(currency) {
 function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
     if (glob_ap_id == "apis") {
         if (thiscurrency == "ethereum" || glob_is_erc20t === true) {
-            let txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
+            const txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
                 payload = {
                     "jsonrpc": "2.0",
                     "id": 2,
@@ -375,7 +375,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
                     }
                 }
             }).done(function(e) {
-                let data = br_result(e),
+                const data = br_result(e),
                     rhash = q_obj(data, "result.result.hash");
                 if (rhash == txhash) {
                     rpc_option_li(optionlist, true, key, value, selected, true);
@@ -387,12 +387,12 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
             });
             return
         }
-        let rpcurl = get_rpc_url({
+        const rpcurl = get_rpc_url({
             "url": value.url,
             "username": value.username,
             "password": value.password
         });
-        let pload = (glob_is_btc) ? { // mempoolspace API
+        const pload = (glob_is_btc) ? { // mempoolspace API
             "api_url": value.url + "/api/v1/difficulty-adjustment",
             "proxy": false,
             "params": {
@@ -413,7 +413,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
             }
         }
         api_proxy(pload).done(function(e) {
-            let data = br_result(e),
+            const data = br_result(e),
                 result = data.result,
                 live = ($.isEmptyObject(result)) ? false : (thiscurrency == "nano") ? (result.network == "live") ? true : false : true;
             rpc_option_li(optionlist, live, key, value, selected, true);
@@ -436,7 +436,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
             });
         }
         if (thiscurrency == "nano") {
-            let naddr = "nano_1hedzz9g3oq1pw49hf9u9koqgwwg8in49o73xwrnfu9j43qk533r7hhuratx"; // random xno address for testing
+            const naddr = "nano_1hedzz9g3oq1pw49hf9u9koqgwwg8in49o73xwrnfu9j43qk533r7hhuratx"; // random xno address for testing
             ping_event = JSON.stringify({
                 "action": "subscribe",
                 "topic": "confirmation",
@@ -448,7 +448,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
             });
         }
         if (thiscurrency == "ethereum" || glob_is_erc20t === true) {
-            let if_id = get_infura_apikey(provider);
+            const if_id = get_infura_apikey(provider);
             provider = provider + if_id,
                 ping_event = JSON.stringify({
                     "jsonrpc": "2.0",
@@ -486,7 +486,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
 }
 
 function rpc_option_li(optionlist, live, key, value, selected, checked) {
-    let liveclass = (live === true) ? " live" : " offline",
+    const liveclass = (live === true) ? " live" : " offline",
         selected_class = (selected === true) ? " rpc_selected" : "",
         icon = (live === true) ? "connection" : "wifi-off",
         datakey = (checked === true) ? " data-key='" + key + "'" : "",
@@ -499,18 +499,18 @@ function rpc_option_li(optionlist, live, key, value, selected, checked) {
 
 function test_rpcnode() {
     $(document).on("click", "#settingsbox .selectbox .options > div", function(e) {
-        let target = $(e.target);
+        const target = $(e.target);
         if (target.hasClass("icon-bin")) {
             return // prevent selection when deleting
         }
-        let thisoption = $(this),
+        const thisoption = $(this),
             thisdata = thisoption.data();
         if (thisoption.hasClass("offline")) {
             playsound(glob_funk);
             topnotify(translate("unabletoconnect"));
             return
         }
-        let settingsbox = $("#settingsbox"),
+        const settingsbox = $("#settingsbox"),
             rpc_main_input = settingsbox.find("#rpc_main_input");
         settingsbox.find("#rpc_main_input").removeData().data(thisdata);
         settingsbox.find(".options .optionwrap").removeClass("rpc_selected");
@@ -521,15 +521,15 @@ function test_rpcnode() {
 function submit_rpcnode() {
     $(document).on("click", "#settingsbox input.submit", function(e) {
         e.preventDefault();
-        let settingsbox = $("#settingsbox"),
+        const settingsbox = $("#settingsbox"),
             thiscurrency = $(this).attr("data-currency"),
             rpc_main_input = settingsbox.find("#rpc_main_input"),
             setvalue = rpc_main_input.data(),
             rpc_input_box = settingsbox.find("#rpc_input_box");
         if (rpc_input_box.length) {
-            let rpc_url_input_val = rpc_input_box.find("#rpc_url_input").val();
+            const rpc_url_input_val = rpc_input_box.find("#rpc_url_input").val();
             if (rpc_url_input_val.length > 5) {
-                let optionsbox = settingsbox.find(".options"),
+                const optionsbox = settingsbox.find(".options"),
                     duplicates = optionsbox.find("span[data-value='" + rpc_url_input_val + "']"),
                     indexed = (duplicates.length) ? true : false;
                 if (indexed || rpc_url_input_val.indexOf("mempool.space") > -1 ||
@@ -537,7 +537,7 @@ function submit_rpcnode() {
                     popnotify("error", translate("nodealreadyadded"));
                     return
                 }
-                let rpc_username_input_val = rpc_input_box.find("#rpc_username_input").val(),
+                const rpc_username_input_val = rpc_input_box.find("#rpc_username_input").val(),
                     rpc_password_input_val = rpc_input_box.find("#rpc_password_input").val(),
                     rpc_data = {
                         "url": rpc_url_input_val,
@@ -554,10 +554,10 @@ function submit_rpcnode() {
 }
 
 function test_rpc(rpc_input_box, rpc_data, currency) {
-    let cant_connect = translate("unabletoconnect");
+    const cant_connect = translate("unabletoconnect");
     if (glob_ap_id == "apis") {
         if (currency == "ethereum" || glob_is_erc20t === true) {
-            let txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
+            const txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
                 payload = {
                     "jsonrpc": "2.0",
                     "id": 2,
@@ -574,7 +574,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                     }
                 }
             }).done(function(e) {
-                let data = br_result(e),
+                const data = br_result(e),
                     rhash = q_obj(data, "result.result.hash");
                 if (rhash == txhash) {
                     rpc_input_box.addClass("live").removeClass("offline");
@@ -589,7 +589,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
             });
             return
         }
-        let rpcurl = get_rpc_url(rpc_data),
+        const rpcurl = get_rpc_url(rpc_data),
             testadress = (currency == "bitcoin") ? glob_expected_bech32 :
             (currency == "litecoin") ? glob_expected_ltc_address :
             (currency == "dogecoin") ? glob_expected_doge_address :
@@ -615,14 +615,14 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
                 }
             }
         api_proxy(pload).done(function(e) {
-            let data = br_result(e),
+            const data = br_result(e),
                 rpc_result = data.result;
-            if (rpc_result && br_issar(rpc_result)) {
-                let error = data.error || rpc_result.error;
+            if (rpc_result && (br_issar(rpc_result) || rpc_result.rpc_version)) {
+                const error = data.error || rpc_result.error;
                 if (error) {
                     rpc_input_box.addClass("offline").removeClass("live");
                     topnotify(cant_connect);
-                    let error_message = (error.error_message) ? error.error_message : error.message;
+                    const error_message = (error.error_message) ? error.error_message : error.message;
                     if (error_message) {
                         popnotify("error", error_message);
                     }
@@ -699,7 +699,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
 }
 
 function pass_rpc_submit(thiscurrency, thisvalue, newnode) {
-    let rpc_setting_li = cs_node(thiscurrency, glob_ap_id),
+    const rpc_setting_li = cs_node(thiscurrency, glob_ap_id),
         options = rpc_setting_li.data("options"),
         node_name = (thisvalue.name) ? thisvalue.name : thisvalue.url;
     rpc_setting_li.data("selected", thisvalue).find("p").html(node_name);
@@ -718,13 +718,13 @@ function pass_rpc_submit(thiscurrency, thisvalue, newnode) {
 function remove_rpcnode() {
     $(document).on("click", "#settingsbox .options .opt_icon_box .icon-bin", function(e) {
         e.preventDefault();
-        let thistrigger = $(this),
+        const thistrigger = $(this),
             settingsbox = $("#settingsbox"),
             thiscurrency = settingsbox.find("#rpc_input_box").attr("data-currency"),
             rpc_setting_li = cs_node(thiscurrency, glob_ap_id),
             options = rpc_setting_li.data("options");
         if (options.length) {
-            let thisoption = thistrigger.closest(".optionwrap"),
+            const thisoption = thistrigger.closest(".optionwrap"),
                 thisdata = thisoption.data(),
                 thisurl = thisdata.url,
                 default_node = (thisdata.default !== false),
@@ -736,12 +736,12 @@ function remove_rpcnode() {
                 topnotify(translate("removedefaultnode"));
                 return
             }
-            let thisname = (thisdata.name) ? thisdata.name : thisurl,
+            const thisname = (thisdata.name) ? thisdata.name : thisurl,
                 result = confirm(translate("confirmremovenode", {
                     "thisname": thisname
                 }));
             if (result === true) {
-                let new_array = $.grep(options, function(option) {
+                const new_array = $.grep(options, function(option) {
                     return option.url != thisurl;
                 });
                 thisoption.slideUp(500, function() {
@@ -761,7 +761,7 @@ function get_rpc_url(rpc_data) {
     if (rpc_data === false) {
         return false;
     }
-    let url = rpc_data.url,
+    const url = rpc_data.url,
         username = rpc_data.username,
         password = rpc_data.password,
         login_param = (username && password) ? username + ":" + password + "@" : "",
@@ -773,11 +773,11 @@ function get_rpc_url(rpc_data) {
 // Layer 2's
 function edit_l2() {
     $(document).on("click", ".cc_settinglist li[data-id='layer2']", function() {
-        let current_li = $(this),
+        const current_li = $(this),
             this_data = current_li.data(),
             options = this_data.options;
         if (options) {
-            let thiscurrency = current_li.children(".liwrap").attr("data-currency"),
+            const thiscurrency = current_li.children(".liwrap").attr("data-currency"),
                 selected = this_data.selected,
                 ddat = [{
                     "div": {
@@ -827,7 +827,7 @@ function edit_l2() {
                     "elements": ddat
                 });
             popdialog(content, "triggersubmit");
-            let optionlist = $("#l2_formbox").find(".options"),
+            const optionlist = $("#l2_formbox").find(".options"),
                 ccsymbol = fetchsymbol(thiscurrency),
                 arb_contract = contracts(ccsymbol.symbol, "arbitrum");
             $.each(options, function(i, value) {
@@ -842,7 +842,7 @@ function edit_l2() {
 function submit_l2() {
     $(document).on("click", "#l2_formbox input.submit", function(e) {
         e.preventDefault();
-        let thiscurrency = $(this).attr("data-currency"),
+        const thiscurrency = $(this).attr("data-currency"),
             thisvalue = $("#l2_formbox").find("input:first").val(),
             csnode = cs_node(thiscurrency, "layer2");
         if (csnode) {
@@ -858,11 +858,11 @@ function submit_l2() {
 function edit_xpub_trigger() {
     $(document).on("click", ".cc_settinglist li[data-id='Xpub'] .atext", function() {
         if (glob_test_derive === true) {
-            let thisnode = $(this),
+            const thisnode = $(this),
                 thislist = thisnode.closest("li"),
                 thisdat = thislist.data();
             if (thisdat.selected === true && thisdat.key) {
-                let thisliwrap = thislist.find(".liwrap"),
+                const thisliwrap = thislist.find(".liwrap"),
                     thiscurrency = thisliwrap.attr("data-currency"),
                     coindat = getcoindata(thiscurrency),
                     xpub = thisdat.key,
@@ -892,9 +892,9 @@ function edit_xpub_trigger() {
 
 function delete_xpub() {
     $(document).on("click", "#delete_xpub", function() {
-        let result = confirm(translate("delete") + " " + translate("bip32xpub") + "?");
+        const result = confirm(translate("delete") + " " + translate("bip32xpub") + "?");
         if (result === true) {
-            let currency = $(this).attr("data-currency"),
+            const currency = $(this).attr("data-currency"),
                 xpubli = cs_node(currency, "Xpub"),
                 x_pubid = xpubli.data("key_id");
             delete_xpub_cb(currency, x_pubid, true);
@@ -913,9 +913,9 @@ function delete_xpub() {
 }
 
 function delete_xpub_cb(currency, x_pubid, uncheck) {
-    let xpublist = filter_addressli(currency, "xpubid", x_pubid);
+    const xpublist = filter_addressli(currency, "xpubid", x_pubid);
     xpublist.each(function() {
-        let thisli = $(this);
+        const thisli = $(this);
         thisli.removeClass("xpubv").addClass("xpubu");
         if (uncheck === true) {
             thisli.attr("data-checked", "false").data("checked", false);
@@ -924,7 +924,7 @@ function delete_xpub_cb(currency, x_pubid, uncheck) {
 }
 
 function add_xpub_cb(currency, x_pubid) {
-    let xpublist = filter_addressli(currency, "xpubid", x_pubid);
+    const xpublist = filter_addressli(currency, "xpubid", x_pubid);
     xpublist.each(function() {
         $(this).addClass("xpubv").removeClass("xpubu").attr("data-checked", "true").data("checked", true);
     });
@@ -933,13 +933,13 @@ function add_xpub_cb(currency, x_pubid) {
 function xpub_cc_switch() {
     $(document).on("mouseup", ".cc_settinglist li[data-id='Xpub'] .switchpanel.custom", function() {
         if (glob_test_derive === true) {
-            let this_switch = $(this),
+            const this_switch = $(this),
                 thislist = this_switch.closest("li"),
                 thisliwrap = this_switch.closest(".liwrap"),
                 thiscurrency = thisliwrap.attr("data-currency"),
                 thisdat = thislist.data();
             if (this_switch.hasClass("true")) {
-                let result = confirm(translate("disablexpub"));
+                const result = confirm(translate("disablexpub"));
                 if (result === true) {
                     thislist.data("selected", false).find("p").html("false");
                     this_switch.removeClass("true").addClass("false");
@@ -957,7 +957,7 @@ function xpub_cc_switch() {
                 currency_check(thiscurrency);
                 return
             }
-            let cd = getcoindata(thiscurrency),
+            const cd = getcoindata(thiscurrency),
                 ad = {
                     "currency": thiscurrency,
                     "ccsymbol": cd.ccsymbol,
@@ -972,7 +972,7 @@ function xpub_cc_switch() {
 }
 
 function edit_xpub(ad) {
-    let currency = ad.currency,
+    const currency = ad.currency,
         cpid = ad.ccsymbol + "-" + currency,
         address = (ad.address) ? ad.address : "",
         scanqr = (glob_hascam === true) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
@@ -1003,7 +1003,7 @@ function edit_xpub(ad) {
 
 function xpub_change() {
     $(document).on("input", "#xpub_input", function(e) {
-        let thisnode = $(this),
+        const thisnode = $(this),
             addressinputval = thisnode.val(),
             currency = thisnode.attr("data-currency"),
             valid = check_xpub(addressinputval, xpub_prefix(currency), currency);
@@ -1024,17 +1024,17 @@ function submit_xpub_trigger() {
 }
 
 function validate_xpub(thisnode) {
-    let this_data = thisnode.data(),
+    const this_data = thisnode.data(),
         currency = this_data.currency,
         ccsymbol = this_data.ccsymbol,
         addressfield = thisnode.find(".address"),
         addressinputval = addressfield.val();
     if (addressinputval) {
-        let valid = check_xpub(addressinputval, xpub_prefix(currency), currency),
+        const valid = check_xpub(addressinputval, xpub_prefix(currency), currency),
             tdbox = $("#ad_info_wrap .td_box"),
             dp_body = $("#ad_info_wrap");
         if (valid === true) {
-            let derive_list = xpub_derivelists(currency, addressinputval);
+            const derive_list = xpub_derivelists(currency, addressinputval);
             if (derive_list) {
                 tdbox.html(xpub_derivelists(currency, addressinputval));
                 dp_body.slideDown("500");
@@ -1042,7 +1042,7 @@ function validate_xpub(thisnode) {
                 xpub_fail(currency);
                 return false;
             }
-            let pk_checkbox = thisnode.find("#pk_confirmwrap"),
+            const pk_checkbox = thisnode.find("#pk_confirmwrap"),
                 pk_checked = pk_checkbox.data("checked"),
                 matchwrap = thisnode.find("#matchwrap"),
                 mw_checked = matchwrap.data("checked");
@@ -1055,43 +1055,43 @@ function validate_xpub(thisnode) {
                 return false;
             }
             if (pk_checked == true && mw_checked == true) {
-                let xpubli = cs_node(currency, "Xpub"),
+                const xpubli = cs_node(currency, "Xpub"),
                     haskey = xpubli.data("key");
                 if (haskey) {
                     if (haskey == addressinputval) {
                         canceldialog();
                         return false;
                     }
-                    let result = confirm(translate("replacexpub"));
+                    const result = confirm(translate("replacexpub"));
                     if (result === true) {} else {
                         return false;
                     }
                 }
-                let xpub_id = hmacsha(addressinputval, "sha256").slice(0, 8);
+                const xpub_id = hmacsha(addressinputval, "sha256").slice(0, 8);
                 xpubli.data({
                     "selected": true,
                     "key": addressinputval,
                     "key_id": xpub_id
                 }).find(".switchpanel").removeClass("false").addClass("true");
                 xpubli.find("p").html("true");
-                let currencyli = get_currencyli(currency),
+                const currencyli = get_currencyli(currency),
                     home_icon = get_homeli(currency);
                 currencyli.attr("data-checked", "true").data("checked", true);
                 home_icon.removeClass("hide");
                 savecurrencies(true);
                 save_cc_settings(currency, true);
-                let keycc = key_cc_xpub(addressinputval),
+                const keycc = key_cc_xpub(addressinputval),
                     coindat = getcoindata(currency),
                     bip32 = getbip32dat(currency);
                 keycc.seedid = xpub_id;
-                let ad = derive_obj("xpub", keycc, coindat, bip32);
+                const ad = derive_obj("xpub", keycc, coindat, bip32);
                 if (ad) {
                     derive_add_address(currency, ad);
                 }
                 canceldialog();
                 clear_savedurl();
                 if (glob_body.hasClass("showstartpage")) {
-                    let acountname = $("#eninput").val();
+                    const acountname = $("#eninput").val();
                     $("#accountsettings").data("selected", acountname).find("p").html(acountname);
                     savesettings();
                     openpage("?p=home", "home", "loadpage");
@@ -1108,7 +1108,7 @@ function validate_xpub(thisnode) {
             popnotify("error", translate("confirmpkownership"));
             return
         }
-        let errormessage = translate("invalidxpub", {
+        const errormessage = translate("invalidxpub", {
             "currency": currency
         });
         popnotify("error", errormessage);
@@ -1122,7 +1122,7 @@ function validate_xpub(thisnode) {
 }
 
 function xpub_fail(currency) {
-    let errormessage = translate("invalidxpub", {
+    const errormessage = translate("invalidxpub", {
         "currency": currency
     });
     popnotify("error", errormessage);
@@ -1143,7 +1143,7 @@ function clear_xpub_checkboxes() {
 
 function xpub_derivelists(currency, xpub) {
     try {
-        let coindat = getcoindata(currency),
+        const coindat = getcoindata(currency),
             bip32dat = getbip32dat(currency),
             root_path = "M/0/",
             startindex = 0,
@@ -1157,10 +1157,10 @@ function xpub_derivelists(currency, xpub) {
                 "xpub": true,
                 "versionbytes": versionbytes
             },
-            derivelist = "",
             derive_array = keypair_array(false, new Array(5), startindex, root_path, bip32dat, key, chaincode, currency, versionbytes);
+        let derivelist = "";
         $.each(derive_array, function(i, val) {
-            let index = startindex + i;
+            const index = startindex + i;
             derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> | <span class='mspace'>" + val.address + "</span></li>";
         });
         return derivelist;
@@ -1170,7 +1170,7 @@ function xpub_derivelists(currency, xpub) {
 }
 
 function check_xpub(address, prefix, currency) {
-    let this_prefix = (currency == "bitcoin") ? "zpub|xpub" : (currency == "litecoin") ? "zpub|Ltub" : prefix,
+    const this_prefix = (currency == "bitcoin") ? "zpub|xpub" : (currency == "litecoin") ? "zpub|Ltub" : prefix,
         regex = "(" + this_prefix + ")([a-km-zA-HJ-NP-Z1-9]{107})(\\?c=\\d*&h=bip\\d{2,3})?";
     return new RegExp(regex).test(address);
 }
@@ -1179,7 +1179,7 @@ function check_xpub(address, prefix, currency) {
 
 function key_management() {
     $(document).on("click", ".cc_settinglist li[data-id='Key derivations'] .atext", function() {
-        let thisnode = $(this),
+        const thisnode = $(this),
             thislist = thisnode.closest("li"),
             thisdat = thislist.data(),
             thisliwrap = thislist.find(".liwrap"),
@@ -1216,7 +1216,7 @@ function segwit_switch() {
             vu_block();
             return
         }
-        let this_switch = $(this),
+        const this_switch = $(this),
             thisvalue = (this_switch.hasClass("true")) ? true : false,
             current_li = this_switch.closest("li"),
             thiscurrency = current_li.attr("data-currency"),
@@ -1226,29 +1226,29 @@ function segwit_switch() {
             coincode = rootpath.split("/")[2],
             dpath_header = $("#d_paths .pd_" + thiscurrency + " .d_path_header span.ref");
         if (thisvalue === true) {
-            let result = confirm(translate("uselegacy", {
+            const result = confirm(translate("uselegacy", {
                 "thiscurrency": thiscurrency
             }));
             if (result === false) {
                 return
             }
-            let dp = "m/44'/" + coincode + "/0'/0/";
+            const dp = "m/44'/" + coincode + "/0'/0/";
             kdli.data("root_path", dp);
             this_switch.removeClass("true").addClass("false");
             dpath_header.text(dp);
         } else {
-            let result = confirm(translate("usesegwit", {
+            const result = confirm(translate("usesegwit", {
                 "thiscurrency": thiscurrency
             }));
             if (result === false) {
                 return
             }
-            let dp = "m/84'/" + coincode + "/0'/0/";
+            const dp = "m/84'/" + coincode + "/0'/0/";
             kdli.data("root_path", dp);
             this_switch.addClass("true").removeClass("false");
             dpath_header.text(dp);
         }
-        let dpath_next = $("#d_paths .pd_" + thiscurrency + " .d_path_body .td_bar .td_next");
+        const dpath_next = $("#d_paths .pd_" + thiscurrency + " .d_path_body .td_bar .td_next");
         save_cc_settings(thiscurrency, true);
         test_derive_function(dpath_next, "replace");
     })
@@ -1259,7 +1259,7 @@ function bip39_sc(coinsc) {
 }
 
 function xpub_info_pu(currency, xpub) {
-    let coindat = getcoindata(currency),
+    const coindat = getcoindata(currency),
         bip32dat = getbip32dat(currency),
         root_path = "M/0/",
         startindex = 0,
@@ -1273,13 +1273,13 @@ function xpub_info_pu(currency, xpub) {
             "xpub": true,
             "versionbytes": versionbytes
         },
-        derivelist = "",
         derive_array = keypair_array(false, new Array(5), startindex, root_path, bip32dat, key, chaincode, currency, versionbytes);
+    derivelist = "";
     $.each(derive_array, function(i, val) {
-        let index = startindex + i;
+        const index = startindex + i;
         derivelist += "<li class='adbox der_li' data-index='" + index + "'><strong>" + root_path + index + "</strong> | <span class='mspace'>" + val.address + "</span></li>";
     });
-    let ccsymbol = coindat.ccsymbol,
+    const ccsymbol = coindat.ccsymbol,
         cc_icon = getcc_icon(coindat.cmcid, ccsymbol + "-" + currency, coindat.erc20),
         content = $("<div id='ad_info_wrap'><h2>" + cc_icon + " <span>" + currency + " " + translate("Key derivations") + "</span></h2><ul>\
         <li id='xpub_box' class='clearfix noline'>\
@@ -1296,7 +1296,7 @@ function xpub_info_pu(currency, xpub) {
     </ul>\
     </div>").data(root_dat);
     popdialog(content, "triggersubmit");
-    let dp_node_dat = {
+    const dp_node_dat = {
             "bip32": bip32dat,
             "currency": currency
         },
@@ -1322,7 +1322,7 @@ function trigger_apikey() {
 }
 
 function add_apikey(api) {
-    let get_key = $("#apikeys").data(api),
+    const get_key = $("#apikeys").data(api),
         api_key = (get_key) ? get_key : "",
         apidata = get_api_data(api),
         sign_up = apidata.sign_up,
@@ -1345,7 +1345,7 @@ function add_apikey(api) {
 function submit_apikey() {
     $(document).on("click", "#add_apikey input.submit", function(e) {
         e.preventDefault();
-        let thisform = $(this).closest(".popform"),
+        const thisform = $(this).closest(".popform"),
             thisinput = thisform.find("input:first"),
             thisvalue = thisinput.val(),
             currentkey = thisinput.attr("data-apikey");
@@ -1368,7 +1368,7 @@ function submit_apikey() {
 
 function reset_coinsettings() {
     $(document).on("click", ".reset_cc_settings", function() {
-        let thistrigger = $(this),
+        const thistrigger = $(this),
             currency = thistrigger.attr("data-currency");
         popdialog("<h2 class='icon-bin'>" + translate("resetdialog", {
             "currency": currency
@@ -1377,14 +1377,14 @@ function reset_coinsettings() {
 }
 
 function reset_coinsettings_function(trigger) {
-    let currency = trigger.attr("data-currency"),
+    const currency = trigger.attr("data-currency"),
         result = confirm(translate("resetconfirm", {
             "currency": currency
         }));
     if (result === true) {
-        let current_settings = br_get_local(currency + "_settings", true);
+        const current_settings = br_get_local(currency + "_settings", true);
         if (current_settings) {
-            let ln_settings = (currency == "bitcoin") ? current_settings["Lightning network"] : false,
+            const ln_settings = (currency == "bitcoin") ? current_settings["Lightning network"] : false,
                 xpub_settings = (current_settings.Xpub) ? current_settings.Xpub : false,
                 coinsettings = getcoinsettings(currency);
             if (ln_settings) {

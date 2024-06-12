@@ -10,7 +10,7 @@ $(document).ready(function() {
 function checkout() {
     $(document).on("click", ".br_checkout", function(e) {
         e.preventDefault();
-        let checkout_url = $(this).attr("href"),
+        const checkout_url = $(this).attr("href"),
             br_frame = $("#br_framebox iframe");
         if (br_frame.length > 0) {
             showloader();
@@ -28,7 +28,7 @@ function append_iframe(framesrc) {
 }
 
 function iframe_loaded() {
-    let requestframe = $("#br_framebox iframe");
+    const requestframe = $("#br_framebox iframe");
     requestframe.on("load", function() {
         if (requestframe.attr("src") !== undefined) {
             showframe();
@@ -37,7 +37,7 @@ function iframe_loaded() {
 }
 
 function crossframe(e) {
-    let data = e.data;
+    const data = e.data;
     if (data == "close_loader") {
         closeloader();
     } else if (data == "close_request") {
@@ -60,7 +60,7 @@ function showframe() {
 }
 
 function closeframe_confirm() {
-    let result = confirm("Close request?");
+    const result = confirm("Close request?");
     if (result === true) {
         closeframe();
     }

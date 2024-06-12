@@ -1,6 +1,8 @@
 //globals
 const glob_deviceid = hashcode(getdevicetype() + navigator.appName + navigator.appCodeName);
 let glob_backup_active,
+    glob_backup_result = null,
+    glob_backup_filename = null,
     glob_resd = {};
 
 $(document).ready(function() {
@@ -148,7 +150,7 @@ $(document).ready(function() {
 // Account name
 function editaccount() {
     $(document).on("click", "#accountsettings", function() {
-        let ddat = [{
+        const ddat = [{
                 "div": {
                     "class": "popform",
                     "content": [{
@@ -184,7 +186,7 @@ function editaccount() {
 function submitaccount() {
     $(document).on("click", "#accountformbox input.submit", function(e) {
         e.preventDefault();
-        let thisinput = $(this).prev("input"),
+        const thisinput = $(this).prev("input"),
             thisvalue = thisinput.val();
         if (thisvalue.length < 1) {
             popnotify("error", translate("nameisrequired"));
@@ -203,18 +205,18 @@ function submitaccount() {
 // Standard fiat currency
 function editcurrency() {
     $(document).on("click", "#currencysettings", function() {
-        let currencysettings = $("#currencysettings"),
+        const currencysettings = $("#currencysettings"),
             switchmode = currencysettings.data("default"),
             currency = currencysettings.data("selected"),
-            symbolstringarray = br_get_local("symbols", true),
-            symbollist = "";
+            symbolstringarray = br_get_local("symbols", true);
+        let symbollist = "";
         $.each(symbolstringarray, function(key, value) {
             if (key == "BTC") { // remove from list
             } else {
                 symbollist += "<span data-id='1' data-pe='none'>" + key + " | " + value + "</span>";
             }
         });
-        let ddat = [{
+        const ddat = [{
                 "div": {
                     "class": "popform validated",
                     "content": [{
@@ -282,13 +284,13 @@ function toggle_defaultcurrency() {
 
 function autocompletecurrency() {
     $(document).on("input", "#currencyformbox input:first", function() {
-        let thisinput = $(this),
+        const thisinput = $(this),
             thisform = thisinput.closest(".popform"),
             thisvalue = thisinput.val().toUpperCase(),
             options = thisform.find(".options");
         thisform.removeClass("validated");
         $("#currencyformbox .options > span").each(function() {
-            let thisoption = $(this),
+            const thisoption = $(this),
                 thistext = thisoption.text(),
                 currencysymbol = thistext.split(" | ")[0];
             thisoption.removeClass("show");
@@ -305,7 +307,7 @@ function autocompletecurrency() {
 function submitcurrency() {
     $(document).on("click", "#currencyformbox input.submit", function(e) {
         e.preventDefault();
-        let localcurrency = get_setting("currencysettings", "currencysymbol");
+        const localcurrency = get_setting("currencysettings", "currencysymbol");
         thisform = $(this).closest(".popform"),
             thisinput = thisform.find("input:first"),
             thisinputvalue = thisinput.val();
@@ -315,7 +317,7 @@ function submitcurrency() {
             }
         });
         if (thisform.hasClass("validated")) {
-            let defaultcurrency_switch = $("#toggle_defaultcurrency .switchpanel"),
+            const defaultcurrency_switch = $("#toggle_defaultcurrency .switchpanel"),
                 switchchange = (defaultcurrency_switch.hasClass("dc_changed")),
                 values = thisinputvalue.split(" | "),
                 currencysymbol = values[0],
@@ -325,7 +327,7 @@ function submitcurrency() {
                 canceldialog();
                 return false;
             }
-            let dc_output = (defaultcurrency_switch.hasClass("true")) ? true : false;
+            const dc_output = (defaultcurrency_switch.hasClass("true")) ? true : false;
             set_setting("currencysettings", {
                 "currencysymbol": currencysymbollc,
                 "selected": thisinputvalue,
@@ -347,17 +349,17 @@ function submitcurrency() {
 // Language
 function editlanguage() {
     $(document).on("click", "#langsettings", function() {
-        let translation = translate("obj"),
+        const translation = translate("obj"),
             current_lang = q_obj(translation, glob_langcode + ".lang"),
             current_flag = q_obj(translation, glob_langcode + ".flag"),
             cf_string = (current_flag) ? current_flag + " " : "";
-        let current_val = cf_string + current_lang + " (" + glob_langcode + ")",
-            langlist = "";
+        current_val = cf_string + current_lang + " (" + glob_langcode + ")";
+        let langlist = "";
         $.each(translation, function(key, value) {
-            let cflag = (value.flag) ? value.flag + " " : ""
+            const cflag = (value.flag) ? value.flag + " " : ""
             langlist += "<span>" + cflag + value.lang + " (" + key + ")</span>";
         });
-        let ddat = [{
+        const ddat = [{
                 "div": {
                     "class": "popform validated",
                     "attr": {
@@ -416,7 +418,7 @@ function editlanguage() {
 function submitlang() {
     $(document).on("click", "#langformbox input.submit", function(e) {
         e.preventDefault();
-        let thisform = $(this).closest(".popform"),
+        const thisform = $(this).closest(".popform"),
             currentlang = thisform.attr("data-currentlang"),
             thisinput = thisform.find("input"),
             thisvalue = thisinput.val(),
@@ -441,18 +443,18 @@ function submitlang() {
 function editpin() {
     $(document).on("click", "#pinsettings", function() {
         if (haspin(true) === true) {
-            let content = pinpanel(" pinwall reset", null, true);
+            const content = pinpanel(" pinwall reset", null, true);
             showoptions(content, "pin");
-        } else {
-            let content = pinpanel();
-            showoptions(content, "pin");
+            return
         }
+        const content = pinpanel();
+        showoptions(content, "pin");
     })
 }
 
 function locktime() {
     $(document).on("click", "#locktime, #lock_time", function() {
-        let locktime = get_setting("pinsettings", "locktime"),
+        const locktime = get_setting("pinsettings", "locktime"),
             ddat = [{
                 "div": {
                     "class": "popform",
@@ -487,7 +489,7 @@ function locktime() {
                 "elements": ddat
             });
         popdialog(content, "triggersubmit");
-        let currentli = $("#locktime_formbox ul.conf_options li").filter(function() {
+        const currentli = $("#locktime_formbox ul.conf_options li").filter(function() {
             return $(this).find("span").text() == locktime
         });
         currentli.find(".radio").removeClass("icon-radio-unchecked").addClass("icon-radio-checked2");
@@ -497,7 +499,7 @@ function locktime() {
 function submit_locktime() {
     $(document).on("click", "#locktime_formbox input.submit", function(e) {
         e.preventDefault();
-        let thistrigger = $(this),
+        const thistrigger = $(this),
             thisvalue = thistrigger.prev("input").val(),
             titlepin = (thisvalue == "never") ? "pincodedisabled" : "pincodeactivated";
         set_setting("pinsettings", {
@@ -549,16 +551,16 @@ function backupdatabase() {
     if (is_openrequest() === true) {
         return
     }
-    let jsonencode = complilebackup(),
+    const jsonencode = complilebackup(),
         filename = complilefilename(),
         changespush = [];
     $.each(glob_changes, function(key, value) {
         if (value > 0) {
-            let nrchanges = (value == 1) ? translate("changein") : translate("changesin");
+            const nrchanges = (value == 1) ? translate("changein") : translate("changesin");
             changespush.push("<li>" + value + " " + nrchanges + " '" + key + "'</li>");
         }
     });
-    let gd_active = (GD_pass().pass) ? true : false,
+    const gd_active = (GD_pass().pass) ? true : false,
         alert_icon = $("#alert > span"),
         nr_changes = alert_icon.text(),
         alert_title = alert_icon.attr("title"),
@@ -667,10 +669,10 @@ function backupdatabase() {
 
 function sbu_switch() {
     $(document).on("mouseup", "#toggle_sbu_span .switchpanel", function() {
-        let thistrigger = $(this),
+        const thistrigger = $(this),
             thisvalue = (thistrigger.hasClass("true")) ? true : false;
         if (thisvalue === true) {
-            let result = confirm(translate("includesecretphrase"));
+            const result = confirm(translate("includesecretphrase"));
             if (result === false) {
                 thistrigger.removeClass("true").addClass("false");
                 return false;
@@ -685,11 +687,11 @@ function sbu_switch() {
 
 function sharebu() {
     $(document).on("click", "#share_bu", function() {
-        let result = confirm(translate("sharebu"));
+        const result = confirm(translate("sharebu"));
         if (result === true) {
             loader(true);
             loadertext(translate("generatebu"));
-            let accountname = $("#accountsettings").data("selected");
+            const accountname = $("#accountsettings").data("selected");
             api_proxy({
                 "custom": "system_bu",
                 "api_url": true,
@@ -699,7 +701,7 @@ function sharebu() {
                     "account": btoa(accountname)
                 }
             }).done(function(e) {
-                let br_cache = e.ping.br_cache,
+                const br_cache = e.ping.br_cache,
                     filetime = br_cache.created_utc,
                     filetimesec = (filetime) ? filetime * 1000 : now(),
                     filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
@@ -721,7 +723,7 @@ function sharebu() {
 }
 
 function check_systembu(sbu) {
-    let ro_dat = stripb64(sbu),
+    const ro_dat = stripb64(sbu),
         ro_id = ro_dat.ro,
         ro_proxy = ro_dat.proxy;
     api_proxy({
@@ -730,9 +732,9 @@ function check_systembu(sbu) {
         "proxy": true,
         "params": ro_id
     }, ro_proxy).done(function(e) {
-        let ping = e.ping;
+        const ping = e.ping;
         if (ping) {
-            let br_cache = ping.br_cache,
+            const br_cache = ping.br_cache,
                 server_time = br_cache.utc_timestamp,
                 filetime = br_cache.created_utc,
                 filetimesec = (filetime) ? filetime * 1000 : now(),
@@ -818,12 +820,12 @@ function check_systembu(sbu) {
 }
 
 function stripb64(ab) {
-    let b64 = (ab.indexOf("%") > -1) ? ab.substr(0, ab.indexOf("%")) : ab;
+    const b64 = (ab.indexOf("%") > -1) ? ab.substr(0, ab.indexOf("%")) : ab;
     return JSON.parse(atob(b64));
 }
 
 function systembu_expired() {
-    let content = render_html([{
+    const content = render_html([{
             "div": {
                 "id": "system_backupformbox",
                 "class": "formbox",
@@ -842,9 +844,9 @@ function systembu_expired() {
 
 function restore_systembu() {
     $(document).on("click", "#system_backupformbox #restore_bu", function() {
-        let result = confirm(translate("installsb"));
+        const result = confirm(translate("installsb"));
         if (result === true) {
-            let this_bttn = $(this),
+            const this_bttn = $(this),
                 bu_dat = this_bttn.attr("data-base64"),
                 j_filename = this_bttn.attr("data-filename"),
                 j_object = JSON.parse(atob(bu_dat));
@@ -860,9 +862,9 @@ function backupcd() {
 }
 
 function complilebackup() {
-    let jsonfile = [];
+    const jsonfile = [];
     for (let key in localStorage) {
-        let value = localStorage.getItem(key);
+        const value = localStorage.getItem(key);
         if (value === null ||
             key == "bitrequest_symbols" ||
             key == "bitrequest_changes" ||
@@ -876,9 +878,9 @@ function complilebackup() {
             key == "bitrequest_awl" ||
             key == "bitrequest_dat" ||
             key == "bitrequest_tp") {} else if (key == "bitrequest_bpdat") { // only backup encrypted seed
-            let not_verified = (glob_io.bipv != "yes"); // backup when not verified
+            const not_verified = (glob_io.bipv != "yes"); // backup when not verified
             if (not_verified || (glob_test_derive === true && get_setting("backup", "sbu") === true)) {
-                let val_obj = JSON.parse(value);
+                const val_obj = JSON.parse(value);
                 val_obj.dat = null;
                 jsonfile.push('"' + key + '":' + JSON.stringify(val_obj));
             }
@@ -900,7 +902,7 @@ function submitbackup() {
             notify(translate("noiosbu"));
             return
         }
-        let thisnode = $(this),
+        const thisnode = $(this),
             href = thisnode.attr("href"),
             title = thisnode.attr("title"),
             result = confirm(translate("downloadfile", {
@@ -910,7 +912,7 @@ function submitbackup() {
             e.preventDefault();
             return
         }
-        let lastsaved = "last backup: " + thisnode.attr("data-date"),
+        const lastsaved = "last backup: " + thisnode.attr("data-date"),
             lastbackup = thisnode.attr("data-lastbackup");
         set_setting("backup", {
             "titlebackup": lastsaved,
@@ -935,7 +937,7 @@ function restorefrombackup() {
 
 function trigger_restore() {
     glob_backup_active = false;
-    let restorenode = $("#restore"),
+    const restorenode = $("#restore"),
         backupnode = $("#backup"),
         lastfileused = restorenode.data("fileused"),
         lastdevice = restorenode.data("device"),
@@ -991,27 +993,25 @@ function trigger_restore() {
 
 function restorebackup() {
     $(document).on("change", "#fileupload", function(n) {
-        backup_result = null,
-            backup_filename = null;
-        let file = this.files[0],
+        const file = this.files[0],
             filesize = file.size,
             filetype = file.type;
-        backup_filename = file.name;
+        glob_backup_filename = file.name;
         if (filesize > 5242880) {
             n.preventDefault();
             popnotify("error", translate("filesize"));
             return
         }
         if (filetype == "application/json") {
-            let reader = new FileReader();
+            const reader = new FileReader();
             reader.onload = function(e) {
-                backup_result = e.target.result,
-                    glob_backup_active = true;
+                glob_backup_result = e.target.result;
+                glob_backup_active = true;
             };
             reader.readAsDataURL(file);
             return
         }
-        let filetypewarningtext = translate("filetype", {
+        const filetypewarningtext = translate("filetype", {
             "filetype": filetype
         });
         popnotify("error", filetypewarningtext);
@@ -1021,14 +1021,18 @@ function restorebackup() {
 function submitrestore() {
     $(document).on("click", "#restoreformbox input.submit", function(e) {
         e.preventDefault();
-        let switchpanel = $("#popup #listappdata .switchpanel");
+        const switchpanel = $("#popup #listappdata .switchpanel");
         if (switchpanel.hasClass("true")) {
             topnotify(translate("selectbackup"));
             return
         }
         if (glob_backup_active === true) {
-            let jsonobject = JSON.parse(atob(backup_result.substr(backup_result.indexOf(",") + 1)));
-            restore(jsonobject, backup_filename);
+            if (glob_backup_result) {
+                const jsonobject = JSON.parse(atob(glob_backup_result.substr(glob_backup_result.indexOf(",") + 1)));
+                restore(jsonobject, glob_backup_filename);
+                return
+            }
+            topnotify(translate("error"));
             return
         }
         topnotify(translate("selectbackup"));
@@ -1036,21 +1040,21 @@ function submitrestore() {
 }
 
 function restore(jsonobject, bu_filename) {
-    let cbu = check_backup(jsonobject);
+    const cbu = check_backup(jsonobject);
     if (cbu === false) {
         return
     }
-    let result = confirm(translate("restorefile", {
+    const result = confirm(translate("restorefile", {
         "file": bu_filename
     }));
     if (result === true) {
-        let is_team_invite = isteaminvite(jsonobject);
+        const is_team_invite = isteaminvite(jsonobject);
         if (is_team_invite === true) {
             install_teaminvite(jsonobject, bu_filename, false);
             return
         }
         scan_restore(jsonobject);
-        let pass_dat = {
+        const pass_dat = {
             "jasobj": jsonobject,
             "filename": bu_filename,
             "type": "file"
@@ -1060,7 +1064,7 @@ function restore(jsonobject, bu_filename) {
 }
 
 function check_backup(jsonobject) {
-    let is_team_invite = isteaminvite(jsonobject);
+    const is_team_invite = isteaminvite(jsonobject);
     if (glob_cashier_dat && glob_cashier_dat.cashier && !is_team_invite) {
         notify(translate("cashiernotallowed"));
         return false;
@@ -1070,14 +1074,14 @@ function check_backup(jsonobject) {
 
 function submit_GD_restore() {
     $(document).on("click", "#gd_backuplist .restorefile", function() {
-        let thisfield = $(this).parent("li"),
+        const thisfield = $(this).parent("li"),
             thisdevice = thisfield.attr("data-device"),
             result = confirm(translate("restorefromdevice", {
                 "file": thisfield.text(),
                 "device": thisdevice
             }));
         if (result === true) {
-            let thisfileid = thisfield.attr("data-gdbu_id"),
+            const thisfileid = thisfield.attr("data-gdbu_id"),
                 p = GD_pass();
             if (p.pass) {
                 api_proxy({
@@ -1091,9 +1095,9 @@ function submit_GD_restore() {
                         }
                     }
                 }).done(function(e) {
-                    let jsonobject = JSON.parse(atob(e));
+                    const jsonobject = JSON.parse(atob(e));
                     scan_restore(jsonobject);
-                    let pass_dat = {
+                    const pass_dat = {
                         "jasobj": jsonobject,
                         "filename": thisfield.text(),
                         "thisfileid": thisfileid,
@@ -1124,10 +1128,10 @@ function scan_restore(jsonobject) {
     glob_resd = {
         "pcnt": 0
     }
-    let bpdat = jsonobject.bitrequest_bpdat;
+    const bpdat = jsonobject.bitrequest_bpdat;
     if (bpdat) {
+        const can_dec = (bpdat.dat) ? s_decode(bpdat) : (bpdat.datenc) ? s_decode(bpdat.datenc) : false;
         glob_resd.sbu = true;
-        let can_dec = (bpdat.dat) ? s_decode(bpdat) : (bpdat.datenc) ? s_decode(bpdat.datenc) : false;
         glob_resd.samebip = (bpdat.id == glob_bipid);
         glob_resd.bpdat = can_dec;
     }
@@ -1135,7 +1139,7 @@ function scan_restore(jsonobject) {
 
 
 function restore_algo(pass_dat) {
-    let cbu = check_backup(pass_dat);
+    const cbu = check_backup(pass_dat);
     if (cbu === false) {
         return false
     }
@@ -1161,7 +1165,7 @@ function restore_algo(pass_dat) {
 }
 
 function restore_callback(pass_dat, newphrase) {
-    let type = pass_dat.type;
+    const type = pass_dat.type;
     if (type) {
         if (type == "gd") {
             restore_callback_gd(pass_dat, newphrase);
@@ -1176,16 +1180,16 @@ function restore_callback(pass_dat, newphrase) {
 }
 
 function s_decode(pdat, phash) {
-    let pinhash = (phash) ? phash : $("#pinsettings").data("pinhash");
+    const pinhash = (phash) ? phash : $("#pinsettings").data("pinhash");
     if (pinhash && pdat) {
-        let keystring = ptokey(pinhash, pdat.id),
+        const keystring = ptokey(pinhash, pdat.id),
             decrypt = aes_dec(pdat.dat, keystring);
         if (decrypt) {
-            let unquote = decrypt.replace(/['"]+/g, ""),
+            const unquote = decrypt.replace(/['"]+/g, ""),
                 dec = JSON.parse(atob(unquote)),
                 pid = dec.pid;
             if (pid) {
-                let dec_obj = {
+                const dec_obj = {
                     "dat": unquote,
                     "id": pid
                 }
@@ -1198,16 +1202,16 @@ function s_decode(pdat, phash) {
 
 function pin_dialog(pass_dat, cb) {
     canceldialog();
-    let pinsettings = $("#pinsettings").data(),
+    const pinsettings = $("#pinsettings").data(),
         current_timeout = pinsettings.timeout;
     if (current_timeout) {
-        let timeleft = current_timeout - now();
+        const timeleft = current_timeout - now();
         if (timeleft > 0) {
             lockscreen(current_timeout);
             return false
         }
     }
-    let ddat = [{
+    const ddat = [{
             "div": {
                 "class": "popform",
                 "content": [{
@@ -1247,20 +1251,20 @@ function pin_dialog(pass_dat, cb) {
 function submit_pin_dialog() {
     $(document).on("click", "#pindialog input.submit", function(e) {
         e.preventDefault();
-        let thisinput = $(this).prev("input"),
+        const thisinput = $(this).prev("input"),
             thisvalue = thisinput.val();
         if (thisvalue.length) {
-            let dialog = $("#dialog"),
+            const dialog = $("#dialog"),
                 pdat = $("#pindialog").data(),
                 pass_dat = pdat.pass_dat,
                 jasobj = pass_dat.jasobj;
             if (jasobj) {
-                let pbdat = jasobj.bitrequest_bpdat,
+                const pbdat = jasobj.bitrequest_bpdat,
                     pbdat_eq = (pbdat.dat) ? pbdat : pbdat.datenc,
                     can_dec = s_decode(pbdat_eq, hashcode(thisvalue));
                 if (can_dec) {
                     glob_resd.pcnt = 0;
-                    let callback = pdat.cb;
+                    const callback = pdat.cb;
                     clearpinlock();
                     if (callback) {
                         glob_resd.bpdat = can_dec;
@@ -1278,7 +1282,7 @@ function submit_pin_dialog() {
                 if (glob_resd.pcnt > 1) {
                     $("#pinsettings").data("timeout", now() + 300000); // 5 minutes
                     topnotify(translate("maxattempts"));
-                    let result = confirm(translate("restorewithoutsecretphrase") + "?");
+                    const result = confirm(translate("restorewithoutsecretphrase") + "?");
                     if (result === true) {
                         restore_callback(pass_dat, false);
                     }
@@ -1300,17 +1304,17 @@ function submit_pin_dialog() {
 
 function restore_cb_init_addresses() {
     br_set_local("tp", now());
-    let initdat = br_get_local("init", true),
+    const initdat = br_get_local("init", true),
         iodat = br_dobj(initdat, true);
     delete iodat.bipv;
     br_set_local("init", iodat, true);
 }
 
 function restore_callback_file(pass_dat, np) {
-    let newphrase = (glob_hasbip === true) ? np : true;
+    const newphrase = (glob_hasbip === true) ? np : true;
     restorestorage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
-    let lastrestore = "last restore: " + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_");
+    const lastrestore = "last restore: " + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_");
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": pass_dat.filename,
@@ -1325,10 +1329,10 @@ function restore_callback_file(pass_dat, np) {
 }
 
 function restore_callback_gd(pass_dat, np) {
-    let newphrase = (glob_hasbip === true) ? np : true;
+    const newphrase = (glob_hasbip === true) ? np : true;
     restorestorage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
-    let lastrestore = "last restore: " + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_");
+    const lastrestore = "last restore: " + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_");
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": pass_dat.filename,
@@ -1338,7 +1342,7 @@ function restore_callback_gd(pass_dat, np) {
         savesettings("noalert");
         createfile(); // create new file from backup
         if (pass_dat.thisdeviceid == glob_deviceid) {
-            let p = GD_pass();
+            const p = GD_pass();
             if (p.pass) {
                 deletefile(pass_dat.thisfileid, null, p.token); // delete old backup file
             }
@@ -1355,7 +1359,7 @@ function restore_callback_gd(pass_dat, np) {
 
 function dphrase_dialog(pass_dat) {
     canceldialog();
-    let sfb = translate("usesecretphrasefrombackup"),
+    const sfb = translate("usesecretphrasefrombackup"),
         kcs = translate("keepcurrentsecretphrase"),
         ddat = [{
                 "ul": {
@@ -1426,7 +1430,7 @@ function dphrase_dialog(pass_dat) {
 function submit_dphrase() {
     $(document).on("click", "#importseedbox input.submit", function(e) {
         e.preventDefault();
-        let thistrigger = $(this),
+        const thistrigger = $(this),
             thisvalue = thistrigger.prev("input").val();
         if (thisvalue == translate("usesecretphrasefrombackup")) {
             restore_bu_seed();
@@ -1438,16 +1442,16 @@ function submit_dphrase() {
 }
 
 function keep_current_seed() {
-    let result = confirm(translate("keepexistingsecretphrase"));
+    const result = confirm(translate("keepexistingsecretphrase"));
     if (result === true) {
-        let is_dialog = $("#importseedbox"),
+        const is_dialog = $("#importseedbox"),
             bu_dat = is_dialog.data();
         restore_callback(bu_dat, false);
     }
 }
 
 function restore_bu_seed() {
-    let is_dialog = $("#importseedbox"),
+    const is_dialog = $("#importseedbox"),
         bu_dat = is_dialog.data();
     if (glob_resd.bpdat) {} else {
         if (is_dialog.hasClass("verified")) {} else {
@@ -1464,7 +1468,7 @@ function bu_oldseed(bu_dat) {
         "type": "restore",
         "dat": bu_dat
     });
-    let phrase = ls_phrase_obj(),
+    const phrase = ls_phrase_obj(),
         words = phrase.pob;
     verify_phrase(words, 4);
     $("#seed_steps").removeClass("checked");
@@ -1474,22 +1478,22 @@ function bu_oldseed(bu_dat) {
 
 function compare_seeds() {
     $(document).on("click", "#compare_seeds", function() {
-        let comparebox = $("#compare_box");
+        const comparebox = $("#compare_box");
         if (comparebox.is(":visible")) {
             comparebox.slideUp(200);
             return
         }
-        let checktext = $("#ext_sbox .sbox").text();
+        const checktext = $("#ext_sbox .sbox").text();
         if (checktext.length < 20) {
-            let is_dialog = $("#importseedbox"),
+            const is_dialog = $("#importseedbox"),
                 bu_dat = is_dialog.data(),
                 jasobj = bu_dat.jasobj;
             if (jasobj) {
-                let pbdat = jasobj.bitrequest_bpdat,
+                const pbdat = jasobj.bitrequest_bpdat,
                     pbdat_eq = (pbdat.dat) ? pbdat : pbdat.datenc;
                 if (pbdat_eq) {
                     if (glob_resd.bpdat) {} else {
-                        let enterpin = prompt(translate("fourdigitpin")),
+                        const enterpin = prompt(translate("fourdigitpin")),
                             can_dec = s_decode(pbdat_eq, hashcode(enterpin));
                         if (can_dec) {
                             glob_resd.bpdat = can_dec;
@@ -1511,7 +1515,7 @@ function compare_seeds() {
 }
 
 function cs_callback(pass) {
-    let existing_so = ls_phrase_obj(),
+    const existing_so = ls_phrase_obj(),
         backup_so = ls_phrase_obj_parsed(glob_resd.bpdat),
         compare = {
             "s1": existing_so.pob.slice(0, 3),
@@ -1553,12 +1557,12 @@ function restorestorage(jsonobject, newphrase) {
 // CSV Export
 function csvexport_trigger() {
     $(document).on("click", "#csvexport", function() {
-        let rq_arr = br_get_local("requests", true),
+        const rq_arr = br_get_local("requests", true),
             archive_arr = br_get_local("archive", true),
             has_requests = (rq_arr && !$.isEmptyObject(rq_arr)),
             has_archive = (archive_arr && !$.isEmptyObject(archive_arr));
         if (has_requests === true || has_archive === true) {
-            let filename = "bitrequest_csv_export_" + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_").replace(/\:/g, "_") + ".csv",
+            const filename = "bitrequest_csv_export_" + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_").replace(/\:/g, "_") + ".csv",
                 show_archive = (has_requests === true) ? "false" : "true",
                 content = "<div class='formbox' id='exportcsvbox'>\
                     <h2 class='icon-table'>" + translate("csvexport") + "</h2>\
@@ -1641,11 +1645,11 @@ function submit_csvexport() {
             notify(translate("noiosbu"));
             return false;
         }
-        let thisnode = $(this),
+        const thisnode = $(this),
             csv_encode = complile_csv(),
             d_url = "data:text/csv;charset=utf-16le;base64," + csv_encode;
         thisnode.attr("href", d_url);
-        let title = thisnode.attr("title"),
+        const title = thisnode.attr("title"),
             result = confirm(translate("downloadfile", {
                 "file": title
             }));
@@ -1661,7 +1665,7 @@ function submit_csvexport() {
 }
 
 function complile_csv() {
-    let rq_arr = br_get_local("requests", true),
+    const rq_arr = br_get_local("requests", true),
         archive_arr = br_get_local("archive", true),
         has_archive = (archive_arr && !$.isEmptyObject(archive_arr)),
         csv_arr = [],
@@ -1692,7 +1696,7 @@ function complile_csv() {
         incl_archive = (op_archive.hasClass("true")) ? true : false,
         rq_obj = (has_archive === true && incl_archive) ? rq_arr.concat(archive_arr) : rq_arr;
     $.each(rq_obj, function(i, val) {
-        let csv_request = {},
+        const csv_request = {},
             payment = val.payment,
             address = val.address,
             amount = val.amount,
@@ -1727,13 +1731,13 @@ function complile_csv() {
             csv_request[translate("currency")] = payment + lnd_string;
             csv_request[translate("status")] = translate(status);
             csv_request[translate("network")] = nw_string;
-            let rq_type = (type == "local") ? "point of sale" : type;
+            const rq_type = (type == "local") ? "point of sale" : type;
             csv_request[translate("type")] = translate(rq_type);
             csv_request[translate("created")] = short_date(timestamp);
             csv_request[translate("amount")] = amount + " " + uoa;
-            let ra_val = (receivedamount) ? receivedamount + " " + ccsymbol : "";
+            const ra_val = (receivedamount) ? receivedamount + " " + ccsymbol : "";
             csv_request[translate("amountreceived")] = ra_val;
-            let fv = (fiatvalue) ? fiatvalue.toFixed(2) + " " + fiatcurrency : "";
+            const fv = (fiatvalue) ? fiatvalue.toFixed(2) + " " + fiatcurrency : "";
             csv_request[translate("fiatvalue")] = fv;
             csv_request[translate("sendon")] = received_ts;
             if (incl_address) {
@@ -1746,13 +1750,13 @@ function complile_csv() {
             csv_arr.push(csv_request);
         }
     });
-    let csv_body = render_csv(csv_arr),
+    const csv_body = render_csv(csv_arr),
         b64_body = btoa(csv_body);
     return b64_body;
 }
 
 function render_csv(arr) {
-    let header_arr = [],
+    const header_arr = [],
         inner_header_arr = [],
         body_arr = [];
     $.each(arr[0], function(key, value) {
@@ -1760,25 +1764,25 @@ function render_csv(arr) {
     });
     header_arr.push(inner_header_arr.join(","));
     $.each(arr, function(i, val) {
-        let inner_body_arr = [];
+        const inner_body_arr = [];
         $.each(val, function(key, value) {
-            let ctd = value.replace(/,/g, ".");
+            const ctd = value.replace(/,/g, ".");
             inner_body_arr.push(ctd);
         });
         body_arr.push(inner_body_arr.join(","));
     });
-    let doc_arr = header_arr.concat(body_arr);
+    const doc_arr = header_arr.concat(body_arr);
     return doc_arr.join("\n");
 }
 
 function share_csv() {
     $(document).on("click", "#share_csv", function() {
-        let csv_encode = complile_csv(),
+        const csv_encode = complile_csv(),
             result = confirm(translate("sharecsvexport"));
         if (result === true) {
             loader(true);
             loadertext(translate("generatebu"));
-            let accountname = $("#accountsettings").data("selected");
+            const accountname = $("#accountsettings").data("selected");
             api_proxy({
                 "custom": "system_bu",
                 "api_url": true,
@@ -1788,7 +1792,7 @@ function share_csv() {
                     "account": btoa(accountname)
                 }
             }).done(function(e) {
-                let br_cache = e.ping.br_cache,
+                const br_cache = e.ping.br_cache,
                     filetime = br_cache.created_utc,
                     filetimesec = (filetime) ? filetime * 1000 : now(),
                     filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
@@ -1807,7 +1811,7 @@ function share_csv() {
 }
 
 function check_csvexport(csv) {
-    let ro_dat = stripb64(csv),
+    const ro_dat = stripb64(csv),
         ro_id = ro_dat.ro,
         ro_proxy = ro_dat.proxy;
     api_proxy({
@@ -1816,9 +1820,9 @@ function check_csvexport(csv) {
         "proxy": true,
         "params": ro_id
     }, ro_proxy).done(function(e) {
-        let ping = e.ping;
+        const ping = e.ping;
         if (ping) {
-            let br_cache = ping.br_cache,
+            const br_cache = ping.br_cache,
                 server_time = br_cache.utc_timestamp,
                 filetime = br_cache.created_utc,
                 filetimesec = (filetime) ? filetime * 1000 : now(),
@@ -1901,7 +1905,7 @@ function submit_csvdownload() {
             notify(translate("noiosbu"));
             return false;
         }
-        let thisnode = $(this),
+        const thisnode = $(this),
             href = thisnode.attr("href"),
             title = thisnode.attr("title"),
             result = confirm(translate("downloadfile", {
@@ -1921,7 +1925,7 @@ function submit_csvdownload() {
 // Url shortener
 function urlshortener() {
     $(document).on("click", "#url_shorten_settings", function() {
-        let us_settings = $("#url_shorten_settings"),
+        const us_settings = $("#url_shorten_settings"),
             us_data = us_settings.data(),
             us_source = us_data.selected,
             us_val = (us_source == "inactive") ? "firebase" : us_source,
@@ -2025,20 +2029,20 @@ function urlshortener() {
 
 function togglebl() {
     $(document).on("mouseup", "#toggle_urlshortener .switchpanel", function(e) {
-        let thispanel = $(this),
-            thisform = $("#usformbox .popform"),
-            us_state,
+        const thispanel = $(this),
+            thisform = $("#usformbox .popform");
+        let us_state,
             us_title;
         if (thispanel.hasClass("true")) {
-            let thisinput = thisform.find("input:first"),
-                thisvalue = thisinput.val(),
-                us_state = "active",
+            const thisinput = thisform.find("input:first"),
+                thisvalue = thisinput.val();
+            us_state = "active",
                 us_title = thisvalue;
             thisform.slideDown(300);
         } else {
-            let result = confirm(translate("disableshorturls"));
+            const result = confirm(translate("disableshorturls"));
             if (result === true) {
-                let us_state = "inactive",
+                us_state = "inactive",
                     us_title = "inactive";
                 thisform.slideUp(300);
             } else {
@@ -2058,7 +2062,7 @@ function togglebl() {
 
 function pick_urlshortener_select() {
     $(document).on("click", "#usformbox .selectbox > .options span", function() {
-        let thisselect = $(this),
+        const thisselect = $(this),
             thisvalue = thisselect.text(),
             thisform = thisselect.closest(".popform"),
             firebase_api_input = thisform.find("input.firebase_api_input"),
@@ -2083,7 +2087,7 @@ function pick_urlshortener_select() {
 function submit_urlshortener_select() {
     $(document).on("click", "#usformbox input.submit", function(e) {
         e.preventDefault();
-        let thisform = $(this).closest(".popform"),
+        const thisform = $(this).closest(".popform"),
             currentapi = thisform.attr("data-currentapi"),
             thisinput = thisform.find("input:first"),
             thisvalue = thisinput.val(),
@@ -2098,9 +2102,9 @@ function submit_urlshortener_select() {
             canceldialog();
             return false;
         }
-        let us_active = (toggle_urlshortener.hasClass("true"));
+        const us_active = (toggle_urlshortener.hasClass("true"));
         if (thisvalue != currentapi || toggle_urlshortener.hasClass("us_changed")) {
-            let us_state = (us_active === true) ? "active" : "inactive",
+            const us_state = (us_active === true) ? "active" : "inactive",
                 us_title = (us_active === true) ? thisvalue : "inactive";
             set_setting("url_shorten_settings", {
                 "selected": us_title,
@@ -2108,7 +2112,7 @@ function submit_urlshortener_select() {
             }, us_title);
         }
         if (us_active === true) {
-            let current_firebase_key = firebase_api_input.attr("data-apikey"),
+            const current_firebase_key = firebase_api_input.attr("data-apikey"),
                 current_bitly_key = bitly_api_input.attr("data-apikey");
             if (firebase_apival != current_firebase_key) {
                 if (firebase_checkchange == firebase_apival) {
@@ -2139,7 +2143,7 @@ function submit_urlshortener_select() {
 // Cryptocurrency price api
 function editccapi() {
     $(document).on("click", "#cmcapisettings", function() {
-        let cc_apisettings = $("#cmcapisettings").data(),
+        const cc_apisettings = $("#cmcapisettings").data(),
             ccapisrc = cc_apisettings.selected,
             cmcapikey = cc_apisettings.cmcapikey,
             cmcapikeyval = (cc_apisettings.cmcapikey) ? cc_apisettings.cmcapikey : "",
@@ -2216,7 +2220,7 @@ function editccapi() {
 
 function pickcmcapiselect() {
     $(document).on("click", "#ccapiformbox .selectbox > .options span", function() {
-        let thisselect = $(this),
+        const thisselect = $(this),
             thisvalue = thisselect.text(),
             thisform = thisselect.closest(".popform"),
             api_input = thisform.find("input:nth-child(2)");
@@ -2231,7 +2235,7 @@ function pickcmcapiselect() {
 function submitccapi() {
     $(document).on("click", "#ccapiformbox input.submit", function(e) {
         e.preventDefault();
-        let thisform = $(this).closest(".popform"),
+        const thisform = $(this).closest(".popform"),
             currentapi = thisform.attr("data-currentapi"),
             thisinput = thisform.find("input:first"),
             thisvalue = thisinput.val(),
@@ -2266,7 +2270,7 @@ function submitccapi() {
 // Fiat price api
 function editfiatxrapi() {
     $(document).on("click", "#fiatapisettings", function() {
-        let thisdata = $(this).data(),
+        const thisdata = $(this).data(),
             fiatxrapisrc = thisdata.selected,
             fiatxrapikey = (thisdata.fxapikey) ? thisdata.fxapikey : "",
             options = "<span data-pe='none'>" + glob_br_config.apilists.fiat_price_apis.join("</span><span data-pe='none'>") + "</span>",
@@ -2342,7 +2346,7 @@ function editfiatxrapi() {
 
 function pickfiatxrapiselect() {
     $(document).on("click", "#fiatxrapiformbox .selectbox > .options span", function() {
-        let thisselect = $(this),
+        const thisselect = $(this),
             thisvalue = thisselect.text(),
             thisform = thisselect.closest(".popform"),
             api_input = thisform.find("input:nth-child(2)");
@@ -2357,7 +2361,7 @@ function pickfiatxrapiselect() {
 function submitfiatxrapi() {
     $(document).on("click", "#fiatxrapiformbox input.submit", function(e) {
         e.preventDefault();
-        let thisform = $(this).closest(".popform"),
+        const thisform = $(this).closest(".popform"),
             currentapi = thisform.attr("data-currentapi"),
             thisinput = thisform.find("input:first"),
             thisvalue = thisinput.val(),
@@ -2401,7 +2405,7 @@ function trigger_proxy_dialog() {
 // Api Proxy
 function pick_api_proxy() {
     $(document).on("click", "#api_proxy", function() {
-        let proxies = all_proxies(),
+        const proxies = all_proxies(),
             current_proxy = d_proxy(),
             content = "\
             <div class='formbox' id='proxyformbox'>\
@@ -2431,7 +2435,7 @@ function pick_api_proxy() {
             </div>";
         popdialog(content, "triggersubmit");
         if (glob_phpsupport === true) {
-            let protocol = (glob_localserver) ? glob_w_loc.protocol + "//" : "",
+            const protocol = (glob_localserver) ? glob_w_loc.protocol + "//" : "",
                 port = glob_w_loc.port,
                 pval = (port.length) ? ":" + port : "",
                 fixed_url = complete_url(protocol + glob_thishostname + pval + location.pathname);
@@ -2442,9 +2446,9 @@ function pick_api_proxy() {
         if ($.inArray(glob_hosted_proxy, proxies) === -1) { // always keep default proxy
             proxies.push(glob_hosted_proxy);
         }
-        let optionlist = $("#proxyformbox").find(".options");
+        const optionlist = $("#proxyformbox").find(".options");
         $.each(proxies, function(key, value) {
-            let selected = (value == current_proxy);
+            const selected = (value == current_proxy);
             test_append_proxy(optionlist, key, value, selected, true);
         });
     })
@@ -2460,7 +2464,7 @@ function test_append_proxy(optionlist, key, value, selected, dfault) { // make t
             "ping": true
         }
     }).done(function(e) {
-        let api_result = br_result(e);
+        const api_result = br_result(e);
         if (api_result.result == "pong") {
             proxy_option_li(optionlist, true, key, value, selected, dfault);
             return
@@ -2475,7 +2479,7 @@ function test_append_proxy(optionlist, key, value, selected, dfault) { // make t
 }
 
 function proxy_option_li(optionlist, live, key, value, selected, dfault) {
-    let liveclass = (live === true) ? " live" : " offline",
+    const liveclass = (live === true) ? " live" : " offline",
         icon = (live === true) ? "connection" : "wifi-off",
         default_class = (dfault === true) ? " default" : "",
         option = $("<div class='optionwrap" + liveclass + default_class + "' style='display:none' data-pe='none'><span data-value='" + value + "' data-pe='none'>" + value + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon c_stat icon-" + icon + "' data-pe='none'></div><div class='opt_icon icon-bin' data-pe='none'></div></div>");
@@ -2486,14 +2490,14 @@ function proxy_option_li(optionlist, live, key, value, selected, dfault) {
 function submit_proxy() {
     $(document).on("click", "#proxyformbox input.submit", function(e) {
         e.preventDefault();
-        let proxyformbox = $("#proxyformbox"),
+        const proxyformbox = $("#proxyformbox"),
             selectval = proxyformbox.find("#proxy_select_input").val(),
             customval = proxyformbox.find("#proxy_url_input").val();
         if (customval.length > 0) {
             test_custom_proxy(customval);
             return
         }
-        let set_proxy = c_proxy();
+        const set_proxy = c_proxy();
         if (selectval == set_proxy) {
             canceldialog();
             return
@@ -2509,12 +2513,12 @@ function submit_proxy() {
 
 function hide_custom_proxy_field() {
     $(document).on("click", "#proxyformbox .selectarrows", function() {
-        let proxyformbox = $("#proxyformbox"),
+        const proxyformbox = $("#proxyformbox"),
             options = $("#proxyformbox").find(".options .optionwrap"),
             select_inputval = proxyformbox.find("#proxy_select_input").val(),
             custom_input = proxyformbox.find("#proxy_url_input");
         options.each(function() {
-            let this_option = $(this),
+            const this_option = $(this),
                 to_val = this_option.find("> span").attr("data-value");
             if (to_val == select_inputval) {
                 this_option.hide();
@@ -2527,7 +2531,7 @@ function hide_custom_proxy_field() {
 }
 
 function test_custom_proxy(value) { // make test api call
-    let proxy_node = $("#api_proxy"),
+    const proxy_node = $("#api_proxy"),
         proxy_node_data = proxy_node.data(),
         custom_proxies = proxy_node_data.custom_proxies,
         fixed_url = complete_url(value);
@@ -2545,12 +2549,12 @@ function test_custom_proxy(value) { // make test api call
                 "custom": "add"
             }
         }).done(function(e) {
-            let api_result = br_result(e),
+            const api_result = br_result(e),
                 result = api_result.result;
             if (result) {
-                let error = result.error;
+                const error = result.error;
                 if (error) {
-                    let message = error.message;
+                    const message = error.message;
                     if (message && message == "no write acces") {
                         popnotify("error", translate("folderpermissions"));
                         return
@@ -2588,21 +2592,21 @@ function test_custom_proxy(value) { // make test api call
 function remove_proxy() {
     $(document).on("click", "#proxyformbox .options .opt_icon_box .icon-bin", function(e) {
         e.preventDefault();
-        let proxy_node = "api_proxy",
+        const proxy_node = "api_proxy",
             custom_proxies = get_setting(proxy_node, "custom_proxies");
         if (custom_proxies.length > 0) {
-            let thisoption = $(this).closest(".optionwrap"),
+            const thisoption = $(this).closest(".optionwrap"),
                 default_node = (thisoption.hasClass("default")),
                 thisval = thisoption.find("> span").attr("data-value");
             if (default_node === true) {
                 playsound(glob_funk);
                 topnotify(translate("removedefaultnode"));
             } else {
-                let result = confirm(translate("confirmremovenode", {
+                const result = confirm(translate("confirmremovenode", {
                     "thisval": thisval
                 }));
                 if (result === true) {
-                    let new_array = $.grep(custom_proxies, function(value) {
+                    const new_array = $.grep(custom_proxies, function(value) {
                         return value != thisval;
                     });
                     thisoption.slideUp(500, function() {
@@ -2621,7 +2625,7 @@ function remove_proxy() {
 }
 
 function complete_url(url) {
-    let cv1 = (url.indexOf("://") > -1) ? url : "https://" + url;
+    const cv1 = (url.indexOf("://") > -1) ? url : "https://" + url;
     return (cv1.slice(-1) == "/") ? cv1 : cv1 + "/";
 }
 
@@ -2632,7 +2636,7 @@ function c_proxy() {
 // API keys
 function apikeys() {
     $(document).on("click", "#apikeys", function() {
-        let ak_data = $(this).data(),
+        const ak_data = $(this).data(),
             alchemykey = (ak_data.alchemy) ? ak_data.alchemy : "",
             arbiscankey = (ak_data.arbiscan) ? ak_data.arbiscan : "",
             bitlykey = (ak_data.bitly) ? ak_data.bitly : "",
@@ -2692,9 +2696,9 @@ function submitapi() {
     $(document).on("click", "#apisubmit", function(e) {
         e.preventDefault();
         $("#apikeyformbox").addClass("pass");
-        let allinputs = $("#apikeyformbox input.ak_input"),
+        const allinputs = $("#apikeyformbox input.ak_input"),
             ak_input = allinputs.filter(function() {
-                let this_input = $(this);
+                const this_input = $(this);
                 return this_input.hasClass("changed") && this_input.val() != this_input.attr("data-checkchange");
             }),
             inputcount = ak_input.length;
@@ -2710,7 +2714,7 @@ function submitapi() {
             return false;
         }
         ak_input.each(function(index) {
-            let thisindex = index + 1,
+            const thisindex = index + 1,
                 thisinput = $(this),
                 thisvalue = thisinput.val(),
                 thisref = thisinput.attr("data-ref"),
@@ -2722,7 +2726,7 @@ function submitapi() {
 }
 
 function checkapikey(thisref, apikeyval, lastinput) {
-    let token_data = (thisref == "arbiscan") ? {
+    const token_data = (thisref == "arbiscan") ? {
             "keylength": 6,
             "payload": "?module=block&action=getblockreward&blockno=131049&apikey="
         } :
@@ -2770,7 +2774,7 @@ function checkapikey(thisref, apikeyval, lastinput) {
 function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
     if (apikeyval.length > keylength) {
         if (thisref == "infura" || thisref == "alchemy") {
-            let txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
+            const txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
                 base_url = (thisref == "infura") ? glob_main_eth_node : glob_main_alchemy_node,
                 payload = {
                     "jsonrpc": "2.0",
@@ -2790,7 +2794,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                     }
                 }
             }).done(function(e) {
-                let data = br_result(e).result;
+                const data = br_result(e).result;
                 if (data) {
                     update_api_attr(thisref, apikeyval, lastinput);
                     return
@@ -2801,21 +2805,21 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
             });
             return
         }
-        let api_data = get_api_data(thisref),
+        const api_data = get_api_data(thisref),
             base_url = api_data.base_url,
             method = (thisref == "firebase" || thisref == "bitly") ? "POST" : "GET",
             params = {
                 "method": method,
                 "cache": true
             };
-        var search = payload + apikeyval;
+        let search = payload + apikeyval;
         if (thisref == "firebase") {
             params.data = {
                 "longDynamicLink": glob_firebase_shortlink + "?link=" + glob_approot + "?p=request"
             }
         }
         if (thisref == "bitly") {
-            var search = payload;
+            search = payload;
             params.headers = {
                 "Authorization": "Bearer " + apikeyval,
                 "Content-Type": "application/json"
@@ -2824,7 +2828,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                 "bitlink_id": "bit.ly/12a4b6c"
             })
         }
-        let api_url = base_url + search,
+        const api_url = base_url + search,
             postdata = (thisref == "coinmarketcap") ? {
                 "api": "coinmarketcap",
                 "search": search,
@@ -2841,15 +2845,15 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                 "params": params
             };
         api_proxy(postdata).done(function(e) {
-            let data = br_result(e).result;
+            const data = br_result(e).result;
             if (data) {
-                let apicallfailed = translate("apicallfailed");
+                const apicallfailed = translate("apicallfailed");
                 if (thisref == "arbiscan" && data.status != 1) {
                     if (data.result == "Invalid API Key") {
                         api_fail(thisref, apikeyval);
                     } else {
                         notify(translate("apicallerror"));
-                        let content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.message + "</p>";
+                        const content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.message + "</p>";
                         popdialog(content, "canceldialog");
                     }
                     return
@@ -2859,14 +2863,14 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                     return
                 }
                 if (thisref == "blockchair") {
-                    let context_code = data.context.code;
+                    const context_code = data.context.code;
                     if (context_code === 200) {
                         update_api_attr(thisref, apikeyval, lastinput);
                     } else if (context_code === 402) {
                         api_fail(thisref, apikeyval);
                     } else {
                         notify(translate("apicallerror"));
-                        let content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.error + "</p>";
+                        const content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
                     return
@@ -2888,7 +2892,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                         api_fail(thisref, apikeyval);
                     } else {
                         notify(translate("apicallerror"));
-                        let content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.error + "</p>";
+                        const content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
                     return
@@ -2901,20 +2905,20 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                             api_fail(thisref, apikeyval);
                         } else {
                             notify(translate("apicallerror"));
-                            let content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.error + "</p>";
+                            const content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.error + "</p>";
                             popdialog(content, "canceldialog");
                         }
                     }
                     return
                 }
                 if (thisref == "exchangeratesapi" && !data.success) {
-                    let ec = q_obj(data, "error.code");
+                    const ec = q_obj(data, "error.code");
                     if (ec) {
                         if (ec == "invalid_access_key") {
                             api_fail(thisref, apikeyval);
                         } else {
                             notify(translate("apicallerror"));
-                            let content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + ec + "</p>";
+                            const content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + ec + "</p>";
                             popdialog(content, "canceldialog");
                         }
                         return
@@ -2925,7 +2929,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                         api_fail(thisref, apikeyval);
                     } else {
                         notify(translate("apicallerror"));
-                        let content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.error + "</p>";
+                        const content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
                     return
@@ -2947,7 +2951,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
 }
 
 function api_fail(thisref, thisvalue) {
-    let errormsg = translate("invalidapikeyname", {
+    const errormsg = translate("invalidapikeyname", {
             "thisref": thisref
         }),
         apiformbox = $("#apikeyformbox");
@@ -2958,7 +2962,7 @@ function api_fail(thisref, thisvalue) {
 }
 
 function update_api_attr(thisref, thisvalue, lastinput) {
-    let apiformbox = $("#apikeyformbox"),
+    const apiformbox = $("#apikeyformbox"),
         changeval = (thisvalue) ? thisvalue : "";
     if (apiformbox && apiformbox.hasClass("pass")) {
         complement_apisettings(thisref, thisvalue);
@@ -2981,7 +2985,7 @@ function update_api_attr(thisref, thisvalue, lastinput) {
 }
 
 function complement_apisettings(thisref, thisvalue) {
-    let kpairs = {};
+    const kpairs = {};
     kpairs[thisref] = thisvalue;
     set_setting("apikeys", kpairs);
     if (thisref == "bitly") {
@@ -3017,7 +3021,7 @@ function edit_contactform_trigger() {
 }
 
 function edit_contactform(checkout) {
-    let contactform = $("#contactform"),
+    const contactform = $("#contactform"),
         thisdata = contactform.data(),
         nameinput = thisdata.name,
         addressinput = thisdata.address,
@@ -3055,7 +3059,7 @@ function edit_contactform(checkout) {
 
 function check_contactform() {
     $("#contactformbox .popform .cf_inputwrap").each(function() {
-        let cf_inputwrap = $(this),
+        const cf_inputwrap = $(this),
             thisinput = cf_inputwrap.children("input"),
             inputval = thisinput.val();
         if (inputval.length > 2) {
@@ -3068,7 +3072,7 @@ function check_contactform() {
 
 function type_contactform() {
     $(document).on("input", "#contactformbox .cf_inputwrap input", function() {
-        let thisinput = $(this),
+        const thisinput = $(this),
             thisvalue = thisinput.val(),
             cf_inputwrap = thisinput.parent(".cf_inputwrap");
         if (thisvalue.length > 2) {
@@ -3082,7 +3086,7 @@ function type_contactform() {
 function submit_contactform() {
     $(document).on("click", "#contactformbox input.submit", function(e) {
         e.preventDefault();
-        let cfb = $("#contactformbox"),
+        const cfb = $("#contactformbox"),
             nameinput = cfb.find(".cf_nameinput"),
             nameinput_val = nameinput.val(),
             addressinput = cfb.find(".cf_addressinput"),
@@ -3161,7 +3165,7 @@ function permissions() {
 }
 
 function permissions_callback() {
-    let thisnode = $("#permissions"),
+    const thisnode = $("#permissions"),
         thisdata = thisnode.data(),
         selected = thisdata.selected,
         ddat = [{
@@ -3222,7 +3226,7 @@ function permissions_callback() {
 function submit_permissions() {
     $(document).on("click", "#permissions_formbox input.submit", function(e) {
         e.preventDefault();
-        let thisform = $(this).closest(".popform"),
+        const thisform = $(this).closest(".popform"),
             thisinput = thisform.find("input:first"),
             thisvalue = thisinput.val(),
             currentval = thisform.attr("data-current");
@@ -3254,7 +3258,7 @@ function team_invite_trigger() {
             team_invite();
             return
         }
-        let content = pinpanel("", {
+        const content = pinpanel("", {
             "func": team_invite
         });
         showoptions(content, "pin");
@@ -3262,7 +3266,7 @@ function team_invite_trigger() {
 }
 
 function team_invite() {
-    let jsonencode = complile_teaminvite(),
+    const jsonencode = complile_teaminvite(),
         filename = "bitrequest_team_invite.json",
         ddat = [{
             "div": {
@@ -3281,9 +3285,9 @@ function team_invite() {
 }
 
 function complile_teaminvite() {
-    let jsonfile = {};
+    const jsonfile = {};
     for (let key in localStorage) {
-        let value = localStorage.getItem(key);
+        const value = localStorage.getItem(key);
         if (value === null ||
             key == "bitrequest_symbols" ||
             key == "bitrequest_changes" ||
@@ -3301,9 +3305,9 @@ function complile_teaminvite() {
             key == "bitrequest_dat" ||
             key == "bitrequest_rt" ||
             key == "bitrequest_bpdat") {} else {
-            let pval = JSON.parse(value);
+            const pval = JSON.parse(value);
             if (key == "bitrequest_settings") {
-                let mods = [{
+                const mods = [{
                         "id": "permissions",
                         "change": "selected",
                         "val": "cashier"
@@ -3315,17 +3319,16 @@ function complile_teaminvite() {
             }
         }
     }
-    let seedobj = (glob_hasbip === true) ? ls_phrase_obj() : {
+    const seedobj = (glob_hasbip === true) ? ls_phrase_obj() : {
             "pid": false,
             "pob": false
         },
-        seedid = seedobj.pid,
         adjusted = adjust_object(jsonfile, seedobj);
     return btoa(JSON.stringify(adjusted));
 }
 
 function adjust_object(object, seedobj) {
-    let seedid = seedobj.pid;
+    const seedid = seedobj.pid;
     object.bitrequest_cashier = {
         "cashier": true,
         "seedid": seedid
@@ -3338,7 +3341,7 @@ function adjust_object(object, seedobj) {
             cc = rootkey.slice(64);
     }
     $.each(glob_br_config.bitrequest_coin_data, function(i, coinconfig) {
-        let currency = coinconfig.currency,
+        const currency = coinconfig.currency,
             default_coinsettings = coinconfig.settings,
             bip32dat = default_coinsettings.Xpub,
             keyval = "bitrequest_cc_" + currency,
@@ -3350,11 +3353,11 @@ function adjust_object(object, seedobj) {
                 xpubid = xpubdat.xpubid;
         }
         if (addresses) {
-            let checked = $.grep(addresses, function(filter) {
+            const checked = $.grep(addresses, function(filter) {
                 return filter.checked == true;
             });
             if (bip32dat.xpub) {
-                let address_object = $.grep(checked, function(filter) {
+                const address_object = $.grep(checked, function(filter) {
                     if (filter.seedid) {
                         return false;
                     }
@@ -3363,15 +3366,15 @@ function adjust_object(object, seedobj) {
                     }
                     return true;
                 });
-                let settings_key = "bitrequest_" + currency + "_settings",
+                const settings_key = "bitrequest_" + currency + "_settings",
                     saved_coinsettings = object[settings_key],
                     coinsettings = (saved_coinsettings) ? saved_coinsettings : default_coinsettings;
                 if (coinsettings) {
-                    let xpsettings = coinsettings.Xpub,
+                    const xpsettings = coinsettings.Xpub,
                         xpubkey = xpsettings.key;
                     if (xpubkey && xpsettings.selected === true) {} else {
                         if (seedid) {
-                            let new_xpsettings = xpsettings;
+                            const new_xpsettings = xpsettings;
                             new_xpsettings.key = xpub;
                             new_xpsettings.key_id = xpubid;
                             new_xpsettings.selected = true;
@@ -3395,11 +3398,11 @@ function adjust_object(object, seedobj) {
 
 function share_teaminvite() {
     $(document).on("click", "#send_invite", function() {
-        let result = confirm(translate("sendinvite") + "?");
+        const result = confirm(translate("sendinvite") + "?");
         if (result === true) {
             loader(true);
             loadertext(translate("installationpackage"));
-            let accountname = $("#accountsettings").data("selected");
+            const accountname = $("#accountsettings").data("selected");
             api_proxy({
                 "custom": "system_bu",
                 "api_url": true,
@@ -3409,7 +3412,7 @@ function share_teaminvite() {
                     "account": btoa(accountname)
                 }
             }).done(function(e) {
-                let br_cache = e.ping.br_cache,
+                const br_cache = e.ping.br_cache,
                     sharedtitle = translate("teaminviteharetitle", {
                         "accountname": accountname
                     }),
@@ -3430,7 +3433,7 @@ function share_teaminvite() {
 }
 
 function check_teaminvite(ro) {
-    let ro_dat = stripb64(ro),
+    const ro_dat = stripb64(ro),
         ro_id = ro_dat.ro,
         ro_proxy = ro_dat.proxy;
     api_proxy({
@@ -3439,9 +3442,9 @@ function check_teaminvite(ro) {
         "proxy": true,
         "params": ro_id
     }, ro_proxy).done(function(e) {
-        let ping = e.ping;
+        const ping = e.ping;
         if (ping) {
-            let br_cache = ping.br_cache,
+            const br_cache = ping.br_cache,
                 server_time = br_cache.utc_timestamp,
                 filetime = br_cache.created_utc,
                 filetimesec = (filetime) ? filetime * 1000 : now(),
@@ -3512,19 +3515,19 @@ function check_teaminvite(ro) {
 
 function install_teaminvite_trigger() {
     $(document).on("click", "#install_teaminvite", function() {
-        let this_bttn = $(this),
+        const this_bttn = $(this),
             ismaster = this_bttn.attr("data-ismaster");
         if (ismaster === "true") {
             notify(translate("owndevice"));
             return
         }
-        let update = this_bttn.attr("data-update"),
+        const update = this_bttn.attr("data-update"),
             installid = this_bttn.attr("data-installid"),
             installed = (glob_stored_currencies) ? true : false,
             result_text = (update == "true") ? translate("updatealert") : translate("installalert"),
             result = (installed === true) ? confirm(result_text) : true;
         if (result === true) {
-            let bu_dat = this_bttn.attr("data-base64"),
+            const bu_dat = this_bttn.attr("data-base64"),
                 j_filename = this_bttn.attr("data-filename"),
                 j_object = JSON.parse(atob(bu_dat));
             install_teaminvite(j_object, j_filename, installid);
@@ -3537,13 +3540,13 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
         localStorage.setItem(key, JSON.stringify(val));
     });
     if (iid) {
-        let stored_teamids = br_get_local("teamid", true),
+        const stored_teamids = br_get_local("teamid", true),
             teamid_arr = br_dobj(stored_teamids);
         teamid_arr.push(iid);
         br_set_local("teamid", teamid_arr, true);
     }
     rendersettings(["restore", "backup"]); // exclude restore and backup settings
-    let lastrestore = translate("lastrestore") + "<br/><span class='icon-folder-open'>" + translate("teaminvite") + " " + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_") + "</span>";
+    const lastrestore = translate("lastrestore") + "<br/><span class='icon-folder-open'>" + translate("teaminvite") + " " + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_") + "</span>";
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": bu_filename,
@@ -3556,13 +3559,13 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
 }
 
 function isteaminvite(jsonobject) {
-    let cashier_entry = jsonobject.bitrequest_cashier;
+    const cashier_entry = jsonobject.bitrequest_cashier;
     return (cashier_entry && cashier_entry.cashier) ? true : false;
 }
 
 function check_useragent() {
     $(document).on("click", "#ua", function() {
-        let refmatch = (glob_ref_match) ? "<span class='number'>" + glob_referrer + "</span>" : "<span class='number'>" + false + "</span>",
+        const refmatch = (glob_ref_match) ? "<span class='number'>" + glob_referrer + "</span>" : "<span class='number'>" + false + "</span>",
             pdat = GD_pass(),
             pass = pdat.expired,
             expiresin = pdat.expires_in,

@@ -683,7 +683,7 @@ const glob_apptitle = "Bitrequest",
                     "ccsymbol": "eth",
                     "cmcid": 1027,
                     "urlscheme": function(payment, address, amount, iszero) {
-                        let amnt = (iszero === true) ? "" : "?value=" + tofixedspecial((parseFloat(amount) * 1000000000000000000).toString(), 0);
+                        const amnt = (iszero === true) ? "" : "?value=" + tofixedspecial((parseFloat(amount) * 1000000000000000000).toString(), 0);
                         return payment + ":" + address + amnt;
                     },
                     "address_regex": "^0x[a-fA-F0-9]{40}$"
@@ -822,7 +822,7 @@ const glob_apptitle = "Bitrequest",
                     "ccsymbol": "xno",
                     "cmcid": 1567,
                     "urlscheme": function(payment, address, amount, iszero) {
-                        let amnt = (iszero === true) ? "" : "?amount=" + NanocurrencyWeb.tools.convert(amount, "NANO", "RAW");
+                        const amnt = (iszero === true) ? "" : "?amount=" + NanocurrencyWeb.tools.convert(amount, "NANO", "RAW");
                         return "nano:" + address + amnt;
                     },
                     "address_regex": "^(xrb|nano)_([a-z1-9]{60})$"

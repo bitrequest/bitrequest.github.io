@@ -38,7 +38,7 @@ function init_access(ak) {
         fetch_creds(ak);
         return
     }
-    let p = GD_pass();
+    const p = GD_pass();
     if (p.pass) {
         glob_html.addClass("gdauth");
         return
@@ -74,29 +74,29 @@ function fetch_creds(k) {
             "grant_type": "authorization_code"
         }).done(function(e) {
             if (e) {
-                let data = br_result(e);
+                const data = br_result(e);
                 if (data) {
-                    let result = data.result;
+                    const result = data.result;
                     if (result) {
-                        let error = result.error;
+                        const error = result.error;
                         if (error) {
-                            let ed = result.error_description,
+                            const ed = result.error_description,
                                 em = (ed) ? " || " + ed : "";
                             notify(error + em);
                             return
                         }
-                        let ga_token = result.access_token;
+                        const ga_token = result.access_token;
                         if (ga_token) {
-                            let jt = {
+                            const jt = {
                                 "created": now(),
                                 "active": true,
                                 "access_token": ga_token,
                                 "expires_in": result.expires_in
                             };
                             br_set_local("dat", JSON.stringify(jt));
-                            let rt = result.refresh_token;
+                            const rt = result.refresh_token;
                             if (rt) {
-                                let jtobj = {
+                                const jtobj = {
                                     "d": lnurl_encode("xz", rt)
                                 }
                                 br_set_local("rt", JSON.stringify(jtobj));
@@ -105,7 +105,7 @@ function fetch_creds(k) {
                             if (glob_body.hasClass("showstartpage")) { // only show when logged in
                                 trigger_restore();
                             }
-                            let timeout = setTimeout(function() {
+                            const timeout = setTimeout(function() {
                                 history.pushState({
                                     "pagename": "settings"
                                 }, "", glob_redirect_uri);
@@ -132,13 +132,13 @@ function fetch_access(rt, callback) {
             "grant_type": "refresh_token"
         }).done(function(e) {
             if (e) {
-                let data = br_result(e);
+                const data = br_result(e);
                 if (data) {
-                    let result = data.result;
+                    const result = data.result;
                     if (result) {
-                        let ga_token = result.access_token;
+                        const ga_token = result.access_token;
                         if (ga_token) {
-                            let jt = {
+                            const jt = {
                                 "created": now(),
                                 "active": true,
                                 "access_token": ga_token,
@@ -147,9 +147,9 @@ function fetch_access(rt, callback) {
                             br_set_local("dat", JSON.stringify(jt));
                             refcb(callback);
                         }
-                        let error = result.error;
+                        const error = result.error;
                         if (error) {
-                            let ed = result.error_description,
+                            const ed = result.error_description,
                                 em = (ed) ? " || " + ed : "";
                             if (ed.indexOf("expired") >= 0 || ed.indexOf("revoked") >= 0) {
                                 br_remove_local("rt");
@@ -172,7 +172,7 @@ function refcb(cb) {
     glob_html.addClass("gdauth");
     if (cb) {
         if (cb == "uad") {
-            let p = GD_pass();
+            const p = GD_pass();
             if (p.pass) {
                 updateappdata(p);
                 return
@@ -185,7 +185,7 @@ function refcb(cb) {
 }
 
 function lca_obj() {
-    let bdat = br_get_local("dat", true);
+    const bdat = br_get_local("dat", true);
     if (bdat) {
         return bdat;
     }
@@ -193,7 +193,7 @@ function lca_obj() {
 }
 
 function rt_obj() {
-    let rtdat = br_get_local("rt", true);
+    const rtdat = br_get_local("rt", true);
     if (rtdat) {
         return rtdat.d;
     }
@@ -221,7 +221,7 @@ function init_login_dialog(p) {
 
 function oauth_pop_delay(ab) {
     canceldialog();
-    let timeout = setTimeout(function() {
+    const timeout = setTimeout(function() {
         oauth_pop(ab);
     }, 1200, function() {
         clearTimeout(timeout);
@@ -229,7 +229,7 @@ function oauth_pop_delay(ab) {
 }
 
 function oauth_pop(ab) {
-    let cbx = (ab) ? render_html([{
+    const cbx = (ab) ? render_html([{
             "div": {
                 "id": "pk_confirmwrap",
                 "class": "cb_wrap",
@@ -300,7 +300,7 @@ function gd_login_trigger() {
 function submit_gdbu_dialog() {
     $(document).on("click", "#gdbu_dialog input.submit", function(e) {
         e.preventDefault();
-        let gdbu_dialog = $("#gdbu_dialog"),
+        const gdbu_dialog = $("#gdbu_dialog"),
             gd_checkbox = gdbu_dialog.find("#pk_confirmwrap"),
             gd_checked = gd_checkbox.data("checked");
         if (gd_checked == true) {
@@ -316,7 +316,7 @@ function g_login() {
         notify(translate("ganot"));
         return
     }
-    let p = GD_pass();
+    const p = GD_pass();
     if (p.pass) {
         gdlogin_callbacks();
         return
@@ -328,7 +328,7 @@ function g_login() {
             return
         }
     }
-    let consent = (p.expired == "norefresh") ? "&prompt=consent" : "",
+    const consent = (p.expired == "norefresh") ? "&prompt=consent" : "",
         login_uri = "https://accounts.google.com/o/oauth2/auth?client_id=" + to.ga_id + "&redirect_uri=" + glob_redirect_uri + "&response_type=code&scope=" + glob_scope + "&access_type=offline" + consent;
     glob_w_loc.href = login_uri;
 }
@@ -344,10 +344,10 @@ function gdlogin_callbacks(close) {
 }
 
 function adjust_sp() {
-    let switch_panel = $("#popup.showpu .switchpanel");
+    const switch_panel = $("#popup.showpu .switchpanel");
     if (switch_panel.length) {
         switch_panel.addClass("true").removeClass("false");
-        let lad = $("#listappdata");
+        const lad = $("#listappdata");
         if (lad.length) {
             listappdata();
             return
@@ -358,7 +358,7 @@ function adjust_sp() {
 }
 
 function g_logout() {
-    let result = confirm(translate("stopgdalert"));
+    const result = confirm(translate("stopgdalert"));
     if (result === true) {
         deactivate();
         gdlogout_callbacks();
@@ -366,7 +366,7 @@ function g_logout() {
 }
 
 function activate() {
-    let bdat = lca_obj();
+    const bdat = lca_obj();
     if (bdat) {
         bdat.active = true;
         br_set_local("dat", JSON.stringify(bdat));
@@ -374,7 +374,7 @@ function activate() {
 }
 
 function deactivate() {
-    let bdat = lca_obj();
+    const bdat = lca_obj();
     if (bdat) {
         bdat.active = false;
         br_set_local("dat", JSON.stringify(bdat));
@@ -384,7 +384,7 @@ function deactivate() {
 function gdlogout_callbacks() {
     glob_html.removeClass("gdauth");
     notify(translate("gdsignedout"));
-    let switch_panel = $("#popup.showpu .switchpanel");
+    const switch_panel = $("#popup.showpu .switchpanel");
     if (switch_panel.length) {
         switch_panel.removeClass("true").addClass("false");
         $("#changelog").slideDown(300);
@@ -396,7 +396,7 @@ function gdlogout_callbacks() {
 
 function Drive_Backup_trigger() {
     $(document).on("click", "#gdtrigger .switchpanel", function() {
-        let p = GD_pass();
+        const p = GD_pass();
         if (p.pass) {
             g_logout();
             return
@@ -406,19 +406,19 @@ function Drive_Backup_trigger() {
 }
 
 function updateappdata(p) {
-    let gd_timer = br_get_session("gd_timer"); // prevent Ddos
+    const gd_timer = br_get_session("gd_timer"); // prevent Ddos
     if (gd_timer) {
-        let interval = 3000;
+        const interval = 3000;
         if ((now() - gd_timer) < interval) {
             return
         }
     }
-    let token = p.token;
+    const token = p.token;
     if (token) {
-        let bu_id = br_get_local("backupfile_id");
+        const bu_id = br_get_local("backupfile_id");
         if (bu_id) {
             br_set_session("gd_timer", now());
-            let ddat = {
+            const ddat = {
                 "api_url": glob_drivepath + "/upload/drive/v3/files/" + bu_id + "?uploadType=media&alt=json",
                 "proxy": false,
                 "params": {
@@ -436,11 +436,11 @@ function updateappdata(p) {
                 console.log(textStatus);
                 console.log(errorThrown);
                 if (textStatus == "error") {
-                    let error_object = jqXHR;
+                    const error_object = jqXHR;
                     if (error_object) {
-                        let resp_obj = error_object.responseJSON;
+                        const resp_obj = error_object.responseJSON;
                         if (resp_obj) {
-                            let resp = resp_obj.error;
+                            const resp = resp_obj.error;
                             if (resp) {
                                 if (resp.code == 401) {
                                     notify(translate("unauthorized"));
@@ -463,12 +463,12 @@ function updateappdata(p) {
 }
 
 function createfile(token) {
-    let jt = GD_pass(),
+    const jt = GD_pass(),
         jtp = jt.pass,
         pass = (token) ? token : (jtp) ? jt.token : false,
         backup = complilebackup();
     if (pass) {
-        let file = new Blob([complilebackup()], {
+        const file = new Blob([complilebackup()], {
                 "type": "text/plain"
             }),
             description = {
@@ -492,7 +492,7 @@ function createfile(token) {
         xhr.setRequestHeader("Authorization", "Bearer " + pass);
         xhr.responseType = "json";
         xhr.onload = () => {
-            let response_id = xhr.response.id,
+            const response_id = xhr.response.id,
                 response_id_string = response_id.toString();
             br_set_local("backupfile_id", response_id_string);
         };
@@ -507,9 +507,9 @@ function lad_trigger() {
 }
 
 function listappdata() {
-    let p = GD_pass();
+    const p = GD_pass();
     if (p.pass) {
-        let thistrigger = $("#listappdata .switchpanel"),
+        const thistrigger = $("#listappdata .switchpanel"),
             backuplist = $("#gd_backuplist"),
             importjsonlist = $("#importjson");
         if (backuplist.find("li").length) {
@@ -534,10 +534,10 @@ function listappdata() {
                 }
             }
         }).done(function(e) {
-            let filelist = e.files;
+            const filelist = e.files;
             if (filelist.length) {
-                let sorted_filelist = filelist.sort(function(a, b) { // sort array by timestamp
-                        let amod = a.modifiedTime,
+                const sorted_filelist = filelist.sort(function(a, b) { // sort array by timestamp
+                        const amod = a.modifiedTime,
                             bmod = b.modifiedTime,
                             d1 = (amod) ? to_ts(amod) : 2,
                             d2 = (bmod) ? to_ts(bmod) : 1;
@@ -545,7 +545,7 @@ function listappdata() {
                     }),
                     gdbackuppush = [];
                 $.each(sorted_filelist, function(i, value) {
-                    let description = JSON.parse(value.description),
+                    const description = JSON.parse(value.description),
                         device = description.device,
                         device_id = description.deviceid,
                         dmod = short_date(description.modified),
@@ -583,9 +583,9 @@ function listappdata() {
 
 function deletefiletrigger() {
     $(document).on("click", ".purge_bu", function() {
-        let p = GD_pass();
+        const p = GD_pass();
         if (p.pass) {
-            let thislist = $(this).parent("li"),
+            const thislist = $(this).parent("li"),
                 fileid = thislist.attr("data-gdbu_id"),
                 result = confirm(translate("deletefile", {
                     "file": thislist.text()
@@ -626,7 +626,7 @@ function deletefile(fileId, thislist, pass) {
 }
 
 function GD_pass() {
-    let jt = {
+    const jt = {
             "token": false,
             "active": false,
             "expired": false,
@@ -636,7 +636,7 @@ function GD_pass() {
         rtoken = rt_obj(),
         can_refresh = (rtoken) ? rtoken : "norefresh";
     if (bdat) {
-        let token = bdat.access_token,
+        const token = bdat.access_token,
             ttime = (now() - bdat.created) + 60000,
             extime = bdat.expires_in * 1000,
             expired = (ttime > extime),

@@ -1,11 +1,11 @@
 import QrScanner from "./assets_js_lib_qr-scanner.js";
 QrScanner.WORKER_PATH = "./assets_js_lib_qr-scanner-worker.min.js";
 
-let video = $("#qr-video")[0],
+const video = $("#qr-video")[0],
     scanner = new QrScanner(video, result => setResult(result), error => {
         console.log(error);
-    }),
-    currencyscan = null,
+    });
+let currencyscan = null,
     scantype = null;
 
 $(document).ready(function() {
@@ -30,7 +30,7 @@ function start_scan(currency, type) {
     scanner.start().then(() => {
         currencyscan = currency,
             scantype = type;
-        let currentpage = geturlparameters().p,
+        const currentpage = geturlparameters().p,
             currentpage_correct = (currentpage) ? "?p=" + currentpage + "&scan=" : "?scan=",
             url = currentpage_correct + currency,
             title = "scanning " + currency + " " + type;
@@ -49,7 +49,7 @@ function cam_trigger() {
     $(document).on("click", ".qrscanner", function() {
         loader(true);
         loadertext(translate("loadingcamera"));
-        let thisqr = $(this),
+        const thisqr = $(this),
             currency = thisqr.attr("data-currency"),
             type = thisqr.attr("data-id");
         start_scan(currency, type);
@@ -78,17 +78,17 @@ function close_cam() {
 
 function setResult(result) {
     scanner.stop();
-    let payment = currencyscan,
+    const payment = currencyscan,
         thistype = scantype;
     if (thistype == "lnconnect") {
-        let params_url = renderlnconnect(result);
+        const params_url = renderlnconnect(result);
         if (params_url) {
-            let resturl = params_url.resturl,
+            const resturl = params_url.resturl,
                 macaroon = params_url.macaroon;
             if (resturl && macaroon) {
-                let macval = b64urldecode(macaroon);
+                const macval = b64urldecode(macaroon);
                 if (macval) {
-                    let set_vals = set_ln_fields(payment, resturl, macval);
+                    const set_vals = set_ln_fields(payment, resturl, macval);
                     if (set_vals) {
                         trigger_ln();
                     }
@@ -98,7 +98,7 @@ function setResult(result) {
             }
         }
     } else if (thistype == "address") {
-        let prefix = payment + ":",
+        const prefix = payment + ":",
             mid_result = (result.indexOf(prefix) >= 0 && payment != "kaspa") ? result.split(prefix).pop() : result,
             end_result = (result.indexOf("?") >= 0) ? mid_result.split("?")[0] : mid_result,
             isxpub = (end_result.length > 103),
@@ -127,7 +127,7 @@ function setResult(result) {
             }
         }
     } else if (thistype == "viewkey") {
-        let validate = (result.length === 64) ? check_vk(result) : false;
+        const validate = (result.length === 64) ? check_vk(result) : false;
         if (validate === true) {
             $("#popup .formbox input.vk_input").val(result);
             if (glob_supportsTouch) {} else {
