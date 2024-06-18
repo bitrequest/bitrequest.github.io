@@ -302,73 +302,75 @@ function monero_fetch(rd, api_data, rdo) {
             }
         }).done(function(e) {
             const data = br_result(e).result;
-            if (data.start_height > -1) { // success!
-                const pl = {
-                    "address": account,
-                    "view_key": viewkey
-                };
-                api_proxy({
-                    "api": api_name,
-                    "search": "get_address_txs",
-                    "cachetime": 25,
-                    "cachefolder": "1h",
-                    "proxy": true,
-                    "params": {
-                        "method": "POST",
-                        "data": JSON.stringify(pl),
-                        "headers": {
-                            "Content-Type": "application/json"
+            if (data) {
+                if (data.start_height > -1) { // success!
+                    const pl = {
+                        "address": account,
+                        "view_key": viewkey
+                    };
+                    api_proxy({
+                        "api": api_name,
+                        "search": "get_address_txs",
+                        "cachetime": 25,
+                        "cachefolder": "1h",
+                        "proxy": true,
+                        "params": {
+                            "method": "POST",
+                            "data": JSON.stringify(pl),
+                            "headers": {
+                                "Content-Type": "application/json"
+                            }
                         }
-                    }
-                }).done(function(e) {
-                    const data = br_result(e).result,
-                        transactions = data.transactions,
-                        source = rdo.source;
-                    if (transactions) {
-                        const sortlist = sort_by_date(xmr_scan_data, transactions);
-                        let counter = 0,
-                            match = false,
-                            txdat = false;
-                        $.each(sortlist, function(dat, value) {
-                            const txd = xmr_scan_data(value, rdo.setconfirmations, "xmr", data.blockchain_height);
-                            if (txd) {
-                                const xid_match = match_xmr_pid(xmr_ia, payment_id, txd.payment_id); // match xmr payment_id if set
-                                if (xid_match === true) {
-                                    if (rdo.pending == "polling") {
-                                        if (txd.txhash == rd.txhash && txd.ccval) {
-                                            match = true, txdat = txd;
-                                            const tx_listitem = append_tx_li(txd, rd.requesttype);
-                                            if (tx_listitem) {
-                                                transactionlist.append(tx_listitem.data(txd));
-                                                counter++;
-                                            }
-                                            return
-                                        }
-                                    }
-                                    if (rdo.pending == "scanning") {
-                                        if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
-                                            match = true, txdat = txd;
-                                            if (source == "list") {
+                    }).done(function(e) {
+                        const data = br_result(e).result,
+                            transactions = data.transactions,
+                            source = rdo.source;
+                        if (transactions) {
+                            const sortlist = sort_by_date(xmr_scan_data, transactions);
+                            let counter = 0,
+                                match = false,
+                                txdat = false;
+                            $.each(sortlist, function(dat, value) {
+                                const txd = xmr_scan_data(value, rdo.setconfirmations, "xmr", data.blockchain_height);
+                                if (txd) {
+                                    const xid_match = match_xmr_pid(xmr_ia, payment_id, txd.payment_id); // match xmr payment_id if set
+                                    if (xid_match === true) {
+                                        if (rdo.pending == "polling") {
+                                            if (txd.txhash == rd.txhash && txd.ccval) {
+                                                match = true, txdat = txd;
                                                 const tx_listitem = append_tx_li(txd, rd.requesttype);
                                                 if (tx_listitem) {
                                                     transactionlist.append(tx_listitem.data(txd));
                                                     counter++;
                                                 }
+                                                return
+                                            }
+                                        }
+                                        if (rdo.pending == "scanning") {
+                                            if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
+                                                match = true, txdat = txd;
+                                                if (source == "list") {
+                                                    const tx_listitem = append_tx_li(txd, rd.requesttype);
+                                                    if (tx_listitem) {
+                                                        transactionlist.append(tx_listitem.data(txd));
+                                                        counter++;
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
-                        });
-                        scan_match(rd, api_data, rdo, counter, txdat, match);
-                        return
-                    }
-                    api_callback(rd.requestid, source);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    const error_object = (errorThrown) ? errorThrown : jqXHR;
-                    tx_api_scan_fail(rd, rdo, api_data, error_object);
-                });
-                return
+                            });
+                            scan_match(rd, api_data, rdo, counter, txdat, match);
+                            return
+                        }
+                        api_callback(rd.requestid, source);
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        const error_object = (errorThrown) ? errorThrown : jqXHR;
+                        tx_api_scan_fail(rd, rdo, api_data, error_object);
+                    });
+                    return
+                }
             }
             tx_api_scan_fail(rd, rdo, api_data, default_error);
         }).fail(function(jqXHR, textStatus, errorThrown) {

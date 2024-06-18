@@ -1343,23 +1343,27 @@ function init_xmr_node(cachetime, address, vk, request_ts, txhash, start) {
             }
         }
     }).done(function(e) {
-        const data = br_result(e).result,
-            errormessage = data.Error;
-        if (errormessage) {
-            const error = (errormessage) ? errormessage : translate("invalidvk");
-            popnotify("error", error);
-            return
-        }
-        const start_height = data.start_height;
-        if (start_height > -1) { // success!
-            const pingtime = (txhash) ? 35000 : 12000; // poll slower when we know txid
-            if (start === true) {
-                ping_xmr_node(cachetime, address, vk, request_ts, txhash);
+        const data = br_result(e).result;
+        if (data) {
+            const errormessage = data.Error;
+            if (errormessage) {
+                const error = (errormessage) ? errormessage : translate("invalidvk");
+                popnotify("error", error);
+                return
             }
-            glob_pinging[address] = setInterval(function() {
-                ping_xmr_node(cachetime, address, vk, request_ts, txhash);
-            }, pingtime);
+            const start_height = data.start_height;
+            if (start_height > -1) { // success!
+                const pingtime = (txhash) ? 35000 : 12000; // poll slower when we know txid
+                if (start === true) {
+                    ping_xmr_node(cachetime, address, vk, request_ts, txhash);
+                }
+                glob_pinging[address] = setInterval(function() {
+                    ping_xmr_node(cachetime, address, vk, request_ts, txhash);
+                }, pingtime);
+                return
+            }
         }
+        notify(translate("notmonitored"), 500000, "yes");
     }).fail(function(jqXHR, textStatus, errorThrown) {
         const next_proxy = get_next_proxy();
         if (next_proxy) {
