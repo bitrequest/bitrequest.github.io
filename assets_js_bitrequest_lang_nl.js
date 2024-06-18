@@ -190,7 +190,7 @@ function lang_nl(id, data) {
         "failedhistoric": "Kan " + data.ccsymbol + " historische prijs data niet ophalen",
         "closingsockets": "Verbinding aan het verbreken...",
         "nowriteaccess": "LNurl proxy toegang geweigerd, controleer uw folder permissies",
-        "notmonitored": "Dit adres wordt niet gemonitoord",
+        "notmonitored": "Dit adres wordt niet gemonitord",
         "lnoffline": "Lightning node is offline",
         "addlightningnode": "Voeg lightning node toe",
         "addressinuse": "Adres in gebruik",
