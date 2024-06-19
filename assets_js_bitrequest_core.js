@@ -1764,6 +1764,10 @@ function keyup() {
 }
 
 function escapeandback() {
+    if (glob_inframe === true) {
+        parent.postMessage("close_request", "*");
+        return
+    }
     if (glob_body.hasClass("showcam")) {
         window.history.back();
         return
@@ -1874,9 +1878,9 @@ function payment_lookup(request_dat) {
             <h2 class='icon-warning'><span class='icon-qrcode'/>" + translate("nodetection") + "</h2>\
             <div id='ad_info_wrap'>\
                 <p><strong><a href='" + bu_url + "' target='_blank' class='ref check_recent'>" + translate("lookuppayment", {
-                    "currency": currency,
-                    "blockexplorer": blockexplorer
-                }) + " <span class='icon-new-tab'></span></a></strong></p>\
+            "currency": currency,
+            "blockexplorer": blockexplorer
+        }) + " <span class='icon-new-tab'></span></a></strong></p>\
                 <div class='pk_wrap noselect'>\
                     <div id='dontshowwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
                     <span>" + translate("dontshowagain") + "</span>\
@@ -3294,6 +3298,10 @@ function apisrc_shortcut() {
 
 function canceloptionstrigger() {
     $(document).on("click", "#optionspop, #closeoptions", function(e) {
+        if (glob_inframe === true) {
+            parent.postMessage("close_request", "*");
+            return
+        }
         if (e.target == this) {
             canceloptions();
         }

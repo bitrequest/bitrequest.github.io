@@ -2656,11 +2656,12 @@ function view_tx() {
     $(document).on("click", "#view_tx", function() {
         if (glob_inframe === true) {
             glob_html.removeClass("hide_app");
-        }
-        if (glob_body.hasClass("showstartpage")) {
-            cancelpaymentdialog();
-            startnext($("#intro"));
-            return
+        } else {
+            if (glob_body.hasClass("showstartpages")) {
+                cancelpaymentdialog();
+                startnext($("#intro"));
+                return
+            }
         }
         openpage("?p=requests", "requests", "loadpage");
         const tx_hash = $(this).attr("data-txhash"),

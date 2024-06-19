@@ -2160,8 +2160,13 @@ input:invalid {
 	z-index: 2;
 }
 
+html.inframe #closeoptions,
 .blurmain_options #closeoptions {
 	display: block;
+}
+
+html.inframe.hide_app #closeoptions {
+	display: none;
 }
 
 
