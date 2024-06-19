@@ -1615,6 +1615,10 @@ html.dragmode .currentpage .applist li.dragging {
 	display: block;
 }
 
+html.inframe .requestlist li .req_actions .icon-folder-open {
+	display: none;
+}
+
 .requestlist li[data-status="insufficient"] .metalist .meta_status .status {
 	/* unmonitored transactions */
 	color: #eeac57;
