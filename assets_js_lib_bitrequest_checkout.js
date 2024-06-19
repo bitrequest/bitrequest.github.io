@@ -40,11 +40,21 @@ function crossframe(e) {
     const data = e.data;
     if (data == "close_loader") {
         closeloader();
-    } else if (data == "close_request") {
+        return
+    } 
+    if (data == "close_request_confirm") {
         setTimeout(function() {
             closeframe_confirm();
         }, 200);
-    } else if (data.id == "result") {
+        return
+    }
+    if (data == "close_request") {
+        setTimeout(function() {
+            closeframe();
+        }, 200);
+        return
+    }
+    if (data.id == "result") {
         result_callback(data.data);
     }
 }

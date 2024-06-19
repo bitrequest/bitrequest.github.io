@@ -1769,6 +1769,11 @@ function keyup() {
 
 function escapeandback() {
     if (glob_inframe === true) {
+        const gets = geturlparameters();
+        if (gets.payment) {
+            parent.postMessage("close_request_confirm", "*");
+            return
+        }
         parent.postMessage("close_request", "*");
         return
     }
