@@ -4188,7 +4188,7 @@ function appendrequest(rd) {
         statustext = (ismonitored === false) ? "" : (status == "new") ? "Waiting for payment" : status,
         src_html = (source) ? "<span class='src_txt'>" + translate("source") + ": " + source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>" : "",
         iscryptoclass = (iscrypto === true) ? "" : " isfiat",
-        archivebutton = (showarchive === true) ? "<div class='icon-folder-open' title='archive request'></div>" : "",
+        archivebutton = (showarchive === true || isexpired === true) ? "<div class='icon-folder-open' title='archive request'></div>" : "",
         render_archive = (txhistory && (pending == "no" || archive === true)),
         tl_text = (render_archive === true) ? translate("transactions") : "",
         edit_request = (local === true) ? "<div class='editrequest icon-pencil' title='edit request' data-requestid='" + requestid + "'></div>" : "",
