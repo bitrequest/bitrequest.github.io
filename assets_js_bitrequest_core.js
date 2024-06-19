@@ -89,7 +89,11 @@ $(document).ready(function() {
 
     //Set classname for iframe	
     if (glob_inframe === true) {
-        glob_html.addClass("inframe hide_app");
+        glob_html.addClass("inframe");
+        const gets = geturlparameters();
+        if (gets.payment) {
+            glob_html.addClass("hide_app");
+        }
     } else {
         glob_html.addClass("noframe");
     }
