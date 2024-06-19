@@ -83,7 +83,7 @@ function is_scanning() {
 }
 
 function trigger_requeststates(trigger) {
-    if (glob_offline === true || glob_inframe === true) {
+    if (glob_offline === true) {
         return // do nothing when offline
     }
     glob_api_attempts = {}, // reset cache and index
