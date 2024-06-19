@@ -1644,7 +1644,7 @@ function node_exists(nodelist, node_id) {
     if ($.isEmptyObject(nodelist)) {
         return false
     }
-    const lnd_exists = false;
+    let lnd_exists = false;
     $.each(nodelist, function(key, value) {
         if (value.node_id == node_id) {
             lnd_exists = true;
