@@ -321,7 +321,7 @@ function rmpl(payment, rpcurl, txhash) { // rpc_monitor payload
 
 function ping_eth_node(rpcdata, txhash, erc20) {
     if (glob_paymentpopup.hasClass("active")) { // only when request is visible
-        const url = get_rpc_url(rpcdata),
+        const rpcurl = get_rpc_url(rpcdata),
             set_url = (rpcdata.name == "arbiscan") ? glob_main_arbitrum_node : (rpcurl) ? rpcurl : glob_main_eth_node;
         api_proxy(eth_params(set_url, 10, "eth_blockNumber", [])).done(function(a) {
             const r_1 = inf_result(a);
