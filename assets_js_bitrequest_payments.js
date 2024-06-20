@@ -616,6 +616,7 @@ function continue_paymentfunction() {
         offlineclass = (glob_offline === true) ? " br_offline" : "",
         pendingclass = (ispending === true && monitored === true && requesttype == "local") ? "ispending" : "",
         has_xmr_ia = (xmr_ia == address) ? false : xmr_ia,
+        showqr = ("showqr" in gets) ? true : false,
         extend_data = {
             "uoa": uoa,
             "amount": amount,
@@ -647,7 +648,8 @@ function continue_paymentfunction() {
             "xmr_ia": has_xmr_ia,
             "monitored": monitored,
             "coinsettings": coinsettings,
-            "dataobject": dataobject
+            "dataobject": dataobject,
+            "showqr": showqr
         },
         extend_helper_data = {
             "socket_list": socket_list,
@@ -925,7 +927,9 @@ function proceed_pf(error) {
         "data-lnd": lndstatus
     });
     if (request.isrequest === true) {
-        add_flip();
+        if (request.showqr) {} else {
+            add_flip();
+        }
     }
     if (glob_offline === true) { // no price conversion when app is offline
         rendercurrencypool({
