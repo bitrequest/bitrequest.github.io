@@ -1,4 +1,7 @@
-let glob_block_scan = 0;
+let glob_block_scan = 0,
+    l2network_cache = br_get_session("l2source", true),
+    glob_l2network = (l2network_cache) ? l2network_cache : {};
+
 $(document).ready(function() {
     updaterequeststatestrigger();
     updaterequeststatesrefresh();
@@ -11,13 +14,13 @@ $(document).ready(function() {
 
     //get_api_inputs_init
     //get_api_inputs
-    //match_xmr_pid
+    //select_api
     //fail_dialogs
     //scan_match
     //tx_count
     //tx_api_scan_fail
     //tx_api_fail
-    //handle_api_fails_list
+    //handle_api_fails
     //get_next_api
     //api_eror_msg
     //get_api_error_data
@@ -27,7 +30,8 @@ $(document).ready(function() {
 
     //get_rpc_inputs_init
     //get_rpc_inputs
-    //handle_rpc_fails_list
+    //select_rpc
+    //handle_rpc_fails
     //get_next_rpc
     //scan_tx_li
     //append_tx_li
@@ -99,8 +103,8 @@ function trigger_requeststates(trigger) {
 }
 
 function get_requeststates(trigger, active_requests) {
-    const d_lay = (trigger == "delay") ? true : false;
-    const request_data = $("#requestlist li.rqli.open").first().data();
+    const d_lay = (trigger == "delay") ? true : false,
+        request_data = $("#requestlist li.rqli.open").first().data();
     if (request_data) {
         if (trigger == "loop") {
             getinputs(request_data, d_lay);
@@ -219,19 +223,26 @@ function check_api(payment, iserc20) {
 
 function get_api_inputs_init(rd, api_data) {
     if (api_data) {
-        glob_api_attempts[rd.requestid + api_data.name] = null; // reset api attempts
-        get_api_inputs(rd, api_data);
+        const requestid = rd.requestid,
+            rqid = (requestid) ? requestid : "",
+            fetch_id = rqid + api_data.name;
+        glob_api_attempts[fetch_id] = null; // reset api attempts
+        get_api_inputs(rd, false, api_data);
         return
     }
     console.log("no api data available");
 }
 
-function get_api_inputs(rd, api_data) {
-    const rdo = tx_data(rd), // fetchblocks.js
-        thislist = rdo.thislist;
+function get_api_inputs(rd, rdod, api_data) {
+    const rdo = (rdod) ? rdod : tx_data(rd), // fetchblocks.js
+        source = rdo.source;
+    if (source == "poll") {
+        select_api(rd, rdo, api_data);
+        return
+    }
+    const thislist = rdo.thislist;
     if (thislist.hasClass("scan")) {
         const transactionlist = rdo.transactionlist;
-        glob_api_attempts[rd.requestid + api_data.name] = true;
         thislist.removeClass("no_network");
         if (rdo.pending == "no" || rdo.pending == "incoming" || thislist.hasClass("expired")) {
             transactionlist.find("li").each(function(i) {
@@ -242,60 +253,57 @@ function get_api_inputs(rd, api_data) {
         }
         if (rdo.pending == "scanning" || rdo.pending == "polling") {
             transactionlist.html("");
-            const api_name = api_data.name;
-            if (rd.lightning) {
-                const l_fetch = lightning_fetch(rd, api_data, rdo);
-                if (l_fetch == "exit") {
-                    return
-                }
-            }
-            if (rd.payment == "monero") {
-                monero_fetch(rd, api_data, rdo);
-                return
-            }
-            if (api_name == "mempool.space") {
-                mempoolspace_rpc(rd, api_data, rdo, false)
-                return
-            }
-            if (api_name == "blockcypher") {
-                blockcypher_fetch(rd, api_data, rdo);
-                return
-            }
-            if (api_name == "ethplorer" || api_name == "binplorer") {
-                ethplorer_fetch(rd, api_data, rdo);
-                return
-            }
-            if (api_name == "arbiscan") {
-                arbiscan_fetch(rd, api_data, rdo);
-                return
-            }
-            if (api_name == "blockchair") {
-                blockchair_fetch(rd, api_data, rdo);
-                return
-            }
-            if (api_name == "nimiq.watch" || api_name == "mopsus.com") {
-                nimiq_fetch(rd, api_data, rdo);
-                return
-            }
-            if (rd.payment == "kaspa") {
-                kaspa_fetch(rd, api_data, rdo);
-                return
-            }
+            select_api(rd, rdo, api_data);
         }
     }
 }
 
-function match_xmr_pid(xmria, xmrpid, xmr_pid) {
-    if (xmria) {
-        if (xmrpid == xmr_pid) {
-            return true;
+function select_api(rd, rdo, api_dat) {
+    const txhash = rd.txhash,
+        requestid = rd.requestid,
+        fetch_id = (txhash) ? txhash : (requestid) ? requestid : "",
+        glob_l2 = glob_l2network[fetch_id], // get cached l2 network
+        api_data = (glob_l2) ? glob_l2 : api_dat,
+        api_name = api_data.name;
+    glob_api_attempts[fetch_id] = true;
+    if (rd.lightning) {
+        const l_fetch = lightning_fetch(rd, api_data, rdo);
+        if (l_fetch == "exit") {
+            return
         }
-        return false;
     }
-    if (xmrpid || xmr_pid) {
-        return false;
+    if (rd.payment == "monero") {
+        monero_fetch(rd, api_data, rdo);
+        return
     }
-    return true;
+    if (api_name == "mempool.space") {
+        mempoolspace_rpc(rd, api_data, rdo, false)
+        return
+    }
+    if (api_name == "blockcypher") {
+        blockcypher_fetch(rd, api_data, rdo);
+        return
+    }
+    if (api_name == "ethplorer" || api_name == "binplorer") {
+        ethplorer_fetch(rd, api_data, rdo);
+        return
+    }
+    if (api_name == "arbiscan") {
+        arbiscan_fetch(rd, api_data, rdo);
+        return
+    }
+    if (api_name == "blockchair") {
+        blockchair_fetch(rd, api_data, rdo);
+        return
+    }
+    if (api_name == "nimiq.watch" || api_name == "mopsus.com") {
+        nimiq_fetch(rd, api_data, rdo);
+        return
+    }
+    if (rd.payment == "kaspa") {
+        kaspa_fetch(rd, api_data, rdo);
+        return
+    }
 }
 
 // API error handling
@@ -311,28 +319,57 @@ function scan_match(rd, api_data, rdo, counter, txdat, match, l2) {
         tx_count(rdo.statuspanel, counter);
     }
     if (match) {
-        if (src == "list") {
-            compareamounts(rd);
+        const txhash = rd.txhash;
+        if (src == "poll") {
+            const status = confirmations(txdat);
+            if (status == "paid") {
+                return
+            }
+            if (glob_pinging[txhash]) {
+                return
+            }
+            glob_pinging[txhash] = setInterval(function() {
+                if (glob_paymentpopup.hasClass("active")) { // only when request is visible
+                    if (api_data.api) {
+                        select_api(rd, rdo, api_data);
+                    } else {
+                        select_rpc(rd, rdo, api_data);
+                    }
+                    return
+                }
+                forceclosesocket();
+            }, 30000);
             return
         }
-        if (txdat) {
+        if (src == "list") {
+            compareamounts(rd);
+        }
+        if (src == "afterscan") { // afterscan
             pick_monitor(txdat.txhash, txdat);
+        }
+        if (l2) { // Save L2 Network to session storage
+            const requestid = rd.requestid,
+                fetchid = (txhash) ? txhash : (requestid) ? requestid : "";
+            if (glob_l2network[fetchid] != api_data) {
+                glob_l2network[fetchid] = api_data;
+                br_set_session("l2source", glob_l2network, true);
+            }
         }
         return
     }
-    if (src == "list") {
-        if (l2) { // scan l2's
-            const console_l2 = {
-                "error": "Scanning next l2 rpc",
-                "console": true
-            };
-            if (api_data.api) {
-                handle_api_fails_list(rd, console_l2, api_data);
-                return
-            }
-            handle_rpc_fails_list(rd, console_l2, api_data);
+    if (l2) { // scan l2's
+        const console_l2 = {
+            "error": "Scanning next l2 rpc",
+            "console": true
+        };
+        if (api_data.api) {
+            handle_api_fails(rd, rdo, console_l2, api_data);
             return
         }
+        handle_rpc_fails(rd, rdo, console_l2, api_data);
+        return
+    }
+    if (src == "list") {
         api_callback(rd.requestid);
         return
     }
@@ -345,21 +382,22 @@ function tx_count(statuspanel, count) {
 
 function tx_api_scan_fail(rd, rdo, api_data, error_data, all_proxys) {
     const src = rdo.source;
+    if (src == "afterscan") {
+        after_scan_fails(api_data.name);
+        return
+    }
     if (src == "list") {
         const thislist = rdo.thislist;
         if (thislist) {
             tx_api_fail(thislist, rdo.statuspanel);
         }
-        if (api_data.api) {
-            handle_api_fails_list(rd, error_data, api_data, all_proxys);
-            return
-        }
-        handle_rpc_fails_list(rd, error_data, api_data, all_proxys);
+    }
+    if (api_data.api) {
+        handle_api_fails(rd, rdo, error_data, api_data, all_proxys);
         return
     }
-    if (rdo.pending == "scanning") {
-        after_poll_fails(api_data.name);
-    }
+    handle_rpc_fails(rd, rdo, error_data, api_data, all_proxys);
+    return
 }
 
 function tx_api_fail(thislist, statuspanel) {
@@ -367,7 +405,7 @@ function tx_api_fail(thislist, statuspanel) {
     statuspanel.attr("data-count", 0).text("?");
 }
 
-function handle_api_fails_list(rd, error, api_data, all_proxys) {
+function handle_api_fails(rd, rdo, error, api_data, all_proxys) {
     const error_data = get_api_error_data(error),
         requestid = rd.requestid;
     if (!api_data) {
@@ -385,7 +423,7 @@ function handle_api_fails_list(rd, error, api_data, all_proxys) {
             if (all_proxys === true) { // try next proxy
                 const next_proxy = get_next_proxy();
                 if (next_proxy) {
-                    get_api_inputs(rd, api_data);
+                    get_api_inputs(rd, rdo, api_data);
                     return;
                 }
             }
@@ -395,9 +433,9 @@ function handle_api_fails_list(rd, error, api_data, all_proxys) {
         }
     }
     if (nextapi) {
-        get_api_inputs(rd, nextapi);
+        get_api_inputs(rd, rdo, nextapi);
     } else if (nextrpc) {
-        get_rpc_inputs(rd, nextrpc);
+        get_rpc_inputs(rd, rdo, nextrpc);
     }
 }
 
@@ -546,15 +584,19 @@ function api_callback(requestid, nocache) {
 
 function get_rpc_inputs_init(rd, api_data) {
     glob_rpc_attempts[rd.requestid + api_data.url] = null; // reset api attempts
-    get_rpc_inputs(rd, api_data);
+    get_rpc_inputs(rd, false, api_data);
 }
 
-function get_rpc_inputs(rd, api_data) {
-    const rdo = tx_data(rd),
-        thislist = rdo.thislist,
-        transactionlist = rdo.transactionlist;
+function get_rpc_inputs(rd, rdod, api_data) {
+    const rdo = (rdod) ? rdod : tx_data(rd),
+        source = rdo.source;
+    if (source == "poll") {
+        select_rpc(rd, rdo, api_data);
+        return
+    }
+    const thislist = rdo.thislist;
     if (thislist.hasClass("scan")) {
-        glob_rpc_attempts[rd.requestid + api_data.url] = true;
+        const transactionlist = rdo.transactionlist;
         thislist.removeClass("no_network");
         if (rdo.pending == "no" || rdo.pending == "incoming" || thislist.hasClass("expired")) {
             transactionlist.find("li").each(function() {
@@ -565,30 +607,40 @@ function get_rpc_inputs(rd, api_data) {
         }
         if (rdo.pending == "scanning" || rdo.pending == "polling") {
             transactionlist.html("");
-            if (is_btchain(rd.payment) === true) {
-                mempoolspace_rpc(rd, api_data, rdo, true);
-                return
-            }
-            if (rd.payment == "ethereum" || rd.erc20 === true) {
-                if (rdo.pending == "scanning") { // scan incoming transactions on address
-                    handle_rpc_fails_list(rd, false, api_data, "scanl2"); // use api instead
-                    return
-                }
-                infura_txd_rpc(rd, api_data, rdo);
-                return
-            }
-            if (rd.payment == "nano") {
-                nano_rpc(rd, api_data, rdo);
-                return
-            }
-            get_api_inputs_init(rd, rpc_data);
+            select_rpc(rd, rdo, api_data);
         }
     }
 }
 
+function select_rpc(rd, rdo, api_dat) {
+    const txhash = rd.txhash,
+        requestid = rd.requestid,
+        fetch_id = (txhash) ? txhash : (requestid) ? requestid : "",
+        glob_l2 = glob_l2network[fetch_id], // get cached l2 network
+        api_data = (glob_l2) ? glob_l2 : api_dat;
+    glob_rpc_attempts[fetch_id] = true;
+    if (is_btchain(rd.payment) === true) {
+        mempoolspace_rpc(rd, api_data, rdo, true);
+        return
+    }
+    if (rd.payment == "ethereum" || rd.erc20 === true) {
+        if (rdo.pending == "scanning") { // scan incoming transactions on address
+            handle_rpc_fails(rd, rdo, false, api_data, "scanl2"); // use api instead
+            return
+        }
+        infura_txd_rpc(rd, api_data, rdo);
+        return
+    }
+    if (rd.payment == "nano") {
+        nano_rpc(rd, api_data, rdo);
+        return
+    }
+    get_api_inputs_init(rd, api_data);
+}
+
 // RPC error handling
 
-function handle_rpc_fails_list(rd, error, api_data, all_proxys) {
+function handle_rpc_fails(rd, rdo, error, api_data, all_proxys) {
     const error_data = get_api_error_data(error),
         requestid = rd.requestid;
     if (!api_data) {
@@ -606,7 +658,7 @@ function handle_rpc_fails_list(rd, error, api_data, all_proxys) {
             if (all_proxys === true) { // try next proxy
                 const next_proxy = get_next_proxy();
                 if (next_proxy) {
-                    get_api_inputs(rd, api_data);
+                    get_api_inputs(rd, rdo, api_data);
                     return;
                 }
             }
@@ -620,9 +672,9 @@ function handle_rpc_fails_list(rd, error, api_data, all_proxys) {
         }
     }
     if (nextrpc) {
-        get_rpc_inputs(rd, nextrpc);
+        get_rpc_inputs(rd, rdo, nextrpc);
     } else if (nextapi) {
-        get_api_inputs(rd, nextapi);
+        get_api_inputs(rd, rdo, nextapi);
     }
 }
 

@@ -36,11 +36,7 @@ $(document).ready(function() {
 
     //init_xmr_node
     //ping_xmr_node
-    //after_poll
-    //ap_loader
-    //after_poll_fails
     //rconnect
-    //get_next_scan_api
 });
 
 // Websockets / Pollfunctions
@@ -1044,7 +1040,8 @@ function alchemy_eth_websocket(socket_node, thisaddress) {
         const data = JSON.parse(e.data),
             result = q_obj(data, "params.result");
         if (result) {
-            if (result.hash) {
+            const txhash = result.hash;
+            if (txhash) {
                 if (str_match(result.to, thisaddress)) {
                     const set_confirmations = request.set_confirmations ?? 0,
                         set_cc = (set_confirmations) ? set_confirmations : 0,
@@ -1526,106 +1523,10 @@ function ping_nimiq(address, request_ts) {
     forceclosesocket();
 }
 
-function after_poll(rq_init, next_api) {
-    const amount_input = $("#mainccinputmirror > input"),
-        input_val = amount_input.val(),
-        api_info = helper.api_info,
-        api_data = (next_api) ? next_api : api_info.data,
-        ccsymbol = request.currencysymbol,
-        api_name = api_data.name,
-        request_ts_utc = rq_init + glob_timezone,
-        request_ts = request_ts_utc - 30000, // 30 seconds compensation for unexpected results
-        thislist = $("#" + request.requestid),
-        statuspanel = thislist.find(".pmetastatus"),
-        set_confirmations = request.set_confirmations ?? 0,
-        set_cc = (set_confirmations) ? set_confirmations : 0,
-        rdo = {
-            "thislist": thislist,
-            "statuspanel": statuspanel,
-            "request_timestamp": request_ts,
-            "setconfirmations": set_cc,
-            "pending": "scanning",
-            "erc20": request.erc20,
-            "source": "afterscan"
-        };
-    glob_scan_attempts[api_name] = true;
-    if (input_val.length) {
-        if (ccsymbol == "xmr" || ccsymbol == "nim" || request.erc20 === true) {
-            close_paymentdialog();
-            return
-        }
-        if (ccsymbol == "xno") {
-            ap_loader();
-            nano_rpc(request, api_data, rdo);
-            return
-        }
-        if (api_name == "mempool.space") {
-            ap_loader();
-            mempoolspace_rpc(request, api_data, rdo, false);
-            return
-        }
-        if (api_name == "blockcypher") {
-            ap_loader();
-            blockcypher_fetch(request, api_data, rdo);
-            return
-        }
-        if (api_name == "blockchair") {
-            ap_loader();
-            blockchair_fetch(request, api_data, rdo);
-            return
-        }
-        if (payment == "kaspa") {
-            ap_loader();
-            kaspa_fetch(request, api_data, rdo);
-            return
-        }
-        if (ccsymbol == "btc" || ccsymbol == "ltc" || ccsymbol == "doge" || ccsymbol == "bch") {
-            if (api_data.default === false) {
-                ap_loader();
-                mempoolspace_rpc(request, api_data, rdo, true);
-                return
-            }
-        }
-    }
-    close_paymentdialog();
-}
-
-function ap_loader() {
-    loader(true);
-    loadertext(translate("closingrequest") + " / " + translate("scanningforincoming"));
-}
-
-function after_poll_fails(api_name) {
-    const nextapi = get_next_scan_api(api_name);
-    if (nextapi) {
-        after_poll(request.rq_init, nextapi);
-        return
-    }
-    close_paymentdialog(true);
-}
-
 function rconnect(tid) {
     glob_paymentdialogbox.removeClass("transacting");
     const bttn = (tid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + tid + "'>Reconnect</span></div></p>" : "",
         content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + bttn;
     closesocket();
     popdialog(content, "canceldialog");
-}
-
-function get_next_scan_api(api_name) {
-    const rpc_settings = cs_node(request.payment, "apis", true);
-    if (rpc_settings) {
-        const apirpc = rpc_settings.apis,
-            apilist = $.grep(apirpc, function(filter) {
-                return filter.api;
-            })
-        if (!$.isEmptyObject(apilist)) {
-            const next_scan = apilist[apilist.findIndex(option => option.name == api_name) + 1],
-                next_api = (next_scan) ? next_scan : apilist[0];
-            if (glob_scan_attempts[next_api.name] !== true) {
-                return next_api;
-            }
-        }
-    }
-    return false;
 }
