@@ -224,9 +224,8 @@ function check_api(payment, iserc20) {
 function get_api_inputs_init(rd, api_data) {
     if (api_data) {
         const requestid = rd.requestid,
-            rqid = (requestid) ? requestid : "",
-            fetch_id = rqid + api_data.name;
-        glob_api_attempts[fetch_id] = null; // reset api attempts
+            rq_id = (requestid) ? requestid : "";
+        glob_api_attempts[rq_id + api_data.name] = null; // reset api attempts
         get_api_inputs(rd, false, api_data);
         return
     }
@@ -261,18 +260,22 @@ function get_api_inputs(rd, rdod, api_data) {
 function select_api(rd, rdo, api_dat) {
     const txhash = rd.txhash,
         requestid = rd.requestid,
-        fetch_id = (txhash) ? txhash : (requestid) ? requestid : "",
-        glob_l2 = glob_l2network[fetch_id], // get cached l2 network
+        rq_id = (requestid) ? requestid : "",
+        glob_l2 = glob_l2network[rq_id], // get cached l2 network
         api_data = (glob_l2) ? glob_l2 : api_dat,
         api_name = api_data.name;
-    glob_api_attempts[fetch_id] = true;
+    glob_api_attempts[rq_id + api_name] = true;
     if (rd.lightning) {
         const l_fetch = lightning_fetch(rd, api_data, rdo);
         if (l_fetch == "exit") {
             return
         }
     }
-    if (rd.payment == "monero") {
+    if (api_name == "mymonero api") {
+        monero_fetch(rd, api_data, rdo);
+        return
+    }
+    if (api_name == "blockchair_xmr") {
         monero_fetch(rd, api_data, rdo);
         return
     }
@@ -314,7 +317,8 @@ function fail_dialogs(apisrc, error) {
 }
 
 function scan_match(rd, api_data, rdo, counter, txdat, match, l2) {
-    const src = rdo.source;
+    const src = rdo.source,
+        is_api = (api_data.api) ? true : false;
     if (src == "list") {
         tx_count(rdo.statuspanel, counter);
     }
@@ -330,7 +334,7 @@ function scan_match(rd, api_data, rdo, counter, txdat, match, l2) {
             }
             glob_pinging[txhash] = setInterval(function() {
                 if (glob_paymentpopup.hasClass("active")) { // only when request is visible
-                    if (api_data.api) {
+                    if (is_api) {
                         select_api(rd, rdo, api_data);
                     } else {
                         select_rpc(rd, rdo, api_data);
@@ -349,10 +353,12 @@ function scan_match(rd, api_data, rdo, counter, txdat, match, l2) {
         }
         if (l2) { // Save L2 Network to session storage
             const requestid = rd.requestid,
-                fetchid = (txhash) ? txhash : (requestid) ? requestid : "";
-            if (glob_l2network[fetchid] != api_data) {
-                glob_l2network[fetchid] = api_data;
-                br_set_session("l2source", glob_l2network, true);
+                rq_id = (requestid) ? requestid : "";
+            if (rq_id.length) {
+                if (glob_l2network[rq_id] != api_data) {
+                    glob_l2network[rq_id] = api_data;
+                    br_set_session("l2source", glob_l2network, true);
+                }
             }
         }
         return
@@ -362,7 +368,7 @@ function scan_match(rd, api_data, rdo, counter, txdat, match, l2) {
             "error": "Scanning next l2 rpc",
             "console": true
         };
-        if (api_data.api) {
+        if (is_api) {
             handle_api_fails(rd, rdo, console_l2, api_data);
             return
         }
@@ -449,8 +455,8 @@ function get_next_api(this_payment, api_name, requestid) {
         if (!$.isEmptyObject(apilist)) {
             const next_scan = apilist[apilist.findIndex(option => option.name == api_name) + 1],
                 next_api = (next_scan) ? next_scan : apilist[0],
-                rqid = (requestid) ? requestid : "";
-            if (glob_api_attempts[rqid + next_api.name] !== true) {
+                rq_id = (requestid) ? requestid : "";
+            if (glob_api_attempts[rq_id + next_api.name] !== true) {
                 return next_api;
             }
         }
@@ -583,7 +589,9 @@ function api_callback(requestid, nocache) {
 }
 
 function get_rpc_inputs_init(rd, api_data) {
-    glob_rpc_attempts[rd.requestid + api_data.url] = null; // reset api attempts
+    const requestid = rd.requestid,
+        rq_id = (requestid) ? requestid : "";
+    glob_rpc_attempts[rq_id + api_data.url] = null; // reset api attempts
     get_rpc_inputs(rd, false, api_data);
 }
 
@@ -615,10 +623,10 @@ function get_rpc_inputs(rd, rdod, api_data) {
 function select_rpc(rd, rdo, api_dat) {
     const txhash = rd.txhash,
         requestid = rd.requestid,
-        fetch_id = (txhash) ? txhash : (requestid) ? requestid : "",
-        glob_l2 = glob_l2network[fetch_id], // get cached l2 network
+        rq_id = (requestid) ? requestid : "",
+        glob_l2 = glob_l2network[rq_id], // get cached l2 network
         api_data = (glob_l2) ? glob_l2 : api_dat;
-    glob_rpc_attempts[fetch_id] = true;
+    glob_rpc_attempts[rq_id + api_data.url] = true;
     if (is_btchain(rd.payment) === true) {
         mempoolspace_rpc(rd, api_data, rdo, true);
         return
@@ -690,8 +698,8 @@ function get_next_rpc(this_payment, api_url, requestid) {
         if (!$.isEmptyObject(restlist)) {
             const next_scan = restlist[restlist.findIndex(option => option.url == api_url) + 1],
                 next_rpc = (next_scan) ? next_scan : restlist[0],
-                rqid = (requestid) ? requestid : "";
-            if (glob_rpc_attempts[rqid + next_rpc.url] !== true) {
+                rq_id = (requestid) ? requestid : "";
+            if (glob_rpc_attempts[rq_id + next_rpc.url] !== true) {
                 return next_rpc;
             }
         }
@@ -896,7 +904,7 @@ function init_historical_fiat_data(rd, conf, latestinput, firstinput) {
         hc_prefix = "historic_" + thisrequestid,
         historiccache = br_get_session(hc_prefix),
         cacheval = latestinput + latestconf;
-    if (cacheval != historiccache) { //new input detected; call historic api
+    if ((cacheval - historiccache) > 1) { //new input detected; call historic api
         br_remove_session(hc_prefix); // remove historic price cache
         const historic_payload = $.extend(rd, {
             "latestinput": latestinput,

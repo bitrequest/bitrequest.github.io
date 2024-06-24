@@ -20,10 +20,10 @@ function pick_monitor(txhash, tx_data, api_data) {
 
 function api_monitor_init(txhash, tx_data, api_dat) {
     const requestid = request.requestid,
-        fetchid = (txhash) ? txhash : (requestid) ? requestid : "",
-        glob_l2 = glob_l2network[fetchid], // get cached l2 network
+        rq_id = (requestid) ? requestid : "",
+        glob_l2 = glob_l2network[rq_id], // get cached l2 network
         api_data = (glob_l2) ? glob_l2 : api_dat,
-        api_info = (api_data) ? api_data : q_obj(helper, "api_info.data");
+        api_info = (api_data) ? api_data : (api_dat) ? api_dat : q_obj(helper, "api_info.data");
     if (api_info) {
         api_monitor(txhash, tx_data, api_info);
         glob_paymentdialogbox.addClass("transacting");
@@ -47,7 +47,9 @@ function api_monitor(txhash, tx_data, api_dat) {
                 "txhash": txhash,
                 "currencysymbol": request.currencysymbol,
                 "address": gets.address,
-                "decimals": request.decimals
+                "decimals": request.decimals,
+                "requestid": request.requestid,
+                "viewkey": request.viewkey
             };
         if (gets.xss) {
             return
@@ -76,124 +78,127 @@ function api_monitor(txhash, tx_data, api_dat) {
 }
 
 function confirmations(tx_data, direct, ln) {
-    let new_status = "pending";
-    closeloader();
-    clearTimeout(glob_request_timer);
-    if (tx_data && tx_data.ccval) {
-        const pmd = $("#paymentdialogbox"),
-            brstatuspanel = pmd.find(".brstatuspanel"),
-            brheader = brstatuspanel.find("h2"),
-            status = tx_data.status;
-        if (status && status == "canceled") {
-            brheader.html("<span class='icon-blocked'></span>Invoice canceled");
-            pmd.attr("data-status", "canceled");
-            updaterequest({
-                "requestid": request.requestid,
-                "status": "canceled",
-                "confirmations": 0
-            }, true);
-            notify(translate("invoicecanceled"), 500000);
-            forceclosesocket();
-            new_status = "canceled";
-            return new_status;
-        }
-        const setconfirmations = (tx_data.setconfirmations) ? parseInt(tx_data.setconfirmations) : 0,
-            conf_text = (setconfirmations) ? setconfirmations.toString() : "",
-            confbox = brstatuspanel.find("span.confbox"),
-            confboxspan = confbox.find("span"),
-            currentconf = parseFloat(confboxspan.attr("data-conf")),
-            xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
-            txhash = tx_data.txhash,
-            zero_conf = (xconf === false || !setconfirmations);
-        brstatuspanel.find("span#confnumber").text(conf_text);
-        new_status = xconf;
-        if (xconf > currentconf || zero_conf === true || direct === true) {
-            reset_recent();
-            br_remove_session("txstatus"); // remove cached historical exchange rates
-            confbox.removeClass("blob");
-            setTimeout(function() {
-                confbox.addClass("blob");
-                confboxspan.text(xconf).attr("data-conf", xconf);
-            }, 500);
-            const amount_rel = $("#open_wallet").attr("data-rel"),
-                cc_raw = (amount_rel && amount_rel.length) ? parseFloat(amount_rel) : 0,
-                receivedutc = tx_data.transactiontime,
-                receivedtime = receivedutc - glob_timezone,
-                receivedcc = tx_data.ccval,
-                rccf = parseFloat(receivedcc.toFixed(6)),
-                payment = request.payment,
-                thiscurrency = request.uoa,
-                currencysymbol = request.currencysymbol,
-                requesttype = request.requesttype,
-                iscrypto = (thiscurrency == currencysymbol) ? true : false,
-                fiatvalue = (iscrypto) ? null : (rccf / parseFloat($("#paymentdialogbox .ccpool").attr("data-xrate"))) * parseFloat($("#paymentdialog .cpool[data-currency='" + thiscurrency + "']").attr("data-xrate")), // calculate fiat value
-                fiatrounded = (iscrypto) ? null : fiatvalue.toFixed(2),
-                receivedrounded = (iscrypto) ? receivedcc : fiatrounded;
-            // extend global request object
-            $.extend(request, {
-                "received": true,
-                "inout": requesttype,
-                "receivedamount": rccf,
-                "fiatvalue": fiatvalue,
-                "paymenttimestamp": receivedutc,
-                "txhash": txhash,
-                "confirmations": xconf,
-                "set_confirmations": setconfirmations
-            });
-            brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), glob_langcode));
-            if (iscrypto) {} else {
-                brstatuspanel.find("span.receivedcrypto").text(rccf + " " + currencysymbol);
+    const payment = request.payment;
+    if (payment) {
+        let new_status = "pending";
+        closeloader();
+        clearTimeout(glob_request_timer);
+        if (tx_data && tx_data.ccval) {
+            const pmd = $("#paymentdialogbox"),
+                brstatuspanel = pmd.find(".brstatuspanel"),
+                brheader = brstatuspanel.find("h2"),
+                status = tx_data.status;
+            if (status && status == "canceled") {
+                brheader.html("<span class='icon-blocked'></span>Invoice canceled");
+                pmd.attr("data-status", "canceled");
+                updaterequest({
+                    "requestid": request.requestid,
+                    "status": "canceled",
+                    "confirmations": 0
+                }, true);
+                notify(translate("invoicecanceled"), 500000);
+                forceclosesocket();
+                new_status = "canceled";
+                return new_status;
             }
-            brstatuspanel.find("span.receivedfiat").text(" (" + receivedrounded + " " + thiscurrency + ")");
-            const exact = helper.exact,
-                xmr_pass = (payment == "monero") ? (rccf > cc_raw * 0.97 && rccf < cc_raw * 1.03) : true; // error margin for xmr integrated addresses
-            if (xmr_pass) {
-                const pass = (exact) ? (rccf == cc_raw) ? true : false : (rccf >= cc_raw * 0.97) ? true : false;
-                if (pass) {
-                    if (xconf >= setconfirmations || zero_conf === true) {
-                        forceclosesocket();
-                        if (payment == "dogecoin") {
-                            playsound(glob_howl);
+            const setconfirmations = (tx_data.setconfirmations) ? parseInt(tx_data.setconfirmations) : 0,
+                conf_text = (setconfirmations) ? setconfirmations.toString() : "",
+                confbox = brstatuspanel.find("span.confbox"),
+                confboxspan = confbox.find("span"),
+                currentconf = parseFloat(confboxspan.attr("data-conf")),
+                xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
+                txhash = tx_data.txhash,
+                zero_conf = (xconf === false || !setconfirmations);
+            brstatuspanel.find("span#confnumber").text(conf_text);
+            new_status = xconf;
+            if (xconf > currentconf || zero_conf === true || direct === true) {
+                reset_recent();
+                br_remove_session("txstatus"); // remove cached historical exchange rates
+                confbox.removeClass("blob");
+                setTimeout(function() {
+                    confbox.addClass("blob");
+                    confboxspan.text(xconf).attr("data-conf", xconf);
+                }, 500);
+                const amount_rel = $("#open_wallet").attr("data-rel"),
+                    cc_raw = (amount_rel && amount_rel.length) ? parseFloat(amount_rel) : 0,
+                    receivedutc = tx_data.transactiontime,
+                    receivedtime = receivedutc - glob_timezone,
+                    receivedcc = tx_data.ccval,
+                    rccf = parseFloat(receivedcc.toFixed(6)),
+                    thiscurrency = request.uoa,
+                    currencysymbol = request.currencysymbol,
+                    requesttype = request.requesttype,
+                    iscrypto = (thiscurrency == currencysymbol) ? true : false,
+                    fiatvalue = (iscrypto) ? null : (rccf / parseFloat($("#paymentdialogbox .ccpool").attr("data-xrate"))) * parseFloat($("#paymentdialog .cpool[data-currency='" + thiscurrency + "']").attr("data-xrate")), // calculate fiat value
+                    fiatrounded = (iscrypto) ? null : fiatvalue.toFixed(2),
+                    receivedrounded = (iscrypto) ? receivedcc : fiatrounded;
+                // extend global request object
+                $.extend(request, {
+                    "received": true,
+                    "inout": requesttype,
+                    "receivedamount": rccf,
+                    "fiatvalue": fiatvalue,
+                    "paymenttimestamp": receivedutc,
+                    "txhash": txhash,
+                    "confirmations": xconf,
+                    "set_confirmations": setconfirmations
+                });
+                brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), glob_langcode));
+                if (iscrypto) {} else {
+                    brstatuspanel.find("span.receivedcrypto").text(rccf + " " + currencysymbol);
+                }
+                brstatuspanel.find("span.receivedfiat").text(" (" + receivedrounded + " " + thiscurrency + ")");
+                const exact = helper.exact,
+                    xmr_pass = (payment == "monero") ? (rccf > (cc_raw * 0.97) && rccf < (cc_raw * 1.03)) ? true : false : true; // error margin for xmr integrated addresses
+                if (xmr_pass) {
+                    const pass = (exact && (rccf == cc_raw)) ? true : (rccf >= (cc_raw * 0.97)) ? true : false;
+                    if (pass) {
+                        if (xconf >= setconfirmations || zero_conf === true) {
+                            forceclosesocket();
+                            if (payment == "dogecoin") {
+                                playsound(glob_howl);
+                            } else {
+                                playsound(glob_cashier);
+                            }
+                            const status_text = (requesttype == "incoming") ? translate("paymentsent") : translate("paymentreceived");
+                            pmd.addClass("transacting").attr("data-status", "paid");
+                            brheader.text(status_text);
+                            request.status = "paid",
+                                request.pending = "polling";
+                            saverequest(direct);
+                            $("span#ibstatus").fadeOut(500);
+                            closenotify();
+                            new_status = "paid";
                         } else {
-                            playsound(glob_cashier);
+                            if (ln) {} else {
+                                playsound(glob_blip);
+                            }
+                            pmd.addClass("transacting").attr("data-status", "pending");
+                            const bctext = (ln) ? translate("waitingforpayment") : translate("txbroadcasted");
+                            brheader.text(bctext);
+                            request.status = "pending",
+                                request.pending = "polling";
+                            saverequest(direct);
                         }
-                        const status_text = (requesttype == "incoming") ? translate("paymentsent") : translate("paymentreceived");
-                        pmd.addClass("transacting").attr("data-status", "paid");
-                        brheader.text(status_text);
-                        request.status = "paid",
-                            request.pending = "polling";
-                        saverequest(direct);
-                        $("span#ibstatus").fadeOut(500);
-                        closenotify();
-                        new_status = "paid";
-                    } else {
-                        if (ln) {} else {
-                            playsound(glob_blip);
-                        }
-                        pmd.addClass("transacting").attr("data-status", "pending");
-                        const bctext = (ln) ? translate("waitingforpayment") : translate("txbroadcasted");
-                        brheader.text(bctext);
-                        request.status = "pending",
-                            request.pending = "polling";
-                        saverequest(direct);
+                        brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
+                        return new_status
                     }
-                    brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
-                    return new_status
+                    if (exact) {} else {
+                        brheader.text(translate("insufficientamount"));
+                        pmd.addClass("transacting").attr("data-status", "insufficient");
+                        request.status = "insufficient",
+                            request.pending = "scanning";
+                        saverequest(direct);
+                        brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
+                        new_status = "insufficient";
+                    }
+                    playsound(glob_funk);
                 }
-                if (exact) {} else {
-                    brheader.text(translate("insufficientamount"));
-                    pmd.addClass("transacting").attr("data-status", "insufficient");
-                    request.status = "insufficient",
-                        request.pending = "scanning";
-                    saverequest(direct);
-                    brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
-                    new_status = "insufficient";
-                }
-                playsound(glob_funk);
             }
         }
+        return new_status;
     }
-    return new_status;
+    return false;
 }
 
 function reset_recent() {

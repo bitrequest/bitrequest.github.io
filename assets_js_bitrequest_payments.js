@@ -2914,7 +2914,9 @@ function saverequest(direct) {
 function pendingdialog(pr) { // show pending dialog if tx is pending
     request.received = true;
     const prdata = pr.data(),
-        status = prdata.status,
+        requestid = prdata.requestid;
+    request.requestid = requestid;
+    const status = prdata.status,
         txhash = prdata.txhash,
         tl_txhash = pr.find(".transactionlist li:first").data("txhash"),
         smart_txhash = (txhash) ? txhash : tl_txhash,
@@ -2968,19 +2970,6 @@ function pendingdialog(pr) { // show pending dialog if tx is pending
             return
         }
         adjust_paymentdialog("pending", "polling", translate("txbroadcasted"));
-        if (thispayment == "monero") {
-            const address = prdata.address,
-                vk = request.viewkey;
-            if (vk) {
-                const account = (vk.account) ? vk.account : address,
-                    viewkey = vk.vk;
-                closenotify();
-                init_xmr_node(34, account, viewkey, null, smart_txhash, true);
-                return
-            }
-            notify(translate("notmonitored"), 500000, "yes");
-            return
-        }
         pick_monitor(smart_txhash, false);
     }
 }
