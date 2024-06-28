@@ -2876,7 +2876,8 @@ function saverequest(direct) {
                 "set_confirmations": set_confirmations,
                 "transactiontime": tpts,
                 "pending": request.pending,
-                "lightning": lightning
+                "lightning": lightning,
+                "erc20": request.erc20
             };
         let contactdata;
         if (contact_param) {
