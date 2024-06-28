@@ -194,13 +194,13 @@ function init_socket(socket_node, address, swtch, retry) {
         bnb_scan(address, request_ts, ccsymbol);
         // arbitrum:
         const arb_contract = contracts(ccsymbol, "arbitrum");
-        var arbtxt = "";
+        let arbtxt = "";
         if (arb_contract) {
             web3_erc20_websocket({
                 "name": glob_main_arbitrum_socket,
                 "url": glob_main_arbitrum_socket
-            }, address, arb_contract);
-            var arbtxt = " Arbitrum,";
+            }, address, arb_contract, "arbitrum");
+            arbtxt = " Arbitrum,";
         }
         notify(translate("networks") + ": ETH," + arbtxt + " <span class='nowrap'>BNB smart chain</span>", 500000, "yes");
         return
@@ -908,7 +908,7 @@ function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
     };
 }
 
-function web3_erc20_websocket(socket_node, thisaddress, contract) {
+function web3_erc20_websocket(socket_node, thisaddress, contract, l2) {
     const provider_url = socket_node.url,
         if_id = get_infura_apikey(provider_url),
         provider = provider_url + if_id,
@@ -952,7 +952,8 @@ function web3_erc20_websocket(socket_node, thisaddress, contract) {
                                     "txhash": tx_hash,
                                     "confirmations": 0,
                                     "setconfirmations": set_cc,
-                                    "ccsymbol": request.currencysymbol
+                                    "ccsymbol": request.currencysymbol,
+                                    "l2": l2
                                 }
                             pick_monitor(tx_hash, txd);
                             return
@@ -1413,7 +1414,7 @@ function ping_bnb(address, request_ts, ccsymbol) {
                 const set_confirmations = request.set_confirmations,
                     set_cc = (set_confirmations) ? set_confirmations : 0;
                 $.each(data.operations, function(dat, value) {
-                    const txd = ethplorer_scan_data(value, set_cc, ccsymbol);
+                    const txd = ethplorer_scan_data(value, set_cc, ccsymbol, "binplorer");
                     if (txd.transactiontime > request_ts && txd.ccval) {
                         clearpinging();
                         const requestlist = $("#requestlist > li.rqli"),

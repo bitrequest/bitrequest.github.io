@@ -1985,7 +1985,8 @@ function recent_requests_list(recent_payments) {
                 erc20 = val.erc20,
                 rq_time = val.rqtime,
                 source = val.source,
-                blockchainurl = blockexplorer_url(currency, false, erc20, source) + address;
+                layer = val.layer,
+                blockchainurl = blockexplorer_url(currency, false, erc20, source, layer) + address;
             addresslist += "<li class='rp_li'>" + getcc_icon(cmcid, ccsymbol + "-" + currency, erc20) + "<strong style='opacity:0.5'>" + short_date(rq_time + glob_timezone) + "</strong><br/>\
             <a href='" + blockchainurl + "' target='_blank' class='ref check_recent'>\
             <span class='select'>" + address + "</span> <span class='icon-new-tab'></a></li>";
@@ -3035,7 +3036,7 @@ function removeaddressfunction(trigger) {
 function rec_payments() {
     $(document).on("click", "#rpayments", function() {
         const ad = $(this).closest("ul").data(),
-            blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20, ad.source);
+            blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20, ad.source, ad.layer);
         if (blockchainurl === undefined) {} else {
             open_blockexplorer_url(blockchainurl + ad.address);
         }
@@ -3074,10 +3075,12 @@ function showtransaction_trigger() {
                 playsound(glob_funk);
                 return
             }
-            const currency = rqli.data("payment"),
-                erc20 = rqli.data("erc20"),
-                source = rqli.data("source"),
-                blockchainurl = blockexplorer_url(currency, true, erc20, source);
+            const rql_dat = rqli.data(),
+                currency = rql_dat.payment,
+                erc20 = rql_dat.erc20,
+                source = rql_dat.source,
+                layer = rql_dat.layer,
+                blockchainurl = blockexplorer_url(currency, true, erc20, source, layer);
             if (blockchainurl) {
                 open_blockexplorer_url(blockchainurl + txhash);
             }
@@ -3089,7 +3092,7 @@ function showtransactions() {
     $(document).on("click", ".showtransactions", function(e) {
         e.preventDefault();
         const ad = $("#ad_info_wrap").data(),
-            blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20, ad.source);
+            blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20, ad.source, ad.layer);
         if (blockchainurl) {
             open_blockexplorer_url(blockchainurl + ad.address);
         }
@@ -3266,12 +3269,12 @@ function open_blockexplorer_url(be_link) {
     }
 }
 
-function blockexplorer_url(currency, tx, erc20, source) {
+function blockexplorer_url(currency, tx, erc20, source, layer) {
     const tx_prefix = (tx === true) ? "tx/" : "address/";
-    if (source == "binplorer") {
+    if (source == "binplorer" || layer == "bnb smart chain") {
         return "https://binplorer.com/" + tx_prefix;
     }
-    if (source == "arbiscan") {
+    if (source == "arbiscan" || layer == "arbitrum") {
         return "https://arbiscan.io/" + tx_prefix;
     }
     if (erc20 == "true" || erc20 === true) {
@@ -3759,7 +3762,7 @@ function get_pdf_url(rqdat) {
         deter = (iscrypto === true) ? 6 : 2,
         amount_rounded = trimdecimals(amount, deter),
         uoa = rqdat.uoa,
-        source = rqdat.source,
+        layer = rqdat.layer,
         uoa_upper = uoa.toUpperCase(),
         requestdate = rqdat.requestdate,
         timestamp = rqdat.timestamp,
@@ -3797,7 +3800,7 @@ function get_pdf_url(rqdat) {
     if (exists(txhash)) {
         invd["TxID"] = txhash;
     }
-    const network = getnetwork(source);
+    const network = getnetwork(layer);
     if (network) {
         invd[transclear("network")] = network;
     }
@@ -4141,6 +4144,7 @@ function appendrequest(rd) {
         rqmeta = rd.rqmeta,
         ismonitored = rd.monitored,
         source = rd.source,
+        layer = rd.layer,
         txhistory = rd.txhistory,
         uoa_upper = uoa.toUpperCase(),
         deter = (iscrypto === true) ? 6 : 2,
@@ -4217,8 +4221,8 @@ function appendrequest(rd) {
         cc_logo = (lightning) ? (txhash && !lnhash) ? cclogo : ln_logo : cclogo,
         rc_address_title = (hybrid) ? translate("fallbackaddress") : translate("receivingaddress"),
         address_markup = (lightning && (lnhash || hybrid === false)) ? "" : "<li><p class='address'><strong>" + rc_address_title + ":</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>",
-        network = getnetwork(source),
-        source_markup = (network) ? "<li><p><strong>" + translate("network") + ":</strong> " + network + "</p></li>" : "",
+        network = getnetwork(layer),
+        network_markup = (network) ? "<li><p><strong>" + translate("network") + ":</strong> " + network + "</p></li>" : "",
         tlstat = (direction == "sent") ? translate("paymentsent") : translate("paymentreceived");
     new_requestli = $("<li class='rqli " + requesttypeclass + expiredclass + lnclass + "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status + "' data-address='" + address + "' data-pending='" + pending + "' data-iscrypto='" + iscrypto + "'>\
             <div class='liwrap iconright'>" + cc_logo +
@@ -4249,7 +4253,7 @@ function appendrequest(rd) {
         timestampbox +
         paymentdetails +
         address_markup +
-        source_markup +
+        network_markup +
         pid_li +
         ia_li +
         "<li class='receipt'><p><span class='icon-file-pdf' title='View receipt'/>" + translate("receipt") + "</p></li>" + view_tx_markup +
@@ -4280,9 +4284,10 @@ function appendrequest(rd) {
     }
 }
 
-function getnetwork(source) {
-    return (source == "binplorer") ? "BNB smart chain" :
-        (source == glob_main_arbitrum_node || source == "arbiscan") ? "Arbitrum" : false;
+function getnetwork(layer) {
+    return (layer) ? (layer == "arbitrum") ? "Arbitrum" :
+        (layer == "bnb smart chain") ? "BNB smart chain" :
+        false : false;
 }
 
 // ** Store data in localstorage **

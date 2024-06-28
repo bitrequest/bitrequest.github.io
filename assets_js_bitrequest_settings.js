@@ -1718,8 +1718,8 @@ function complile_csv() {
             pts = val.paymenttimestamp,
             pdf_url = get_pdf_url(val),
             received_ts = (pts) ? short_date(pts) : "",
-            source = val.source,
-            network = getnetwork(source),
+            layer = val.layer,
+            network = getnetwork(layer),
             nw_string = (network) ? network : "";
         if (incl_paid === false && status == "paid") {} else if (incl_ins === false && status == "insufficient") {} else if (incl_new === false && status == "new") {} else if (incl_pending === false && status == "pending") {} else if (incl_pos === false && type == "local") {} else if (incl_outgoing === false && type == "outgoing") {} else if (incl_incoming === false && type == "incoming") {} else {
             if (incl_from) {

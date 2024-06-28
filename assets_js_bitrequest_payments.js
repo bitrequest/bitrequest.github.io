@@ -431,7 +431,8 @@ function loadpaymentfunction(pass) {
                     "rq_timer": request_start_time,
                     "payment": payment,
                     "coindata": coindata,
-                    "erc20": iserc20
+                    "erc20": iserc20,
+                    "layer": "main"
                 }, // global request object
                 helper = {
                     "exact": exact,
@@ -2877,7 +2878,8 @@ function saverequest(direct) {
                 "transactiontime": tpts,
                 "pending": request.pending,
                 "lightning": lightning,
-                "erc20": request.erc20
+                "erc20": request.erc20,
+                "layer": request.layer
             };
         let contactdata;
         if (contact_param) {

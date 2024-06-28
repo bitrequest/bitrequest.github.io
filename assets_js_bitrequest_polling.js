@@ -108,6 +108,7 @@ function confirmations(tx_data, direct, ln) {
                 currentconf = parseFloat(confboxspan.attr("data-conf")),
                 xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
                 txhash = tx_data.txhash,
+                layer = (tx_data.l2) ? tx_data.l2 : "main",
                 zero_conf = (xconf === false || !setconfirmations);
             brstatuspanel.find("span#confnumber").text(conf_text);
             new_status = xconf;
@@ -141,7 +142,8 @@ function confirmations(tx_data, direct, ln) {
                     "paymenttimestamp": receivedutc,
                     "txhash": txhash,
                     "confirmations": xconf,
-                    "set_confirmations": setconfirmations
+                    "set_confirmations": setconfirmations,
+                    "layer": layer
                 });
                 brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), glob_langcode));
                 if (iscrypto) {} else {

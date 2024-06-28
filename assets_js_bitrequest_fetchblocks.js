@@ -581,7 +581,7 @@ function ethplorer_fetch(rd, api_data, rdo) {
                 if (operations) {
                     const sortlist = sort_by_date(ethplorer_scan_data, operations);
                     $.each(sortlist, function(dat, value) {
-                        const txd = ethplorer_scan_data(value, rdo.setconfirmations, rd.currencysymbol),
+                        const txd = ethplorer_scan_data(value, rdo.setconfirmations, rd.currencysymbol, api_name),
                             rt_compensate = (rd.inout == "local" && rd.status == "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
                         if ((str_match(value.to, rd.address) === true) && (txd.transactiontime > rt_compensate) && (str_match(rd.currencysymbol, q_obj(value, "tokenInfo.symbol")) === true) && txd.ccval) {
                             match = true, txdat = txd;
@@ -2107,7 +2107,8 @@ function arbiscan_scan_data(data, setconfirmations, ccsymbol) { // scan
                 "txhash": txhash,
                 "confirmations": data.confirmations,
                 "setconfirmations": setconfirmations,
-                "ccsymbol": ccsymbol
+                "ccsymbol": ccsymbol,
+                "l2": "arbitrum"
             };
         } catch (err) {
             console.log(err);
@@ -2133,7 +2134,8 @@ function arbiscan_scan_data_eth(data, setconfirmations) { // scan
                 "txhash": txhash,
                 "confirmations": false,
                 "setconfirmations": setconfirmations,
-                "ccsymbol": "eth"
+                "ccsymbol": "eth",
+                "l2": "arbitrum"
             };
         } catch (err) {
             console.log(err);
@@ -2145,7 +2147,7 @@ function arbiscan_scan_data_eth(data, setconfirmations) { // scan
 
 // ethplorer
 
-function ethplorer_scan_data(data, setconfirmations, ccsymbol) { // scan
+function ethplorer_scan_data(data, setconfirmations, ccsymbol, l2) { // scan
     if (data) {
         try {
             const transactiontime = (data.timestamp) ? data.timestamp * 1000 : null,
@@ -2154,14 +2156,16 @@ function ethplorer_scan_data(data, setconfirmations, ccsymbol) { // scan
                 return transactiontime_utc;
             }
             const erc20value = (data.value) ? parseFloat((data.value / Math.pow(10, data.tokenInfo.decimals)).toFixed(8)) : null,
-                txhash = (data.transactionHash) ? data.transactionHash : null;
+                txhash = (data.transactionHash) ? data.transactionHash : null,
+                layer = (l2 == "binplorer") ? "bnb smart chain" : "main";
             return {
                 "ccval": erc20value,
                 "transactiontime": transactiontime_utc,
                 "txhash": txhash,
                 "confirmations": false,
                 "setconfirmations": setconfirmations,
-                "ccsymbol": ccsymbol
+                "ccsymbol": ccsymbol,
+                "l2": layer
             };
         } catch (err) {
             console.log(err);
