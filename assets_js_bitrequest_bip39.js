@@ -1819,7 +1819,7 @@ function compatible_wallets(coin) {
             walletdat = coinconfig.wallets,
             bip32dat = coinconfig.settings.Xpub;
         if (bip32dat.active === true) {
-            const walletlist = "";
+            let walletlist = "";
             if (walletdat) {
                 const platform = getplatform(getdevicetype()),
                     store_icon = platform_icon(platform),
