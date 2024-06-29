@@ -346,6 +346,10 @@ function scan_match(rd, api_data, rdo, counter, txdat, match, l2) {
             return
         }
         if (src == "list") {
+            const layer = txdat.l2;
+            if (layer) { // update l2 source
+                rd.layer = layer;
+            }
             compareamounts(rd);
         }
         if (src == "afterscan") { // afterscan
@@ -564,7 +568,7 @@ function api_callback(requestid, nocache) {
                         setconfirmations = thisdata.setconfirmations;
                     transactionpush.push(thisdata);
                     if (!historic || $.isEmptyObject(historic)) {} else {
-                        const h_string = historic_data_title(thisdata.ccsymbol, thisdata.ccval, historic, setconfirmations, conf, false);
+                        const h_string = historic_data_title(thisdata.ccsymbol, thisdata.ccval, historic, setconfirmations, conf, false, thisdata.l2);
                         thisnode.append(hs_for(h_string)).attr("title", h_string);
                     }
                 });
@@ -730,7 +734,7 @@ function append_tx_li(txd, rqtype, ln) {
             tx_listitem = $("<li><div class='txli_content'>" + date_format + confspan + "<div class='txli_conf txl_canceled'><span class='icon-blocked'></span>Canceled</div><span class='tx_val'> + " + valstr + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>"),
             historic = txd.historic;
         if (historic) {
-            const h_string = historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, true);
+            const h_string = historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, true, txd.l2);
             tx_listitem.append(hs_for(h_string)).attr("title", h_string);
         }
         if (rqtype === false) {
@@ -753,7 +757,7 @@ function hs_for(dat) {
     return "<div class='historic_meta'>" + dat.split("\n").join("<br/>") + "</div>";
 }
 
-function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, fromcache) {
+function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, fromcache, l2) {
     const timestamp = historic.timestamp,
         price = historic.price;
     if (timestamp && price) {
@@ -770,8 +774,9 @@ function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, 
             lc_upper = (lcsymbol) ? lcsymbol.toUpperCase() : lcsymbol,
             localrate = (lc_upper == "USD") ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(6) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2),
             conf_var = (conf === false) ? "Confirmed" : (conf && setconfirmations) ? conf + "/" + setconfirmations : "",
-            cf_info = "\nConfirmations: " + conf_var;
-        return "Historic data (" + fulldateformat(new Date((timestamp - glob_timezone)), glob_langcode) + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(6) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src + cf_info;
+            cf_info = "\nConfirmations: " + conf_var,
+            l2source = (l2) ? "\nLayer: " + l2 : "";
+        return "Historic data (" + fulldateformat(new Date((timestamp - glob_timezone)), glob_langcode) + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(6) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src + cf_info + l2source;
     }
     const resp = translate("failedhistoric", {
         "ccsymbol": ccsymbol
