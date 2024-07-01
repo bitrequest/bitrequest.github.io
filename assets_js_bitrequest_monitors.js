@@ -660,7 +660,7 @@ function handle_rpc_fails(rd, rdo, error, api_data, all_proxys) {
         api_callback(requestid);
         return
     }
-    const api_url = rpc_data.url,
+    const api_url = api_data.url,
         nextrpc = get_next_rpc(rd.payment, api_url, requestid);
     let nextapi;
     if (nextrpc === false) {
