@@ -33,8 +33,8 @@ function api_monitor_init(txhash, tx_data, api_dat) {
 }
 
 function api_monitor(txhash, tx_data, api_dat) {
-    const api_name = api_dat.name;
-    if (api_name) {
+    const api_url = api_dat.url;
+    if (api_url) {
         const gets = geturlparameters(),
             rdo = {
                 "pending": "polling",
@@ -65,7 +65,7 @@ function api_monitor(txhash, tx_data, api_dat) {
         };
         const to_time = (tx_data) ? 25000 : 100,
             timeout = setTimeout(function() {
-                if (api_dat.api === true) {
+                if (api_dat.api) {
                     select_api(rd, rdo, api_dat);
                 } else {
                     select_rpc(rd, rdo, api_dat);

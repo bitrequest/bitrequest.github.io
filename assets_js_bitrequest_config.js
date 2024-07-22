@@ -886,8 +886,8 @@ const glob_apptitle = "Bitrequest",
                     },
                     "blockexplorers": {
                         "icon": "eye",
-                        "selected": "nanocrawler.cc",
-                        "options": ["nanocrawler.cc", "nanolooker.com"]
+                        "selected": "blocklattice.io",
+                        "options": ["blocklattice.io", "nanobrowse.com", "nanocrawler.cc", "nanolooker.com"]
                     },
                     "apis": {
                         "icon": "sphere",
@@ -913,8 +913,15 @@ const glob_apptitle = "Bitrequest",
                                 "display": true
                             },
                             {
-                                "name": "api.nanos.cc",
-                                "url": "https://proxy.nanos.cc/proxy",
+                                "name": "node.somenano.com",
+                                "url": "https://node.somenano.com/proxy",
+                                "username": "",
+                                "password": "",
+                                "display": true
+                            },
+                            {
+                                "name": "nanoslo.0x.no",
+                                "url": "https://nanoslo.0x.no/proxy",
                                 "username": "",
                                 "password": "",
                                 "display": true
@@ -929,6 +936,13 @@ const glob_apptitle = "Bitrequest",
                             {
                                 "name": "proxy.powernode.cc",
                                 "url": "https://proxy.powernode.cc/proxy",
+                                "username": "",
+                                "password": "",
+                                "display": true
+                            },
+                            {
+                                "name": "api.nanos.cc",
+                                "url": "https://proxy.nanos.cc/proxy",
                                 "username": "",
                                 "password": "",
                                 "display": true
@@ -953,8 +967,13 @@ const glob_apptitle = "Bitrequest",
                                 "display": true
                             },
                             {
-                                "name": "nanos.cc websocket",
-                                "url": "wss://socket.nanos.cc",
+                                "name": "node.somenano.com",
+                                "url": "wss://node.somenano.com/websocket",
+                                "display": true
+                            },
+                            {
+                                "name": "NanOslo websocket",
+                                "url": "wss://nanoslo.0x.no/websocket",
                                 "display": true
                             },
                             {
@@ -970,6 +989,11 @@ const glob_apptitle = "Bitrequest",
                             {
                                 "name": "powernode.cc websocket",
                                 "url": "wss://ws.powernode.cc",
+                                "display": true
+                            },
+                            {
+                                "name": "nanos.cc websocket",
+                                "url": "wss://socket.nanos.cc",
                                 "display": true
                             }
                         ],
@@ -1753,6 +1777,20 @@ const glob_apptitle = "Bitrequest",
                 "prefix": "",
                 "tx_prefix": "tx/",
                 "address_prefix": "address/"
+            },
+            {
+                "name": "blocklattice.io",
+                "url": "https://blocklattice.io/",
+                "prefix": "",
+                "tx_prefix": "block/",
+                "address_prefix": "account/"
+            },
+            {
+                "name": "nanobrowse.com",
+                "url": "https://nanobrowse.com/",
+                "prefix": "",
+                "tx_prefix": "block/",
+                "address_prefix": "account/"
             },
             {
                 "name": "nanocrawler.cc",
