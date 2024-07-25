@@ -1204,7 +1204,10 @@ function socket_info(snode, live) {
     $("#current_socket").html(contents);
     if (live) {
         console.log("Connected: " + snode.url);
+        glob_paymentpopup.addClass("live");
+        return
     }
+    glob_paymentpopup.removeClass("live");
 }
 
 function reconnect() {

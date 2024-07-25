@@ -120,29 +120,31 @@ function get_requeststates(trigger, active_requests) {
                 getinputs(request_data, d_lay);
                 return
             }
-            if (trigger === true) {} else { // only update on page refresh
-                // parse cached transaction data
-                $.each(requeststates, function(i, value) {
-                    const thislist = $("#" + value.requestid),
-                        thisdata = thislist.data();
-                    if (thisdata) {
-                        const pendingstatus = thisdata.pending;
-                        if (pendingstatus == "scanning" || pendingstatus == "polling") {
-                            const statuspanel = thislist.find(".pmetastatus"),
-                                transactionlist = thislist.find(".transactionlist");
-                            statuspanel.text(value.status);
-                            transactionlist.html("");
-                            $.each(value.transactions, function(data, value) {
-                                const tx_listitem = append_tx_li(value, false);
-                                if (tx_listitem) {
-                                    transactionlist.append(tx_listitem.data(value));
-                                }
-                            });
-                            thislist.addClass("pmstatloaded");
-                        }
-                    }
-                });
+            if (trigger === true) {
+                return
             }
+            // Only update on page refresh
+            // parse cached transaction data
+            $.each(requeststates, function(i, value) {
+                const thislist = $("#" + value.requestid),
+                    thisdata = thislist.data();
+                if (thisdata) {
+                    const pendingstatus = thisdata.pending;
+                    if (pendingstatus == "scanning" || pendingstatus == "polling") {
+                        const statuspanel = thislist.find(".pmetastatus"),
+                            transactionlist = thislist.find(".transactionlist");
+                        statuspanel.text(value.status);
+                        transactionlist.html("");
+                        $.each(value.transactions, function(data, value) {
+                            const tx_listitem = append_tx_li(value, false);
+                            if (tx_listitem) {
+                                transactionlist.append(tx_listitem.data(value));
+                            }
+                        });
+                        thislist.addClass("pmstatloaded");
+                    }
+                }
+            });
             return
         }
         active_requests.addClass("scan");
