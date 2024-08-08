@@ -241,9 +241,7 @@ function get_api_inputs(rd, rdod, api_data) {
         select_api(rd, rdo, api_data);
         return
     }
-    console.log(rdo);
     const thislist = rdo.thislist;
-    console.log(thislist);
     if (thislist.hasClass("scan")) {
         const transactionlist = rdo.transactionlist;
         thislist.removeClass("no_network");

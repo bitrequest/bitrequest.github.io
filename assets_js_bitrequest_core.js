@@ -2697,7 +2697,7 @@ function cancelpaymentdialog() {
         parent.postMessage("close_request", "*");
         return
     }
-    glob_paymentpopup.removeClass("active");
+    glob_paymentpopup.removeClass("active live");
     glob_html.removeClass("blurmain_payment");
     const timeout = setTimeout(function() {
         glob_paymentpopup.removeClass("showpu outgoing");

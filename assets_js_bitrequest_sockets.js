@@ -1275,12 +1275,13 @@ function init_xmr_node(cachetime, address, vk, request_ts) {
 
 function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
     if (glob_paymentpopup.hasClass("active")) { // only when request is visible
-        const payload = {
+        const api_name = "mymonero api",
+            payload = {
             "address": address,
             "view_key": vk
         };
         api_proxy({
-            "api": "mymonero api",
+            "api": api_name,
             "search": "get_address_txs",
             "cachetime": cachetime,
             "cachefolder": "1h",
@@ -1296,6 +1297,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
             const data = br_result(e).result,
                 transactions = data.transactions;
             if (transactions) {
+                socket_info({"url": api_name}, true);
                 const set_confirmations = request.set_confirmations ?? 0,
                     set_cc = (set_confirmations) ? set_confirmations : 0,
                     txflip = transactions.reverse();
