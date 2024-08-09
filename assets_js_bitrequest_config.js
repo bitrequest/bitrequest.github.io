@@ -570,6 +570,133 @@ const glob_apptitle = "Bitrequest",
                 }
             },
             {
+                "currency": "dash",
+                "active": true,
+                "data": {
+                    "currency": "dash",
+                    "ccsymbol": "dash",
+                    "cmcid": 131,
+                    "urlscheme": function(payment, address, amount, iszero) {
+                        return btc_urlscheme(payment, address, amount, iszero);
+                    },
+                    "address_regex": "^X[1-9A-HJ-NP-Za-km-z]{33}"
+                },
+                "wallets": {
+                    "wallet_download_page": "https://www.dash.org/downloads/",
+                    "wallets": [
+                        glob_multi_wallets.exodus,
+                        glob_multi_wallets.coinomi,
+                        glob_multi_wallets.trezor,
+                        glob_multi_wallets.ledger,
+                        glob_multi_wallets.trustwallet,
+                        {
+                            "name": "Dash Wallet",
+                            "website": "https://www.dash.org",
+                            "appstore": "https://itunes.apple.com/app/id1206647026",
+                            "playstore": "https://play.google.com/store/apps/details?id=hashengineering.darkcoin.wallet",
+                            "desktop": "https://www.dash.org",
+                            "seed": true
+                        }
+                    ]
+                },
+                "settings": {
+                    "confirmations": {
+                        "icon": "clock",
+                        "selected": 0
+                    },
+                    "Use random address": {
+                        "icon": "dice",
+                        "selected": false,
+                        "switch": true,
+                    },
+                    "Reuse address": {
+                        "icon": "recycle",
+                        "selected": false,
+                        "switch": true,
+                        "custom_switch": true
+                    },
+                    "blockexplorers": {
+                        "icon": "eye",
+                        "selected": "blockchair.com",
+                        "options": ["blockchair.com", "dash.org", "cryptoid.info"]
+                    },
+                    "apis": {
+                        "icon": "sphere",
+                        "selected": {
+                            "name": "dash.org",
+                            "url": "insight.dash.org",
+                            "api": true,
+                            "display": true
+                        },
+                        "apis": [{
+                                "name": "dash.org",
+                                "url": "insight.dash.org",
+                                "api": true,
+                                "display": true
+                            },
+                            {
+                                "name": "blockchair",
+                                "url": "blockchair.com",
+                                "api": true,
+                                "display": true
+                            },
+                            {
+                                "name": "blockcypher",
+                                "url": "blockcypher.com",
+                                "api": true,
+                                "display": true
+                            }
+                        ]
+                    },
+                    "websockets": {
+                        "icon": "tab",
+                        "selected": {
+                            "name": "dash.org",
+                            "url": "insight.dash.org",
+                            "display": true
+                        },
+                        "apis": [{
+                                "name": "dash.org",
+                                "url": "insight.dash.org",
+                                "display": true
+                            },
+                            {
+                                "name": "blockcypher wss",
+                                "url": glob_main_bc_wss,
+                                "display": true
+                            },
+                            {
+                                "name": "blockcypher ws",
+                                "url": glob_main_bc_ws,
+                                "display": false
+                            }
+                        ]
+                    },
+                    "Xpub": {
+                        "active": true,
+                        "xpub": true,
+                        "icon": "key",
+                        "switch": true,
+                        "custom_switch": true,
+                        "selected": false,
+                        "key": null,
+                        "root_path": "m/44'/5'/0'/0/",
+                        "prefix": {
+                            "pub": 76,
+                            "pubx": 76067358,
+                            "privx": 76066276
+                        },
+                        "pk_vbytes": {
+                            "wif": 204
+                        }
+                    },
+                    "Key derivations": {
+                        "icon": "cog",
+                        "selected": "compatiblewallets",
+                    }
+                }
+            },
+            {
                 "currency": "bitcoin-cash",
                 "active": true,
                 "data": {
@@ -1609,6 +1736,15 @@ const glob_apptitle = "Bitrequest",
                 "sign_up": "https://blockchair.com/api"
             },
             {
+                "name": "dash.org",
+                "base_url": "https://insight.dash.org/insight-api/",
+                // for now no api key needed yet
+                // "key_param": "key=",
+                "key_param": null,
+                "api_key": null,
+                "sign_up": null
+            },
+            {
                 "name": "mempool.space",
                 "base_url": "https://mempool.space/api/",
                 // for now no api key needed yet
@@ -1854,6 +1990,20 @@ const glob_apptitle = "Bitrequest",
                 "prefix": null,
                 "tx_prefix": "tx/",
                 "address_prefix": "addr/"
+            },
+            {
+                "name": "dash.org",
+                "url": "https://insight.dash.org/",
+                "prefix": null,
+                "tx_prefix": "insight/tx/",
+                "address_prefix": "insight/address/"
+            },
+            {
+                "name": "cryptoid.info",
+                "url": "https://chainz.cryptoid.info/",
+                "prefix": "currency",
+                "tx_prefix": "tx.dws?",
+                "address_prefix": "address.dws?"
             }
         ]
     };

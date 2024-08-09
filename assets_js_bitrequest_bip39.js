@@ -2,15 +2,16 @@ const glob_test_phrase = "army van defense carry jealous true garbage claim echo
     glob_expected_seed = "5b56c417303faa3fcba7e57400e120a0ca83ec5a4fc9ffba757fbe63fbd77a89a1a3be4c67196f57c39a88b76373733891bfaba16ed27a813ceed498804c0570", // expected seed used for test derive
     glob_expected_address = "1HQ3rb7nyLPrjnuW85MUknPekwkn7poAUm", // expected addres used for test derive
     glob_expected_bech32 = "bc1qg0azlj4w2lrq8jssrrz6eprt2fe7f7edm4vpd5", // expected bech32 addres used for test derive
-
     glob_expected_ltc_address = "LZakyXotaE29Pehw21SoPuU832UhvJp4LG",
     glob_expected_bch_cashaddr = "qp5p0eur784pk8wxy2kzlz3ctnq5whfnuqqpp78u22",
     glob_expected_doge_address = "DKvWg8UhQSycj1J8QVxeBDkRpbjDkw3DiW",
+    glob_expected_dash_address = "XdAWpRgPyCwQqVwEqAff6RjJ9FN97QJVEC",
     glob_expected_eth_address = "0x2161DedC3Be05B7Bb5aa16154BcbD254E9e9eb68",
     glob_c_derive = {
         "bitcoin": true,
         "litecoin": true,
         "dogecoin": true,
+        "dash": true,
         "nano": true,
         "monero": true,
         "ethereum": true,
@@ -22,6 +23,7 @@ const glob_test_phrase = "army van defense carry jealous true garbage claim echo
         "bitcoin": true,
         "litecoin": true,
         "dogecoin": true,
+        "dash": true,
         "nano": false,
         "monero": false,
         "ethereum": true,
@@ -208,7 +210,7 @@ function test_bip39() {
         glob_test_derive = false;
     }
     if (toseed(glob_test_phrase) != glob_expected_seed || test_derivation() === false) {
-        derive_fail(["bitcoin", "litecoin", "dogecoin", "ethereum", "bitcoin-cash"]);
+        derive_fail(["bitcoin", "litecoin", "dogecoin", "dash", "ethereum", "bitcoin-cash"]);
         glob_c_derive.bitcoin = false,
             glob_c_derive.litecoin = false,
             glob_c_derive.dogecoin = false,
@@ -233,10 +235,11 @@ function test_bip39() {
     }
     // check xpub derivation
     if (xpub_check() === false) { // test for btc xpub derivation
-        derive_xpub_fail(["bitcoin", "litecoin", "dogecoin", "bitcoin-cash"]);
+        derive_xpub_fail(["bitcoin", "litecoin", "dogecoin", "dash", "bitcoin-cash"]);
         glob_can_xpub.bitcoin = false,
             glob_can_xpub.litecoin = false,
             glob_can_xpub.dogecoin = false,
+            glob_can_xpub.dash = false,
             glob_can_xpub["bitcoin-cash"] = false;
     }
     if (eth_xpub_check() === false) { // test for ethereum xpub derivation

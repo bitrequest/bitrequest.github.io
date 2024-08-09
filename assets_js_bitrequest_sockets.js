@@ -39,6 +39,8 @@ $(document).ready(function() {
     //ping_bnb
     //nimiq_scan
     //ping_nimiq
+    //dashorg_scan
+    //ping_dashorg
     //rconnect
 });
 
@@ -118,6 +120,21 @@ function init_socket(socket_node, address, swtch, retry) {
             return
         }
         blockcypher_websocket(socket_node, address);
+        return
+    }
+    if (payment == "dash") {
+        if (socket_name == "dash.org") {
+            dashorg_scan(socket_node, address, request_ts);
+            return
+        }
+        if (socket_name == "blockcypher wss") {
+            blockcypher_websocket(socket_node, address);
+            return
+        }
+        if (socket_name == "blockcypher ws") {
+            blockcypherws(socket_node, address);
+            return
+        }
         return
     }
     if (payment == "bitcoin-cash") {
@@ -596,8 +613,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
         const ping_event = JSON.stringify({
             "event": "tx-confirmation",
             "address": thisaddress,
-            "token": get_blockcypher_apikey(),
-            "confirmations": 10
+            "token": get_blockcypher_apikey()
         });
         websocket.send(ping_event);
         glob_pinging[thisaddress] = setInterval(function() {
@@ -618,6 +634,11 @@ function blockcypher_websocket(socket_node, thisaddress) {
                 const set_confirmations = request.set_confirmations ?? 0,
                     set_cc = (set_confirmations) ? set_confirmations : 0,
                     txd = blockcypher_poll_data(data, set_cc, request.currencysymbol, thisaddress);
+                if (txd.double_spend) {
+                    const content = "<h2 class='icon-warning'>Double spend detected</h2>";
+                    popdialog(content, "canceldialog");
+                    return
+                }
                 pick_monitor(txhash, txd);
             }
         }
@@ -1117,7 +1138,7 @@ function kaspa_fyi_websocket(socket_node, thisaddress) {
         handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress)
+        handle_socket_fails(socket_node, thisaddress);
         return
     };
 }
@@ -1277,9 +1298,9 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
     if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         const api_name = "mymonero api",
             payload = {
-            "address": address,
-            "view_key": vk
-        };
+                "address": address,
+                "view_key": vk
+            };
         api_proxy({
             "api": api_name,
             "search": "get_address_txs",
@@ -1297,7 +1318,9 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
             const data = br_result(e).result,
                 transactions = data.transactions;
             if (transactions) {
-                socket_info({"url": api_name}, true);
+                socket_info({
+                    "url": api_name
+                }, true);
                 const set_confirmations = request.set_confirmations ?? 0,
                     set_cc = (set_confirmations) ? set_confirmations : 0,
                     txflip = transactions.reverse();
@@ -1462,6 +1485,9 @@ function ping_nimiq(address, request_ts) {
         }).done(function(e) {
             const transactions = br_result(e).result;
             if (transactions) {
+                socket_info({
+                    "url": "nimiq.watch"
+                }, true);
                 const set_confirmations = request.set_confirmations,
                     set_cc = (set_confirmations) ? set_confirmations : 0,
                     txflip = transactions.reverse();
@@ -1486,6 +1512,59 @@ function ping_nimiq(address, request_ts) {
             clearpinging(address);
             const error_object = (errorThrown) ? errorThrown : jqXHR;
             handle_api_fails(false, error_object, "nimiq.watch", request.payment);
+        });
+        return
+    }
+    forceclosesocket();
+}
+
+function dashorg_scan(socket_node, address, request_ts) {
+    glob_pinging[address] = setInterval(function() {
+        ping_dashorg(socket_node, address, request_ts);
+    }, 5000);
+}
+
+function ping_dashorg(socket_node, address, request_ts) {
+    if (glob_paymentpopup.hasClass("active")) { // only when request is visible
+        api_proxy({
+            "api": "dash.org",
+            "search": "txs?address=" + address,
+            "params": {
+                "method": "GET"
+            }
+        }).done(function(e) {
+            const data = br_result(e).result;
+            if (data) {
+                const transactions = data.txs,
+                    set_confirmations = request.set_confirmations,
+                    set_cc = (set_confirmations) ? set_confirmations : 0;
+                if (transactions && !$.isEmptyObject(transactions)) {
+                    const sortlist = sort_by_date(insight_scan_data, transactions);
+                    socket_info({
+                        "url": "dash.org"
+                    }, true);
+                    $.each(sortlist, function(dat, value) {
+                        const txd = insight_scan_data(value, set_cc, address);
+                        if (txd.transactiontime > request_ts && txd.ccval) {
+                            clearpinging();
+                            const requestlist = $("#requestlist > li.rqli"),
+                                txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
+                            if (txid_match.length) {
+                                return
+                            }
+                            if (set_cc > 0) {
+                                pick_monitor(txd.txhash, txd);
+                                return
+                            }
+                            confirmations(txd, true);
+                        }
+                    });
+                }
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            clearpinging(address);
+            const error_object = (errorThrown) ? errorThrown : jqXHR;
+            handle_socket_fails(socket_node, address);
         });
         return
     }

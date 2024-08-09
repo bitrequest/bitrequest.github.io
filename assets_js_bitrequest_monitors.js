@@ -242,7 +242,7 @@ function get_api_inputs(rd, rdod, api_data) {
         return
     }
     const thislist = rdo.thislist;
-    if (thislist.hasClass("scan")) {
+    if (thislist && thislist.hasClass("scan")) {
         const transactionlist = rdo.transactionlist;
         thislist.removeClass("no_network");
         if (rdo.pending == "no" || rdo.pending == "incoming" || thislist.hasClass("expired")) {
@@ -307,6 +307,10 @@ function select_api(rd, rdo, api_dat) {
     }
     if (rd.payment == "kaspa") {
         kaspa_fetch(rd, api_data, rdo);
+        return
+    }
+    if (api_name == "dash.org") {
+        insight_fetch_dash(rd, api_data, rdo);
         return
     }
 }
@@ -727,16 +731,16 @@ function append_tx_li(txd, rqtype, ln) {
             valstr = (ln && !conf) ? "" : ccval_rounded + " " + set_ccsymbol + lnstr,
             date_format = (transactiontime) ? short_date(transactiontime) : "",
             confirmed = (conf && conf >= setconfirmations),
-            conftitle = (conf === false) ? "Confirmed transaction" : conf + " / " + setconfirmations + " " + translate("confirmations"),
+            instant_lock = txd.instant_lock,
+            conftitle = (instant_lock) ? "instant_lock" : conf + " / " + setconfirmations + " " + translate("confirmations"),
             checked_span = "<span class='icon-checkmark' title='" + conftitle + "'></span>",
             confspan = (conf) ? (confirmed) ? checked_span :
             "<div class='txli_conf' title='" + conftitle + "'><div class='confbar'></div><span>" + conftitle + "</span></div>" :
-            (conf === false) ? checked_span :
             "<div class='txli_conf' title='" + translate("unconfirmedtx") + "'><div class='confbar'></div><span>" + translate("unconfirmedtx") + "</span></div>",
             tx_listitem = $("<li><div class='txli_content'>" + date_format + confspan + "<div class='txli_conf txl_canceled'><span class='icon-blocked'></span>Canceled</div><span class='tx_val'> + " + valstr + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>"),
             historic = txd.historic;
         if (historic) {
-            const h_string = historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, true, txd.l2);
+            const h_string = historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, true, txd.l2, instant_lock);
             tx_listitem.append(hs_for(h_string)).attr("title", h_string);
         }
         if (rqtype === false) {
@@ -759,7 +763,7 @@ function hs_for(dat) {
     return "<div class='historic_meta'>" + dat.split("\n").join("<br/>") + "</div>";
 }
 
-function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, fromcache, l2) {
+function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, fromcache, l2, instant_lock) {
     const timestamp = historic.timestamp,
         price = historic.price;
     if (timestamp && price) {
@@ -775,7 +779,7 @@ function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, 
             cc_upper = (ccsymbol) ? ccsymbol.toUpperCase() : ccsymbol,
             lc_upper = (lcsymbol) ? lcsymbol.toUpperCase() : lcsymbol,
             localrate = (lc_upper == "USD") ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(6) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2),
-            conf_var = (conf === false) ? "Confirmed" : (conf && setconfirmations) ? conf + "/" + setconfirmations : "",
+            conf_var = (instant_lock) ? "instant_lock" : (conf) ? conf + "/" + setconfirmations : "",
             cf_info = "\nConfirmations: " + conf_var,
             l2source = (l2) ? "\nLayer: " + l2 : "";
         return "Historic data (" + fulldateformat(new Date((timestamp - glob_timezone)), glob_langcode) + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(6) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src + cf_info + l2source;
@@ -800,7 +804,7 @@ function compareamounts(rd) {
                 pendingstatus = rd.pending,
                 getconfirmations = rd.set_confirmations,
                 getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
-                setconfirmations = (rd.lightning) ? 1 : (getconfint) ? getconfint : 1, // set minimum confirmations to 1
+                setconfirmations = (rd.lightning) ? 1 : getconfint, // set minimum confirmations to 1
                 firstlist = txlist.first(),
                 conf = firstlist.data("confirmations"),
                 latestinput = firstlist.data("transactiontime"),
@@ -829,7 +833,7 @@ function compareamounts(rd) {
                         paymenttimestamp_cc = tn_dat.transactiontime,
                         txhash_cc = tn_dat.txhash,
                         thissum_cc += parseFloat(tn_dat.ccval) || 0; // sum of outputs
-                    if (confirmations_cc >= setconfirmations || rd.no_conf === true || confirmations_cc === false) { // check all confirmations + whitelist for currencies unable to fetch confirmation
+                    if (confirmations_cc >= setconfirmations || rd.no_conf === true) { // check all confirmations + whitelist for currencies unable to fetch confirmations
                         confirmed_cc = true;
                         if (thissum_cc >= cc_amount * margin) { // compensation for small fluctuations in rounding amount
                             thisnode.addClass("exceed").nextAll().addClass("exceed");
@@ -1023,7 +1027,8 @@ function form_date(latestinput) {
 
 function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, lcsymbol) {
     glob_api_attempt[apilist][api] = true;
-    const thispayment = rd.payment,
+    const thisrequestid = rd.requestid,
+        thispayment = rd.payment,
         ccsymbol = rd.currencysymbol,
         latestinput = rd.latestinput,
         firstinput = rd.firstinput,
@@ -1051,8 +1056,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
             data = (api == "coingecko") ? (api_result) ? api_result.prices : null :
             (api == "coincodex") ? (api_result) ? api_result[ccsymbol.toUpperCase()] : null : api_result;
         if (data && !data.error) {
-            const thisrequestid = rd.requestid,
-                requestli = $("#" + thisrequestid),
+            const requestli = $("#" + thisrequestid),
                 txlist = requestli.find(".transactionlist li"),
                 txlist_length = txlist.length,
                 txreverse = (txlist_length > 1) ? txlist.get().reverse() : txlist,
@@ -1061,7 +1065,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 getconfirmations = rd.set_confirmations,
                 getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
                 lnd = rd.lightning,
-                setconfirmations = (lnd) ? 1 : (getconfint) ? getconfint : 1, // set minimum confirmations to 1
+                setconfirmations = (lnd) ? 1 : getconfint, // set minimum confirmations to 1
                 iserc20 = rd.erc20,
                 historicusdvalue = (thisamount / lcrate) * usdrate,
                 margin = (historicusdvalue < 2) ? 0.60 : 0.95; // be flexible with small amounts
@@ -1095,14 +1099,14 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     paymenttimestamp = thistimestamp,
                     txhash = tn_dat.txhash,
                     receivedcc += parseFloat(thisvalue) || 0; // sum of outputs CC
-                let thisusdsum = receivedusd += parseFloat(historic_price * thisvalue) || 0;
-                if (historic_price && (conf >= setconfirmations || rd.no_conf === true || conf === false)) { // check all confirmations + whitelist for currencies unable to fetch confirmations
+                if ((historic_price && (conf >= setconfirmations)) || rd.no_conf === true) { // check all confirmations + whitelist for currencies unable to fetch confirmations
                     confirmed = true;
-                    if (thisusdsum >= historicusdvalue * margin) { //minus 5% dollar for volatility compensation
-                        thisnode.addClass("exceed").nextAll().addClass("exceed");
-                    }
                 } else {
                     confirmed = false;
+                }
+                let thisusdsum = receivedusd += parseFloat(historic_price * thisvalue) || 0;
+                if (thisusdsum >= historicusdvalue * margin) { //minus 5% dollar for volatility compensation
+                    thisnode.addClass("exceed").nextAll().addClass("exceed");
                 }
                 const confbar = thisnode.find(".confbar");
                 if (confbar.length > 0) {

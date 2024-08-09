@@ -33,7 +33,7 @@ function api_monitor_init(txhash, tx_data, api_dat) {
 }
 
 function api_monitor(txhash, tx_data, api_dat) {
-    const api_url = api_dat.url;
+    const api_url = (api_dat.url || api_dat.name);
     if (api_url) {
         const gets = geturlparameters(),
             rdo = {
@@ -78,8 +78,8 @@ function api_monitor(txhash, tx_data, api_dat) {
 }
 
 function confirmations(tx_data, direct, ln) {
-    const payment = request.payment;
-    if (payment) {
+    const ccsymbol = tx_data.ccsymbol;
+    if (ccsymbol) {
         let new_status = "pending";
         closeloader();
         clearTimeout(glob_request_timer);
@@ -127,9 +127,8 @@ function confirmations(tx_data, direct, ln) {
                     receivedcc = tx_data.ccval,
                     rccf = parseFloat(receivedcc.toFixed(6)),
                     thiscurrency = request.uoa,
-                    currencysymbol = request.currencysymbol,
                     requesttype = request.requesttype,
-                    iscrypto = (thiscurrency == currencysymbol) ? true : false,
+                    iscrypto = (thiscurrency == ccsymbol) ? true : false,
                     fiatvalue = (iscrypto) ? null : (rccf / parseFloat($("#paymentdialogbox .ccpool").attr("data-xrate"))) * parseFloat($("#paymentdialog .cpool[data-currency='" + thiscurrency + "']").attr("data-xrate")), // calculate fiat value
                     fiatrounded = (iscrypto) ? null : fiatvalue.toFixed(2),
                     receivedrounded = (iscrypto) ? receivedcc : fiatrounded;
@@ -147,17 +146,17 @@ function confirmations(tx_data, direct, ln) {
                 });
                 brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), glob_langcode));
                 if (iscrypto) {} else {
-                    brstatuspanel.find("span.receivedcrypto").text(rccf + " " + currencysymbol);
+                    brstatuspanel.find("span.receivedcrypto").text(rccf + " " + ccsymbol);
                 }
                 brstatuspanel.find("span.receivedfiat").text(" (" + receivedrounded + " " + thiscurrency + ")");
                 const exact = helper.exact,
-                    xmr_pass = (payment == "monero") ? (rccf > (cc_raw * 0.97) && rccf < (cc_raw * 1.03)) ? true : false : true; // error margin for xmr integrated addresses
+                    xmr_pass = (ccsymbol == "xmr") ? (rccf > (cc_raw * 0.97) && rccf < (cc_raw * 1.03)) ? true : false : true; // error margin for xmr integrated addresses
                 if (xmr_pass) {
                     const pass = (exact && (rccf == cc_raw)) ? true : (rccf >= (cc_raw * 0.97)) ? true : false;
                     if (pass) {
                         if (xconf >= setconfirmations || zero_conf === true) {
                             forceclosesocket();
-                            if (payment == "dogecoin") {
+                            if (ccsymbol == "doge") {
                                 playsound(glob_howl);
                             } else {
                                 playsound(glob_cashier);
@@ -259,6 +258,11 @@ function after_scan(rq_init, next_api) {
         if (api_name == "blockcypher") {
             ap_loader();
             blockcypher_fetch(request, api_data, rdo);
+            return
+        }
+        if (api_name == "dash.org") {
+            ap_loader();
+            insight_fetch_dash(request, api_data, rdo);
             return
         }
         if (api_name == "blockchair") {
