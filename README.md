@@ -21,7 +21,7 @@ Create and share payment requests for cryptocurrencies.
 * __Create__ payment requests by entering the amount in crypto or fiat.
 * __Share__ payment requests pegged to fiat to reduce volatility.
 * Get __instant payment feedback.__
-* Supports __multiple cryptocurrencies__ (Bitcoin, Lightning, Nano, Litecoin, Dogecoin, Dash, Ethereum, Bitcoin-cash, Monero, Kaspa, Nimiq, and Erc20-tokens).
+* Supports __multiple cryptocurrencies__ (Bitcoin, Lightning, Nano, Litecoin, Dogecoin, Dash, Ethereum, Bitcoin-cash, Monero, Nimiq, Kaspa, and Erc20-tokens).
 * __Manage requests__ (Monitor, View details, Archive).
 
 #### Addresses
