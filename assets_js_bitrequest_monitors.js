@@ -571,10 +571,11 @@ function api_callback(requestid, nocache) {
                         thisdata = thisnode.data(),
                         historic = thisdata.historic,
                         conf = thisdata.confirmations,
-                        setconfirmations = thisdata.setconfirmations;
+                        setconfirmations = thisdata.setconfirmations,
+                        instant_lock = thisdata.instant_lock;
                     transactionpush.push(thisdata);
                     if (!historic || $.isEmptyObject(historic)) {} else {
-                        const h_string = historic_data_title(thisdata.ccsymbol, thisdata.ccval, historic, setconfirmations, conf, false, thisdata.l2);
+                        const h_string = historic_data_title(thisdata.ccsymbol, thisdata.ccval, historic, setconfirmations, conf, false, thisdata.l2, instant_lock);
                         thisnode.append(hs_for(h_string)).attr("title", h_string);
                     }
                 });
@@ -779,7 +780,8 @@ function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, 
             cc_upper = (ccsymbol) ? ccsymbol.toUpperCase() : ccsymbol,
             lc_upper = (lcsymbol) ? lcsymbol.toUpperCase() : lcsymbol,
             localrate = (lc_upper == "USD") ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(6) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2),
-            conf_var = (instant_lock) ? "instant_lock" : (conf) ? conf + "/" + setconfirmations : "",
+            conf_ratio = (conf) ? conf + "/" + setconfirmations : translate("unconfirmedtx"),
+            conf_var = (instant_lock) ? "instant_lock " + conf_ratio : conf_ratio,
             cf_info = "\nConfirmations: " + conf_var,
             l2source = (l2) ? "\nLayer: " + l2 : "";
         return "Historic data (" + fulldateformat(new Date((timestamp - glob_timezone)), glob_langcode) + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(6) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src + cf_info + l2source;
@@ -828,12 +830,13 @@ function compareamounts(rd) {
                 $(txreverse).each(function(i) {
                     tx_counter++;
                     const thisnode = $(this),
-                        tn_dat = thisnode.data();
+                        tn_dat = thisnode.data(),
+                        conf_correct = (tn_dat.instant_lock) ? 1 : setconfirmations; // correction if dash instant_lock
                     confirmations_cc = tn_dat.confirmations,
                         paymenttimestamp_cc = tn_dat.transactiontime,
                         txhash_cc = tn_dat.txhash,
                         thissum_cc += parseFloat(tn_dat.ccval) || 0; // sum of outputs
-                    if (confirmations_cc >= setconfirmations || rd.no_conf === true) { // check all confirmations + whitelist for currencies unable to fetch confirmations
+                    if (confirmations_cc >= conf_correct || rd.no_conf === true) { // check all confirmations + whitelist for currencies unable to fetch confirmations
                         confirmed_cc = true;
                         if (thissum_cc >= cc_amount * margin) { // compensation for small fluctuations in rounding amount
                             thisnode.addClass("exceed").nextAll().addClass("exceed");
@@ -1093,13 +1096,14 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                         "fetched": false
                     },
                     historic_object = compare_historic_prices(api, values, data, thistimestamp),
-                    historic_price = historic_object.price;
+                    historic_price = historic_object.price,
+                    conf_correct = (tn_dat.instant_lock) ? 1 : setconfirmations; // correction if dash instant_lock
                 thisnode.data("historic", historic_object);
                 conf = tn_dat.confirmations, // check confirmations
                     paymenttimestamp = thistimestamp,
                     txhash = tn_dat.txhash,
                     receivedcc += parseFloat(thisvalue) || 0; // sum of outputs CC
-                if ((historic_price && (conf >= setconfirmations)) || rd.no_conf === true) { // check all confirmations + whitelist for currencies unable to fetch confirmations
+                if ((historic_price && (conf >= conf_correct)) || rd.no_conf === true) { // check all confirmations + whitelist for currencies unable to fetch confirmations
                     confirmed = true;
                 } else {
                     confirmed = false;

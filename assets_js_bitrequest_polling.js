@@ -78,6 +78,7 @@ function api_monitor(txhash, tx_data, api_dat) {
 }
 
 function confirmations(tx_data, direct, ln) {
+    console.log(tx_data);
     const ccsymbol = tx_data.ccsymbol;
     if (ccsymbol) {
         let new_status = "pending";
@@ -109,10 +110,10 @@ function confirmations(tx_data, direct, ln) {
                 xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
                 txhash = tx_data.txhash,
                 layer = (tx_data.l2) ? tx_data.l2 : "main",
-                zero_conf = (xconf === false || !setconfirmations);
+                zero_conf = (xconf === false || !setconfirmations || direct === true || tx_data.instant_lock); // Dashpay instant_lock
             brstatuspanel.find("span#confnumber").text(conf_text);
             new_status = xconf;
-            if (xconf > currentconf || zero_conf === true || direct === true) {
+            if (xconf > currentconf || zero_conf === true) {
                 reset_recent();
                 br_remove_session("txstatus"); // remove cached historical exchange rates
                 confbox.removeClass("blob");

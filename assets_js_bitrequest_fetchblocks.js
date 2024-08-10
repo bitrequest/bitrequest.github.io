@@ -2059,14 +2059,13 @@ function insight_scan_data(data, setconfirmations, address) { // scan
             }
             const txhash = data.txid,
                 conf = (data.confirmations) ? data.confirmations : 0,
-                instant_lock = (data.txlock) ? true : false, // instant transactions
-                set_conf = (instant_lock) ? 0 : setconfirmations;
+                instant_lock = (data.txlock) ? true : false; // instant transactions
             return {
                 "ccval": outputsum,
                 "transactiontime": transactiontime_utc,
                 "txhash": txhash,
                 "confirmations": conf,
-                "setconfirmations": set_conf,
+                "setconfirmations": setconfirmations,
                 "double_spend": false,
                 "instant_lock": instant_lock,
                 "ccsymbol": "dash"
@@ -2143,14 +2142,13 @@ function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestb
                 }
                 const ccval = (outputs) ? outputsum / 100000000 : null,
                     txhash = transaction.hash,
-                    instant_lock = (transaction.is_instant_lock) ? true : false, // instant transactions
-                    set_conf = (instant_lock) ? 0 : setconfirmations;
+                    instant_lock = (transaction.is_instant_lock) ? true : false; // instant transactions
                 return {
                     "ccval": ccval,
                     "transactiontime": transactiontime,
                     "txhash": txhash,
                     "confirmations": conf,
-                    "setconfirmations": set_conf,
+                    "setconfirmations": setconfirmations,
                     "double_spend": false,
                     "instant_lock": instant_lock,
                     "ccsymbol": ccsymbol
