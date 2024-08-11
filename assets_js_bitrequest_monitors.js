@@ -36,7 +36,7 @@ $(document).ready(function() {
     //scan_tx_li
     //append_tx_li
     //hs_for
-    //historic_data_title
+    //data_title
 
     //compareamounts
     //init_historical_fiat_data
@@ -568,16 +568,8 @@ function api_callback(requestid, nocache) {
                 const transactionpush = [];
                 transactionli.each(function() {
                     const thisnode = $(this),
-                        thisdata = thisnode.data(),
-                        historic = thisdata.historic,
-                        conf = thisdata.confirmations,
-                        setconfirmations = thisdata.setconfirmations,
-                        instant_lock = thisdata.instant_lock;
+                        thisdata = thisnode.data();
                     transactionpush.push(thisdata);
-                    if (!historic || $.isEmptyObject(historic)) {} else {
-                        const h_string = historic_data_title(thisdata.ccsymbol, thisdata.ccval, historic, setconfirmations, conf, false, thisdata.l2, instant_lock);
-                        thisnode.append(hs_for(h_string)).attr("title", h_string);
-                    }
                 });
                 const statuspanel = thislist.find(".pmetastatus"),
                     statusbox = {
@@ -731,18 +723,23 @@ function append_tx_li(txd, rqtype, ln) {
             lnstr = (ln) ? " <span class='icon-power'></span>" : "",
             valstr = (ln && !conf) ? "" : ccval_rounded + " " + set_ccsymbol + lnstr,
             date_format = (transactiontime) ? short_date(transactiontime) : "",
-            confirmed = (conf && conf >= setconfirmations),
+            no_conf = (setconfirmations === false) ? true : false,
             instant_lock = txd.instant_lock,
-            conftitle = (instant_lock) ? "instant_lock" : conf + " / " + setconfirmations + " " + translate("confirmations"),
-            checked_span = "<span class='icon-checkmark' title='" + conftitle + "'></span>",
-            confspan = (conf) ? (confirmed) ? checked_span :
-            "<div class='txli_conf' title='" + conftitle + "'><div class='confbar'></div><span>" + conftitle + "</span></div>" :
-            "<div class='txli_conf' title='" + translate("unconfirmedtx") + "'><div class='confbar'></div><span>" + translate("unconfirmedtx") + "</span></div>",
+            confirmed = (instant_lock || no_conf || (conf && conf >= setconfirmations)),
+            conf_count = (no_conf) ? "" : conf + " / " + setconfirmations + " " + translate("confirmations"),
+            instant_lock_text = (instant_lock) ? " (instant_lock)" : "",
+            conf_title = (instant_lock) ? "instant_lock" : conf_count,
+            unconf_text = translate("unconfirmedtx"),
+            checked_span = "<span class='icon-checkmark' title='" + conf_title + "'></span>",
+            confspan = (confirmed) ? checked_span : (conf) ? "<div class='txli_conf' title='" + conf_title + "'><div class='confbar'></div><span>" + conf_title + "</span></div>" :
+            "<div class='txli_conf' title='" + unconf_text + "'><div class='confbar'></div><span>" + unconf_text + "</span></div>",
             tx_listitem = $("<li><div class='txli_content'>" + date_format + confspan + "<div class='txli_conf txl_canceled'><span class='icon-blocked'></span>Canceled</div><span class='tx_val'> + " + valstr + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>"),
             historic = txd.historic;
-        if (historic) {
-            const h_string = historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, true, txd.l2, instant_lock);
-            tx_listitem.append(hs_for(h_string)).attr("title", h_string);
+        const h_string = data_title(ccsymbol, ccval, historic, setconfirmations, conf, true, txd.l2, instant_lock);
+        if (h_string) {
+            if (confirmed || historic) {
+                tx_listitem.append(hs_for(h_string)).attr("title", h_string);
+            }
         }
         if (rqtype === false) {
             return tx_listitem;
@@ -764,11 +761,12 @@ function hs_for(dat) {
     return "<div class='historic_meta'>" + dat.split("\n").join("<br/>") + "</div>";
 }
 
-function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, fromcache, l2, instant_lock) {
-    const timestamp = historic.timestamp,
-        price = historic.price;
-    if (timestamp && price) {
-        const fiatsrc = historic.fiatapisrc,
+function data_title(ccsymbol, ccval, historic, setconfirmations, conf, fromcache, l2, instant_lock) {
+    let historic_dat = "";
+    if (historic) {
+        const timestamp = historic.timestamp,
+            price = historic.price,
+            fiatsrc = historic.fiatapisrc,
             src = historic.apisrc,
             lcsymbol = historic.lcsymbol,
             lc_eur_rate = historic.lcrate,
@@ -779,18 +777,18 @@ function historic_data_title(ccsymbol, ccval, historic, setconfirmations, conf, 
             lc_val = ccval * lc_ccrate,
             cc_upper = (ccsymbol) ? ccsymbol.toUpperCase() : ccsymbol,
             lc_upper = (lcsymbol) ? lcsymbol.toUpperCase() : lcsymbol,
-            localrate = (lc_upper == "USD") ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(6) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2),
-            conf_ratio = (conf) ? conf + "/" + setconfirmations : translate("unconfirmedtx"),
-            conf_var = (instant_lock) ? "instant_lock " + conf_ratio : conf_ratio,
-            cf_info = "\nConfirmations: " + conf_var,
-            l2source = (l2) ? "\nLayer: " + l2 : "";
-        return "Historic data (" + fulldateformat(new Date((timestamp - glob_timezone)), glob_langcode) + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(6) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src + cf_info + l2source;
+            localrate = (lc_upper == "USD") ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(6) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2);
+        historic_dat = "Historic data (" + fulldateformat(new Date((timestamp - glob_timezone)), glob_langcode) + "):\nFiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" + cc_upper + "-USD: " + price.toFixed(6) + "\n" + localrate + "\nSource: " + fiatsrc + "/" + src + "\n";
     }
-    const resp = translate("failedhistoric", {
-        "ccsymbol": ccsymbol
-    });
-    notify(resp);
-    return resp;
+    const conf_ratio = (conf) ? conf + "/" + setconfirmations : translate("unconfirmedtx"),
+        conf_var = (instant_lock) ? "(instant_lock)" : conf_ratio,
+        cf_info = (setconfirmations === false) ? "" : "Confirmations: " + conf_var,
+        l2source = (l2) ? "\nLayer: " + l2 : "",
+        title_string = historic_dat + cf_info + l2source;
+    if (title_string.length) {
+        return title_string;
+    }
+    return false
 }
 
 function compareamounts(rd) {
@@ -805,7 +803,7 @@ function compareamounts(rd) {
             const iscrypto = rd.iscrypto,
                 pendingstatus = rd.pending,
                 getconfirmations = rd.set_confirmations,
-                getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
+                getconfint = (getconfirmations === false) ? 0 : (getconfirmations) ? parseInt(getconfirmations) : 1,
                 setconfirmations = (rd.lightning) ? 1 : getconfint, // set minimum confirmations to 1
                 firstlist = txlist.first(),
                 conf = firstlist.data("confirmations"),
@@ -831,7 +829,7 @@ function compareamounts(rd) {
                     tx_counter++;
                     const thisnode = $(this),
                         tn_dat = thisnode.data(),
-                        conf_correct = (tn_dat.instant_lock) ? 1 : setconfirmations; // correction if dash instant_lock
+                        conf_correct = (tn_dat.instant_lock) ? 0 : setconfirmations; // correction if dash instant_lock
                     confirmations_cc = tn_dat.confirmations,
                         paymenttimestamp_cc = tn_dat.transactiontime,
                         txhash_cc = tn_dat.txhash,
@@ -1066,7 +1064,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 latestconf = rd.latestconf,
                 thisamount = rd.amount,
                 getconfirmations = rd.set_confirmations,
-                getconfint = (getconfirmations) ? parseInt(getconfirmations) : 1,
+                getconfint = (getconfirmations === false) ? 0 : (getconfirmations) ? parseInt(getconfirmations) : 1,
                 lnd = rd.lightning,
                 setconfirmations = (lnd) ? 1 : getconfint, // set minimum confirmations to 1
                 iserc20 = rd.erc20,
@@ -1097,7 +1095,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     },
                     historic_object = compare_historic_prices(api, values, data, thistimestamp),
                     historic_price = historic_object.price,
-                    conf_correct = (tn_dat.instant_lock) ? 1 : setconfirmations; // correction if dash instant_lock
+                    conf_correct = (tn_dat.instant_lock) ? 0 : setconfirmations; // correction if dash instant_lock
                 thisnode.data("historic", historic_object);
                 conf = tn_dat.confirmations, // check confirmations
                     paymenttimestamp = thistimestamp,
