@@ -2022,7 +2022,7 @@ function blockcypher_scan_data(data, setconfirmations, ccsymbol) { // scan
                 "transactiontime": transactiontime,
                 "txhash": txhash_mod,
                 "confirmations": conf,
-                "setconfirmations": instant,
+                "setconfirmations": setconfirmations,
                 "double_spend": double_spend,
                 "instant_lock": false,
                 "ccsymbol": ccsymbol
