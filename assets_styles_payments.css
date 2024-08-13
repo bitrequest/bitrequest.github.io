@@ -55,7 +55,7 @@
 
 .brstatuspanel img {
 	display: none;
-	width: 20%;
+	width: 12%;
 }
 
 .brstatuspanel span.receivedcrypto {
@@ -71,7 +71,7 @@
 
 .brstatuspanel h2 {
 	color: #707070;
-	font-size: 250%;
+	font-size: 200%;
 	font-weight: 700;
 	line-height: 1em;
 	margin: 0.3em 0;

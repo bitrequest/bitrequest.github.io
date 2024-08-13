@@ -1073,7 +1073,7 @@ html.dragmode .currentpage .applist li.dragging {
 .requestlist li.requestlocal.visible_request,
 .requestlist li.requestlocal.visible_request .brstatuspanel,
 .requestlist li.requestlocal .brmarker {
-	background-color: rgba(0, 0, 0, 0.20);
+	background-color:rgba(0, 0, 0, 0.20);
 }
 
 .requestlist li .liwrap img.cmc_icon {
@@ -1257,7 +1257,7 @@ html.dragmode .currentpage .applist li.dragging {
 	width: 100%;
 	display: none;
 	padding: 0 0 1em 1em;
-	font-size: 100%;
+	font-size: 85%;
 }
 
 .moreinfo .icon-power {
@@ -1333,7 +1333,7 @@ html.dragmode .currentpage .applist li.dragging {
 .metalist li {
 	float: left;
 	width: 100%;
-	padding: 0.2em 0 0.2em 0;
+	padding: 0.15em 0 0.15em 0;
 	list-style-type: none;
 	font-weight: 600;
 }
@@ -1369,6 +1369,7 @@ html.dragmode .currentpage .applist li.dragging {
 }
 
 .metalist li.receipt {
+	padding-top:0.7em;
 	display: none;
 }
 
@@ -1430,15 +1431,14 @@ html.dragmode .currentpage .applist li.dragging {
 
 .transactionlist h2 {
 	font-size: 110%;
-	padding: 0.7em 0 0 0;
-	opacity: 0.5;
+	padding: 0.7em 0 0.5em 0;
 }
 
 .transactionlist li {
 	float: left;
 	width: 100%;
 	list-style-type: none;
-	padding: 1em 0 0.2em 0.25em;
+	padding: 0.3em 0 0.3em 0.25em;
 	font-weight: 600;
 }
 
