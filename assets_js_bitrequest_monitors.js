@@ -138,7 +138,12 @@ function get_requeststates(trigger, active_requests) {
                         $.each(value.transactions, function(data, value) {
                             const tx_listitem = append_tx_li(value, false);
                             if (tx_listitem) {
-                                transactionlist.append(tx_listitem.data(value));
+                                tx_listitem.data(value);
+                                const h_string = data_title(value.ccsymbol, value.ccval, value.historic, value.setconfirmations, value.confirmations, value.l2, null, "cache ");
+                                if (h_string) {
+                                    tx_listitem.append(hs_for(h_string)).attr("title", h_string);
+                                }
+                                transactionlist.append(tx_listitem);
                             }
                         });
                         thislist.addClass("pmstatloaded");
@@ -570,6 +575,10 @@ function api_callback(requestid, nocache) {
                     const thisnode = $(this),
                         thisdata = thisnode.data();
                     transactionpush.push(thisdata);
+                    const h_string = data_title(thisdata.ccsymbol, thisdata.ccval, thisdata.historic, thisdata.setconfirmations, thisdata.confirmations, thisdata.l2, null, "callback ");
+                    if (h_string) {
+                        thisnode.append(hs_for(h_string)).attr("title", h_string);
+                    }
                 });
                 const statuspanel = thislist.find(".pmetastatus"),
                     statusbox = {
@@ -581,8 +590,7 @@ function api_callback(requestid, nocache) {
             } else {
                 const statusbox = {
                     "requestid": requestid,
-                    "status": 0,
-                    "transactions": []
+                    "status": 0
                 };
                 glob_statuspush.push(statusbox);
             }
@@ -733,14 +741,7 @@ function append_tx_li(txd, rqtype, ln) {
             checked_span = "<span class='icon-checkmark' title='" + conf_title + "'></span>",
             confspan = (confirmed) ? checked_span : (conf) ? "<div class='txli_conf' title='" + conf_title + "'><div class='confbar'></div><span>" + conf_title + "</span></div>" :
             "<div class='txli_conf' title='" + unconf_text + "'><div class='confbar'></div><span>" + unconf_text + "</span></div>",
-            tx_listitem = $("<li><div class='txli_content'>" + date_format + confspan + "<div class='txli_conf txl_canceled'><span class='icon-blocked'></span>Canceled</div><span class='tx_val'> + " + valstr + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>"),
-            historic = txd.historic;
-        const h_string = data_title(ccsymbol, ccval, historic, setconfirmations, conf, true, txd.l2, instant_lock);
-        if (h_string) {
-            if (confirmed || historic) {
-                tx_listitem.append(hs_for(h_string)).attr("title", h_string);
-            }
-        }
+            tx_listitem = $("<li><div class='txli_content'>" + date_format + confspan + "<div class='txli_conf txl_canceled'><span class='icon-blocked'></span>Canceled</div><span class='tx_val'> + " + valstr + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>");
         if (rqtype === false) {
             return tx_listitem;
         }
@@ -761,7 +762,7 @@ function hs_for(dat) {
     return "<div class='historic_meta'>" + dat.split("\n").join("<br/>") + "</div>";
 }
 
-function data_title(ccsymbol, ccval, historic, setconfirmations, conf, fromcache, l2, instant_lock) {
+function data_title(ccsymbol, ccval, historic, setconfirmations, conf, l2, instant_lock, ide) {
     let historic_dat = "";
     if (historic) {
         const timestamp = historic.timestamp,
@@ -784,7 +785,7 @@ function data_title(ccsymbol, ccval, historic, setconfirmations, conf, fromcache
         conf_var = (instant_lock) ? "(instant_lock)" : conf_ratio,
         cf_info = (setconfirmations === false) ? "" : "Confirmations: " + conf_var,
         l2source = (l2) ? "\nLayer: " + l2 : "",
-        title_string = historic_dat + cf_info + l2source;
+        title_string = ide + historic_dat + cf_info + l2source;
     if (title_string.length) {
         return title_string;
     }
@@ -916,7 +917,7 @@ function init_historical_fiat_data(rd, conf, latestinput, firstinput) {
         hc_prefix = "historic_" + thisrequestid,
         historiccache = br_get_session(hc_prefix),
         cacheval = latestinput + latestconf;
-    if ((cacheval - historiccache) > 1) { //new input detected; call historic api
+    if ((cacheval - historiccache) > 0) { //new input detected; call historic api
         br_remove_session(hc_prefix); // remove historic price cache
         const historic_payload = $.extend(rd, {
             "latestinput": latestinput,
