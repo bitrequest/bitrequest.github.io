@@ -139,7 +139,7 @@ function get_requeststates(trigger, active_requests) {
                             const tx_listitem = append_tx_li(value, false);
                             if (tx_listitem) {
                                 tx_listitem.data(value);
-                                const h_string = data_title(value.ccsymbol, value.ccval, value.historic, value.setconfirmations, value.confirmations, value.l2, null, "cache ");
+                                const h_string = data_title(value.ccsymbol, value.ccval, value.historic, value.setconfirmations, value.confirmations, value.l2, value.instant_lock);
                                 if (h_string) {
                                     tx_listitem.append(hs_for(h_string)).attr("title", h_string);
                                 }
@@ -575,7 +575,7 @@ function api_callback(requestid, nocache) {
                     const thisnode = $(this),
                         thisdata = thisnode.data();
                     transactionpush.push(thisdata);
-                    const h_string = data_title(thisdata.ccsymbol, thisdata.ccval, thisdata.historic, thisdata.setconfirmations, thisdata.confirmations, thisdata.l2, null, "callback ");
+                    const h_string = data_title(thisdata.ccsymbol, thisdata.ccval, thisdata.historic, thisdata.setconfirmations, thisdata.confirmations, thisdata.l2, thisdata.instant_lock);
                     if (h_string) {
                         thisnode.append(hs_for(h_string)).attr("title", h_string);
                     }
@@ -762,7 +762,7 @@ function hs_for(dat) {
     return "<div class='historic_meta'>" + dat.split("\n").join("<br/>") + "</div>";
 }
 
-function data_title(ccsymbol, ccval, historic, setconfirmations, conf, l2, instant_lock, ide) {
+function data_title(ccsymbol, ccval, historic, setconfirmations, conf, l2, instant_lock) {
     let historic_dat = "";
     if (historic) {
         const timestamp = historic.timestamp,
@@ -785,7 +785,7 @@ function data_title(ccsymbol, ccval, historic, setconfirmations, conf, l2, insta
         conf_var = (instant_lock) ? "(instant_lock)" : conf_ratio,
         cf_info = (setconfirmations === false) ? "" : "Confirmations: " + conf_var,
         l2source = (l2) ? "\nLayer: " + l2 : "",
-        title_string = ide + historic_dat + cf_info + l2source;
+        title_string = historic_dat + cf_info + l2source;
     if (title_string.length) {
         return title_string;
     }
