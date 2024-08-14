@@ -53,12 +53,6 @@
 }
 
 @media only screen and (min-width:319px) {
-	body {
-		font-size: 1.25rem;
-	}
-	.nav li .self {
-		font-size: 115%;
-	}
 	.applist {
 		font-size: 110%;
 	}
@@ -156,6 +150,9 @@
 	}
 	.applist {
 		font-size: 100%;
+	}
+	.checkbox {
+		font-size: 110%;
 	}
 }
 

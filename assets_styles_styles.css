@@ -288,7 +288,7 @@ html.hidemain header {
 
 #header h1 {
 	float: left;
-	font-size: 230%;
+	font-size: 220%;
 	padding: 0em 0.5em 0.2em 0em;
 	font-weight: 700;
 	-webkit-transition: all 300ms linear;
@@ -634,10 +634,10 @@ html.showmain ul#currencylist {
 }
 
 .heading {
-	font-size: 250%;
+	font-size: 240%;
 	font-weight: 400;
 	width: 100%;
-	padding: 0 0 0.5em 0.5em;
+	padding: 0 0 0 0.5em;
 	text-transform: capitalize;
 }
 
@@ -949,8 +949,14 @@ li[data-checked="false"] .checkbox:before,
 	border-bottom: none;
 }
 
+.settinglist .liwrap > span {
+	display: block;
+	float:left;
+}
+
 .settinglist .liwrap .atext {
 	cursor: pointer;
+	float:left;
 }
 
 .settinglist .liwrap>span:before {
@@ -1257,7 +1263,7 @@ html.dragmode .currentpage .applist li.dragging {
 	width: 100%;
 	display: none;
 	padding: 0 0 1em 1em;
-	font-size: 85%;
+	font-size: 100%;
 }
 
 .moreinfo .icon-power {
@@ -1631,6 +1637,7 @@ html.inframe .requestlist li .req_actions .icon-folder-open {
 .checkbox {
 	width: auto;
 	margin: auto;
+	font-size: 90%;
 }
 
 
