@@ -3008,9 +3008,9 @@ function removeaddressfunction(trigger) {
             currency = ad.currency,
             address = ad.address,
             erc20 = ad.erc20,
-            current_entry = filter_addressli(currency, "address", address),
-            currentaddresslist = get_addresslist(currency).children("li");
+            current_entry = filter_addressli(currency, "address", address);
         current_entry.remove();
+        const currentaddresslist = get_addresslist(currency).children("li"); // check lenghth after removing address
         if (currentaddresslist.length) {} else {
             loadpage("?p=currencies");
             const currencyli = get_currencyli(currency),
