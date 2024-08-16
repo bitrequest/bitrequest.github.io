@@ -2281,6 +2281,9 @@ function add_erc20() {
                 "monitored": true,
                 "checked": true
             },
+            checked_eth_addresses = filter_addressli("ethereum", "checked", true),
+            first_checked_eth_address = checked_eth_addresses[0],
+            eth_address_prefill = (first_checked_eth_address) ? $(first_checked_eth_address).attr("data-address") : "",
             scanqr = (glob_hascam === true) ? "<div class='qrscanner' data-currency='ethereum' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
             content = $("\
             <div class='formbox' id='erc20formbox'>\
@@ -2293,7 +2296,7 @@ function add_erc20() {
                         <div id='ac_options' class='options'>" + tokenlist + "</div>\
                     </div>\
                     <div id='erc20_inputs'>\
-                    <div class='inputwrap'><input type='text' class='address' value='' placeholder='" + translate("enteraddress") + "'/>" + scanqr + "</div>\
+                    <div class='inputwrap'><input type='text' class='address' value='" + eth_address_prefill + "' placeholder='" + translate("enteraddress") + "'/>" + scanqr + "</div>\
                     <input type='text' class='addresslabel' value='' placeholder='label'/>\
                     <div id='pk_confirm' class='noselect'>\
                         <div id='pk_confirmwrap' class='cb_wrap' data-checked='false'>\
@@ -2357,7 +2360,7 @@ function initaddressform(coin_data) {
         erc20_inputs = erc20formbox.find("#erc20_inputs"),
         addressfield = erc20formbox.find("input.address"),
         labelfield = erc20formbox.find("input.addresslabel");
-    addressfield.add(labelfield).val("");
+    addressfield.add(labelfield);
     erc20formbox.data(coin_data);
     addressfield.attr("placeholder", translate("entercoinaddress", {
         "currency": coin_data.currency
