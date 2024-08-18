@@ -2520,6 +2520,12 @@ function contracts(ccsymbol, network) {
                     "main": "0x321c2fe4446c7c963dc41dd58879af648838f98d",
                     "arbitrum": false
                 }
+            },
+            {
+                "paw": {
+                    "main": "0xC11158C5dA9db1D553Ed28F0C2Ba1Cbedd42CfCb",
+                    "arbitrum": "0xC11158C5dA9db1D553Ed28F0C2Ba1Cbedd42CfCb"
+                }
             }
         ],
         nll = nw_list.filter(function(val) {
