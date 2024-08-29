@@ -2,6 +2,7 @@
 const glob_ls_support = check_local(),
     glob_language = navigator.language || navigator.userLanguage,
     glob_userAgent = navigator.userAgent || navigator.vendor || window.opera,
+    glob_lower_userAgent = glob_userAgent.toLowerCase(),
     glob_titlenode = $("title"),
     glob_ogtitle = $("meta[property='og:title']"),
     glob_html = $("html"),
@@ -19,6 +20,7 @@ const glob_ls_support = check_local(),
     glob_timezone = glob_timezoneoffset * 60000,
     glob_has_ndef = ("NDEFReader" in window),
     glob_supportsTouch = ("ontouchstart" in window || navigator.msMaxTouchPoints) ? true : false,
+    glob_is_safari = (glob_lower_userAgent.indexOf("safari/") > -1),
     glob_referrer = document.referrer,
     glob_exp_referrer = "android-app://" + glob_androidpackagename,
     glob_ref_match = (glob_referrer && glob_referrer.indexOf(glob_exp_referrer) >= 0) ? true : false,
@@ -2283,7 +2285,9 @@ function add_erc20() {
             },
             checked_eth_addresses = filter_addressli("ethereum", "checked", true),
             first_checked_eth_address = checked_eth_addresses[0],
-            eth_address_prefill = (first_checked_eth_address) ? $(first_checked_eth_address).attr("data-address") : "",
+            eth_address_data = (first_checked_eth_address) ? $(first_checked_eth_address).data() : false,
+            eth_address_prefill = (eth_address_data) ? eth_address_data.address : "",
+            eth_label_prefill = (eth_address_data) ? eth_address_data.label : "",
             scanqr = (glob_hascam === true) ? "<div class='qrscanner' data-currency='ethereum' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
             content = $("\
             <div class='formbox' id='erc20formbox'>\
@@ -2297,7 +2301,7 @@ function add_erc20() {
                     </div>\
                     <div id='erc20_inputs'>\
                     <div class='inputwrap'><input type='text' class='address' value='" + eth_address_prefill + "' placeholder='" + translate("enteraddress") + "'/>" + scanqr + "</div>\
-                    <input type='text' class='addresslabel' value='' placeholder='label'/>\
+                    <input type='text' class='addresslabel' value='" + eth_label_prefill + "' placeholder='label'/>\
                     <div id='pk_confirm' class='noselect'>\
                         <div id='pk_confirmwrap' class='cb_wrap' data-checked='false'>\
                             <span class='checkbox'></span>\

@@ -2025,6 +2025,12 @@ function validatesteps() {
         if (keycode === 188 || keycode === 190 || keycode === 108 || keycode === 110 || keycode === 229) { // prevent double commas and dots
             const v_length = thisvalue.length;
             if (v_length) {
+                if (keycode === 188) {
+                    if ((glob_supportsTouch && glob_is_safari) || glob_is_ios_app) { // prevent commas for mobile safari and ios app
+                        e.preventDefault();
+                        return
+                    }
+                }
                 if (glob_prevkey || thisvalue.indexOf(".") > -1 || thisvalue.indexOf(",") > -1 || e.target.validity.valid === false || thisnode.hasClass("satinput")) {
                     e.preventDefault();
                 }
