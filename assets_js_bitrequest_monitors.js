@@ -242,8 +242,6 @@ function get_api_inputs_init(rd, api_data) {
 function get_api_inputs(rd, rdod, api_data) {
     const rdo = (rdod) ? rdod : tx_data(rd), // fetchblocks.js
         source = rdo.source;
-    console.log(rd.payment);
-    console.log(rdo);
     if (source == "poll") {
         select_api(rd, rdo, api_data);
         return
