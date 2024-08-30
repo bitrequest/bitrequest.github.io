@@ -415,7 +415,7 @@ function getdevicetype() {
 function getplatform(device) {
     return (glob_supportsTouch) ?
         (glob_is_android_app === true || device == "Android" || device == "Windows") ? "playstore" :
-        (device == "iPhone" || device == "iPad" || device == "Macintosh" || is_ios_app === true) ? "appstore" : "unknown" :
+        (device == "iPhone" || device == "iPad" || device == "Macintosh" || glob_is_ios_app === true) ? "appstore" : "unknown" :
         (device == "Windows") ? "desktop" :
         (device == "Macintosh") ? "desktop" : "unknown";
 }
