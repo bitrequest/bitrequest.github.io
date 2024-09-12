@@ -594,37 +594,16 @@ function finishfunctions() {
     //getapp
     close_app_panel();
     //platform_icon
-
-    // ** Query helpers **//
-
-    //get_setting
-    //set_setting
-    //get_requestli
-    //ch_pending
-    //get_addresslist
-    //filter_addressli
-    //filter_all_addressli
-    //filter_list
-    //get_currencyli
-    //get_homeli
-    //cs_node
-    //getcoindata
-    //activecoinsettings
-    //getcoinsettings
-    //getcoinconfig
     gk();
     glob_html.addClass("loaded");
     //is_opendialog
     //is_openrequest
-
-    // ** Check params ** //
 
     check_params();
     //check_intents;
     //expand_shoturl
     //expand_bitly
     //ln_connect
-    //click_pop
     //add_serviceworker
 }
 
@@ -5057,153 +5036,6 @@ function platform_icon(platform) {
         fetch_aws("img_button-desktop_app.png");
 }
 
-// ** Query helpers ** //
-
-// Retrieves a setting value
-function get_setting(setting, dat) {
-    return $("#" + setting).data(dat);
-}
-
-// Sets a setting value and optionally updates its title
-function set_setting(setting, keypairs, title) {
-    const set_node = $("#" + setting);
-    set_node.data(keypairs);
-    if (title) {
-        set_node.find("p").text(title);
-    }
-}
-
-// Finds a request list item based on data attributes
-function get_requestli(datakey, dataval) {
-    return $("#requestlist li.rqli").filter(function() {
-        return $(this).data(datakey) == dataval;
-    })
-}
-
-// Checks if a pending request exists for the given data
-function ch_pending(dat) {
-    return ($("#requestlist li.rqli[data-address='" + dat.address + "'][data-pending='scanning'][data-cmcid='" + dat.cmcid + "']").length > 0) ? true : false;
-}
-
-// Retrieves the address list for a given currency
-function get_addresslist(currency) {
-    return $("main #" + currency + " .content ul.pobox[data-currency='" + currency + "']");
-}
-
-// Filters address list items based on data attributes
-function filter_addressli(currency, datakey, dataval) {
-    const addressli = get_addresslist(currency).children("li");
-    return filter_list(addressli, datakey, dataval);
-}
-
-// Filters all address list items based on data attributes
-function filter_all_addressli(datakey, dataval) {
-    return filter_list($(".adli"), datakey, dataval);
-}
-
-// Filters a list based on data attributes
-function filter_list(list, datakey, dataval) {
-    return list.filter(function() {
-        return $(this).data(datakey) == dataval;
-    })
-}
-
-// Retrieves the currency list item for a given currency
-function get_currencyli(currency) {
-    return $("#usedcurrencies > li[data-currency='" + currency + "']");
-}
-
-// Retrieves the home list item for a given currency
-function get_homeli(currency) {
-    return $("#currencylist > li[data-currency='" + currency + "']");
-}
-
-// Retrieves coin settings node or data
-function cs_node(currency, id, data) {
-    const coinnode = $("#" + currency + "_settings .cc_settinglist li[data-id='" + id + "']");
-    if (coinnode.length) {
-        if (data) {
-            const coindat = coinnode.data();
-            if (coindat) {
-                return coindat;
-            }
-        }
-        return coinnode;
-    }
-    const coindata = getcoinsettings(currency);
-    if (coindata) {
-        const apis = coindata.apis;
-        if (apis) {
-            return apis;
-        }
-    }
-    return false
-}
-
-// Retrieves coin data for a given currency
-function getcoindata(currency) {
-    const coindata_object = getcoinconfig(currency);
-    if (coindata_object) {
-        const coindata = coindata_object.data,
-            settings = coindata_object.settings,
-            has_settings = (settings) ? true : false,
-            is_monitored = (settings) ? (settings.apis) ? true : false : false,
-            cd_object = {
-                "currency": coindata.currency,
-                "ccsymbol": coindata.ccsymbol,
-                "cmcid": coindata.cmcid,
-                "monitored": is_monitored,
-                "urlscheme": coindata.urlscheme,
-                "settings": has_settings,
-                "regex": coindata.address_regex,
-                "erc20": false
-            };
-        return cd_object;
-    } // if not it's probably erc20 token
-    const currencyref = get_currencyli(currency); // check if erc20 token is added
-    if (currencyref.length > 0) {
-        return $.extend(currencyref.data(), glob_br_config.erc20_dat.data);
-    } // else lookup erc20 data
-    const tokenobject = br_get_local("erc20tokens", true);
-    if (tokenobject) {
-        const erc20data = $.grep(tokenobject, function(filter) {
-            return filter.name == currency;
-        })[0];
-        if (erc20data) {
-            const fetched_data = {
-                "currency": erc20data.name,
-                "ccsymbol": erc20data.symbol,
-                "cmcid": erc20data.cmcid.toString(),
-                "contract": erc20data.contract
-            }
-            return $.extend(fetched_data, glob_br_config.erc20_dat.data);
-        }
-    }
-    return false;
-}
-
-// Retrieves active coin settings for a given currency
-function activecoinsettings(currency) {
-    const saved_coinsettings = br_get_local(currency + "_settings", true);
-    return (saved_coinsettings) ? saved_coinsettings : getcoinsettings(currency);
-}
-
-// Retrieves coin settings for a given currency
-function getcoinsettings(currency) {
-    const coindata = getcoinconfig(currency);
-    if (coindata) {
-        return coindata.settings;
-    } // return erc20 settings
-    return glob_br_config.erc20_dat.settings;
-}
-
-// Retrieves coin configuration for a given currency
-function getcoinconfig(currency) {
-    return $.grep(glob_br_config.bitrequest_coin_data, function(filter) {
-        return filter.currency == currency;
-    })[0];
-}
-
 // Checks if a dialog is currently open
 function is_opendialog() {
     return ($("#dialogbody > div.formbox").length) ? true : false;
@@ -5212,44 +5044,6 @@ function is_opendialog() {
 // Checks if a request is currently open
 function is_openrequest() {
     return ($("#request_front").length) ? true : false;
-}
-
-// ** Check params ** //
-
-// Checks and processes URL parameters
-function check_params(gets) {
-    const lgets = (gets) ? gets : geturlparameters();
-    if (lgets.xss) {
-        return
-    }
-    if (lgets.i) {
-        expand_shoturl(lgets.i);
-        return
-    }
-    if (lgets.cl) {
-        click_pop(lgets.cl);
-    }
-    const page = lgets.p;
-    if (page == "settings") {
-        if (lgets.ro) {
-            check_teaminvite(lgets.ro);
-        } else if (lgets.sbu) {
-            check_systembu(lgets.sbu);
-        } else if (lgets.csv) {
-            check_csvexport(lgets.csv);
-        } else if (lgets.code) {
-            init_access(lgets.code);
-        }
-        return
-    }
-    if (lgets.scheme) {
-        check_intents(lgets.scheme);
-        return
-    }
-    if (lgets.lnconnect) {
-        lm_function();
-        ln_connect();
-    }
 }
 
 // Checks and processes URL scheme intents
@@ -5429,15 +5223,6 @@ function ln_connect(gets) {
         return
     }
     notify(translate("invalidformat"));
-}
-
-// Triggers a click event after a delay
-function click_pop(fn) {
-    const timeout = setTimeout(function() {
-        $("#" + fn).trigger("click");
-    }, 1200, function() {
-        clearTimeout(timeout);
-    });
 }
 
 // Adds a service worker to the application
