@@ -617,7 +617,7 @@ function finishfunctions() {
     //is_opendialog
     //is_openrequest
 
-    // ** Check params **//
+    // ** Check params ** //
 
     check_params();
     //check_intents;
@@ -630,24 +630,28 @@ function finishfunctions() {
 
 //checks
 
+// Sets the language attributes for the HTML document and meta tags
 function setlocales() {
     glob_html.attr("lang", glob_langcode);
     $("meta[property='og:locale']").attr("content", glob_langcode);
     $("meta[property='og:url']").attr("content", glob_w_loc.href);
 }
 
+// Sets the data-role attribute on the HTML element based on selected permissions
 function setpermissions() {
     const permission = $("#permissions").data("selected");
     glob_html.attr("data-role", permission);
 }
 
+// Checks if the current user has view-only (cashier) permissions
 function is_viewonly() {
     const permission = $("#permissions").data("selected");
     return (permission == "cashier");
 }
 
-// ** Pincode **
+// ** Pincode ** //
 
+// Handles keypress events for PIN entry
 function pinkeypress() {
     $(document).keydown(function(e) {
         const pinfloat = $("#pinfloat");
@@ -684,6 +688,7 @@ function pinkeypress() {
     });
 }
 
+// Selects the appropriate PIN press function based on the current mode
 function pinpressselect(node) {
     if ($("#pinfloat").hasClass("enterpin")) {
         pinpress(node);
@@ -692,12 +697,14 @@ function pinpressselect(node) {
     pinvalidate(node)
 }
 
+// Sets up click event listener for PIN pad buttons
 function pinpresstrigger() {
     $(document).on("click", "#optionspop .enterpin .pinpad .pincell", function() {
         pinpress($(this));
     });
 }
 
+// Handles PIN button press events
 function pinpress(thispad) {
     const pinfloat = $("#pinfloat"),
         thisval = thispad.text(),
@@ -727,6 +734,7 @@ function pinpress(thispad) {
     $("#pincode .pinpad").not(thispad).removeClass("activepad");
 }
 
+// Processes the entered PIN and performs corresponding actions
 function enterapp(pinval) {
     const pinfloat = $("#pinfloat"),
         pinsettings = $("#pinsettings").data(),
@@ -800,6 +808,7 @@ function enterapp(pinval) {
     }
 }
 
+// Clears the PIN lock by resetting timeout and attempts
 function clearpinlock() {
     const pinsettings = $("#pinsettings").data();
     pinsettings.timeout = null;
@@ -807,18 +816,21 @@ function clearpinlock() {
     savesettings();
 }
 
+// Sets up event listener for PIN reset button
 function pin_admin_reset() {
     $(document).on("click", "#reset_pin", function() {
         $("#pinfloat").removeClass("p_admin");
     });
 }
 
+// Sets up click event listener for PIN validation buttons
 function pinvalidatetrigger() {
     $(document).on("click", "#optionspop .validatepin .pinpad .pincell", function() {
         pinvalidate($(this))
     });
 }
 
+// Handles PIN validation process
 function pinvalidate(thispad) {
     const pinfloat = $("#pinfloat"),
         thisval = thispad.text(),
@@ -867,18 +879,21 @@ function pinvalidate(thispad) {
     $("#pincode .pinpad").not(thispad).removeClass("activepad");
 }
 
+// Sets up event listener for PIN backspace in enter mode
 function pinbacktrigger() {
     $(document).on("click", "#optionspop #pinfloat.enterpin #pinback", function() {
         pinback($("#pininput"));
     });
 }
 
+// Sets up event listener for PIN backspace in validate mode
 function pinbackvalidatetrigger() {
     $(document).on("click", "#optionspop #pinfloat.validatepin #pinback", function() {
         pinback($("#validatepin"));
     });
 }
 
+// Handles PIN backspace functionality
 function pinback(pininput) {
     const pinval = pininput.val(),
         inputlength = pinval.length,
@@ -890,13 +905,13 @@ function pinback(pininput) {
 
 // (Can only be envoked from the IOS app) 
 
-//Set classname for ios app
-
+// Initializes iOS-specific functionality
 function ios_init() {
     glob_is_ios_app = true;
     glob_body.addClass("ios"); // ios app fingerprint
 }
 
+// Handles iOS-specific page redirections
 function ios_redirections(url) {
     if (url) {
         const search = get_search(url),
@@ -946,12 +961,14 @@ function ios_redirections(url) {
 
 // ** Intropage **
 
+// Sets up event listener for starting the intro process
 function starttrigger() {
     $(document).on("click touchend", "#intro .panelwrap, #intro .proceeed", function() {
         startnext($("#intro"));
     });
 }
 
+// Sets up event listener for progressing to the next step in the intro process
 function startnexttrigger() {
     $(document).on("click touchend", "#entername .panelwrap", function(e) {
         if (e.target == this) {
@@ -960,6 +977,7 @@ function startnexttrigger() {
     });
 }
 
+// Handles progression to the next step in the intro process
 function startnext(thisnode) {
     const thisnext = thisnode.attr("data-next");
     if (thisnext === undefined) {
@@ -974,6 +992,7 @@ function startnext(thisnode) {
     topnotify(translate("enteryourname"));
 }
 
+// Handles going back to the previous step in the intro process
 function startprev(thisnode) {
     const thisprev = thisnode.attr("data-prev");
     if (thisprev === undefined) {
@@ -984,7 +1003,8 @@ function startprev(thisnode) {
     $("#eninput").blur();
 }
 
-function lettercountkeydown() { // Character limit on input field
+// Handles keydown events for character limit on input field
+function lettercountkeydown() {
     $(document).on("keydown", "#eninput", function(e) {
         const keycode = e.keyCode,
             thisinput = $(this),
@@ -1003,7 +1023,8 @@ function lettercountkeydown() { // Character limit on input field
     });
 }
 
-function lettercountinput() { // Character count plus validation
+// Handles input events for character count and validation
+function lettercountinput() {
     $(document).on("input", "#eninput", function() {
         const thisinput = $(this),
             mininput = thisinput.attr("data-min"),
@@ -1025,6 +1046,7 @@ function lettercountinput() { // Character count plus validation
     });
 }
 
+// Handles currency selection from a list
 function choosecurrency() {
     $(document).on("click touch", "#allcurrencies li.choose_currency", function() {
         const currency = $(this).attr("data-currency"),
@@ -1041,6 +1063,7 @@ function choosecurrency() {
 
 // ** Navigation **
 
+// Toggles navigation based on header click
 function togglenav() {
     $(document).on("click", "#header", function() {
         if (glob_html.hasClass("showmain")) {
@@ -1063,6 +1086,7 @@ function togglenav() {
     });
 }
 
+// Loads the appropriate page based on URL parameters
 function loadurl() {
     const gets = geturlparameters();
     if (gets.xss) {
@@ -1085,6 +1109,7 @@ function loadurl() {
     }
 }
 
+// Handles clicks on link elements
 function clicklink() {
     $(document).on("click", ".self", function(e) {
         e.preventDefault();
@@ -1093,12 +1118,13 @@ function clicklink() {
     })
 }
 
-//push history and set current page
+// Loads a page and updates the URL
 function loadpage(href) {
     const pagename = href.split("&")[0].split("=").pop();
     openpage(href, pagename, "loadpage");
 }
 
+// Opens a page, updates history, and loads the appropriate function
 function openpage(href, pagename, event) {
     history.pushState({
         "pagename": pagename,
@@ -1107,6 +1133,7 @@ function openpage(href, pagename, event) {
     loadfunction(pagename, event);
 }
 
+// Handles browser's back/forward navigation
 function popstate() {
     window.onpopstate = function(e) {
         const statemeta = e.state;
@@ -1118,7 +1145,7 @@ function popstate() {
     }
 }
 
-//activate page
+// Loads the appropriate function based on the page and event
 function loadfunction(pagename, thisevent) {
     if (thisevent == "payment") { //load paymentpopup if payment is set
         loadpaymentfunction();
@@ -1138,6 +1165,7 @@ function loadfunction(pagename, thisevent) {
     cancel_url_dialogs();
 }
 
+// Cancels any active dialogs related to URL changes
 function cancel_url_dialogs() {
     if (glob_paymentpopup.hasClass("active")) {
         cancelpaymentdialog();
@@ -1147,6 +1175,7 @@ function cancel_url_dialogs() {
     }
 }
 
+// Loads a page event, updates UI elements
 function loadpageevent(pagename) {
     $("html, body").animate({
         "scrollTop": 0
@@ -1164,7 +1193,8 @@ function loadpageevent(pagename) {
     }
 }
 
-function shownav(pagename) { // show / hide navigation
+// Shows or hides navigation based on the current page
+function shownav(pagename) {
     if (ishome(pagename) === true) {
         glob_html.removeClass("showmain").addClass("hidemain");
         $("#relnav .nav").slideUp(300);
@@ -1174,6 +1204,7 @@ function shownav(pagename) { // show / hide navigation
     $("#relnav .nav").slideDown(300);
 }
 
+// Handles active menu item selection
 function activemenu() {
     $(document).on("click", ".nav li .self", function() {
         const thisitem = $(this);
@@ -1183,6 +1214,7 @@ function activemenu() {
     })
 }
 
+// Handles fixed navigation on scroll
 function fixednav() {
     $(document).scroll(function(e) {
         if (glob_html.hasClass("paymode")) {
@@ -1195,6 +1227,7 @@ function fixednav() {
 
 // ** Triggerrequest **
 
+// Handles triggering of transactions
 function triggertx() {
     $(document).on("click", ".currencylist li > .rq_icon", function() {
         triggertxfunction($(this));
@@ -1202,6 +1235,7 @@ function triggertx() {
     });
 }
 
+// Processes transaction triggering
 function triggertxfunction(thislink) {
     const currency = thislink.data("currency"),
         can_derive = derive_first_check(currency);
@@ -1246,6 +1280,7 @@ function triggertxfunction(thislink) {
     finishtxfunction(currency, thisaddress, savedurl, title)
 }
 
+// Handles confirmation of missing seed
 function confirm_missing_seed() {
     $(document).on("click", "#addresswarning .submit", function(e) {
         e.preventDefault();
@@ -1268,6 +1303,7 @@ function confirm_missing_seed() {
     })
 }
 
+// Generates HTML for address warning dialog
 function get_address_warning(id, address, pass_dat) {
     const seedstr = (pass_dat.xpubid) ? "Xpub" : "Seed",
         rest_str = (seedstr == "Seed") ? (glob_hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + pass_dat.seedid + "'>" + translate("resoresecretphrase") + "</div>" : "",
@@ -1295,6 +1331,7 @@ function get_address_warning(id, address, pass_dat) {
     </div>").data(pass_dat);
 }
 
+// Completes the transaction function
 function finishtxfunction(currency, thisaddress, savedurl, title) {
     glob_prevkey = false;
     const gets = geturlparameters();
@@ -1316,10 +1353,12 @@ function finishtxfunction(currency, thisaddress, savedurl, title) {
     openpage(href, thistitle, "payment");
 }
 
+// Clears saved URLs from currency list items
 function clear_savedurl() {
     $("#currencylist li > .rq_icon").removeData("url");
 }
 
+// Handles payment request actions
 function payrequest() {
     $(document).on("click", "#requestlist .req_actions .icon-qrcode, #requestlist .payrequest", function(e) {
         e.preventDefault();
@@ -1359,6 +1398,7 @@ function payrequest() {
 
 // ** UX **
 
+// Toggles currency visibility
 function togglecurrency() {
     $(document).on("click", ".togglecurrency", function() {
         const parentlistitem = $(this).closest("li"),
@@ -1388,6 +1428,7 @@ function togglecurrency() {
     });
 }
 
+// Toggles address visibility and handles address validation
 function toggleaddress() {
     $(document).on("click", ".toggleaddress", function() {
         const parentlistitem = $(this).closest("li"),
@@ -1437,6 +1478,7 @@ function toggleaddress() {
     });
 }
 
+// Handles confirmation of missing seed for address toggling
 function confirm_missing_seed_toggle() {
     $(document).on("click", "#addresswarningcheck .submit", function(e) {
         e.preventDefault();
@@ -1459,6 +1501,7 @@ function confirm_missing_seed_toggle() {
     })
 }
 
+// Callback function for confirming missing seed toggle
 function cmst_callback(parentlistitem) {
     const parentlist = parentlistitem.closest("ul.pobox"),
         currency = parentlist.attr("data-currency");
@@ -1468,6 +1511,7 @@ function cmst_callback(parentlistitem) {
     clear_savedurl();
 }
 
+// Adds a seed to the whitelist
 function add_seed_whitelist(seedid) {
     const stored_whitelist = br_get_local("swl", true),
         seed_whitelist = br_dobj(stored_whitelist);
@@ -1477,12 +1521,14 @@ function add_seed_whitelist(seedid) {
     br_set_local("swl", seed_whitelist, true);
 }
 
+// Checks if a seed is in the whitelist
 function seed_wl(seedid) {
     const stored_whitelist = br_get_local("swl", true),
         seed_whitelist = br_dobj(stored_whitelist);
     return ($.inArray(seedid, seed_whitelist) === -1) ? false : true;
 }
 
+// Adds an address to the whitelist
 function add_address_whitelist(address) {
     const stored_whitelist = br_get_local("awl", true),
         address_whitelist = br_dobj(stored_whitelist);
@@ -1492,12 +1538,14 @@ function add_address_whitelist(address) {
     br_set_local("awl", address_whitelist, true);
 }
 
+// Checks if an address is in the whitelist
 function addr_whitelist(address) {
     const stored_whitelist = br_get_local("awl", true),
         address_whitelist = br_dobj(stored_whitelist);
     return ($.inArray(address, address_whitelist) === -1) ? false : true;
 }
 
+// Handles checkbox toggling in popup
 function check_pk() {
     $(document).on("click", "#popup .cb_wrap", function() {
         const thisnode = $(this),
@@ -1510,6 +1558,7 @@ function check_pk() {
     });
 }
 
+// Checks and updates currency status based on address count
 function check_currency(currency) {
     const addresscount = filter_addressli(currency, "checked", true).length;
     if (addresscount > 0) {
@@ -1519,6 +1568,7 @@ function check_currency(currency) {
     currency_uncheck(currency);
 }
 
+// Marks a currency as checked and updates UI
 function currency_check(currency) {
     const currencylistitem = get_homeli(currency),
         parentcheckbox = get_currencyli(currency);
@@ -1527,6 +1577,7 @@ function currency_check(currency) {
     savecurrencies(false);
 }
 
+// Marks a currency as unchecked and updates UI
 function currency_uncheck(currency) {
     const currencylistitem = get_homeli(currency),
         parentcheckbox = get_currencyli(currency);
@@ -1535,6 +1586,7 @@ function currency_uncheck(currency) {
     savecurrencies(false);
 }
 
+// Handles toggling of global switches
 function toggleswitch() {
     $(document).on("mousedown", ".switchpanel.global", function() {
         const thistoggle = $(this);
@@ -1548,6 +1600,7 @@ function toggleswitch() {
 
 // ** Selectbox **
 
+// Shows select options
 function showselect() {
     $(document).on("click", ".selectarrows", function() {
         const options = $(this).next(".options");
@@ -1559,6 +1612,7 @@ function showselect() {
     });
 }
 
+// Handles selectbox input click
 function selectbox() {
     $(document).on("click", ".selectbox > input:not([readonly])", function() {
         const thisselect = $(this),
@@ -1574,6 +1628,7 @@ function selectbox() {
     })
 }
 
+// Handles selection from selectbox options
 function pickselect() {
     $(document).on("click", ".selectbox > .options span", function() {
         const thisselect = $(this),
@@ -1586,10 +1641,12 @@ function pickselect() {
     })
 }
 
+// Closes all open selectboxes in popup
 function closeselectbox() {
     $("#popup .selectbox .options").removeClass("showoptions");
 }
 
+// Handles radio button selection
 function radio_select() {
     $(document).on("click", ".formbox .pick_conf", function() {
         const thistrigger = $(this),
@@ -1606,6 +1663,7 @@ function radio_select() {
     })
 }
 
+// Handles dialog drawer toggling
 function dialog_drawer() {
     $(document).on("click", "#ad_info_wrap .d_trigger", function() {
         const thistrigger = $(this),
@@ -1618,6 +1676,8 @@ function dialog_drawer() {
         }
     })
 }
+
+// ** Reorder Adresses **
 
 // Reorder addresses
 function dragstart() {
@@ -3450,6 +3510,8 @@ function clearoptions() {
     });
 }
 
+// ** Requestlist functions **
+
 // Handles showing request details
 function showrequestdetails() {
     $(document).on("click", ".requestlist .liwrap", function() {
@@ -3664,6 +3726,8 @@ function submit_request_description() {
         popnotify("error", translate("title") + " " + translate("requiredfield"));
     })
 }
+
+// ** Services **
 
 // Handles displaying receipt information
 function receipt() {
@@ -3954,6 +4018,8 @@ function countdown_format(cd) {
         result = (cd) ? daynode + hournode + minutenode + secondnode : false;
     return result;
 }
+
+// ** Page rendering **
 
 // Renders the currencies from cached data
 function rendercurrencies() {
@@ -4406,6 +4472,8 @@ function getnetwork(layer) {
         (layer == "bnb smart chain") ? "BNB smart chain" :
         false : false;
 }
+
+// ** Store data in localstorage **
 
 // Saves the list of used cryptocurrencies to local storage
 function savecurrencies(add) {
@@ -4920,6 +4988,8 @@ function toggle_rr(bool) {
     glob_html.removeClass("show_rr");
 }
 
+// ** Get_app **
+
 // Detects if the app should be promoted to the user
 function detectapp() {
     if (glob_inframe === true || glob_is_android_app === true || glob_is_ios_app === true) {
@@ -4986,6 +5056,8 @@ function platform_icon(platform) {
         (platform == "appstore") ? fetch_aws("img_button-appstore.png") :
         fetch_aws("img_button-desktop_app.png");
 }
+
+// ** Query helpers ** //
 
 // Retrieves a setting value
 function get_setting(setting, dat) {
@@ -5141,6 +5213,8 @@ function is_opendialog() {
 function is_openrequest() {
     return ($("#request_front").length) ? true : false;
 }
+
+// ** Check params ** //
 
 // Checks and processes URL parameters
 function check_params(gets) {
