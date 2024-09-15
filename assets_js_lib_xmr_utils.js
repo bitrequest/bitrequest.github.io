@@ -14,6 +14,8 @@ const l = 7237005577332262213973186563042994240857116359379907606001950938285454
             full_block_size = 8,
             full_encoded_block_size = 11,
             UINT64_MAX = new JSBigInt(2).pow(64);
+
+        // Decodes a single block of Base58 encoded data
         b58.decode_block = function(data, buf, index) {
             if (data.length < 1 || data.length > full_encoded_block_size) {
                 throw "Invalid block length: " + data.length;
@@ -42,6 +44,8 @@ const l = 7237005577332262213973186563042994240857116359379907606001950938285454
             buf.set(uint64_to_8be(res_num, res_size), index);
             return buf;
         };
+
+        // Decodes a complete Base58 encoded string
         b58.decode = function(encode) {
             const enc = strtobin(encode);
             if (enc.length === 0) {
@@ -66,10 +70,12 @@ const l = 7237005577332262213973186563042994240857116359379907606001950938285454
         return b58;
     })();
 
+// Reduces a 32-byte hexadecimal string modulo the curve order
 function sc_reduce32(hex) {
     return hextobin(str_pad((BigInt("0x" + bintohex(hextobin(hex).reverse())) % l).toString(16), 64)).reverse();
 }
 
+// Generates a secret spend key (ssk) from a BIP39 mnemonic or seed
 function get_ssk(bip39, seed) {
     const p_rootkey = (seed === true) ? get_rootkey(bip39) : get_rootkey(toseed(bip39)),
         dx_dat = {
@@ -82,6 +88,7 @@ function get_ssk(bip39, seed) {
     return sc_reduce32(fasthash(rootkey));
 }
 
+// Generates a Monero address from public spend key (psk) and public view key (pvk)
 function pub_keys_to_address(psk, pvk, index) {
     const pref = (index < 1) ? "12" : "2a",
         res_hex = pref + psk + pvk,
@@ -89,10 +96,12 @@ function pub_keys_to_address(psk, pvk, index) {
     return base58_encode(hextobin(cpa));
 }
 
+// Computes the Keccak-256 hash of a hexadecimal string
 function fasthash(hex) {
     return keccak256(hextobin(hex));
 }
 
+// Generates public keys and addresses for a given secret spend key (ssk) and index
 function xmr_getpubs(ssk, index) {
     const sskh = bintohex(ssk),
         svk = bintohex(sc_reduce32(fasthash(sskh))),
@@ -126,6 +135,7 @@ function xmr_getpubs(ssk, index) {
     }
 }
 
+// Generates a CRC (Cyclic Redundancy Check) table
 function makeCRCTable() {
     let c,
         crcTable = [];
@@ -139,6 +149,7 @@ function makeCRCTable() {
     return crcTable;
 }
 
+// Computes the CRC-32 checksum of a string
 function crc_32(str) {
     let crcTable = window.crcTable || (window.crcTable = makeCRCTable()),
         crc = 0 ^ (-1);
@@ -148,6 +159,7 @@ function crc_32(str) {
     return (crc ^ (-1)) >>> 0;
 }
 
+// Converts a secret spend key to a mnemonic phrase
 function secret_spend_key_to_words(ssk) {
     const seed = [];
     let for_checksum = "";
@@ -171,6 +183,7 @@ function secret_spend_key_to_words(ssk) {
 
 // helpers
 
+// Converts a 32-bit unsigned integer to a hexadecimal string
 function uint32hex(value) {
     let h = value.toString(16);
     if (h.length > 8) throw "value must not equal or exceed 2^32";
@@ -178,6 +191,7 @@ function uint32hex(value) {
     return h.match(/../g).reverse().join("");
 }
 
+// Converts a string to a Uint8Array
 function strtobin(str) {
     const res = uint_8Array(str.length);
     for (let i = 0; i < str.length; i++) {
@@ -186,6 +200,7 @@ function strtobin(str) {
     return res;
 }
 
+// Converts a 64-bit unsigned integer to a big-endian Uint8Array
 function uint64_to_8be(num, size) {
     const res = uint_8Array(size);
     if (size < 1 || size > 8) {
@@ -199,6 +214,7 @@ function uint64_to_8be(num, size) {
     return res;
 }
 
+// Encodes data using Base58 encoding
 function base58_encode(data) {
     const ab = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
         ab_map = {},
@@ -260,6 +276,8 @@ class ExtendedPoint {
         this.z = z;
         this.t = t;
     }
+
+    // Converts an affine point to an extended point
     static fromAffine(p) {
         if (!(p instanceof xPoint)) {
             throw new TypeError('ExtendedPoint#fromAffine: expected Point');
@@ -268,16 +286,24 @@ class ExtendedPoint {
             return ExtendedPoint.ZERO;
         return new ExtendedPoint(p.x, p.y, 1n, xmod(p.x * p.y));
     }
+
+    // Converts a batch of extended points to affine points
     static toAffineBatch(points) {
         const toInv = xmr_invertBatch(points.map((p) => p.z));
         return points.map((p, i) => p.toAffine(toInv[i]));
     }
+
+    // Normalizes the Z coordinate of a batch of points
     static normalizeZ(points) {
         return this.toAffineBatch(points).map(this.fromAffine);
     }
+
+    // Negates the point
     negate() {
         return new ExtendedPoint(xmod(-this.x), this.y, this.z, xmod(-this.t));
     }
+
+    // Doubles the point
     double() {
         const X1 = this.x,
             Y1 = this.y,
@@ -299,6 +325,8 @@ class ExtendedPoint {
             Z3 = xmod(F * G);
         return new ExtendedPoint(X3, Y3, Z3, T3);
     }
+
+    // Adds another point to this point
     add(other) {
         const X1 = this.x,
             Y1 = this.y,
@@ -325,6 +353,8 @@ class ExtendedPoint {
             Z3 = xmod(F * G);
         return new ExtendedPoint(X3, Y3, Z3, T3);
     }
+
+    // Precomputes window of points for faster multiplication
     precomputeWindow(W) {
         const windows = 256 / W + 1;
         let points = [],
@@ -341,6 +371,8 @@ class ExtendedPoint {
         }
         return points;
     }
+
+    // Implements the w-ary non-adjacent form (wNAF) method for point multiplication
     wNAF(n, affinePoint) {
         if (!affinePoint && this.equals(ExtendedPoint.BASE))
             affinePoint = xPoint.BASE;
@@ -380,6 +412,8 @@ class ExtendedPoint {
         }
         return [p, f];
     }
+
+    // Multiplies the point by a scalar
     multiply(scalar, affinePoint) {
         if (typeof scalar !== 'number' && typeof scalar !== 'bigint') {
             throw new TypeError('Point#multiply: expected number or bigint');
@@ -390,6 +424,8 @@ class ExtendedPoint {
         }
         return ExtendedPoint.normalizeZ(this.wNAF(n, affinePoint))[0];
     }
+
+    // Converts the extended point to an affine point
     toAffine(invZ = xmr_invert(this.z)) {
         const x = xmod(this.x * invZ),
             y = xmod(this.y * invZ);
@@ -403,10 +439,14 @@ class xPoint {
         this.x = x;
         this.y = y;
     }
+
+    // Sets the window size for precomputation
     _setWindowSize(windowSize) {
         this._WINDOW_SIZE = windowSize;
         xmr_pointPrecomputes.delete(this);
     }
+
+    // Creates a point from a hexadecimal string
     static fromHex(hash) {
         const {
             d,
@@ -433,6 +473,8 @@ class xPoint {
         }
         return new xPoint(x, y);
     }
+
+    // Converts the point to raw bytes
     toRawBytes() {
         const hex = xmr_numberToHex(this.y),
             u8 = uint_8Array(ENCODING_LENGTH);
@@ -443,15 +485,23 @@ class xPoint {
         u8[ENCODING_LENGTH - 1] |= mask;
         return u8;
     }
+
+    // Converts the point to a hexadecimal string
     toHex() {
         return xmr_bytesToHex(this.toRawBytes());
     }
+
+    // Checks if this point is equal to another point
     equals(other) {
         return this.x === other.x && this.y === other.y;
     }
+
+    // Adds another point to this point
     add(other) {
         return ExtendedPoint.fromAffine(this).add(ExtendedPoint.fromAffine(other)).toAffine();
     }
+
+    // Multiplies this point by a scalar
     multiply(scalar) {
         return ExtendedPoint.fromAffine(this).multiply(scalar, this).toAffine();
     }
@@ -460,6 +510,7 @@ xPoint.BASE = new xPoint(xmr_CURVE.Gx, xmr_CURVE.Gy);
 xPoint.ZERO = new xPoint(0n, 1n);
 xPoint.BASE._setWindowSize(8);
 
+// Converts a Uint8Array to a hexadecimal string
 function xmr_bytesToHex(uint8a) {
     let hex = "";
     for (let i = 0; i < uint8a.length; i++) {
@@ -468,6 +519,7 @@ function xmr_bytesToHex(uint8a) {
     return hex;
 }
 
+// Converts a hexadecimal string to a Uint8Array
 function xmr_hexToBytes(hex) {
     hex = hex.length & 1 ? `0${hex}` : hex;
     const array = uint_8Array(hex.length / 2);
@@ -478,11 +530,13 @@ function xmr_hexToBytes(hex) {
     return array;
 }
 
+// Converts a number to a hexadecimal string
 function xmr_numberToHex(num) {
     const hex = num.toString(16);
     return hex.length & 1 ? `0${hex}` : hex;
 }
 
+// Converts a little-endian byte array to a BigInt
 function bytesToNumberLE(uint8a) {
     let value = 0n;
     for (let i = 0; i < uint8a.length; i++) {
@@ -491,11 +545,13 @@ function bytesToNumberLE(uint8a) {
     return value;
 }
 
+// Performs modular arithmetic (a mod b)
 function xmod(a, b = xmr_CURVE.P) {
     const res = a % b;
     return res >= 0n ? res : b + res;
 }
 
+// Performs modular exponentiation (a^power mod m)
 function xpowMod(a, power, m = xmr_CURVE.P) {
     let res = 1n;
     while (power > 0n) {
@@ -508,6 +564,7 @@ function xpowMod(a, power, m = xmr_CURVE.P) {
     return res;
 }
 
+// Performs the Extended Euclidean Algorithm
 function xmr_egcd(a, b) {
     let [x, y, u, v] = [0n, 1n, 1n, 0n];
     while (a !== 0n) {
@@ -523,6 +580,7 @@ function xmr_egcd(a, b) {
     return [gcd, x, y];
 }
 
+// Calculates the modular multiplicative inverse
 function xmr_invert(number, modulo = xmr_CURVE.P) {
     if (number === 0n || modulo <= 0n) {
         throw new Error('invert: expected positive integers');
@@ -534,6 +592,7 @@ function xmr_invert(number, modulo = xmr_CURVE.P) {
     return xmod(x, modulo);
 }
 
+// Calculates the modular multiplicative inverse for a batch of numbers
 function xmr_invertBatch(nums, n = xmr_CURVE.P) {
     const len = nums.length,
         scratch = new Array(len);
@@ -555,22 +614,27 @@ function xmr_invertBatch(nums, n = xmr_CURVE.P) {
     return nums;
 }
 
+// Converts a hexadecimal string to an xPoint object
 function xmr_getpoint(hex) {
     return xPoint.fromHex(hex);
 }
 
+// Multiplies a point by the base point of the curve
 function point_multiply(hex) {
     return xPoint.BASE.multiply(xmr_getpoint(hex).y);
 }
 
+// Generates a public key from a private key
 function xmr_getPublicKey(privateKey) {
     return point_multiply(privateKey).toHex();
 }
 
+// Generates a random payment ID
 function xmr_pid() {
     return mn_random(256).slice(0, 16);
 }
 
+// Validates a payment ID
 function check_pid(payment_id) {
     const payment_id_length = payment_id.length;
     if (payment_id_length !== 16) {
@@ -583,6 +647,7 @@ function check_pid(payment_id) {
     return true;
 }
 
+// Generates a random number with the specified number of bits
 function mn_random(bits) {
     "use strict";
     if (bits % 32 !== 0) throw "Something weird went wrong: Invalid number of bits - " + bits;
@@ -611,6 +676,7 @@ function mn_random(bits) {
     return out;
 }
 
+// Retrieves the view key for a given Monero address
 function get_vk(address) {
     const ad_li = filter_addressli("monero", "address", address),
         ad_dat = (ad_li.length) ? ad_li.data() : {},
@@ -621,6 +687,7 @@ function get_vk(address) {
     return false;
 }
 
+// Creates an object containing account and view key information
 function vk_obj(vk) {
     if (vk.length === 64) {
         return {
@@ -637,6 +704,7 @@ function vk_obj(vk) {
     return false;
 }
 
+// Checks if the user has opted to share their view key
 function share_vk() {
     const vkshare = cs_node("monero", "Share viewkey", true).selected;
     if (vkshare === true) {

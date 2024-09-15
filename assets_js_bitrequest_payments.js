@@ -135,12 +135,14 @@ $(document).ready(function() {
 
 // ** Swipe payment dialog **
 
+// Initializes the panel wake functionality
 function wake_panel() {
     $(document).on("mousedown touchstart", "#paymentdialogbox", function() {
         set_request_timer();
     })
 }
 
+// Sets a timer to close the request dialog after 3 minutes
 function set_request_timer() {
     // close request dialog after 3 minutes
     clearTimeout(glob_request_timer);
@@ -151,6 +153,7 @@ function set_request_timer() {
     });
 }
 
+// Initializes the swipe start functionality for the payment dialog
 function swipestart() {
     $(document).on("mousedown touchstart", "#paymentdialog", function(e) {
         glob_blockswipe = false;
@@ -165,6 +168,7 @@ function swipestart() {
     })
 }
 
+// Handles the swipe movement for the payment dialog
 function swipe(dialogheight, startheight) {
     $(document).on("mousemove touchmove", "#payment", function(e) {
         if (glob_blockswipe === true) {
@@ -187,6 +191,7 @@ function swipe(dialogheight, startheight) {
     })
 }
 
+// Handles the end of a swipe action
 function swipeend() {
     $(document).on("mouseup mouseleave touchend", "#payment", function() {
         $(document).off("mousemove touchmove", "#payment");
@@ -216,8 +221,7 @@ function swipeend() {
     })
 }
 
-// ** Flip payment dialog **
-
+// Initializes the flip start functionality for the payment dialog
 function flipstart() {
     $(document).on("mousedown touchstart", "#paymentdialog", function(e) {
         if (glob_paymentdialogbox.hasClass("norequest")) {
@@ -237,6 +241,7 @@ function flipstart() {
     })
 }
 
+// Handles the flip movement for the payment dialog
 function flip(dialogwidth, startwidth) {
     $(document).on("mousemove touchmove", "#payment", function(e) {
         glob_html.addClass("flipmode");
@@ -254,6 +259,7 @@ function flip(dialogwidth, startwidth) {
     })
 }
 
+// Handles the end of a flip action
 function flipend() {
     $(document).on("mouseup mouseleave touchend", "#payment", function() {
         const thisunit = $(this);
@@ -285,42 +291,51 @@ function flipend() {
     })
 }
 
+// Flips the payment dialog to the right (front to back)
 function flip_right1() {
     add_flip();
     face_back();
 }
 
+// Flips the payment dialog to the right (back to front)
 function flip_right2() {
     glob_paymentdialogbox.css("-webkit-transform", "rotateY(360deg)").removeClass("flipped");
     face_front();
 }
 
+// Flips the payment dialog to the left (front to back)
 function flip_left1() {
     glob_paymentdialogbox.css("-webkit-transform", "rotateY(-180deg)").addClass("flipped");
     face_back();
 }
 
+// Flips the payment dialog to the left (back to front)
 function flip_left2() {
     remove_flip();
     face_front();
 }
 
+// Resets the flip when it's currently flipped
 function flip_reset1() {
     glob_paymentdialogbox.css("-webkit-transform", "");
 }
 
+// Resets the flip when it's not currently flipped
 function flip_reset2() {
     glob_paymentdialogbox.css("-webkit-transform", "rotateY(0deg)");
 }
 
+// Adds the flipped class and rotates the payment dialog
 function add_flip() {
     glob_paymentdialogbox.css("-webkit-transform", "rotateY(180deg)").addClass("flipped");
 }
 
+// Removes the flipped class and resets the rotation of the payment dialog
 function remove_flip() {
     glob_paymentdialogbox.css("-webkit-transform", "rotateY(0deg)").removeClass("flipped");
 }
 
+// Handles the front-facing view of the payment dialog
 function face_front() {
     if (request) {
         if (request.isrequest === false) {
@@ -354,6 +369,7 @@ function face_front() {
     }
 }
 
+// Handles the back-facing view of the payment dialog
 function face_back() {
     if (request) {
         if (request.isrequest === false) {
@@ -395,6 +411,7 @@ function face_back() {
 
 //loadpayment (check for crypto rates)
 
+// Initializes the payment function and handles various scenarios
 function loadpaymentfunction(pass) {
     if (is_openrequest() === true) { // prevent double load
         return
@@ -472,6 +489,7 @@ function loadpaymentfunction(pass) {
     }, true);
 }
 
+// Retrieves token information for ERC20 tokens
 function get_tokeninfo(payment, contract) {
     const getcache = br_get_local("decimals_" + payment);
     if (getcache) { // check for cached values
@@ -513,6 +531,7 @@ function get_tokeninfo(payment, contract) {
     });
 }
 
+// Continues the payment function setup after initial checks
 function continue_paymentfunction() {
     //set globals
     const gets = geturlparameters();
@@ -686,6 +705,7 @@ function continue_paymentfunction() {
 
 // Check for lightning
 
+// Sets up the Lightning Network payment functionality
 function lightning_setup() {
     if (request.isrequest === true) {
         const dataobject = request.dataobject;
@@ -815,6 +835,7 @@ function lightning_setup() {
     return
 }
 
+// Sends a PUT request to the Lightning Network proxy
 function lnd_put(proxy, key, pl, lnurl) {
     const rqtype = (request.requesttype == "local") ? undefined : request.requesttype;
     glob_proxy_attempts[proxy] = true;
@@ -873,6 +894,7 @@ function lnd_put(proxy, key, pl, lnurl) {
     });
 }
 
+// Tests the Lightning Network connection status
 function test_lnd(lnurl) {
     const lnd = helper.lnd;
     if (!lnd.proxy_host) {
@@ -912,6 +934,7 @@ function test_lnd(lnurl) {
     }
 }
 
+// Proceeds with the payment function after initial setup
 function proceed_pf(error) {
     if (helper.lnd_status === false && helper.lnd_only) {
         request.monitored = false;
@@ -961,7 +984,7 @@ function proceed_pf(error) {
     getccexchangerates(apilist, ccapi);
 }
 
-//get crypto rates
+// Fetches cryptocurrency exchange rates from various APIs
 function getccexchangerates(apilist, api) {
     glob_api_attempt[apilist][api] = true;
     loadertext(translate("getccrates", {
@@ -1036,6 +1059,7 @@ function getccexchangerates(apilist, api) {
     });
 }
 
+// Handles failure scenarios when fetching cryptocurrency rates
 function cc_fail(apilist, api, error_val) {
     const nextccapi = try_next_api(apilist, api);
     if (nextccapi) {
@@ -1054,6 +1078,7 @@ function cc_fail(apilist, api, error_val) {
     fail_dialogs(api, error_val);
 }
 
+// Initializes the exchange rate process
 function initexchangerate(cc_rate, ccapi, cachetime) {
     loadertext(translate("getfiatrates"));
     const ccrate = 1 / cc_rate,
@@ -1088,7 +1113,7 @@ function initexchangerate(cc_rate, ccapi, cachetime) {
     get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, cachetime);
 }
 
-//get fiat rates
+// Fetches fiat exchange rates from various APIs
 function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, cachetime) {
     glob_api_attempt[apilist][fiatapi] = true;
     loadertext(translate("fetchingfiatrates", {
@@ -1199,6 +1224,7 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
     });
 }
 
+// Handles switching to the next fiat API when the current one fails
 function next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, ccapi, cachetime) {
     const nextfiatapi = try_next_api(apilist, fiatapi);
     if (nextfiatapi) {
@@ -1217,6 +1243,7 @@ function next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, c
     fail_dialogs(fiatapi, error_object);
 }
 
+// Renders the currency pool with exchange rates and payment details
 function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cachetimefiat) {
     const xrates_array = [],
         usdrate = data.usd, //cryptocurrency rate is in dollar, needs to be converted to euro
@@ -1257,6 +1284,7 @@ function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cache
     getpayment(ccrateeuro, ccapi);
 }
 
+// Processes and displays payment information, including currency conversions, UI elements, and request details
 function getpayment(ccrateeuro, ccapi) {
     closeloader();
     const currencypoolnode = $("#paymentdialog .cpool[data-currency='" + request.uoa + "']"),
@@ -1487,6 +1515,7 @@ function getpayment(ccrateeuro, ccapi) {
     }
 }
 
+// Displays the payment dialog and adjusts the UI accordingly
 function show_paymentdialog() {
     glob_scrollposition = $(document).scrollTop(); // get scrollposition save as global
     fixedcheck(glob_scrollposition); // fix nav position
@@ -1495,6 +1524,7 @@ function show_paymentdialog() {
     glob_paymentpopup.addClass("showpu active");
 }
 
+// Focuses on the main input field in the payment dialog
 function main_input_focus() {
     const visible_input = (glob_paymentdialogbox.hasClass("flipped")) ? $("#paymentdialog #shareamount input:visible:first") :
         $("#paymentdialog #amountbreak input:visible:first");
@@ -1507,6 +1537,7 @@ function main_input_focus() {
 
 // ** Paymentdialog functions **
 
+// Handles the Lightning Network switch functionality
 function lnd_switch_function() {
     $(document).on("click", "#paymentdialogbox #lightning_switch", function() {
         if (helper.lnd) {
@@ -1543,12 +1574,14 @@ function lnd_switch_function() {
     });
 }
 
+// Handles the NFC switch functionality
 function ndef_switch_function() {
     $(document).on("click", "#paymentdialogbox #ndef_switch", function() {
         notify(translate("tabyourboldcard"), 10000);
     });
 }
 
+// Updates the Lightning Network status
 function lnd_statusx() {
     if (helper.lnd_status) {
         if (glob_paymentdialogbox.attr("data-lswitch") == "lnd_ao") {
@@ -1565,12 +1598,14 @@ function lnd_statusx() {
     notify("<span id='lnd_offline'>" + translate("lnoffline") + "</span>", 200000, "yes");
 }
 
+// Handles the Lightning Network offline status click event
 function lnd_offline() {
     $(document).on("click", "#lnd_offline", function() {
         lnd_popup();
     });
 }
 
+// Handles the Lightning Network node info click event
 function lnd_ni() {
     $(document).on("click", "#paymentdialogbox #current_lndnode #lnd_nodeinfo_trigger", function(e) {
         e.stopPropagation();
@@ -1579,10 +1614,12 @@ function lnd_ni() {
     });
 }
 
+// Opens the Lightning Network popup
 function lnd_popup() {
     lndli().find(".atext").trigger("click");
 }
 
+// Handles currency selection in the payment dialog
 function pickcurrency() {
     $(document).on("click", "#paymentdialogbox #pickcurrency", function() {
         const thisnode = $(this),
@@ -1632,6 +1669,7 @@ function pickcurrency() {
     });
 }
 
+// Renders the currency pool text in the payment dialog
 function rendercpooltext(nextcurrency, newccrate) {
     $("#paymentdialog .cpool").each(function() {
         const thisnode = $(this),
@@ -1652,6 +1690,7 @@ function rendercpooltext(nextcurrency, newccrate) {
     });
 }
 
+// Handles input changes for the fiat amount in the payment dialog
 function pushamount() {
     $(document).on("input", "#paymentdialogbox .fmirror > input", function() {
         glob_blocktyping = true;
@@ -1668,6 +1707,7 @@ function pushamount() {
     });
 }
 
+// Handles input changes for the local currency amount in the payment dialog
 function pushlcamount() {
     $(document).on("input", "#paymentdialogbox .lcmirror > input", function() {
         glob_blocktyping = true;
@@ -1681,6 +1721,7 @@ function pushlcamount() {
     });
 }
 
+// Handles input changes for the cryptocurrency amount in the payment dialog
 function pushccamount() {
     $(document).on("input", "#paymentdialogbox .ccmirror > input", function() {
         glob_blocktyping = true;
@@ -1695,6 +1736,7 @@ function pushccamount() {
     });
 }
 
+// Handles input changes for the satoshi amount in the payment dialog
 function pushsatamount() {
     $(document).on("input", "#satinputmirror > input", function() {
         glob_blocktyping = true;
@@ -1708,6 +1750,7 @@ function pushsatamount() {
     });
 }
 
+// Reflects fiat values in the payment dialog
 function reflectfiatvalue(thisamount, thisrate, fieldtype) { // reflect fiat values
     const amountinputrate = $("#amountinputmirror > input").attr("data-xrate"), //get fiat rate
         deter = (glob_paymentdialogbox.hasClass("showcc")) ? 6 : 2,
@@ -1718,6 +1761,7 @@ function reflectfiatvalue(thisamount, thisrate, fieldtype) { // reflect fiat val
     updatecpool(thisamountvalue, amountinputrate, ccvalue);
 }
 
+// Reflects local currency value in the payment dialog
 function reflectlcvalue(thisamount, thisrate) { // reflect local currency value
     const lcrate = $("#popform").attr("data-lcrate"),
         lcvalue = ((thisamount / thisrate) * lcrate).toFixed(2),
@@ -1725,11 +1769,13 @@ function reflectlcvalue(thisamount, thisrate) { // reflect local currency value
     reflectinputs($("#paymentdialogbox .lcmirror > input"), lcvalue, lcplaceholder);
 }
 
+// Reflects cryptocurrency value in the payment dialog
 function reflectccvalue(thisamount, thisrate, fieldtype) { // reflect crypto input
     const ccvalue = (thisamount.length === 0) ? glob_zeroplaceholder : (fieldtype == "crypto") ? thisamount.toFixed(6) : cryptovalue(thisamount, thisrate);
     reflectinputs($("#paymentdialogbox .ccmirror > input"), ccvalue, ccvalue);
 }
 
+// Reflects satoshi value in the payment dialog
 function reflectsatvalue(thisamount, thisrate, fieldtype) { // reflect sat input
     const ccvalue = (thisamount.length === 0) ? glob_zeroplaceholder : (fieldtype == "crypto") ? thisamount : cryptovalue(thisamount, thisrate),
         satvalue = (ccvalue * 100000000).toFixed(0),
@@ -1737,15 +1783,18 @@ function reflectsatvalue(thisamount, thisrate, fieldtype) { // reflect sat input
     reflectinputs($("#satinputmirror > input"), satvalue, satplaceholder);
 }
 
+// Updates input fields and their placeholders
 function reflectinputs(node, value, placeholder) {
     const val_correct = (value == 0 || value == "0.00") ? "" : value;
     node.val(val_correct).prev("span").text(placeholder);
 }
 
+// Calculates the cryptocurrency value based on the amount and rate
 function cryptovalue(thisamount, thisrate) { // get ccrate
     return parseFloat(((thisamount / thisrate) * $("#paymentdialogbox .ccpool").attr("data-xrate")).toFixed(6));
 }
 
+// Reflects input changes in the payment dialog
 function reflectinput() {
     $(document).on("input change", ".mirrordiv > input", function() {
         const thisinput = $(this),
@@ -1761,6 +1810,7 @@ function reflectinput() {
     });
 }
 
+// Updates the currency pool and related UI elements
 function updatecpool(thisamount, thisrate, ccvalue) {
     rendercpool(thisamount, thisrate);
     const gets = geturlparameters(),
@@ -1785,6 +1835,7 @@ function updatecpool(thisamount, thisrate, ccvalue) {
     glob_blocktyping = false;
 }
 
+// Renders the currency pool in the payment dialog
 function rendercpool(thisamount, thisrate) {
     $("#paymentdialog .cpool").each(function() {
         const thisnode = $(this),
@@ -1794,6 +1845,7 @@ function rendercpool(thisamount, thisrate) {
     });
 }
 
+// Renders the QR code for the payment
 function renderqr(payment, address, amount, title) {
     const number = Number(amount),
         this_iszero = (number === 0 || isNaN(number)),
@@ -1806,6 +1858,7 @@ function renderqr(payment, address, amount, title) {
     }
 }
 
+// Sets the URIs for wallet opening
 function set_uris(urlscheme, amount) {
     $("#paymentdialogbox .openwallet").attr({
         "data-rel": amount,
@@ -1813,6 +1866,7 @@ function set_uris(urlscheme, amount) {
     });
 }
 
+// Sets the QR code for Lightning Network payments
 function set_lnd_qr(a, title) {
     const ln = helper.lnd,
         srt = (title) ? title : $("#paymentdialog input#requesttitle").val(),
@@ -1825,6 +1879,7 @@ function set_lnd_qr(a, title) {
     set_lnd_uris(lnurl, a);
 }
 
+// Sets the URIs for Lightning Network wallet opening
 function set_lnd_uris(urlscheme, amount) {
     $("#paymentdialogbox .openwallet_lnd").attr({
         "data-rel": amount,
@@ -1833,15 +1888,18 @@ function set_lnd_uris(urlscheme, amount) {
     $("#paymentaddress_lnd").text(urlscheme);
 }
 
+// Generates the URL scheme for Bitcoin payments
 function btc_urlscheme(payment, address, amount, iszero) {
     return payment + ":" + address + ((iszero === true) ? "" : "?amount=" + amount);
 }
 
+// Generates the URL scheme for Bitcoin Cash payments
 function bch_urlscheme(payment, address, amount, iszero) {
     const c_address = (address.indexOf("bitcoincash:") > -1) ? address.split("bitcoincash:").pop() : address;
     return "bitcoincash:" + c_address + ((iszero === true) ? "" : "?amount=" + amount);
 }
 
+// Handles switching between different addresses for the same currency
 function switchaddress() {
     $(document).on("click", "#paymentdialogbox.norequest #labelbttn", function() {
         const timelapsed = now() - glob_sa_timer;
@@ -1889,6 +1947,7 @@ function switchaddress() {
     });
 }
 
+// Finds the next valid address for a given currency
 function newaddresli(currency, address) {
     const add_li = filter_addressli(currency, "checked", true),
         label_li = add_li.filter(function() { // only pick addresses with label
@@ -1903,6 +1962,7 @@ function newaddresli(currency, address) {
     return (nextaddressli.length) ? nextaddressli : firstaddressli;
 }
 
+// Handles double-click events for copying addresses
 function copyaddress_dblclick() {
     $(document).on("dblclick", "#paymentaddress, #paymentaddress_lnd, .select", function() {
         const thisnode = $(this),
@@ -1915,6 +1975,7 @@ function copyaddress_dblclick() {
     });
 }
 
+// Handles the click event for copying addresses
 function copyaddress() {
     $(document).on("click", "#copyaddress", function() {
         const val = glob_copycontent.val(),
@@ -1923,6 +1984,7 @@ function copyaddress() {
     });
 }
 
+// Handles double-click events for copying input values
 function copyinputs() {
     $(document).on("dblclick", "#paymentdialogbox.request .mirrordiv input", function() {
         const thisval = $(this).val(),
@@ -1934,6 +1996,7 @@ function copyinputs() {
     });
 }
 
+// Handles the click event for opening Monero settings
 function xmrsettings() {
     $(document).on("click", "#xmrsettings", function() {
         let result = confirm(translate("opencoinsettings", {
@@ -1947,6 +2010,7 @@ function xmrsettings() {
     });
 }
 
+// Validates request data and updates the URL
 function validaterequestdata(lnurl) {
     const gets = geturlparameters(),
         requestname_val = $("input#requestname").val(),
@@ -2004,6 +2068,7 @@ function validaterequestdata(lnurl) {
     set_edit(newurl);
 }
 
+// Handles input events for request data
 function inputrequestdata() {
     $(document).on("input", "#shareform input", function() {
         validaterequestdata();
@@ -2011,6 +2076,7 @@ function inputrequestdata() {
     });
 }
 
+// Validates input steps and prevents invalid inputs
 function validatesteps() {
     $(document).on("keydown", "#paymentdialogbox .mirrordiv input", function(e) {
         if (glob_blocktyping === true) {
@@ -2067,6 +2133,7 @@ function validatesteps() {
     })
 }
 
+// Handles flipping the request dialog
 function fliprequest() {
     $(document).on("click", "#paymentdialogbox.norequest #sharerequest", function(e) {
         e.preventDefault();
@@ -2089,6 +2156,7 @@ function fliprequest() {
     });
 }
 
+// Handles revealing the full title when it's too long
 function revealtitle() {
     $(document).on("click", "#paymentdialogbox.request #sharetitle.title_exceed", function(e) {
         const thisnode = $(this),
@@ -2102,6 +2170,7 @@ function revealtitle() {
     });
 }
 
+// Handles pending requests and address selection
 function pendingrequest() {
     const thisaddress = request.address,
         payment = request.payment,
@@ -2145,6 +2214,7 @@ function pendingrequest() {
     popdialog(content, "triggersubmit");
 }
 
+// Handles viewing pending transactions
 function view_pending_tx() {
     $(document).on("click", "#view_pending_tx", function() {
         const result = confirm(translate("viewpendingrequest"));
@@ -2157,6 +2227,7 @@ function view_pending_tx() {
     });
 }
 
+// Handles picking an address from the dialog
 function pickaddressfromdialog() {
     $(document).on("click", "#addresslock #pending_pick_address", function(e) {
         e.preventDefault();
@@ -2197,11 +2268,13 @@ function pickaddressfromdialog() {
     });
 }
 
+// Sets the edit URL and updates browser history
 function set_edit(url) {
     history.replaceState(null, null, url);
     br_set_local("editurl", url);
 }
 
+// Handles adding a new address from the dialog
 function addaddressfromdialog() {
     $(document).on("click", "#addresslock #pending_add_address, #addaddress", function(e) {
         e.preventDefault();
@@ -2230,6 +2303,7 @@ function addaddressfromdialog() {
     });
 }
 
+// Handles adding an address from seed
 function add_from_seed() {
     $(document).on("click", "#addfromseed", function() {
         const ad = $("#addressformbox").data(),
@@ -2249,6 +2323,7 @@ function add_from_seed() {
     });
 }
 
+// Handles scanning QR code
 function scanqr() {
     $(document).on("click", "#scanqr", function() {
         remove_flip();
@@ -2258,6 +2333,7 @@ function scanqr() {
     });
 }
 
+// Shows API stats
 function showapistats() {
     $(document).on("click", "#apisrc", function() {
         const xratestats = $("#xratestats");
@@ -2269,13 +2345,16 @@ function showapistats() {
     });
 }
 
+// Hides API stats
 function hideapistats() {
     $(document).on("click", "#xratestats", function() {
         $(this).removeClass("show");
     });
 }
 
-//share
+// ** Share **
+
+// Handles share button click
 function sharebutton() {
     $(document).on("click", "#sharebutton", function() {
         const thisbttn = $(this);
@@ -2298,6 +2377,7 @@ function sharebutton() {
     });
 }
 
+// Handles sharing the payment request
 function share(thisbutton) {
     if (thisbutton.hasClass("sbactive")) {
         const gets = geturlparameters();
@@ -2364,6 +2444,7 @@ function share(thisbutton) {
     }
 }
 
+// Handles URL shortening and sharing process
 function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
     loadertext(translate("generatelink"));
     const us_settings = $("#url_shorten_settings"),
@@ -2455,6 +2536,7 @@ function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
     sharerequest(sharedurl, sharedtitle);
 }
 
+// Handles custom URL shortening
 function custom_shorten(service, sharedurl, sharedtitle, sitethumb) {
     const serv = (service) ? service : d_proxy(),
         rqdat = btoa(JSON.stringify({
@@ -2497,6 +2579,7 @@ function custom_shorten(service, sharedurl, sharedtitle, sitethumb) {
     });
 }
 
+// Handles Bitly URL shortening
 function bitly_shorten(sharedurl, sharedtitle) {
     api_proxy({
         "api": "bitly",
@@ -2526,11 +2609,13 @@ function bitly_shorten(sharedurl, sharedtitle) {
     });
 }
 
+// Generates a random ID for custom short URLs
 function randomId() {
     const uint32 = crypto.getRandomValues(new Uint32Array(1))[0];
     return uint32.toString(16);
 }
 
+// Handles the sharing of requests
 function sharerequest(sharedurl, sharedtitle) {
     closeloader();
     if (glob_is_ios_app === true) {
@@ -2548,6 +2633,7 @@ function sharerequest(sharedurl, sharedtitle) {
     sharefallback(sharedurl, sharedtitle);
 }
 
+// Fallback function for sharing when native sharing is not available
 function sharefallback(sharedurl, sharedtitle) {
     const mobileclass = (glob_supportsTouch) ? " showtouch" : "";
     $("#sharepopup").addClass("showpu active" + mobileclass).data({
@@ -2557,6 +2643,7 @@ function sharefallback(sharedurl, sharedtitle) {
     glob_body.addClass("sharemode");
 }
 
+// Handles sharing via WhatsApp
 function whatsappshare() {
     $(document).on("click", "#whatsappshare", function() {
         sharecallback();
@@ -2567,6 +2654,7 @@ function whatsappshare() {
     });
 }
 
+// Handles sharing via email
 function mailto() {
     $(document).on("click", "#mailto", function() {
         sharecallback();
@@ -2576,6 +2664,7 @@ function mailto() {
     });
 }
 
+// Handles copying the share URL to clipboard
 function copyurl() {
     $(document).on("click", "#copyurl", function() {
         copytoclipboard(getshareinfo().url, "Request url");
@@ -2583,6 +2672,7 @@ function copyurl() {
     });
 }
 
+// Handles sharing via Gmail
 function gmailshare() {
     $(document).on("click", "#gmailshare", function() {
         sharecallback();
@@ -2592,6 +2682,7 @@ function gmailshare() {
     });
 }
 
+// Handles sharing via Telegram
 function telegramshare() {
     $(document).on("click", "#telegramshare", function() {
         sharecallback();
@@ -2601,6 +2692,7 @@ function telegramshare() {
     });
 }
 
+// Handles sharing via Outlook
 function outlookshare() {
     $(document).on("click", "#outlookshare", function() {
         sharecallback();
@@ -2610,6 +2702,7 @@ function outlookshare() {
     });
 }
 
+// Retrieves share information from the share popup
 function getshareinfo() {
     const sharepopup = $("#sharepopup"),
         sharetitle = sharepopup.data("sharetitle"),
@@ -2621,6 +2714,7 @@ function getshareinfo() {
     }
 }
 
+// Handles actions after successful sharing
 function sharecallback() {
     if (request) {
         request.received = true,
@@ -2637,6 +2731,7 @@ function sharecallback() {
     notify(translate("successshare") + " 🎉");
 }
 
+// Opens the share URL
 function open_share_url(type, url) {
     loader(true);
     setTimeout(function() {
@@ -2651,6 +2746,7 @@ function open_share_url(type, url) {
     }, 500);
 }
 
+// Triggers opening of a transaction based on URL parameters
 function trigger_open_tx() {
     const gets = geturlparameters();
     if (gets.xss) {
@@ -2663,6 +2759,7 @@ function trigger_open_tx() {
     }
 }
 
+// Handles viewing transaction details
 function view_tx() {
     $(document).on("click", "#view_tx", function() {
         if (glob_inframe === true) {
@@ -2681,6 +2778,7 @@ function view_tx() {
     });
 }
 
+// Opens and displays transaction details
 function open_tx(tx_node) {
     const selected_request = (tx_node.length > 0) ? tx_node : $("#requestlist .rqli").first(),
         infopanel = selected_request.find(".moreinfo"),
@@ -2705,6 +2803,7 @@ function open_tx(tx_node) {
 
 // ** Save and update request **
 
+// Saves or updates a payment request, handling various scenarios including local, incoming, and outgoing requests
 function saverequest(direct) {
     const gets = geturlparameters();
     if (gets.xss) {
@@ -2920,6 +3019,7 @@ function saverequest(direct) {
     }
 }
 
+// Handles the display of pending transaction dialog
 function pendingdialog(pr) { // show pending dialog if tx is pending
     request.received = true;
     const prdata = pr.data(),
@@ -2983,6 +3083,7 @@ function pendingdialog(pr) { // show pending dialog if tx is pending
     }
 }
 
+// Adjusts the payment dialog based on the current status
 function adjust_paymentdialog(status, pending, status_text) {
     const play_sound = (status == "insufficient") ? glob_funk : glob_blip,
         brstatuspanel = glob_paymentdialogbox.find(".brstatuspanel");
@@ -2995,7 +3096,7 @@ function adjust_paymentdialog(status, pending, status_text) {
     brstatuspanel.find("h2").text(status_text);
 }
 
-//open wallet
+// Handles the open wallet functionality
 function openwallet() {
     $(document).on("click", ".openwallet, .openwallet_lnd", function() {
         const thisnode = $(this),
@@ -3010,12 +3111,14 @@ function openwallet() {
     });
 }
 
+// Handles the click event for opening wallet URL
 function openwalleturl() {
     $(document).on("click", "#openwalleturl", function() {
         canceldialog();
     });
 }
 
+// Triggers the download wallet functionality
 function dw_trigger() {
     $(document).on("click", "#dw_trigger", function() {
         const this_currency = $(this).attr("data-currency");
@@ -3026,6 +3129,7 @@ function dw_trigger() {
     })
 }
 
+// Handles the wallet download process
 function download_wallet(currency) {
     const ln = (currency == "lightning") ? true : false,
         thiscurrency = (ln) ? "bitcoin" : currency,
@@ -3067,6 +3171,7 @@ function download_wallet(currency) {
     }
 }
 
+// Updates the request details in the UI
 function updaterequest(ua, save) {
     const requestlist = $("#" + ua.requestid),
         rldata = requestlist.data(),
@@ -3154,6 +3259,7 @@ function updaterequest(ua, save) {
     }
 }
 
+// Gets the Monero payment ID
 function get_xmrpid() {
     const use_integrated = cs_node("monero", "Integrated addresses", true).selected;
     if (use_integrated) {
@@ -3162,6 +3268,7 @@ function get_xmrpid() {
     return false;
 }
 
+// Generates an integrated Monero address
 function xmr_integrated(xmr_address, pmid) {
     const is_valid = check_pid(pmid);
     if (is_valid) {

@@ -46,6 +46,7 @@ $(document).ready(function() {
 
 // Websockets / Pollfunctions
 
+// Initializes a socket connection based on the payment type and node configuration
 function init_socket(socket_node, address, swtch, retry) {
     clearpinging();
     if (glob_offline === true) {
@@ -225,6 +226,7 @@ function init_socket(socket_node, address, swtch, retry) {
     notify(translate("notmonitored"), 500000, "yes")
 }
 
+// Handles BlockCypher WebSocket connection, falling back to WebSocket if local
 function blockcypherws(socket_node, address) {
     if (glob_local === true) {
         blockcypher_websocket(socket_node, address);
@@ -233,6 +235,7 @@ function blockcypherws(socket_node, address) {
     }
 }
 
+// Sets up a Lightning Network socket connection
 function lightning_socket(lnd) {
     glob_lnd_confirm = false;
     const p_arr = lnurl_deform(lnd.proxy_host),
@@ -286,6 +289,7 @@ function lightning_socket(lnd) {
     ln_ndef(proxy_host, pk, pid, nid, imp);
 }
 
+// Handles NFC (Near Field Communication) functionality for Lightning Network payments
 async function ln_ndef(proxy_host, pk, pid, nid, imp) {
     if (glob_ndef) {
         glob_ndef_processing = false;
@@ -466,6 +470,7 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
     }
 }
 
+// Handles API failure for NFC operations
 function ndef_apifail(jqXHR, textStatus, errorThrown) {
     const error_object = (errorThrown) ? errorThrown : jqXHR;
     api_eror_msg(null, get_api_error_data(error_object));
@@ -474,6 +479,7 @@ function ndef_apifail(jqXHR, textStatus, errorThrown) {
     glob_ndef_processing = false;
 }
 
+// Displays error messages for NFC operations
 function ndef_errormg(message) {
     const pmd = $("#paymentdialogbox"),
         brstatuspanel = pmd.find(".brstatuspanel"),
@@ -488,6 +494,7 @@ function ndef_errormg(message) {
     }, 5000);
 }
 
+// Sets up the NFC controller for scanning
 function ndef_controller() {
     glob_ctrl = new AbortController();
     console.log("Waiting for NDEF messages.");
@@ -496,6 +503,7 @@ function ndef_controller() {
     };
 }
 
+// Aborts the NFC operation
 function abort_ndef() {
     if (glob_ndef && glob_ctrl) {
         glob_ctrl.abort();
@@ -503,6 +511,7 @@ function abort_ndef() {
     }
 }
 
+// Polls Lightning Network data for payment status
 function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
     if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         const default_error = translate("unabletoconnect");
@@ -552,6 +561,7 @@ function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
     forceclosesocket();
 }
 
+// Polls Lightning Network invoice status
 function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
     if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         const default_error = "unable to connect";
@@ -598,6 +608,7 @@ function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
     forceclosesocket();
 }
 
+// Handles failure in polling Lightning Network data
 function lnd_poll_data_fail(pid) {
     clearpinging(pid);
     notify(translate("notmonitored"), 500000, "yes");
@@ -605,6 +616,7 @@ function lnd_poll_data_fail(pid) {
 
 // Websockets
 
+// Initializes and manages BlockCypher WebSocket connection
 function blockcypher_websocket(socket_node, thisaddress) {
     const provider = socket_node.url + request.currencysymbol + "/main",
         websocket = glob_sockets[thisaddress] = new WebSocket(provider);
@@ -652,6 +664,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
     };
 }
 
+// Initializes and manages Blockchain.info WebSocket for Bitcoin
 function blockchain_btc_socket(socket_node, thisaddress) {
     const provider = socket_node.url,
         websocket = glob_sockets[thisaddress] = new WebSocket(provider);
@@ -694,6 +707,7 @@ function blockchain_btc_socket(socket_node, thisaddress) {
     };
 }
 
+// Initializes and manages Blockchain.info WebSocket for Bitcoin Cash
 function blockchain_bch_socket(socket_node, thisaddress) {
     const provider = socket_node.url,
         websocket = glob_sockets[thisaddress] = new WebSocket(provider);
@@ -737,6 +751,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
     };
 }
 
+// Initializes and manages mempool.space WebSocket for Bitcoin
 function mempoolspace_btc_socket(socket_node, thisaddress) {
     const provider = socket_node.url,
         mps_websocket = glob_sockets[thisaddress] = new WebSocket(provider);
@@ -783,6 +798,7 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
     };
 }
 
+// Initializes and manages dogechain.info WebSocket for Dogecoin
 function dogechain_info_socket(socket_node, thisaddress) {
     const provider = socket_node.url,
         websocket = glob_sockets[thisaddress] = new WebSocket(provider);
@@ -827,6 +843,7 @@ function dogechain_info_socket(socket_node, thisaddress) {
     };
 }
 
+// Initializes and manages WebSocket for Nano cryptocurrency
 function nano_socket(socket_node, thisaddress) {
     const address_mod = (thisaddress.match("^xrb")) ? "nano_" + thisaddress.split("_").pop() : thisaddress, // change nano address prefix xrb_ to nano untill websocket support
         provider = socket_node.url,
@@ -873,6 +890,7 @@ function nano_socket(socket_node, thisaddress) {
     };
 }
 
+// Initializes and manages WebSocket for Ethereum and Ethereum-like networks
 function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
     const provider_url = socket_node.url,
         if_id = get_infura_apikey(provider_url),
@@ -929,6 +947,7 @@ function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
     };
 }
 
+// Initializes and manages WebSocket for ERC20 tokens on Ethereum and Ethereum-like networks
 function web3_erc20_websocket(socket_node, thisaddress, contract, l2) {
     const provider_url = socket_node.url,
         if_id = get_infura_apikey(provider_url),
@@ -993,6 +1012,7 @@ function web3_erc20_websocket(socket_node, thisaddress, contract, l2) {
     };
 }
 
+// Initializes and manages Alchemy WebSocket for Ethereum
 function alchemy_eth_websocket(socket_node, thisaddress) {
     const provider_url = socket_node.url,
         al_id = get_alchemy_apikey(),
@@ -1042,6 +1062,7 @@ function alchemy_eth_websocket(socket_node, thisaddress) {
     };
 }
 
+// Initializes and manages Kaspa WebSocket
 function kaspa_websocket(socket_node, thisaddress) {
     const provider = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket",
         websocket = glob_sockets[thisaddress] = new WebSocket(provider);
@@ -1094,6 +1115,7 @@ function kaspa_websocket(socket_node, thisaddress) {
     };
 }
 
+// Initializes and manages Kaspa FYI WebSocket
 function kaspa_fyi_websocket(socket_node, thisaddress) {
     const provider = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket",
         websocket = glob_sockets[thisaddress] = new WebSocket(provider);
@@ -1143,6 +1165,7 @@ function kaspa_fyi_websocket(socket_node, thisaddress) {
     };
 }
 
+// Handles WebSocket connection failures
 function handle_socket_fails(socket_node, thisaddress, socketid) {
     if (glob_paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
         return
@@ -1162,6 +1185,7 @@ function handle_socket_fails(socket_node, thisaddress, socketid) {
     }
 }
 
+// Handles WebSocket connection closure
 function handle_socket_close(socket_node) {
     socket_info(socket_node, false);
     console.log("Disconnected from " + socket_node.url);
@@ -1169,6 +1193,7 @@ function handle_socket_close(socket_node) {
         glob_ws_timer = 0;
 }
 
+// Manages WebSocket reconnection
 function ws_recon(recon) {
     if (recon) {
         const trigger = recon.trigger;
@@ -1194,6 +1219,7 @@ function ws_recon(recon) {
     }
 }
 
+// Attempts to find the next available WebSocket
 function try_next_socket(current_socket_data) {
     if (current_socket_data) {
         const current_socket_url = current_socket_data.url,
@@ -1219,6 +1245,7 @@ function try_next_socket(current_socket_data) {
     return false;
 }
 
+// Updates the UI with socket connection information
 function socket_info(snode, live) {
     const islive = (live) ? " <span class='pulse'></span>" : " <span class='icon-wifi-off'></span>",
         contents = "websocket: " + snode.url + islive;
@@ -1231,6 +1258,7 @@ function socket_info(snode, live) {
     glob_paymentpopup.removeClass("live");
 }
 
+// Sets up event listener for reconnection button
 function reconnect() {
     $(document).on("click", "#reconnect", function() {
         const txhash = $(this).attr("data-txid");
@@ -1243,6 +1271,7 @@ function reconnect() {
 
 // XMR Poll
 
+// Initializes Monero node connection
 function init_xmr_node(cachetime, address, vk, request_ts) {
     const payload = {
         "address": address,
@@ -1294,6 +1323,7 @@ function init_xmr_node(cachetime, address, vk, request_ts) {
     });
 }
 
+// Pings Monero node for transaction updates
 function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
     if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         const api_name = "mymonero api",
@@ -1372,12 +1402,14 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
     forceclosesocket();
 }
 
+// Initiates Arbitrum scanning
 function arbi_scan(address, request_ts) {
     glob_pinging["arbi" + address] = setInterval(function() {
         ping_arbiscan(address, request_ts);
     }, 7000);
 }
 
+// Pings Arbiscan for transaction updates
 function ping_arbiscan(address, request_ts) {
     if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         const apikeytoken = get_arbiscan_apikey();
@@ -1422,12 +1454,14 @@ function ping_arbiscan(address, request_ts) {
     forceclosesocket();
 }
 
+// Initiates BNB Smart Chain scanning
 function bnb_scan(address, request_ts, ccsymbol) {
     glob_pinging["bnb" + address] = setInterval(function() {
         ping_bnb(address, request_ts, ccsymbol);
     }, 7000);
 }
 
+// Pings BNB Smart Chain for transaction updates
 function ping_bnb(address, request_ts, ccsymbol) {
     if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         api_proxy({
@@ -1468,12 +1502,14 @@ function ping_bnb(address, request_ts, ccsymbol) {
     forceclosesocket();
 }
 
+// Initiates Nimiq scanning
 function nimiq_scan(address, request_ts) {
     glob_pinging[address] = setInterval(function() {
         ping_nimiq(address, request_ts);
     }, 5000);
 }
 
+// Pings Nimiq network for transaction updates
 function ping_nimiq(address, request_ts) {
     if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         api_proxy({
@@ -1518,12 +1554,14 @@ function ping_nimiq(address, request_ts) {
     forceclosesocket();
 }
 
+// Initiates Dash.org scanning
 function dashorg_scan(socket_node, address, request_ts) {
     glob_pinging[address] = setInterval(function() {
         ping_dashorg(socket_node, address, request_ts);
     }, 5000);
 }
 
+// Pings Dash.org for transaction updates
 function ping_dashorg(socket_node, address, request_ts) {
     if (glob_paymentpopup.hasClass("active")) { // only when request is visible
         api_proxy({
@@ -1571,6 +1609,7 @@ function ping_dashorg(socket_node, address, request_ts) {
     forceclosesocket();
 }
 
+// Handles reconnection when multiple transactions are detected
 function rconnect(tid) {
     glob_paymentdialogbox.removeClass("transacting");
     const bttn = (tid) ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + tid + "'>Reconnect</span></div></p>" : "",

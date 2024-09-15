@@ -33,6 +33,7 @@ $(document).ready(function() {
 
 // ** Google api **
 
+// Initializes access based on the provided access key or global password
 function init_access(ak) {
     if (ak) {
         fetch_creds(ak);
@@ -48,6 +49,7 @@ function init_access(ak) {
     }
 }
 
+// Handles token expiration and refreshes access if necessary
 function t_expired(expired, callback) {
     if (glob_hostlocation == "local") {
         return
@@ -63,6 +65,7 @@ function t_expired(expired, callback) {
     fetch_access(lnurl_decode_c(expired), callback);
 }
 
+// Fetches credentials using the provided access key
 function fetch_creds(k) {
     if (k) {
         api_proxy({
@@ -122,6 +125,7 @@ function fetch_creds(k) {
     }
 }
 
+// Fetches a new access token using the provided refresh token
 function fetch_access(rt, callback) {
     if (rt) {
         api_proxy({
@@ -168,6 +172,7 @@ function fetch_access(rt, callback) {
     }
 }
 
+// Handles callbacks after refreshing access token
 function refcb(cb) {
     glob_html.addClass("gdauth");
     if (cb) {
@@ -184,6 +189,7 @@ function refcb(cb) {
     }
 }
 
+// Retrieves the local access token object
 function lca_obj() {
     const bdat = br_get_local("dat", true);
     if (bdat) {
@@ -192,6 +198,7 @@ function lca_obj() {
     return false;
 }
 
+// Retrieves the local refresh token object
 function rt_obj() {
     const rtdat = br_get_local("rt", true);
     if (rtdat) {
@@ -200,6 +207,7 @@ function rt_obj() {
     return false;
 }
 
+// Initializes the login dialog based on the provided parameters
 function init_login_dialog(p) {
     if (glob_hostlocation == "local") {
         notify(translate("ganot"));
@@ -219,6 +227,7 @@ function init_login_dialog(p) {
     }
 }
 
+// Delays the OAuth popup with an optional abort parameter
 function oauth_pop_delay(ab) {
     canceldialog();
     const timeout = setTimeout(function() {
@@ -228,6 +237,7 @@ function oauth_pop_delay(ab) {
     });
 }
 
+// Displays the OAuth popup dialog for Google Drive authentication
 function oauth_pop(ab) {
     const cbx = (ab) ? render_html([{
             "div": {
@@ -291,12 +301,14 @@ function oauth_pop(ab) {
     popdialog(content, "triggersubmit");
 }
 
+// Sets up event listener for Google Drive login trigger
 function gd_login_trigger() {
     $(document).on("click", "#oauth_onload", function() {
         g_login();
     })
 }
 
+// Handles submission of Google Drive backup dialog
 function submit_gdbu_dialog() {
     $(document).on("click", "#gdbu_dialog input.submit", function(e) {
         e.preventDefault();
@@ -311,6 +323,7 @@ function submit_gdbu_dialog() {
     })
 }
 
+// Initiates Google Drive login process
 function g_login() {
     if (glob_hostlocation == "local") {
         notify(translate("ganot"));
@@ -333,6 +346,7 @@ function g_login() {
     glob_w_loc.href = login_uri;
 }
 
+// Performs callbacks after successful Google Drive login
 function gdlogin_callbacks(close) {
     glob_html.addClass("gdauth");
     notify(translate("gdsignedin"));
@@ -343,6 +357,7 @@ function gdlogin_callbacks(close) {
     }
 }
 
+// Adjusts the switch panel after Google Drive login
 function adjust_sp() {
     const switch_panel = $("#popup.showpu .switchpanel");
     if (switch_panel.length) {
@@ -357,6 +372,7 @@ function adjust_sp() {
     }
 }
 
+// Initiates Google Drive logout process
 function g_logout() {
     const result = confirm(translate("stopgdalert"));
     if (result === true) {
@@ -365,6 +381,7 @@ function g_logout() {
     }
 }
 
+// Activates Google Drive authentication
 function activate() {
     const bdat = lca_obj();
     if (bdat) {
@@ -373,6 +390,7 @@ function activate() {
     }
 }
 
+// Deactivates Google Drive authentication
 function deactivate() {
     const bdat = lca_obj();
     if (bdat) {
@@ -381,6 +399,7 @@ function deactivate() {
     }
 }
 
+// Performs callbacks after Google Drive logout
 function gdlogout_callbacks() {
     glob_html.removeClass("gdauth");
     notify(translate("gdsignedout"));
@@ -394,6 +413,7 @@ function gdlogout_callbacks() {
     canceldialog();
 }
 
+// Sets up event listener for Drive Backup trigger
 function Drive_Backup_trigger() {
     $(document).on("click", "#gdtrigger .switchpanel", function() {
         const p = GD_pass();
@@ -405,6 +425,7 @@ function Drive_Backup_trigger() {
     })
 }
 
+// Updates app data in Google Drive
 function updateappdata(p) {
     const gd_timer = br_get_session("gd_timer"); // prevent Ddos
     if (gd_timer) {
@@ -462,6 +483,7 @@ function updateappdata(p) {
     }
 }
 
+// Creates a new file in Google Drive with the provided token
 function createfile(token) {
     const jt = GD_pass(),
         jtp = jt.pass,
@@ -500,12 +522,14 @@ function createfile(token) {
     }
 }
 
+// Sets up event listener for listing app data
 function lad_trigger() {
     $(document).on("click", "#listappdata .switchpanel", function() {
         listappdata();
     })
 }
 
+// Lists app data from Google Drive
 function listappdata() {
     const p = GD_pass();
     if (p.pass) {
@@ -581,6 +605,7 @@ function listappdata() {
     init_login_dialog(p);
 }
 
+// Sets up event listener for deleting a file
 function deletefiletrigger() {
     $(document).on("click", ".purge_bu", function() {
         const p = GD_pass();
@@ -599,6 +624,7 @@ function deletefiletrigger() {
     })
 }
 
+// Deletes a file from Google Drive
 function deletefile(fileId, thislist, pass) {
     api_proxy({
         "api_url": glob_drivepath + "/drive/v3/files/" + fileId,
@@ -625,6 +651,7 @@ function deletefile(fileId, thislist, pass) {
     });
 }
 
+// Retrieves and processes Google Drive authentication information
 function GD_pass() {
     const jt = {
             "token": false,

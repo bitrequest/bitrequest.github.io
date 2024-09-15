@@ -33,11 +33,12 @@ const glob_test_phrase = "army van defense carry jealous true garbage claim echo
     };
 let glob_test_derive = true,
     glob_phrasearray,
-    glob_has_bigint = false,
+    glob_has_bigint = hasbigint(),
     glob_phraseverified;
 
 $(document).ready(function() {
-    hasbigint();
+    console.log(glob_has_bigint);
+    //hasbigint
     //istrial
     //bipv_pass
     test_bip39();
@@ -141,16 +142,17 @@ $(document).ready(function() {
     phrase_showxp();
 });
 
+// Checks if BigInt is supported in the current environment
 function hasbigint() {
     try {
-        if (typeof BigInt("1") == "bigint") {
-            glob_has_bigint = true;
-        }
-    } catch (err) {
-        console.log(err.message);
+        BigInt("1");
+        return true;
+    } catch {
+        return false;
     }
 }
 
+// Determines if the current session is a trial based on a timestamp
 function istrial() {
     const trialp = br_get_local("tp");
     if (trialp) {
@@ -164,6 +166,7 @@ function istrial() {
 
 // Reminder to write down secret phrase
 
+// Checks BIP (Bitcoin Improvement Proposal) validation status
 function bipv_pass() {
     if (glob_hasbip === true) {
         if (glob_bipv === true) {
@@ -193,6 +196,7 @@ function bipv_pass() {
 
 // dependencies check
 
+// Tests BIP39 implementation and related functionalities
 function test_bip39() {
     if (crypto === undefined) { // test for window.crypto
         bip39_fail();
@@ -248,10 +252,12 @@ function test_bip39() {
     }
 }
 
+// Handles BIP39 failure by adding a CSS class
 function bip39_fail() {
     glob_body.addClass("nobip");
 }
 
+// Handles derivation failure for specified cryptocurrencies
 function derive_fail(arr) {
     setTimeout(function() {
         $.each(arr, function(i, val) {
@@ -260,6 +266,7 @@ function derive_fail(arr) {
     }, 500)
 }
 
+// Handles xpub derivation failure for specified cryptocurrencies
 function derive_xpub_fail(arr) {
     setTimeout(function() {
         $.each(arr, function(i, val) {
@@ -270,6 +277,7 @@ function derive_xpub_fail(arr) {
 
 // test derivations
 
+// Tests derivation process for Bitcoin
 function test_derivation() {
     const currency = "bitcoin",
         test_rootkey = get_rootkey(glob_expected_seed),
@@ -287,6 +295,7 @@ function test_derivation() {
     return false;
 }
 
+// Checks Bech32 address derivation
 function bech32_check() {
     const bip84_pub = "03bb4a626f63436a64d7cf1e441713cc964c0d53289a5b17acb1b9c262be57cb17",
         bip84_bech32 = pub_to_address_bech32("bc", bip84_pub);
@@ -296,6 +305,7 @@ function bech32_check() {
     return false;
 }
 
+// Checks Bitcoin Cash cashaddr derivation
 function cashaddr_check() {
     const bch_legacy = "1AVPurYZinnctgGPiXziwU6PuyZKX5rYZU",
         bch_cashaddr = pub_to_cashaddr(bch_legacy);
@@ -305,8 +315,9 @@ function cashaddr_check() {
     return false;
 }
 
+// Checks Nano address derivation
 function nano_check() {
-    const expected_nano_address = "nano_1mbtirc4x3kixfy5wufxaqakd3gbojpn6gpmk6kjiyngnjwgy6yty3txgztq",
+    const expected_nano_address = "nano_1mbtirc4x3kixfy5wufxaqakd3gbojpn6gpmk6kixnjwgy6yty3txgztq",
         xnano_address = NanocurrencyWeb.wallet.accounts(glob_expected_seed, 0, 0)[0].address;
     if (expected_nano_address == xnano_address) {
         return true;
@@ -314,6 +325,7 @@ function nano_check() {
     return false;
 }
 
+// Checks Monero (XMR) address derivation
 function xmr_check() { // https://coinomi.github.io/tools/bip39/
     const expected_xmr_address = "477h3C6E6C4VLMR36bQL3yLcA8Aq3jts1AHLzm5QXipDdXVCYPnKEvUKykh2GTYqkkeQoTEhWpzvVQ4rMgLM1YpeD6qdHbS",
         ssk = get_ssk(glob_expected_seed, true),
@@ -324,6 +336,7 @@ function xmr_check() { // https://coinomi.github.io/tools/bip39/
     return false;
 }
 
+// Checks extended public key (xpub) derivation for Bitcoin
 function xpub_check() {
     const currency = "bitcoin",
         xpub_keycc = key_cc_xpub("xpub6Cy7dUR4ZKF22HEuVq7epRgRsoXfL2MK1RE81CSvp1ZySySoYGXk5PUY9y9Cc5ExpnSwXyimQAsVhyyPDNDrfj4xjDsKZJNYgsHXoEPNCYQ"),
@@ -344,6 +357,7 @@ function xpub_check() {
     return false;
 }
 
+// Checks Ethereum extended public key (xpub) derivation
 function eth_xpub_check() {
     const eth_pub = "03c026c4b041059c84a187252682b6f80cbbe64eb81497111ab6914b050a8936fd",
         eth_address = pub_to_eth_address(eth_pub);
@@ -353,8 +367,9 @@ function eth_xpub_check() {
     return false;
 }
 
-// Check derivationsn
+// Check derivations
 
+// Checks derivation method for a given currency
 function check_derivations(currency) {
     if (glob_test_derive === true && glob_c_derive[currency]) {
         const activepub = active_xpub(currency);
@@ -368,6 +383,7 @@ function check_derivations(currency) {
     return false;
 }
 
+// Checks if there's an active extended public key for a given currency
 function active_xpub(currency) {
     const haspub = has_xpub(currency)
     if (haspub) {
@@ -378,6 +394,7 @@ function active_xpub(currency) {
     return false;
 }
 
+// Checks if a currency has an extended public key
 function has_xpub(currency) {
     const ispub = is_xpub(currency);
     if (ispub) {
@@ -388,6 +405,7 @@ function has_xpub(currency) {
     return false;
 }
 
+// Checks if a currency is using an extended public key
 function is_xpub(currency) {
     if (cxpub(currency)) {
         const xpubli_dat = cs_node(currency, "Xpub", true);
@@ -398,6 +416,7 @@ function is_xpub(currency) {
     return false;
 }
 
+// Checks if a currency can use extended public keys
 function cxpub(currency) {
     if (glob_can_xpub[currency]) {
         return true;
@@ -405,6 +424,7 @@ function cxpub(currency) {
     return false;
 }
 
+// Retrieves BIP32 data for a given currency
 function getbip32dat(currency) {
     const xpub_dat = cs_node(currency, "Xpub", true);
     if (xpub_dat && xpub_dat.active === true) {
@@ -420,6 +440,7 @@ function getbip32dat(currency) {
     return false;
 }
 
+// Checks if a currency supports BIP32
 function hasbip32(currency) {
     const coindata = getcoinconfig(currency);
     if (coindata) {
@@ -438,6 +459,7 @@ function hasbip32(currency) {
 
 // Bip 39 seed generation
 
+// Handles the creation of a new seed
 function make_seed() {
     $(document).on("click", "#option_makeseed", function() {
         const currency = $(this).attr("data-currency");
@@ -453,6 +475,7 @@ function make_seed() {
     })
 }
 
+// Handles the restoration of a seed
 function restore_seed() {
     $(document).on("click", "#rest_seed, .applist.pobox li.seedu .address .srcicon", function() {
         if (is_viewonly() === true) {
@@ -479,6 +502,7 @@ function restore_seed() {
     })
 }
 
+// Verifies the restored seed
 function restore_seed_verify() {
     $(document).on("click", "#restore_seed", function() {
         if (glob_hasbip === true) {
@@ -507,10 +531,12 @@ function restore_seed_verify() {
     })
 }
 
+// Generates a seed ID from the given words
 function get_seedid(words) {
     return hmacsha(btoa(JSON.stringify(words)), "sha256").slice(0, 8);
 }
 
+// Manages BIP32 operations
 function manage_bip32(dat) {
     if (glob_hasbip === true) {
         bip39(dat);
@@ -578,6 +604,7 @@ function manage_bip32(dat) {
     }
 }
 
+// Handles the submission of the disclaimer dialog
 function submit_disclaimer() {
     $(document).on("click", "#disclaimer_dialog input.submit", function(e) {
         e.preventDefault();
@@ -594,6 +621,7 @@ function submit_disclaimer() {
     })
 }
 
+// Initializes the BIP39 seed generation process
 function bip39(dat) {
     glob_phraseverified = false;
     const data = br_dobj(dat, true),
@@ -676,18 +704,21 @@ function bip39(dat) {
 
 // Seed panel nav
 
+// Handles the "Got it" button click in the seed generation process
 function got_it() {
     $(document).on("click", "#cfbu1", function() {
         seed_nav(2);
     })
 }
 
+// Handles the back button click from step 2 to step 1
 function seed_back1() {
     $(document).on("click", "#seed_steps #seed_step2 .ss_header .icon-arrow-left2", function() {
         seed_nav(1);
     })
 }
 
+// Handles the back button click from step 3 to step 2
 function seed_back2() {
     $(document).on("click", "#seed_steps #seed_step3 .ss_header .icon-arrow-left2, #seed_steps #seed_step3 #toseed", function() {
         seed_nav(2);
@@ -695,18 +726,20 @@ function seed_back2() {
     })
 }
 
+// Navigates to a specific step in the seed generation process
 function seed_nav(index) {
     $("#seed_steps").attr("class", "panel" + index);
 }
 
+// Retrieves the phrase object from local storage
 function ls_phrase_obj() {
     if (glob_bipobj) {
         return ls_phrase_obj_parsed(glob_bipobj);
     }
     return false;
-
 }
 
+// Parses the phrase object from local storage
 function ls_phrase_obj_parsed(obj) {
     const pdat_enc = obj.datenc;
     let phrasedat = obj.dat;
@@ -727,6 +760,7 @@ function ls_phrase_obj_parsed(obj) {
     return false;
 }
 
+// Decrypts the seed using a PIN
 function seed_decrypt(pin) {
     if (glob_bipobj) {
         const pdat_enc = glob_bipobj.datenc;
@@ -745,6 +779,7 @@ function seed_decrypt(pin) {
     return false;
 }
 
+// Handles the continuation of the backup process
 function backup_continue() {
     $(document).on("click", "#cfbu2", function() {
         glob_phrasearray = null,
@@ -763,6 +798,7 @@ function backup_continue() {
     })
 }
 
+// Checks if the provided phrase is valid
 function check_phrase(phrase) {
     const cleanphrase = get_phrase(),
         words = phrase.split(" "),
@@ -785,10 +821,12 @@ function check_phrase(phrase) {
     return translate("mustbe12characters");
 }
 
+// Retrieves the cleaned phrase from the DOM
 function get_phrase() {
     return cleanstring($("#bip39phrase").text());
 }
 
+// Validates a BIP39 mnemonic phrase
 function checkmnemonic(mnemonic) {
     const b = mnemonicToBinaryString(mnemonic);
     if (b === null) {
@@ -805,6 +843,7 @@ function checkmnemonic(mnemonic) {
     return h == nh;
 }
 
+// Identifies words not in the BIP39 wordlist
 function missing_words(words) {
     let missing;
     $.each(words, function(i, word) {
@@ -816,6 +855,7 @@ function missing_words(words) {
     return missing;
 }
 
+// Prepares a phrase verification UI
 function verify_phrase(words, count) {
     const wordindex = [];
     $.each(words, function(i, word) {
@@ -838,6 +878,7 @@ function verify_phrase(words, count) {
     });
 }
 
+// Shuffles an array (Fisher-Yates algorithm)
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         let j = Math.floor(Math.random() * (i + 1)),
@@ -848,6 +889,7 @@ function shuffleArray(array) {
     return array;
 }
 
+// Handles word verification input
 function verify_words() {
     $(document).on("input", "#seed_verify_box input", function(e) {
         const thisinput = $(this),
@@ -902,6 +944,7 @@ function verify_words() {
     });
 }
 
+// Updates UI after seed changes
 function move_seed_cb() {
     $.each(glob_br_config.bitrequest_coin_data, function(i, coinconfig) {
         const currency = coinconfig.currency,
@@ -925,12 +968,14 @@ function move_seed_cb() {
     });
 }
 
+// Handles the "Continue" button click in seed setup
 function continue_seed() {
     $(document).on("click", "#continue_seed", function() {
         finish_seed();
     })
 }
 
+// Handles skipping the verification step
 function skip_verify() {
     $(document).on("click", "#cfbu3", function() {
         const content = "<h2><span class='icon-warning' style='color:#B33A3A'></span>" + translate("continueatownrisk") + "</h2><p><strong>" + translate("ifyouloseyourdevice") + "</strong></p>";
@@ -938,6 +983,7 @@ function skip_verify() {
     })
 }
 
+// Finalizes the seed setup process
 function finish_seed() {
     canceldialog();
     if (haspin(true) === true) {
@@ -951,6 +997,7 @@ function finish_seed() {
     showoptions(content, "pin");
 }
 
+// Callback function after seed setup is complete
 function seed_callback() {
     if (glob_hasbip === true) {} else {
         const seed_object = {},
@@ -1001,6 +1048,7 @@ function seed_callback() {
     hide_seed_panel();
 }
 
+// Deactivates all extended public keys (xpubs) for all supported cryptocurrencies
 function deactivate_xpubs() {
     $.each(glob_br_config.bitrequest_coin_data, function(i, coinconfig) {
         const bip32 = coinconfig.settings.Xpub;
@@ -1017,6 +1065,7 @@ function deactivate_xpubs() {
     });
 }
 
+// Encrypts seed data using the user's PIN
 function enc_s(dat) {
     if (glob_hasbip && glob_test_derive) {
         const pn = get_setting("pinsettings", "pinhash");
@@ -1048,6 +1097,7 @@ function enc_s(dat) {
     }
 }
 
+// Checks if encrypted data exists
 function has_datenc() {
     if (glob_hasbip === true) {
         if (glob_bipobj.datenc) {
@@ -1057,6 +1107,7 @@ function has_datenc() {
     return false;
 }
 
+// Converts a PIN to a key for encryption
 function ptokey(p, sid) {
     const pr = p.toString().split(""),
         newarr = [];
@@ -1077,17 +1128,20 @@ function ptokey(p, sid) {
 
 // Test triggers
 
+// Gets the latest index from an address list
 function get_latest_index(alist) {
     const index = dom_to_array(alist, "derive_index");
     return Math.max.apply(Math, index);
 }
 
+// Sets up event listener for adding a new address
 function derive_addone_trigger() {
     $(document).on("click", ".addonexx", function() {
         derive_addone($(this).attr("data-currency"), true);
     })
 }
 
+// Derives and adds a new address for a given currency
 function derive_addone(currency, extra) {
     const dd = derive_data(currency, extra);
     if (dd) {
@@ -1097,6 +1151,7 @@ function derive_addone(currency, extra) {
     return false;
 }
 
+// Retrieves key and chaincode from the seed phrase
 function key_cc() {
     const seedobject = ls_phrase_obj();
     if (seedobject) {
@@ -1116,6 +1171,7 @@ function key_cc() {
     return false;
 }
 
+// Retrieves key and chaincode from an extended public key (xpub)
 function key_cc_xpub(xpub) {
     const ext_dec = b58check_decode(xpub),
         extend_object = objectify_extended(ext_dec);
@@ -1126,10 +1182,12 @@ function key_cc_xpub(xpub) {
     }
 }
 
+// Generates a root key from a seed
 function get_rootkey(seed) {
     return hmac_bits(seed, tobits("Bitcoin seed"), "hex");
 }
 
+// Initializes derivation for all supported currencies
 function derive_all_init(phrase, seedid, extra) {
     derive_all(phrase, seedid, extra);
     const acountname = $("#eninput").val();
@@ -1139,6 +1197,7 @@ function derive_all_init(phrase, seedid, extra) {
     glob_body.removeClass("showstartpage");
 }
 
+// Derives addresses for all supported currencies
 function derive_all(phrase, seedid, extra) {
     const seed = toseed(phrase),
         rootkey = get_rootkey(seed),
@@ -1163,6 +1222,7 @@ function derive_all(phrase, seedid, extra) {
     });
 }
 
+// Adds a derived address to the UI and saves it
 function derive_add_address(currency, ad) {
     appendaddress(currency, ad);
     saveaddresses(currency, true);
@@ -1172,6 +1232,7 @@ function derive_add_address(currency, ad) {
     homeli.removeClass("hide"); // each
 }
 
+// Retrieves derivation data for a given currency
 function derive_data(currency, extra) {
     if (glob_test_derive === true && glob_c_derive[currency]) {
         const coindat = getcoindata(currency),
@@ -1201,6 +1262,7 @@ function derive_data(currency, extra) {
     return false;
 }
 
+// Derives a new address object based on the provided parameters
 function derive_obj(source, keycc, coindat, bip32, add) {
     const seed = keycc.seed,
         seedid = keycc.seedid,
@@ -1261,10 +1323,12 @@ function derive_obj(source, keycc, coindat, bip32, add) {
     return false;
 }
 
+// Checks if there's a pending request for the given address data
 function ch_pending(dat) {
     return ($("#requestlist li[data-address='" + dat.address + "'][data-pending='scanning'][data-cmcid='" + dat.cmcid + "']").length > 0) ? true : false;
 }
 
+// Counts the number of unique elements in an array
 function get_uniques(arr) {
     const counts = {};
     for (let i = 0; i < arr.length; i++) {
@@ -1273,6 +1337,7 @@ function get_uniques(arr) {
     return Object.keys(counts).length;
 }
 
+// Handles the copying of the mnemonic phrase
 function copy_phrase() {
     $(document).on("click", "#copyphrase", function() {
         const phrase = get_phrase(),
@@ -1289,6 +1354,7 @@ function copy_phrase() {
     });
 }
 
+// Toggles the visibility of the mnemonic phrase
 function show_phrase() {
     $(document).on("click", "#showphrase, #phrase_cb.hidephrase #phraseblur", function() {
         const phrase_cb = $("#phrase_cb");
@@ -1310,10 +1376,12 @@ function show_phrase() {
     })
 }
 
+// Callback function to show the mnemonic phrase
 function show_phrase_callback() {
     $("#phrase_cb").addClass("showphrase").removeClass("hidephrase");
 }
 
+// Initiates the process of deleting the mnemonic phrase
 function delete_phrase_trigger() {
     $(document).on("click", "#deletephrase", function() {
         const content = "<h2 style='color:#B33A3A'><span class='icon-warning'></span>" + translate("deletingyoursecretphrase") + "</h2><p><strong>" + translate("continuewithbackup") + "</strong></p>";
@@ -1321,6 +1389,7 @@ function delete_phrase_trigger() {
     });
 }
 
+// Verifies the user's intent to delete the mnemonic phrase
 function delete_phrase_verify() {
     canceldialog();
     const phrase = get_phrase(),
@@ -1333,6 +1402,7 @@ function delete_phrase_verify() {
 
 // Bip 32 Key derivation
 
+// Creates an HMAC encryptor
 function hmac_encrypt(key) {
     const hasher = new sjcl.misc.hmac(key, sjcl.hash.sha512);
     this.encrypt = function() {
@@ -1340,11 +1410,13 @@ function hmac_encrypt(key) {
     };
 }
 
+// Converts a mnemonic phrase to a seed
 function toseed(mnemonic, passphrase) {
     const parsed = parse_seed(mnemonic, passphrase);
     return frombits(sjcl.misc.pbkdf2(parsed.mnemonic, parsed.passphrase, 2048, 512, hmac_encrypt));
 }
 
+// Parses a mnemonic phrase and passphrase for seed generation
 function parse_seed(mnemonic, passphrase1) {
     const passphrase2 = passphrase1 || "",
         mnemonicNormalized = cleanstring(mnemonic),
@@ -1356,6 +1428,7 @@ function parse_seed(mnemonic, passphrase1) {
     }
 }
 
+// Generates a new mnemonic phrase
 function newseed(numWords) {
     const strength = numWords / 3 * 32,
         buffer = uint_8Array(strength / 8),
@@ -1363,6 +1436,7 @@ function newseed(numWords) {
     return to_mnemonic(data);
 }
 
+// Converts a byte array to a mnemonic phrase
 function to_mnemonic(byteArray) {
     if (byteArray.length % 4 > 0) {
         throw "Data length in bits should be divisible by 32, but it is not (" + byteArray.length + " bytes = " + byteArray.length * 8 + " bits)."
@@ -1382,6 +1456,7 @@ function to_mnemonic(byteArray) {
     return joinwords(result);
 }
 
+// Pads a string with leading zeros
 function zfill(source1, length) {
     let source = source1.toString();
     while (source.length < length) {
@@ -1392,6 +1467,7 @@ function zfill(source1, length) {
 
 // bip32 Derivation
 
+// Converts an extended key to an object with its components
 function objectify_extended(extended) {
     var version = extended.slice(0, 8),
         remain = extended.slice(8),
@@ -1416,6 +1492,7 @@ function objectify_extended(extended) {
     }
 }
 
+// Performs hierarchical deterministic key derivation based on the provided data
 function derive_x(dx_dat, from_x_priv) {
     const dpath = dx_dat.dpath,
         derive_array = dpath.split("/"),
@@ -1465,6 +1542,7 @@ function derive_x(dx_dat, from_x_priv) {
     return keydat;
 }
 
+// Performs child key derivation for a single step in the derivation path
 function ckd(ckey, cc, index, xpub, hard) {
     const ckd = {},
         parent_pub = (xpub === true) ? ckey : secp.Point.fromPrivateKey(ckey).toHex(true),
@@ -1486,6 +1564,7 @@ function ckd(ckey, cc, index, xpub, hard) {
     return ckd;
 }
 
+// Generates an array of key pairs for a range of indices
 function keypair_array(seed, arr, startindex, d_path, bip32dat, key, chaincode, currency, versionbytes) {
     const derive_array = [];
     $.each(arr, function(i) {
@@ -1504,6 +1583,7 @@ function keypair_array(seed, arr, startindex, d_path, bip32dat, key, chaincode, 
     return derive_array;
 }
 
+// Generates extended keys (private and public) for a given key object
 function ext_keys(eo, currency) {
     const eko = {},
         ext_payload = b58c_x_payload(eo, currency),
@@ -1527,6 +1607,7 @@ function ext_keys(eo, currency) {
     return eko;
 }
 
+// Creates an extended public key object for a given currency and path
 function xpub_obj(currency, rootpath, cc, key) {
     const dx_dat = {
             "dpath": rootpath.slice(0, -3),
@@ -1544,6 +1625,7 @@ function xpub_obj(currency, rootpath, cc, key) {
     }
 }
 
+// Generates the payload for Base58Check encoding of extended keys
 function b58c_x_payload(eo, currency) {
     const xpubdat = getbip32dat(currency);
     if (!xpubdat) {
@@ -1565,6 +1647,7 @@ function b58c_x_payload(eo, currency) {
     }
 }
 
+// Formats keys for different cryptocurrencies based on the derived key object
 function format_keys(seed, key_object, bip32, index, coin) {
     const ko = {};
     if (coin == "nano") {
@@ -1642,6 +1725,7 @@ function format_keys(seed, key_object, bip32, index, coin) {
     return ko;
 }
 
+// Retrieves the extended public key prefix for a given currency
 function xpub_prefix(currency) {
     const test_rootkey = get_rootkey(glob_expected_seed),
         dx_dat = {
@@ -1656,12 +1740,14 @@ function xpub_prefix(currency) {
 
 // Phrase info
 
+// Sets up event listener for displaying phrase information
 function phrase_info() {
     $(document).on("click", "#phrase_info", function() {
         phrase_info_pu(null);
     })
 }
 
+// Generates and displays detailed information about the mnemonic phrase
 function phrase_info_pu(coin) {
     const phrase_obj = ls_phrase_obj(),
         savedseed = (glob_hasbip === true && phrase_obj) ? phrase_obj.pob.join(" ") : false,
@@ -1800,6 +1886,7 @@ function phrase_info_pu(coin) {
     });
 }
 
+// Displays a list of compatible wallets for a given coin
 function compatible_wallets(coin) {
     const content = $("<div id='ad_info_wrap' class='' data-class='pd_" + coin + "'><h2><span class='icon-warning' style='color:#B33A3A'/>" + translate("cannotsendfunds") + "</span></h2><ul>\
             <li class='noline'><strong style='color:#6a6a6a'>" + translate("importtosend") + "</strong></li>\
@@ -1849,10 +1936,12 @@ function compatible_wallets(coin) {
     });
 }
 
+// Generates the URL for a wallet icon based on the wallet name
 function w_icon(wname) {
     return glob_aws_bucket + "img_icons_wallet-icons_" + wname + ".png";
 }
 
+// Sets up event listener for displaying coin-specific information when clicking on coin icons
 function phrase_coin_info() {
     $(document).on("click", "#pi_icons img", function() {
         $("#ad_info_wrap").attr("data-class", $(this).attr("data-class"));
@@ -1860,6 +1949,7 @@ function phrase_coin_info() {
     })
 }
 
+// Toggles the visibility of derivation paths
 function toggle_dpaths() {
     $(document).on("click", "#ad_info_wrap .d_path_header", function() {
         const d_body = $(".d_path_body");
@@ -1873,6 +1963,7 @@ function toggle_dpaths() {
     })
 }
 
+// Shows coin-specific information based on the selected coin
 function pi_show() {
     const mclass = $("#ad_info_wrap").attr("data-class");
     $(".pd_hide").hide();
@@ -1881,18 +1972,21 @@ function pi_show() {
     $("#pi_icons img[data-class='" + mclass + "']").addClass("current");
 }
 
+// Sets up event listener for deriving next set of addresses
 function test_derive_next() {
     $(document).on("click", ".td_next", function() {
         test_derive_function($(this));
     })
 }
 
+// Sets up event listener for deriving previous set of addresses
 function test_derive_prev() {
     $(document).on("click", ".td_prev", function() {
         test_derive_function($(this), true);
     })
 }
 
+// Performs address derivation for next or previous set of addresses
 function test_derive_function(thisnode, prev) {
     const kd = $("#ad_info_wrap").data(),
         dp_node = thisnode.closest(".d_path"),
@@ -1929,6 +2023,7 @@ function test_derive_function(thisnode, prev) {
     }
 }
 
+// Toggles the visibility of additional information in the phrase info dialog
 function phrase_moreinfo() {
     $(document).on("click", "#bip_mi", function() {
         const thisbttn = $(this),
@@ -1946,6 +2041,7 @@ function phrase_moreinfo() {
     })
 }
 
+// Toggles the visibility of extended public key (xpub) information
 function phrase_showxp() {
     $(document).on("click", ".show_xpub", function() {
         const thisbttn = $(this),

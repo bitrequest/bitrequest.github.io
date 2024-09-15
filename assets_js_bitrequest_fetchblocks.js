@@ -64,6 +64,8 @@ $(document).ready(function() {
 
 // ** Lightning RPC **
 
+// This function handles the fetching and processing of Lightning Network payment data.
+// It performs various API calls to check payment status, handle invoices, and update transaction information.
 function lightning_fetch(rd, api_data, rdo) {
     const api_name = api_data.name,
         thislist = rdo.thislist,
@@ -269,6 +271,8 @@ function lightning_fetch(rd, api_data, rdo) {
 
 // ** MyMonero API **
 
+// This function handles fetching and processing Monero transaction data.
+// It uses different APIs based on the pending status and performs various checks and data manipulations.
 function monero_fetch(rd, api_data, rdo) {
     if (rdo.pending == "polling") {
         blockchair_xmr_poll(rd, api_data, rdo); // use blockchair api for tx lookup
@@ -387,6 +391,8 @@ function monero_fetch(rd, api_data, rdo) {
     }
 }
 
+// This function matches Monero payment IDs.
+// It checks if the provided payment IDs match based on certain conditions.
 function match_xmr_pid(xmria, xmrpid, xmr_pid) {
     if (xmria) {
         if (xmrpid == xmr_pid) {
@@ -402,6 +408,8 @@ function match_xmr_pid(xmria, xmrpid, xmr_pid) {
 
 // ** MyMonero API **
 
+// This function polls the Blockchair API for Monero transaction data.
+// It retrieves and processes transaction information based on the provided parameters.
 function blockchair_xmr_poll(rd, api_data, rdo) {
     const vk = rd.viewkey;
     if (vk) {
@@ -454,6 +462,8 @@ function blockchair_xmr_poll(rd, api_data, rdo) {
 
 // ** blockcypher API **
 
+// This function fetches and processes transaction data using the BlockCypher API.
+// It handles both scanning for incoming transactions and polling for specific transaction details.
 function blockcypher_fetch(rd, api_data, rdo) {
     const transactionlist = rdo.transactionlist;
     let counter = 0,
@@ -551,6 +561,8 @@ function blockcypher_fetch(rd, api_data, rdo) {
 
 // ** ethplorer / binplorer API **
 
+// This function fetches and processes transaction data using the Ethplorer or Binplorer API.
+// It handles both scanning for incoming transactions and polling for specific transaction details for Ethereum and Binance Smart Chain.
 function ethplorer_fetch(rd, api_data, rdo) {
     const api_name = api_data.name,
         thislist = rdo.thislist,
@@ -663,6 +675,9 @@ function ethplorer_fetch(rd, api_data, rdo) {
 
 // ** arbiscan API **
 
+// This function fetches and processes transaction data from the Arbiscan API for Arbitrum network.
+// It handles both scanning for incoming transactions and polling for specific transaction details,
+// supporting both Ethereum and ERC20 token transactions on the Arbitrum network.
 function arbiscan_fetch(rd, api_data, rdo) {
     const api_name = api_data.name,
         thislist = rdo.thislist,
@@ -846,6 +861,10 @@ function arbiscan_fetch(rd, api_data, rdo) {
 
 // ** blockchair API **
 
+// This function fetches and processes transaction data from the Blockchair API.
+// It handles both scanning for incoming transactions and polling for specific transaction details.
+// The function supports various cryptocurrencies, including Ethereum and ERC20 tokens,
+// and adapts its behavior based on the type of transaction and the API being used.
 function blockchair_fetch(rd, api_data, rdo) {
     const api_name = api_data.name;
     if (api_name == "arbiscan" || api_name == "alchemy" || api_name == "binplorer") { // no layer 2's for now
@@ -1042,6 +1061,9 @@ function blockchair_fetch(rd, api_data, rdo) {
 
 // ** nimiq / mopsus API **
 
+// This function fetches and processes transaction data for Nimiq cryptocurrency.
+// It handles both scanning for incoming transactions and polling for specific transaction details.
+// The function supports multiple APIs (nimiq.watch and mopsus.com) and adapts its behavior based on the API being used.
 function nimiq_fetch(rd, api_data, rdo) {
     const api_name = api_data.name,
         transactionlist = rdo.transactionlist,
@@ -1200,6 +1222,10 @@ function nimiq_fetch(rd, api_data, rdo) {
 
 // ** kaspa API **
 
+// This function fetches and processes transaction data for the Kaspa cryptocurrency.
+// It handles both scanning for incoming transactions and polling for specific transaction details.
+// The function supports multiple APIs (kaspa.org and kas.fyi) and adapts its behavior based on the API being used.
+// It also manages the retrieval of the current bluescore for transaction confirmation calculations.
 function kaspa_fetch(rd, api_data, rdo) {
     const api_name = api_data.name,
         transactionlist = rdo.transactionlist,
@@ -1385,6 +1411,8 @@ function kaspa_fetch(rd, api_data, rdo) {
 
 // ** insight.dash.org **
 
+// This function fetches and processes transaction data for Dash cryptocurrency using the Insight API.
+// It handles both scanning for incoming transactions and polling for specific transaction details.
 function insight_fetch_dash(rd, api_data, rdo) {
     const transactionlist = rdo.transactionlist;
     let counter = 0,
@@ -1479,6 +1507,9 @@ function insight_fetch_dash(rd, api_data, rdo) {
 
 // ** mempool.space RPC **
 
+// This function interacts with the mempool.space API to fetch and process Bitcoin transaction data.
+// It handles both scanning for incoming transactions and polling for specific transaction details.
+// The function also retrieves the latest block height for confirmation calculations.
 function mempoolspace_rpc(rd, api_data, rdo, rpc) {
     const transactionlist = rdo.transactionlist,
         url = api_data.url,
@@ -1583,6 +1614,8 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc) {
 
 // ** infura RPC **
 
+// This function interacts with Infura or similar Ethereum RPC providers to fetch and process transaction data.
+// It handles both ERC20 and regular Ethereum transactions, retrieving block information and calculating confirmations.
 function infura_txd_rpc(rd, api_data, rdo) {
     const thislist = rdo.thislist,
         transactionlist = rdo.transactionlist,
@@ -1667,6 +1700,7 @@ function infura_txd_rpc(rd, api_data, rdo) {
     });
 }
 
+// This function extracts the result from a nested JSON response typically returned by Infura or similar services.
 function inf_result(r) {
     const ir1 = br_result(r);
     if (ir1) {
@@ -1678,10 +1712,12 @@ function inf_result(r) {
     return false;
 }
 
+// This function generates an error message for failed Ethereum RPC requests.
 function inf_err(set_url) {
     return "error fetching data from " + set_url;
 }
 
+// This function prepares the parameters for Ethereum RPC requests, supporting different node types (Infura, Arbitrum, custom).
 function eth_params(set_url, cachetime, method, params) {
     const payload = {
         "cachetime": cachetime,
@@ -1718,6 +1754,8 @@ function eth_params(set_url, cachetime, method, params) {
 
 // ** Nano RPC **
 
+// This function interacts with a Nano RPC node to fetch and process transaction data.
+// It handles both scanning for incoming transactions and polling for specific transaction details.
 function nano_rpc(rd, api_data, rdo) {
     const transactionlist = rdo.transactionlist,
         source = rdo.source;
@@ -1831,6 +1869,7 @@ function nano_rpc(rd, api_data, rdo) {
 
 // ** sort transactions by date **
 
+// This function sorts a list of transactions by date in descending order.
 function sort_by_date(func, list, rdo, rd) {
     return $(list).sort(function(a, b) {
         const txd1 = func(a, "sort"),
@@ -1839,7 +1878,7 @@ function sort_by_date(func, list, rdo, rd) {
     });
 }
 
-// Unify transactiondata
+// This function returns a default transaction data object with null or default values.
 function default_tx_data() {
     return {
         "ccval": null,
@@ -1853,10 +1892,9 @@ function default_tx_data() {
     };
 }
 
-// Collect transactiondata and return unified object
+// ** Unifications
 
-// blockchain.info
-
+// This function processes blockchain.info websocket data and returns a unified transaction object.
 function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) { // poll blockchain.info websocket data
     if (data) {
         try {
@@ -1890,8 +1928,7 @@ function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) {
     return default_tx_data();
 }
 
-// mempool.space
-
+// This function processes mempool.space websocket data and returns a unified transaction object.
 function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) { // poll mempool.space websocket data
     if (data) {
         try {
@@ -1925,6 +1962,7 @@ function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) { // po
     return default_tx_data();
 }
 
+// This function processes mempool.space API data for scanning or polling and returns a unified transaction object.
 function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, latestblock) { // scan/poll mempool.space api data
     if (data) {
         try {
@@ -1965,8 +2003,7 @@ function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, lates
     return default_tx_data();
 }
 
-// dogechain
-
+// This function processes dogechain websocket data and returns a unified transaction object.
 function dogechain_ws_data(data, setconfirmations, ccsymbol, address) { // poll blockchain.info websocket data
     if (data) {
         try {
@@ -2000,8 +2037,7 @@ function dogechain_ws_data(data, setconfirmations, ccsymbol, address) { // poll 
     return default_tx_data();
 }
 
-// blockcypher
-
+// This function processes blockcypher API data for scanning and returns a unified transaction object.
 function blockcypher_scan_data(data, setconfirmations, ccsymbol) { // scan
     if (data) {
         try {
@@ -2035,6 +2071,7 @@ function blockcypher_scan_data(data, setconfirmations, ccsymbol) { // scan
     return default_tx_data();
 }
 
+// This function processes Insight API data for scanning and returns a unified transaction object for Dash cryptocurrency.
 function insight_scan_data(data, setconfirmations, address) { // scan
     if (data) {
         try {
@@ -2078,6 +2115,7 @@ function insight_scan_data(data, setconfirmations, address) { // scan
     return default_tx_data();
 }
 
+// This function processes BlockCypher API data for polling and returns a unified transaction object.
 function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) { // poll
     if (data) {
         try {
@@ -2117,8 +2155,7 @@ function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) { // p
     return default_tx_data();
 }
 
-// blockchair
-
+// This function processes Blockchair API data for scanning/polling and returns a unified transaction object.
 function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestblock) { // scan/poll
     if (data) {
         try {
@@ -2162,6 +2199,7 @@ function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestb
     return default_tx_data();
 }
 
+// This function processes Blockchair API data for Ethereum transactions and returns a unified transaction object.
 function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan/poll
     if (data) {
         try {
@@ -2192,6 +2230,7 @@ function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latestblock)
     return default_tx_data();
 }
 
+// This function processes Blockchair API data for ERC20 token transactions and returns a unified transaction object.
 function blockchair_erc20_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
     if (data) {
         try {
@@ -2224,6 +2263,7 @@ function blockchair_erc20_scan_data(data, setconfirmations, ccsymbol, latestbloc
     return default_tx_data();
 }
 
+// This function processes Blockchair API data for polling ERC20 token transactions and returns a unified transaction object.
 function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latestblock) { // poll
     if (data) {
         try {
@@ -2255,6 +2295,7 @@ function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latestbloc
 
 // arbiscan
 
+// This function processes Arbiscan API data for ERC20 token transactions on Arbitrum and returns a unified transaction object.
 function arbiscan_scan_data(data, setconfirmations, ccsymbol) { // scan
     if (data) {
         try {
@@ -2284,6 +2325,7 @@ function arbiscan_scan_data(data, setconfirmations, ccsymbol) { // scan
     return default_tx_data();
 }
 
+// This function processes Arbiscan API data for Ethereum transactions on Arbitrum and returns a unified transaction object.
 function arbiscan_scan_data_eth(data, setconfirmations) { // scan
     if (data) {
         try {
@@ -2313,8 +2355,7 @@ function arbiscan_scan_data_eth(data, setconfirmations) { // scan
     return default_tx_data();
 }
 
-// ethplorer
-
+// This function processes Ethplorer API data for ERC20 token transactions and returns a unified transaction object.
 function ethplorer_scan_data(data, setconfirmations, ccsymbol, l2) { // scan
     if (data) {
         try {
@@ -2345,8 +2386,7 @@ function ethplorer_scan_data(data, setconfirmations, ccsymbol, l2) { // scan
     return default_tx_data();
 }
 
-// RPC templates
-
+// This function processes Nano RPC data for scanning or polling and returns a unified transaction object.
 function nano_scan_data(data, setconfirmations, ccsymbol, txhash) { // scan/poll
     if (data) {
         try {
@@ -2375,6 +2415,7 @@ function nano_scan_data(data, setconfirmations, ccsymbol, txhash) { // scan/poll
     return default_tx_data();
 }
 
+// This function processes Bitcoin RPC data for polling and returns a unified transaction object.
 function bitcoin_rpc_data(data, setconfirmations, ccsymbol, address) { // poll
     if (data) {
         try {
@@ -2410,6 +2451,7 @@ function bitcoin_rpc_data(data, setconfirmations, ccsymbol, address) { // poll
     return default_tx_data();
 }
 
+// This function processes Infura API data for Ethereum transactions and returns a unified transaction object.
 function infura_eth_poll_data(data, setconfirmations, ccsymbol) { // poll
     if (data) {
         try {
@@ -2435,6 +2477,7 @@ function infura_eth_poll_data(data, setconfirmations, ccsymbol) { // poll
     return default_tx_data();
 }
 
+// This function processes Infura API data for ERC20 token transactions and returns a unified transaction object.
 function infura_erc20_poll_data(data, setconfirmations, ccsymbol) { // poll
     if (data) {
         try {
@@ -2462,6 +2505,7 @@ function infura_erc20_poll_data(data, setconfirmations, ccsymbol) { // poll
     return default_tx_data();
 }
 
+// This function processes Infura block data for Ethereum transactions and returns a unified transaction object.
 function infura_block_data(data, setconfirmations, ccsymbol, ts) {
     if (data) {
         try {
@@ -2485,6 +2529,7 @@ function infura_block_data(data, setconfirmations, ccsymbol, ts) {
     return default_tx_data();
 }
 
+// This function processes Monero (XMR) transaction data and returns a unified transaction object.
 function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
     if (data) {
         try {
@@ -2516,6 +2561,7 @@ function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
     return default_tx_data();
 }
 
+// This function processes Monero (XMR) transaction data from Blockchair API and returns a unified transaction object.
 function blockchair_xmr_data(data, setconfirmations) {
     if (data) {
         try {
@@ -2550,6 +2596,7 @@ function blockchair_xmr_data(data, setconfirmations) {
     return default_tx_data();
 }
 
+// This function processes Nimiq transaction data and returns a unified transaction object.
 function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash) { // scan
     if (data) {
         try {
@@ -2581,6 +2628,7 @@ function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash)
     return default_tx_data();
 }
 
+// This function processes Kaspa transaction data and returns a unified transaction object.
 function kaspa_scan_data(data, thisaddress, setconfirmations, current_bluescore) { // scan
     if (data) {
         try {
@@ -2620,6 +2668,7 @@ function kaspa_scan_data(data, thisaddress, setconfirmations, current_bluescore)
     return default_tx_data();
 }
 
+// This function processes Kaspa transaction data from kas.fyi API and returns a unified transaction object.
 function kaspa_poll_fyi_data(data, thisaddress, setconfirmations) { // scan
     if (data) {
         try {
@@ -2653,6 +2702,7 @@ function kaspa_poll_fyi_data(data, thisaddress, setconfirmations) { // scan
     return default_tx_data();
 }
 
+// This function processes Kaspa websocket transaction data and returns a unified transaction object.
 function kaspa_ws_data(data, thisaddress, set_confirmations) { // scan
     if (data) {
         try {
@@ -2686,6 +2736,7 @@ function kaspa_ws_data(data, thisaddress, set_confirmations) { // scan
     return default_tx_data();
 }
 
+// This function processes Kaspa websocket data from kas.fyi and returns a unified transaction object.
 function kaspa_fyi_ws_data(data, thisaddress) { // scan
     if (data) {
         try {
@@ -2719,8 +2770,7 @@ function kaspa_fyi_ws_data(data, thisaddress) { // scan
     return default_tx_data();
 }
 
-// lightning
-
+// This function processes Lightning Network transaction data and returns a unified transaction object.
 function lnd_tx_data(data) { // poll
     const txtime = (data.txtime) ? data.txtime : data.timestamp,
         amount = parseFloat(data.amount / 100000000000);
@@ -2737,8 +2787,7 @@ function lnd_tx_data(data) { // poll
     }
 }
 
-// ** Format request data **
-
+// This function formats request data and returns an object with various properties related to the transaction request.
 function tx_data(rd) {
     const thislist = $("#" + rd.requestid),
         requestdate = (rd.inout == "incoming") ? rd.timestamp : rd.requestdate,

@@ -12,12 +12,14 @@
 //get_next_scan_api
 
 // pick API / RPC
+// Initializes the payment monitoring process for a transaction
 function pick_monitor(txhash, tx_data, api_data) {
     glob_api_attempts = {};
     glob_rpc_attempts = {};
     api_monitor_init(txhash, tx_data, api_data);
 }
 
+// Initializes the API monitoring process with transaction and API data
 function api_monitor_init(txhash, tx_data, api_dat) {
     const requestid = request.requestid,
         rq_id = (requestid) ? requestid : "",
@@ -32,6 +34,7 @@ function api_monitor_init(txhash, tx_data, api_dat) {
     console.log("missing api info");
 }
 
+// Monitors the transaction status using the provided API data
 function api_monitor(txhash, tx_data, api_dat) {
     const api_url = (api_dat.url || api_dat.name);
     if (api_url) {
@@ -74,6 +77,7 @@ function api_monitor(txhash, tx_data, api_dat) {
     console.log("No API selected");
 }
 
+// Handles transaction confirmations and updates the UI accordingly
 function confirmations(tx_data, direct, ln) {
     const ccsymbol = tx_data.ccsymbol;
     if (ccsymbol) {
@@ -199,6 +203,7 @@ function confirmations(tx_data, direct, ln) {
     return false;
 }
 
+// Resets recent requests and cancels the current dialog
 function reset_recent() {
     if (request) {
         const ls_recentrequests = br_get_local("recent_requests");
@@ -214,6 +219,7 @@ function reset_recent() {
     canceldialog();
 }
 
+// Handles post-scan operations for various cryptocurrencies and APIs
 function after_scan(rq_init, next_api) {
     const amount_input = $("#mainccinputmirror > input"),
         input_val = amount_input.val(),
@@ -283,11 +289,13 @@ function after_scan(rq_init, next_api) {
     close_paymentdialog();
 }
 
+// Displays a loader with a custom message during the scanning process
 function ap_loader() {
     loader(true);
     loadertext(translate("closingrequest") + " / " + translate("scanningforincoming"));
 }
 
+// Handles the case when a scan fails and attempts to use the next available API
 function after_scan_fails(api_name) {
     const nextapi = get_next_scan_api(api_name);
     if (nextapi) {
@@ -297,6 +305,7 @@ function after_scan_fails(api_name) {
     close_paymentdialog(true);
 }
 
+// Retrieves the next available API for scanning based on the current API name
 function get_next_scan_api(api_name) {
     const rpc_settings = cs_node(request.payment, "apis", true);
     if (rpc_settings) {

@@ -14,6 +14,7 @@ $(document).ready(function() {
     close_cam_trigger();
 });
 
+// Initializes the QR scanner, checking if it's in an iframe and if a camera is available
 function init_scan() {
     if (glob_inframe === true) {
         glob_hascam = false;
@@ -22,10 +23,12 @@ function init_scan() {
     QrScanner.hasCamera().then(hasCamera => detect_cam(hasCamera));
 }
 
+// Sets the global camera availability flag
 function detect_cam(result) {
     glob_hascam = result;
 }
 
+// Starts the QR scanner for a specific currency and type
 function start_scan(currency, type) {
     scanner.start().then(() => {
         currencyscan = currency,
@@ -40,11 +43,13 @@ function start_scan(currency, type) {
     }).catch((reason) => abort_cam(reason));
 }
 
+// Handles camera initialization errors
 function abort_cam(reason) {
     console.log(reason);
     closeloader();
 }
 
+// Sets up click event listener for QR scanner elements
 function cam_trigger() {
     $(document).on("click", ".qrscanner", function() {
         loader(true);
@@ -56,6 +61,7 @@ function cam_trigger() {
     });
 }
 
+// Sets up click event listener for closing the camera
 function close_cam_trigger() {
     $(document).on("click", "#closecam", function(e) {
         if (e.originalEvent) {
@@ -66,16 +72,19 @@ function close_cam_trigger() {
     });
 }
 
+// Shows the camera interface
 function show_cam() {
     glob_body.addClass("showcam");
 }
 
+// Closes the camera interface and stops the scanner
 function close_cam() {
     glob_body.removeClass("showcam");
     scanner.stop();
     currencyscan = null;
 }
 
+// Processes the QR scan result based on the scan type
 function setResult(result) {
     scanner.stop();
     const payment = currencyscan,

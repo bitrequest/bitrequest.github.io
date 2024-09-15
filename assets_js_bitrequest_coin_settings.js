@@ -66,7 +66,7 @@ $(document).ready(function() {
 
 // ** Currency Settings **
 
-// Confirmations
+// Function to handle editing confirmations for cryptocurrency transactions
 function edit_confirmations() {
     $(document).on("click", ".cc_settinglist li[data-id='confirmations'] .edit_trigger", function() {
         const thistrigger = $(this),
@@ -121,6 +121,7 @@ function edit_confirmations() {
     })
 }
 
+// Function to handle submission of confirmation settings
 function submit_confirmations() {
     $(document).on("click", "#conf_formbox input.submit", function(e) {
         e.preventDefault();
@@ -137,7 +138,7 @@ function submit_confirmations() {
     })
 }
 
-// Reuse addresses
+// Function to handle the reuse address toggle switch
 function reuse_address_trigger() {
     $(document).on("mouseup", ".cc_settinglist li[data-id='Reuse address'] .switchpanel.custom", function() {
         const this_switch = $(this),
@@ -170,6 +171,7 @@ function reuse_address_trigger() {
     })
 }
 
+// Function to handle generic cryptocurrency switch toggles
 function cc_switch() {
     $(document).on("mouseup", ".cc_settinglist li .switchpanel.bool", function() {
         const thistrigger = $(this),
@@ -182,7 +184,7 @@ function cc_switch() {
     })
 }
 
-// Choose blockexplorer
+// Function to handle editing block explorer settings
 function edit_blockexplorer() {
     $(document).on("click", ".cc_settinglist li[data-id='blockexplorers']", function() {
         const current_li = $(this),
@@ -248,6 +250,7 @@ function edit_blockexplorer() {
     })
 }
 
+// Function to handle submission of block explorer settings
 function submit_blockexplorer() {
     $(document).on("click", "#be_formbox input.submit", function(e) {
         e.preventDefault();
@@ -263,7 +266,7 @@ function submit_blockexplorer() {
     })
 }
 
-// RPC node / Websockets
+// Function to handle editing RPC node settings for APIs and WebSockets
 function edit_rpcnode() {
     $(document).on("click", ".cc_settinglist li[data-id='apis'], .cc_settinglist li[data-id='websockets']", function() {
         const current_li = $(this),
@@ -338,6 +341,7 @@ function edit_rpcnode() {
     })
 }
 
+// Function to get RPC placeholders for different currencies and API types
 function get_rpc_placeholder(currency) {
     return {
         "apisnano1": "eg: http://127.0.0.1:7076",
@@ -355,6 +359,7 @@ function get_rpc_placeholder(currency) {
     }
 }
 
+// Function to test and append RPC options for different cryptocurrencies
 function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
     if (glob_ap_id == "apis") {
         if (thiscurrency == "ethereum" || glob_is_erc20t === true) {
@@ -485,6 +490,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
     }
 }
 
+// Function to create and append an RPC option list item
 function rpc_option_li(optionlist, live, key, value, selected, checked) {
     const liveclass = (live === true) ? " live" : " offline",
         selected_class = (selected === true) ? " rpc_selected" : "",
@@ -497,6 +503,7 @@ function rpc_option_li(optionlist, live, key, value, selected, checked) {
     option.slideDown(500);
 }
 
+// Function to handle RPC node selection
 function test_rpcnode() {
     $(document).on("click", "#settingsbox .selectbox .options > div", function(e) {
         const target = $(e.target);
@@ -518,6 +525,7 @@ function test_rpcnode() {
     })
 }
 
+// Function to handle RPC node submission
 function submit_rpcnode() {
     $(document).on("click", "#settingsbox input.submit", function(e) {
         e.preventDefault();
@@ -553,6 +561,7 @@ function submit_rpcnode() {
     })
 }
 
+// Function to test RPC connection for various cryptocurrencies
 function test_rpc(rpc_input_box, rpc_data, currency) {
     const cant_connect = translate("unabletoconnect");
     if (glob_ap_id == "apis") {
@@ -698,6 +707,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
     }
 }
 
+// Function to finalize RPC submission and update settings
 function pass_rpc_submit(thiscurrency, thisvalue, newnode) {
     const rpc_setting_li = cs_node(thiscurrency, glob_ap_id),
         options = rpc_setting_li.data("options"),
@@ -715,6 +725,7 @@ function pass_rpc_submit(thiscurrency, thisvalue, newnode) {
     save_cc_settings(thiscurrency, true);
 }
 
+// Function to handle removal of RPC nodes
 function remove_rpcnode() {
     $(document).on("click", "#settingsbox .options .opt_icon_box .icon-bin", function(e) {
         e.preventDefault();
@@ -757,6 +768,7 @@ function remove_rpcnode() {
     })
 }
 
+// Function to construct RPC URL with optional authentication
 function get_rpc_url(rpc_data) {
     if (rpc_data === false) {
         return false;
@@ -771,6 +783,8 @@ function get_rpc_url(rpc_data) {
 }
 
 // Layer 2's
+
+// Function to handle editing of Layer 2 settings
 function edit_l2() {
     $(document).on("click", ".cc_settinglist li[data-id='layer2']", function() {
         const current_li = $(this),
@@ -839,6 +853,7 @@ function edit_l2() {
     })
 }
 
+// Function to handle submission of Layer 2 settings
 function submit_l2() {
     $(document).on("click", "#l2_formbox input.submit", function(e) {
         e.preventDefault();
@@ -854,7 +869,7 @@ function submit_l2() {
     })
 }
 
-// Xpub settings
+// Function to handle editing of Xpub settings
 function edit_xpub_trigger() {
     $(document).on("click", ".cc_settinglist li[data-id='Xpub'] .atext", function() {
         if (glob_test_derive === true) {
@@ -890,6 +905,7 @@ function edit_xpub_trigger() {
     })
 }
 
+// Function to handle deletion of Xpub
 function delete_xpub() {
     $(document).on("click", "#delete_xpub", function() {
         const result = confirm(translate("delete") + " " + translate("bip32xpub") + "?");
@@ -912,6 +928,7 @@ function delete_xpub() {
     })
 }
 
+// Function to handle callback after Xpub deletion
 function delete_xpub_cb(currency, x_pubid, uncheck) {
     const xpublist = filter_addressli(currency, "xpubid", x_pubid);
     xpublist.each(function() {
@@ -923,6 +940,7 @@ function delete_xpub_cb(currency, x_pubid, uncheck) {
     });
 }
 
+// Function to handle callback after adding Xpub
 function add_xpub_cb(currency, x_pubid) {
     const xpublist = filter_addressli(currency, "xpubid", x_pubid);
     xpublist.each(function() {
@@ -930,6 +948,7 @@ function add_xpub_cb(currency, x_pubid) {
     });
 }
 
+// Function to handle Xpub switch in currency settings
 function xpub_cc_switch() {
     $(document).on("mouseup", ".cc_settinglist li[data-id='Xpub'] .switchpanel.custom", function() {
         if (glob_test_derive === true) {
@@ -971,6 +990,7 @@ function xpub_cc_switch() {
     })
 }
 
+// Function to handle editing of Xpub
 function edit_xpub(ad) {
     const currency = ad.currency,
         cpid = ad.ccsymbol + "-" + currency,
@@ -1001,6 +1021,7 @@ function edit_xpub(ad) {
     }
 }
 
+// Function to handle Xpub input changes
 function xpub_change() {
     $(document).on("input", "#xpub_input", function(e) {
         const thisnode = $(this),
@@ -1016,6 +1037,7 @@ function xpub_change() {
     })
 }
 
+// Function to trigger Xpub submission
 function submit_xpub_trigger() {
     $(document).on("click", "#xpubformbox input.submit", function(e) {
         e.preventDefault();
@@ -1023,6 +1045,7 @@ function submit_xpub_trigger() {
     })
 }
 
+// Function to validate Xpub
 function validate_xpub(thisnode) {
     const this_data = thisnode.data(),
         currency = this_data.currency,
@@ -1121,6 +1144,7 @@ function validate_xpub(thisnode) {
     addressfield.focus();
 }
 
+// Function to handle Xpub validation failure
 function xpub_fail(currency) {
     const errormessage = translate("invalidxpub", {
         "currency": currency
@@ -1129,6 +1153,7 @@ function xpub_fail(currency) {
     clear_xpub_inputs();
 }
 
+// Function to clear Xpub input fields
 function clear_xpub_inputs() {
     $("#ad_info_wrap").slideUp(200, function() {
         $("#ad_info_wrap .td_box").html("");
@@ -1136,11 +1161,13 @@ function clear_xpub_inputs() {
     clear_xpub_checkboxes();
 }
 
+// Function to clear Xpub checkboxes
 function clear_xpub_checkboxes() {
     $("#pk_confirmwrap").attr("data-checked", "false").data("checked", false);
     $("#matchwrap").attr("data-checked", "false").data("checked", false);
 }
 
+// Function to generate Xpub derivation list
 function xpub_derivelists(currency, xpub) {
     try {
         const coindat = getcoindata(currency),
@@ -1169,14 +1196,14 @@ function xpub_derivelists(currency, xpub) {
     }
 }
 
+// Function to check if Xpub is valid
 function check_xpub(address, prefix, currency) {
     const this_prefix = (currency == "bitcoin") ? "zpub|xpub" : (currency == "litecoin") ? "zpub|Ltub" : prefix,
         regex = "(" + this_prefix + ")([a-km-zA-HJ-NP-Z1-9]{107})(\\?c=\\d*&h=bip\\d{2,3})?";
     return new RegExp(regex).test(address);
 }
 
-// Key Management
-
+// Function to handle key management
 function key_management() {
     $(document).on("click", ".cc_settinglist li[data-id='Key derivations'] .atext", function() {
         const thisnode = $(this),
@@ -1210,6 +1237,7 @@ function key_management() {
     })
 }
 
+// Function to handle SegWit switch
 function segwit_switch() {
     $(document).on("mouseup", "#segw_box .toggle_segwit .switchpanel", function() {
         if (is_viewonly() === true) {
@@ -1254,10 +1282,12 @@ function segwit_switch() {
     })
 }
 
+// Function to trigger BIP39 settings
 function bip39_sc(coinsc) {
     $("#" + coinsc + "_settings .cc_settinglist li[data-id='Key derivations'] .atext").trigger("click");
 }
 
+// Function to display Xpub info popup
 function xpub_info_pu(currency, xpub) {
     const coindat = getcoindata(currency),
         bip32dat = getbip32dat(currency),
@@ -1313,14 +1343,14 @@ function xpub_info_pu(currency, xpub) {
     }, 550);
 }
 
-// Add api key
-
+// Function to trigger API key addition
 function trigger_apikey() {
     $(document).on("click", "#add_api", function() {
         add_apikey($(this).attr("data-api"));
     })
 }
 
+// Function to add API key
 function add_apikey(api) {
     const get_key = $("#apikeys").data(api),
         api_key = (get_key) ? get_key : "",
@@ -1342,6 +1372,7 @@ function add_apikey(api) {
     }, 800);
 }
 
+// Function to submit API key
 function submit_apikey() {
     $(document).on("click", "#add_apikey input.submit", function(e) {
         e.preventDefault();
@@ -1366,6 +1397,7 @@ function submit_apikey() {
     })
 }
 
+// Function to reset coin settings
 function reset_coinsettings() {
     $(document).on("click", ".reset_cc_settings", function() {
         const thistrigger = $(this),
@@ -1376,6 +1408,7 @@ function reset_coinsettings() {
     })
 }
 
+// Function to perform coin settings reset
 function reset_coinsettings_function(trigger) {
     const currency = trigger.attr("data-currency"),
         result = confirm(translate("resetconfirm", {

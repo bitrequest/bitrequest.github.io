@@ -50,12 +50,14 @@ $(document).ready(function() {
     //lnurl_decode_c
 });
 
+// Initializes event listener for Lightning Network settings
 function lightning_management() {
     $(document).on("click", ".cc_settinglist li[data-id='Lightning network'] .atext", function() {
         lm_function();
     })
 }
 
+// Handles the switching of Lightning Network functionality on/off
 function lnd_cc_switch() {
     $(document).on("mouseup", ".cc_settinglist li[data-id='Lightning network'] .switchpanel.custom", function() {
         const this_switch = $(this),
@@ -80,6 +82,7 @@ function lnd_cc_switch() {
     })
 }
 
+// Main function for managing Lightning Network settings and UI
 function lm_function(replace) {
     const this_data = lndli().data();
     if (this_data) {
@@ -212,6 +215,7 @@ function lm_function(replace) {
     }
 }
 
+// Handles the creation and appending of Lightning Network node options
 function node_option_li(value, selected, fn, proxy, pw) {
     loader(true);
     loadertext(translate("connecttolnur", {
@@ -284,6 +288,7 @@ function node_option_li(value, selected, fn, proxy, pw) {
     });
 }
 
+// Tests and creates an option list item for an LND (Lightning Network Daemon) node
 function test_lnd_option_li(value, selected, fn) {
     const host = value.host,
         proxy = (host.indexOf(".onion") > 0) ? true : false;
@@ -334,6 +339,7 @@ function test_lnd_option_li(value, selected, fn) {
     });
 }
 
+// Tests and creates an option list item for a c-lightning node
 function test_c_lightning_option_li(value, selected, fn) {
     const host = value.host,
         proxy = (host.indexOf(".onion") > 0) ? true : false;
@@ -385,6 +391,7 @@ function test_c_lightning_option_li(value, selected, fn) {
     });
 }
 
+// Tests and creates an option list item for an Eclair Lightning node
 function test_eclair_option_li(value, selected, fn) {
     const host = value.host,
         proxy = (host.indexOf(".onion") > 0) ? true : false;
@@ -445,6 +452,7 @@ function test_eclair_option_li(value, selected, fn) {
     });
 }
 
+// Tests and creates an option list item for an LNbits Lightning node
 function test_lnbits_option_li(value, selected, fn) {
     const host = value.host,
         proxy = (host.indexOf(".onion") > 0) ? true : false;
@@ -495,6 +503,7 @@ function test_lnbits_option_li(value, selected, fn) {
     });
 }
 
+// Callback function for testing connection to a Lightning node
 function tconnectcb(add) {
     const pnode = $("#lnsettingsbox .ln_info_wrap:visible");
     if (add) {
@@ -506,6 +515,7 @@ function tconnectcb(add) {
     }
 }
 
+// Creates and appends a Lightning node option to the UI
 function lightning_option_li(live, value, selected, invoices, proxy) {
     const has_invoices = (invoices && invoices != "locked") ? true : false,
         locked = (invoices && invoices == "locked") ? true : false,
@@ -578,6 +588,7 @@ function lightning_option_li(live, value, selected, invoices, proxy) {
     }, 500);
 }
 
+// Applies syntax highlighting to JSON data for display
 function syntaxHighlight(json) {
     if (typeof json != "string") {
         json = JSON.stringify(json, undefined, 2);
@@ -600,6 +611,7 @@ function syntaxHighlight(json) {
     });
 }
 
+// Appends a Lightning Network proxy option to the list and tests its connection
 function lnd_append_proxy(optionlist, key, value, selected) { // make test api call
     const locked = false,
         p_arr = lnurl_deform(value.proxy),
@@ -642,6 +654,7 @@ function lnd_append_proxy(optionlist, key, value, selected) { // make test api c
     });
 }
 
+// Creates and appends a Lightning Network proxy option to the list
 function lnd_proxy_option_li(optionlist, live, key, value, selected, proxy_name, locked) {
     const liveclass = (live === true) ? " live" : " offline",
         icon = (locked) ? "lock" : (live === true) ? "connection" : "wifi-off",
@@ -651,6 +664,7 @@ function lnd_proxy_option_li(optionlist, live, key, value, selected, proxy_name,
     option.slideDown(500);
 }
 
+// Toggles the visibility of the Lightning Network proxy drawer
 function toggle_ln_proxy() {
     $(document).on("click", "#lnsettingsbox #toggle_lnd", function() {
         const lpd = $("#add_proxy_drawer");
@@ -665,6 +679,7 @@ function toggle_ln_proxy() {
     })
 }
 
+// Handles the switching between Lightning Network proxy and direct connection
 function proxy_switch() {
     $(document).on("mouseup", "#lnsettingsbox #lnurl_s .switchpanel.custom", function() {
         const this_switch = $(this),
@@ -692,6 +707,7 @@ function proxy_switch() {
     })
 }
 
+// Toggles the visibility of the add proxy drawer
 function toggle_add_proxy() {
     $(document).on("click", "#lnsettingsbox #add_proxy .ref", function() {
         const lupd = $("#lnurl_proxy_drawer");
@@ -703,6 +719,7 @@ function toggle_add_proxy() {
     })
 }
 
+// Handles the switching of Lightning Network proxy for individual nodes
 function lnd_proxy_switch() {
     $(document).on("mouseup", "#lnsettingsbox .lnurl_p .switchpanel.custom", function() {
         const lnli = lndli(),
@@ -769,6 +786,7 @@ function lnd_proxy_switch() {
     })
 }
 
+// Tests the connection to a Lightning Network node
 function test_pconnect(value, proxy, pw) {
     if (value.lnurl || value.proxy) {
         node_option_li(value, null, "test_connect", proxy, pw);
@@ -784,6 +802,7 @@ function test_pconnect(value, proxy, pw) {
     }
 }
 
+// Handles the selection of a Lightning Network node from the list
 function lnd_select_node() {
     $(document).on("click", "#ln_nodelist .optionwrap", function() {
         const thisnode = $(this);
@@ -803,6 +822,7 @@ function lnd_select_node() {
     })
 }
 
+// Handles the selection of a Lightning Network proxy from the list
 function lnd_select_proxy() {
     $(document).on("click", "#lnd_proxy_select_input .optionwrap", function() {
         const thisnode = $(this);
@@ -820,6 +840,7 @@ function lnd_select_proxy() {
     })
 }
 
+// Manages the selection of Lightning Network implementation
 function lnd_select_implementation() {
     $(document).on("click", "#implements .imp_select", function(e) {
         const thisnode = $(this),
@@ -847,6 +868,7 @@ function lnd_select_implementation() {
     })
 }
 
+// Toggles the visibility of invoice details
 function toggle_invoices() {
     $(document).on("click", "#lnsettingsbox .invoice_memo", function() {
         const thistrigger = $(this),
@@ -860,6 +882,7 @@ function toggle_invoices() {
     })
 }
 
+// Main function to handle Lightning Network settings and actions
 function trigger_ln() {
     const lnli = lndli(),
         ln_dat = lnli.data();
@@ -1000,7 +1023,6 @@ function trigger_ln() {
                     "selected_service": selected_service
                 }).find(".switchpanel").removeClass("false").addClass("true");
                 canceldialog();
-                console.log("shift");
                 notify(translate("datasaved"));
                 save_cc_settings("bitcoin", true);
                 cancelpd();
@@ -1026,6 +1048,7 @@ function trigger_ln() {
     }
 }
 
+// Tests the connection to a Lightning Network proxy and adds it if successful
 function test_lnd_proxy(value, pid, pw) { // make test api call
     loader(true);
     loadertext(translate("connecttolnur", {
@@ -1091,6 +1114,7 @@ function test_lnd_proxy(value, pid, pw) { // make test api call
     });
 }
 
+// Adds a custom proxy to the list of available proxies
 function add_custom_proxy(value) {
     const proxy_node = $("#api_proxy"),
         proxy_node_data = proxy_node.data(),
@@ -1105,6 +1129,7 @@ function add_custom_proxy(value) {
     savesettings();
 }
 
+// Tests the creation of an invoice for a Lightning Network implementation
 function test_create_invoice(imp, proxydat, host, key) {
     const is_onion = (host && host.indexOf(".onion") > 0) ? true : false,
         p_arr = (proxydat) ? lnurl_deform(proxydat.proxy) : false,
@@ -1360,6 +1385,7 @@ function test_create_invoice(imp, proxydat, host, key) {
     }
 }
 
+// Adds a new Lightning Network implementation to the node list
 function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
     const has_proxy = (proxydat) ? true : false,
         p_arr = (has_proxy) ? lnurl_deform(proxydat.proxy) : false,
@@ -1417,6 +1443,7 @@ function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
     cancelpd();
 }
 
+// Removes an RPC proxy from the list
 function remove_rpc_proxy() {
     $(document).on("click", "#lnd_proxy_select_input .options .opt_icon_box .icon-bin", function() {
         const thisnode = $(this),
@@ -1467,6 +1494,7 @@ function remove_rpc_proxy() {
     })
 }
 
+// Removes a Lightning Network node from the list
 function remove_lnd() {
     $(document).on("click", "#select_ln_node .options .opt_icon_box .icon-bin", function() {
         const thisnode = $(this),
@@ -1511,6 +1539,7 @@ function remove_lnd() {
     })
 }
 
+// Initiates the unlock process for a proxy from the proxy select input
 function unlock_proxy1() {
     $(document).on("click", "#lnd_proxy_select_input .options .opt_icon_box .icon-lock", function() {
         const thisnode = $(this),
@@ -1520,6 +1549,7 @@ function unlock_proxy1() {
     })
 }
 
+// Initiates the unlock process for a proxy from the Lightning Network node select
 function unlock_proxy2() {
     $(document).on("click", "#select_ln_node .options .opt_icon_box .icon-lock", function() {
         const thisnode = $(this),
@@ -1529,6 +1559,7 @@ function unlock_proxy2() {
     })
 }
 
+// Initiates the unlock process for a proxy from the info section
 function unlock_proxy3() {
     $(document).on("click", "#lnsettingsbox #pw_unlock_info", function() {
         const thisnode = $(this),
@@ -1537,6 +1568,7 @@ function unlock_proxy3() {
     })
 }
 
+// Initiates the unlock process for a proxy from the invoices section
 function unlock_proxy4() {
     $(document).on("click", "#lnsettingsbox #pw_unlock_invoices", function() {
         const thisnode = $(this),
@@ -1545,6 +1577,7 @@ function unlock_proxy4() {
     })
 }
 
+// Prompts for a password to unlock a proxy and tests the connection
 function p_promt(pid) {
     const lnli = lndli(),
         ln_dat = lnli.data(),
@@ -1615,31 +1648,37 @@ function p_promt(pid) {
 
 /* helpers */
 
+// Returns the Lightning Network settings node
 function lndli() {
     return cs_node("bitcoin", "Lightning network");
 }
 
+// Selects and returns a Lightning Network proxy
 function lnd_pick_proxy() {
     const saved_proxy = s_lnd_proxy();
     return (saved_proxy) ? saved_proxy.proxy : d_proxy();
 }
 
+// Retrieves the selected Lightning Network proxy
 function s_lnd_proxy() {
     const lnli = lndli(),
         ln_dat = lnli.data();
     return (ln_dat.selected_proxy) ? ln_dat.selected_proxy : false;
 }
 
+// Checks if the given host is a local node
 function is_local_node(host) {
     return (host) ? ((host.indexOf("localhost") > -1) || (host.indexOf("127.0.0.1") > -1)) ? true : false : null;
 }
 
+// Cancels the payment dialog if it's open
 function cancelpd() {
     if (is_openrequest() === true) { // update request dialog
         cancelpaymentdialog();
     }
 }
 
+// Checks if a node with the given ID exists in the node list
 function node_exists(nodelist, node_id) {
     if ($.isEmptyObject(nodelist)) {
         return false
@@ -1653,36 +1692,42 @@ function node_exists(nodelist, node_id) {
     return lnd_exists;
 }
 
+// Fetches a node from the list by its ID
 function fetch_node(list, pid) {
     return $.grep(list, function(value) {
         return value.node_id == pid;
     })[0];
 }
 
+// Fetches all nodes from the list except the one with the given ID
 function fetch_other_nodes(list, pid) {
     return $.grep(list, function(value) {
         return value.node_id != pid;
     });
 }
 
+// Fetches a proxy from the list by its ID
 function fetch_proxy(list, pid) {
     return $.grep(list, function(value) {
         return value.id == pid;
     })[0];
 }
 
+// Fetches all proxies from the list except the one with the given ID
 function fetch_other_proxies(list, pid) {
     return $.grep(list, function(value) {
         return value.id != pid;
     });
 }
 
+// Formats a Lightning Network URL with an optional password
 function lnurl_form(url, pw) {
     const get = (pw) ? "#" + pw : "",
         lnurl = url + get;
     return lnurl_encode("lnurl", lnurl);
 }
 
+// Decodes a Lightning Network URL
 function lnurl_deform(lrl) {
     if (typeof lrl != "string") {
         console.log("lnurl must be string")
@@ -1703,24 +1748,29 @@ function lnurl_deform(lrl) {
     }
 }
 
+// Encodes a URL for saving
 function lnurl_encode_save(url) {
     return (url.match("^lnurl")) ? url : lnurl_encode("lnurl", complete_url(url));
 }
 
+// Encodes a Lightning Network URL
 function lnurl_encode(hrp, url) {
     return bech32_encode(hrp, toWords(buffer(url)));
 }
 
+// Decodes a Lightning Network URL
 function lnurl_decode(lnurl) {
     return utf8Decoder.decode(uint_8Array(fromWords(lnurl_decodeb32(lnurl).data)));
 }
 
+// Decodes and cleans a Lightning Network URL
 function lnurl_decode_c(lnurl) {
     return clean_str(lnurl_decode(lnurl));
 }
 
 /* Tools */
 
+// Generates a template for a dialog box
 function template_dialog_temp(ddat) {
     const validated_class = (ddat.validated) ? " validated" : "",
         dialog_object = [{
@@ -1750,6 +1800,7 @@ function template_dialog_temp(ddat) {
     return render_html(dialog_object);
 }
 
+// Tests the status of a Lightning Network URL
 function test_lnurl_status(lnd) {
     const imp = (lnd.imp) ? lnd.imp : null,
         host = (lnd.host) ? lnd.host : null,
@@ -1811,6 +1862,7 @@ function test_lnurl_status(lnd) {
     });
 }
 
+// Checks the status of a Lightning Network node
 function check_lnd_status(lnd) {
     api_proxy({
         "proxy": false,
@@ -1842,6 +1894,7 @@ function check_lnd_status(lnd) {
     });
 }
 
+// Checks the status of a c-lightning node
 function check_c_lightning_status(lnd) {
     api_proxy({
         "proxy": false,
@@ -1874,6 +1927,7 @@ function check_c_lightning_status(lnd) {
     });
 }
 
+// Checks the status of an Eclair node
 function check_eclair_status(lnd) {
     api_proxy({
         "proxy": false,
@@ -1910,6 +1964,7 @@ function check_eclair_status(lnd) {
     });
 }
 
+// Checks the status of an LNbits node
 function check_lnbits_status(lnd) {
     api_proxy({
         "proxy": false,
@@ -1941,6 +1996,7 @@ function check_lnbits_status(lnd) {
     });
 }
 
+// Sets the Lightning Network fields for LND or c-lightning implementations
 function set_ln_fields(imp, rest, mac) {
     if (imp && rest && mac) {
         if (imp == "lnd" || imp == "c-lightning") {

@@ -55,6 +55,7 @@ $(document).ready(function() {
 
 // ** Fetch incoming transactions **
 
+// Attaches a click event listener to update request states
 function updaterequeststatestrigger() {
     $(document).on("click", ".requestsbttn .self", function() {
         const scanning = is_scanning();
@@ -67,6 +68,7 @@ function updaterequeststatestrigger() {
     })
 }
 
+// Updates request states based on URL parameters
 function updaterequeststatesrefresh() {
     const gets = geturlparameters();
     if (gets.xss) {
@@ -79,6 +81,7 @@ function updaterequeststatesrefresh() {
     }
 }
 
+// Checks if scanning is in progress
 function is_scanning() {
     if (glob_block_scan > 9) {
         clearscan();
@@ -86,6 +89,7 @@ function is_scanning() {
     return ($("#requestlist li.rqli.scan").length) ? true : false;
 }
 
+// Triggers the update of request states
 function trigger_requeststates(trigger) {
     if (glob_offline === true) {
         return // do nothing when offline
@@ -102,6 +106,7 @@ function trigger_requeststates(trigger) {
     get_requeststates(trigger, active_requests);
 }
 
+// Retrieves and processes request states
 function get_requeststates(trigger, active_requests) {
     const d_lay = (trigger == "delay") ? true : false,
         request_data = $("#requestlist li.rqli.open").first().data();
@@ -166,6 +171,7 @@ function get_requeststates(trigger, active_requests) {
     }
 }
 
+// Retrieves input data for requests
 function getinputs(rd, dl) {
     if (dl) {
         const delay = 10000,
@@ -191,11 +197,13 @@ function getinputs(rd, dl) {
     get_rpc_inputs_init(rd, selected);
 }
 
+// Clears scanning status
 function clearscan() {
     $("#requestlist .rqli").removeClass("scan"); // prevent triggerblock
     glob_block_scan = 0;
 }
 
+// Checks API availability for a given payment method
 function check_api(payment, iserc20) {
     const api_data = cs_node(payment, "apis", true);
     if (api_data) {
@@ -228,6 +236,7 @@ function check_api(payment, iserc20) {
     }
 }
 
+// Initializes API input retrieval
 function get_api_inputs_init(rd, api_data) {
     if (api_data) {
         const requestid = rd.requestid,
@@ -239,6 +248,7 @@ function get_api_inputs_init(rd, api_data) {
     console.log("no api data available");
 }
 
+// Retrieves API inputs for a request
 function get_api_inputs(rd, rdod, api_data) {
     const rdo = (rdod) ? rdod : tx_data(rd), // fetchblocks.js
         source = rdo.source;
@@ -264,6 +274,7 @@ function get_api_inputs(rd, rdod, api_data) {
     }
 }
 
+// Selects the appropriate API based on the request data and API information
 function select_api(rd, rdo, api_dat) {
     const txhash = rd.txhash,
         requestid = rd.requestid,
@@ -322,11 +333,13 @@ function select_api(rd, rdo, api_dat) {
 
 // API error handling
 
+// Handles API error dialogs
 function fail_dialogs(apisrc, error) {
     const error_data = get_api_error_data(error);
     api_eror_msg(apisrc, error_data)
 }
 
+// Processes the scan results and performs appropriate actions based on the match
 function scan_match(rd, api_data, rdo, counter, txdat, match, l2) {
     const src = rdo.source,
         is_api = (api_data.api) ? true : false;
@@ -397,10 +410,12 @@ function scan_match(rd, api_data, rdo, counter, txdat, match, l2) {
     close_paymentdialog(true);
 }
 
+// Updates the transaction count in the status panel
 function tx_count(statuspanel, count) {
     statuspanel.attr("data-count", count).text("+ " + count);
 }
 
+// Handles API scan failures
 function tx_api_scan_fail(rd, rdo, api_data, error_data, all_proxys) {
     const src = rdo.source;
     if (src == "afterscan") {
@@ -421,11 +436,13 @@ function tx_api_scan_fail(rd, rdo, api_data, error_data, all_proxys) {
     return
 }
 
+// Updates UI elements to reflect an API failure
 function tx_api_fail(thislist, statuspanel) {
     thislist.addClass("no_network");
     statuspanel.attr("data-count", 0).text("?");
 }
 
+// Handles API failures and attempts to use alternative APIs or RPCs
 function handle_api_fails(rd, rdo, error, api_data, all_proxys) {
     const error_data = get_api_error_data(error),
         requestid = rd.requestid;
@@ -460,6 +477,7 @@ function handle_api_fails(rd, rdo, error, api_data, all_proxys) {
     }
 }
 
+// Retrieves the next available API for a given payment method
 function get_next_api(this_payment, api_name, requestid) {
     const rpc_settings = cs_node(this_payment, "apis", true);
     if (rpc_settings) {
@@ -479,6 +497,7 @@ function get_next_api(this_payment, api_name, requestid) {
     return false;
 }
 
+// Displays error messages for API-related issues
 function api_eror_msg(apisrc, error) {
     if (error == false) {
         console.log("no error data");
@@ -508,6 +527,7 @@ function api_eror_msg(apisrc, error) {
     }
 }
 
+// Extracts and formats error data from various API responses
 function get_api_error_data(error) {
     if (error == false) {
         return false;
@@ -542,6 +562,7 @@ function get_api_error_data(error) {
     return error_object;
 }
 
+// Sets the API source for a given request
 function set_api_src(rdo, api_data) {
     const src = rdo.source;
     if (src == "list") {
@@ -549,6 +570,7 @@ function set_api_src(rdo, api_data) {
     }
 }
 
+// Updates the UI with API source information
 function api_src(thislist, api_data) {
     const api_url = api_data.url,
         api_url_short = (api_url) ? (api_url.length > 40) ? api_url.slice(0, 40) + "..." : api_url : "",
@@ -558,6 +580,7 @@ function api_src(thislist, api_data) {
     thislist.data("source", api_source).find(".api_source").html("<span class='src_txt' title='" + api_url_short + "'>" + translate("source") + ": " + api_source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
 }
 
+// Handles the callback after an API request is completed
 function api_callback(requestid, nocache) {
     if (nocache == "afterscan") {
         close_paymentdialog(true);
@@ -599,6 +622,7 @@ function api_callback(requestid, nocache) {
     }
 }
 
+// Initializes RPC input retrieval
 function get_rpc_inputs_init(rd, api_data) {
     const requestid = rd.requestid,
         rq_id = (requestid) ? requestid : "";
@@ -606,6 +630,7 @@ function get_rpc_inputs_init(rd, api_data) {
     get_rpc_inputs(rd, false, api_data);
 }
 
+// Retrieves RPC inputs for a request
 function get_rpc_inputs(rd, rdod, api_data) {
     const rdo = (rdod) ? rdod : tx_data(rd),
         source = rdo.source;
@@ -631,6 +656,7 @@ function get_rpc_inputs(rd, rdod, api_data) {
     }
 }
 
+// Selects the appropriate RPC based on the request data and API information
 function select_rpc(rd, rdo, api_dat) {
     const txhash = rd.txhash,
         requestid = rd.requestid,
@@ -659,6 +685,7 @@ function select_rpc(rd, rdo, api_dat) {
 
 // RPC error handling
 
+// Handles RPC failures and attempts to use alternative RPCs or APIs
 function handle_rpc_fails(rd, rdo, error, api_data, all_proxys) {
     const error_data = get_api_error_data(error),
         requestid = rd.requestid;
@@ -697,6 +724,7 @@ function handle_rpc_fails(rd, rdo, error, api_data, all_proxys) {
     }
 }
 
+// Retrieves the next available RPC for a given payment method
 function get_next_rpc(this_payment, api_url, requestid) {
     const rpc_settings = cs_node(this_payment, "apis", true);
     if (rpc_settings) {
@@ -718,6 +746,7 @@ function get_next_rpc(this_payment, api_url, requestid) {
     return false;
 }
 
+// Appends a transaction list item with given transaction data
 function append_tx_li(txd, rqtype, ln) {
     const txhash = txd.txhash;
     if (txhash) {
@@ -758,10 +787,12 @@ function append_tx_li(txd, rqtype, ln) {
     return null;
 }
 
+// Creates HTML for historic data
 function hs_for(dat) {
     return "<div class='historic_meta'>" + dat.split("\n").join("<br/>") + "</div>";
 }
 
+// Generates a title string with transaction data
 function data_title(ccsymbol, ccval, historic, setconfirmations, conf, l2, instant_lock) {
     let historic_dat = "";
     if (historic) {
@@ -792,6 +823,7 @@ function data_title(ccsymbol, ccval, historic, setconfirmations, conf, l2, insta
     return false
 }
 
+// Compares received amounts with requested amounts and updates request status
 function compareamounts(rd) {
     const thisrequestid = rd.requestid,
         requestli = $("#" + thisrequestid),
@@ -910,6 +942,7 @@ function compareamounts(rd) {
 
 // get historic crypto rates
 
+// Initializes the process of fetching historical fiat data for a request
 function init_historical_fiat_data(rd, conf, latestinput, firstinput) {
     const thisrequestid = rd.requestid,
         confcor = (conf) ? conf : 0,
@@ -934,6 +967,7 @@ function init_historical_fiat_data(rd, conf, latestinput, firstinput) {
     api_callback(thisrequestid);
 }
 
+// Fetches historical fiat data from a specified API
 function get_historical_fiat_data(rd, apilist, fiatapi) {
     glob_api_attempt[apilist][fiatapi] = true;
     const thisrequestid = rd.requestid,
@@ -1009,6 +1043,7 @@ function get_historical_fiat_data(rd, apilist, fiatapi) {
     api_callback(thisrequestid);
 }
 
+// Generates the payload for historical fiat price API requests
 function get_historic_fiatprice_api_payload(fiatapi, lcsymbol, latestinput) {
     const dateformat = form_date(latestinput),
         payload = (fiatapi == "fixer") ? dateformat + "?symbols=" + lcsymbol + ",USD" :
@@ -1017,6 +1052,7 @@ function get_historic_fiatprice_api_payload(fiatapi, lcsymbol, latestinput) {
     return payload;
 }
 
+// Formats a date for API requests
 function form_date(latestinput) {
     const dateobject = new Date(parseFloat(latestinput)),
         getmonth = dateobject.getUTCMonth() + 1,
@@ -1027,6 +1063,7 @@ function form_date(latestinput) {
     return year + "-" + month + "-" + day;
 }
 
+// Fetches historical cryptocurrency data from a specified API
 function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, lcsymbol) {
     glob_api_attempt[apilist][api] = true;
     const thisrequestid = rd.requestid,
@@ -1173,6 +1210,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
     })
 }
 
+// Generates the payload for historical price data from CoinGecko API
 function get_payload_historic_coingecko(coin_id, starttime, endtime, erc20_contract) {
     const time_range = Math.abs(endtime - starttime),
         start_time = (time_range < 3600) ? 5200 : 3600; // compensation for minimum range
@@ -1182,6 +1220,7 @@ function get_payload_historic_coingecko(coin_id, starttime, endtime, erc20_contr
     return "coins/" + coin_id + "/market_chart/range?vs_currency=usd&from=" + (starttime - start_time) + "&to=" + (endtime + 3600); // expand range with one hour for error margin
 }
 
+// Generates the payload for historical price data from CoinPaprika API
 function get_payload_historic_coinpaprika(coin_id, starttime, endtime) {
     const ts_start = starttime - 36000,
         ts_end = endtime + 36000, // add ten hours flex both ways otherwise api can return empty result
@@ -1199,6 +1238,7 @@ function get_payload_historic_coinpaprika(coin_id, starttime, endtime) {
     return coin_id + "/historical?start=" + cp_querystring;
 }
 
+// Generates the payload for historical price data from CoinCodex API
 function get_payload_historic_coincodex(coin_id, starttime, endtime) {
     const st_format = cx_date(starttime),
         et_format = cx_date(endtime),
@@ -1206,10 +1246,12 @@ function get_payload_historic_coincodex(coin_id, starttime, endtime) {
     return "get_coin_history/" + coin_id + "/" + tquery + "/" + 1000;
 }
 
+// Formats a timestamp into a date string for CoinCodex API
 function cx_date(ts) {
     return new Date(ts * 1000).toISOString().split("T")[0];
 }
 
+// Compares historical prices from different APIs and returns the most relevant price
 function compare_historic_prices(api, values, price_array, thistimestamp) {
     $.each(price_array, function(i, value) {
         const historic_object = (api == "coincodex") ? get_historic_object_coincodex(value) :
@@ -1242,6 +1284,7 @@ function compare_historic_prices(api, values, price_array, thistimestamp) {
     return values;
 }
 
+// Extracts historical price data from CoinCodex API response
 function get_historic_object_coincodex(value) {
     if (value) {
         return {
@@ -1252,6 +1295,7 @@ function get_historic_object_coincodex(value) {
     return false;
 }
 
+// Extracts historical price data from CoinGecko API response
 function get_historic_object_coingecko(value) {
     if (value) {
         return {
@@ -1262,6 +1306,7 @@ function get_historic_object_coingecko(value) {
     return false;
 }
 
+// Extracts historical price data from CoinPaprika API response
 function get_historic_object_coinpaprika(value) {
     if (value && value.timestamp) {
         return {

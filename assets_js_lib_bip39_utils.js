@@ -12,34 +12,42 @@ const crypto = window.crypto,
 
 // helpers
 
+// Creates a Uint8Array from an array of bytes
 function uint_8Array(bytes) {
     return new Uint8Array(bytes);
 }
 
+// Encodes a string to UTF-8
 function buffer(enc) {
     return utf8Encoder.encode(enc);
 }
 
+// Decodes a UTF-8 encoded string
 function unbuffer(enc, encoding) {
     return utf8Decoder.decode(enc);
 }
 
+// Converts a string to SJCL bits
 function tobits(val) {
     return sjcl.codec.utf8String.toBits(val);
 }
 
+// Converts a decimal to hexadecimal
 function dectohex(val) {
     return val.toString(16);
 }
 
+// Converts a hexadecimal to decimal (BigInt)
 function hextodec(val) {
     return BigInt("0x" + val);
 }
 
+// Checks if a string is a valid hexadecimal
 function is_hex(str) {
     return new RegExp("^[a-fA-F0-9]+$").test(str);
 }
 
+// Converts a hexadecimal string to a binary array
 function hextobin(hex) {
     if (hex.length % 2 !== 0) throw "Hex string has invalid length!";
     const res = uint_8Array(hex.length / 2);
@@ -49,6 +57,7 @@ function hextobin(hex) {
     return res;
 }
 
+// Converts a binary array to a hexadecimal string
 function bintohex(bin) {
     const out = [];
     for (let i = 0; i < bin.length; ++i) {
@@ -57,50 +66,61 @@ function bintohex(bin) {
     return out.join("");
 }
 
+// Pads a string with leading zeros to a specified byte length
 function str_pad(val, bytes) {
     return (bytestring.slice(0, bytes) + val).substr(-bytes);
 }
 
+// Converts a hexadecimal string to SJCL bits
 function hextobits(val) {
     return sjcl.codec.hex.toBits(val);
 }
 
+// Converts SJCL bits to a hexadecimal string
 function frombits(val) {
     return sjcl.codec.hex.fromBits(val);
 }
 
+// Returns the bit length of an SJCL bitArray
 function bitlength(val) {
     return sjcl.bitArray.bitLength(val);
 }
 
+// Concatenates two SJCL bitArrays
 function concat_array(arr1, arr2) {
     return sjcl.bitArray.concat(arr1, arr2);
 }
 
+// Converts an ArrayBuffer to a hexadecimal string
 function buf2hex(buffer) { // buffer is an ArrayBuffer
     return Array.prototype.map.call(uint_8Array(buffer), x => ("00" + x.toString(16)).slice(-2)).join("");
 }
 
 // mnemonic helpers
 
+// Cleans and normalizes a mnemonic phrase
 function cleanstring(words) {
     return normalizestring(joinwords(splitwords(words)));
 }
 
+// Joins an array of words into a space-separated string
 function joinwords(words) {
     return words.join(" ");
 }
 
+// Splits a mnemonic phrase into an array of words
 function splitwords(mnemonic) {
     return mnemonic.split(/\s/g).filter(function(x) {
         return x.length;
     });
 }
 
+// Normalizes a string using NFKD normalization
 function normalizestring(str) {
     return str.normalize("NFKD");
 }
 
+// Converts a mnemonic phrase to a binary string
 function mnemonicToBinaryString(mnemonic) {
     const mm = splitwords(mnemonic);
     if (mm.length == 0 || mm.length % 3 > 0) {
@@ -119,6 +139,7 @@ function mnemonicToBinaryString(mnemonic) {
     return idx.join("");
 }
 
+// Converts a binary string to an array of 32-bit words
 function binaryStringToWordArray(binary) {
     let aLen = binary.length / 32,
         a = [];
@@ -131,6 +152,7 @@ function binaryStringToWordArray(binary) {
     return a;
 }
 
+// Converts a byte array to an array of 32-bit words
 function byteArrayToWordArray(data) {
     const a = [];
     for (let i = 0; i < data.length / 4; i++) {
@@ -144,6 +166,7 @@ function byteArrayToWordArray(data) {
     return a;
 }
 
+// Converts a byte array to a binary string
 function byteArrayToBinaryString(data) {
     let bin = "";
     for (let i = 0; i < data.length; i++) {
@@ -152,6 +175,7 @@ function byteArrayToBinaryString(data) {
     return bin;
 }
 
+// Converts a hexadecimal string to a binary string
 function hexStringToBinaryString(hexString) {
     let binaryString = "";
     for (let i = 0; i < hexString.length; i++) {
@@ -163,11 +187,13 @@ function hexStringToBinaryString(hexString) {
 // base58
 // https://gist.github.com/diafygi/90a3e80ca1c2793220e5/
 
+// Encodes a string or hexadecimal to Base58
 function b58enc(enc, encode) {
     const bytestring = (encode = "hex") ? hextobin(enc) : buffer(enc);
     return b58enc_uint_array(bytestring);
 }
 
+// Encodes a Uint8Array to Base58
 function b58enc_uint_array(u) {
     let d = [],
         s = "",
@@ -187,11 +213,13 @@ function b58enc_uint_array(u) {
     return s;
 }
 
+// Decodes a Base58 string to UTF-8 or hexadecimal
 function b58dec(dec, decode) {
     const buffer = b58dec_uint_array(dec);
     return (decode == "hex") ? buf2hex(buffer) : unbuffer(buffer, "utf-8");
 }
 
+// Decodes a Base58 string to a Uint8Array
 function b58dec_uint_array(dec) {
     let d = [],
         b = [],
@@ -213,11 +241,13 @@ function b58dec_uint_array(dec) {
 }
 
 // base58check
+// Encodes a payload with a checksum using Base58Check encoding
 function b58check_encode(payload) {
     const full_bytes = payload + hmacsha(hmacsha(payload, "sha256", "hex"), "sha256", "hex").slice(0, 8);
     return b58enc(full_bytes, "hex");
 }
 
+// Decodes a Base58Check encoded string
 function b58check_decode(val) {
     const full_bytes = b58dec(val, "hex"),
         bytes = full_bytes.substring(0, full_bytes.length - 8);
@@ -226,6 +256,7 @@ function b58check_decode(val) {
 
 //LNurl
 
+// Converts bytes to words (used in bech32 encoding)
 function toWords(bytes) {
     const res = convert(bytes, 8, 5, true);
     if (Array.isArray(res)) {
@@ -234,6 +265,7 @@ function toWords(bytes) {
     throw new Error(res)
 }
 
+// Converts words to bytes (used in bech32 decoding)
 function fromWords(bytes) {
     const res = convert(bytes, 5, 8, true);
     if (Array.isArray(res)) {
@@ -242,6 +274,7 @@ function fromWords(bytes) {
     throw new Error(res)
 }
 
+// Converts data between different bit representations
 function convert(data, inBits, outBits, pad) {
     let value = 0,
         bits = 0,
@@ -272,38 +305,46 @@ function convert(data, inBits, outBits, pad) {
 
 //hashing
 
+// Computes HMAC using SJCL
 function hmac_bits(message, key, encode) {
     const enc_msg = (encode == "hex") ? hextobits(message) : message,
         hmac = new sjcl.misc.hmac(key, sjcl.hash.sha512);
     return frombits(hmac.encrypt(enc_msg));
 }
 
+// Computes HMAC-SHA hash
 function hmacsha(key, hash, encode) {
     const enc_key = (encode == "hex") ? hextobits(key) : key;
     return frombits(hmacsha_bits(enc_key, hash));
 }
 
+// Computes HMAC-SHA hash in bits
 function hmacsha_bits(key, hash) {
     return sjcl.hash[hash].hash(key);
 }
 
+// Converts a private key to Wallet Import Format (WIF)
 function privkey_wif(versionbytes, hexkey, comp) {
     const compressed = (comp) ? "01" : "";
     return b58check_encode(versionbytes + hexkey + compressed);
 }
 
+// Derives public key from private key
 function priv_to_pub(priv) {
     return secp.getPublicKey(priv, true);
 }
 
+// Expands a compressed public key to uncompressed format
 function expand_pub(pub) {
     return secp.Point.fromHex(pub).toHex(false);
 }
 
+// Converts a public key to a cryptocurrency address
 function pub_to_address(versionbytes, pub) {
     return hash160_to_address(versionbytes, hash160(pub));
 }
 
+// Converts a public key to an Ethereum address
 function pub_to_eth_address(pub) {
     const xp_pub = expand_pub(pub),
         keccak = "0x" + keccak_256(hextobin(xp_pub.slice(2))),
@@ -311,18 +352,22 @@ function pub_to_eth_address(pub) {
     return toChecksumAddress(addr);
 }
 
+// Computes RIPEMD160(SHA256(input))
 function hash160(pub) {
     return hmacsha(hmacsha(pub, "sha256", "hex"), "ripemd160", "hex");
 }
 
+// Converts RIPEMD160 hash to a cryptocurrency address
 function hash160_to_address(versionbytes, h160) {
     return b58check_encode(versionbytes + h160);
 }
 
+// Computes a substring of SHA256 hash
 function sha_sub(val, lim) {
     return hmacsha(val, "sha256").slice(0, lim);
 }
 
+// Converts an Ethereum address to checksum format
 function toChecksumAddress(e) {
     if (void 0 === e) {
         return "";
@@ -339,6 +384,7 @@ function toChecksumAddress(e) {
 
 // Bech 32
 
+// Converts a public key to a Bech32 address
 function pub_to_address_bech32(hrp, pubkey) {
     const step1 = hash160(pubkey),
         step2 = hexStringToBinaryString(step1),
@@ -347,6 +393,7 @@ function pub_to_address_bech32(hrp, pubkey) {
     return bech32_encode(hrp, step4);
 }
 
+// Converts a binary array to decimal array for Bech32 encoding
 function bech32_dec_array(bitarr) {
     const hexstr = [0];
     $.each(bitarr, function(i, bits) {
@@ -357,6 +404,7 @@ function bech32_dec_array(bitarr) {
 
 // from https://github.com/sipa/bech32/tree/master/ref/javascript
 
+// Computes the Bech32 checksum
 function polymod(values) {
     let chk = 1;
     for (let p = 0; p < values.length; ++p) {
@@ -371,6 +419,7 @@ function polymod(values) {
     return chk;
 }
 
+// Expands the human-readable part for Bech32 encoding
 function hrpExpand(hrp) {
     const ret = [];
     let p;
@@ -384,10 +433,12 @@ function hrpExpand(hrp) {
     return ret;
 }
 
+// Verifies the checksum in a Bech32 address
 function verifyChecksum(hrp, data) {
     return polymod(hrpExpand(hrp).concat(data)) === 1;
 }
 
+// Creates a checksum for Bech32 encoding
 function createChecksum(hrp, data) {
     const values = hrpExpand(hrp).concat(data).concat([0, 0, 0, 0, 0, 0]),
         mod = polymod(values) ^ 1,
@@ -398,6 +449,7 @@ function createChecksum(hrp, data) {
     return ret;
 }
 
+// Encodes data into a Bech32 address
 function bech32_encode(hrp, data) {
     let combined = data.concat(createChecksum(hrp, data)),
         ret = hrp + "1";
@@ -407,6 +459,7 @@ function bech32_encode(hrp, data) {
     return ret;
 }
 
+// Decodes a Bech32 encoded string (unused)
 function bech32_decode(bechString) { // unused
     let p,
         has_lower = false,
@@ -448,6 +501,7 @@ function bech32_decode(bechString) { // unused
     };
 }
 
+// Decodes a Bech32 encoded LNURL
 function lnurl_decodeb32(lnurl) {
     let p,
         has_lower = false,
@@ -486,6 +540,7 @@ function lnurl_decodeb32(lnurl) {
     };
 }
 
+// Encrypts data using AES-GCM
 function aes_enc(params, keyString) {
     const buffer = uint_8Array(16),
         iv = byteArrayToWordArray(crypto.getRandomValues(buffer)),
@@ -498,6 +553,7 @@ function aes_enc(params, keyString) {
     return conString;
 }
 
+// Decrypts AES-GCM encrypted data
 function aes_dec(content, keyst) {
     const bitArray = sjcl.codec.base64.toBits(content),
         bitArrayCopy = bitArray.slice(0),
@@ -514,21 +570,25 @@ function aes_dec(content, keyst) {
     }
 }
 
+// Converts a hexadecimal string to a decimal string
 function hexToNumberString(val) {
     return hex_to_number(val).toString();
 }
 
+// Converts a hexadecimal string to a number
 function hex_to_number(val) {
     return parseInt(val, 16);
 }
 
 // CashAddr
 
+// Converts a legacy Bitcoin Cash address to CashAddr format
 function pub_to_cashaddr(legacy) {
     const c_addr = bch_cashaddr("bitcoincash", "P2PKH", legacy);
     return c_addr.split(":")[1];
 }
 
+// Converts a CashAddr format address to legacy Bitcoin Cash address
 function bch_legacy(cadr) {
     try {
         const version = 0,
@@ -544,6 +604,7 @@ function bch_legacy(cadr) {
     }
 }
 
+// Converts a legacy Bitcoin Cash address to CashAddr format
 function bch_cashaddr(prefix, type, legacy) {
     try {
         const lbytes = b58dec_uint_array(legacy),
@@ -557,6 +618,7 @@ function bch_cashaddr(prefix, type, legacy) {
 
 // Nimiq.watch TXD
 
+// Encodes a Nimiq transaction hash for use with Nimiq.watch
 function nimiqhash(tx) {
     return encodeURIComponent(btoa(tx.match(/\w{2}/g).map(function(a) {
         return String.fromCharCode(parseInt(a, 16));
