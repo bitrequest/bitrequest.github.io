@@ -623,20 +623,20 @@ const glob_apptitle = "Bitrequest",
                     "apis": {
                         "icon": "sphere",
                         "selected": {
-                            "name": "dash.org",
-                            "url": "insight.dash.org",
+                            "name": "blockchair",
+                            "url": "blockchair.com",
                             "api": true,
                             "display": true
                         },
                         "apis": [{
-                                "name": "dash.org",
-                                "url": "insight.dash.org",
+                                "name": "blockchair",
+                                "url": "blockchair.com",
                                 "api": true,
                                 "display": true
                             },
                             {
-                                "name": "blockchair",
-                                "url": "blockchair.com",
+                                "name": "dash.org",
+                                "url": "insight.dash.org",
                                 "api": true,
                                 "display": true
                             },
