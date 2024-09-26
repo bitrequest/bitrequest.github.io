@@ -3550,7 +3550,7 @@ function check_teaminvite(ro) {
                 cd_format = countdown_format(cd),
                 bpdat_seedid = br_dat.bitrequest_cashier ? br_dat.bitrequest_cashier.seedid || false : false,
                 update = bpdat_seedid === glob_cashier_seedid,
-                master_account = bpdat_seedid === glob_bipide,
+                master_account = bpdat_seedid === glob_bipid,
                 teamid = br_get_local("teamid", true),
                 teamid_arr = br_dobj(teamid),
                 is_installed = teamid_arr.includes(ro),
