@@ -214,8 +214,7 @@ function editcurrency() {
             symbolstringarray = br_get_local("symbols", true);
         let symbollist = "";
         $.each(symbolstringarray, function(key, value) {
-            if (key == "BTC") { // remove from list
-            } else {
+            if (key !== "BTC") { // remove from list
                 symbollist += "<span data-id='1' data-pe='none'>" + key + " | " + value + "</span>";
             }
         });
@@ -313,10 +312,11 @@ function autocompletecurrency() {
 function submitcurrency() {
     $(document).on("click", "#currencyformbox input.submit", function(e) {
         e.preventDefault();
-        const localcurrency = get_setting("currencysettings", "currencysymbol");
-        thisform = $(this).closest(".popform"),
+        const localcurrency = get_setting("currencysettings", "currencysymbol"),
+            thisform = $(this).closest(".popform"),
             thisinput = thisform.find("input:first"),
             thisinputvalue = thisinput.val();
+        thisform.removeClass("validated");
         $("#currencyformbox .options > span").each(function() {
             if (thisinputvalue == $(this).text()) {
                 thisform.addClass("validated");
@@ -324,16 +324,16 @@ function submitcurrency() {
         });
         if (thisform.hasClass("validated")) {
             const defaultcurrency_switch = $("#toggle_defaultcurrency .switchpanel"),
-                switchchange = (defaultcurrency_switch.hasClass("dc_changed")),
+                switchchange = defaultcurrency_switch.hasClass("dc_changed"),
                 values = thisinputvalue.split(" | "),
                 currencysymbol = values[0],
                 currency = values[1],
                 currencysymbollc = currencysymbol.toLowerCase();
-            if (currencysymbollc == localcurrency && switchchange === false) {
+            if (currencysymbollc === localcurrency && !switchchange) {
                 canceldialog();
                 return false;
             }
-            const dc_output = (defaultcurrency_switch.hasClass("true")) ? true : false;
+            const dc_output = defaultcurrency_switch.hasClass("true");
             set_setting("currencysettings", {
                 "currencysymbol": currencysymbollc,
                 "selected": thisinputvalue,
@@ -359,11 +359,11 @@ function editlanguage() {
         const translation = translate("obj"),
             current_lang = q_obj(translation, glob_langcode + ".lang"),
             current_flag = q_obj(translation, glob_langcode + ".flag"),
-            cf_string = (current_flag) ? current_flag + " " : "";
-        current_val = cf_string + current_lang + " (" + glob_langcode + ")";
+            cf_string = current_flag ? current_flag + " " : "",
+            current_val = cf_string + current_lang + " (" + glob_langcode + ")";
         let langlist = "";
         $.each(translation, function(key, value) {
-            const cflag = (value.flag) ? value.flag + " " : ""
+            const cflag = value.flag ? value.flag + " " : ""
             langlist += "<span>" + cflag + value.lang + " (" + key + ")</span>";
         });
         const ddat = [{
@@ -430,9 +430,8 @@ function submitlang() {
             currentlang = thisform.attr("data-currentlang"),
             thisinput = thisform.find("input"),
             thisvalue = thisinput.val(),
-            lc1 = thisvalue.split(")")[0],
-            lc2 = lc1.split("(")[1];
-        if (lc2 == currentlang) {
+            lc2 = thisvalue.match(/\(([^)]+)\)/)[1];
+        if (lc2 === currentlang) {
             canceldialog();
             return
         }
@@ -465,13 +464,45 @@ function editpin() {
 function locktime() {
     $(document).on("click", "#locktime, #lock_time", function() {
         const locktime = get_setting("pinsettings", "locktime"),
-            ddat = [{
+            locktimeOptions = [{
+                    "value": "0",
+                    "text": "0 " + translate("minutes")
+                },
+                {
+                    "value": "60000",
+                    "text": "1 " + translate("minute")
+                },
+                {
+                    "value": "300000",
+                    "text": "5 " + translate("minutes")
+                },
+                {
+                    "value": "600000",
+                    "text": "10 " + translate("minutes")
+                },
+                {
+                    "value": "900000",
+                    "text": "15 " + translate("minutes")
+                },
+                {
+                    "value": "1800000",
+                    "text": "30 " + translate("minutes")
+                },
+                {
+                    "value": "never",
+                    "text": translate("never")
+                }
+            ],
+            options = locktimeOptions.map(option =>
+                "<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>" + option.value + "</span> " + option.text + "</div></li>"
+            ).join("");
+        ddat = [{
                 "div": {
                     "class": "popform",
                     "content": [{
                             "ul": {
                                 "class": "conf_options noselect",
-                                "content": "<li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>0</span> 0 " + translate("minutes") + "</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>60000</span> 1 " + translate("minute") + "</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>300000</span> 5 " + translate("minutes") + "</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>600000</span> 10 " + translate("minutes") + "</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>900000</span> 15 " + translate("minutes") + "</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>1800000</span> 30 " + translate("minutes") + "</div></li><li><div class='pick_conf'><div class='radio icon-radio-unchecked'></div><span>never</span> " + translate("never") + "</div></li>"
+                                "content": options
                             },
                             "input": {
                                 "attr": {
@@ -499,10 +530,9 @@ function locktime() {
                 "elements": ddat
             });
         popdialog(content, "triggersubmit");
-        const currentli = $("#locktime_formbox ul.conf_options li").filter(function() {
-            return $(this).find("span").text() == locktime
-        });
-        currentli.find(".radio").removeClass("icon-radio-unchecked").addClass("icon-radio-checked2");
+        $("#locktime_formbox ul.conf_options li").filter(function() {
+            return $(this).find("span").text() === locktime;
+        }).find(".radio").removeClass("icon-radio-unchecked").addClass("icon-radio-checked2");
     })
 }
 
@@ -510,9 +540,8 @@ function locktime() {
 function submit_locktime() {
     $(document).on("click", "#locktime_formbox input.submit", function(e) {
         e.preventDefault();
-        const thistrigger = $(this),
-            thisvalue = thistrigger.prev("input").val(),
-            titlepin = (thisvalue == "never") ? "pincodedisabled" : "pincodeactivated";
+        const thisvalue = $(this).prev("input").val(),
+            titlepin = thisvalue === "never" ? "pincodedisabled" : "pincodeactivated";
         set_setting("pinsettings", {
             "locktime": thisvalue,
             "selected": titlepin
@@ -580,11 +609,11 @@ function backupdatabase() {
         alert_icon = $("#alert > span"),
         nr_changes = alert_icon.text(),
         alert_title = alert_icon.attr("title"),
-        alert_txt = (nr_changes == "!") ? "<span class='warning'>! " + alert_title + " </span>" : "<p>" + translate("nrchanges", {
+        alert_txt = (nr_changes === "!") ? "<span class='warning'>! " + alert_title + " </span>" : "<p>" + translate("nrchanges", {
             "nr_changes": nr_changes
         }) + "</p>",
-        showhidechangelog = (gd_active === true) ? "display:none" : "display:block",
-        changenotification = (gd_active === false && glob_body.hasClass("haschanges")) ? alert_txt : "",
+        showhidechangelog = gd_active ? "display:none" : "display:block",
+        changenotification = (!gd_active && glob_body.hasClass("haschanges")) ? alert_txt : "",
         ddat = [{
                 "div": {
                     "id": "dialogcontent",
@@ -687,7 +716,7 @@ function backupdatabase() {
 function sbu_switch() {
     $(document).on("mouseup", "#toggle_sbu_span .switchpanel", function() {
         const thistrigger = $(this),
-            thisvalue = (thistrigger.hasClass("true")) ? true : false;
+            thisvalue = thistrigger.hasClass("true");
         if (thisvalue === true) {
             const result = confirm(translate("includesecretphrase"));
             if (result === false) {
@@ -721,7 +750,7 @@ function sharebu() {
             }).done(function(e) {
                 const br_cache = e.ping.br_cache,
                     filetime = br_cache.created_utc,
-                    filetimesec = (filetime) ? filetime * 1000 : now(),
+                    filetimesec = filetime ? filetime * 1000 : now(),
                     filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
                     sharedtitle = translate("systembackup") + " " + accountname + " (" + filetime_format + ")",
                     set_proxy = c_proxy(),
@@ -731,9 +760,7 @@ function sharebu() {
                     }));
                 shorten_url(sharedtitle, glob_approot + "?p=settings&sbu=" + r_dat, fetch_aws("img_system_backup.png"), true);
             }).fail(function(jqXHR, textStatus, errorThrown) {
-                console.log(jqXHR);
-                console.log(textStatus);
-                console.log(errorThrown);
+                console.error("API proxy error:", jqXHR, textStatus, errorThrown);
                 closeloader();
             });
         }
@@ -756,7 +783,7 @@ function check_systembu(sbu) {
             const br_cache = ping.br_cache,
                 server_time = br_cache.utc_timestamp,
                 filetime = br_cache.created_utc,
-                filetimesec = (filetime) ? filetime * 1000 : now(),
+                filetimesec = filetime ? filetime * 1000 : now(),
                 filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
                 br_result = ping.br_result,
                 base64 = br_result.base64,
@@ -768,7 +795,7 @@ function check_systembu(sbu) {
                 filename = "bitrequest_system_backup_" + glob_langcode + "_" + encodeURIComponent(account) + "_" + bu_date + ".json",
                 cd = countdown(expires_in * 1000),
                 cd_format = countdown_format(cd),
-                cf_string = (cd_format) ? translate("expiresin") + cd_format : translate("fileexpired"),
+                cf_string = cd_format ? translate("expiresin") + cd_format : translate("fileexpired"),
                 ddat = [{
                     "div": {
                         "id": "dialogcontent",
@@ -834,13 +861,14 @@ function check_systembu(sbu) {
             systembu_expired();
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
+        console.error("API proxy error:", jqXHR, textStatus, errorThrown);
         systembu_expired();
     });
 }
 
 // Decodes base64 string and returns JSON object
 function stripb64(ab) {
-    const b64 = (ab.indexOf("%") > -1) ? ab.substr(0, ab.indexOf("%")) : ab;
+    const b64 = ab.indexOf("%") > -1 ? ab.substr(0, ab.indexOf("%")) : ab;
     return JSON.parse(atob(b64));
 }
 
@@ -886,23 +914,19 @@ function backupcd() {
 
 // Compiles backup data from localStorage
 function complilebackup() {
-    const jsonfile = [];
+    const jsonfile = [],
+        excludedKeys = [
+            "bitrequest_symbols", "bitrequest_changes", "bitrequest_erc20tokens",
+            "bitrequest_editurl", "bitrequest_recent_requests", "bitrequest_backupfile_id",
+            "bitrequest_appstore_dialog", "bitrequest_init", "bitrequest_k",
+            "bitrequest_awl", "bitrequest_dat", "bitrequest_tp"
+        ];
     for (let key in localStorage) {
         const value = localStorage.getItem(key);
-        if (value === null ||
-            key == "bitrequest_symbols" ||
-            key == "bitrequest_changes" ||
-            key == "bitrequest_erc20tokens" ||
-            key == "bitrequest_editurl" ||
-            key == "bitrequest_recent_requests" ||
-            key == "bitrequest_backupfile_id" ||
-            key == "bitrequest_appstore_dialog" ||
-            key == "bitrequest_init" ||
-            key == "bitrequest_k" ||
-            key == "bitrequest_awl" ||
-            key == "bitrequest_dat" ||
-            key == "bitrequest_tp") {} else if (key == "bitrequest_bpdat") { // only backup encrypted seed
-            const not_verified = (glob_io.bipv != "yes"); // backup when not verified
+        if (value === null || excludedKeys.includes(key)) {
+            continue;
+        } else if (key === "bitrequest_bpdat") {
+            const not_verified = (glob_io.bipv !== "yes");
             if (not_verified || (glob_test_derive === true && get_setting("backup", "sbu") === true)) {
                 const val_obj = JSON.parse(value);
                 val_obj.dat = null;
@@ -912,7 +936,7 @@ function complilebackup() {
             jsonfile.push('"' + key + '":' + value);
         }
     }
-    return btoa("{" + jsonfile + "}");
+    return btoa("{" + jsonfile.join(",") + "}");
 }
 
 // Generates a filename for the backup file
@@ -969,14 +993,14 @@ function trigger_restore() {
         backupnode = $("#backup"),
         lastfileused = restorenode.data("fileused"),
         lastdevice = restorenode.data("device"),
-        deviceused = (lastdevice == "folder-open") ? "" : "google-drive",
-        lastfileusedstring = (lastfileused) ? "<p class='icon-" + deviceused + "'>" + translate("lastrestore") + "<br/><span class='icon-" + lastdevice + "'>" + lastfileused + "</span></p>" : "",
+        deviceused = lastdevice === "folder-open" ? "" : "google-drive",
+        lastfileusedstring = lastfileused ? "<p class='icon-" + deviceused + "'>" + translate("lastrestore") + "<br/><span class='icon-" + lastdevice + "'>" + lastfileused + "</span></p>" : "",
         lastbackup = backupnode.data("lastbackup"),
         lastbudevice = backupnode.data("device"),
-        lastbackupdevice = (lastbudevice == "folder-open") ? "" : "google-drive",
-        lastbackupstring = (lastbackup) ? "<p class='icon-" + lastbackupdevice + "'>" + translate("lastbackup") + "<br/><span class='icon-" + lastbudevice + "'>" + lastbackup + "</span></p>" : "",
+        lastbackupdevice = lastbudevice === "folder-open" ? "" : "google-drive",
+        lastbackupstring = lastbackup ? "<p class='icon-" + lastbackupdevice + "'>" + translate("lastbackup") + "<br/><span class='icon-" + lastbudevice + "'>" + lastbackup + "</span></p>" : "",
         gd_active = GD_pass().pass,
-        showhidegd = (gd_active === true) ? "display:none" : "display:block",
+        showhidegd = gd_active ? "display:none" : "display:block",
         ddat = [{
                 "div": {
                     "id": "gd_meta",
@@ -1014,7 +1038,7 @@ function trigger_restore() {
             "elements": ddat
         });
     popdialog(content, "triggersubmit");
-    if (gd_active === true) {
+    if (gd_active) {
         listappdata();
     }
 }
@@ -1031,7 +1055,7 @@ function restorebackup() {
             popnotify("error", translate("filesize"));
             return
         }
-        if (filetype == "application/json") {
+        if (filetype === "application/json") {
             const reader = new FileReader();
             reader.onload = function(e) {
                 glob_backup_result = e.target.result;
@@ -1071,18 +1095,16 @@ function submitrestore() {
 
 // Initiates the restore process
 function restore(jsonobject, bu_filename) {
-    const cbu = check_backup(jsonobject);
-    if (cbu === false) {
-        return
+    if (!check_backup(jsonobject)) {
+        return;
     }
     const result = confirm(translate("restorefile", {
         "file": bu_filename
     }));
-    if (result === true) {
-        const is_team_invite = isteaminvite(jsonobject);
-        if (is_team_invite === true) {
+    if (result) {
+        if (isteaminvite(jsonobject)) {
             install_teaminvite(jsonobject, bu_filename, false);
-            return
+            return;
         }
         scan_restore(jsonobject);
         const pass_dat = {
@@ -1113,7 +1135,7 @@ function submit_GD_restore() {
                 "file": thisfield.text(),
                 "device": thisdevice
             }));
-        if (result === true) {
+        if (result) {
             const thisfileid = thisfield.attr("data-gdbu_id"),
                 p = GD_pass();
             if (p.pass) {
@@ -1140,18 +1162,11 @@ function submit_GD_restore() {
                     };
                     restore_algo(pass_dat);
                 }).fail(function(jqXHR, textStatus, errorThrown) {
-                    console.log(jqXHR);
-                    console.log(textStatus);
-                    console.log(errorThrown);
-                    if (textStatus == "error") {
-                        if (errorThrown == "Unauthorized") {
-                            notify(translate("unauthorized")); // log in
-                            return
-                        }
-                        notify(translate("error"));
+                    console.error("API request failed:", textStatus, errorThrown);
+                    if (textStatus === "error") {
+                        notify(errorThrown === "Unauthorized" ? translate("unauthorized") : translate("error"));
                     }
                 });
-                return
             }
         }
     })
@@ -1167,10 +1182,10 @@ function scan_restore(jsonobject) {
     const bpdat = jsonobject.bitrequest_bpdat;
     if (bpdat) {
         // Attempt to decode the backup data
-        const can_dec = (bpdat.dat) ? s_decode(bpdat) : (bpdat.datenc) ? s_decode(bpdat.datenc) : false;
+        const can_dec = bpdat.dat ? s_decode(bpdat) : bpdat.datenc ? s_decode(bpdat.datenc) : false;
         // Set flags for successful backup unit and same backup ID
         glob_resd.sbu = true;
-        glob_resd.samebip = (bpdat.id == glob_bipid);
+        glob_resd.samebip = (bpdat.id === glob_bipid);
         // Store decoded backup data
         glob_resd.bpdat = can_dec;
     }
@@ -1181,23 +1196,19 @@ function scan_restore(jsonobject) {
 function restore_algo(pass_dat) {
     const cbu = check_backup(pass_dat);
     if (cbu === false) {
-        return false
+        return false;
     }
     if (glob_resd.sbu) { // has seed backup
         if (glob_resd.samebip === true) {
             // keep existing phrase
             restore_callback(pass_dat, false);
+        } else if (glob_hasbip === true) {
+            dphrase_dialog(pass_dat);
+        } else if (glob_resd.bpdat) {
+            // import and check decode
+            restore_callback(pass_dat, true);
         } else {
-            if (glob_hasbip === true) {
-                dphrase_dialog(pass_dat);
-            } else {
-                // import and check decode
-                if (glob_resd.bpdat) {
-                    restore_callback(pass_dat, true);
-                } else {
-                    pin_dialog(pass_dat, "restore_callback");
-                }
-            }
+            pin_dialog(pass_dat, "restore_callback");
         }
     } else {
         restore_callback(pass_dat, false);
@@ -1208,11 +1219,11 @@ function restore_algo(pass_dat) {
 function restore_callback(pass_dat, newphrase) {
     const type = pass_dat.type;
     if (type) {
-        if (type == "gd") {
+        if (type === "gd") {
             restore_callback_gd(pass_dat, newphrase);
             return
         }
-        if (type == "file") {
+        if (type === "file") {
             restore_callback_file(pass_dat, newphrase);
             return
         }
@@ -1222,24 +1233,29 @@ function restore_callback(pass_dat, newphrase) {
 
 // Function to decode encrypted data using a pin hash
 function s_decode(pdat, phash) {
-    const pinhash = (phash) ? phash : $("#pinsettings").data("pinhash");
-    if (pinhash && pdat) {
-        const keystring = ptokey(pinhash, pdat.id),
-            decrypt = aes_dec(pdat.dat, keystring);
-        if (decrypt) {
-            const unquote = decrypt.replace(/['"]+/g, ""),
-                dec = JSON.parse(atob(unquote)),
-                pid = dec.pid;
-            if (pid) {
-                const dec_obj = {
-                    "dat": unquote,
-                    "id": pid
-                }
-                return dec_obj;
-            }
-        }
+    const pinhash = phash || $("#pinsettings").data("pinhash");
+    if (!pinhash || !pdat) {
+        return false;
     }
-    return false
+    const keystring = ptokey(pinhash, pdat.id),
+        decrypt = aes_dec(pdat.dat, keystring);
+    if (!decrypt) {
+        return false;
+    }
+    const unquote = decrypt.replace(/['"]+/g, "");
+    try {
+        const dec = JSON.parse(atob(unquote)),
+            pid = dec.pid;
+        if (pid) {
+            return {
+                "dat": unquote,
+                "id": pid
+            };
+        }
+    } catch (error) {
+        console.error("Error parsing decoded data:", error);
+    }
+    return false;
 }
 
 // Function to display a PIN entry dialog
@@ -1297,52 +1313,52 @@ function submit_pin_dialog() {
         e.preventDefault();
         const thisinput = $(this).prev("input"),
             thisvalue = thisinput.val();
-        if (thisvalue.length) {
-            const dialog = $("#dialog"),
-                pdat = $("#pindialog").data(),
-                pass_dat = pdat.pass_dat,
-                jasobj = pass_dat.jasobj;
-            if (jasobj) {
-                const pbdat = jasobj.bitrequest_bpdat,
-                    pbdat_eq = (pbdat.dat) ? pbdat : pbdat.datenc,
-                    can_dec = s_decode(pbdat_eq, hashcode(thisvalue));
-                if (can_dec) {
-                    glob_resd.pcnt = 0;
-                    const callback = pdat.cb;
-                    clearpinlock();
-                    if (callback) {
-                        glob_resd.bpdat = can_dec;
-                        if (callback == "restore_callback") {
-                            restore_callback(pass_dat, true);
-                        } else if (callback == "bu_oldseed") {
-                            bu_oldseed(pass_dat);
-                        } else if (callback == "cs_callback") {
-                            cs_callback(pass_dat);
-                        }
-                    }
-                    notify(translate("success") + "!");
-                    return
-                }
-                if (glob_resd.pcnt > 1) {
-                    $("#pinsettings").data("timeout", now() + 300000); // 5 minutes
-                    topnotify(translate("maxattempts"));
-                    const result = confirm(translate("restorewithoutsecretphrase") + "?");
-                    if (result === true) {
-                        restore_callback(pass_dat, false);
-                    }
-                    glob_resd.pcnt = 0;
-                    canceldialog();
-                } else {
-                    glob_resd.pcnt = glob_resd.pcnt + 1;
-                }
-                savesettings();
-                shake(dialog);
-                thisinput.val("");
-            }
+        if (!thisvalue.length) {
+            popnotify("error", translate("fourdigitpin"));
             return
         }
-        popnotify("error", translate("fourdigitpin"));
-        return false;
+        const dialog = $("#dialog"),
+            pdat = $("#pindialog").data(),
+            pass_dat = pdat.pass_dat,
+            jasobj = pass_dat.jasobj;
+        if (!jasobj) {
+            return
+        }
+        const pbdat = jasobj.bitrequest_bpdat,
+            pbdat_eq = pbdat.dat ? pbdat : pbdat.datenc,
+            can_dec = s_decode(pbdat_eq, hashcode(thisvalue));
+        if (can_dec) {
+            glob_resd.pcnt = 0;
+            const callback = pdat.cb;
+            clearpinlock();
+            if (callback) {
+                glob_resd.bpdat = can_dec;
+                if (callback === "restore_callback") {
+                    restore_callback(pass_dat, true);
+                } else if (callback === "bu_oldseed") {
+                    bu_oldseed(pass_dat);
+                } else if (callback === "cs_callback") {
+                    cs_callback(pass_dat);
+                }
+            }
+            notify(translate("success") + "!");
+            return
+        }
+        if (glob_resd.pcnt > 1) {
+            $("#pinsettings").data("timeout", now() + 300000); // 5 minutes
+            topnotify(translate("maxattempts"));
+            const result = confirm(translate("restorewithoutsecretphrase") + "?");
+            if (result === true) {
+                restore_callback(pass_dat, false);
+            }
+            glob_resd.pcnt = 0;
+            canceldialog();
+        } else {
+            glob_resd.pcnt += 1;
+        }
+        savesettings();
+        shake(dialog);
+        thisinput.val("");
     })
 }
 
@@ -1357,7 +1373,7 @@ function restore_cb_init_addresses() {
 
 // Callback for file-based restoration
 function restore_callback_file(pass_dat, np) {
-    const newphrase = (glob_hasbip === true) ? np : true;
+    const newphrase = glob_hasbip === true ? np : true;
     restorestorage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
     const lastrestore = "last restore: " + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_");
@@ -1388,7 +1404,7 @@ function restore_callback_gd(pass_dat, np) {
     setTimeout(function() {
         savesettings("noalert");
         createfile(); // create new file from backup
-        if (pass_dat.thisdeviceid == glob_deviceid) {
+        if (pass_dat.thisdeviceid === glob_deviceid) {
             const p = GD_pass();
             if (p.pass) {
                 deletefile(pass_dat.thisfileid, null, p.token); // delete old backup file
@@ -1481,9 +1497,9 @@ function submit_dphrase() {
         e.preventDefault();
         const thistrigger = $(this),
             thisvalue = thistrigger.prev("input").val();
-        if (thisvalue == translate("usesecretphrasefrombackup")) {
+        if (thisvalue === translate("usesecretphrasefrombackup")) {
             restore_bu_seed();
-        } else if (thisvalue == translate("keepcurrentsecretphrase")) {
+        } else if (thisvalue === translate("keepcurrentsecretphrase")) {
             keep_current_seed();
         }
         return false;
@@ -1493,7 +1509,7 @@ function submit_dphrase() {
 // Function to keep the current seed during restoration
 function keep_current_seed() {
     const result = confirm(translate("keepexistingsecretphrase"));
-    if (result === true) {
+    if (result) {
         const is_dialog = $("#importseedbox"),
             bu_dat = is_dialog.data();
         restore_callback(bu_dat, false);
@@ -1504,11 +1520,9 @@ function keep_current_seed() {
 function restore_bu_seed() {
     const is_dialog = $("#importseedbox"),
         bu_dat = is_dialog.data();
-    if (glob_resd.bpdat) {} else {
-        if (is_dialog.hasClass("verified")) {} else {
-            pin_dialog(bu_dat, "bu_oldseed")
-            return false;
-        }
+    if (!glob_resd.bpdat && !is_dialog.hasClass("verified")) {
+        pin_dialog(bu_dat, "bu_oldseed");
+        return false;
     }
     bu_oldseed(bu_dat);
 }
@@ -1543,21 +1557,19 @@ function compare_seeds() {
                 jasobj = bu_dat.jasobj;
             if (jasobj) {
                 const pbdat = jasobj.bitrequest_bpdat,
-                    pbdat_eq = (pbdat.dat) ? pbdat : pbdat.datenc;
-                if (pbdat_eq) {
-                    if (glob_resd.bpdat) {} else {
-                        const enterpin = prompt(translate("fourdigitpin")),
-                            can_dec = s_decode(pbdat_eq, hashcode(enterpin));
-                        if (can_dec) {
-                            glob_resd.bpdat = can_dec;
-                            is_dialog.addClass("verified");
-                            cs_callback(true)
-                        } else {
-                            popnotify("error", translate("wrongpin"));
-                            shake(is_dialog);
-                        }
-                        return false;
+                    pbdat_eq = pbdat.dat ? pbdat : pbdat.datenc;
+                if (pbdat_eq && !glob_resd.bpdat) {
+                    const enterpin = prompt(translate("fourdigitpin")),
+                        can_dec = s_decode(pbdat_eq, hashcode(enterpin));
+                    if (can_dec) {
+                        glob_resd.bpdat = can_dec;
+                        is_dialog.addClass("verified");
+                        cs_callback(true)
+                    } else {
+                        popnotify("error", translate("wrongpin"));
+                        shake(is_dialog);
                     }
+                    return false;
                 }
             }
             cs_callback();
@@ -1595,11 +1607,9 @@ function compare_seeds_callback(compare) {
 // Function to restore storage data from JSON object
 function restorestorage(jsonobject, newphrase) {
     $.each(jsonobject, function(key, value) {
-        if (key == "bitrequest_bpdat") {
-            if (glob_test_derive === true && newphrase === true) {
-                if (glob_resd.bpdat) {
-                    localStorage.setItem(key, JSON.stringify(glob_resd.bpdat));
-                }
+        if (key === "bitrequest_bpdat") {
+            if (glob_test_derive === true && newphrase === true && glob_resd.bpdat) {
+                localStorage.setItem(key, JSON.stringify(glob_resd.bpdat));
             }
         } else {
             localStorage.setItem(key, JSON.stringify(value));
@@ -1616,11 +1626,11 @@ function csvexport_trigger() {
     $(document).on("click", "#csvexport", function() {
         const rq_arr = br_get_local("requests", true),
             archive_arr = br_get_local("archive", true),
-            has_requests = (rq_arr && !$.isEmptyObject(rq_arr)),
-            has_archive = (archive_arr && !$.isEmptyObject(archive_arr));
-        if (has_requests === true || has_archive === true) {
-            const filename = "bitrequest_csv_export_" + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_").replace(/\:/g, "_") + ".csv",
-                show_archive = (has_requests === true) ? "false" : "true",
+            has_requests = rq_arr && !$.isEmptyObject(rq_arr),
+            has_archive = archive_arr && !$.isEmptyObject(archive_arr);
+        if (has_requests || has_archive) {
+            const filename = "bitrequest_csv_export_" + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_").replace(/:/g, "_") + ".csv",
+                show_archive = has_requests ? "false" : "true",
                 content = "<div class='formbox' id='exportcsvbox'>\
                     <h2 class='icon-table'>" + translate("csvexport") + "</h2>\
                     <div class='popnotify'></div>\
@@ -1688,11 +1698,11 @@ function csvexport_trigger() {
                     <div id='backupcd'>" + cancelbttn + "</div>\
                 </div>";
             popdialog(content, "triggersubmit", null, true);
-            return
+            return;
         }
         playsound(glob_funk);
         notify(translate("nocsvexports"));
-    })
+    });
 }
 
 // Event handler for submitting CSV export
@@ -1719,14 +1729,14 @@ function submit_csvexport() {
         notify(translate("downloaded", {
             "file": "CSV"
         }));
-    })
+    });
 }
 
 // Compiles the CSV data from requests and archive
 function complile_csv() {
     const rq_arr = br_get_local("requests", true),
         archive_arr = br_get_local("archive", true),
-        has_archive = (archive_arr && !$.isEmptyObject(archive_arr)),
+        has_archive = archive_arr && !$.isEmptyObject(archive_arr),
         csv_arr = [],
         options_li = $("#exportcsvbox #ecsv_options"),
         op_from = options_li.find("li#escv_from .switchpanel"),
@@ -1741,19 +1751,19 @@ function complile_csv() {
         op_incoming = options_li.find("li#escv_incoming .switchpanel"),
         op_receipt = options_li.find("li#escv_receipt .switchpanel"),
         op_archive = options_li.find("li#escv_archive .switchpanel"),
-        incl_from = (op_from.hasClass("true")) ? true : false,
-        incl_desc = (op_desc.hasClass("true")) ? true : false,
-        incl_address = (op_address.hasClass("true")) ? true : false,
-        incl_paid = (op_paid.hasClass("true")) ? true : false,
-        incl_ins = (op_ins.hasClass("true")) ? true : false,
-        incl_new = (op_new.hasClass("true")) ? true : false,
-        incl_pending = (op_pending.hasClass("true")) ? true : false,
-        incl_pos = (op_pos.hasClass("true")) ? true : false,
-        incl_outgoing = (op_outgoing.hasClass("true")) ? true : false,
-        incl_incoming = (op_incoming.hasClass("true")) ? true : false,
-        incl_receipt = (op_receipt.hasClass("true")) ? true : false,
-        incl_archive = (op_archive.hasClass("true")) ? true : false,
-        rq_obj = (has_archive === true && incl_archive) ? rq_arr.concat(archive_arr) : rq_arr;
+        incl_from = op_from.hasClass("true"),
+        incl_desc = op_desc.hasClass("true"),
+        incl_address = op_address.hasClass("true"),
+        incl_paid = op_paid.hasClass("true"),
+        incl_ins = op_ins.hasClass("true"),
+        incl_new = op_new.hasClass("true"),
+        incl_pending = op_pending.hasClass("true"),
+        incl_pos = op_pos.hasClass("true"),
+        incl_outgoing = op_outgoing.hasClass("true"),
+        incl_incoming = op_incoming.hasClass("true"),
+        incl_receipt = op_receipt.hasClass("true"),
+        incl_archive = op_archive.hasClass("true"),
+        rq_obj = has_archive && incl_archive ? rq_arr.concat(archive_arr) : rq_arr;
     $.each(rq_obj, function(i, val) {
         const csv_request = {},
             payment = val.payment,
@@ -1761,13 +1771,13 @@ function complile_csv() {
             amount = val.amount,
             uoa = val.uoa,
             status = val.status,
-            txhash = (val.txhash) ? val.txhash : "",
-            lnhash = (txhash && txhash.slice(0, 9) == "lightning") ? true : false,
+            txhash = val.txhash || "",
+            lnhash = txhash && txhash.slice(0, 9) === "lightning",
             lightning = val.lightning,
-            hybrid = (lightning && lightning.hybrid === true),
-            lnd_string = (lnhash) ? " (lightning)" : "",
-            rqname = (val.requestname) ? val.requestname : "",
-            description = (val.requesttitle) ? val.requesttitle : "",
+            hybrid = lightning && lightning.hybrid === true,
+            lnd_string = lnhash ? " (lightning)" : "",
+            rqname = val.requestname || "",
+            description = val.requesttitle || "",
             type = val.requesttype,
             timestamp = val.timestamp,
             receivedamount = val.receivedamount,
@@ -1776,11 +1786,11 @@ function complile_csv() {
             fiatcurrency = val.fiatcurrency,
             pts = val.paymenttimestamp,
             pdf_url = get_pdf_url(val),
-            received_ts = (pts) ? short_date(pts) : "",
+            received_ts = pts ? short_date(pts) : "",
             layer = val.layer,
             network = getnetwork(layer),
-            nw_string = (network) ? network : "";
-        if (incl_paid === false && status == "paid") {} else if (incl_ins === false && status == "insufficient") {} else if (incl_new === false && status == "new") {} else if (incl_pending === false && status == "pending") {} else if (incl_pos === false && type == "local") {} else if (incl_outgoing === false && type == "outgoing") {} else if (incl_incoming === false && type == "incoming") {} else {
+            nw_string = network || "";
+        if (shouldIncludeRequest(status, type, incl_paid, incl_ins, incl_new, incl_pending, incl_pos, incl_outgoing, incl_incoming)) {
             if (incl_from) {
                 csv_request[translate("from")] = rqname;
             }
@@ -1790,13 +1800,13 @@ function complile_csv() {
             csv_request[translate("currency")] = payment + lnd_string;
             csv_request[translate("status")] = translate(status);
             csv_request[translate("network")] = nw_string;
-            const rq_type = (type == "local") ? "point of sale" : type;
+            const rq_type = type === "local" ? "point of sale" : type;
             csv_request[translate("type")] = translate(rq_type);
             csv_request[translate("created")] = short_date(timestamp);
             csv_request[translate("amount")] = amount + " " + uoa;
-            const ra_val = (receivedamount) ? receivedamount + " " + ccsymbol : "";
+            const ra_val = receivedamount ? receivedamount + " " + ccsymbol : "";
             csv_request[translate("amountreceived")] = ra_val;
-            const fv = (fiatvalue) ? fiatvalue.toFixed(2) + " " + fiatcurrency : "";
+            const fv = fiatvalue ? fiatvalue.toFixed(2) + " " + fiatcurrency : "";
             csv_request[translate("fiatvalue")] = fv;
             csv_request[translate("sendon")] = received_ts;
             if (incl_address) {
@@ -1809,9 +1819,20 @@ function complile_csv() {
             csv_arr.push(csv_request);
         }
     });
-    const csv_body = render_csv(csv_arr),
-        b64_body = btoa(csv_body);
-    return b64_body;
+    const csv_body = render_csv(csv_arr);
+    return btoa(csv_body);
+}
+
+// Helper function to determine if a request should be included in the CSV
+function shouldIncludeRequest(status, type, incl_paid, incl_ins, incl_new, incl_pending, incl_pos, incl_outgoing, incl_incoming) {
+    if (!incl_paid && status === "paid") return false;
+    if (!incl_ins && status === "insufficient") return false;
+    if (!incl_new && status === "new") return false;
+    if (!incl_pending && status === "pending") return false;
+    if (!incl_pos && type === "local") return false;
+    if (!incl_outgoing && type === "outgoing") return false;
+    if (!incl_incoming && type === "incoming") return false;
+    return true;
 }
 
 // Renders the CSV data into a string format
@@ -1840,7 +1861,7 @@ function share_csv() {
     $(document).on("click", "#share_csv", function() {
         const csv_encode = complile_csv(),
             result = confirm(translate("sharecsvexport"));
-        if (result === true) {
+        if (result) {
             loader(true);
             loadertext(translate("generatebu"));
             const accountname = $("#accountsettings").data("selected");
@@ -1855,7 +1876,7 @@ function share_csv() {
             }).done(function(e) {
                 const br_cache = e.ping.br_cache,
                     filetime = br_cache.created_utc,
-                    filetimesec = (filetime) ? filetime * 1000 : now(),
+                    filetimesec = filetime ? filetime * 1000 : now(),
                     filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
                     sharedtitle = "CSV Export " + accountname + " (" + filetime_format + ")",
                     set_proxy = c_proxy(),
@@ -1887,7 +1908,7 @@ function check_csvexport(csv) {
             const br_cache = ping.br_cache,
                 server_time = br_cache.utc_timestamp,
                 filetime = br_cache.created_utc,
-                filetimesec = (filetime) ? filetime * 1000 : now(),
+                filetimesec = filetime ? filetime * 1000 : now(),
                 filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
                 br_result = ping.br_result,
                 base64 = br_result.base64,
@@ -1899,7 +1920,7 @@ function check_csvexport(csv) {
                 filename = "bitrequest_csv_export_" + encodeURIComponent(account) + "_" + bu_date + ".csv",
                 cd = countdown(expires_in * 1000),
                 cd_format = countdown_format(cd),
-                cf_string = (cd_format) ? translate("expiresin") + " " + cd_format : translate("fileexpired"),
+                cf_string = cd_format ? translate("expiresin") + " " + cd_format : translate("fileexpired"),
                 ddat = [{
                     "div": {
                         "id": "dialogcontent",
@@ -1992,16 +2013,16 @@ function urlshortener() {
         const us_settings = $("#url_shorten_settings"),
             us_data = us_settings.data(),
             us_source = us_data.selected,
-            us_val = (us_source == "inactive") ? "firebase" : us_source,
-            firebase_apikey = (us_data.fbapikey) ? us_data.fbapikey : "",
-            bitly_accestoken = (us_data.bitly_at) ? us_data.bitly_at : "",
+            us_val = us_source == "inactive" ? "firebase" : us_source,
+            firebase_apikey = us_data.fbapikey || "",
+            bitly_accestoken = us_data.bitly_at || "",
             us_active = us_data.us_active,
-            us_is_active = (us_active == "active"),
-            shformclass = (us_is_active === true) ? "" : " hide",
-            firebase_class = (us_val == "firebase") ? "" : " hide",
-            bitly_class = (us_val == "bitly") ? "" : " hide",
-            headericon = (us_val == "firebase") ? "icon-firebase" :
-            (us_val == "bitly") ? "icon-bitly" : "",
+            us_is_active = us_active === "active",
+            shformclass = us_is_active ? "" : " hide",
+            firebase_class = us_val === "firebase" ? "" : " hide",
+            bitly_class = us_val === "bitly" ? "" : " hide",
+            headericon = us_val === "firebase" ? "icon-firebase" :
+            us_val === "bitly" ? "icon-bitly" : "",
             ddat = [{
                     "div": {
                         "id": "toggle_urlshortener",
@@ -2106,7 +2127,7 @@ function togglebl() {
             thisform.slideDown(300);
         } else {
             const result = confirm(translate("disableshorturls"));
-            if (result === true) {
+            if (result) {
                 us_state = "inactive",
                     us_title = "inactive";
                 thisform.slideUp(300);
@@ -2134,11 +2155,11 @@ function pick_urlshortener_select() {
             firebase_api_input = thisform.find("input.firebase_api_input"),
             bitly_api_input = thisform.find("input.bitly_api_input"),
             dialogheader = $("#usformbox h3");
-        if (thisvalue == "firebase") {
+        if (thisvalue === "firebase") {
             firebase_api_input.removeClass("hide");
             bitly_api_input.addClass("hide");
             dialogheader.attr("class", "icon-firebase");
-        } else if (thisvalue == "bitly") {
+        } else if (thisvalue === "bitly") {
             firebase_api_input.addClass("hide");
             bitly_api_input.removeClass("hide");
             dialogheader.attr("class", "icon-bitly");
@@ -2165,24 +2186,24 @@ function submit_urlshortener_select() {
             firebase_checkchange = firebase_api_input.attr("data-checkchange"),
             bitly_checkchange = bitly_api_input.attr("data-checkchange"),
             toggle_urlshortener = $("#toggle_urlshortener .switchpanel");
-        if (thisvalue == currentapi && firebase_checkchange == firebase_apival && bitly_checkchange == bitly_apival && !toggle_urlshortener.hasClass("us_changed")) { // check for changes
+        if (thisvalue === currentapi && firebase_checkchange === firebase_apival && bitly_checkchange === bitly_apival && !toggle_urlshortener.hasClass("us_changed")) { // check for changes
             canceldialog();
             return false;
         }
-        const us_active = (toggle_urlshortener.hasClass("true"));
-        if (thisvalue != currentapi || toggle_urlshortener.hasClass("us_changed")) {
-            const us_state = (us_active === true) ? "active" : "inactive",
-                us_title = (us_active === true) ? thisvalue : "inactive";
+        const us_active = toggle_urlshortener.hasClass("true");
+        if (thisvalue !== currentapi || toggle_urlshortener.hasClass("us_changed")) {
+            const us_state = us_active ? "active" : "inactive",
+                us_title = us_active ? thisvalue : "inactive";
             set_setting("url_shorten_settings", {
                 "selected": us_title,
                 "us_active": us_state
             }, us_title);
         }
-        if (us_active === true) {
+        if (us_active) {
             const current_firebase_key = firebase_api_input.attr("data-apikey"),
                 current_bitly_key = bitly_api_input.attr("data-apikey");
-            if (firebase_apival != current_firebase_key) {
-                if (firebase_checkchange == firebase_apival) {
+            if (firebase_apival !== current_firebase_key) {
+                if (firebase_checkchange === firebase_apival) {
                     popnotify("error", translate("validateapikey"));
                     return false;
                 }
@@ -2190,8 +2211,8 @@ function submit_urlshortener_select() {
                 checkapikey("firebase", firebase_apival, true)
                 return
             }
-            if (bitly_apival != current_bitly_key) {
-                if (bitly_checkchange == bitly_apival) {
+            if (bitly_apival !== current_bitly_key) {
+                if (bitly_checkchange === bitly_apival) {
                     popnotify("error", translate("validateapikey"));
                     return false;
                 }
@@ -2213,8 +2234,8 @@ function editccapi() {
         const cc_apisettings = $("#cmcapisettings").data(),
             ccapisrc = cc_apisettings.selected,
             cmcapikey = cc_apisettings.cmcapikey,
-            cmcapikeyval = (cc_apisettings.cmcapikey) ? cc_apisettings.cmcapikey : "",
-            cmcapikeyclass = (ccapisrc == "coinmarketcap") ? "" : "hide",
+            cmcapikeyval = cc_apisettings.cmcapikey || "",
+            cmcapikeyclass = ccapisrc === "coinmarketcap" ? "" : "hide",
             options = "<span data-pe='none'>" + glob_br_config.apilists.crypto_price_apis.join("</span><span data-pe='none'>") + "</span>",
             ddat = [{
                 "div": {
@@ -2292,7 +2313,7 @@ function pickcmcapiselect() {
             thisvalue = thisselect.text(),
             thisform = thisselect.closest(".popform"),
             api_input = thisform.find("input:nth-child(2)");
-        if (thisvalue == "coinmarketcap") {
+        if (thisvalue === "coinmarketcap") {
             api_input.removeClass("hide");
         } else {
             api_input.addClass("hide");
@@ -2311,17 +2332,17 @@ function submitccapi() {
             api_input = thisform.find("input:nth-child(2)"),
             apival = api_input.val(),
             checkchange = api_input.attr("data-checkchange");
-        if (thisvalue == currentapi && checkchange == apival) {
+        if (thisvalue === currentapi && checkchange === apival) {
             canceldialog();
             return false;
         }
-        if (thisvalue != currentapi) {
+        if (thisvalue !== currentapi) {
             set_setting("cmcapisettings", {
                 "selected": thisvalue
             }, thisvalue);
         }
         if (apival !== api_input.attr("data-apikey")) {
-            if (checkchange == apival) {
+            if (checkchange === apival) {
                 popnotify("error", translate("validateapikey"));
                 return false;
             }
@@ -2341,9 +2362,9 @@ function editfiatxrapi() {
     $(document).on("click", "#fiatapisettings", function() {
         const thisdata = $(this).data(),
             fiatxrapisrc = thisdata.selected,
-            fiatxrapikey = (thisdata.fxapikey) ? thisdata.fxapikey : "",
+            fiatxrapikey = thisdata.fxapikey || "",
             options = "<span data-pe='none'>" + glob_br_config.apilists.fiat_price_apis.join("</span><span data-pe='none'>") + "</span>",
-            fiatxrapikeyclass = (fiatxrapisrc == "fixer") ? "" : "hide",
+            fiatxrapikeyclass = fiatxrapisrc === "fixer" ? "" : "hide",
             ddat = [{
                 "div": {
                     "class": "popform",
@@ -2420,7 +2441,7 @@ function pickfiatxrapiselect() {
             thisvalue = thisselect.text(),
             thisform = thisselect.closest(".popform"),
             api_input = thisform.find("input:nth-child(2)");
-        if (thisvalue == "fixer") {
+        if (thisvalue === "fixer") {
             api_input.removeClass("hide");
         } else {
             api_input.addClass("hide");
@@ -2439,17 +2460,17 @@ function submitfiatxrapi() {
             api_input = thisform.find("input:nth-child(2)"),
             apival = api_input.val(),
             checkchange = api_input.attr("data-checkchange");
-        if (thisvalue == currentapi && checkchange == apival) {
+        if (thisvalue === currentapi && checkchange === apival) {
             canceldialog();
             return false;
         }
-        if (thisvalue != currentapi) {
+        if (thisvalue !== currentapi) {
             set_setting("fiatapisettings", {
                 "selected": thisvalue
             }, thisvalue);
         }
         if (apival !== api_input.attr("data-apikey")) {
-            if (checkchange == apival) {
+            if (checkchange === apival) {
                 popnotify("error", translate("validateapikey"));
                 return false;
             }
@@ -2507,9 +2528,9 @@ function pick_api_proxy() {
             </div>";
         popdialog(content, "triggersubmit");
         if (glob_phpsupport === true) {
-            const protocol = (glob_localserver) ? glob_w_loc.protocol + "//" : "",
+            const protocol = glob_localserver ? glob_w_loc.protocol + "//" : "",
                 port = glob_w_loc.port,
-                pval = (port.length) ? ":" + port : "",
+                pval = port.length ? ":" + port : "",
                 fixed_url = complete_url(protocol + glob_thishostname + pval + location.pathname);
             if ($.inArray(fixed_url, proxies) === -1) {
                 proxies.push(fixed_url);
@@ -2520,7 +2541,7 @@ function pick_api_proxy() {
         }
         const optionlist = $("#proxyformbox").find(".options");
         $.each(proxies, function(key, value) {
-            const selected = (value == current_proxy);
+            const selected = (value === current_proxy);
             test_append_proxy(optionlist, key, value, selected, true);
         });
     })
@@ -2538,7 +2559,7 @@ function test_append_proxy(optionlist, key, value, selected, dfault) { // make t
         }
     }).done(function(e) {
         const api_result = br_result(e);
-        if (api_result.result == "pong") {
+        if (api_result.result === "pong") {
             proxy_option_li(optionlist, true, key, value, selected, dfault);
             return
         }
@@ -2553,9 +2574,9 @@ function test_append_proxy(optionlist, key, value, selected, dfault) { // make t
 
 // Creates a list item for a proxy option
 function proxy_option_li(optionlist, live, key, value, selected, dfault) {
-    const liveclass = (live === true) ? " live" : " offline",
-        icon = (live === true) ? "connection" : "wifi-off",
-        default_class = (dfault === true) ? " default" : "",
+    const liveclass = live ? " live" : " offline",
+        icon = live ? "connection" : "wifi-off",
+        default_class = dfault ? " default" : "",
         option = $("<div class='optionwrap" + liveclass + default_class + "' style='display:none' data-pe='none'><span data-value='" + value + "' data-pe='none'>" + value + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon c_stat icon-" + icon + "' data-pe='none'></div><div class='opt_icon icon-bin' data-pe='none'></div></div>");
     optionlist.append(option);
     option.slideDown(500);
@@ -2573,7 +2594,7 @@ function submit_proxy() {
             return
         }
         const set_proxy = c_proxy();
-        if (selectval == set_proxy) {
+        if (selectval === set_proxy) {
             canceldialog();
             return
         }
@@ -2596,7 +2617,7 @@ function hide_custom_proxy_field() {
         options.each(function() {
             const this_option = $(this),
                 to_val = this_option.find("> span").attr("data-value");
-            if (to_val == select_inputval) {
+            if (to_val === select_inputval) {
                 this_option.hide();
             } else {
                 this_option.show();
@@ -2632,7 +2653,7 @@ function test_custom_proxy(value) { // make test api call
                 const error = result.error;
                 if (error) {
                     const message = error.message;
-                    if (message && message == "no write acces") {
+                    if (message && message === "no write acces") {
                         popnotify("error", translate("folderpermissions"));
                         return
                     }
@@ -2683,9 +2704,9 @@ function remove_proxy() {
                 const result = confirm(translate("confirmremovenode", {
                     "thisval": thisval
                 }));
-                if (result === true) {
+                if (result) {
                     const new_array = $.grep(custom_proxies, function(value) {
-                        return value != thisval;
+                        return value !== thisval;
                     });
                     thisoption.slideUp(500, function() {
                         $(this).remove();
@@ -2704,8 +2725,8 @@ function remove_proxy() {
 
 // Completes a URL by adding protocol and ensuring it ends with a slash
 function complete_url(url) {
-    const cv1 = (url.indexOf("://") > -1) ? url : "https://" + url;
-    return (cv1.slice(-1) == "/") ? cv1 : cv1 + "/";
+    const cv1 = url.indexOf("://") > -1 ? url : "https://" + url;
+    return cv1.slice(-1) === "/" ? cv1 : cv1 + "/";
 }
 
 // Retrieves the current proxy setting
@@ -2717,18 +2738,18 @@ function c_proxy() {
 function apikeys() {
     $(document).on("click", "#apikeys", function() {
         const ak_data = $(this).data(),
-            alchemykey = (ak_data.alchemy) ? ak_data.alchemy : "",
-            arbiscankey = (ak_data.arbiscan) ? ak_data.arbiscan : "",
-            bitlykey = (ak_data.bitly) ? ak_data.bitly : "",
-            blockchairkey = (ak_data.blockchair) ? ak_data.blockchair : "",
-            blockcypherkey = (ak_data.blockcypher) ? ak_data.blockcypher : "",
-            cmckey = (ak_data.coinmarketcap) ? ak_data.coinmarketcap : "",
-            currencylayerkey = (ak_data.currencylayer) ? ak_data.currencylayer : "",
-            ethplorerkey = (ak_data.ethplorer) ? ak_data.ethplorer : "",
-            exchangeratesapikey = (ak_data.exchangeratesapi) ? ak_data.exchangeratesapi : "",
-            firebasekey = (ak_data.firebase) ? ak_data.firebase : "",
-            fixerkey = (ak_data.fixer) ? ak_data.fixer : "",
-            infurakey = (ak_data.infura) ? ak_data.infura : "",
+            alchemykey = ak_data.alchemy || "",
+            arbiscankey = ak_data.arbiscan || "",
+            bitlykey = ak_data.bitly || "",
+            blockchairkey = ak_data.blockchair || "",
+            blockcypherkey = ak_data.blockcypher || "",
+            cmckey = ak_data.coinmarketcap || "",
+            currencylayerkey = ak_data.currencylayer || "",
+            ethplorerkey = ak_data.ethplorer || "",
+            exchangeratesapikey = ak_data.exchangeratesapi || "",
+            firebasekey = ak_data.firebase || "",
+            fixerkey = ak_data.fixer || "",
+            infurakey = ak_data.infura || "",
             apikeyph = translate("apikey"),
             content = "\
             <div class='formbox' id='apikeyformbox'>\
@@ -2763,7 +2784,7 @@ function apikeys() {
                 </div>\
             </div>";
         popdialog(content, "triggersubmit");
-    })
+    });
 }
 
 // Detects changes in API key input fields
@@ -2781,7 +2802,7 @@ function submitapi() {
         const allinputs = $("#apikeyformbox input.ak_input"),
             ak_input = allinputs.filter(function() {
                 const this_input = $(this);
-                return this_input.hasClass("changed") && this_input.val() != this_input.attr("data-checkchange");
+                return this_input.hasClass("changed") && this_input.val() !== this_input.attr("data-checkchange");
             }),
             inputcount = ak_input.length;
         if (inputcount === 0) {
@@ -2800,66 +2821,70 @@ function submitapi() {
                 thisinput = $(this),
                 thisvalue = thisinput.val(),
                 thisref = thisinput.attr("data-ref"),
-                lastinput = (inputcount === thisindex);
+                lastinput = inputcount === thisindex;
             checkapikey(thisref, thisvalue, lastinput);
         });
         return false;
-    })
+    });
 }
 
 // Checks the validity of an API key
 function checkapikey(thisref, apikeyval, lastinput) {
-    const token_data = (thisref == "arbiscan") ? {
+    const token_data = {
+        "arbiscan": {
             "keylength": 6,
             "payload": "?module=block&action=getblockreward&blockno=131049&apikey="
-        } :
-        (thisref == "bitly") ? {
+        },
+        "bitly": {
             "keylength": 6,
             "payload": "expand"
-        } :
-        (thisref == "blockchair") ? {
+        },
+        "blockchair": {
             "keylength": 6,
             "payload": "stats?key="
-        } :
-        (thisref == "blockcypher") ? {
+        },
+        "blockcypher": {
             "keylength": 6,
             "payload": "btc/main/addrs/1rundZJCMJhUiWQNFS5uT3BvisBuLxkAp/balance?token="
-        } :
-        (thisref == "coinmarketcap") ? {
+        },
+        "coinmarketcap": {
             "keylength": 20,
             "payload": "v1/cryptocurrency/quotes/latest?id=1&CMC_PRO_API_KEY="
-        } :
-        (thisref == "currencylayer") ? {
+        },
+        "currencylayer": {
             "keylength": 6,
             "payload": "live?access_key="
-        } :
-        (thisref == "ethplorer") ? {
+        },
+        "ethplorer": {
             "keylength": 6,
             "payload": "getTop?apiKey="
-        } :
-        (thisref == "exchangeratesapi") ? {
+        },
+        "exchangeratesapi": {
             "keylength": 6,
             "payload": "v1/latest?access_key="
-        } :
-        (thisref == "firebase") ? {
+        },
+        "firebase": {
             "keylength": 20,
             "payload": "shortLinks?key="
-        } :
-        (thisref == "fixer") ? {
+        },
+        "fixer": {
             "keylength": 20,
             "payload": "symbols?access_key="
-        } : null,
-        keylength = (token_data) ? token_data.keylength : 6,
-        payload = (token_data) ? token_data.payload : null;
-    json_check_apikey(keylength, thisref, payload, apikeyval, lastinput);
+        }
+    };
+    const data = token_data[thisref] || {
+        keylength: 6,
+        payload: null
+    };
+    json_check_apikey(data.keylength, thisref, data.payload, apikeyval, lastinput);
 }
 
 // Validates an API key using JSON requests
 function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
     if (apikeyval.length > keylength) {
-        if (thisref == "infura" || thisref == "alchemy") {
+        if (thisref === "infura" || thisref === "alchemy") {
             const txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
-                base_url = (thisref == "infura") ? glob_main_eth_node : glob_main_alchemy_node,
+                base_url = thisref === "infura" ? glob_main_eth_node : glob_main_alchemy_node,
                 payload = {
                     "jsonrpc": "2.0",
                     "id": 3,
@@ -2881,28 +2906,28 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                 const data = br_result(e).result;
                 if (data) {
                     update_api_attr(thisref, apikeyval, lastinput);
-                    return
+                    return;
                 }
                 api_fail(thisref, apikeyval);
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 api_fail(thisref, apikeyval);
             });
-            return
+            return;
         }
         const api_data = get_api_data(thisref),
             base_url = api_data.base_url,
-            method = (thisref == "firebase" || thisref == "bitly") ? "POST" : "GET",
+            method = (thisref === "firebase" || thisref === "bitly") ? "POST" : "GET",
             params = {
                 "method": method,
                 "cache": true
             };
         let search = payload + apikeyval;
-        if (thisref == "firebase") {
+        if (thisref === "firebase") {
             params.data = {
                 "longDynamicLink": glob_firebase_shortlink + "?link=" + glob_approot + "?p=request"
-            }
+            };
         }
-        if (thisref == "bitly") {
+        if (thisref === "bitly") {
             search = payload;
             params.headers = {
                 "Authorization": "Bearer " + apikeyval,
@@ -2910,10 +2935,10 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
             };
             params.data = JSON.stringify({
                 "bitlink_id": "bit.ly/12a4b6c"
-            })
+            });
         }
         const api_url = base_url + search,
-            postdata = (thisref == "coinmarketcap") ? {
+            postdata = (thisref === "coinmarketcap") ? {
                 "api": "coinmarketcap",
                 "search": search,
                 "cachetime": 0,
@@ -2932,21 +2957,21 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
             const data = br_result(e).result;
             if (data) {
                 const apicallfailed = translate("apicallfailed");
-                if (thisref == "arbiscan" && data.status != 1) {
-                    if (data.result == "Invalid API Key") {
+                if (thisref === "arbiscan" && data.status !== 1) {
+                    if (data.result === "Invalid API Key") {
                         api_fail(thisref, apikeyval);
                     } else {
                         notify(translate("apicallerror"));
                         const content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.message + "</p>";
                         popdialog(content, "canceldialog");
                     }
-                    return
+                    return;
                 }
-                if (thisref == "bitly" && data.status_code === 500) {
+                if (thisref === "bitly" && data.status_code === 500) {
                     api_fail(thisref, apikeyval);
-                    return
+                    return;
                 }
-                if (thisref == "blockchair") {
+                if (thisref === "blockchair") {
                     const context_code = data.context.code;
                     if (context_code === 200) {
                         update_api_attr(thisref, apikeyval, lastinput);
@@ -2957,21 +2982,21 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                         const content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
-                    return
+                    return;
                 }
-                if (thisref == "blockcypher") {
+                if (thisref === "blockcypher") {
                     if (data.address) {
                         update_api_attr(thisref, apikeyval, lastinput);
                     } else {
                         api_fail(thisref, apikeyval);
                     }
-                    return
+                    return;
                 }
-                if (thisref == "coinmarketcap" && data.status.error_code === 1001) {
+                if (thisref === "coinmarketcap" && data.status.error_code === 1001) {
                     api_fail(thisref, apikeyval);
-                    return
+                    return;
                 }
-                if (thisref == "currencylayer" && data.success === false) {
+                if (thisref === "currencylayer" && data.success === false) {
                     if (data.error.code === 101) {
                         api_fail(thisref, apikeyval);
                     } else {
@@ -2979,9 +3004,9 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                         const content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
-                    return
+                    return;
                 }
-                if (thisref == "ethplorer") {
+                if (thisref === "ethplorer") {
                     if (data.tokens) {
                         update_api_attr(thisref, apikeyval, lastinput);
                     } else {
@@ -2993,22 +3018,22 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                             popdialog(content, "canceldialog");
                         }
                     }
-                    return
+                    return;
                 }
-                if (thisref == "exchangeratesapi" && !data.success) {
+                if (thisref === "exchangeratesapi" && !data.success) {
                     const ec = q_obj(data, "error.code");
                     if (ec) {
-                        if (ec == "invalid_access_key") {
+                        if (ec === "invalid_access_key") {
                             api_fail(thisref, apikeyval);
                         } else {
                             notify(translate("apicallerror"));
                             const content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + ec + "</p>";
                             popdialog(content, "canceldialog");
                         }
-                        return
+                        return;
                     }
                 }
-                if (thisref == "fixer" && data.success === false) {
+                if (thisref === "fixer" && data.success === false) {
                     if (data.error.code === 101) {
                         api_fail(thisref, apikeyval);
                     } else {
@@ -3016,7 +3041,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                         const content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
-                    return
+                    return;
                 }
                 update_api_attr(thisref, apikeyval, lastinput);
                 return;
@@ -3025,11 +3050,11 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
         }).fail(function(jqXHR, textStatus, errorThrown) {
             api_fail(thisref, apikeyval);
         });
-        return
+        return;
     }
     if (!apikeyval) {
         update_api_attr(thisref, null, lastinput);
-        return
+        return;
     }
     api_fail(thisref, apikeyval);
 }
@@ -3049,7 +3074,7 @@ function api_fail(thisref, thisvalue) {
 // Updates API key attributes after validation
 function update_api_attr(thisref, thisvalue, lastinput) {
     const apiformbox = $("#apikeyformbox"),
-        changeval = (thisvalue) ? thisvalue : "";
+        changeval = thisvalue || "";
     if (apiformbox && apiformbox.hasClass("pass")) {
         complement_apisettings(thisref, thisvalue);
         apiformbox.find("input[data-ref=" + thisref + "]").attr("data-checkchange", changeval).removeClass("changed input_error");
@@ -3058,7 +3083,7 @@ function update_api_attr(thisref, thisvalue, lastinput) {
             notify(translate("datasaved"));
             savesettings();
         }
-        return
+        return;
     }
     complement_apisettings(thisref, thisvalue);
     canceldialog();
@@ -3075,25 +3100,25 @@ function complement_apisettings(thisref, thisvalue) {
     const kpairs = {};
     kpairs[thisref] = thisvalue;
     set_setting("apikeys", kpairs);
-    if (thisref == "bitly") {
+    if (thisref === "bitly") {
         set_setting("url_shorten_settings", {
             "bitly_at": thisvalue
         });
-        return
+        return;
     }
-    if (thisref == "firebase") {
+    if (thisref === "firebase") {
         set_setting("url_shorten_settings", {
             "fbapikey": thisvalue
         });
-        return
+        return;
     }
-    if (thisref == "coinmarketcap") {
+    if (thisref === "coinmarketcap") {
         set_setting("cmcapisettings", {
             "cmcapikey": thisvalue
         });
-        return
+        return;
     }
-    if (thisref == "fixer") {
+    if (thisref === "fixer") {
         set_setting("fiatapisettings", {
             "fxapikey": thisvalue
         });
@@ -3103,43 +3128,36 @@ function complement_apisettings(thisref, thisvalue) {
 // Contact form
 function edit_contactform_trigger() {
     $(document).on("click", "#contactform", function() {
-        edit_contactform()
-    })
+        edit_contactform();
+    });
 }
 
 // Opens and populates the contact form
 function edit_contactform(checkout) {
     const contactform = $("#contactform"),
         thisdata = contactform.data(),
-        nameinput = thisdata.name,
-        addressinput = thisdata.address,
-        zipcodeinput = thisdata.zipcode,
-        cityinput = thisdata.city,
-        countryinput = thisdata.country,
-        emailinput = thisdata.email,
-        cformtl = translate("contactform"),
-        formheader = (checkout === true) ? cformtl + " / " + translate("shipping") : cformtl,
-        form_subheader = (checkout === true) ? "" : "<p>" + translate("yourdetails") + "</p>",
+        formheader = checkout ? translate("contactform") + " / " + translate("shipping") : translate("contactform"),
+        form_subheader = checkout ? "" : "<p>" + translate("yourdetails") + "</p>",
         content = "\
     <div class='formbox' id='contactformbox'>\
         <h2 class='icon-sphere'>" + formheader + "</h2>" + form_subheader +
         "<div class='popnotify'></div>\
         <div class='popform'>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + nameinput + "' placeholder='" + translate("phname") + "' class='cf_nameinput'/><span class='required'>*</span></div>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + addressinput + "' placeholder='" + translate("phaddress") + "' class='cf_addressinput'/><span class='required'>*</span></div>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + zipcodeinput + "' placeholder='" + translate("phzipcode") + "' class='cf_zipcodeinput'/><span class='required'>*</span></div>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + cityinput + "' placeholder='" + translate("phcity") + "' class='cf_cityinput'/><span class='required'>*</span></div>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + countryinput + "' placeholder='" + translate("phcountry") + "' class='cf_countryinput'/><span class='required'>*</span></div>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + emailinput + "' placeholder='" + translate("phemail") + "' class='cf_emailinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + thisdata.name + "' placeholder='" + translate("phname") + "' class='cf_nameinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + thisdata.address + "' placeholder='" + translate("phaddress") + "' class='cf_addressinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + thisdata.zipcode + "' placeholder='" + translate("phzipcode") + "' class='cf_zipcodeinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + thisdata.city + "' placeholder='" + translate("phcity") + "' class='cf_cityinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + thisdata.country + "' placeholder='" + translate("phcountry") + "' class='cf_countryinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + thisdata.email + "' placeholder='" + translate("phemail") + "' class='cf_emailinput'/><span class='required'>*</span></div>\
             <input type='submit' class='submit' value='" + translate("okbttn") + "'/>\
         </div>\
     </div>";
     popdialog(content, "triggersubmit");
     check_contactform();
-    if (checkout === true) {
+    if (checkout) {
         $("#popup #execute").text("CONTINUE");
         $("#popup #canceldialog").hide();
-        if (glob_inframe === true) {
+        if (glob_inframe) {
             parent.postMessage("close_loader", "*");
         }
     }
@@ -3151,11 +3169,7 @@ function check_contactform() {
         const cf_inputwrap = $(this),
             thisinput = cf_inputwrap.children("input"),
             inputval = thisinput.val();
-        if (inputval.length > 2) {
-            cf_inputwrap.removeClass("empty");
-        } else {
-            cf_inputwrap.addClass("empty");
-        }
+        cf_inputwrap.toggleClass("empty", inputval.length <= 2);
     });
 }
 
@@ -3165,12 +3179,8 @@ function type_contactform() {
         const thisinput = $(this),
             thisvalue = thisinput.val(),
             cf_inputwrap = thisinput.parent(".cf_inputwrap");
-        if (thisvalue.length > 2) {
-            cf_inputwrap.removeClass("empty");
-        } else {
-            cf_inputwrap.addClass("empty");
-        }
-    })
+        cf_inputwrap.toggleClass("empty", thisvalue.length <= 2);
+    });
 }
 
 // Submits the contact form data
@@ -3178,72 +3188,64 @@ function submit_contactform() {
     $(document).on("click", "#contactformbox input.submit", function(e) {
         e.preventDefault();
         const cfb = $("#contactformbox"),
-            nameinput = cfb.find(".cf_nameinput"),
-            nameinput_val = nameinput.val(),
-            addressinput = cfb.find(".cf_addressinput"),
-            addressinput_val = addressinput.val(),
-            zipcodeinput = cfb.find(".cf_zipcodeinput"),
-            zipcodeinput_val = zipcodeinput.val(),
-            cityinput = cfb.find(".cf_cityinput"),
-            cityinput_val = cityinput.val(),
-            countryinput = cfb.find(".cf_countryinput"),
-            countryinput_val = countryinput.val(),
-            emailinput = cfb.find(".cf_emailinput"),
-            emailinput_val = emailinput.val(),
-            cf_data = {
-                "name": nameinput_val,
-                "address": addressinput_val,
-                "zipcode": zipcodeinput_val,
-                "city": cityinput_val,
-                "country": countryinput_val,
-                "email": emailinput_val
-            },
-            email_regex = /^\w(?:\.?[\w%+-]+)*@\w(?:[\w-]*\.)+?[a-z]{2,}$/,
-            email_check = email_regex.test(emailinput_val);
-        if (nameinput_val.length < 4) {
-            popnotify("error", translate("phname") + " " + translate("requiredfield"));
-            nameinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return
+            inputs = {
+                "name": cfb.find(".cf_nameinput"),
+                "address": cfb.find(".cf_addressinput"),
+                "zipcode": cfb.find(".cf_zipcodeinput"),
+                "city": cfb.find(".cf_cityinput"),
+                "country": cfb.find(".cf_countryinput"),
+                "email": cfb.find(".cf_emailinput")
+            };
+        const cf_data = {},
+            email_regex = /^\w(?:\.?[\w%+-]+)*@\w(?:[\w-]*\.)+?[a-z]{2,}$/;
+
+        for (const [key, input] of Object.entries(inputs)) {
+            const value = input.val().trim();
+            cf_data[key] = value;
+
+            if (key === "name" && value.length < 4) {
+                showError(input, "phname");
+                return;
+            }
+            if (key === "address" && value.length < 10) {
+                showError(input, "phaddress");
+                return;
+            }
+            if (key === "zipcode" && value.length < 6) {
+                showError(input, "phzipcode");
+                return;
+            }
+            if ((key === "city" || key === "country") && value.length < 3) {
+                showError(input, "ph" + key);
+                return;
+            }
+            if (key === "email") {
+                if (value.length < 1) {
+                    showError(input, "phemail");
+                    return;
+                }
+                if (!email_regex.test(value)) {
+                    popnotify("error", translate("phemail") + " " + translate("invalidchars"));
+                    input.focus().parent(".cf_inputwrap").addClass("empty");
+                    return;
+                }
+            }
         }
-        if (addressinput_val.length < 10) {
-            popnotify("error", translate("phaddress") + " " + translate("requiredfield"));
-            addressinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return
-        }
-        if (zipcodeinput_val.length < 6) {
-            popnotify("error", translate("phzipcode") + " " + translate("requiredfield"));
-            zipcodeinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return
-        }
-        if (cityinput_val.length < 3) {
-            popnotify("error", translate("phcity") + " " + translate("requiredfield"));
-            cityinput.focus();
-            return
-        }
-        if (countryinput_val.length < 3) {
-            popnotify("error", translate("phcountry") + " " + translate("requiredfield"));
-            countryinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return
-        }
-        if (emailinput_val.length < 1) {
-            popnotify("error", translate("phemail") + " " + translate("requiredfield"));
-            emailinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return
-        }
-        if (email_check === false) {
-            popnotify("error", translate("phemail") + " " + translate("invalidchars"));
-            emailinput.focus().parent(".cf_inputwrap").addClass("empty");
-            return
-        }
+
         set_setting("contactform", cf_data);
         canceldialog(true);
         savesettings();
-        if (geturlparameters().contactform !== undefined) { // test for contactform param 
-            loadpaymentfunction(true) // continue to paymentdialog
-            return
+        if (geturlparameters().contactform !== undefined) {
+            loadpaymentfunction(true);
+            return;
         }
         notify(translate("datasaved"));
-    })
+    });
+
+    function showError(input, translationKey) {
+        popnotify("error", translate(translationKey) + " " + translate("requiredfield"));
+        input.focus().parent(".cf_inputwrap").addClass("empty");
+    }
 }
 
 // Permissions
@@ -3324,9 +3326,9 @@ function submit_permissions() {
             thisinput = thisform.find("input:first"),
             thisvalue = thisinput.val(),
             currentval = thisform.attr("data-current");
-        if (thisvalue == currentval) { // check for changes
+        if (thisvalue === currentval) { // check for changes
             canceldialog();
-            return false;
+            return
         }
         set_setting("permissions", {
             "selected": thisvalue
@@ -3347,17 +3349,17 @@ function team_invite_trigger() {
         if (glob_hasbip && !glob_bipv) {
             bipv_pass();
             notify(translate("pleaseverify"));
-            return
+            return;
         }
         if (haspin(true) === true) {
             team_invite();
-            return
+            return;
         }
         const content = pinpanel("", {
             "func": team_invite
         });
         showoptions(content, "pin");
-    })
+    });
 }
 
 // Opens team invite dialog
@@ -3368,7 +3370,7 @@ function team_invite() {
             "div": {
                 "class": "popform",
                 "content": "<p><strong>" + translate("inviteteammembers") + "</strong><br/>" + translate("teaminviteexplainer") + "<br/>" + translate("teaminviteaccess") + "</p>\
-                <div id='send_invite' data-url='" + jsonencode + "' class='button'><span class='icon-share2'/>" + translate("sendinvite") + "</div>"
+            <div id='send_invite' data-url='" + jsonencode + "' class='button'><span class='icon-share2'></span>" + translate("sendinvite") + "</div>"
             }
         }],
         content = template_dialog({
@@ -3382,45 +3384,36 @@ function team_invite() {
 
 // Compiles team invite data
 function complile_teaminvite() {
-    const jsonfile = {};
+    const jsonfile = {},
+        excludeKeys = [
+            "bitrequest_symbols", "bitrequest_changes", "bitrequest_erc20tokens",
+            "bitrequest_editurl", "bitrequest_recent_requests", "bitrequest_backupfile_id",
+            "bitrequest_appstore_dialog", "bitrequest_init", "bitrequest_k",
+            "bitrequest_awl", "bitrequest_tp", "bitrequest_requests",
+            "bitrequest_archive", "bitrequest_dat", "bitrequest_rt",
+            "bitrequest_bpdat"
+        ];
     for (let key in localStorage) {
         const value = localStorage.getItem(key);
-        if (value === null ||
-            key == "bitrequest_symbols" ||
-            key == "bitrequest_changes" ||
-            key == "bitrequest_erc20tokens" ||
-            key == "bitrequest_editurl" ||
-            key == "bitrequest_recent_requests" ||
-            key == "bitrequest_backupfile_id" ||
-            key == "bitrequest_appstore_dialog" ||
-            key == "bitrequest_init" ||
-            key == "bitrequest_k" ||
-            key == "bitrequest_awl" ||
-            key == "bitrequest_tp" ||
-            key == "bitrequest_requests" ||
-            key == "bitrequest_archive" ||
-            key == "bitrequest_dat" ||
-            key == "bitrequest_rt" ||
-            key == "bitrequest_bpdat") {} else {
+        if (value !== null && !excludeKeys.includes(key)) {
             const pval = JSON.parse(value);
-            if (key == "bitrequest_settings") {
+            if (key === "bitrequest_settings") {
                 const mods = [{
-                        "id": "permissions",
-                        "change": "selected",
-                        "val": "cashier"
-                    }],
-                    newarray = adjust_objectarray(pval, mods);
-                jsonfile[key] = newarray;
+                    "id": "permissions",
+                    "change": "selected",
+                    "val": "cashier"
+                }];
+                jsonfile[key] = adjust_objectarray(pval, mods);
             } else {
                 jsonfile[key] = pval;
             }
         }
     }
-    const seedobj = (glob_hasbip === true) ? ls_phrase_obj() : {
-            "pid": false,
-            "pob": false
-        },
-        adjusted = adjust_object(jsonfile, seedobj);
+    const seedobj = glob_hasbip ? ls_phrase_obj() : {
+        "pid": false,
+        "pob": false
+    };
+    const adjusted = adjust_object(jsonfile, seedobj);
     return btoa(JSON.stringify(adjusted));
 }
 
@@ -3430,13 +3423,14 @@ function adjust_object(object, seedobj) {
     object.bitrequest_cashier = {
         "cashier": true,
         "seedid": seedid
-    }
+    };
+    let phrase, seed, rootkey, key, cc;
     if (seedid) {
-        var phrase = seedobj.pob.join(" "),
-            seed = toseed(phrase),
-            rootkey = get_rootkey(seed),
-            key = rootkey.slice(0, 64),
-            cc = rootkey.slice(64);
+        phrase = seedobj.pob.join(" ");
+        seed = toseed(phrase);
+        rootkey = get_rootkey(seed);
+        key = rootkey.slice(0, 64);
+        cc = rootkey.slice(64);
     }
     $.each(glob_br_config.bitrequest_coin_data, function(i, coinconfig) {
         const currency = coinconfig.currency,
@@ -3444,53 +3438,47 @@ function adjust_object(object, seedobj) {
             bip32dat = default_coinsettings.Xpub,
             keyval = "bitrequest_cc_" + currency,
             addresses = object[keyval];
+        let xpub, xpubid;
         if (seedid && bip32dat.active) {
-            var root_path = bip32dat.root_path,
-                xpubdat = xpub_obj(currency, root_path, cc, key),
-                xpub = xpubdat.xpub,
-                xpubid = xpubdat.xpubid;
+            const root_path = bip32dat.root_path,
+                xpubdat = xpub_obj(currency, root_path, cc, key);
+            xpub = xpubdat.xpub;
+            xpubid = xpubdat.xpubid;
         }
         if (addresses) {
-            const checked = $.grep(addresses, function(filter) {
-                return filter.checked == true;
-            });
+            const checked = addresses.filter(filter => filter.checked === true);
             if (bip32dat.xpub) {
-                const address_object = $.grep(checked, function(filter) {
-                    if (filter.seedid) {
-                        return false;
-                    }
-                    if (filter.xpubid && filter.xpubid != xpubid) {
-                        return false;
-                    }
+                const address_object = checked.filter(filter => {
+                    if (filter.seedid) return false;
+                    if (filter.xpubid && filter.xpubid !== xpubid) return false;
                     return true;
                 });
                 const settings_key = "bitrequest_" + currency + "_settings",
                     saved_coinsettings = object[settings_key],
-                    coinsettings = (saved_coinsettings) ? saved_coinsettings : default_coinsettings;
+                    coinsettings = saved_coinsettings || default_coinsettings;
                 if (coinsettings) {
-                    const xpsettings = coinsettings.Xpub,
-                        xpubkey = xpsettings.key;
-                    if (xpubkey && xpsettings.selected === true) {} else {
-                        if (seedid) {
-                            const new_xpsettings = xpsettings;
-                            new_xpsettings.key = xpub;
-                            new_xpsettings.key_id = xpubid;
-                            new_xpsettings.selected = true;
-                            coinsettings.Xpub = new_xpsettings;
-                        }
+                    const xpsettings = coinsettings.Xpub;
+                    if (!(xpsettings.key && xpsettings.selected === true) && seedid) {
+                        const new_xpsettings = {
+                            ...xpsettings
+                        };
+                        new_xpsettings.key = xpub;
+                        new_xpsettings.key_id = xpubid;
+                        new_xpsettings.selected = true;
+                        coinsettings.Xpub = new_xpsettings;
                     }
                 }
                 object[keyval] = address_object;
                 object[settings_key] = coinsettings;
             } else {
-                $.each(checked, function(key, val) {
+                checked.forEach(val => {
                     val.used = false;
                     delete val.seedid;
                 });
                 object[keyval] = checked;
             }
         }
-    })
+    });
     return object;
 }
 
@@ -3498,7 +3486,7 @@ function adjust_object(object, seedobj) {
 function share_teaminvite() {
     $(document).on("click", "#send_invite", function() {
         const result = confirm(translate("sendinvite") + "?");
-        if (result === true) {
+        if (result) {
             loader(true);
             loadertext(translate("installationpackage"));
             const accountname = $("#accountsettings").data("selected");
@@ -3528,7 +3516,7 @@ function share_teaminvite() {
                 closeloader();
             });
         }
-    })
+    });
 }
 
 // Checks and processes team invite
@@ -3547,36 +3535,38 @@ function check_teaminvite(ro) {
             const br_cache = ping.br_cache,
                 server_time = br_cache.utc_timestamp,
                 filetime = br_cache.created_utc,
-                filetimesec = (filetime) ? filetime * 1000 : now(),
+                filetimesec = filetime ? filetime * 1000 : now(),
                 filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
                 br_result = ping.br_result,
                 base64 = br_result.base64,
                 account = atob(br_result.account),
                 br_dat = JSON.parse(atob(base64)),
                 sharedtitle = "Team invite " + account + " (" + filetime_format + ")",
-                bu_date = filetime_format.replace(/\s+/g, '_').replace(/\:/g, '_'),
+                bu_date = filetime_format.replace(/\s+/g, "_").replace(/\:/g, "_"),
                 cache_time = br_cache.cache_time,
                 expires_in = (filetime + cache_time) - server_time,
                 filename = "bitrequest_team_invite" + encodeURIComponent(account) + "_" + bu_date + ".json",
                 cd = countdown(expires_in * 1000),
                 cd_format = countdown_format(cd),
-                bpdat_seedid = (br_dat.bitrequest_cashier) ? (br_dat.bitrequest_cashier.seedid) ? br_dat.bitrequest_cashier.seedid : false : false,
-                update = (bpdat_seedid == glob_cashier_seedid) ? true : false,
-                master_account = (bpdat_seedid == glob_bipid) ? true : false,
+                bpdat_seedid = br_dat.bitrequest_cashier ? br_dat.bitrequest_cashier.seedid || false : false,
+                update = bpdat_seedid === glob_cashier_seedid,
+                master_account = bpdat_seedid === glob_bipide,
                 teamid = br_get_local("teamid", true),
                 teamid_arr = br_dobj(teamid),
-                is_installed = ($.inArray(ro, teamid_arr) > -1) ? true : false,
-                dialog_heading = (update) ? translate("teamupdate") : translate("teaminvite"),
-                cf_string = (cd_format) ? translate("invitationexpiresin") + " " + cd_format : translate("fileexpired"),
-                dialogtext = (is_installed) ? "<p>" + translate("installcompleted") + "</p>" : (update) ? "<p>" + translate("teamupdata", {
+                is_installed = teamid_arr.includes(ro),
+                dialog_heading = update ? translate("teamupdate") : translate("teaminvite"),
+                cf_string = cd_format ? translate("invitationexpiresin") + " " + cd_format : translate("fileexpired"),
+                dialogtext = is_installed ? "<p>" + translate("installcompleted") + "</p>" :
+                update ? "<p>" + translate("teamupdata", {
                     "account": account
-                }) + "</p>" : "<p>" + translate("teamup", {
+                }) + "</p>" :
+                "<p>" + translate("teamup", {
                     "account": account
                 }) + "<br/><br/>" + translate("clickinstall", {
                     "account": account
                 }) + "</p>",
-                button_text = (update) ? translate("update") : translate("install"),
-                install_button = (is_installed) ? "" : "<div id='install_teaminvite' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-download' data-update='" + update + "' data-ismaster='" + master_account + "'data-installid='" + ro + "'>" + button_text + "</div>",
+                button_text = update ? translate("update") : translate("install"),
+                install_button = is_installed ? "" : "<div id='install_teaminvite' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-download' data-update='" + update + "' data-ismaster='" + master_account + "'data-installid='" + ro + "'>" + button_text + "</div>",
                 ddat = [{
                     "div": {
                         "id": "dialogcontent",
@@ -3617,17 +3607,17 @@ function check_teaminvite(ro) {
 function install_teaminvite_trigger() {
     $(document).on("click", "#install_teaminvite", function() {
         const this_bttn = $(this),
-            ismaster = this_bttn.attr("data-ismaster");
-        if (ismaster === "true") {
+            ismaster = this_bttn.attr("data-ismaster") === "true";
+        if (ismaster) {
             notify(translate("owndevice"));
             return
         }
-        const update = this_bttn.attr("data-update"),
+        const update = this_bttn.attr("data-update") === "true",
             installid = this_bttn.attr("data-installid"),
             installed = (glob_stored_currencies) ? true : false,
-            result_text = (update == "true") ? translate("updatealert") : translate("installalert"),
-            result = (installed === true) ? confirm(result_text) : true;
-        if (result === true) {
+            result_text = update ? translate("updatealert") : translate("installalert"),
+            result = installed ? confirm(result_text) : true;
+        if (result) {
             const bu_dat = this_bttn.attr("data-base64"),
                 j_filename = this_bttn.attr("data-filename"),
                 j_object = JSON.parse(atob(bu_dat));
@@ -3669,14 +3659,14 @@ function isteaminvite(jsonobject) {
 // Displays user agent information
 function check_useragent() {
     $(document).on("click", "#ua", function() {
-        const refmatch = (glob_ref_match) ? "<span class='number'>" + glob_referrer + "</span>" : "<span class='number'>" + false + "</span>",
+        const refmatch = glob_ref_match ? "<span class='number'>" + glob_referrer + "</span>" : "<span class='number'>" + false + "</span>",
             pdat = GD_pass(),
             pass = pdat.expired,
             expiresin = pdat.expires_in,
             rtoken = rt_obj(),
-            ei_str = (expiresin > 0) ? " || expires: <span class='number'>" + Math.floor(expiresin / 1000) + " sec </span>" : "",
-            hastoken = (rtoken) ? "true" : "false",
-            rtstring = " || rt: <span class='number'> " + hastoken + "</span>",
+            ei_str = expiresin > 0 ? "expires: <span class='number'>" + Math.floor(expiresin / 1000) + " sec </span>" : "",
+            hastoken = rtoken ? "true" : "false",
+            rtstring = "rt: <span class='number'> " + hastoken + "</span>",
             ddat = [{
                 "div": {
                     "class": "popform",
@@ -3689,7 +3679,15 @@ function check_useragent() {
                         {
                             "div": {
                                 "class": "pre",
-                                "content": "android_standalone : <span class='number'>" + glob_android_standalone + "</span> || ios_standalone : <span class='number'>" + glob_ios_standalone + "</span> || referrer : " + refmatch + " || is_android_app: <span class='number'>" + glob_is_android_app + "</span> || is_ios_app: <span class='number'>" + glob_is_ios_app + "</span>" + ei_str + rtstring
+                                "content": [
+                                    "android_standalone : <span class='number'>" + glob_android_standalone + "</span>",
+                                    "ios_standalone : <span class='number'>" + glob_ios_standalone + "</span>",
+                                    "referrer : " + refmatch,
+                                    "is_android_app: <span class='number'>" + glob_is_android_app + "</span>",
+                                    "is_ios_app: <span class='number'>" + glob_is_ios_app + "</span>",
+                                    ei_str,
+                                    rtstring
+                                ].join(" || ")
                             }
                         }
                     ]

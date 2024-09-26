@@ -77,7 +77,7 @@ $(document).ready(function() {
     });
     buildsettings(); // build settings first
 
-    if (glob_hostlocation != "local") { // don't add service worker on desktop
+    if (glob_hostlocation !== "local") { // don't add service worker on desktop
         add_serviceworker();
     }
 
@@ -113,7 +113,7 @@ $(document).ready(function() {
             glob_bipv = true;
         }
         if (phpsupport) {
-            glob_phpsupport = (phpsupport == "yes") ? true : false;
+            glob_phpsupport = phpsupport === "yes";
             setsymbols();
         } else {
             checkphp();
@@ -160,7 +160,7 @@ function checkphp() {
                 if (symbols.USD) {
                     br_set_local("symbols", symbols, true);
                 } else {
-                    const this_error = (data.error) ? data.error : "Unable to get API data";
+                    const this_error = data.error || "Unable to get API data";
                     fail_dialogs("fixer", this_error);
                 }
             }
@@ -185,8 +185,8 @@ function checkphp() {
 // Fetch fiat currencies from fixer.io API
 function setsymbols() {
     //set globals
-    glob_local = (glob_hostlocation == "local" && glob_phpsupport === false),
-        glob_localserver = (glob_hostlocation == "local" && glob_phpsupport === true);
+    glob_local = (glob_hostlocation === "local" && glob_phpsupport === false),
+        glob_localserver = (glob_hostlocation === "local" && glob_phpsupport === true);
     if (br_get_local("symbols")) {
         geterc20tokens();
         return
@@ -208,7 +208,7 @@ function setsymbols() {
                 geterc20tokens();
                 return
             }
-            const this_error = (data.error) ? data.error : "Unable to get API data";
+            const this_error = data.error || "Unable to get API data";
             fail_dialogs("fixer", this_error);
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -254,34 +254,26 @@ function geterc20tokens() {
 // Get locally stored ERC20 token data
 function geterc20tokens_local() {
     const apiurl = glob_approot + "assets_data_erc20.json";
-    $.getJSON(apiurl, function(data) {
-        if (data) {
-            storecoindata(data);
-        }
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const content = "<h2 class='icon-bin'>" + translate("apicallfailed") + "</h2><p class='doselect'>" + translate("nofetchtokeninfo") + "</p>";
-        popdialog(content, "canceldialog");
-    });
+    $.getJSON(apiurl).done(function(data) {
+            if (data) {
+                storecoindata(data);
+            }
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {
+            const content = "<h2 class='icon-bin'>" + translate("apicallfailed") + "</h2><p class='doselect'>" + translate("nofetchtokeninfo") + "</p>";
+            popdialog(content, "canceldialog");
+        });
 }
 
 // Store coin data in local storage
 function storecoindata(data) {
-    if (data) {
-        const erc20push = [];
-        $.each(data.data, function(key, value) {
-            const platform = value.platform;
-            if (platform) {
-                if (platform.id === 1027) { // only get erc20 tokens
-                    const erc20box = {
-                        "name": value.slug,
-                        "symbol": value.symbol.toLowerCase(),
-                        "cmcid": value.id,
-                        "contract": value.platform.token_address
-                    };
-                    erc20push.push(erc20box);
-                }
-            }
-        });
+    if (data && data.data) {
+        const erc20push = data.data.filter(value => value.platform && value.platform.id === 1027).map(value => ({
+            "name": value.slug,
+            "symbol": value.symbol.toLowerCase(),
+            "cmcid": value.id,
+            "contract": value.platform.token_address
+        }));
         br_set_local("erc20tokens", erc20push, true);
     }
 }
@@ -292,15 +284,12 @@ function haspin(set) {
         pinhash = pinsettings.pinhash;
     if (pinhash) {
         const pinstring = pinhash.toString(),
-            plength = (pinstring.length > 3) ? true : false;
+            plength = pinstring.length > 3;
         if (plength) {
             if (set) {
                 return true;
             }
-            if (pinsettings.locktime == "never") {
-                return false;
-            }
-            return true;
+            return pinsettings.locktime !== "never";
         }
     }
     return false;
@@ -313,7 +302,7 @@ function islocked() {
         lastlock = br_get_local("locktime"),
         tsll = now() - lastlock,
         pflt = parseFloat(locktime);
-    return (gets.payment) ? false : (haspin() === true && tsll > pflt) ? true : false;
+    return gets.payment ? false : (haspin() === true && tsll > pflt);
 }
 
 // Set up various functions for the application
@@ -573,6 +562,7 @@ function finishfunctions() {
     //loadertext
     //settitle
     //pinpanel
+    //generatePinpadHTML
     //switchpanel
     //try_next_api
     //wake
@@ -625,7 +615,7 @@ function setpermissions() {
 // Checks if the current user has view-only (cashier) permissions
 function is_viewonly() {
     const permission = $("#permissions").data("selected");
-    return (permission == "cashier");
+    return permission === "cashier";
 }
 
 // ** Pincode ** //
@@ -721,9 +711,9 @@ function enterapp(pinval) {
         attempts = pinsettings.attempts,
         hashpin = hashcode(pinval),
         _now = now(),
-        global = (pinfloat.hasClass("global")) ? true : false;
+        isGlobal = pinfloat.hasClass("global");
     if (hashpin == savedpin) {
-        if (global) {
+        if (isGlobal) {
             br_set_local("locktime", _now);
             finishfunctions();
             setTimeout(function() {
@@ -755,10 +745,10 @@ function enterapp(pinval) {
             canceloptions(true);
         }
         pinsettings.attempts = 0;
-        savesettings(global);
+        savesettings(isGlobal);
         remove_cashier();
     } else {
-        if (navigator.vibrate) {} else {
+        if (!navigator.vibrate) {
             playsound(glob_funk);
         }
         shake(pinfloat);
@@ -766,16 +756,23 @@ function enterapp(pinval) {
             $("#pininput").val("");
         }, 10);
         if (attempts > 2) {
-            if (attempts === 3) {
-                const timeout = _now + 300000; // 5 minutes
-                pinsettings.timeout = timeout;
-                lockscreen(timeout);
-            } else if (attempts === 6) {
-                const timeout = _now + 1800000; // 30 minutes
-                pinsettings.timeout = timeout;
-                lockscreen(timeout);
-            } else if (attempts === 9) {
-                const timeout = _now + 86400000; // 24 hours
+            const timeoutDurations = [{
+                    "threshold": 3,
+                    "duration": 300000
+                }, // 5 minutes
+                {
+                    "threshold": 6,
+                    "duration": 1800000
+                }, // 30 minutes
+                {
+                    "threshold": 9,
+                    "duration": 86400000
+                } // 24 hours
+            ];
+
+            const timeoutSetting = timeoutDurations.find(setting => attempts === setting.threshold);
+            if (timeoutSetting) {
+                const timeout = _now + timeoutSetting.duration;
                 pinsettings.timeout = timeout;
                 lockscreen(timeout);
             } else if (attempts > 9) {
@@ -783,7 +780,7 @@ function enterapp(pinval) {
             }
         }
         pinsettings.attempts = attempts + 1;
-        savesettings(global);
+        savesettings(isGlobal);
     }
 }
 
@@ -838,7 +835,6 @@ function pinvalidate(thispad) {
             notify(translate("datasaved"));
             enc_s(seed_decrypt(current_pin));
         } else {
-            const pinfloat = $("#pinfloat");
             topnotify(translate("pinmatch"));
             if (navigator.vibrate) {} else {
                 playsound(glob_funk);
@@ -875,15 +871,12 @@ function pinbackvalidatetrigger() {
 // Handles PIN backspace functionality
 function pinback(pininput) {
     const pinval = pininput.val(),
-        inputlength = pinval.length,
-        prevval = pinval.substring(0, inputlength - 1);
+        prevval = pinval.slice(0, -1);
     pininput.val(prevval);
 }
 
 // ** IOS Redirects **
-
 // (Can only be envoked from the IOS app) 
-
 // Initializes iOS-specific functionality
 function ios_init() {
     glob_is_ios_app = true;
@@ -892,50 +885,42 @@ function ios_init() {
 
 // Handles iOS-specific page redirections
 function ios_redirections(url) {
-    if (url) {
-        const search = get_search(url),
-            gets = renderparameters(search);
-        if (gets.xss) {
-            return
-        }
-        const currenturlvar = glob_w_loc.href,
-            currenturl = currenturlvar.toUpperCase(),
-            newpage = url.toUpperCase();
-        if (currenturl == newpage) {
-            return
-        }
-        if (br_get_local("editurl") == glob_w_loc.search) {
-            return
-        }
-        const isrequest = (newpage.indexOf("PAYMENT=") >= 0),
-            isopenrequest = (glob_paymentpopup.hasClass("active"));
-        if (isrequest) {
-            if (isopenrequest) {
-                cancelpaymentdialog();
-                setTimeout(function() {
-                    openpage(url, "", "payment");
-                }, 1000);
-                return
-            }
-            openpage(url, "", "payment");
-            updaterequeststatesrefresh();
-            return
-        }
-        if (gets.i) {
-            // expand shorturl don't open page
-        } else {
-            const pagename = (gets.p) ? gets.p : "prompt";
-            openpage(url, pagename, "page");
-        }
-        if (is_opendialog() === true) {
-            canceldialog();
+    if (!url) return;
+    const search = get_search(url),
+        gets = renderparameters(search);
+    if (gets.xss) return;
+    const currenturl = glob_w_loc.href.toUpperCase(),
+        newpage = url.toUpperCase();
+    if (currenturl === newpage) return;
+    if (br_get_local("editurl") === glob_w_loc.search) return;
+    const isrequest = newpage.includes("PAYMENT="),
+        isopenrequest = glob_paymentpopup.hasClass("active");
+    if (isrequest) {
+        if (isopenrequest) {
+            cancelpaymentdialog();
             setTimeout(function() {
-                check_params(gets);
+                openpage(url, "", "payment");
             }, 1000);
             return
         }
-        check_params(gets);
+        openpage(url, "", "payment");
+        updaterequeststatesrefresh();
+        return
     }
+    if (gets.i) {
+        // expand shorturl don't open page
+    } else {
+        const pagename = gets.p || "prompt";
+        openpage(url, pagename, "page");
+    }
+    if (is_opendialog() === true) {
+        canceldialog();
+        setTimeout(function() {
+            check_params(gets);
+        }, 1000);
+        return
+    }
+    check_params(gets);
 }
 
 // ** Intropage **
@@ -950,7 +935,7 @@ function starttrigger() {
 // Sets up event listener for progressing to the next step in the intro process
 function startnexttrigger() {
     $(document).on("click touchend", "#entername .panelwrap", function(e) {
-        if (e.target == this) {
+        if (e.target === this) {
             startnext($("#entername"));
         }
     });
@@ -959,9 +944,7 @@ function startnexttrigger() {
 // Handles progression to the next step in the intro process
 function startnext(thisnode) {
     const thisnext = thisnode.attr("data-next");
-    if (thisnext === undefined) {
-        return
-    }
+    if (!thisnext) return;
     if (thisnode.hasClass("validstep")) {
         $("#startpage").attr("class", "sp_" + thisnext);
         thisnode.removeClass("panelactive").next(".startpanel").addClass("panelactive");
@@ -974,9 +957,7 @@ function startnext(thisnode) {
 // Handles going back to the previous step in the intro process
 function startprev(thisnode) {
     const thisprev = thisnode.attr("data-prev");
-    if (thisprev === undefined) {
-        return
-    }
+    if (!thisprev) return;
     $("#startpage").attr("class", "sp_" + thisprev);
     thisnode.removeClass("panelactive").prev(".startpanel").addClass("panelactive");
     $("#eninput").blur();
@@ -985,10 +966,10 @@ function startprev(thisnode) {
 // Handles keydown events for character limit on input field
 function lettercountkeydown() {
     $(document).on("keydown", "#eninput", function(e) {
-        const keycode = e.keyCode,
+        const keycode = e.which || e.keyCode,
             thisinput = $(this),
             thisvallength = thisinput.val().length,
-            lettersleft = thisinput.attr("data-max") - thisvallength;
+            lettersleft = parseInt(thisinput.attr("data-max"), 10) - thisvallength;
         if (keycode === 13) {
             startnext($("#entername"));
         }
@@ -1006,22 +987,14 @@ function lettercountkeydown() {
 function lettercountinput() {
     $(document).on("input", "#eninput", function() {
         const thisinput = $(this),
-            mininput = thisinput.attr("data-min"),
+            mininput = parseInt(thisinput.attr("data-min"), 10),
             thispanel = $("#entername"),
             thisvallength = thisinput.val().length,
-            lettersleft = thisinput.attr("data-max") - thisvallength,
+            lettersleft = parseInt(thisinput.attr("data-max"), 10) - thisvallength,
             lettercount = $("#lettercount");
         lettercount.text(lettersleft);
-        if (thisvallength >= mininput) {
-            thispanel.addClass("validstep");
-        } else {
-            thispanel.removeClass("validstep");
-        }
-        if (thisvallength < 1) {
-            lettercount.removeClass("activlc");
-        } else {
-            lettercount.addClass("activlc");
-        }
+        thispanel.toggleClass("validstep", thisvallength >= mininput);
+        lettercount.toggleClass("activlc", thisvallength > 0);
     });
 }
 
@@ -1075,7 +1048,7 @@ function loadurl() {
     const page = gets.p,
         payment = gets.payment,
         url = glob_w_loc.search,
-        event = (payment) ? "both" : "loadpage";
+        event = payment ? "both" : "loadpage";
     if (url) {
         openpage(url, page, event);
     } else {
@@ -1114,23 +1087,24 @@ function openpage(href, pagename, event) {
 
 // Handles browser's back/forward navigation
 function popstate() {
-    window.onpopstate = function(e) {
+    // CHANGE: Use addEventListener instead of onpopstate
+    window.addEventListener("popstate", function(e) {
         const statemeta = e.state;
-        if (statemeta && statemeta.pagename) { //check for history
+        if (statemeta && statemeta.pagename) {
             loadfunction(statemeta.pagename, statemeta.event);
-            return
+            return;
         }
         cancel_url_dialogs();
-    }
+    });
 }
 
 // Loads the appropriate function based on the page and event
 function loadfunction(pagename, thisevent) {
-    if (thisevent == "payment") { //load paymentpopup if payment is set
+    if (thisevent === "payment") { //load paymentpopup if payment is set
         loadpaymentfunction();
         return
     }
-    if (thisevent == "both") { //load paymentpopup if payment is set and load page
+    if (thisevent === "both") { //load paymentpopup if payment is set and load page
         loadpageevent(pagename);
         setTimeout(function() {
             loadpaymentfunction("delay");
@@ -1139,7 +1113,7 @@ function loadfunction(pagename, thisevent) {
     }
     loadpageevent(pagename);
     const page_tl = translate(pagename),
-        page_title = (page_tl) ? page_tl : pagename;
+        page_title = page_tl || pagename;
     settitle(page_title);
     cancel_url_dialogs();
 }
@@ -1165,7 +1139,7 @@ function loadpageevent(pagename) {
     $(".highlightbar").attr("data-class", pagename);
     shownav(pagename);
     const requestfilter = geturlparameters().filteraddress; // filter requests if filter parameter exists
-    if (requestfilter && pagename == "requests") {
+    if (requestfilter && pagename === "requests") {
         $("#requestlist > li").not(get_requestli("address", requestfilter)).hide();
     } else {
         $("#requestlist > li").show();
@@ -1187,17 +1161,15 @@ function shownav(pagename) {
 function activemenu() {
     $(document).on("click", ".nav li .self", function() {
         const thisitem = $(this);
+        $(".nav li .self").removeClass("activemenu");
         thisitem.addClass("activemenu");
-        $(".nav li .self").not(thisitem).removeClass("activemenu");
-        return
     })
 }
 
 // Handles fixed navigation on scroll
 function fixednav() {
-    $(document).scroll(function(e) {
+    $(document).scroll(function() {
         if (glob_html.hasClass("paymode")) {
-            e.preventDefault();
             return
         }
         fixedcheck($(document).scrollTop());
@@ -1269,24 +1241,23 @@ function confirm_missing_seed() {
             pk_checked = pk_checkbox.data("checked"),
             ds_checkbox = thisdialog.find("#dontshowwrap"),
             ds_checked = ds_checkbox.data("checked");
-        if (pk_checked == true) {} else {
+        if (pk_checked !== true) {
             popnotify("error", translate("confirmpkownership"));
             return false
         }
-        if (ds_checked == true) { // whitlist seed id
+        if (ds_checked === true) { // whitlist seed id
             add_address_whitelist(d_dat.address);
         }
         canceldialog();
         finishtxfunction(d_dat.currency, d_dat.address, d_dat.url, d_dat.title);
-        return false;
     })
 }
 
 // Generates HTML for address warning dialog
 function get_address_warning(id, address, pass_dat) {
-    const seedstr = (pass_dat.xpubid) ? "Xpub" : "Seed",
-        rest_str = (seedstr == "Seed") ? (glob_hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + pass_dat.seedid + "'>" + translate("resoresecretphrase") + "</div>" : "",
-        seedstrtitle = (seedstr == "Seed") ? translate("bip39_passphrase") : seedstr;
+    const seedstr = pass_dat.xpubid ? "Xpub" : "Seed",
+        rest_str = (seedstr === "Seed") ? (glob_hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + pass_dat.seedid + "'>" + translate("resoresecretphrase") + "</div>" : "",
+        seedstrtitle = (seedstr === "Seed") ? translate("bip39_passphrase") : seedstr;
     return $("<div class='formbox addwarning' id='" + id + "'>\
         <h2 class='icon-warning'>" + translate("warning") + "</h2>\
         <div class='popnotify'></div>\
@@ -1322,11 +1293,11 @@ function finishtxfunction(currency, thisaddress, savedurl, title) {
         c_default = currencysettings.default,
         currencysymbol = (c_default === true && glob_offline === false) ? currencysettings.currencysymbol : cd.ccsymbol,
         currentpage = gets.p,
-        currentpage_correct = (currentpage) ? "?p=" + currentpage + "&payment=" : "?payment=",
+        currentpage_correct = currentpage ? "?p=" + currentpage + "&payment=" : "?payment=",
         prefix = currentpage_correct + currency + "&uoa=",
         newlink = prefix + currencysymbol + "&amount=0" + "&address=" + thisaddress,
         href = (!savedurl || glob_offline !== false) ? newlink : savedurl, //load saved url if exists
-        thistitle = (title) ? title : "bitrequest";
+        thistitle = title || "bitrequest";
     br_set_local("editurl", href); // to check if request is being edited
     remove_flip(); // reset request card facing front
     openpage(href, thistitle, "payment");
@@ -1393,7 +1364,7 @@ function togglecurrency() {
             if (lscurrency) {
                 const addresslist = get_addresslist(currency),
                     addresscount = addresslist.find("li[data-checked='true']").length;
-                if (addresscount == 0) {
+                if (addresscount === 0) {
                     addresslist.find("li[data-checked='false']").first().find(".toggleaddress").trigger("click");
                 } else {
                     parentlistitem.attr("data-checked", "true").data("checked", true);
@@ -1415,14 +1386,14 @@ function toggleaddress() {
             parentlist = parentlistitem.closest("ul.pobox"),
             addresscount = parentlist.find("li[data-checked='true']").length,
             currency = parentlist.attr("data-currency");
-        if (checked === true || checked == "true") {
+        if (checked === true || checked === "true") {
             parentlistitem.attr("data-checked", "false").data("checked", false);
         } else {
             const a_dat = parentlistitem.data();
             if (parentlistitem.hasClass("seedu")) {
                 const address = a_dat.address,
                     seedid = a_dat.seedid;
-                if (addr_whitelist(address) === true) {} else {
+                if (addr_whitelist(address) !== true) {
                     const pass_dat = {
                             "address": address,
                             "pli": parentlistitem,
@@ -1434,7 +1405,7 @@ function toggleaddress() {
                 }
             } else if (parentlistitem.hasClass("xpubu")) {
                 const address = a_dat.address;
-                if (addr_whitelist(address) === true) {} else {
+                if (addr_whitelist(address) !== true) {
                     const haspub = has_xpub(currency),
                         xpubid = a_dat.xpubid;
                     if (haspub === false || (haspub && haspub.key_id != xpubid)) {
@@ -1467,11 +1438,11 @@ function confirm_missing_seed_toggle() {
             pk_checked = pk_checkbox.data("checked"),
             ds_checkbox = thisdialog.find("#dontshowwrap"),
             ds_checked = ds_checkbox.data("checked");
-        if (pk_checked == true) {} else {
+        if (pk_checked !== true) {
             popnotify("error", translate("confirmpkownership"));
             return
         }
-        if (ds_checked == true) { // whitlist seed id
+        if (ds_checked === true) { // whitlist seed id
             add_address_whitelist(d_dat.address);
         }
         canceldialog();
@@ -1494,7 +1465,7 @@ function cmst_callback(parentlistitem) {
 function add_seed_whitelist(seedid) {
     const stored_whitelist = br_get_local("swl", true),
         seed_whitelist = br_dobj(stored_whitelist);
-    if ($.inArray(seedid, seed_whitelist) === -1) {
+    if (!seed_whitelist.includes(seedid)) {
         seed_whitelist.push(seedid);
     }
     br_set_local("swl", seed_whitelist, true);
@@ -1504,14 +1475,14 @@ function add_seed_whitelist(seedid) {
 function seed_wl(seedid) {
     const stored_whitelist = br_get_local("swl", true),
         seed_whitelist = br_dobj(stored_whitelist);
-    return ($.inArray(seedid, seed_whitelist) === -1) ? false : true;
+    return seed_whitelist.includes(seedid);
 }
 
 // Adds an address to the whitelist
 function add_address_whitelist(address) {
     const stored_whitelist = br_get_local("awl", true),
         address_whitelist = br_dobj(stored_whitelist);
-    if ($.inArray(address, address_whitelist) === -1) {
+    if (!address_whitelist.includes(address)) {
         address_whitelist.push(address);
     }
     br_set_local("awl", address_whitelist, true);
@@ -1521,7 +1492,7 @@ function add_address_whitelist(address) {
 function addr_whitelist(address) {
     const stored_whitelist = br_get_local("awl", true),
         address_whitelist = br_dobj(stored_whitelist);
-    return ($.inArray(address, address_whitelist) === -1) ? false : true;
+    return address_whitelist.includes(address);
 }
 
 // Handles checkbox toggling in popup
@@ -1601,7 +1572,7 @@ function selectbox() {
             options.removeClass("show");
         } else {
             options.filter(function() {
-                return $(this).text() != thisvalue;
+                return $(this).text() !== thisvalue;
             }).addClass("show");
         }
     })
@@ -1637,8 +1608,7 @@ function radio_select() {
             thisradio.removeClass("icon-radio-checked2").addClass("icon-radio-unchecked");
         }
         const thisvalue = thistrigger.children("span").text(),
-            thisinput = $(".formbox input:first");
-        thisinput.val(thisvalue);
+            thisinput = $(".formbox input:first").val(thisvalue);
     })
 }
 
@@ -1690,7 +1660,7 @@ function drag(thisli, dialogheight, startheight, thisindex) {
                 thisoffset = this_li.offset().top,
                 thisheight = this_li.height(),
                 hoverpoint = thisoffset + (thisheight / 2),
-                dragup = (i + 1 > thisindex) ? true : false;
+                dragup = i + 1 > thisindex;
             if (dragup === true) {
                 if (currentheight > hoverpoint) {
                     this_li.css({
@@ -1888,7 +1858,7 @@ function escapeandback() {
 // Close payment dialog
 function close_paymentdialog(empty) {
     if (request) {
-        if (empty === true && glob_inframe === false && request.requesttype == "local") {
+        if (empty === true && glob_inframe === false && request.requesttype === "local") {
             const currency = request.payment,
                 address = request.address,
                 ls_recentrequests = br_get_local("recent_requests", true),
@@ -1906,11 +1876,9 @@ function close_paymentdialog(empty) {
             closeloader();
             toggle_rr(true);
             const rr_whitelist = br_get_session("rrwl", true);
-            if (rr_whitelist) {
-                if (rr_whitelist && rr_whitelist[currency] == address) {
-                    continue_cpd();
-                    return
-                }
+            if (rr_whitelist && rr_whitelist[currency] == address) {
+                continue_cpd();
+                return
             }
             payment_lookup(request_dat);
             return
@@ -1924,7 +1892,7 @@ function continue_cpd() {
     if (glob_html.hasClass("firstload")) {
         const gets = geturlparameters(),
             pagename = gets.p,
-            set_pagename = (pagename) ? pagename : "home";
+            set_pagename = pagename || "home";
         openpage("?p=" + set_pagename, set_pagename, "loadpage");
         return
     }
@@ -1967,7 +1935,7 @@ function check_recent() {
             result = confirm(translate("openurl", {
                 "url": thisurl
             }));
-        if (result === true) {
+        if (result) {
             open_share_url("location", thisurl);
         }
         return
@@ -1979,7 +1947,7 @@ function dismiss_payment_lookup() {
     $(document).on("click", "#dismiss", function() {
         const ds_checkbox = $("#dontshowwrap"),
             ds_checked = ds_checkbox.data("checked");
-        if (ds_checked == true) {
+        if (ds_checked === true) {
             block_payment_lookup();
         }
         canceldialog();
@@ -2058,10 +2026,8 @@ function recent_requests_list(recent_payments) {
 }
 
 // Display notification
-function notify(message, time, showbutton) {
-    const settime = (time) ? time : 4000,
-        setbutton = (showbutton) ? showbutton : "no",
-        notify = $("#notify");
+function notify(message, settime = 4000, setbutton = "no") {
+    const notify = $("#notify");
     $("#notifysign").html(message + "<span class='icon-cross'></div>").attr("class", "button" + setbutton);
     notify.addClass("popupn");
     const timeout = setTimeout(function() {
@@ -2124,11 +2090,11 @@ function popdialog(content, functionname, trigger, custom, replace) {
     }
     glob_body.addClass("blurmain");
     $("#popup").addClass("active showpu");
-    const thistrigger = (trigger) ? trigger : $("#popup #execute");
+    const thistrigger = trigger || $("#popup #execute");
     if (functionname) {
         execute(thistrigger, functionname);
     }
-    if (glob_supportsTouch) {} else {
+    if (!glob_supportsTouch) {
         $("#dialogbody input:first").focus();
     }
 }
@@ -2137,8 +2103,7 @@ function popdialog(content, functionname, trigger, custom, replace) {
 function execute(trigger, functionname) {
     $(document).on("click", "#execute", function(e) {
         e.preventDefault();
-        eval(functionname + "(trigger)");
-        return
+        window[functionname](trigger);
     })
 }
 
@@ -2194,31 +2159,30 @@ function addaddresstrigger() {
 function addaddress(ad, edit) {
     const currency = ad.currency,
         cpid = ad.ccsymbol + "-" + currency,
-        address = (ad.address) ? ad.address : "",
-        label = (ad.label) ? ad.label : "",
-        derived = (ad.seedid || ad.xpubid),
+        address = ad.address || "",
+        label = ad.label || "",
         readonly = (edit === true) ? " readonly" : "",
-        nopub = (glob_test_derive === false) ? true : (is_xpub(currency) === false || has_xpub(currency) !== false),
+        nopub = glob_test_derive === false || (is_xpub(currency) === false || has_xpub(currency) !== false),
         choose_wallet_str = "<span id='get_wallet' class='address_option' data-currency='" + currency + "'>" + translate("noaddressyet", {
             "currency": currency
         }) + "</span>",
         derive_seed_str = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>" + translate("generatewallet") + "</span>",
-        options = (glob_hasbip === true) ? choose_wallet_str : (glob_test_derive === true && glob_c_derive[currency]) ? (hasbip32(currency) === true) ? derive_seed_str : choose_wallet_str : choose_wallet_str,
-        pnotify = (glob_body.hasClass("showstartpage")) ? "<div class='popnotify' style='display:block'>" + options + "</div>" : "<div class='popnotify'></div>",
-        scanqr = (glob_hascam === true && edit === false) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
-        title = (edit === true) ? "<h2 class='icon-pencil'>" + translate("editlabel") + "</h2>" : "<h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " " + translate("addcoinaddress", {
+        options = glob_hasbip ? choose_wallet_str : (glob_test_derive && glob_c_derive[currency]) ? (hasbip32(currency) === true ? derive_seed_str : choose_wallet_str) : choose_wallet_str,
+        pnotify = glob_body.hasClass("showstartpage") ? "<div class='popnotify' style='display:block'>" + options + "</div>" : "<div class='popnotify'></div>",
+        scanqr = glob_hascam && !edit ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+        title = edit ? "<h2 class='icon-pencil'>" + translate("editlabel") + "</h2>" : "<h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " " + translate("addcoinaddress", {
             "currency": currency
         }) + "</h2>",
-        pk_checkbox = (edit === true) ? "" : "<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + translate("pkownership") + "</span></div>",
-        addeditclass = (edit === true) ? "edit" : "add",
-        xpubclass = (nopub) ? " hasxpub" : " noxpub",
-        xpubph = (nopub) ? translate("entercoinaddress", {
+        pk_checkbox = edit ? "" : "<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + translate("pkownership") + "</span></div>",
+        addeditclass = edit ? "edit" : "add",
+        xpubclass = nopub ? " hasxpub" : " noxpub",
+        xpubph = nopub ? translate("entercoinaddress", {
             "currency": currency
         }) : translate("nopub"),
-        vk_val = (ad.vk) ? ad.vk : "",
-        has_vk = (vk_val != ""),
-        scanvk = (glob_hascam === true) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
-        vk_box = (currency == "monero") ? (has_vk) ? "" : "<div class='inputwrap'><input type='text' class='vk_input' value='" + vk_val + "' placeholder='" + translate("secretviewkey") + "'>" + scanvk + "</div>" : "",
+        vk_val = ad.vk || "",
+        has_vk = (vk_val !== ""),
+        scanvk = glob_hascam ? "<div class='qrscanner' data-currency='" + currency + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+        vk_box = (currency == "monero") ? has_vk ? "" : "<div class='inputwrap'><input type='text' class='vk_input' value='" + vk_val + "' placeholder='" + translate("secretviewkey") + "'>" + scanvk + "</div>" : "",
         content = $("<div class='formbox form" + addeditclass + xpubclass + "' id='addressformbox'>" + title + pnotify + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' id='address_xpub_input' class='address' value='" + address + "' data-currency='" + currency + "' placeholder='" + xpubph + "'" + readonly + ">" + scanqr + "</div>" + vk_box + "<input type='text' class='addresslabel' value='" + label + "' placeholder='label'>\
         <div id='ad_info_wrap' style='display:none'>\
             <ul class='td_box'>\
@@ -2234,7 +2198,7 @@ function addaddress(ad, edit) {
     if (glob_supportsTouch) {
         return
     }
-    if (edit === true) {
+    if (edit) {
         $("#popup input.addresslabel").focus().select();
         return
     }
@@ -2278,7 +2242,7 @@ function active_derives(currency, derive) {
             return true;
         }
     }
-    if (derive == "seed") {
+    if (derive === "seed") {
         const active_sder = filter_list(addresslist, "seedid", glob_bipid).not(".used");
         if (active_sder.length) {
             const check_p = ch_pending(active_sder.first().data());
@@ -2289,7 +2253,7 @@ function active_derives(currency, derive) {
             return false;
         }
     }
-    if (derive == "xpub") {
+    if (derive === "xpub") {
         const activepub = active_xpub(currency),
             xpubid = activepub.key_id,
             active_xder = filter_list(addresslist, "xpubid", xpubid).not(".used");
@@ -2338,10 +2302,7 @@ function submitaddresstrigger() {
 
 // Handles the "Connect Lightning Node" button click
 function add_lightning() {
-    $(document).on("click", "#connectln", function() {
-        lm_function();
-        return
-    })
+    $(document).on("click", "#connectln", lm_function);
 }
 
 // Handles the "Add ERC20 Token" button click
@@ -2359,10 +2320,10 @@ function add_erc20() {
             },
             checked_eth_addresses = filter_addressli("ethereum", "checked", true),
             first_checked_eth_address = checked_eth_addresses[0],
-            eth_address_data = (first_checked_eth_address) ? $(first_checked_eth_address).data() : false,
-            eth_address_prefill = (eth_address_data) ? eth_address_data.address : "",
-            eth_label_prefill = (eth_address_data) ? eth_address_data.label : "",
-            scanqr = (glob_hascam === true) ? "<div class='qrscanner' data-currency='ethereum' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+            eth_address_data = first_checked_eth_address ? $(first_checked_eth_address).data() : false,
+            eth_address_prefill = eth_address_data ? eth_address_data.address : "",
+            eth_label_prefill = eth_address_data ? eth_address_data.label : "",
+            scanqr = glob_hascam ? "<div class='qrscanner' data-currency='ethereum' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
             content = $("\
             <div class='formbox' id='erc20formbox'>\
                 <h2 class='icon-coin-dollar'>" + translate("adderc20token") + "</h2>\
@@ -2396,7 +2357,7 @@ function autocomplete_erc20token() {
             thisvalue = thisinput.val().toLowerCase(),
             options = thisform.find(".options");
         thisform.removeClass("validated");
-        $("#ac_options > span").each(function(i) {
+        $("#ac_options > span").each(function() {
             const thisoption = $(this),
                 thistext = thisoption.text(),
                 currency = thisoption.attr("data-currency"),
@@ -2404,7 +2365,7 @@ function autocomplete_erc20token() {
                 contract = thisoption.attr("data-contract"),
                 thisid = thisoption.attr("data-id");
             thisoption.removeClass("show");
-            if (thisvalue.length > 2 && currencysymbol === thisvalue || currency === thisvalue) {
+            if (thisvalue.length > 2 && (currencysymbol === thisvalue || currency === thisvalue)) {
                 thisform.addClass("validated");
                 const coin_data = {
                     "cmcid": thisid,
@@ -2446,7 +2407,7 @@ function initaddressform(coin_data) {
     addressfield.attr("placeholder", translate("entercoinaddress", {
         "currency": coin_data.currency
     }));
-    if (erc20_inputs.is(":visible")) {} else {
+    if (!erc20_inputs.is(":visible")) {
         erc20_inputs.slideDown(300);
         addressfield.focus();
     }
@@ -2465,7 +2426,7 @@ function validateaddress_vk(ad) {
     const currency = ad.currency,
         addressfield = $("#addressform .address"),
         addressinputval = addressfield.val();
-    if (addressinputval) {} else {
+    if (!addressinputval) {
         const errormessage = translate("entercoinaddress", {
             "currency": currency
         });
@@ -2475,19 +2436,19 @@ function validateaddress_vk(ad) {
     }
     if (currency) {
         const vkfield = $("#addressform .vk_input"),
-            vkinputval = (currency == "monero") ? (vkfield.length) ? vkfield.val() : 0 : 0,
+            vkinputval = (currency === "monero" && vkfield.length) ? vkfield.val() : 0,
             vklength = vkinputval.length;
         if (vklength) {
             if (vklength !== 64) {
                 popnotify("error", translate("invalidvk"));
                 return
             }
-            if (check_vk(vkinputval)) {} else {
+            if (!check_vk(vkinputval)) {
                 popnotify("error", translate("invalidvk"));
                 return
             }
             const valid = check_address(addressinputval, currency);
-            if (valid === true) {} else {
+            if (!valid === true) {
                 const errormessage = addressinputval + " " + translate("novalidaddress", {
                     "currency": currency
                 });
@@ -2516,7 +2477,7 @@ function validateaddress_vk(ad) {
                 const data = br_result(e).result,
                     errormessage = data.Error;
                 if (errormessage) {
-                    const error = (errormessage) ? errormessage : translate("invalidvk");
+                    const error = errormessage || translate("invalidvk");
                     popnotify("error", error);
                     return
                 }
@@ -2541,92 +2502,40 @@ function validateaddress_vk(ad) {
 // Validates the address for the selected currency and handles the addition or editing of the address
 function validateaddress(ad, vk) {
     const currency = ad.currency,
-        iserc20 = (ad.erc20 === true),
-        currencycheck = (iserc20 === true) ? "ethereum" : currency,
+        iserc20 = ad.erc20 === true,
+        currencycheck = iserc20 ? "ethereum" : currency,
         ccsymbol = ad.ccsymbol,
         addressfield = $("#addressform .address"),
         addressinputvalue = addressfield.val(),
-        addressinputval = (currency == "nimiq") ? addressinputvalue.replace(/\s/g, "") : addressinputvalue,
+        addressinputval = currency === "nimiq" ? addressinputvalue.replace(/\s/g, "") : addressinputvalue,
         currentaddresslist = get_addresslist(currency),
         getindex = currentaddresslist.children("li").length + 1,
-        index = (getindex > 1) ? getindex : 1,
+        index = getindex > 1 ? getindex : 1,
         labelfield = $("#addressform .addresslabel"),
         labelinput = labelfield.val(),
-        labelinputval = (labelinput) ? labelinput : "";
-    if (addressinputval) {
-        const addinputval = (currency == "bitcoin-cash" && addressinputval.indexOf(":") > -1) ? addressinputval.split(":").pop() : addressinputval,
-            addressduplicate = (filter_addressli(currency, "address", addinputval).length > 0),
-            address = ad.address,
-            label = ad.label;
-        if (addressduplicate === true && address !== addinputval) {
-            popnotify("error", translate("alreadyexists"));
-            addressfield.select();
-            return
-        }
-        if (addinputval == glob_new_address) { // prevent double address entries
-            console.log("already added");
-            return
-        }
-        const valid = check_address(addinputval, currencycheck);
-        if (valid === true) {
-            const validlabel = check_address(labelinputval, currencycheck);
-            if (validlabel === true) {
-                popnotify("error", translate("invalidlabel"));
-                labelfield.val(label).select();
-                return
-            }
-            if ($("#addressformbox").hasClass("formedit")) {
-                const currentlistitem = currentaddresslist.children("li[data-address='" + address + "']"),
-                    ed = {};
-                ed.label = labelinputval;
-                if (vk) {
-                    ed.vk = vk;
-                }
-                currentlistitem.data(ed).attr("data-address", addinputval);
-                currentlistitem.find(".atext h2 > span").text(labelinputval);
-                currentlistitem.find(".atext p.address").text(addinputval);
-                saveaddresses(currency, true);
-                canceldialog();
-                canceloptions();
-                return
-            }
-            const pk_checkbox = $("#pk_confirmwrap"),
-                pk_checked = pk_checkbox.data("checked");
-            if (pk_checked == true) {
-                if (index === 1) {
-                    if (iserc20 === true) {
-                        buildpage(ad, true);
-                        append_coinsetting(currency, glob_br_config.erc20_dat.settings);
-                    }
-                    if (glob_body.hasClass("showstartpage")) {
-                        const acountname = $("#eninput").val();
-                        $("#accountsettings").data("selected", acountname).find("p").text(acountname);
-                        savesettings();
-                        const href = "?p=home&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0" + "&address=" + addinputval;
-                        br_set_local("editurl", href); // to check if request is being edited
-                        openpage(href, "create " + currency + " request", "payment");
-                        glob_body.removeClass("showstartpage");
-                    } else {
-                        loadpage("?p=" + currency);
-                    }
-                }
-                glob_new_address = addinputval + currency;
-                ad.address = addinputval,
-                    ad.label = labelinputval,
-                    ad.a_id = ccsymbol + index,
-                    ad.vk = vk,
-                    ad.checked = true;
-                appendaddress(currency, ad);
-                saveaddresses(currency, true);
-                currency_check(currency);
-                canceldialog();
-                canceloptions();
-                clear_savedurl();
-                return
-            }
-            popnotify("error", translate("confirmpkownership"));
-            return
-        }
+        labelinputval = labelinput || "";
+    if (!addressinputval) {
+        popnotify("error", translate("entercoinaddress", {
+            "currency": currency
+        }));
+        addressfield.focus();
+        return
+    }
+    const addinputval = currency === "bitcoin-cash" && addressinputval.includes(":") ? addressinputval.split(":").pop() : addressinputval,
+        addressduplicate = filter_addressli(currency, "address", addinputval).length > 0,
+        address = ad.address,
+        label = ad.label;
+    if (addressduplicate && address !== addinputval) {
+        popnotify("error", translate("alreadyexists"));
+        addressfield.select();
+        return
+    }
+    if (addinputval == glob_new_address) { // prevent double address entries
+        console.log("already added");
+        return
+    }
+    const valid = check_address(addinputval, currencycheck);
+    if (!valid) {
         popnotify("error", addressinputval + " " + translate("novalidaddress", {
             "currency": currency
         }));
@@ -2635,16 +2544,69 @@ function validateaddress(ad, vk) {
         }, 10);
         return
     }
-    popnotify("error", translate("entercoinaddress", {
-        "currency": currency
-    }));
-    addressfield.focus();
+    const validlabel = check_address(labelinputval, currencycheck);
+    if (validlabel === true) {
+        popnotify("error", translate("invalidlabel"));
+        labelfield.val(label).select();
+        return
+    }
+    if ($("#addressformbox").hasClass("formedit")) {
+        const currentlistitem = currentaddresslist.children("li[data-address='" + address + "']"),
+            ed = {
+                "label": labelinputval
+            };
+        if (vk) {
+            ed.vk = vk;
+        }
+        currentlistitem.data(ed).attr("data-address", addinputval);
+        currentlistitem.find(".atext h2 > span").text(labelinputval);
+        currentlistitem.find(".atext p.address").text(addinputval);
+        saveaddresses(currency, true);
+        canceldialog();
+        canceloptions();
+        return
+    }
+    const pk_checkbox = $("#pk_confirmwrap"),
+        pk_checked = pk_checkbox.data("checked");
+    if (!pk_checked) {
+        popnotify("error", translate("confirmpkownership"));
+        return
+    }
+    if (index === 1) {
+        if (iserc20 === true) {
+            buildpage(ad, true);
+            append_coinsetting(currency, glob_br_config.erc20_dat.settings);
+        }
+        if (glob_body.hasClass("showstartpage")) {
+            const acountname = $("#eninput").val();
+            $("#accountsettings").data("selected", acountname).find("p").text(acountname);
+            savesettings();
+            const href = "?p=home&payment=" + currency + "&uoa=" + ccsymbol + "&amount=0" + "&address=" + addinputval;
+            br_set_local("editurl", href); // to check if request is being edited
+            openpage(href, "create " + currency + " request", "payment");
+            glob_body.removeClass("showstartpage");
+        } else {
+            loadpage("?p=" + currency);
+        }
+    }
+    glob_new_address = addinputval + currency;
+    ad.address = addinputval,
+        ad.label = labelinputval,
+        ad.a_id = ccsymbol + index,
+        ad.vk = vk,
+        ad.checked = true;
+    appendaddress(currency, ad);
+    saveaddresses(currency, true);
+    currency_check(currency);
+    canceldialog();
+    canceloptions();
+    clear_savedurl();
 }
 
 // Validates an address for a given currency using a regex pattern
 function check_address(address, currency) {
     const regex = getcoindata(currency).regex;
-    return (regex) ? new RegExp(regex).test(address) : false;
+    return regex ? new RegExp(regex).test(address) : false;
 }
 
 // Validates a view key using a regex pattern
@@ -2675,9 +2637,7 @@ function showbip39_trigger() {
 
 // Handles the click event for canceling a dialog
 function canceldialog_click() {
-    $(document).on("click", ".cancel_dialog", function() {
-        canceldialog();
-    })
+    $(document).on("click", ".cancel_dialog", canceldialog);
 }
 
 // Sets up event listeners for closing dialogs
@@ -2689,12 +2649,12 @@ function canceldialogtrigger() {
             options = $("#dialog").find(".options");
         if (options.length > 0 && options.hasClass("showoptions")) {
             const pointerevent = jtarget.attr("data-pe");
-            if (pointerevent == "none") {} else {
+            if (pointerevent !== "none") {
                 options.removeClass("showoptions");
             }
             return
         }
-        if (target == this || target_id == "canceldialog") {
+        if (target == this || target_id === "canceldialog") {
             canceldialog();
         }
     });
@@ -2703,7 +2663,7 @@ function canceldialogtrigger() {
 // Closes the current dialog
 function canceldialog(pass) {
     if (glob_inframe === true) {
-        if (pass === true) {} else {
+        if (pass !== true) {
             if ($("#contactformbox").length > 0) {
                 return false;
             }
@@ -2731,7 +2691,7 @@ function canceldialog(pass) {
 function blockcancelpaymentdialog() {
     $(document).on("mousedown", "#payment", function(e) {
         glob_blockswipe = false;
-        if (e.target == this) {
+        if (e.target === this) {
             const inputs = glob_paymentdialogbox.find("input");
             if (inputs.is(":focus")) {
                 glob_blockswipe = true;
@@ -2756,7 +2716,7 @@ function cancelpaymentdialogtrigger() {
             console.log("clicking too fast");
             return
         }
-        if (e.target == this) {
+        if (e.target === this) {
             escapeandback();
             glob_cp_timer = now();
         }
@@ -2765,8 +2725,7 @@ function cancelpaymentdialogtrigger() {
 
 // Removes focus from input fields
 function unfocus_inputs() {
-    const inputs = glob_paymentdialogbox.find("input");
-    inputs.blur();
+    glob_paymentdialogbox.find("input").blur();
 }
 
 // Checks polling conditions and closes payment dialog if necessary
@@ -2775,15 +2734,13 @@ function cpd_pollcheck() {
         close_paymentdialog();
         return
     }
-    if (request) {
-        if (request.received !== true) {
-            const rq_init = request.rq_init,
-                rq_timer = request.rq_timer,
-                rq_time = now() - rq_timer;
-            if (rq_time > glob_after_scan_timeout) {
-                after_scan(rq_init);
-                return
-            }
+    if (request && request.received !== true) {
+        const rq_init = request.rq_init,
+            rq_timer = request.rq_timer,
+            rq_time = now() - rq_timer;
+        if (rq_time > glob_after_scan_timeout) {
+            after_scan(rq_init);
+            return
         }
     }
     close_paymentdialog();
@@ -2855,7 +2812,7 @@ function clearpinging(s_id) {
         }
         return
     }
-    if ($.isEmptyObject(glob_pinging)) {} else {
+    if (!$.isEmptyObject(glob_pinging)) {
         $.each(glob_pinging, function(key, value) {
             clearInterval(value);
         });
@@ -2866,7 +2823,7 @@ function clearpinging(s_id) {
 // Sets up event listener for canceling the share dialog
 function cancelsharedialogtrigger() {
     $(document).on("click", "#sharepopup", function(e) {
-        if (e.target == this) {
+        if (e.target === this) {
             cancelsharedialog();
         }
     });
@@ -2889,7 +2846,7 @@ function showoptionstrigger() {
     $(document).on("click", ".popoptions", function(e) {
         const ad = $(this).closest("li").data(),
             address = ad.address;
-        if (address == "lnurl") {
+        if (address === "lnurl") {
             playsound(glob_funk);
             return
         }
@@ -2912,23 +2869,21 @@ function showoptionstrigger() {
 }
 
 // Shows options dialog
-function showoptions(content, addclass, callback) {
-    if (addclass) {
-        if (addclass.indexOf("pin") > -1) {
-            const pinsettings = $("#pinsettings").data(),
-                timeout = pinsettings.timeout;
-            if (timeout) {
-                if (now() > timeout) {
-                    pinsettings.timeout = null;
-                    savesettings();
-                } else {
-                    lockscreen(timeout);
-                    return false;
-                }
+function showoptions(content, addclass) {
+    if (addclass && addclass.includes("pin")) {
+        const pinsettings = $("#pinsettings").data(),
+            timeout = pinsettings.timeout;
+        if (timeout) {
+            if (now() > timeout) {
+                pinsettings.timeout = null;
+                savesettings();
+            } else {
+                lockscreen(timeout);
+                return false;
             }
         }
     }
-    const plusclass = (addclass) ? " " + addclass : "";
+    const plusclass = addclass ? " " + addclass : "";
     $("#optionspop").addClass("showpu active" + plusclass);
     $("#optionsbox").html(content);
     glob_body.addClass("blurmain_options");
@@ -2974,9 +2929,9 @@ function phrase_login() {
             seedobject = ls_phrase_obj(),
             savedid = seedobject.pid,
             phraseid = get_seedid(b39txt.split(" "));
-        if (phraseid == savedid || phraseid == glob_cashier_seedid) {
+        if (phraseid === savedid || phraseid === glob_cashier_seedid) {
             clearpinlock();
-            if (glob_html.hasClass("loaded")) {} else {
+            if (!glob_html.hasClass("loaded")) {
                 finishfunctions();
             }
             const content = pinpanel(" reset");
@@ -3030,8 +2985,8 @@ function newrequest() {
             title = thislink.attr("title"),
             seedid = ad.seedid;
         if (seedid) {
-            if (seedid != glob_bipid) {
-                if (addr_whitelist(address) === true) {} else {
+            if (seedid !== glob_bipid) {
+                if (addr_whitelist(address) !== true) {
                     const pass_dat = {
                             "currency": currency,
                             "address": address,
@@ -3043,11 +2998,9 @@ function newrequest() {
                     popdialog(content, "triggersubmit");
                     return
                 }
-            } else {
-                if (bipv_pass() === false) {
-                    canceloptions();
-                    return
-                }
+            } else if (bipv_pass() === false) {
+                canceloptions();
+                return
             }
         }
         canceloptions();
@@ -3065,7 +3018,7 @@ function confirm_ms_newrequest() {
             pk_checked = pk_checkbox.data("checked"),
             ds_checkbox = thisdialog.find("#dontshowwrap"),
             ds_checked = ds_checkbox.data("checked");
-        if (pk_checked == true) {} else {
+        if (!pk_checked == true) {
             popnotify("error", translate("confirmpkownership"));
             return
         }
@@ -3156,7 +3109,7 @@ function rec_payments() {
     $(document).on("click", "#rpayments", function() {
         const ad = $(this).closest("ul").data(),
             blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20, ad.source, ad.layer);
-        if (blockchainurl === undefined) {} else {
+        if (blockchainurl !== undefined) {
             open_blockexplorer_url(blockchainurl + ad.address);
         }
     })
@@ -3171,7 +3124,7 @@ function showtransaction_trigger() {
             rqldat = rqli.data(),
             txhash = (thisnode.hasClass("tx_val")) ? thislist.data("txhash") : rqldat.txhash;
         if (txhash) {
-            const lnhash = (txhash.slice(0, 9) == "lightning") ? true : false;
+            const lnhash = txhash.startsWith("lightning");
             if (lnhash) {
                 const lightning = rqldat.lightning,
                     imp = lightning.imp,
@@ -3188,7 +3141,7 @@ function showtransaction_trigger() {
                                 pid = lightning.pid,
                                 pw = lightning.pw;
                             lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw);
-                            return;
+                            return
                         }
                     }
                 }
@@ -3225,27 +3178,25 @@ function addressinfo() {
     $(document).on("click", ".address_info", function() {
         const dialogwrap = $(this).closest("ul"),
             dd = dialogwrap.data(),
-            label = (dd.label) ? dd.label : (dd.a_id) ? dd.a_id : "",
+            label = dd.label || dd.a_id || "",
             currency = dd.currency,
             isbip = hasbip32(currency),
             bip32dat = (isbip) ? getbip32dat(currency) : null,
             seedid = dd.seedid,
             xpubid = dd.xpubid,
             vk = dd.vk,
-            source = (seedid) ? "seed" : (xpubid) ? "xpub" : false,
-            isseed = (source == "seed"),
-            isxpub = (source == "xpub"),
+            source = seedid ? "seed" : xpubid ? "xpub" : false,
+            isseed = source === "seed",
+            isxpub = source === "xpub",
             activepub = active_xpub(currency),
-            active_src = (isseed) ? (seedid == glob_bipid) :
-            (isxpub) ? (activepub && xpubid == activepub.key_id) : false,
+            active_src = isseed ? (seedid === glob_bipid) : (isxpub ? (activepub && xpubid === activepub.key_id) : false),
             address = dd.address,
             a_wl = addr_whitelist(address),
-            restore = (isseed) ? (glob_hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + seedid + "'>" + translate("resoresecretphrase") + "</div>" : "",
-            srcval = (source) ? (active_src) ? source + " <span class='icon-checkmark'>" :
-            source + " (Unavailable)" + restore : "external",
+            restore = isseed ? (glob_hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + seedid + "'>" + translate("resoresecretphrase") + "</div>" : "",
+            srcval = source ? (active_src) ? source + " <span class='icon-checkmark'>" : source + " (Unavailable)" + restore : "external",
             d_index = dd.derive_index,
             purpose = dd.purpose;
-        let dpath = (bip32dat) ? bip32dat.root_path + d_index : "";
+        let dpath = bip32dat ? bip32dat.root_path + d_index : "";
         if (purpose) {
             const dsplit = dpath.split("/");
             dsplit[1] = purpose;
@@ -3255,13 +3206,15 @@ function addressinfo() {
             dd.bip32dat = bip32dat,
             dd.address = address;
         const cc_icon = getcc_icon(dd.cmcid, dd.ccsymbol + "-" + currency, dd.erc20),
-            dpath_str = (isseed) ? "<li><strong>" + translate("derivationpath") + ":</strong> " + dpath + "</li>" : "",
+            dpath_str = isseed ? "<li><strong>" + translate("derivationpath") + ":</strong> " + dpath + "</li>" : "",
             pk_verified = "Unknown <span class='icon-checkmark'></span>",
-            vkobj = (dd.vk) ? vk_obj(dd.vk) : false,
-            vkdat = (vkobj) ? (isseed && active_src) ? "derive" : vkobj.vk : false,
+            vkobj = vk ? vk_obj(vk) : false,
+            vkdat = vkobj ? (isseed && active_src ? "derive" : vkobj.vk) : false,
             showtl = translate("show"),
-            pk_str = (vkdat) ? "<span id='show_vk' class='ref' data-vk='" + vkdat + "'>" + showtl + "</span>" : (isseed) ? (active_src) ? "<span id='show_pk' class='ref'>" + showtl + "</span>" : (a_wl === true) ? pk_verified : "Unknown" : pk_verified,
-            tlpk = translate("privatekey"),
+            pk_str = vkdat ? "<span id='show_vk' class='ref' data-vk='" + vkdat + "'>" + showtl + "</span>" :
+            (isseed ? (active_src ? "<span id='show_pk' class='ref'>" + showtl + "</span>" :
+                (a_wl === true ? pk_verified : "Unknown")) : pk_verified);
+        tlpk = translate("privatekey"),
             content = $("<div id='ad_info_wrap'><h2>" + cc_icon + " <span>" + label + "</span></h2><ul>\
                 <li><strong>" + translate("address") + ": </strong><span class='adbox adboxl select'>" + address + "</span>\
                 <div id='qrcodea' class='qrwrap flex'><div class='qrcode'></div>" + cc_icon + "</div>\
@@ -3353,7 +3306,7 @@ function show_vk() {
         }
         $("#optionsbox").html("");
         let x_ko = {};
-        if (vk == "derive") {
+        if (vk === "derive") {
             const addat = $("#ad_info_wrap").data(),
                 keycc = key_cc(),
                 dx_dat = {
@@ -3398,7 +3351,7 @@ function open_blockexplorer_url(be_link) {
 
 // Generates a block explorer URL based on currency and transaction type
 function blockexplorer_url(currency, tx, erc20, source, layer) {
-    const tx_prefix = (tx === true) ? "tx/" : "address/";
+    const tx_prefix = tx === true ? "tx/" : "address/";
     if (source == "binplorer" || layer == "bnb smart chain") {
         return "https://binplorer.com/" + tx_prefix;
     }
@@ -3410,14 +3363,14 @@ function blockexplorer_url(currency, tx, erc20, source, layer) {
     }
     const blockexplorer = get_blockexplorer(currency);
     if (blockexplorer) {
-        const blockdata = $.grep(glob_br_config.blockexplorers, function(filter) { //filter pending requests	
-                return filter.name == blockexplorer;
-            })[0],
-            be_prefix = blockdata.prefix,
+        const blockdata = glob_br_config.blockexplorers.find(filter => filter.name === blockexplorer);
+        if (!blockdata) return false;
+        const be_prefix = blockdata.prefix,
             coindata = getcoindata(currency),
-            pfix = (be_prefix == "currencysymbol") ? coindata.ccsymbol : (be_prefix == "currency") ? currency : be_prefix,
-            prefix = (pfix) ? pfix + "/" : "",
-            prefix_type = (tx === true) ? blockdata.tx_prefix : blockdata.address_prefix;
+            pfix = be_prefix === "currencysymbol" ? coindata.ccsymbol :
+            be_prefix === "currency" ? currency : be_prefix,
+            prefix = pfix ? pfix + "/" : "",
+            prefix_type = tx === true ? blockdata.tx_prefix : blockdata.address_prefix;
         return blockdata.url + prefix + prefix_type;
     }
     return false;
@@ -3445,7 +3398,7 @@ function canceloptionstrigger() {
             parent.postMessage("close_request", "*");
             return
         }
-        if (e.target == this) {
+        if (e.target === this) {
             canceloptions();
         }
     });
@@ -3465,11 +3418,9 @@ function canceloptions(pass) {
             phrasewrap.removeClass("showph");
             return
         }
-        if (ishome() === true) {} else {
-            if (glob_html.hasClass("loaded")) {} else {
-                shake(optionspop);
-                return
-            }
+        if (!ishome() && !glob_html.hasClass("loaded")) {
+            shake(optionspop);
+            return;
         }
     }
     clearoptions();
@@ -3591,7 +3542,7 @@ function archivefunction() {
     const thisreguest = $("#requestlist > li.visible_request"),
         requestdata = thisreguest.data(),
         requestcopy = thisreguest.clone();
-    if (thisreguest.data("status") == "insufficient") {
+    if (thisreguest.data("status") === "insufficient") {
         updaterequest({
             "requestid": requestdata.requestid,
             "status": "archive_pending"
@@ -3658,9 +3609,9 @@ function removerequestfunction() {
 
 // Calculates the amount short for a payment
 function amountshort(amount, receivedamount, fiatvalue, iscrypto) {
-    const amount_recieved = (iscrypto === true) ? receivedamount : fiatvalue,
+    const amount_recieved = iscrypto === true ? receivedamount : fiatvalue,
         amount_short = amount - amount_recieved,
-        numberamount = (iscrypto === true) ? trimdecimals(amount_short, 5) : trimdecimals(amount_short, 2);
+        numberamount = iscrypto === true ? trimdecimals(amount_short, 5) : trimdecimals(amount_short, 2);
     return (isNaN(numberamount)) ? null : numberamount;
 }
 
@@ -3671,8 +3622,8 @@ function editrequest() {
             thisrequestid = thisnode.attr("data-requestid"),
             requestlist = $("#" + thisrequestid),
             requesttitle = requestlist.data("requesttitle"),
-            requesttitle_input = (requesttitle) ? requesttitle : "",
-            formheader = (requesttitle) ? translate("edit") : translate("enter"),
+            requesttitle_input = requesttitle || "",
+            formheader = requesttitle ? translate("edit") : translate("enter"),
             content = "\
             <div class='formbox' id='edit_request_formbox'>\
                 <h2 class='icon-pencil'>" + formheader + " " + translate("title") + "</h2>\
@@ -3692,7 +3643,7 @@ function submit_request_description() {
         const thisnode = $(this),
             this_requestid = thisnode.attr("data-requestid"),
             this_requesttitle = thisnode.prev("input").val(),
-            requesttitle_val = (this_requesttitle) ? this_requesttitle : "empty";
+            requesttitle_val = this_requesttitle || "empty";
         if (this_requesttitle) {
             updaterequest({
                 "requestid": this_requestid,
@@ -3816,7 +3767,7 @@ function share_receipt() {
 function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
     const p_arr = lnurl_deform(proxy),
         proxy_host = p_arr.url,
-        pk = (pw) ? pw : p_arr.k,
+        pk = pw || p_arr.k,
         proxy_url = proxy_host + "proxy/v1/ln/api/",
         postdata = {
             "method": "POST",
@@ -3838,45 +3789,45 @@ function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
         "url": lnurl_encode("lnurl", proxy_host)
     }));
     $.ajax(postdata).done(function(e) {
-        if (e) {
-            const error = e.error;
-            if (error) {
-                popdialog("<h2 class='icon-blocked'>" + error.message + "</h2>", "canceldialog");
-                closeloader();
-                return;
-            }
-            const ddat = [{
-                    "div": {
-                        "class": "popform",
-                        "content": [{
-                                "div": {
-                                    "class": "invoice_body",
-                                    "content": "<pre>" + syntaxHighlight(e) + "</pre><div class='inv_pb'><img src='" + c_icons(imp) + "' class='lnd_icon' title='" + imp + "'/> Powered by " + imp + "</div>"
-                                }
-                            },
-                            {
-                                "input": {
-                                    "class": "submit",
-                                    "attr": {
-                                        "type": "submit",
-                                        "value": "OK"
-                                    }
-                                }
-                            }
-                        ]
-                    }
-                }],
-                content = template_dialog({
-                    "id": "invoiceformbox",
-                    "icon": "icon-power",
-                    "title": "Invoice",
-                    "elements": ddat
-                });
-            popdialog(content, "canceldialog");
+        if (!e) {
+            notify(translate("nofetchincoice"));
             closeloader();
             return
         }
-        notify(translate("nofetchincoice"));
+        const error = e.error;
+        if (error) {
+            popdialog("<h2 class='icon-blocked'>" + error.message + "</h2>", "canceldialog");
+            closeloader();
+            return;
+        }
+        const ddat = [{
+                "div": {
+                    "class": "popform",
+                    "content": [{
+                            "div": {
+                                "class": "invoice_body",
+                                "content": "<pre>" + syntaxHighlight(e) + "</pre><div class='inv_pb'><img src='" + c_icons(imp) + "' class='lnd_icon' title='" + imp + "'/> Powered by " + imp + "</div>"
+                            }
+                        },
+                        {
+                            "input": {
+                                "class": "submit",
+                                "attr": {
+                                    "type": "submit",
+                                    "value": "OK"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }],
+            content = template_dialog({
+                "id": "invoiceformbox",
+                "icon": "icon-power",
+                "title": "Invoice",
+                "elements": ddat
+            });
+        popdialog(content, "canceldialog");
         closeloader();
     }).fail(function(jqXHR, textStatus, errorThrown) {
         notify(translate("nofetchincoice"));
@@ -3886,66 +3837,70 @@ function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
 
 // Generates a PDF URL for a receipt
 function get_pdf_url(rqdat) {
-    const requestid = rqdat.requestid,
-        currencyname = rqdat.currencyname,
-        requestname = rqdat.requestname,
-        requesttitle = rqdat.requesttitle,
-        ismonitored = rqdat.monitored,
-        status = rqdat.status,
-        statustext = (status == "new") ? "Waiting for payment" : status,
-        txhash = rqdat.txhash,
-        lnhash = (txhash && txhash.slice(0, 9) == "lightning") ? true : false,
-        lightning = rqdat.lightning,
-        hybrid = (lightning && lightning.hybrid === true),
-        paymenttimestamp = rqdat.paymenttimestamp,
+    const {
+        requestid,
+        currencyname,
+        requestname,
+        requesttitle,
+        status,
+        txhash,
+        lightning,
+        paymenttimestamp,
+        amount,
+        fiatvalue,
+        receivedamount,
+        requesttype,
+        iscrypto,
+        uoa,
+        layer,
+        requestdate,
+        timestamp,
+        payment,
+        address
+    } = rqdat,
+    statustext = status === "new" ? "Waiting for payment" : status,
+        lnhash = txhash && txhash.slice(0, 9) === "lightning",
+        hybrid = lightning && lightning.hybrid === true,
         ptsformatted = fulldateformat(new Date(paymenttimestamp - glob_timezone), glob_langcode),
-        amount = rqdat.amount,
-        fiatvalue = rqdat.fiatvalue,
-        receivedamount = rqdat.receivedamount,
         receivedamount_rounded = trimdecimals(receivedamount, 6),
         fiatvalue_rounded = trimdecimals(fiatvalue, 2),
-        requesttype = rqdat.requesttype,
-        incoming = (requesttype == "incoming"),
-        outgoing = (requesttype == "outgoing"),
-        local = (requesttype == "local"),
-        checkout = (requesttype == "checkout"),
-        typetext = (incoming === true) ? (checkout) ? "online purchase" : "incoming" : (local === true) ? "point of sale" : "outgoing",
-        iscrypto = rqdat.iscrypto,
-        deter = (iscrypto === true) ? 6 : 2,
+        incoming = requesttype === "incoming",
+        outgoing = requesttype === "outgoing",
+        local = requesttype === "local",
+        checkout = requesttype === "checkout",
+        typetext = incoming ? (checkout ? "online purchase" : "incoming") : (local ? "point of sale" : "outgoing"),
+        deter = iscrypto ? 6 : 2,
         amount_rounded = trimdecimals(amount, deter),
-        uoa = rqdat.uoa,
-        layer = rqdat.layer,
         uoa_upper = uoa.toUpperCase(),
-        requestdate = rqdat.requestdate,
-        timestamp = rqdat.timestamp,
         utc = timestamp - glob_timezone,
-        localtime = (requestdate) ? requestdate - glob_timezone : utc,
+        localtime = requestdate ? requestdate - glob_timezone : utc,
         localtimeobject = new Date(localtime),
         requestdateformatted = fulldateformat(localtimeobject, glob_langcode),
-        created = (requestdate) ? requestdateformatted : "unknown",
+        created = requestdate ? requestdateformatted : "unknown",
         utc_format = fulldateformat(new Date(utc)),
-        invd = {},
-        lnd_string = (lnhash) ? " (lightning)" : "";
-    invd["Request ID"] = requestid;
-    invd[transclear("currency")] = clear_accents(rqdat.payment + lnd_string);
+        lnd_string = lnhash ? " (lightning)" : "",
+        invd = {
+            "Request ID": requestid,
+            [transclear("currency")]: clear_accents(payment + lnd_string),
+            [transclear("amount")]: amount_rounded + " " + uoa_upper,
+            [transclear("status")]: transclear(statustext),
+            [transclear("type")]: transclear(typetext),
+            [transclear("receivingaddress")]: address
+        };
     if (exists(requestname)) {
         invd[transclear("from")] = clear_accents(requestname);
     }
     if (exists(requesttitle)) {
         invd[transclear("title")] = "'" + clear_accents(requesttitle) + "'";
     }
-    invd[transclear("amount")] = amount_rounded + " " + uoa_upper,
-        invd[transclear("status")] = transclear(statustext),
-        invd[transclear("type")] = transclear(typetext);
-    if (incoming === true) {
+    if (incoming) {
         invd[transclear("created")] = created;
         invd[transclear("firstviewed")] = utc_format;
     }
-    invd[transclear("receivingaddress")] = rqdat.address;
     if (status === "paid") {
-        invd[transclear("paidon")] = ptsformatted,
-            invd[transclear("amountreceived")] = receivedamount_rounded + " " + rqdat.payment;
-        if (iscrypto === true) {} else {
+        invd[transclear("paidon")] = ptsformatted;
+        invd[transclear("amountreceived")] = receivedamount_rounded + " " + payment;
+        if (!iscrypto) {
             invd[transclear("fiatvalueon") + " " + ptsformatted] = fiatvalue_rounded + " " + currencyname;
         }
     }
@@ -3987,14 +3942,14 @@ function countdown_format(cd) {
         hours = cd.hours,
         minutes = cd.minutes,
         seconds = cd.seconds,
-        daynode = (days) ? (days < 2) ? days + " " + translate("day") : days + " " + translate("days") : "",
-        hs = (days) ? ", " : "",
-        hournode = (hours) ? (hours < 2) ? hs + hours + " " + translate("hour") : hs + hours + " " + translate("hours") : "",
-        ms = (hours) ? ", " : "",
-        minutenode = (minutes) ? (minutes < 2) ? ms + minutes + " " + translate("minute") : ms + minutes + " " + translate("minutes") : "",
-        ss = (minutes) ? " " + translate("and") + " " : "",
-        secondnode = (seconds) ? ss + seconds + " " + translate("seconds") : "",
-        result = (cd) ? daynode + hournode + minutenode + secondnode : false;
+        daynode = days ? (days < 2) ? days + " " + translate("day") : days + " " + translate("days") : "",
+        hs = days ? ", " : "",
+        hournode = hours ? (hours < 2) ? hs + hours + " " + translate("hour") : hs + hours + " " + translate("hours") : "",
+        ms = hours ? ", " : "",
+        minutenode = minutes ? (minutes < 2) ? ms + minutes + " " + translate("minute") : ms + minutes + " " + translate("minutes") : "",
+        ss = minutes ? " " + translate("and") + " " : "",
+        secondnode = seconds ? ss + seconds + " " + translate("seconds") : "",
+        result = cd ? daynode + hournode + minutenode + secondnode : false;
     return result;
 }
 
@@ -4032,12 +3987,12 @@ function render_currencysettings(thiscurrency) {
 // Builds the settings UI
 function buildsettings() {
     const appsettingslist = $("#appsettings");
-    $.each(glob_br_config.app_settings, function(i, value) {
+    glob_br_config.app_settings.forEach(function(value) {
         const setting_id = value.id,
             selected = value.selected,
             value_tl = translate(selected),
-            setval = (value_tl) ? value_tl : selected,
-            setting_li = (setting_id == "heading") ? $("<li class='set_heading'>\
+            setval = value_tl || selected,
+            setting_li = (setting_id === "heading") ? $("<li class='set_heading'>\
               <h2>" + translate(value.heading) + "</h2>\
         </li>") :
             $("<li class='render' id='" + setting_id + "'>\
@@ -4060,12 +4015,12 @@ function buildsettings() {
 function rendersettings(excludes) {
     const settingcache = br_get_local("settings", true);
     if (settingcache) {
-        $.each(settingcache, function(i, value) {
+        settingcache.forEach(function(value) {
             const settings_id = value.id;
             if ($.inArray(settings_id, excludes) === -1) { // exclude excludes
                 const selected = value.selected,
                     value_tl = translate(selected),
-                    setval = (settings_id == "accountsettings") ? selected : (value_tl) ? value_tl : selected; // Exclude translations
+                    setval = settings_id === "accountsettings" ? selected : (value_tl || selected); // Exclude translations
                 $("#" + value.id).data(value).find("p").text(setval);
             }
         });
@@ -4095,8 +4050,8 @@ function archive_button() {
 function fetchrequests(cachename, archive) {
     const requestcache = br_get_local(cachename, true);
     if (requestcache) {
-        const showarchive = (archive === false && requestcache.length > 11); // only show archive button when there are more then 11 requests
-        $.each(requestcache.reverse(), function(i, value) {
+        const showarchive = !archive && requestcache.length > 11; // only show archive button when there are more then 11 requests
+        requestcache.reverse().forEach(function(value) {
             value.archive = archive;
             value.showarchive = showarchive;
             appendrequest(value);
@@ -4108,10 +4063,12 @@ function fetchrequests(cachename, archive) {
 function initiate() {
     $.each(glob_br_config.bitrequest_coin_data, function(dat, val) {
         if (val.active === true) {
-            const settings = val.settings,
-                has_settings = (settings) ? true : false,
-                is_monitored = (has_settings) ? (settings.apis) ? true : false : false,
-                cd = val.data,
+            const {
+                settings,
+                "data": cd
+            } = val,
+            has_settings = !!settings,
+                is_monitored = has_settings && !!settings.apis,
                 coindata = {
                     "currency": cd.currency,
                     "ccsymbol": cd.ccsymbol,
@@ -4130,20 +4087,23 @@ function initiate() {
 
 // Builds the page for a specific currency
 function buildpage(cd, ini) {
-    const currency = cd.currency,
-        ccsymbol = cd.ccsymbol,
-        checked = cd.checked,
-        cmcid = cd.cmcid,
-        cpid = ccsymbol + "-" + currency,
-        erc20 = cd.erc20,
+    const {
+        currency,
+        ccsymbol,
+        checked,
+        cmcid,
+        erc20,
+        settings
+    } = cd,
+    cpid = ccsymbol + "-" + currency,
         // append currencies
         currencylist = $("ul#usedcurrencies"),
         cc_li = currencylist.children("li[data-currency='" + currency + "']"),
         home_currencylist = $("ul#currencylist"),
         home_cc_li = home_currencylist.children("li[data-currency='" + currency + "']"),
-        visibility = (checked === true) ? "" : "hide",
-        has_settings = (cd.settings === true || erc20 === true);
-    glob_init = (cc_li.length === 0 && ini === true);
+        visibility = checked ? "" : "hide",
+        has_settings = settings === true || erc20 === true;
+    glob_init = cc_li.length === 0 && ini === true;
     if (glob_init === true || erc20 === true) {
         const new_li = $("<li class='iconright' data-currency='" + currency + "' data-checked='" + checked + "'>\
             <div data-rel='?p=" + currency + "' class='liwrap addcurrency'>\
@@ -4161,7 +4121,7 @@ function buildpage(cd, ini) {
             </div>\
         </li>");
         new_homeli.data(cd).appendTo(home_currencylist);
-        const settingspage = (has_settings === true) ? "\
+        const settingspage = has_settings ? "\
         <div class='page' id='" + currency + "_settings' data-erc20='" + erc20 + "'>\
             <div class='content'>\
                 <h2 class='heading'>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + " " + translate("settings") + "</h2>\
@@ -4171,8 +4131,8 @@ function buildpage(cd, ini) {
                 </div>\
             </div>\
         </div>" : "";
-        const settingsbutton = (has_settings === true) ? "<div data-rel='?p=" + currency + "_settings' class='self icon-cog'></div>" : "",
-            sendbttn = (glob_hasbip === true) ? "<div class='button send' data-currency='" + currency + "'><span class='icon-telegram'>" + translate("send") + "</span></div>" : "",
+        const settingsbutton = has_settings ? "<div data-rel='?p=" + currency + "_settings' class='self icon-cog'></div>" : "",
+            sendbttn = glob_hasbip ? "<div class='button send' data-currency='" + currency + "'><span class='icon-telegram'>" + translate("send") + "</span></div>" : "",
             currency_page = $("<div class='page' id='" + currency + "'>\
             <div class='content'>\
                 <h2 class='heading'>" + getcc_icon(cmcid, cpid, erc20) + " " + currency + settingsbutton + "</h2>\
@@ -4204,34 +4164,35 @@ function buildpage(cd, ini) {
 function append_coinsetting(currency, settings) {
     const coinsettings_list = $("#" + currency + "_settings ul.cc_settinglist");
     $.each(settings, function(dat, val) {
-        if (val.xpub === false) {} else {
-            const selected = val.selected,
-                selected_val = (selected.name) ? selected.name : (selected.url) ? selected.url : selected;
-            if (selected_val !== undefined) {
-                const selected_string = selected_val.toString(),
-                    ss_filter = (selected_string == "true" || selected_string == "false") ? "" : selected_string,
-                    ss_tl = translate(ss_filter),
-                    ss_translate = (ss_tl) ? ss_tl : ss_filter,
-                    check_setting_li = coinsettings_list.children("li[data-id='" + dat + "']");
-                if (check_setting_li.length === 0) {
-                    const switchclass = (val.custom_switch) ? " custom" : " global bool",
-                        trigger = (val.switch === true) ? switchpanel(selected_string, switchclass) : "<span class='icon-pencil'></span>",
-                        coinsettings_li = $("<li data-id='" + dat + "'>\
-                            <div class='liwrap edit_trigger iconright' data-currency='" + currency + "'>\
-                                <span class='icon-" + val.icon + "'></span>\
-                                <div class='atext'>\
-                                    <h2>" + translate(dat) + "</h2>\
-                                    <p>" + ss_translate + "</p>\
-                                </div>\
-                                <div class='iconbox'>" + trigger + "</div>\
-                                </div>\
-                        </li>");
-                    coinsettings_li.data(val).appendTo(coinsettings_list);
-                } else {
-                    check_setting_li.data(val).find("p").text(ss_translate);
-                    if (val.switch === true) {
-                        check_setting_li.find(".switchpanel").removeClass("true false").addClass(selected_string);
-                    }
+        if (val.xpub === false) {
+            return
+        }
+        const selected = val.selected,
+            selected_val = selected.name || selected.url || selected;
+        if (selected_val !== undefined) {
+            const selected_string = selected_val.toString(),
+                ss_filter = selected_string === "true" || selected_string === "false" ? "" : selected_string,
+                ss_tl = translate(ss_filter),
+                ss_translate = ss_tl || ss_filter,
+                check_setting_li = coinsettings_list.children("li[data-id='" + dat + "']");
+            if (check_setting_li.length === 0) {
+                const switchclass = val.custom_switch ? " custom" : " global bool",
+                    trigger = val.switch ? switchpanel(selected_string, switchclass) : "<span class='icon-pencil'></span>",
+                    coinsettings_li = $("<li data-id='" + dat + "'>\
+                        <div class='liwrap edit_trigger iconright' data-currency='" + currency + "'>\
+                            <span class='icon-" + val.icon + "'></span>\
+                            <div class='atext'>\
+                                <h2>" + translate(dat) + "</h2>\
+                                <p>" + ss_translate + "</p>\
+                            </div>\
+                            <div class='iconbox'>" + trigger + "</div>\
+                            </div>\
+                    </li>");
+                coinsettings_li.data(val).appendTo(coinsettings_list);
+            } else {
+                check_setting_li.data(val).find("p").text(ss_translate);
+                if (val.switch === true) {
+                    check_setting_li.find(".switchpanel").removeClass("true false").addClass(selected_string);
                 }
             }
         }
@@ -4246,14 +4207,14 @@ function appendaddress(currency, ad) {
         seedid = ad.seedid,
         addressid = ad.a_id,
         xpubid = ad.xpubid,
-        source = (seedid) ? "seed" : (xpubid) ? "xpub" : "",
+        source = seedid ? "seed" : (xpubid ? "xpub" : ""),
         used = ad.used,
-        ad_id_str = (addressid) ? "address_ID: " + addressid + "\n" : "",
-        ad_icon = (source) ? (source == "seed") ? "<span title='" + ad_id_str + "seed_ID: " + seedid + "' class='srcicon' data-seedid='" + seedid + "'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 888 899' class='srcseed'><path d='M852.9 26.3c.5-3.5-28.7 14.8-28.2 14.1-.9 1.1-25.3 23.4-195.1 46-71.4 9.5-120.3 37.2-145.3 82.4-40.3 72.6-1.1 161 .6 164.7l1.6 3.5c-7.8 16.8-14.1 34.2-19.3 51.9-11.6-27.1-26.5-50.9-44.8-71.4 4.8-20.2 5-45.5-3.8-77.1-21.1-76.1-73.8-104.4-114.2-114.7-42.3-10.8-79.6-4.1-81.2-3.9l-.7.1c-1.8.4-44.8 10-90.8 38.1C69.2 198.3 31 252.7 21.3 317.2L16 353.5l35-11.1c2.7-.8 66.4-20.2 150.4 29.6 32.6 19.3 68.6 29 102 29 30.8 0 59.4-8.2 81.1-24.8 5.4-4.1 11.5-9.6 17.3-16.8 24.5 33 40.5 75.2 47.9 126.3-.8 9.5-1.3 19-1.7 28.4-70.6 10.5-187.2 47.6-280.8 173 0 0 59.9 179.7 264.3 183.3 204.4 3.5 194.6 0 194.6 0s137.6-7 126.6-183.3-241.3-176.6-241.3-176.6-5.9-.5-16.3-.4c-.2-2.7-.4-5.4-.7-8.1 3.2-52.1 13.1-97.9 29.5-136.7 38.8 24.8 75.7 37.3 110.6 37.3 18.5 0 36.4-3.5 53.7-10.5C824 336.9 862.7 78.4 866.5 50.6c.3-1.6-6.6 14.4.5-4.9s-14.1-19.4-14.1-19.4zM356.8 339.8C326.5 363 271 360 224.9 332.6c-54.8-32.5-103.6-40.3-137.8-40.3-4.4 0-8.6.1-12.5.4 34.8-95.2 149.9-124.1 157.2-125.8 8.8-1.5 114.1-16.6 142.6 85.9 2.3 8.3 4.2 17.5 4.9 26.9-93-63.9-206.9-45.3-210.2-45-31.7 13.8-17.6 42 7.1 41.7 24.4-.4 113.8-18 193.8 49.1-3.4 5.3-7.7 10.1-13.2 14.3zm314.2 9.9c-36 14.6-78.2 6.2-125.6-25 8.2-12.9 17.4-24.7 27.6-35.3 40.2-41.9 84-53.8 96.3-56.4.9-.1 2-.2 3.3-.6h.2c17-5.6 25.1-43.8-6-45.4-.6-2-66.2 9.2-124.4 68.3-9.2 9.4-17.6 19.3-25.2 29.6-6.1-25.6-9.9-63 7.3-94 17.7-31.7 55.1-51.6 111.2-59 79.7-10.6 138.5-23.2 176.8-37.9-18.8 88.1-63.2 223.8-141.5 255.7z' fill='#B33A3A'/></svg></span>" : "<span class='srcicon icon-key' title='" + ad_id_str + "derived from Xpub: #" + xpubid + "'></span>" : (currency == "monero") ? (ad.vk) ? "<span class='srcicon icon-eye' title='Monitored address'></span>" : "<span class='srcicon icon-eye-blocked' title='Unmonitored address'></span>" : "",
+        ad_id_str = addressid ? "address_ID: " + addressid + "\n" : "",
+        ad_icon = source ? source === "seed" ? "<span title='" + ad_id_str + "seed_ID: " + seedid + "' class='srcicon' data-seedid='" + seedid + "'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 888 899' class='srcseed'><path d='M852.9 26.3c.5-3.5-28.7 14.8-28.2 14.1-.9 1.1-25.3 23.4-195.1 46-71.4 9.5-120.3 37.2-145.3 82.4-40.3 72.6-1.1 161 .6 164.7l1.6 3.5c-7.8 16.8-14.1 34.2-19.3 51.9-11.6-27.1-26.5-50.9-44.8-71.4 4.8-20.2 5-45.5-3.8-77.1-21.1-76.1-73.8-104.4-114.2-114.7-42.3-10.8-79.6-4.1-81.2-3.9l-.7.1c-1.8.4-44.8 10-90.8 38.1C69.2 198.3 31 252.7 21.3 317.2L16 353.5l35-11.1c2.7-.8 66.4-20.2 150.4 29.6 32.6 19.3 68.6 29 102 29 30.8 0 59.4-8.2 81.1-24.8 5.4-4.1 11.5-9.6 17.3-16.8 24.5 33 40.5 75.2 47.9 126.3-.8 9.5-1.3 19-1.7 28.4-70.6 10.5-187.2 47.6-280.8 173 0 0 59.9 179.7 264.3 183.3 204.4 3.5 194.6 0 194.6 0s137.6-7 126.6-183.3-241.3-176.6-241.3-176.6-5.9-.5-16.3-.4c-.2-2.7-.4-5.4-.7-8.1 3.2-52.1 13.1-97.9 29.5-136.7 38.8 24.8 75.7 37.3 110.6 37.3 18.5 0 36.4-3.5 53.7-10.5C824 336.9 862.7 78.4 866.5 50.6c.3-1.6-6.6 14.4.5-4.9s-14.1-19.4-14.1-19.4zM356.8 339.8C326.5 363 271 360 224.9 332.6c-54.8-32.5-103.6-40.3-137.8-40.3-4.4 0-8.6.1-12.5.4 34.8-95.2 149.9-124.1 157.2-125.8 8.8-1.5 114.1-16.6 142.6 85.9 2.3 8.3 4.2 17.5 4.9 26.9-93-63.9-206.9-45.3-210.2-45-31.7 13.8-17.6 42 7.1 41.7 24.4-.4 113.8-18 193.8 49.1-3.4 5.3-7.7 10.1-13.2 14.3zm314.2 9.9c-36 14.6-78.2 6.2-125.6-25 8.2-12.9 17.4-24.7 27.6-35.3 40.2-41.9 84-53.8 96.3-56.4.9-.1 2-.2 3.3-.6h.2c17-5.6 25.1-43.8-6-45.4-.6-2-66.2 9.2-124.4 68.3-9.2 9.4-17.6 19.3-25.2 29.6-6.1-25.6-9.9-63 7.3-94 17.7-31.7 55.1-51.6 111.2-59 79.7-10.6 138.5-23.2 176.8-37.9-18.8 88.1-63.2 223.8-141.5 255.7z' fill='#B33A3A'/></svg></span>" : "<span class='srcicon icon-key' title='" + ad_id_str + "derived from Xpub: #" + xpubid + "'></span>" : currency === "monero" ? ad.vk ? "<span class='srcicon icon-eye' title='Monitored address'></span>" : "<span class='srcicon icon-eye-blocked' title='Unmonitored address'></span>" : "",
         activepub = active_xpub(currency),
-        clasv = (source) ? (source == "seed") ? (seedid == glob_bipid) ? " seed seedv" : " seed seedu" :
-        (source == "xpub") ? (activepub && xpubid == activepub.key_id) ? " xpub xpubv" : " xpub xpubu" : "" : "",
-        usedcl = (used) ? " used" : "",
+        clasv = source ? source === "seed" ? seedid === glob_bipid ? " seed seedv" : " seed seedu" :
+        source === "xpub" ? (activepub && xpubid == activepub.key_id) ? " xpub xpubv" : " xpub xpubu" : "" : "",
+        usedcl = used ? " used" : "",
         address_li = $("<li class='adli" + clasv + usedcl + "' data-index='" + index + "' data-address='" + address + "' data-checked='" + ad.checked + "'>\
             <div class='addressinfo liwrap iconright2'>\
                 <div class='atext'>\
@@ -4271,77 +4232,81 @@ function appendaddress(currency, ad) {
 
 // Appends a new request to the UI
 function appendrequest(rd) {
-    const payment = rd.payment,
-        erc20 = rd.erc20,
-        uoa = rd.uoa,
-        amount = rd.amount,
-        address = rd.address,
-        payment_id = rd.payment_id,
-        xmr_ia = rd.xmr_ia,
-        currencysymbol = rd.currencysymbol,
-        cmcid = rd.cmcid,
-        cpid = rd.cpid,
-        requesttype = rd.requesttype,
-        iscrypto = rd.iscrypto,
-        requestname = rd.requestname,
-        requesttitle = rd.requesttitle,
-        set_confirmations = rd.set_confirmations,
-        currencyname = rd.currencyname,
-        receivedamount = rd.receivedamount,
-        fiatvalue = rd.fiatvalue,
-        txhash = rd.txhash,
-        lnhash = (txhash && txhash.slice(0, 9) == "lightning") ? true : false,
-        lightning = rd.lightning,
-        hybrid = (lightning && lightning.hybrid === true),
-        conf = (rd.confirmations) ? rd.confirmations : 0,
-        status = rd.status,
-        pending = rd.pending,
-        requestid = rd.requestid,
-        archive = rd.archive,
-        showarchive = rd.showarchive,
-        timestamp = rd.timestamp,
-        requestdate = rd.requestdate,
-        rqdata = rd.rqdata,
-        rqmeta = rd.rqmeta,
-        ismonitored = rd.monitored,
-        source = rd.source,
-        layer = rd.layer,
-        txhistory = rd.txhistory,
-        uoa_upper = uoa.toUpperCase(),
-        deter = (iscrypto === true) ? 6 : 2,
-        insufficient = (status == "insufficient"),
-        requesttitle_short = (requesttitle && requesttitle.length > 85) ? "<span title='" + requesttitle + "'>" + requesttitle.substring(0, 64) + "...</span>" : requesttitle,
-        // Fix decimal rounding:
-        amount_rounded = trimdecimals(amount, deter),
+    const {
+        payment,
+        erc20,
+        uoa,
+        amount,
+        address,
+        payment_id,
+        xmr_ia,
+        currencysymbol,
+        cmcid,
+        cpid,
+        requesttype,
+        iscrypto,
+        requestname,
+        requesttitle,
+        set_confirmations,
+        currencyname,
+        receivedamount,
+        fiatvalue,
+        txhash,
+        lightning,
+        confirmations,
+        status,
+        pending,
+        requestid,
+        archive,
+        showarchive,
+        timestamp,
+        requestdate,
+        rqdata,
+        rqmeta,
+        monitored,
+        source,
+        layer,
+        txhistory,
+        paymenttimestamp
+    } = rd,
+    uoa_upper = uoa.toUpperCase(),
+        deter = iscrypto === true ? 6 : 2,
+        insufficient = status === "insufficient",
+        lnhash = txhash && txhash.slice(0, 9) === "lightning",
+        hybrid = lightning && lightning.hybrid === true,
+        conf = confirmations || 0,
+        requesttitle_short = requesttitle && requesttitle.length > 85 ?
+        "<span title='" + requesttitle + "'>" + requesttitle.substring(0, 64) + "...</span>" :
+        requesttitle,
+        amount_rounded = trimdecimals(amount, Math.min(deter, 8)),
         receivedamount_rounded = trimdecimals(receivedamount, 6),
         fiatvalue_rounded = trimdecimals(fiatvalue, 2),
-        requestlist = (archive === true) ? $("#archivelist") : $("#requestlist"),
+        requestlist = archive === true ? $("#archivelist") : $("#requestlist"),
         utc = timestamp - glob_timezone,
-        localtime = (requestdate) ? requestdate - glob_timezone : utc, // timezone correction
-        paymenttimestamp = (rd.paymenttimestamp) ? rd.paymenttimestamp : requestdate,
-        incoming = (requesttype == "incoming"),
-        local = (requesttype == "local"),
-        checkout = (requesttype == "checkout"),
-        outgoing = (requesttype == "outgoing"),
-        direction = (incoming === true) ? "sent" : "received",
-        typetext = (checkout) ? "online purchase" : (local) ? "point of sale" : requesttype,
+        localtime = requestdate ? requestdate - glob_timezone : utc,
+        incoming = requesttype === "incoming",
+        local = requesttype === "local",
+        checkout = requesttype === "checkout",
+        outgoing = requesttype === "outgoing",
+        direction = incoming ? "sent" : "received",
+        typetext = checkout ? "online purchase" : local ? "point of sale" : requesttype,
         typetext_translate = translate(typetext),
-        requesticon = (checkout) ? " typeicon icon-cart" : (local) ? " icon-qrcode" : (incoming === true) ? " typeicon icon-arrow-down-right2" : " typeicon icon-arrow-up-right2",
+        requesticon = checkout ? " typeicon icon-cart" : local ? " icon-qrcode" : incoming ? " typeicon icon-arrow-down-right2" : " typeicon icon-arrow-up-right2",
         typeicon = "<span class='inout" + requesticon + "'></span> ",
         statusicon = "<span class='icon-checkmark' title='Confirmed transaction'></span>\
             <span class='icon-clock' title='pending transaction'></span>\
             <span class='icon-eye-blocked' title='unmonitored transaction'></span>\
             <span class='icon-wifi-off' title='No network'></span>",
-        requesttitlestring = (rqdata || requesttitle) ? (incoming === true) ? requestname : requesttitle_short : "<b>" + amount_rounded + "</b> " + currencyname + statusicon,
-        requestnamestring = (rqdata || requesttitle) ? (incoming === true) ? "<strong>'" + requesttitle_short + "'</strong> (" + amount_rounded + " " + currencyname + ")" + statusicon : amount_rounded + " " + currencyname + statusicon : "",
-        rqdataparam = (rqdata) ? "&d=" + rqdata : "",
-        rqmetaparam = (rqmeta) ? "&m=" + rqmeta : "",
+        requesttitlestring = (rqdata || requesttitle) ? (incoming ? requestname : requesttitle_short) : "<b>" + amount_rounded + "</b> " + currencyname + statusicon,
+        requestnamestring = (rqdata || requesttitle) ? (incoming ? "<strong>" + requesttitle_short + "</strong> (" + amount_rounded + " " + currencyname + ")" + statusicon : amount_rounded + " " + currencyname + statusicon) : "",
+        rqdataparam = rqdata ? "&d=" + rqdata : "",
+        rqmetaparam = rqmeta ? "&m=" + rqmeta : "",
         requesttypeclass = "request" + requesttype,
-        lnclass = (lightning) ? " lightning" : "",
-        lnd_expire = (lightning && hybrid === false || lnhash) ? true : false,
-        expirytime = (lnd_expire) ? 604800000 : (iscrypto === true) ? 25920000000 : 6048000000, // expirydate crypto: 300 days / fiat: 70 days / lightning: 7 days
+        lnclass = lightning ? " lightning" : "",
+        lnd_expire = (lightning && !hybrid) || lnhash,
+        expirytime = lnd_expire ? 604800000 : (iscrypto === true) ? 25920000000 : 6048000000, // expirydate crypto: 300 days / fiat: 70 days / lightning: 7 days
         isexpired = (status == "expired" || (now() - localtime) >= expirytime && (lnd_expire || status == "new" || insufficient === true)),
-        expiredclass = (isexpired === true) ? " expired" : "",
+        expiredclass = isexpired ? " expired" : "",
         localtimeobject = new Date(localtime),
         requestdateformatted = fulldateformat(localtimeobject, glob_langcode),
         timeformat = "<span class='rq_month'>" + localtimeobject.toLocaleString(glob_langcode, {
@@ -4349,45 +4314,45 @@ function appendrequest(rd) {
         }) + "</span> <span class='rq_day'>" + localtimeobject.getDate() + "</span>",
         ptsformatted = fulldateformat(new Date(paymenttimestamp - glob_timezone), glob_langcode, true),
         amount_short_rounded = amountshort(amount, receivedamount, fiatvalue, iscrypto),
-        amount_short_span = (insufficient === true) ? " (" + amount_short_rounded + " " + uoa_upper + " " + translate("amountshort") + ")" : "",
-        amount_short_cc_span = (iscrypto === true) ? amount_short_span : "",
-        created = (requestdate) ? requestdateformatted : "<strong>unknown</strong>",
-        fiatvaluebox = (iscrypto === true || !fiatvalue) ? "" : "<li class='payday pd_fiat'><strong>" + translate("fiatvalueon") + "<span class='pd_fiat'> " + ptsformatted + "</span> :</strong><span class='fiatvalue'> " + fiatvalue_rounded + "</span> " + currencyname + "<div class='show_as amountshort'>" + amount_short_span + "</div></li>",
+        amount_short_span = insufficient ? " (" + amount_short_rounded + " " + uoa_upper + " " + translate("amountshort") + ")" : "",
+        amount_short_cc_span = iscrypto ? amount_short_span : "",
+        created = requestdate ? requestdateformatted : "<strong>unknown</strong>",
+        fiatvaluebox = iscrypto || !fiatvalue ? "" : "<li class='payday pd_fiat'><strong>" + translate("fiatvalueon") + "<span class='pd_fiat'> " + ptsformatted + "</span> :</strong><span class='fiatvalue'> " + fiatvalue_rounded + "</span> " + currencyname + "<div class='show_as amountshort'>" + amount_short_span + "</div></li>",
         paymentdetails = "<li class='payday pd_paydate'><strong>" + translate("paidon") + ":</strong><span class='paydate'> " + ptsformatted + "</span></li><li class='receivedamount'><strong>" + translate("amountreceived") + ":</strong><span> " + receivedamount_rounded + "</span> " + payment + "<div class='show_as amountshort'>" + amount_short_cc_span + "</div></li>" + fiatvaluebox,
-        requestnamebox = (incoming === true) ? (rqdata) ? "<li><strong>" + translate("from") + ":</strong> " + requestname + "</li>" : "<li><strong>From: unknown</strong></li>" : "",
-        requesttitlebox = (requesttitle) ? "<li><strong>" + translate("title") + ":</strong> '<span class='requesttitlebox'>" + requesttitle + "</span>'</li>" : "",
-        ismonitoredspan = (ismonitored === false) ? " (unmonitored transaction)" : "",
-        timestampbox = (incoming === true) ? "<li><strong>" + translate("created") + ":</strong> " + created + "</li><li><strong>" + translate("firstviewed") + ":</strong> " + fulldateformat(new Date(utc), glob_langcode) + "</li>" :
-        (outgoing === true) ? "<li><strong>" + translate("sendon") + ":</strong> " + requestdateformatted + "</li>" :
-        (local === true) ? "<li><strong>" + translate("created") + ":</strong> " + requestdateformatted + "</li>" : "",
+        requestnamebox = incoming ? rqdata ? "<li><strong>" + translate("from") + ":</strong> " + requestname + "</li>" : "<li><strong>From: unknown</strong></li>" : "",
+        requesttitlebox = requesttitle ? "<li><strong>" + translate("title") + ":</strong> '<span class='requesttitlebox'>" + requesttitle + "</span>'</li>" : "",
+        ismonitoredspan = !monitored ? " (unmonitored transaction)" : "",
+        timestampbox = incoming ? "<li><strong>" + translate("created") + ":</strong> " + created + "</li><li><strong>" + translate("firstviewed") + ":</strong> " + fulldateformat(new Date(utc), glob_langcode) + "</li>" :
+        outgoing ? "<li><strong>" + translate("sendon") + ":</strong> " + requestdateformatted + "</li>" :
+        local ? "<li><strong>" + translate("created") + ":</strong> " + requestdateformatted + "</li>" : "",
         paymenturl = "&address=" + address + rqdataparam + rqmetaparam + "&requestid=" + requestid,
         islabel = $("main #" + payment + " li[data-address='" + address + "']").data("label"),
-        requestlabel = (islabel) ? " <span class='requestlabel'>(" + islabel + ")</span>" : "",
-        conf_box = (ismonitored === false) ? "<div class='txli_conf' data-conf='0'><span>Unmonitored transaction</span></div>" :
-        (conf > 0) ? "<div class='txli_conf'><div class='confbar'></div><span>" + conf + " / " + set_confirmations + " " + translate("confirmations") + "</span></div>" :
-        (conf === 0) ? "<div class='txli_conf' data-conf='0'><div class='confbar'></div><span>Unconfirmed transaction<span></div>" : "",
-        view_tx_markup = (lnhash) ? "<li><strong class='show_tx'><span class='icon-power'></span><span class='ref'>" + translate("viewinvoice") + "</span></strong></li>" : (txhash) ? "<li><strong class='show_tx'><span class='icon-eye'></span>" + translate("viewon") + " blockchain</strong></li>" : "",
-        statustext = (ismonitored === false) ? "" : (status == "new") ? "Waiting for payment" : status,
-        src_html = (source) ? "<span class='src_txt'>" + translate("source") + ": " + source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>" : "",
-        iscryptoclass = (iscrypto === true) ? "" : " isfiat",
-        archivebutton = (showarchive === true || isexpired === true) ? "<div class='icon-folder-open' title='archive request'></div>" : "",
-        render_archive = (txhistory && (pending == "no" || archive === true)),
-        tl_text = (render_archive === true) ? translate("transactions") : "",
-        edit_request = (local === true) ? "<div class='editrequest icon-pencil' title='edit request' data-requestid='" + requestid + "'></div>" : "",
-        pid_li = (payment_id) ? "<li><strong>" + translate("paymentid") + ":</strong> <span class='select' data-type='payment ID'>" + payment_id + "</span></li>" : "",
-        ia_li = (xmr_ia) ? "<li><p class='address'><strong>" + translate("integratedaddress") + ":</strong> <span class='requestaddress select'>" + xmr_ia + "</span></p></li>" : "",
-        ln_emoji = (lnhash) ? " <span class='icon-power'></span>" : "",
+        requestlabel = islabel ? " <span class='requestlabel'>(" + islabel + ")</span>" : "",
+        conf_box = !monitored ? "<div class='txli_conf' data-conf='0'><span>Unmonitored transaction</span></div>" :
+        conf > 0 ? "<div class='txli_conf'><div class='confbar'></div><span>" + conf + " / " + set_confirmations + " " + translate("confirmations") + "</span></div>" :
+        conf === 0 ? "<div class='txli_conf' data-conf='0'><div class='confbar'></div><span>Unconfirmed transaction<span></div>" : "",
+        view_tx_markup = lnhash ? "<li><strong class='show_tx'><span class='icon-power'></span><span class='ref'>" + translate("viewinvoice") + "</span></strong></li>" : (txhash) ? "<li><strong class='show_tx'><span class='icon-eye'></span>" + translate("viewon") + " blockchain</strong></li>" : "",
+        statustext = !monitored ? "" : (status == "new") ? "Waiting for payment" : status,
+        src_html = source ? "<span class='src_txt'>" + translate("source") + ": " + source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>" : "",
+        iscryptoclass = iscrypto ? "" : " isfiat",
+        archivebutton = showarchive || isexpired ? "<div class='icon-folder-open' title='archive request'></div>" : "",
+        render_archive = txhistory && (pending == "no" || archive === true),
+        tl_text = render_archive ? translate("transactions") : "",
+        edit_request = local ? "<div class='editrequest icon-pencil' title='edit request' data-requestid='" + requestid + "'></div>" : "",
+        pid_li = payment_id ? "<li><strong>" + translate("paymentid") + ":</strong> <span class='select' data-type='payment ID'>" + payment_id + "</span></li>" : "",
+        ia_li = xmr_ia ? "<li><p class='address'><strong>" + translate("integratedaddress") + ":</strong> <span class='requestaddress select'>" + xmr_ia + "</span></p></li>" : "",
+        ln_emoji = lnhash ? " <span class='icon-power'></span>" : "",
         ln_logo = "<img src='img_logos_btc-lnd.png' class='cmc_icon'><img src='img_logos_btc-lnd.png' class='cmc_icon'>",
         cclogo = getcc_icon(cmcid, cpid, erc20) + getcc_icon(cmcid, cpid, erc20),
-        cc_logo = (lightning) ? (txhash && !lnhash) ? cclogo : ln_logo : cclogo,
-        rc_address_title = (hybrid) ? translate("fallbackaddress") : translate("receivingaddress"),
-        address_markup = (lightning && (lnhash || hybrid === false)) ? "" : "<li><p class='address'><strong>" + rc_address_title + ":</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>",
+        cc_logo = lightning ? (txhash && !lnhash) ? cclogo : ln_logo : cclogo,
+        rc_address_title = hybrid ? translate("fallbackaddress") : translate("receivingaddress"),
+        address_markup = lightning && (lnhash || hybrid === false) ? "" : "<li><p class='address'><strong>" + rc_address_title + ":</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>",
         network = getnetwork(layer),
-        network_markup = (network) ? "<li><p><strong>" + translate("network") + ":</strong> " + network + "</p></li>" : "",
-        tlstat = (direction == "sent") ? translate("paymentsent") : translate("paymentreceived");
-    new_requestli = $("<li class='rqli " + requesttypeclass + expiredclass + lnclass + "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status + "' data-address='" + address + "' data-pending='" + pending + "' data-iscrypto='" + iscrypto + "'>\
+        network_markup = network ? "<li><p><strong>" + translate("network") + ":</strong> " + network + "</p></li>" : "",
+        tlstat = direction === "sent" ? translate("paymentsent") : translate("paymentreceived"),
+        new_requestli = $("<li class='rqli " + requesttypeclass + expiredclass + lnclass + "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status + "' data-address='" + address + "' data-pending='" + pending + "' data-iscrypto='" + iscrypto + "'>\
             <div class='liwrap iconright'>" + cc_logo +
-        "<div class='atext'>\
+            "<div class='atext'>\
                     <h2>" + requesttitlestring + "</h2>\
                     <p class='rq_subject'>" + typeicon + requestnamestring + "</p>\
                 </div>\
@@ -4401,24 +4366,24 @@ function appendrequest(rd) {
                 <div class='req_actions'>\
                     <div data-rel='" + paymenturl + "' class='icon-qrcode" + iscryptoclass + "'></div>\
                     <div class='icon-bin' title='delete'></div>" +
-        archivebutton +
-        "<div class='icon-undo2' title='unarchive request'></div>\
+            archivebutton +
+            "<div class='icon-undo2' title='unarchive request'></div>\
                     <div class='icon-info' title='show info'></div>" + edit_request + "</div>\
                 <ul class='metalist'>\
                     <li class='cnamemeta'><strong>" + translate("currency") + ":</strong> " + payment + ln_emoji + "</li>" +
-        requestnamebox +
-        requesttitlebox +
-        "<li><strong>" + translate("amount") + ":</strong> " + amount_rounded + " " + uoa_upper + "</li>\
+            requestnamebox +
+            requesttitlebox +
+            "<li><strong>" + translate("amount") + ":</strong> " + amount_rounded + " " + uoa_upper + "</li>\
                     <li class='meta_status' data-conf='" + conf + "'><strong>" + translate("status") + ":</strong><span class='status'> " + translate(statustext) + "</span> " + conf_box + "</li>\
                     <li><strong>" + translate("type") + ":</strong> " + typetext_translate + ismonitoredspan + "</li>" +
-        timestampbox +
-        paymentdetails +
-        address_markup +
-        network_markup +
-        pid_li +
-        ia_li +
-        "<li class='receipt'><p><span class='icon-file-pdf' title='View receipt'/>" + translate("receipt") + "</p></li>" + view_tx_markup +
-        "</ul>\
+            timestampbox +
+            paymentdetails +
+            address_markup +
+            network_markup +
+            pid_li +
+            ia_li +
+            "<li class='receipt'><p><span class='icon-file-pdf' title='View receipt'/>" + translate("receipt") + "</p></li>" + view_tx_markup +
+            "</ul>\
                 <ul class='transactionlist'>\
                     <h2>" + tl_text + "</h2>\
                 </ul>\
@@ -4436,7 +4401,7 @@ function appendrequest(rd) {
         const transactionlist = requestlist.find("#" + requestid).find(".transactionlist");
         $.each(txhistory, function(dat, val) {
             const txh = val.txhash,
-                lnh = (txh && txh.slice(0, 9) == "lightning") ? true : false,
+                lnh = txh && txh.slice(0, 9) === "lightning",
                 tx_listitem = append_tx_li(val, false, lnh);
             if (tx_listitem.length > 0) {
                 transactionlist.append(tx_listitem.data(val));
@@ -4447,19 +4412,24 @@ function appendrequest(rd) {
 
 // Determines the network based on the layer
 function getnetwork(layer) {
-    return (layer) ? (layer == "arbitrum") ? "Arbitrum" :
-        (layer == "bnb smart chain") ? "BNB smart chain" :
-        false : false;
+    if (!layer) return false;
+    switch (layer) {
+        case "arbitrum":
+            return "Arbitrum";
+        case "bnb smart chain":
+            return "BNB smart chain";
+        default:
+            return false;
+    }
 }
 
 // ** Store data in localstorage **
 
 // Saves the list of used cryptocurrencies to local storage
 function savecurrencies(add) {
-    const currenciespush = [];
-    $("#usedcurrencies li").each(function(i) {
-        currenciespush.push($(this).data());
-    });
+    const currenciespush = $("#usedcurrencies li").map(function() {
+        return $(this).data();
+    }).get();
     br_set_local("currencies", currenciespush, true);
     updatechanges(translate("currencies"), add);
 }
@@ -4469,10 +4439,9 @@ function saveaddresses(currency, add) {
     const pobox = get_addresslist(currency),
         addresses = pobox.find("li");
     if (addresses.length) {
-        const addressboxpush = [];
-        addresses.each(function(i) {
-            addressboxpush.push($(this).data());
-        });
+        const addressboxpush = addresses.map(function() {
+            return $(this).data();
+        }).get();
         br_set_local("cc_" + currency, addressboxpush, true)
     } else {
         br_remove_local("cc_" + currency);
@@ -4483,29 +4452,26 @@ function saveaddresses(currency, add) {
 
 // Saves the list of requests to local storage
 function saverequests() {
-    const requestpush = [];
-    $("ul#requestlist > li").each(function() {
-        requestpush.push($(this).data());
-    });
+    const requestpush = $("ul#requestlist > li").map(function() {
+        return $(this).data();
+    }).get();
     br_set_local("requests", requestpush, true);
     updatechanges(translate("requests"), true);
 }
 
 // Saves the archive list to local storage
 function savearchive() {
-    const requestpush = [];
-    $("ul#archivelist > li").each(function() {
-        requestpush.push($(this).data());
-    });
+    const requestpush = $("ul#archivelist > li").map(function() {
+        return $(this).data();
+    }).get();
     br_set_local("archive", requestpush, true);
 }
 
 // Saves the app settings to local storage
 function savesettings(nit) {
-    const settingsspush = [];
-    $("ul#appsettings > li.render").each(function() {
-        settingsspush.push($(this).data());
-    });;
+    const settingsspush = $("ul#appsettings > li.render").map(function() {
+        return $(this).data();
+    }).get();
     br_set_local("settings", settingsspush, true);
     updatechanges(translate("settings"), true, nit);
 }
@@ -4535,9 +4501,8 @@ function updatechanges(key, add, nit) {
         }
     }
     if (add === true) {
-        const cc = glob_changes[key],
-            cc_correct = (cc) ? cc : 0;
-        glob_changes[key] = cc_correct + 1;
+        const cc = glob_changes[key] || 0;
+        glob_changes[key] = cc + 1;
         savechangesstats();
         if (nit == "noalert") {
             return
@@ -4561,12 +4526,7 @@ function savechangesstats() {
 
 // Renders the changes from local storage or initializes an empty object
 function renderchanges() {
-    const changescache = br_get_local("changes", true);
-    if (changescache) {
-        glob_changes = changescache;
-        return
-    }
-    glob_changes = {};
+    glob_changes = br_get_local("changes", true) || {};
 }
 
 // Displays an alert for changes and triggers backup if necessary
@@ -4582,7 +4542,7 @@ function change_alert() {
         setTimeout(function() {
             glob_body.addClass("haschanges");
         }, 2500);
-        if (total_changes == 20 || total_changes == 50 || total_changes == 150 || total_changes == 200 || total_changes == 250) {
+        if ([20, 50, 150, 200, 250].includes(total_changes)) {
             canceldialog();
             const timeout = setTimeout(function() {
                 backupdatabase();
@@ -4595,45 +4555,35 @@ function change_alert() {
 
 // Calculates the total number of changes
 function get_total_changes() {
-    let totalchanges = 0;
-    $.each(glob_changes, function(key, value) {
-        const thisval = (value) ? value : 0;
-        totalchanges += parseInt(thisval);
-    });
-    return totalchanges;
+    return Object.values(glob_changes).reduce((total, value) => total + (parseInt(value) || 0), 0);
 }
 
 // Renders HTML from a data object
 function render_html(dat) {
-    let result = "";
-    $.each(dat, function(i, value) {
-        $.each(value, function(key, val) {
-            const id = (val.id) ? " id='" + val.id + "'" : "",
-                clas = (val.class) ? " class='" + val.class + "'" : "",
-                attr = (val.attr) ? render_attributes(val.attr) : "",
-                cval = val.content,
-                content = (cval) ? (typeof cval == "object") ? render_html(cval) : cval : "",
-                close = (val.close) ? "/>" : ">" + content + "</" + key + ">";
-            result += "<" + key + id + clas + attr + close;
-        });
-    });
-    return result;
+    return dat.map(function(value) {
+        return Object.entries(value).map(function([key, val]) {
+            const id = val.id ? " id='" + val.id + "'" : "",
+                clas = val.class ? " class='" + val.class + "'" : "",
+                attr = val.attr ? render_attributes(val.attr) : "",
+                content = val.content ? (typeof val.content === 'object' ? render_html(val.content) : val.content) : "",
+                close = val.close ? "/>" : ">" + content + "</" + key + ">";
+            return "<" + key + id + clas + attr + close;
+        }).join("");
+    }).join("");
 }
 
 // Renders HTML attributes from an object
 function render_attributes(attr) {
-    let attributes = "";
-    $.each(attr, function(key, value) {
-        attributes += " " + key + "='" + value + "'";
-    });
-    return attributes;
+    return Object.entries(attr).map(function([key, value]) {
+        return " " + key + "='" + value + "'";
+    }).join("");
 }
 
 // HTML rendering
 
 // Creates a dialog template
 function template_dialog(ddat) {
-    const validated_class = (ddat.validated) ? " validated" : "",
+    const validated_class = ddat.validated ? " validated" : "",
         dialog_object = [{
             "div": {
                 "id": ddat.id,
@@ -4679,7 +4629,7 @@ function open_url() {
         }
         setTimeout(function() {
             closeloader();
-            if (target == "_blank") {
+            if (target === "_blank") {
                 window.open(url);
             } else {
                 glob_w_loc.href = url;
@@ -4690,27 +4640,23 @@ function open_url() {
 
 // Retrieves the BlockCypher API key
 function get_blockcypher_apikey() {
-    const savedkey = $("#apikeys").data("blockcypher");
-    return (savedkey) ? savedkey : to.bc_id;
+    return $("#apikeys").data("blockcypher") || to.bc_id;
 }
 
 // Retrieves the Infura API key
 function get_infura_apikey(rpcurl) {
     const savedkey = $("#apikeys").data("infura");
-    return (/^[A-Za-z0-9]+$/.test(rpcurl.slice(rpcurl.length - 15))) ? "" : // check if rpcurl already contains apikey
-        (savedkey) ? savedkey : to.if_id;
+    return (/^[A-Za-z0-9]+$/.test(rpcurl.slice(-15))) ? "" : savedkey || to.if_id; // check if rpcurl already contains apikey
 }
 
 // Retrieves the Arbiscan API key
 function get_arbiscan_apikey() {
-    const savedkey = $("#apikeys").data("arbiscan");
-    return (savedkey) ? savedkey : to.as_id;
+    return $("#apikeys").data("arbiscan") || to.as_id;
 }
 
 // Retrieves the Alchemy API key
 function get_alchemy_apikey() {
-    const savedkey = $("#apikeys").data("alchemy");
-    return (savedkey) ? savedkey : to.al_id;
+    return $("#apikeys").data("alchemy") || to.al_id;
 }
 
 // Displays an alert for proxy updates
@@ -4726,15 +4672,10 @@ function proxy_alert(version) {
 
 // Fetches the symbol and ID for a given currency name
 function fetchsymbol(currencyname) {
-    const ccsymbol = {};
-    $.each(br_get_local("erc20tokens", true), function(key, value) {
-        if (value.name == currencyname) {
-            ccsymbol.symbol = value.symbol;
-            ccsymbol.id = value.cmcid;
-            return
-        }
-    });
-    return ccsymbol;
+    const erc20tokens = br_get_local("erc20tokens", true);
+    return erc20tokens.find(function(token) {
+        return token.name === currencyname;
+    }) || {};
 }
 
 // Checks if the fixed navigation should be applied
@@ -4749,8 +4690,8 @@ function fixedcheck(livetop) {
 
 // Checks if the current page is the home page
 function ishome(pagename) {
-    const page = (pagename) ? pagename : geturlparameters().p;
-    return (!page || page == "home");
+    const page = pagename || geturlparameters().p;
+    return !page || page === "home";
 }
 
 // Triggers the submit action on a dialog
@@ -4760,17 +4701,20 @@ function triggersubmit(trigger) {
 
 // Copies content to the clipboard
 function copytoclipboard(content, type) {
-    const copy_api = navigator.clipboard;
-    if (copy_api) {
-        navigator.clipboard.writeText(content);
-        notify(type + " " + translate("copied"), 2500, "no");
-        return
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(content)
+            .then(function() {
+                notify(type + " " + translate("copied"), 2500, "no");
+            })
+            .catch(function() {
+                notify(translate("xcopy") + " " + type, 2500, "no");
+            });
+        return;
     }
-    glob_copycontent.val(content);
-    copycontent[0].setSelectionRange(0, 999);
+
+    glob_copycontent.val(content).select();
     try {
-        const success = document.execCommand("copy");
-        if (success) {
+        if (document.execCommand("copy")) {
             notify(type + " " + translate("copied"), 2500, "no");
         } else {
             notify(translate("xcopy") + " " + type, 2500, "no");
@@ -4778,23 +4722,17 @@ function copytoclipboard(content, type) {
     } catch (err) {
         notify(translate("xcopy") + " " + type, 2500, "no");
     }
-    glob_copycontent.val("").data({
-        "type": false
-    }).blur();
+    glob_copycontent.val("").removeData("type").blur();
 }
 
 // Displays the loader
 function loader(top) {
-    const loader = $("#loader"),
-        class_string = (top === true) ? "showpu active toploader" : "showpu active";
-    $("#loader").addClass(class_string);
+    $("#loader").addClass(top ? "showpu active toploader" : "showpu active");
 }
 
 // Sets up the event listener for closing the loader
 function closeloader_trigger() {
-    $(document).on("click", "#loader", function() {
-        closeloader();
-    })
+    $(document).on("click", "#loader", closeloader);
 }
 
 // Closes the loader
@@ -4837,50 +4775,13 @@ function all_pinpanel(cb, top, set) {
 // Generates the HTML for the PIN panel
 function pinpanel(pinclass, pincb, set) {
     const makeclass = (pinclass === undefined) ? "" : pinclass,
-        headertext = (haspin(set) === true) ? translate("pleaseenter") : translate("createpin");
+        headertext = haspin(set) === true ? translate("pleaseenter") : translate("createpin");
     return $("<div id='pinfloat' class='enterpin" + makeclass + "'>\
         <p id='pintext'>" + headertext + "</p>\
         <p id='confirmpin'>" + translate("confirmyourpin") + "</p>\
         <input id='pininput' type='password' readonly='readonly'/>\
         <input id='validatepin' type='password' readonly='readonly'/>\
-        <div id='pinkeypad'>\
-            <div id='pin1' class='pinpad flex'>\
-                <span class='pincell'>1</span>\
-            </div>\
-            <div id='pin2' class='pinpad'>\
-                <span class='pincell'>2</span>\
-            </div>\
-            <div id='pin3' class='pinpad'>\
-                <span class='pincell'>3</span>\
-            </div><br>\
-            <div id='pin4' class='pinpad'>\
-                <span class='pincell'>4</span>\
-            </div>\
-            <div id='pin5' class='pinpad'>\
-                <span class='pincell'>5</span>\
-            </div>\
-            <div id='pin6' class='pinpad'>\
-                <span class='pincell'>6</span>\
-            </div><br>\
-            <div id='pin7' class='pinpad'>\
-                <span class='pincell'>7</span>\
-            </div>\
-            <div id='pin8' class='pinpad'>\
-                <span class='pincell'>8</span>\
-            </div>\
-            <div id='pin9' class='pinpad'>\
-                <span class='pincell'>9</span>\
-            </div><br>\
-            <div id='locktime' class='pinpad'>\
-                <span class='icomoon'></span>\
-            </div>\
-            <div id='pin0' class='pinpad'>\
-                <span class='pincell'>0</span>\
-            </div>\
-            <div id='pinback' class='pinpad'>\
-                <span class='icomoon'></span>\
-            </div>\
-        </div>\
+        <div id='pinkeypad'>" + generatePinpadHTML() + "</div>\
         <div id='pin_admin' class='flex'>\
             <div id='pin_admin_float'>\
                 <div id='lock_time'><span class='icomoon'></span> " + translate("locktime") + "</div>\
@@ -4888,6 +4789,20 @@ function pinpanel(pinclass, pincb, set) {
             </div>\
         </div>\
     </div>").data("pincb", pincb);
+}
+
+// Helper function to generate pinpad HTML
+function generatePinpadHTML() {
+    let html = "";
+    for (let i = 1; i <= 9; i++) {
+        html += "<div id='pin" + i + "' class='pinpad" + (i === 1 ? " flex" : "") + "'>" +
+            "<span class='pincell'>" + i + "</span>" +
+            "</div>" + (i % 3 === 0 ? "<br>" : "");
+    }
+    html += "<div id='locktime' class='pinpad'><span class='icomoon'></span></div>" +
+        "<div id='pin0' class='pinpad'><span class='pincell'>0</span></div>" +
+        "<div id='pinback' class='pinpad'><span class='icomoon'></span></div>";
+    return html;
 }
 
 // Generates HTML for a switch panel
@@ -4898,12 +4813,9 @@ function switchpanel(switchmode, mode) {
 // Attempts to find the next available API in the list
 function try_next_api(apilistitem, current_apiname) {
     const apilist = glob_br_config.apilists[apilistitem],
-        next_scan = apilist[$.inArray(current_apiname, apilist) + 1],
-        next_api = (next_scan) ? next_scan : apilist[0];
-    if (glob_api_attempt[apilistitem][next_api] === true) {
-        return false;
-    }
-    return next_api;
+        currentIndex = apilist.indexOf(current_apiname),
+        next_api = apilist[(currentIndex + 1) % apilist.length];
+    return glob_api_attempt[apilistitem][next_api] !== true ? next_api : false;
 }
 
 // Requests a wake lock to keep the screen active
@@ -4942,15 +4854,7 @@ function vu_block() {
 // Checks for recent requests and toggles UI accordingly
 function check_rr() {
     const ls_recentrequests = br_get_local("recent_requests", true);
-    if (ls_recentrequests) {
-        if ($.isEmptyObject(ls_recentrequests)) {
-            toggle_rr(false);
-            return
-        }
-        toggle_rr(true);
-        return
-    }
-    toggle_rr(false);
+    toggle_rr(ls_recentrequests && !$.isEmptyObject(ls_recentrequests));
 }
 
 // Toggles the visibility of recent requests in the UI
@@ -5006,9 +4910,9 @@ function detectapp() {
 function getapp(type) {
     const app_panel = $("#app_panel");
     app_panel.html("");
-    const android = (type == "android"),
-        button = (android === true) ? fetch_aws("img_button-playstore.png") : fetch_aws("img_button-appstore.png"),
-        url = (android === true) ? "https://play.google.com/store/apps/details?id=" + glob_androidpackagename + "&pcampaignid=fdl_long&url=" + glob_approot + encodeURIComponent(glob_w_loc.search) : "https://apps.apple.com/app/id1484815377?mt=8",
+    const isAndroid = type === "android",
+        button = fetch_aws(isAndroid ? "img_button-playstore.png" : "img_button-appstore.png"),
+        url = isAndroid ? "https://play.google.com/store/apps/details?id=" + glob_androidpackagename + "&pcampaignid=fdl_long&url=" + glob_approot + encodeURIComponent(glob_w_loc.search) : "https://apps.apple.com/app/id1484815377?mt=8",
         panelcontent = "<h2>Download the app</h2>\
             <a href='" + url + "' class='exit store_bttn'><img src='" + button + "'></a><br/>\
             <div id='not_now'>Not now</div>";
@@ -5031,19 +4935,24 @@ function close_app_panel() {
 
 // Returns the appropriate icon for the given platform
 function platform_icon(platform) {
-    return (platform == "playstore") ? fetch_aws("img_button-playstore.png") :
-        (platform == "appstore") ? fetch_aws("img_button-appstore.png") :
-        fetch_aws("img_button-desktop_app.png");
+    switch (platform) {
+        case "playstore":
+            return fetch_aws("img_button-playstore.png");
+        case "appstore":
+            return fetch_aws("img_button-appstore.png");
+        default:
+            return fetch_aws("img_button-desktop_app.png");
+    }
 }
 
 // Checks if a dialog is currently open
 function is_opendialog() {
-    return ($("#dialogbody > div.formbox").length) ? true : false;
+    return $("#dialogbody > div.formbox").length > 0;
 }
 
 // Checks if a request is currently open
 function is_openrequest() {
-    return ($("#request_front").length) ? true : false;
+    return $("#request_front").length > 0;
 }
 
 // Checks and processes URL scheme intents
@@ -5061,7 +4970,7 @@ function check_intents(scheme) {
         return
     }
     if (proto == "lndconnect" || proto == "c-lightning-rest") {
-        const imp = (proto == "lndconnect") ? "lnd" : (proto == "c-lightning-rest") ? "c-lightning" : proto,
+        const imp = proto === "lndconnect" ? "lnd" : proto === "c-lightning-rest" ? "c-lightning" : proto,
             scheme_obj = renderlnconnect(scheme_url);
         if (scheme_obj) {
             const resturl = scheme_obj.resturl,
@@ -5152,7 +5061,7 @@ function expand_shoturl(i_param) {
 
 // Expands a Bitly short URL
 function expand_bitly(i_param) {
-    if (glob_hostlocation == "local") {
+    if (glob_hostlocation === "local") {
         return
     }
     const bitly_id = i_param.slice(3),
@@ -5196,7 +5105,7 @@ function expand_bitly(i_param) {
 
 // Handles Lightning Network connection
 function ln_connect(gets) {
-    const lgets = (gets) ? gets : geturlparameters(),
+    const lgets = gets || geturlparameters(),
         lnconnect = lgets.lnconnect,
         macaroon = lgets.macaroon,
         imp = lgets.imp;
@@ -5227,14 +5136,15 @@ function ln_connect(gets) {
 
 // Adds a service worker to the application
 function add_serviceworker() {
-    if ("serviceWorker" in navigator) {
-        if (!navigator.serviceWorker.controller) {
-            navigator.serviceWorker.register(glob_approot + "serviceworker.js", {
-                    "scope": "./"
-                })
-                .then(function(reg) {
-                    // console.log("Service worker has been registered for scope: " + reg.scope);
-                });
-        }
+    if ("serviceWorker" in navigator && !navigator.serviceWorker.controller) {
+        navigator.serviceWorker.register(glob_approot + "serviceworker.js", {
+                "scope": "./"
+            })
+            .then(function(reg) {
+                // console.log("Service worker has been registered for scope: " + reg.scope);
+            }).catch(function(error) {
+                // Registration failed
+                console.log('Service worker registration failed:', error);
+            });
     }
 }

@@ -22,10 +22,10 @@ function pick_monitor(txhash, tx_data, api_data) {
 // Initializes the API monitoring process with transaction and API data
 function api_monitor_init(txhash, tx_data, api_dat) {
     const requestid = request.requestid,
-        rq_id = (requestid) ? requestid : "",
+        rq_id = requestid || "",
         glob_l2 = glob_l2network[rq_id], // get cached l2 network
-        api_data = (glob_l2) ? glob_l2 : api_dat,
-        api_info = (api_data) ? api_data : (api_dat) ? api_dat : q_obj(helper, "api_info.data");
+        api_data = glob_l2 || api_dat,
+        api_info = api_data || api_dat || q_obj(helper, "api_info.data");
     if (api_info) {
         api_monitor(txhash, tx_data, api_info);
         glob_paymentdialogbox.addClass("transacting");
@@ -36,10 +36,13 @@ function api_monitor_init(txhash, tx_data, api_dat) {
 
 // Monitors the transaction status using the provided API data
 function api_monitor(txhash, tx_data, api_dat) {
-    const api_url = (api_dat.url || api_dat.name);
+    const api_url = api_dat.url || api_dat.name;
     if (api_url) {
-        const gets = geturlparameters(),
-            rdo = {
+        const gets = geturlparameters();
+        if (gets.xss) {
+            return
+        }
+        const rdo = {
                 "pending": "polling",
                 "txdat": tx_data,
                 "source": "poll",
@@ -54,16 +57,13 @@ function api_monitor(txhash, tx_data, api_dat) {
                 "requestid": request.requestid,
                 "viewkey": request.viewkey
             };
-        if (gets.xss) {
-            return
-        }
         if (tx_data) {
             confirmations(tx_data, true);
             if (tx_data.setconfirmations === false) {
                 return
             }
         };
-        const to_time = (tx_data) ? 25000 : 100,
+        const to_time = tx_data ? 25000 : 100,
             timeout = setTimeout(function() {
                 if (api_dat.api) {
                     select_api(rd, rdo, api_dat);
@@ -73,6 +73,7 @@ function api_monitor(txhash, tx_data, api_dat) {
             }, to_time, function() {
                 clearTimeout(timeout);
             });
+        return
     }
     console.log("No API selected");
 }
@@ -89,7 +90,7 @@ function confirmations(tx_data, direct, ln) {
                 brstatuspanel = pmd.find(".brstatuspanel"),
                 brheader = brstatuspanel.find("h2"),
                 status = tx_data.status;
-            if (status && status == "canceled") {
+            if (status && status === "canceled") {
                 brheader.html("<span class='icon-blocked'></span>Invoice canceled");
                 pmd.attr("data-status", "canceled");
                 updaterequest({
@@ -99,20 +100,21 @@ function confirmations(tx_data, direct, ln) {
                 }, true);
                 notify(translate("invoicecanceled"), 500000);
                 forceclosesocket();
-                new_status = "canceled";
-                return new_status;
+                return "canceled";
             }
-            const setconfirmations = (tx_data.setconfirmations) ? parseInt(tx_data.setconfirmations) : 0,
-                conf_text = (setconfirmations) ? setconfirmations.toString() : "",
+            const setconfirmations = tx_data.setconfirmations ? parseInt(tx_data.setconfirmations, 10) : 0,
+                conf_text = setconfirmations ? setconfirmations.toString() : "",
                 confbox = brstatuspanel.find("span.confbox"),
                 confboxspan = confbox.find("span"),
                 currentconf = parseFloat(confboxspan.attr("data-conf")),
-                xconf = (tx_data.confirmations) ? tx_data.confirmations : 0,
+                xconf = tx_data.confirmations || 0,
                 txhash = tx_data.txhash,
-                layer = (tx_data.l2) ? tx_data.l2 : "main",
-                zero_conf = (setconfirmations === false || tx_data.instant_lock); // Dashpay instant_lock
+                layer = tx_data.l2 || "main",
+                zero_conf = setconfirmations === false || tx_data.instant_lock; // Dashpay instant_lock
+
             brstatuspanel.find("span#confnumber").text(conf_text);
             new_status = xconf;
+
             if (xconf > currentconf || zero_conf === true || direct === true) {
                 reset_recent();
                 br_remove_session("txstatus"); // remove cached historical exchange rates
@@ -121,18 +123,20 @@ function confirmations(tx_data, direct, ln) {
                     confbox.addClass("blob");
                     confboxspan.text(xconf).attr("data-conf", xconf);
                 }, 500);
+
                 const amount_rel = $("#open_wallet").attr("data-rel"),
-                    cc_raw = (amount_rel && amount_rel.length) ? parseFloat(amount_rel) : 0,
+                    cc_raw = amount_rel && amount_rel.length ? parseFloat(amount_rel) : 0,
                     receivedutc = tx_data.transactiontime,
                     receivedtime = receivedutc - glob_timezone,
                     receivedcc = tx_data.ccval,
                     rccf = parseFloat(receivedcc.toFixed(6)),
                     thiscurrency = request.uoa,
                     requesttype = request.requesttype,
-                    iscrypto = (thiscurrency == ccsymbol) ? true : false,
-                    fiatvalue = (iscrypto) ? null : (rccf / parseFloat($("#paymentdialogbox .ccpool").attr("data-xrate"))) * parseFloat($("#paymentdialog .cpool[data-currency='" + thiscurrency + "']").attr("data-xrate")), // calculate fiat value
-                    fiatrounded = (iscrypto) ? null : fiatvalue.toFixed(2),
-                    receivedrounded = (iscrypto) ? receivedcc : fiatrounded;
+                    iscrypto = thiscurrency === ccsymbol,
+                    fiatvalue = iscrypto ? null : (rccf / parseFloat($("#paymentdialogbox .ccpool").attr("data-xrate"))) * parseFloat($("#paymentdialog .cpool[data-currency='" + thiscurrency + "']").attr("data-xrate")), // calculate fiat value
+                    fiatrounded = iscrypto ? null : fiatvalue.toFixed(2),
+                    receivedrounded = iscrypto ? receivedcc : fiatrounded;
+
                 // extend global request object
                 $.extend(request, {
                     "received": true,
@@ -145,24 +149,23 @@ function confirmations(tx_data, direct, ln) {
                     "set_confirmations": setconfirmations,
                     "layer": layer
                 });
+
                 brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), glob_langcode));
-                if (iscrypto) {} else {
+                if (!iscrypto) {
                     brstatuspanel.find("span.receivedcrypto").text(rccf + " " + ccsymbol);
                 }
                 brstatuspanel.find("span.receivedfiat").text(" (" + receivedrounded + " " + thiscurrency + ")");
+
                 const exact = helper.exact,
-                    xmr_pass = (ccsymbol == "xmr") ? (rccf > (cc_raw * 0.97) && rccf < (cc_raw * 1.03)) ? true : false : true; // error margin for xmr integrated addresses
+                    xmr_pass = ccsymbol === "xmr" ? (rccf > (cc_raw * 0.97) && rccf < (cc_raw * 1.03)) : true; // error margin for xmr integrated addresses
+
                 if (xmr_pass) {
-                    const pass = (exact && (rccf == cc_raw)) ? true : (rccf >= (cc_raw * 0.97)) ? true : false;
+                    const pass = exact && (rccf == cc_raw) ? true : (rccf >= (cc_raw * 0.97));
                     if (pass) {
                         if (xconf >= setconfirmations || zero_conf === true) {
                             forceclosesocket();
-                            if (ccsymbol == "doge") {
-                                playsound(glob_howl);
-                            } else {
-                                playsound(glob_cashier);
-                            }
-                            const status_text = (requesttype == "incoming") ? translate("paymentsent") : translate("paymentreceived");
+                            playsound(ccsymbol === "doge" ? glob_howl : glob_cashier);
+                            const status_text = requesttype === "incoming" ? translate("paymentsent") : translate("paymentreceived");
                             pmd.addClass("transacting").attr("data-status", "paid");
                             brheader.text(status_text);
                             request.status = "paid",
@@ -172,11 +175,11 @@ function confirmations(tx_data, direct, ln) {
                             closenotify();
                             new_status = "paid";
                         } else {
-                            if (ln) {} else {
+                            if (!ln) {
                                 playsound(glob_blip);
                             }
                             pmd.addClass("transacting").attr("data-status", "pending");
-                            const bctext = (ln) ? translate("waitingforpayment") : translate("txbroadcasted");
+                            const bctext = ln ? translate("waitingforpayment") : translate("txbroadcasted");
                             brheader.text(bctext);
                             request.status = "pending",
                                 request.pending = "polling";
@@ -185,7 +188,7 @@ function confirmations(tx_data, direct, ln) {
                         brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
                         return new_status
                     }
-                    if (exact) {} else {
+                    if (!exact) {
                         brheader.text(translate("insufficientamount"));
                         pmd.addClass("transacting").attr("data-status", "insufficient");
                         request.status = "insufficient",
@@ -208,11 +211,17 @@ function reset_recent() {
     if (request) {
         const ls_recentrequests = br_get_local("recent_requests");
         if (ls_recentrequests) {
-            const lsrr_arr = JSON.parse(ls_recentrequests);
-            delete lsrr_arr[request.payment];
-            br_set_local("recent_requests", lsrr_arr, true);
-            if ($.isEmptyObject(lsrr_arr)) {
-                toggle_rr(false);
+            try {
+                const lsrr_arr = JSON.parse(ls_recentrequests);
+                if (lsrr_arr[request.payment]) {
+                    delete lsrr_arr[request.payment];
+                    br_set_local("recent_requests", lsrr_arr, true);
+                    if ($.isEmptyObject(lsrr_arr)) {
+                        toggle_rr(false);
+                    }
+                }
+            } catch (error) {
+                console.error("Error parsing recent requests:", error);
             }
         }
     }
@@ -224,63 +233,56 @@ function after_scan(rq_init, next_api) {
     const amount_input = $("#mainccinputmirror > input"),
         input_val = amount_input.val(),
         api_info = helper.api_info,
-        api_data = (next_api) ? next_api : api_info.data,
+        api_data = next_api || api_info.data,
         ccsymbol = request.currencysymbol,
         api_name = api_data.name,
         request_ts_utc = rq_init + glob_timezone,
         request_ts = request_ts_utc - 30000, // 30 seconds compensation for unexpected results
         thislist = $("#" + request.requestid),
         statuspanel = thislist.find(".pmetastatus"),
-        set_confirmations = request.set_confirmations ?? 0,
-        set_cc = (set_confirmations) ? set_confirmations : 0,
+        set_confirmations = request.set_confirmations || 0,
         rdo = {
             "thislist": thislist,
             "statuspanel": statuspanel,
             "request_timestamp": request_ts,
-            "setconfirmations": set_cc,
+            "setconfirmations": set_confirmations,
             "pending": "scanning",
             "erc20": request.erc20,
             "source": "afterscan"
         };
     glob_scan_attempts[api_name] = true;
     if (input_val.length) {
-        if (ccsymbol == "xmr" || ccsymbol == "nim" || request.erc20 === true) {
+        if (ccsymbol === "xmr" || ccsymbol === "nim" || request.erc20) {
             close_paymentdialog();
             return
         }
-        if (ccsymbol == "xno") {
-            ap_loader();
+        ap_loader();
+        if (ccsymbol === "xno") {
             nano_rpc(request, api_data, rdo);
             return
         }
-        if (api_name == "mempool.space") {
-            ap_loader();
+        if (api_name === "mempool.space") {
             mempoolspace_rpc(request, api_data, rdo, false);
             return
         }
-        if (api_name == "blockcypher") {
-            ap_loader();
+        if (api_name === "blockcypher") {
             blockcypher_fetch(request, api_data, rdo);
             return
         }
-        if (api_name == "dash.org") {
-            ap_loader();
+        if (api_name === "dash.org") {
             insight_fetch_dash(request, api_data, rdo);
             return
         }
-        if (api_name == "blockchair") {
-            ap_loader();
+        if (api_name === "blockchair") {
             blockchair_fetch(request, api_data, rdo);
             return
         }
-        if (payment == "kaspa") {
-            ap_loader();
+        if (payment === "kaspa") {
             kaspa_fetch(request, api_data, rdo);
             return
         }
-        if (ccsymbol == "btc" || ccsymbol == "ltc" || ccsymbol == "doge" || ccsymbol == "bch") {
+        if (ccsymbol === "btc" || ccsymbol === "ltc" || ccsymbol === "doge" || ccsymbol === "bch") {
             if (api_data.default === false) {
-                ap_loader();
                 mempoolspace_rpc(request, api_data, rdo, true);
                 return
             }
@@ -310,13 +312,12 @@ function get_next_scan_api(api_name) {
     const rpc_settings = cs_node(request.payment, "apis", true);
     if (rpc_settings) {
         const apirpc = rpc_settings.apis,
-            apilist = $.grep(apirpc, function(filter) {
-                return filter.api;
-            })
-        if (!$.isEmptyObject(apilist)) {
-            const next_scan = apilist[apilist.findIndex(option => option.name == api_name) + 1],
-                next_api = (next_scan) ? next_scan : apilist[0];
-            if (glob_scan_attempts[next_api.name] !== true) {
+            apilist = apirpc.filter(filter => filter.api);
+
+        if (apilist.length) {
+            const currentIndex = apilist.findIndex(option => option.name === api_name),
+                next_api = apilist[(currentIndex + 1) % apilist.length];
+            if (!glob_scan_attempts[next_api.name]) {
                 return next_api;
             }
         }

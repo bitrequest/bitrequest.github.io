@@ -51,11 +51,11 @@ function init_access(ak) {
 
 // Handles token expiration and refreshes access if necessary
 function t_expired(expired, callback) {
-    if (glob_hostlocation == "local") {
+    if (glob_hostlocation === "local") {
         return
     }
-    if (expired == "norefresh") {
-        if (callback == "gcb") {
+    if (expired === "norefresh") {
+        if (callback === "gcb") {
             g_login();
             return
         }
@@ -140,6 +140,18 @@ function fetch_access(rt, callback) {
                 if (data) {
                     const result = data.result;
                     if (result) {
+                        const error = result.error;
+                        if (error) {
+                            const ed = result.error_description,
+                                em = ed ? " || " + ed : "";
+                            if (ed.indexOf("expired") >= 0 || ed.indexOf("revoked") >= 0) {
+                                br_remove_local("rt");
+                                oauth_pop_delay();
+                                return;
+                            }
+                            notify(error + em);
+                            return
+                        }
                         const ga_token = result.access_token;
                         if (ga_token) {
                             const jt = {
@@ -150,18 +162,6 @@ function fetch_access(rt, callback) {
                             };
                             br_set_local("dat", JSON.stringify(jt));
                             refcb(callback);
-                        }
-                        const error = result.error;
-                        if (error) {
-                            const ed = result.error_description,
-                                em = (ed) ? " || " + ed : "";
-                            if (ed.indexOf("expired") >= 0 || ed.indexOf("revoked") >= 0) {
-                                br_remove_local("rt");
-                                oauth_pop_delay();
-                                return;
-                            }
-                            notify(error + em);
-                            return
                         }
                     }
                 }
@@ -176,14 +176,14 @@ function fetch_access(rt, callback) {
 function refcb(cb) {
     glob_html.addClass("gdauth");
     if (cb) {
-        if (cb == "uad") {
+        if (cb === "uad") {
             const p = GD_pass();
             if (p.pass) {
                 updateappdata(p);
                 return
             }
         }
-        if (cb == "gcb") {
+        if (cb === "gcb") {
             adjust_sp();
         }
     }
@@ -201,15 +201,12 @@ function lca_obj() {
 // Retrieves the local refresh token object
 function rt_obj() {
     const rtdat = br_get_local("rt", true);
-    if (rtdat) {
-        return rtdat.d;
-    }
-    return false;
+    return rtdat ? rtdat.d : false;
 }
 
 // Initializes the login dialog based on the provided parameters
 function init_login_dialog(p) {
-    if (glob_hostlocation == "local") {
+    if (glob_hostlocation === "local") {
         notify(translate("ganot"));
         return
     }
@@ -239,7 +236,7 @@ function oauth_pop_delay(ab) {
 
 // Displays the OAuth popup dialog for Google Drive authentication
 function oauth_pop(ab) {
-    const cbx = (ab) ? render_html([{
+    const cbx = ab ? render_html([{
             "div": {
                 "id": "pk_confirmwrap",
                 "class": "cb_wrap",
@@ -325,7 +322,7 @@ function submit_gdbu_dialog() {
 
 // Initiates Google Drive login process
 function g_login() {
-    if (glob_hostlocation == "local") {
+    if (glob_hostlocation === "local") {
         notify(translate("ganot"));
         return
     }
@@ -341,7 +338,7 @@ function g_login() {
             return
         }
     }
-    const consent = (p.expired == "norefresh") ? "&prompt=consent" : "",
+    const consent = p.expired == "norefresh" ? "&prompt=consent" : "",
         login_uri = "https://accounts.google.com/o/oauth2/auth?client_id=" + to.ga_id + "&redirect_uri=" + glob_redirect_uri + "&response_type=code&scope=" + glob_scope + "&access_type=offline" + consent;
     glob_w_loc.href = login_uri;
 }
@@ -375,7 +372,7 @@ function adjust_sp() {
 // Initiates Google Drive logout process
 function g_logout() {
     const result = confirm(translate("stopgdalert"));
-    if (result === true) {
+    if (result) {
         deactivate();
         gdlogout_callbacks();
     }
@@ -428,69 +425,67 @@ function Drive_Backup_trigger() {
 // Updates app data in Google Drive
 function updateappdata(p) {
     const gd_timer = br_get_session("gd_timer"); // prevent Ddos
-    if (gd_timer) {
-        const interval = 3000;
-        if ((now() - gd_timer) < interval) {
-            return
-        }
+    if (gd_timer && (now() - gd_timer) < 3000) {
+        return;
     }
     const token = p.token;
-    if (token) {
-        const bu_id = br_get_local("backupfile_id");
-        if (bu_id) {
-            br_set_session("gd_timer", now());
-            const ddat = {
-                "api_url": glob_drivepath + "/upload/drive/v3/files/" + bu_id + "?uploadType=media&alt=json",
-                "proxy": false,
-                "params": {
-                    "method": "PATCH",
-                    "dataType": "json",
-                    "contentType": "application/json",
-                    "headers": {
-                        "Authorization": "Bearer " + token
-                    },
-                    "data": complilebackup()
-                }
-            };
-            api_proxy(ddat).done(function(e) {}).fail(function(jqXHR, textStatus, errorThrown) {
-                console.log(jqXHR);
-                console.log(textStatus);
-                console.log(errorThrown);
-                if (textStatus == "error") {
-                    const error_object = jqXHR;
-                    if (error_object) {
-                        const resp_obj = error_object.responseJSON;
-                        if (resp_obj) {
-                            const resp = resp_obj.error;
-                            if (resp) {
-                                if (resp.code == 401) {
-                                    notify(translate("unauthorized"));
-                                    return
-                                }
-                                if (resp.code == 404) {
-                                    createfile(token); // create file
-                                    return
-                                }
+    if (!token) {
+        return
+    }
+    const bu_id = br_get_local("backupfile_id");
+    if (bu_id) {
+        br_set_session("gd_timer", now());
+        const ddat = {
+            "api_url": glob_drivepath + "/upload/drive/v3/files/" + bu_id + "?uploadType=media&alt=json",
+            "proxy": false,
+            "params": {
+                "method": "PATCH",
+                "dataType": "json",
+                "contentType": "application/json",
+                "headers": {
+                    "Authorization": "Bearer " + token
+                },
+                "data": complilebackup()
+            }
+        };
+        api_proxy(ddat).done(function(e) {
+            // Success handling if needed  
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.log(jqXHR, textStatus, errorThrown);
+            if (textStatus === "error") {
+                const error_object = jqXHR;
+                if (error_object) {
+                    const resp_obj = error_object.responseJSON;
+                    if (resp_obj) {
+                        const resp = resp_obj.error;
+                        if (resp) {
+                            if (resp.code === 401) {
+                                notify(translate("unauthorized"));
+                                return
+                            }
+                            if (resp.code === 404) {
+                                createfile(token); // create file
+                                return
                             }
                         }
                     }
-                    notify(translate("error"));
                 }
-            });
-            return
-        }
-        createfile(token) // create file   
+                notify(translate("error"));
+            }
+        });
+        return
     }
+    createfile(token) // create file
 }
 
 // Creates a new file in Google Drive with the provided token
 function createfile(token) {
     const jt = GD_pass(),
         jtp = jt.pass,
-        pass = (token) ? token : (jtp) ? jt.token : false,
+        pass = token || (jtp ? jt.token : false),
         backup = complilebackup();
     if (pass) {
-        const file = new Blob([complilebackup()], {
+        const file = new Blob([backup], {
                 "type": "text/plain"
             }),
             description = {
@@ -513,10 +508,11 @@ function createfile(token) {
         xhr.open("post", "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id");
         xhr.setRequestHeader("Authorization", "Bearer " + pass);
         xhr.responseType = "json";
-        xhr.onload = () => {
-            const response_id = xhr.response.id,
-                response_id_string = response_id.toString();
-            br_set_local("backupfile_id", response_id_string);
+        xhr.onload = function() {
+            const response_id = xhr.response.id;
+            if (response_id) {
+                br_set_local("backupfile_id", response_id.toString());
+            }
         };
         xhr.send(form);
     }
@@ -532,95 +528,95 @@ function lad_trigger() {
 // Lists app data from Google Drive
 function listappdata() {
     const p = GD_pass();
-    if (p.pass) {
-        const thistrigger = $("#listappdata .switchpanel"),
-            backuplist = $("#gd_backuplist"),
-            importjsonlist = $("#importjson");
-        if (backuplist.find("li").length) {
-            if (thistrigger.hasClass("true")) {
+    if (!p.pass) {
+        init_login_dialog(p);
+        return
+    }
+    const thistrigger = $("#listappdata .switchpanel"),
+        backuplist = $("#gd_backuplist"),
+        importjsonlist = $("#importjson");
+    if (backuplist.find("li").length) {
+        if (thistrigger.hasClass("true")) {
+            thistrigger.removeClass("true");
+            backuplist.slideUp(300);
+            importjsonlist.slideDown(300);
+            return
+        }
+        thistrigger.addClass("true");
+        backuplist.slideDown(300);
+        importjsonlist.slideUp(300);
+        return
+    }
+    api_proxy({
+        "api_url": glob_drivepath + "/drive/v3/files?pageSize=10&spaces=appDataFolder&fields=*",
+        "proxy": false,
+        "params": {
+            "method": "GET",
+            "headers": {
+                "Authorization": "Bearer " + p.token
+            }
+        }
+    }).done(function(e) {
+        const filelist = e.files;
+        if (filelist.length) {
+            const sorted_filelist = filelist.sort(function(a, b) { // sort array by timestamp
+                    const amod = a.modifiedTime,
+                        bmod = b.modifiedTime,
+                        d1 = amod ? to_ts(amod) : 2,
+                        d2 = bmod ? to_ts(bmod) : 1;
+                    return d2 - d1; // descending order
+                }),
+                gdbackuppush = [];
+            $.each(sorted_filelist, function(i, value) {
+                const description = JSON.parse(value.description),
+                    device = description.device,
+                    device_id = description.deviceid,
+                    dmod = short_date(description.modified),
+                    mod = short_date(to_ts(value.modifiedTime)),
+                    trash = (device_id === glob_deviceid) ? "<div class='purge_bu icon-bin'></div>" : "",
+                    gdbackups = "<li data-gdbu_id='" + value.id + "' data-device-id='" + device_id + "' data-device='" + device + "'><div class='restorefile icon-" + device + "' title='" + device + " (Created: " + dmod + ")'>" + mod + "<span class='lmodified'> (" + (value.size / 1000).toFixed(0) + " KB)</div>" + trash + "</li>";
+                gdbackuppush.push(gdbackups);
+            });
+            backuplist.prepend(gdbackuppush.join("")).slideDown(300);
+        } else {
+            backuplist.prepend("<li>No files found</li>").slideDown(300);
+        }
+        importjsonlist.slideUp(300);
+        thistrigger.addClass("true");
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        if (textStatus === "error") {
+            if (errorThrown === "Unauthorized") {
                 thistrigger.removeClass("true");
                 backuplist.slideUp(300);
                 importjsonlist.slideDown(300);
+                notify(translate("unauthorized"));
                 return
             }
-            thistrigger.addClass("true");
-            backuplist.slideDown(300);
-            importjsonlist.slideUp(300);
-            return
+            if (errorThrown === "Not Found") {
+                createfile(); // create file
+                return
+            }
+            notify(translate("error"));
         }
-        api_proxy({
-            "api_url": glob_drivepath + "/drive/v3/files?pageSize=10&spaces=appDataFolder&fields=*",
-            "proxy": false,
-            "params": {
-                "method": "GET",
-                "headers": {
-                    "Authorization": "Bearer " + p.token
-                }
-            }
-        }).done(function(e) {
-            const filelist = e.files;
-            if (filelist.length) {
-                const sorted_filelist = filelist.sort(function(a, b) { // sort array by timestamp
-                        const amod = a.modifiedTime,
-                            bmod = b.modifiedTime,
-                            d1 = (amod) ? to_ts(amod) : 2,
-                            d2 = (bmod) ? to_ts(bmod) : 1;
-                        return d2 - d1; // descending order
-                    }),
-                    gdbackuppush = [];
-                $.each(sorted_filelist, function(i, value) {
-                    const description = JSON.parse(value.description),
-                        device = description.device,
-                        device_id = description.deviceid,
-                        dmod = short_date(description.modified),
-                        mod = short_date(to_ts(value.modifiedTime)),
-                        trash = (device_id == glob_deviceid) ? "<div class='purge_bu icon-bin'></div>" : "",
-                        gdbackups = "<li data-gdbu_id='" + value.id + "' data-device-id='" + device_id + "' data-device='" + device + "'><div class='restorefile icon-" + device + "' title='" + device + " (Created: " + dmod + ")'>" + mod + "<span class='lmodified'> (" + (value.size / 1000).toFixed(0) + " KB)</div>" + trash + "</li>";
-                    gdbackuppush.push(gdbackups);
-                });
-                backuplist.prepend(gdbackuppush.join("")).slideDown(300);
-            } else {
-                backuplist.prepend("<li>No files found</li>").slideDown(300);
-            }
-            importjsonlist.slideUp(300);
-            thistrigger.addClass("true");
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            if (textStatus == "error") {
-                if (errorThrown == "Unauthorized") {
-                    thistrigger.removeClass("true");
-                    backuplist.slideUp(300);
-                    importjsonlist.slideDown(300);
-                    notify(translate("unauthorized"));
-                    return
-                }
-                if (errorThrown == "Not Found") {
-                    createfile(); // create file
-                    return
-                }
-                notify(translate("error"));
-            }
-        });
-        return
-    }
-    init_login_dialog(p);
+    });
 }
 
 // Sets up event listener for deleting a file
 function deletefiletrigger() {
     $(document).on("click", ".purge_bu", function() {
         const p = GD_pass();
-        if (p.pass) {
-            const thislist = $(this).parent("li"),
-                fileid = thislist.attr("data-gdbu_id"),
-                result = confirm(translate("deletefile", {
-                    "file": thislist.text()
-                }));
-            if (result === true) {
-                deletefile(fileid, thislist, p.token);
-            }
+        if (!p.pass) {
+            init_login_dialog(p);
             return
         }
-        init_login_dialog(p);
+        const thislist = $(this).parent("li"),
+            fileid = thislist.attr("data-gdbu_id"),
+            result = confirm(translate("deletefile", {
+                "file": thislist.text()
+            }));
+        if (result) {
+            deletefile(fileid, thislist, p.token);
+        }
     })
 }
 
@@ -641,8 +637,8 @@ function deletefile(fileId, thislist, pass) {
             notify(translate("filedeleted"));
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        if (textStatus == "error") {
-            if (errorThrown == "Not Found") {
+        if (textStatus === "error") {
+            if (errorThrown === "Not Found") {
                 notify(translate("error") + ": " + translate("filenotfound"));
                 return
             }
@@ -661,7 +657,7 @@ function GD_pass() {
         },
         bdat = lca_obj(),
         rtoken = rt_obj(),
-        can_refresh = (rtoken) ? rtoken : "norefresh";
+        can_refresh = rtoken || "norefresh";
     if (bdat) {
         const token = bdat.access_token,
             ttime = (now() - bdat.created) + 60000,
@@ -679,7 +675,7 @@ function GD_pass() {
                 jt.active = true;
             }
         }
-        if (token && expired === false && active) {
+        if (token && !expired && active) {
             glob_html.addClass("gdauth");
             jt.pass = true;
         } else {

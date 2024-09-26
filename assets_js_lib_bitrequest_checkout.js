@@ -33,7 +33,7 @@ function append_iframe(framesrc) {
 function iframe_loaded() {
     const requestframe = $("#br_framebox iframe");
     requestframe.on("load", function() {
-        if (requestframe.attr("src") !== undefined) {
+        if (requestframe.attr("src")) {
             showframe();
         }
     });
@@ -42,24 +42,20 @@ function iframe_loaded() {
 // Handles cross-frame communication
 function crossframe(e) {
     const data = e.data;
-    if (data == "close_loader") {
-        closeloader();
-        return
-    }
-    if (data == "close_request_confirm") {
-        setTimeout(function() {
-            closeframe_confirm();
-        }, 200);
-        return
-    }
-    if (data == "close_request") {
-        setTimeout(function() {
-            closeframe();
-        }, 200);
-        return
-    }
-    if (data.id == "result") {
-        result_callback(data.data);
+    switch (data) {
+        case "close_loader":
+            closeloader();
+            break;
+        case "close_request_confirm":
+            setTimeout(closeframe_confirm, 200);
+            break;
+        case "close_request":
+            setTimeout(closeframe, 200);
+            break;
+        default:
+            if (data.id === "result") {
+                result_callback(data.data);
+            }
     }
 }
 
@@ -77,8 +73,7 @@ function showframe() {
 
 // Prompts for confirmation before closing the frame
 function closeframe_confirm() {
-    const result = confirm("Close request?");
-    if (result === true) {
+    if (confirm("Close request?")) {
         closeframe();
     }
 }
@@ -101,9 +96,7 @@ function showloader() {
 
 // Sets up a click event listener to close the loader
 function closeloader_trigger() {
-    $(document).on("click", "#br_loadbox", function() {
-        closeloader();
-    });
+    $(document).on("click", "#br_loadbox", closeloader);
 }
 
 // Closes the loader by removing CSS classes
@@ -119,7 +112,7 @@ function closeloader() {
 // Sets up a keyup event listener for the ESC key
 function keyup() {
     $(document).keyup(function(e) {
-        if (e.keyCode == 27) {
+        if (e.keyCode === 27) {
             if (html_node.hasClass("slide_loader")) {
                 closeloader();
                 return false;

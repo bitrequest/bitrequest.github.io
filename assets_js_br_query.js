@@ -61,6 +61,7 @@
 //makelocal
 //clean_str
 //clear_accents
+//capitalize
 
 // ** Query helpers **//
 
@@ -97,26 +98,26 @@ function check_local() {
 
 // Sets an item in local storage with a prefix
 function br_set_local(pref, dat, str) {
-    const ddat = (str) ? JSON.stringify(dat) : dat;
+    const ddat = str ? JSON.stringify(dat ?? null) : dat;
     localStorage.setItem("bitrequest_" + pref, ddat);
 }
 
 // Sets an item in session storage with a prefix
 function br_set_session(pref, dat, str) {
-    const ddat = (str) ? JSON.stringify(dat) : dat;
+    const ddat = str ? JSON.stringify(dat ?? null) : dat;
     sessionStorage.setItem("bitrequest_" + pref, ddat);
 }
 
 // Gets an item from local storage with a prefix
 function br_get_local(pref, parse) {
     const dat = localStorage.getItem("bitrequest_" + pref);
-    return (parse) ? JSON.parse(dat) : dat;
+    return parse && dat !== null ? JSON.parse(dat) : dat;
 }
 
 // Gets an item from session storage with a prefix
 function br_get_session(pref, parse) {
     const dat = sessionStorage.getItem("bitrequest_" + pref);
-    return (parse) ? JSON.parse(dat) : dat;
+    return parse && dat !== null ? JSON.parse(dat) : dat;
 }
 
 // Removes an item from local storage with a prefix
@@ -133,18 +134,13 @@ function br_remove_session(pref) {
 
 // Checks if a currency is a Bitcoin-like blockchain
 function is_btchain(currency) {
-    if (currency == "bitcoin" || currency == "litecoin" || currency == "dogecoin" || currency == "bitcoin-cash") {
-        return true;
-    }
-    return false;
+    const btchains = ["bitcoin", "litecoin", "dogecoin", "bitcoin-cash"];
+    return btchains.includes(currency);
 }
 
 // Returns a default object or array if the input is false
 function br_dobj(object, obj) { // Default object
-    if (object) {
-        return object;
-    }
-    return (obj === true) ? {} : [];
+    return object || (obj === true ? {} : []);
 }
 
 // Checks if a value exists and is not empty
@@ -157,43 +153,31 @@ function exists(val) {
 
 // Checks if the input is an array
 function br_issar(e) {
-    try {
-        if ($.isArray(e)) {
-            return true;
-        }
-        return false;
-    } catch (e) {
-        //console.error(e.name, e.message);
-        return false;
-    }
+    return Array.isArray(e);
 }
 
 // Queries a nested object using a dot-notated path
 function q_obj(obj, path) {
     try {
         const p_arr = path.split(".");
-        if ($.isArray(p_arr) && p_arr.length > 1) {
-            for (let v of p_arr) {
-                if (!obj[v]) {
-                    obj = false;
-                    break
-                }
-                obj = obj[v];
+        for (let i = 0; i < p_arr.length; i++) {
+            if (obj === null || typeof obj !== "object") {
+                return false;
             }
-            return obj;
+            obj = obj[p_arr[i]];
         }
-        return false
+        return obj;
     } catch (e) {
         console.error(e.name, e.message);
-        return false
+        return false;
     }
 }
 
 // Handles API proxy requests
 function api_proxy(ad, p_proxy) {
-    const custom_url = (ad.api_url) ? ad.api_url : false,
+    const custom_url = ad.api_url || false,
         apiname = ad.api,
-        aud = (custom_url) ? {} :
+        aud = custom_url ? {} :
         get_api_url({
             "api": apiname,
             "search": ad.search
@@ -201,21 +185,20 @@ function api_proxy(ad, p_proxy) {
     if (aud) {
         const proxy = ad.proxy,
             api_key = aud.api_key,
-            set_key = (api_key) ? true : false,
-            nokey = (api_key == "no_key") ? true : false,
-            key_pass = (nokey === true || set_key === true);
-        if (proxy === false || (proxy !== true && key_pass === true)) {
+            set_key = Boolean(api_key),
+            nokey = api_key === "no_key",
+            key_pass = nokey || set_key;
+        if (proxy === false || (proxy !== true && key_pass)) {
             const params = ad.params,
                 bearer = ad.bearer;
-            params.url = (custom_url) ? custom_url : aud.api_url_key;
+            params.url = custom_url || aud.api_url_key;
             if (bearer && api_key) {
                 if (params.headers) {
                     params.headers["Authorization"] = "Bearer " + api_key;
                 } else {
-                    const auth = {
+                    params.headers = {
                         "Authorization": "Bearer " + api_key
-                    }
-                    params.headers = auth;
+                    };
                 }
             }
             return $.ajax(params);
@@ -223,8 +206,8 @@ function api_proxy(ad, p_proxy) {
         // use api proxy
         ad.api = c_apiname(apiname);
         const api_location = "proxy/v1/",
-            set_proxy = (p_proxy) ? p_proxy : d_proxy(),
-            app_root = (ad.localhost) ? "" : set_proxy,
+            set_proxy = p_proxy || d_proxy(),
+            app_root = ad.localhost ? "" : set_proxy,
             proxy_data = {
                 "method": "POST",
                 "cache": false,
@@ -242,23 +225,24 @@ function api_proxy(ad, p_proxy) {
 
 // Corrects API name for specific cases
 function c_apiname(apiname) {
-    return (apiname == "arbitrum") ? "infura" :
-        (apiname == "binplorer") ? "ethplorer" : apiname;
+    if (apiname === "arbitrum") return "infura";
+    if (apiname === "binplorer") return "ethplorer";
+    return apiname;
 }
 
 // Processes the result from an API request
 function br_result(e) {
     const ping = e.ping,
-        proxy = (ping) ? true : false;
+        proxy = Boolean(ping);
     if (proxy && ping.br_cache) {
         const version = ping.br_cache.version;
-        if (version != glob_proxy_version) {
+        if (version !== glob_proxy_version) {
             proxy_alert(version);
         }
     }
     return {
         "proxy": proxy,
-        "result": (proxy) ? (ping.br_cache) ? ping.br_result : ping : e
+        "result": proxy ? (ping.br_cache ? ping.br_result : ping) : e
     }
 }
 
@@ -267,13 +251,13 @@ function get_api_url(get) {
     const api = get.api,
         ad = get_api_data(api);
     if (ad) {
-        const search = (get.search) ? get.search : "",
+        const search = get.search || "",
             base_url = ad.base_url,
-            key_param = (ad.key_param) ? ad.key_param : "",
+            key_param = ad.key_param || "",
             saved_key = $("#apikeys").data(api),
-            key_val = (saved_key) ? saved_key : ad.api_key,
-            ampersand = (search) ? (search.indexOf("?") > -1 || search.indexOf("&") > -1) ? "&" : "?" : "",
-            api_param = (key_param != "bearer" && saved_key) ? ampersand + key_param + saved_key : "",
+            key_val = saved_key || ad.api_key,
+            ampersand = search && (search.includes("?") || search.includes("&")) ? "&" : "?",
+            api_param = key_param !== "bearer" && saved_key ? ampersand + key_param + saved_key : "",
             api_url = base_url + search;
         return {
             "api_url": api_url,
@@ -291,9 +275,9 @@ function get_next_proxy() {
     const proxies = all_proxies(),
         current_proxy = d_proxy(),
         c_index = proxies.indexOf(current_proxy),
-        cc_index = (c_index == -1) ? 0 : c_index,
+        cc_index = c_index === -1 ? 0 : c_index,
         next_i = proxies[cc_index + 1],
-        next_p = (next_i) ? next_i : proxies[0];
+        next_p = next_i || proxies[0];
     if (glob_proxy_attempts[next_p] !== true) {
         glob_api_attempts = {}, // reset cache and index
             glob_rpc_attempts = {};
@@ -312,8 +296,8 @@ function tofixedspecial(str, n) {
         return str;
     }
     const convert = str.replace(".", "").split("e+").reduce(function(p, b) {
-        return p + Array(b - p.length + 2).join(0);
-    }) + "." + Array(n + 1).join(0);
+        return p + "0".repeat(b - p.length + 1);
+    }) + "." + "0".repeat(n);
     return convert.slice(0, -1);
 }
 
@@ -322,10 +306,10 @@ function renderlnconnect(str) {
     const spitsearch = str.split("?"),
         url = spitsearch[0],
         s_string = spitsearch[1],
-        proto = (url.indexOf("https://") > -1) ? "https://" : (url.indexOf("http://") > -1) ? "http://" : "://",
-        search = (s_string) ? renderparameters(s_string) : false,
+        proto = url.includes("https://") ? "https://" : url.includes("http://") ? "http://" : "://",
+        search = s_string ? renderparameters(s_string) : false,
         bare_url = url.split(proto).pop(),
-        rest_url = (search.lnconnect) ? atob(search.lnconnect) : (proto == "://") ? "https://" + bare_url : proto + bare_url;
+        rest_url = search.lnconnect ? atob(search.lnconnect) : (proto === "://") ? "https://" + bare_url : proto + bare_url;
     search.resturl = rest_url;
     return search;
 }
@@ -350,7 +334,7 @@ function b64urldecode(str) {
 
 // Extracts search parameters from a URL
 function get_search(str) {
-    return (str.indexOf("?") > -1) ? str.split("?").pop() : false;
+    return str.includes("?") ? str.split("?").pop() : false;
 }
 
 // Gets URL parameters from the current page
@@ -368,9 +352,9 @@ function renderparameters(str) {
     }
     const getvalues = str.split("&"),
         get_object = {};
-    $.each(getvalues, function(i, val) {
+    getvalues.forEach(function(val) {
         const keyval = val.split("=");
-        get_object[keyval[0]] = keyval[1];
+        get_object[decodeURIComponent(keyval[0])] = decodeURIComponent(keyval[1]);
     });
     const dp = get_object.d,
         mp = get_object.m;
@@ -391,24 +375,24 @@ function renderparameters(str) {
 
 // Scans metadata for potential XSS attacks
 function scanmeta(val) {
-    const isd = (val && val.length > 5) ? atob(val) : false,
+    const isd = (val?.length > 5) ? atob(val) : false,
         xssdat = xss_search(isd);
     if (xssdat) { //xss detection
-        return true
+        return true;
     }
-    return false
+    return false;
 }
 
 // Searches for potential XSS attacks in a string
 function xss_search(val) {
     if (val) {
         const val_lower = val.toLowerCase();
-        if (val_lower.indexOf("<scrip") > -1) {
+        if (val_lower.includes("<scrip")) {
             vibrate();
             notify(glob_xss_alert);
             return true
         }
-        if (val_lower.indexOf("onerror") > -1) {
+        if (val_lower.includes("onerror")) {
             vibrate();
             notify(glob_xss_alert);
             return true
@@ -419,7 +403,7 @@ function xss_search(val) {
 
 // Generates a random number within a range
 function getrandomnumber(min, max) {
-    return Math.floor(Math.random() * (max - min + 1) + min);
+    return Math.floor(Math.random() * (max - min) + min);
 }
 
 // Selects a random item from an array
@@ -464,32 +448,40 @@ function getdevicetype() {
 
 // Determines the platform based on device type
 function getplatform(device) {
-    return (glob_supportsTouch) ?
-        (glob_is_android_app === true || device == "Android" || device == "Windows") ? "playstore" :
-        (device == "iPhone" || device == "iPad" || device == "Macintosh" || glob_is_ios_app === true) ? "appstore" : "unknown" :
-        (device == "Windows") ? "desktop" :
-        (device == "Macintosh") ? "desktop" : "unknown";
+    if (glob_supportsTouch) {
+        if (glob_is_android_app === true || device === "Android" || device === "Windows") {
+            return "playstore";
+        } else if (device === "iPhone" || device === "iPad" || device === "Macintosh" || glob_is_ios_app === true) {
+            return "appstore";
+        }
+    } else {
+        if (device === "Windows" || device === "Macintosh") {
+            return "desktop";
+        }
+    }
+    return "unknown";
 }
 
 // Creates a date string from date-time parts
 function makedatestring(datetimeparts) {
-    const split = (datetimeparts.indexOf(".") > -1) ? "." : "Z";
-    return datetimeparts[0] + " " + datetimeparts[1].split(split)[0];
+    const [date, time] = datetimeparts,
+    split = time.includes(".") ? "." : "Z";
+    return date + " " + time.split(split)[0];
 }
 
 // Converts a date string to a timestamp
 function returntimestamp(datestring) {
-    const datetimeparts = datestring.split(" "),
-        timeparts = datetimeparts[1].split(":"),
-        dateparts = datetimeparts[0].split("-");
-    return new Date(dateparts[0], parseInt(dateparts[1], 10) - 1, dateparts[2], timeparts[0], timeparts[1], timeparts[2]);
+    const [date, time] = datestring.split(" "),
+        [year, month, day] = date.split("-"),
+        [hours, minutes, seconds] = time.split(":");
+    return new Date(year, parseInt(month, 10) - 1, day, hours, minutes, seconds);
 }
 
 // Converts a timestamp string to milliseconds
 function to_ts(ts) {
     if (ts) {
         const tstamp = ts.split("T");
-        return (tstamp) ? returntimestamp(makedatestring(tstamp)).getTime() : null;
+        return tstamp?.length ? returntimestamp(makedatestring(tstamp)).getTime() : null;
     }
     return null;
 }
@@ -506,25 +498,25 @@ function short_date(txtime) {
 }
 
 // Returns an object with translated weekday names
-function weekdays(day) {
-    return {
-        "0": translate("sunday"),
-        "1": translate("monday"),
-        "2": translate("tuesday"),
-        "3": translate("wednesday"),
-        "4": translate("thursday"),
-        "5": translate("friday"),
-        "6": translate("saturday")
-    };
+function weekdays() {
+    return [
+        translate("sunday"),
+        translate("monday"),
+        translate("tuesday"),
+        translate("wednesday"),
+        translate("thursday"),
+        translate("friday"),
+        translate("saturday")
+    ];
 }
 
 // Formats a date object into a full date string
 function fulldateformat(date, lng, markup) {
     const year = date.getFullYear(),
         currentyear = new Date().getFullYear(),
-        yearstring = (year == currentyear) ? "" : ", " + year,
+        yearstring = year == currentyear ? "" : ", " + year,
         time = formattime(date),
-        time_str = (markup) ? " | <div class='fdtime'>" + time + "</div>" : " | " + time;
+        time_str = markup ? " | <div class='fdtime'>" + time + "</div>" : " | " + time;
     return weekdays()[date.getDay()] + ", " + date.toLocaleString(lng, {
         "month": "long"
     }) + " " + date.getDate() + yearstring + time_str;
@@ -539,12 +531,9 @@ function fulldateformatmarkup(date, lng) {
 
 // Formats time as a string in HH:MM:SS format
 function formattime(date) {
-    const h = date.getHours(),
-        m = date.getMinutes(),
-        s = date.getSeconds(),
-        hours = (h < 10) ? "0" + h : h,
-        minutes = (m < 10) ? "0" + m : m,
-        seconds = (s < 10) ? "0" + s : s;
+    const hours = date.getHours().toString().padStart(2, "0"),
+        minutes = date.getMinutes().toString().padStart(2, "0"),
+        seconds = date.getSeconds().toString().padStart(2, "0");
     return " " + hours + ":" + minutes + ":" + seconds;
 }
 
@@ -552,10 +541,10 @@ function formattime(date) {
 function playsound(audio) {
     const promise = audio[0].play();
     if (promise) {
-        promise.then(_ => {
+        promise.then(function() {
             // Autoplay started!
-        }).catch(error => {
-            // Fallback
+        }).catch(function(error) {
+            console.error("Autoplay failed:", error);
         });
     }
 }
@@ -571,17 +560,14 @@ function shake(node) {
 
 // Triggers device vibration if supported
 function vibrate() {
-    if (navigator.vibrate) {
-        navigator.vibrate(100);
-    }
+    navigator.vibrate?.([100]);
 }
 
 // Retrieves API data based on the API ID
 function get_api_data(api_id) {
-    const apipath = glob_br_config.apis.filter(function(val) {
-        return val.name == api_id;
+    return glob_br_config.apis.find(function(val) {
+        return val.name === api_id;
     });
-    return apipath[0];
 }
 
 // Checks if one string contains another (case-insensitive)
@@ -589,17 +575,14 @@ function str_match(add1, add2) {
     if (add1 && add2) {
         const a1u = add1.toUpperCase(),
             a2u = add2.toUpperCase();
-        if (a1u.indexOf(a2u) >= 0) {
-            return true
-        }
+        return a1u.includes(a2u);
     }
     return false
 }
 
 // Trims a number to a specified number of decimal places
 function trimdecimals(amount, decimals) {
-    const round_amount = parseFloat(amount).toFixed(decimals);
-    return parseFloat(round_amount.toString());
+    return Number(parseFloat(amount).toFixed(decimals));
 }
 
 // Adjusts properties of objects in an array based on provided modifications
@@ -648,7 +631,7 @@ function all_proxies() {
 
 // Constructs an AWS URL for a file
 function fetch_aws(filename, bckt) {
-    const bucket = (bckt) ? bckt : glob_aws_bucket;
+    const bucket = bckt || glob_aws_bucket;
     return bucket + filename;
 }
 
@@ -657,7 +640,7 @@ function gk() {
     const k = glob_io.k;
     if (k) {
         const pk = JSON.parse(atob(k));
-        if (pk.if_id == "" || pk.ad_id == "" || pk.ga_id == "" || pk.bc_id == "") {
+        if (pk.if_id === "" || pk.ad_id === "" || pk.ga_id === "" || pk.bc_id === "") {
             fk();
             return
         }
@@ -696,7 +679,7 @@ function init_keys(ko, set) { // set required keys
 // Converts a URL to a local file path if necessary
 function makelocal(url) {
     const pathname = glob_w_loc.pathname;
-    return (glob_local || glob_localserver) ? (url.indexOf("?") >= 0) ? "file://" + pathname + "?" + url.split("?")[1] : pathname : url;
+    return (glob_local || glob_localserver) ? (url.includes("?")) ? "file://" + pathname + "?" + url.split("?")[1] : pathname : url;
 }
 
 // Removes invalid characters from a string
@@ -707,6 +690,11 @@ function clean_str(string) {
 
 function clear_accents(str) {
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+// Capitalize a string
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 // ** Query helpers ** //
@@ -728,13 +716,13 @@ function set_setting(setting, keypairs, title) {
 // Finds a request list item based on data attributes
 function get_requestli(datakey, dataval) {
     return $("#requestlist li.rqli").filter(function() {
-        return $(this).data(datakey) == dataval;
+        return $(this).data(datakey) === dataval;
     })
 }
 
 // Checks if a pending request exists for the given data
 function ch_pending(dat) {
-    return ($("#requestlist li.rqli[data-address='" + dat.address + "'][data-pending='scanning'][data-cmcid='" + dat.cmcid + "']").length > 0) ? true : false;
+    return $("#requestlist li.rqli[data-address='" + dat.address + "'][data-pending='scanning'][data-cmcid='" + dat.cmcid + "']").length > 0;
 }
 
 // Retrieves the address list for a given currency
@@ -756,7 +744,7 @@ function filter_all_addressli(datakey, dataval) {
 // Filters a list based on data attributes
 function filter_list(list, datakey, dataval) {
     return list.filter(function() {
-        return $(this).data(datakey) == dataval;
+        return $(this).data(datakey) === dataval;
     })
 }
 
@@ -798,8 +786,8 @@ function getcoindata(currency) {
     if (coindata_object) {
         const coindata = coindata_object.data,
             settings = coindata_object.settings,
-            has_settings = (settings) ? true : false,
-            is_monitored = (settings) ? (settings.apis) ? true : false : false,
+            has_settings = Boolean(settings),
+            is_monitored = settings && settings.apis,
             cd_object = {
                 "currency": coindata.currency,
                 "ccsymbol": coindata.ccsymbol,
@@ -818,9 +806,9 @@ function getcoindata(currency) {
     } // else lookup erc20 data
     const tokenobject = br_get_local("erc20tokens", true);
     if (tokenobject) {
-        const erc20data = $.grep(tokenobject, function(filter) {
-            return filter.name == currency;
-        })[0];
+        const erc20data = tokenobject.find(function(filter) {
+            return filter.name === currency;
+        });
         if (erc20data) {
             const fetched_data = {
                 "currency": erc20data.name,
@@ -837,7 +825,7 @@ function getcoindata(currency) {
 // Retrieves active coin settings for a given currency
 function activecoinsettings(currency) {
     const saved_coinsettings = br_get_local(currency + "_settings", true);
-    return (saved_coinsettings) ? saved_coinsettings : getcoinsettings(currency);
+    return saved_coinsettings || getcoinsettings(currency);
 }
 
 // Retrieves coin settings for a given currency
@@ -851,16 +839,16 @@ function getcoinsettings(currency) {
 
 // Retrieves coin configuration for a given currency
 function getcoinconfig(currency) {
-    return $.grep(glob_br_config.bitrequest_coin_data, function(filter) {
-        return filter.currency == currency;
-    })[0];
+    return glob_br_config.bitrequest_coin_data.find(function(filter) {
+        return filter.currency === currency;
+    });
 }
 
 // ** Check params ** //
 
 // Checks and processes URL parameters
 function check_params(gets) {
-    const lgets = (gets) ? gets : geturlparameters();
+    const lgets = gets || geturlparameters();
     if (lgets.xss) {
         return
     }
@@ -872,7 +860,7 @@ function check_params(gets) {
         click_pop(lgets.cl);
     }
     const page = lgets.p;
-    if (page == "settings") {
+    if (page === "settings") {
         if (lgets.ro) {
             check_teaminvite(lgets.ro);
         } else if (lgets.sbu) {
