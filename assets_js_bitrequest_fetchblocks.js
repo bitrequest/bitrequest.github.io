@@ -1065,48 +1065,53 @@ function nimiq_fetch(rd, api_data, rdo) {
         txdat = false,
         match = false;
     if (rdo.pending === "scanning") { // scan incoming transactions on address
-        api_proxy({
-            "api": "nimiq.watch",
-            "search": "account-transactions/" + rd.address,
-            "cachetime": 25,
-            "cachefolder": "1h",
-            "params": {
-                "method": "GET"
-            }
-        }).done(function(e) {
-            const data = br_result(e).result;
-            if (data) {
-                if ($.isEmptyObject(data)) {
-                    api_callback(requestid, source);
-                    return
+        if (api_name === "nimiq.watch") {
+            api_proxy({
+                "api": "nimiq.watch",
+                "search": "account-transactions/" + rd.address,
+                "cachetime": 25,
+                "cachefolder": "1h",
+                "params": {
+                    "method": "GET"
                 }
-                const sortlist = sort_by_date(nimiq_scan_data, data);
-                $.each(sortlist, function(dat, value) {
-                    const r_address = value.receiver_address.replace(/\s/g, "");
-                    if (r_address === rd.address) { // filter outgoing transactions
-                        const txd = nimiq_scan_data(value, rdo.setconfirmations);
-                        if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
-                            match = true, txdat = txd;
-                            if (source === "list") {
-                                const tx_listitem = append_tx_li(txd, rd.requesttype);
-                                if (tx_listitem) {
-                                    transactionlist.append(tx_listitem.data(txd));
-                                    counter++;
+            }).done(function(e) {
+                const data = br_result(e).result;
+                if (data) {
+                    if ($.isEmptyObject(data)) {
+                        api_callback(requestid, source);
+                        return
+                    }
+                    const sortlist = sort_by_date(nimiq_scan_data, data);
+                    $.each(sortlist, function(dat, value) {
+                        const r_address = value.receiver_address.replace(/\s/g, "");
+                        if (r_address === rd.address) { // filter outgoing transactions
+                            const txd = nimiq_scan_data(value, rdo.setconfirmations);
+                            if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
+                                match = true, txdat = txd;
+                                if (source === "list") {
+                                    const tx_listitem = append_tx_li(txd, rd.requesttype);
+                                    if (tx_listitem) {
+                                        transactionlist.append(tx_listitem.data(txd));
+                                        counter++;
+                                    }
                                 }
                             }
                         }
-                    }
-                });
-                scan_match(rd, api_data, rdo, counter, txdat, match);
-                return
-            }
-            tx_api_scan_fail(rd, rdo, api_data, default_error);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            const error_object = errorThrown || jqXHR;
-            tx_api_scan_fail(rd, rdo, api_data, error_object, true);
-        }).always(function() {
-            set_api_src(rdo, api_data);
-        });
+                    });
+                    scan_match(rd, api_data, rdo, counter, txdat, match);
+                    return
+                }
+                tx_api_scan_fail(rd, rdo, api_data, default_error);
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                const error_object = errorThrown || jqXHR;
+                tx_api_scan_fail(rd, rdo, api_data, error_object, true);
+            }).always(function() {
+                set_api_src(rdo, api_data);
+            });
+            return
+        }
+        tx_api_scan_fail(rd, rdo, api_data, default_error);
+        return
     }
     if (rdo.pending === "polling") {
         if (rd.txhash) {
