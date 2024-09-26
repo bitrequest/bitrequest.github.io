@@ -680,7 +680,7 @@ function arbiscan_fetch(rd, api_data, rdo) {
         requestid = rd.requestid,
         eth_payload = {
             "api": api_name,
-            "search": "?module=account&action=txlist&address=" + rd.address + "&startblock=0&endblock=latest&page=1&offset=10&sort=desc&apikey=" + apikeytoken,
+            "search": "?module=account&action=txlist&address=" + rd.address + "&startblock=0&endblock=latest&page=1&offset=1000&sort=desc&apikey=" + apikeytoken,
             "cachetime": 25,
             "cachefolder": "1h",
             "params": {

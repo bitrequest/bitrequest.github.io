@@ -822,7 +822,7 @@ function compareamounts(rd) {
             const iscrypto = rd.iscrypto,
                 pendingstatus = rd.pending,
                 getconfirmations = rd.set_confirmations,
-                getconfint = getconfirmations === false ? 0 : (getconfirmations ? parseInt(getconfirmations) : 1),
+                getconfint = !getconfirmations ? 0 : (getconfirmations ? parseInt(getconfirmations) : 1),
                 setconfirmations = rd.lightning ? 1 : getconfint, // set minimum confirmations to 1
                 firstlist = txlist.first(),
                 conf = firstlist.data("confirmations"),
@@ -1089,7 +1089,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 latestconf = rd.latestconf,
                 thisamount = rd.amount,
                 getconfirmations = rd.set_confirmations,
-                getconfint = getconfirmations === false ? 0 : (getconfirmations ? parseInt(getconfirmations) : 1),
+                getconfint = !getconfirmations ? 0 : (getconfirmations ? parseInt(getconfirmations) : 1),
                 lnd = rd.lightning,
                 setconfirmations = lnd ? 1 : getconfint, // set minimum confirmations to 1
                 iserc20 = rd.erc20,
