@@ -982,7 +982,7 @@ function web3_erc20_websocket(socket_node, thisaddress, contract, l2) {
             if (result) {
                 if (result.topics) {
                     const topic_address = result.topics[2];
-                    if (!topic_address || str_match(topic_address, address.slice(3)) !== true) return;
+                    if (!topic_address || str_match(topic_address, thisaddress.slice(3)) !== true) return;
                     const contractdata = result.data,
                         cd_hex = contractdata.slice(2),
                         token_value = hexToNumberString(cd_hex),
