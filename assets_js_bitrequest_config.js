@@ -32,7 +32,7 @@ const glob_apptitle = "Bitrequest",
     glob_main_alchemy_socket = "wss://eth-mainnet.g.alchemy.com/v2/",
     glob_main_nano_node = "https://www.bitrequest.app:8020",
     glob_main_kas_wss = "wss://api.kaspa.org",
-    glob_sec_kas_wss = "wss://socket.kas.fyi",
+    glob_sec_kas_wss = "wss://api-v2-do.kas.fyi",
     glob_aws_bucket = "https://brq.s3.us-west-2.amazonaws.com/",
     glob_cmc_icon_loc = "https://s2.coinmarketcap.com/static/img/coins/200x200/",
     glob_multi_wallets = {
@@ -1846,7 +1846,7 @@ const glob_apptitle = "Bitrequest",
             },
             {
                 "name": "nimiq.watch",
-                "base_url": "https://api.nimiq.watch/",
+                "base_url": "https://api.nimiq.watch/api/v1/",
                 "key_param": null,
                 "api_key": "no_key",
                 "sign_up": null

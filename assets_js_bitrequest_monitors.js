@@ -822,7 +822,7 @@ function compareamounts(rd) {
             const iscrypto = rd.iscrypto,
                 pendingstatus = rd.pending,
                 getconfirmations = rd.set_confirmations,
-                getconfint = !getconfirmations ? 0 : (getconfirmations ? parseInt(getconfirmations) : 1),
+                getconfint = getconfirmations === false ? 0 : (getconfirmations ? parseInt(getconfirmations) : 1),
                 setconfirmations = rd.lightning ? 1 : getconfint, // set minimum confirmations to 1
                 firstlist = txlist.first(),
                 conf = firstlist.data("confirmations"),
@@ -853,7 +853,7 @@ function compareamounts(rd) {
                         paymenttimestamp_cc = tn_dat.transactiontime,
                         txhash_cc = tn_dat.txhash,
                         thissum_cc += parseFloat(tn_dat.ccval) || 0; // sum of outputs
-                    if (confirmations_cc >= conf_correct || rd.no_conf === true) { // check all confirmations + whitelist for currencies unable to fetch confirmations
+                    if (confirmations_cc >= conf_correct || rd.no_conf === true || tn_dat.setconfirmations === false) { // check all confirmations + whitelist for currencies unable to fetch confirmations
                         confirmed_cc = true;
                         if (thissum_cc >= cc_amount * margin) { // compensation for small fluctuations in rounding amount
                             thisnode.addClass("exceed").nextAll().addClass("exceed");
@@ -1089,7 +1089,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                 latestconf = rd.latestconf,
                 thisamount = rd.amount,
                 getconfirmations = rd.set_confirmations,
-                getconfint = !getconfirmations ? 0 : (getconfirmations ? parseInt(getconfirmations) : 1),
+                getconfint = getconfirmations === false ? 0 : (getconfirmations ? parseInt(getconfirmations) : 1),
                 lnd = rd.lightning,
                 setconfirmations = lnd ? 1 : getconfint, // set minimum confirmations to 1
                 iserc20 = rd.erc20,
@@ -1126,7 +1126,7 @@ function get_historical_crypto_data(rd, fiatapi, apilist, api, lcrate, usdrate, 
                     paymenttimestamp = thistimestamp,
                     txhash = tn_dat.txhash,
                     receivedcc += parseFloat(thisvalue) || 0; // sum of outputs CC
-                if ((historic_price && conf >= conf_correct) || rd.no_conf === true) { // check all confirmations + whitelist for currencies unable to fetch confirmations
+                if ((historic_price && conf >= conf_correct) || rd.no_conf === true || tn_dat.setconfirmations === false) { // check all confirmations + whitelist for currencies unable to fetch confirmations
                     confirmed = true;
                 } else {
                     confirmed = false;

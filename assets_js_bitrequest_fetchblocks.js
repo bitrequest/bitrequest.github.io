@@ -498,7 +498,8 @@ function blockcypher_fetch(rd, api_data, rdo) {
                         }
                     });
                 }
-                scan_match(rd, api_data, rdo, counter, txdat, match);
+                const l2 = rd.payment === "ethereum";
+                scan_match(rd, api_data, rdo, counter, txdat, match, l2);
                 return
             }
             tx_api_scan_fail(rd, rdo, api_data, default_error);
@@ -1250,6 +1251,7 @@ function kaspa_fetch(rd, api_data, rdo) {
                             "search": "addresses/" + rd.address + "/full-transactions",
                             "cachetime": 25,
                             "cachefolder": "1h",
+                            "proxy": true,
                             "params": {
                                 "method": "GET"
                             }
@@ -2741,7 +2743,7 @@ function kaspa_fyi_ws_data(data, thisaddress) { // scan
             if (outputs) {
                 outputsum = 0;
                 $.each(outputs, function(dat, val) {
-                    const amount = val.amount,
+                    const amount = val.value,
                         output = (q_obj(val, "verboseData.scriptPublicKeyAddress") === thisaddress) ? Math.abs(amount) : 0;
                     outputsum += parseFloat(output) || 0; // sum of outputs
                 });

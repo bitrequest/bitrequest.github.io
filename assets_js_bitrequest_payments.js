@@ -2767,7 +2767,6 @@ function open_tx(tx_node) {
 
 // Saves or updates a payment request, handling various scenarios including local, incoming, and outgoing requests
 function saverequest(direct) {
-    console.log("rf");
     const gets = geturlparameters();
     if (gets.xss) {
         return

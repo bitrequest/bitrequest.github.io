@@ -1065,18 +1065,18 @@ function alchemy_eth_websocket(socket_node, thisaddress) {
 
 // Initializes and manages Kaspa WebSocket
 function kaspa_websocket(socket_node, thisaddress) {
-    const provider = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket",
+    const provider = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket&sid=" + now(),
         websocket = glob_sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
         glob_ws_timer = now();
         socket_info(socket_node, true);
-        websocket.send("40");
+        websocket.send("2probe");
     };
     websocket.onmessage = function(e) {
         const dat = e.data;
         if (!dat) return;
         const datid = dat.slice(0, 2);
-        if (datid === "40") {
+        if (dat === "3probe") {
             websocket.send('42["join-room","blocks"]');
             return;
         }
@@ -1386,10 +1386,9 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
                 }
             }
         });
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function() {
         clearpinging(address);
-        const error_object = errorThrown || jqXHR;
-        handle_api_fails(false, error_object, "mymonero api", request.payment, txhash);
+        notify(translate("websocketoffline"), 500000, "yes");
     });
 }
 
@@ -1437,10 +1436,9 @@ function ping_arbiscan(address, request_ts) {
                 });
             }
         }
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function() {
         clearpinging("arbi" + address);
-        const error_object = errorThrown || jqXHR;
-        handle_api_fails(false, error_object, "arbiscan", request.payment);
+        notify(translate("notmonitored"), 500000, "yes");
     });
 }
 
@@ -1483,10 +1481,8 @@ function ping_bnb(address, request_ts, ccsymbol) {
                 confirmations(txd, true);
             }
         });
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function() {
         clearpinging("bnb" + address);
-        const error_object = errorThrown || jqXHR;
-        handle_api_fails(false, error_object, "binplorer", request.payment);
     });
 }
 
@@ -1533,10 +1529,9 @@ function ping_nimiq(address, request_ts) {
                 confirmations(txd, true);
             }
         });
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function() {
         clearpinging(address);
-        const error_object = errorThrown || jqXHR;
-        handle_api_fails(false, error_object, "nimiq.watch", request.payment);
+        notify(translate("websocketoffline"), 500000, "yes");
     });
 }
 
