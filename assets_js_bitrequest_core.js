@@ -2302,7 +2302,10 @@ function submitaddresstrigger() {
 
 // Handles the "Connect Lightning Node" button click
 function add_lightning() {
-    $(document).on("click", "#connectln", lm_function);
+    $(document).on("click", "#connectln", function() {
+        lm_function();
+        return
+    })
 }
 
 // Handles the "Add ERC20 Token" button click
