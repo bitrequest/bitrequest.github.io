@@ -1,7 +1,6 @@
 let glob_socket_attempt = {},
     glob_api_attempt = {},
     glob_api_attempts = {},
-    glob_scan_attempts = {},
     glob_statuspush = [],
     glob_tx_list = [],
     glob_rpc_attempts = {},
@@ -289,7 +288,7 @@ const glob_apptitle = "Bitrequest",
                             },
                             {
                                 "name": "blockchain.info websocket",
-                                "url": "wss://ws.blockchain.info/inv",
+                                "url": "wss://ws.blockchain.infos/inv",
                                 "display": true
                             }
                         ],
@@ -425,7 +424,8 @@ const glob_apptitle = "Bitrequest",
                                 "display": true
                             }
                         ],
-                        "options": []
+                        "options": [],
+                        "poll_fallback": true
                     },
                     "Xpub": {
                         "active": true,
@@ -543,7 +543,8 @@ const glob_apptitle = "Bitrequest",
                                 "display": true
                             }
                         ],
-                        "options": []
+                        "options": [],
+                        "poll_fallback": true
                     },
                     "Xpub": {
                         "active": true,
@@ -623,18 +624,12 @@ const glob_apptitle = "Bitrequest",
                     "apis": {
                         "icon": "sphere",
                         "selected": {
-                            "name": "blockchair",
-                            "url": "blockchair.com",
+                            "name": "dash.org",
+                            "url": "insight.dash.org",
                             "api": true,
                             "display": true
                         },
                         "apis": [{
-                                "name": "blockchair",
-                                "url": "blockchair.com",
-                                "api": true,
-                                "display": true
-                            },
-                            {
                                 "name": "dash.org",
                                 "url": "insight.dash.org",
                                 "api": true,
@@ -643,6 +638,12 @@ const glob_apptitle = "Bitrequest",
                             {
                                 "name": "blockcypher",
                                 "url": "blockcypher.com",
+                                "api": true,
+                                "display": true
+                            },
+                            {
+                                "name": "blockchair",
+                                "url": "blockchair.com",
                                 "api": true,
                                 "display": true
                             }
@@ -670,7 +671,8 @@ const glob_apptitle = "Bitrequest",
                                 "url": glob_main_bc_ws,
                                 "display": false
                             }
-                        ]
+                        ],
+                        "poll_fallback": true
                     },
                     "Xpub": {
                         "active": true,
@@ -776,7 +778,8 @@ const glob_apptitle = "Bitrequest",
                             "url": "wss://ws.blockchain.info/bch/inv",
                             "display": true
                         }],
-                        "options": []
+                        "options": [],
+                        "poll_fallback": true
                     },
                     "Xpub": {
                         "active": true,
@@ -1124,7 +1127,8 @@ const glob_apptitle = "Bitrequest",
                                 "display": true
                             }
                         ],
-                        "options": []
+                        "options": [],
+                        "poll_fallback": true
                     },
                     "Xpub": {
                         "active": true,
@@ -1335,7 +1339,8 @@ const glob_apptitle = "Bitrequest",
                                 "url": glob_sec_kas_wss,
                                 "display": true
                             }
-                        ]
+                        ],
+                        "poll_fallback": true
                     },
                     "Xpub": {
                         "active": false,

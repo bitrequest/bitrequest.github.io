@@ -561,8 +561,6 @@ function lang_en(id, data) {
         "loadingcamera": "Loading camera",
         "generatebu": "Generate system backup",
         "installationpackage": "Generate installation package",
-        "closingrequest": "Closing request",
-        "scanningforincoming": "scanning for incoming transactions",
 
         // RANDOM TERMS
         "address": "address",

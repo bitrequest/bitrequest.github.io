@@ -252,7 +252,7 @@ function get_api_inputs_init(rd, api_data) {
 function get_api_inputs(rd, rdod, api_data) {
     const rdo = rdod || tx_data(rd), // fetchblocks.js
         source = rdo.source;
-    if (source === "poll") {
+    if (source === "poll" || source === "acc_polling") {
         select_api(rd, rdo, api_data);
         return
     }
@@ -282,7 +282,7 @@ function select_api(rd, rdo, api_dat) {
         api_data = glob_l2 || api_dat,
         api_name = api_data.name;
     glob_api_attempts[rq_id + api_name] = true;
-    if (rd.lightning) {
+    if (rd.lightning && rdo.source === "list") {
         const l_fetch = lightning_fetch(rd, api_data, rdo);
         if (l_fetch === "exit") {
             return
@@ -328,6 +328,10 @@ function select_api(rd, rdo, api_dat) {
         insight_fetch_dash(rd, api_data, rdo);
         return
     }
+    if (rdo.source === "acc_polling") {
+        glob_api_attempts = {}
+        select_rpc(rd, rdo, api_dat);
+    }
 }
 
 // API error handling
@@ -345,8 +349,8 @@ function scan_match(rd, api_data, rdo, counter, txdat, match, l2) {
     if (src === "list") {
         tx_count(rdo.statuspanel, counter);
     }
+    const txhash = rd.txhash || txdat.txhash;
     if (match) {
-        const txhash = rd.txhash;
         if (src === "poll") {
             const status = confirmations(txdat);
             if (status === "paid") {
@@ -375,8 +379,9 @@ function scan_match(rd, api_data, rdo, counter, txdat, match, l2) {
             }
             compareamounts(rd);
         }
-        if (src === "afterscan") { // afterscan
-            pick_monitor(txdat.txhash, txdat);
+        if (src === "acc_polling") { // polling
+            clearpinging();
+            pick_monitor(txhash, txdat);
         }
         if (l2) { // Save L2 Network to session storage
             const requestid = rd.requestid,
@@ -406,7 +411,6 @@ function scan_match(rd, api_data, rdo, counter, txdat, match, l2) {
         api_callback(rd.requestid);
         return
     }
-    close_paymentdialog(true);
 }
 
 // Updates the transaction count in the status panel
@@ -417,15 +421,15 @@ function tx_count(statuspanel, count) {
 // Handles API scan failures
 function tx_api_scan_fail(rd, rdo, api_data, error_data, all_proxys) {
     const src = rdo.source;
-    if (src === "afterscan") {
-        after_scan_fails(api_data.name);
-        return
-    }
     if (src === "list") {
         const thislist = rdo.thislist;
         if (thislist) {
             tx_api_fail(thislist, rdo.statuspanel);
         }
+    }
+    if (src === "acc_polling" && rdo.socket === true) {
+        handle_socket_fails(api_data, rd.address);
+        return
     }
     if (api_data.api) {
         handle_api_fails(rd, rdo, error_data, api_data, all_proxys);
@@ -444,10 +448,17 @@ function tx_api_fail(thislist, statuspanel) {
 // Handles API failures and attempts to use alternative APIs or RPCs
 function handle_api_fails(rd, rdo, error, api_data, all_proxys) {
     const error_data = get_api_error_data(error),
-        requestid = rd.requestid;
+        requestid = rd.requestid,
+        src = rdo.source;
     if (!api_data) {
         api_eror_msg(false, error_data);
-        api_callback(requestid);
+        if (src === "list") {
+            api_callback(requestid);
+            return
+        }
+        clearpinging();
+        socket_info(api_data, false);
+        notify(translate("websocketoffline"), 500000, "yes");
         return
     }
     const api_name = api_data.name,
@@ -460,19 +471,37 @@ function handle_api_fails(rd, rdo, error, api_data, all_proxys) {
             if (all_proxys === true) { // try next proxy
                 const next_proxy = get_next_proxy();
                 if (next_proxy) {
-                    get_api_inputs(rd, rdo, api_data);
-                    return;
+                    if (src === "acc_polling") {
+                        init_account_polling(rdo.timeout, rdo.socket, rdo.cachetime, null, nextapi);
+                    } else {
+                        get_api_inputs(rd, rdo, api_data)
+                    }
+                    return
                 }
+                clearpinging();
             }
             const rpc_id = api_name || api_url || "unknown";
             api_eror_msg(rpc_id, error_data);
+            if (src === "acc_polling") {
+                clearpinging();
+                socket_info(api_data, false);
+                notify(translate("websocketoffline"), 500000, "yes");
+            }
             return
         }
     }
     if (nextapi) {
-        get_api_inputs(rd, rdo, nextapi);
+        if (src === "acc_polling") {
+            init_account_polling(rdo.timeout, rdo.socket, rdo.cachetime, null, nextapi);
+        } else {
+            get_api_inputs(rd, rdo, nextapi);
+        }
     } else if (nextrpc) {
-        get_rpc_inputs(rd, rdo, nextrpc);
+        if (src === "acc_polling") {
+            init_account_polling(rdo.timeout, rdo.socket, rdo.cachetime, true, nextrpc);
+        } else {
+            get_rpc_inputs(rd, rdo, nextrpc);
+        }
     }
 }
 
@@ -574,10 +603,6 @@ function api_src(thislist, api_data) {
 
 // Handles the callback after an API request is completed
 function api_callback(requestid, nocache) {
-    if (nocache === "afterscan") {
-        close_paymentdialog(true);
-        return
-    }
     const thislist = $("#" + requestid);
     if (thislist.hasClass("scan")) {
         thislist.removeClass("scan open").addClass("pmstatloaded");
@@ -626,7 +651,7 @@ function get_rpc_inputs_init(rd, api_data) {
 function get_rpc_inputs(rd, rdod, api_data) {
     const rdo = rdod || tx_data(rd),
         source = rdo.source;
-    if (source === "poll") {
+    if (source === "poll" || source === "acc_polling") {
         select_rpc(rd, rdo, api_data);
         return
     }
@@ -679,10 +704,17 @@ function select_rpc(rd, rdo, api_dat) {
 // Handles RPC failures and attempts to use alternative RPCs or APIs
 function handle_rpc_fails(rd, rdo, error, api_data, all_proxys) {
     const error_data = get_api_error_data(error),
-        requestid = rd.requestid;
+        requestid = rd.requestid,
+        src = rdo.source;
     if (!api_data) {
         api_eror_msg(false, error_data);
-        api_callback(requestid);
+        if (src === "list") {
+            api_callback(requestid);
+            return
+        }
+        clearpinging();
+        socket_info(api_data, false);
+        notify(translate("websocketoffline"), 500000, "yes");
         return
     }
     const api_url = api_data.url,
@@ -695,8 +727,12 @@ function handle_rpc_fails(rd, rdo, error, api_data, all_proxys) {
             if (all_proxys === true) { // try next proxy
                 const next_proxy = get_next_proxy();
                 if (next_proxy) {
-                    get_api_inputs(rd, rdo, api_data);
-                    return;
+                    if (src === "acc_polling") {
+                        init_account_polling(rdo.timeout, rdo.socket, rdo.cachetime, null, nextapi);
+                    } else {
+                        get_api_inputs(rd, rdo, api_data);
+                    }
+                    return
                 }
             }
             if (all_proxys === "scanl2") { // goo to next request when scanning for L2's
@@ -705,13 +741,26 @@ function handle_rpc_fails(rd, rdo, error, api_data, all_proxys) {
             }
             const rpc_id = api_name || api_url || "unknown";
             api_eror_msg(rpc_id, error_data);
+            if (src === "acc_polling") {
+                clearpinging();
+                socket_info(api_data, false);
+                notify(translate("websocketoffline"), 500000, "yes");
+            }
             return
         }
     }
     if (nextrpc) {
-        get_rpc_inputs(rd, rdo, nextrpc);
+        if (src === "acc_polling") {
+            init_account_polling(rdo.timeout, rdo.socket, rdo.cachetime, true, nextrpc);
+        } else {
+            get_rpc_inputs(rd, rdo, nextrpc);
+        }
     } else if (nextapi) {
-        get_api_inputs(rd, rdo, nextapi);
+        if (src === "acc_polling") {
+            init_account_polling(rdo.timeout, rdo.socket, rdo.cachetime, null, nextapi);
+        } else {
+            get_api_inputs(rd, rdo, nextapi);
+        }
     }
 }
 

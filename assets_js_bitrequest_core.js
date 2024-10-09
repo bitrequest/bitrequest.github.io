@@ -36,7 +36,7 @@ const glob_ls_support = check_local(),
     (glob_thishostname == "bitrequest.github.io") ? "hosted" :
     (glob_thishostname == glob_localhostname) ? "selfhosted" : "unknown",
     glob_wl = navigator.wakeLock,
-    glob_after_scan_timeout = 15000,
+    glob_after_scan_timeout = 120000, // offer a blockexplorer lookup after 2 minutes without detection
     glob_xss_alert = "xss attempt detected",
     glob_langcode = setlangcode(); // set saved or system language
 
@@ -1936,6 +1936,8 @@ function check_recent() {
                 "url": thisurl
             }));
         if (result) {
+            canceldialog();
+            close_paymentdialog();
             open_share_url("location", thisurl);
         }
         return
@@ -2685,8 +2687,11 @@ function canceldialog(pass) {
     }, 600, function() {
         clearTimeout(timeout);
     });
-    if (request) { // reset after_scan
-        request.rq_timer = now();
+    if (glob_paymentpopup.hasClass("active")) {
+        if (request) { // reset after_scan
+            request.rq_timer = now();
+        }
+        set_request_timer();
     }
 }
 
@@ -2733,7 +2738,7 @@ function unfocus_inputs() {
 
 // Checks polling conditions and closes payment dialog if necessary
 function cpd_pollcheck() {
-    if (glob_paymentdialogbox.attr("data-lswitch") == "lnd_ao") {
+    if (glob_paymentdialogbox.attr("data-lswitch") === "lnd_ao") {
         close_paymentdialog();
         return
     }
@@ -2742,7 +2747,7 @@ function cpd_pollcheck() {
             rq_timer = request.rq_timer,
             rq_time = now() - rq_timer;
         if (rq_time > glob_after_scan_timeout) {
-            after_scan(rq_init);
+            close_paymentdialog(true);
             return
         }
     }

@@ -561,8 +561,6 @@ function lang_fr(id, data) {
         "loadingcamera": "Caméra à ouvrir",
         "generatebu": "Générer une sauvegarde du système",
         "installationpackage": "Générer le package d'installation",
-        "closingrequest": "Paiement de clôture",
-        "scanningforincoming": "analyse des transactions entrantes",
 
         // RANDOM TERMS
         "address": "adresse",

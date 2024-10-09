@@ -28,19 +28,6 @@ $(document).ready(function() {
     //try_next_socket
     //current_socket
     reconnect();
-
-    // Polling
-
-    //init_xmr_node
-    //ping_xmr_node
-    //arbi_scan
-    //ping_arbiscan
-    //bnb_scan
-    //ping_bnb
-    //nimiq_scan
-    //ping_nimiq
-    //dashorg_scan
-    //ping_dashorg
     //rconnect
 });
 
@@ -53,7 +40,7 @@ function init_socket(socket_node, address, swtch, retry) {
         notify(translate("youareoffline") + ". " + translate("notmonitored"));
         return
     }
-    glob_scan_attempts = {};
+    glob_api_attempts = {};
     const payment = request.payment,
         rq_init = request.rq_init,
         request_ts_utc = rq_init + glob_timezone,
@@ -61,7 +48,12 @@ function init_socket(socket_node, address, swtch, retry) {
     let socket_name;
     if (socket_node) {
         socket_name = socket_node.name;
-        glob_socket_attempt[btoa(socket_node.url)] = true;
+        if (socket_name === "poll_fallback") {
+            init_account_polling();
+            return
+        } else {
+            glob_socket_attempt[btoa(socket_node.url)] = true;
+        }
     }
     if (payment === "bitcoin") {
         if (address === "lnurl") {
@@ -125,7 +117,7 @@ function init_socket(socket_node, address, swtch, retry) {
     }
     if (payment === "dash") {
         if (socket_name === "dash.org") {
-            dashorg_scan(socket_node, address, request_ts);
+            dashorg_poll();
             return
         }
         if (socket_name === "blockcypher wss") {
@@ -173,10 +165,7 @@ function init_socket(socket_node, address, swtch, retry) {
         if (vk) {
             trigger_requeststates(); // update outgoing
             const account = vk.account || address,
-                viewkey = vk.vk,
-                rq_init = request.rq_init,
-                request_ts_utc = rq_init + glob_timezone,
-                request_ts = request_ts_utc - 30000; // 30 seconds compensation for unexpected results
+                viewkey = vk.vk;
             request.monitored = true;
             if (swtch) {
                 request.viewkey = vk;
@@ -191,7 +180,7 @@ function init_socket(socket_node, address, swtch, retry) {
         return
     }
     if (payment === "nimiq") {
-        nimiq_scan(address, request_ts);
+        nimiq_poll();
         return
     }
     if (payment === "kaspa") {
@@ -1175,15 +1164,24 @@ function handle_socket_fails(socket_node, thisaddress, socketid) {
         return
     }
     if (glob_paymentpopup.hasClass("active")) { // only when request is visible
-        const next_socket = try_next_socket(socket_node);
+        const next_socket = try_next_socket(socket_node),
+            wsid = (socketid) ? socketid : thisaddress;
         if (next_socket) {
-            const wsid = (socketid) ? socketid : thisaddress;
             closesocket(wsid);
             init_socket(next_socket, thisaddress, null, true);
             return
         }
+        const coin_settings = getcoinsettings(request.payment),
+            poll_fallback = q_obj(coin_settings, "websockets.poll_fallback");
+        if (poll_fallback) {
+            closesocket(wsid);
+            init_socket({
+                "name": "poll_fallback",
+                "display": false
+            }, thisaddress, null, true);
+            return
+        }
         const error_message = "unable to connect to " + socket_node.name;
-        console.log(error_message);
         socket_info(socket_node, false);
         notify(translate("websocketoffline"), 500000, "yes");
     }
@@ -1257,334 +1255,6 @@ function reconnect() {
         const txhash = $(this).attr("data-txid");
         canceldialog();
         pick_monitor(txhash);
-    });
-}
-
-// Polling
-
-// XMR Poll
-
-// Initializes Monero node connection
-function init_xmr_node(cachetime, address, vk, request_ts) {
-    const payload = {
-        "address": address,
-        "view_key": vk,
-        "create_account": true,
-        "generated_locally": false
-    };
-    api_proxy({
-        "api": "mymonero api",
-        "search": "login",
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "proxy": true,
-        "params": {
-            "method": "POST",
-            "data": JSON.stringify(payload),
-            "headers": {
-                "Content-Type": "application/json"
-            }
-        }
-    }).done(function(e) {
-        const data = br_result(e).result;
-        if (data) {
-            const errormessage = data.Error;
-            if (errormessage) {
-                const error = errormessage || translate("invalidvk");
-                popnotify("error", error);
-                return
-            }
-            const start_height = data.start_height;
-            if (start_height > -1) { // success!
-                glob_pinging[address] = setInterval(function() {
-                    ping_xmr_node(cachetime, address, vk, request_ts);
-                }, 12000);
-                return
-            }
-        }
-        notify(translate("notmonitored"), 500000, "yes");
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const next_proxy = get_next_proxy();
-        if (next_proxy) {
-            init_xmr_node(cachetime, address, vk, request_ts);
-            return
-        }
-        console.log(jqXHR);
-        console.log(textStatus);
-        console.log(errorThrown);
-        notify(translate("errorvk"));
-    });
-}
-
-// Pings Monero node for transaction updates
-function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
-    if (!glob_paymentpopup.hasClass("active")) { // only when request is visible
-        forceclosesocket();
-        return;
-    }
-    const api_name = "mymonero api",
-        payload = {
-            "address": address,
-            "view_key": vk
-        };
-    api_proxy({
-        "api": api_name,
-        "search": "get_address_txs",
-        "cachetime": cachetime,
-        "cachefolder": "1h",
-        "proxy": true,
-        "params": {
-            "method": "POST",
-            "data": JSON.stringify(payload),
-            "headers": {
-                "Content-Type": "application/json"
-            }
-        }
-    }).done(function(e) {
-        const data = br_result(e).result,
-            transactions = data.transactions;
-        if (!transactions) return;
-        socket_info({
-            "url": api_name
-        }, true);
-        const set_confirmations = request.set_confirmations || 0,
-            txflip = transactions.reverse();
-        $.each(txflip, function(dat, value) {
-            const txd = xmr_scan_data(value, set_confirmations, "xmr", data.blockchain_height);
-            if (txd) {
-                if (txd.ccval) {
-                    const tx_hash = txd.txhash;
-                    if (tx_hash) {
-                        if (txhash) {
-                            if (txhash === tx_hash) {
-                                confirmations(txd);
-                            }
-                            return
-                        }
-                        if (txd.transactiontime > request_ts) {
-                            const requestlist = $("#requestlist > li.rqli"),
-                                txid_match = filter_list(requestlist, "txhash", tx_hash); // check if txhash already exists
-                            if (txid_match.length) {
-                                return
-                            }
-                            confirmations(txd, true);
-                            if (set_confirmations > 0) {
-                                clearpinging(address);
-                                pick_monitor(tx_hash, txd, {
-                                    "api": true,
-                                    "name": "blockchair_xmr",
-                                    "display": true
-                                });
-                                return
-                                // deprecated
-                                glob_pinging[address] = setInterval(function() {
-                                    ping_xmr_node(34, address, vk, request_ts, tx_hash);
-                                }, 35000);
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }).fail(function() {
-        clearpinging(address);
-        notify(translate("websocketoffline"), 500000, "yes");
-    });
-}
-
-// Initiates Arbitrum scanning
-function arbi_scan(address, request_ts) {
-    glob_pinging["arbi" + address] = setInterval(function() {
-        ping_arbiscan(address, request_ts);
-    }, 7000);
-}
-
-// Pings Arbiscan for transaction updates
-function ping_arbiscan(address, request_ts) {
-    if (!glob_paymentpopup.hasClass("active")) { // only when request is visible
-        forceclosesocket();
-        return;
-    }
-    const apikeytoken = get_arbiscan_apikey();
-    api_proxy({
-        "api": "arbiscan",
-        "search": "?module=account&action=txlist&address=" + address + "&startblock=0&endblock=latest&page=1&offset=10&sort=desc&apikey=" + apikeytoken,
-        "params": {
-            "method": "GET"
-        }
-    }).done(function(e) {
-        const data = br_result(e).result;
-        if (data) {
-            const result = data.result;
-            if (result && br_issar(result)) {
-                const set_confirmations = request.set_confirmations || 0;
-                $.each(result, function(dat, value) {
-                    const txd = arbiscan_scan_data_eth(value, set_confirmations);
-                    if (txd.transactiontime > request_ts && txd.ccval) {
-                        clearpinging();
-                        const requestlist = $("#requestlist > li.rqli"),
-                            txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
-                        if (txid_match.length) {
-                            return
-                        }
-                        if (set_confirmations > 0) {
-                            pick_monitor(txd.txhash, txd);
-                            return
-                        }
-                        confirmations(txd, true);
-                    }
-                });
-            }
-        }
-    }).fail(function() {
-        clearpinging("arbi" + address);
-        notify(translate("notmonitored"), 500000, "yes");
-    });
-}
-
-// Initiates BNB Smart Chain scanning
-function bnb_scan(address, request_ts, ccsymbol) {
-    glob_pinging["bnb" + address] = setInterval(function() {
-        ping_bnb(address, request_ts, ccsymbol);
-    }, 7000);
-}
-
-// Pings BNB Smart Chain for transaction updates
-function ping_bnb(address, request_ts, ccsymbol) {
-    if (!glob_paymentpopup.hasClass("active")) { // only when request is visible
-        forceclosesocket();
-        return;
-    }
-    api_proxy({
-        "api": "binplorer",
-        "search": "getAddressHistory/" + address + "?type=transfer",
-        "params": {
-            "method": "GET"
-        }
-    }).done(function(e) {
-        const data = br_result(e).result;
-        if (!data) return;
-        const set_confirmations = request.set_confirmations || 0;
-        $.each(data.operations, function(dat, value) {
-            const txd = ethplorer_scan_data(value, set_confirmations, ccsymbol, "binplorer");
-            if (txd.transactiontime > request_ts && txd.ccval) {
-                clearpinging();
-                const requestlist = $("#requestlist > li.rqli"),
-                    txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
-                if (txid_match.length) {
-                    return
-                }
-                if (set_confirmations > 0) {
-                    pick_monitor(txd.txhash, txd);
-                    return
-                }
-                confirmations(txd, true);
-            }
-        });
-    }).fail(function() {
-        clearpinging("bnb" + address);
-    });
-}
-
-// Initiates Nimiq scanning
-function nimiq_scan(address, request_ts) {
-    glob_pinging[address] = setInterval(function() {
-        ping_nimiq(address, request_ts);
-    }, 5000);
-}
-
-// Pings Nimiq network for transaction updates
-function ping_nimiq(address, request_ts) {
-    if (!glob_paymentpopup.hasClass("active")) { // only when request is visible
-        forceclosesocket();
-        return;
-    }
-    api_proxy({
-        "api": "nimiq.watch",
-        "search": "account-transactions/" + address,
-        "params": {
-            "method": "GET"
-        }
-    }).done(function(e) {
-        const transactions = br_result(e).result;
-        if (!transactions) return;
-        socket_info({
-            "url": "nimiq.watch"
-        }, true);
-        const set_confirmations = request.set_confirmations || 0,
-            txflip = transactions.reverse();
-        $.each(txflip, function(dat, value) {
-            const txd = nimiq_scan_data(value, set_confirmations);
-            if (txd.transactiontime > request_ts && txd.ccval) {
-                clearpinging();
-                const requestlist = $("#requestlist > li.rqli"),
-                    txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
-                if (txid_match.length) {
-                    return
-                }
-                if (set_confirmations > 0) {
-                    pick_monitor(txd.txhash, txd);
-                    return
-                }
-                confirmations(txd, true);
-            }
-        });
-    }).fail(function() {
-        clearpinging(address);
-        notify(translate("websocketoffline"), 500000, "yes");
-    });
-}
-
-// Initiates Dash.org scanning
-function dashorg_scan(socket_node, address, request_ts) {
-    glob_pinging[address] = setInterval(function() {
-        ping_dashorg(socket_node, address, request_ts);
-    }, 5000);
-}
-
-// Pings Dash.org for transaction updates
-function ping_dashorg(socket_node, address, request_ts) {
-    if (!glob_paymentpopup.hasClass("active")) { // only when request is visible
-        forceclosesocket();
-        return;
-    }
-    api_proxy({
-        "api": "dash.org",
-        "search": "txs?address=" + address,
-        "params": {
-            "method": "GET"
-        }
-    }).done(function(e) {
-        const data = br_result(e).result;
-        if (!data) return;
-        const transactions = data.txs,
-            set_confirmations = request.set_confirmations || 0;
-        if (transactions && !$.isEmptyObject(transactions)) {
-            const sortlist = sort_by_date(insight_scan_data, transactions);
-            socket_info({
-                "url": "dash.org"
-            }, true);
-            $.each(sortlist, function(dat, value) {
-                const txd = insight_scan_data(value, set_confirmations, address);
-                if (txd.transactiontime > request_ts && txd.ccval) {
-                    clearpinging();
-                    const requestlist = $("#requestlist > li.rqli"),
-                        txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
-                    if (txid_match.length) {
-                        return
-                    }
-                    if (set_confirmations > 0) {
-                        pick_monitor(txd.txhash, txd);
-                        return
-                    }
-                    confirmations(txd, true);
-                }
-            });
-        }
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        clearpinging(address);
-        const error_object = errorThrown || jqXHR;
-        handle_socket_fails(socket_node, address);
     });
 }
 

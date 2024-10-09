@@ -3,13 +3,17 @@
 //pick_monitor
 //api_monitor_init
 //api_monitor
+//init_account_polling
+//account_polling
+//init_xmr_node
+//ping_xmr_node
+//arbi_scan
+//ping_arbiscan
+//bnb_scan
+//ping_bnb
+//nimiq_poll
 //confirmations
 //reset_recent
-
-//after_scan
-//ap_loader
-//after_scan_fails
-//get_next_scan_api
 
 // pick API / RPC
 // Initializes the payment monitoring process for a transaction
@@ -41,12 +45,19 @@ function api_monitor(txhash, tx_data, api_dat) {
         const gets = geturlparameters();
         if (gets.xss) {
             return
-        }
+        };
+        if (tx_data) {
+            confirmations(tx_data, true);
+            if (tx_data.setconfirmations === false) {
+                return
+            }
+        };
         const rdo = {
                 "pending": "polling",
                 "txdat": tx_data,
                 "source": "poll",
-                "setconfirmations": request.set_confirmations
+                "setconfirmations": request.set_confirmations,
+                "cachetime": 25
             },
             rd = {
                 "payment": request.payment,
@@ -56,14 +67,8 @@ function api_monitor(txhash, tx_data, api_dat) {
                 "decimals": request.decimals,
                 "requestid": request.requestid,
                 "viewkey": request.viewkey
-            };
-        if (tx_data) {
-            confirmations(tx_data, true);
-            if (tx_data.setconfirmations === false) {
-                return
-            }
-        };
-        const to_time = tx_data ? 25000 : 100,
+            },
+            to_time = tx_data ? 30000 : 100,
             timeout = setTimeout(function() {
                 if (api_dat.api) {
                     select_api(rd, rdo, api_dat);
@@ -76,6 +81,274 @@ function api_monitor(txhash, tx_data, api_dat) {
         return
     }
     console.log("No API selected");
+}
+
+function init_account_polling(time_out, socket, cache, rpc, next_api) {
+    const ping_id = request.address,
+        timeout = time_out || 7000;
+    if (next_api) {
+        clearpinging(ping_id);
+        account_polling(timeout, socket, cache, rpc, next_api);
+    }
+    glob_pinging[ping_id] = setInterval(function() {
+        account_polling(timeout, socket, cache, rpc, next_api);
+    }, timeout);
+}
+
+function account_polling(timeout, socket, cache, rpc, next_api) {
+    const rq_init = request.rq_init,
+        request_ts_utc = rq_init + glob_timezone,
+        request_ts = request_ts_utc - 15000, // 15 second margin
+        api_data = next_api || helper.api_info.data;
+    set_confirmations = request.set_confirmations || 0,
+        cachetime = cache ? (timeout - 1000) / 1000 : 0;
+    rdo = {
+        "request_timestamp": request_ts,
+        "setconfirmations": set_confirmations,
+        "pending": "scanning",
+        "erc20": request.erc20,
+        "source": "acc_polling",
+        socket,
+        timeout,
+        cachetime
+    };
+    if (rpc) {
+        get_rpc_inputs(request, rdo, api_data);
+    } else {
+        get_api_inputs(request, rdo, api_data);
+    }
+    socket_info(api_data, true);
+}
+
+// Polling
+
+// XMR Poll
+
+// Initializes Monero node connection
+function init_xmr_node(cachetime, address, vk, request_ts) {
+    const payload = {
+        "address": address,
+        "view_key": vk,
+        "create_account": true,
+        "generated_locally": false
+    };
+    api_proxy({
+        "api": "mymonero api",
+        "search": "login",
+        "cachetime": 25,
+        "cachefolder": "1h",
+        "proxy": true,
+        "params": {
+            "method": "POST",
+            "data": JSON.stringify(payload),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }
+    }).done(function(e) {
+        const data = br_result(e).result;
+        if (data) {
+            const errormessage = data.Error;
+            if (errormessage) {
+                const error = errormessage || translate("invalidvk");
+                popnotify("error", error);
+                return
+            }
+            const start_height = data.start_height;
+            if (start_height > -1) { // success!
+                glob_pinging[address] = setInterval(function() {
+                    ping_xmr_node(cachetime, address, vk, request_ts);
+                }, 12000);
+                return
+            }
+        }
+        notify(translate("notmonitored"), 500000, "yes");
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        const next_proxy = get_next_proxy();
+        if (next_proxy) {
+            init_xmr_node(cachetime, address, vk, request_ts);
+            return
+        }
+        console.log(jqXHR);
+        console.log(textStatus);
+        console.log(errorThrown);
+        notify(translate("errorvk"));
+    });
+}
+
+// Pings Monero node for transaction updates
+function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
+    if (!glob_paymentpopup.hasClass("active")) { // only when request is visible
+        forceclosesocket();
+        return;
+    }
+    const api_name = "mymonero api",
+        payload = {
+            "address": address,
+            "view_key": vk
+        };
+    api_proxy({
+        "api": api_name,
+        "search": "get_address_txs",
+        "cachetime": cachetime,
+        "cachefolder": "1h",
+        "proxy": true,
+        "params": {
+            "method": "POST",
+            "data": JSON.stringify(payload),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }
+    }).done(function(e) {
+        const data = br_result(e).result,
+            transactions = data.transactions;
+        if (!transactions) return;
+        socket_info({
+            "url": api_name
+        }, true);
+        const set_confirmations = request.set_confirmations || 0,
+            txflip = transactions.reverse();
+        $.each(txflip, function(dat, value) {
+            const txd = xmr_scan_data(value, set_confirmations, "xmr", data.blockchain_height);
+            if (txd) {
+                if (txd.ccval) {
+                    const tx_hash = txd.txhash;
+                    if (tx_hash) {
+                        if (txhash) {
+                            if (txhash === tx_hash) {
+                                confirmations(txd);
+                            }
+                            return
+                        }
+                        if (txd.transactiontime > request_ts) {
+                            const requestlist = $("#requestlist > li.rqli"),
+                                txid_match = filter_list(requestlist, "txhash", tx_hash); // check if txhash already exists
+                            if (txid_match.length) {
+                                return
+                            }
+                            confirmations(txd, true);
+                            if (set_confirmations > 0) {
+                                clearpinging(address);
+                                pick_monitor(tx_hash, txd, {
+                                    "api": true,
+                                    "name": "blockchair_xmr",
+                                    "display": true
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }).fail(function() {
+        clearpinging(address);
+        notify(translate("websocketoffline"), 500000, "yes");
+    });
+}
+
+// Initiates Arbitrum scanning
+function arbi_scan(address, request_ts) {
+    glob_pinging["arbi" + address] = setInterval(function() {
+        ping_arbiscan(address, request_ts);
+    }, 7000);
+}
+
+// Pings Arbiscan for transaction updates
+function ping_arbiscan(address, request_ts) {
+    if (!glob_paymentpopup.hasClass("active")) { // only when request is visible
+        forceclosesocket();
+        return;
+    }
+    const apikeytoken = get_arbiscan_apikey();
+    api_proxy({
+        "api": "arbiscan",
+        "search": "?module=account&action=txlist&address=" + address + "&startblock=0&endblock=latest&page=1&offset=10&sort=desc&apikey=" + apikeytoken,
+        "params": {
+            "method": "GET"
+        }
+    }).done(function(e) {
+        const data = br_result(e).result;
+        if (data) {
+            const result = data.result;
+            if (result && br_issar(result)) {
+                const set_confirmations = request.set_confirmations || 0;
+                $.each(result, function(dat, value) {
+                    const txd = arbiscan_scan_data_eth(value, set_confirmations);
+                    if (txd.transactiontime > request_ts && txd.ccval) {
+                        clearpinging();
+                        const requestlist = $("#requestlist > li.rqli"),
+                            txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
+                        if (txid_match.length) {
+                            return
+                        }
+                        if (set_confirmations > 0) {
+                            pick_monitor(txd.txhash, txd);
+                            return
+                        }
+                        confirmations(txd, true);
+                    }
+                });
+            }
+        }
+    }).fail(function() {
+        clearpinging("arbi" + address);
+        notify(translate("notmonitored"), 500000, "yes");
+    });
+}
+
+// Initiates BNB Smart Chain scanning
+function bnb_scan(address, request_ts, ccsymbol) {
+    glob_pinging["bnb" + address] = setInterval(function() {
+        ping_bnb(address, request_ts, ccsymbol);
+    }, 7000);
+}
+
+// Pings BNB Smart Chain for transaction updates
+function ping_bnb(address, request_ts, ccsymbol) {
+    if (!glob_paymentpopup.hasClass("active")) { // only when request is visible
+        forceclosesocket();
+        return;
+    }
+    api_proxy({
+        "api": "binplorer",
+        "search": "getAddressHistory/" + address + "?type=transfer",
+        "params": {
+            "method": "GET"
+        }
+    }).done(function(e) {
+        const data = br_result(e).result;
+        if (!data) return;
+        const set_confirmations = request.set_confirmations || 0;
+        $.each(data.operations, function(dat, value) {
+            const txd = ethplorer_scan_data(value, set_confirmations, ccsymbol, "binplorer");
+            if (txd.transactiontime > request_ts && txd.ccval) {
+                clearpinging();
+                const requestlist = $("#requestlist > li.rqli"),
+                    txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
+                if (txid_match.length) {
+                    return
+                }
+                if (set_confirmations > 0) {
+                    pick_monitor(txd.txhash, txd);
+                    return
+                }
+                confirmations(txd, true);
+            }
+        });
+    }).fail(function() {
+        clearpinging("bnb" + address);
+    });
+}
+
+// Initiates Nimiq polling
+function nimiq_poll() {
+    init_account_polling(5000, true);
+}
+
+// Initiates Dash.org polling
+function dashorg_poll() {
+    init_account_polling(5000, true);
 }
 
 // Handles transaction confirmations and updates the UI accordingly
@@ -226,101 +499,4 @@ function reset_recent() {
         }
     }
     canceldialog();
-}
-
-// Handles post-scan operations for various cryptocurrencies and APIs
-function after_scan(rq_init, next_api) {
-    const amount_input = $("#mainccinputmirror > input"),
-        input_val = amount_input.val(),
-        api_info = helper.api_info,
-        api_data = next_api || api_info.data,
-        ccsymbol = request.currencysymbol,
-        api_name = api_data.name,
-        request_ts_utc = rq_init + glob_timezone,
-        request_ts = request_ts_utc - 30000, // 30 seconds compensation for unexpected results
-        thislist = $("#" + request.requestid),
-        statuspanel = thislist.find(".pmetastatus"),
-        set_confirmations = request.set_confirmations || 0,
-        rdo = {
-            "thislist": thislist,
-            "statuspanel": statuspanel,
-            "request_timestamp": request_ts,
-            "setconfirmations": set_confirmations,
-            "pending": "scanning",
-            "erc20": request.erc20,
-            "source": "afterscan"
-        };
-    glob_scan_attempts[api_name] = true;
-    if (input_val.length) {
-        if (ccsymbol === "xmr" || ccsymbol === "nim" || request.erc20) {
-            close_paymentdialog();
-            return
-        }
-        ap_loader();
-        if (ccsymbol === "xno") {
-            nano_rpc(request, api_data, rdo);
-            return
-        }
-        if (api_name === "mempool.space") {
-            mempoolspace_rpc(request, api_data, rdo, false);
-            return
-        }
-        if (api_name === "blockcypher") {
-            blockcypher_fetch(request, api_data, rdo);
-            return
-        }
-        if (api_name === "dash.org") {
-            insight_fetch_dash(request, api_data, rdo);
-            return
-        }
-        if (api_name === "blockchair") {
-            blockchair_fetch(request, api_data, rdo);
-            return
-        }
-        if (payment === "kaspa") {
-            kaspa_fetch(request, api_data, rdo);
-            return
-        }
-        if (ccsymbol === "btc" || ccsymbol === "ltc" || ccsymbol === "doge" || ccsymbol === "bch") {
-            if (api_data.default === false) {
-                mempoolspace_rpc(request, api_data, rdo, true);
-                return
-            }
-        }
-    }
-    close_paymentdialog();
-}
-
-// Displays a loader with a custom message during the scanning process
-function ap_loader() {
-    loader(true);
-    loadertext(translate("closingrequest") + " / " + translate("scanningforincoming"));
-}
-
-// Handles the case when a scan fails and attempts to use the next available API
-function after_scan_fails(api_name) {
-    const nextapi = get_next_scan_api(api_name);
-    if (nextapi) {
-        after_scan(request.rq_init, nextapi);
-        return
-    }
-    close_paymentdialog(true);
-}
-
-// Retrieves the next available API for scanning based on the current API name
-function get_next_scan_api(api_name) {
-    const rpc_settings = cs_node(request.payment, "apis", true);
-    if (rpc_settings) {
-        const apirpc = rpc_settings.apis,
-            apilist = apirpc.filter(filter => filter.api);
-
-        if (apilist.length) {
-            const currentIndex = apilist.findIndex(option => option.name === api_name),
-                next_api = apilist[(currentIndex + 1) % apilist.length];
-            if (!glob_scan_attempts[next_api.name]) {
-                return next_api;
-            }
-        }
-    }
-    return false;
 }

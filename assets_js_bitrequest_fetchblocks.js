@@ -465,7 +465,7 @@ function blockcypher_fetch(rd, api_data, rdo) {
         api_proxy({
             "api": "blockcypher",
             "search": rd.currencysymbol + "/main/addrs/" + rd.address,
-            "cachetime": 25,
+            "cachetime": rdo.cachetime,
             "cachefolder": "1h",
             "params": {
                 "method": "GET"
@@ -516,7 +516,7 @@ function blockcypher_fetch(rd, api_data, rdo) {
             api_proxy({
                 "api": "blockcypher",
                 "search": rd.currencysymbol + "/main/txs/" + rd.txhash,
-                "cachetime": 25,
+                "cachetime": rdo.cachetime,
                 "cachefolder": "1h",
                 "params": {
                     "method": "GET"
@@ -569,7 +569,7 @@ function ethplorer_fetch(rd, api_data, rdo) {
         api_proxy({
             "api": api_name,
             "search": "getAddressHistory/" + rd.address + "?type=transfer",
-            "cachetime": 25,
+            "cachetime": rdo.cachetime,
             "cachefolder": "1h",
             "params": {
                 "method": "GET"
@@ -617,7 +617,7 @@ function ethplorer_fetch(rd, api_data, rdo) {
             api_proxy({
                 "api": api_name,
                 "search": "getTxInfo/" + txhash,
-                "cachetime": 25,
+                "cachetime": rdo.cachetime,
                 "cachefolder": "1h",
                 "params": {
                     "method": "GET"
@@ -682,7 +682,7 @@ function arbiscan_fetch(rd, api_data, rdo) {
         eth_payload = {
             "api": api_name,
             "search": "?module=account&action=txlist&address=" + rd.address + "&startblock=0&endblock=latest&page=1&offset=1000&sort=desc&apikey=" + apikeytoken,
-            "cachetime": 25,
+            "cachetime": rdo.cachetime,
             "cachefolder": "1h",
             "params": {
                 "method": "GET"
@@ -691,7 +691,7 @@ function arbiscan_fetch(rd, api_data, rdo) {
         erc20_payload = {
             "api": api_name,
             "search": "?module=account&action=tokentx&contractaddress=" + arb_contract + "&address=" + rd.address + "&page=1&offset=100&startblock=0&endblock=99999999&sort=asc&apikey=" + apikeytoken,
-            "cachetime": 25,
+            "cachetime": rdo.cachetime,
             "cachefolder": "1h",
             "params": {
                 "method": "GET"
@@ -876,7 +876,7 @@ function blockchair_fetch(rd, api_data, rdo) {
         api_proxy({
             "api": api_name,
             "search": scan_url,
-            "cachetime": 25,
+            "cachetime": rdo.cachetime,
             "cachefolder": "1h",
             "params": {
                 "method": "GET"
@@ -958,7 +958,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                 api_proxy({
                     "api": api_name,
                     "search": rd.payment + "/dashboards/transactions/" + txarray.slice(0, 6), // get last 5 transactions
-                    "cachetime": 25,
+                    "cachetime": rdo.cachetime,
                     "cachefolder": "1h",
                     "params": {
                         "method": "GET"
@@ -1004,7 +1004,7 @@ function blockchair_fetch(rd, api_data, rdo) {
             api_proxy({
                 "api": api_name,
                 "search": poll_url,
-                "cachetime": 25,
+                "cachetime": rdo.cachetime,
                 "cachefolder": "1h",
                 "params": {
                     "method": "GET"
@@ -1070,7 +1070,7 @@ function nimiq_fetch(rd, api_data, rdo) {
             api_proxy({
                 "api": "nimiq.watch",
                 "search": "account-transactions/" + rd.address,
-                "cachetime": 25,
+                "cachetime": rdo.cachetime,
                 "cachefolder": "1h",
                 "params": {
                     "method": "GET"
@@ -1120,7 +1120,7 @@ function nimiq_fetch(rd, api_data, rdo) {
                 api_proxy({
                     "api": api_name,
                     "search": "transaction/" + nimiqhash(rd.txhash),
-                    "cachetime": 25,
+                    "cachetime": rdo.cachetime,
                     "cachefolder": "1h",
                     "params": {
                         "method": "GET"
@@ -1160,7 +1160,7 @@ function nimiq_fetch(rd, api_data, rdo) {
                 api_proxy({
                     "api": api_name,
                     "search": "tx/" + rd.txhash,
-                    "cachetime": 25,
+                    "cachetime": rdo.cachetime,
                     "cachefolder": "1h",
                     "params": {
                         "method": "GET"
@@ -1175,7 +1175,7 @@ function nimiq_fetch(rd, api_data, rdo) {
                         api_proxy({
                             "api": api_name,
                             "search": "quick-stats/",
-                            "cachetime": 25,
+                            "cachetime": rdo.cachetime,
                             "cachefolder": "1h",
                             "params": {
                                 "method": "GET"
@@ -1236,7 +1236,7 @@ function kaspa_fetch(rd, api_data, rdo) {
             api_proxy({
                 "api": api_name,
                 "search": "info/virtual-chain-blue-score",
-                "cachetime": 25,
+                "cachetime": rdo.cachetime,
                 "cachefolder": "1h",
                 "params": {
                     "method": "GET"
@@ -1249,7 +1249,7 @@ function kaspa_fetch(rd, api_data, rdo) {
                         api_proxy({
                             "api": api_name,
                             "search": "addresses/" + rd.address + "/full-transactions",
-                            "cachetime": 25,
+                            "cachetime": rdo.cachetime,
                             "cachefolder": "1h",
                             "proxy": true,
                             "params": {
@@ -1305,7 +1305,7 @@ function kaspa_fetch(rd, api_data, rdo) {
                 api_proxy({
                     "api": api_name,
                     "search": "info/virtual-chain-blue-score",
-                    "cachetime": 25,
+                    "cachetime": rdo.cachetime,
                     "cachefolder": "1h",
                     "params": {
                         "method": "GET"
@@ -1318,7 +1318,7 @@ function kaspa_fetch(rd, api_data, rdo) {
                             api_proxy({
                                 "api": api_name,
                                 "search": "transactions/" + rd.txhash,
-                                "cachetime": 25,
+                                "cachetime": rdo.cachetime,
                                 "cachefolder": "1h",
                                 "params": {
                                     "method": "GET"
@@ -1368,7 +1368,7 @@ function kaspa_fetch(rd, api_data, rdo) {
                 api_proxy({
                     "api": api_name,
                     "search": "transactions/" + rd.txhash,
-                    "cachetime": 25,
+                    "cachetime": rdo.cachetime,
                     "cachefolder": "1h",
                     "params": {
                         "method": "GET"
@@ -1421,7 +1421,7 @@ function insight_fetch_dash(rd, api_data, rdo) {
         api_proxy({
             "api": "dash.org",
             "search": "txs?address=" + rd.address,
-            "cachetime": 25,
+            "cachetime": rdo.cachetime,
             "cachefolder": "1h",
             "params": {
                 "method": "GET"
@@ -1466,7 +1466,7 @@ function insight_fetch_dash(rd, api_data, rdo) {
             api_proxy({
                 "api": "dash.org",
                 "search": "tx/" + rd.txhash,
-                "cachetime": 25,
+                "cachetime": rdo.cachetime,
                 "cachefolder": "1h",
                 "params": {
                     "method": "GET"
@@ -1765,7 +1765,7 @@ function nano_rpc(rd, api_data, rdo) {
         api_proxy({
             "api": "nano",
             "search": "account",
-            "cachetime": 25,
+            "cachetime": rdo.cachetime,
             "cachefolder": "1h",
             "custom": "nano_txd",
             "api_url": api_data.url,
@@ -1785,7 +1785,7 @@ function nano_rpc(rd, api_data, rdo) {
             const data = br_result(e).result;
             if (data) {
                 const nano_data = data.data;
-                if (nano_data) {
+                if (nano_data && !$.isEmptyObject(nano_data)) {
                     const pending_array_node = nano_data[0] ? nano_data[0].pending : [],
                         pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
                         history_array_node = nano_data[1] ? nano_data[1].history : [],
@@ -1824,7 +1824,7 @@ function nano_rpc(rd, api_data, rdo) {
         api_proxy({
             "api": "nano",
             "search": "block",
-            "cachetime": 25,
+            "cachetime": rdo.cachetime,
             "cachefolder": "1h",
             "api_url": api_data.url,
             "params": {
@@ -2806,6 +2806,7 @@ function tx_data(rd) {
         "statuspanel": statuspanel,
         "transactionlist": transactionlist,
         "erc20": erc20,
-        "source": "list"
+        "source": "list",
+        "cachetime": 25
     }
 }
