@@ -288,7 +288,7 @@ const glob_apptitle = "Bitrequest",
                             },
                             {
                                 "name": "blockchain.info websocket",
-                                "url": "wss://ws.blockchain.infos/inv",
+                                "url": "wss://ws.blockchain.info/inv",
                                 "display": true
                             }
                         ],
