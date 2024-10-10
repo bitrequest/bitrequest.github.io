@@ -1746,7 +1746,7 @@ const glob_apptitle = "Bitrequest",
                 // for now no api key needed yet
                 // "key_param": "key=",
                 "key_param": null,
-                "api_key": null,
+                "api_key": "no_key",
                 "sign_up": null
             },
             {

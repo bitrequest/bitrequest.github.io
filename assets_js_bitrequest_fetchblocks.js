@@ -1303,7 +1303,7 @@ function kaspa_fetch(rd, api_data, rdo) {
         if (rd.txhash) {
             if (api_name === "kaspa.org") {
                 api_proxy({
-                    "api": api_name,
+                    "api": "kaspa.org",
                     "search": "info/virtual-chain-blue-score",
                     "cachetime": rdo.cachetime,
                     "cachefolder": "1h",
@@ -1316,7 +1316,7 @@ function kaspa_fetch(rd, api_data, rdo) {
                         const current_bluescore = data.blueScore;
                         if (current_bluescore) {
                             api_proxy({
-                                "api": api_name,
+                                "api": "kaspa.org",
                                 "search": "transactions/" + rd.txhash,
                                 "cachetime": rdo.cachetime,
                                 "cachefolder": "1h",
