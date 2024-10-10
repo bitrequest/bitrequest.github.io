@@ -1016,7 +1016,7 @@ const glob_apptitle = "Bitrequest",
                     },
                     "blockexplorers": {
                         "icon": "eye",
-                        "selected": "blocklattice.io",
+                        "selected": "nanexplorer.com",
                         "options": ["nanexplorer.com", "blocklattice.io", "spynano.org", "nanolooker.com"]
                     },
                     "apis": {
