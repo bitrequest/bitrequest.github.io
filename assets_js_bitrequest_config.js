@@ -1017,7 +1017,7 @@ const glob_apptitle = "Bitrequest",
                     "blockexplorers": {
                         "icon": "eye",
                         "selected": "blocklattice.io",
-                        "options": ["blocklattice.io", "nanobrowse.com", "nanocrawler.cc", "nanolooker.com"]
+                        "options": ["nanexplorer.com", "blocklattice.io", "spynano.org", "nanolooker.com"]
                     },
                     "apis": {
                         "icon": "sphere",
@@ -1920,6 +1920,13 @@ const glob_apptitle = "Bitrequest",
                 "address_prefix": "address/"
             },
             {
+                "name": "nanexplorer.com",
+                "url": "https://nanexplorer.com/",
+                "prefix": "nano",
+                "tx_prefix": "block/",
+                "address_prefix": "account/"
+            },
+            {
                 "name": "blocklattice.io",
                 "url": "https://blocklattice.io/",
                 "prefix": "",
@@ -1927,17 +1934,10 @@ const glob_apptitle = "Bitrequest",
                 "address_prefix": "account/"
             },
             {
-                "name": "nanobrowse.com",
-                "url": "https://nanobrowse.com/",
+                "name": "spynano.org",
+                "url": "https://spynano.org/",
                 "prefix": "",
-                "tx_prefix": "block/",
-                "address_prefix": "account/"
-            },
-            {
-                "name": "nanocrawler.cc",
-                "url": "https://nanocrawler.cc/",
-                "prefix": "explorer",
-                "tx_prefix": "block/",
+                "tx_prefix": "hash/",
                 "address_prefix": "account/"
             },
             {
