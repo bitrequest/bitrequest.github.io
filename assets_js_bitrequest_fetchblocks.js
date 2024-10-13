@@ -2301,8 +2301,8 @@ function blockchaininfo_scan_data(data, setconfirmations, ccsymbol, address, lat
             if (setconfirmations === "sort") {
                 return transactiontime;
             }
-            const block_id = q_obj(data, "block.height");
-            conf = (block_id && block_id > 10 && latestblock) ? (latestblock - block_id) + 1 : 0,
+            const block_id = q_obj(data, "block.height"),
+                conf = (block_id && block_id > 10 && latestblock) ? (latestblock - block_id) + 1 : 0,
                 confirmations = q_obj(data, "block.mempool") ? 0 : conf,
                 outputs = data.outputs;
             let outputsum;
