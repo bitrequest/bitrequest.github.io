@@ -759,20 +759,20 @@ const glob_apptitle = "Bitrequest",
                     "apis": {
                         "icon": "sphere",
                         "selected": {
-                            "name": "blockchair",
-                            "url": "blockchair.com",
+                            "name": "blockchain.info",
+                            "url": "blockchain.info",
                             "api": true,
                             "display": true
                         },
                         "apis": [{
-                                "name": "blockchair",
-                                "url": "blockchair.com",
+                                "name": "blockchain.info",
+                                "url": "blockchain.info",
                                 "api": true,
                                 "display": true
                             },
                             {
-                                "name": "blockchain.info",
-                                "url": "blockchain.info",
+                                "name": "blockchair",
+                                "url": "blockchair.com",
                                 "api": true,
                                 "display": true
                             }
