@@ -256,6 +256,12 @@ const glob_apptitle = "Bitrequest",
                                 "display": true
                             },
                             {
+                                "name": "blockchain.info",
+                                "url": "blockchain.info",
+                                "api": true,
+                                "display": true
+                            },
+                            {
                                 "name": "blockchair",
                                 "url": "blockchair.com",
                                 "api": true,
@@ -759,11 +765,18 @@ const glob_apptitle = "Bitrequest",
                             "display": true
                         },
                         "apis": [{
-                            "name": "blockchair",
-                            "url": "blockchair.com",
-                            "api": true,
-                            "display": true
-                        }],
+                                "name": "blockchair",
+                                "url": "blockchair.com",
+                                "api": true,
+                                "display": true
+                            },
+                            {
+                                "name": "blockchain.info",
+                                "url": "blockchain.info",
+                                "api": true,
+                                "display": true
+                            }
+                        ],
                         "options": []
                     },
                     "websockets": {
@@ -1702,6 +1715,13 @@ const glob_apptitle = "Bitrequest",
                 "key_param": "token=",
                 "api_key": null,
                 "sign_up": "https://accounts.blockcypher.com/"
+            },
+            {
+                "name": "blockchain.info",
+                "base_url": "https://api.blockchain.info/haskoin-store/",
+                "key_param": null,
+                "api_key": null,
+                "sign_up": null
             },
             {
                 "name": "ethplorer",

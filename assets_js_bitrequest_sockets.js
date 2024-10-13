@@ -574,7 +574,7 @@ function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
                 notify(translate("waitingforpayment"), 500000);
                 helper.lnd.invoice = e;
                 const txd = lnd_tx_data(e);
-                confirmations(txd, true, true);
+                handle_confirmations(txd, true, true);
                 glob_paymentdialogbox.removeClass("blockd");
                 if (status == "paid") {
                     clearpinging(inv.hash);

@@ -300,6 +300,10 @@ function select_api(rd, rdo, api_dat) {
         mempoolspace_rpc(rd, api_data, rdo, false)
         return
     }
+    if (api_name === "blockchain.info") {
+        blockchaininfo_fetch(rd, api_data, rdo, false)
+        return
+    }
     if (api_name === "blockcypher") {
         blockcypher_fetch(rd, api_data, rdo);
         return
@@ -352,7 +356,7 @@ function scan_match(rd, api_data, rdo, counter, txdat, match, l2) {
     const txhash = rd.txhash || txdat.txhash;
     if (match) {
         if (src === "poll") {
-            const status = confirmations(txdat);
+            const status = handle_confirmations(txdat);
             if (status === "paid") {
                 return
             }

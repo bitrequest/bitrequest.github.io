@@ -11,6 +11,7 @@ $(document).ready(function() {
     //monero_fetch
     //match_xmr_pid
     //blockchair_xmr_poll
+    //blockchaininfo_fetch
     //blockcypher_fetch
     //ethplorer_fetch
     //arbiscan_fetch
@@ -451,6 +452,143 @@ function blockchair_xmr_poll(rd, api_data, rdo) {
         });
     });
 }
+
+// ** blockchain.info API **
+
+// This function fetches and processes transaction data using the blockchain.info API.
+// It handles both scanning for incoming transactions and polling for specific transaction details.
+function blockchaininfo_fetch(rd, api_data, rdo) {
+    const transactionlist = rdo.transactionlist,
+        source = rdo.source;
+    let counter = 0,
+        txdat = false,
+        match = false;
+    api_proxy({ // get latest blockheight
+        "api": "blockchain.info",
+        "search": rd.currencysymbol + "/block/best",
+        "cachetime": rdo.cachetime,
+        "cachefolder": "1h",
+        "params": {
+            "method": "GET"
+        }
+    }).done(function(lb) {
+        const lbdat = br_result(lb);
+        if (lbdat) {
+            const latestblock = q_obj(lbdat, "result.height");
+            if (latestblock) {
+                if (rdo.pending === "scanning") { // scan incoming transactions on address
+                    api_proxy({
+                        "api": "blockchain.info",
+                        "search": rd.currencysymbol + "/address/" + rd.address + "/transactions?limit=20&offset=0",
+                        "cachetime": rdo.cachetime,
+                        "cachefolder": "1h",
+                        "params": {
+                            "method": "GET"
+                        }
+                    }).done(function(e) {
+                        const data = br_result(e).result;
+                        if (data) {
+                            if (data.error) {
+                                tx_api_scan_fail(rd, rdo, api_data, data.error);
+                                return
+                            }
+                            if (br_issar(data)) {
+                                const tx_string = data.map(item => item.txid).join(",");
+                                api_proxy({
+                                    "api": "blockchain.info",
+                                    "search": rd.currencysymbol + "/transactions?txids=" + tx_string, // get transactions
+                                    "cachetime": rdo.cachetime,
+                                    "cachefolder": "1h",
+                                    "params": {
+                                        "method": "GET"
+                                    }
+                                }).done(function(e) {
+                                    const dat = br_result(e).result;
+                                    if (dat) {
+                                        $.each(dat, function(dt, val) {
+                                            const txd = blockchaininfo_scan_data(val, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
+                                            if (txd.transactiontime > rdo.request_timestamp && txd.ccval) { // get all transactions after requestdate
+                                                match = true, txdat = txd;
+                                                if (source === "list") {
+                                                    const tx_listitem = append_tx_li(txd, rd.requesttype);
+                                                    if (tx_listitem) {
+                                                        transactionlist.append(tx_listitem.data(txd));
+                                                        counter++;
+                                                    }
+                                                }
+                                            }
+                                        });
+                                        scan_match(rd, api_data, rdo, counter, txdat, match);
+                                        return
+                                    }
+                                    api_callback(requestid, source);
+                                }).fail(function(jqXHR, textStatus, errorThrown) {
+                                    const error_object = errorThrown || jqXHR;
+                                    tx_api_scan_fail(rd, rdo, api_data, error_object);
+                                });
+                                return
+                            }
+                        }
+                        tx_api_scan_fail(rd, rdo, api_data, default_error);
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        const error_object = errorThrown || jqXHR;
+                        tx_api_scan_fail(rd, rdo, api_data, error_object, true);
+                    }).always(function() {
+                        set_api_src(rdo, api_data);
+                    });
+                    return
+                }
+                if (rdo.pending === "polling") { // poll transaction id
+                    if (rd.txhash) {
+                        api_proxy({
+                            "api": "blockchain.info",
+                            "search": rd.currencysymbol + "/transaction/" + rd.txhash,
+                            "cachetime": rdo.cachetime,
+                            "cachefolder": "1h",
+                            "params": {
+                                "method": "GET"
+                            }
+                        }).done(function(e) {
+                            const data = br_result(e).result;
+                            if (data) {
+                                if (data.error) {
+                                    tx_api_scan_fail(rd, rdo, api_data, data.error);
+                                    return
+                                }
+                                const txd = blockchaininfo_scan_data(data, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
+                                if (txd.ccval) {
+                                    match = true, txdat = txd, counter = 1;
+                                    if (rdo.source === "list") {
+                                        const tx_listitem = append_tx_li(txd, rd.requesttype);
+                                        if (tx_listitem) {
+                                            transactionlist.append(tx_listitem.data(txd));
+                                        }
+                                    }
+                                }
+                                scan_match(rd, api_data, rdo, counter, txdat, match);
+                                return
+                            }
+                            tx_api_scan_fail(rd, rdo, api_data, default_error);
+                        }).fail(function(jqXHR, textStatus, errorThrown) {
+                            const error_object = errorThrown || jqXHR;
+                            tx_api_scan_fail(rd, rdo, api_data, error_object, true);
+                        }).always(function() {
+                            set_api_src(rdo, api_data);
+                        });
+                    }
+                }
+                return
+            }
+        }
+        tx_api_scan_fail(rd, rdo, api_data, default_error);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        const error_object = errorThrown || jqXHR;
+        tx_api_scan_fail(rd, rdo, api_data, error_object, true);
+    }).always(function() {
+        set_api_src(rdo, api_data);
+    });
+}
+
 
 // ** blockcypher API **
 
@@ -2148,6 +2286,47 @@ function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) { // p
             };
         } catch (err) {
             console.error("Error processing Blockcypher ERC20 data:", err);
+            return default_tx_data();
+        }
+    }
+    return default_tx_data();
+}
+
+// This function processes blockchain.info API data for scanning/polling and returns a unified transaction object.
+function blockchaininfo_scan_data(data, setconfirmations, ccsymbol, address, latestblock) { // scan/poll
+    if (data) {
+        try {
+            const transactiontime = data.time ? data.time * 1000 : null,
+                transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
+            if (setconfirmations === "sort") {
+                return transactiontime;
+            }
+            const block_id = q_obj(data, "block.height");
+            conf = (block_id && block_id > 10 && latestblock) ? (latestblock - block_id) + 1 : 0,
+                confirmations = q_obj(data, "block.mempool") ? 0 : conf,
+                outputs = data.outputs;
+            let outputsum;
+            if (outputs) {
+                outputsum = 0;
+                $.each(outputs, function(dat, val) {
+                    const output = str_match(val.address, address) ? Math.abs(val.value) : 0;
+                    outputsum += parseFloat(output) || 0; // sum of outputs
+                });
+            }
+            const ccval = outputs ? outputsum / 1e8 : null,
+                txhash = data.txid || null;
+            return {
+                "ccval": ccval,
+                "transactiontime": transactiontime_utc,
+                "txhash": txhash,
+                "confirmations": conf,
+                "setconfirmations": setconfirmations,
+                "double_spend": false,
+                "instant_lock": false,
+                "ccsymbol": ccsymbol
+            };
+        } catch (err) {
+            console.error("Error processing blockchain.info data:", err);
             return default_tx_data();
         }
     }

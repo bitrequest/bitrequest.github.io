@@ -47,7 +47,7 @@ function api_monitor(txhash, tx_data, api_dat) {
             return
         };
         if (tx_data) {
-            confirmations(tx_data, true);
+            handle_confirmations(tx_data, true);
             if (tx_data.setconfirmations === false) {
                 return
             }
@@ -99,8 +99,8 @@ function account_polling(timeout, socket, cache, rpc, next_api) {
     const rq_init = request.rq_init,
         request_ts_utc = rq_init + glob_timezone,
         request_ts = request_ts_utc - 15000, // 15 second margin
-        api_data = next_api || helper.api_info.data;
-    set_confirmations = request.set_confirmations || 0,
+        api_data = next_api || helper.api_info.data,
+        set_confirmations = request.set_confirmations || 0,
         cachetime = cache ? (timeout - 1000) / 1000 : 0;
     rdo = {
         "request_timestamp": request_ts,
@@ -217,7 +217,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
                     if (tx_hash) {
                         if (txhash) {
                             if (txhash === tx_hash) {
-                                confirmations(txd);
+                                handle_confirmations(txd);
                             }
                             return
                         }
@@ -227,7 +227,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
                             if (txid_match.length) {
                                 return
                             }
-                            confirmations(txd, true);
+                            handle_confirmations(txd, true);
                             if (set_confirmations > 0) {
                                 clearpinging(address);
                                 pick_monitor(tx_hash, txd, {
@@ -286,7 +286,7 @@ function ping_arbiscan(address, request_ts) {
                             pick_monitor(txd.txhash, txd);
                             return
                         }
-                        confirmations(txd, true);
+                        handle_confirmations(txd, true);
                     }
                 });
             }
@@ -333,7 +333,7 @@ function ping_bnb(address, request_ts, ccsymbol) {
                     pick_monitor(txd.txhash, txd);
                     return
                 }
-                confirmations(txd, true);
+                handle_confirmations(txd, true);
             }
         });
     }).fail(function() {
@@ -352,7 +352,7 @@ function dashorg_poll() {
 }
 
 // Handles transaction confirmations and updates the UI accordingly
-function confirmations(tx_data, direct, ln) {
+function handle_confirmations(tx_data, direct, ln) {
     const ccsymbol = tx_data.ccsymbol;
     if (ccsymbol) {
         let new_status = "pending";
