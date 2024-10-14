@@ -356,7 +356,7 @@ function scan_match(rd, api_data, rdo, counter, txdat, match, l2) {
     const txhash = rd.txhash || txdat.txhash;
     if (match) {
         if (src === "poll") {
-            const status = handle_confirmations(txdat);
+            const status = confirmations(txdat);
             if (status === "paid") {
                 return
             }

@@ -2690,9 +2690,17 @@ function canceldialog(pass) {
     if (isopenrequest()) {
         if (request) { // reset after_scan
             request.rq_timer = now();
+            // re initialize websocket
+            const address = request.address
+            if (glob_sockets[address]) {
+                return
+            }
+            if (glob_pinging[address]) {
+                return
+            }
+            init_socket(helper.selected_socket, address);
+            set_request_timer();
         }
-        init_socket(helper.selected_socket, request.address);
-        set_request_timer();
     }
 }
 

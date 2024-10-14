@@ -47,7 +47,7 @@ function api_monitor(txhash, tx_data, api_dat) {
             return
         };
         if (tx_data) {
-            handle_confirmations(tx_data, true);
+            confirmations(tx_data, true);
             if (tx_data.setconfirmations === false) {
                 return
             }
@@ -219,7 +219,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
                     if (tx_hash) {
                         if (txhash) {
                             if (txhash === tx_hash) {
-                                handle_confirmations(txd);
+                                confirmations(txd);
                             }
                             return
                         }
@@ -229,7 +229,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
                             if (txid_match.length) {
                                 return
                             }
-                            handle_confirmations(txd, true);
+                            confirmations(txd, true);
                             if (set_confirmations > 0) {
                                 clearpinging(address);
                                 pick_monitor(tx_hash, txd, {
@@ -289,7 +289,7 @@ function ping_arbiscan(address, request_ts) {
                             pick_monitor(txd.txhash, txd);
                             return
                         }
-                        handle_confirmations(txd, true);
+                        confirmations(txd, true);
                     }
                 });
             }
@@ -337,7 +337,7 @@ function ping_bnb(address, request_ts, ccsymbol) {
                     pick_monitor(txd.txhash, txd);
                     return
                 }
-                handle_confirmations(txd, true);
+                confirmations(txd, true);
             }
         });
     }).fail(function() {
@@ -356,7 +356,7 @@ function dashorg_poll() {
 }
 
 // Handles transaction confirmations and updates the UI accordingly
-function handle_confirmations(tx_data, direct, ln) {
+function confirmations(tx_data, direct, ln) {
     const ccsymbol = tx_data.ccsymbol;
     if (ccsymbol) {
         let new_status = "pending";
@@ -502,5 +502,4 @@ function reset_recent() {
             }
         }
     }
-    canceldialog();
 }

@@ -248,7 +248,7 @@ function lightning_socket(lnd) {
     socket.onmessage = function(e) {
         const result = JSON.parse(e.data);
         if (result.pid == pid) {
-            if (result.status == "pending" && result.bolt11) {
+            if (result.status === "pending" && result.bolt11) {
                 clearpinging(pid);
                 closesocket(pid);
                 lnd_poll_invoice(proxy_host, pk, imp, result, pid, nid);
@@ -256,7 +256,7 @@ function lightning_socket(lnd) {
                     lnd_poll_invoice(proxy_host, pk, imp, result, pid, nid);
                 }, 5000);
             }
-            if (result.status == "confirm" && !glob_lnd_confirm) {
+            if (result.status === "confirm" && !glob_lnd_confirm) {
                 glob_lnd_confirm = true;
                 glob_paymentdialogbox.addClass("accept_lnd");
                 notify(translate("acceptthepayment"), 500000);
@@ -577,9 +577,9 @@ function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
                 notify(translate("waitingforpayment"), 500000);
                 helper.lnd.invoice = e;
                 const txd = lnd_tx_data(e);
-                handle_confirmations(txd, true, true);
+                confirmations(txd, true, true);
                 glob_paymentdialogbox.removeClass("blockd");
-                if (status == "paid") {
+                if (status === "paid") {
                     clearpinging(inv.hash);
                     helper.currencylistitem.removeData("url");
                     br_remove_local("editurl");
