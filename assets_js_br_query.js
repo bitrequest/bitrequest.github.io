@@ -699,6 +699,11 @@ function capitalize(str) {
 
 // ** Query helpers ** //
 
+// See if request is opened
+function isopenrequest() {
+    return glob_paymentpopup.hasClass("active");
+}
+
 // Retrieves a setting value
 function get_setting(setting, dat) {
     return $("#" + setting).data(dat);

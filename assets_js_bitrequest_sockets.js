@@ -500,7 +500,7 @@ function abort_ndef() {
 
 // Polls Lightning Network data for payment status
 function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
-    if (glob_paymentpopup.hasClass("active")) { // only when request is visible
+    if (isopenrequest()) { // only when request is visible
         const default_error = translate("unabletoconnect");
         $.ajax({
             "method": "POST",
@@ -550,7 +550,7 @@ function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
 
 // Polls Lightning Network invoice status
 function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
-    if (glob_paymentpopup.hasClass("active")) { // only when request is visible
+    if (isopenrequest()) { // only when request is visible
         const default_error = "unable to connect";
         $.ajax({
             "method": "POST",
@@ -1163,7 +1163,7 @@ function handle_socket_fails(socket_node, thisaddress, socketid) {
     if (glob_paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
         return
     }
-    if (glob_paymentpopup.hasClass("active")) { // only when request is visible
+    if (isopenrequest()) { // only when request is visible
         const next_socket = try_next_socket(socket_node),
             wsid = (socketid) ? socketid : thisaddress;
         if (next_socket) {
@@ -1204,7 +1204,7 @@ function ws_recon(recon) {
     const c_time = now() - glob_ws_timer;
     if (c_time < 10000) return;
     const timeout = setTimeout(function() {
-        if (glob_paymentpopup.hasClass("active")) {
+        if (isopenrequest()) {
             recon.function(recon.node, address);
         }
     }, 2000, function() {

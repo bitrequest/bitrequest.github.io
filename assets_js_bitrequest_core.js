@@ -893,10 +893,9 @@ function ios_redirections(url) {
         newpage = url.toUpperCase();
     if (currenturl === newpage) return;
     if (br_get_local("editurl") === glob_w_loc.search) return;
-    const isrequest = newpage.includes("PAYMENT="),
-        isopenrequest = glob_paymentpopup.hasClass("active");
+    const isrequest = newpage.includes("PAYMENT=");
     if (isrequest) {
-        if (isopenrequest) {
+        if (isopenrequest()) {
             cancelpaymentdialog();
             setTimeout(function() {
                 openpage(url, "", "payment");
@@ -1120,7 +1119,7 @@ function loadfunction(pagename, thisevent) {
 
 // Cancels any active dialogs related to URL changes
 function cancel_url_dialogs() {
-    if (glob_paymentpopup.hasClass("active")) {
+    if (isopenrequest()) {
         cancelpaymentdialog();
     }
     if (glob_body.hasClass("showcam")) {
@@ -1835,7 +1834,7 @@ function escapeandback() {
     if (glob_body.hasClass("showstartpage")) {
         startprev($(".panelactive"));
     }
-    if (glob_paymentpopup.hasClass("active")) {
+    if (isopenrequest()) {
         if (glob_paymentdialogbox.hasClass("flipped") && glob_paymentdialogbox.hasClass("norequest")) {
             remove_flip();
         } else {
@@ -1904,6 +1903,7 @@ function payment_lookup(request_dat) {
     if ($("#dismiss").length) {
         return false;
     }
+    forceclosesocket();
     const currency = request.payment,
         blockexplorer = get_blockexplorer(currency),
         bu_url = blockexplorer_url(currency, false, request_dat.erc20) + request_dat.address,
@@ -1953,7 +1953,7 @@ function dismiss_payment_lookup() {
             block_payment_lookup();
         }
         canceldialog();
-        if (glob_paymentpopup.hasClass("active")) {
+        if (isopenrequest()) {
             close_paymentdialog();
         }
     })
@@ -2687,10 +2687,11 @@ function canceldialog(pass) {
     }, 600, function() {
         clearTimeout(timeout);
     });
-    if (glob_paymentpopup.hasClass("active")) {
+    if (isopenrequest()) {
         if (request) { // reset after_scan
             request.rq_timer = now();
         }
+        init_socket(helper.selected_socket, request.address);
         set_request_timer();
     }
 }

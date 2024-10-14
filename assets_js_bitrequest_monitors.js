@@ -364,7 +364,7 @@ function scan_match(rd, api_data, rdo, counter, txdat, match, l2) {
                 return
             }
             glob_pinging[txhash] = setInterval(function() {
-                if (glob_paymentpopup.hasClass("active")) { // only when request is visible
+                if (isopenrequest()) { // only when request is visible
                     if (is_api) {
                         select_api(rd, rdo, api_data);
                     } else {

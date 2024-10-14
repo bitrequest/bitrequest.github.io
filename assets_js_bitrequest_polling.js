@@ -178,7 +178,7 @@ function init_xmr_node(cachetime, address, vk, request_ts) {
 
 // Pings Monero node for transaction updates
 function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
-    if (!glob_paymentpopup.hasClass("active")) { // only when request is visible
+    if (!isopenrequest()) { // only when request is visible
         forceclosesocket();
         return;
     }
@@ -256,7 +256,7 @@ function arbi_scan(address, request_ts) {
 
 // Pings Arbiscan for transaction updates
 function ping_arbiscan(address, request_ts) {
-    if (!glob_paymentpopup.hasClass("active")) { // only when request is visible
+    if (!isopenrequest()) { // only when request is visible
         forceclosesocket();
         return;
     }
@@ -306,7 +306,7 @@ function bnb_scan(address, request_ts, ccsymbol) {
 
 // Pings BNB Smart Chain for transaction updates
 function ping_bnb(address, request_ts, ccsymbol) {
-    if (!glob_paymentpopup.hasClass("active")) { // only when request is visible
+    if (!isopenrequest()) { // only when request is visible
         forceclosesocket();
         return;
     }
