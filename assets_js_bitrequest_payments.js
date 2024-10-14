@@ -1249,7 +1249,7 @@ function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cache
         fiatapi === "currencylayer" ? "currencylayer.com" :
         fiatapi === "coinbase" ? "coinbase.com" :
         null,
-        xratedata1 = "<div data-currency='" + request.currencysymbol + "' data-value='' data-xrate='" + ccrateeuro + "' class='cpool ccpool' data-currencyname='" + request.payment + "'><span>" + ccapi + ": <span class='ratesspan'>" + request.currencysymbol + "_" + request.uoa + ": " + (1 / (ccrateeuro / currentrate)).toFixed(8) + "</span></span></div><div class='cachetime'> (" + (cachetimecrypto / 60000).toFixed(1) + " of " + (glob_cacheperiodcrypto / 60000).toFixed(0) + " min. in cache)</div><br/><div class='mainrate'>" + fiatapiurl + ": </div>",
+        xratedata1 = "<div data-currency='" + request.currencysymbol + "' data-value='' data-xrate='" + ccrateeuro + "' class='cpool ccpool' data-currencyname='" + request.payment + "'><span>" + ccapi + ": <span class='ratesspan'>" + request.currencysymbol + "_" + request.uoa + ": " + (1 / (ccrateeuro / currentrate)).toFixed(2) + "</span></span></div><div class='cachetime'> (" + (cachetimecrypto / 60000).toFixed(1) + " of " + (glob_cacheperiodcrypto / 60000).toFixed(0) + " min. in cache)</div><br/><div class='mainrate'>" + fiatapiurl + ": </div>",
         xratedata2 = [];
     xrates_array.push({
         "currency": request.currencysymbol,
@@ -1257,10 +1257,10 @@ function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cache
         "currencyname": request.payment
     });
     $.each(data, function(thiscurrency, rate) {
-        const parsedrate = (rate / currentrate).toFixed(6) / 1,
+        const parsedrate = (rate / currentrate) / 1,
             ratesspanclass = parsedrate === 1 ? " hide" : "",
             currencyname = glob_symbolcache[thiscurrency.toUpperCase()],
-            xratedatarray = "<div data-currency='" + thiscurrency + "' data-value='' data-xrate='" + rate + "' class='cpool' data-currencyname='" + currencyname + "'><span class='ratesspan" + ratesspanclass + "'>" + request.uoa + "_" + thiscurrency + ": " + parsedrate + "</span></div>";
+            xratedatarray = "<div data-currency='" + thiscurrency + "' data-value='' data-xrate='" + rate + "' class='cpool' data-currencyname='" + currencyname + "'><span class='ratesspan" + ratesspanclass + "'>" + request.uoa + "_" + thiscurrency + ": " + parsedrate.toFixed(2) + "</span></div>";
         xratedata2.push(xratedatarray);
         xrates_array.push({
             "currency": thiscurrency,
@@ -1666,8 +1666,8 @@ function rendercpooltext(nextcurrency, newccrate) {
             newrate = thisnoderate / newccrate,
             ccpool = thisnode.hasClass("ccpool"),
             parsedtext = ccpool ? thiscurrency + "_" + nextcurrency : nextcurrency + "_" + thiscurrency,
-            parsedrate = ccpool ? (1 / newrate).toFixed(8) : newrate.toFixed(6),
-            thisnodetext = parsedtext + ": " + parsedrate / 1,
+            parsedrate = ccpool ? 1 / newrate : newrate,
+            thisnodetext = parsedtext + ": " + (parsedrate / 1).toFixed(2),
             ratesspan = thisnode.find(".ratesspan");
         ratesspan.toggleClass("hide", parsedrate == 1).text(thisnodetext);
     });
