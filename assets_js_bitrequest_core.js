@@ -3906,8 +3906,9 @@ function get_pdf_url(rqdat) {
         invd[transclear("firstviewed")] = utc_format;
     }
     if (status === "paid") {
+        const amountpaidreceived = incoming ? translate("amountpaid") : translate("amountreceived");
         invd[transclear("paidon")] = ptsformatted;
-        invd[transclear("amountreceived")] = receivedamount_rounded + " " + payment;
+        invd[amountpaidreceived] = receivedamount_rounded + " " + payment;
         if (!iscrypto) {
             invd[transclear("fiatvalueon") + " " + ptsformatted] = fiatvalue_rounded + " " + currencyname;
         }
@@ -4325,8 +4326,9 @@ function appendrequest(rd) {
         amount_short_span = insufficient ? " (" + amount_short_rounded + " " + uoa_upper + " " + translate("amountshort") + ")" : "",
         amount_short_cc_span = iscrypto ? amount_short_span : "",
         created = requestdate ? requestdateformatted : "<strong>unknown</strong>",
+        amountpaidreceived = incoming ? translate("amountpaid") : translate("amountreceived"),
         fiatvaluebox = iscrypto || !fiatvalue ? "" : "<li class='payday pd_fiat'><strong>" + translate("fiatvalueon") + "<span class='pd_fiat'> " + ptsformatted + "</span> :</strong><span class='fiatvalue'> " + fiatvalue_rounded + "</span> " + currencyname + "<div class='show_as amountshort'>" + amount_short_span + "</div></li>",
-        paymentdetails = "<li class='payday pd_paydate'><strong>" + translate("paidon") + ":</strong><span class='paydate'> " + ptsformatted + "</span></li><li class='receivedamount'><strong>" + translate("amountreceived") + ":</strong><span> " + receivedamount_rounded + "</span> " + payment + "<div class='show_as amountshort'>" + amount_short_cc_span + "</div></li>" + fiatvaluebox,
+        paymentdetails = "<li class='payday pd_paydate'><strong>" + translate("paidon") + ":</strong><span class='paydate'> " + ptsformatted + "</span></li><li class='receivedamount'><strong>" + amountpaidreceived + ":</strong><span> " + receivedamount_rounded + "</span> " + payment + "<div class='show_as amountshort'>" + amount_short_cc_span + "</div></li>" + fiatvaluebox,
         requestnamebox = incoming ? rqdata ? "<li><strong>" + translate("from") + ":</strong> " + requestname + "</li>" : "<li><strong>From: unknown</strong></li>" : "",
         requesttitlebox = requesttitle ? "<li><strong>" + translate("title") + ":</strong> '<span class='requesttitlebox'>" + requesttitle + "</span>'</li>" : "",
         ismonitoredspan = !monitored ? " (unmonitored transaction)" : "",

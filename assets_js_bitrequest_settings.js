@@ -1792,29 +1792,31 @@ function complile_csv() {
             nw_string = network || "";
         if (shouldIncludeRequest(status, type, incl_paid, incl_ins, incl_new, incl_pending, incl_pos, incl_outgoing, incl_incoming)) {
             if (incl_from) {
-                csv_request[translate("from")] = rqname;
+                csv_request[transclear("from")] = rqname;
             }
             if (incl_desc) {
-                csv_request[translate("title")] = description;
+                csv_request[transclear("title")] = description;
             }
-            csv_request[translate("currency")] = payment + lnd_string;
-            csv_request[translate("status")] = translate(status);
-            csv_request[translate("network")] = nw_string;
+            csv_request[transclear("currency")] = payment + lnd_string;
+            csv_request[transclear("status")] = transclear(status);
+            csv_request[transclear("network")] = nw_string;
             const rq_type = type === "local" ? "point of sale" : type;
-            csv_request[translate("type")] = translate(rq_type);
-            csv_request[translate("created")] = short_date(timestamp);
-            csv_request[translate("amount")] = amount + " " + uoa;
-            const ra_val = receivedamount ? receivedamount + " " + ccsymbol : "";
-            csv_request[translate("amountreceived")] = ra_val;
-            const fv = fiatvalue ? fiatvalue.toFixed(2) + " " + fiatcurrency : "";
-            csv_request[translate("fiatvalue")] = fv;
-            csv_request[translate("sendon")] = received_ts;
+            csv_request[transclear("type")] = transclear(rq_type);
+            csv_request[transclear("created")] = short_date(timestamp);
+            csv_request[transclear("amount")] = amount + " " + uoa;
+            const ra_val = receivedamount ? receivedamount + " " + ccsymbol : "",
+                paidreceived = type === "incoming" ? transclear("paid") : transclear("received"),
+                pttitle = transclear("amount") + " " + transclear("received") + " / " + transclear("paid"),
+                fv = fiatvalue ? fiatvalue.toFixed(2) + " " + fiatcurrency : "";
+            csv_request[pttitle] = ra_val + " (" + paidreceived + ")";
+            csv_request[transclear("fiatvalue")] = fv;
+            csv_request[transclear("sendon")] = received_ts;
             if (incl_address) {
-                csv_request[translate("receivingaddress")] = address;
+                csv_request[transclear("receivingaddress")] = address;
             }
             csv_request.txhash = txhash;
             if (incl_receipt) {
-                csv_request["PDF download (" + translate("receipt") + ")"] = pdf_url;
+                csv_request["PDF download (" + transclear("receipt") + ")"] = pdf_url;
             }
             csv_arr.push(csv_request);
         }
