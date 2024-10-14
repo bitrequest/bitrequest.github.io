@@ -3906,7 +3906,7 @@ function get_pdf_url(rqdat) {
         invd[transclear("firstviewed")] = utc_format;
     }
     if (status === "paid") {
-        const amountpaidreceived = incoming ? translate("amountpaid") : translate("amountreceived");
+        const amountpaidreceived = incoming ? transclear("amountpaid") : transclear("amountreceived");
         invd[transclear("paidon")] = ptsformatted;
         invd[amountpaidreceived] = receivedamount_rounded + " " + payment;
         if (!iscrypto) {
