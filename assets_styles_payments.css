@@ -209,10 +209,7 @@ html.inframe #paymentdialogbox[data-pending="no"].transacting #view_tx {
 	0% {
 		transform: scale(1) rotate(0deg);
 	}
-	94% {
-		transform: scale(1) rotate(0deg);
-	}
-	97% {
+	50% {
 		transform: scale(1.1) rotate(180deg);
 	}
 	100% {
@@ -505,8 +502,8 @@ html.inframe #request_back {
 	-webkit-transform: translate3d(0, 0, 0);
 }
 
-#payment.live .qrwrap img.cmc_icon {
-	animation: iconpulse 10000ms linear infinite;
+#paymentdialogbox.poll .qrwrap img.cmc_icon {
+	animation: iconpulse 750ms linear forwards;
 }
 
 #paymentdialogbox.transacting #rf_wrap {

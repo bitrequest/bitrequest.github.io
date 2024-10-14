@@ -242,6 +242,7 @@ function lightning_socket(lnd) {
         socket.send(ping_event);
         glob_pinging[pid] = setInterval(function() {
             socket.send(ping_event);
+            poll_animate();
         }, 55000);
     };
     socket.onmessage = function(e) {
@@ -513,6 +514,7 @@ function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
                 "x-api": pk
             }
         }).done(function(e) {
+            poll_animate();
             const error = e.error;
             if (error) {
                 const message = error?.message ?? (typeof e.error === "string" ? error : default_error);
@@ -568,6 +570,7 @@ function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
                 "x-api": pk
             }
         }).done(function(e) {
+            poll_animate();
             const status = e.status;
             if (status) {
                 request.address = "lnurl"; // make it a lightning request
@@ -617,6 +620,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
         websocket.send(ping_event);
         glob_pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
+            poll_animate();
         }, 55000);
     };
     websocket.onmessage = function(e) {
@@ -661,6 +665,7 @@ function blockchain_btc_socket(socket_node, thisaddress) {
         websocket.send(ping_event);
         glob_pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
+            poll_animate();
         }, 55000);
     };
     websocket.onmessage = function(e) {
@@ -706,6 +711,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
         websocket.send(ping_event);
         glob_pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
+            poll_animate();
         }, 55000);
     };
     websocket.onmessage = function(e) {
@@ -750,6 +756,7 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
         mps_websocket.send(ping_event);
         glob_pinging[thisaddress] = setInterval(function() {
             mps_websocket.send(ping_event);
+            poll_animate();
         }, 55000);
     };
     mps_websocket.onmessage = function(e) {
@@ -800,6 +807,7 @@ function dogechain_info_socket(socket_node, thisaddress) {
         websocket.send(ping_event);
         glob_pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
+            poll_animate();
         }, 55000);
     };
     websocket.onmessage = function(e) {
@@ -853,6 +861,7 @@ function nano_socket(socket_node, thisaddress) {
         websocket.send(ping_event);
         glob_pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
+            poll_animate();
         }, 55000);
     };
     websocket.onmessage = function(e) {
@@ -903,6 +912,7 @@ function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
         websocket.send(ping_event);
         glob_pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
+            poll_animate();
         }, 55000);
     };
     websocket.onmessage = function(e) {
@@ -1026,6 +1036,7 @@ function alchemy_eth_websocket(socket_node, thisaddress) {
         websocket.send(ping_event);
         glob_pinging[thisaddress] = setInterval(function() {
             websocket.send(ping_event);
+            poll_animate();
         }, 55000);
     };
     websocket.onmessage = function(e) {

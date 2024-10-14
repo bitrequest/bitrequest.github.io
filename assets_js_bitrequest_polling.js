@@ -117,6 +117,7 @@ function account_polling(timeout, socket, cache, rpc, next_api) {
     } else {
         get_api_inputs(request, rdo, api_data);
     }
+    poll_animate();
     socket_info(api_data, true);
 }
 
@@ -201,6 +202,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
             }
         }
     }).done(function(e) {
+        poll_animate();
         const data = br_result(e).result,
             transactions = data.transactions;
         if (!transactions) return;
@@ -268,6 +270,7 @@ function ping_arbiscan(address, request_ts) {
             "method": "GET"
         }
     }).done(function(e) {
+        poll_animate();
         const data = br_result(e).result;
         if (data) {
             const result = data.result;
@@ -317,6 +320,7 @@ function ping_bnb(address, request_ts, ccsymbol) {
             "method": "GET"
         }
     }).done(function(e) {
+        poll_animate();
         const data = br_result(e).result;
         if (!data) return;
         const set_confirmations = request.set_confirmations || 0;

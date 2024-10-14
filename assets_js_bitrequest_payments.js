@@ -38,6 +38,7 @@ $(document).ready(function() {
     //remove_flip
     //face_front
     //face_back
+    //poll_animate
 
     // ** Paymentdialog **
 
@@ -406,6 +407,13 @@ function face_back() {
             }, 300);
         }
     }
+}
+
+function poll_animate() {
+    glob_paymentdialogbox.removeClass("poll");
+    setTimeout(function() {
+        glob_paymentdialogbox.addClass("poll");
+    }, 100);
 }
 
 // ** Paymentdialog **
