@@ -337,7 +337,14 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                             }
                                         }, proxy_host).done(function(e) {
                                             const result = br_result(e).result;
-                                            if (result.status == "ERROR") {
+                                            if (!result) { // catch lightning node connection failure
+                                                playsound(glob_funk);
+                                                notify(translate("unabletoconnectln"), 5000);
+                                                glob_paymentdialogbox.removeClass("accept_lnd");
+                                                glob_ndef_processing = false;
+                                                return
+                                            }
+                                            if (result.status === "ERROR") {
                                                 playsound(glob_funk);
                                                 const error_message = result.reason;
                                                 notify(error_message, 5000);
