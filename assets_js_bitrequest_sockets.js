@@ -382,13 +382,9 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                 if (k1) {
                                                     const descr = $("#paymentdialog input#requesttitle").val(),
                                                         final_descr = (descr && descr.length > 1) ? descr + " (Boltcard)" :
-                                                        (result.defaultDescription) ? result.defaultDescription : "bitrequest " + pid + " (Boltcard)";
-                                                    $.ajax({
-                                                        "method": "POST",
-                                                        "cache": false,
-                                                        "timeout": 5000,
-                                                        "url": proxy_host + "proxy/v1/ln/api/",
-                                                        "data": {
+                                                        (result.defaultDescription) ? result.defaultDescription : "bitrequest " + pid + " (Boltcard)",
+                                                        rqtype = request.requesttype,
+                                                        postdata = {
                                                             "imp": imp,
                                                             "fn": "ln-create-invoice",
                                                             "amount": milli_sats,
@@ -397,7 +393,16 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                             "nid": nid,
                                                             "expiry": 60,
                                                             "x-api": pk
-                                                        }
+                                                        };
+                                                    if (rqtype === "incoming") {
+                                                        postdata.b11 = true;
+                                                    }
+                                                    $.ajax({
+                                                        "method": "POST",
+                                                        "cache": false,
+                                                        "timeout": 5000,
+                                                        "url": proxy_host + "proxy/v1/ln/api/",
+                                                        "data": postdata
                                                     }).done(function(inv1) {
                                                         const invoice = inv1.bolt11;
                                                         if (invoice) {

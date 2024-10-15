@@ -171,13 +171,13 @@ if ($imp == "lnd" || $imp == "eclair" || $imp == "c-lightning" || $imp == "lnbit
 						$contents = json_decode($b64_dec, true);
 						if ($contents) {
 							if ($contents["host"]) {
-                                // use cached host
+								// use cached host
 								$host = $contents["host"];
 								$type = "cache";
 								$isproxy = false;
 							}
 							if ($contents["key"]) {
-                                // use cached key
+								// use cached key
 								$key = $contents["key"];
 							}
 						}
@@ -187,25 +187,25 @@ if ($imp == "lnd" || $imp == "eclair" || $imp == "c-lightning" || $imp == "lnbit
 		}
 		$cred = $setup[$imp];
 		if ($cred["host"]) {
-            // prioritize server host
+			// prioritize server host
 			$host = $cred["host"];
 			$type = "lnurl";
 			$isproxy = true;
 		}
 		if ($cred["key"]) {
-            // prioritize server key
+			// prioritize server key
 			$key = $cred["key"];
 		}
 		$posthost = isset($pdat["host"]) ? $pdat["host"] : false;
 		$postkey = isset($pdat["key"]) ? $pdat["key"] : false;
 		if ($posthost) {
-            // prioritize post host
+			// prioritize post host
 			$host = $posthost;
 			$type = "post";
 			$isproxy = false;
 		}
 		if ($postkey) {
-            // prioritize post key
+			// prioritize post key
 			$key = $postkey;
 			$isproxy = false;
 		}
@@ -243,8 +243,31 @@ if ($imp == "lnd" || $imp == "eclair" || $imp == "c-lightning" || $imp == "lnbit
 			$lnurl_id = $type == "lnurl" ? " (LNURL)" : "";
 			$memo = $pdat["memo"] ? $pdat["memo"] . $lnurl_id : null;
 			$invoice = create_invoice($imp, $p_pid, $host, $key, $amount, $memo, $type, $pingtest, "test", null, null, $p_expiry);
-			echo json_encode($invoice);
-			return;
+			if ($invoice) {
+				$b11 = isset($pdat["b11"]) ? $pdat["b11"] : false;
+				if ($b11) {
+					$path = "cache/tx/" . $p_pid;
+					if (file_exists($path)) {
+						$s_content = [
+							"pid" => $p_pid,
+							"status" => "pending",
+							"bolt11" => $invoice["bolt11"],
+							"hash" => $invoice["hash"],
+							"amount" => (int)$amount,
+							"amount_paid" => null,
+							"timestamp" => time() * 1000,
+							"txtime" => null,
+							"conf" => 0,
+							"rqtype" => "outgoing",
+							"proxy" => $serverhost
+						];
+						$tx_content = json_encode($s_content);
+						file_put_contents($path, $tx_content);
+					}
+				}
+				echo json_encode($invoice);
+				return;
+			}
 		}
 		if ($fn == "ln-list-invoices") {
 			$invoices = list_invoices($imp, $host, $key, $type, $pingtest);
@@ -530,6 +553,9 @@ function create_invoice($imp, $pid, $host, $key, $amount, $memo, $type, $pingtes
 		$pl = [];
 		if ($memo) {
 			$pl["description"] = $memo;
+			if ($src == "lnurl" && $desc_hash) {
+				$pl["description_hash"] = $desc_hash;
+			}
 		}
 		if ($amount) {
 			$pl["amountMsat"] = $amount;
