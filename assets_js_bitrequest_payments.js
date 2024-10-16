@@ -2386,7 +2386,7 @@ function share(thisbutton) {
                 "amount": thisamount,
                 "uoa": thiscurrency
             }),
-            share_icon = lightning ? glob_localhostname + "/img_logos_btc-lnd.png" : glob_cmc_icon_loc + cmcid + ".png";
+            share_icon = lightning ? glob_approot + "img_logos_btc-lnd.png" : glob_cmc_icon_loc + cmcid + ".png";
         if (isipfs) {
             sharerequest(sharedurl, sharedtitle);
             setlocales();
