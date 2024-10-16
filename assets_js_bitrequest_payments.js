@@ -2790,7 +2790,7 @@ function saverequest(direct) {
         ln_id = ln_info ? ln_info.pid : "",
         sc_string = ln_info ? "1" : (set_confirmations ? set_confirmations.toString() : "0"),
         amount_string = thisamount ? thisamount.toString() : "0",
-        thisaddress = request.address === "lnurl" ? "lnurl" : gets.address, // if lightning payment, overwrite address 
+        thisaddress = gets.address,
         thisdata = gets.d,
         thismeta = gets.m,
         timestamp = now_utc(), // UTC
@@ -2812,7 +2812,6 @@ function saverequest(direct) {
         lightning = false;
     if (ln_info) {
         if (thisaddress === "lnurl") {
-            request.address = thisaddress;
             hybrid = false;
         }
         invoice = ln_info.invoice,
