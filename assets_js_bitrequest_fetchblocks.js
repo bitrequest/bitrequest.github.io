@@ -98,115 +98,136 @@ function lightning_fetch(rd, api_data, rdo) {
                 "x-api": pk
             }
         }).done(function(r) {
-            const error = r.error;
+            const error = r.error,
+                version = r.version;
+            if (version !== glob_proxy_version) {
+                proxy_alert(version);
+            }
             if (error) {
                 const message = error ? (error.message || (typeof error === "string" ? error : default_error)) : default_error;
                 tx_api_fail(thislist, statuspanel);
                 handle_api_fails(rd, rdo, {
                     "error": message,
                     "console": true
-                }, false);
+                });
                 status_field.text(" " + message);
-            } else {
-                const inv_status = r.status;
-                status_field.text(" " + inv_status);
-                if (r.pid === lnd.pid) {
-                    if (r.bolt11) {
-                        $.ajax({
-                            "method": "POST",
-                            "cache": false,
-                            "timeout": 5000,
-                            "url": proxy_host + "proxy/v1/ln/api/",
-                            "data": {
-                                "fn": "ln-invoice-status",
-                                "imp": imp,
-                                "hash": r.hash,
-                                "id": pid,
-                                "nid": nid,
-                                "callback": "no",
-                                "type": rd.requesttype,
-                                "x-api": pk
+                if (!ln_only) {
+                    continue_select_api(rd, rdo, api_data);
+                }
+                return
+            }
+            const inv_status = r.status;
+            status_field.text(" " + inv_status);
+            if (r.pid === lnd.pid) {
+                if (r.bolt11) {
+                    $.ajax({
+                        "method": "POST",
+                        "cache": false,
+                        "timeout": 5000,
+                        "url": proxy_host + "proxy/v1/ln/api/",
+                        "data": {
+                            "fn": "ln-invoice-status",
+                            "imp": imp,
+                            "hash": r.hash,
+                            "id": pid,
+                            "nid": nid,
+                            "callback": "no",
+                            "type": rd.requesttype,
+                            "x-api": pk
+                        }
+                    }).done(function(e) {
+                        const inv_error = e.error;
+                        if (inv_error) {
+                            const err_message = inv_error.message || (typeof inv_error === "string" ? inv_error : default_error);
+                            tx_api_fail(thislist, statuspanel);
+                            handle_api_fails(rd, rdo, {
+                                "error": err_message,
+                                "console": true
+                            });
+                            status_field.text(" " + err_message);
+                            if (!ln_only) {
+                                continue_select_api(rd, rdo, api_data);
                             }
-                        }).done(function(e) {
-                            const inv_error = e.error;
-                            if (inv_error) {
-                                const err_message = inv_error.message || (typeof inv_error === "string" ? inv_error : default_error);
-                                tx_api_fail(thislist, statuspanel);
-                                handle_api_fails(rd, rdo, {
-                                    "error": err_message,
-                                    "console": true
-                                }, false);
-                                status_field.text(" " + err_message);
-                            } else {
-                                const status = e.status;
-                                if (status) {
-                                    lnd.invoice = e;
-                                    status_field.text(" " + status);
-                                    rd.lightning = lnd; // push invoice
-                                    const txd = lnd_tx_data(e);
-                                    if (txd.ccval) {
-                                        const tx_listitem = append_tx_li(txd, rd.requesttype, true);
-                                        if (tx_listitem) {
-                                            transactionlist.append(tx_listitem.data(txd));
-                                            tx_count(statuspanel, txd.confirmations);
-                                            if (status === "canceled") {
-                                                updaterequest({
-                                                    "requestid": rd.requestid,
-                                                    "status": "canceled",
-                                                    "confirmations": 0
-                                                }, false);
-                                                api_callback(rd.requestid);
-                                            } else {
-                                                compareamounts(rd);
-                                            }
-                                        }
+                            return
+                        }
+                        const status = e.status;
+                        if (status) {
+                            lnd.invoice = e;
+                            status_field.text(" " + status);
+                            rd.lightning = lnd; // push invoice
+                            const txd = lnd_tx_data(e);
+                            if (txd.ccval) {
+                                const tx_listitem = append_tx_li(txd, rd.requesttype, true);
+                                if (tx_listitem) {
+                                    transactionlist.append(tx_listitem.data(txd));
+                                    tx_count(statuspanel, txd.confirmations);
+                                    if (status === "canceled") {
+                                        updaterequest({
+                                            "requestid": rd.requestid,
+                                            "status": "canceled",
+                                            "confirmations": 0
+                                        }, false);
+                                        api_callback(rd.requestid);
+                                        return
                                     }
+                                    compareamounts(rd);
+                                    return
                                 }
                             }
-                        }).fail(function(jqXHR, textStatus, errorThrown) {
-                            tx_api_fail(thislist, statuspanel);
-                            const error_object = errorThrown || jqXHR;
-                            handle_api_fails(rd, rdo, error_object, false);
-                        });
-                    } else {
-                        tx_count(statuspanel, 0);
-                        handle_api_fails(rd, rdo, {
-                            "error": "invoice not found",
-                            "console": true
-                        }, false);
-                    }
-                } else {
-                    if (inv_status === "not found") {
-                        updaterequest({
-                            "requestid": rd.requestid,
-                            "status": "expired",
-                            "pending": "no",
-                            "confirmations": 0
-                        }, true);
-                    }
-                    handle_api_fails(rd, rdo, {
-                        "error": "payment id not found",
-                        "console": true
-                    }, false);
+                        }
+                        if (!ln_only) {
+                            continue_select_api(rd, rdo, api_data);
+                        }
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        tx_api_fail(thislist, statuspanel);
+                        const error_object = errorThrown || jqXHR;
+                        handle_api_fails(rd, rdo, error_object);
+                        if (!ln_only) {
+                            continue_select_api(rd, rdo, api_data);
+                        }
+                    });
+                    return
                 }
+                tx_count(statuspanel, 0);
+                handle_api_fails(rd, rdo, {
+                    "error": "invoice not found",
+                    "console": true
+                });
+                if (!ln_only) {
+                    continue_select_api(rd, rdo, api_data);
+                }
+                return
             }
-            const version = r.version;
-            if (version !== glob_proxy_version) {
-                proxy_alert(version);
+            if (inv_status === "not found") {
+                updaterequest({
+                    "requestid": rd.requestid,
+                    "status": "expired",
+                    "pending": "no",
+                    "confirmations": 0
+                }, true);
+            }
+            handle_api_fails(rd, rdo, {
+                "error": "payment id not found",
+                "console": true
+            });
+            if (!ln_only) {
+                continue_select_api(rd, rdo, api_data);
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
             tx_api_fail(thislist, statuspanel);
             const error_object = errorThrown || jqXHR;
-            handle_api_fails(rd, rdo, error_object, false);
+            handle_api_fails(rd, rdo, error_object);
+            if (!ln_only) {
+                continue_select_api(rd, rdo, api_data);
+            }
         }).always(function() {
             set_api_src(rdo, {
                 "name": "proxy"
             });
         });
-        if (ln_only) {
-            return "exit";
-        }
-    } else if (rdo.pending === "polling" && lnhash) {
+        return
+    }
+    if (rdo.pending === "polling" && lnhash) {
         const invoice = lnd.invoice;
         if (invoice) {
             if (transactionhash) {
@@ -259,14 +280,13 @@ function lightning_fetch(rd, api_data, rdo) {
                         "name": "proxy"
                     });
                 });
-                return "exit";
             }
+            return
         }
         handle_api_fails(rd, rdo, {
             "error": "invoice not found",
             "console": true
         }, false);
-        return "exit";
     }
 }
 

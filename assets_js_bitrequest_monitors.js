@@ -15,6 +15,7 @@ $(document).ready(function() {
     //get_api_inputs_init
     //get_api_inputs
     //select_api
+    //continue_select_api
     //fail_dialogs
     //scan_match
     //tx_count
@@ -283,11 +284,14 @@ function select_api(rd, rdo, api_dat) {
         api_name = api_data.name;
     glob_api_attempts[rq_id + api_name] = true;
     if (rd.lightning && rdo.source === "list") {
-        const l_fetch = lightning_fetch(rd, api_data, rdo);
-        if (l_fetch === "exit") {
-            return
-        }
+        lightning_fetch(rd, api_data, rdo);
+        return
     }
+    continue_select_api(rd, rdo, api_data);
+}
+
+function continue_select_api(rd, rdo, api_data) {
+    const api_name = api_data.name;
     if (api_name === "mymonero api") {
         monero_fetch(rd, api_data, rdo);
         return
