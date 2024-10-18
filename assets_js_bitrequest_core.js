@@ -908,10 +908,11 @@ function ios_redirections(url) {
     }
     if (gets.i) {
         // expand shorturl don't open page
-    } else {
-        const pagename = gets.p || "prompt";
-        openpage(url, pagename, "page");
+    } 
+    else if (gets.data) {
+        glob_w_loc.href = url;
     }
+    else
     if (is_opendialog() === true) {
         canceldialog();
         setTimeout(function() {
