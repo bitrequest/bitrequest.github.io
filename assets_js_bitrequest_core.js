@@ -912,7 +912,10 @@ function ios_redirections(url) {
     else if (gets.data) {
         glob_w_loc.href = url;
     }
-    else
+    else {
+        const pagename = gets.p || "prompt";
+        openpage(url, pagename, "page");
+    }
     if (is_opendialog() === true) {
         canceldialog();
         setTimeout(function() {
