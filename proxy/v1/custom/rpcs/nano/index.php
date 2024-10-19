@@ -56,7 +56,7 @@ if ($payload) {
     }
     $pending_payload = json_encode(
         [
-            "action" => "accounts_receivable",
+            "action" => "accounts_pending",
             "accounts" => [$account],
             "include_active" => true,
             "count" => 50,
