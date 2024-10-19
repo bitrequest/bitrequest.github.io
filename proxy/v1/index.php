@@ -63,6 +63,7 @@ $ampersand1 = ($ampersand) ? $ampersand : "";
 $key_param_var = ($auth_token && $keyparam != "bearer") ? $ampersand1 . $key_param1 . $auth_token : "";
 $key_param2 = ($apikey && $nokey == "true") ? "" : $key_param_var;
 $new_url = $apiurl . $key_param2;
+
 if ($custom) {
     if ($custom == "gk") {
         $key_array = base64_encode(
@@ -88,8 +89,8 @@ if ($custom) {
         return;
     }
     if ($custom == "nano_txd") {
-        include "custom/rpcs/nano/index.php";
-        $result = nano($apiurl, $search, $data_var, $postheaders, $cache_time, $cache_folder, null, null);
+        $nano_url = "https://" . $_SERVER["HTTP_HOST"] . "/proxy/v1/custom/rpcs/nano/?pl=" . base64_encode(json_encode($data_var));
+        $result = api($nano_url, $data_var, $postheaders, $cache_time, $cache_folder, null, null);
         echo json_encode([
             "ping" => $result
         ]);
@@ -122,6 +123,7 @@ if ($custom) {
     }
     return;
 }
+
 $result = api($new_url, $data_var, $postheaders, $cache_time, $cache_folder, null, null);
 echo json_encode([
     "ping" => $result

@@ -1,8 +1,12 @@
 <?php
 // PROXY
-$GLOBALS["version"] = "0.010";
+
+function version() {
+    return "0.011";
+}
+
 function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
-    $version = "0.010";
+    $version = version();
     $cf = isset($cfd) ? $cfd : false;
     if (!$cf) {
         $curl_result = curl_get($url, $data, $headers);
@@ -37,7 +41,7 @@ function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
                 "cache_time" => $ctime,
                 "time_in_cache" => $time_in_cache,
                 "utc_timestamp" => $time,
-                "version" => $version
+                "version" => version()
             ];
             $cache_contents = json_decode(file_get_contents($cache_file), true);
             $meta_contents = [
@@ -103,11 +107,11 @@ function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
 
 // CURL
 function curl_get($url, $data, $headers) {
-	if (strpos($url, ".onion")) { // use TOR
-		include "ln/tor/index.php";
-		$result = fetch_tor($url, $data, $headers);
-		return $result;
-	}
+    if (strpos($url, ".onion")) { // use TOR
+        include "ln/tor/index.php";
+        $result = fetch_tor($url, $data, $headers);
+        return $result;
+    }
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     if (!empty($headers)) {

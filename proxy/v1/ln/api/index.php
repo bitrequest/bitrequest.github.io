@@ -78,7 +78,7 @@ if ($fn == "put") {
 		"status" => "waiting",
 		"rqtype" => $rqtype,
 		"proxy" => $serverhost,
-		"version" => $version
+		"version" => version()
 	];
 	if ($pl) {
 		$creds = isset($pl["cred"]) ? $pl["cred"] : false;
@@ -119,7 +119,7 @@ if ($fn == "put") {
 							"status" => "waiting",
 							"rqtype" => $rqtype,
 							"proxy" => $serverhost,
-							"version" => $version
+							"version" => version()
 						];
 						$stat_resp = true;
 					}
@@ -132,7 +132,7 @@ if ($fn == "put") {
 			"creds" => $cred_resp,
 			"stat" => $stat_resp,
 			"content" => $stat_content,
-			"version" => $version
+			"version" => version()
 		]
 	);
 	echo $response;
@@ -990,7 +990,7 @@ function r_objl2($dat) {
 		[
 			"ping" => [
 				"br_cache" => [
-					"version" => $GLOBALS["version"],
+					"version" => "0.011",
 				],
 				"br_result" => $dat
 			],

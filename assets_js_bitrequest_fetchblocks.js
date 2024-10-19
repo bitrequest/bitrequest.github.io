@@ -1932,42 +1932,28 @@ function nano_rpc(rd, api_data, rdo) {
                 "method": "POST",
                 "cache": true,
                 "data": JSON.stringify({
-                    "action": "accounts_pending",
-                    "accounts": [rd.address],
-                    "sorting": true,
-                    "include_active": true,
-                    "count": 100
+                    "account": rd.address,
+                    "node": api_data.url
                 })
             }
         }).done(function(e) {
             const data = br_result(e).result;
-            if (data) {
-                const nano_data = data.data;
-                if (nano_data && !$.isEmptyObject(nano_data)) {
-                    const pending_array_node = nano_data[0] ? nano_data[0].pending : [],
-                        pending_array = $.isEmptyObject(pending_array_node) ? [] : pending_array_node,
-                        history_array_node = nano_data[1] ? nano_data[1].history : [],
-                        history_array = $.isEmptyObject(history_array_node) ? [] : history_array_node,
-                        merged_array = pending_array.concat(history_array).sort(function(x, y) { // merge and sort arrays
-                            return y.local_timestamp - x.local_timestamp;
-                        }),
-                        sortlist = sort_by_date(nano_scan_data, merged_array);
-                    $.each(sortlist, function(data, value) {
-                        const txd = nano_scan_data(value, rdo.setconfirmations, rd.currencysymbol);
-                        if (txd.transactiontime > rdo.request_timestamp && txd.ccval && (value.type === undefined || value.type === "receive")) {
-                            match = true, txdat = txd;
-                            if (source === "list") {
-                                const tx_listitem = append_tx_li(txd, rd.requesttype);
-                                if (tx_listitem) {
-                                    transactionlist.append(tx_listitem.data(txd));
-                                    counter++;
-                                }
+            if (data && !$.isEmptyObject(data)) {
+                $.each(data, function(data, value) {
+                    const txd = nano_scan_data(value, rdo.setconfirmations, rd.currencysymbol);
+                    if ((txd.transactiontime > rdo.request_timestamp) && txd.ccval && (value.subtype === "receive" || value.receivable)) {
+                        match = true, txdat = txd;
+                        if (source === "list") {
+                            const tx_listitem = append_tx_li(txd, rd.requesttype);
+                            if (tx_listitem) {
+                                transactionlist.append(tx_listitem.data(txd));
+                                counter++;
                             }
                         }
-                    });
-                    scan_match(rd, api_data, rdo, counter, txdat, match);
-                    return
-                }
+                    }
+                });
+                scan_match(rd, api_data, rdo, counter, txdat, match);
+                return
             }
             tx_api_scan_fail(rd, rdo, api_data, default_error);
         }).fail(function(jqXHR, textStatus, errorThrown) {
