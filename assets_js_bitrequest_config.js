@@ -17,7 +17,7 @@ const glob_apptitle = "Bitrequest",
         "https://www.bitrequest.app/"
     ],
     glob_hosted_proxy = random_array_item(glob_proxy_list), // load balance proxies
-    glob_proxy_version = "0.010",
+    glob_proxy_version = "0.012",
     glob_firebase_dynamic_link_domain = "bitrequest.page.link",
     glob_firebase_shortlink = "https://" + glob_firebase_dynamic_link_domain + "/",
     glob_androidpackagename = "io.bitrequest.app",

@@ -1,148 +1,176 @@
 <?php
-include "../../../api.php";
-$getdata = $_GET;
-$default_node = "https://www.bitrequest.app:8020";
-$payload = isset($getdata["pl"]) ? json_decode(base64_decode($getdata["pl"]), true) : false;
-$transformed_pending_array = array();
-$merged_history = array();
+require_once "../../../api.php";
 
-if ($payload) {
-    $pl_array = json_decode($payload, true);
-    $node = isset($pl_array["node"]) ? $pl_array["node"] : $default_node;
-    $account = isset($pl_array["account"]) ? $pl_array["account"] : false;
+const DEFAULT_NODE = "https://www.bitrequest.app:8020";
+const MAX_HISTORY_COUNT = 25;
+const MAX_PENDING_COUNT = 25;
+
+// Main function to process Nano transactions
+function main() {
+    $payload = get_payload();
+    if (!$payload) {
+        send_jsonresponse(["error" => "Invalid payload"]);
+        return;
+    }
+	$pl_array = json_decode($payload, true);
+    $node = $pl_array["node"] ?? DEFAULT_NODE;
+    $account = $pl_array["account"] ?? null;
+
+    if (!$account) {
+        send_jsonresponse(["error" => "Account not provided"]);
+        return;
+    }
+
     $headers = ["Content-Type: application/json"];
-    $history_payload = json_encode(
-        [
-            "action" => "account_history",
-            "account" => $account,
-            "count" => 25,
-            "raw" => true
-        ],
-        true
-    );
-    $history_result = api($node, $history_payload, $headers, null, null, null, null);
-    $history_data = $history_result["br_result"];
-    $historic_hashes = array();
-    if ($history_data && empty($history_data["error"])) {
-        $history_blocks = isset($history_data["history"]) ? $history_data["history"] : false;
-        if ($history_blocks) {
-            foreach ($history_blocks as $key => $value) {
-                $receivable = isset($value["receivable"]);
-                if ($value["subtype"] == "receive" || $receivable) {
-                    $historic_hashes[] = $value["link"];
-                }
-            }
-        }
+
+    $mergedHistory = get_account_history($node, $account, $headers);
+    $transformedPendingArray = get_account_pending($node, $account, $headers);
+
+    if (!empty($transformedPendingArray) && !empty($mergedHistory)) {
+        $result = sort_array(merge_arrays($transformedPendingArray, $mergedHistory));
+    } elseif (!empty($transformedPendingArray)) {
+        $result = sort_array($transformedPendingArray);
+    } elseif (!empty($mergedHistory)) {
+        $result = sort_array($mergedHistory);
+    } else {
+        $result = ["message" => "No transactions found"];
     }
-    if (!empty($historic_hashes)) {
-        $historyblock_info_payload = json_encode(
-            [
-                "action" => "blocks_info",
-                "json_block" => true,
-                "pending" => true,
-                "source" => true,
-                "hashes" => $historic_hashes
-            ],
-            true
-        );
-        $history_block_result = api($node, $historyblock_info_payload, $headers, null, null, null, null);
-        $history_info_data = $history_block_result["br_result"];
-        if ($history_info_data && empty($history_info_data["error"]) && is_array($history_info_data)) {
-            $transformed_history_array = transform_object($history_info_data);
-            $merged_history = merge_timestamps($history_blocks, $transformed_history_array);
-        } else {
-            $merged_history = $history_blocks;
-        }
+
+    send_jsonresponse($result);
+}
+
+// Retrieves and decodes the payload from GET parameters
+function get_payload() {
+    $rawPayload = $_GET["pl"] ?? null;
+    if (!$rawPayload) {
+        return null;
     }
-    $pending_payload = json_encode(
-        [
-            "action" => "accounts_pending",
-            "accounts" => [$account],
-            "include_active" => true,
-            "count" => 50,
-        ],
-        true
-    );
+    return json_decode(base64_decode($rawPayload), true);
+}
+
+// Sends a JSON response with appropriate headers
+function send_jsonresponse($data) {
+    header("Content-Type: application/json");
+    echo json_encode($data, JSON_PRETTY_PRINT);
+}
+
+// Fetches account history from the Nano node
+function get_account_history($node, $account, $headers) {
+    $historyPayload = [
+        "action" => "account_history",
+        "account" => $account,
+        "count" => MAX_HISTORY_COUNT,
+        "raw" => true
+    ];
+
+    $historyResult = api($node, json_encode($historyPayload), $headers, null, null, null, null);
+    $historyData = $historyResult["br_result"] ?? null;
+
+    if (!$historyData || !empty($historyData["error"])) {
+        return [];
+    }
+
+    $historyBlocks = $historyData["history"] ?? [];
+    $historicHashes = array_reduce($historyBlocks, function($carry, $block) {
+        if ($block["subtype"] == "receive" || isset($block["receivable"])) {
+            $carry[] = $block["link"];
+        }
+        return $carry;
+    }, []);
+
+    if (empty($historicHashes)) {
+        return $historyBlocks;
+    }
+
+    $historyBlockInfoPayload = [
+        "action" => "blocks_info",
+        "json_block" => true,
+        "pending" => true,
+        "source" => true,
+        "hashes" => $historicHashes
+    ];
+
+    $historyBlockResult = api($node, json_encode($historyBlockInfoPayload), $headers, null, null, null, null);
+    $historyInfoData = $historyBlockResult["br_result"] ?? null;
+
+    if (!$historyInfoData || !empty($historyInfoData["error"]) || !is_array($historyInfoData)) {
+        return $historyBlocks;
+    }
+
+    $transformedHistoryArray = transform_object($historyInfoData);
+    return merge_timestamps($historyBlocks, $transformedHistoryArray);
+}
+
+// Fetches pending transactions for the account from the Nano node
+function get_account_pending($node, $account, $headers) {
+    $pendingPayload = [
+        "action" => "accounts_pending",
+        "accounts" => [$account],
+        "include_active" => true,
+        "count" => MAX_PENDING_COUNT,
+    ];
+
     sleep(1); // set 1 second timeout for too many api calls on the nano api proxy
-    $receivable_result = api($node, $pending_payload, $headers, null, null, null, null);
-    if ($receivable_result) {
-        $pending_data = $receivable_result["br_result"];
-        if ($pending_data) {
-            $pending_blocks = isset($pending_data["blocks"][$account]) ? $pending_data["blocks"][$account] : false;
-            if ($pending_blocks) {
-                $limit_blocks = array_slice($pending_blocks, 0, 30);
-                $pendingblock_info_payload = json_encode(
-                    [
-                        "action" => "blocks_info",
-                        "json_block" => true,
-                        "pending" => true,
-                        "source" => true,
-                        "hashes" => array_values($limit_blocks)
-                    ],
-                    true
-                );
-                $pending_result = api($node, $pendingblock_info_payload, $headers, null, null, null, null);
-                $pendingblock_info_data = $pending_result["br_result"];
-                $transformed_pending_array = transform_object($pendingblock_info_data);
-            }
-        }
-        if (!empty($transformed_pending_array) && !empty($merged_history)) {
-            //echo("pending and history");
-            $merge_and_sort = sort_array(merge_arrays($transformed_pending_array, $merged_history));
-            echo json_encode($merge_and_sort, true);
-            return;
-        }
-        if (!empty($transformed_pending_array)) {
-            //echo("pending");
-            $sort_pending = sort_array($transformed_pending_array);
-            echo json_encode($sort_pending, true);
-            return;
-        }
-        if (!empty($merged_history)) {
-            //echo("history");
-            $sort_history = sort_array($merged_history);
-            echo json_encode($sort_history, true);
-            return;
-        }
+
+    $receivableResult = api($node, json_encode($pendingPayload), $headers, null, null, null, null);
+    $pendingData = $receivableResult["br_result"] ?? null;
+
+    if (!$pendingData) {
+        return [];
     }
+
+    $pendingBlocks = $pendingData["blocks"][$account] ?? [];
+    if (empty($pendingBlocks)) {
+        return [];
+    }
+
+    $pendingBlockInfoPayload = [
+        "action" => "blocks_info",
+        "json_block" => true,
+        "pending" => true,
+        "source" => true,
+        "hashes" => array_values($pendingBlocks)
+    ];
+
+    $pendingResult = api($node, json_encode($pendingBlockInfoPayload), $headers, null, null, null, null);
+    $pendingBlockInfoData = $pendingResult["br_result"] ?? null;
+
+    return transform_object($pendingBlockInfoData);
 }
 
-// Function to transform the object
+// Transforms block data into a more usable format
 function transform_object($obj) {
-    $result = [];
-    foreach ($obj["blocks"] as $key => $value) {
-        $value["hash"] = $key;
-        $result[] = $value;
+    if (!isset($obj["blocks"]) || !is_array($obj["blocks"])) {
+        return [];
     }
-    return $result;
+    return array_map(function($key, $value) {
+        $value["hash"] = $key;
+        return $value;
+    }, array_keys($obj["blocks"]), $obj["blocks"]);
 }
 
-function merge_timestamps($history, $history_blocks) {
-    // Create a lookup array for historyblocks
-    $lookup = array();
-    foreach ($history_blocks as $block) {
-        $lookup[$block["hash"]] = $block["local_timestamp"];
-    }
-    // Merge timestamps into history
-    foreach ($history as &$item) {
+// Merges timestamp information into the history blocks
+function merge_timestamps($history, $historyBlocks) {
+    $lookup = array_column($historyBlocks, "local_timestamp", "hash");
+    return array_map(function($item) use ($lookup) {
         if (isset($lookup[$item["link"]])) {
             $item["local_timestamp"] = $lookup[$item["link"]];
         }
-    }
-    return $history;
+        return $item;
+    }, $history);
 }
 
+// Merges two arrays
 function merge_arrays($array1, $array2) {
     return array_merge($array1, $array2);
 }
 
+// Sorts an array of transactions by timestamp in descending order
 function sort_array($array) {
-    // Define a comparison function for usort
-    $compare_function = function($a, $b) {
+    usort($array, function($a, $b) {
         return $b["local_timestamp"] - $a["local_timestamp"];
-    };
-    // Sort the merged array using the comparison function
-    usort($array, $compare_function);
+    });
     return $array;
 }
-?>
+
+main();

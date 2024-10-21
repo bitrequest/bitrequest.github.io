@@ -908,11 +908,9 @@ function ios_redirections(url) {
     }
     if (gets.i) {
         // expand shorturl don't open page
-    } 
-    else if (gets.data) {
+    } else if (gets.data) {
         glob_w_loc.href = url;
-    }
-    else {
+    } else {
         const pagename = gets.p || "prompt";
         openpage(url, pagename, "page");
     }
@@ -4539,7 +4537,9 @@ function resetchanges() {
     glob_changes = {};
     savechangesstats();
     glob_body.removeClass("haschanges");
-    $("#alert > span").text("0").attr("title", translate("nochanges"));
+    if (!glob_html.hasClass("proxyupdate")) {
+        $("#alert > span").text("0").attr("title", translate("nochanges"));
+    }
 }
 
 // Saves the changes statistics to local storage
@@ -4559,9 +4559,11 @@ function change_alert() {
     }
     const total_changes = get_total_changes();
     if (total_changes > 0) {
-        $("#alert > span").text(total_changes).attr("title", translate("totalchanges", {
-            "total_changes": total_changes
-        }));
+        if (!glob_html.hasClass("proxyupdate")) {
+            $("#alert > span").text(total_changes).attr("title", translate("totalchanges", {
+                "total_changes": total_changes
+            }));
+        }
         setTimeout(function() {
             glob_body.addClass("haschanges");
         }, 2500);
@@ -4685,6 +4687,7 @@ function get_alchemy_apikey() {
 // Displays an alert for proxy updates
 function proxy_alert(version) {
     if (version) {
+        glob_html.addClass("proxyupdate");
         glob_body.addClass("haschanges");
         $("#alert > span").text("!").attr("title", translate("updateproxy", {
             "version": version,

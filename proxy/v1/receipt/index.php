@@ -1,56 +1,42 @@
 <?php
-	$data = "";
-	$output = "";
-	$requestid = "";
-	$download = "inline";
-	if (isset($_GET["data"])) {
-		$dataparam = $_GET["data"];
-		$data = json_decode(base64_decode($dataparam));
-		$requestid = $data->{"Request ID"};
-	}
-	else {
-		return false;
-	}
-	if (isset($_GET["download"])) {
-		$download = "attachment";
-	}
-	$index = 0; 
-	foreach ($data as $key => $value) {
-		$margin = 650 - ($index * 20);
-        $output .= " BT /F1 12 Tf 50 " . $margin . " Td (" . $key . ": " . $value . ")Tj ET ";
-		$index++;
-    };
-	$content = "%PDF-1.7
+// Function to safely get GET parameters
+function get_param($key, $default = null) {
+    return $_GET[$key] ?? $default;
+}
+
+// Function to generate PDF content
+function generate_pdf_content($data) {
+    $output = "";
+    $index = 0;
+    foreach ($data as $key => $value) {
+        $margin = 650 - ($index * 20);
+        $output .= " BT /F1 12 Tf 50 $margin Td ($key: $value)Tj ET ";
+        $index++;
+    }
+    return "%PDF-1.7
 1 0 obj
 << /Type /Catalog /Outlines 2 0 R /Pages 3 0 R >>
 endobj
-
 2 0 obj
 << /Type /Outlines /Count 0 >>
 endobj
-
 3 0 obj
 << /Type /Pages /Kids [4 0 R] /Count 1 >>
 endobj
-
 4 0 obj
 << /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Contents 5 0 R /Resources << /ProcSet 6 0 R /Font << /F1 7 0 R >> >> >>
 endobj
-
 5 0 obj
 << /Length 48 >>
 stream
-BT/F1 24 Tf 50 700 Td (RECEIPT)Tj ET " . $output . " BT/F1 8 Tf 505 15 Td (Powered by bitrequest.io)Tj ET endstream
+BT/F1 24 Tf 50 700 Td (RECEIPT)Tj ET $output BT/F1 8 Tf 505 15 Td (Powered by bitrequest.io)Tj ET endstream
 endobj
-
 6 0 obj
 [/PDF /Text]
 endobj
-
 7 0 obj
 << /Type /Font /Subtype /Type1 /Name /F1 /BaseFont /Arial /Encoding /MacRomanEncoding >>
 endobj
-
 xref
 0 8
 0000000000 65535 f
@@ -66,11 +52,33 @@ trailer
 startxref
 642
 %%EOF";
-	header("Content-Type: application/pdf");
+}
+
+// Main execution
+try {
+    $dataparam = get_param("data");
+    if (!$dataparam) {
+        throw new Exception("No data provided");
+    }
+
+    $data = json_decode(base64_decode($dataparam), true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        throw new Exception("Invalid JSON data");
+    }
+
+    $requestId = $data["Request ID"] ?? "unknown";
+    $download = get_param("download") ? "attachment" : "inline";
+    $content = generate_pdf_content($data);
+
+    header("Content-Type: application/pdf");
     header("Content-Length: " . strlen($content));
-    header("Content-Disposition: " . $download . "; filename=bitrequest_receipt_" . $requestid . ".pdf");
+    header("Content-Disposition: $download; filename=bitrequest_receipt_$requestId.pdf");
     header("Cache-Control: private, max-age=0, must-revalidate");
     header("Pragma: public");
-    ini_set("zlib.output_compression","0");
-    die($content);
-?>
+    ini_set("zlib.output_compression", "0");
+
+    echo $content;
+} catch (Exception $e) {
+    header("HTTP/1.1 400 Bad Request");
+    echo "Error: " . $e->getMessage();
+}
