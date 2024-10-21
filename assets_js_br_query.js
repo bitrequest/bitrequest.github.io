@@ -638,7 +638,6 @@ function fetch_aws(filename, bckt) {
 
 // Retrieves and processes key data
 function gk() {
-    console.log(glob_io);
     const k = glob_io.k;
     if (k) {
         const pk = JSON.parse(atob(k));
