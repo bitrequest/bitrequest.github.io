@@ -1,4 +1,4 @@
-# Lightning Proxy README
+# API / Lightning Proxy README
 
 ## Update
 
