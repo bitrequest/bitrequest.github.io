@@ -5,9 +5,6 @@ const CACHE_DIR = "api/cache/" . CACHE_TIME . "/";
 const DEFAULT_TITLE = "Bitrequest";
 const DEFAULT_MESSAGE = "⚠️ Request not found or expired";
 
-error_reporting(E_ALL);
-ini_set("display_errors", 1);
-
 // Function to safely get GET parameters
 function get_param($key, $default = null) {
     return $_GET[$key] ?? $default;
