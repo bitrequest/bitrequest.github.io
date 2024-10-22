@@ -3,6 +3,7 @@
 header("Content-Type: application/json");
 header("Access-Control-Allow-Headers: Cache-Control, Pragma");
 //header("Access-Control-Allow-Origin: *"); // uncomment for nginx
+
 include "../../../config.php";
 include "../../api.php";
 
@@ -11,7 +12,6 @@ if (isset($pdat["ping"])) {
     echo r_objl2("pong");
     return;
 }
-
 $gdat = $_GET;
 
 // Server and request information
@@ -28,7 +28,7 @@ $provided_api_key = $pdat["x-api"] ?? false;
 $post_api_key = (strlen($provided_api_key) == 10) ? $provided_api_key : substr(hash("sha256", $provided_api_key), 0, 10);
 
 // Error messages
-$key_error = "API key required for $server_path";
+$key_error = "API key required for " . $server_path;
 $wrong_key = "Wrong API key for lightning Proxy";
 
 // GET and POST data handling
@@ -40,12 +40,18 @@ $get_id = $gdat["id"] ?? false;
 
 // ID parsing
 $type = $get_id ? substr($get_id, 0, 1) : false;
-$type_text = match ($type) {
-    "1" => "local",
-    "2" => "outgoing",
-    "3" => "checkout",
-    default => "unknown"
-};
+$type_text = "unknown";
+switch ($type) {
+    case "1":
+        $type_text = "local";
+        break;
+    case "2":
+        $type_text = "outgoing";
+        break;
+    case "3":
+        $type_text = "checkout";
+        break;
+}
 $g_pid = $get_id ? substr($get_id, 1, 10) : false;
 $g_nid = ($get_id && strlen($get_id) > 15) ? substr($get_id, 11) : false;
 
@@ -65,19 +71,19 @@ $remote_tracking = $setup["remote_tracking"] === "yes" ? "yes" : "no";
 // Check if API key is required and validate it
 if ($api_key && !$lnget) {
     if ($post_apikey === "false") {
-        echo json_encode(r_err($key_error, 1), JSON_THROW_ON_ERROR);
+        echo json_encode(r_err($key_error, 1));
         return;
     }
     if ($post_apikey !== $key_hash) {
-        echo json_encode(r_err($wrong_key, 2), JSON_THROW_ON_ERROR);
+        echo json_encode(r_err($wrong_key, 2));
         return;
     }
 }
 
 // Handle "add" operation
 if (isset($pdat["add"])) {
-    $result = api(null, json_encode($pdat, JSON_THROW_ON_ERROR), null, 0, "tx", null, null);
-    echo json_encode(["ping" => $result], JSON_THROW_ON_ERROR);
+    $result = api(null, json_encode($pdat), null, 0, "tx", null, null);
+    echo json_encode(["ping" => $result]);
     return;
 }
 
@@ -103,7 +109,6 @@ if ($fn === "put") {
         "proxy" => $server_host,
         "version" => VERSION
     ];
-
     if ($pl) {
         // Process credentials if available
         $creds = $pl["cred"] ?? false;
@@ -114,7 +119,6 @@ if ($fn === "put") {
                 $cred_resp = true;
             }
         }
-
         // Process status information
         if ($status) {
             $statfile = "cache/tx/" . $status;
@@ -124,37 +128,31 @@ if ($fn === "put") {
                     $stat_obj = json_decode($get_content, true);
                     $stat_obj["status"] = "waiting";
                     $stat_content = $stat_obj;
-                    file_put_contents($statfile, json_encode($stat_content, JSON_THROW_ON_ERROR));
+                    file_put_contents($statfile, json_encode($stat_content));
                 }
                 $stat_resp = true;
             } else {
-                $put_result = api(null, json_encode($stat_content, JSON_THROW_ON_ERROR), null, 0, "tx", null, $status);
+                $put_result = api(null, json_encode($stat_content), null, 0, "tx", null, $status);
                 $p_result = $put_result["br_result"] ?? false;
                 if ($p_result) {
-                    $put_error = $p_result["error"] ?? false;
-                    if ($put_error) {
-                        $stat_resp = $put_error["message"] ?? false;
-                    } else {
-                        $stat_content = [
-                            "pid" => $status,
-                            "status" => "waiting",
-                            "rqtype" => $rqtype,
-                            "proxy" => $server_host,
-                            "version" => VERSION
-                        ];
-                        $stat_resp = true;
-                    }
+	                $stat_content = [
+                        "pid" => $status,
+                        "status" => "waiting",
+                        "rqtype" => $rqtype,
+                        "proxy" => $server_host,
+                        "version" => VERSION
+                    ];
+                    $stat_resp = true;
                 }
             }
         }
     }
-
     $response = json_encode([
         "creds" => $cred_resp,
         "stat" => $stat_resp,
         "content" => $stat_content,
         "version" => VERSION
-    ], JSON_THROW_ON_ERROR);
+    ]);
     echo $response;
     return;
 }
@@ -169,7 +167,7 @@ if ($fn === "ln-request-status" && $post_pid) {
             return;
         }
     }
-    echo json_encode(["status" => "not found"], JSON_THROW_ON_ERROR);
+    echo json_encode(["status" => "not found"]);
     return;
 }
 
@@ -177,6 +175,7 @@ if ($fn === "ln-request-status" && $post_pid) {
 if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
     $allowed_functions = ["ln-create-invoice", "ln-list-invoices", "ln-invoice-status", "ln-invoice-decode", "ln-delete-invoice"];
     if ($lnget || in_array($fn, $allowed_functions)) {
+        
         // Initialize variables for host, key, and other settings
         $host = $key = false;
         $type = "lnurl";
@@ -187,9 +186,11 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
         if ($nid) {
             $filename = "cache/1w/" . $nid;
             if (file_exists($filename)) {
+                
                 // Attempt to read and decode cached credentials
                 $get_content = file_get_contents($filename);
                 if ($get_content && ($contents = json_decode(base64_decode($get_content), true))) {
+                    
                     // Use cached host and key if available
                     if (!empty($contents["host"])) {
                         $host = $contents["host"];
@@ -419,7 +420,7 @@ function handle_callback($callback_url, $content, $type, $remote_tracking, $loca
         curl_get($callback_url, $content, null); // only track checkout
     }
 }
-    
+
 // Create an invoice for a Lightning Network payment
 function create_invoice($imp, $pid, $host, $key, $amount, $memo, $type, $pingtest, $src, $desc_hash, $meta, $expiry) {
     if ($imp == "lnd") {
@@ -537,6 +538,10 @@ function invoice_uniform($imp, $inv, $type) {
 
     $proxy_host = $_SERVER["HTTP_HOST"];
     $dat = json_decode($inv, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        return false;
+    }
+    
     $error = isset($dat["error"]) ? $imp . ": " . $dat["error"]["code"] . ": " . $dat["error"]["message"] : null;
 
     $result = [
@@ -732,6 +737,7 @@ function invoice_status($imp, $dat, $pid, $type, $expiry) {
     return false;
 }
 
+// Status functions remain unchanged as they don't need compatibility updates
 function get_lnd_status($dat, $base_result) {
     $status = $dat["state"];
     $br_state = "unknown";
@@ -844,11 +850,13 @@ function d_hash($arr) {
 
 // Encode a value to base64 for LND
 function lnd_b64_enc($val) {
+    if (!$val) return "";
     return base64_encode(hex2bin($val));
 }
 
 // Decode a base64 value from LND
 function lnd_b64_dec($val) {
+    if (!$val) return '';
     return bin2hex(base64_decode($val));
 }
 

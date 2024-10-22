@@ -4,13 +4,22 @@ function get_param($key, $default = null) {
     return $_GET[$key] ?? $default;
 }
 
+// Function to escape PDF text
+function escape_pdf_text($text) {
+    // Escape special characters in PDF strings
+    $text = str_replace(["\\", "(", ")", "\n"], ["\\\\", "\\(", "\\)", "\\n"], $text);
+    return $text;
+}
+
 // Function to generate PDF content
 function generate_pdf_content($data) {
     $output = "";
     $index = 0;
     foreach ($data as $key => $value) {
         $margin = 650 - ($index * 20);
-        $output .= " BT /F1 12 Tf 50 $margin Td ($key: $value)Tj ET ";
+        $escaped_key = escape_pdf_text($key);
+        $escaped_value = escape_pdf_text($value);
+        $output .= " BT /F1 12 Tf 50 $margin Td ($escaped_key: $escaped_value)Tj ET ";
         $index++;
     }
     return "%PDF-1.7
@@ -61,24 +70,42 @@ try {
         throw new Exception("No data provided");
     }
 
-    $data = json_decode(base64_decode($dataparam), true);
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        throw new Exception("Invalid JSON data");
-    }
-
+    // Safely decode base64 and JSON data
+    $decoded = base64_decode($dataparam);
+    $data = json_decode($decoded, true);
+    
+    // Get request ID with fallback
     $requestId = $data["Request ID"] ?? "unknown";
+    
+    // Set download type
     $download = get_param("download") ? "attachment" : "inline";
+    
+    // Generate PDF content
     $content = generate_pdf_content($data);
-
+    
+    // Clear any previous output
+    if (ob_get_length()) {
+        ob_clean();
+    }
+    
+    // Set headers
     header("Content-Type: application/pdf");
     header("Content-Length: " . strlen($content));
-    header("Content-Disposition: $download; filename=bitrequest_receipt_$requestId.pdf");
+    header("Content-Disposition: $download; filename=bitrequest_receipt_" . rawurlencode($requestId) . ".pdf");
     header("Cache-Control: private, max-age=0, must-revalidate");
     header("Pragma: public");
+    
+    // Disable compression
     ini_set("zlib.output_compression", "0");
-
+    
+    // Output content
     echo $content;
+    
 } catch (Exception $e) {
+    if (ob_get_length()) {
+        ob_clean();
+    }
     header("HTTP/1.1 400 Bad Request");
+    header("Content-Type: text/plain");
     echo "Error: " . $e->getMessage();
 }

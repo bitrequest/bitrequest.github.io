@@ -4692,7 +4692,7 @@ function proxy_alert(version) {
         $("#alert > span").text("!").attr("title", translate("updateproxy", {
             "version": version,
             "proxy_version": glob_proxy_version
-        }));
+        }) + " " + d_proxy());
     }
 }
 

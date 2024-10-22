@@ -5,6 +5,9 @@ const CACHE_DIR = "api/cache/" . CACHE_TIME . "/";
 const DEFAULT_TITLE = "Bitrequest";
 const DEFAULT_MESSAGE = "⚠️ Request not found or expired";
 
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
 // Function to safely get GET parameters
 function get_param($key, $default = null) {
     return $_GET[$key] ?? $default;
@@ -26,10 +29,13 @@ $sharedtitle = DEFAULT_TITLE;
 if (file_exists($path)) {
     $get_content = file_get_contents($path);
     if ($get_content !== false) {
-        $content = json_decode(base64_decode($get_content), true);
-        if ($content) {
-            $longurl = $content["sharedurl"] ?? null;
-            $thumb = $content["sitethumb"] ?? null;
+        $decoded = base64_decode($get_content);
+        if ($decoded !== null) {
+            $content = json_decode($decoded, true);
+            if ($content) {
+                $longurl = $content["sharedurl"] ?? null;
+                $thumb = $content["sitethumb"] ?? null;
+            }
         }
     }
 } else {
