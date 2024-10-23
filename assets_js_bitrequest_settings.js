@@ -613,7 +613,7 @@ function backupdatabase() {
             "nr_changes": nr_changes
         }) + "</p>",
         showhidechangelog = gd_active ? "display:none" : "display:block",
-        changenotification = (!gd_active && glob_body.hasClass("haschanges")) ? alert_txt : "",
+        changenotification = ((!gd_active && glob_body.hasClass("haschanges")) || glob_html.hasClass("proxyupdate")) ? alert_txt : "",
         ddat = [{
                 "div": {
                     "id": "dialogcontent",

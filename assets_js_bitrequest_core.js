@@ -4558,16 +4558,14 @@ function change_alert() {
         return
     }
     const total_changes = get_total_changes();
-    if (total_changes > 0) {
-        if (!glob_html.hasClass("proxyupdate")) {
-            $("#alert > span").text(total_changes).attr("title", translate("totalchanges", {
-                "total_changes": total_changes
-            }));
-        }
+    if (total_changes > 24) {
+        $("#alert > span").text(total_changes).attr("title", translate("totalchanges", {
+            "total_changes": total_changes
+        }));
         setTimeout(function() {
             glob_body.addClass("haschanges");
         }, 2500);
-        if ([20, 50, 150, 200, 250].includes(total_changes)) {
+        if ([25, 50, 150, 200, 250].includes(total_changes)) {
             canceldialog();
             const timeout = setTimeout(function() {
                 backupdatabase();
@@ -4688,7 +4686,6 @@ function get_alchemy_apikey() {
 function proxy_alert(version) {
     if (version) {
         glob_html.addClass("proxyupdate");
-        glob_body.addClass("haschanges");
         $("#alert > span").text("!").attr("title", translate("updateproxy", {
             "version": version,
             "proxy_version": glob_proxy_version

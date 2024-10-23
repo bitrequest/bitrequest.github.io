@@ -530,10 +530,9 @@ function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
             const error = e.error;
             if (error) {
                 const message = error?.message ?? (typeof e.error === "string" ? error : default_error);
-                console.log(message);
             }
             const version = e.version;
-            if (version != glob_proxy_version) {
+            if (version < glob_proxy_version) {
                 proxy_alert(version);
             }
             if (e.pid == pid) {

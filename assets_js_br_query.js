@@ -237,8 +237,13 @@ function br_result(e) {
         proxy = Boolean(ping);
     if (proxy && ping.br_cache) {
         const version = ping.br_cache.version;
-        if (version !== glob_proxy_version) {
+        if (version < glob_proxy_version) {
             proxy_alert(version);
+        } else {
+            if (glob_html.hasClass("proxyupdate")) {
+                glob_html.removeClass("proxyupdate");
+                glob_body.removeClass("haschanges");
+            }
         }
     }
     return {
@@ -659,7 +664,7 @@ function fk() {
         "api_url": true
     }).done(function(e) {
         const res = br_result(e);
-            result = res.result,
+        result = res.result,
             ko = result.k;
         if (ko) {
             init_keys(ko, false);

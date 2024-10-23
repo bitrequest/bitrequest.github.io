@@ -100,7 +100,7 @@ function lightning_fetch(rd, api_data, rdo) {
         }).done(function(r) {
             const error = r.error,
                 version = r.version;
-            if (version !== glob_proxy_version) {
+            if (version < glob_proxy_version) {
                 proxy_alert(version);
             }
             if (error) {
