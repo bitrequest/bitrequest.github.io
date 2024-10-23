@@ -52,8 +52,8 @@ switch ($type) {
         $type_text = "checkout";
         break;
 }
-$g_pid = $get_id ? substr($get_id, 1, 10) : false;
-$g_nid = ($get_id && strlen($get_id) > 15) ? substr($get_id, 11) : false;
+$get_pid = $get_id ? substr($get_id, 1, 10) : false;
+$get_nid = ($get_id && strlen($get_id) > 15) ? substr($get_id, 11) : false;
 
 // POST data
 $post_pid = $pdat["id"] ?? false;
@@ -61,7 +61,7 @@ $post_nid = $pdat["nid"] ?? false;
 $p_expiry = $pdat["expiry"] ?? 60;
 
 // Lightning GET request validation
-$lnget = $imp && $g_pid && $requested_amount > -1 && $specified_amount;
+$lnget = $imp && $get_pid && $requested_amount > -1 && $specified_amount;
 
 // Configuration
 $callback_url = $setup["callback_url"] ?? "";
@@ -180,7 +180,7 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
         $host = $key = false;
         $type = "lnurl";
         $isproxy = false;
-        $nid = $g_nid ?? $post_nid ?? false;
+        $nid = $get_nid ? $get_nid : ($post_nid ? $post_nid : false);
 
         // Check for cached credentials
         if ($nid) {
@@ -312,7 +312,7 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
                 return;
             }
             
-            $path = "cache/tx/" . $g_pid;
+            $path = "cache/tx/" . $get_pid;
             $successmessage = $setup["successAction"] ?? false;
             $routes = $cred["routes"] ?? [];
             
@@ -339,7 +339,7 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
                 $desc_hash = d_hash($meta_arr);
                 $meta = bin2hex(json_encode($meta_arr));
                 
-                $result = create_invoice($imp, $g_pid, $host, $key, $specified_amount, $memo, $type, null, "lnurl", $desc_hash, $meta, $p_expiry);
+                $result = create_invoice($imp, $get_pid, $host, $key, $specified_amount, $memo, $type, null, "lnurl", $desc_hash, $meta, $p_expiry);
                 
                 if ($result) {
                     $inv_error = $result["error"] ?? false;
@@ -359,7 +359,7 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
                         echo json_encode($inv_arr);
                         
                         $s_content = [
-                            "pid" => $g_pid,
+                            "pid" => $get_pid,
                             "status" => "pending",
                             "bolt11" => $pr,
                             "hash" => $hash,
@@ -856,7 +856,7 @@ function lnd_b64_enc($val) {
 
 // Decode a base64 value from LND
 function lnd_b64_dec($val) {
-    if (!$val) return '';
+    if (!$val) return "";
     return bin2hex(base64_decode($val));
 }
 

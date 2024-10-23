@@ -114,7 +114,7 @@
             "count" => MAX_PENDING_COUNT,
         ];
 
-        sleep(1);
+        sleep(1); // wait one second before next call to not exceed api proxy limits
 
         $receivable_result = api($node, json_encode($pending_payload), $headers, null, null, null, null);
         $pending_data = json_decode(json_encode($receivable_result), true);
