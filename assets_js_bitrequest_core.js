@@ -3774,8 +3774,9 @@ function share_receipt() {
             loader(true);
             loadertext(translate("generatereceipt"));
             const accountname = $("#accountsettings").data("selected"),
-                sharedtitle = "bitrequest_receipt_" + requestid + ".pdf";
-            shorten_url(sharedtitle, href, fetch_aws("img_receipt_icon.png"), true);
+                sharedtitle = "bitrequest_receipt_" + requestid + ".pdf",
+                url_hash = hashcode(requestid + sharedtitle);
+            shorten_url(sharedtitle, href, fetch_aws("img_receipt_icon.png"), true, url_hash);
             closeloader();
         }
     })

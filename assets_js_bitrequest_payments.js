@@ -2371,7 +2371,8 @@ function share(thisbutton) {
             newdatastring = thisdata ? "&d=" + dataparam : "", // construct data param if exists
             isipfs = glob_thishostname.includes("ipfs") || glob_thishostname.includes("bitrequest.crypto"),
             shared_host = isipfs ? glob_c_host : "https://bitrequest.github.io", // check for IFPS
-            sharedurl = shared_host + "/?p=requests&payment=" + payment + "&uoa=" + thiscurrency + "&amount=" + thisamount + "&address=" + thisaddress + newdatastring,
+            url_id = shared_host + "/?p=requests&payment=" + payment + "&uoa=" + thiscurrency + "&amount=" + thisamount + "&address=" + thisaddress,
+            sharedurl = url_id + newdatastring,
             thisrequestname_uppercase = capitalize(thisrequestname), // capitalize requestname
             paymentupper = capitalize(payment),
             payment_name = lightning ? "Lightning" : paymentupper,
@@ -2392,7 +2393,8 @@ function share(thisbutton) {
             setlocales();
             return
         }
-        shorten_url(sharedtitle, sharedurl, share_icon);
+        const url_hash = hashcode(url_id + sharedtitle);
+        shorten_url(sharedtitle, sharedurl, share_icon, null, url_hash);
         setlocales();
         return
 
@@ -2413,29 +2415,31 @@ function share(thisbutton) {
 }
 
 // Handles URL shortening and sharing process
-function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
+function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable, url_hash) {
     loadertext(translate("generatelink"));
     const us_settings = $("#url_shorten_settings"),
         us_active = us_settings.data("us_active") === "active";
     if (us_active) {
         const us_service = us_settings.data("selected"),
             is_custom = us_service.indexOf("https://") >= 0;
-        cache_prefix = is_custom ? "custom" : us_service,
-            getcache = br_get_session(cache_prefix + "_shorturl_" + hashcode(sharedurl));
-        if (getcache) {
-            sharerequest(getcache, sharedtitle);
-            return;
+        if (url_hash) {
+            const cache_prefix = is_custom ? "custom" : us_service,
+                getcache = br_get_session(cache_prefix + "_shorturl_" + url_hash);
+            if (getcache) {
+                sharerequest(getcache, sharedtitle);
+                return;
+            }
         }
         if (us_service === "firebase") {
-            firebase_shorten(sharedurl, sharedtitle, sitethumb, unguessable);
+            firebase_shorten(sharedurl, sharedtitle, sitethumb, unguessable, url_hash);
             return;
         }
         if (us_service === "bitly") {
-            bitly_shorten(sharedurl, sharedtitle);
+            bitly_shorten(sharedurl, sharedtitle, url_hash);
             return;
         }
         if (is_custom) {
-            custom_shorten(us_service, sharedurl, sharedtitle, sitethumb);
+            custom_shorten(us_service, sharedurl, sharedtitle, sitethumb, url_hash);
             return;
         }
     }
@@ -2443,13 +2447,11 @@ function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
 }
 
 // Handles Firebase URL shortening
-function firebase_shorten(sharedurl, sharedtitle, sitethumb, unguessable) {
+function firebase_shorten(sharedurl, sharedtitle, sitethumb, unguessable, url_hash) {
     const security = unguessable ? "UNGUESSABLE" : "SHORT";
     api_proxy({
         "api": "firebase",
         "search": "shortLinks",
-        "cachetime": 84600,
-        "cachefolder": "1d",
         "params": {
             "method": "POST",
             "cache": false,
@@ -2482,24 +2484,26 @@ function firebase_shorten(sharedurl, sharedtitle, sitethumb, unguessable) {
         const data = br_result(e).result;
         if (data) {
             if (data.error) {
-                custom_shorten(false, sharedurl, sharedtitle, sitethumb);
+                custom_shorten(false, sharedurl, sharedtitle, sitethumb, url_hash);
                 return
             }
             const shorturl = data.shortLink;
             if (shorturl) {
                 sharerequest(shorturl, sharedtitle);
-                br_set_session("firebase_shorturl_" + hashcode(sharedurl), shorturl);
+                if (url_hash) {
+                    br_set_session("firebase_shorturl_" + url_hash, shorturl);
+                }
                 return
             }
         }
-        custom_shorten(false, sharedurl, sharedtitle, sitethumb);
+        custom_shorten(false, sharedurl, sharedtitle, sitethumb, url_hash);
     }).fail(function() {
-        custom_shorten(false, sharedurl, sharedtitle, sitethumb);
+        custom_shorten(false, sharedurl, sharedtitle, sitethumb, url_hash);
     });
 }
 
 // Handles Bitly URL shortening
-function bitly_shorten(sharedurl, sharedtitle) {
+function bitly_shorten(sharedurl, sharedtitle, url_hash) {
     api_proxy({
         "api": "bitly",
         "search": "bitlinks",
@@ -2519,7 +2523,9 @@ function bitly_shorten(sharedurl, sharedtitle) {
             const linkid = data.id.split("/").pop(),
                 shurl = glob_approot + "?i=4bR" + linkid;
             sharerequest(shurl, sharedtitle);
-            br_set_session("bitly_shorturl_" + hashcode(sharedurl), shurl);
+            if (url_hash) {
+                br_set_session("bitly_shorturl_" + url_hash, shurl);
+            }
             return
         }
         sharerequest(sharedurl, sharedtitle);
@@ -2529,7 +2535,7 @@ function bitly_shorten(sharedurl, sharedtitle) {
 }
 
 // Handles Custom URL shortening
-function custom_shorten(service, sharedurl, sharedtitle, sitethumb) {
+function custom_shorten(service, sharedurl, sharedtitle, sitethumb, url_hash) {
     const serv = service || d_proxy(),
         rqdat = btoa(JSON.stringify({
             "sharedurl": sharedurl,
@@ -2552,7 +2558,7 @@ function custom_shorten(service, sharedurl, sharedtitle, sitethumb) {
         if (data) {
             if (data.error) {
                 notify(serv + ": " + data.error, 500000, "yes");
-                bitly_shorten(sharedurl, sharedtitle);
+                bitly_shorten(sharedurl, sharedtitle, url_hash);
                 return
             }
             const rqid = data.shorturl;
@@ -2561,13 +2567,15 @@ function custom_shorten(service, sharedurl, sharedtitle, sitethumb) {
                     isdefault = index > -1;
                 shurl = isdefault ? glob_approot + "?i=" + index.toString() + rqid : serv + "proxy/v1/inv/4bR" + rqid;
                 sharerequest(shurl, sharedtitle);
-                br_set_session("custom_shorturl_" + hashcode(sharedurl), shurl);
+                if (url_hash) {
+                    br_set_session("custom_shorturl_" + url_hash, shurl);
+                }
                 return
             }
         }
-        bitly_shorten(sharedurl, sharedtitle);
+        bitly_shorten(sharedurl, sharedtitle, url_hash);
     }).fail(function() {
-        bitly_shorten(sharedurl, sharedtitle);
+        bitly_shorten(sharedurl, sharedtitle, url_hash);
     });
 }
 
