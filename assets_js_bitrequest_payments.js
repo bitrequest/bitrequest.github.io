@@ -2444,66 +2444,58 @@ function shorten_url(sharedtitle, sharedurl, sitethumb, unguessable) {
 
 // Handles Firebase URL shortening
 function firebase_shorten(sharedurl, sharedtitle, sitethumb, unguessable) {
-    if (to && to.fb_id) {
-        const security = unguessable ? "UNGUESSABLE" : "SHORT";
-        api_proxy({
-            "api": "firebase",
-            "search": "shortLinks",
-            "cachetime": 84600,
-            "cachefolder": "1d",
-            "proxy": false,
-            "api_url": "https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=" + to.fb_id,
-            "params": {
-                "method": "POST",
-                "cache": false,
-                "dataType": "json",
-                "contentType": "application/json",
-                "data": JSON.stringify({
-                    "dynamicLinkInfo": {
-                        "domainUriPrefix": glob_firebase_dynamic_link_domain,
-                        "link": sharedurl,
-                        "androidInfo": {
-                            "androidPackageName": glob_androidpackagename
-                        },
-                        "iosInfo": {
-                            "iosBundleId": glob_androidpackagename,
-                            "iosAppStoreId": "1484815377"
-                        },
-                        "navigationInfo": {
-                            "enableForcedRedirect": "1"
-                        },
-                        "socialMetaTagInfo": {
-                            "socialTitle": "Bitrequest",
-                            "socialDescription": "Accept crypto anywhere",
-                            "socialImageLink": sitethumb
-                        }
+    const security = unguessable ? "UNGUESSABLE" : "SHORT";
+    api_proxy({
+        "api": "firebase",
+        "search": "shortLinks",
+        "cachetime": 84600,
+        "cachefolder": "1d",
+        "params": {
+            "method": "POST",
+            "cache": false,
+            "data": JSON.stringify({
+                "dynamicLinkInfo": {
+                    "domainUriPrefix": glob_firebase_dynamic_link_domain,
+                    "link": sharedurl,
+                    "androidInfo": {
+                        "androidPackageName": glob_androidpackagename
                     },
-                    "suffix": {
-                        "option": security
+                    "iosInfo": {
+                        "iosBundleId": glob_androidpackagename,
+                        "iosAppStoreId": "1484815377"
+                    },
+                    "navigationInfo": {
+                        "enableForcedRedirect": "1"
+                    },
+                    "socialMetaTagInfo": {
+                        "socialTitle": "Bitrequest",
+                        "socialDescription": "Accept crypto anywhere",
+                        "socialImageLink": sitethumb
                     }
-                })
-            }
-        }).done(function(e) {
-            const data = br_result(e).result;
-            if (data) {
-                if (data.error) {
-                    custom_shorten(false, sharedurl, sharedtitle, sitethumb);
-                    return
+                },
+                "suffix": {
+                    "option": security
                 }
-                const shorturl = data.shortLink;
-                if (shorturl) {
-                    sharerequest(shorturl, sharedtitle);
-                    br_set_session("firebase_shorturl_" + hashcode(sharedurl), shorturl);
-                    return
-                }
+            })
+        }
+    }).done(function(e) {
+        const data = br_result(e).result;
+        if (data) {
+            if (data.error) {
+                custom_shorten(false, sharedurl, sharedtitle, sitethumb);
+                return
             }
-            custom_shorten(false, sharedurl, sharedtitle, sitethumb);
-        }).fail(function() {
-            custom_shorten(false, sharedurl, sharedtitle, sitethumb);
-        });
-    } else {
+            const shorturl = data.shortLink;
+            if (shorturl) {
+                sharerequest(shorturl, sharedtitle);
+                br_set_session("firebase_shorturl_" + hashcode(sharedurl), shorturl);
+                return
+            }
+        }
         custom_shorten(false, sharedurl, sharedtitle, sitethumb);
-    }
+    }).fail(function() {
+        custom_shorten(false, sharedurl, sharedtitle, sitethumb);
+    });
 }
 
 // Handles Bitly URL shortening

@@ -646,7 +646,7 @@ function gk() {
     const k = glob_io.k;
     if (k) {
         const pk = JSON.parse(atob(k));
-        if (pk.if_id === "" || pk.ad_id === "" || pk.ga_id === "" || pk.bc_id === "") {
+        if (pk.if_id === "" || pk.ga_id === "" || pk.bc_id === "" || pk.al_id === "") {
             fk();
             return
         }

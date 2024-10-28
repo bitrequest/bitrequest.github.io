@@ -548,7 +548,6 @@ function finishfunctions() {
     open_url();
     //get_blockcypher_apikey
     //get_infura_apikey
-    //get_arbiscan_apikey
     //get_alchemy_apikey
     //proxy_alert
     //fetchsymbol
@@ -4670,11 +4669,6 @@ function get_blockcypher_apikey() {
 function get_infura_apikey(rpcurl) {
     const savedkey = $("#apikeys").data("infura");
     return (/^[A-Za-z0-9]+$/.test(rpcurl.slice(-15))) ? "" : savedkey || to.if_id; // check if rpcurl already contains apikey
-}
-
-// Retrieves the Arbiscan API key
-function get_arbiscan_apikey() {
-    return $("#apikeys").data("arbiscan") || to.as_id;
 }
 
 // Retrieves the Alchemy API key

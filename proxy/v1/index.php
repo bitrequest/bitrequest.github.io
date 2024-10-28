@@ -108,8 +108,6 @@
             "if_id" => $keys["infura"] ?? "",
             "ga_id" => $keys["googleauth"] ?? "",
             "bc_id" => $keys["blockcypher"] ?? "",
-            "fb_id" => $keys["firebase"] ?? "",
-            "as_id" => $keys["arbiscan"] ?? "",
             "al_id" => $keys["alchemy"] ?? ""
         ];
         return ["k" => base64_encode(json_encode($key_data))];

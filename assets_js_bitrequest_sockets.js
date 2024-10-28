@@ -320,7 +320,6 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                         if (glob_ndef_processing) {
                                             playsound(glob_funk);
                                             console.log("already processing");
-                                            console.log(glob_ndef_processing);
                                             return
                                         }
                                         playsound(glob_blip);

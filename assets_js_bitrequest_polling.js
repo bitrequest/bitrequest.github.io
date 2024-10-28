@@ -101,17 +101,17 @@ function account_polling(timeout, socket, cache, rpc, next_api) {
         request_ts = request_ts_utc - 15000, // 15 second margin
         api_data = next_api || helper.api_info.data,
         set_confirmations = request.set_confirmations || 0,
-        cachetime = cache ? (timeout - 1000) / 1000 : 0;
-    rdo = {
-        "request_timestamp": request_ts,
-        "setconfirmations": set_confirmations,
-        "pending": "scanning",
-        "erc20": request.erc20,
-        "source": "acc_polling",
-        socket,
-        timeout,
-        cachetime
-    };
+        cachetime = cache ? (timeout - 1000) / 1000 : 0,
+        rdo = {
+            "request_timestamp": request_ts,
+            "setconfirmations": set_confirmations,
+            "pending": "scanning",
+            "erc20": request.erc20,
+            "source": "acc_polling",
+            socket,
+            timeout,
+            cachetime
+        };
     if (rpc) {
         get_rpc_inputs(request, rdo, api_data);
     } else {
@@ -262,10 +262,9 @@ function ping_arbiscan(address, request_ts) {
         forceclosesocket();
         return;
     }
-    const apikeytoken = get_arbiscan_apikey();
     api_proxy({
         "api": "arbiscan",
-        "search": "?module=account&action=txlist&address=" + address + "&startblock=0&endblock=latest&page=1&offset=10&sort=desc&apikey=" + apikeytoken,
+        "search": "?module=account&action=txlist&address=" + address + "&startblock=0&endblock=latest&page=1&offset=10&sort=desc",
         "params": {
             "method": "GET"
         }

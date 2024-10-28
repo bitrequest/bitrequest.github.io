@@ -834,12 +834,11 @@ function arbiscan_fetch(rd, api_data, rdo) {
         thislist = rdo.thislist,
         transactionlist = rdo.transactionlist,
         arb_contract = contracts(rd.currencysymbol, "arbitrum"),
-        apikeytoken = get_arbiscan_apikey(),
         txhash = rd.txhash,
         requestid = rd.requestid,
         eth_payload = {
             "api": api_name,
-            "search": "?module=account&action=txlist&address=" + rd.address + "&startblock=0&endblock=latest&page=1&offset=1000&sort=desc&apikey=" + apikeytoken,
+            "search": "?module=account&action=txlist&address=" + rd.address + "&startblock=0&endblock=latest&page=1&offset=1000&sort=desc",
             "cachetime": rdo.cachetime,
             "cachefolder": "1h",
             "params": {
@@ -848,7 +847,7 @@ function arbiscan_fetch(rd, api_data, rdo) {
         },
         erc20_payload = {
             "api": api_name,
-            "search": "?module=account&action=tokentx&contractaddress=" + arb_contract + "&address=" + rd.address + "&page=1&offset=100&startblock=0&endblock=99999999&sort=asc&apikey=" + apikeytoken,
+            "search": "?module=account&action=tokentx&contractaddress=" + arb_contract + "&address=" + rd.address + "&page=1&offset=100&startblock=0&endblock=99999999&sort=asc",
             "cachetime": rdo.cachetime,
             "cachefolder": "1h",
             "params": {
