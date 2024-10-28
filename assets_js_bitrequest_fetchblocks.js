@@ -11,17 +11,23 @@ $(document).ready(function() {
     //monero_fetch
     //match_xmr_pid
     //blockchair_xmr_poll
+    //blockchaininfo_fetch_init
+    //blockchaininfo_fetch_blockheight
     //blockchaininfo_fetch
     //blockcypher_fetch
     //ethplorer_fetch
     //arbiscan_fetch
     //blockchair_fetch
     //nimiq_fetch
+    //kaspa_fetch_init
+    //kaspa_fetch_blockheight
     //kaspa_fetch
     //insight_fetch_dash
 
     // ** RPC **
 
+    //mempoolspace_rpc_init
+    //mempoolspace_rpc_blockheight
     //mempoolspace_rpc
     //infura_txd_rpc
     //inf_result
@@ -477,12 +483,15 @@ function blockchair_xmr_poll(rd, api_data, rdo) {
 
 // This function fetches and processes transaction data using the blockchain.info API.
 // It handles both scanning for incoming transactions and polling for specific transaction details.
-function blockchaininfo_fetch(rd, api_data, rdo) {
-    const transactionlist = rdo.transactionlist,
-        source = rdo.source;
-    let counter = 0,
-        txdat = false,
-        match = false;
+function blockchaininfo_fetch_init(rd, api_data, rdo) {
+    if (rdo.source === "acc_polling") {
+        blockchaininfo_fetch(rd, api_data, rdo, false);
+        return
+    }
+    blockchaininfo_fetch_blockheight(rd, api_data, rdo);
+}
+
+function blockchaininfo_fetch_blockheight(rd, api_data, rdo) {
     api_proxy({ // get latest blockheight
         "api": "blockchain.info",
         "search": rd.currencysymbol + "/block/best",
@@ -496,107 +505,7 @@ function blockchaininfo_fetch(rd, api_data, rdo) {
         if (lbdat) {
             const latestblock = q_obj(lbdat, "result.height");
             if (latestblock) {
-                if (rdo.pending === "scanning") { // scan incoming transactions on address
-                    api_proxy({
-                        "api": "blockchain.info",
-                        "search": rd.currencysymbol + "/address/" + rd.address + "/transactions?limit=20&offset=0",
-                        "cachetime": rdo.cachetime,
-                        "cachefolder": "1h",
-                        "params": {
-                            "method": "GET"
-                        }
-                    }).done(function(e) {
-                        const data = br_result(e).result;
-                        if (data) {
-                            if (data.error) {
-                                tx_api_scan_fail(rd, rdo, api_data, data.error);
-                                return
-                            }
-                            if (br_issar(data)) {
-                                const tx_string = data.map(item => item.txid).join(",");
-                                api_proxy({
-                                    "api": "blockchain.info",
-                                    "search": rd.currencysymbol + "/transactions?txids=" + tx_string, // get transactions
-                                    "cachetime": rdo.cachetime,
-                                    "cachefolder": "1h",
-                                    "params": {
-                                        "method": "GET"
-                                    }
-                                }).done(function(e) {
-                                    const dat = br_result(e).result;
-                                    if (dat) {
-                                        $.each(dat, function(dt, val) {
-                                            const txd = blockchaininfo_scan_data(val, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
-                                            if (txd.transactiontime > rdo.request_timestamp && txd.ccval) { // get all transactions after requestdate
-                                                match = true, txdat = txd;
-                                                if (source === "list") {
-                                                    const tx_listitem = append_tx_li(txd, rd.requesttype);
-                                                    if (tx_listitem) {
-                                                        transactionlist.append(tx_listitem.data(txd));
-                                                        counter++;
-                                                    }
-                                                }
-                                            }
-                                        });
-                                        scan_match(rd, api_data, rdo, counter, txdat, match);
-                                        return
-                                    }
-                                    api_callback(requestid, source);
-                                }).fail(function(jqXHR, textStatus, errorThrown) {
-                                    const error_object = errorThrown || jqXHR;
-                                    tx_api_scan_fail(rd, rdo, api_data, error_object);
-                                });
-                                return
-                            }
-                        }
-                        tx_api_scan_fail(rd, rdo, api_data, default_error);
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        const error_object = errorThrown || jqXHR;
-                        tx_api_scan_fail(rd, rdo, api_data, error_object, true);
-                    }).always(function() {
-                        set_api_src(rdo, api_data);
-                    });
-                    return
-                }
-                if (rdo.pending === "polling") { // poll transaction id
-                    if (rd.txhash) {
-                        api_proxy({
-                            "api": "blockchain.info",
-                            "search": rd.currencysymbol + "/transaction/" + rd.txhash,
-                            "cachetime": rdo.cachetime,
-                            "cachefolder": "1h",
-                            "params": {
-                                "method": "GET"
-                            }
-                        }).done(function(e) {
-                            const data = br_result(e).result;
-                            if (data) {
-                                if (data.error) {
-                                    tx_api_scan_fail(rd, rdo, api_data, data.error);
-                                    return
-                                }
-                                const txd = blockchaininfo_scan_data(data, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
-                                if (txd.ccval) {
-                                    match = true, txdat = txd, counter = 1;
-                                    if (rdo.source === "list") {
-                                        const tx_listitem = append_tx_li(txd, rd.requesttype);
-                                        if (tx_listitem) {
-                                            transactionlist.append(tx_listitem.data(txd));
-                                        }
-                                    }
-                                }
-                                scan_match(rd, api_data, rdo, counter, txdat, match);
-                                return
-                            }
-                            tx_api_scan_fail(rd, rdo, api_data, default_error);
-                        }).fail(function(jqXHR, textStatus, errorThrown) {
-                            const error_object = errorThrown || jqXHR;
-                            tx_api_scan_fail(rd, rdo, api_data, error_object, true);
-                        }).always(function() {
-                            set_api_src(rdo, api_data);
-                        });
-                    }
-                }
+                blockchaininfo_fetch(rd, api_data, rdo, latestblock);
                 return
             }
         }
@@ -607,6 +516,115 @@ function blockchaininfo_fetch(rd, api_data, rdo) {
     }).always(function() {
         set_api_src(rdo, api_data);
     });
+}
+
+function blockchaininfo_fetch(rd, api_data, rdo, latestblock) {
+    const transactionlist = rdo.transactionlist,
+        source = rdo.source;
+    let counter = 0,
+        txdat = false,
+        match = false;
+    if (rdo.pending === "scanning") { // scan incoming transactions on address
+        api_proxy({
+            "api": "blockchain.info",
+            "search": rd.currencysymbol + "/address/" + rd.address + "/transactions?limit=20&offset=0",
+            "cachetime": rdo.cachetime,
+            "cachefolder": "1h",
+            "params": {
+                "method": "GET"
+            }
+        }).done(function(e) {
+            const data = br_result(e).result;
+            if (data) {
+                if (data.error) {
+                    tx_api_scan_fail(rd, rdo, api_data, data.error);
+                    return
+                }
+                if (br_issar(data)) {
+                    const tx_string = data.map(item => item.txid).join(",");
+                    api_proxy({
+                        "api": "blockchain.info",
+                        "search": rd.currencysymbol + "/transactions?txids=" + tx_string, // get transactions
+                        "cachetime": rdo.cachetime,
+                        "cachefolder": "1h",
+                        "params": {
+                            "method": "GET"
+                        }
+                    }).done(function(e) {
+                        const dat = br_result(e).result;
+                        if (dat) {
+                            $.each(dat, function(dt, val) {
+                                const txd = blockchaininfo_scan_data(val, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
+                                if (txd.transactiontime > rdo.request_timestamp && txd.ccval) { // get all transactions after requestdate
+                                    match = true, txdat = txd;
+                                    if (source === "list") {
+                                        const tx_listitem = append_tx_li(txd, rd.requesttype);
+                                        if (tx_listitem) {
+                                            transactionlist.append(tx_listitem.data(txd));
+                                            counter++;
+                                        }
+                                    }
+                                }
+                            });
+                            scan_match(rd, api_data, rdo, counter, txdat, match);
+                            return
+                        }
+                        api_callback(requestid, source);
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                        const error_object = errorThrown || jqXHR;
+                        tx_api_scan_fail(rd, rdo, api_data, error_object);
+                    });
+                    return
+                }
+            }
+            tx_api_scan_fail(rd, rdo, api_data, default_error);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            const error_object = errorThrown || jqXHR;
+            tx_api_scan_fail(rd, rdo, api_data, error_object, true);
+        }).always(function() {
+            set_api_src(rdo, api_data);
+        });
+        return
+    }
+    if (rdo.pending === "polling") { // poll transaction id
+        if (rd.txhash) {
+            api_proxy({
+                "api": "blockchain.info",
+                "search": rd.currencysymbol + "/transaction/" + rd.txhash,
+                "cachetime": rdo.cachetime,
+                "cachefolder": "1h",
+                "params": {
+                    "method": "GET"
+                }
+            }).done(function(e) {
+                const data = br_result(e).result;
+                if (data) {
+                    if (data.error) {
+                        tx_api_scan_fail(rd, rdo, api_data, data.error);
+                        return
+                    }
+                    const txd = blockchaininfo_scan_data(data, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
+                    if (txd.ccval) {
+                        match = true, txdat = txd, counter = 1;
+                        if (source === "list") {
+                            const tx_listitem = append_tx_li(txd, rd.requesttype);
+                            if (tx_listitem) {
+                                transactionlist.append(tx_listitem.data(txd));
+                            }
+                        }
+                    }
+                    scan_match(rd, api_data, rdo, counter, txdat, match);
+                    return
+                }
+                tx_api_scan_fail(rd, rdo, api_data, default_error);
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                const error_object = errorThrown || jqXHR;
+                tx_api_scan_fail(rd, rdo, api_data, error_object, true);
+            }).always(function() {
+                set_api_src(rdo, api_data);
+            });
+        }
+    }
 }
 
 
@@ -1381,7 +1399,42 @@ function nimiq_fetch(rd, api_data, rdo) {
 // It handles both scanning for incoming transactions and polling for specific transaction details.
 // The function supports multiple APIs (kaspa.org and kas.fyi) and adapts its behavior based on the API being used.
 // It also manages the retrieval of the current bluescore for transaction confirmation calculations.
-function kaspa_fetch(rd, api_data, rdo) {
+function kaspa_fetch_init(rd, api_data, rdo) {
+    if (rdo.source === "acc_polling") {
+        kaspa_fetch(rd, api_data, rdo, false);
+        return
+    }
+    kaspa_fetch_blockheight(rd, api_data, rdo);
+}
+
+function kaspa_fetch_blockheight(rd, api_data, rdo) {
+    api_proxy({
+        "api": "kaspa.org",
+        "search": "info/virtual-chain-blue-score",
+        "cachetime": rdo.cachetime,
+        "cachefolder": "1h",
+        "params": {
+            "method": "GET"
+        }
+    }).done(function(lb) {
+        const lbdat = br_result(lb);
+        if (lbdat) {
+            const latestblock = q_obj(lbdat, "result.blueScore");
+            if (latestblock) {
+                kaspa_fetch(rd, api_data, rdo, latestblock);
+                return
+            }
+        }
+        tx_api_scan_fail(rd, rdo, api_data, default_error);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        const error_object = errorThrown || jqXHR;
+        tx_api_scan_fail(rd, rdo, api_data, error_object, true);
+    }).always(function() {
+        set_api_src(rdo, api_data);
+    });
+}
+
+function kaspa_fetch(rd, api_data, rdo, blockheight) {
     const api_name = api_data.name,
         transactionlist = rdo.transactionlist,
         source = rdo.source;
@@ -1389,10 +1442,53 @@ function kaspa_fetch(rd, api_data, rdo) {
         match = false,
         txdat = false;
     if (rdo.pending === "scanning") { // scan incoming transactions on address
-        if (api_name === "kaspa.org") {
+        api_proxy({
+            "api": "kaspa.org",
+            "search": "addresses/" + rd.address + "/full-transactions",
+            "cachetime": rdo.cachetime,
+            "cachefolder": "1h",
+            "proxy": true,
+            "params": {
+                "method": "GET"
+            }
+        }).done(function(e) {
+            const data = br_result(e).result;
+            if (data) {
+                if ($.isEmptyObject(data)) {
+                    tx_api_scan_fail(rd, rdo, api_data, default_error);
+                    return
+                }
+                const sortlist = sort_by_date(kaspa_scan_data, data);
+                $.each(sortlist, function(dat, value) {
+                    const txd = kaspa_scan_data(value, rd.address, rdo.setconfirmations, blockheight);
+                    if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
+                        match = true, txdat = txd;
+                        if (source === "list") {
+                            const tx_listitem = append_tx_li(txd, rd.requesttype);
+                            if (tx_listitem) {
+                                transactionlist.append(tx_listitem.data(txd));
+                                counter++;
+                            }
+                        }
+                    }
+                });
+                scan_match(rd, api_data, rdo, counter, txdat, match);
+                return
+            }
+            tx_api_scan_fail(rd, rdo, api_data, default_error);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            const error_object = errorThrown || jqXHR;
+            tx_api_scan_fail(rd, rdo, api_data, error_object);
+        }).always(function() {
+            set_api_src(rdo, api_data);
+        });
+        return
+    }
+    if (rdo.pending === "polling") {
+        if (rd.txhash) {
             api_proxy({
                 "api": api_name,
-                "search": "info/virtual-chain-blue-score",
+                "search": "transactions/" + rd.txhash,
                 "cachetime": rdo.cachetime,
                 "cachefolder": "1h",
                 "params": {
@@ -1401,166 +1497,33 @@ function kaspa_fetch(rd, api_data, rdo) {
             }).done(function(e) {
                 const data = br_result(e).result;
                 if (data) {
-                    const current_bluescore = data.blueScore;
-                    if (current_bluescore) {
-                        api_proxy({
-                            "api": api_name,
-                            "search": "addresses/" + rd.address + "/full-transactions",
-                            "cachetime": rdo.cachetime,
-                            "cachefolder": "1h",
-                            "proxy": true,
-                            "params": {
-                                "method": "GET"
-                            }
-                        }).done(function(e) {
-                            const data = br_result(e).result;
-                            if (data) {
-                                if ($.isEmptyObject(data)) {
-                                    tx_api_scan_fail(rd, rdo, api_data, default_error);
-                                    return
-                                }
-                                const sortlist = sort_by_date(kaspa_scan_data, data);
-                                $.each(sortlist, function(dat, value) {
-                                    const txd = kaspa_scan_data(value, rd.address, rdo.setconfirmations, current_bluescore);
-                                    if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
-                                        match = true, txdat = txd;
-                                        if (source === "list") {
-                                            const tx_listitem = append_tx_li(txd, rd.requesttype);
-                                            if (tx_listitem) {
-                                                transactionlist.append(tx_listitem.data(txd));
-                                                counter++;
-                                            }
-                                        }
-                                    }
-                                });
-                                scan_match(rd, api_data, rdo, counter, txdat, match);
-                                return
-                            }
-                            tx_api_scan_fail(rd, rdo, api_data, default_error);
-                        }).fail(function(jqXHR, textStatus, errorThrown) {
-                            const error_object = errorThrown || jqXHR;
-                            tx_api_scan_fail(rd, rdo, api_data, error_object);
-                        }).always(function() {
-                            set_api_src(rdo, api_data);
-                        });
+                    if (data.error) {
+                        tx_api_scan_fail(rd, rdo, api_data, data.error);
                         return
                     }
+                    const txd = (api_name === "kaspa.org") ? kaspa_scan_data(data, rd.address, rdo.setconfirmations, blockheight) :
+                        kaspa_poll_fyi_data(data, rd.address, rdo.setconfirmations); // kas.fyi
+                    if (txd) {
+                        if (txd.ccval) {
+                            match = true, txdat = txd, counter = 1;
+                            if (source === "list") {
+                                const tx_listitem = append_tx_li(txd, rd.requesttype);
+                                if (tx_listitem) {
+                                    transactionlist.append(tx_listitem.data(txd));
+                                }
+                            }
+                        }
+                    }
+                    scan_match(rd, api_data, rdo, counter, txdat, match);
+                    return
                 }
                 tx_api_scan_fail(rd, rdo, api_data, default_error);
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 const error_object = errorThrown || jqXHR;
-                tx_api_scan_fail(rd, rdo, api_data, error_object, true);
+                tx_api_scan_fail(rd, rdo, api_data, error_object);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
-        }
-        return
-    }
-    if (rdo.pending === "polling") {
-        if (rd.txhash) {
-            if (api_name === "kaspa.org") {
-                api_proxy({
-                    "api": "kaspa.org",
-                    "search": "info/virtual-chain-blue-score",
-                    "cachetime": rdo.cachetime,
-                    "cachefolder": "1h",
-                    "params": {
-                        "method": "GET"
-                    }
-                }).done(function(e) {
-                    const data = br_result(e).result;
-                    if (data) {
-                        const current_bluescore = data.blueScore;
-                        if (current_bluescore) {
-                            api_proxy({
-                                "api": "kaspa.org",
-                                "search": "transactions/" + rd.txhash,
-                                "cachetime": rdo.cachetime,
-                                "cachefolder": "1h",
-                                "params": {
-                                    "method": "GET"
-                                }
-                            }).done(function(e) {
-                                const data = br_result(e).result;
-                                if (data) {
-                                    if (data.error) {
-                                        tx_api_scan_fail(rd, rdo, api_data, data.error);
-                                        return
-                                    }
-                                    const txd = kaspa_scan_data(data, rd.address, rdo.setconfirmations, current_bluescore);
-                                    if (txd) {
-                                        if (txd.ccval) {
-                                            match = true, txdat = txd, counter = 1;
-                                            if (source === "list") {
-                                                const tx_listitem = append_tx_li(txd, rd.requesttype);
-                                                if (tx_listitem) {
-                                                    transactionlist.append(tx_listitem.data(txd));
-                                                }
-                                            }
-                                        }
-                                    }
-                                    scan_match(rd, api_data, rdo, counter, txdat, match);
-                                    return
-                                }
-                                tx_api_scan_fail(rd, rdo, api_data, default_error);
-                            }).fail(function(jqXHR, textStatus, errorThrown) {
-                                const error_object = errorThrown || jqXHR;
-                                tx_api_scan_fail(rd, rdo, api_data, error_object);
-                            }).always(function() {
-                                set_api_src(rdo, api_data);
-                            });
-                            return
-                        }
-                    }
-                    tx_api_scan_fail(rd, rdo, api_data, default_error);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    const error_object = errorThrown || jqXHR;
-                    tx_api_scan_fail(rd, rdo, api_data, error_object, true);
-                }).always(function() {
-                    set_api_src(rdo, api_data);
-                });
-                return
-            }
-            if (api_name === "kas.fyi") {
-                api_proxy({
-                    "api": api_name,
-                    "search": "transactions/" + rd.txhash,
-                    "cachetime": rdo.cachetime,
-                    "cachefolder": "1h",
-                    "params": {
-                        "method": "GET"
-                    }
-                }).done(function(e) {
-                    const data = br_result(e).result;
-                    if (data) {
-                        if (data.error) {
-                            tx_api_scan_fail(rd, rdo, api_data, data.error);
-                            return
-                        }
-                        const txd = kaspa_poll_fyi_data(data, rd.address, rdo.setconfirmations);
-                        if (txd) {
-                            if (txd.ccval) {
-                                match = true, txdat = txd, counter = 1;
-                                if (source === "list") {
-                                    const tx_listitem = append_tx_li(txd, rd.requesttype);
-                                    if (tx_listitem) {
-                                        transactionlist.append(tx_listitem.data(txd));
-                                    }
-                                }
-                            }
-                        }
-                        scan_match(rd, api_data, rdo, counter, txdat, match);
-                        return
-                    }
-                    tx_api_scan_fail(rd, rdo, api_data, default_error);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    const error_object = errorThrown || jqXHR;
-                    tx_api_scan_fail(rd, rdo, api_data, error_object, true);
-                }).always(function() {
-                    set_api_src(rdo, api_data);
-                });
-                return
-            }
         }
     }
 }
@@ -1666,15 +1629,17 @@ function insight_fetch_dash(rd, api_data, rdo) {
 // This function interacts with the mempool.space API to fetch and process Bitcoin transaction data.
 // It handles both scanning for incoming transactions and polling for specific transaction details.
 // The function also retrieves the latest block height for confirmation calculations.
-function mempoolspace_rpc(rd, api_data, rdo, rpc) {
-    const transactionlist = rdo.transactionlist,
-        url = api_data.url,
-        endpoint = (rpc) ? url : "https://" + url,
-        requestid = rd.requestid,
-        source = rdo.source;
-    let counter = 0,
-        match = false,
-        txdat = false;
+function mempoolspace_rpc_init(rd, api_data, rdo, rpc) {
+    if (rdo.source === "acc_polling") {
+        mempoolspace_rpc(rd, api_data, rdo, rpc, false);
+        return
+    }
+    mempoolspace_rpc_blockheight(rd, api_data, rdo, rpc);
+}
+
+function mempoolspace_rpc_blockheight(rd, api_data, rdo, rpc) {
+    const url = api_data.url,
+        endpoint = (rpc) ? url : "https://" + url;
     api_proxy({ // get latest blockheight
         "api_url": endpoint + "/api/blocks/tip/height",
         "proxy": false,
@@ -1682,82 +1647,13 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc) {
             "method": "GET"
         }
     }).done(function(lb) {
-        const latestblock = br_result(lb).result;
-        if (latestblock) {
-            setTimeout(function() {
-                if (rdo.pending === "scanning") { // scan incoming transactions on address
-                    api_proxy({
-                        "api_url": endpoint + "/api/address/" + rd.address + "/txs",
-                        "proxy": false,
-                        "params": {
-                            "method": "GET"
-                        }
-                    }).done(function(e) {
-                        const data = br_result(e).result;
-                        if (data) {
-                            if ($.isEmptyObject(data)) {
-                                api_callback(requestid, source);
-                                return
-                            }
-                            const sortlist = sort_by_date(mempoolspace_scan_data, data);
-                            $.each(sortlist, function(dat, value) {
-                                if (value.txid) { // filter outgoing transactions
-                                    const txd = mempoolspace_scan_data(value, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
-                                    if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
-                                        match = true, txdat = txd;
-                                        if (source === "list") {
-                                            const tx_listitem = append_tx_li(txd, rd.requesttype);
-                                            if (tx_listitem) {
-                                                transactionlist.append(tx_listitem.data(txd));
-                                                counter++;
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-                            scan_match(rd, api_data, rdo, counter, txdat, match);
-                            return
-                        }
-                        tx_api_scan_fail(rd, rdo, api_data, default_error);
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        const error_object = errorThrown || jqXHR;
-                        tx_api_scan_fail(rd, rdo, api_data, error_object);
-                    }).always(function() {
-                        set_api_src(rdo, api_data);
-                    });
-                    return
-                }
-                api_proxy({ // poll mempool.space transaction id
-                    "api_url": endpoint + "/api/tx/" + rd.txhash,
-                    "proxy": false,
-                    "params": {
-                        "method": "GET"
-                    }
-                }).done(function(e) {
-                    const data = br_result(e).result;
-                    if (data) {
-                        const txd = mempoolspace_scan_data(data, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
-                        if (txd) {
-                            if (txd.ccval) {
-                                match = true, txdat = txd, counter = 1;
-                                if (source === "list") {
-                                    const tx_listitem = append_tx_li(txd, rd.requesttype);
-                                    if (tx_listitem) {
-                                        transactionlist.append(tx_listitem.data(txd));
-                                    }
-                                }
-                            }
-                        }
-                        scan_match(rd, api_data, rdo, counter, txdat, match);
-                        return
-                    }
-                    tx_api_scan_fail(rd, rdo, api_data, default_error);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    const error_object = errorThrown || jqXHR;
-                    tx_api_scan_fail(rd, rdo, api_data, error_object);
-                });
-            }, 500);
-            return
+        const lbdat = br_result(lb);
+        if (lbdat) {
+            const latestblock = lbdat.result;
+            if (latestblock) {
+                mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock);
+                return
+            }
         }
         tx_api_scan_fail(rd, rdo, api_data, default_error);
     }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -1766,6 +1662,90 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc) {
     }).always(function() {
         set_api_src(rdo, api_data);
     });
+}
+
+function mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock) {
+    const transactionlist = rdo.transactionlist,
+        url = api_data.url,
+        endpoint = (rpc) ? url : "https://" + url,
+        requestid = rd.requestid,
+        source = rdo.source;
+    let counter = 0,
+        match = false,
+        txdat = false;
+    setTimeout(function() {
+        if (rdo.pending === "scanning") { // scan incoming transactions on address
+            api_proxy({
+                "api_url": endpoint + "/api/address/" + rd.address + "/txs",
+                "proxy": false,
+                "params": {
+                    "method": "GET"
+                }
+            }).done(function(e) {
+                const data = br_result(e).result;
+                if (data) {
+                    if ($.isEmptyObject(data)) {
+                        api_callback(requestid, source);
+                        return
+                    }
+                    const sortlist = sort_by_date(mempoolspace_scan_data, data);
+                    $.each(sortlist, function(dat, value) {
+                        if (value.txid) { // filter outgoing transactions
+                            const txd = mempoolspace_scan_data(value, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
+                            if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
+                                match = true, txdat = txd;
+                                if (source === "list") {
+                                    const tx_listitem = append_tx_li(txd, rd.requesttype);
+                                    if (tx_listitem) {
+                                        transactionlist.append(tx_listitem.data(txd));
+                                        counter++;
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    scan_match(rd, api_data, rdo, counter, txdat, match);
+                    return
+                }
+                tx_api_scan_fail(rd, rdo, api_data, default_error);
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                const error_object = errorThrown || jqXHR;
+                tx_api_scan_fail(rd, rdo, api_data, error_object);
+            }).always(function() {
+                set_api_src(rdo, api_data);
+            });
+            return
+        }
+        api_proxy({ // poll mempool.space transaction id
+            "api_url": endpoint + "/api/tx/" + rd.txhash,
+            "proxy": false,
+            "params": {
+                "method": "GET"
+            }
+        }).done(function(e) {
+            const data = br_result(e).result;
+            if (data) {
+                const txd = mempoolspace_scan_data(data, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
+                if (txd) {
+                    if (txd.ccval) {
+                        match = true, txdat = txd, counter = 1;
+                        if (source === "list") {
+                            const tx_listitem = append_tx_li(txd, rd.requesttype);
+                            if (tx_listitem) {
+                                transactionlist.append(tx_listitem.data(txd));
+                            }
+                        }
+                    }
+                }
+                scan_match(rd, api_data, rdo, counter, txdat, match);
+                return
+            }
+            tx_api_scan_fail(rd, rdo, api_data, default_error);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            const error_object = errorThrown || jqXHR;
+            tx_api_scan_fail(rd, rdo, api_data, error_object);
+        });
+    }, 500);
 }
 
 // ** infura RPC **
@@ -2307,7 +2287,8 @@ function blockchaininfo_scan_data(data, setconfirmations, ccsymbol, address, lat
                 return transactiontime;
             }
             const block_id = q_obj(data, "block.height"),
-                conf = (block_id && block_id > 10 && latestblock) ? (latestblock - block_id) + 1 : 0,
+                conf_calc = (block_id && block_id > 10 && latestblock) ? (latestblock - block_id) + 1 : 0,
+                conf = latestblock ? conf_calc : 0,
                 confirmations = q_obj(data, "block.mempool") ? 0 : conf,
                 outputs = data.outputs;
             let outputsum;
@@ -2811,7 +2792,7 @@ function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash)
 }
 
 // This function processes Kaspa transaction data and returns a unified transaction object.
-function kaspa_scan_data(data, thisaddress, setconfirmations, current_bluescore) { // scan
+function kaspa_scan_data(data, thisaddress, setconfirmations, latestblock) { // scan
     if (data) {
         try {
             const transactiontime = data.block_time + glob_timezone;
@@ -2820,7 +2801,7 @@ function kaspa_scan_data(data, thisaddress, setconfirmations, current_bluescore)
             }
             const outputs = data.outputs,
                 block_bluescore = data.accepting_block_blue_score,
-                confblocks = (current_bluescore) ? current_bluescore - block_bluescore : null;
+                confblocks = (latestblock) ? latestblock - block_bluescore : null;
             let outputsum;
             if (outputs) {
                 outputsum = 0;
@@ -2831,7 +2812,8 @@ function kaspa_scan_data(data, thisaddress, setconfirmations, current_bluescore)
                 });
             }
             const ccval = (outputs) ? outputsum / 1e8 : null,
-                conf = data.is_accepted ? Math.max(0, confblocks || 0) : 0;
+                conf_calc = data.is_accepted ? Math.max(0, confblocks || 0) : 0,
+                conf = latestblock ? conf_calc : 0;
             return {
                 "ccval": ccval,
                 "transactiontime": transactiontime,

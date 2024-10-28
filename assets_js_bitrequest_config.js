@@ -298,7 +298,8 @@ const glob_apptitle = "Bitrequest",
                                 "display": true
                             }
                         ],
-                        "options": []
+                        "options": [],
+                        "poll_fallback": true
                     },
                     "Xpub": {
                         "active": true,

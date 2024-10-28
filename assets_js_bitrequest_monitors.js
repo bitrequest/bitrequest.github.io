@@ -301,11 +301,11 @@ function continue_select_api(rd, rdo, api_data) {
         return
     }
     if (api_name === "mempool.space") {
-        mempoolspace_rpc(rd, api_data, rdo, false)
+        mempoolspace_rpc_init(rd, api_data, rdo, false);
         return
     }
     if (api_name === "blockchain.info") {
-        blockchaininfo_fetch(rd, api_data, rdo, false)
+        blockchaininfo_fetch_init(rd, api_data, rdo);
         return
     }
     if (api_name === "blockcypher") {
@@ -329,7 +329,7 @@ function continue_select_api(rd, rdo, api_data) {
         return
     }
     if (rd.payment === "kaspa") {
-        kaspa_fetch(rd, api_data, rdo);
+        kaspa_fetch_init(rd, api_data, rdo);
         return
     }
     if (api_name === "dash.org") {
@@ -689,7 +689,7 @@ function select_rpc(rd, rdo, api_dat) {
         api_data = glob_l2 || api_dat;
     glob_rpc_attempts[rq_id + api_data.url] = true;
     if (is_btchain(rd.payment) === true) {
-        mempoolspace_rpc(rd, api_data, rdo, true);
+        mempoolspace_rpc_init(rd, api_data, rdo, true);
         return
     }
     if (rd.payment === "ethereum" || rd.erc20 === true) {
