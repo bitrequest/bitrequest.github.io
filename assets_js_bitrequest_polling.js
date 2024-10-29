@@ -90,6 +90,9 @@ function init_account_polling(time_out, socket, cache, rpc, next_api) {
         clearpinging(ping_id);
         account_polling(timeout, socket, cache, rpc, next_api);
     }
+    socket_info({
+        "url": ""
+    }, true);
     glob_pinging[ping_id] = setInterval(function() {
         account_polling(timeout, socket, cache, rpc, next_api);
     }, timeout);
@@ -157,6 +160,9 @@ function init_xmr_node(cachetime, address, vk, request_ts) {
             }
             const start_height = data.start_height;
             if (start_height > -1) { // success!
+                socket_info({
+                    "url": "mymonero api"
+                }, true);
                 glob_pinging[address] = setInterval(function() {
                     ping_xmr_node(cachetime, address, vk, request_ts);
                 }, 12000);
@@ -248,6 +254,8 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
         notify(translate("websocketoffline"), 500000, "yes");
     });
 }
+
+// ETH Layer2's
 
 // Initiates Arbitrum scanning
 function arbi_scan(address, request_ts) {

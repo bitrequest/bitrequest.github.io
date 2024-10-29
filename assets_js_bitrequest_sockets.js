@@ -149,14 +149,10 @@ function init_socket(socket_node, address, swtch, retry) {
     if (payment === "ethereum") {
         if (socket_node.url === glob_main_alchemy_socket) {
             alchemy_eth_websocket(socket_node, address); // L1 Alchemy
-            arbi_scan(address, request_ts); // L2 Arbitrum
         } else {
             web3_eth_websocket(socket_node, address, glob_main_eth_node); // L1 Infura
-            web3_eth_websocket({
-                "name": glob_main_arbitrum_socket,
-                "url": glob_main_arbitrum_socket
-            }, address, glob_main_arbitrum_node); // L2 Infura Arbitrum
         }
+        arbi_scan(address, request_ts); // L2 Arbitrum
         notify(translate("networks") + ": ETH, Arbitrum", 500000, "yes");
         return
     }
@@ -236,6 +232,7 @@ function lightning_socket(lnd) {
         socket = glob_sockets[pid] = new WebSocket(glob_ln_socket);
     socket.onopen = function(e) {
         console.log("Connected: " + glob_ln_socket);
+        glob_paymentpopup.addClass("live");
         const ping_event = JSON.stringify({
             "id": pid
         });
@@ -272,6 +269,7 @@ function lightning_socket(lnd) {
     };
     socket.onerror = function(e) {
         glob_lnd_confirm = false;
+        glob_paymentpopup.addClass("live");
         glob_pinging[pid] = setInterval(function() {
             lnd_poll_data(proxy_host, pk, pid, nid, imp);
         }, 5000);

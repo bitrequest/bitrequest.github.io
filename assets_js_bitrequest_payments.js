@@ -148,11 +148,15 @@ function wake_panel() {
 function set_request_timer() {
     // close request dialog after 3 minutes
     clearTimeout(glob_request_timer);
+    glob_paymentdialogbox.removeClass("timer");
     glob_request_timer = setTimeout(function() {
         cpd_pollcheck();
     }, 180000, function() {
         clearTimeout(glob_request_timer);
     });
+    setTimeout(function() {
+        glob_paymentdialogbox.addClass("timer");
+    }, 500);
 }
 
 // Initializes the swipe start functionality for the payment dialog
@@ -1428,7 +1432,7 @@ function getpayment(ccrateeuro, ccapi) {
         ccqr = "<div id='qrcode' class='qrcode'><canvas width='256' height='256'></canvas></div>" + cryptologo,
         lndqr = (request.payment === "bitcoin") ? "<div id='qrcode_lnd' class='qrcode'><canvas width='256' height='256'></canvas></div><img src='img_logos_btc-lnd.png' class='cmc_icon' id='lnd_icon'><img src='" + c_icons("phone-icon") + "' class='cmc_icon' id='phone_icon'>" : "",
         lndow = (request.payment === "bitcoin") ? "<div class='openwallet_lnd abr icon-folder-open' data-currency='bitcoin' data-rel='0'>" + openwtl + "</div>" : "";
-    $("#request_front").prepend("<div id='cl_wrap'>" + cryptologo + "</div>\
+    $("#request_front").prepend("<div class='time_panel'><div class='time_bar'></div></div><div id='cl_wrap'>" + cryptologo + "</div>\
         <div class='actionbar clearfix'>\
             <div id='sharerequest' class='abl icon-share2 sbactive'>" + translate("sharerequest") + "</div><div id='open_wallet' class='openwallet abr icon-folder-open' data-currency='" + request.payment + "' data-rel='0'>" + translate("openwallet") + "</div>" + lndow +
         "</div>\
@@ -1465,6 +1469,7 @@ function getpayment(ccrateeuro, ccapi) {
         </div>\
         <div id='apisrc'>" + translate("source") + ": " + ccapi + "</div>" + poweredby);
     glob_paymentdialogbox.find("#request_back").html("\
+        <div class='time_panel'><div class='time_bar'></div></div>\
         <div class='actionbar clearfix'></div>\
         <div id='backwraptop' class='flex'>" + requestinfo + "</div>\
         <div id='backwrapbottom' class='flex'>" + bottomcard + brstatuspanel + "</div>" + poweredby);
