@@ -247,10 +247,7 @@ ul.conf_options li .conf_emoji {
 }
 
 .options.showoptions {
-	-webkit-transform: translate(0, -50%);
-	-ms-transform: translate(0, -50%);
 	transform: translate(0, -50%);
-	-webkit-box-shadow: 0 30px 30px rgba(0, 0, 0, 0.5);
 	box-shadow: 0 30px 30px rgba(0, 0, 0, 0.5);
 	border-radius: 0.6em;
 }
@@ -288,8 +285,6 @@ ul.conf_options li .conf_emoji {
 	font-size: 170%;
 	color: rgba(0, 0, 0, 0.5);
 	opacity: 0;
-	-webkit-transition: opacity 1000ms ease;
-	-ms-transition: opacity 1000ms ease;
 	transition: opacity 1000ms ease;
 }
 
@@ -458,8 +453,6 @@ ul.conf_options li .conf_emoji {
 	background-color: #2c333a;
 	pointer-events: none;
 	opacity: 0;
-	-webkit-transition: opacity 300ms linear;
-	-ms-transition: opacity 300ms linear;
 	transition: opacity 300ms linear;
 }
 
@@ -534,8 +527,6 @@ ul.conf_options li .conf_emoji {
 	opacity: 0;
 	pointer-events: none;
 	background-color: #2c333a;
-	-webkit-transition: opacity 300ms linear;
-	-ms-transition: opacity 300ms linear;
 	transition: opacity 300ms linear;
 }
 
@@ -580,19 +571,13 @@ body.themepu #popup.active #dialog {
 	background-color: #2c333a;
 	opacity: 0;
 	pointer-events: none;
-	-webkit-transform: scale(5, 5);
-	-ms-transform: scale(5, 5);
 	transform: scale(0, 0);
-	-webkit-transition: all 200ms ease-out;
-	-ms-transition: all 200ms ease-out;
 	transition: all 200ms ease-out;
 }
 
 body.seed_dialog #seed_panel {
 	opacity: 1;
 	pointer-events: all;
-	-webkit-transform: scale(1, 1);
-	-ms-transform: scale(1, 1);
 	transform: scale(1, 1);
 }
 
@@ -627,20 +612,14 @@ body.seed_dialog #seed_panel {
 	left: 0;
 	width: 300%;
 	height: 100%;
-	-webkit-transition: transform 200ms ease-out;
-	-ms-transition: transform 200ms ease-out;
 	transition: transform 200ms ease-out;
 }
 
 #seed_steps.panel2 {
-	-webkit-transform: translate(-33.333%, 0);
-	-ms-transform: translate(-33.333%, 0);
 	transform: translate(-33.333%, 0);
 }
 
 #seed_steps.panel3 {
-	-webkit-transform: translate(-66.666%, 0);
-	-ms-transform: translate(-66.666%, 0);
 	transform: translate(-66.666%, 0);
 }
 

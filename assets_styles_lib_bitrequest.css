@@ -9,8 +9,6 @@
 	width: 100vw;
 	z-index: 999;
 	margin-left: -100%;
-	-webkit-transition: opacity 400ms linear;
-	-ms-transition: opacity 400ms linear;
 	transition: opacity 400ms linear;
 	opacity: 0;
 	pointer-events: none;
@@ -54,8 +52,6 @@ html.zoomframe #br_framebox {
 	background-color: #4D5359;
 	pointer-events: none;
 	opacity: 0;
-	-webkit-transition: opacity 1000ms linear;
-	-ms-transition: opacity 1000ms linear;
 	transition: opacity 1000ms linear;
 }
 

@@ -132,7 +132,6 @@ body.sharemode #payment {
 	margin: 0;
 	text-align: center;
 	cursor: pointer;
-	-webkit-box-shadow: 0 5px 8px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 5px 8px rgba(0, 0, 0, 0.2);
 	text-transform: uppercase;
 }
@@ -242,8 +241,6 @@ main {
 }
 
 .hidesplashscreen {
-	-webkit-transition: opacity 500ms linear;
-	-ms-transition: opacity 500ms linear;
 	transition: opacity 500ms linear;
 	opacity: 0;
 }
@@ -264,15 +261,11 @@ header {
 }
 
 html.showmain header {
-	-webkit-transition: -webkit-transform 200ms linear;
-	-ms-transition: -ms-transform 200ms linear;
 	transition: transform 200ms linear;
 }
 
 html.hidemain header {
 	position: fixed;
-	-webkit-transform: translate(0, 0) !important;
-	-ms-transform: translate(0, 0) !important;
 	transform: translate(0, 0) !important;
 	z-index: 1;
 }
@@ -291,8 +284,6 @@ html.hidemain header {
 	font-size: 220%;
 	padding: 0em 0.5em 0.2em 0em;
 	font-weight: 700;
-	-webkit-transition: all 300ms linear;
-	-ms-transition: all 300ms linear;
 	transition: all 300ms linear;
 }
 
@@ -311,26 +302,18 @@ html.hidemain header {
 	font-weight: 700;
 	opacity: 0;
 	cursor: pointer;
-	-webkit-transform: translate(-100%, 0);
-	-ms-transform: translate(-100%, 0);
 	transform: translate(-100%, 0);
-	-webkit-transition: all 400ms cubic-bezier(0.5, -0.5, 0.5, 1.5);
-	-ms-transition: all 400ms cubic-bezier(0.5, -0.5, 0.5, 1.5);
 	transition: all 400ms cubic-bezier(0.5, -0.5, 0.5, 1.5);
 }
 
 html:not(.gdauth) body.haschanges #alert,
 html.proxyupdate #alert {
 	opacity: 1;
-	-webkit-transform: translate(0%, 0);
-	-ms-transform: translate(0%, 0);
 	transform: translate(0%, 0);
 }
 
 html:not(.gdauth) body.haschanges #header h1,
 html.proxyupdate #header h1 {
-	-webkit-transform: translate(1em, 0);
-	-ms-transform: translate(1em, 0);
 	transform: translate(1em, 0);
 }
 
@@ -361,8 +344,6 @@ html:not(.proxyupdate).gdauth #alert {
 	padding: 0.2em;
 	border: 0.1em solid rgba(255, 255, 255, 0);
 	text-align: center;
-	-webkit-transition: opacity 700ms linear;
-	-ms-transition: opacity 700ms linear;
 	transition: opacity 700ms linear;
 	cursor: pointer;
 }
@@ -418,8 +399,6 @@ html.fixednav body.showstartpage #fixednav {
 	width: 100%;
 	list-style-type: none;
 	opacity: 0;
-	-webkit-transition: opacity 300ms linear;
-	-ms-transition: opacity 300ms linear;
 	transition: opacity 300ms linear;
 }
 
@@ -470,8 +449,6 @@ html.showmain .nav {
 }
 
 .nav li.settingsbttn .self>span {
-	-webkit-transform: scale(1.3, 1.3);
-	-ms-transform: scale(1.3, 1.3);
 	transform: scale(1.3, 1.3);
 }
 
@@ -501,30 +478,20 @@ html.showmain .nav {
 	width: 42.5%;
 	height: 0.2em;
 	background-color: #FFF;
-	-webkit-transform: translate(-100%, 0);
-	-ms-transform: translate(-100%, 0);
 	transform: translate(-100%, 0);
-	-webkit-transition: all 400ms cubic-bezier(0.5, -0.5, 0.5, 1.5);
-	-ms-transition: all 400ms cubic-bezier(0.5, -0.5, 0.5, 1.5);
 	transition: all 400ms cubic-bezier(0.5, -0.5, 0.5, 1.5);
 }
 
 .highlightbar[data-class="currencies"] .highlighter {
-	-webkit-transform: translate(0%, 0);
-	-ms-transform: translate(0%, 0);
 	transform: translate(0%, 0);
 }
 
 .highlightbar[data-class="requests"] .highlighter {
-	-webkit-transform: translate(100%, 0);
-	-ms-transform: translate(100%, 0);
 	transform: translate(100%, 0);
 }
 
 .highlightbar[data-class="settings"] .highlighter,
 .highlightbar[data-class="home"] .highlighter {
-	-webkit-transform: translate(200%, 0);
-	-ms-transform: translate(200%, 0);
 	transform: translate(200%, 0);
 }
 
@@ -548,11 +515,7 @@ html.showmain .nav {
 	list-style-type: none;
 	text-align: center;
 	margin: auto;
-	-webkit-transform: translate(0%, 0);
-	-ms-transform: translate(0%, 0);
 	transform: translate(0%, 0);
-	-webkit-transition: all 300ms linear;
-	-ms-transition: all 300ms linear;
 	transition: all 300ms linear;
 }
 
@@ -592,13 +555,10 @@ ul.currencylist li img {
 	background-color: rgba(255, 255, 255, 1);
 	border-radius: 50%;
 	padding: 1%;
-	-webkit-box-shadow: 0 30px 30px rgba(0, 0, 0, 0.5);
 	box-shadow: 0 2em 2em rgba(0, 0, 0, 0.5);
 }
 
 html.showmain ul#currencylist {
-	-webkit-transform: translate(-200%, 0);
-	-ms-transform: translate(-200%, 0);
 	transform: translate(-200%, 0);
 }
 
@@ -609,19 +569,13 @@ html.showmain ul#currencylist {
 	position: absolute;
 	width: 100%;
 	min-height: 60vh;
-	-webkit-transform: scale(0, 0);
-	-ms-transform: scale(0, 0);
 	transform: scale(0, 0);
 	opacity: 0;
-	-webkit-transition: all 300ms ease-in-out;
-	-ms-transition: all 300ms ease-in-out;
 	transition: all 300ms ease-in-out;
 	padding-bottom: 100px;
 }
 
 .currentpage {
-	-webkit-transform: scale(1, 1);
-	-ms-transform: scale(1, 1);
 	transform: scale(1, 1);
 	opacity: 1;
 }
@@ -660,10 +614,7 @@ html.showmain ul#currencylist {
 	color: #009788;
 	border-radius: 50%;
 	cursor: pointer;
-	-webkit-box-shadow: 0 5px 8px rgba(0, 0, 0, 0.2);
 	box-shadow: 0 5px 8px rgba(0, 0, 0, 0.2);
-	-webkit-transition: opacity 300ms linear;
-	-ms-transition: opacity 300ms linear;
 	transition: opacity 300ms linear;
 }
 
@@ -704,7 +655,6 @@ html.showmain ul#currencylist {
 
 #request_history.load {
 	animation: lds-ring 500ms normal forwards;
-	-webkit-animation: lds-ring 500ms normal forwards;
 }
 
 html.show_rr #request_history {
@@ -857,8 +807,6 @@ html.showmain #newrequest_alias {
 
 .requestlist li.rqli .liwrap img.cmc_icon:nth-child(2) {
 	opacity: 0;
-	-webkit-transition: opacity 1500ms ease-out;
-	-ms-transition: opacity 1500ms ease-out;
 	transition: opacity 1500ms ease-out;
 }
 
@@ -884,8 +832,6 @@ html.showmain #newrequest_alias {
 	color: rgba(238, 173, 88, 0.64);
 	font-weight: 700;
 	font-size: 520%;
-	-webkit-transform: rotate(15deg);
-	-ms-transform: rotate(15deg);
 	transform: rotate(15deg);
 }
 
@@ -1026,8 +972,6 @@ li[data-checked="false"] .checkbox:before,
 /* dragging */
 
 html.dragmode .currentpage .applist li {
-	-webkit-transition: -webkit-transform 200ms linear;
-	-ms-transition: -ms-transform 200ms linear;
 	transition: transform 200ms linear;
 	touch-action: none;
 }
@@ -1068,8 +1012,6 @@ html.dragmode .currentpage .applist li.dragging {
 	float: left;
 	width: 100%;
 	min-height: 8em;
-	-webkit-transition: background-color 200ms ease-out;
-	-ms-transition: background-color 200ms ease-out;
 	transition: background-color 200ms ease-out;
 	overflow: hidden;
 	border-bottom: 1px solid rgba(255, 255, 255, 0.15);
@@ -1199,29 +1141,14 @@ html.dragmode .currentpage .applist li.dragging {
 	background-color: #2c333a;
 	border-radius: 1em;
 	opacity: 0;
-	-webkit-transition: opacity 1400ms ease;
-	-ms-transition: opacity 1400ms ease;
 	transition: opacity 1400ms ease;
 }
 
 .requestlist li.pmstatloaded {
 	animation: loaded 500ms normal forwards;
-	-webkit-animation: loaded 500ms normal forwards;
 }
 
 @keyframes loaded {
-	0% {
-		transform: scale(1);
-	}
-	50% {
-		transform: scale(1.01);
-	}
-	100% {
-		transform: scale(1);
-	}
-}
-
-@-webkit-keyframes loaded {
 	0% {
 		transform: scale(1);
 	}
@@ -1490,26 +1417,21 @@ html.dragmode .currentpage .applist li.dragging {
 	color: #FFF;
 	border-radius: 1em;
 	overflow: hidden;
-	-webkit-transform: translate3d(0, 0, 0);
+	transform: translate3d(0, 0, 0);
 	vertical-align: top;
 }
 
 .txli_conf .confbar {
 	position: absolute;
 	top: 0;
-	0;
 	bottom: 0;
 	left: 0;
 	width: 100%;
 	background-color: green;
-	-webkit-transform: translate(-100%, 0);
-	-ms-transform: translate(-100%, 0);
 	transform: translate(-100%, 0);
 }
 
 #requestlist li.visible_request .txli_conf .confbar {
-	-webkit-transition: transform 500ms ease-out;
-	-ms-transition: transform 500ms ease-out;
 	transition: transform 500ms ease-out;
 }
 
@@ -1653,18 +1575,12 @@ html.inframe .requestlist li .req_actions .icon-folder-open {
 	left: 0;
 	padding: 5vh 0 10vh 0;
 	background-color: rgba(0, 0, 0, 0.0);
-	-webkit-transform: translate(100%, 0);
-	-ms-transform: translate(100%, 0);
 	transform: translate(100%, 0);
-	-webkit-transition: background-color 500ms linear;
-	-ms-transition: background-color 500ms linear;
 	transition: background-color 500ms linear;
 	overflow: auto;
 }
 
 .showpu {
-	-webkit-transform: translate(0, 0);
-	-ms-transform: translate(0, 0);
 	transform: translate(0, 0);
 }
 
@@ -1679,8 +1595,6 @@ html.inframe .requestlist li .req_actions .icon-folder-open {
 	max-width: 850px;
 	height: auto;
 	opacity: 0;
-	-webkit-transform: scale(0.7, 0.7);
-	-ms-transform: scale(0.7, 0.7);
 	transform: scale(0.7, 0.7);
 }
 
@@ -1688,7 +1602,6 @@ html.inframe .requestlist li .req_actions .icon-folder-open {
 	padding: 1em;
 	background-color: #FFF;
 	border-radius: 1.5em;
-	-webkit-box-shadow: 0 30px 30px rgba(0, 0, 0, 0.5);
 	box-shadow: 0 30px 30px rgba(0, 0, 0, 0.5);
 	overflow: hidden;
 }
@@ -1698,15 +1611,11 @@ html.inframe .requestlist li .req_actions .icon-folder-open {
 }
 
 .showpu .dialog {
-	-webkit-transition: all 500ms cubic-bezier(0.5, -0.5, 0.5, 1.5);
-	-ms-transition: all 500ms cubic-bezier(0.5, -0.5, 0.5, 1.5);
 	transition: all 500ms cubic-bezier(0.5, -0.5, 0.5, 1.5);
 }
 
 #payment.swiping #paymentdialog,
 #payment.flipping #paymentdialog {
-	-webkit-transition: none !important;
-	-ms-transition: none !important;
 	transition: none !important;
 	-webkit-user-select: none;
 	-moz-user-select: none;
@@ -1716,8 +1625,6 @@ html.inframe .requestlist li .req_actions .icon-folder-open {
 }
 
 .showpu.active .dialog {
-	-webkit-transform: scale(1, 1);
-	-ms-transform: scale(1, 1);
 	transform: scale(1, 1);
 	opacity: 1;
 }
@@ -2002,11 +1909,7 @@ input:invalid {
 	width: 100%;
 	padding: 0;
 	text-align: center;
-	-webkit-transform: translate(0, 200%);
-	-ms-transform: translate(0, 200%);
 	transform: translate(0, 200%);
-	-webkit-transition: transform 200ms ease-out;
-	-ms-transition: transform 200ms ease-out;
 	transition: transform 200ms ease-out;
 	pointer-events: none;
 }
@@ -2050,8 +1953,6 @@ input:invalid {
 }
 
 #notify.popupn {
-	-webkit-transform: translate(0, 0%);
-	-ms-transform: translate(0, 0%);
 	transform: translate(0, 0%);
 }
 
@@ -2100,18 +2001,12 @@ input:invalid {
 	color: #bbbbbb;
 	background-color: rgba(0, 0, 0, 0.66);
 	border-bottom: 1px solid #909090;
-	-webkit-transform: translate(0, -100%);
-	-ms-transform: translate(0, -100%);
 	transform: translate(0, -100%);
-	-webkit-transition: transform 200ms ease-out;
-	-ms-transition: transform 200ms ease-out;
 	transition: transform 200ms ease-out;
 	pointer-events: none;
 }
 
 #topnotify.slidedown {
-	-webkit-transform: translate(0, 0%);
-	-ms-transform: translate(0, 0%);
 	transform: translate(0, 0%);
 }
 
@@ -2128,18 +2023,12 @@ input:invalid {
 
 .poplistbox {
 	margin: auto;
-	-webkit-transform: scale(5, 5);
-	-ms-transform: scale(5, 5);
 	transform: scale(5, 5);
 	opacity: 0;
-	-webkit-transition: all 300ms ease-out;
-	-ms-transition: all 300ms ease-out;
 	transition: all 300ms ease-out;
 }
 
 .active .poplistbox {
-	-webkit-transform: scale(1, 1);
-	-ms-transform: scale(1, 1);
 	transform: scale(1, 1);
 	opacity: 1;
 }
@@ -2257,8 +2146,6 @@ html.inframe.hide_app #closeoptions {
 /* loader */
 
 #loader {
-	-webkit-transition: all 300ms ease-out;
-	-ms-transition: all 300ms ease-out;
 	transition: all 300ms ease-out;
 }
 
@@ -2322,16 +2209,11 @@ html.inframe.hide_app #closeoptions {
 	width: 200px;
 	background-color: #FFF;
 	padding: 10px;
-	-webkit-transform: translate(-100%, 0);
-	-ms-transform: translate(-100%, 0);
 	transform: translate(-100%, 0);
 }
 
 .flex,
 .iconbox {
-	display: -webkit-box;
-	display: -ms-flexbox;
-	display: -webkit-flex;
 	display: flex;
 	-webkit-box-pack: center;
 	-ms-flex-pack: center;
@@ -2367,8 +2249,6 @@ html.noframe body.showstartpage #startpage {
 	width: 300vw;
 	height: 100vh;
 	overflow: hidden;
-	-webkit-transition: transform 500ms ease;
-	-ms-transition: transform 500ms ease;
 	transition: transform 500ms ease;
 }
 
@@ -2510,14 +2390,10 @@ html.noframe body.showstartpage #startpage {
 }
 
 #startpage.sp_entername #startsteps {
-	-webkit-transform: translate(-33.333333%, 0);
-	-ms-transform: translate(-33.333333%, 0);
 	transform: translate(-33.333333%, 0);
 }
 
 #startpage.sp_choosecurrency #startsteps {
-	-webkit-transform: translate(-66.666666%, 0);
-	-ms-transform: translate(-66.666666%, 0);
 	transform: translate(-66.666666%, 0);
 }
 
@@ -2541,8 +2417,6 @@ html.noframe body.showstartpage #startpage {
 	padding: 0.3em 0 0.3em 0.3em;
 	cursor: not-allowed;
 	opacity: 0.3;
-	-webkit-transition: opacity 500ms ease;
-	-ms-transition: opacity 500ms ease;
 	transition: opacity 500ms ease;
 	pointer-events: none;
 }
@@ -2561,8 +2435,6 @@ html.noframe body.showstartpage #startpage {
 	font-weight: 700;
 	padding: 0.3em;
 	opacity: 0;
-	-webkit-transition: opacity 1000ms ease;
-	-ms-transition: opacity 1000ms ease;
 	transition: opacity 1000ms ease;
 }
 
@@ -2599,8 +2471,6 @@ html.swipemode #paymentdialogbox {
 }
 
 html.flipmode #paymentdialog {
-	-webkit-transition: all 270ms linear;
-	-ms-transition: all 270ms linear;
 	transition: all 270ms linear;
 }
 
@@ -2636,8 +2506,6 @@ html.flipmode #paymentdialog {
 	font-weight: 700;
 	padding: 1em;
 	cursor: pointer;
-	-webkit-transition: all 300ms linear;
-	-ms-transition: all 300ms linear;
 	transition: all 300ms linear;
 	text-transform: uppercase;
 }
@@ -2649,8 +2517,6 @@ html.flipmode #paymentdialog {
 	margin: 0 0 0 -0.5em;
 	color: #009788;
 	cursor: pointer;
-	-webkit-transition: opacity 300ms linear;
-	-ms-transition: opacity 300ms linear;
 	transition: opacity 300ms linear;
 }
 
@@ -2762,11 +2628,8 @@ html.flipmode #paymentdialog {
 	padding: 0;
 	border-radius: 1em;
 	box-sizing: content-box;
-	-webkit-box-shadow: 0 0 0 0.15em #CCC;
 	box-shadow: 0 0 0 0.15em #CCC;
 	overflow: hidden;
-	-webkit-transition: all 200ms ease-out;
-	-ms-transition: all 200ms ease-out;
 	transition: all 200ms ease-out;
 	cursor: pointer;
 }
@@ -2774,7 +2637,6 @@ html.flipmode #paymentdialog {
 .switchpanel.switchon,
 .switchpanel.true {
 	background-color: #00b800;
-	-webkit-box-shadow: 0 0 0 0.15em #00b800;
 	box-shadow: 0 0 0 0.15em #00b800;
 }
 
@@ -2792,21 +2654,14 @@ html.flipmode #paymentdialog {
 	height: 2em;
 	background-color: #FFF;
 	border-radius: 1em;
-	-webkit-box-shadow: 0 0.15em 0.15em rgba(0, 0, 0, 0.3);
 	box-shadow: 0 0.15em 0.15em rgba(0, 0, 0, 0.3);
-	-webkit-transform: translate(0%, 0%);
-	-ms-transform: translate(0%, 0%);
 	transform: translate(0%, 0%);
-	-webkit-transition: transform 100ms ease-out;
-	-ms-transition: transform 100ms ease-out;
 	transition: transform 100ms ease-out;
 	pointer-events: none;
 }
 
 .switchpanel.switchon .switch,
 .switchpanel.true .switch {
-	-webkit-transform: translate(60%, 0%);
-	-ms-transform: translate(60%, 0%);
 	transform: translate(60%, 0%);
 }
 
@@ -2816,8 +2671,6 @@ html.flipmode #paymentdialog {
 	-moz-user-select: none;
 	-ms-user-select: none;
 	-khtml-user-select: none;
-	-webkit-transition: background-color 200ms ease-out;
-	-ms-transition: background-color 200ms ease-out;
 	transition: background-color 200ms ease-out;
 }
 
@@ -2836,17 +2689,11 @@ html.flipmode #paymentdialog {
 	text-align: center;
 	padding: 1em 1em 0 1em;
 	border-top: 1px solid #CCC;
-	-webkit-transform: translate(0, 100%);
-	-ms-transform: translate(0, 100%);
 	transform: translate(0, 100%);
-	-webkit-transition: -webkit-transform 400ms linear;
-	-ms-transition: -ms-transform 400ms linear;
 	transition: transform 400ms linear;
 }
 
 body.getapp #app_panel {
-	-webkit-transform: translate(0, 0%);
-	-ms-transform: translate(0, 0%);
 	transform: translate(0, 0%);
 }
 
@@ -2940,19 +2787,13 @@ html.inframe body {
 	height: 100vh;
 	background-color: black;
 	z-index: 1;
-	-webkit-transform: translate(0, 110vh);
-	-ms-transform: translate(0, 110vh);
 	transform: translate(0, 110vh);
-	-webkit-transition: all 200ms linear;
-	-ms-transition: all 200ms linear;
 	transition: all 200ms linear;
 	pointer-events: none;
 	opacity: 0;
 }
 
 body.showcam #scanner {
-	-webkit-transform: translate(0, 0vh);
-	-ms-transform: translate(0, 0vh);
 	transform: translate(0, 0vh);
 	pointer-events: all;
 	opacity: 1;
