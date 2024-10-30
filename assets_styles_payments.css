@@ -1084,10 +1084,18 @@ html.inframe #request_back {
 #paymentdialogbox .time_panel {
 	position:absolute;
 	bottom:0;
-	left:0;
-	width:100%;
+	left:0em;
+	right:0em;
 	height:12px;
 	border-top:1px solid #ccc;
+	border-right:1px solid #ccc;
+	border-left:1px solid #ccc;
+	overflow: hidden;
+}
+
+html.inframe #paymentdialogbox .time_panel {
+	left:1.5em;
+	right:1.5em;
 }
 
 #paymentdialogbox .time_bar {
