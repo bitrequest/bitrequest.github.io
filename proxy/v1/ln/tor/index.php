@@ -3,7 +3,7 @@ function fetch_tor($url, $data, $headers) {
     $plo = [
         "url" => $url,
         "data" => $data,
-        "headers" => $headers,
+        "headers" => $headers
     ];
     $local = false; // Set to true if TOR is installed on your server (apt install tor)
     if ($local === true) {
