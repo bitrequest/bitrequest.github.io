@@ -104,9 +104,9 @@ if ($fn === "put") {
     $stat_resp = false;
     $stat_content = [
         "pid" => $status,
-        "status" => "waiting",
         "rqtype" => $rqtype,
         "proxy" => $server_host,
+        "status" => "waiting",
         "version" => VERSION
     ];
     if ($pl) {
@@ -135,11 +135,11 @@ if ($fn === "put") {
                 $put_result = api(null, json_encode($stat_content), null, 0, "tx", null, $status);
                 $p_result = $put_result["br_result"] ?? false;
                 if ($p_result) {
-	                $stat_content = [
+                    $stat_content = [
                         "pid" => $status,
-                        "status" => "waiting",
                         "rqtype" => $rqtype,
                         "proxy" => $server_host,
+                        "status" => "waiting",
                         "version" => VERSION
                     ];
                     $stat_resp = true;
@@ -257,6 +257,8 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
                     if (file_exists($path)) {
                         $s_content = [
                             "pid" => $post_pid,
+                            "rqtype" => "outgoing",
+                            "proxy" => $server_host,
                             "status" => "pending",
                             "bolt11" => $invoice["bolt11"],
                             "hash" => $invoice["hash"],
@@ -264,9 +266,7 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
                             "amount_paid" => null,
                             "timestamp" => time() * 1000,
                             "txtime" => null,
-                            "conf" => 0,
-                            "rqtype" => "outgoing",
-                            "proxy" => $server_host
+                            "conf" => 0
                         ];
                         file_put_contents($path, json_encode($s_content));
                     }
@@ -360,6 +360,8 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
                         
                         $s_content = [
                             "pid" => $get_pid,
+                            "rqtype" => $type_text,
+                            "proxy" => $server_host,
                             "status" => "pending",
                             "bolt11" => $pr,
                             "hash" => $hash,
@@ -367,9 +369,7 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
                             "amount_paid" => null,
                             "timestamp" => time() * 1000,
                             "txtime" => null,
-                            "conf" => 0,
-                            "rqtype" => $type_text,
-                            "proxy" => $server_host
+                            "conf" => 0
                         ];
                         
                         $tx_content = json_encode($s_content);
