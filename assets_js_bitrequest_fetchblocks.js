@@ -295,7 +295,7 @@ function lightning_fetch(rd, api_data, rdo) {
         }, false);
         return
     }
-    api_callback(rd.requestid);
+    continue_select_api(rd, rdo, api_data);
 }
 
 // ** MyMonero API **
