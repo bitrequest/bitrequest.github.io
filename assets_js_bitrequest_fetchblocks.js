@@ -293,7 +293,9 @@ function lightning_fetch(rd, api_data, rdo) {
             "error": "invoice not found",
             "console": true
         }, false);
+        return
     }
+    api_callback(rd.requestid);
 }
 
 // ** MyMonero API **
