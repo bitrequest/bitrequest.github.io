@@ -32,7 +32,6 @@ $(document).ready(function() {
     //set_l2_status
     reconnect();
     //rconnect
-    console.log(glob_l2s);
 });
 
 // Websockets / Pollfunctions
