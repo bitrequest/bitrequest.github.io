@@ -318,7 +318,7 @@ html.proxyupdate #header h1 {
 }
 
 html:not(.proxyupdate).gdauth #alert {
-	display: none!important;
+	display: none !important;
 }
 
 /* Nav */
@@ -461,6 +461,7 @@ html.showmain .nav {
 	50% {
 		background-color: rgba(255, 255, 255, 0.3);
 	}
+
 	100% {
 		background-color: rgba(255, 255, 255, 0);
 		color: #FFF;
@@ -897,14 +898,14 @@ li[data-checked="false"] .checkbox:before,
 	border-bottom: none;
 }
 
-.settinglist .liwrap > span {
+.settinglist .liwrap>span {
 	display: block;
-	float:left;
+	float: left;
 }
 
 .settinglist .liwrap .atext {
 	cursor: pointer;
-	float:left;
+	float: left;
 }
 
 .settinglist .liwrap>span:before {
@@ -1023,7 +1024,7 @@ html.dragmode .currentpage .applist li.dragging {
 .requestlist li.requestlocal.visible_request,
 .requestlist li.requestlocal.visible_request .brstatuspanel,
 .requestlist li.requestlocal .brmarker {
-	background-color:rgba(0, 0, 0, 0.20);
+	background-color: rgba(0, 0, 0, 0.20);
 }
 
 .requestlist li .liwrap img.cmc_icon {
@@ -1152,9 +1153,11 @@ html.dragmode .currentpage .applist li.dragging {
 	0% {
 		transform: scale(1);
 	}
+
 	50% {
 		transform: scale(1.01);
 	}
+
 	100% {
 		transform: scale(1);
 	}
@@ -1174,7 +1177,7 @@ html.dragmode .currentpage .applist li.dragging {
 }
 
 .requestlist li.requestincoming[data-pending="incoming"] .payrequest,
-.requestlist li.requestincoming[data-status="canceled"] .payrequest  {
+.requestlist li.requestincoming[data-status="canceled"] .payrequest {
 	display: block;
 }
 
@@ -1196,7 +1199,7 @@ html.dragmode .currentpage .applist li.dragging {
 }
 
 .moreinfo .icon-power {
-	color:#f5c243;
+	color: #f5c243;
 }
 
 .moreinfo h2 {
@@ -1244,14 +1247,14 @@ html.dragmode .currentpage .applist li.dragging {
 
 .requestlist li.rqli.lightning .metalist li.receivedamount,
 .requestlist li.rqli.lightning .metalist li.payday {
-	display:none;
+	display: none;
 }
 
 .requestlist li.rqli.lightning[data-status="paid"] .metalist li.receivedamount,
 .requestlist li.rqli.lightning[data-status="insufficient"] .metalist li.receivedamount,
 .requestlist li.rqli.lightning[data-status="paid"] .metalist li.payday,
 .requestlist li.rqli.lightning[data-status="insufficient"] .metalist li.payday {
-	display:block;
+	display: block;
 }
 
 .metalist {
@@ -1304,7 +1307,7 @@ html.dragmode .currentpage .applist li.dragging {
 }
 
 .metalist li.receipt {
-	padding-top:0.7em;
+	padding-top: 0.7em;
 	display: none;
 }
 
@@ -1390,7 +1393,7 @@ html.dragmode .currentpage .applist li.dragging {
 }
 
 .transactionlist li .txli_content .icon-power {
-	color:#f5c243;
+	color: #f5c243;
 }
 
 .transactionlist li .historic_meta {
@@ -1475,17 +1478,17 @@ html.dragmode .currentpage .applist li.dragging {
 }
 
 .requestlist li.rqli[data-status="canceled"] .transactionlist li .txli_conf {
-	display:none;
+	display: none;
 }
 
 .requestlist li.rqli .transactionlist li .txli_conf.txl_canceled {
-	display:none;
-	color:#eeac57;
-	opacity:1;
+	display: none;
+	color: #eeac57;
+	opacity: 1;
 }
 
 .requestlist li.rqli[data-status="canceled"] .transactionlist li .txli_conf.txl_canceled {
-	display:inline-block;
+	display: inline-block;
 }
 
 .requestlist li[data-confirmations="0"] .metalist .txli_conf,
@@ -1971,11 +1974,11 @@ input:invalid {
 }
 
 .warning {
-	display:inline-block;
+	display: inline-block;
 	color: #FFF;
 	background-color: #B33A3A !important;
 	padding: 1em;
-	margin-bottom:0.5em;
+	margin-bottom: 0.5em;
 }
 
 .error {
@@ -2194,6 +2197,7 @@ html.inframe.hide_app #closeoptions {
 	0% {
 		transform: rotate(0deg);
 	}
+
 	100% {
 		transform: rotate(360deg);
 	}

@@ -55,7 +55,8 @@
 .brstatuspanel span.receivedcrypto {
 	text-transform: uppercase;
 	font-size: 120%;
-	color: #707070;;
+	color: #707070;
+	;
 }
 
 .brstatuspanel span.receivedfiat {
@@ -185,7 +186,7 @@ html.inframe #paymentdialogbox[data-pending="no"].transacting #view_tx {
 }
 
 #paymentdialogbox[data-status="canceled"] #mainpulse {
-	opacity:0;
+	opacity: 0;
 }
 
 #statusbox {
@@ -199,9 +200,11 @@ html.inframe #paymentdialogbox[data-pending="no"].transacting #view_tx {
 	0% {
 		transform: scale(1) rotate(0deg);
 	}
+
 	50% {
 		transform: scale(1.1) rotate(180deg);
 	}
+
 	100% {
 		transform: scale(1) rotate(360deg);
 	}
@@ -211,6 +214,7 @@ html.inframe #paymentdialogbox[data-pending="no"].transacting #view_tx {
 	50% {
 		transform: scale(1.3);
 	}
+
 	100% {
 		transform: scale(1);
 	}
@@ -263,9 +267,11 @@ html.inframe #paymentdialogbox[data-pending="no"].transacting #view_tx {
 		opacity: 0;
 		transform: scale(0);
 	}
+
 	60% {
 		opacity: 1;
 	}
+
 	100% {
 		opacity: 0;
 		transform: scale(1);
@@ -273,7 +279,7 @@ html.inframe #paymentdialogbox[data-pending="no"].transacting #view_tx {
 }
 
 #paymentdialogbox.pd_error .pulse {
-	opacity:0;
+	opacity: 0;
 }
 
 .requestlist li .brstatuspanel h2 {
@@ -426,7 +432,7 @@ html.inframe #request_back {
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"].request .actionbar .openwallet_lnd {
-	display:inline-block;
+	display: inline-block;
 }
 
 .actionbar>div {
@@ -451,16 +457,16 @@ html.inframe #request_back {
 /* wqrcode */
 
 #main_qrwrap {
-	opacity:0.2;
+	opacity: 0.2;
 	transition: opacity 500ms linear;
 }
 
 #payment.live #main_qrwrap {
-	opacity:1;
+	opacity: 1;
 }
 
 #payment #paymentdialogbox.transacting #main_qrwrap {
-	opacity:1;
+	opacity: 1;
 }
 
 .qrwrap {
@@ -558,7 +564,7 @@ html.inframe #request_back {
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"] #labelbttn {
-	display:none;
+	display: none;
 }
 
 #pickcurrency {
@@ -590,18 +596,18 @@ html.inframe #request_back {
 }
 
 #paymentaddress_lnd {
-	width:80%;
-	padding-left:20%;
-	overflow:hidden;
+	width: 80%;
+	padding-left: 20%;
+	overflow: hidden;
 }
 
 #paymentaddress:after {
-	position:absolute;
+	position: absolute;
 	content: "•";
 	color: #FF0000;
-	margin:-0.32em 0 0 0.1em;
-	padding:0;
-	font-size:2em;
+	margin: -0.32em 0 0 0.1em;
+	padding: 0;
+	font-size: 2em;
 }
 
 #payment.live #paymentaddress:after {
@@ -639,19 +645,19 @@ html.inframe #request_back {
 }
 
 .networks {
-	position:relative;
-	width:100%;
+	position: relative;
+	width: 100%;
 }
 
 #request_back .networks {
-	position:absolute;
-	bottom:15px;
-	left:0;
-	right:0;
+	position: absolute;
+	bottom: 15px;
+	left: 0;
+	right: 0;
 }
 
 .networks ul {
-	width:100%;
+	width: 100%;
 	list-style-type: none;
 	font-size: 0.8em;
 	text-align: center;
@@ -659,8 +665,8 @@ html.inframe #request_back {
 }
 
 .networks ul li {
-	position:relative;
-	display:inline-block;
+	position: relative;
+	display: inline-block;
 	padding: 0 0.5em 0 0;
 	font-weight: 600;
 }
@@ -672,12 +678,12 @@ html.inframe #request_back {
 }
 
 .networks ul li.nwl2:after {
-	position:absolute;
+	position: absolute;
 	content: "•";
 	color: rgba(255, 255, 255, 0);
-	margin:-0.32em 0 0 0.08em;
-	padding:0;
-	font-size:2em;
+	margin: -0.32em 0 0 0.08em;
+	padding: 0;
+	font-size: 2em;
 }
 
 .networks ul li.nwl2.offline {
@@ -699,147 +705,147 @@ html.inframe #request_back {
 }
 
 #rq_errlog {
-	display:inline-block;
-	width:100%;
-	margin:1em 0 0 0;
-	width:100%;
+	display: inline-block;
+	width: 100%;
+	margin: 1em 0 0 0;
+	width: 100%;
 }
 
 #rq_errlog .rq_err {
-	display:inline-block;
-	width:100%;
-	color:#bb282b;
-	background-color:#f8e5e4;
-	border:1px solid #f5caca;
-	padding:0.2em 0.5em;
+	display: inline-block;
+	width: 100%;
+	color: #bb282b;
+	background-color: #f8e5e4;
+	border: 1px solid #f5caca;
+	padding: 0.2em 0.5em;
 }
 
 .lnswitch {
-	position:absolute;
-	bottom:0;
-	padding:0 0 1em 0;
-	cursor:pointer;
-	color:#CCC;
+	position: absolute;
+	bottom: 0;
+	padding: 0 0 1em 0;
+	cursor: pointer;
+	color: #CCC;
 }
 
 #lightning_switch {
-	right:0;
+	right: 0;
 }
 
 #lightning_switch span.icon-power {
-	font-size:200%;
+	font-size: 200%;
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"] #lightning_switch {
-	color:#f5c243;
+	color: #f5c243;
 }
 
 #paymentdialogbox #lnd_icon {
-	width:10%;
+	width: 10%;
 }
 
 #ndef_switch {
-	left:-0.5em;
-	color:#8f8f8f;
+	left: -0.5em;
+	color: #8f8f8f;
 	transform: rotate(90deg);
-	display:none;
+	display: none;
 }
 
 #ndef_switch span.icon-connection {
-	font-size:200%;
+	font-size: 200%;
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"] #ndef_switch {
-	display:block;
+	display: block;
 }
 
 #paymentdialogbox #qrcode_lnd,
 #paymentdialogbox #lnd_icon,
 #paymentdialogbox .openwallet_lnd,
 #paymentdialogbox #paymentaddress_lnd,
-#paymentdialogbox #sharecryptowrap > img.cmc_icon.icon_lnd,
-#paymentdialogbox #ccamount > img.cmc_icon.icon_lnd {
-	display:none;
+#paymentdialogbox #sharecryptowrap>img.cmc_icon.icon_lnd,
+#paymentdialogbox #ccamount>img.cmc_icon.icon_lnd {
+	display: none;
 }
 
 #paymentdialogbox #current_lndnode {
-	display:none;
+	display: none;
 }
 
 #paymentdialogbox #current_lndnode #lnd_nodeinfo_trigger {
 	text-decoration: underline;
-	cursor:pointer;
+	cursor: pointer;
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"] #qrcode_lnd {
-	display:flex;
+	display: flex;
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"] #lnd_icon {
-	display:block;
+	display: block;
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"] #qrcode,
 #paymentdialogbox[data-lswitch="lnd_ao"] #paymentaddress,
-#paymentdialogbox[data-lswitch="lnd_ao"] #ccamount > img.cmc_icon {
-	display:none;
+#paymentdialogbox[data-lswitch="lnd_ao"] #ccamount>img.cmc_icon {
+	display: none;
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"] .openwallet_lnd {
-	display:inline-block;
+	display: inline-block;
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"] #paymentaddress_lnd,
-#paymentdialogbox[data-lswitch="lnd_ao"] #sharecryptowrap > img.cmc_icon.icon_lnd {
-	display:block;
+#paymentdialogbox[data-lswitch="lnd_ao"] #sharecryptowrap>img.cmc_icon.icon_lnd {
+	display: block;
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"] .openwallet {
-	display:none!important;
+	display: none !important;
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"] #current_lndnode,
 #paymentdialogbox[data-lswitch="lnd_active"] #current_lndnode,
-#paymentdialogbox[data-lswitch="lnd_ao"] #ccamount > img.cmc_icon.icon_lnd {
-	display:inline;
+#paymentdialogbox[data-lswitch="lnd_ao"] #ccamount>img.cmc_icon.icon_lnd {
+	display: inline;
 }
 
 #paymentdialogbox #phone_icon {
-	display:none;
+	display: none;
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"].accept_lnd #qrcode_lnd {
-	opacity:0.1;
+	opacity: 0.1;
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"].transacting.accept_lnd #request_front #qrcode_lnd {
-	opacity:0;
+	opacity: 0;
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"].accept_lnd #phone_icon {
-	display:block;
+	display: block;
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"].accept_lnd #rf_wrap {
-	opacity:0.5;
+	opacity: 0.5;
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"].accept_lnd #rf_wrap * {
-	pointer-events:none;
+	pointer-events: none;
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"].accept_lnd #lightning_switch {
-	pointer-events:none;
+	pointer-events: none;
 }
 
 #lnd_offline {
 	text-decoration: underline;
-	cursor:pointer;
+	cursor: pointer;
 }
 
 #paymentdialogbox #current_lndnode .lnd_icon {
 	width: 1.5em;
-	vertical-align:bottom;
+	vertical-align: bottom;
 }
 
 /* request_back */
@@ -1011,24 +1017,24 @@ html.inframe #request_back {
 }
 
 #fallback_address {
-	display:none;
+	display: none;
 	font-weight: 700;
-	color:#939393;
-	font-size:0.9em;
+	color: #939393;
+	font-size: 0.9em;
 }
 
 #fallback_address #fb_addr {
-	color:#a8a8a8;
+	color: #a8a8a8;
 	font-weight: 700;
-	font-size:0.9em;
+	font-size: 0.9em;
 }
 
 #paymentdialogbox[data-lswitch="lnd_ao"] #fallback_address {
-	display:block;
+	display: block;
 }
 
 #paymentdialogbox[data-pending="ispending"] #fallback_address {
-	display:none;
+	display: none;
 }
 
 /* request_back request */
@@ -1137,30 +1143,30 @@ html.inframe #request_back {
 /* Timer */
 
 #paymentdialogbox .time_panel {
-	position:absolute;
-	bottom:0;
-	left:0em;
-	right:0em;
-	height:12px;
-	border-top:1px solid #ccc;
-	border-right:1px solid #ccc;
-	border-left:1px solid #ccc;
+	position: absolute;
+	bottom: 0;
+	left: 0em;
+	right: 0em;
+	height: 12px;
+	border-top: 1px solid #ccc;
+	border-right: 1px solid #ccc;
+	border-left: 1px solid #ccc;
 	overflow: hidden;
 }
 
 html.inframe #paymentdialogbox .time_panel {
-	left:1.5em;
-	right:1.5em;
+	left: 1.5em;
+	right: 1.5em;
 }
 
 #paymentdialogbox .time_bar {
-	position:absolute;
-	top:0;
-	right:0;
-	bottom:0;
-	left:0;
-	width:100%;
-	height:100%;
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
 	background-color: #bbb;
 	transform: translate(-100%, 0%);
 	transition: transform 180s linear;

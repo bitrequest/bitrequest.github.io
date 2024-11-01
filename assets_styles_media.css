@@ -10,15 +10,19 @@
 	body {
 		font-size: 1.1rem;
 	}
+
 	.qrwrap .qrcode {
 		width: 85%;
 	}
+
 	#optionslist {
 		font-size: 150%;
 	}
+
 	#rf_wrap {
 		font-size: 120%;
 	}
+
 	#pinkeypad .pinpad {
 		font-size: 200%;
 	}
@@ -28,6 +32,7 @@
 	#sharerequest>span {
 		display: inline;
 	}
+
 	#pinkeypad .pinpad {
 		font-size: 250%;
 	}
@@ -37,15 +42,19 @@
 	body {
 		font-size: 1.2rem;
 	}
+
 	.qrwrap .qrcode {
 		width: 75%;
 	}
+
 	#allcurrencies li {
 		width: 50%;
 	}
+
 	.iconright2 .atext {
 		padding-right: 25%;
 	}
+
 	.iconright2 .iconbox {
 		font-size: 180%;
 		width: 25%;
@@ -56,6 +65,7 @@
 	.applist {
 		font-size: 110%;
 	}
+
 	#pinkeypad .pinpad {
 		font-size: 280%;
 		margin: 0.3em 0.3em;
@@ -66,44 +76,56 @@
 	body {
 		font-size: 1.2rem;
 	}
+
 	.qrwrap .qrcode {
 		width: 65%;
 	}
+
 	.iconright2 .atext {
 		padding-right: 15%;
 	}
+
 	#backupactions {
 		font-size: 140%;
 	}
 }
 
 @media only screen and (min-width:400px) {
+
 	/* start flex font-size */
 	body {
 		font-size: 2.7vw;
 	}
+
 	#sharelist li {
 		font-size: 450%;
 	}
+
 	.iconbox {
 		font-size: 150%;
 	}
+
 	#allcurrencies li {
 		width: 33.333333%;
 		float: none;
 	}
+
 	#show_backup {
 		display: inline-block;
 	}
+
 	#sharelist li:after {
 		font-size: 1.5rem;
 	}
+
 	#pinkeypad .pinpad {
 		font-size: 260%;
 	}
+
 	.nav li .self {
 		font-size: 120%;
 	}
+
 	#xratestats {
 		font-size: 10px;
 	}
@@ -123,9 +145,11 @@
 		font-size: 100%;
 		padding: 1.2em 1em;
 	}
+
 	.nav li#settingsbttn a {
 		padding: 1.25em 1em;
 	}
+
 	#pinkeypad .pinpad {
 		font-size: 200%;
 	}
@@ -139,50 +163,63 @@
 		font-size: 40px;
 		font-size: 4rem;
 	}
+
 	.iconright .iconbox {
 		font-size: 130%;
 	}
+
 	#allcurrencies li:after {
 		font-size: 2.4rem;
 	}
+
 	#request_front {
 		font-size: 105%;
 	}
+
 	.applist {
 		font-size: 100%;
 	}
+
 	.checkbox {
 		font-size: 110%;
 	}
 }
 
 @media only screen and (min-width:850px) {
+
 	/* max font-size dialog */
 	#startpage,
 	#startscreen {
 		font-size: 3.4rem;
 	}
+
 	.dialog {
 		font-size: 2rem;
 	}
+
 	.nav li .self {
 		padding: 1.2em 1em;
 	}
+
 	.nav li#settingsbttn a {
 		padding: 0.95em 1em;
 	}
+
 	#homenav .icomoon {
 		//padding:0.16em 0 0 0;
 	}
+
 	.iconright .iconbox {
 		font-size: 100%;
 	}
+
 	#xratestats {
 		font-size: 12px;
 	}
 }
 
 @media only screen and (min-width:1200px) {
+
 	/* max font-size */
 	body {
 		font-size: 3.2rem;
@@ -196,6 +233,7 @@
 	.dialog {
 		max-width: 600px;
 	}
+
 	#sharelist li:after {
 		font-size: 2rem;
 	}
@@ -205,6 +243,7 @@
 	.dialogstyle {
 		font-size: 1.5rem;
 	}
+
 	.qrcode {
 		max-width: 300px;
 	}
