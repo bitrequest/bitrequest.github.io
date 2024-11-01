@@ -704,7 +704,7 @@ function continue_paymentfunction() {
         lnd_switch = payment === "bitcoin" ? (isrequest && !ln ? "" : "<div id='lightning_switch' title='lightning' class='lnswitch'><span class='icon-power'></span></div>") : "",
         ndef_switch = payment === "bitcoin" && glob_ndef ? "<div id='ndef_switch' title='Tap to pay' class='lnswitch'><span class='icon-connection'></span></div>" : "";
     settitle(pagename);
-    glob_paymentdialogbox.append("<div id='request_back' class='share_request dialogstyle'></div><div id='request_front' class='dialogstyle'><div id='xratestats'><span id='rq_errlog'></span></div>" + ndef_switch + lnd_switch + "</div>").attr(payment_attributes);
+    glob_paymentdialogbox.append("<div id='request_back' class='share_request dialogstyle'></div><div id='request_front' class='dialogstyle'><div id='xratestats'><span id='rq_errlog'></span></div>" + ndef_switch + lnd_switch + "<div id='networks'></div></div>").attr(payment_attributes);
     // Extend global request object
     $.extend(request, extend_data);
     // Extend global helper object

@@ -259,6 +259,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
 
 // Initiates Arbitrum scanning
 function arbi_scan(address, request_ts) {
+    set_l2_status("arbitrum", true);
     glob_pinging["arbi" + address] = setInterval(function() {
         ping_arbiscan(address, request_ts);
     }, 7000);
@@ -282,6 +283,7 @@ function ping_arbiscan(address, request_ts) {
         if (data) {
             const result = data.result;
             if (result && br_issar(result)) {
+                set_l2_status("arbitrum", true);
                 const set_confirmations = request.set_confirmations || 0;
                 $.each(result, function(dat, value) {
                     const txd = arbiscan_scan_data_eth(value, set_confirmations);
@@ -302,13 +304,14 @@ function ping_arbiscan(address, request_ts) {
             }
         }
     }).fail(function() {
+        set_l2_status("arbitrum", false);
         clearpinging("arbi" + address);
-        notify(translate("notmonitored"), 500000, "yes");
     });
 }
 
 // Initiates BNB Smart Chain scanning
 function bnb_scan(address, request_ts, ccsymbol) {
+    set_l2_status("bnb", true);
     glob_pinging["bnb" + address] = setInterval(function() {
         ping_bnb(address, request_ts, ccsymbol);
     }, 7000);
@@ -331,6 +334,7 @@ function ping_bnb(address, request_ts, ccsymbol) {
         const data = br_result(e).result;
         if (!data) return;
         const set_confirmations = request.set_confirmations || 0;
+        set_l2_status("bnb", true);
         $.each(data.operations, function(dat, value) {
             const txd = ethplorer_scan_data(value, set_confirmations, ccsymbol, "binplorer");
             if (txd.transactiontime > request_ts && txd.ccval) {
@@ -348,6 +352,7 @@ function ping_bnb(address, request_ts, ccsymbol) {
             }
         });
     }).fail(function() {
+        set_l2_status("bnb", false);
         clearpinging("bnb" + address);
     });
 }

@@ -2790,10 +2790,11 @@ function cancelpaymentdialog() {
     abort_ndef();
     glob_lnd_ph = false,
         request = null,
-        helper = null;
+        helper = null,
+        glob_l2s = {};
     const wstimeout = setTimeout(function() {
         closesocket();
-    }, 2500, function() {
+    }, 500, function() {
         clearTimeout(wstimeout);
     });
 }

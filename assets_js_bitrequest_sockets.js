@@ -2,7 +2,8 @@ let glob_lnd_confirm = false,
     glob_txid,
     glob_ndef_processing,
     glob_ndef_timer = 0,
-    glob_ws_timer = 0;
+    glob_ws_timer = 0,
+    glob_l2s = {};
 
 $(document).ready(function() {
     //init_socket
@@ -27,8 +28,11 @@ $(document).ready(function() {
     //ws_recon
     //try_next_socket
     //current_socket
+    //socket_info
+    //set_l2_status
     reconnect();
     //rconnect
+    console.log(glob_l2s);
 });
 
 // Websockets / Pollfunctions
@@ -153,7 +157,6 @@ function init_socket(socket_node, address, swtch, retry) {
             web3_eth_websocket(socket_node, address, glob_main_eth_node); // L1 Infura
         }
         arbi_scan(address, request_ts); // L2 Arbitrum
-        notify(translate("networks") + ": ETH, Arbitrum", 500000, "yes");
         return
     }
     if (payment === "monero") {
@@ -197,15 +200,12 @@ function init_socket(socket_node, address, swtch, retry) {
         bnb_scan(address, request_ts, ccsymbol);
         // arbitrum:
         const arb_contract = contracts(ccsymbol, "arbitrum");
-        let arbtxt = "";
         if (arb_contract) {
             web3_erc20_websocket({
                 "name": glob_main_arbitrum_socket,
                 "url": glob_main_arbitrum_socket
             }, address, arb_contract, "arbitrum");
-            arbtxt = " Arbitrum,";
         }
-        notify(translate("networks") + ": ETH," + arbtxt + " <span class='nowrap'>BNB smart chain</span>", 500000, "yes");
         return
     }
     notify(translate("notmonitored"), 500000, "yes")
@@ -968,6 +968,9 @@ function web3_erc20_websocket(socket_node, thisaddress, contract, l2) {
         websocket = glob_sockets[contract] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
+        if (l2) {
+            set_l2_status("arbitrum", true);
+        }
         const ping_event = JSON.stringify({
             "jsonrpc": "2.0",
             "id": 1,
@@ -1018,6 +1021,9 @@ function web3_erc20_websocket(socket_node, thisaddress, contract, l2) {
         handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
+        if (l2) {
+            set_l2_status("arbitrum", false);
+        }
         handle_socket_fails(socket_node, thisaddress, contract);
         return
     };
@@ -1266,6 +1272,19 @@ function socket_info(snode, live) {
         return
     }
     glob_paymentpopup.removeClass("live");
+}
+
+// Set and dislay l2 status
+function set_l2_status(network, status) {
+    glob_l2s[network] = status;
+    const networks = $("#networks");
+    let nw_li = "<li>L2's: </i>";
+    $.each(glob_l2s, function(key, value) {
+        const nw_name = key === "bnb" ? "bnb smart chain" : key,
+            status = value ? " online" : " offline";
+        nw_li += "<li class='nwl2" + status + "'>" + nw_name + "</li>";
+    });
+    networks.html("<ul>" + nw_li + "</ul>");
 }
 
 // Sets up event listener for reconnection button
