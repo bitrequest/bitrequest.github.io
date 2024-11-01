@@ -256,7 +256,7 @@ function geterc20tokens_local() {
     const apiurl = glob_approot + "assets_data_erc20.json";
     $.getJSON(apiurl).done(function(data) {
             if (data) {
-                storecoindata(data);
+                storecoindata(data, true);
             }
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
@@ -266,7 +266,11 @@ function geterc20tokens_local() {
 }
 
 // Store coin data in local storage
-function storecoindata(data) {
+function storecoindata(data, local) {
+    if (local) {
+        br_set_local("erc20tokens", data, true);
+        return
+    }
     if (data && data.data) {
         const erc20push = data.data.filter(value => value.platform && value.platform.id === 1027).map(value => ({
             "name": value.slug,
