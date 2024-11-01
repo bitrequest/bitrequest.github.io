@@ -1277,7 +1277,7 @@ function socket_info(snode, live) {
 // Set and dislay l2 status
 function set_l2_status(network, status) {
     glob_l2s[network] = status;
-    const networks = $("#networks");
+    const networks = $("#paymentdialogbox .networks");
     let nw_li = "<li>L2's: </i>";
     $.each(glob_l2s, function(key, value) {
         const nw_name = key === "bnb" ? "bnb smart chain" : key,

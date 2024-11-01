@@ -638,11 +638,19 @@ html.inframe #request_back {
 	text-transform: uppercase;
 }
 
-#networks {
+.networks {
+	position:relative;
 	width:100%;
 }
 
-#networks ul {
+#request_back .networks {
+	position:absolute;
+	bottom:15px;
+	left:0;
+	right:0;
+}
+
+.networks ul {
 	width:100%;
 	list-style-type: none;
 	font-size: 0.8em;
@@ -650,20 +658,20 @@ html.inframe #request_back {
 	color: #8d8d8d;
 }
 
-#networks ul li {
+.networks ul li {
 	position:relative;
 	display:inline-block;
 	padding: 0 0.5em 0 0;
 	font-weight: 600;
 }
 
-#networks ul li.nwl2 {
-	padding: 0 1.5em 0 0;
+.networks ul li.nwl2 {
+	padding: 0 1.3em 0 0;
 	text-transform: capitalize;
 	font-weight: 400;
 }
 
-#networks ul li.nwl2:after {
+.networks ul li.nwl2:after {
 	position:absolute;
 	content: "•";
 	color: rgba(255, 255, 255, 0);
@@ -672,16 +680,16 @@ html.inframe #request_back {
 	font-size:2em;
 }
 
-#networks ul li.nwl2.offline {
+.networks ul li.nwl2.offline {
 	text-decoration-line: line-through;
 	color: #afafaf;
 }
 
-#networks ul li.nwl2.online:after {
+.networks ul li.nwl2.online:after {
 	color: #00c000;
 }
 
-#networks ul li.nwl2.offline:after {
+.networks ul li.nwl2.offline:after {
 	color: #FF0000;
 }
 
