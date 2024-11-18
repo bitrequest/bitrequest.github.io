@@ -15,7 +15,9 @@ $keys = array(
 	"googleauth" => "",
 	"google_secret" => "",
 	"arbiscan" => "",
-	"alchemy" => ""
+	"alchemy" => "",
+	"polygonscan" => "",
+	"bscscan" => ""
 );
 
 /* Sign up:
@@ -32,6 +34,8 @@ $keys = array(
 	googleauth: https://developers.google.com/
 	arbiscan: https://arbiscan.io/register/
 	alchemy: https://auth.alchemy.com/signup/
+	polygonscan: https://polygonscan.com/register/
+	bscscan: https://bscscan.com/register/
 */
 
 // enter lightning node keys here
