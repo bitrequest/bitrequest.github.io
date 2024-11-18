@@ -647,11 +647,12 @@ html.inframe #request_back {
 .networks {
 	position: relative;
 	width: 100%;
-	padding-bottom:13px;
+	padding-bottom: 13px;
+	cursor: pointer;
 }
 
 .networks ul {
-	display:block;
+	display: block;
 	width: 100%;
 	list-style-type: none;
 	font-size: 0.8em;
@@ -660,7 +661,7 @@ html.inframe #request_back {
 }
 
 #request_back .networks ul {
-	margin-top:-18px;
+	margin-top: -18px;
 }
 
 .networks ul li {

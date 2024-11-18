@@ -1,5 +1,4 @@
 let glob_lnd_confirm = false,
-    glob_txid,
     glob_ndef_processing,
     glob_ndef_timer = 0,
     glob_ws_timer = 0,
@@ -7,6 +6,8 @@ let glob_lnd_confirm = false,
 
 $(document).ready(function() {
     //init_socket
+    //init_layer2
+    //init_erc20_layer2
     //blockcypherws
     //lightning_socket
     //ln_ndef
@@ -30,15 +31,12 @@ $(document).ready(function() {
     //current_socket
     //socket_info
     //set_l2_status
-    reconnect();
-    //rconnect
 });
 
 // Websockets / Pollfunctions
 
 // Initializes a socket connection based on the payment type and node configuration
 function init_socket(socket_node, address, swtch, retry) {
-    clearpinging();
     if (glob_offline) {
         notify(translate("youareoffline") + ". " + translate("notmonitored"));
         return
@@ -55,7 +53,7 @@ function init_socket(socket_node, address, swtch, retry) {
             init_account_polling();
             return
         } else {
-            glob_socket_attempt[btoa(socket_node.url)] = true;
+            glob_socket_attempt[sha_sub(socket_node.url + "l1", 15)] = true;
         }
     }
     if (payment === "bitcoin") {
@@ -150,12 +148,42 @@ function init_socket(socket_node, address, swtch, retry) {
         return
     }
     if (payment === "ethereum") {
+        // Layer 1
         if (socket_node.url === glob_main_alchemy_socket) {
             alchemy_eth_websocket(socket_node, address); // L1 Alchemy
         } else {
             web3_eth_websocket(socket_node, address, glob_main_eth_node); // L1 Infura
         }
-        arbi_scan(address, request_ts); // L2 Arbitrum
+        // Layer 2
+        if (retry) {
+            init_layer2(socket_node, address, request_ts);
+            return
+        }
+        const eth_setting = cs_node(payment, "layer2", true),
+            eth_options = eth_setting.options;
+        if (eth_options) {
+            const l2_arr = [],
+                is_request = request.isrequest,
+                req_l2_arr = request.eth_l2s;
+            let index = 0;
+            $.each(eth_options, function(key, value) {
+                const set_select = is_request ? false : value.selected,
+                    inarr = $.inArray(index, req_l2_arr) !== -1,
+                    selected = set_select || inarr;
+                if (selected) {
+                    l2_arr.push(index);
+                    const sn = q_obj(value, "websockets.selected");
+                    if (sn) {
+                        init_layer2(sn, address, request_ts);
+                    }
+                }
+                index++;
+            });
+            if (request.isrequest) {} else {
+                // attach eth l2's to request object
+                request.eth_l2s = l2_arr;
+            }
+        }
         return
     }
     if (payment === "monero") {
@@ -194,20 +222,108 @@ function init_socket(socket_node, address, swtch, retry) {
         return
     }
     if (request.erc20 === true) {
+        // Layer 1
         web3_erc20_websocket(socket_node, address, request.token_contract);
-        const ccsymbol = request.currencysymbol;
-        bnb_scan(address, request_ts, ccsymbol);
-        // arbitrum:
-        const arb_contract = contracts(ccsymbol, "arbitrum");
-        if (arb_contract) {
-            web3_erc20_websocket({
-                "name": glob_main_arbitrum_socket,
-                "url": glob_main_arbitrum_socket
-            }, address, arb_contract, "arbitrum");
+        // Layer 2
+        if (retry) {
+            init_erc20_layer2(socket_node, address, request_ts);
+            return
+        }
+        const erc20_setting = cs_node(payment, "layer2", true),
+            erc20_options = erc20_setting.options;
+        if (erc20_options) {
+            const l2_arr = [],
+                is_request = request.isrequest,
+                req_l2_arr = request.eth_l2s;
+            let index = 0;
+            $.each(erc20_options, function(key, value) {
+                const set_select = is_request ? false : value.selected,
+                    inarr = $.inArray(index, req_l2_arr) !== -1,
+                    selected = set_select || inarr;
+                if (selected) {
+                    l2_arr.push(index);
+                    const sn = (retry) ? socket_node : q_obj(value, "websockets.selected");
+                    if (sn) {
+                        init_erc20_layer2(sn, address, request_ts);
+                    }
+                }
+                index++;
+            });
+            if (is_request) {} else {
+                // attach eth l2's to request object
+                request.eth_l2s = l2_arr;
+            }
         }
         return
     }
     notify(translate("notmonitored"), 500000, "yes")
+}
+
+// Init L2s
+function init_layer2(socket_node, address, request_ts) {
+    glob_socket_attempt[sha_sub(socket_node.url + "l2", 15)] = true;
+    const network = socket_node.network,
+        node_name = socket_node.name;
+    // arbitrum:
+    if (network === "arbitrum") {
+        if (node_name === "arbiscan") {
+            omni_scan(socket_node, address, request_ts);
+        }
+    }
+    // polygon
+    if (network === "polygon") {
+        if (node_name === "polygonscan") {
+            omni_scan(socket_node, address, request_ts);
+        }
+    }
+}
+
+// Init erc20 L2s
+function init_erc20_layer2(socket_node, address, request_ts) {
+    glob_socket_attempt[sha_sub(socket_node.url + "l2", 15)] = true;
+    const ccsymbol = request.currencysymbol,
+        network = socket_node.network,
+        node_name = socket_node.name,
+        ctracts = contracts(ccsymbol);
+    // arbitrum
+    if (network === "arbitrum") {
+        const arb_contract = ctracts.arbitrum;
+        if (!arb_contract) {
+            // No arbitrum support
+        } else {
+            if (node_name === "infura") {
+                web3_erc20_websocket(socket_node, address, arb_contract);
+            } else if (node_name === "arbiscan") {
+                omniscan_erc20(socket_node, address, request_ts, arb_contract);
+            }
+        }
+    }
+    // polygon
+    if (network === "polygon") {
+        const polygon_contract = ctracts.polygon;
+        if (!polygon_contract) {
+            // No Polygon support
+        } else {
+            if (node_name === "infura") {
+                web3_erc20_websocket(socket_node, address, polygon_contract);
+            } else if (node_name === "polygonscan") {
+                omniscan_erc20(socket_node, address, request_ts, polygon_contract);
+            }
+        }
+    }
+    // binance smart chain
+    if (network === "bnb") {
+        const bnb_contract = ctracts.bnb;
+        if (!bnb_contract) {
+            // No Binance smart chain support
+        } else {
+            if (node_name === "bscscan") {
+                omniscan_erc20(socket_node, address, request_ts, bnb_contract);
+            } else if (node_name === "binplorer") {
+                bnb_scan(socket_node, address, request_ts, ccsymbol);
+            }
+        }
+    }
 }
 
 // Handles BlockCypher WebSocket connection, falling back to WebSocket if local
@@ -227,8 +343,11 @@ function lightning_socket(lnd) {
         pk = (lnd.pw) ? lnd.pw : p_arr.k,
         pid = lnd.pid,
         nid = lnd.nid,
-        imp = lnd.imp,
-        socket = glob_sockets[pid] = new WebSocket(glob_ln_socket);
+        imp = lnd.imp;
+    if (glob_sockets[pid]) {
+        return
+    }
+    const socket = glob_sockets[pid] = new WebSocket(glob_ln_socket);
     socket.onopen = function(e) {
         console.log("Connected: " + glob_ln_socket);
         glob_paymentpopup.addClass("live");
@@ -615,6 +734,9 @@ function lnd_poll_data_fail(pid) {
 
 // Initializes and manages BlockCypher WebSocket connection
 function blockcypher_websocket(socket_node, thisaddress) {
+    if (glob_sockets[thisaddress]) {
+        return
+    }
     const provider = socket_node.url + request.currencysymbol + "/main",
         websocket = glob_sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
@@ -635,11 +757,6 @@ function blockcypher_websocket(socket_node, thisaddress) {
         if (data.event === "pong") return;
         const txhash = data.hash;
         if (!txhash) return;
-        if (glob_paymentdialogbox.hasClass("transacting") && glob_txid !== txhash) {
-            rconnect(glob_txid);
-            return
-        }
-        glob_txid = txhash;
         closesocket();
         const set_confirmations = request.set_confirmations || 0,
             txd = blockcypher_poll_data(data, set_confirmations, request.currencysymbol, thisaddress);
@@ -648,7 +765,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
             popdialog(content, "canceldialog");
             return
         }
-        pick_monitor(txhash, txd);
+        pick_monitor(txd);
     };
     websocket.onclose = function(e) {
         handle_socket_close(socket_node);
@@ -661,6 +778,9 @@ function blockcypher_websocket(socket_node, thisaddress) {
 
 // Initializes and manages Blockchain.info WebSocket for Bitcoin
 function blockchain_btc_socket(socket_node, thisaddress) {
+    if (glob_sockets[thisaddress]) {
+        return
+    }
     const provider = socket_node.url,
         websocket = glob_sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
@@ -680,16 +800,11 @@ function blockchain_btc_socket(socket_node, thisaddress) {
             const json = JSON.parse(e.data).x,
                 txhash = json.hash;
             if (!txhash) return;
-            if (glob_paymentdialogbox.hasClass("transacting") && glob_txid !== txhash) {
-                rconnect(glob_txid);
-                return
-            }
             const set_confirmations = request.set_confirmations || 0,
                 txd = blockchain_ws_data(json, set_confirmations, request.currencysymbol, thisaddress);
             if (txd) {
-                glob_txid = txhash;
                 closesocket();
-                pick_monitor(txhash, txd);
+                pick_monitor(txd);
             }
         } catch (error) {
             console.error("Error parsing WebSocket message:", error);
@@ -706,6 +821,9 @@ function blockchain_btc_socket(socket_node, thisaddress) {
 
 // Initializes and manages Blockchain.info WebSocket for Bitcoin Cash
 function blockchain_bch_socket(socket_node, thisaddress) {
+    if (glob_sockets[thisaddress]) {
+        return
+    }
     const provider = socket_node.url,
         websocket = glob_sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
@@ -726,17 +844,12 @@ function blockchain_bch_socket(socket_node, thisaddress) {
             const json = JSON.parse(e.data).x,
                 txhash = json.hash;
             if (!txhash) return;
-            if (glob_paymentdialogbox.hasClass("transacting") && glob_txid !== txhash) {
-                rconnect(glob_txid);
-                return
-            }
             const legacy = bch_legacy(thisaddress),
                 set_confirmations = request.set_confirmations || 0,
                 txd = blockchain_ws_data(json, set_confirmations, request.currencysymbol, thisaddress, legacy);
             if (txd) {
-                glob_txid = txhash;
                 closesocket();
-                pick_monitor(txhash, txd);
+                pick_monitor(txd);
             }
         } catch (error) {
             console.error("Error parsing WebSocket message:", error);
@@ -753,6 +866,9 @@ function blockchain_bch_socket(socket_node, thisaddress) {
 
 // Initializes and manages mempool.space WebSocket for Bitcoin
 function mempoolspace_btc_socket(socket_node, thisaddress) {
+    if (glob_sockets[thisaddress]) {
+        return
+    }
     const provider = socket_node.url,
         mps_websocket = glob_sockets[thisaddress] = new WebSocket(provider);
     mps_websocket.onopen = function(e) {
@@ -775,16 +891,11 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
                 if (json) {
                     const txhash = json.txid;
                     if (!txhash) return;
-                    if (glob_paymentdialogbox.hasClass("transacting") && glob_txid !== txhash) {
-                        rconnect(glob_txid);
-                        return
-                    }
                     const set_confirmations = request.set_confirmations || 0,
                         txd = mempoolspace_ws_data(json, set_confirmations, request.currencysymbol, thisaddress);
                     if (txd) {
-                        glob_txid = txhash;
                         closesocket();
-                        pick_monitor(txhash, txd);
+                        pick_monitor(txd);
                     }
                 }
             }
@@ -803,6 +914,9 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
 
 // Initializes and manages dogechain.info WebSocket for Dogecoin
 function dogechain_info_socket(socket_node, thisaddress) {
+    if (glob_sockets[thisaddress]) {
+        return
+    }
     const provider = socket_node.url,
         websocket = glob_sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
@@ -824,16 +938,11 @@ function dogechain_info_socket(socket_node, thisaddress) {
             if (data) {
                 const txhash = data.hash;
                 if (!txhash) return;
-                if (glob_paymentdialogbox.hasClass("transacting") && glob_txid !== txhash) {
-                    rconnect(glob_txid);
-                    return
-                }
                 const set_confirmations = request.set_confirmations || 0,
                     txd = dogechain_ws_data(data, set_confirmations, request.currencysymbol, thisaddress);
                 if (txd) {
-                    glob_txid = txhash;
                     closesocket();
-                    pick_monitor(txhash, txd);
+                    pick_monitor(txd);
                 }
             }
         } catch (error) {
@@ -851,6 +960,9 @@ function dogechain_info_socket(socket_node, thisaddress) {
 
 // Initializes and manages WebSocket for Nano cryptocurrency
 function nano_socket(socket_node, thisaddress) {
+    if (glob_sockets[thisaddress]) {
+        return
+    }
     const address_mod = (thisaddress.match("^xrb")) ? "nano_" + thisaddress.split("_").pop() : thisaddress, // change nano address prefix xrb_ to nano untill websocket support
         provider = socket_node.url,
         websocket = glob_sockets[thisaddress] = new WebSocket(provider);
@@ -880,12 +992,13 @@ function nano_socket(socket_node, thisaddress) {
                 if (data.account === thisaddress) {
                     return // block outgoing transactions
                 }
+                if (!data.hash) return;
                 const txd = nano_scan_data(data, undefined, request.currencysymbol),
                     tx_timestamp = txd.transactiontime,
                     timestamp_difference = Math.abs(tx_timestamp - utc);
                 if (timestamp_difference < 60000) { // filter transactions longer then a minute ago
                     closesocket();
-                    pick_monitor(data.hash, txd);
+                    pick_monitor(txd);
                 }
             }
         } catch (error) {
@@ -906,8 +1019,11 @@ function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
     const provider_url = socket_node.url,
         if_id = get_infura_apikey(provider_url),
         provider = provider_url + if_id,
-        ws_id = sha_sub(provider, 10),
-        websocket = glob_sockets[ws_id] = new WebSocket(provider);
+        ws_id = sha_sub(provider, 10);
+    if (glob_sockets[ws_id]) {
+        return
+    }
+    const websocket = glob_sockets[ws_id] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         const ping_event = JSON.stringify({
@@ -936,10 +1052,11 @@ function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
                     if (transactions) {
                         const set_confirmations = request.set_confirmations || 0;
                         $.each(transactions, function(i, val) {
+                            const txda = infura_block_data(val, set_confirmations, request.currencysymbol, result.timestamp);
                             if (str_match(val.to, thisaddress) === true) {
                                 const txd = infura_block_data(val, set_confirmations, request.currencysymbol, result.timestamp);
                                 closesocket();
-                                pick_monitor(val.hash, txd, api_dat);
+                                pick_monitor(txd);
                                 return
                             }
                         });
@@ -960,15 +1077,19 @@ function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
 }
 
 // Initializes and manages WebSocket for ERC20 tokens on Ethereum and Ethereum-like networks
-function web3_erc20_websocket(socket_node, thisaddress, contract, l2) {
+function web3_erc20_websocket(socket_node, thisaddress, contract) {
+    const l2network = socket_node.network;
+    if (glob_sockets[contract]) {
+        return
+    }
     const provider_url = socket_node.url,
         if_id = get_infura_apikey(provider_url),
         provider = provider_url + if_id,
         websocket = glob_sockets[contract] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
-        if (l2) {
-            set_l2_status("arbitrum", true);
+        if (l2network) {
+            set_l2_status(socket_node, true);
         }
         const ping_event = JSON.stringify({
             "jsonrpc": "2.0",
@@ -998,18 +1119,21 @@ function web3_erc20_websocket(socket_node, thisaddress, contract, l2) {
                         token_decimals = request.decimals,
                         ccval = parseFloat((token_value / Math.pow(10, token_decimals)).toFixed(8));
                     if (ccval === Infinity) return;
-                    const tx_hash = result.transactionHash,
-                        set_confirmations = request.set_confirmations || 0,
+                    const set_confirmations = request.set_confirmations || 0,
                         txd = {
                             "ccval": ccval,
                             "transactiontime": now_utc(),
-                            "txhash": tx_hash,
+                            "txhash": result.transactionHash,
                             "confirmations": 0,
                             "setconfirmations": set_confirmations,
                             "ccsymbol": request.currencysymbol,
-                            "l2": l2
+                            "eth_layer2": l2network
                         }
-                    pick_monitor(tx_hash, txd);
+                    if (l2network) {
+                        glob_l2s = {};
+                        set_l2_status(socket_node, true);
+                    }
+                    pick_monitor(txd);
                 }
             }
         } catch (error) {
@@ -1021,9 +1145,9 @@ function web3_erc20_websocket(socket_node, thisaddress, contract, l2) {
     };
     websocket.onerror = function(e) {
         if (l2) {
-            set_l2_status("arbitrum", false);
+            set_l2_status(socket_node, false);
         }
-        handle_socket_fails(socket_node, thisaddress, contract);
+        handle_socket_fails(socket_node, thisaddress, contract, l2);
         return
     };
 }
@@ -1033,8 +1157,11 @@ function alchemy_eth_websocket(socket_node, thisaddress) {
     const provider_url = socket_node.url,
         al_id = get_alchemy_apikey(),
         provider = provider_url + al_id,
-        ws_id = sha_sub(provider, 10),
-        websocket = glob_sockets[ws_id] = new WebSocket(provider);
+        ws_id = sha_sub(provider, 10);
+    if (glob_sockets[ws_id]) {
+        return
+    }
+    const websocket = glob_sockets[ws_id] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
         const ping_event = JSON.stringify({
@@ -1058,10 +1185,9 @@ function alchemy_eth_websocket(socket_node, thisaddress) {
                 result = q_obj(data, "params.result");
             if (result && result.hash && str_match(result.to, thisaddress)) {
                 const set_confirmations = request.set_confirmations || 0,
-                    txd = infura_block_data(result, set_confirmations, request.currencysymbol, result.timestamp),
-                    api_dat = helper ? q_obj(helper, "api_info.data") : null;
+                    txd = infura_block_data(result, set_confirmations, request.currencysymbol);
                 closesocket();
-                pick_monitor(result.hash, txd, api_dat);
+                pick_monitor(txd);
             }
         } catch (error) {
             console.error("Error parsing WebSocket message:", error);
@@ -1078,6 +1204,9 @@ function alchemy_eth_websocket(socket_node, thisaddress) {
 
 // Initializes and manages Kaspa WebSocket
 function kaspa_websocket(socket_node, thisaddress) {
+    if (glob_sockets[thisaddress]) {
+        return
+    }
     const provider = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket&sid=" + now(),
         websocket = glob_sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
@@ -1098,14 +1227,13 @@ function kaspa_websocket(socket_node, thisaddress) {
                 data = JSON.parse(newdat),
                 contents = data[1];
             if (contents) {
-                const txs = contents.txs,
-                    set_confirmations = request.set_confirmations || 0;
+                const txs = contents.txs;
                 if (txs) {
                     $.each(txs, function(dat, value) {
-                        const txd = kaspa_ws_data(value, thisaddress, set_confirmations);
+                        const txd = kaspa_ws_data(value, thisaddress);
                         if (txd.ccval) {
                             closesocket();
-                            pick_monitor(txd.txhash, txd);
+                            pick_monitor(txd);
                             return
                         }
                     });
@@ -1123,13 +1251,16 @@ function kaspa_websocket(socket_node, thisaddress) {
         handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress)
+        handle_socket_fails(socket_node, thisaddress);
         return
     };
 }
 
 // Initializes and manages Kaspa FYI WebSocket
 function kaspa_fyi_websocket(socket_node, thisaddress) {
+    if (glob_sockets[thisaddress]) {
+        return
+    }
     const provider = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket",
         websocket = glob_sockets[thisaddress] = new WebSocket(provider);
     websocket.onopen = function(e) {
@@ -1156,7 +1287,7 @@ function kaspa_fyi_websocket(socket_node, thisaddress) {
                             const txd = kaspa_fyi_ws_data(value, thisaddress);
                             if (txd.ccval) {
                                 closesocket();
-                                pick_monitor(txd.txhash, txd);
+                                pick_monitor(txd);
                                 return
                             }
                         });
@@ -1183,27 +1314,31 @@ function kaspa_fyi_websocket(socket_node, thisaddress) {
 }
 
 // Handles WebSocket connection failures
-function handle_socket_fails(socket_node, thisaddress, socketid) {
+function handle_socket_fails(socket_node, thisaddress, socketid, l2) {
     if (glob_paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
         return
     }
     if (isopenrequest()) { // only when request is visible
-        const next_socket = try_next_socket(socket_node),
+        const next_socket = try_next_socket(socket_node, l2),
             wsid = (socketid) ? socketid : thisaddress;
+        clearpinging(wsid);
+        closesocket(wsid);
         if (next_socket) {
-            closesocket(wsid);
             init_socket(next_socket, thisaddress, null, true);
             return
         }
-        const coin_settings = getcoinsettings(request.payment),
-            poll_fallback = q_obj(coin_settings, "websockets.poll_fallback");
-        if (poll_fallback) {
-            closesocket(wsid);
-            init_socket({
-                "name": "poll_fallback",
-                "display": false
-            }, thisaddress, null, true);
-            return
+        if (l2) {
+            // No poll fallback for L2
+        } else {
+            const coin_settings = getcoinsettings(request.payment),
+                poll_fallback = q_obj(coin_settings, "websockets.poll_fallback");
+            if (poll_fallback) {
+                init_socket({
+                    "name": "poll_fallback",
+                    "display": false
+                }, thisaddress, null, true);
+                return
+            }
         }
         const error_message = "unable to connect to " + socket_node.name;
         socket_info(socket_node, false);
@@ -1215,8 +1350,7 @@ function handle_socket_fails(socket_node, thisaddress, socketid) {
 function handle_socket_close(socket_node) {
     socket_info(socket_node, false);
     console.log("Disconnected from " + socket_node.url);
-    glob_txid = null,
-        glob_ws_timer = 0;
+    glob_ws_timer = 0;
 }
 
 // Manages Kaspa WebSocket reconnection
@@ -1237,10 +1371,10 @@ function ws_recon(recon) {
 }
 
 // Attempts to find the next available WebSocket
-function try_next_socket(current_socket_data) {
+function try_next_socket(current_socket_data, l2) {
     if (!current_socket_data) return false;
     const current_socket_url = current_socket_data.url,
-        sockets = helper.socket_list,
+        sockets = l2 ? q_obj(getcoinsettings(request.payment), "layer2.options." + current_socket_data.network + ".websockets") : helper.socket_list,
         socketlist = sockets.options ? $.merge(sockets.apis, sockets.options) : sockets.apis;
     let socket_index;
     $.each(socketlist, function(i, val) {
@@ -1250,8 +1384,9 @@ function try_next_socket(current_socket_data) {
     });
     if (socket_index > -1) {
         const next_scan = socketlist[socket_index + 1],
-            next_socket = next_scan || socketlist[0];
-        if (glob_socket_attempt[btoa(next_socket.url)] === true) {
+            next_socket = next_scan || socketlist[0],
+            l2_prefix = l2 ? "l2" : "l1";
+        if (glob_socket_attempt[sha_sub(next_socket.url + l2_prefix, 15)] === true) {
             return false;
         }
         if (next_socket) {
@@ -1261,9 +1396,10 @@ function try_next_socket(current_socket_data) {
 }
 
 // Updates the UI with socket connection information
-function socket_info(snode, live) {
+function socket_info(snode, live, polling) {
     const islive = live ? " <span class='pulse'></span>" : " <span class='icon-wifi-off'></span>",
-        contents = "websocket: " + snode.url + islive;
+        method = polling ? "polling" : "websocket",
+        contents = method + ": " + snode.url + islive;
     $("#current_socket").html(contents);
     if (live) {
         console.log("Connected: " + snode.url);
@@ -1274,32 +1410,27 @@ function socket_info(snode, live) {
 }
 
 // Set and dislay l2 status
-function set_l2_status(network, status) {
-    glob_l2s[network] = status;
+function set_l2_status(sn, stat) {
+    if (!sn) {
+        return
+    }
+    const network = sn.network,
+        status = stat ? "online" : "offline",
+        title1 = "#" + sn.url,
+        val = status + title1;
+    glob_l2s[network] = val;
     const networks = $("#paymentdialogbox .networks");
-    let nw_li = "<li>L2's: </i>";
+    let nw_li = "<li>L2's: </i>",
+        empty = true;
     $.each(glob_l2s, function(key, value) {
-        const nw_name = key === "bnb" ? "bnb smart chain" : key,
-            status = value ? " online" : " offline";
-        nw_li += "<li class='nwl2" + status + "'>" + nw_name + "</li>";
+        empty = false;
+        const nw_select = value.split("#"),
+            stat = " " + nw_select[0],
+            title = nw_select[1],
+            nw_name = key === "bnb" ? "bnb smart chain" : key;
+        nw_li += "<li class='nwl2" + stat + "' title='" + title + "'>" + nw_name + "</li>";
     });
-    networks.html("<ul>" + nw_li + "</ul>");
-}
-
-// Sets up event listener for reconnection button
-function reconnect() {
-    $(document).on("click", "#reconnect", function() {
-        const txhash = $(this).attr("data-txid");
-        canceldialog();
-        pick_monitor(txhash);
-    });
-}
-
-// Handles reconnection when multiple transactions are detected
-function rconnect(tid) {
-    glob_paymentdialogbox.removeClass("transacting");
-    const bttn = tid ? "<p style='margin-top:2em'><div class='button'><span id='reconnect' class='icon-connection' data-txid='" + tid + "'>Reconnect</span></div></p>" : "",
-        content = "<h2 class='icon-blocked'>Websocket closed</h2><p>The websocket was closed due to multiple incoming transactions</p>" + bttn;
-    closesocket();
-    popdialog(content, "canceldialog");
+    if (!empty) {
+        networks.html("<ul>" + nw_li + "</ul>");
+    }
 }

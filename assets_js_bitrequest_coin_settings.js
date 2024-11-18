@@ -33,6 +33,8 @@ $(document).ready(function() {
 
     // Layer 2's
     edit_l2();
+    l2nw_toggle();
+    l2nw_switch();
     submit_l2();
 
     // Xpub settings
@@ -650,17 +652,17 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
         api_proxy(pload).done(function(e) {
             const data = br_result(e),
                 rpc_result = data.result;
-            if (rpc_result && (br_issar(rpc_result) || rpc_result.rpc_version)) {
-                const error = data.error || rpc_result.error;
-                if (error) {
-                    rpc_input_box.addClass("offline").removeClass("live");
-                    topnotify(cant_connect);
-                    const error_message = error.error_message || error.message;
-                    if (error_message) {
-                        popnotify("error", error_message);
-                    }
-                    return
+            const error = data.error || rpc_result.error;
+            if (error) {
+                rpc_input_box.addClass("offline").removeClass("live");
+                topnotify(cant_connect);
+                const error_message = error.error_message || error.message;
+                if (error_message) {
+                    popnotify("error", error_message);
                 }
+                return
+            }
+            if (rpc_result && (br_issar(rpc_result) || rpc_result.rpc_version)) {
                 rpc_input_box.addClass("live").removeClass("offline");
                 pass_rpc_submit(currency, rpc_data, true);
             }
@@ -806,54 +808,118 @@ function get_rpc_url(rpc_data) {
 
 // Layer 2's
 
-// Function to handle editing of Layer 2 settings
+// Function to handle editing of eth Layer 2 settings
 function edit_l2() {
     $(document).on("click", ".cc_settinglist li[data-id='layer2']", function() {
-        const current_li = $(this),
-            this_data = current_li.data(),
-            options = this_data.options;
+        const thiscurrency = $(this).children(".liwrap").attr("data-currency"),
+            csnode = cs_node(thiscurrency, "layer2", true),
+            options = csnode.options;
         if (options) {
-            const thiscurrency = current_li.children(".liwrap").attr("data-currency"),
-                selected = this_data.selected,
+            const ccsymbol = fetchsymbol(thiscurrency),
+                symbol = ccsymbol.symbol,
+                ctracts = contracts(symbol),
+                arb_contract = ctracts.arbitrum,
+                polygon_contract = ctracts.polygon,
+                bnb_contract = ctracts.bnb,
+                networks = [];
+            $.each(options, function(key, value) {
+                if (key === "arbitrum" && !arb_contract && thiscurrency !== "ethereum") {} else if (key === "polygon" && !polygon_contract && thiscurrency !== "ethereum") {} else if (key === "bnb" && !bnb_contract && thiscurrency !== "ethereum") {} else {
+                    const nw_name = key === "bnb" ? "bnb smart chain" : key,
+                        nw_selected = value.selected,
+                        s_boxes = []
+                    $.each(value, function(k, v) {
+                        if (k === "selected") {
+
+                        } else {
+                            const selected = v.selected,
+                                apis = v.apis,
+                                api_push = [];
+                            $.each(apis, function(i, v2) {
+                                api_push.push({
+                                    "span": {
+                                        "data-pe": "none",
+                                        "attr": add_prefix_to_keys(v2),
+                                        "content": v2.name
+                                    }
+                                });
+                            });
+                            s_boxes.push({
+                                "div": {
+                                    "class": "l2_apis",
+                                    "attr": {
+                                        "data-type": k
+                                    },
+                                    "content": [{
+                                        "h3": {
+                                            "content": k
+                                        },
+                                        "div": {
+                                            "class": "selectbox",
+                                            "content": [{
+                                                    "input": {
+                                                        "attr": {
+                                                            "type": "text",
+                                                            "value": selected.name,
+                                                            "placeholder": translate("layer2"),
+                                                            "readonly": "readonly"
+                                                        },
+                                                        "close": true
+                                                    },
+                                                    "div": {
+                                                        "class": "selectarrows icon-menu2",
+                                                        "attr": {
+                                                            "data-pe": "none"
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "div": {
+                                                        "class": "options single",
+                                                        "content": api_push
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }]
+                                }
+                            });
+                        }
+                    });
+                    networks.push({
+                        "div": {
+                            "class": "nw2box",
+                            "attr": {
+                                "data-network": key
+                            },
+                            "content": [{
+                                "h2": {
+                                    "class": "nwheading",
+                                    "content": nw_name + switchpanel(nw_selected, " custom")
+                                },
+                                "div": {
+                                    "class": "sboxwrap hide",
+                                    "content": s_boxes
+                                }
+                            }]
+                        }
+                    });
+                }
+            });
+            networks.push({
+                "input": {
+                    "class": "submit",
+                    "attr": {
+                        "type": "submit",
+                        "value": translate("okbttn"),
+                        "data-currency": thiscurrency
+                    }
+                }
+            });
+            const sb_render = render_html(networks),
                 ddat = [{
                     "div": {
                         "class": "popform",
-                        "content": [{
-                            "div": {
-                                "class": "selectbox",
-                                "content": [{
-                                        "input": {
-                                            "attr": {
-                                                "type": "text",
-                                                "value": selected,
-                                                "placeholder": translate("layer2"),
-                                                "readonly": "readonly"
-                                            },
-                                            "close": true
-                                        },
-                                        "div": {
-                                            "class": "selectarrows icon-menu2",
-                                            "attr": {
-                                                "data-pe": "none"
-                                            }
-                                        }
-                                    },
-                                    {
-                                        "div": {
-                                            "class": "options"
-                                        }
-                                    }
-                                ]
-                            },
-                            "input": {
-                                "class": "submit",
-                                "attr": {
-                                    "type": "submit",
-                                    "value": translate("okbttn"),
-                                    "data-currency": thiscurrency
-                                }
-                            }
-                        }]
+                        "content": sb_render
                     }
                 }],
                 content = template_dialog({
@@ -863,15 +929,37 @@ function edit_l2() {
                     "elements": ddat
                 });
             popdialog(content, "triggersubmit");
-            const optionlist = $("#l2_formbox").find(".options"),
-                ccsymbol = fetchsymbol(thiscurrency),
-                arb_contract = contracts(ccsymbol.symbol, "arbitrum");
-            $.each(options, function(i, value) {
-                if (!(value === "Arbitrum (L2)" && arb_contract === false && thiscurrency !== "ethereum")) {
-                    optionlist.append("<span data-pe='none'>" + value + "</span>");
-                }
-            });
         }
+    })
+}
+
+function l2nw_toggle() {
+    $(document).on("mouseup", "#l2_formbox h2.nwheading", function(e) {
+        const target = $(e.target);
+        if (target.hasClass("switchpanel")) {
+            return // prevent selection when deleting
+        }
+        const all_bws = $("#l2_formbox").find(".sboxwrap"),
+            this_boxwrap = $(this).next(".sboxwrap");
+        if (this_boxwrap.is(":visible")) {
+            all_bws.slideUp(200);
+            return
+        }
+        all_bws.not(this_boxwrap).slideUp(200);
+        this_boxwrap.slideDown(200);
+    })
+}
+
+function l2nw_switch() {
+    $(document).on("mouseup", "#l2_formbox h2.nwheading .switchpanel", function() {
+        const this_switch = $(this),
+            sboxwrap = this_switch.parent("h2.nwheading").next(".sboxwrap");
+        if (this_switch.hasClass("true")) {
+            this_switch.removeClass("true").addClass("false");
+            sboxwrap.slideUp(300);
+            return
+        }
+        this_switch.removeClass("false").addClass("true");
     })
 }
 
@@ -879,14 +967,35 @@ function edit_l2() {
 function submit_l2() {
     $(document).on("click", "#l2_formbox input.submit", function(e) {
         e.preventDefault();
-        const thiscurrency = $(this).attr("data-currency"),
-            thisvalue = $("#l2_formbox").find("input:first").val(),
-            csnode = cs_node(thiscurrency, "layer2");
+        const payment = $(this).attr("data-currency"),
+            csnode = cs_node(payment, "layer2");
         if (csnode) {
-            csnode.data("selected", thisvalue).find("p").html(thisvalue);
+            const cs_node_dat = csnode.data("options"),
+                nw2box = $("#l2_formbox").find(".popform > .nw2box");
+            nw2box.each(function() {
+                const this_box = $(this),
+                    this_network = this_box.data("network"),
+                    this_switch = this_box.find(".switchpanel"),
+                    selected = this_switch.hasClass("true"),
+                    l2_apis = this_box.find(".l2_apis");
+                cs_node_dat[this_network].selected = selected;
+                l2_apis.each(function() {
+                    const this_nw = $(this),
+                        input = this_nw.find(".selectbox > input"),
+                        input_data = input.data();
+                    if (!$.isEmptyObject(input_data)) {
+                        const this_type = this_nw.data("type"),
+                            new_selected = q_obj(cs_node_dat, this_network + "." + this_type);
+                        if (new_selected) {
+                            new_selected.selected = input_data;
+                        }
+                    }
+                });
+            });
+            csnode.data("options", cs_node_dat).find("p").html("");
             canceldialog();
             notify(translate("datasaved"));
-            save_cc_settings(thiscurrency, true);
+            save_cc_settings(payment, true);
         }
     })
 }

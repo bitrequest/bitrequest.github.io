@@ -38,7 +38,8 @@ const glob_ls_support = check_local(),
     glob_wl = navigator.wakeLock,
     glob_after_scan_timeout = 120000, // offer a blockexplorer lookup after 2 minutes without detection
     glob_xss_alert = "xss attempt detected",
-    glob_langcode = setlangcode(); // set saved or system language
+    glob_langcode = setlangcode(), // set saved or system language
+    glob_token_cache = 604800;
 
 let glob_scrollposition = 0,
     glob_is_ios_app = false, // ios app fingerprint
@@ -224,15 +225,17 @@ function setsymbols() {
 
 // Get top 600 ERC20 tokens from CoinMarketCap
 function geterc20tokens() {
-    if (br_get_local("erc20tokens")) {
+    const in_cache = fetch_cached_erc20(true);
+    if (in_cache) {
         setfunctions();
         return;
     }
     api_proxy({
         "api": "coinmarketcap",
-        "search": "v1/cryptocurrency/listings/latest?cryptocurrency_type=tokens&limit=600&aux=cmc_rank,platform",
-        "cachetime": 604800,
+        "search": "v1/cryptocurrency/listings/latest?cryptocurrency_type=tokens&limit=2000&aux=cmc_rank,platform",
+        "cachetime": glob_token_cache,
         "cachefolder": "1w",
+        "proxy": true,
         "params": {
             "method": "GET"
         }
@@ -240,45 +243,59 @@ function geterc20tokens() {
         const data = br_result(e).result,
             status = data.status;
         if (status && status.error_code === 0) {
-            storecoindata(data);
-            return
+            const token_arr = data.data;
+            if (token_arr) {
+                // Split token_array in two and convert
+                const middle = Math.floor(token_arr.length / 2),
+                    first_half = token_arr.slice(0, middle),
+                    second_half = token_arr.slice(middle);
+                if (first_half && second_half) {
+                    store_coindata(first_half, second_half);
+                    return
+                }
+            }
         }
-        geterc20tokens_local(); // get locally stored coindata
+        const content = "<h2 class='icon-bin'>" + translate("apicallfailed") + "</h2><p class='doselect'>" + translate("nofetchtokeninfo") + "</p>";
+        popdialog(content, "canceldialog");
     }).fail(function(jqXHR, textStatus, errorThrown) {
-        geterc20tokens_local();
+        const content = "<h2 class='icon-bin'>" + translate("apicallfailed") + "</h2><p class='doselect'>" + translate("nofetchtokeninfo") + "</p>";
+        popdialog(content, "canceldialog");
     }).always(function() {
         setfunctions();
     });
 }
 
-// Get locally stored ERC20 token data
-function geterc20tokens_local() {
-    const apiurl = glob_approot + "assets_data_erc20.json";
-    $.getJSON(apiurl).done(function(data) {
-            if (data) {
-                storecoindata(data, true);
+// Store coin data in local storage
+function store_coindata(first_half, second_half) {
+    if (first_half) {
+        const c_arr1 = convert_coinlist(first_half);
+        if (c_arr1) {
+            cr_push = {
+                "timestamp": now(),
+                "token_arr": c_arr1
             }
-        })
-        .fail(function(jqXHR, textStatus, errorThrown) {
-            const content = "<h2 class='icon-bin'>" + translate("apicallfailed") + "</h2><p class='doselect'>" + translate("nofetchtokeninfo") + "</p>";
-            popdialog(content, "canceldialog");
-        });
+            br_set_local("erc20tokens_init", cr_push, true);
+        }
+    }
+    if (second_half) {
+        const c_arr2 = convert_coinlist(second_half);
+        if (c_arr2) {
+            br_set_local("erc20tokens", c_arr2, true);
+        }
+    }
 }
 
-// Store coin data in local storage
-function storecoindata(data, local) {
-    if (local) {
-        br_set_local("erc20tokens", data, true);
-        return
-    }
-    if (data && data.data) {
-        const erc20push = data.data.filter(value => value.platform && value.platform.id === 1027).map(value => ({
+function convert_coinlist(og_list) {
+    try {
+        return og_list.filter(value => value.platform && value.platform.id === 1027).map(value => ({
             "name": value.slug,
             "symbol": value.symbol.toLowerCase(),
             "cmcid": value.id,
             "contract": value.platform.token_address
         }));
-        br_set_local("erc20tokens", erc20push, true);
+    } catch (e) {
+        console.error(e.name, e.message);
+        return false;
     }
 }
 
@@ -1558,6 +1575,12 @@ function toggleswitch() {
 function showselect() {
     $(document).on("click", ".selectarrows", function() {
         const options = $(this).next(".options");
+        if (options.hasClass("single")) {
+            const option_length = options.children("*").length;
+            if (option_length < 2) {
+                return
+            }
+        }
         if (options.hasClass("showoptions")) {
             options.removeClass("showoptions");
         } else {
@@ -2022,7 +2045,7 @@ function recent_requests_list(recent_payments) {
                 erc20 = val.erc20,
                 rq_time = val.rqtime,
                 source = val.source,
-                layer = val.layer,
+                layer = val.eth_layer2,
                 blockchainurl = blockexplorer_url(currency, false, erc20, source, layer) + address;
             addresslist += "<li class='rp_li'>" + getcc_icon(cmcid, ccsymbol + "-" + currency, erc20) + "<strong style='opacity:0.5'>" + short_date(rq_time + glob_timezone) + "</strong><br/>\
             <a href='" + blockchainurl + "' target='_blank' class='ref check_recent'>\
@@ -2318,7 +2341,7 @@ function add_lightning() {
 // Handles the "Add ERC20 Token" button click
 function add_erc20() {
     $(document).on("click", "#add_erc20, #choose_erc20", function() {
-        const tokenobject = br_get_local("erc20tokens", true);
+        const tokenobject = fetch_cached_erc20();
         let tokenlist = "";
         $.each(tokenobject, function(key, value) {
             tokenlist += "<span data-id='" + value.cmcid + "' data-currency='" + value.name + "' data-ccsymbol='" + value.symbol.toLowerCase() + "' data-contract='" + value.contract + "' data-pe='none'>" + value.symbol + " | " + value.name + "</span>";
@@ -2585,7 +2608,7 @@ function validateaddress(ad, vk) {
     if (index === 1) {
         if (iserc20 === true) {
             buildpage(ad, true);
-            append_coinsetting(currency, glob_br_config.erc20_dat.settings);
+            append_coinsetting(currency, get_erc20_settings());
         }
         if (glob_body.hasClass("showstartpage")) {
             const acountname = $("#eninput").val();
@@ -2816,7 +2839,6 @@ function closesocket(s_id) {
         });
         glob_sockets = {};
     }
-    glob_txid = null;
 }
 
 // Forces closure of WebSocket connections
@@ -3131,7 +3153,7 @@ function removeaddressfunction(trigger) {
 function rec_payments() {
     $(document).on("click", "#rpayments", function() {
         const ad = $(this).closest("ul").data(),
-            blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20, ad.source, ad.layer);
+            blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20, ad.source, ad.eth_layer2);
         if (blockchainurl !== undefined) {
             open_blockexplorer_url(blockchainurl + ad.address);
         }
@@ -3175,7 +3197,7 @@ function showtransaction_trigger() {
                 currency = rql_dat.payment,
                 erc20 = rql_dat.erc20,
                 source = rql_dat.source,
-                layer = rql_dat.layer,
+                layer = rql_dat.eth_layer2,
                 blockchainurl = blockexplorer_url(currency, true, erc20, source, layer);
             if (blockchainurl) {
                 open_blockexplorer_url(blockchainurl + txhash);
@@ -3189,7 +3211,7 @@ function showtransactions() {
     $(document).on("click", ".showtransactions", function(e) {
         e.preventDefault();
         const ad = $("#ad_info_wrap").data(),
-            blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20, ad.source, ad.layer);
+            blockchainurl = blockexplorer_url(ad.currency, false, ad.erc20, ad.source, ad.eth_layer2);
         if (blockchainurl) {
             open_blockexplorer_url(blockchainurl + ad.address);
         }
@@ -3374,14 +3396,17 @@ function open_blockexplorer_url(be_link) {
 
 // Generates a block explorer URL based on currency and transaction type
 function blockexplorer_url(currency, tx, erc20, source, layer) {
-    const tx_prefix = tx === true ? "tx/" : "address/";
-    if (source == "binplorer" || layer == "bnb smart chain") {
-        return "https://binplorer.com/" + tx_prefix;
+    const tx_prefix = tx ? "tx/" : "address/";
+    if (layer === "bnb") {
+        return "https://bscscan.com/" + tx_prefix;
     }
-    if (source == "arbiscan" || layer == "arbitrum") {
+    if (layer === "arbitrum") {
         return "https://arbiscan.io/" + tx_prefix;
     }
-    if (erc20 == "true" || erc20 === true) {
+    if (layer === "polygon") {
+        return "https://polygonscan.com/" + tx_prefix;
+    }
+    if (erc20) {
         return "https://ethplorer.io/" + tx_prefix;
     }
     const blockexplorer = get_blockexplorer(currency);
@@ -3876,7 +3901,7 @@ function get_pdf_url(rqdat) {
         requesttype,
         iscrypto,
         uoa,
-        layer,
+        eth_layer2,
         requestdate,
         timestamp,
         payment,
@@ -3932,7 +3957,7 @@ function get_pdf_url(rqdat) {
     if (exists(txhash)) {
         invd["TxID"] = txhash;
     }
-    const network = getnetwork(layer);
+    const network = getnetwork(eth_layer2);
     if (network) {
         invd[transclear("network")] = network;
     }
@@ -4171,7 +4196,7 @@ function buildpage(cd, ini) {
         if (erc20 === true) {
             const coin_settings_cache = br_get_local(currency + "_settings");
             if (!coin_settings_cache) {
-                br_set_local(currency + "_settings", glob_br_config.erc20_dat.settings, true);
+                br_set_local(currency + "_settings", get_erc20_settings(), true);
             }
         }
     } else {
@@ -4290,7 +4315,7 @@ function appendrequest(rd) {
         rqmeta,
         monitored,
         source,
-        layer,
+        eth_layer2,
         txhistory,
         paymenttimestamp
     } = rd,
@@ -4373,7 +4398,7 @@ function appendrequest(rd) {
         cc_logo = lightning ? (txhash && !lnhash) ? cclogo : ln_logo : cclogo,
         rc_address_title = hybrid ? translate("fallbackaddress") : translate("receivingaddress"),
         address_markup = lightning && (lnhash || hybrid === false) ? "" : "<li><p class='address'><strong>" + rc_address_title + ":</strong> <span class='requestaddress select'>" + address + "</span>" + requestlabel + "</p></li>",
-        network = getnetwork(layer),
+        network = getnetwork(eth_layer2),
         network_markup = network ? "<li><p><strong>" + translate("network") + ":</strong> " + network + "</p></li>" : "",
         tlstat = direction === "sent" ? translate("paymentsent") : translate("paymentreceived"),
         new_requestli = $("<li class='rqli " + requesttypeclass + expiredclass + lnclass + "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status + "' data-address='" + address + "' data-pending='" + pending + "' data-iscrypto='" + iscrypto + "'>\
@@ -4425,12 +4450,15 @@ function appendrequest(rd) {
     new_requestli.data(rd).prependTo(requestlist);
     if (render_archive === true) {
         const transactionlist = requestlist.find("#" + requestid).find(".transactionlist");
-        $.each(txhistory, function(dat, val) {
-            const txh = val.txhash,
-                lnh = txh && txh.slice(0, 9) === "lightning",
-                tx_listitem = append_tx_li(val, false, lnh);
+        $.each(txhistory, function(dat, value) {
+            tx_listitem = append_tx_li(value, false);
             if (tx_listitem.length > 0) {
-                transactionlist.append(tx_listitem.data(val));
+                tx_listitem.data(value);
+                const h_string = data_title(value);
+                if (h_string) {
+                    tx_listitem.append(hs_for(h_string)).attr("title", h_string);
+                }
+                transactionlist.append(tx_listitem);
             }
         });
     }
@@ -4440,12 +4468,10 @@ function appendrequest(rd) {
 function getnetwork(layer) {
     if (!layer) return false;
     switch (layer) {
-        case "arbitrum":
-            return "Arbitrum";
-        case "bnb smart chain":
+        case "bnb":
             return "BNB smart chain";
         default:
-            return false;
+            return layer;
     }
 }
 
@@ -4457,7 +4483,7 @@ function savecurrencies(add) {
         return $(this).data();
     }).get();
     br_set_local("currencies", currenciespush, true);
-    updatechanges(translate("currencies"), add);
+    updatechanges("currencies", add);
 }
 
 // Saves addresses for a specific currency to local storage
@@ -4473,7 +4499,7 @@ function saveaddresses(currency, add) {
         br_remove_local("cc_" + currency);
         br_remove_local(currency + "_settings");
     }
-    updatechanges(translate("addresses"), add);
+    updatechanges("addresses", add);
 }
 
 // Saves the list of requests to local storage
@@ -4482,7 +4508,7 @@ function saverequests() {
         return $(this).data();
     }).get();
     br_set_local("requests", requestpush, true);
-    updatechanges(translate("requests"), true);
+    updatechanges("requests", true);
 }
 
 // Saves the archive list to local storage
@@ -4499,7 +4525,7 @@ function savesettings(nit) {
         return $(this).data();
     }).get();
     br_set_local("settings", settingsspush, true);
-    updatechanges(translate("settings"), true, nit);
+    updatechanges("settings", true, nit);
 }
 
 // Saves the settings for a specific cryptocurrency to local storage
@@ -4510,7 +4536,7 @@ function save_cc_settings(currency, add) {
         settingbox[thisnode.attr("data-id")] = thisnode.data();
     });
     br_set_local(currency + "_settings", settingbox, true);
-    updatechanges(translate("coinsettings"), add);
+    updatechanges("coinsettings", add);
 }
 
 // Updates the changes counter and triggers related actions
@@ -4695,7 +4721,7 @@ function proxy_alert(version) {
 
 // Fetches the symbol and ID for a given currency name
 function fetchsymbol(currencyname) {
-    const erc20tokens = br_get_local("erc20tokens", true);
+    const erc20tokens = fetch_cached_erc20();
     return erc20tokens.find(function(token) {
         return token.name === currencyname;
     }) || {};
@@ -5164,10 +5190,10 @@ function add_serviceworker() {
                 "scope": "./"
             })
             .then(function(reg) {
-                // console.log("Service worker has been registered for scope: " + reg.scope);
-            }).catch(function(error) {
+                console.log("Service worker has been registered for scope: " + reg.scope);
+            }).catch(function(e) {
                 // Registration failed
-                console.log('Service worker registration failed:', error);
+                console.log(e);
             });
     }
 }

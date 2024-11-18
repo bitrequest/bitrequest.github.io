@@ -17,7 +17,7 @@ const glob_apptitle = "Bitrequest",
         "https://www.bitrequest.app/"
     ],
     glob_hosted_proxy = random_array_item(glob_proxy_list), // load balance proxies
-    glob_proxy_version = "0.013",
+    glob_proxy_version = "0.014",
     glob_firebase_dynamic_link_domain = "bitrequest.page.link",
     glob_firebase_shortlink = "https://" + glob_firebase_dynamic_link_domain + "/",
     glob_androidpackagename = "io.bitrequest.app",
@@ -25,9 +25,11 @@ const glob_apptitle = "Bitrequest",
     glob_main_bc_wss = "wss://socket.blockcypher.com/v1/",
     glob_main_eth_node = "https://mainnet.infura.io/v3/",
     glob_main_arbitrum_node = "https://arbitrum-mainnet.infura.io/v3/",
+    glob_main_polygon_node = "https://polygon-mainnet.infura.io/v3/",
     glob_main_alchemy_node = "https://eth-mainnet.g.alchemy.com/v2/",
     glob_main_eth_socket = "wss://mainnet.infura.io/ws/v3/",
     glob_main_arbitrum_socket = "wss://arbitrum-mainnet.infura.io/ws/v3/",
+    glob_main_polygon_socket = "wss://polygon-mainnet.infura.io/ws/v3/",
     glob_main_alchemy_socket = "wss://eth-mainnet.g.alchemy.com/v2/",
     glob_main_nano_node = "https://www.bitrequest.app:8020",
     glob_main_kas_wss = "wss://api.kaspa.org",
@@ -893,12 +895,6 @@ const glob_apptitle = "Bitrequest",
                                 "display": true
                             },
                             {
-                                "name": "arbiscan",
-                                "url": "arbiscan.io",
-                                "api": true,
-                                "display": true
-                            },
-                            {
                                 "name": "blockchair",
                                 "url": "blockchair.com",
                                 "api": true,
@@ -931,8 +927,83 @@ const glob_apptitle = "Bitrequest",
                     },
                     "layer2": {
                         "icon": "new-tab",
-                        "selected": "Ethereum (L1)",
-                        "options": ["Ethereum (L1)", "Arbitrum (L2)"]
+                        "selected": false,
+                        "options": {
+                            "arbitrum": {
+                                "selected": false,
+                                "apis": {
+                                    "icon": "sphere",
+                                    "selected": {
+                                        "network": "arbitrum",
+                                        "name": "arbiscan",
+                                        "url": "arbiscan.io",
+                                        "api": true,
+                                        "display": true
+                                    },
+                                    "apis": [{
+                                        "network": "arbitrum",
+                                        "name": "arbiscan",
+                                        "url": "arbiscan.io",
+                                        "api": true,
+                                        "display": true
+                                    }]
+                                },
+                                "websockets": {
+                                    "icon": "tab",
+                                    "selected": {
+                                        "network": "arbitrum",
+                                        "name": "arbiscan",
+                                        "url": "arbiscan.io",
+                                        "api": true,
+                                        "display": true
+                                    },
+                                    "apis": [{
+                                        "network": "arbitrum",
+                                        "name": "arbiscan",
+                                        "url": "arbiscan.io",
+                                        "api": true,
+                                        "display": true
+                                    }]
+                                }
+                            },
+                            "polygon": {
+                                "selected": false,
+                                "apis": {
+                                    "icon": "sphere",
+                                    "selected": {
+                                        "network": "polygon",
+                                        "name": "polygonscan",
+                                        "url": "polygonscan.com",
+                                        "api": true,
+                                        "display": true
+                                    },
+                                    "apis": [{
+                                        "network": "polygon",
+                                        "name": "polygonscan",
+                                        "url": "polygonscan.com",
+                                        "api": true,
+                                        "display": true
+                                    }]
+                                },
+                                "websockets": {
+                                    "icon": "tab",
+                                    "selected": {
+                                        "network": "polygon",
+                                        "name": "polygonscan",
+                                        "url": "polygonscan.com",
+                                        "api": true,
+                                        "display": true
+                                    },
+                                    "apis": [{
+                                        "network": "polygon",
+                                        "name": "polygonscan",
+                                        "url": "polygonscan.com",
+                                        "api": true,
+                                        "display": true
+                                    }]
+                                }
+                            }
+                        }
                     },
                     "Xpub": {
                         "active": true,
@@ -1031,7 +1102,7 @@ const glob_apptitle = "Bitrequest",
                     "blockexplorers": {
                         "icon": "eye",
                         "selected": "nanexplorer.com",
-                        "options": ["nanexplorer.com", "blocklattice.io", "spynano.org", "nanolooker.com"]
+                        "options": ["nanexplorer.com", "blocklattice.io", "spynano.org"]
                     },
                     "apis": {
                         "icon": "sphere",
@@ -1076,20 +1147,6 @@ const glob_apptitle = "Bitrequest",
                                 "username": "",
                                 "password": "",
                                 "display": true
-                            },
-                            {
-                                "name": "proxy.powernode.cc",
-                                "url": "https://proxy.powernode.cc/proxy",
-                                "username": "",
-                                "password": "",
-                                "display": true
-                            },
-                            {
-                                "name": "api.nanos.cc",
-                                "url": "https://proxy.nanos.cc/proxy",
-                                "username": "",
-                                "password": "",
-                                "display": true
                             }
 
                         ],
@@ -1123,21 +1180,6 @@ const glob_apptitle = "Bitrequest",
                             {
                                 "name": "rainstorm.city websocket",
                                 "url": "wss://rainstorm.city/websocket",
-                                "display": true
-                            },
-                            {
-                                "name": "nanolooker.com websocket",
-                                "url": "wss://www.nanolooker.com/ws",
-                                "display": true
-                            },
-                            {
-                                "name": "powernode.cc websocket",
-                                "url": "wss://ws.powernode.cc",
-                                "display": true
-                            },
-                            {
-                                "name": "nanos.cc websocket",
-                                "url": "wss://socket.nanos.cc",
                                 "display": true
                             }
                         ],
@@ -1517,18 +1559,6 @@ const glob_apptitle = "Bitrequest",
                             "display": true
                         },
                         {
-                            "name": "arbiscan",
-                            "url": "arbiscan.io",
-                            "api": true,
-                            "display": true
-                        },
-                        {
-                            "name": "binplorer",
-                            "url": "binplorer.com",
-                            "api": true,
-                            "display": true
-                        },
-                        {
                             "name": "blockchair",
                             "url": "blockchair.com",
                             "api": true,
@@ -1537,11 +1567,6 @@ const glob_apptitle = "Bitrequest",
                         {
                             "name": glob_main_eth_node,
                             "url": glob_main_eth_node,
-                            "display": true
-                        },
-                        {
-                            "name": glob_main_arbitrum_node,
-                            "url": glob_main_arbitrum_node,
                             "display": true
                         }
                     ],
@@ -1566,8 +1591,167 @@ const glob_apptitle = "Bitrequest",
                 },
                 "layer2": {
                     "icon": "new-tab",
-                    "selected": "Ethereum (L1)",
-                    "options": ["Ethereum (L1)", "Arbitrum (L2)", "BNB smart chain (L2)"]
+                    "selected": false,
+                    "options": {
+                        "arbitrum": {
+                            "selected": false,
+                            "apis": {
+                                "icon": "sphere",
+                                "selected": {
+                                    "network": "arbitrum",
+                                    "name": "arbiscan",
+                                    "url": "arbiscan.io",
+                                    "api": true,
+                                    "display": true
+                                },
+                                "apis": [{
+                                        "network": "arbitrum",
+                                        "name": "arbiscan",
+                                        "url": "arbiscan.io",
+                                        "api": true,
+                                        "display": true
+                                    },
+                                    {
+                                        "network": "arbitrum",
+                                        "name": "infura",
+                                        "url": glob_main_arbitrum_node,
+                                        "api": true,
+                                        "display": true
+                                    }
+                                ]
+                            },
+                            "websockets": {
+                                "icon": "tab",
+                                "selected": {
+                                    "network": "arbitrum",
+                                    "name": "infura",
+                                    "url": glob_main_arbitrum_socket,
+                                    "display": true
+                                },
+                                "apis": [{
+                                        "network": "arbitrum",
+                                        "name": "infura",
+                                        "url": glob_main_arbitrum_socket,
+                                        "api": true,
+                                        "display": true
+                                    },
+                                    {
+                                        "network": "arbitrum",
+                                        "name": "arbiscan",
+                                        "url": "arbiscan.io",
+                                        "api": true,
+                                        "display": true
+                                    }
+                                ]
+                            }
+                        },
+                        "polygon": {
+                            "selected": false,
+                            "apis": {
+                                "icon": "sphere",
+                                "selected": {
+                                    "network": "polygon",
+                                    "name": "polygonscan",
+                                    "url": "polygonscan.com",
+                                    "api": true,
+                                    "display": true
+                                },
+                                "apis": [{
+                                        "network": "polygon",
+                                        "name": "polygonscan",
+                                        "url": "polygonscan.com",
+                                        "api": true,
+                                        "display": true
+                                    },
+                                    {
+                                        "network": "polygon",
+                                        "name": "infura",
+                                        "url": glob_main_polygon_node,
+                                        "api": true,
+                                        "display": true
+                                    }
+                                ]
+                            },
+                            "websockets": {
+                                "icon": "tab",
+                                "selected": {
+                                    "network": "polygon",
+                                    "name": "infura",
+                                    "url": glob_main_polygon_socket,
+                                    "api": true,
+                                    "display": true
+                                },
+                                "apis": [{
+                                        "network": "polygon",
+                                        "name": "infura",
+                                        "url": glob_main_polygon_socket,
+                                        "api": true,
+                                        "display": true
+                                    },
+                                    {
+                                        "network": "polygon",
+                                        "name": "polygonscan",
+                                        "url": "polygonscan.com",
+                                        "api": true,
+                                        "display": true
+                                    }
+                                ]
+                            }
+                        },
+                        "bnb": {
+                            "selected": false,
+                            "apis": {
+                                "icon": "sphere",
+                                "selected": {
+                                    "network": "bnb",
+                                    "name": "bscscan",
+                                    "url": "bscscan.com",
+                                    "api": true,
+                                    "display": true
+                                },
+                                "apis": [{
+                                        "network": "bnb",
+                                        "name": "bscscan",
+                                        "url": "bscscan.com",
+                                        "api": true,
+                                        "display": true
+                                    },
+                                    {
+                                        "network": "bnb",
+                                        "name": "binplorer",
+                                        "url": "binplorer.com",
+                                        "api": true,
+                                        "display": true
+                                    }
+                                ]
+                            },
+                            "websockets": {
+                                "icon": "tab",
+                                "selected": {
+                                    "network": "bnb",
+                                    "name": "bscscan",
+                                    "url": "bscscan.com",
+                                    "api": true,
+                                    "display": true
+                                },
+                                "apis": [{
+                                        "network": "bnb",
+                                        "name": "bscscan",
+                                        "url": "bscscan.com",
+                                        "api": true,
+                                        "display": true
+                                    },
+                                    {
+                                        "network": "bnb",
+                                        "name": "binplorer",
+                                        "url": "binplorer.com",
+                                        "api": true,
+                                        "display": true
+                                    }
+                                ]
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -1675,6 +1859,7 @@ const glob_apptitle = "Bitrequest",
                 "alchemy": null,
                 "arbiscan": null,
                 "bitly": null,
+                "bscscan": null,
                 "blockchair": null,
                 "blockcypher": null,
                 "coinmarketcap": null,
@@ -1683,7 +1868,8 @@ const glob_apptitle = "Bitrequest",
                 "exchangeratesapi": null,
                 "firebase": null,
                 "fixer": null,
-                "infura": null
+                "infura": null,
+                "polygonscan": null
             },
             {
                 "id": "contactform",
@@ -1737,6 +1923,20 @@ const glob_apptitle = "Bitrequest",
                 "key_param": "apikey=",
                 "api_key": null,
                 "sign_up": "https://arbiscan.io/register/"
+            },
+            {
+                "name": "polygonscan",
+                "base_url": "https://api.polygonscan.com/api",
+                "key_param": "apikey=",
+                "api_key": null,
+                "sign_up": "https://polygonscan.com/register/"
+            },
+            {
+                "name": "bscscan",
+                "base_url": "https://api.bscscan.com/api",
+                "key_param": "apikey=",
+                "api_key": null,
+                "sign_up": "https://bscscan.com/register/"
             },
             {
                 "name": "alchemy",
@@ -1899,6 +2099,13 @@ const glob_apptitle = "Bitrequest",
                 "sign_up": "https://infura.io/register"
             },
             {
+                "name": "polygon",
+                "base_url": glob_main_polygon_node,
+                "key_param": null,
+                "api_key": null,
+                "sign_up": "https://infura.io/register"
+            },
+            {
                 "name": "google_auth",
                 "base_url": null,
                 "key_param": null,
@@ -1962,13 +2169,6 @@ const glob_apptitle = "Bitrequest",
                 "address_prefix": "account/"
             },
             {
-                "name": "nanolooker.com",
-                "url": "https://nanolooker.com/",
-                "prefix": "",
-                "tx_prefix": "block/",
-                "address_prefix": "account/"
-            },
-            {
                 "name": "ethplorer.io",
                 "url": "https://ethplorer.io/",
                 "prefix": null,
@@ -1985,6 +2185,20 @@ const glob_apptitle = "Bitrequest",
             {
                 "name": "arbiscan.io",
                 "url": "https://arbiscan.io/",
+                "prefix": null,
+                "tx_prefix": "tx/",
+                "address_prefix": "address/"
+            },
+            {
+                "name": "polygonscan.com",
+                "url": "https://polygonscan.com/",
+                "prefix": null,
+                "tx_prefix": "tx/",
+                "address_prefix": "address/"
+            },
+            {
+                "name": "bscscan.com",
+                "url": "https://bscscan.com/",
                 "prefix": null,
                 "tx_prefix": "tx/",
                 "address_prefix": "address/"

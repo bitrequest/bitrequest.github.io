@@ -602,7 +602,7 @@ function backupdatabase() {
     $.each(glob_changes, function(key, value) {
         if (value > 0) {
             const nrchanges = (value == 1) ? translate("changein") : translate("changesin");
-            changespush.push("<li>" + value + " " + nrchanges + " '" + key + "'</li>");
+            changespush.push("<li>" + value + " " + nrchanges + " '" + translate(key) + "'</li>");
         }
     });
     const gd_active = (GD_pass().pass) ? true : false,
@@ -916,7 +916,7 @@ function backupcd() {
 function complilebackup() {
     const jsonfile = [],
         excludedKeys = [
-            "bitrequest_symbols", "bitrequest_changes", "bitrequest_erc20tokens",
+            "bitrequest_symbols", "bitrequest_changes", "bitrequest_erc20tokens_init", "bitrequest_erc20tokens",
             "bitrequest_editurl", "bitrequest_recent_requests", "bitrequest_backupfile_id",
             "bitrequest_appstore_dialog", "bitrequest_init", "bitrequest_k",
             "bitrequest_awl", "bitrequest_dat", "bitrequest_tp"
@@ -1787,7 +1787,7 @@ function complile_csv() {
             pts = val.paymenttimestamp,
             pdf_url = get_pdf_url(val),
             received_ts = pts ? short_date(pts) : "",
-            layer = val.layer,
+            layer = val.eth_layer2,
             network = getnetwork(layer),
             nw_string = network || "";
         if (shouldIncludeRequest(status, type, incl_paid, incl_ins, incl_new, incl_pending, incl_pos, incl_outgoing, incl_incoming)) {
@@ -2743,6 +2743,7 @@ function apikeys() {
             alchemykey = ak_data.alchemy || "",
             arbiscankey = ak_data.arbiscan || "",
             bitlykey = ak_data.bitly || "",
+            bscscankey = ak_data.bscscan || "",
             blockchairkey = ak_data.blockchair || "",
             blockcypherkey = ak_data.blockcypher || "",
             cmckey = ak_data.coinmarketcap || "",
@@ -2752,6 +2753,7 @@ function apikeys() {
             firebasekey = ak_data.firebase || "",
             fixerkey = ak_data.fixer || "",
             infurakey = ak_data.infura || "",
+            polygonscankey = ak_data.polygonscan || "",
             apikeyph = translate("apikey"),
             content = "\
             <div class='formbox' id='apikeyformbox'>\
@@ -2761,9 +2763,11 @@ function apikeys() {
                     <h3>Alchemy</h3>\
                     <input type='text' value='" + alchemykey + "' placeholder='Alchemy " + apikeyph + "' data-ref='alchemy' data-checkchange='" + alchemykey + "' class='ak_input'/>\
                     <h3>Arbiscan</h3>\
-                    <input type='text' value='" + arbiscankey + "' placeholder='Arbisca " + apikeyph + "' data-ref='arbiscan' data-checkchange='" + arbiscankey + "' class='ak_input'/>\
+                    <input type='text' value='" + arbiscankey + "' placeholder='Arbiscan " + apikeyph + "' data-ref='arbiscan' data-checkchange='" + arbiscankey + "' class='ak_input'/>\
                     <h3>Bitly</h3>\
                     <input type='text' value='" + bitlykey + "' placeholder='Bitly access token' data-ref='bitly' data-checkchange='" + bitlykey + "' class='ak_input'/>\
+                    <h3>Bscscan</h3>\
+                    <input type='text' value='" + bscscankey + "' placeholder='Bscscan " + apikeyph + "' data-ref='bscscan' data-checkchange='" + bscscankey + "' class='ak_input'/>\
                     <h3>Blockchair</h3>\
                     <input type='text' value='" + blockchairkey + "' placeholder='Blockchair " + apikeyph + "' data-ref='blockchair' data-checkchange='" + blockchairkey + "' class='ak_input'/>\
                     <h3>Blockcypher</h3>\
@@ -2783,6 +2787,8 @@ function apikeys() {
                     <h3>Infura</h3>\
                     <input type='text' value='" + infurakey + "' placeholder='Infura Project ID' data-ref='infura' data-checkchange='" + infurakey + "' class='ak_input'/>\
                     <input type='submit' class='submit' value='" + translate("okbttn") + "' id='apisubmit'/>\
+                    <h3>Polygonscan</h3>\
+                    <input type='text' value='" + polygonscankey + "' placeholder='Polygonscan " + apikeyph + "' data-ref='polygonscan' data-checkchange='" + polygonscankey + "' class='ak_input'/>\
                 </div>\
             </div>";
         popdialog(content, "triggersubmit");
@@ -2841,6 +2847,10 @@ function checkapikey(thisref, apikeyval, lastinput) {
             "keylength": 6,
             "payload": "expand"
         },
+        "bscscan": {
+            "keylength": 6,
+            "payload": "?module=block&action=getblockreward&blockno=131049&apikey="
+        },
         "blockchair": {
             "keylength": 6,
             "payload": "stats?key="
@@ -2872,6 +2882,10 @@ function checkapikey(thisref, apikeyval, lastinput) {
         "fixer": {
             "keylength": 20,
             "payload": "symbols?access_key="
+        },
+        "polygonscan": {
+            "keylength": 6,
+            "payload": "?module=block&action=getblockreward&blockno=131049&apikey="
         }
     };
     const data = token_data[thisref] || {
@@ -2914,7 +2928,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 api_fail(thisref, apikeyval);
             });
-            return;
+            return
         }
         const api_data = get_api_data(thisref),
             base_url = api_data.base_url,
@@ -2940,51 +2954,46 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
             });
         }
         const api_url = base_url + search,
-            postdata = (thisref === "coinmarketcap") ? {
-                "api": "coinmarketcap",
-                "search": search,
-                "cachetime": 0,
-                "cachefolder": "1h",
-                "params": params
-            } : {
+            proxy = (thisref === "coinmarketcap") ? true : false,
+            postdata = {
                 "api": thisref,
                 "search": search,
                 "cachetime": 0,
                 "cachefolder": "1h",
                 "api_url": api_url,
-                "proxy": false,
+                "proxy": proxy,
                 "params": params
             };
         api_proxy(postdata).done(function(e) {
             const data = br_result(e).result;
             if (data) {
                 const apicallfailed = translate("apicallfailed");
-                if (thisref === "arbiscan" && data.status !== 1) {
-                    if (data.result === "Invalid API Key") {
+                if ((thisref === "arbiscan" || thisref === "polygonscan" || thisref === "bscscan") && data.status != 1) {
+                    if (str_match(data.result, "Invalid API Key")) {
                         api_fail(thisref, apikeyval);
                     } else {
                         notify(translate("apicallerror"));
                         const content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.message + "</p>";
                         popdialog(content, "canceldialog");
                     }
-                    return;
+                    return
                 }
-                if (thisref === "bitly" && data.status_code === 500) {
+                if (thisref === "bitly" && data.status_code == 500) {
                     api_fail(thisref, apikeyval);
-                    return;
+                    return
                 }
                 if (thisref === "blockchair") {
                     const context_code = data.context.code;
-                    if (context_code === 200) {
+                    if (context_code == 200) {
                         update_api_attr(thisref, apikeyval, lastinput);
-                    } else if (context_code === 402) {
+                    } else if (context_code == 402) {
                         api_fail(thisref, apikeyval);
                     } else {
                         notify(translate("apicallerror"));
                         const content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
-                    return;
+                    return
                 }
                 if (thisref === "blockcypher") {
                     if (data.address) {
@@ -2994,25 +3003,28 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                     }
                     return;
                 }
-                if (thisref === "coinmarketcap" && data.status.error_code === 1001) {
-                    api_fail(thisref, apikeyval);
-                    return;
+                if (thisref === "coinmarketcap") {
+                    const cmc_key_length = apikeyval.length;
+                    if (cmc_key_length !== 36) {
+                        api_fail(thisref, apikeyval);
+                        return
+                    }
                 }
                 if (thisref === "currencylayer" && data.success === false) {
-                    if (data.error.code === 101) {
+                    if (data.error.code == 101) {
                         api_fail(thisref, apikeyval);
                     } else {
                         notify(translate("apicallerror"));
                         const content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
-                    return;
+                    return
                 }
                 if (thisref === "ethplorer") {
                     if (data.tokens) {
                         update_api_attr(thisref, apikeyval, lastinput);
                     } else {
-                        if (data.error.code === 1) {
+                        if (data.error.code == 1) {
                             api_fail(thisref, apikeyval);
                         } else {
                             notify(translate("apicallerror"));
@@ -3020,7 +3032,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                             popdialog(content, "canceldialog");
                         }
                     }
-                    return;
+                    return
                 }
                 if (thisref === "exchangeratesapi" && !data.success) {
                     const ec = q_obj(data, "error.code");
@@ -3032,31 +3044,31 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                             const content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + ec + "</p>";
                             popdialog(content, "canceldialog");
                         }
-                        return;
+                        return
                     }
                 }
                 if (thisref === "fixer" && data.success === false) {
-                    if (data.error.code === 101) {
+                    if (data.error.code == 101) {
                         api_fail(thisref, apikeyval);
                     } else {
                         notify(translate("apicallerror"));
                         const content = "<h2 class='icon-blocked'>" + apicallfailed + "</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
-                    return;
+                    return
                 }
                 update_api_attr(thisref, apikeyval, lastinput);
-                return;
+                return
             }
             api_fail(thisref, apikeyval);
         }).fail(function(jqXHR, textStatus, errorThrown) {
             api_fail(thisref, apikeyval);
         });
-        return;
+        return
     }
     if (!apikeyval) {
         update_api_attr(thisref, null, lastinput);
-        return;
+        return
     }
     api_fail(thisref, apikeyval);
 }
@@ -3388,7 +3400,7 @@ function team_invite() {
 function complile_teaminvite() {
     const jsonfile = {},
         excludeKeys = [
-            "bitrequest_symbols", "bitrequest_changes", "bitrequest_erc20tokens",
+            "bitrequest_symbols", "bitrequest_changes", "bitrequest_erc20tokens_init", "bitrequest_erc20tokens",
             "bitrequest_editurl", "bitrequest_recent_requests", "bitrequest_backupfile_id",
             "bitrequest_appstore_dialog", "bitrequest_init", "bitrequest_k",
             "bitrequest_awl", "bitrequest_tp", "bitrequest_requests",

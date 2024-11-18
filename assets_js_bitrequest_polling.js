@@ -1,14 +1,15 @@
 // pick API / RPC
 
 //pick_monitor
-//api_monitor_init
 //api_monitor
 //init_account_polling
 //account_polling
 //init_xmr_node
 //ping_xmr_node
-//arbi_scan
-//ping_arbiscan
+//omni_scan
+//ping_omniscan
+//omniscan_erc20
+//ping_omniscan_erc20
 //bnb_scan
 //ping_bnb
 //nimiq_poll
@@ -17,42 +18,37 @@
 
 // pick API / RPC
 // Initializes the payment monitoring process for a transaction
-function pick_monitor(txhash, tx_data, api_data) {
-    glob_api_attempts = {};
-    glob_rpc_attempts = {};
-    api_monitor_init(txhash, tx_data, api_data);
-}
-
-// Initializes the API monitoring process with transaction and API data
-function api_monitor_init(txhash, tx_data, api_dat) {
-    const requestid = request.requestid,
-        rq_id = requestid || "",
-        glob_l2 = glob_l2network[rq_id], // get cached l2 network
-        api_data = glob_l2 || api_dat,
-        api_info = api_data || api_dat || q_obj(helper, "api_info.data");
-    if (api_info) {
-        api_monitor(txhash, tx_data, api_info);
-        glob_paymentdialogbox.addClass("transacting");
+function pick_monitor(tx_data, api_data) {
+    const scanning = is_scanning();
+    if (scanning) {
+        glob_block_scan += 1;
+        playsound(glob_funk);
         return
     }
-    console.log("missing api info");
+    glob_api_attempts = {};
+    glob_rpc_attempts = {};
+    api_monitor(tx_data, api_data);
 }
 
 // Monitors the transaction status using the provided API data
-function api_monitor(txhash, tx_data, api_dat) {
-    const api_url = api_dat.url || api_dat.name;
-    if (api_url) {
-        const gets = geturlparameters();
-        if (gets.xss) {
+function api_monitor(tx_data, api_dat) {
+    const gets = geturlparameters();
+    if (gets.xss) {
+        return
+    };
+    if (tx_data) {
+        confirmations(tx_data, true);
+        if (!tx_data.setconfirmations) {
             return
-        };
-        if (tx_data) {
-            confirmations(tx_data, true);
-            if (tx_data.setconfirmations === false) {
-                return
-            }
-        };
-        const rdo = {
+        }
+        if (!request) {
+            return
+        }
+        const eth_layer2 = tx_data.eth_layer2,
+            api_data = eth_layer2 ? api_dat : api_dat || q_obj(helper, "api_info.data"),
+            retry = api_data ? true : false,
+            rdo = {
+                "requestid": request.requestid,
                 "pending": "polling",
                 "txdat": tx_data,
                 "source": "poll",
@@ -60,52 +56,54 @@ function api_monitor(txhash, tx_data, api_dat) {
                 "cachetime": 25
             },
             rd = {
+                "requestid": request.requestid,
                 "payment": request.payment,
-                "txhash": txhash,
+                "erc20": request.erc20,
+                "txhash": tx_data.txhash,
                 "currencysymbol": request.currencysymbol,
                 "address": gets.address,
                 "decimals": request.decimals,
-                "requestid": request.requestid,
-                "viewkey": request.viewkey
+                "viewkey": request.viewkey,
+                eth_layer2
             },
-            to_time = tx_data ? 30000 : 100,
+            to_time = tx_data.ccval ? 30000 : 10,
             timeout = setTimeout(function() {
-                if (api_dat.api) {
-                    select_api(rd, rdo, api_dat);
+                if (q_obj(api_data, "api") || eth_layer2) {
+                    get_api_inputs(rd, rdo, api_data, retry);
                 } else {
-                    select_rpc(rd, rdo, api_dat);
+                    get_rpc_inputs(rd, rdo, api_data, retry);
                 }
             }, to_time, function() {
                 clearTimeout(timeout);
             });
-        return
-    }
-    console.log("No API selected");
+        glob_paymentdialogbox.addClass("transacting");
+    };
 }
 
 function init_account_polling(time_out, socket, cache, rpc, next_api) {
     const ping_id = request.address,
-        timeout = time_out || 7000;
+        timeout = time_out || 7000,
+        api_data = next_api || q_obj(helper, "api_info.data");
     if (next_api) {
         clearpinging(ping_id);
-        account_polling(timeout, socket, cache, rpc, next_api);
+        account_polling(timeout, socket, cache, rpc, api_data);
     }
     socket_info({
         "url": ""
     }, true);
     glob_pinging[ping_id] = setInterval(function() {
-        account_polling(timeout, socket, cache, rpc, next_api);
+        account_polling(timeout, socket, cache, rpc, api_data);
     }, timeout);
 }
 
-function account_polling(timeout, socket, cache, rpc, next_api) {
+function account_polling(timeout, socket, cache, rpc, api_data) {
     const rq_init = request.rq_init,
         request_ts_utc = rq_init + glob_timezone,
         request_ts = request_ts_utc - 15000, // 15 second margin
-        api_data = next_api || helper.api_info.data,
         set_confirmations = request.set_confirmations || 0,
         cachetime = cache ? (timeout - 1000) / 1000 : 0,
         rdo = {
+            "requestid": request.requestid,
             "request_timestamp": request_ts,
             "setconfirmations": set_confirmations,
             "pending": "scanning",
@@ -238,7 +236,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
                             confirmations(txd, true);
                             if (set_confirmations > 0) {
                                 clearpinging(address);
-                                pick_monitor(tx_hash, txd, {
+                                pick_monitor(txd, {
                                     "api": true,
                                     "name": "blockchair_xmr",
                                     "display": true
@@ -258,35 +256,44 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
 // ETH Layer2's
 
 // Initiates Arbitrum scanning
-function arbi_scan(address, request_ts) {
-    set_l2_status("arbitrum", true);
-    glob_pinging["arbi" + address] = setInterval(function() {
-        ping_arbiscan(address, request_ts);
+// Initiates Polygon scanning
+function omni_scan(socket_node, address, request_ts) {
+    set_l2_status(socket_node, true);
+    glob_pinging[sha_sub(socket_node.name + address)] = setInterval(function() {
+        poll_animate();
+        ping_omniscan(socket_node, address, request_ts);
     }, 7000);
 }
 
 // Pings Arbiscan for transaction updates
-function ping_arbiscan(address, request_ts) {
+// Pings polygonscan for transaction updates
+function ping_omniscan(socket_node, address, request_ts) {
     if (!isopenrequest()) { // only when request is visible
         forceclosesocket();
         return;
     }
+    const socket_name = socket_node.name;
     api_proxy({
-        "api": "arbiscan",
+        "api": socket_name,
         "search": "?module=account&action=txlist&address=" + address + "&startblock=0&endblock=latest&page=1&offset=10&sort=desc",
         "params": {
             "method": "GET"
         }
     }).done(function(e) {
-        poll_animate();
         const data = br_result(e).result;
         if (data) {
+            const error = data.error;
+            if (error) {
+                set_l2_status(socket_node, false);
+                handle_socket_fails(socket_node, address, sha_sub(socket_name + address), true);
+                return
+            }
             const result = data.result;
             if (result && br_issar(result)) {
-                set_l2_status("arbitrum", true);
+                set_l2_status(socket_node, true);
                 const set_confirmations = request.set_confirmations || 0;
                 $.each(result, function(dat, value) {
-                    const txd = arbiscan_scan_data_eth(value, set_confirmations);
+                    const txd = omniscan_scan_data_eth(value, set_confirmations, socket_node.network);
                     if (txd.transactiontime > request_ts && txd.ccval) {
                         clearpinging();
                         const requestlist = $("#requestlist > li.rqli"),
@@ -294,8 +301,10 @@ function ping_arbiscan(address, request_ts) {
                         if (txid_match.length) {
                             return
                         }
+                        glob_l2s = {};
+                        set_l2_status(socket_node, true);
                         if (set_confirmations > 0) {
-                            pick_monitor(txd.txhash, txd);
+                            pick_monitor(txd);
                             return
                         }
                         confirmations(txd, true);
@@ -304,21 +313,86 @@ function ping_arbiscan(address, request_ts) {
             }
         }
     }).fail(function() {
-        set_l2_status("arbitrum", false);
-        clearpinging("arbi" + address);
+        set_l2_status(socket_node, false);
+        handle_socket_fails(socket_node, address, sha_sub(socket_name + address), true);
+    });
+}
+
+// Initiates Arbitrum scanning for erc20 tokens on arbiscan.io
+// Initiates Polygon scanning for erc20 tokens on polygonscan.com
+function omniscan_erc20(socket_node, address, request_ts, contract) {
+    set_l2_status(socket_node, true);
+    glob_pinging[contract] = setInterval(function() {
+        poll_animate();
+        ping_omniscan_erc20(socket_node, address, request_ts, contract);
+    }, 7000);
+}
+
+// Pings Arbiscan for erc20 transaction updates
+// Pings Polygonscan for erc20 transaction updates
+// Pings Bscscan for erc20 transaction updates
+function ping_omniscan_erc20(socket_node, address, request_ts, contract) {
+    if (!isopenrequest()) { // only when request is visible
+        forceclosesocket();
+        return;
+    }
+    api_proxy({
+        "api": socket_node.name,
+        "search": "?module=account&action=tokentx&contractaddress=" + contract + "&address=" + address + "&page=1&offset=100&startblock=0&endblock=99999999&sort=asc",
+        "params": {
+            "method": "GET"
+        }
+    }).done(function(e) {
+        const data = br_result(e).result;
+        if (data) {
+            const error = data.error,
+                message = data.message;
+            if (error || message === "NOTOK") {
+                set_l2_status(socket_node, false);
+                handle_socket_fails(socket_node, address, contract, true);
+                return
+            }
+            const result = data.result;
+            if (result && br_issar(result)) {
+                set_l2_status(socket_node, true);
+                const set_confirmations = request.set_confirmations || 0;
+                $.each(result, function(dat, value) {
+                    const txd = omniscan_scan_data(value, set_confirmations, request.currencysymbol, socket_node.network);
+                    if (txd.transactiontime > request_ts && txd.ccval) {
+                        clearpinging();
+                        const requestlist = $("#requestlist > li.rqli"),
+                            txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
+                        if (txid_match.length) {
+                            return
+                        }
+                        glob_l2s = {};
+                        set_l2_status(socket_node, true);
+                        if (set_confirmations > 0) {
+                            pick_monitor(txd);
+                            return
+                        }
+                        confirmations(txd, true);
+                    }
+                });
+            }
+        }
+    }).fail(function() {
+        set_l2_status(socket_node, false);
+        handle_socket_fails(socket_node, address, contract, true);
     });
 }
 
 // Initiates BNB Smart Chain scanning
-function bnb_scan(address, request_ts, ccsymbol) {
-    set_l2_status("bnb", true);
+function bnb_scan(socket_node, address, request_ts, ccsymbol) {
+    set_l2_status(socket_node, true);
     glob_pinging["bnb" + address] = setInterval(function() {
-        ping_bnb(address, request_ts, ccsymbol);
+        poll_animate();
+        ping_bnb(socket_node, address, request_ts, ccsymbol);
     }, 7000);
 }
 
 // Pings BNB Smart Chain for transaction updates
-function ping_bnb(address, request_ts, ccsymbol) {
+function ping_bnb(socket_node, address, request_ts, ccsymbol) {
     if (!isopenrequest()) { // only when request is visible
         forceclosesocket();
         return;
@@ -330,30 +404,35 @@ function ping_bnb(address, request_ts, ccsymbol) {
             "method": "GET"
         }
     }).done(function(e) {
-        poll_animate();
         const data = br_result(e).result;
         if (!data) return;
         const set_confirmations = request.set_confirmations || 0;
-        set_l2_status("bnb", true);
+        set_l2_status(socket_node, true);
         $.each(data.operations, function(dat, value) {
-            const txd = ethplorer_scan_data(value, set_confirmations, ccsymbol, "binplorer");
-            if (txd.transactiontime > request_ts && txd.ccval) {
-                clearpinging();
-                const requestlist = $("#requestlist > li.rqli"),
-                    txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
-                if (txid_match.length) {
-                    return
+            const symbol = q_obj(value, "tokenInfo.symbol"),
+                smatch = str_match(symbol, ccsymbol);
+            if (smatch) {
+                const txd = ethplorer_scan_data(value, set_confirmations, ccsymbol, "bnb");
+                if (txd.transactiontime > request_ts && txd.ccval) {
+                    clearpinging();
+                    const requestlist = $("#requestlist > li.rqli"),
+                        txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
+                    if (txid_match.length) {
+                        return
+                    }
+                    glob_l2s = {};
+                    set_l2_status(socket_node, true);
+                    if (set_confirmations > 0) {
+                        pick_monitor(txd);
+                        return
+                    }
+                    confirmations(txd, true);
                 }
-                if (set_confirmations > 0) {
-                    pick_monitor(txd.txhash, txd);
-                    return
-                }
-                confirmations(txd, true);
             }
         });
     }).fail(function() {
-        set_l2_status("bnb", false);
-        clearpinging("bnb" + address);
+        set_l2_status(socket_node, false);
+        handle_socket_fails(socket_node, address, "bnb" + address, true);
     });
 }
 
@@ -398,7 +477,7 @@ function confirmations(tx_data, direct, ln) {
                 currentconf = parseFloat(confboxspan.attr("data-conf")),
                 xconf = tx_data.confirmations || 0,
                 txhash = tx_data.txhash,
-                layer = tx_data.l2 || "main",
+                eth_layer2 = tx_data.eth_layer2,
                 zero_conf = setconfirmations === false || tx_data.instant_lock; // Dashpay instant_lock
 
             brstatuspanel.find("span#confnumber").text(conf_text);
@@ -436,7 +515,7 @@ function confirmations(tx_data, direct, ln) {
                     "txhash": txhash,
                     "confirmations": xconf,
                     "set_confirmations": setconfirmations,
-                    "layer": layer
+                    eth_layer2
                 });
 
                 brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), glob_langcode));
@@ -475,7 +554,7 @@ function confirmations(tx_data, direct, ln) {
                             saverequest(direct);
                         }
                         brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
-                        return new_status
+                        return new_status;
                     }
                     if (!exact) {
                         brheader.text(translate("insufficientamount"));

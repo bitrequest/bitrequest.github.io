@@ -912,14 +912,6 @@ li[data-checked="false"] .checkbox:before,
 	vertical-align: top;
 }
 
-.settinglist .iconbox {
-	color: #009788;
-}
-
-.settinglist .iconbox .switchpanel {
-	margin-right: 1em;
-}
-
 .iconbox {
 	position: absolute;
 	top: 0;
@@ -937,6 +929,15 @@ li[data-checked="false"] .checkbox:before,
 
 .iconbox>span:before {
 	margin: 0;
+}
+
+.settinglist .iconbox {
+	top: 50%;
+	color: #009788;
+}
+
+.settinglist .iconbox .switchpanel {
+	margin-right: 1em;
 }
 
 .iconright .atext {
@@ -1274,9 +1275,6 @@ html.dragmode .currentpage .applist li.dragging {
 	padding: 0.15em 0 0.15em 0;
 	list-style-type: none;
 	font-weight: 600;
-}
-
-.metalist li.cnamemeta {
 	text-transform: capitalize;
 }
 
@@ -1716,6 +1714,7 @@ html.inframe .requestlist li .req_actions .icon-folder-open {
 #dialogbody .popform h3 {
 	color: #4d4d4d;
 	margin: 1.2em 0 0.2em 0.8em;
+	text-transform: capitalize;
 }
 
 #actions {

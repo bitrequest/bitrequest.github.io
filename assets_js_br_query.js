@@ -80,7 +80,10 @@
 //getcoindata
 //activecoinsettings
 //getcoinsettings
+//get_erc20_settings
 //getcoinconfig
+//add_prefix_to_keys
+//check_params
 //click_pop
 
 // Manage local storage
@@ -226,7 +229,7 @@ function api_proxy(ad, p_proxy) {
 
 // Corrects API name for specific cases
 function c_apiname(apiname) {
-    if (apiname === "arbitrum") return "infura";
+    if (apiname === "arbitrum" || apiname === "polygon") return "infura";
     if (apiname === "binplorer") return "ethplorer";
     return apiname;
 }
@@ -262,7 +265,7 @@ function get_api_url(get) {
             key_param = ad.key_param || "",
             saved_key = $("#apikeys").data(api),
             key_val = saved_key || ad.api_key,
-            ampersand = search && (search.includes("?") || search.includes("&")) ? "&" : "?",
+            ampersand = (search) ? (search.indexOf("?") > -1 || search.indexOf("&") > -1) ? "&" : "?" : "",
             api_param = key_param !== "bearer" && saved_key ? ampersand + key_param + saved_key : "",
             api_url = base_url + search;
         return {
@@ -785,10 +788,7 @@ function cs_node(currency, id, data) {
     }
     const coindata = getcoinsettings(currency);
     if (coindata) {
-        const apis = coindata.apis;
-        if (apis) {
-            return apis;
-        }
+        return coindata[id];
     }
     return false
 }
@@ -817,7 +817,7 @@ function getcoindata(currency) {
     if (currencyref.length > 0) {
         return $.extend(currencyref.data(), glob_br_config.erc20_dat.data);
     } // else lookup erc20 data
-    const tokenobject = br_get_local("erc20tokens", true);
+    const tokenobject = fetch_cached_erc20();
     if (tokenobject) {
         const erc20data = tokenobject.find(function(filter) {
             return filter.name === currency;
@@ -847,6 +847,11 @@ function getcoinsettings(currency) {
     if (coindata) {
         return coindata.settings;
     } // return erc20 settings
+    return get_erc20_settings();
+}
+
+// Retrieves erc20 settings
+function get_erc20_settings() {
     return glob_br_config.erc20_dat.settings;
 }
 
@@ -855,6 +860,36 @@ function getcoinconfig(currency) {
     return glob_br_config.bitrequest_coin_data.find(function(filter) {
         return filter.currency === currency;
     });
+}
+
+function add_prefix_to_keys(obj, prefix = "data-") {
+    return Object.entries(obj).reduce((acc, [key, value]) => {
+        acc[prefix + key] = value;
+        return acc;
+    }, {});
+}
+
+function fetch_cached_erc20(check) {
+    const first_arr = br_get_local("erc20tokens_init", true);
+    if (first_arr) {
+        const timestamp = first_arr.timestamp;
+        if (timestamp) {
+            if (check) {
+                const time_in_cache = now() - timestamp;
+                // flush cache every week
+                if (time_in_cache < glob_token_cache * 1000) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+            const second_arr = br_get_local("erc20tokens", true);
+            if (second_arr) {
+                return first_arr.token_arr.concat(second_arr);
+            }
+        }
+    }
+    return false;
 }
 
 // ** Check params ** //

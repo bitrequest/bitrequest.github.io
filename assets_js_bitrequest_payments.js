@@ -462,7 +462,7 @@ function loadpaymentfunction(pass) {
                     "payment": payment,
                     "coindata": coindata,
                     "erc20": iserc20,
-                    "layer": "main"
+                    "eth_l2s": []
                 }, // global request object
                 helper = {
                     "exact": exact,
@@ -621,6 +621,7 @@ function continue_paymentfunction() {
         requesttimestamp = dataobject && dataobject.ts ? dataobject.ts : null,
         requestname = dataobject && dataobject.n ? dataobject.n : null,
         requesttitle = dataobject && dataobject.t ? dataobject.t : null,
+        eth_l2s = dataobject && dataobject.l2 ? dataobject.l2 : [],
         current_conf = coinsettings ? coinsettings.confirmations || 0 : 0,
         no_conf = !current_conf || !monitored,
         set_confirmations = dataobject && dataobject.c ? parseFloat(dataobject.c) : no_conf ? 0 : current_conf.selected,
@@ -668,6 +669,7 @@ function continue_paymentfunction() {
             fiatcurrency,
             requestname,
             requesttitle,
+            eth_l2s,
             set_confirmations,
             no_conf,
             instant,
@@ -2039,6 +2041,10 @@ function validaterequestdata(lnurl) {
             }
             set_lnd_qr($("#ccinputmirror > input").val(), requesttitle_val);
         }
+        // Include eth l2 chain data
+        if (request.eth_l2s.length) {
+            dataobject.l2 = request.eth_l2s;
+        }
         newurl = currenturl + "&d=" + btoa(JSON.stringify(dataobject));
         request.requestname = requestname_val,
             request.requesttitle = requesttitle_val;
@@ -2810,7 +2816,9 @@ function saverequest(direct) {
         requestid_param = gets.requestid,
         checkout = direct !== "init" && thisrequesttype === "checkout",
         this_iscrypto = thiscurrency === currencysymbol,
-        ln = dataobject && dataobject.imp;
+        ln = dataobject && dataobject.imp,
+        eth_layer2 = request.eth_layer2,
+        eth_l2s = request.eth_l2s;
     let this_requestid,
         hybrid = true,
         invoice = false,
@@ -2855,7 +2863,9 @@ function saverequest(direct) {
                     "txhash": savedtxhash,
                     "confirmations": request.confirmations,
                     "pending": request.pending,
-                    "lightning": lightning
+                    "lightning": lightning,
+                    eth_layer2,
+                    eth_l2s
                 };
                 br_remove_session("historic_" + smart_id); // remove historic price cache
                 updaterequest(update_dat, true);
@@ -2962,7 +2972,8 @@ function saverequest(direct) {
                 "pending": request.pending,
                 "lightning": lightning,
                 "erc20": request.erc20,
-                "layer": request.layer
+                eth_layer2,
+                eth_l2s
             };
         let contactdata;
         if (contact_param) {
@@ -3001,8 +3012,10 @@ function saverequest(direct) {
 function pendingdialog(pr) { // show pending dialog if tx is pending
     request.received = true;
     const prdata = pr.data(),
-        requestid = prdata.requestid;
+        requestid = prdata.requestid,
+        eth_layer2 = prdata.eth_layer2;
     request.requestid = requestid;
+    request.eth_layer2 = eth_layer2;
     const status = prdata.status,
         txhash = prdata.txhash,
         tl_txhash = pr.find(".transactionlist li:first").data("txhash"),
@@ -3057,7 +3070,12 @@ function pendingdialog(pr) { // show pending dialog if tx is pending
             return
         }
         adjust_paymentdialog("pending", "polling", translate("txbroadcasted"));
-        pick_monitor(smart_txhash, false);
+        const set_confirmations = request.set_confirmations || 0;
+        pick_monitor({
+            "txhash": smart_txhash,
+            "setconfirmations": set_confirmations,
+            eth_layer2
+        });
     }
 }
 
