@@ -317,7 +317,9 @@ function init_erc20_layer2(socket_node, address, request_ts) {
         if (!bnb_contract) {
             // No Binance smart chain support
         } else {
-            if (node_name === "bscscan") {
+            if (node_name === "infura") {
+                web3_erc20_websocket(socket_node, address, bnb_contract);
+            } else if (node_name === "bscscan") {
                 omniscan_erc20(socket_node, address, request_ts, bnb_contract);
             } else if (node_name === "binplorer") {
                 bnb_scan(socket_node, address, request_ts, ccsymbol);

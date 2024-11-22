@@ -531,6 +531,13 @@ function bnb_apis(dat) {
             omniscan_fetch(dat.rd, dat.rdo, dat.api_data, bnb_contract);
         } else if (api_name === "binplorer") {
             ethplorer_fetch(dat.rd, dat.rdo, dat.api_data);
+        } else if (api_name === "infura") {
+            if (q_obj(dat, "rdo.pending") === "polling") {
+                infura_txd_rpc(dat.rd, dat.rdo, dat.api_data);
+            } else {
+                // Use Polygonscan
+                handle_api_fails(dat.rd, dat.rdo, null, dat.api_data, null, "bnb");
+            }
         }
     }
 }

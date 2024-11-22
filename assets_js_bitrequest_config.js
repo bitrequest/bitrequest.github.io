@@ -26,10 +26,12 @@ const glob_apptitle = "Bitrequest",
     glob_main_eth_node = "https://mainnet.infura.io/v3/",
     glob_main_arbitrum_node = "https://arbitrum-mainnet.infura.io/v3/",
     glob_main_polygon_node = "https://polygon-mainnet.infura.io/v3/",
+    glob_main_bnb_node = "https://bsc-mainnet.infura.io/v3/",
     glob_main_alchemy_node = "https://eth-mainnet.g.alchemy.com/v2/",
     glob_main_eth_socket = "wss://mainnet.infura.io/ws/v3/",
     glob_main_arbitrum_socket = "wss://arbitrum-mainnet.infura.io/ws/v3/",
     glob_main_polygon_socket = "wss://polygon-mainnet.infura.io/ws/v3/",
+    glob_main_bnb_socket = "wss://bsc-mainnet.infura.io/ws/v3/",
     glob_main_alchemy_socket = "wss://eth-mainnet.g.alchemy.com/v2/",
     glob_main_nano_node = "https://www.bitrequest.app:8020",
     glob_main_kas_wss = "wss://api.kaspa.org",
@@ -1722,6 +1724,13 @@ const glob_apptitle = "Bitrequest",
                                         "url": "binplorer.com",
                                         "api": true,
                                         "display": true
+                                    },
+                                    {
+                                        "network": "bnb",
+                                        "name": "infura",
+                                        "url": glob_main_bnb_node,
+                                        "api": true,
+                                        "display": true
                                     }
                                 ]
                             },
@@ -1729,12 +1738,19 @@ const glob_apptitle = "Bitrequest",
                                 "icon": "tab",
                                 "selected": {
                                     "network": "bnb",
-                                    "name": "bscscan",
-                                    "url": "bscscan.com",
+                                    "name": "infura",
+                                    "url": glob_main_bnb_socket,
                                     "api": true,
                                     "display": true
                                 },
                                 "apis": [{
+                                        "network": "bnb",
+                                        "name": "infura",
+                                        "url": glob_main_bnb_socket,
+                                        "api": true,
+                                        "display": true
+                                    },
+                                    {
                                         "network": "bnb",
                                         "name": "bscscan",
                                         "url": "bscscan.com",
