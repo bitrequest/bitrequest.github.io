@@ -610,8 +610,12 @@ html.inframe #request_back {
 	font-size: 2em;
 }
 
-#payment.live #paymentaddress:after {
+#paymentaddress.live:after {
 	color: #00c000;
+}
+
+#paymentdialogbox.transacting #paymentaddress:after {
+	color: #919191;
 }
 
 #apisrc {
@@ -655,7 +659,7 @@ html.inframe #request_back {
 	display: block;
 	width: 100%;
 	list-style-type: none;
-	font-size: 0.8em;
+	font-size: 0.7em;
 	text-align: center;
 	color: #8d8d8d;
 }

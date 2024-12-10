@@ -44,6 +44,7 @@ $(document).ready(function() {
 
     //loadpaymentfunction
     //get_tokeninfo
+    //get_tokeninfo_local
     //continue_paymentfunction
     //lightning_setup
     //test_lnd
@@ -434,6 +435,7 @@ function loadpaymentfunction(pass) {
         notify(translate("closingsockets"));
         return
     }
+    glob_l2s = {};
     loader();
     glob_symbolcache = br_get_local("symbols", true);
     if (glob_symbolcache) {
@@ -523,6 +525,13 @@ function get_tokeninfo(payment, contract) {
         const data = br_result(e).result,
             error = data.error;
         if (error) {
+            const get_decimals = get_tokeninfo_local();
+            if (get_decimals) {
+                request.decimals = get_decimals;
+                continue_paymentfunction();
+                br_set_local("decimals_" + payment, get_decimals); //cache token decimals
+                return
+            }
             cancelpaymentdialog();
             fail_dialogs("ethplorer", error);
             return
@@ -532,6 +541,13 @@ function get_tokeninfo(payment, contract) {
         continue_paymentfunction();
         br_set_local("decimals_" + payment, decimals); //cache token decimals
     }).fail(function(jqXHR, textStatus, errorThrown) {
+        const get_decimals = get_tokeninfo_local();
+        if (get_decimals) {
+            request.decimals = get_decimals;
+            continue_paymentfunction();
+            br_set_local("decimals_" + payment, get_decimals); //cache token decimals
+            return
+        }
         const next_proxy = get_next_proxy();
         if (next_proxy) {
             get_tokeninfo(payment, contract);
@@ -542,6 +558,20 @@ function get_tokeninfo(payment, contract) {
         fail_dialogs("ethplorer", error_object);
         closeloader();
     });
+}
+
+// Fallback token information for ERC20 token decimals
+function get_tokeninfo_local() {
+    const ccsymbol = q_obj(request, "coindata.ccsymbol");
+    if (!ccsymbol) {
+        return false;
+    }
+    const ctracts = contracts(ccsymbol);
+    if (!ctracts) {
+        return false;
+    }
+    const decimals = ctracts.dec;
+    return decimals ? decimals : (decimals === null) ? false : 18;
 }
 
 // Continues the payment function setup after initial checks
@@ -3129,7 +3159,7 @@ function dw_trigger() {
 function download_wallet(currency) {
     const ln = currency === "lightning",
         thiscurrency = ln ? "bitcoin" : currency,
-        coindata = getcoinconfig(thiscurrency),
+        coindata = getcoindat(thiscurrency),
         wallets = ln ? coindata.lightning_wallets : coindata.wallets,
         wdp = wallets.wallet_download_page,
         wallets_arr = wallets.wallets;

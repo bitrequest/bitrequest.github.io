@@ -903,7 +903,7 @@ const glob_apptitle = "Bitrequest",
                                 "display": false
                             },
                             {
-                                "name": glob_main_eth_node,
+                                "name": "infura_main_rpc",
                                 "url": glob_main_eth_node,
                                 "display": true
                             }
@@ -916,12 +916,12 @@ const glob_apptitle = "Bitrequest",
                     "websockets": {
                         "icon": "tab",
                         "selected": {
-                            "name": glob_main_alchemy_socket,
+                            "name": "alchemy_main_ws",
                             "url": glob_main_alchemy_socket,
                             "display": true
                         },
                         "apis": [{
-                            "name": glob_main_alchemy_socket,
+                            "name": "alchemy_main_ws",
                             "url": glob_main_alchemy_socket,
                             "display": true
                         }],
@@ -1567,7 +1567,7 @@ const glob_apptitle = "Bitrequest",
                             "display": true
                         },
                         {
-                            "name": glob_main_eth_node,
+                            "name": "infura_main_rpc",
                             "url": glob_main_eth_node,
                             "display": true
                         }
@@ -1580,16 +1580,17 @@ const glob_apptitle = "Bitrequest",
                 "websockets": {
                     "icon": "tab",
                     "selected": {
-                        "name": glob_main_eth_socket,
+                        "name": "infura_main_ws",
                         "url": glob_main_eth_socket,
                         "display": true
                     },
                     "apis": [{
-                        "name": glob_main_eth_socket,
+                        "name": "infura_main_ws",
                         "url": glob_main_eth_socket,
                         "display": true
                     }],
-                    "options": []
+                    "options": [],
+                    "poll_fallback": true
                 },
                 "layer2": {
                     "icon": "new-tab",
@@ -1628,6 +1629,7 @@ const glob_apptitle = "Bitrequest",
                                     "network": "arbitrum",
                                     "name": "infura",
                                     "url": glob_main_arbitrum_socket,
+                                    "api": true,
                                     "display": true
                                 },
                                 "apis": [{

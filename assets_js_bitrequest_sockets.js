@@ -222,8 +222,11 @@ function init_socket(socket_node, address, swtch, retry) {
         return
     }
     if (request.erc20 === true) {
+        const l2 = socket_node.network;
         // Layer 1
-        web3_erc20_websocket(socket_node, address, request.token_contract);
+        if (!l2) {
+            web3_erc20_websocket(socket_node, address, request.token_contract);
+        }
         // Layer 2
         if (retry) {
             init_erc20_layer2(socket_node, address, request_ts);
@@ -773,7 +776,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
         handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress)
+        handle_socket_fails(socket_node, thisaddress);
         return
     };
 }
@@ -1080,19 +1083,18 @@ function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
 
 // Initializes and manages WebSocket for ERC20 tokens on Ethereum and Ethereum-like networks
 function web3_erc20_websocket(socket_node, thisaddress, contract) {
-    const l2network = socket_node.network;
-    if (glob_sockets[contract]) {
+    const l2network = socket_node.network,
+        nwid = l2network || "",
+        ws_id = contract + nwid;
+    if (glob_sockets[ws_id]) {
         return
     }
-    const provider_url = socket_node.url,
+    const provider_url = complete_url(socket_node.url),
         if_id = get_infura_apikey(provider_url),
-        provider = provider_url + if_id,
-        websocket = glob_sockets[contract] = new WebSocket(provider);
+        provider = provider_url + if_id;
+    const websocket = glob_sockets[ws_id] = new WebSocket(provider);
     websocket.onopen = function(e) {
         socket_info(socket_node, true);
-        if (l2network) {
-            set_l2_status(socket_node, true);
-        }
         const ping_event = JSON.stringify({
             "jsonrpc": "2.0",
             "id": 1,
@@ -1144,13 +1146,10 @@ function web3_erc20_websocket(socket_node, thisaddress, contract) {
     };
     websocket.onclose = function(e) {
         handle_socket_close(socket_node);
+        handle_socket_fails(socket_node, thisaddress, ws_id, l2network);
     };
     websocket.onerror = function(e) {
-        if (l2) {
-            set_l2_status(socket_node, false);
-        }
-        handle_socket_fails(socket_node, thisaddress, contract, l2);
-        return
+        handle_socket_fails(socket_node, thisaddress, ws_id, l2network);
     };
 }
 
@@ -1323,8 +1322,7 @@ function handle_socket_fails(socket_node, thisaddress, socketid, l2) {
     if (isopenrequest()) { // only when request is visible
         const next_socket = try_next_socket(socket_node, l2),
             wsid = (socketid) ? socketid : thisaddress;
-        clearpinging(wsid);
-        closesocket(wsid);
+        forceclosesocket(wsid);
         if (next_socket) {
             init_socket(next_socket, thisaddress, null, true);
             return
@@ -1344,7 +1342,6 @@ function handle_socket_fails(socket_node, thisaddress, socketid, l2) {
         }
         const error_message = "unable to connect to " + socket_node.name;
         socket_info(socket_node, false);
-        notify(translate("websocketoffline"), 500000, "yes");
     }
 }
 
@@ -1399,16 +1396,43 @@ function try_next_socket(current_socket_data, l2) {
 
 // Updates the UI with socket connection information
 function socket_info(snode, live, polling) {
-    const islive = live ? " <span class='pulse'></span>" : " <span class='icon-wifi-off'></span>",
-        method = polling ? "polling" : "websocket",
-        contents = method + ": " + snode.url + islive;
-    $("#current_socket").html(contents);
+    const l2 = snode.network;
+    if (l2) {
+        set_l2_status(snode, live);
+    } else {
+        const islive = live ? " <span class='pulse'></span>" : " <span class='icon-wifi-off'></span>",
+            method = polling ? "polling" : "websocket",
+            contents = method + ": " + snode.url + islive,
+            paymentaddress = $("#paymentaddress");
+        $("#current_socket").html(contents);
+        if (live) {
+            paymentaddress.addClass("live");
+        } else {
+            paymentaddress.removeClass("live");
+        }
+    }
     if (live) {
         console.log("Connected: " + snode.url);
         glob_paymentpopup.addClass("live");
-        return
+        closenotify();
+    } else {
+        setTimeout(function() {
+            if (is_openrequest() !== true) {
+                return
+            }
+            if (glob_paymentdialogbox.hasClass("transacting")) {
+                return
+            }
+            if ($("#paymentaddress").hasClass("live")) {
+                return
+            }
+            const l2nws = glob_paymentpopup.find("li.nwl2.online");
+            if (!l2nws.length) {
+                glob_paymentpopup.removeClass("live");
+                notify(translate("websocketoffline"), 500000, "yes");
+            }
+        }, 1000);
     }
-    glob_paymentpopup.removeClass("live");
 }
 
 // Set and dislay l2 status

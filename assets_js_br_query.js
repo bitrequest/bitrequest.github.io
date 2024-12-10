@@ -79,7 +79,9 @@
 //cs_node
 //getcoindata
 //activecoinsettings
+//getcoindat
 //getcoinsettings
+//get_erc20_data
 //get_erc20_settings
 //getcoinconfig
 //add_prefix_to_keys
@@ -185,7 +187,9 @@ function api_proxy(ad, p_proxy) {
         get_api_url({
             "api": apiname,
             "search": ad.search
-        });
+        }),
+        set_proxy = p_proxy || d_proxy();
+    glob_proxy_attempts[set_proxy] = true;
     if (aud) {
         const proxy = ad.proxy,
             api_key = aud.api_key,
@@ -210,7 +214,6 @@ function api_proxy(ad, p_proxy) {
         // use api proxy
         ad.api = c_apiname(apiname);
         const api_location = "proxy/v1/",
-            set_proxy = p_proxy || d_proxy(),
             app_root = ad.localhost ? "" : set_proxy,
             proxy_data = {
                 "method": "POST",
@@ -221,7 +224,6 @@ function api_proxy(ad, p_proxy) {
                     "nokey": nokey
                 })
             };
-        glob_proxy_attempts[set_proxy] = true;
         return $.ajax(proxy_data);
     }
     return $.ajax();
@@ -841,6 +843,11 @@ function activecoinsettings(currency) {
     return saved_coinsettings || getcoinsettings(currency);
 }
 
+// Retrieves coin data for a given currency
+function getcoindat(currency) {
+    return getcoinconfig(currency) || get_erc20_data();
+}
+
 // Retrieves coin settings for a given currency
 function getcoinsettings(currency) {
     const coindata = getcoinconfig(currency);
@@ -848,6 +855,11 @@ function getcoinsettings(currency) {
         return coindata.settings;
     } // return erc20 settings
     return get_erc20_settings();
+}
+
+// Retrieves erc20 data
+function get_erc20_data() {
+    return glob_br_config.erc20_dat;
 }
 
 // Retrieves erc20 settings

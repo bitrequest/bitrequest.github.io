@@ -470,8 +470,8 @@ function finishfunctions() {
     //unfocus_inputs
     //cpd_pollcheck
     //cancelpaymentdialog
-    //closesocket
     //forceclosesocket
+    //closesocket
     //clearpinging
     cancelsharedialogtrigger();
     //cancelsharedialog
@@ -2826,6 +2826,13 @@ function cancelpaymentdialog() {
     });
 }
 
+// Forces closure of WebSocket connections
+function forceclosesocket(s_id) {
+    console.log("force close");
+    clearpinging(s_id);
+    closesocket(s_id);
+}
+
 // Closes WebSocket connections
 function closesocket(s_id) {
     if (s_id) { // close this socket
@@ -2839,13 +2846,6 @@ function closesocket(s_id) {
         });
         glob_sockets = {};
     }
-}
-
-// Forces closure of WebSocket connections
-function forceclosesocket() {
-    console.log("force close");
-    clearpinging();
-    closesocket();
 }
 
 // Clears pinging intervals

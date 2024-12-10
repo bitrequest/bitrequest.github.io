@@ -162,6 +162,7 @@ function init_xmr_node(cachetime, address, vk, request_ts) {
                     "url": "mymonero api"
                 }, true);
                 glob_pinging[address] = setInterval(function() {
+                    poll_animate();
                     ping_xmr_node(cachetime, address, vk, request_ts);
                 }, 12000);
                 return
@@ -206,7 +207,6 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
             }
         }
     }).done(function(e) {
-        poll_animate();
         const data = br_result(e).result,
             transactions = data.transactions;
         if (!transactions) return;
@@ -258,9 +258,8 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
 // Initiates Arbitrum scanning
 // Initiates Polygon scanning
 function omni_scan(socket_node, address, request_ts) {
-    set_l2_status(socket_node, true);
+    socket_info(socket_node, true);
     glob_pinging[sha_sub(socket_node.name + address)] = setInterval(function() {
-        poll_animate();
         ping_omniscan(socket_node, address, request_ts);
     }, 7000);
 }
@@ -284,7 +283,7 @@ function ping_omniscan(socket_node, address, request_ts) {
         if (data) {
             const error = data.error;
             if (error) {
-                set_l2_status(socket_node, false);
+                socket_info(socket_node, false);
                 handle_socket_fails(socket_node, address, sha_sub(socket_name + address), true);
                 return
             }
@@ -313,7 +312,7 @@ function ping_omniscan(socket_node, address, request_ts) {
             }
         }
     }).fail(function() {
-        set_l2_status(socket_node, false);
+        socket_info(socket_node, false);
         handle_socket_fails(socket_node, address, sha_sub(socket_name + address), true);
     });
 }
@@ -321,9 +320,8 @@ function ping_omniscan(socket_node, address, request_ts) {
 // Initiates Arbitrum scanning for erc20 tokens on arbiscan.io
 // Initiates Polygon scanning for erc20 tokens on polygonscan.com
 function omniscan_erc20(socket_node, address, request_ts, contract) {
-    set_l2_status(socket_node, true);
+    socket_info(socket_node, true);
     glob_pinging[contract] = setInterval(function() {
-        poll_animate();
         ping_omniscan_erc20(socket_node, address, request_ts, contract);
     }, 7000);
 }
@@ -348,7 +346,7 @@ function ping_omniscan_erc20(socket_node, address, request_ts, contract) {
             const error = data.error,
                 message = data.message;
             if (error || message === "NOTOK") {
-                set_l2_status(socket_node, false);
+                socket_info(socket_node, false);
                 handle_socket_fails(socket_node, address, contract, true);
                 return
             }
@@ -377,16 +375,15 @@ function ping_omniscan_erc20(socket_node, address, request_ts, contract) {
             }
         }
     }).fail(function() {
-        set_l2_status(socket_node, false);
+        socket_info(socket_node, false);
         handle_socket_fails(socket_node, address, contract, true);
     });
 }
 
 // Initiates BNB Smart Chain scanning
 function bnb_scan(socket_node, address, request_ts, ccsymbol) {
-    set_l2_status(socket_node, true);
+    socket_info(socket_node, true);
     glob_pinging["bnb" + address] = setInterval(function() {
-        poll_animate();
         ping_bnb(socket_node, address, request_ts, ccsymbol);
     }, 7000);
 }
@@ -431,7 +428,7 @@ function ping_bnb(socket_node, address, request_ts, ccsymbol) {
             }
         });
     }).fail(function() {
-        set_l2_status(socket_node, false);
+        socket_info(socket_node, false);
         handle_socket_fails(socket_node, address, "bnb" + address, true);
     });
 }
