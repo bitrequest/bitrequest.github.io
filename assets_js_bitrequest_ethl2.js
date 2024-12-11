@@ -85,16 +85,16 @@ function init_layer2(payment, socket_node, address, request_ts) {
         if (network === "arbitrum") {
             if (node_name === "arbiscan") {
                 omni_scan(socket_node, address, request_ts);
-            } else {
-                omni_scan(socket_node, address, request_ts);
+            } else if (node_name === "etherscan") {
+                omni_scan(socket_node, address, request_ts, 42161);
             }
         }
         // polygon
         if (network === "polygon") {
             if (node_name === "polygonscan") {
                 omni_scan(socket_node, address, request_ts);
-            } else {
-                omni_scan(socket_node, address, request_ts);
+            } else if (node_name === "etherscan") {
+                omni_scan(socket_node, address, request_ts, 137);
             }
         }
         return
@@ -109,6 +109,8 @@ function init_layer2(payment, socket_node, address, request_ts) {
         } else {
             if (node_name === "infura") {
                 web3_erc20_websocket(socket_node, address, arb_contract);
+            } else if (node_name === "etherscan") {
+                omniscan_erc20(socket_node, address, request_ts, arb_contract, 42161);
             } else if (node_name === "arbiscan") {
                 omniscan_erc20(socket_node, address, request_ts, arb_contract);
             }
@@ -122,6 +124,8 @@ function init_layer2(payment, socket_node, address, request_ts) {
         } else {
             if (node_name === "infura") {
                 web3_erc20_websocket(socket_node, address, polygon_contract);
+            } else if (node_name === "etherscan") {
+                omniscan_erc20(socket_node, address, request_ts, polygon_contract, 137);
             } else if (node_name === "polygonscan") {
                 omniscan_erc20(socket_node, address, request_ts, polygon_contract);
             }
@@ -135,6 +139,8 @@ function init_layer2(payment, socket_node, address, request_ts) {
         } else {
             if (node_name === "infura") {
                 web3_erc20_websocket(socket_node, address, bnb_contract);
+            } else if (node_name === "etherscan") {
+                omniscan_erc20(socket_node, address, request_ts, bnb_contract, 56);
             } else if (node_name === "bscscan") {
                 omniscan_erc20(socket_node, address, request_ts, bnb_contract);
             } else if (node_name === "binplorer") {
@@ -328,26 +334,25 @@ function web3_erc20_websocket(socket_node, thisaddress, contract) {
     };
 }
 
-// Initiates Arbitrum scanning
-// Initiates Polygon scanning
-function omni_scan(socket_node, address, request_ts) {
+// Initiates Eth layer2 scanning
+function omni_scan(socket_node, address, request_ts, chainid) {
     socket_info(socket_node, true);
     glob_pinging[sha_sub(socket_node.name + address)] = setInterval(function() {
-        ping_omniscan(socket_node, address, request_ts);
+        ping_omniscan(socket_node, address, request_ts, chainid);
     }, 7000);
 }
 
-// Pings Arbiscan for transaction updates
-// Pings polygonscan for transaction updates
-function ping_omniscan(socket_node, address, request_ts) {
+// Pings Eth layer2 for transaction updates
+function ping_omniscan(socket_node, address, request_ts, chainid) {
     if (!isopenrequest()) { // only when request is visible
         forceclosesocket();
         return;
     }
-    const socket_name = socket_node.name;
+    const socket_name = socket_node.name,
+        cid = chainid ? "&chainid=" + chainid : "";
     api_proxy({
         "api": socket_name,
-        "search": "?module=account&action=txlist&address=" + address + "&startblock=0&endblock=latest&page=1&offset=10&sort=desc",
+        "search": "?module=account&action=txlist&address=" + address + "&startblock=0&endblock=latest&page=1&offset=10&sort=desc" + cid,
         "params": {
             "method": "GET"
         }
@@ -390,27 +395,24 @@ function ping_omniscan(socket_node, address, request_ts) {
     });
 }
 
-// Initiates Arbitrum scanning for erc20 tokens on arbiscan.io
-// Initiates Polygon scanning for erc20 tokens on polygonscan.com
-// Initiates Bscscan scanning for erc20 tokens on bscscan.com
-function omniscan_erc20(socket_node, address, request_ts, contract) {
+// Initiates Erc20 layer2 scanning
+function omniscan_erc20(socket_node, address, request_ts, contract, chainid) {
     socket_info(socket_node, true);
     glob_pinging[contract] = setInterval(function() {
-        ping_omniscan_erc20(socket_node, address, request_ts, contract);
+        ping_omniscan_erc20(socket_node, address, request_ts, contract, chainid);
     }, 7000);
 }
 
-// Pings Arbiscan for erc20 transaction updates
-// Pings Polygonscan for erc20 transaction updates
-// Pings Bscscan for erc20 transaction updates
-function ping_omniscan_erc20(socket_node, address, request_ts, contract) {
+// Pings Eth Erc20 for transaction updates
+function ping_omniscan_erc20(socket_node, address, request_ts, contract, chainid) {
     if (!isopenrequest()) { // only when request is visible
         forceclosesocket();
         return;
     }
+    const cid = chainid ? "&chainid=" + chainid : "";
     api_proxy({
         "api": socket_node.name,
-        "search": "?module=account&action=tokentx&contractaddress=" + contract + "&address=" + address + "&page=1&offset=100&startblock=0&endblock=99999999&sort=asc",
+        "search": "?module=account&action=tokentx&contractaddress=" + contract + "&address=" + address + "&page=1&offset=100&startblock=0&endblock=99999999&sort=desc" + cid,
         "params": {
             "method": "GET"
         }
@@ -535,16 +537,13 @@ function set_l2_status(sn, stat) {
 
 // ** Monirors **
 
-function query_ethl2_api(rd, rdo, api_dat, l2) {
-    if (l2) {
-        if (rdo.pending === "polling") {
-            poll_ethl2_api(rd, rdo, api_dat, l2);
-            return
-        }
-        scan_ethl2_api(rd, rdo, api_dat);
+function query_ethl2_api(rd, rdo, api_dat) {
+    const l2 = rd.eth_layer2;
+    if (rdo.pending === "polling" && l2) {
+        poll_ethl2_api(rd, rdo, api_dat, l2);
         return
     }
-    api_callback(rdo);
+    scan_ethl2_api(rd, rdo, api_dat);
 }
 
 function scan_ethl2_api(rd, rdo, api_dat) {
@@ -679,18 +678,20 @@ function poll_ethl2_api(rd, rdo, api_dat, l2) {
 // Handles Arbitrum APIS
 function arbitrum_apis(dat) {
     const arb_contract = dat.arb_contract,
-        thiscurrency = q_obj(dat, "rd.thiscurrency");
+        thiscurrency = q_obj(dat, "rd.payment");
     if (!arb_contract && thiscurrency !== "ethereum") {
         // No arbitrum contract
     } else {
         const api_name = q_obj(dat, "api_data.name");
         if (api_name === "arbiscan") {
-            omniscan_fetch(dat.rd, dat.rdo, dat.api_data, arb_contract);
+            omniscan_fetch(dat.rd, dat.api_data, dat.rdo, arb_contract);
+        } else if (api_name === "etherscan") {
+            omniscan_fetch(dat.rd, dat.api_data, dat.rdo, arb_contract, 42161);
         } else if (api_name === "infura") {
             if (q_obj(dat, "rdo.pending") === "polling") {
-                infura_txd_rpc(dat.rd, dat.rdo, dat.api_data);
+                infura_txd_rpc(dat.rd, dat.api_data, dat.rdo);
             } else {
-                // Use Arbiscan
+                // Use arbiscan
                 handle_api_fails(dat.rd, dat.rdo, null, dat.api_data, null, "arbitrum");
             }
         }
@@ -700,18 +701,20 @@ function arbitrum_apis(dat) {
 // Handles Polygon APIS
 function polygon_apis(dat) {
     const polygon_contract = dat.polygon_contract,
-        thiscurrency = q_obj(dat, "rd.thiscurrency");
+        thiscurrency = q_obj(dat, "rd.payment");
     if (!polygon_contract && thiscurrency !== "ethereum") {
         // No polygon contract
     } else {
         const api_name = q_obj(dat, "api_data.name");
         if (api_name === "polygonscan") {
-            omniscan_fetch(dat.rd, dat.rdo, dat.api_data, polygon_contract);
+            omniscan_fetch(dat.rd, dat.api_data, dat.rdo, polygon_contract);
+        } else if (api_name === "etherscan") {
+            omniscan_fetch(dat.rd, dat.api_data, dat.rdo, polygon_contract, 137);
         } else if (api_name === "infura") {
             if (q_obj(dat, "rdo.pending") === "polling") {
-                infura_txd_rpc(dat.rd, dat.rdo, dat.api_data);
+                infura_txd_rpc(dat.rd, dat.api_data, dat.rdo);
             } else {
-                // Use Polygonscan
+                // Use polygonscan
                 handle_api_fails(dat.rd, dat.rdo, null, dat.api_data, null, "polygon");
             }
         }
@@ -721,20 +724,22 @@ function polygon_apis(dat) {
 // Handles Binance smart chain APIS
 function bnb_apis(dat) {
     const bnb_contract = dat.bnb_contract,
-        thiscurrency = q_obj(dat, "rd.thiscurrency");
+        thiscurrency = q_obj(dat, "rd.payment");
     if (!bnb_contract && thiscurrency !== "ethereum") {
         // No bnb contract
     } else {
         const api_name = q_obj(dat, "api_data.name");
         if (api_name === "bscscan") {
-            omniscan_fetch(dat.rd, dat.rdo, dat.api_data, bnb_contract);
+            omniscan_fetch(dat.rd, dat.api_data, dat.rdo, bnb_contract);
         } else if (api_name === "binplorer") {
             ethplorer_fetch(dat.rd, dat.rdo, dat.api_data);
+        } else if (api_name === "etherscan") {
+            omniscan_fetch(dat.rd, dat.api_data, dat.rdo, bnb_contract, 56);
         } else if (api_name === "infura") {
             if (q_obj(dat, "rdo.pending") === "polling") {
-                infura_txd_rpc(dat.rd, dat.rdo, dat.api_data);
+                infura_txd_rpc(dat.rd, dat.api_data, dat.rdo);
             } else {
-                // Use Polygonscan
+                // Use bscscan
                 handle_api_fails(dat.rd, dat.rdo, null, dat.api_data, null, "bnb");
             }
         }
@@ -758,14 +763,12 @@ function edit_l2() {
                 bnb_contract = ctracts.bnb,
                 networks = [];
             $.each(options, function(key, value) {
-                if (key === "arbitrum" && !arb_contract && thiscurrency !== "ethereum") {} else if (key === "polygon" && !polygon_contract && thiscurrency !== "ethereum") {} else if (key === "bnb" && (thiscurrency === "ethereum" || !bnb_contract)) {} else {
+                if (key === "arbitrum" && !arb_contract && thiscurrency !== "ethereum") {} else if (key === "polygon" && !polygon_contract && thiscurrency !== "ethereum") {} else if (key === "bnb" && !bnb_contract && thiscurrency !== "ethereum") {} else {
                     const nw_name = key === "bnb" ? "bnb smart chain" : key,
                         nw_selected = value.selected,
                         s_boxes = []
                     $.each(value, function(k, v) {
-                        if (k === "selected") {
-
-                        } else {
+                        if (k === "selected") {} else {
                             const selected = v.selected,
                                 apis = v.apis,
                                 api_push = [];

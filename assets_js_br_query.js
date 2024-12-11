@@ -585,8 +585,9 @@ function get_api_data(api_id) {
 function str_match(add1, add2) {
     if (add1 && add2) {
         const a1u = add1.toUpperCase(),
-            a2u = add2.toUpperCase();
-        return a1u.includes(a2u);
+            a2u = add2.toUpperCase(),
+            includes = a1u.includes(a2u) || a2u.includes(a1u);
+        return includes;
     }
     return false
 }

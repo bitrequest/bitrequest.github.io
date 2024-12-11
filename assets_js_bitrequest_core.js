@@ -1574,7 +1574,8 @@ function toggleswitch() {
 // Shows select options
 function showselect() {
     $(document).on("click", ".selectarrows", function() {
-        const options = $(this).next(".options");
+        const all_options = $(".options"),
+            options = $(this).next(".options");
         if (options.hasClass("single")) {
             const option_length = options.children("*").length;
             if (option_length < 2) {
@@ -1582,8 +1583,9 @@ function showselect() {
             }
         }
         if (options.hasClass("showoptions")) {
-            options.removeClass("showoptions");
+            all_options.removeClass("showoptions");
         } else {
+            all_options.not(options).removeClass("showoptions");
             options.addClass("showoptions");
         }
     });

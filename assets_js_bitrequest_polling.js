@@ -63,9 +63,9 @@ function api_monitor(tx_data, api_dat) {
             to_time = tx_data.ccval ? 30000 : 10,
             timeout = setTimeout(function() {
                 if (q_obj(api_data, "api") || eth_layer2) {
-                    get_api_inputs(rd, rdo, api_data, retry);
+                    get_api_inputs(rd, api_data, rdo, retry);
                 } else {
-                    get_rpc_inputs(rd, rdo, api_data, retry);
+                    get_rpc_inputs(rd, api_data, rdo, retry);
                 }
             }, to_time, function() {
                 clearTimeout(timeout);
@@ -108,9 +108,9 @@ function account_polling(timeout, socket, cache, rpc, api_data) {
             cachetime
         };
     if (rpc) {
-        get_rpc_inputs(request, rdo, api_data);
+        get_rpc_inputs(request, api_data, rdo);
     } else {
-        get_api_inputs(request, rdo, api_data);
+        get_api_inputs(request, api_data, rdo);
     }
     poll_animate();
     socket_info(api_data, true);

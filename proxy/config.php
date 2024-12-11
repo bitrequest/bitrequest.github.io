@@ -4,6 +4,7 @@
 $keys = array(
 	"coinmarketcap" => "",
 	"fixer" => "",
+	"etherscan" => "",
 	"ethplorer" => "",
 	"blockcypher" => "",
 	"bitly" => "",
@@ -23,6 +24,7 @@ $keys = array(
 /* Sign up:
 	coinmarketcap: https://pro.coinmarketcap.com/signup/
 	fixer: https://fixer.io/signup/free/
+	etherscan: https://etherscan.io/register/
 	ethplorer: https://ethplorer.io/wallet/
 	blockcypher: https://accounts.blockcypher.com/
 	bitly: https://bitly.com/a/sign_up/
