@@ -2748,6 +2748,7 @@ function apikeys() {
             blockcypherkey = ak_data.blockcypher || "",
             cmckey = ak_data.coinmarketcap || "",
             currencylayerkey = ak_data.currencylayer || "",
+            etherscankey = ak_data.etherscan || "",
             ethplorerkey = ak_data.ethplorer || "",
             exchangeratesapikey = ak_data.exchangeratesapi || "",
             firebasekey = ak_data.firebase || "",
@@ -2776,6 +2777,8 @@ function apikeys() {
                     <input type='text' value='" + cmckey + "' placeholder='Coinmarketcap " + apikeyph + "' data-ref='coinmarketcap' data-checkchange='" + cmckey + "' class='ak_input'/>\
                     <h3>Currencylayer</h3>\
                     <input type='text' value='" + currencylayerkey + "' placeholder='Currencylayer " + apikeyph + "' data-ref='currencylayer' data-checkchange='" + currencylayerkey + "' class='ak_input'/>\
+                    <h3>Etherscan</h3>\
+                    <input type='text' value='" + etherscankey + "' placeholder='Etherscan " + apikeyph + "' data-ref='etherscan' data-checkchange='" + etherscankey + "' class='ak_input'/>\
                     <h3>Ethplorer</h3>\
                     <input type='text' value='" + ethplorerkey + "' placeholder='Ethplorer " + apikeyph + "' data-ref='ethplorer' data-checkchange='" + ethplorerkey + "' class='ak_input'/>\
                     <h3>Exchangeratesapi</h3>\
@@ -2866,6 +2869,10 @@ function checkapikey(thisref, apikeyval, lastinput) {
         "currencylayer": {
             "keylength": 6,
             "payload": "live?access_key="
+        },
+        "etherscan": {
+            "keylength": 6,
+            "payload": "?module=block&action=getblockreward&blockno=131049&chainid=1&apikey="
         },
         "ethplorer": {
             "keylength": 6,
@@ -2968,7 +2975,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
             const data = br_result(e).result;
             if (data) {
                 const apicallfailed = translate("apicallfailed");
-                if ((thisref === "arbiscan" || thisref === "polygonscan" || thisref === "bscscan") && data.status != 1) {
+                if ((thisref === "etherscan" || thisref === "arbiscan" || thisref === "polygonscan" || thisref === "bscscan") && data.status != 1) {
                     if (str_match(data.result, "Invalid API Key")) {
                         api_fail(thisref, apikeyval);
                     } else {
