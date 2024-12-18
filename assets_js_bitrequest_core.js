@@ -1934,6 +1934,7 @@ function after_scan(api_data) {
             "setconfirmations": set_confirmations,
             "pending": "scanning",
             "erc20": request.erc20,
+            "cachetime": 20,
             "source": "after_scan"
         };
     if (rpc) {
