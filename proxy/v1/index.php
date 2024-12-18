@@ -115,7 +115,7 @@
 
     // Handle Nano TXD request
     function handle_nano_txd_request($data_var, $postheaders, $cache_time, $cache_folder) {
-        $nano_url = "https://" . $_SERVER["HTTP_HOST"] . $_SERVER["BASE"] . "custom/rpcs/nano/?pl=" . base64_encode(json_encode($data_var));
+        $nano_url = "https://" . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"] . "custom/rpcs/nano/?pl=" . base64_encode(json_encode($data_var));
         return api($nano_url, $data_var, $postheaders, $cache_time, $cache_folder, null, null);
     }
 
