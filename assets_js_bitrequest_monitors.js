@@ -245,7 +245,7 @@ function get_api_inputs_init(rd, api_data, rdo) {
 // Retrieves API inputs for a request
 function get_api_inputs(rd, api_data, rdo, retry) {
     const source = rdo.source;
-    if (source === "poll" || source === "acc_polling") {
+    if (source === "poll" || source === "acc_polling" || source === "after_scan") {
         select_api(rd, api_data, rdo, retry);
         return
     }
@@ -382,11 +382,23 @@ function scan_match(rd, api_data, rdo, counter, txdat, l2) {
             compareamounts(rd, rdo);
             return
         }
+        if (src === "after_scan") { // After scan
+            glob_html.addClass("blurmain_payment");
+            glob_paymentpopup.addClass("active");
+            txdat.txhash = txhash;
+            clearpinging();
+            pick_monitor(txdat);
+            closeloader();
+        }
         if (src === "acc_polling") { // polling
             txdat.txhash = txhash;
             clearpinging();
             pick_monitor(txdat);
         }
+        return
+    }
+    if (src === "after_scan") {
+        cancel_after_scan();
         return
     }
     if (rd.erc20 || rd.payment === "ethereum") {
@@ -435,9 +447,13 @@ function tx_api_fail(thislist, statuspanel) {
 
 // Handles API failures and attempts to use alternative APIs or RPCs
 function handle_api_fails(rd, rdo, error, api_data, all_proxys, l2) {
+    const src = rdo.source;
+    if (src === "after_scan") {
+        cancel_after_scan();
+        return
+    }
     const error_data = get_api_error_data(error),
         requestid = rd.requestid,
-        src = rdo.source,
         payment = rd.payment,
         timeout = rdo.timeout,
         socket = rdo.socket,
@@ -609,6 +625,13 @@ function api_src(thislist, api_data) {
 // Handles the callback after an API request is completed
 function api_callback(rdo) {
     const source = rdo.source;
+    if (source === "after_scan") {
+        cancel_after_scan();
+        return
+    }
+    if (source === "acc_polling") {
+        return
+    }
     if (source === "list") {
         const thislist = rdo.thislist;
         if (thislist && thislist.hasClass("scan")) {
@@ -662,7 +685,7 @@ function get_rpc_inputs_init(rd, api_data, rdo) {
 // Retrieves RPC inputs for a request
 function get_rpc_inputs(rd, api_data, rdo) {
     const source = rdo.source;
-    if (source === "poll" || source === "acc_polling") {
+    if (source === "poll" || source === "acc_polling" || source === "after_scan") {
         select_rpc(rd, api_data, rdo);
         return
     }
@@ -705,9 +728,13 @@ function select_rpc(rd, api_data, rdo) {
 
 // Handles RPC failures and attempts to use alternative RPCs or APIs
 function handle_rpc_fails(rd, rdo, error, api_data, all_proxys, l2) {
+    const src = rdo.source;
+    if (src === "after_scan") {
+        cancel_after_scan();
+        return
+    }
     const error_data = get_api_error_data(error),
         requestid = rd.requestid,
-        src = rdo.source,
         payment = rd.payment,
         timeout = rdo.timeout,
         socket = rdo.socket,

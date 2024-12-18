@@ -207,7 +207,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
         socket_info({
             "url": api_name
         }, true);
-        const set_confirmations = request.set_confirmations || 0,
+        const set_confirmations = q_obj(request, "set_confirmations") || 0,
             txflip = transactions.reverse();
         $.each(txflip, function(dat, value) {
             const txd = xmr_scan_data(value, set_confirmations, "xmr", data.blockchain_height);

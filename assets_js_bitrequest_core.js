@@ -36,7 +36,7 @@ const glob_ls_support = check_local(),
     (glob_thishostname == "bitrequest.github.io") ? "hosted" :
     (glob_thishostname == glob_localhostname) ? "selfhosted" : "unknown",
     glob_wl = navigator.wakeLock,
-    glob_after_scan_timeout = 120000, // offer a blockexplorer lookup after 2 minutes without detection
+    glob_after_scan_timeout = 30000, // Preform extra tx lookup when closing paymentdialog after 30 seconds
     glob_xss_alert = "xss attempt detected",
     glob_langcode = setlangcode(), // set saved or system language
     glob_token_cache = 604800;
@@ -426,10 +426,10 @@ function finishfunctions() {
     //escapeandback
     //close_paymentdialog
     //continue_cpd
-    //payment_lookup
+    //after_scan
+    //cancel_after_scan
+    //set_recent_requests
     check_recent();
-    dismiss_payment_lookup();
-    //block_payment_lookup
     request_history();
     //recent_requests
     //recent_requests_list
@@ -470,6 +470,8 @@ function finishfunctions() {
     //unfocus_inputs
     //cpd_pollcheck
     //cancelpaymentdialog
+    //hide_paymentdialog
+    //reset_paymentdialog
     //forceclosesocket
     //closesocket
     //clearpinging
@@ -1820,10 +1822,10 @@ function keyup() {
 
 // Handle escape and back functionality
 function escapeandback() {
-    if (glob_inframe === true) {
+    if (glob_inframe) {
         const gets = geturlparameters();
         if (gets.payment) {
-            parent.postMessage("close_request_confirm", "*");
+            cpd_pollcheck();
             return
         }
         parent.postMessage("close_request", "*");
@@ -1885,34 +1887,19 @@ function escapeandback() {
 }
 
 // Close payment dialog
-function close_paymentdialog(empty) {
-    if (request) {
-        if (empty === true && glob_inframe === false && request.requesttype === "local") {
-            const currency = request.payment,
-                address = request.address,
-                ls_recentrequests = br_get_local("recent_requests", true),
-                lsrr_arr = br_dobj(ls_recentrequests, true),
-                request_dat = {
-                    "currency": currency,
-                    "cmcid": request.cmcid,
-                    "ccsymbol": request.currencysymbol,
-                    "address": address,
-                    "erc20": request.erc20,
-                    "rqtime": request.rq_init
-                };
-            lsrr_arr[currency] = request_dat;
-            br_set_local("recent_requests", lsrr_arr, true);
-            closeloader();
-            toggle_rr(true);
-            const rr_whitelist = br_get_session("rrwl", true);
-            if (rr_whitelist && rr_whitelist[currency] == address) {
-                continue_cpd();
-                return
-            }
-            payment_lookup(request_dat);
-            return
+function close_paymentdialog(afterscan) {
+    if (afterscan) {
+        const api_data = q_obj(request, "coinsettings.apis.selected");
+        if (api_data) {
+            after_scan(api_data);
         }
+        return
     }
+    if (glob_inframe) {
+        parent.postMessage("close_request_confirm", "*");
+        return
+    }
+    cancelpaymentdialog();
     continue_cpd();
 }
 
@@ -1928,32 +1915,64 @@ function continue_cpd() {
     window.history.back();
 }
 
-// Lookup payment details
-function payment_lookup(request_dat) {
-    if ($("#dismiss").length) {
-        return false;
+// Scan address one last time
+function after_scan(api_data) {
+    loader(true);
+    loadertext(translate("lookuppayment", {
+        "currency": request.payment,
+        "blockexplorer": api_data.name
+    }));
+    if (!glob_inframe) {
+        hide_paymentdialog();
     }
-    forceclosesocket();
-    const currency = request.payment,
-        blockexplorer = get_blockexplorer(currency),
-        bu_url = blockexplorer_url(currency, false, request_dat.erc20) + request_dat.address,
-        content = "<div class='formbox'>\
-            <h2 class='icon-warning'><span class='icon-qrcode'/>" + translate("nodetection") + "</h2>\
-            <div id='ad_info_wrap'>\
-                <p><strong><a href='" + bu_url + "' target='_blank' class='ref check_recent'>" + translate("lookuppayment", {
-            "currency": currency,
-            "blockexplorer": blockexplorer
-        }) + " <span class='icon-new-tab'></span></a></strong></p>\
-                <div class='pk_wrap noselect'>\
-                    <div id='dontshowwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
-                    <span>" + translate("dontshowagain") + "</span>\
-                </div>\
-            </div>\
-            <div id='backupactions'>\
-                <div id='dismiss' class='customtrigger'>" + translate("dismiss") + "</div>\
-            </div>\
-            </div>";
-    popdialog(content, "triggersubmit");
+    const rpc = api_data.api !== true,
+        rq_init = request.rq_init,
+        request_ts = rq_init + glob_timezone,
+        set_confirmations = request.set_confirmations || 0,
+        rdo = {
+            "request_timestamp": request_ts,
+            "setconfirmations": set_confirmations,
+            "pending": "scanning",
+            "erc20": request.erc20,
+            "source": "after_scan"
+        };
+    if (rpc) {
+        get_rpc_inputs(request, api_data, rdo);
+    } else {
+        get_api_inputs(request, api_data, rdo);
+    }
+    socket_info(api_data, true);
+}
+
+// No results found for afterscan
+function cancel_after_scan() {
+    closeloader();
+    if (glob_inframe) {
+        parent.postMessage("close_request_confirm", "*");
+        return
+    }
+    set_recent_requests();
+    reset_paymentdialog();
+    continue_cpd();
+}
+
+function set_recent_requests() {
+    if (request) {
+        const currency = request.payment,
+            address = request.address,
+            ls_recentrequests = br_get_local("recent_requests", true),
+            lsrr_arr = br_dobj(ls_recentrequests, true),
+            request_dat = {
+                "currency": currency,
+                "cmcid": request.cmcid,
+                "ccsymbol": request.currencysymbol,
+                "address": address,
+                "erc20": request.erc20,
+                "rqtime": request.rq_init
+            };
+        lsrr_arr[currency] = request_dat;
+        br_set_local("recent_requests", lsrr_arr, true);
+    }
 }
 
 // Handle recent payment check
@@ -1974,31 +1993,6 @@ function check_recent() {
     })
 }
 
-// Dismiss payment lookup
-function dismiss_payment_lookup() {
-    $(document).on("click", "#dismiss", function() {
-        const ds_checkbox = $("#dontshowwrap"),
-            ds_checked = ds_checkbox.data("checked");
-        if (ds_checked === true) {
-            block_payment_lookup();
-        }
-        canceldialog();
-        if (isopenrequest()) {
-            close_paymentdialog();
-        }
-    })
-}
-
-// Block payment lookup
-function block_payment_lookup() {
-    if (request) {
-        const rr_whitelist = br_get_session("rrwl", true),
-            rrwl_arr = br_dobj(rr_whitelist, true);
-        rrwl_arr[request.payment] = request.address;
-        br_set_session("rrwl", rrwl_arr, true);
-    }
-}
-
 // Show request history
 function request_history() {
     $(document).on("click", "#request_history", function() {
@@ -2013,16 +2007,8 @@ function request_history() {
 function recent_requests(recent_payments) {
     const addresslist = recent_requests_list(recent_payments);
     if (addresslist.length) {
-        const content = "<div class='formbox'>\
-            <h2 class='icon-history'>" + translate("recentrequests") + ":</h2>\
-            <div id='ad_info_wrap'>\
-            <ul>" + addresslist + "</ul>\
-            </div>\
-            <div id='backupactions'>\
-                <div id='dismiss' class='customtrigger'>" + cancelbttn + "</div>\
-            </div>\
-            </div>";
-        popdialog(content, "triggersubmit");
+        const content = "<div class='formbox'><h2 class='icon-history'>" + translate("recentrequests") + ":</h2><div id='ad_info_wrap'><ul>" + addresslist + "</ul></div></div>";
+        popdialog(content, "canceldialog");
     }
 }
 
@@ -2777,15 +2763,15 @@ function unfocus_inputs() {
 
 // Checks polling conditions and closes payment dialog if necessary
 function cpd_pollcheck() {
-    if (glob_paymentdialogbox.attr("data-lswitch") === "lnd_ao") {
-        close_paymentdialog();
-        return
-    }
-    if (request && request.received !== true) {
-        const rq_init = request.rq_init,
-            rq_timer = request.rq_timer,
+    if (q_obj(request, "received") !== true) {
+        const rq_timer = request.rq_timer,
             rq_time = now() - rq_timer;
         if (rq_time > glob_after_scan_timeout) {
+            const payment = request.payment;
+            if (payment === "monero" || payment === "nimiq" || payment === "dash") { // No afterscan when polling
+                close_paymentdialog();
+                return
+            }
             close_paymentdialog(true);
             return
         }
@@ -2800,8 +2786,19 @@ function cancelpaymentdialog() {
         parent.postMessage("close_request", "*");
         return
     }
+    hide_paymentdialog();
+    reset_paymentdialog();
+
+}
+
+// Hides the paymentdialog
+function hide_paymentdialog() {
     glob_paymentpopup.removeClass("active live");
     glob_html.removeClass("blurmain_payment");
+}
+
+// Resets the paymentdialog states
+function reset_paymentdialog() {
     const timeout = setTimeout(function() {
         glob_paymentpopup.removeClass("showpu outgoing");
         glob_html.removeClass("paymode firstload");
@@ -3444,7 +3441,7 @@ function apisrc_shortcut() {
 // Sets up event listener for canceling options
 function canceloptionstrigger() {
     $(document).on("click", "#optionspop, #closeoptions", function(e) {
-        if (glob_inframe === true) {
+        if (glob_inframe) {
             parent.postMessage("close_request", "*");
             return
         }
