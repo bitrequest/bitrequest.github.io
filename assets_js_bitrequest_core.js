@@ -1917,11 +1917,13 @@ function continue_cpd() {
 
 // Scan address one last time
 function after_scan(api_data) {
-    loader(true);
-    loadertext(translate("lookuppayment", {
-        "currency": request.payment,
-        "blockexplorer": api_data.name
-    }));
+    if (glob_inframe) {
+        loader(true);
+        loadertext(translate("lookuppayment", {
+            "currency": request.payment,
+            "blockexplorer": api_data.name
+        }));
+    }
     if (!glob_inframe) {
         hide_paymentdialog();
     }

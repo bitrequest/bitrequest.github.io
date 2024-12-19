@@ -1,4 +1,5 @@
-const html_node = document.documentElement;
+const html_node = document.documentElement,
+    base_url = "https://bitrequest.github.io";
 
 document.addEventListener("DOMContentLoaded", function() {
     checkout();
@@ -12,11 +13,9 @@ function checkout() {
     document.addEventListener("click", function(e) {
         const target = e.target;
         if (!target.matches(".br_checkout")) return;
-        
         e.preventDefault();
         const checkout_url = target.getAttribute("href"),
             br_frame = document.querySelector("#br_framebox iframe");
-        
         if (br_frame) {
             showloader();
             br_frame.setAttribute("src", checkout_url);
@@ -39,7 +38,11 @@ function append_iframe(framesrc) {
 function iframe_loaded() {
     const requestframe = document.querySelector("#br_framebox iframe");
     requestframe.addEventListener("load", function() {
-        if (requestframe.getAttribute("src")) {
+        const frame_source = requestframe.getAttribute("src");
+        if (frame_source) {
+            if (frame_source === base_url) {
+                return
+            }
             showframe();
         }
     });
@@ -92,7 +95,7 @@ function closeframe() {
             html_node.classList.remove("showframe");
             const iframe = document.querySelector("#br_framebox iframe");
             if (iframe) {
-                iframe.removeAttribute("src");
+                iframe.setAttribute("src", base_url);
             }
         }, 400);
     }
@@ -128,11 +131,11 @@ function keyup() {
         if (e.key === "Escape" || e.keyCode === 27) {
             if (html_node.classList.contains("slide_loader")) {
                 closeloader();
-                return false;
+                return
             }
             if (html_node.classList.contains("showframe")) {
                 closeframe_confirm();
-                return false;
+                return
             }
         }
     });
