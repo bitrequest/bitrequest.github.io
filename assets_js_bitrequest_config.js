@@ -120,6 +120,7 @@ const glob_apptitle = "Bitrequest",
                 "wallets": {
                     "wallet_download_page": "https://bitcoin.org/en/choose-your-wallet",
                     "wallets": [
+                        glob_multi_wallets.cakewallet,
                         glob_multi_wallets.exodus,
                         glob_multi_wallets.coinomi,
                         glob_multi_wallets.trezor,
@@ -355,6 +356,7 @@ const glob_apptitle = "Bitrequest",
                 "wallets": {
                     "wallet_download_page": "https://litecoin.org",
                     "wallets": [
+                        glob_multi_wallets.cakewallet,
                         glob_multi_wallets.exodus,
                         glob_multi_wallets.coinomi,
                         glob_multi_wallets.trezor,
@@ -732,6 +734,7 @@ const glob_apptitle = "Bitrequest",
                 "wallets": {
                     "wallet_download_page": "https://bch.info/en/wallets",
                     "wallets": [
+                        glob_multi_wallets.cakewallet,
                         glob_multi_wallets.exodus,
                         glob_multi_wallets.coinomi,
                         glob_multi_wallets.trezor,
@@ -847,6 +850,7 @@ const glob_apptitle = "Bitrequest",
                 "wallets": {
                     "wallet_download_page": "https://ethereum.org/en/wallets/",
                     "wallets": [
+                        glob_multi_wallets.cakewallet,
                         glob_multi_wallets.exodus,
                         glob_multi_wallets.trezor,
                         glob_multi_wallets.ledger,
@@ -1093,8 +1097,8 @@ const glob_apptitle = "Bitrequest",
                 "wallets": {
                     "wallet_download_page": "https://nanowallets.guide",
                     "wallets": [
-                        glob_multi_wallets.trustwallet,
                         glob_multi_wallets.cakewallet,
+                        glob_multi_wallets.trustwallet,
                         {
                             "name": "nautilus",
                             "website": "https://nautilus.io",
