@@ -94,6 +94,14 @@ const glob_apptitle = "Bitrequest",
             "playstore": "https://play.google.com/store/apps/details?id=io.atomicwallet",
             "desktop": "https://atomicwallet.io/#download-section-anchor",
             "seed": true
+        },
+        "cakewallet": {
+            "name": "cakewallet",
+            "website": "https://cakewallet.com",
+            "appstore": "https://apps.apple.com/app/id1334702542",
+            "playstore": "https://play.google.com/store/apps/details?id=com.cakewallet.cake_wallet",
+            "desktop": "https://cakewallet.com",
+            "seed": true
         }
     },
     glob_br_config = {
@@ -1086,27 +1094,12 @@ const glob_apptitle = "Bitrequest",
                     "wallet_download_page": "https://nanowallets.guide",
                     "wallets": [
                         glob_multi_wallets.trustwallet,
+                        glob_multi_wallets.cakewallet,
                         {
                             "name": "nautilus",
                             "website": "https://nautilus.io",
                             "appstore": "https://apps.apple.com/app/id1615775960",
                             "playstore": "https://play.google.com/store/apps/details?id=co.perish.nautiluswallet",
-                            "seed": true
-                        },
-                        {
-                            "name": "nalli",
-                            "website": "https://nalli.app",
-                            "appstore": "https://apps.apple.com/app/id1515601975",
-                            "playstore": "https://play.google.com/store/apps/details?id=fi.heimo.nalli",
-                            "desktop": "https://nalli.app",
-                            "seed": true
-                        },
-                        {
-                            "name": "kaiak",
-                            "website": "https://kaiak.cc",
-                            "appstore": null,
-                            "playstore": null,
-                            "desktop": "https://kaiak.cc",
                             "seed": true
                         },
                         {
@@ -1266,19 +1259,12 @@ const glob_apptitle = "Bitrequest",
                     "wallet_download_page": "https://www.getmonero.org/downloads/",
                     "wallets": [
                         glob_multi_wallets.coinomi,
+                        glob_multi_wallets.cakewallet,
                         {
                             "name": "monerujo",
                             "website": "https://www.monerujo.io",
                             "appstore": null,
                             "playstore": "https://play.google.com/store/apps/details?id=com.m2049r.xmrwallet",
-                            "desktop": null,
-                            "seed": true
-                        },
-                        {
-                            "name": "cakewallet",
-                            "website": "https://cakewallet.com",
-                            "appstore": "https://apps.apple.com/app/id1334702542",
-                            "playstore": "https://play.google.com/store/apps/details?id=com.cakewallet.cake_wallet",
                             "desktop": null,
                             "seed": true
                         },
