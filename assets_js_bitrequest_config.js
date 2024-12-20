@@ -79,14 +79,6 @@ const glob_apptitle = "Bitrequest",
             "desktop": "https://beta.shapeshift.com",
             "seed": true
         },
-        "trustwallet": {
-            "name": "trustwallet",
-            "website": "https://trustwallet.com",
-            "appstore": "https://apps.apple.com/app/id1288339409",
-            "playstore": "https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp",
-            "desktop": "https://trustwallet.com",
-            "seed": true
-        },
         "atomicwallet": {
             "name": "atomicwallet",
             "website": "https://atomicwallet.io",
@@ -125,7 +117,6 @@ const glob_apptitle = "Bitrequest",
                         glob_multi_wallets.coinomi,
                         glob_multi_wallets.trezor,
                         glob_multi_wallets.ledger,
-                        glob_multi_wallets.trustwallet,
                         {
                             "name": "electrum",
                             "website": "https://electrum.org",
@@ -494,7 +485,6 @@ const glob_apptitle = "Bitrequest",
                         glob_multi_wallets.coinomi,
                         glob_multi_wallets.trezor,
                         glob_multi_wallets.ledger,
-                        glob_multi_wallets.trustwallet,
                         glob_multi_wallets.keepkey
                     ]
                 },
@@ -610,7 +600,6 @@ const glob_apptitle = "Bitrequest",
                         glob_multi_wallets.coinomi,
                         glob_multi_wallets.trezor,
                         glob_multi_wallets.ledger,
-                        glob_multi_wallets.trustwallet,
                         {
                             "name": "Dash Wallet",
                             "website": "https://www.dash.org",
@@ -739,7 +728,6 @@ const glob_apptitle = "Bitrequest",
                         glob_multi_wallets.coinomi,
                         glob_multi_wallets.trezor,
                         glob_multi_wallets.ledger,
-                        glob_multi_wallets.trustwallet,
                         glob_multi_wallets.atomicwallet,
                         {
                             "name": "electron-cash",
@@ -854,7 +842,6 @@ const glob_apptitle = "Bitrequest",
                         glob_multi_wallets.exodus,
                         glob_multi_wallets.trezor,
                         glob_multi_wallets.ledger,
-                        glob_multi_wallets.trustwallet,
                         glob_multi_wallets.keepkey,
                         {
                             "name": "myetherwallet",
@@ -1089,7 +1076,7 @@ const glob_apptitle = "Bitrequest",
                     "ccsymbol": "xno",
                     "cmcid": 1567,
                     "urlscheme": function(payment, address, amount, iszero) {
-                        const amnt = (iszero === true) ? "" : "?amount=" + NanocurrencyWeb.tools.convert(amount, "NANO", "RAW");
+                        const amnt = (iszero === true) ? "" : "?amount=" + (NanocurrencyWeb.tools.convert(amount, "NANO", "RAW")) / 1000000000000000000000000000000;
                         return "nano:" + address + amnt;
                     },
                     "address_regex": "^(xrb|nano)_([a-z1-9]{60})$"
@@ -1098,7 +1085,6 @@ const glob_apptitle = "Bitrequest",
                     "wallet_download_page": "https://nanowallets.guide",
                     "wallets": [
                         glob_multi_wallets.cakewallet,
-                        glob_multi_wallets.trustwallet,
                         {
                             "name": "nautilus",
                             "website": "https://nautilus.io",
