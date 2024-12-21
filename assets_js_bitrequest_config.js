@@ -1076,7 +1076,7 @@ const glob_apptitle = "Bitrequest",
                     "ccsymbol": "xno",
                     "cmcid": 1567,
                     "urlscheme": function(payment, address, amount, iszero) {
-                        const amnt = (iszero === true) ? "" : "?amount=" + (NanocurrencyWeb.tools.convert(amount, "NANO", "RAW")) / 1000000000000000000000000000000;
+                        const amnt = (iszero === true) ? "" : "?amount=" + (NanocurrencyWeb.tools.convert(amount, "NANO", "RAW"))
                         return "nano:" + address + amnt;
                     },
                     "address_regex": "^(xrb|nano)_([a-z1-9]{60})$"
