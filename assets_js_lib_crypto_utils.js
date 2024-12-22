@@ -1,3 +1,5 @@
+"use strict";
+
 const crypto = window.crypto,
     b58ab = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
     b32ab = "qpzry9x8gf2tvdw0s3jn54khce6mua7l",
@@ -9,6 +11,347 @@ const crypto = window.crypto,
     utf8Decoder = new TextDecoder("utf-8", {
         "fatal": true
     });
+
+const secp = {};
+
+// Minimal curve params for secp256k1
+const CURVE = {
+    a: 0n,
+    b: 7n,
+    P: (2n ** 256n) - (2n ** 32n) - 977n,
+    n: (2n ** 256n) - 432420386565659656852420866394968145599n,
+    Gx: 55066263022277343669578718895168534326250603453777594175500187360389116729240n,
+    Gy: 32670510020758816978083085130507043184471273380659243275938904335757337482424n
+};
+secp.CURVE = CURVE;
+
+// Basic "mod" function that works with BigInt
+function mod(a, m = CURVE.P) {
+    const r = a % m;
+    return r >= 0n ? r : m + r;
+}
+
+// Weierstrass curve equation: y² = x³ + ax + b with secp256k1 a=0, b=7 => y² = x³ + 7
+function weierstrass(x) {
+    return mod(x ** 3n + CURVE.b);
+}
+
+// Extended Euclidean Algorithm for modular inverse
+function egcd(a, b) {
+    if (a === 0n) return [b, 0n, 1n];
+    let [g, x1, y1] = egcd(b % a, a);
+    return [g, y1 - (b / a) * x1, x1];
+}
+
+function invert(number, modulo = CURVE.P) {
+    if (number === 0n || modulo <= 0n) {
+        throw new Error("invert: invalid number");
+    }
+    const [g, x] = egcd(mod(number, modulo), modulo);
+    if (g !== 1n) throw new Error("invert: does not exist");
+    return mod(x, modulo);
+}
+
+// Some basic hex / byte array helpers
+function hexToBytes(hex) {
+    if (typeof hex !== "string") throw new TypeError("hexToBytes: expected string");
+    if (hex.length % 2 !== 0) hex = "0" + hex; // pad if needed
+    const array = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < array.length; i++) {
+        const j = i * 2;
+        array[i] = parseInt(hex.slice(j, j + 2), 16);
+    }
+    return array;
+}
+
+function bytesToHex(uint8a) {
+    let hex = "";
+    for (let i = 0; i < uint8a.length; i++) {
+        hex += uint8a[i].toString(16).padStart(2, "0");
+    }
+    return hex;
+}
+
+function hexToNumber(hex) {
+    if (typeof hex !== "string") throw new TypeError("hexToNumber: expected string");
+    return BigInt("0x" + hex);
+}
+
+function bytesToNumber(bytes) {
+    return hexToNumber(bytesToHex(bytes));
+}
+
+// Pads a number to 64 hex characters (32 bytes)
+function pad64(num) {
+    return num.toString(16).padStart(64, "0");
+}
+
+// Minimal Jacobian Point for projective coordinates
+class JacobianPoint {
+    constructor(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+    static fromAffine(p) {
+        return new JacobianPoint(p.x, p.y, 1n);
+    }
+
+    // Point doubling in Jacobian coordinates
+    double() {
+        const {
+            x: X1,
+            y: Y1,
+            z: Z1
+        } = this;
+        if (!Y1) return new JacobianPoint(0n, 0n, 0n);
+        const A = mod(X1 ** 2n),
+            B = mod(Y1 ** 2n),
+            C = mod(B ** 2n),
+            D = mod(2n * (mod((X1 + B) ** 2n) - A - C)),
+            E = mod(3n * A),
+            F = mod(E ** 2n),
+            X3 = mod(F - 2n * D),
+            Y3 = mod(E * (D - X3) - 8n * C),
+            Z3 = mod(2n * Y1 * Z1);
+        return new JacobianPoint(X3, Y3, Z3);
+    }
+
+    // Point addition in Jacobian coordinates
+    add(other) {
+        if (!other.x && !other.y) return this;
+        if (!this.x && !this.y) return other;
+        const {
+            x: X1,
+            y: Y1,
+            z: Z1
+        } = this, {
+            x: X2,
+            y: Y2,
+            z: Z2
+        } = other, Z1Z1 = mod(Z1 ** 2n), Z2Z2 = mod(Z2 ** 2n), U1 = mod(X1 * Z2Z2), U2 = mod(X2 * Z1Z1), S1 = mod(Y1 * Z2 * Z2Z2), S2 = mod(Y2 * Z1 * Z1Z1), H = mod(U2 - U1), r = mod(S2 - S1);
+        if (H === 0n) {
+            if (r === 0n) {
+                return this.double();
+            } else {
+                return new JacobianPoint(0n, 0n, 0n);
+            }
+        }
+        const HH = mod(H ** 2n),
+            HHH = mod(H * HH),
+            V = mod(U1 * HH),
+            X3 = mod(r ** 2n - HHH - 2n * V),
+            Y3 = mod(r * (V - X3) - S1 * HHH),
+            Z3 = mod(Z1 * Z2 * H);
+        return new JacobianPoint(X3, Y3, Z3);
+    }
+
+    // Simple double-and-add scalar multiplication
+    multiplyUnsafe(scalar) {
+        let n = scalar;
+        if (typeof n !== "bigint") n = BigInt(n);
+        n = n % CURVE.n;
+        if (n === 0n) return new JacobianPoint(0n, 0n, 0n);
+        let p = new JacobianPoint(0n, 0n, 0n),
+            d = this;
+        while (n > 0n) {
+            if (n & 1n) p = p.add(d);
+            d = d.double();
+            n >>= 1n;
+        }
+        return p;
+    }
+
+    toAffine() {
+        if (this.z === 0n) {
+            return new Point(0n, 0n);
+        }
+        const iz = invert(this.z, CURVE.P),
+            iz2 = mod(iz ** 2n),
+            x = mod(this.x * iz2),
+            y = mod(this.y * iz2 * iz);
+        return new Point(x, y);
+    }
+}
+
+// Affine Point on the curve y² = x³ + 7
+class Point {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    // Create new point from a private key scalar
+    static fromPrivateKey(privateKey) {
+        const key = normalizePrivateKey(privateKey);
+        return Point.BASE.multiply(key);
+    }
+
+    // Parse a compressed or uncompressed hex/bytes public key
+    static fromHex(hex) {
+        const bytes = hex instanceof Uint8Array ? hex : hexToBytes(hex);
+        if (bytes.length === 32) {
+            return this.fromX(bytes);
+        }
+        const header = bytes[0];
+        if (header === 0x02 || header === 0x03) {
+            return this.fromCompressedHex(bytes);
+        }
+        if (header === 0x04) {
+            return this.fromUncompressedHex(bytes);
+        }
+        throw new Error("Point.fromHex: invalid format");
+    }
+
+    // For 32-byte X only
+    static fromX(bytes) {
+        const x = bytesToNumber(bytes),
+            y2 = weierstrass(x);
+        let y = sqrtMod(y2); // we need sqrt for y
+        if ((y & 1n) === 1n) {
+            y = mod(-y);
+        }
+        const p = new Point(x, y);
+        p.assertValidity();
+        return p;
+    }
+
+    static fromCompressedHex(bytes) {
+        if (bytes.length !== 33) {
+            throw new Error("Compressed pubkey must be 33 bytes");
+        }
+        const x = bytesToNumber(bytes.slice(1)),
+            y2 = weierstrass(x);
+        let y = sqrtMod(y2);
+        const odd = (y & 1n) === 1n,
+            isFirstByteOdd = (bytes[0] & 1) === 1;
+        if (odd !== isFirstByteOdd) {
+            y = mod(-y);
+        }
+        const p = new Point(x, y);
+        p.assertValidity();
+        return p;
+    }
+
+    static fromUncompressedHex(bytes) {
+        if (bytes.length !== 65) {
+            throw new Error("Uncompressed pubkey must be 65 bytes");
+        }
+        const x = bytesToNumber(bytes.slice(1, 33)),
+            y = bytesToNumber(bytes.slice(33)),
+            p = new Point(x, y);
+        p.assertValidity();
+        return p;
+    }
+
+    // Validate that a point is on the curve
+    assertValidity() {
+        const {
+            x,
+            y
+        } = this;
+        if (x < 0n || x >= CURVE.P || y < 0n || y >= CURVE.P) {
+            throw new Error("Point is not on curve (coordinates out of range)");
+        }
+        const left = mod(y * y),
+            right = weierstrass(x);
+        if (left !== right) {
+            throw new Error("Point is not on curve (y^2 != x^3 + 7)");
+        }
+    }
+
+    // Convert affine to Jacobian => multiply => back to Affine
+    multiply(scalar) {
+        return JacobianPoint.fromAffine(this).multiplyUnsafe(scalar).toAffine();
+    }
+
+    // Standard point addition in affine
+    add(other) {
+        const pA = JacobianPoint.fromAffine(this),
+            pB = JacobianPoint.fromAffine(other);
+        return pA.add(pB).toAffine();
+    }
+
+    // Negate a point
+    negate() {
+        return new Point(this.x, mod(-this.y));
+    }
+
+    // For printing / compressed or uncompressed
+    toHex(compressed = false) {
+        const xHex = pad64(this.x);
+        if (compressed) {
+            // 02 or 03 + x
+            const prefix = (this.y & 1n) === 1n ? "03" : "02";
+            return prefix + xHex;
+        } else {
+            // 04 + x + y
+            const yHex = pad64(this.y);
+            return "04" + xHex + yHex;
+        }
+    }
+
+    // Shortcut for multiplication by base point
+    static get BASE() {
+        return new Point(CURVE.Gx, CURVE.Gy);
+    }
+
+    // For "empty" (aka point at infinity in affine form)
+    static get ZERO() {
+        return new Point(0n, 0n);
+    }
+}
+
+// For sqrt mod P, we can use Tonelli–Shanks or a simplified variant for P ≡ 3 (mod 4) (like secp256k1). P is prime => (p+1)/4 exponent y = x^((p+1)/4) mod p
+const P_1_4 = (CURVE.P + 1n) >> 2n;
+
+function sqrtMod(x) {
+    return powMod(x, P_1_4, CURVE.P);
+}
+
+// Basic exponentiation mod
+function powMod(base, exponent, modulus) {
+    let result = 1n,
+        b = mod(base, modulus),
+        e = exponent;
+    while (e > 0n) {
+        if (e & 1n) result = mod(result * b, modulus);
+        b = mod(b * b, modulus);
+        e >>= 1n;
+    }
+    return result;
+}
+
+// Private key normalization helper
+function normalizePrivateKey(privateKey) {
+    let key = null;
+    if (typeof privateKey === "bigint") {
+        key = privateKey;
+    } else if (typeof privateKey === "string") {
+        key = hexToNumber(privateKey);
+    } else if (privateKey instanceof Uint8Array) {
+        key = bytesToNumber(privateKey);
+    } else {
+        throw new Error("Invalid private key type");
+    }
+    key = key % CURVE.n;
+    if (key <= 0n || key >= CURVE.n) {
+        throw new Error("Invalid private key range");
+    }
+    return key;
+}
+
+// Public export: getPublicKey(privateKey, isCompressed)
+function getPublicKey(privateKey, isCompressed = true) {
+    const P = Point.fromPrivateKey(privateKey);
+    return P.toHex(isCompressed);
+}
+
+// Export the main Point class
+secp.Point = Point;
+
+// End secp256k1
 
 // helpers
 
@@ -45,25 +388,6 @@ function hextodec(val) {
 // Checks if a string is a valid hexadecimal
 function is_hex(str) {
     return new RegExp("^[a-fA-F0-9]+$").test(str);
-}
-
-// Converts a hexadecimal string to a binary array
-function hextobin(hex) {
-    if (hex.length % 2 !== 0) throw "Hex string has invalid length!";
-    const res = uint_8Array(hex.length / 2);
-    for (let i = 0; i < hex.length / 2; ++i) {
-        res[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
-    }
-    return res;
-}
-
-// Converts a binary array to a hexadecimal string
-function bintohex(bin) {
-    const out = [];
-    for (let i = 0; i < bin.length; ++i) {
-        out.push(("0" + bin[i].toString(16)).slice(-2));
-    }
-    return out.join("");
 }
 
 // Pads a string with leading zeros to a specified byte length
@@ -156,7 +480,7 @@ function binaryStringToWordArray(binary) {
 function byteArrayToWordArray(data) {
     const a = [];
     for (let i = 0; i < data.length / 4; i++) {
-        v = 0;
+        let v = 0;
         v += data[i * 4 + 0] << 8 * 3;
         v += data[i * 4 + 1] << 8 * 2;
         v += data[i * 4 + 2] << 8 * 1;
@@ -189,7 +513,7 @@ function hexStringToBinaryString(hexString) {
 
 // Encodes a string or hexadecimal to Base58
 function b58enc(enc, encode) {
-    const bytestring = (encode = "hex") ? hextobin(enc) : buffer(enc);
+    const bytestring = (encode = "hex") ? hexToBytes(enc) : buffer(enc);
     return b58enc_uint_array(bytestring);
 }
 
@@ -216,7 +540,7 @@ function b58enc_uint_array(u) {
 // Decodes a Base58 string to UTF-8 or hexadecimal
 function b58dec(dec, decode) {
     const buffer = b58dec_uint_array(dec);
-    return (decode == "hex") ? buf2hex(buffer) : unbuffer(buffer, "utf-8");
+    return (decode === "hex") ? buf2hex(buffer) : unbuffer(buffer, "utf-8");
 }
 
 // Decodes a Base58 string to a Uint8Array
@@ -347,7 +671,7 @@ function pub_to_address(versionbytes, pub) {
 // Converts a public key to an Ethereum address
 function pub_to_eth_address(pub) {
     const xp_pub = expand_pub(pub),
-        keccak = "0x" + keccak_256(hextobin(xp_pub.slice(2))),
+        keccak = "0x" + keccak_256(hexToBytes(xp_pub.slice(2))),
         addr = "0x" + keccak.slice(26);
     return toChecksumAddress(addr);
 }

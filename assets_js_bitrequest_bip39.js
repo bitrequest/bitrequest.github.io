@@ -1452,7 +1452,7 @@ function derive_x(dx_dat, from_x_priv) {
             } else if (level === "M") {
                 xpub = true;
                 if (from_x_priv === true) {
-                    key = secp.Point.fromPrivateKey(key).toHex(true);
+                    key = getPublicKey(key);
                 }
             } else {
                 return false;
@@ -1488,7 +1488,7 @@ function derive_x(dx_dat, from_x_priv) {
 // Performs child key derivation for a single step in the derivation path
 function ckd(ckey, cc, index, xpub, hard) {
     const ckd = {},
-        parent_pub = xpub ? ckey : secp.Point.fromPrivateKey(ckey).toHex(true),
+        parent_pub = xpub ? ckey : getPublicKey(ckey),
         pubh60 = hash160(parent_pub),
         fingerprint = pubh60.slice(0, 8),
         keyfeed = xpub ? parent_pub : (hard ? "00" + ckey : parent_pub),
@@ -1533,7 +1533,7 @@ function ext_keys(eo, currency) {
         priv_key = eo.key;
     eko.ext_key = b58check_encode(ext_payload);
     if (eo.xpub === false) {
-        const pub_key = secp.Point.fromPrivateKey(priv_key).toHex(true),
+        const pub_key = getPublicKey(priv_key),
             pub_obj = {
                 "chaincode": eo.chaincode,
                 "purpose": eo.purpose,
@@ -1621,7 +1621,7 @@ function format_keys(seed, key_object, bip32, index, coin) {
     const purpose = key_object.purpose,
         xpub = key_object.xpub,
         prekey = key_object.key,
-        pubkey = xpub === true ? prekey : secp.Point.fromPrivateKey(prekey).toHex(true),
+        pubkey = xpub === true ? prekey : getPublicKey(prekey),
         vb = str_pad(dectohex(bip32.prefix.pub), 2);
     ko.index = index;
     if (coin === "ethereum") {

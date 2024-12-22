@@ -3301,7 +3301,7 @@ function xmr_integrated(xmr_address, pmid) {
             pvk = pahx.slice(66, 130),
             bytes = "13" + psk + pvk + pmid,
             checksum = bytes + fasthash(bytes).slice(0, 8);
-        return base58_encode(hextobin(checksum));
+        return base58_encode(hexToBytes(checksum));
     }
     console.log("invalid xmr payment id");
     return xmr_address;
