@@ -5211,7 +5211,7 @@ function ln_connect(gets) {
 
 // Initializes the QR scanner, checking if it's in an iframe and if a camera is available
 function init_scan() {
-    if (glob_inframe === true) {
+    if (glob_inframe || glob_local) {
         glob_hascam = false;
         return
     }
