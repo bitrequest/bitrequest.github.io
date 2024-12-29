@@ -5,11 +5,6 @@ $(document).ready(function() {
     //web3_eth_websocket
     //web3_erc20_websocket
     //omni_scan
-    //ping_omniscan
-    //omniscan_erc20
-    //ping_omniscan_erc20
-    //bnb_scan
-    //ping_bnb
     //set_l2_status
 
     // ** Monirors **
@@ -68,7 +63,7 @@ function init_eth_sockets(payment, socket_node, address, request_ts, contract, r
             }
             index++;
         });
-        if (is_request) {} else {
+        if (!is_request) {
             // attach eth l2's to request object
             request.eth_l2s = l2_arr;
         }
@@ -81,22 +76,7 @@ function init_layer2(payment, socket_node, address, request_ts) {
     const network = socket_node.network,
         node_name = socket_node.name;
     if (payment === "ethereum") {
-        // arbitrum:
-        if (network === "arbitrum") {
-            if (node_name === "arbiscan") {
-                omni_scan(socket_node, address, request_ts);
-            } else if (node_name === "etherscan") {
-                omni_scan(socket_node, address, request_ts, 42161);
-            }
-        }
-        // polygon
-        if (network === "polygon") {
-            if (node_name === "polygonscan") {
-                omni_scan(socket_node, address, request_ts);
-            } else if (node_name === "etherscan") {
-                omni_scan(socket_node, address, request_ts, 137);
-            }
-        }
+        omni_scan(socket_node);
         return
     }
     const ccsymbol = request.currencysymbol,
@@ -104,409 +84,43 @@ function init_layer2(payment, socket_node, address, request_ts) {
     // arbitrum
     if (network === "arbitrum") {
         const arb_contract = ctracts.arbitrum;
-        if (!arb_contract) {
-            // No arbitrum support
-        } else {
+        if (arb_contract) {
             if (node_name === "infura") {
                 web3_erc20_websocket(socket_node, address, arb_contract);
-            } else if (node_name === "etherscan") {
-                omniscan_erc20(socket_node, address, request_ts, arb_contract, 42161);
-            } else if (node_name === "arbiscan") {
-                omniscan_erc20(socket_node, address, request_ts, arb_contract);
+            } else {
+                omni_scan(socket_node);
             }
         }
     }
     // polygon
     if (network === "polygon") {
         const polygon_contract = ctracts.polygon;
-        if (!polygon_contract) {
-            // No Polygon support
-        } else {
+        if (polygon_contract) {
             if (node_name === "infura") {
                 web3_erc20_websocket(socket_node, address, polygon_contract);
-            } else if (node_name === "etherscan") {
-                omniscan_erc20(socket_node, address, request_ts, polygon_contract, 137);
-            } else if (node_name === "polygonscan") {
-                omniscan_erc20(socket_node, address, request_ts, polygon_contract);
+            } else {
+                omni_scan(socket_node);
             }
         }
     }
     // binance smart chain
     if (network === "bnb") {
         const bnb_contract = ctracts.bnb;
-        if (!bnb_contract) {
-            // No Binance smart chain support
-        } else {
+        if (bnb_contract) {
             if (node_name === "infura") {
                 web3_erc20_websocket(socket_node, address, bnb_contract);
-            } else if (node_name === "etherscan") {
-                omniscan_erc20(socket_node, address, request_ts, bnb_contract, 56);
-            } else if (node_name === "bscscan") {
-                omniscan_erc20(socket_node, address, request_ts, bnb_contract);
-            } else if (node_name === "binplorer") {
-                bnb_scan(socket_node, address, request_ts, ccsymbol);
+            } else {
+                omni_scan(socket_node);
             }
         }
     }
 }
 
-// Initializes and manages Alchemy WebSocket for Ethereum
-function alchemy_eth_websocket(socket_node, thisaddress) {
-    const provider_url = socket_node.url,
-        al_id = get_alchemy_apikey(),
-        provider = provider_url + al_id,
-        ws_id = sha_sub(provider, 10);
-    if (glob_sockets[ws_id]) {
-        return
-    }
-    const websocket = glob_sockets[ws_id] = new WebSocket(provider);
-    websocket.onopen = function(e) {
-        socket_info(socket_node, true);
-        const ping_event = JSON.stringify({
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "eth_subscribe",
-            "params": ["alchemy_pendingTransactions", {
-                "toAddress": [thisaddress],
-                "hashesOnly": false
-            }]
-        });
-        websocket.send(ping_event);
-        glob_pinging[thisaddress] = setInterval(function() {
-            websocket.send(ping_event);
-            poll_animate();
-        }, 55000);
-    };
-    websocket.onmessage = function(e) {
-        try {
-            const data = JSON.parse(e.data),
-                result = q_obj(data, "params.result");
-            if (result && result.hash && str_match(result.to, thisaddress)) {
-                const set_confirmations = request.set_confirmations || 0,
-                    txd = infura_block_data(result, set_confirmations, request.currencysymbol);
-                closesocket();
-                pick_monitor(txd);
-            }
-        } catch (error) {
-            console.error("Error parsing WebSocket message:", error);
-        }
-    };
-    websocket.onclose = function(e) {
-        handle_socket_close(socket_node);
-    };
-    websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress, ws_id);
-        return
-    };
-}
-
-// Initializes and manages WebSocket for Ethereum and Ethereum-like networks
-function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
-    const provider_url = socket_node.url,
-        if_id = get_infura_apikey(provider_url),
-        provider = provider_url + if_id,
-        ws_id = sha_sub(provider, 10);
-    if (glob_sockets[ws_id]) {
-        return
-    }
-    const websocket = glob_sockets[ws_id] = new WebSocket(provider);
-    websocket.onopen = function(e) {
-        socket_info(socket_node, true);
-        const ping_event = JSON.stringify({
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "eth_subscribe",
-            "params": ["newHeads"]
-        });
-        websocket.send(ping_event);
-        glob_pinging[thisaddress] = setInterval(function() {
-            websocket.send(ping_event);
-            poll_animate();
-        }, 55000);
-    };
-    websocket.onmessage = function(e) {
-        try {
-            const data = JSON.parse(e.data),
-                result = q_obj(data, "params.result");
-            if (result && result.hash) {
-                const api_dat = helper ? q_obj(helper, "api_info.data") : null;
-                if (!api_dat) return;
-                const rpc_url = api_dat.default === false ? api_dat.url : rpcurl;
-                api_proxy(eth_params(rpc_url, 25, "eth_getBlockByHash", [result.hash, true])).done(function(res) {
-                    const rslt = inf_result(res),
-                        transactions = rslt.transactions;
-                    if (transactions) {
-                        const set_confirmations = request.set_confirmations || 0;
-                        $.each(transactions, function(i, val) {
-                            const txda = infura_block_data(val, set_confirmations, request.currencysymbol, result.timestamp);
-                            if (str_match(val.to, thisaddress) === true) {
-                                const txd = infura_block_data(val, set_confirmations, request.currencysymbol, result.timestamp);
-                                closesocket();
-                                pick_monitor(txd);
-                                return
-                            }
-                        });
-                    }
-                })
-            }
-        } catch (error) {
-            console.error("Error parsing WebSocket message:", error);
-        }
-    };
-    websocket.onclose = function(e) {
-        handle_socket_close(socket_node);
-    };
-    websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress, ws_id);
-        return
-    };
-}
-
-// Initializes and manages WebSocket for ERC20 tokens on Ethereum and Ethereum-like networks
-function web3_erc20_websocket(socket_node, thisaddress, contract) {
-    const l2network = socket_node.network,
-        nwid = l2network || "",
-        ws_id = contract + nwid;
-    if (glob_sockets[ws_id]) {
-        return
-    }
-    const provider_url = complete_url(socket_node.url),
-        if_id = get_infura_apikey(provider_url),
-        provider = provider_url + if_id;
-    const websocket = glob_sockets[ws_id] = new WebSocket(provider);
-    websocket.onopen = function(e) {
-        socket_info(socket_node, true);
-        const ping_event = JSON.stringify({
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": "eth_subscribe",
-            "params": [
-                "logs",
-                {
-                    "address": contract,
-                    "topics": []
-                }
-            ]
-        });
-        websocket.send(ping_event);
-    };
-    websocket.onmessage = function(e) {
-        try {
-            const dat = JSON.parse(e.data),
-                result = q_obj(dat, "params.result");
-            if (result) {
-                if (result.topics) {
-                    const topic_address = result.topics[2];
-                    if (!topic_address || str_match(topic_address, thisaddress.slice(3)) !== true) return;
-                    const contractdata = result.data,
-                        cd_hex = contractdata.slice(2),
-                        token_value = hexToNumberString(cd_hex),
-                        token_decimals = request.decimals,
-                        ccval = parseFloat((token_value / Math.pow(10, token_decimals)).toFixed(8));
-                    if (ccval === Infinity) return;
-                    const set_confirmations = request.set_confirmations || 0,
-                        txd = {
-                            "ccval": ccval,
-                            "transactiontime": now_utc(),
-                            "txhash": result.transactionHash,
-                            "confirmations": 0,
-                            "setconfirmations": set_confirmations,
-                            "ccsymbol": request.currencysymbol,
-                            "eth_layer2": l2network
-                        }
-                    if (l2network) {
-                        glob_l2s = {};
-                        set_l2_status(socket_node, true);
-                    }
-                    pick_monitor(txd);
-                }
-            }
-        } catch (error) {
-            console.error("Error parsing WebSocket message:", error);
-        }
-    };
-    websocket.onclose = function(e) {
-        handle_socket_close(socket_node);
-        handle_socket_fails(socket_node, thisaddress, ws_id, l2network);
-    };
-    websocket.onerror = function(e) {
-        handle_socket_fails(socket_node, thisaddress, ws_id, l2network);
-    };
-}
+// eth websockets
 
 // Initiates Eth layer2 scanning
-function omni_scan(socket_node, address, request_ts, chainid) {
-    socket_info(socket_node, true);
-    glob_pinging[sha_sub(socket_node.name + address)] = setInterval(function() {
-        ping_omniscan(socket_node, address, request_ts, chainid);
-    }, 7000);
-}
-
-// Pings Eth layer2 for transaction updates
-function ping_omniscan(socket_node, address, request_ts, chainid) {
-    if (!isopenrequest()) { // only when request is visible
-        forceclosesocket();
-        return;
-    }
-    const socket_name = socket_node.name,
-        cid = chainid ? "&chainid=" + chainid : "";
-    api_proxy({
-        "api": socket_name,
-        "search": "?module=account&action=txlist&address=" + address + "&startblock=0&endblock=latest&page=1&offset=10&sort=desc" + cid,
-        "params": {
-            "method": "GET"
-        }
-    }).done(function(e) {
-        const data = br_result(e).result;
-        if (data) {
-            const error = data.error;
-            if (error) {
-                socket_info(socket_node, false);
-                handle_socket_fails(socket_node, address, sha_sub(socket_name + address), true);
-                return
-            }
-            const result = data.result;
-            if (result && br_issar(result)) {
-                set_l2_status(socket_node, true);
-                const set_confirmations = request.set_confirmations || 0;
-                $.each(result, function(dat, value) {
-                    const txd = omniscan_scan_data_eth(value, set_confirmations, socket_node.network);
-                    if (txd.transactiontime > request_ts && txd.ccval) {
-                        clearpinging();
-                        const requestlist = $("#requestlist > li.rqli"),
-                            txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
-                        if (txid_match.length) {
-                            return
-                        }
-                        glob_l2s = {};
-                        set_l2_status(socket_node, true);
-                        if (set_confirmations > 0) {
-                            pick_monitor(txd);
-                            return
-                        }
-                        confirmations(txd, true);
-                    }
-                });
-            }
-        }
-    }).fail(function() {
-        socket_info(socket_node, false);
-        handle_socket_fails(socket_node, address, sha_sub(socket_name + address), true);
-    });
-}
-
-// Initiates Erc20 layer2 scanning
-function omniscan_erc20(socket_node, address, request_ts, contract, chainid) {
-    socket_info(socket_node, true);
-    glob_pinging[contract] = setInterval(function() {
-        ping_omniscan_erc20(socket_node, address, request_ts, contract, chainid);
-    }, 7000);
-}
-
-// Pings Eth Erc20 for transaction updates
-function ping_omniscan_erc20(socket_node, address, request_ts, contract, chainid) {
-    if (!isopenrequest()) { // only when request is visible
-        forceclosesocket();
-        return;
-    }
-    const cid = chainid ? "&chainid=" + chainid : "";
-    api_proxy({
-        "api": socket_node.name,
-        "search": "?module=account&action=tokentx&contractaddress=" + contract + "&address=" + address + "&page=1&offset=100&startblock=0&endblock=99999999&sort=desc" + cid,
-        "params": {
-            "method": "GET"
-        }
-    }).done(function(e) {
-        const data = br_result(e).result;
-        if (data) {
-            const error = data.error,
-                message = data.message;
-            if (error || message === "NOTOK") {
-                socket_info(socket_node, false);
-                handle_socket_fails(socket_node, address, contract, true);
-                return
-            }
-            const result = data.result;
-            if (result && br_issar(result)) {
-                set_l2_status(socket_node, true);
-                const set_confirmations = request.set_confirmations || 0;
-                $.each(result, function(dat, value) {
-                    const txd = omniscan_scan_data(value, set_confirmations, request.currencysymbol, socket_node.network);
-                    if (txd.transactiontime > request_ts && txd.ccval) {
-                        clearpinging();
-                        const requestlist = $("#requestlist > li.rqli"),
-                            txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
-                        if (txid_match.length) {
-                            return
-                        }
-                        glob_l2s = {};
-                        set_l2_status(socket_node, true);
-                        if (set_confirmations > 0) {
-                            pick_monitor(txd);
-                            return
-                        }
-                        confirmations(txd, true);
-                    }
-                });
-            }
-        }
-    }).fail(function() {
-        socket_info(socket_node, false);
-        handle_socket_fails(socket_node, address, contract, true);
-    });
-}
-
-// Initiates BNB Smart Chain scanning
-function bnb_scan(socket_node, address, request_ts, ccsymbol) {
-    socket_info(socket_node, true);
-    glob_pinging["bnb" + address] = setInterval(function() {
-        ping_bnb(socket_node, address, request_ts, ccsymbol);
-    }, 7000);
-}
-
-// Pings BNB Smart Chain for transaction updates
-function ping_bnb(socket_node, address, request_ts, ccsymbol) {
-    if (!isopenrequest()) { // only when request is visible
-        forceclosesocket();
-        return;
-    }
-    api_proxy({
-        "api": "binplorer",
-        "search": "getAddressHistory/" + address + "?type=transfer",
-        "params": {
-            "method": "GET"
-        }
-    }).done(function(e) {
-        const data = br_result(e).result;
-        if (!data) return;
-        const set_confirmations = request.set_confirmations || 0;
-        set_l2_status(socket_node, true);
-        $.each(data.operations, function(dat, value) {
-            const symbol = q_obj(value, "tokenInfo.symbol"),
-                smatch = str_match(symbol, ccsymbol);
-            if (smatch) {
-                const txd = ethplorer_scan_data(value, set_confirmations, ccsymbol, "bnb");
-                if (txd.transactiontime > request_ts && txd.ccval) {
-                    clearpinging();
-                    const requestlist = $("#requestlist > li.rqli"),
-                        txid_match = filter_list(requestlist, "txhash", txd.txhash); // check if txhash already exists
-                    if (txid_match.length) {
-                        return
-                    }
-                    glob_l2s = {};
-                    set_l2_status(socket_node, true);
-                    if (set_confirmations > 0) {
-                        pick_monitor(txd);
-                        return
-                    }
-                    confirmations(txd, true);
-                }
-            }
-        });
-    }).fail(function() {
-        socket_info(socket_node, false);
-        handle_socket_fails(socket_node, address, "bnb" + address, true);
-    });
+function omni_scan(socket_node) {
+    address_polling_init(null, true, null, null, socket_node);
 }
 
 // Set and dislay l2 status
@@ -535,7 +149,7 @@ function set_l2_status(sn, stat) {
     }
 }
 
-// ** Monirors **
+// ** Monitors **
 
 function query_ethl2_api(rd, rdo, api_dat) {
     const l2 = rd.eth_layer2;
@@ -550,29 +164,30 @@ function scan_ethl2_api(rd, rdo, api_dat) {
     const requestid = rd.requestid,
         req_l2_arr = rd.eth_l2s,
         source = rdo.source;
-    if ($.isEmptyObject(req_l2_arr)) { // No l2's
+    if (empty_obj(req_l2_arr)) { // No l2's
         api_callback(rdo);
         return
     }
     const thiscurrency = rd.payment,
         l2_setting = cs_node(thiscurrency, "layer2", true),
-        l2_options = l2_setting.options;
+        l2_options = l2_setting.options,
+        l2_length = Object.keys(l2_options).length;
     if (l2_options) {
         const ccsymbol = rd.currencysymbol,
             ctracts = contracts(ccsymbol),
             rq_id = requestid || "";
-        let index = 0,
-            scanned = false;
+        let index = 0;
         $.each(l2_options, function(key, value) {
             const inarr = $.inArray(index, req_l2_arr) !== -1;
             if (inarr) {
-                const delay = (index + 1) * 1000;
-                scanned = true;
+                delay = (index + 1) * 1000;
                 setTimeout(function() {
-                    if (glob_l2_fetched) {
-                        // Block scanning when l2 tx is detected
+                    if (index === (l2_length - 1) || glob_l2_fetched) {
+                        // Block scanning when l2 tx is detected or detect when scanning is finished
+                        api_callback(rdo);
                         return
                     }
+                    index++;
                     const api_data = api_dat || q_obj(value, "apis.selected"),
                         api_name = api_data.name;
                     if (api_name) {
@@ -616,11 +231,8 @@ function scan_ethl2_api(rd, rdo, api_dat) {
                     }
                 }, delay);
             }
-            index++;
         });
-        if (!scanned) {
-            api_callback(rdo);
-        }
+        return
     }
 }
 
@@ -921,7 +533,7 @@ function submit_l2() {
                     const this_nw = $(this),
                         input = this_nw.find(".selectbox > input"),
                         input_data = input.data();
-                    if (!$.isEmptyObject(input_data)) {
+                    if (!empty_obj(input_data)) {
                         const this_type = this_nw.data("type"),
                             new_selected = q_obj(cs_node_dat, this_network + "." + this_type);
                         if (new_selected) {

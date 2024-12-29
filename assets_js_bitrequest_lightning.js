@@ -92,8 +92,8 @@ function lm_function(replace) {
             "selected_service": current_node,
             "selected_proxy": current_proxy
         } = this_data,
-        has_nodes = Boolean(node_list && !$.isEmptyObject(node_list)),
-            has_proxies = Boolean(lnd_proxy_list && !$.isEmptyObject(lnd_proxy_list)),
+        has_nodes = Boolean(node_list && !empty_obj(node_list)),
+            has_proxies = Boolean(lnd_proxy_list && !empty_obj(lnd_proxy_list)),
             node_title = has_nodes ? translate("lightningnode") : translate("addlightningnode"),
             has_proxy = Boolean(current_proxy),
             p_arr = has_proxy ? lnurl_deform(current_proxy.proxy) : false,
@@ -720,7 +720,7 @@ function lnd_proxy_switch() {
         const lnli = lndli(),
             ln_dat = lnli.data(),
             nodelist = ln_dat.services;
-        if ($.isEmptyObject(nodelist)) {
+        if (empty_obj(nodelist)) {
             playsound(glob_funk)
             return
         }
@@ -834,7 +834,7 @@ function lnd_select_implementation() {
         const thisnode = $(this),
             this_data = lndli().data(),
             lnd_proxy_list = this_data.proxies,
-            has_proxies = !$.isEmptyObject(lnd_proxy_list),
+            has_proxies = !empty_obj(lnd_proxy_list),
             imp = thisnode.attr("data-value"),
             cs_boxes = $("#lnd_credentials .lndcd"),
             cd_box_select = $("#lnd_credentials .cs_" + imp),
@@ -991,7 +991,7 @@ function trigger_ln() {
         if (thisval) {
             if (thisval.live == "connection") {
                 const nodelist = ln_dat.services;
-                if ($.isEmptyObject(nodelist)) {
+                if (empty_obj(nodelist)) {
                     canceldialog();
                     return
                 }
@@ -1016,7 +1016,7 @@ function trigger_ln() {
                 playsound(glob_funk);
                 return
             }
-            if ($.isEmptyObject(thisval)) {
+            if (empty_obj(thisval)) {
                 canceldialog();
                 return
             }
@@ -1366,7 +1366,7 @@ function remove_rpc_proxy() {
             const proxylist = ln_dat.proxies,
                 selected_proxy = ln_dat.selected_proxy,
                 new_array = fetch_other_proxies(proxylist, pid),
-                empty_arr = $.isEmptyObject(new_array),
+                empty_arr = empty_obj(new_array),
                 proxy_array = empty_arr ? [] : new_array,
                 select_proxy = empty_arr ? false : (selected_proxy.id === pid) ? new_array[0] : selected_proxy;
             lnli.data({
@@ -1405,7 +1405,7 @@ function remove_lnd() {
                 ln_dat = lnli.data(),
                 services = ln_dat.services,
                 new_array = fetch_other_nodes(services, thisval.node_id),
-                empty_arr = $.isEmptyObject(new_array);
+                empty_arr = empty_obj(new_array);
             thisoption.slideUp(500, function() {
                 $(this).remove();
             });
@@ -1474,7 +1474,7 @@ function p_promt(pid) {
         ln_dat = lnli.data(),
         proxylist = ln_dat.proxies,
         this_proxy = fetch_proxy(proxylist, pid);
-    if ($.isEmptyObject(this_proxy)) {
+    if (empty_obj(this_proxy)) {
         popnotify("error", translate("unknownproxy"));
         return
     }
@@ -1571,7 +1571,7 @@ function cancelpd() {
 
 // Checks if a node with the given ID exists in the node list
 function node_exists(nodelist, node_id) {
-    if ($.isEmptyObject(nodelist)) {
+    if (empty_obj(nodelist)) {
         return false;
     }
     return nodelist.some(value => value.node_id === node_id);

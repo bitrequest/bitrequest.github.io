@@ -432,6 +432,7 @@ function finishfunctions() {
     //escapeandback
     //close_paymentdialog
     //continue_cpd
+    //after_scan_init
     //after_scan
     //cancel_after_scan
     //set_recent_requests
@@ -637,7 +638,7 @@ function finishfunctions() {
     //handleLnconnect
     //handleAddress
     //handleViewkey
-    
+
     //add_serviceworker
 }
 
@@ -1357,6 +1358,7 @@ function clear_savedurl() {
 function payrequest() {
     $(document).on("click", "#requestlist .req_actions .icon-qrcode, #requestlist .payrequest", function(e) {
         e.preventDefault();
+        if (is_scanning()) return
         const thisnode = $(this);
         if (glob_offline === true && thisnode.hasClass("isfiat")) {
             // do not trigger fiat request when offline because of unknown exchange rate
@@ -1913,7 +1915,7 @@ function close_paymentdialog(afterscan) {
     if (afterscan) {
         const api_data = q_obj(request, "coinsettings.apis.selected");
         if (api_data) {
-            after_scan(api_data);
+            after_scan_init(api_data);
         }
         return
     }
@@ -1935,6 +1937,14 @@ function continue_cpd() {
         return
     }
     window.history.back();
+}
+
+// After scan initialization
+function after_scan_init(api_data) {
+    if (is_scanning()) return
+    glob_api_attempts = {};
+    glob_rpc_attempts = {};
+    after_scan(api_data);
 }
 
 // Scan address one last time
@@ -2792,8 +2802,7 @@ function cpd_pollcheck() {
         const rq_timer = request.rq_timer,
             rq_time = now() - rq_timer;
         if (rq_time > glob_after_scan_timeout) {
-            const payment = request.payment;
-            if (payment === "monero" || payment === "nimiq" || payment === "dash") { // No afterscan when polling
+            if (empty_obj(glob_sockets)) { // No afterscan when polling
                 close_paymentdialog();
                 return
             }
@@ -2881,7 +2890,7 @@ function clearpinging(s_id) {
         }
         return
     }
-    if (!$.isEmptyObject(glob_pinging)) {
+    if (!empty_obj(glob_pinging)) {
         $.each(glob_pinging, function(key, value) {
             clearInterval(value);
         });
@@ -3026,6 +3035,7 @@ function remove_cashier() {
 // Handles the creation of a new request using an alias
 function newrequest_alias() {
     $(document).on("click", "#newrequest_alias", function() {
+        if (is_scanning()) return
         const currencylist = $("#currencylist"),
             active_currencies = currencylist.find("li").not(".hide"),
             active_currency_count = active_currencies.length;
@@ -4927,7 +4937,7 @@ function vu_block() {
 // Checks for recent requests and toggles UI accordingly
 function check_rr() {
     const ls_recentrequests = br_get_local("recent_requests", true);
-    toggle_rr(ls_recentrequests && !$.isEmptyObject(ls_recentrequests));
+    toggle_rr(ls_recentrequests && !empty_obj(ls_recentrequests));
 }
 
 // Toggles the visibility of recent requests in the UI

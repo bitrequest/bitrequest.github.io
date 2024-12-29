@@ -438,7 +438,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
         api_proxy(pload).done(function(e) {
             const data = br_result(e),
                 result = data.result,
-                live = $.isEmptyObject(result) ? false : (thiscurrency === "nano" ? result.network === "live" : true);
+                live = empty_obj(result) ? false : (thiscurrency === "nano" ? result.network === "live" : true);
             rpc_option_li(optionlist, live, key, value, selected, true);
         }).fail(function(e) {
             rpc_option_li(optionlist, false, key, value, selected, true);
@@ -734,7 +734,7 @@ function pass_rpc_submit(thiscurrency, thisvalue, newnode) {
         node_name = thisvalue.name || thisvalue.url;
     rpc_setting_li.data("selected", thisvalue).find("p").html(node_name);
     if (newnode === true) {
-        if ($.isEmptyObject(options)) {
+        if (empty_obj(options)) {
             rpc_setting_li.data("options", [thisvalue]);
         } else {
             options.push(thisvalue);

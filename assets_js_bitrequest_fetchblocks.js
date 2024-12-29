@@ -38,32 +38,38 @@ $(document).ready(function() {
     // ** Unified TXdata **
 
     //sort_by_date
+    //process_outputs
+    //process_timestam
+    //calculate_confirmation
     //default_tx_data
-    //blockchain_ws_data
+    //blockchain_ws_dat
     //mempoolspace_ws_data
-    //mempoolspace_scan_data
-    //dogechain_ws_data
+    //mempoolspace_scan_dat
+    //dogechain_ws_dat
     //blockcypher_scan_data
-    //blockcypher_poll_data
+    //insight_scan_data
+    //blockcypher_poll_dat
+    //blockchaininfo_scan_dat
     //blockchair_scan_data
     //blockchair_eth_scan_data
-    //blockchair_erc20_scan_data
-    //blockchair_erc20_poll_data
+    //blockchair_erc20_scan_dat
+    //blockchair_erc20_poll_dat
     //omniscan_scan_data
-    //omniscan_scan_data_eth
-    //ethplorer_scan_data
+    //omniscan_scan_data_et
+    //ethplorer_scan_dat
     //nano_scan_data
     //bitcoin_rpc_data
-    //infura_eth_poll_data
     //infura_erc20_poll_data
     //infura_block_data
     //xmr_scan_data
-    //nimiq_scan_data
+    //blockchair_xmr_data
+    //nimiq_scan_dat
     //kaspa_scan_data
     //kaspa_poll_fyi_data
-    //kaspa_ws_data
+    //kaspa_ws_dat
     //kaspa_fyi_ws_data
     //lnd_tx_data
+    //infura_eth_poll_data
     //tx_data
 });
 
@@ -485,7 +491,7 @@ function blockchair_xmr_poll(rd, api_data, rdo) {
 // This function fetches and processes transaction data using the blockchain.info API.
 // It handles both scanning for incoming transactions and polling for specific transaction details.
 function blockchaininfo_fetch_init(rd, api_data, rdo) {
-    if (rdo.source === "acc_polling") {
+    if (rdo.source === "addr_polling") {
         blockchaininfo_fetch(rd, api_data, rdo, false);
         return
     }
@@ -655,7 +661,7 @@ function blockcypher_fetch(rd, api_data, rdo) {
                 const conf_tx = data.txrefs,
                     unconf_tx = data.unconfirmed_txrefs,
                     all_tx = (unconf_tx && conf_tx) ? unconf_tx.concat(conf_tx) : conf_tx || unconf_tx;
-                if (all_tx && !$.isEmptyObject(all_tx)) {
+                if (all_tx && !empty_obj(all_tx)) {
                     const sortlist = sort_by_date(blockcypher_scan_data, all_tx);
                     $.each(sortlist, function(dat, value) {
                         if (!value.spent) { // filter outgoing transactions
@@ -1154,7 +1160,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                     return
                 }
                 const txarray = q_obj(data, "data." + rd.address + ".transactions");
-                if ($.isEmptyObject(txarray)) {
+                if (empty_obj(txarray)) {
                     api_callback(rdo);
                     return
                 }
@@ -1279,7 +1285,7 @@ function nimiq_fetch(rd, api_data, rdo) {
             }).done(function(e) {
                 const data = br_result(e).result;
                 if (data) {
-                    if ($.isEmptyObject(data)) {
+                    if (empty_obj(data)) {
                         api_callback(rdo);
                         return
                     }
@@ -1422,7 +1428,7 @@ function nimiq_fetch(rd, api_data, rdo) {
 // The function supports multiple APIs (kaspa.org and kas.fyi) and adapts its behavior based on the API being used.
 // It also manages the retrieval of the current bluescore for transaction confirmation calculations.
 function kaspa_fetch_init(rd, api_data, rdo) {
-    if (rdo.source === "acc_polling") {
+    if (rdo.source === "addr_polling") {
         kaspa_fetch(rd, api_data, rdo, false);
         return
     }
@@ -1475,7 +1481,7 @@ function kaspa_fetch(rd, api_data, rdo, blockheight) {
         }).done(function(e) {
             const data = br_result(e).result;
             if (data) {
-                if ($.isEmptyObject(data)) {
+                if (empty_obj(data)) {
                     tx_api_scan_fail(rd, api_data, rdo, default_error);
                     return
                 }
@@ -1650,7 +1656,7 @@ function insight_fetch_dash(rd, api_data, rdo) {
 // It handles both scanning for incoming transactions and polling for specific transaction details.
 // The function also retrieves the latest block height for confirmation calculations.
 function mempoolspace_rpc_init(rd, api_data, rdo, rpc) {
-    if (rdo.source === "acc_polling") {
+    if (rdo.source === "addr_polling") {
         mempoolspace_rpc(rd, api_data, rdo, rpc, false);
         return
     }
@@ -1703,7 +1709,7 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock) {
             }).done(function(e) {
                 const data = br_result(e).result;
                 if (data) {
-                    if ($.isEmptyObject(data)) {
+                    if (empty_obj(data)) {
                         api_callback(rdo);
                         return
                     }
@@ -1939,7 +1945,7 @@ function nano_rpc(rd, api_data, rdo) {
             }
         }).done(function(e) {
             const data = br_result(e).result;
-            if (data && !$.isEmptyObject(data)) {
+            if (data && !empty_obj(data)) {
                 if (data.error) {
                     tx_api_scan_fail(rd, api_data, rdo, data.error);
                     return
@@ -2026,7 +2032,34 @@ function sort_by_date(func, list, rdo, rd) {
     });
 }
 
-// This function returns a default transaction data object with null or default values.
+// Helper function to process transaction outputs
+function process_outputs(outputs, address, process_value) {
+    if (!outputs) return null;
+    let outputsum = 0;
+    $.each(outputs, function(dat, value) {
+        const output = process_value(value, address);
+        outputsum += parseFloat(output) || 0;
+    });
+    return outputsum;
+}
+
+// Helper function to process transaction time
+function process_timestamp(timestamp, utc) {
+    if (!timestamp) return utc ? now_utc() : now();
+    const time = timestamp * 1000;
+    return utc ? time + glob_timezone : time;
+}
+
+// Helper function to calculate confirmations
+function calculate_confirmations(block_id, latestblock) {
+    if (!block_id || !latestblock) return 0;
+    if (block_id > 10 && latestblock) {
+        return Math.max(0, (latestblock - block_id) + 1);
+    }
+    return 0;
+}
+
+// Default transaction data
 function default_tx_data() {
     return {
         "ccval": null,
@@ -2037,934 +2070,510 @@ function default_tx_data() {
         "double_spend": false,
         "instant_lock": false,
         "ccsymbol": null
-
     };
 }
 
 // ** Unifications
 
-// This function processes blockchain.info websocket data and returns a unified transaction object.
-function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) { // poll blockchain.info websocket data
-    if (data) {
-        try {
-            const outputs = data.out;
-            let outputsum;
-            if (outputs) {
-                outputsum = 0;
-                $.each(outputs, function(dat, value) {
-                    if (address === value.addr || "bitcoincash:" + address === value.addr || legacy === value.addr) {
-                        outputsum += value.value || 0; // sum of outputs
-                    }
-                });
-            }
-            const transactiontime = data.time ? data.time * 1000 : null,
-                transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
-            return {
-                "ccval": outputsum ? outputsum / 1e8 : null,
-                "transactiontime": transactiontime_utc,
-                "txhash": data.hash,
-                "confirmations": data.confirmations || 0,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": ccsymbol
-            };
-        } catch (err) {
-            console.error("Error processing blockchain.info websocket data:", err);
-            return default_tx_data();
-        }
+function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) {
+    function process_value(value, addr) {
+        return (addr === value.addr ||
+            "bitcoincash:" + addr === value.addr ||
+            legacy === value.addr) ? value.value || 0 : 0;
     }
-    return default_tx_data();
+    const outputsum = process_outputs(data.out, address, process_value),
+        transactiontime = data.time ? data.time * 1000 : null,
+        transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
+    return {
+        "ccval": outputsum ? outputsum / 1e8 : null,
+        "transactiontime": transactiontime_utc,
+        "txhash": data.hash,
+        "confirmations": data.confirmations || 0,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": ccsymbol
+    };
 }
 
-// This function processes mempool.space websocket data and returns a unified transaction object.
-function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) { // poll mempool.space websocket data
-    if (data) {
-        try {
-            const outputs = data.vout;
-            let outputsum;
-            if (outputs) {
-                outputsum = 0;
-                $.each(outputs, function(dat, value) {
-                    if (address === value.scriptpubkey_address) {
-                        outputsum += value.value || 0; // sum of outputs
-                    }
-                });
-            }
-            const transactiontime = data.firstSeen ? data.firstSeen * 1000 : null,
-                transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
-            return {
-                "ccval": outputsum ? outputsum / 1e8 : null,
-                "transactiontime": transactiontime_utc,
-                "txhash": data.txid,
-                "confirmations": data.confirmations || 0,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": ccsymbol
-            };
-        } catch (err) {
-            console.error("Error processing mempool.space websocket data:", err);
-            return default_tx_data();
-        }
+function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) {
+    function process_value(value, addr) {
+        return addr === value.scriptpubkey_address ? value.value || 0 : 0;
     }
-    return default_tx_data();
+    const outputsum = process_outputs(data.vout, address, process_value),
+        transactiontime = data.firstSeen ? data.firstSeen * 1000 : null,
+        transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
+    return {
+        "ccval": outputsum ? outputsum / 1e8 : null,
+        "transactiontime": transactiontime_utc,
+        "txhash": data.txid,
+        "confirmations": data.confirmations || 0,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": ccsymbol
+    };
 }
 
-// This function processes mempool.space API data for scanning or polling and returns a unified transaction object.
-function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, latestblock) { // scan/poll mempool.space api data
-    if (data) {
-        try {
-            const status = data.status,
-                transactiontime = status.block_time ? status.block_time * 1000 : now(),
-                transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
-            if (setconfirmations === "sort") {
-                return transactiontime_utc;
-            }
-            const outputs = data.vout;
-            let outputsum;
-            if (outputs) {
-                outputsum = 0;
-                $.each(outputs, function(dat, value) {
-                    if (value.scriptpubkey_address.indexOf(address) > -1) {
-                        outputsum += value.value || 0; // sum of outputs
-                    }
-                });
-            }
-            const block_height = status.block_height,
-                confs = status.confirmed ? setconfirmations : 0,
-                conf = (block_height && block_height > 10 && latestblock) ? (latestblock - block_height) + 1 : confs;
-            return {
-                "ccval": outputsum ? outputsum / 1e8 : null,
-                "transactiontime": transactiontime_utc,
-                "txhash": data.txid,
-                "confirmations": conf,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": ccsymbol
-            };
-        } catch (err) {
-            console.error("Error processing mempool.space data:", err);
-            return default_tx_data();
-        }
+function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, latestblock) {
+    const status = data.status,
+        transactiontime = status.block_time ? status.block_time * 1000 : now(),
+        transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
+    if (setconfirmations === "sort") {
+        return transactiontime_utc;
     }
-    return default_tx_data();
+
+    function process_value(value, addr) {
+        return value.scriptpubkey_address.indexOf(addr) > -1 ? value.value : 0;
+    }
+    const outputsum = process_outputs(data.vout, address, process_value),
+        block_height = status.block_height,
+        confs = status.confirmed ? setconfirmations : 0,
+        conf = (block_height && block_height > 10 && latestblock) ?
+        (latestblock - block_height) + 1 : confs;
+    return {
+        "ccval": outputsum ? outputsum / 1e8 : null,
+        "transactiontime": transactiontime_utc,
+        "txhash": data.txid,
+        "confirmations": conf,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": ccsymbol
+    };
 }
 
-// This function processes dogechain websocket data and returns a unified transaction object.
-function dogechain_ws_data(data, setconfirmations, ccsymbol, address) { // poll blockchain.info websocket data
-    if (data) {
-        try {
-            const outputs = data.outputs;
-            let outputsum;
-            if (outputs) {
-                outputsum = 0;
-                $.each(outputs, function(dat, value) {
-                    if (address === value.addr) {
-                        outputsum += value.value || 0; // sum of outputs
-                    }
-                });
-            }
-            const transactiontime = data.time ? data.time * 1000 : now(),
-                transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
-            return {
-                "ccval": outputsum ? outputsum / 1e8 : null,
-                "transactiontime": transactiontime_utc,
-                "txhash": data.hash || null,
-                "confirmations": data.confirmations || 0,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": ccsymbol
-            };
-        } catch (err) {
-            console.error("Error processing dogechain data:", err);
-            return default_tx_data();
-        }
+function dogechain_ws_data(data, setconfirmations, ccsymbol, address) {
+    function process_value(value, addr) {
+        return addr === value.addr ? value.value || 0 : 0;
     }
-    return default_tx_data();
+    const outputsum = process_outputs(data.outputs, address, process_value),
+        transactiontime = data.time ? data.time * 1000 : now(),
+        transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
+    return {
+        "ccval": outputsum ? outputsum / 1e8 : null,
+        "transactiontime": transactiontime_utc,
+        "txhash": data.hash || null,
+        "confirmations": data.confirmations || 0,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": ccsymbol
+    };
 }
 
-// This function processes blockcypher API data for scanning and returns a unified transaction object.
-function blockcypher_scan_data(data, setconfirmations, ccsymbol) { // scan
-    if (data) {
-        try {
-            const datekey = (data.confirmed) ? data.confirmed : (data.received) ? data.received : false,
-                transactiontime = to_ts(datekey);
-            if (setconfirmations === "sort") {
-                return transactiontime;
-            }
-            let double_spend = false;
-            const is_eth = ccsymbol === "eth",
-                ccval = data.value ? (is_eth ? parseFloat((data.value / 1e18).toFixed(8)) : data.value / 1e8) : null,
-                txhash = data.tx_hash,
-                txhash_mod = txhash && is_eth ? (txhash.startsWith("0x") ? txhash : "0x" + txhash) : txhash,
-                conf = data.confirmations || 0;
-            double_spend = !!data.double_spend; // double spend proof
-            return {
-                "ccval": ccval,
-                "transactiontime": transactiontime,
-                "txhash": txhash_mod,
-                "confirmations": conf,
-                "setconfirmations": setconfirmations,
-                "double_spend": double_spend,
-                "instant_lock": false,
-                "ccsymbol": ccsymbol
-            };
-        } catch (err) {
-            console.error("Error processing blockcypher data:", err);
-            return default_tx_data();
-        }
+function blockcypher_scan_data(data, setconfirmations, ccsymbol) {
+    const datekey = (data.confirmed) ? data.confirmed : (data.received) ? data.received : false,
+        transactiontime = to_ts(datekey);
+    if (setconfirmations === "sort") {
+        return transactiontime;
     }
-    return default_tx_data();
+    const is_eth = ccsymbol === "eth",
+        ccval = data.value ? (is_eth ? parseFloat((data.value / 1e18).toFixed(8)) : data.value / 1e8) : null,
+        txhash = data.tx_hash,
+        txhash_mod = txhash && is_eth ? (txhash.startsWith("0x") ? txhash : "0x" + txhash) : txhash;
+    return {
+        "ccval": ccval,
+        "transactiontime": transactiontime,
+        "txhash": txhash_mod,
+        "confirmations": data.confirmations || 0,
+        "setconfirmations": setconfirmations,
+        "double_spend": !!data.double_spend,
+        "ccsymbol": ccsymbol
+    };
 }
 
-// This function processes Insight API data for scanning and returns a unified transaction object for Dash cryptocurrency.
-function insight_scan_data(data, setconfirmations, address) { // scan
-    if (data) {
-        try {
-            const transactiontime = (data.time) ? data.time : (data.blocktime) ? data.blocktime : false,
-                txtime = transactiontime ? transactiontime * 1000 : now(),
-                transactiontime_utc = txtime ? txtime + glob_timezone : null;
-            if (setconfirmations === "sort") {
-                return transactiontime_utc;
-            }
-            const outputs = data.vout;
-            let outputsum = null;
-            if (outputs) {
-                outputsum = 0;
-                $.each(outputs, function(dat, value) {
-                    const addrlist = q_obj(value, "scriptPubKey.addresses");
-                    if (addrlist) {
-                        if (addrlist.indexOf(address) > -1) {
-                            outputsum += parseFloat(value.value) || 0; // sum of outputs
-                        }
-                    }
-                });
-            }
-            const txhash = data.txid || null,
-                conf = data.confirmations || 0,
-                instant_lock = !!data.txlock; // instant transactions
-            return {
-                "ccval": outputsum,
-                "transactiontime": transactiontime_utc,
-                "txhash": txhash,
-                "confirmations": conf,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": instant_lock,
-                "ccsymbol": "dash"
-            };
-        } catch (err) {
-            console.error("Error processing Blockchair Insight API data:", err);
-            return default_tx_data();
-        }
+function insight_scan_data(data, setconfirmations, address) {
+    const transactiontime = data.time ? data.time : data.blocktime ? data.blocktime : false,
+        txtime = transactiontime ? transactiontime * 1000 : now(),
+        transactiontime_utc = txtime ? txtime + glob_timezone : null;
+    if (setconfirmations === "sort") {
+        return transactiontime_utc;
     }
-    return default_tx_data();
+
+    function process_output_value(value, addr) {
+        const addrlist = q_obj(value, "scriptPubKey.addresses");
+        if (addrlist && addrlist.indexOf(addr) > -1) {
+            return parseFloat(value.value) || 0;
+        }
+        return 0;
+    }
+    const outputsum = process_outputs(data.vout, address, process_output_value);
+    return {
+        "ccval": outputsum,
+        "transactiontime": transactiontime_utc,
+        "txhash": data.txid || null,
+        "confirmations": data.confirmations || 0,
+        "setconfirmations": setconfirmations,
+        "instant_lock": !!data.txlock,
+        "ccsymbol": "dash"
+    };
 }
 
-// This function processes BlockCypher API data for polling and returns a unified transaction object.
-function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) { // poll
-    if (data) {
-        try {
-            const is_eth = ccsymbol === "eth",
-                transactiontime = to_ts(data.received),
-                outputs = data.outputs;
-            let outputsum,
-                double_spend = false;
-            if (outputs) {
-                outputsum = 0;
-                $.each(outputs, function(dat, value) {
-                    const satval = value.value;
-                    output = (str_match(address, value.addresses[0].slice(3)) === true) ? Math.abs(satval) : 0;
-                    outputsum += parseFloat(output) || 0; // sum of outputs
-                });
-            }
-            const ccval = outputs ? (is_eth ? parseFloat((outputsum / 1e18).toFixed(8)) : outputsum / 1e8) : null,
-                txhash = data.hash,
-                txhash_mod = txhash && is_eth ? (txhash.startsWith("0x") ? txhash : "0x" + txhash) : txhash,
-                conf = data.confirmations || 0;
-            double_spend = !!data.double_spend;
-            return {
-                "ccval": ccval,
-                "transactiontime": transactiontime,
-                "txhash": txhash_mod,
-                "confirmations": conf,
-                "setconfirmations": setconfirmations,
-                "double_spend": double_spend,
-                "instant_lock": false,
-                "ccsymbol": ccsymbol
-            };
-        } catch (err) {
-            console.error("Error processing Blockcypher ERC20 data:", err);
-            return default_tx_data();
-        }
+function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) {
+    const is_eth = ccsymbol === "eth",
+        transactiontime = to_ts(data.received);
+
+    function process_output_value(value, addr) {
+        const satval = value.value;
+        return (str_match(addr, value.addresses[0].slice(3)) === true) ? Math.abs(satval) : 0;
     }
-    return default_tx_data();
+    const outputsum = process_outputs(data.outputs, address, process_output_value),
+        ccval = outputsum ? (is_eth ? parseFloat((outputsum / 1e18).toFixed(8)) : outputsum / 1e8) : null,
+        txhash = data.hash,
+        txhash_mod = txhash && is_eth ? (txhash.startsWith("0x") ? txhash : "0x" + txhash) : txhash;
+    return {
+        "ccval": ccval,
+        "transactiontime": transactiontime,
+        "txhash": txhash_mod,
+        "confirmations": data.confirmations || 0,
+        "setconfirmations": setconfirmations,
+        "double_spend": !!data.double_spend,
+        "ccsymbol": ccsymbol
+    };
 }
 
-// This function processes blockchain.info API data for scanning/polling and returns a unified transaction object.
-function blockchaininfo_scan_data(data, setconfirmations, ccsymbol, address, latestblock) { // scan/poll
-    if (data) {
-        try {
-            const transactiontime = data.time ? data.time * 1000 : null,
-                transactiontime_utc = transactiontime ? transactiontime + glob_timezone : now();
-            if (setconfirmations === "sort") {
-                return transactiontime;
-            }
-            const block_id = q_obj(data, "block.height"),
-                conf_calc = (block_id && block_id > 10 && latestblock) ? (latestblock - block_id) + 1 : 0,
-                conf = latestblock ? conf_calc : 0,
-                confirmations = q_obj(data, "block.mempool") ? 0 : conf,
-                outputs = data.outputs;
-            let outputsum;
-            if (outputs) {
-                outputsum = 0;
-                $.each(outputs, function(dat, val) {
-                    const output = str_match(val.address, address) ? Math.abs(val.value) : 0;
-                    outputsum += parseFloat(output) || 0; // sum of outputs
-                });
-            }
-            const ccval = outputs ? outputsum / 1e8 : null,
-                txhash = data.txid || null;
-            return {
-                "ccval": ccval,
-                "transactiontime": transactiontime_utc,
-                "txhash": txhash,
-                "confirmations": conf,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": ccsymbol
-            };
-        } catch (err) {
-            console.error("Error processing blockchain.info data:", err);
-            return default_tx_data();
-        }
+function blockchaininfo_scan_data(data, setconfirmations, ccsymbol, address, latestblock) {
+    const transactiontime = data.time ? data.time * 1000 : null,
+        transactiontime_utc = transactiontime ? transactiontime + glob_timezone : now();
+    if (setconfirmations === "sort") {
+        return transactiontime;
     }
-    return default_tx_data();
+
+    function process_output_value(val, addr) {
+        return str_match(val.address, addr) ? Math.abs(val.value) : 0;
+    }
+    const block_id = q_obj(data, "block.height"),
+        conf = calculate_confirmations(block_id, latestblock),
+        confirmations = q_obj(data, "block.mempool") ? 0 : conf,
+        outputsum = process_outputs(data.outputs, address, process_output_value);
+    return {
+        "ccval": outputsum ? outputsum / 1e8 : null,
+        "transactiontime": transactiontime_utc,
+        "txhash": data.txid || null,
+        "confirmations": confirmations,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": ccsymbol
+    };
 }
 
-// This function processes Blockchair API data for scanning/polling and returns a unified transaction object.
-function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestblock) { // scan/poll
-    if (data) {
-        try {
-            const transaction = data.transaction;
-            if (transaction) {
-                const transactiontime = transaction.time ? returntimestamp(transaction.time).getTime() : null;
-                if (setconfirmations === "sort") {
-                    return transactiontime;
-                }
-                const block_id = transaction.block_id,
-                    conf = (block_id && block_id > 10 && latestblock) ? (latestblock - block_id) + 1 : 0,
-                    outputs = data.outputs;
-                let outputsum;
-                if (outputs) {
-                    outputsum = 0;
-                    $.each(outputs, function(dat, val) {
-                        const satval = val.value,
-                            output = (val.recipient === address) ? Math.abs(satval) : 0;
-                        outputsum += parseFloat(output) || 0; // sum of outputs
-                    });
-                }
-                const ccval = outputs ? outputsum / 1e8 : null,
-                    txhash = transaction.hash || null,
-                    instant_lock = !!transaction.is_instant_lock; // instant transactions
-                return {
-                    "ccval": ccval,
-                    "transactiontime": transactiontime,
-                    "txhash": txhash,
-                    "confirmations": conf,
-                    "setconfirmations": setconfirmations,
-                    "double_spend": false,
-                    "instant_lock": instant_lock,
-                    "ccsymbol": ccsymbol
-                };
-            }
-        } catch (err) {
-            console.error("Error processing Blockchair data:", err);
-            return default_tx_data();
-        }
+function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestblock) {
+    const transaction = data.transaction;
+    if (!transaction) return default_tx_data();
+    const transactiontime = transaction.time ? returntimestamp(transaction.time).getTime() : null;
+    if (setconfirmations === "sort") {
+        return transactiontime;
     }
-    return default_tx_data();
+
+    function process_value(val, addr) {
+        const satval = val.value;
+        return val.recipient === addr ? Math.abs(satval) : 0;
+    }
+    const block_id = transaction.block_id,
+        conf = (block_id && block_id > 10 && latestblock) ? (latestblock - block_id) + 1 : 0,
+        outputsum = process_outputs(data.outputs, address, process_value);
+    return {
+        "ccval": outputsum ? outputsum / 1e8 : null,
+        "transactiontime": transactiontime,
+        "txhash": transaction.hash || null,
+        "confirmations": conf,
+        "setconfirmations": setconfirmations,
+        "double_spend": false,
+        "instant_lock": !!transaction.is_instant_lock,
+        "ccsymbol": ccsymbol
+    };
 }
 
-// This function processes Blockchair API data for Ethereum transactions and returns a unified transaction object.
-function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan/poll
-    if (data) {
-        try {
-            const transactiontime = (data.time) ? returntimestamp(data.time).getTime() : null;
-            if (setconfirmations === "sort") {
-                return transactiontime;
-            }
-            const ethvalue = data.value ? parseFloat((data.value / 1e18).toFixed(8)) : null;
-            txhash = data.transaction_hash || null,
-                conf = (data.block_id && latestblock) ? latestblock - data.block_id : 0,
-                recipient = data.recipient || null;
-            return {
-                "ccval": ethvalue,
-                "transactiontime": transactiontime,
-                "txhash": txhash,
-                "confirmations": conf,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": ccsymbol,
-                "recipient": recipient
-            };
-        } catch (err) {
-            console.error("Error processing Blockchair Eth data:", err);
-            return default_tx_data();
-        }
+function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latestblock) {
+    const transactiontime = data.time ? returntimestamp(data.time).getTime() : null;
+    if (setconfirmations === "sort") {
+        return transactiontime;
     }
-    return default_tx_data();
+    const ethvalue = data.value ? parseFloat((data.value / 1e18).toFixed(8)) : null,
+        conf = (data.block_id && latestblock) ? latestblock - data.block_id : 0;
+    return {
+        "ccval": ethvalue,
+        "transactiontime": transactiontime,
+        "txhash": data.transaction_hash || null,
+        "confirmations": conf,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": ccsymbol,
+        "recipient": data.recipient || null
+    };
 }
 
-// This function processes Blockchair API data for ERC20 token transactions and returns a unified transaction object.
-function blockchair_erc20_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
-    if (data) {
-        try {
-            const transactiontime = (data.time) ? returntimestamp(data.time).getTime() : null;
-            if (setconfirmations === "sort") {
-                return transactiontime;
-            }
-            const erc20value = data.value ? parseFloat((data.value / (10 ** data.token_decimals)).toFixed(8)) : null,
-                txhash = data.transaction_hash || null,
-                conf = (data.block_id && latestblock) ? latestblock - data.block_id : 0,
-                recipient = data.recipient || null,
-                token_symbol = data.token_symbol || null;
-            return {
-                "ccval": erc20value,
-                "transactiontime": transactiontime,
-                "txhash": txhash,
-                "confirmations": conf,
-                "setconfirmations": setconfirmations,
-                "ccsymbol": ccsymbol,
-                "double_spend": false,
-                "instant_lock": false,
-                "recipient": recipient,
-                "token_symbol": token_symbol
-            };
-        } catch (err) {
-            console.error("Error processing Blockchair ERC20 data:", err);
-            return default_tx_data();
-        }
+function blockchair_erc20_scan_data(data, setconfirmations, ccsymbol, latestblock) {
+    const transactiontime = data.time ? returntimestamp(data.time).getTime() : null;
+    if (setconfirmations === "sort") {
+        return transactiontime;
     }
-    return default_tx_data();
+    const erc20value = data.value ? parseFloat((data.value / (10 ** data.token_decimals)).toFixed(8)) : null,
+        conf = (data.block_id && latestblock) ? latestblock - data.block_id : 0;
+    return {
+        "ccval": erc20value,
+        "transactiontime": transactiontime,
+        "txhash": data.transaction_hash || null,
+        "confirmations": conf,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": ccsymbol,
+        "recipient": data.recipient || null,
+        "token_symbol": data.token_symbol || null
+    };
 }
 
-// This function processes Blockchair API data for polling ERC20 token transactions and returns a unified transaction object.
-function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latestblock) { // poll
-    if (data) {
-        try {
-            const transaction = data.transaction,
-                tokendata = data.layer_2.erc_20[0];
-            if (transaction && tokendata) {
-                const transactiontime = transaction.time ? returntimestamp(transaction.time).getTime() : null,
-                    erc20value = tokendata.value ? parseFloat((tokendata.value / (10 ** tokendata.token_decimals)).toFixed(8)) : null,
-                    txhash = transaction.hash || null,
-                    conf = (transaction.block_id && latestblock) ? latestblock - transaction.block_id : 0;
-                return {
-                    "ccval": erc20value,
-                    "transactiontime": transactiontime,
-                    "txhash": txhash,
-                    "confirmations": conf,
-                    "setconfirmations": setconfirmations,
-                    "double_spend": false,
-                    "instant_lock": false,
-                    "ccsymbol": ccsymbol
-                };
-            }
-        } catch (err) {
-            console.error("Error processing Blockchair ERC20 data:", err);
-            return default_tx_data();
-        }
+function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latestblock) {
+    const transaction = data.transaction,
+        tokendata = data.layer_2.erc_20[0];
+    if (!transaction || !tokendata) {
+        return default_tx_data();
     }
-    return default_tx_data();
+    const transactiontime = transaction.time ? returntimestamp(transaction.time).getTime() : null,
+        erc20value = tokendata.value ? parseFloat((tokendata.value / (10 ** tokendata.token_decimals)).toFixed(8)) : null,
+        conf = (transaction.block_id && latestblock) ? latestblock - transaction.block_id : 0;
+    return {
+        "ccval": erc20value,
+        "transactiontime": transactiontime,
+        "txhash": transaction.hash || null,
+        "confirmations": conf,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": ccsymbol
+    };
 }
 
-// arbiscan
-
-// This function processes Arbiscan API data for ERC20 token transactions on Arbitrum and returns a unified transaction object.
-function omniscan_scan_data(data, setconfirmations, ccsymbol, eth_layer2) { // scan
-    if (data) {
-        try {
-            const transactiontime = data.timeStamp ? data.timeStamp * 1000 : null,
-                transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
-            if (setconfirmations === "sort") {
-                return transactiontime_utc;
-            }
-            const erc20value = data.value ? parseFloat((data.value / (10 ** data.tokenDecimal)).toFixed(8)) : null,
-                txhash = data.hash || null;
-            return {
-                "ccval": erc20value,
-                "transactiontime": transactiontime_utc,
-                "txhash": txhash,
-                "confirmations": data.confirmations,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": ccsymbol,
-                eth_layer2
-            };
-        } catch (err) {
-            console.error("Error processing Arbiscan ERC20 data:", err);
-            return default_tx_data();
-        }
+function omniscan_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
+    const transactiontime = process_timestamp(data.timeStamp, true);
+    if (setconfirmations === "sort") {
+        return transactiontime;
     }
-    return default_tx_data();
+    const erc20value = data.value ? parseFloat((data.value / (10 ** data.tokenDecimal)).toFixed(8)) : null;
+    return {
+        "ccval": erc20value,
+        "transactiontime": transactiontime,
+        "txhash": data.hash || null,
+        "confirmations": data.confirmations,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": ccsymbol,
+        "eth_layer2": eth_layer2
+    };
 }
 
-// This function processes Arbiscan API data for Ethereum transactions on Arbitrum and returns a unified transaction object.
-function omniscan_scan_data_eth(data, setconfirmations, eth_layer2) { // scan
-    if (data) {
-        try {
-            const transactiontime = data.timeStamp ? data.timeStamp * 1000 : null,
-                transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
-            if (setconfirmations === "sort") {
-                return transactiontime_utc;
-            }
-            const ethvalue = data.value ? parseFloat((data.value / 1e18).toFixed(8)) : null,
-                txhash = data.hash || null;
-            return {
-                "ccval": ethvalue,
-                "transactiontime": transactiontime_utc,
-                "txhash": txhash,
-                "confirmations": data.confirmations,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": "eth",
-                eth_layer2
-            };
-        } catch (err) {
-            console.error("Error processing Arbiscan Eth data:", err);
-            return default_tx_data();
-        }
+function omniscan_scan_data_eth(data, setconfirmations, eth_layer2) {
+    const transactiontime = process_timestamp(data.timeStamp, true);
+    if (setconfirmations === "sort") {
+        return transactiontime;
     }
-    return default_tx_data();
+    const ethvalue = data.value ? parseFloat((data.value / 1e18).toFixed(8)) : null;
+    return {
+        "ccval": ethvalue,
+        "transactiontime": transactiontime,
+        "txhash": data.hash || null,
+        "confirmations": data.confirmations,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": "eth",
+        "eth_layer2": eth_layer2
+    };
 }
 
-// This function processes Ethplorer API data for ERC20 token transactions and returns a unified transaction object.
-function ethplorer_scan_data(data, setconfirmations, ccsymbol, eth_layer2) { // scan
-    if (data) {
-        try {
-            const transactiontime = data.timestamp ? data.timestamp * 1000 : null,
-                transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
-            if (setconfirmations === "sort") {
-                return transactiontime_utc;
-            }
-            const erc20value = data.value ? parseFloat((data.value / (10 ** data.tokenInfo.decimals)).toFixed(8)) : null
-            txhash = data.transactionHash || null;
-            return {
-                "ccval": erc20value,
-                "transactiontime": transactiontime_utc,
-                "txhash": txhash,
-                "confirmations": 0,
-                "setconfirmations": false,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": ccsymbol,
-                eth_layer2
-            };
-        } catch (err) {
-            console.error("Error processing Ethplorer ERC20 data:", err);
-            return default_tx_data();
-        }
+function ethplorer_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
+    const transactiontime = process_timestamp(data.timestamp, true);
+    if (setconfirmations === "sort") {
+        return transactiontime;
     }
-    return default_tx_data();
+    const erc20value = data.value ? parseFloat((data.value / (10 ** data.tokenInfo.decimals)).toFixed(8)) : null;
+    return {
+        "ccval": erc20value,
+        "transactiontime": transactiontime,
+        "txhash": data.transactionHash || null,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": ccsymbol,
+        "eth_layer2": eth_layer2
+    };
 }
 
-// This function processes Nano RPC data for scanning or polling and returns a unified transaction object.
-function nano_scan_data(data, setconfirmations, ccsymbol, txhash) { // scan/poll
-    if (data) {
-        try {
-            const transactiontime = (data.local_timestamp) ? (data.local_timestamp * 1000) + glob_timezone : null,
-                transactiontime_utc = (transactiontime) ? transactiontime : now_utc();
-            if (setconfirmations === "sort") {
-                return transactiontime_utc;
-            }
-            const ccval = data.amount ? parseFloat((data.amount / 1e30).toFixed(8)) : null, // convert Mnano to nano
-                tx_hash = data.hash ? data.hash : txhash || null;
-            return {
-                "ccval": ccval,
-                "transactiontime": transactiontime_utc,
-                "txhash": tx_hash,
-                "confirmations": 0,
-                "setconfirmations": false,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": ccsymbol
-            };
-        } catch (err) {
-            console.error("Error processing Nano RPC data:", err);
-            return default_tx_data();
-        }
+function nano_scan_data(data, setconfirmations, ccsymbol, txhash) {
+    const transactiontime = data.local_timestamp ? (data.local_timestamp * 1000) + glob_timezone : null,
+        transactiontime_utc = transactiontime ? transactiontime : now_utc();
+    if (setconfirmations === "sort") {
+        return transactiontime_utc;
     }
-    return default_tx_data();
+    const ccval = data.amount ? parseFloat((data.amount / 1e30).toFixed(8)) : null,
+        tx_hash = data.hash ? data.hash : txhash || null;
+    return {
+        "ccval": ccval,
+        "transactiontime": transactiontime_utc,
+        "txhash": tx_hash,
+        "confirmations": 0,
+        "setconfirmations": false,
+        "ccsymbol": ccsymbol
+    };
 }
 
-// This function processes Bitcoin RPC data for polling and returns a unified transaction object.
-function bitcoin_rpc_data(data, setconfirmations, ccsymbol, address) { // poll
-    if (data) {
-        try {
-            const transactiontime = (data.time) ? (data.time * 1000) + glob_timezone : null,
-                outputs = data.vout;
-            let outputsum;
-            if (outputs) {
-                outputsum = 0;
-                $.each(outputs, function(dat, value) {
-                    const satval = value.value * 1e8,
-                        output = (value.scriptPubKey.addresses[0] === address) ? Math.abs(satval) : 0;
-                    outputsum += parseFloat(output) || 0; // sum of outputs
-                });
-            }
-            const ccval = outputs ? outputsum / 1e8 : null,
-                txhash = data.txid || null,
-                conf = data.confirmations || 0;
-            return {
-                "ccval": ccval,
-                "transactiontime": transactiontime,
-                "txhash": txhash,
-                "confirmations": conf,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": ccsymbol
-            };
-        } catch (err) {
-            console.error("Error processing Bitcoin RPC data:", err);
-            return default_tx_data();
-        }
+function bitcoin_rpc_data(data, setconfirmations, ccsymbol, address) {
+    const transactiontime = process_timestamp(data.time, true);
+
+    function process_output_value(value, addr) {
+        const satval = value.value * 1e8;
+        return value.scriptPubKey.addresses[0] === addr ? Math.abs(satval) : 0;
     }
-    return default_tx_data();
+    const outputsum = process_outputs(data.vout, address, process_output_value);
+    return {
+        "ccval": outputsum ? outputsum / 1e8 : null,
+        "transactiontime": transactiontime,
+        "txhash": data.txid || null,
+        "confirmations": data.confirmations || 0,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": ccsymbol
+    };
 }
 
-// This function processes Infura API data for Ethereum transactions and returns a unified transaction object.
-function infura_eth_poll_data(data, setconfirmations, ccsymbol, eth_layer2) { // poll
-    if (data) {
-        try {
-            const transactiontime = data.timestamp ? (data.timestamp * 1000) + glob_timezone : null,
-                ethvalue = data.value ? parseFloat((data.value / 1e18).toFixed(8)) : null,
-                txhash = data.hash || null,
-                conf = data.confirmations || 0;
-            return {
-                "ccval": ethvalue,
-                "transactiontime": transactiontime,
-                "txhash": txhash,
-                "confirmations": conf,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": ccsymbol,
-                eth_layer2
-            };
-        } catch (err) {
-            console.error("Error processing Infura Eth data:", err);
-            return default_tx_data();
-        }
-    }
-    return default_tx_data();
+function infura_erc20_poll_data(data, setconfirmations, ccsymbol, eth_layer2) {
+    const tokenValue = data.value || null,
+        decimals = data.decimals || null,
+        ccval = decimals ? parseFloat((tokenValue / 10 ** decimals).toFixed(8)) : null,
+        transactiontime = process_timestamp(data.timestamp, true);
+    return {
+        "ccval": ccval,
+        "transactiontime": transactiontime,
+        "txhash": data.hash || null,
+        "confirmations": data.confirmations || 0,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": ccsymbol,
+        "eth_layer2": eth_layer2
+    };
 }
 
-// This function processes Infura API data for ERC20 token transactions and returns a unified transaction object.
-function infura_erc20_poll_data(data, setconfirmations, ccsymbol, eth_layer2) { // poll
-    if (data) {
-        try {
-            const tokenValue = data.value || null,
-                decimals = data.decimals || null,
-                ccval = decimals ? parseFloat((tokenValue / 10 ** decimals).toFixed(8)) : null,
-                transactiontime = data.timestamp ? (data.timestamp * 1000) + glob_timezone : null,
-                txhash = data.hash || null,
-                conf = data.confirmations || 0;
-            return {
-                "ccval": ccval,
-                "transactiontime": transactiontime,
-                "txhash": txhash,
-                "confirmations": conf,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": ccsymbol,
-                eth_layer2
-            };
-        } catch (err) {
-            console.error("Error processing Infura ERC20 data:", err);
-            return default_tx_data();
-        }
-    }
-    return default_tx_data();
-}
-
-// This function processes Infura block data for Ethereum transactions and returns a unified transaction object.
 function infura_block_data(data, setconfirmations, ccsymbol, ts) {
-    if (data) {
-        try {
-            const ccval = data.value ? parseFloat((Number(data.value) / 1e18).toFixed(8)) : null,
-                transactiontime = ts ? (Number(ts) * 1000) + glob_timezone : now(),
-                transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
-            return {
-                "ccval": ccval,
-                "transactiontime": transactiontime_utc,
-                "txhash": data.hash,
-                "confirmations": 0,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": ccsymbol
-            };
-        } catch (err) {
-            console.error("Error processing Infura eth block data:", err);
-            return default_tx_data();
-        }
-    }
-    return default_tx_data();
+    const ccval = data.value ? parseFloat((Number(data.value) / 1e18).toFixed(8)) : null,
+        transactiontime = ts ? process_timestamp(Number(ts), true) : now(),
+        transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
+    return {
+        "ccval": ccval,
+        "transactiontime": transactiontime_utc,
+        "txhash": data.hash,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": ccsymbol
+    };
 }
 
-// This function processes Monero (XMR) transaction data and returns a unified transaction object.
-function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) { // scan
-    if (data) {
-        try {
-            const transactiontime = to_ts(data.timestamp);
-            if (setconfirmations === "sort") {
-                return transactiontime;
-            }
-            const recieved = data.total_received,
-                height = data.height || latestblock,
-                blocks = latestblock - height,
-                conf = (blocks < 0) ? 0 : blocks,
-                payment_id = data.payment_id || false;
-            return {
-                "ccval": recieved / 1e12,
-                "transactiontime": transactiontime,
-                "txhash": data.hash,
-                "confirmations": conf,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": ccsymbol,
-                "payment_id": payment_id
-            };
-        } catch (err) {
-            console.error("Error processing XMR data:", err);
-            return default_tx_data();
-        }
+function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) {
+    const transactiontime = to_ts(data.timestamp);
+    if (setconfirmations === "sort") {
+        return transactiontime;
     }
-    return default_tx_data();
+    const height = data.height || latestblock,
+        blocks = latestblock - height,
+        conf = (blocks < 0) ? 0 : blocks;
+    return {
+        "ccval": data.total_received / 1e12,
+        "transactiontime": transactiontime,
+        "txhash": data.hash,
+        "confirmations": conf,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": ccsymbol,
+        "payment_id": data.payment_id || false
+    };
 }
 
-// This function processes Monero (XMR) transaction data from Blockchair API and returns a unified transaction object.
 function blockchair_xmr_data(data, setconfirmations) {
-    if (data) {
-        try {
-            const transactiontime = (data.tx_timestamp) ? (data.tx_timestamp * 1000) + glob_timezone : null,
-                outputs = data.outputs;
-            let outputsum;
-            if (outputs) {
-                outputsum = 0;
-                $.each(outputs, function(dat, value) {
-                    if (value.match) {
-                        outputsum += value.amount; // sum of outputs
-                    }
-                });
-            }
-            const payment_id = data.payment_id || false;
-            return {
-                "ccval": outputsum / 1e12,
-                "transactiontime": transactiontime,
-                "txhash": data.tx_hash,
-                "confirmations": data.tx_confirmations,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": "xmr",
-                "payment_id": payment_id
-            };
-        } catch (err) {
-            console.error("Error processing Blockchair XMR data:", err);
-            return default_tx_data();
-        }
+    const transactiontime = process_timestamp(data.tx_timestamp, true);
+
+    function process_output_value(value) {
+        return value.match ? value.amount : 0;
     }
-    return default_tx_data();
+    const outputsum = process_outputs(data.outputs, null, process_output_value);
+    return {
+        "ccval": outputsum / 1e12,
+        "transactiontime": transactiontime,
+        "txhash": data.tx_hash,
+        "confirmations": data.tx_confirmations,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": "xmr",
+        "payment_id": data.payment_id || false
+    };
 }
 
-// This function processes Nimiq transaction data and returns a unified transaction object.
-function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash) { // scan
-    if (data) {
-        try {
-            const transactiontime = data.timestamp ? (data.timestamp * 1000) + glob_timezone : now_utc();
-            if (setconfirmations === "sort") {
-                return transactiontime;
-            }
-
-            const confval = confirmed ? 0 : data.confirmations || (latestblock && data.height ? Math.max(0, latestblock - data.height) : 0),
-                conf = (confval < 0) ? 0 : confval,
-                thash = txhash || data.hash || null,
-                setconf = (confirmed) ? null : setconfirmations;
-            return {
-                "ccval": data.value / 1e5,
-                "transactiontime": transactiontime,
-                "txhash": thash,
-                "confirmations": conf,
-                "setconfirmations": setconf,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": "nim"
-            };
-        } catch (err) {
-            console.error("Error processing Nimiq data:", err);
-            return default_tx_data();
-        }
+function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash) {
+    const transactiontime = process_timestamp(data.timestamp, true);
+    if (setconfirmations === "sort") {
+        return transactiontime;
     }
-    return default_tx_data();
+    const confval = confirmed ? 0 : data.confirmations ||
+        (latestblock && data.height ? Math.max(0, latestblock - data.height) : 0),
+        conf = (confval < 0) ? 0 : confval,
+        thash = txhash || data.hash || null,
+        setconf = (confirmed) ? null : setconfirmations;
+    return {
+        "ccval": data.value / 1e5,
+        "transactiontime": transactiontime,
+        "txhash": thash,
+        "confirmations": conf,
+        "setconfirmations": setconf,
+        "ccsymbol": "nim"
+    };
 }
 
-// This function processes Kaspa transaction data and returns a unified transaction object.
-function kaspa_scan_data(data, thisaddress, setconfirmations, latestblock) { // scan
-    if (data) {
-        try {
-            const transactiontime = data.block_time + glob_timezone;
-            if (setconfirmations === "sort") {
-                return transactiontime;
-            }
-            const outputs = data.outputs,
-                block_bluescore = data.accepting_block_blue_score,
-                confblocks = (latestblock) ? latestblock - block_bluescore : null;
-            let outputsum;
-            if (outputs) {
-                outputsum = 0;
-                $.each(outputs, function(dat, val) {
-                    const amount = val.amount,
-                        output = (val.script_public_key_address === thisaddress) ? Math.abs(amount) : 0;
-                    outputsum += parseFloat(output) || 0; // sum of outputs
-                });
-            }
-            const ccval = (outputs) ? outputsum / 1e8 : null,
-                conf_calc = data.is_accepted ? Math.max(0, confblocks || 0) : 0,
-                conf = latestblock ? conf_calc : 0;
-            return {
-                "ccval": ccval,
-                "transactiontime": transactiontime,
-                "txhash": data.transaction_id,
-                "confirmations": conf,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": "kas"
-            };
-        } catch (err) {
-            console.error("Error processing Kaspa data:", err);
-            return default_tx_data();
-        }
+function kaspa_scan_data(data, thisaddress, setconfirmations, latestblock) {
+    const transactiontime = data.block_time + glob_timezone;
+    if (setconfirmations === "sort") {
+        return transactiontime;
     }
-    return default_tx_data();
+
+    function process_output_value(val, addr) {
+        const amount = val.amount;
+        return val.script_public_key_address === addr ? Math.abs(amount) : 0;
+    }
+    const outputsum = process_outputs(data.outputs, thisaddress, process_output_value);
+    block_bluescore = data.accepting_block_blue_score,
+        confblocks = (latestblock) ? latestblock - block_bluescore : null,
+        conf_calc = data.is_accepted ? Math.max(0, confblocks || 0) : 0,
+        conf = latestblock ? conf_calc : 0;
+    return {
+        "ccval": outputsum ? outputsum / 1e8 : null,
+        "transactiontime": transactiontime,
+        "txhash": data.transaction_id,
+        "confirmations": conf,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": "kas"
+    };
 }
 
-// This function processes Kaspa transaction data from kas.fyi API and returns a unified transaction object.
-function kaspa_poll_fyi_data(data, thisaddress, setconfirmations) { // scan
-    if (data) {
-        try {
-            const outputs = data.outputs;
-            let outputsum;
-            if (outputs) {
-                outputsum = 0;
-                $.each(outputs, function(dat, val) {
-                    const amount = val.amount,
-                        output = (val.scriptPublicKeyAddress === thisaddress) ? Math.abs(amount) : 0;
-                    outputsum += parseFloat(output) || 0; // sum of outputs
-                });
-            }
-            const ccval = outputs ? outputsum / 1e8 : null,
-                conf = data.isAccepted || data.confirmations || 0;
-            return {
-                "ccval": ccval,
-                "transactiontime": parseFloat(data.blockTime) + glob_timezone,
-                "txhash": data.transactionId,
-                "confirmations": conf,
-                "setconfirmations": setconfirmations,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": "kas"
-            };
-        } catch (err) {
-            console.error("Error processing Kaspa FYI data:", err);
-            return default_tx_data();
-        }
+function kaspa_poll_fyi_data(data, thisaddress, setconfirmations) {
+    function process_output_value(val, addr) {
+        const amount = val.amount;
+        return val.scriptPublicKeyAddress === addr ? Math.abs(amount) : 0;
     }
-    return default_tx_data();
+    const outputsum = process_outputs(data.outputs, thisaddress, process_output_value);
+    return {
+        "ccval": outputsum ? outputsum / 1e8 : null,
+        "transactiontime": parseFloat(data.blockTime) + glob_timezone,
+        "txhash": data.transactionId,
+        "confirmations": data.isAccepted || data.confirmations || 0,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": "kas"
+    };
 }
 
-// This function processes Kaspa websocket transaction data and returns a unified transaction object.
-function kaspa_ws_data(data, thisaddress) { // scan
-    if (data) {
-        try {
-            const outputs = data.outputs;
-            let outputsum;
-            if (outputs) {
-                outputsum = 0;
-                $.each(outputs, function(dat, val) {
-                    const amount = val[1],
-                        output = (val[0] === thisaddress) ? Math.abs(amount) : 0;
-                    outputsum += parseFloat(output) || 0; // sum of outputs
-                });
-            }
-            const ccval = outputs ? outputsum / 1e8 : null,
-                txhash = q_obj(data, "verboseData.transactionId");
-            return {
-                "ccval": ccval,
-                "transactiontime": now_utc(),
-                "txhash": data.txId,
-                "confirmations": 0,
-                "setconfirmations": false,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": "kas"
-            };
-        } catch (err) {
-            console.error("Error processing Kaspa websocket data:", err);
-            return default_tx_data();
-        }
+function kaspa_ws_data(data, thisaddress) {
+    function process_output_value(val, addr) {
+        const amount = val[1];
+        return val[0] === addr ? Math.abs(amount) : 0;
     }
-    return default_tx_data();
+    const outputsum = process_outputs(data.outputs, thisaddress, process_output_value);
+    return {
+        "ccval": outputsum ? outputsum / 1e8 : null,
+        "transactiontime": now_utc(),
+        "txhash": data.txId,
+        "ccsymbol": "kas"
+    };
 }
 
-// This function processes Kaspa websocket data from kas.fyi and returns a unified transaction object.
-function kaspa_fyi_ws_data(data, thisaddress) { // scan
-    if (data) {
-        try {
-            const outputs = data.outputs;
-            let outputsum;
-            if (outputs) {
-                outputsum = 0;
-                $.each(outputs, function(dat, val) {
-                    const amount = val.value,
-                        output = (q_obj(val, "verboseData.scriptPublicKeyAddress") === thisaddress) ? Math.abs(amount) : 0;
-                    outputsum += parseFloat(output) || 0; // sum of outputs
-                });
-            }
-            const ccval = outputs ? outputsum / 1e8 : null,
-                txhash = q_obj(data, "verboseData.transactionId");
-            return {
-                "ccval": ccval,
-                "transactiontime": now_utc(),
-                "txhash": txhash,
-                "confirmations": 0,
-                "setconfirmations": false,
-                "double_spend": false,
-                "instant_lock": false,
-                "ccsymbol": "kas"
-            };
-        } catch (err) {
-            console.error("Error processing Kaspa FYI websocket data:", err);
-            return default_tx_data();
-        }
+function kaspa_fyi_ws_data(data, thisaddress) {
+    function process_output_value(val, addr) {
+        const amount = val.value;
+        return q_obj(val, "verboseData.scriptPublicKeyAddress") === addr ? Math.abs(amount) : 0;
     }
-    return default_tx_data();
+    const outputsum = process_outputs(data.outputs, thisaddress, process_output_value);
+    return {
+        "ccval": outputsum ? outputsum / 1e8 : null,
+        "transactiontime": now_utc(),
+        "txhash": q_obj(data, "verboseData.transactionId"),
+        "ccsymbol": "kas"
+    };
 }
 
-// This function processes Lightning Network transaction data and returns a unified transaction object.
-function lnd_tx_data(data) { // poll
+function lnd_tx_data(data) {
     const txtime = data.txtime || data.timestamp,
         amount = parseFloat(data.amount / 100000000000);
     return {
@@ -2973,11 +2582,23 @@ function lnd_tx_data(data) { // poll
         "txhash": "lightning" + data.hash,
         "confirmations": data.conf,
         "setconfirmations": 1,
-        "double_spend": false,
-        "instant_lock": false,
         "ccsymbol": "btc",
         "status": data.status
-    }
+    };
+}
+
+function infura_eth_poll_data(data, setconfirmations, ccsymbol, eth_layer2) {
+    const transactiontime = process_timestamp(data.timestamp, true),
+        ethvalue = data.value ? parseFloat((data.value / 1e18).toFixed(8)) : null;
+    return {
+        "ccval": ethvalue,
+        "transactiontime": transactiontime,
+        "txhash": data.hash || null,
+        "confirmations": data.confirmations || 0,
+        "setconfirmations": setconfirmations,
+        "ccsymbol": ccsymbol,
+        "eth_layer2": eth_layer2
+    };
 }
 
 // This function formats request data and returns an object with various properties related to the transaction request.

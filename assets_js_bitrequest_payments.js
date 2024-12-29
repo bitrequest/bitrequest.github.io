@@ -430,7 +430,7 @@ function loadpaymentfunction(pass) {
     if (is_openrequest() === true) { // prevent double load
         return
     }
-    if (!$.isEmptyObject(glob_sockets)) {
+    if (!empty_obj(glob_sockets)) {
         playsound(glob_funk);
         notify(translate("closingsockets"));
         return
@@ -1063,7 +1063,7 @@ function getccexchangerates(apilist, api) {
         const data = br_result(e).result,
             error_val = "unable to get " + payment + " rate";
         if (data) {
-            if (!$.isEmptyObject(data)) {
+            if (!empty_obj(data)) {
                 const status = data.status,
                     has_error = data.statusCode === 404 || data.error || (status && status.error_message);
                 if (has_error) {
@@ -3101,7 +3101,7 @@ function pendingdialog(pr) { // show pending dialog if tx is pending
         }
         adjust_paymentdialog("pending", "polling", translate("txbroadcasted"));
         const set_confirmations = request.set_confirmations || 0;
-        pick_monitor({
+        tx_polling_init({
             "txhash": smart_txhash,
             "setconfirmations": set_confirmations,
             eth_layer2

@@ -14,6 +14,7 @@
 //exists
 //br_issar
 //q_obj
+//empty_obj
 //api_proxy
 //c_apiname
 //br_result
@@ -177,6 +178,14 @@ function q_obj(obj, path) {
         console.error(e.name, e.message);
         return false;
     }
+}
+
+// Checking if object is empty
+function empty_obj(val) {
+    return $.isEmptyObject(val);
+    // future vanilla js
+    // const str = JSON.stringify(val);
+    // return str === "{}" || str === "[]";
 }
 
 // Handles API proxy requests

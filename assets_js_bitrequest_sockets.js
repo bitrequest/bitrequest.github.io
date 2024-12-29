@@ -17,7 +17,9 @@ $(document).ready(function() {
     //blockchain_btc_socket
     //blockchain_bch_socket
     //mempoolspace_btc_socket
+    //dashorg_poll
     //nano_socket
+    //nimiq_poll
     //kaspa_websocket
     //kaspa_fyi_websocket
     //handle_socket_fails
@@ -46,7 +48,7 @@ function init_socket(socket_node, address, swtch, retry) {
     if (socket_node) {
         socket_name = socket_node.name;
         if (socket_name === "poll_fallback") {
-            init_account_polling();
+            address_polling_init();
             return
         } else {
             glob_socket_attempt[sha_sub(socket_node.url + "l1", 15)] = true;
@@ -143,6 +145,10 @@ function init_socket(socket_node, address, swtch, retry) {
         nano_socket(socket_node, address);
         return
     }
+    if (payment === "nimiq") {
+        nimiq_poll();
+        return
+    }
     if (payment === "ethereum" || request.erc20) {
         init_eth_sockets(payment, socket_node, address, request_ts, request.token_contract, retry);
         return
@@ -164,10 +170,6 @@ function init_socket(socket_node, address, swtch, retry) {
         request.monitored = false;
         request.viewkey = false;
         notify(translate("notmonitored"), 500000, "yes");
-        return
-    }
-    if (payment === "nimiq") {
-        nimiq_poll();
         return
     }
     if (payment === "kaspa") {
@@ -624,7 +626,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
             popdialog(content, "canceldialog");
             return
         }
-        pick_monitor(txd);
+        tx_polling_init(txd);
     };
     websocket.onclose = function(e) {
         handle_socket_close(socket_node);
@@ -663,7 +665,7 @@ function blockchain_btc_socket(socket_node, thisaddress) {
                 txd = blockchain_ws_data(json, set_confirmations, request.currencysymbol, thisaddress);
             if (txd) {
                 closesocket();
-                pick_monitor(txd);
+                tx_polling_init(txd);
             }
         } catch (error) {
             console.error("Error parsing WebSocket message:", error);
@@ -708,7 +710,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
                 txd = blockchain_ws_data(json, set_confirmations, request.currencysymbol, thisaddress, legacy);
             if (txd) {
                 closesocket();
-                pick_monitor(txd);
+                tx_polling_init(txd);
             }
         } catch (error) {
             console.error("Error parsing WebSocket message:", error);
@@ -754,7 +756,7 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
                         txd = mempoolspace_ws_data(json, set_confirmations, request.currencysymbol, thisaddress);
                     if (txd) {
                         closesocket();
-                        pick_monitor(txd);
+                        tx_polling_init(txd);
                     }
                 }
             }
@@ -769,6 +771,11 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
         handle_socket_fails(socket_node, thisaddress);
         return
     };
+}
+
+// Initiates Dash.org polling
+function dashorg_poll() {
+    address_polling_init(5000, true);
 }
 
 // Initializes and manages dogechain.info WebSocket for Dogecoin
@@ -801,7 +808,7 @@ function dogechain_info_socket(socket_node, thisaddress) {
                     txd = dogechain_ws_data(data, set_confirmations, request.currencysymbol, thisaddress);
                 if (txd) {
                     closesocket();
-                    pick_monitor(txd);
+                    tx_polling_init(txd);
                 }
             }
         } catch (error) {
@@ -857,7 +864,7 @@ function nano_socket(socket_node, thisaddress) {
                     timestamp_difference = Math.abs(tx_timestamp - utc);
                 if (timestamp_difference < 60000) { // filter transactions longer then a minute ago
                     closesocket();
-                    pick_monitor(txd);
+                    tx_polling_init(txd);
                 }
             }
         } catch (error) {
@@ -871,6 +878,11 @@ function nano_socket(socket_node, thisaddress) {
         handle_socket_fails(socket_node, thisaddress);
         return
     };
+}
+
+// Initiates Nimiq polling
+function nimiq_poll() {
+    address_polling_init(5000, true);
 }
 
 // Initializes and manages Kaspa WebSocket
@@ -904,7 +916,7 @@ function kaspa_websocket(socket_node, thisaddress) {
                         const txd = kaspa_ws_data(value, thisaddress);
                         if (txd.ccval) {
                             closesocket();
-                            pick_monitor(txd);
+                            tx_polling_init(txd);
                             return
                         }
                     });
@@ -958,7 +970,7 @@ function kaspa_fyi_websocket(socket_node, thisaddress) {
                             const txd = kaspa_fyi_ws_data(value, thisaddress);
                             if (txd.ccval) {
                                 closesocket();
-                                pick_monitor(txd);
+                                tx_polling_init(txd);
                                 return
                             }
                         });
@@ -981,6 +993,190 @@ function kaspa_fyi_websocket(socket_node, thisaddress) {
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress);
         return
+    };
+}
+
+// Initializes and manages Alchemy WebSocket for Ethereum
+function alchemy_eth_websocket(socket_node, thisaddress) {
+    const provider_url = socket_node.url,
+        al_id = get_alchemy_apikey(),
+        provider = provider_url + al_id,
+        ws_id = sha_sub(provider, 10);
+    if (glob_sockets[ws_id]) {
+        return
+    }
+    const websocket = glob_sockets[ws_id] = new WebSocket(provider);
+    websocket.onopen = function(e) {
+        socket_info(socket_node, true);
+        const ping_event = JSON.stringify({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "eth_subscribe",
+            "params": ["alchemy_pendingTransactions", {
+                "toAddress": [thisaddress],
+                "hashesOnly": false
+            }]
+        });
+        websocket.send(ping_event);
+        glob_pinging[thisaddress] = setInterval(function() {
+            websocket.send(ping_event);
+            poll_animate();
+        }, 55000);
+    };
+    websocket.onmessage = function(e) {
+        try {
+            const data = JSON.parse(e.data),
+                result = q_obj(data, "params.result");
+            if (result && result.hash && str_match(result.to, thisaddress)) {
+                const set_confirmations = request.set_confirmations || 0,
+                    txd = infura_block_data(result, set_confirmations, request.currencysymbol);
+                closesocket();
+                tx_polling_init(txd);
+            }
+        } catch (error) {
+            console.error("Error parsing WebSocket message:", error);
+        }
+    };
+    websocket.onclose = function(e) {
+        handle_socket_close(socket_node);
+    };
+    websocket.onerror = function(e) {
+        handle_socket_fails(socket_node, thisaddress, ws_id);
+        return
+    };
+}
+
+// Initializes and manages WebSocket for Ethereum and Ethereum-like networks
+function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
+    const provider_url = socket_node.url,
+        if_id = get_infura_apikey(provider_url),
+        provider = provider_url + if_id,
+        ws_id = sha_sub(provider, 10);
+    if (glob_sockets[ws_id]) {
+        return
+    }
+    const websocket = glob_sockets[ws_id] = new WebSocket(provider);
+    websocket.onopen = function(e) {
+        socket_info(socket_node, true);
+        const ping_event = JSON.stringify({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "eth_subscribe",
+            "params": ["newHeads"]
+        });
+        websocket.send(ping_event);
+        glob_pinging[thisaddress] = setInterval(function() {
+            websocket.send(ping_event);
+            poll_animate();
+        }, 55000);
+    };
+    websocket.onmessage = function(e) {
+        try {
+            const data = JSON.parse(e.data),
+                result = q_obj(data, "params.result");
+            if (result && result.hash) {
+                const api_dat = helper ? q_obj(helper, "api_info.data") : null;
+                if (!api_dat) return;
+                const rpc_url = api_dat.default === false ? api_dat.url : rpcurl;
+                api_proxy(eth_params(rpc_url, 25, "eth_getBlockByHash", [result.hash, true])).done(function(res) {
+                    const rslt = inf_result(res),
+                        transactions = rslt.transactions;
+                    if (transactions) {
+                        const set_confirmations = request.set_confirmations || 0;
+                        $.each(transactions, function(i, val) {
+                            const txda = infura_block_data(val, set_confirmations, request.currencysymbol, result.timestamp);
+                            if (str_match(val.to, thisaddress) === true) {
+                                const txd = infura_block_data(val, set_confirmations, request.currencysymbol, result.timestamp);
+                                closesocket();
+                                tx_polling_init(txd);
+                                return
+                            }
+                        });
+                    }
+                })
+            }
+        } catch (error) {
+            console.error("Error parsing WebSocket message:", error);
+        }
+    };
+    websocket.onclose = function(e) {
+        handle_socket_close(socket_node);
+    };
+    websocket.onerror = function(e) {
+        handle_socket_fails(socket_node, thisaddress, ws_id);
+        return
+    };
+}
+
+// Initializes and manages WebSocket for ERC20 tokens on Ethereum and Ethereum-like networks
+function web3_erc20_websocket(socket_node, thisaddress, contract) {
+    const l2network = socket_node.network,
+        nwid = l2network || "",
+        ws_id = contract + nwid;
+    if (glob_sockets[ws_id]) {
+        return
+    }
+    const provider_url = complete_url(socket_node.url),
+        if_id = get_infura_apikey(provider_url),
+        provider = provider_url + if_id;
+    const websocket = glob_sockets[ws_id] = new WebSocket(provider);
+    websocket.onopen = function(e) {
+        socket_info(socket_node, true);
+        const ping_event = JSON.stringify({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "eth_subscribe",
+            "params": [
+                "logs",
+                {
+                    "address": contract,
+                    "topics": []
+                }
+            ]
+        });
+        websocket.send(ping_event);
+    };
+    websocket.onmessage = function(e) {
+        try {
+            const dat = JSON.parse(e.data),
+                result = q_obj(dat, "params.result");
+            if (result) {
+                if (result.topics) {
+                    const topic_address = result.topics[2];
+                    if (!topic_address || str_match(topic_address, thisaddress.slice(3)) !== true) return;
+                    const contractdata = result.data,
+                        cd_hex = contractdata.slice(2),
+                        token_value = hexToNumberString(cd_hex),
+                        token_decimals = request.decimals,
+                        ccval = parseFloat((token_value / Math.pow(10, token_decimals)).toFixed(8));
+                    if (ccval === Infinity) return;
+                    const set_confirmations = request.set_confirmations || 0,
+                        txd = {
+                            "ccval": ccval,
+                            "transactiontime": now_utc(),
+                            "txhash": result.transactionHash,
+                            "confirmations": 0,
+                            "setconfirmations": set_confirmations,
+                            "ccsymbol": request.currencysymbol,
+                            "eth_layer2": l2network
+                        }
+                    if (l2network) {
+                        glob_l2s = {};
+                        set_l2_status(socket_node, true);
+                    }
+                    tx_polling_init(txd);
+                }
+            }
+        } catch (error) {
+            console.error("Error parsing WebSocket message:", error);
+        }
+    };
+    websocket.onclose = function(e) {
+        handle_socket_close(socket_node);
+        handle_socket_fails(socket_node, thisaddress, ws_id, l2network);
+    };
+    websocket.onerror = function(e) {
+        handle_socket_fails(socket_node, thisaddress, ws_id, l2network);
     };
 }
 
@@ -1011,6 +1207,7 @@ function handle_socket_fails(socket_node, thisaddress, socketid, l2) {
             }
         }
         const error_message = "unable to connect to " + socket_node.name;
+        console.log(error_message);
         socket_info(socket_node, false);
     }
 }

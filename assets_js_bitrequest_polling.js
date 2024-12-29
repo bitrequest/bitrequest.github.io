@@ -1,31 +1,24 @@
 // pick API / RPC
 
-//pick_monitor
-//api_monitor
-//init_account_polling
-//account_polling
+//tx_polling_init
+//tx_polling
+//address_polling_init
+//address_polling
 //init_xmr_node
 //ping_xmr_node
-//nimiq_poll
 //confirmations
 //reset_recent
 
 // pick API / RPC
 // Initializes the payment monitoring process for a transaction
-function pick_monitor(tx_data, api_data) {
-    const scanning = is_scanning();
-    if (scanning) {
-        glob_block_scan += 1;
-        playsound(glob_funk);
-        return
-    }
+function tx_polling_init(tx_data, api_data) {
     glob_api_attempts = {};
     glob_rpc_attempts = {};
-    api_monitor(tx_data, api_data);
+    tx_polling(tx_data, api_data);
 }
 
 // Monitors the transaction status using the provided API data
-function api_monitor(tx_data, api_dat) {
+function tx_polling(tx_data, api_dat) {
     const gets = geturlparameters();
     if (gets.xss) {
         return
@@ -39,13 +32,13 @@ function api_monitor(tx_data, api_dat) {
             return
         }
         const eth_layer2 = tx_data.eth_layer2,
-            api_data = eth_layer2 ? api_dat : api_dat || q_obj(helper, "api_info.data"),
-            retry = api_data ? true : false,
+            api_data = eth_layer2 ? api_dat : api_dat || q_obj(helper, "api_info.data");
+        const retry = api_data ? true : false,
             rdo = {
                 "requestid": request.requestid,
                 "pending": "polling",
                 "txdat": tx_data,
-                "source": "poll",
+                "source": "tx_polling",
                 "setconfirmations": request.set_confirmations,
                 "cachetime": 25
             },
@@ -74,23 +67,27 @@ function api_monitor(tx_data, api_dat) {
     };
 }
 
-function init_account_polling(time_out, socket, cache, rpc, next_api) {
+function address_polling_init(time_out, socket, cache, rpc, next_api) {
     const ping_id = request.address,
         timeout = time_out || 7000,
         api_data = next_api || q_obj(helper, "api_info.data");
-    if (next_api) {
-        clearpinging(ping_id);
-        account_polling(timeout, socket, cache, rpc, api_data);
+    if (api_data) {
+        if (next_api) {
+            clearpinging(ping_id);
+            address_polling(timeout, socket, cache, rpc, api_data);
+        }
+        socket_info({
+            "url": api_data.name
+        }, true);
+        glob_pinging[ping_id] = setInterval(function() {
+            address_polling(timeout, socket, cache, rpc, api_data);
+        }, timeout);
+        return
     }
-    socket_info({
-        "url": ""
-    }, true);
-    glob_pinging[ping_id] = setInterval(function() {
-        account_polling(timeout, socket, cache, rpc, api_data);
-    }, timeout);
+    notify(translate("websocketoffline"), 500000, "yes");
 }
 
-function account_polling(timeout, socket, cache, rpc, api_data) {
+function address_polling(timeout, socket, cache, rpc, api_data) {
     const rq_init = request.rq_init,
         request_ts_utc = rq_init + glob_timezone,
         request_ts = request_ts_utc - 15000, // 15 second margin
@@ -102,7 +99,7 @@ function account_polling(timeout, socket, cache, rpc, api_data) {
             "setconfirmations": set_confirmations,
             "pending": "scanning",
             "erc20": request.erc20,
-            "source": "acc_polling",
+            "source": "addr_polling",
             socket,
             timeout,
             cachetime
@@ -230,7 +227,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
                             confirmations(txd, true);
                             if (set_confirmations > 0) {
                                 clearpinging(address);
-                                pick_monitor(txd, {
+                                tx_polling_init(txd, {
                                     "api": true,
                                     "name": "blockchair_xmr",
                                     "display": true
@@ -245,18 +242,6 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
         clearpinging(address);
         notify(translate("websocketoffline"), 500000, "yes");
     });
-}
-
-// ETH Layer2's
-
-// Initiates Nimiq polling
-function nimiq_poll() {
-    init_account_polling(5000, true);
-}
-
-// Initiates Dash.org polling
-function dashorg_poll() {
-    init_account_polling(5000, true);
 }
 
 // Handles transaction confirmations and updates the UI accordingly
@@ -397,7 +382,7 @@ function reset_recent() {
                 if (lsrr_arr[request.payment]) {
                     delete lsrr_arr[request.payment];
                     br_set_local("recent_requests", lsrr_arr, true);
-                    if ($.isEmptyObject(lsrr_arr)) {
+                    if (empty_obj(lsrr_arr)) {
                         toggle_rr(false);
                     }
                 }

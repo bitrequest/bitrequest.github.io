@@ -1626,8 +1626,8 @@ function csvexport_trigger() {
     $(document).on("click", "#csvexport", function() {
         const rq_arr = br_get_local("requests", true),
             archive_arr = br_get_local("archive", true),
-            has_requests = rq_arr && !$.isEmptyObject(rq_arr),
-            has_archive = archive_arr && !$.isEmptyObject(archive_arr);
+            has_requests = rq_arr && !empty_obj(rq_arr),
+            has_archive = archive_arr && !empty_obj(archive_arr);
         if (has_requests || has_archive) {
             const filename = "bitrequest_csv_export_" + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_").replace(/:/g, "_") + ".csv",
                 show_archive = has_requests ? "false" : "true",
@@ -1736,7 +1736,7 @@ function submit_csvexport() {
 function complile_csv() {
     const rq_arr = br_get_local("requests", true),
         archive_arr = br_get_local("archive", true),
-        has_archive = archive_arr && !$.isEmptyObject(archive_arr),
+        has_archive = archive_arr && !empty_obj(archive_arr),
         csv_arr = [],
         options_li = $("#exportcsvbox #ecsv_options"),
         op_from = options_li.find("li#escv_from .switchpanel"),

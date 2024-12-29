@@ -143,12 +143,17 @@ $(document).ready(function() {
 
 // Checks if BigInt is supported in the current environment
 function hasbigint() {
-    try {
-        BigInt("1");
-        return true;
-    } catch (error) {
-        return false;
-    }
+    // Check both existence and functionality
+    return typeof BigInt === "function" &&
+        typeof BigInt.prototype.toString === "function" &&
+        (() => {
+            try {
+                // More comprehensive test
+                return BigInt("9007199254740991") + BigInt(1) === BigInt("9007199254740992");
+            } catch {
+                return false;
+            }
+        })();
 }
 
 // Determines if the current session is a trial based on a timestamp
