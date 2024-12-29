@@ -13,7 +13,7 @@ const l = 7237005577332262213973186563042994240857116359379907606001950938285454
             alphabet_size = alphabet.length,
             full_block_size = 8,
             full_encoded_block_size = 11,
-            UINT64_MAX = 2n ** 64n;
+            uint64_max = 2n ** 64n;
 
         // Decodes a single block of Base58 encoded data
         b58.decode_block = function(data, buf, index) {
@@ -31,12 +31,12 @@ const l = 7237005577332262213973186563042994240857116359379907606001950938285454
                 if (digit < 0) {
                     throw "Invalid symbol";
                 }
-                const product = order.multiply(digit).add(res_num);
-                if (product.compare(UINT64_MAX) === 1) {
+                const product = (order * BigInt(digit)) + BigInt(res_num);
+                if (product > uint64_max) { // UINT64_MAX as BigInt
                     throw "Overflow";
                 }
                 res_num = product;
-                order = order.multiply(alphabet_size);
+                order = order * BigInt(alphabet_size);
             }
             if (res_size < full_block_size && ((2n ** BigInt(8 * res_size)) <= res_num)) {
                 throw "Overflow 2";
@@ -208,8 +208,8 @@ function uint64_to_8be(num, size) {
     }
     const twopow8 = 2n ** 8n;
     for (let i = size - 1; i >= 0; i--) {
-        res[i] = num.remainder(twopow8).toJSValue();
-        num = num.divide(twopow8);
+        res[i] = Number(num % twopow8); // Convert remainder to Number
+        num = num / twopow8; // BigInt division
     }
     return res;
 }
