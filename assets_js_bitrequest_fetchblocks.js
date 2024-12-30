@@ -1584,6 +1584,7 @@ function insight_fetch_dash(rd, api_data, rdo) {
                     const sortlist = sort_by_date(insight_scan_data, all_tx);
                     $.each(sortlist, function(dat, value) {
                         const txd = insight_scan_data(value, rdo.setconfirmations, rd.address);
+                        console.log(txd);
                         if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
                             txdat = txd;
                             if (rdo.source === "list") {
@@ -2182,15 +2183,20 @@ function insight_scan_data(data, setconfirmations, address) {
     if (setconfirmations === "sort") {
         return transactiontime_utc;
     }
-
-    function process_output_value(value, addr) {
-        const addrlist = q_obj(value, "scriptPubKey.addresses");
-        if (addrlist && addrlist.indexOf(addr) > -1) {
-            return parseFloat(value.value) || 0;
-        }
-        return 0;
+    const outputs = data.vout,
+        decoded = b58check_decode(address),
+        pk_hash = decoded.slice(2), // Remove version byte
+        spk_hex1 = "76a914" + pk_hash + "88ac";
+    let outputsum = null;
+    if (outputs) {
+        outputsum = 0;
+        $.each(outputs, function(dat, value) {
+            const spk_hex2 = q_obj(value, "scriptPubKey.hex");
+            if (str_match(spk_hex1, spk_hex2)) {
+                outputsum += parseFloat(value.value) || 0; // sum of outputs
+            }
+        });
     }
-    const outputsum = process_outputs(data.vout, address, process_output_value);
     return {
         "ccval": outputsum,
         "transactiontime": transactiontime_utc,
