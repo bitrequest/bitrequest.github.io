@@ -86,9 +86,6 @@ $(document).ready(function() {
     //finish_seed
     //seed_callback
     //deactivate_xpubs
-
-    // Test triggers
-    //derive_addone_trigger();
     //derive_addone
     //get_latest_index
     //key_cc
@@ -1091,13 +1088,6 @@ function get_latest_index(alist) {
     return Math.max.apply(Math, index);
 }
 
-// Sets up event listener for adding a new address
-function derive_addone_trigger() {
-    $(document).on("click", ".addonexx", function() {
-        derive_addone($(this).attr("data-currency"), true);
-    })
-}
-
 // Derives and adds a new address for a given currency
 function derive_addone(currency, extra) {
     const dd = derive_data(currency, extra);
@@ -1282,7 +1272,15 @@ function derive_obj(source, keycc, coindat, bip32, add) {
 
 // Checks if there's a pending request for the given address data
 function ch_pending(dat) {
-    return $("#requestlist li[data-address='" + dat.address + "'][data-pending='scanning'][data-cmcid='" + dat.cmcid + "']").length > 0;
+    const rqli = $("#requestlist li.rqli[data-address='" + dat.address + "'][data-pending='scanning'][data-cmcid='" + dat.cmcid + "']");
+    if (rqli.length) {
+        const ln_dat = rqli.data("lightning");
+        if (ln_dat && ln_dat.hybrid === false) {
+            return false;
+        }
+        return true;
+    }
+    return false;
 }
 
 // Counts the number of unique elements in an array

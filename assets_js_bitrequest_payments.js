@@ -2369,7 +2369,7 @@ function sharebutton() {
     $(document).on("click", "#sharebutton", function() {
         const thisbttn = $(this);
         if (request.payment === "bitcoin" && helper.lnd_status) {
-            const lnd_only = glob_paymentdialogbox.attr("data-lswitch") === "lnd_ao" ? $("#fallback_address").is(":visible") ? !$("#fallback_address .switchpanel").hasClass("true") : true : false;
+            const lnd_only = is_ln_only();
             validaterequestdata(lnd_only);
             setTimeout(function() { // wait for url to change
                 share(thisbttn);
@@ -2841,7 +2841,8 @@ function saverequest(direct) {
         requesttimestamp = thispaymenttimestamp || (dataobject && dataobject.ts) || (thisrequesttype === "incoming" ? null : timestamp), // null is unknown timestamp
         unhashed = thispayment + thiscurrency + amount_string + thisaddress + request.requestname + request.requesttitle + sc_string + ln_id,
         savedtxhash = request.txhash,
-        requestid = thisrequesttype === "local" && savedtxhash ? hashcode(savedtxhash) : hashcode(unhashed),
+        is_local = thisrequesttype === "local",
+        requestid = is_local && savedtxhash ? hashcode(savedtxhash) : hashcode(unhashed),
         requestcache = br_get_local("requests", true),
         requestid_param = gets.requestid,
         checkout = direct !== "init" && thisrequesttype === "checkout",
@@ -2960,13 +2961,13 @@ function saverequest(direct) {
             if (coinsettings) {
                 const reuse = coinsettings["Reuse address"];
                 if (reuse) {
-                    const addressli = filter_addressli(thispayment, "address", thisaddress);
-                    addressli.addClass("used").data("used", true);
                     if (reuse.selected === false) {
                         // Derive new address
-                        if (hybrid === false) {
+                        if (hybrid === false || is_ln_only()) {
                             // Do nothing
                         } else {
+                            const addressli = filter_addressli(thispayment, "address", thisaddress);
+                            addressli.addClass("used").data("used", true);
                             saveaddresses(thispayment, false);
                             derive_addone(thispayment);
                         }
