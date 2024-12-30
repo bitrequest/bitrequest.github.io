@@ -1584,7 +1584,6 @@ function insight_fetch_dash(rd, api_data, rdo) {
                     const sortlist = sort_by_date(insight_scan_data, all_tx);
                     $.each(sortlist, function(dat, value) {
                         const txd = insight_scan_data(value, rdo.setconfirmations, rd.address);
-                        console.log(txd);
                         if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
                             txdat = txd;
                             if (rdo.source === "list") {
