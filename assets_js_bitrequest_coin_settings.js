@@ -56,7 +56,8 @@ $(document).ready(function() {
     //add_apikey;
     submit_apikey();
 
-    reset_coinsettings();
+    reset_coinsettings_trigger();
+    //reset_coinsettings
     //reset_coinsettings_function
 });
 
@@ -1322,18 +1323,18 @@ function submit_apikey() {
 }
 
 // Function to reset coin settings
-function reset_coinsettings() {
+function reset_coinsettings_trigger() {
     $(document).on("click", ".reset_cc_settings", function() {
         const thistrigger = $(this),
             currency = thistrigger.attr("data-currency");
         popdialog("<h2 class='icon-bin'>" + translate("resetdialog", {
             "currency": currency
-        }) + "</h2>", "reset_coinsettings_function", thistrigger);
+        }) + "</h2>", "reset_coinsettings", thistrigger);
     })
 }
 
-// Function to perform coin settings reset
-function reset_coinsettings_function(trigger) {
+// Perform coin settings reset
+function reset_coinsettings(trigger) {
     const currency = trigger.attr("data-currency"),
         result = confirm(translate("resetconfirm", {
             "currency": currency
@@ -1341,6 +1342,11 @@ function reset_coinsettings_function(trigger) {
     if (result !== true) {
         return
     }
+    reset_coinsettings_function(currency);
+}
+
+// Function to perform coin settings reset
+function reset_coinsettings_function(currency) {
     const current_settings = br_get_local(currency + "_settings", true);
     if (current_settings) {
         const ln_settings = currency === "bitcoin" ? current_settings["Lightning network"] : false,

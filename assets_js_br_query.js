@@ -23,7 +23,6 @@
 //tofixedspecial
 //get_search
 //renderlnconnect
-//is_ln_only
 //cleanb64
 //b64urldecode
 //geturlparameters
@@ -333,11 +332,6 @@ function renderlnconnect(str) {
         rest_url = search.lnconnect ? atob(search.lnconnect) : (proto === "://") ? "https://" + bare_url : proto + bare_url;
     search.resturl = rest_url;
     return search;
-}
-
-// Checks if request is hybrid or lightning only
-function is_ln_only() {
-    return glob_paymentdialogbox.attr("data-lswitch") === "lnd_ao" ? $("#fallback_address").is(":visible") ? !$("#fallback_address .switchpanel").hasClass("true") : true : false;
 }
 
 // Cleans base64 encoded string for URL use

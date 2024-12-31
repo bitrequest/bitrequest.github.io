@@ -336,7 +336,7 @@ function confirmations(tx_data, direct, ln) {
                             brheader.text(status_text);
                             request.status = "paid",
                                 request.pending = "polling";
-                            saverequest(direct);
+                            saverequest(direct, ln);
                             $("span#ibstatus").fadeOut(500);
                             closenotify();
                             new_status = "paid";
@@ -349,7 +349,7 @@ function confirmations(tx_data, direct, ln) {
                             brheader.text(bctext);
                             request.status = "pending",
                                 request.pending = "polling";
-                            saverequest(direct);
+                            saverequest(direct, ln);
                         }
                         brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
                         return new_status;
@@ -359,7 +359,7 @@ function confirmations(tx_data, direct, ln) {
                         pmd.addClass("transacting").attr("data-status", "insufficient");
                         request.status = "insufficient",
                             request.pending = "scanning";
-                        saverequest(direct);
+                        saverequest(direct, ln);
                         brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
                         new_status = "insufficient";
                     }

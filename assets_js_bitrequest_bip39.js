@@ -96,7 +96,6 @@ $(document).ready(function() {
     //derive_add_address
     //derive_data
     //derive_obj
-    //ch_pending
     //get_uniques
     copy_phrase();
     show_phrase();
@@ -1266,19 +1265,6 @@ function derive_obj(source, keycc, coindat, bip32, add) {
         }
         this_data[source + "id"] = seedid;
         return this_data;
-    }
-    return false;
-}
-
-// Checks if there's a pending request for the given address data
-function ch_pending(dat) {
-    const rqli = $("#requestlist li.rqli[data-address='" + dat.address + "'][data-pending='scanning'][data-cmcid='" + dat.cmcid + "']");
-    if (rqli.length) {
-        const ln_dat = rqli.data("lightning");
-        if (ln_dat && ln_dat.hybrid === false) {
-            return false;
-        }
-        return true;
     }
     return false;
 }

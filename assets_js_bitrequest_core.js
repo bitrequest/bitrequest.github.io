@@ -4528,12 +4528,20 @@ function saveaddresses(currency, add) {
         const addressboxpush = addresses.map(function() {
             return $(this).data();
         }).get();
-        br_set_local("cc_" + currency, addressboxpush, true)
-    } else {
-        br_remove_local("cc_" + currency);
-        br_remove_local(currency + "_settings");
+        br_set_local("cc_" + currency, addressboxpush, true);
+        updatechanges("addresses", add);
+        return
     }
-    updatechanges("addresses", add);
+    br_remove_local("cc_" + currency);
+    const coindata = getcoindata(currency);
+    if (coindata) {
+        if (coindata.erc20) {
+            br_remove_local(currency + "_settings");
+            updatechanges("addresses", add);
+            return
+        }
+    }
+    reset_coinsettings_function(currency);
 }
 
 // Saves the list of requests to local storage

@@ -104,6 +104,7 @@ $(document).ready(function() {
     showapistats();
     hideapistats();
     sharebutton();
+    //is_ln_only
     //share
     //shorten_url
     //bitly_shorten
@@ -2387,6 +2388,11 @@ function sharebutton() {
     });
 }
 
+// Checks if request is hybrid or lightning only
+function is_ln_only() {
+    return glob_paymentdialogbox.attr("data-lswitch") === "lnd_ao" ? $("#fallback_address").is(":visible") ? !$("#fallback_address .switchpanel").hasClass("true") : true : false;
+}
+
 // Handles sharing the payment request
 function share(thisbutton) {
     if (thisbutton.hasClass("sbactive")) {
@@ -2408,7 +2414,6 @@ function share(thisbutton) {
             thisrequestname = thisdata ? dataobject.n : $("#accountsettings").data("selected"),
             thisrequesttitle = thisdata ? dataobject.t : "",
             lightning = thisdata ? !!dataobject.imp : false,
-            hybrid = lightning && thisaddress !== "lnurl",
             newdatastring = thisdata ? "&d=" + dataparam : "", // construct data param if exists
             isipfs = glob_thishostname.includes("ipfs") || glob_thishostname.includes("bitrequest.crypto"),
             shared_host = isipfs ? glob_c_host : "https://bitrequest.github.io", // check for IFPS
@@ -2815,7 +2820,7 @@ function open_tx(tx_node) {
 // ** Save and update request **
 
 // Saves or updates a payment request, handling various scenarios including local, incoming, and outgoing requests
-function saverequest(direct) {
+function saverequest(direct, ln) {
     const gets = geturlparameters();
     if (gets.xss) {
         return
@@ -2831,7 +2836,7 @@ function saverequest(direct) {
         ln_id = ln_info ? ln_info.pid : "",
         sc_string = ln_info ? "1" : (set_confirmations ? set_confirmations.toString() : "0"),
         amount_string = thisamount ? thisamount.toString() : "0",
-        thisaddress = gets.address,
+        thisaddress = ln ? "lnurl" : gets.address,
         thisdata = gets.d,
         thismeta = gets.m,
         timestamp = now_utc(), // UTC
@@ -2847,19 +2852,19 @@ function saverequest(direct) {
         requestid_param = gets.requestid,
         checkout = direct !== "init" && thisrequesttype === "checkout",
         this_iscrypto = thiscurrency === currencysymbol,
-        ln = dataobject && dataobject.imp,
+        lightning = dataobject && dataobject.imp,
         eth_layer2 = request.eth_layer2,
         eth_l2s = request.eth_l2s;
     let this_requestid,
-        hybrid = true,
+        ln_only = false,
         invoice = false,
-        lightning = false;
+        ln_obj = false;
     if (ln_info) {
         if (thisaddress === "lnurl") {
-            hybrid = false;
+            ln_only = true;
         }
         invoice = ln_info.invoice,
-            lightning = thisrequesttype === "outgoing" && !ln ? false : {
+            ln_obj = thisrequesttype === "outgoing" && !lightning ? false : {
                 "imp": ln_info.imp,
                 "host": ln_info.host,
                 "key": ln_info.key,
@@ -2868,7 +2873,7 @@ function saverequest(direct) {
                 "pw": ln_info.pw,
                 "invoice": invoice,
                 "proxy_host": ln_info.proxy_host,
-                "hybrid": hybrid
+                "hybrid": !ln_only
             };
     }
     if (requestcache) {
@@ -2894,7 +2899,7 @@ function saverequest(direct) {
                     "txhash": savedtxhash,
                     "confirmations": request.confirmations,
                     "pending": request.pending,
-                    "lightning": lightning,
+                    "lightning": ln_obj,
                     eth_layer2,
                     eth_l2s
                 };
@@ -2908,7 +2913,7 @@ function saverequest(direct) {
             } else {
                 if (pendingstate === "polling" || requestli.hasClass("expired")) {
                     pendingdialog(requestli);
-                    if (lightning) {
+                    if (ln_obj) {
                         return false;
                     }
                     return "nosocket";
@@ -2927,7 +2932,8 @@ function saverequest(direct) {
         }
     } else {
         //overwrite global request object
-        request.requestid = requestid,
+        request.address = thisaddress,
+            request.requestid = requestid,
             request.iscrypto = this_iscrypto,
             request.fiatcurrency = this_iscrypto ? request.localcurrency : thiscurrency,
             request.currencyname = $("#xratestats .cpool[data-currency='" + thiscurrency + "']").attr("data-currencyname"),
@@ -2947,7 +2953,7 @@ function saverequest(direct) {
                     "requestdate": requesttimestamp,
                     "rqdata": rqdatahash,
                     "rqmeta": rqmetahash,
-                    "lightning": lightning
+                    "lightning": ln_obj
                 });
             delete append_object.coinsettings; // don't save coinsettings in request
             appendrequest(append_object);
@@ -2963,9 +2969,7 @@ function saverequest(direct) {
                 if (reuse) {
                     if (reuse.selected === false) {
                         // Derive new address
-                        if (hybrid === false || is_ln_only()) {
-                            // Do nothing
-                        } else {
+                        if (!ln_only) {
                             const addressli = filter_addressli(thispayment, "address", thisaddress);
                             addressli.addClass("used").data("used", true);
                             saveaddresses(thispayment, false);
@@ -3001,7 +3005,7 @@ function saverequest(direct) {
                 "set_confirmations": set_confirmations,
                 "transactiontime": tpts,
                 "pending": request.pending,
-                "lightning": lightning,
+                "lightning": ln_obj,
                 "erc20": request.erc20,
                 eth_layer2,
                 eth_l2s
