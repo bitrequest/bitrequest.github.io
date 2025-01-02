@@ -8,6 +8,7 @@ $(document).ready(function() {
     //trigger_requeststates
     //get_requeststates
     //getinputs
+    //continue_select_api_rpc
     //clearscan
     //check_api
 
@@ -31,6 +32,7 @@ $(document).ready(function() {
     //get_rpc_inputs_init
     //get_rpc_inputs
     //select_rpc
+    //continue_select_rpc
     //handle_rpc_fails
     //get_next_rpc
     //scan_tx_li
@@ -141,17 +143,7 @@ function get_requeststates(trigger, active_requests) {
                             transactionlist = thislist.find(".transactionlist");
                         statuspanel.text(value.status);
                         transactionlist.empty();
-                        $.each(value.transactions, function(data, value) {
-                            const tx_listitem = append_tx_li(value, false);
-                            if (tx_listitem) {
-                                tx_listitem.data(value);
-                                const h_string = data_title(value);
-                                if (h_string) {
-                                    tx_listitem.append(hs_for(h_string)).attr("title", h_string);
-                                }
-                                transactionlist.append(tx_listitem);
-                            }
-                        });
+                        add_historical_data(transactionlist, value.transactions);
                         thislist.addClass("pmstatloaded");
                     }
                 }
@@ -208,6 +200,16 @@ function getinputs(rd, dl) {
     }
 }
 
+// Continue after scanning lightning transaction
+function continue_select_api_rpc(rd, api_data, rdo) {
+    const is_api = api_data.api === true;
+    if (is_api) {
+        continue_select_api(rd, api_data, rdo);
+        return
+    }
+    continue_select_rpc(rd, api_data, rdo);
+}
+
 // Clears scanning status
 function clearscan() {
     $("#requestlist .rqli").removeClass("scan"); // prevent triggerblock
@@ -262,19 +264,19 @@ function get_api_inputs(rd, api_data, rdo, retr) {
 }
 
 // Selects the appropriate API based on the request data and API information
-function select_api(rd, api_dat, rdo, retry) {
-    if (q_obj(api_dat, "network") || q_obj(rdo, "txdat.eth_layer2")) {
-        const api_data = retry ? api_dat : null; // leave api_data blank on first call for L2
-        query_ethl2_api(rd, rdo, api_data);
+function select_api(rd, api_data, rdo, retry) {
+    if (q_obj(api_data, "network") || q_obj(rdo, "txdat.eth_layer2")) {
+        const api_dat = retry ? api_data : null; // leave api_data blank on first call for L2
+        query_ethl2_api(rd, rdo, api_dat);
         return
     }
     const rq_id = rd.requestid || "";
-    glob_api_attempts[sha_sub(rq_id + api_dat.url, 15)] = true;
+    glob_api_attempts[sha_sub(rq_id + api_data.url, 15)] = true;
     if (rd.lightning && rdo.source === "list") {
-        lightning_fetch(rd, api_dat, rdo);
+        lightning_fetch(rd, api_data, rdo);
         return
     }
-    continue_select_api(rd, api_dat, rdo);
+    continue_select_api(rd, api_data, rdo);
 }
 
 function continue_select_api(rd, api_data, rdo) {
@@ -640,13 +642,18 @@ function api_callback(rdo) {
             txli = transactionli.children("li");
         if (txli.length) {
             const transactionpush = [];
+            console.log("add callback");
             txli.each(function() {
                 const thisnode = $(this),
                     thisdata = thisnode.data();
-                transactionpush.push(thisdata);
-                const h_string = data_title(thisdata);
-                if (h_string) {
-                    thisnode.append(hs_for(h_string)).attr("title", h_string);
+                if (thisdata) {
+                    transactionpush.push(thisdata);
+                    if (thisnode.attr("title")) {} else {
+                        const h_string = data_title(thisdata);
+                        if (h_string) {
+                            thisnode.append(hs_for(h_string)).attr("title", h_string);
+                        }
+                    }
                 }
             });
             const statuspanel = thislist.find(".pmetastatus"),
@@ -703,6 +710,14 @@ function select_rpc(rd, api_data, rdo) {
     const requestid = rd.requestid,
         rq_id = requestid || "";
     glob_rpc_attempts[sha_sub(rq_id + api_data.url, 15)] = true;
+    if (rd.lightning && rdo.source === "list") {
+        lightning_fetch(rd, api_data, rdo);
+        return
+    }
+    continue_select_rpc(rd, api_data, rdo);
+}
+
+function continue_select_rpc(rd, api_data, rdo) {
     if (is_btchain(rd.payment) === true) {
         mempoolspace_rpc_init(rd, api_data, rdo, true);
         return
@@ -719,7 +734,7 @@ function select_rpc(rd, api_data, rdo) {
         nano_rpc(rd, api_data, rdo);
         return
     }
-    get_api_inputs_init(rd, api_data, rdo);
+    api_callback(rdo);
 }
 
 // RPC error handling

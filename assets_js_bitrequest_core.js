@@ -4484,18 +4484,25 @@ function appendrequest(rd) {
     new_requestli.data(rd).prependTo(requestlist);
     if (render_archive === true) {
         const transactionlist = requestlist.find("#" + requestid).find(".transactionlist");
-        $.each(txhistory, function(dat, value) {
-            tx_listitem = append_tx_li(value, false);
-            if (tx_listitem.length > 0) {
-                tx_listitem.data(value);
-                const h_string = data_title(value);
-                if (h_string) {
+        add_historical_data(transactionlist, txhistory);
+    }
+}
+
+// Add historical data
+function add_historical_data(transactionlist, txhistory) {
+    let tx_listitem = false;
+    $.each(txhistory, function(data, value) {
+        tx_listitem = append_tx_li(value, false);
+        if (tx_listitem) {
+            const h_string = data_title(value);
+            if (h_string) {
+                if (tx_listitem.attr("title") === h_string) {} else {
                     tx_listitem.append(hs_for(h_string)).attr("title", h_string);
                 }
-                transactionlist.append(tx_listitem);
             }
-        });
-    }
+            transactionlist.append(tx_listitem);
+        }
+    });
 }
 
 // Determines the network based on the layer

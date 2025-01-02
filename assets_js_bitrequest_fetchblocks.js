@@ -125,7 +125,7 @@ function lightning_fetch(rd, api_data, rdo) {
                 });
                 status_field.text(" " + message);
                 if (!ln_only) {
-                    continue_select_api(rd, api_data, rdo);
+                    continue_select_api_rpc(rd, api_data, rdo);
                 }
                 return
             }
@@ -159,7 +159,7 @@ function lightning_fetch(rd, api_data, rdo) {
                             });
                             status_field.text(" " + err_message);
                             if (!ln_only) {
-                                continue_select_api(rd, api_data, rdo);
+                                continue_select_api_rpc(rd, api_data, rdo);
                             }
                             return
                         }
@@ -189,14 +189,14 @@ function lightning_fetch(rd, api_data, rdo) {
                             }
                         }
                         if (!ln_only) {
-                            continue_select_api(rd, api_data, rdo);
+                            continue_select_api_rpc(rd, api_data, rdo);
                         }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
                         tx_api_fail(thislist, statuspanel);
                         const error_object = errorThrown || jqXHR;
                         handle_api_fails(rd, rdo, error_object);
                         if (!ln_only) {
-                            continue_select_api(rd, api_data, rdo);
+                            continue_select_api_rpc(rd, api_data, rdo);
                         }
                     });
                     return
@@ -207,7 +207,7 @@ function lightning_fetch(rd, api_data, rdo) {
                     "console": true
                 });
                 if (!ln_only) {
-                    continue_select_api(rd, api_data, rdo);
+                    continue_select_api_rpc(rd, api_data, rdo);
                 }
                 return
             }
@@ -224,14 +224,14 @@ function lightning_fetch(rd, api_data, rdo) {
                 "console": true
             });
             if (!ln_only) {
-                continue_select_api(rd, api_data, rdo);
+                continue_select_api_rpc(rd, api_data, rdo);
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
             tx_api_fail(thislist, statuspanel);
             const error_object = errorThrown || jqXHR;
             handle_api_fails(rd, rdo, error_object);
             if (!ln_only) {
-                continue_select_api(rd, api_data, rdo);
+                continue_select_api_rpc(rd, api_data, rdo);
             }
         }).always(function() {
             set_api_src(rdo, {
@@ -302,7 +302,7 @@ function lightning_fetch(rd, api_data, rdo) {
         }, false);
         return
     }
-    continue_select_api(rd, api_data, rdo);
+    continue_select_api_rpc(rd, api_data, rdo);
 }
 
 // ** MyMonero API **
