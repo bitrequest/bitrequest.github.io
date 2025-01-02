@@ -642,7 +642,6 @@ function api_callback(rdo) {
             txli = transactionli.children("li");
         if (txli.length) {
             const transactionpush = [];
-            console.log("add callback");
             txli.each(function() {
                 const thisnode = $(this),
                     thisdata = thisnode.data();
