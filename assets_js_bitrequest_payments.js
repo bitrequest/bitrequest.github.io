@@ -2933,6 +2933,7 @@ function saverequest(direct, ln) {
     } else {
         //overwrite global request object
         request.address = thisaddress,
+            request.coindata = null, // no need to save coindata
             request.requestid = requestid,
             request.iscrypto = this_iscrypto,
             request.fiatcurrency = this_iscrypto ? request.localcurrency : thiscurrency,

@@ -811,15 +811,12 @@ function getcoindata(currency) {
     if (coindata_object) {
         const coindata = coindata_object.data,
             settings = coindata_object.settings,
-            has_settings = Boolean(settings),
-            is_monitored = settings && settings.apis,
             cd_object = {
                 "currency": coindata.currency,
                 "ccsymbol": coindata.ccsymbol,
                 "cmcid": coindata.cmcid,
-                "monitored": is_monitored,
+                "monitored": true,
                 "urlscheme": coindata.urlscheme,
-                "settings": has_settings,
                 "regex": coindata.address_regex,
                 "erc20": false
             };
