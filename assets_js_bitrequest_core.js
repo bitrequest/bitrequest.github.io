@@ -3197,12 +3197,11 @@ function rec_payments() {
 // Handles showing transaction details
 function showtransaction_trigger() {
     $(document).on("click", ".metalist .show_tx, .transactionlist .tx_val", function() {
-        alert("jaap");
         const thisnode = $(this),
             thislist = thisnode.closest("li"),
             rqli = thisnode.closest("li.rqli"),
             rqldat = rqli.data(),
-            txhash = (thisnode.hasClass("tx_val")) ? thislist.data("txhash") : rqldat.txhash;
+            txhash = thislist.data("txhash") || rqldat.txhash;
         if (txhash) {
             const lnhash = txhash.startsWith("lightning");
             if (lnhash) {
