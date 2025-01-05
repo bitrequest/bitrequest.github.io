@@ -2003,15 +2003,16 @@ input:invalid {
 	color: #bbbbbb;
 	background-color: rgba(0, 0, 0, 0.66);
 	border-bottom: 1px solid #909090;
+	opacity: 0;
 	transform: translate(0, -100%);
-	transition: transform 200ms ease-out;
+	transition: all 200ms ease-out;
 	pointer-events: none;
 }
 
 #topnotify.slidedown {
 	transform: translate(0, 0%);
+	opacity: 1;
 }
-
 
 /* optionlist */
 
