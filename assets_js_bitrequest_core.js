@@ -480,8 +480,6 @@ function finishfunctions() {
     //hide_paymentdialog
     //reset_paymentdialog
     //forceclosesocket
-    //closesocket
-    //clearpinging
     cancelsharedialogtrigger();
     //cancelsharedialog
     showoptionstrigger();
@@ -2864,38 +2862,6 @@ function forceclosesocket(s_id) {
     console.log("force close");
     clearpinging(s_id);
     closesocket(s_id);
-}
-
-// Closes WebSocket connections
-function closesocket(s_id) {
-    if (s_id) { // close this socket
-        if (glob_sockets[s_id]) {
-            glob_sockets[s_id].close();
-            delete glob_sockets[s_id];
-        }
-    } else { // close all sockets
-        $.each(glob_sockets, function(key, value) {
-            value.close();
-        });
-        glob_sockets = {};
-    }
-}
-
-// Clears pinging intervals
-function clearpinging(s_id) {
-    if (s_id) { // close this interval
-        if (glob_pinging[s_id]) {
-            clearInterval(glob_pinging[s_id]);
-            delete glob_pinging[s_id]
-        }
-        return
-    }
-    if (!empty_obj(glob_pinging)) {
-        $.each(glob_pinging, function(key, value) {
-            clearInterval(value);
-        });
-        glob_pinging = {};
-    }
 }
 
 // Sets up event listener for canceling the share dialog

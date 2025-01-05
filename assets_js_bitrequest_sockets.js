@@ -27,8 +27,8 @@ $(document).ready(function() {
     //ws_recon
     //try_next_socket
     //current_socket
+    //closesocket
     //socket_info
-    //set_l2_status
 });
 
 // Websockets / Pollfunctions
@@ -1048,7 +1048,8 @@ function alchemy_eth_websocket(socket_node, thisaddress) {
 
 // Initializes and manages WebSocket for Ethereum and Ethereum-like networks
 function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
-    const provider_url = socket_node.url,
+    const l2network = socket_node.network,
+        provider_url = socket_node.url,
         if_id = get_infura_apikey(provider_url),
         provider = provider_url + if_id,
         ws_id = sha_sub(provider, 10);
@@ -1087,6 +1088,10 @@ function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
                             const txda = infura_block_data(val, set_confirmations, request.currencysymbol, result.timestamp);
                             if (str_match(val.to, thisaddress) === true) {
                                 const txd = infura_block_data(val, set_confirmations, request.currencysymbol, result.timestamp);
+                                if (l2network) {
+                                    glob_l2s = {};
+                                    set_l2_status(socket_node, true);
+                                }
                                 closesocket();
                                 tx_polling_init(txd);
                                 return
@@ -1159,11 +1164,12 @@ function web3_erc20_websocket(socket_node, thisaddress, contract) {
                             "setconfirmations": set_confirmations,
                             "ccsymbol": request.currencysymbol,
                             "eth_layer2": l2network
-                        }
+                        };
                     if (l2network) {
                         glob_l2s = {};
                         set_l2_status(socket_node, true);
                     }
+                    closesocket();
                     tx_polling_init(txd);
                 }
             }
@@ -1172,7 +1178,8 @@ function web3_erc20_websocket(socket_node, thisaddress, contract) {
         }
     };
     websocket.onclose = function(e) {
-        handle_socket_close(socket_node);
+        console.log("Disconnected from " + socket_node.url);
+        glob_ws_timer = 0;
         handle_socket_fails(socket_node, thisaddress, ws_id, l2network);
     };
     websocket.onerror = function(e) {
@@ -1205,10 +1212,10 @@ function handle_socket_fails(socket_node, thisaddress, socketid, l2) {
                 }, thisaddress, null, true);
                 return
             }
+            socket_info(socket_node, false);
         }
         const error_message = "unable to connect to " + socket_node.name;
         console.log(error_message);
-        socket_info(socket_node, false);
     }
 }
 
@@ -1258,6 +1265,21 @@ function try_next_socket(current_socket_data, l2) {
         if (next_socket) {
             return next_socket;
         }
+    }
+}
+
+// Closes WebSocket connections
+function closesocket(s_id) {
+    if (s_id) { // close this socket
+        if (glob_sockets[s_id]) {
+            glob_sockets[s_id].close();
+            delete glob_sockets[s_id];
+        }
+    } else { // close all sockets
+        $.each(glob_sockets, function(key, value) {
+            value.close();
+        });
+        glob_sockets = {};
     }
 }
 

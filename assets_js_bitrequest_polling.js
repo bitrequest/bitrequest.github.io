@@ -7,6 +7,7 @@
 //init_xmr_node
 //ping_xmr_node
 //confirmations
+//clearpinging
 //reset_recent
 
 // pick API / RPC
@@ -370,6 +371,23 @@ function confirmations(tx_data, direct, ln) {
         return new_status;
     }
     return false;
+}
+
+// Clears pinging intervals
+function clearpinging(s_id) {
+    if (s_id) { // close this interval
+        if (glob_pinging[s_id]) {
+            clearInterval(glob_pinging[s_id]);
+            delete glob_pinging[s_id]
+        }
+        return
+    }
+    if (!empty_obj(glob_pinging)) {
+        $.each(glob_pinging, function(key, value) {
+            clearInterval(value);
+        });
+        glob_pinging = {};
+    }
 }
 
 // Resets recent requests and cancels the current dialog
