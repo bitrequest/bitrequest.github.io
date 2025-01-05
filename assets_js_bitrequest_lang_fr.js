@@ -55,6 +55,7 @@ function lang_fr(id, data) {
         "pinmatch": "code PIN incorrect",
         "xratesx": "Impossible d'obtenir les taux d'échange",
         "entercoinaddress": "Entrez une " + data.currency + " adresse.",
+        "label": "étiquette (facultatif)",
         "errorvk": "Erreur lors de la vérification du Viewkey",
         "invalidvk": "Viewkey invalide",
         "novalidaddress": "N'est pas une " + data.currency + " adresse valide.",

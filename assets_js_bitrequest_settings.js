@@ -947,6 +947,11 @@ function complilefilename() {
 // Handles the submission of backup download
 function submitbackup() {
     $(document).on("click", "#triggerdownload", function(e) {
+        if (glob_body.hasClass("ios")) {
+            e.preventDefault();
+            notify(translate("noiosbu"));
+            return
+        }
         const thisnode = $(this),
             href = thisnode.attr("href"),
             title = thisnode.attr("title"),

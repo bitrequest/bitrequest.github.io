@@ -55,6 +55,7 @@ function lang_nl(id, data) {
         "pinmatch": "pincode komt niet overeen",
         "xratesx": "Niet in staat om koersen op te vragen",
         "entercoinaddress": "Voer een " + data.currency + " adres in.",
+        "label": "label (optioneel)",
         "errorvk": "Fout verificatie Viewkey",
         "invalidvk": "Ongeldige Viewkey",
         "novalidaddress": "is geen geldig " + data.currency + " adres.",

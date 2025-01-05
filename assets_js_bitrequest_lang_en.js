@@ -55,6 +55,7 @@ function lang_en(id, data) {
         "pinmatch": "pincode does not match",
         "xratesx": "Unable to get exchange rate",
         "entercoinaddress": "Enter a " + data.currency + " address.",
+        "label": "label (optional)",
         "errorvk": "Error verifying Viewkey",
         "invalidvk": "Invalid Viewkey",
         "novalidaddress": "is NOT a valid " + data.currency + " address.",
