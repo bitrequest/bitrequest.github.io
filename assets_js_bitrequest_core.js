@@ -3589,6 +3589,7 @@ function animate_confbar(confbox, index) {
 // Shows transaction metadata on double click
 function show_transaction_meta() {
     $(document).on("dblclick", ".requestlist li .transactionlist li", function() {
+        if (!glob_supportsTouch) return;
         const thisli = $(this),
             txmeta = thisli.children(".historic_meta");
         if (txmeta.is(":visible")) {
@@ -4365,7 +4366,7 @@ function appendrequest(rd) {
         amount_rounded = trimdecimals(amount, Math.min(deter, 8)),
         receivedamount_rounded = trimdecimals(receivedamount, 6),
         fiatvalue_rounded = trimdecimals(fiatvalue, 2),
-        requestlist = archive === true ? $("#archivelist") : $("#requestlist"),
+        requestlist = archive ? $("#archivelist") : $("#requestlist"),
         utc = timestamp - glob_timezone,
         localtime = requestdate ? requestdate - glob_timezone : utc,
         incoming = requesttype === "incoming",
@@ -4421,7 +4422,7 @@ function appendrequest(rd) {
         src_html = source ? "<span class='src_txt'>" + translate("source") + ": " + source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>" : "",
         iscryptoclass = iscrypto ? "" : " isfiat",
         archivebutton = showarchive || isexpired ? "<div class='icon-folder-open' title='archive request'></div>" : "",
-        render_archive = txhistory && (pending == "no" || archive === true),
+        render_archive = txhistory && (pending === "no" || archive),
         tl_text = render_archive ? translate("transactions") : "",
         edit_request = local ? "<div class='editrequest icon-pencil' title='edit request' data-requestid='" + requestid + "'></div>" : "",
         pid_li = payment_id ? "<li><strong>" + translate("paymentid") + ":</strong> <span class='select' data-type='payment ID'>" + payment_id + "</span></li>" : "",
@@ -4482,7 +4483,7 @@ function appendrequest(rd) {
             <div class='expired_panel'><h2>" + translate("expired") + "</h2></div>\
         </li>");
     new_requestli.data(rd).prependTo(requestlist);
-    if (render_archive === true) {
+    if (render_archive) {
         const transactionlist = requestlist.find("#" + requestid).find(".transactionlist");
         add_historical_data(transactionlist, txhistory);
     }
@@ -4492,7 +4493,7 @@ function appendrequest(rd) {
 function add_historical_data(transactionlist, txhistory) {
     let tx_listitem = false;
     $.each(txhistory, function(data, value) {
-        tx_listitem = append_tx_li(value, false);
+        tx_listitem = append_tx_li(value);
         if (tx_listitem) {
             const h_string = data_title(value);
             if (h_string) {

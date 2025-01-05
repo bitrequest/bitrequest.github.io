@@ -424,7 +424,7 @@ function tx_api_scan_fail(rd, api_data, rdo, error_data, all_proxys, l2) {
             tx_api_fail(thislist, rdo.statuspanel);
         }
     }
-    if (src === "addr_polling" && rdo.socket === true) {
+    if (src === "addr_polling" && rdo.socket) {
         handle_socket_fails(api_data, rd.address);
         return
     }
@@ -607,8 +607,7 @@ function get_api_error_data(error) {
 
 // Sets the API source for a given request
 function set_api_src(rdo, api_data) {
-    const src = rdo.source;
-    if (src === "list") {
+    if (rdo.source === "list") {
         api_src(rdo.thislist, api_data);
     }
 }
@@ -846,40 +845,35 @@ function get_next_rpc(this_payment, api_data, requestid) {
 
 // Appends a transaction list item with given transaction data
 function append_tx_li(txd, rqtype) {
-    const txhash = txd.txhash,
+    const txhash = txd.txhash;
+    if (!txhash) return null;
+    const ccval = txd.ccval,
+        ccval_rounded = trimdecimals(ccval, 6),
+        transactiontime = txd.transactiontime,
+        conf = txd.confirmations,
+        setconfirmations = txd.setconfirmations,
+        ccsymbol = txd.ccsymbol,
+        set_ccsymbol = ccsymbol ? ccsymbol.toUpperCase() : "",
         ln = txhash && txhash.slice(0, 9) === "lightning";
-    if (txhash) {
-        const ccval = txd.ccval,
-            ccval_rounded = trimdecimals(ccval, 6),
-            transactiontime = txd.transactiontime,
-            conf = txd.confirmations,
-            setconfirmations = txd.setconfirmations,
-            ccsymbol = txd.ccsymbol,
-            set_ccsymbol = ccsymbol ? ccsymbol.toUpperCase() : "",
-            lnstr = ln ? " <span class='icon-power'></span>" : "",
-            valstr = (ln && !conf) ? "" : ccval_rounded + " " + set_ccsymbol + lnstr,
-            date_format = transactiontime ? short_date(transactiontime) : "",
-            no_conf = setconfirmations === false,
-            instant_lock = txd.instant_lock,
-            confirmed = instant_lock || no_conf || (conf && conf >= setconfirmations),
-            conf_count = no_conf ? "" : conf + " / " + setconfirmations + " " + translate("confirmations"),
-            instant_lock_text = instant_lock ? " (instant_lock)" : "",
-            conf_title = instant_lock ? "instant_lock" : conf_count,
-            unconf_text = translate("unconfirmedtx"),
-            checked_span = "<span class='icon-checkmark' title='" + conf_title + "'></span>",
-            confspan = confirmed ? checked_span : conf ? "<div class='txli_conf' title='" + conf_title + "'><div class='confbar'></div><span>" + conf_title + "</span></div>" :
-            "<div class='txli_conf' title='" + unconf_text + "'><div class='confbar'></div><span>" + unconf_text + "</span></div>",
-            tx_listitem = $("<li><div class='txli_content'>" + date_format + confspan + "<div class='txli_conf txl_canceled'><span class='icon-blocked'></span>Canceled</div><span class='tx_val'> + " + valstr + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>");
-        if (rqtype === false) {
-            return tx_listitem;
-        }
-        if (glob_tx_list.includes(txhash)) { // check for indexed transaction id's
-            return rqtype === "outgoing" ? null : tx_listitem;
-        }
-        glob_tx_list.push(txhash);
-        return tx_listitem;
+    lnstr = ln ? " <span class='icon-power'></span>" : "",
+        valstr = (ln && !conf) ? "" : ccval_rounded + " " + set_ccsymbol + lnstr,
+        date_format = transactiontime ? short_date(transactiontime) : "",
+        no_conf = setconfirmations === false,
+        instant_lock = txd.instant_lock,
+        confirmed = instant_lock || no_conf || (conf && conf >= setconfirmations),
+        conf_count = no_conf ? "" : conf + " / " + setconfirmations + " " + translate("confirmations"),
+        instant_lock_text = instant_lock ? " (instant_lock)" : "",
+        conf_title = instant_lock ? "instant_lock" : conf_count,
+        unconf_text = translate("unconfirmedtx"),
+        checked_span = "<span class='icon-checkmark' title='" + conf_title + "'></span>",
+        confspan = confirmed ? checked_span : conf ? "<div class='txli_conf' title='" + conf_title + "'><div class='confbar'></div><span>" + conf_title + "</span></div>" :
+        "<div class='txli_conf' title='" + unconf_text + "'><div class='confbar'></div><span>" + unconf_text + "</span></div>",
+        tx_listitem = $("<li><div class='txli_content'>" + date_format + confspan + "<div class='txli_conf txl_canceled'><span class='icon-blocked'></span>Canceled</div><span class='tx_val'> + " + valstr + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>");
+    if (glob_tx_list.includes(txhash)) { // check for indexed transaction id's
+        return rqtype === "outgoing" ? null : tx_listitem;
     }
-    return null;
+    glob_tx_list.push(txhash);
+    return tx_listitem;
 }
 
 // Creates HTML for historic data

@@ -1401,7 +1401,7 @@ html.dragmode .currentpage .applist li.dragging {
 	margin: 10px 0 0 0;
 	border-radius: 5px;
 	padding: 10px;
-	font-size: 12px;
+	font-size: 70%;
 	line-height: 1.4em;
 	font-family: monospace;
 	display: none;
