@@ -2390,7 +2390,7 @@ function add_erc20() {
                     </div>\
                     <div id='erc20_inputs'>\
                     <div class='inputwrap'><input type='text' class='address' value='" + eth_address_prefill + "' placeholder='" + translate("enteraddress") + "'/>" + scanqr + "</div>\
-                    <input type='text' class='addresslabel' value='" + eth_label_prefill + "' placeholder='label'/>\
+                    <input type='text' class='addresslabel' value='" + eth_label_prefill + "' placeholder='" + translate("label") + "'/>\
                     <div id='pk_confirm' class='noselect'>\
                         <div id='pk_confirmwrap' class='cb_wrap' data-checked='false'>\
                             <span class='checkbox'></span>\
