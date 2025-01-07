@@ -416,23 +416,23 @@ function tx_count(statuspanel, count) {
 }
 
 // Handles API scan failures
-function tx_api_scan_fail(rd, api_data, rdo, error_data, all_proxys, l2) {
+function tx_api_scan_fail(rd, api_data, rdo, error_data, is_proxy, l2) {
     const src = rdo.source;
+    if (src === "addr_polling" && rdo.socket) {
+        handle_socket_fails(api_data, rd.address);
+        return
+    }
     if (src === "list") {
         const thislist = rdo.thislist;
         if (thislist) {
             tx_api_fail(thislist, rdo.statuspanel);
         }
     }
-    if (src === "addr_polling" && rdo.socket) {
-        handle_socket_fails(api_data, rd.address);
-        return
-    }
     if (api_data.api) {
-        handle_api_fails(rd, rdo, error_data, api_data, all_proxys, l2);
+        handle_api_fails(rd, rdo, error_data, api_data, is_proxy, l2);
         return
     }
-    handle_rpc_fails(rd, rdo, error_data, api_data, all_proxys, l2);
+    handle_rpc_fails(rd, rdo, error_data, api_data, is_proxy, l2);
     return
 }
 
@@ -443,14 +443,27 @@ function tx_api_fail(thislist, statuspanel) {
 }
 
 // Handles API failures and attempts to use alternative APIs or RPCs
-function handle_api_fails(rd, rdo, error, api_data, all_proxys, l2) {
+function handle_api_fails(rd, rdo, error, api_data, is_proxy, l2) {
     const src = rdo.source,
-        error_data = get_api_error_data(error),
-        requestid = rd.requestid,
-        payment = rd.payment,
+        error_data = get_api_error_data(error, is_proxy),
         timeout = rdo.timeout,
         socket = rdo.socket,
         cachetime = rdo.cachetime;
+
+    function next_proxy() { // try next proxy
+        if (get_next_proxy()) {
+            if (src === "addr_polling") {
+                address_polling_init(timeout, socket, cachetime, null, api_data);
+            } else {
+                get_api_inputs(rd, api_data, rdo);
+            }
+            return true
+        }
+        return false
+    }
+    if (is_proxy && next_proxy()) { // Try next proxy if proxy fails
+        return
+    }
     if (!api_data) {
         api_eror_msg(false, error_data);
         if (src === "list") {
@@ -462,16 +475,18 @@ function handle_api_fails(rd, rdo, error, api_data, all_proxys, l2) {
         notify(translate("websocketoffline"), 500000, "yes");
         return
     }
+    const requestid = rd.requestid,
+        payment = rd.payment;
     if (l2) {
         const next_l2_api = get_next_api(payment, api_data, requestid, l2);
         if (next_l2_api) {
             if (src === "tx_polling") {
                 clearpinging();
                 tx_polling(rdo.txdat, next_l2_api);
-            } else {
-                // Scan eth layer 2
-                get_api_inputs(rd, next_l2_api, rdo, true);
+                return
             }
+            // Scan eth layer 2
+            get_api_inputs(rd, next_l2_api, rdo, true);
             return
         }
     } else {
@@ -507,16 +522,8 @@ function handle_api_fails(rd, rdo, error, api_data, all_proxys, l2) {
             return
         }
     }
-    if (all_proxys) { // try next proxy
-        const next_proxy = get_next_proxy();
-        if (next_proxy) {
-            if (src === "addr_polling") {
-                address_polling_init(timeout, socket, cachetime, null, api_data);
-            } else {
-                get_api_inputs(rd, api_data, rdo);
-            }
-            return
-        }
+    if (next_proxy()) { // Try next proxy after trying all api's
+        return
     }
     const rpc_id = api_data.name || api_data.url || "unknown";
     api_eror_msg(rpc_id, error_data);
@@ -548,9 +555,7 @@ function get_next_api(this_payment, api_data, requestid, l2) {
 
 // Displays error messages for API-related issues
 function api_eror_msg(apisrc, error) {
-    if (error === false) {
-        return
-    }
+    if (!error) return;
     const error_dat = error || {
             "errormessage": "errormessage",
             "errorcode": null
@@ -558,7 +563,6 @@ function api_eror_msg(apisrc, error) {
         errormessage = error_dat.errormessage,
         errorcode = error_dat.errorcode ? "Error: " + error_dat.errorcode : "";
     if (error.console) {
-        console.log(errorcode + errormessage);
         return
     }
     if ($("#dialogbody .doselect").length) {
@@ -576,33 +580,29 @@ function api_eror_msg(apisrc, error) {
 }
 
 // Extracts and formats error data from various API responses
-function get_api_error_data(error) {
-    if (!error) {
-        return false;
-    }
-    const error_type = typeof error,
-        errorcode = error.code || error.status || error.error_code || "",
+function get_api_error_data(error, proxy) {
+    if (!error) return;
+    const errorcode = error.code || error.status || error.error_code || 0,
         errormessage = error.error || error.message || error.type || error.error_message || error.statusText || error,
-        stringcheck = error_type === "string",
-        cons = error.console;
-    let skcheck = false;
-    if (stringcheck) {
-        skcheck = error.indexOf("API calls limits have been reached") >= 0; // blockcypher
-    }
-    const apikey = (
-        errorcode === 101 || // fixer
-        errorcode === 402 || // blockchair
-        errorcode === 403 || errorcode === 1 || // ethplorer => invalid or missing API key
-        errorcode === 1001 || // coinmarketcap => invalid API key
-        errorcode === 1002 || // coinmarketcap => missing API key
-        skcheck
-    );
-    return {
-        "errorcode": errorcode,
-        "errormessage": errormessage,
-        "apikey": apikey,
-        "console": cons
-    };
+        cons = error.console,
+        ak_check = (typeof error === "string") ? (error.indexOf("API calls limits have been reached") > -1 || error.indexOf("Limits reached") > -1) : false, // blockcypher
+        apikey = (
+            errorcode === 101 || // fixer
+            errorcode === 402 || // blockchair
+            errorcode === 403 || errorcode === 1 || // ethplorer => invalid or missing API key
+            errorcode === 1001 || // coinmarketcap => invalid API key
+            errorcode === 1002 || // coinmarketcap => missing API key
+            ak_check
+        );
+    const error_dat = {
+            "errorcode": errorcode,
+            "errormessage": errormessage,
+            "apikey": apikey,
+            "console": cons
+        },
+        is_proxy = (proxy) ? "proxy " : "";
+    console.error("API " + is_proxy + "error:", error_dat);
+    return error_dat;
 }
 
 // Sets the API source for a given request
@@ -738,14 +738,27 @@ function continue_select_rpc(rd, api_data, rdo) {
 // RPC error handling
 
 // Handles RPC failures and attempts to use alternative RPCs or APIs
-function handle_rpc_fails(rd, rdo, error, api_data, all_proxys, l2) {
+function handle_rpc_fails(rd, rdo, error, api_data, is_proxy, l2) {
     const src = rdo.source,
-        error_data = get_api_error_data(error),
-        requestid = rd.requestid,
-        payment = rd.payment,
+        error_data = get_api_error_data(error, is_proxy),
         timeout = rdo.timeout,
         socket = rdo.socket,
         cachetime = rdo.cachetime;
+
+    function next_proxy() { // try next proxy
+        if (get_next_proxy()) {
+            if (src === "addr_polling") {
+                address_polling_init(timeout, socket, cachetime, null, api_data);
+            } else {
+                get_rpc_inputs(rd, api_data, rdo);
+            }
+            return true
+        }
+        return false
+    }
+    if (is_proxy && next_proxy()) { // Try next proxy if proxy fails
+        return
+    }
     if (!api_data) {
         api_eror_msg(false, error_data);
         if (src === "list") {
@@ -757,6 +770,8 @@ function handle_rpc_fails(rd, rdo, error, api_data, all_proxys, l2) {
         notify(translate("websocketoffline"), 500000, "yes");
         return
     }
+    const requestid = rd.requestid,
+        payment = rd.payment;
     if (l2) {
         const next_l2_api = get_next_api(payment, api_data, requestid, l2);
         if (next_l2_api) {
@@ -802,16 +817,8 @@ function handle_rpc_fails(rd, rdo, error, api_data, all_proxys, l2) {
             return
         }
     }
-    if (all_proxys) { // try next proxy
-        const next_proxy = get_next_proxy();
-        if (next_proxy) {
-            if (src === "addr_polling") {
-                address_polling_init(timeout, socket, cachetime, null, api_data);
-            } else {
-                get_rpc_inputs(rd, api_data, rdo);
-            }
-            return
-        }
+    if (next_proxy()) { // Try next proxy after trying all rpc's
+        return
     }
     const rpc_id = api_data.name || api_data.url || "unknown";
     api_eror_msg(rpc_id, error_data);
@@ -1117,13 +1124,26 @@ function get_historical_fiat_data(rd, rdo, apilist, fiatapi) {
             }
             fail_dialogs(fiatapi, "unable to fetch " + lcsymbol + " exchange rate");
             api_callback(rdo);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+        }).fail(function(xhr, stat, err) {
+            function next_proxy() { // try next proxy
+                if (get_next_proxy()) {
+                    get_historical_fiat_data(rd, rdo, apilist, fiatapi);
+                    return true
+                }
+                return false
+            }
+            if (is_proxy_fail(this.url) && next_proxy()) { // Try next proxy if proxy fails
+                return
+            }
             const next_historic = try_next_api(apilist, fiatapi);
             if (next_historic) {
                 get_historical_fiat_data(rd, rdo, apilist, next_historic);
                 return
             }
-            const error_object = errorThrown || jqXHR;
+            if (next_proxy()) { // Try next proxy after trying all api's
+                return
+            }
+            const error_object = xhr || stat || err;
             fail_dialogs(fiatapi, error_object);
             api_callback(rdo);
         });
@@ -1283,13 +1303,26 @@ function get_historical_crypto_data(rd, rdo, fiatapi, apilist, api, lcrate, usdr
         }
         fail_dialogs(api, "error retrieving historical price data");
         api_callback(rdo);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
+        function next_proxy() { // try next proxy
+            if (get_next_proxy()) {
+                get_historical_crypto_data(rd, rdo, fiatapi, apilist, api, lcrate, usdrate, lcsymbol);
+                return true
+            }
+            return false
+        }
+        if (is_proxy_fail(this.url) && next_proxy()) { // Try next proxy if proxy fails
+            return
+        }
         const next_historic = try_next_api(apilist, api);
         if (next_historic) {
             get_historical_crypto_data(rd, rdo, fiatapi, apilist, next_historic, lcrate, usdrate, lcsymbol);
             return
         }
-        const error_object = errorThrown || jqXHR;
+        if (next_proxy()) { // Try next proxy after trying all api's
+            return
+        }
+        const error_object = xhr || stat || err;
         fail_dialogs(api, error_object);
         api_callback(rdo);
     })

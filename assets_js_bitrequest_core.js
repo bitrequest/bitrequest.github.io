@@ -32,7 +32,7 @@ const glob_ls_support = check_local(),
     glob_w_loc = window.location,
     glob_c_host = glob_w_loc.origin + glob_w_loc.pathname,
     glob_thishostname = glob_w_loc.hostname,
-    glob_hostlocation = (glob_thishostname == "" || glob_thishostname == "localhost" || glob_thishostname === "127.0.0.1") ? "local" :
+    glob_hostlocation = (glob_thishostname == "" || glob_thishostname === "localhost" || glob_thishostname === "127.0.0.1") ? "local" :
     (glob_thishostname == "bitrequest.github.io") ? "hosted" :
     (glob_thishostname == glob_localhostname) ? "selfhosted" : "unknown",
     glob_wl = navigator.wakeLock,
@@ -181,7 +181,7 @@ function checkphp() {
         br_set_local("init", glob_io, true);
         glob_phpsupport = false;
         setsymbols();
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
         glob_io.phpsupport = "no";
         br_set_local("init", glob_io, true);
         glob_phpsupport = false;
@@ -218,9 +218,8 @@ function setsymbols() {
             const this_error = data.error || "Unable to get API data";
             fail_dialogs("fixer", this_error);
         }
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const next_proxy = get_next_proxy();
-        if (next_proxy) {
+    }).fail(function(xhr, stat, err) {
+        if (get_next_proxy()) {
             setsymbols();
             return
         }
@@ -263,7 +262,11 @@ function geterc20tokens() {
         }
         const content = "<h2 class='icon-bin'>" + translate("apicallfailed") + "</h2><p class='doselect'>" + translate("nofetchtokeninfo") + "</p>";
         popdialog(content, "canceldialog");
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
+        if (get_next_proxy()) {
+            geterc20tokens();
+            return
+        }
         const content = "<h2 class='icon-bin'>" + translate("apicallfailed") + "</h2><p class='doselect'>" + translate("nofetchtokeninfo") + "</p>";
         popdialog(content, "canceldialog");
     }).always(function() {
@@ -2539,10 +2542,7 @@ function validateaddress_vk(ad) {
                 if (start_height > -1) { // success!
                     validateaddress(ad, vkinputval);
                 }
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                console.log(jqXHR);
-                console.log(textStatus);
-                console.log(errorThrown);
+            }).fail(function(xhr, stat, err) {
                 popnotify("error", translate("errorvk"));
             });
             return
@@ -3879,7 +3879,7 @@ function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
             });
         popdialog(content, "canceldialog");
         closeloader();
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
         notify(translate("nofetchincoice"));
         closeloader();
     });
@@ -5114,7 +5114,7 @@ function expand_shoturl(i_param) {
                         }
                     }
                 }
-            }).fail(function(jqXHR, textStatus, errorThrown) {
+            }).fail(function(xhr, stat, err) {
                 const content = "<h2 class='icon-warning'>" + translate("failedtofetchrequest") + "</h2>";
                 popdialog(content, "canceldialog");
                 closeloader();
@@ -5163,7 +5163,11 @@ function expand_bitly(i_param) {
             }
             glob_w_loc.href = "http://bit.ly/" + bitly_id;
         }
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
+        if (get_next_proxy()) {
+            expand_bitly(i_param);
+            return
+        }
         glob_w_loc.href = "http://bit.ly/" + bitly_id;
     });
 }

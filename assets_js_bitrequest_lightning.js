@@ -273,7 +273,7 @@ function node_option_li(value, selected, fn, proxy, pw) {
                 tconnectcb(connected);
             }
         })
-        .fail(function(jqXHR, textStatus, errorThrown) {
+        .fail(function(xhr, stat, err) {
             closeloader();
             if (fn === "append") {
                 lightning_option_li(false, value, selected);
@@ -321,7 +321,7 @@ function test_lnd_option_li(value, selected, fn) {
             tconnectcb();
         }
         return
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
         closeloader();
         if (fn === "append") {
             lightning_option_li(false, value, selected);
@@ -373,7 +373,7 @@ function test_c_lightning_option_li(value, selected, fn) {
             tconnectcb();
         }
         return
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
         closeloader();
         if (fn === "append") {
             lightning_option_li(false, value, selected);
@@ -434,7 +434,7 @@ function test_eclair_option_li(value, selected, fn) {
             tconnectcb();
         }
         return
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
         closeloader();
         if (fn === "append") {
             lightning_option_li(false, value, selected);
@@ -485,7 +485,7 @@ function test_lnbits_option_li(value, selected, fn) {
             tconnectcb();
         }
         return
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
         closeloader();
         if (fn === "append") {
             lightning_option_li(false, value, selected);
@@ -646,12 +646,9 @@ function lnd_append_proxy(optionlist, key, value, selected) { // make test api c
             return
         }
         lnd_proxy_option_li(optionlist, false, key, value, selected, proxy, locked);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
         closeloader();
         lnd_proxy_option_li(optionlist, false, key, value, selected, proxy, locked);
-        console.log(jqXHR);
-        console.log(textStatus);
-        console.log(errorThrown);
     });
 }
 
@@ -1088,12 +1085,9 @@ function test_lnd_proxy(value, pid, pw) { // make test api call
         popnotify("error", translate("unabletoconnectto", {
             "value": value
         }));
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
         closeloader();
         popnotify("error", translate("unabletoconnect"));
-        console.log(jqXHR);
-        console.log(textStatus);
-        console.log(errorThrown);
     });
 }
 
@@ -1180,16 +1174,13 @@ function test_create_invoice(imp, proxydat, host, key) {
             }
             popnotify("error", default_error);
             return
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+        }).fail(function(xhr, stat, err) {
             closeloader();
             popnotify("error", default_error);
-            console.log(jqXHR);
-            console.log(textStatus);
-            console.log(errorThrown);
         });
         return
     }
-    const apiCallParams = {
+    const api_call_params = {
         "lnd": {
             "api_url": host + "/v1/invoices",
             "data": JSON.stringify({
@@ -1246,8 +1237,8 @@ function test_create_invoice(imp, proxydat, host, key) {
         }
     };
 
-    if (apiCallParams[imp]) {
-        const params = apiCallParams[imp];
+    if (api_call_params[imp]) {
+        const params = api_call_params[imp];
         api_proxy({
             "proxy": false,
             "api_url": params.api_url,
@@ -1274,12 +1265,9 @@ function test_create_invoice(imp, proxydat, host, key) {
                 }
                 popnotify("error", default_error);
             }
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+        }).fail(function(xhr, stat, err) {
             closeloader();
             popnotify("error", default_error);
-            console.log(jqXHR);
-            console.log(textStatus);
-            console.log(errorThrown);
         });
     }
 }
@@ -1528,11 +1516,8 @@ function p_promt(pid) {
         popnotify("error", translate("unabletoconnectto", {
             "value": proxy
         }));
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
         popnotify("error", translate("unabletoconnect"));
-        console.log(jqXHR);
-        console.log(textStatus);
-        console.log(errorThrown);
     });
 }
 
@@ -1730,8 +1715,8 @@ function test_lnurl_status(lnd) {
             }
         }
         proceed_pf();
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const error_object = errorThrown || jqXHR,
+    }).fail(function(xhr, stat, err) {
+        const error_object = xhr || stat || err,
             error_data = get_api_error_data(error_object);
         proceed_pf(error_data);
     });
@@ -1761,8 +1746,8 @@ function check_lnd_status(lnd) {
             }
         }
         proceed_pf();
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const error_object = errorThrown || jqXHR,
+    }).fail(function(xhr, stat, err) {
+        const error_object = xhr || stat || err,
             error_data = get_api_error_data(error_object);
         proceed_pf(error_data);
     });
@@ -1793,8 +1778,8 @@ function check_c_lightning_status(lnd) {
             }
         }
         proceed_pf();
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const error_object = errorThrown || jqXHR,
+    }).fail(function(xhr, stat, err) {
+        const error_object = xhr || stat || err,
             error_data = get_api_error_data(error_object);
         proceed_pf(error_data);
     });
@@ -1829,8 +1814,8 @@ function check_eclair_status(lnd) {
             }
         }
         proceed_pf();
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const error_object = errorThrown || jqXHR,
+    }).fail(function(xhr, stat, err) {
+        const error_object = xhr || stat || err,
             error_data = get_api_error_data(error_object);
         proceed_pf(error_data);
     });
@@ -1860,8 +1845,8 @@ function check_lnbits_status(lnd) {
             }
         }
         proceed_pf();
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const error_object = errorThrown || jqXHR,
+    }).fail(function(xhr, stat, err) {
+        const error_object = xhr || stat || err,
             error_data = get_api_error_data(error_object);
         proceed_pf(error_data);
     });

@@ -450,10 +450,9 @@ function updateappdata(p) {
         };
         api_proxy(ddat).done(function(e) {
             // Success handling if needed  
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            console.log(jqXHR, textStatus, errorThrown);
+        }).fail(function(xhr, stat, err) {
             if (textStatus === "error") {
-                const error_object = jqXHR;
+                const error_object = xhr;
                 if (error_object) {
                     const resp_obj = error_object.responseJSON;
                     if (resp_obj) {
@@ -583,16 +582,16 @@ function listappdata() {
         }
         importjsonlist.slideUp(300);
         thistrigger.addClass("true");
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        if (textStatus === "error") {
-            if (errorThrown === "Unauthorized") {
+    }).fail(function(xhr, stat, err) {
+        if (stat === "error") {
+            if (err === "Unauthorized") {
                 thistrigger.removeClass("true");
                 backuplist.slideUp(300);
                 importjsonlist.slideDown(300);
                 notify(translate("unauthorized"));
                 return
             }
-            if (errorThrown === "Not Found") {
+            if (err === "Not Found") {
                 createfile(); // create file
                 return
             }
@@ -636,9 +635,9 @@ function deletefile(fileId, thislist, pass) {
             thislist.slideUp(300);
             notify(translate("filedeleted"));
         }
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        if (textStatus === "error") {
-            if (errorThrown === "Not Found") {
+    }).fail(function(xhr, stat, err) {
+        if (stat === "error") {
+            if (err === "Not Found") {
                 notify(translate("error") + ": " + translate("filenotfound"));
                 return
             }

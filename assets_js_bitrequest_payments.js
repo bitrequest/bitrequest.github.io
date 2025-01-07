@@ -541,7 +541,7 @@ function get_tokeninfo(payment, contract) {
         request.decimals = decimals;
         continue_paymentfunction();
         br_set_local("decimals_" + payment, decimals); //cache token decimals
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
         const get_decimals = get_tokeninfo_local();
         if (get_decimals) {
             request.decimals = get_decimals;
@@ -549,13 +549,12 @@ function get_tokeninfo(payment, contract) {
             br_set_local("decimals_" + payment, get_decimals); //cache token decimals
             return
         }
-        const next_proxy = get_next_proxy();
-        if (next_proxy) {
+        if (get_next_proxy()) {
             get_tokeninfo(payment, contract);
             return
         }
         cancelpaymentdialog();
-        const error_object = errorThrown || jqXHR;
+        const error_object = xhr || stat || err;
         fail_dialogs("ethplorer", error_object);
         closeloader();
     });
@@ -919,21 +918,17 @@ function lnd_put(proxy, key, pl, lnurl) {
             }
         }
         proceed_pf();
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
         const is_proxy = q_obj(helper, "lnd.lnurl");
         if (is_proxy === false) {
             const saved_proxy = s_lnd_proxy();
             if (saved_proxy === false) {
-                const next_proxy = get_next_proxy();
-                if (next_proxy) {
+                if (get_next_proxy()) {
                     lightning_setup();
                     return
                 }
             }
         }
-        console.log(jqXHR);
-        console.log(textStatus);
-        console.log(errorThrown);
         proceed_pf();
     });
 }
@@ -1094,23 +1089,32 @@ function getccexchangerates(apilist, api) {
             }
         }
         cc_fail(apilist, api, error_val);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const error_object = errorThrown || jqXHR;
-        cc_fail(apilist, api, error_object);
+    }).fail(function(xhr, stat, err) {
+        const is_proxy = is_proxy_fail(this.url),
+            error_object = xhr || stat || err;
+        cc_fail(apilist, api, error_object, is_proxy);
     });
 }
 
 // Handles failure scenarios when fetching cryptocurrency rates
-function cc_fail(apilist, api, error_val) {
+function cc_fail(apilist, api, error_val, is_proxy) {
+    function next_proxy() { // try next proxy
+        if (get_next_proxy()) {
+            glob_api_attempt[apilist] = {};
+            getccexchangerates(apilist, api);
+            return true
+        }
+        return false
+    }
+    if (is_proxy && next_proxy()) { // Try next proxy if proxy fails
+        return
+    }
     const nextccapi = try_next_api(apilist, api);
     if (nextccapi) {
         getccexchangerates(apilist, nextccapi);
         return
     }
-    const next_proxy = get_next_proxy();
-    if (next_proxy) {
-        glob_api_attempt[apilist] = {};
-        getccexchangerates(apilist, api);
+    if (next_proxy()) { // Try next proxy after trying all api's
         return
     }
     loadertext(translate("apierror"));
@@ -1256,24 +1260,33 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
             return
         }
         get_fiat_exchangerate(apilist, nextfiatapi, ccrate, currencystring, ccapi, cachetime);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const error_object = errorThrown || jqXHR;
-        next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, ccapi, cachetime);
+    }).fail(function(xhr, stat, err) {
+        const is_proxy = is_proxy_fail(this.url),
+            error_object = xhr || stat || err;
+        next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, ccapi, cachetime, is_proxy);
         return
     });
 }
 
 // Handles switching to the next fiat API when the current one fails
-function next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, ccapi, cachetime) {
+function next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, ccapi, cachetime, is_proxy) {
+    function next_proxy() { // try next proxy
+        if (get_next_proxy()) {
+            glob_api_attempt[apilist] = {};
+            get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, cachetime);
+            return true
+        }
+        return false
+    }
+    if (is_proxy && next_proxy()) { // Try next proxy if proxy fails
+        return
+    }
     const nextfiatapi = try_next_api(apilist, fiatapi);
     if (nextfiatapi) {
         get_fiat_exchangerate(apilist, nextfiatapi, ccrate, currencystring, ccapi, cachetime);
         return
     }
-    const next_proxy = get_next_proxy();
-    if (next_proxy) {
-        glob_api_attempt[apilist] = {};
-        get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, cachetime);
+    if (next_proxy()) { // Try next proxy after trying all api's
         return
     }
     loadertext(translate("error"));

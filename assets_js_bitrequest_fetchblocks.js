@@ -191,9 +191,9 @@ function lightning_fetch(rd, api_data, rdo) {
                         if (!ln_only) {
                             continue_select_api_rpc(rd, api_data, rdo);
                         }
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
+                    }).fail(function(xhr, stat, err) {
                         tx_api_fail(thislist, statuspanel);
-                        const error_object = errorThrown || jqXHR;
+                        const error_object = xhr || stat || err;
                         handle_api_fails(rd, rdo, error_object);
                         if (!ln_only) {
                             continue_select_api_rpc(rd, api_data, rdo);
@@ -226,9 +226,9 @@ function lightning_fetch(rd, api_data, rdo) {
             if (!ln_only) {
                 continue_select_api_rpc(rd, api_data, rdo);
             }
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+        }).fail(function(xhr, stat, err) {
             tx_api_fail(thislist, statuspanel);
-            const error_object = errorThrown || jqXHR;
+            const error_object = xhr || stat || err;
             handle_api_fails(rd, rdo, error_object);
             if (!ln_only) {
                 continue_select_api_rpc(rd, api_data, rdo);
@@ -284,10 +284,10 @@ function lightning_fetch(rd, api_data, rdo) {
                             }
                         }
                     }
-                }).fail(function(jqXHR, textStatus, errorThrown) {
+                }).fail(function(xhr, stat, err) {
                     tx_api_fail(thislist, statuspanel);
-                    const error_object = errorThrown || jqXHR;
-                    handle_api_fails(rd, rdo, error_object, false);
+                    const error_object = xhr || stat || err;
+                    handle_api_fails(rd, rdo, error_object);
                 }).always(function() {
                     set_api_src(rdo, {
                         "name": "proxy"
@@ -407,17 +407,18 @@ function monero_fetch(rd, api_data, rdo) {
                         return
                     }
                     api_callback(rdo);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    const error_object = errorThrown || jqXHR;
+                }).fail(function(xhr, stat, err) {
+                    const error_object = xhr || stat || err;
                     tx_api_scan_fail(rd, api_data, rdo, error_object);
                 });
                 return
             }
         }
         tx_api_scan_fail(rd, api_data, rdo, default_error);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const error_object = errorThrown || jqXHR;
-        tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+    }).fail(function(xhr, stat, err) {
+        const is_proxy = is_proxy_fail(this.url),
+            error_object = xhr || stat || err;
+        tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
     }).always(function() {
         set_api_src(rdo, {
             "name": "mymonero api"
@@ -476,9 +477,10 @@ function blockchair_xmr_poll(rd, api_data, rdo) {
             }
         }
         tx_api_scan_fail(rd, api_data, rdo, default_error);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const error_object = errorThrown || jqXHR;
-        tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+    }).fail(function(xhr, stat, err) {
+        const is_proxy = is_proxy_fail(this.url),
+            error_object = xhr || stat || err;
+        tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
     }).always(function() {
         set_api_src(rdo, {
             "name": "blockchair api"
@@ -517,9 +519,10 @@ function blockchaininfo_fetch_blockheight(rd, api_data, rdo) {
             }
         }
         tx_api_scan_fail(rd, api_data, rdo, default_error);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const error_object = errorThrown || jqXHR;
-        tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+    }).fail(function(xhr, stat, err) {
+        const is_proxy = is_proxy_fail(this.url),
+            error_object = xhr || stat || err;
+        tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
     }).always(function() {
         set_api_src(rdo, api_data);
     });
@@ -576,17 +579,18 @@ function blockchaininfo_fetch(rd, api_data, rdo, latestblock) {
                             return
                         }
                         api_callback(rdo);
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                        const error_object = errorThrown || jqXHR;
+                    }).fail(function(xhr, stat, err) {
+                        const error_object = xhr || stat || err;
                         tx_api_scan_fail(rd, api_data, rdo, error_object);
                     });
                     return
                 }
             }
             tx_api_scan_fail(rd, api_data, rdo, default_error);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            const error_object = errorThrown || jqXHR;
-            tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+        }).fail(function(xhr, stat, err) {
+            const is_proxy = is_proxy_fail(this.url),
+                error_object = xhr || stat || err;
+            tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
         }).always(function() {
             set_api_src(rdo, api_data);
         });
@@ -623,9 +627,10 @@ function blockchaininfo_fetch(rd, api_data, rdo, latestblock) {
                     return
                 }
                 tx_api_scan_fail(rd, api_data, rdo, default_error);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                const error_object = errorThrown || jqXHR;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+            }).fail(function(xhr, stat, err) {
+                const is_proxy = is_proxy_fail(this.url),
+                    error_object = xhr || stat || err;
+                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -683,9 +688,10 @@ function blockcypher_fetch(rd, api_data, rdo) {
                 return
             }
             tx_api_scan_fail(rd, api_data, rdo, default_error);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            const error_object = errorThrown || jqXHR;
-            tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+        }).fail(function(xhr, stat, err) {
+            const is_proxy = is_proxy_fail(this.url),
+                error_object = xhr || stat || err;
+            tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
         }).always(function() {
             set_api_src(rdo, api_data);
         });
@@ -722,9 +728,10 @@ function blockcypher_fetch(rd, api_data, rdo) {
                     return
                 }
                 tx_api_scan_fail(rd, api_data, rdo, default_error);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                const error_object = errorThrown || jqXHR;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+            }).fail(function(xhr, stat, err) {
+                const is_proxy = is_proxy_fail(this.url),
+                    error_object = xhr || stat || err;
+                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -785,9 +792,10 @@ function ethplorer_fetch(rd, rdo, api_data) {
                 }
             }
             tx_api_scan_fail(rd, api_data, rdo, default_error, null, l2);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            const error_object = errorThrown || jqXHR;
-            tx_api_scan_fail(rd, api_data, rdo, error_object, true, l2);
+        }).fail(function(xhr, stat, err) {
+            const is_proxy = is_proxy_fail(this.url),
+                error_object = xhr || stat || err;
+            tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy, l2);
         }).always(function() {
             set_api_src(rdo, api_data);
         });
@@ -836,9 +844,10 @@ function ethplorer_fetch(rd, rdo, api_data) {
                     return
                 }
                 tx_api_scan_fail(rd, api_data, rdo, default_error, null, l2);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                const error_object = errorThrown || jqXHR;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, true, l2);
+            }).fail(function(xhr, stat, err) {
+                const is_proxy = is_proxy_fail(this.url),
+                    error_object = xhr || stat || err;
+                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy, l2);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -916,9 +925,10 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                     }
                 }
                 tx_api_scan_fail(rd, api_data, rdo, default_error, null, network);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                const error_object = errorThrown || jqXHR;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, true, network);
+            }).fail(function(xhr, stat, err) {
+                const is_proxy = is_proxy_fail(this.url),
+                    error_object = xhr || stat || err;
+                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy, network);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -960,9 +970,10 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                     return
                 }
                 tx_api_scan_fail(rd, api_data, rdo, default_error, null, network);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                const error_object = errorThrown || jqXHR;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, true, network);
+            }).fail(function(xhr, stat, err) {
+                const is_proxy = is_proxy_fail(this.url),
+                    error_object = xhr || stat || err;
+                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy, network);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -1009,9 +1020,10 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                         }
                     }
                     tx_api_scan_fail(rd, api_data, rdo, default_error, null, network);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    const error_object = errorThrown || jqXHR;
-                    tx_api_scan_fail(rd, api_data, rdo, error_object, true, network);
+                }).fail(function(xhr, stat, err) {
+                    const is_proxy = is_proxy_fail(this.url),
+                        error_object = xhr || stat || err;
+                    tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy, network);
                 }).always(function() {
                     set_api_src(rdo, api_data);
                 });
@@ -1053,9 +1065,10 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                         }
                     }
                     tx_api_scan_fail(rd, api_data, rdo, default_error, null, network);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    const error_object = errorThrown || jqXHR;
-                    tx_api_scan_fail(rd, api_data, rdo, error_object, true, network);
+                }).fail(function(xhr, stat, err) {
+                    const is_proxy = is_proxy_fail(this.url),
+                        error_object = xhr || stat || err;
+                    tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy, network);
                 }).always(function() {
                     set_api_src(rdo, api_data);
                 });
@@ -1193,16 +1206,17 @@ function blockchair_fetch(rd, api_data, rdo) {
                         return
                     }
                     api_callback(rdo);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    const error_object = errorThrown || jqXHR;
+                }).fail(function(xhr, stat, err) {
+                    const error_object = xhr || stat || err;
                     tx_api_scan_fail(rd, api_data, rdo, error_object);
                 });
                 return
             }
             tx_api_scan_fail(rd, api_data, rdo, default_error);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            const error_object = errorThrown || jqXHR;
-            tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+        }).fail(function(xhr, stat, err) {
+            const is_proxy = is_proxy_fail(this.url),
+                error_object = xhr || stat || err;
+            tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
         }).always(function() {
             set_api_src(rdo, api_data);
         });
@@ -1250,9 +1264,10 @@ function blockchair_fetch(rd, api_data, rdo) {
                     }
                 }
                 tx_api_scan_fail(rd, api_data, rdo, default_error);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                const error_object = errorThrown || jqXHR;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+            }).fail(function(xhr, stat, err) {
+                const is_proxy = is_proxy_fail(this.url),
+                    error_object = xhr || stat || err;
+                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -1310,9 +1325,10 @@ function nimiq_fetch(rd, api_data, rdo) {
                     return
                 }
                 tx_api_scan_fail(rd, api_data, rdo, default_error);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                const error_object = errorThrown || jqXHR;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+            }).fail(function(xhr, stat, err) {
+                const is_proxy = is_proxy_fail(this.url),
+                    error_object = xhr || stat || err;
+                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -1355,9 +1371,10 @@ function nimiq_fetch(rd, api_data, rdo) {
                         return
                     }
                     tx_api_scan_fail(rd, api_data, rdo, default_error);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    const error_object = errorThrown || jqXHR;
-                    tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+                }).fail(function(xhr, stat, err) {
+                    const is_proxy = is_proxy_fail(this.url),
+                        error_object = xhr || stat || err;
+                    tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
                 }).always(function() {
                     set_api_src(rdo, api_data);
                 });
@@ -1403,16 +1420,17 @@ function nimiq_fetch(rd, api_data, rdo) {
                                 }
                             }
                             scan_match(rd, api_data, rdo, counter, txdat);
-                        }).fail(function(jqXHR, textStatus, errorThrown) {
-                            const error_object = errorThrown || jqXHR;
+                        }).fail(function(xhr, stat, err) {
+                            const error_object = xhr || stat || err;
                             tx_api_scan_fail(rd, api_data, rdo, error_object);
                         });
                         return
                     }
                     tx_api_scan_fail(rd, api_data, rdo, default_error);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    const error_object = errorThrown || jqXHR;
-                    tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+                }).fail(function(xhr, stat, err) {
+                    const is_proxy = is_proxy_fail(this.url),
+                        error_object = xhr || stat || err;
+                    tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
                 }).always(function() {
                     set_api_src(rdo, api_data);
                 });
@@ -1454,9 +1472,10 @@ function kaspa_fetch_blockheight(rd, api_data, rdo) {
             }
         }
         tx_api_scan_fail(rd, api_data, rdo, default_error);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const error_object = errorThrown || jqXHR;
-        tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+    }).fail(function(xhr, stat, err) {
+        const is_proxy = is_proxy_fail(this.url),
+            error_object = xhr || stat || err;
+        tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
     }).always(function() {
         set_api_src(rdo, api_data);
     });
@@ -1503,9 +1522,10 @@ function kaspa_fetch(rd, api_data, rdo, blockheight) {
                 return
             }
             tx_api_scan_fail(rd, api_data, rdo, default_error);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            const error_object = errorThrown || jqXHR;
-            tx_api_scan_fail(rd, api_data, rdo, error_object);
+        }).fail(function(xhr, stat, err) {
+            const is_proxy = is_proxy_fail(this.url),
+                error_object = xhr || stat || err;
+            tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
         }).always(function() {
             set_api_src(rdo, api_data);
         });
@@ -1545,9 +1565,10 @@ function kaspa_fetch(rd, api_data, rdo, blockheight) {
                     return
                 }
                 tx_api_scan_fail(rd, api_data, rdo, default_error);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                const error_object = errorThrown || jqXHR;
-                tx_api_scan_fail(rd, api_data, rdo, error_object);
+            }).fail(function(xhr, stat, err) {
+                const is_proxy = is_proxy_fail(this.url),
+                    error_object = xhr || stat || err;
+                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -1600,9 +1621,10 @@ function insight_fetch_dash(rd, api_data, rdo) {
                 return
             }
             tx_api_scan_fail(rd, api_data, rdo, default_error);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            const error_object = errorThrown || jqXHR;
-            tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+        }).fail(function(xhr, stat, err) {
+            const is_proxy = is_proxy_fail(this.url),
+                error_object = xhr || stat || err;
+            tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
         }).always(function() {
             set_api_src(rdo, api_data);
         });
@@ -1638,9 +1660,10 @@ function insight_fetch_dash(rd, api_data, rdo) {
                     return
                 }
                 tx_api_scan_fail(rd, api_data, rdo, default_error);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                const error_object = errorThrown || jqXHR;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+            }).fail(function(xhr, stat, err) {
+                const is_proxy = is_proxy_fail(this.url),
+                    error_object = xhr || stat || err;
+                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -1682,9 +1705,10 @@ function mempoolspace_rpc_blockheight(rd, api_data, rdo, rpc) {
             }
         }
         tx_api_scan_fail(rd, api_data, rdo, default_error);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const error_object = errorThrown || jqXHR;
-        tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+    }).fail(function(xhr, stat, err) {
+        const is_proxy = is_proxy_fail(this.url),
+            error_object = xhr || stat || err;
+        tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
     }).always(function() {
         set_api_src(rdo, api_data);
     });
@@ -1733,8 +1757,8 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock) {
                     return
                 }
                 tx_api_scan_fail(rd, api_data, rdo, default_error);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                const error_object = errorThrown || jqXHR;
+            }).fail(function(xhr, stat, err) {
+                const error_object = xhr || stat || err;
                 tx_api_scan_fail(rd, api_data, rdo, error_object);
             }).always(function() {
                 set_api_src(rdo, api_data);
@@ -1766,8 +1790,8 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock) {
                 return
             }
             tx_api_scan_fail(rd, api_data, rdo, default_error);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            const error_object = errorThrown || jqXHR;
+        }).fail(function(xhr, stat, err) {
+            const error_object = xhr || stat || err;
             tx_api_scan_fail(rd, api_data, rdo, error_object);
         });
     }, 500);
@@ -1842,20 +1866,21 @@ function infura_txd_rpc(rd, api_data, rdo) {
                         return
                     }
                     tx_api_scan_fail(rd, api_data, rdo, default_error); // scan l2's
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    const error_object = errorThrown || jqXHR;
+                }).fail(function(xhr, stat, err) {
+                    const error_object = xhr || stat || err;
                     tx_api_scan_fail(rd, api_data, rdo, error_object);
                 });
                 return
             }
             tx_api_scan_fail(rd, api_data, rdo, default_error); // scan l2's
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            const error_object = errorThrown || jqXHR;
+        }).fail(function(xhr, stat, err) {
+            const error_object = xhr || stat || err;
             tx_api_scan_fail(rd, api_data, rdo, error_object);
         });
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const error_object = errorThrown || jqXHR;
-        tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+    }).fail(function(xhr, stat, err) {
+        const is_proxy = is_proxy_fail(this.url),
+            error_object = xhr || stat || err;
+        tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
     }).always(function() {
         set_api_src(rdo, api_data);
     });
@@ -1967,9 +1992,10 @@ function nano_rpc(rd, api_data, rdo) {
                 return
             }
             tx_api_scan_fail(rd, api_data, rdo, default_error);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            const error_object = errorThrown || jqXHR;
-            tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+        }).fail(function(xhr, stat, err) {
+            const is_proxy = is_proxy_fail(this.url),
+                error_object = xhr || stat || err;
+            tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
         }).always(function() {
             set_api_src(rdo, api_data);
         });
@@ -2012,9 +2038,10 @@ function nano_rpc(rd, api_data, rdo) {
                 return
             }
             tx_api_scan_fail(rd, api_data, rdo, default_error);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            const error_object = errorThrown || jqXHR;
-            tx_api_scan_fail(rd, api_data, rdo, error_object, true);
+        }).fail(function(xhr, stat, err) {
+            const is_proxy = is_proxy_fail(this.url),
+                error_object = xhr || stat || err;
+            tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
         }).always(function() {
             set_api_src(rdo, api_data);
         });

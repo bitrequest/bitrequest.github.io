@@ -161,15 +161,11 @@ function init_xmr_node(cachetime, address, vk, request_ts) {
             }
         }
         notify(translate("notmonitored"), 500000, "yes");
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        const next_proxy = get_next_proxy();
-        if (next_proxy) {
+    }).fail(function(xhr, stat, err) {
+        if (get_next_proxy()) {
             init_xmr_node(cachetime, address, vk, request_ts);
             return
         }
-        console.log(jqXHR);
-        console.log(textStatus);
-        console.log(errorThrown);
         notify(translate("errorvk"));
     });
 }

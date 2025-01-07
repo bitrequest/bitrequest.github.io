@@ -759,8 +759,8 @@ function sharebu() {
                         "proxy": set_proxy
                     }));
                 shorten_url(sharedtitle, glob_approot + "?p=settings&sbu=" + r_dat, fetch_aws("img_system_backup.png"), true);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                console.error("API proxy error:", jqXHR, textStatus, errorThrown);
+            }).fail(function(xhr, stat, err) {
+                console.error("API proxy error:", xhr, stat, err);
                 closeloader();
             });
         }
@@ -860,8 +860,12 @@ function check_systembu(sbu) {
         } else {
             systembu_expired();
         }
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-        console.error("API proxy error:", jqXHR, textStatus, errorThrown);
+    }).fail(function(xhr, stat, err) {
+        if (get_next_proxy()) {
+            check_systembu(sbu);
+            return
+        }
+        console.error("API proxy error:", xhr, stat, err);
         systembu_expired();
     });
 }
@@ -1161,8 +1165,8 @@ function submit_GD_restore() {
                         "type": "gd"
                     };
                     restore_algo(pass_dat);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    console.error("API request failed:", textStatus, errorThrown);
+                }).fail(function(xhr, stat, err) {
+                    console.error("API request failed:", stat, err);
                     if (textStatus === "error") {
                         notify(errorThrown === "Unauthorized" ? translate("unauthorized") : translate("error"));
                     }
@@ -1887,7 +1891,7 @@ function share_csv() {
                         "proxy": set_proxy
                     }));
                 shorten_url(sharedtitle, glob_approot + "?p=settings&csv=" + r_dat, fetch_aws("img_system_backup.png"), true);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
+            }).fail(function(xhr, stat, err) {
                 closeloader();
             });
         }
@@ -1978,7 +1982,7 @@ function check_csvexport(csv) {
             return
         }
         systembu_expired();
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
         systembu_expired();
     });
 }
@@ -2566,11 +2570,8 @@ function test_append_proxy(optionlist, key, value, selected, dfault) { // make t
             return
         }
         proxy_option_li(optionlist, false, key, value, selected, dfault);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
         proxy_option_li(optionlist, false, key, value, selected, dfault);
-        console.log(jqXHR);
-        console.log(textStatus);
-        console.log(errorThrown);
     });
 }
 
@@ -2678,11 +2679,8 @@ function test_custom_proxy(value) { // make test api call
             popnotify("error", translate("unabletopost", {
                 "fixed_url": fixed_url
             }));
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+        }).fail(function(xhr, stat, err) {
             popnotify("error", translate("unabletoconnect"));
-            console.log(jqXHR);
-            console.log(textStatus);
-            console.log(errorThrown);
         });
         return
     }
@@ -2932,7 +2930,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                     return;
                 }
                 api_fail(thisref, apikeyval);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
+            }).fail(function(xhr, stat, err) {
                 api_fail(thisref, apikeyval);
             });
             return
@@ -3068,7 +3066,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
                 return
             }
             api_fail(thisref, apikeyval);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+        }).fail(function(xhr, stat, err) {
             api_fail(thisref, apikeyval);
         });
         return
@@ -3530,10 +3528,7 @@ function share_teaminvite() {
                         "proxy": set_proxy
                     }));
                 shorten_url(sharedtitle, glob_approot + "?p=settings&ro=" + r_dat, glob_approot + "/img_icons_apple-touch-icon.png", true);
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                console.log(jqXHR);
-                console.log(textStatus);
-                console.log(errorThrown);
+            }).fail(function(xhr, stat, err) {
                 closeloader();
             });
         }
@@ -3619,7 +3614,7 @@ function check_teaminvite(ro) {
             return
         }
         systembu_expired();
-    }).fail(function(jqXHR, textStatus, errorThrown) {
+    }).fail(function(xhr, stat, err) {
         systembu_expired();
     });
 }

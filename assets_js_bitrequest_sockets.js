@@ -411,14 +411,14 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                                     }, 3000);
                                                                     return
                                                                 }
-                                                            }).fail(function(jqXHR, textStatus, errorThrown) {
-                                                                ndef_apifail(jqXHR, textStatus, errorThrown);
+                                                            }).fail(function(xhr, stat, err) {
+                                                                ndef_apifail(xhr, stat, err);
                                                             });
                                                             return
                                                         }
                                                         ndef_errormg("failed to create invoice");
-                                                    }).fail(function(jqXHR, textStatus, errorThrown) {
-                                                        ndef_apifail(jqXHR, textStatus, errorThrown);
+                                                    }).fail(function(xhr, stat, err) {
+                                                        ndef_apifail(xhr, stat, err);
                                                     }).always(function() {
                                                         glob_ndef_processing = false;
                                                     });
@@ -426,8 +426,8 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                                 }
                                             }
                                             glob_ndef_processing = false;
-                                        }).fail(function(jqXHR, textStatus, errorThrown) {
-                                            ndef_apifail(jqXHR, textStatus, errorThrown);
+                                        }).fail(function(xhr, stat, err) {
+                                            ndef_apifail(xhr, stat, err);
                                         });
                                         return;
                                     }
@@ -447,8 +447,8 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
 }
 
 // Handles API failure for NFC operations
-function ndef_apifail(jqXHR, textStatus, errorThrown) {
-    const error_object = errorThrown || jqXHR;
+function ndef_apifail(xhr, stat, err) {
+    const error_object = xhr || stat || err;
     api_eror_msg(null, get_api_error_data(error_object));
     glob_paymentdialogbox.removeClass("accept_lnd transacting");
     closenotify();
@@ -529,7 +529,7 @@ function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
                 return
             }
             lnd_poll_data_fail(pid);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+        }).fail(function(xhr, stat, err) {
             lnd_poll_data_fail(pid);
         });
         return
@@ -575,10 +575,6 @@ function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
                     return
                 }
             }
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            console.log(jqXHR);
-            console.log(textStatus);
-            console.log(errorThrown);
         });
         return
     }

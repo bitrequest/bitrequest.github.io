@@ -20,6 +20,7 @@
 //br_result
 //get_api_url
 //get_next_proxy
+//is_proxy_fail
 //tofixedspecial
 //get_search
 //renderlnconnect
@@ -48,6 +49,7 @@
 //vibrate
 //get_api_data
 //str_match
+//str_incudes
 //trimdecimals
 //adjust_objectarray
 //now
@@ -308,6 +310,15 @@ function get_next_proxy() {
         return next_p;
     }
     return false;
+}
+
+// Checks if failed connection is proxy 
+function is_proxy_fail(stc) {
+    const proxies = all_proxies(),
+        match = proxies.find(function(url) {
+            return stc.includes(url);
+        });
+    return (match) ? true : false;
 }
 
 // Converts scientific notation to fixed-point notation
@@ -590,12 +601,20 @@ function get_api_data(api_id) {
     });
 }
 
+// Checks if one strings match (case-insensitive)
+function str_match(str1, str2) {
+    if (str1 && str2) {
+        return str_incudes(str1, str2) || str_incudes(str2, str1);
+    }
+    return false
+}
+
 // Checks if one string contains another (case-insensitive)
-function str_match(add1, add2) {
-    if (add1 && add2) {
-        const a1u = add1.toUpperCase(),
-            a2u = add2.toUpperCase(),
-            includes = a1u.includes(a2u) || a2u.includes(a1u);
+function str_incudes(main, chunk) {
+    if (main && chunk) {
+        const main_upper = main.toUpperCase(),
+            chunk_upper = chunk.toUpperCase(),
+            includes = main_upper.includes(chunk_upper);
         return includes;
     }
     return false
