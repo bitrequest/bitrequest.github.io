@@ -1695,14 +1695,15 @@ function mempoolspace_rpc_blockheight(rd, api_data, rdo, rpc) {
         "params": {
             "method": "GET"
         }
-    }).done(function(lb) {
-        const lbdat = br_result(lb);
-        if (lbdat) {
-            const latestblock = lbdat.result;
-            if (latestblock) {
-                mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock);
+    }).done(function(e) {
+        const data = br_result(e).result;
+        if (data) {
+            if (data.error) {
+                tx_api_scan_fail(rd, api_data, rdo, data.error);
                 return
             }
+            mempoolspace_rpc(rd, api_data, rdo, rpc, data);
+            return
         }
         tx_api_scan_fail(rd, api_data, rdo, default_error);
     }).fail(function(xhr, stat, err) {

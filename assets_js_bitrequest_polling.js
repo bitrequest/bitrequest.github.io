@@ -236,6 +236,10 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
             }
         });
     }).fail(function() {
+        if (get_next_proxy()) {
+            ping_xmr_node(cachetime, address, vk, request_ts, txhash);
+            return
+        }
         clearpinging(address);
         notify(translate("websocketoffline"), 500000, "yes");
     });

@@ -53,6 +53,8 @@ $(document).ready(function() {
     //cc_fail
     //initexchangerate
     //get_fiat_exchangerate
+    //next_fiat_api
+    //no_xrate_result
     //rendercurrencypool
     //getpayment
     //show_paymentdialog
@@ -1117,10 +1119,7 @@ function cc_fail(apilist, api, error_val, is_proxy) {
     if (next_proxy()) { // Try next proxy after trying all api's
         return
     }
-    loadertext(translate("apierror"));
-    closeloader();
-    cancelpaymentdialog();
-    fail_dialogs(api, error_val);
+    no_xrate_result(api, error_val);
 }
 
 // Initializes the exchange rate process
@@ -1289,10 +1288,15 @@ function next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, c
     if (next_proxy()) { // Try next proxy after trying all api's
         return
     }
-    loadertext(translate("error"));
+    no_xrate_result(fiatapi, error_object);
+}
+
+// Show error message if all proxies / apis fail.
+function no_xrate_result(api, error_val) {
+    loadertext(translate("apierror"));
     closeloader();
     cancelpaymentdialog();
-    fail_dialogs(fiatapi, error_object);
+    fail_dialogs(api, error_val);
 }
 
 // Renders the currency pool with exchange rates and payment details

@@ -22,6 +22,7 @@ $(document).ready(function() {
     //tx_api_scan_fail
     //tx_api_fail
     //handle_api_fails
+    //no_results
     //get_next_api
     //api_eror_msg
     //get_api_error_data
@@ -461,7 +462,11 @@ function handle_api_fails(rd, rdo, error, api_data, is_proxy, l2) {
         }
         return false
     }
-    if (is_proxy && next_proxy()) { // Try next proxy if proxy fails
+    if (is_proxy) { // Try next proxy if proxy fails
+        if (next_proxy()) {
+            return
+        }
+        no_results(rdo, src, api_data, error_data);
         return
     }
     if (!api_data) {
@@ -525,6 +530,11 @@ function handle_api_fails(rd, rdo, error, api_data, is_proxy, l2) {
     if (next_proxy()) { // Try next proxy after trying all api's
         return
     }
+    no_results(rdo, src, api_data, error_data);
+}
+
+// Show error message if all proxies / apis fail. 
+function no_results(rdo, src, api_data, error_data) {
     const rpc_id = api_data.name || api_data.url || "unknown";
     api_eror_msg(rpc_id, error_data);
     if (src === "addr_polling" || src === "tx_polling") {
@@ -756,7 +766,11 @@ function handle_rpc_fails(rd, rdo, error, api_data, is_proxy, l2) {
         }
         return false
     }
-    if (is_proxy && next_proxy()) { // Try next proxy if proxy fails
+    if (is_proxy) { // Try next proxy if proxy fails
+        if (next_proxy()) {
+            return
+        }
+        no_results(rdo, src, api_data, error_data);
         return
     }
     if (!api_data) {
@@ -820,14 +834,7 @@ function handle_rpc_fails(rd, rdo, error, api_data, is_proxy, l2) {
     if (next_proxy()) { // Try next proxy after trying all rpc's
         return
     }
-    const rpc_id = api_data.name || api_data.url || "unknown";
-    api_eror_msg(rpc_id, error_data);
-    if (src === "addr_polling") {
-        clearpinging();
-        socket_info(api_data, false);
-        notify(translate("websocketoffline"), 500000, "yes");
-    }
-    api_callback(rdo);
+    no_results(rdo, src, api_data, error_data);
 }
 
 // Retrieves the next available RPC for a given payment method
