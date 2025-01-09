@@ -185,6 +185,7 @@ function getinputs(rd, dl) {
         const api_info = check_api(rd.payment),
             selected = api_info.data;
         rdo.thislist.removeClass("pmstatloaded");
+        tx_count(rdo.statuspanel, "reset");
         if (api_info.api) {
             get_api_inputs_init(rd, api_info.data, rdo);
             return
@@ -413,7 +414,17 @@ function scan_match(rd, api_data, rdo, counter, txdat, l2) {
 
 // Updates the transaction count in the status panel
 function tx_count(statuspanel, count) {
-    statuspanel.attr("data-count", count).text("+ " + count);
+    if (count === "reset") {
+        statuspanel.attr("data-count", 0).text("+ " + 0);
+        return
+    }
+    const current_count = parseInt(statuspanel.attr("data-count")),
+        new_count = current_count + count;
+    if (!new_count) return;
+    statuspanel.attr("data-count", new_count).text("+ " + new_count);
+    if (new_count > 1) {
+        statuspanel.closest(".rqli").find(".metalist .show_tx").hide();
+    }
 }
 
 // Handles API scan failures
@@ -868,8 +879,8 @@ function append_tx_li(txd, rqtype) {
         setconfirmations = txd.setconfirmations,
         ccsymbol = txd.ccsymbol,
         set_ccsymbol = ccsymbol ? ccsymbol.toUpperCase() : "",
-        ln = txhash && txhash.slice(0, 9) === "lightning";
-    lnstr = ln ? " <span class='icon-power'></span>" : "",
+        ln = txhash && txhash.slice(0, 9) === "lightning",
+        lnstr = ln ? " <span class='icon-power'></span>" : "",
         valstr = (ln && !conf) ? "" : ccval_rounded + " " + set_ccsymbol + lnstr,
         date_format = transactiontime ? short_date(transactiontime) : "",
         no_conf = setconfirmations === false,
@@ -899,7 +910,7 @@ function hs_for(dat) {
 function data_title(dat) {
     const historic = dat.historic;
     let historic_dat = "";
-    if (historic) {
+    if (historic && historic.price) {
         const timestamp = historic.timestamp,
             price = historic.price,
             fiatsrc = historic.fiatapisrc,

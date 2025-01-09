@@ -3166,12 +3166,13 @@ function showtransaction_trigger() {
         const thisnode = $(this),
             thislist = thisnode.closest("li"),
             rqli = thisnode.closest("li.rqli"),
-            rqldat = rqli.data(),
-            txhash = thislist.data("txhash") || rqldat.txhash;
+            li_dat = thislist.data(),
+            rql_dat = rqli.data(),
+            txhash = rqli.txhash || rql_dat.txhash;
         if (txhash) {
             const lnhash = txhash.startsWith("lightning");
             if (lnhash) {
-                const lightning = rqldat.lightning,
+                const lightning = rql_dat.lightning,
                     imp = lightning.imp,
                     invoice = lightning.invoice;
                 if (invoice) {
@@ -3180,7 +3181,7 @@ function showtransaction_trigger() {
                         const result = confirm(translate("openinvoice", {
                             "hash": hash
                         }));
-                        if (result === true) {
+                        if (result) {
                             const proxy = lightning.proxy_host,
                                 nid = lightning.nid,
                                 pid = lightning.pid,
@@ -3193,11 +3194,10 @@ function showtransaction_trigger() {
                 playsound(glob_funk);
                 return
             }
-            const rql_dat = rqli.data(),
-                currency = rql_dat.payment,
+            const currency = rql_dat.payment,
                 erc20 = rql_dat.erc20,
                 source = rql_dat.source,
-                layer = rql_dat.eth_layer2,
+                layer = li_dat.eth_layer2 || rql_dat.eth_layer2,
                 blockchainurl = blockexplorer_url(currency, true, erc20, source, layer);
             if (blockchainurl) {
                 open_blockexplorer_url(blockchainurl + txhash);
@@ -4382,8 +4382,9 @@ function appendrequest(rd) {
         requestlabel = islabel ? " <span class='requestlabel'>(" + islabel + ")</span>" : "",
         conf_box = !monitored ? "<div class='txli_conf' data-conf='0'><span>Unmonitored transaction</span></div>" :
         conf > 0 ? "<div class='txli_conf'><div class='confbar'></div><span>" + conf + " / " + set_confirmations + " " + translate("confirmations") + "</span></div>" :
-        conf === 0 ? "<div class='txli_conf' data-conf='0'><div class='confbar'></div><span>Unconfirmed transaction<span></div>" : "",
-        view_tx_markup = lnhash ? "<li><strong class='show_tx'><span class='icon-power'></span><span class='ref'>" + translate("viewinvoice") + "</span></strong></li>" : (txhash) ? "<li><strong class='show_tx'><span class='icon-eye'></span>" + translate("viewon") + " blockchain</strong></li>" : "",
+        conf === 0 ? "<div class='txli_conf' data-  conf='0'><div class='confbar'></div><span>Unconfirmed transaction<span></div>" : "",
+        tx_count = txhistory ? txhistory.length : 0,
+        view_tx_markup = (tx_count > 1) ? "" : lnhash ? "<li><strong class='show_tx'><span class='icon-power'></span><span class='ref'>" + translate("viewinvoice") + "</span></strong></li>" : (txhash) ? "<li><strong class='show_tx'><span class='icon-eye'></span>" + translate("viewon") + " blockchain</strong></li>" : "",
         statustext = !monitored ? "" : (status == "new") ? "Waiting for payment" : status,
         src_html = source ? "<span class='src_txt'>" + translate("source") + ": " + source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>" : "",
         iscryptoclass = iscrypto ? "" : " isfiat",
@@ -4467,7 +4468,7 @@ function add_historical_data(transactionlist, txhistory) {
                     tx_listitem.append(hs_for(h_string)).attr("title", h_string);
                 }
             }
-            transactionlist.append(tx_listitem);
+            transactionlist.append(tx_listitem.data(value));
         }
     });
 }

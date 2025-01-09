@@ -33,8 +33,8 @@ function tx_polling(tx_data, api_dat) {
             return
         }
         const eth_layer2 = tx_data.eth_layer2,
-            api_data = eth_layer2 ? api_dat : api_dat || q_obj(helper, "api_info.data");
-        const retry = api_data ? true : false,
+            api_data = eth_layer2 ? api_dat : api_dat || q_obj(helper, "api_info.data"),
+            retry = api_data ? true : false,
             rdo = {
                 "requestid": request.requestid,
                 "pending": "polling",

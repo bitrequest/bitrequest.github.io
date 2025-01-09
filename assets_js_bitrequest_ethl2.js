@@ -176,18 +176,17 @@ function scan_ethl2_api(rd, rdo, api_dat) {
         const ccsymbol = rd.currencysymbol,
             ctracts = contracts(ccsymbol),
             rq_id = requestid || "";
-        let index = 0;
+        let index = 0,
+            delay = 0;
         $.each(l2_options, function(key, value) {
-            const inarr = $.inArray(index, req_l2_arr) !== -1;
-            if (inarr) {
-                delay = (index + 1) * 1000;
-                setTimeout(function() {
-                    if (index === (l2_length - 1) || glob_l2_fetched) {
-                        // Block scanning when l2 tx is detected or detect when scanning is finished
-                        api_callback(rdo);
-                        return
-                    }
-                    index++;
+            setTimeout(function() {
+                if (index === (l2_length - 1) || glob_l2_fetched) {
+                    // Block scanning when l2 tx is detected or detect when scanning is finished
+                    api_callback(rdo);
+                    return false;
+                }
+                const inarr = $.inArray(index, req_l2_arr) !== -1;
+                if (inarr) {
                     const api_data = api_dat || q_obj(value, "apis.selected"),
                         api_name = api_data.name;
                     if (api_name) {
@@ -202,7 +201,6 @@ function scan_ethl2_api(rd, rdo, api_dat) {
                                     rdo
                                 }
                             arbitrum_apis(dat);
-                            return
                         }
                         // polygon:
                         if (key === "polygon") {
@@ -214,7 +212,6 @@ function scan_ethl2_api(rd, rdo, api_dat) {
                                     rdo
                                 }
                             polygon_apis(dat);
-                            return
                         }
                         // bnb_smart_chain:
                         if (key === "bnb") {
@@ -226,11 +223,12 @@ function scan_ethl2_api(rd, rdo, api_dat) {
                                     rdo
                                 }
                             bnb_apis(dat);
-                            return
                         }
                     }
-                }, delay);
-            }
+                }
+                index++;
+            }, delay * 2000);
+            delay++;
         });
         return
     }

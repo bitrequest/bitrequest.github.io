@@ -953,7 +953,7 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                         $.each(sortlist, function(dat, value) {
                             const txd = omniscan_scan_data(value, rdo.setconfirmations, rd.currencysymbol, network),
                                 rt_compensate = (rd.inout === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
-                            if (str_match(value.to, rd.address) && (txd.transactiontime > rt_compensate) && (str_match(rd.currencysymbol, value.tokenSymbol)) && txd.ccval) {
+                            if (str_match(value.to, rd.address) && (txd.transactiontime > rt_compensate) && txd.ccval) {
                                 txdat = txd;
                                 if (source === "list") {
                                     api_src(thislist, api_data); // !!overwrite
