@@ -5130,7 +5130,7 @@ function detect_cam(result) {
 
 // Starts the QR scanner for a specific currency and type
 function start_scan(currency, type) {
-    scanner.start().then(() => {
+    glob_const.scanner.start().then(() => {
         currencyscan = currency,
             scantype = type;
         const currentpage = geturlparameters().p,
@@ -5180,13 +5180,13 @@ function show_cam() {
 // Closes the camera interface and stops the scanner
 function close_cam() {
     glob_const.body.removeClass("showcam");
-    scanner.stop();
+    glob_const.scanner.stop();
     currencyscan = null;
 }
 
 // Processes the QR scan result based on the scan type
 function setResult(result) {
-    scanner.stop();
+    glob_const.scanner.stop();
     const payment = currencyscan,
         thistype = scantype;
     if (thistype === "lnconnect") {
