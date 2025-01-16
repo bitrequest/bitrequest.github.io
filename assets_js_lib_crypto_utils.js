@@ -889,7 +889,7 @@ function aes_dec(content, keyst) {
         const data = sjcl.mode.gcm.decrypt(cipher, encryptedBitArray, ivdec, {}, 128);
         return sjcl.codec.utf8String.fromBits(data);
     } catch (err) {
-        console.log(err.message);
+        console.error(err.name, err.message);
         return false;
     }
 }
@@ -923,7 +923,7 @@ function bch_legacy(cadr) {
             unbuf = buf2hex(conc);
         return b58check_encode(unbuf);
     } catch (e) {
-        console.log(e);
+        console.error(e.name, e.message);
         return cadr
     }
 }
@@ -935,7 +935,7 @@ function bch_cashaddr(prefix, type, legacy) {
             lbslice = lbytes.slice(1, 21);
         return cashaddr.encode(prefix, type, lbslice);
     } catch (e) {
-        console.log(e);
+        console.error(e.name, e.message);
         return legacy
     }
 }

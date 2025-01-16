@@ -1,3 +1,296 @@
+const br_bipobj = br_get_local("bpdat", true),
+    br_hasbip = (br_bipobj) ? true : false,
+    br_bipid = (br_hasbip) ? br_bipobj.id : false,
+    br_cashier_dat = br_get_local("cashier", true),
+    br_is_cashier = (br_cashier_dat && br_cashier_dat.cashier) ? true : false,
+    br_cashier_seedid = (br_is_cashier) ? br_is_cashier.seedid : false,
+    br_init = br_get_local("init", true),
+    br_io = br_dobj(br_init, true),
+    br_hostname = "bitrequest.github.io", // change if self hosted
+    br_localhostname = (br_hostname.indexOf("http") > -1) ? br_hostname.split("://").pop() : br_hostname,
+    br_approot = "https://" + br_localhostname + "/",
+    br_proxy_list = [
+        "https://app.bitrequest.io/",
+        "https://www.bitrequest.io/",
+        "https://www.bitrequest.app/"
+    ],
+    br_hosted_proxy = random_array_item(br_proxy_list), // load balance proxies
+    br_firebase_dynamic_link_domain = "bitrequest.page.link",
+    br_androidpackagename = "io.bitrequest.app",
+    br_useragent = navigator.userAgent || navigator.vendor || window.opera,
+    br_lower_useragent = br_useragent.toLowerCase(),
+    br_timezoneoffset = new Date().getTimezoneOffset(),
+    br_timezone = br_timezoneoffset * 60000,
+    br_has_ndef = ("NDEFReader" in window),
+    br_referrer = document.referrer,
+    br_exp_referrer = "android-app://" + br_androidpackagename,
+    br_ref_match = (br_referrer && br_referrer.indexOf(br_exp_referrer) >= 0) ? true : false,
+    br_inframe = (self !== top),
+    br_w_loc = window.location,
+    br_thishostname = br_w_loc.hostname,
+    br_hostlocation = (br_thishostname === "" || br_thishostname === "localhost" || br_thishostname === "127.0.0.1") ? "local" :
+    (br_thishostname === "bitrequest.github.io") ? "hosted" :
+    (br_thishostname === br_thishostname) ? "selfhosted" : "unknown",
+    br_video = $("#qr-video")[0],
+    glob_const = {
+        "default_error": {
+            "error": "no transactions found",
+            "console": true
+        },
+        "stored_currencies": br_get_local("currencies", true),
+        "apptitle": "Bitrequest",
+        "hostname": br_hostname,
+        "localhostname": br_localhostname,
+        "approot": br_approot,
+        "ln_socket": "wss://bitrequest.app:8030",
+        "proxy_list": br_proxy_list,
+        "hosted_proxy": br_hosted_proxy,
+        "proxy_version": "0.016",
+        "firebase_dynamic_link_domain": br_firebase_dynamic_link_domain,
+        "firebase_shortlink": "https://" + br_firebase_dynamic_link_domain + "/",
+        "androidpackagename": br_androidpackagename,
+        "phpsupport": false,
+        "main_bc_ws": "ws://socket.blockcypher.com/v1/",
+        "main_bc_wss": "wss://socket.blockcypher.com/v1/",
+        "main_eth_node": "https://mainnet.infura.io/v3/",
+        "main_arbitrum_node": "https://arbitrum-mainnet.infura.io/v3/",
+        "main_polygon_node": "https://polygon-mainnet.infura.io/v3/",
+        "main_bnb_node": "https://bsc-mainnet.infura.io/v3/",
+        "main_alchemy_node": "https://eth-mainnet.g.alchemy.com/v2/",
+        "main_eth_socket": "wss://mainnet.infura.io/ws/v3/",
+        "main_arbitrum_socket": "wss://arbitrum-mainnet.infura.io/ws/v3/",
+        "main_polygon_socket": "wss://polygon-mainnet.infura.io/ws/v3/",
+        "main_bnb_socket": "wss://bsc-mainnet.infura.io/ws/v3/",
+        "main_alchemy_socket": "wss://eth-mainnet.g.alchemy.com/v2/",
+        "main_nano_node": "https://www.bitrequest.app:8020",
+        "main_kas_wss": "wss://api.kaspa.org",
+        "sec_kas_wss": "wss://api-v2-do.kas.fyi",
+        "aws_bucket": "https://brq.s3.us-west-2.amazonaws.com/",
+        "cmc_icon_loc": "https://s2.coinmarketcap.com/static/img/coins/200x200/",
+        "multi_wallets": {
+            "exodus": {
+                "name": "exodus",
+                "website": "https://www.exodus.io",
+                "appstore": "https://apps.apple.com/app/id1414384820",
+                "playstore": "https://play.google.com/store/apps/details?id=exodusmovement.exodus",
+                "desktop": "https://www.exodus.io/desktop",
+                "seed": true
+            },
+            "coinomi": {
+                "name": "coinomi",
+                "website": "https://www.coinomi.com",
+                "appstore": "https://itunes.apple.com/app/id1333588809",
+                "playstore": "https://play.google.com/store/apps/details?id=com.coinomi.wallet",
+                "desktop": "https://www.coinomi.com/en/downloads/",
+                "seed": true
+            },
+            "trezor": {
+                "name": "trezor",
+                "website": "https://trezor.io",
+                "appstore": "https://trezor.io",
+                "playstore": "https://trezor.io",
+                "desktop": "https://trezor.io",
+                "seed": true
+            },
+            "ledger": {
+                "name": "ledger",
+                "website": "https://www.ledger.com",
+                "appstore": "https://itunes.apple.com/app/id1361671700",
+                "playstore": "https://play.google.com/store/apps/details?id=com.ledger.live",
+                "desktop": "https://www.ledger.com/ledger-live/download",
+                "seed": true
+            },
+            "keepkey": {
+                "name": "keepkey",
+                "website": "https://shapeshift.com/keepkey",
+                "appstore": "https://beta.shapeshift.com",
+                "playstore": "https://beta.shapeshift.com",
+                "desktop": "https://beta.shapeshift.com",
+                "seed": true
+            },
+            "atomicwallet": {
+                "name": "atomicwallet",
+                "website": "https://atomicwallet.io",
+                "appstore": "https://apps.apple.com/app/id1478257827",
+                "playstore": "https://play.google.com/store/apps/details?id=io.atomicwallet",
+                "desktop": "https://atomicwallet.io/#download-section-anchor",
+                "seed": true
+            },
+            "cakewallet": {
+                "name": "cakewallet",
+                "website": "https://cakewallet.com",
+                "appstore": "https://apps.apple.com/app/id1334702542",
+                "playstore": "https://play.google.com/store/apps/details?id=com.cakewallet.cake_wallet",
+                "desktop": "https://cakewallet.com",
+                "seed": true
+            }
+        },
+        // bip39
+        "test_phrase": "army van defense carry jealous true garbage claim echo media make crunch", // random phrase used for test derive
+        "expected_seed": "5b56c417303faa3fcba7e57400e120a0ca83ec5a4fc9ffba757fbe63fbd77a89a1a3be4c67196f57c39a88b76373733891bfaba16ed27a813ceed498804c0570", // expected seed used for test derive
+        "expected_address": "1HQ3rb7nyLPrjnuW85MUknPekwkn7poAUm", // expected addres used for test derive
+        "expected_bech32": "bc1qg0azlj4w2lrq8jssrrz6eprt2fe7f7edm4vpd5", // expected bech32 addres used for test derive
+        "expected_ltc_address": "LZakyXotaE29Pehw21SoPuU832UhvJp4LG",
+        "expected_bch_cashaddr": "qp5p0eur784pk8wxy2kzlz3ctnq5whfnuqqpp78u22",
+        "expected_doge_address": "DKvWg8UhQSycj1J8QVxeBDkRpbjDkw3DiW",
+        "expected_eth_address": "0x2161DedC3Be05B7Bb5aa16154BcbD254E9e9eb68",
+        "c_derive": {
+            "bitcoin": true,
+            "litecoin": true,
+            "dogecoin": true,
+            "dash": true,
+            "nano": true,
+            "monero": true,
+            "ethereum": true,
+            "bitcoin-cash": true,
+            "nimiq": false,
+            "kaspa": false
+        },
+        "can_xpub": {
+            "bitcoin": true,
+            "litecoin": true,
+            "dogecoin": true,
+            "dash": true,
+            "nano": false,
+            "monero": false,
+            "ethereum": true,
+            "bitcoin-cash": true,
+            "nimiq": false,
+            "kaspa": false
+        },
+        "ls_support": check_local(),
+        language,
+        "useragent": br_useragent,
+        "lower_useragent": br_lower_useragent,
+        "titlenode": $("title"),
+        "ogtitle": $("meta[property='og:title']"),
+        "html": $("html"),
+        "body": $("body"),
+        "paymentpopup": $("#payment"),
+        "paymentdialogbox": $("#paymentdialogbox"),
+        "copycontent": $("#copyinput"),
+        "funk": $("#funk"), // funk sound effect
+        "cashier": $("#cashier"), // cashier sound effect
+        "collect": $("#collect"), // collect sound effect
+        "blip": $("#blip"), // blip sound effect
+        "waterdrop": $("#waterdrop"), // waterdrop sound effect
+        "howl": $("#howl"), // howl sound effect
+        "timezoneoffset": br_timezoneoffset,
+        "timezone": br_timezone,
+        "has_ndef": br_has_ndef,
+        "supportsTouch": ("ontouchstart" in window || navigator.msMaxTouchPoints) ? true : false,
+        "is_safari": (br_lower_useragent.indexOf("safari/") > -1 && br_lower_useragent.indexOf("android") == -1),
+        "referrer": br_referrer,
+        "exp_referrer": br_exp_referrer,
+        "ref_match": br_ref_match,
+        "android_standalone": window.matchMedia("(display-mode: standalone)").matches,
+        "ios_standalone": navigator.standalone,
+        "is_android_app": (br_ref_match) ? true : false, // android app fingerprint
+        "is_ios_app": false, // ios app fingerprint
+        "deviceid": null,
+        "inframe": br_inframe,
+        "offline": (navigator.onLine === false),
+        "w_loc": br_w_loc,
+        "c_host": br_w_loc.origin + br_w_loc.pathname,
+        "thishostname": br_thishostname,
+        "hostlocation": br_hostlocation,
+        "wl": navigator.wakeLock,
+        "after_scan_timeout": 30000, // Preform extra tx lookup when closing paymentdialog after 30 seconds
+        "xss_alert": "xss attempt detected",
+        "langcode": br_langcode, // set saved or system language
+        "token_cache": 604800,
+        "video": br_video,
+        "scanner": new QrScanner(br_video, result => setResult(result), error => {
+            console.log(error);
+        }),
+        "overflow_limit": 25,
+        "ndef": (br_has_ndef && !br_inframe) ? new NDEFReader() : false,
+        "cacheperiodcrypto": 120000, //120000 = 2 minutes
+        "cacheperiodfiat": 600000, //600000 = 10 minutes
+        "zeroplaceholder": parseFloat((0.00).toLocaleString(br_langcode, {
+            "minimumFractionDigits": 2,
+            "maximumFractionDigits": 2
+        })).toFixed(2),
+        "default_error": {
+            "error": "no transactions found",
+            "console": true
+        },
+        "scope": "https://www.googleapis.com/auth/drive.appdata",
+        "drivepath": "https://content.googleapis.com",
+        "redirect_uri": br_w_loc.origin + br_w_loc.pathname + "?p=settings"
+    },
+    glob_let = {
+        "socket_attempt": {},
+        "api_attempt": {},
+        "api_attempts": {},
+        "statuspush": [],
+        "tx_list": [],
+        "rpc_attempts": {},
+        "changes": {}, //bip39
+        "test_derive": true,
+        "phrasearray": null,
+        "has_bigint": hasbigint(),
+        "phraseverified": false, // core:
+        "scrollposition": 0,
+        "symbolcache": false,
+        "hascam": false,
+        "cp_timer": 0,
+        "local": false,
+        "localserver": false,
+        "wakelock": false,
+        "bipv": false,
+        "bipobj": br_bipobj,
+        "hasbip": br_hasbip,
+        "bipid": br_bipid,
+        "ndef": false,
+        "ctrl": false,
+        "cashier_dat": br_cashier_dat,
+        "is_cashier": br_is_cashier,
+        "cashier_seedid": br_cashier_seedid,
+        "init": br_init,
+        "io": br_io,
+        "new_address": false, // prevent double address entries
+        "proxy_attempts": {},
+        "sockets": {},
+        "pinging": {},
+        "currencyscan": null,
+        "scantype": null,
+        "backup_active": false,
+        "backup_result": null,
+        "backup_filename": null,
+        "resd": {},
+        "ap_id": null,
+        "test_rpc_call": null,
+        "is_erc20t": null,
+        "is_btc": false,
+        "lnd_confirm": false,
+        "ndef_processing": null,
+        "ndef_timer": 0,
+        "ws_timer": 0,
+        "socket_overflow": 0,
+        "l2s": {},
+        "tpto": 0, // tx_polling timer
+        "blockswipe": false,
+        "angle": 0,
+        "percent": 0,
+        "sa_timer": 0,
+        "request_timer": 0,
+        "blocktyping": false,
+        "lnd_ph": false,
+        "prevkey": false,
+        "block_scan": 0,
+        "rpc_overflow": 0,
+        "polling_overflow": 0,
+        "l2_fetched": {}
+
+    }
+
+// Global helpers
+let request = null,
+    helper = null;
+
+//hasbigint
+
 // Manage local storage
 
 //check_local
@@ -91,6 +384,21 @@
 //check_params
 //click_pop
 
+// Checks if BigInt is supported in the current environment
+function hasbigint() {
+    // Check both existence and functionality
+    return typeof BigInt === "function" &&
+        typeof BigInt.prototype.toString === "function" &&
+        (() => {
+            try {
+                // More comprehensive test
+                return BigInt("9007199254740991") + BigInt(1) === BigInt("9007199254740992");
+            } catch {
+                return false;
+            }
+        })();
+}
+
 // Manage local storage
 
 // Checks if local storage is available
@@ -117,11 +425,7 @@ function br_set_session(pref, dat, str) {
     sessionStorage.setItem("bitrequest_" + pref, ddat);
 }
 
-// Gets an item from local storage with a prefix
-function br_get_local(pref, parse) {
-    const dat = localStorage.getItem("bitrequest_" + pref);
-    return parse && dat !== null ? JSON.parse(dat) : dat;
-}
+// Gets an item from local storage with a prefix --> Moved to lang_controller
 
 // Gets an item from session storage with a prefix
 function br_get_session(pref, parse) {
@@ -200,7 +504,7 @@ function api_proxy(ad, p_proxy) {
             "search": ad.search
         }),
         set_proxy = p_proxy || d_proxy();
-    glob_proxy_attempts[set_proxy] = true;
+    glob_let.proxy_attempts[set_proxy] = true;
     if (aud) {
         const proxy = ad.proxy,
             api_key = aud.api_key,
@@ -253,12 +557,12 @@ function br_result(e) {
         proxy = Boolean(ping);
     if (proxy && ping.br_cache) {
         const version = ping.br_cache.version;
-        if (version < glob_proxy_version) {
+        if (version < glob_const.proxy_version) {
             proxy_alert(version);
         } else {
-            if (glob_html.hasClass("proxyupdate")) {
-                glob_html.removeClass("proxyupdate");
-                glob_body.removeClass("haschanges");
+            if (glob_const.html.hasClass("proxyupdate")) {
+                glob_const.html.removeClass("proxyupdate");
+                glob_const.body.removeClass("haschanges");
             }
         }
     }
@@ -300,9 +604,9 @@ function get_next_proxy() {
         cc_index = c_index === -1 ? 0 : c_index,
         next_i = proxies[cc_index + 1],
         next_p = next_i || proxies[0];
-    if (glob_proxy_attempts[next_p] !== true) {
-        glob_api_attempts = {}, // reset cache and index
-            glob_rpc_attempts = {};
+    if (glob_let.proxy_attempts[next_p] !== true) {
+        glob_let.api_attempts = {}, // reset cache and index
+            glob_let.rpc_attempts = {};
         set_setting("api_proxy", { // save next proxy
             "selected": next_p
         }, next_p);
@@ -370,7 +674,7 @@ function get_search(str) {
 
 // Gets URL parameters from the current page
 function geturlparameters(str) {
-    return renderparameters(glob_w_loc.search.substring(1));
+    return renderparameters(glob_const.w_loc.search.substring(1));
 }
 
 // Renders URL parameters into an object
@@ -420,12 +724,12 @@ function xss_search(val) {
         const val_lower = val.toLowerCase();
         if (val_lower.includes("<scrip")) {
             vibrate();
-            notify(glob_xss_alert);
+            notify(glob_const.xss_alert);
             return true
         }
         if (val_lower.includes("onerror")) {
             vibrate();
-            notify(glob_xss_alert);
+            notify(glob_const.xss_alert);
             return true
         }
     }
@@ -456,19 +760,19 @@ function hashcode(str) {
 // Gets the cryptocurrency icon based on IDs
 function getcc_icon(cmcid, cpid, erc20) {
     if (erc20) {
-        if (glob_offline === true) {
+        if (glob_const.offline === true) {
             return "<img src='" + c_icons("ph") + "' class='cmc_icon'/>";
         }
-        return "<img src='" + glob_cmc_icon_loc + cmcid + ".png' class='cmc_icon'/>";
+        return "<img src='" + glob_const.cmc_icon_loc + cmcid + ".png' class='cmc_icon'/>";
     }
     return "<img src='" + c_icons(cpid) + "' class='cmc_icon'/>";
 }
 
 // Determines the device type
 function getdevicetype() {
-    const ua = glob_userAgent;
-    return (glob_is_android_app === true) ? "android-app" :
-        (glob_is_ios_app === true) ? "apple-app" :
+    const ua = br_useragent;
+    return (glob_const.is_android_app === true) ? "android-app" :
+        (glob_let.is_ios_app === true) ? "apple-app" :
         (/iPad/.test(ua)) ? "iPad" :
         (/iPhone/.test(ua)) ? "iPhone" :
         (/Android/.test(ua)) ? "Android" :
@@ -479,10 +783,10 @@ function getdevicetype() {
 
 // Determines the platform based on device type
 function getplatform(device) {
-    if (glob_supportsTouch) {
-        if (glob_is_android_app === true || device === "Android" || device === "Windows") {
+    if (glob_const.supportsTouch) {
+        if (glob_const.is_android_app === true || device === "Android" || device === "Windows") {
             return "playstore";
-        } else if (device === "iPhone" || device === "iPad" || device === "Macintosh" || glob_is_ios_app === true) {
+        } else if (device === "iPhone" || device === "iPad" || device === "Macintosh" || glob_let.is_ios_app === true) {
             return "appstore";
         }
     } else {
@@ -519,7 +823,7 @@ function to_ts(ts) {
 
 // Formats a timestamp into a short date string
 function short_date(txtime) {
-    return new Date(txtime - glob_timezone).toLocaleString(glob_langcode, {
+    return new Date(txtime - glob_const.timezone).toLocaleString(glob_const.langcode, {
         "day": "2-digit", // numeric, 2-digit
         "month": "2-digit", // numeric, 2-digit, long, short, narrow
         "year": "2-digit", // numeric, 2-digit
@@ -596,7 +900,7 @@ function vibrate() {
 
 // Retrieves API data based on the API ID
 function get_api_data(api_id) {
-    return glob_br_config.apis.find(function(val) {
+    return glob_config.apis.find(function(val) {
         return val.name === api_id;
     });
 }
@@ -642,7 +946,7 @@ function now() {
 
 // Returns the current UTC timestamp
 function now_utc() {
-    return Date.now() + glob_timezone;
+    return Date.now() + glob_const.timezone;
 }
 
 // Converts a jQuery object to an array of data attributes
@@ -666,18 +970,18 @@ function d_proxy() {
 function all_proxies() {
     const pdat = proxy_dat(),
         cproxies = pdat.custom_proxies;
-    return glob_proxy_list.concat(cproxies);
+    return glob_const.proxy_list.concat(cproxies);
 }
 
 // Constructs an AWS URL for a file
 function fetch_aws(filename, bckt) {
-    const bucket = bckt || glob_aws_bucket;
+    const bucket = bckt || glob_const.aws_bucket;
     return bucket + filename;
 }
 
 // Retrieves and processes key data
 function gk() {
-    const k = glob_io.k;
+    const k = glob_let.io.k;
     if (k) {
         const pk = JSON.parse(atob(k));
         if (pk.if_id === "" || pk.ga_id === "" || pk.bc_id === "" || pk.al_id === "") {
@@ -712,16 +1016,16 @@ function fk() {
 function init_keys(ko, set) { // set required keys
     const k = JSON.parse(atob(ko));
     to = k;
-    glob_io.k = ko;
+    glob_let.io.k = ko;
     if (set === false) {
-        br_set_local("init", glob_io, true);
+        br_set_local("init", glob_let.io, true);
     }
 }
 
 // Converts a URL to a local file path if necessary
 function makelocal(url) {
-    const pathname = glob_w_loc.pathname;
-    return (glob_local || glob_localserver) ? (url.includes("?")) ? "file://" + pathname + "?" + url.split("?")[1] : pathname : url;
+    const pathname = glob_const.w_loc.pathname;
+    return (glob_let.local || glob_let.localserver) ? (url.includes("?")) ? "file://" + pathname + "?" + url.split("?")[1] : pathname : url;
 }
 
 // Removes invalid characters from a string
@@ -743,7 +1047,7 @@ function capitalize(str) {
 
 // See if request is opened
 function isopenrequest() {
-    return glob_paymentpopup.hasClass("active");
+    return glob_const.paymentpopup.hasClass("active");
 }
 
 // Retrieves a setting value
@@ -843,7 +1147,7 @@ function getcoindata(currency) {
     } // if not it's probably erc20 token
     const currencyref = get_currencyli(currency); // check if erc20 token is added
     if (currencyref.length > 0) {
-        return $.extend(currencyref.data(), glob_br_config.erc20_dat.data);
+        return $.extend(currencyref.data(), glob_config.erc20_dat.data);
     } // else lookup erc20 data
     const tokenobject = fetch_cached_erc20();
     if (tokenobject) {
@@ -857,7 +1161,7 @@ function getcoindata(currency) {
                 "cmcid": erc20data.cmcid.toString(),
                 "contract": erc20data.contract
             }
-            return $.extend(fetched_data, glob_br_config.erc20_dat.data);
+            return $.extend(fetched_data, glob_config.erc20_dat.data);
         }
     }
     return false;
@@ -885,17 +1189,17 @@ function getcoinsettings(currency) {
 
 // Retrieves erc20 data
 function get_erc20_data() {
-    return glob_br_config.erc20_dat;
+    return glob_config.erc20_dat;
 }
 
 // Retrieves erc20 settings
 function get_erc20_settings() {
-    return glob_br_config.erc20_dat.settings;
+    return glob_config.erc20_dat.settings;
 }
 
 // Retrieves coin configuration for a given currency
 function getcoinconfig(currency) {
-    return glob_br_config.bitrequest_coin_data.find(function(filter) {
+    return glob_config.bitrequest_coin_data.find(function(filter) {
         return filter.currency === currency;
     });
 }
@@ -915,7 +1219,7 @@ function fetch_cached_erc20(check) {
             if (check) {
                 const time_in_cache = now() - timestamp;
                 // flush cache every week
-                if (time_in_cache < glob_token_cache * 1000) {
+                if (time_in_cache < glob_const.token_cache * 1000) {
                     return true;
                 } else {
                     return false;

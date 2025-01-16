@@ -1,24 +1,3 @@
-//globals
-
-const glob_cacheperiodcrypto = 120000, //120000 = 2 minutes
-    glob_cacheperiodfiat = 600000, //600000 = 10 minutes
-    glob_zeroplaceholder = parseFloat((0.00).toLocaleString(glob_langcode, {
-        "minimumFractionDigits": 2,
-        "maximumFractionDigits": 2
-    })).toFixed(2);
-
-// Global helpers
-let glob_blockswipe,
-    glob_angle,
-    glob_percent,
-    glob_sa_timer,
-    glob_request_timer,
-    glob_blocktyping = false,
-    glob_lnd_ph = false,
-    glob_prevkey = false,
-    request = null,
-    helper = null;
-
 $(document).ready(function() {
     wake_panel();
     //set_request_timer
@@ -151,26 +130,26 @@ function wake_panel() {
 // Sets a timer to close the request dialog after 3 minutes
 function set_request_timer() {
     // close request dialog after 3 minutes
-    clearTimeout(glob_request_timer);
-    glob_paymentdialogbox.removeClass("timer");
-    glob_request_timer = setTimeout(function() {
+    clearTimeout(glob_let.request_timer);
+    glob_const.paymentdialogbox.removeClass("timer");
+    glob_let.request_timer = setTimeout(function() {
         cpd_pollcheck();
     }, 180000, function() {
-        clearTimeout(glob_request_timer);
+        clearTimeout(glob_let.request_timer);
     });
     setTimeout(function() {
-        glob_paymentdialogbox.addClass("timer");
+        glob_const.paymentdialogbox.addClass("timer");
     }, 500);
 }
 
 // Initializes the swipe start functionality for the payment dialog
 function swipestart() {
     $(document).on("mousedown touchstart", "#paymentdialog", function(e) {
-        glob_blockswipe = false;
+        glob_let.blockswipe = false;
         const thisdialog = $(this),
             inputs = thisdialog.find("input");
         if (inputs.is(":focus")) {
-            glob_blockswipe = true;
+            glob_let.blockswipe = true;
         }
         const startheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
         startswipetime = now();
@@ -181,21 +160,21 @@ function swipestart() {
 // Handles the swipe movement for the payment dialog
 function swipe(dialogheight, startheight) {
     $(document).on("mousemove touchmove", "#payment", function(e) {
-        if (glob_blockswipe === true) {
+        if (glob_let.blockswipe === true) {
             unfocus_inputs();
             return
         }
         const currentheight = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY,
             dragdistance = currentheight - startheight;
         if (Math.abs(dragdistance) > 3) { // margin to activate swipe
-            glob_html.addClass("swipemode");
+            glob_const.html.addClass("swipemode");
             const distance = dragdistance / dialogheight,
                 posdist = 1 - Math.abs(distance);
-            glob_percent = distance * 100;
+            glob_let.percent = distance * 100;
             $(this).addClass("swiping");
             $("#paymentdialog").css({
                 "opacity": posdist,
-                "transform": "translate(0, " + glob_percent + "%)"
+                "transform": "translate(0, " + glob_let.percent + "%)"
             });
         }
     })
@@ -209,8 +188,8 @@ function swipeend() {
         if (thisunit.hasClass("swiping")) {
             const paymentdialog = $("#paymentdialog"),
                 swipetime = now() - startswipetime,
-                largeswipe = Math.abs(glob_percent) > 90,
-                smallswipe = Math.abs(glob_percent) > 25;
+                largeswipe = Math.abs(glob_let.percent) > 90,
+                smallswipe = Math.abs(glob_let.percent) > 25;
             if (largeswipe || (smallswipe && swipetime < 500)) {
                 thisunit.removeClass("swiping");
                 paymentdialog.css({
@@ -218,14 +197,14 @@ function swipeend() {
                     "transform": ""
                 });
                 cpd_pollcheck();
-                glob_html.removeClass("swipemode");
+                glob_const.html.removeClass("swipemode");
             } else {
                 thisunit.removeClass("swiping");
                 paymentdialog.css({
                     "opacity": "",
                     "transform": ""
                 });
-                glob_html.removeClass("swipemode");
+                glob_const.html.removeClass("swipemode");
             }
         }
     })
@@ -234,15 +213,15 @@ function swipeend() {
 // Initializes the flip start functionality for the payment dialog
 function flipstart() {
     $(document).on("mousedown touchstart", "#paymentdialog", function(e) {
-        if (glob_paymentdialogbox.hasClass("norequest")) {
-            if (glob_offline === true) {
+        if (glob_const.paymentdialogbox.hasClass("norequest")) {
+            if (glob_const.offline === true) {
                 return
             }
-            const is_lnd = glob_paymentdialogbox.attr("data-lswitch") === "lnd_ao";
-            if (glob_paymentdialogbox.attr("data-pending") === "ispending" && !is_lnd) {
+            const is_lnd = glob_const.paymentdialogbox.attr("data-lswitch") === "lnd_ao";
+            if (glob_const.paymentdialogbox.attr("data-pending") === "ispending" && !is_lnd) {
                 return;
             }
-            if (is_lnd && glob_paymentdialogbox.hasClass("accept_lnd")) {
+            if (is_lnd && glob_const.paymentdialogbox.hasClass("accept_lnd")) {
                 return;
             }
         }
@@ -254,17 +233,17 @@ function flipstart() {
 // Handles the flip movement for the payment dialog
 function flip(dialogwidth, startwidth) {
     $(document).on("mousemove touchmove", "#payment", function(e) {
-        glob_html.addClass("flipmode");
+        glob_const.html.addClass("flipmode");
         const currentwidth = e.originalEvent.touches ? e.originalEvent.touches[0].pageX : e.pageX,
             dragdistance = currentwidth - startwidth;
         if (Math.abs(dragdistance) > 3) { // margin to activate flip (prevent sloppy click)
-            glob_html.addClass("swipemode");
+            glob_const.html.addClass("swipemode");
             $(this).addClass("flipping");
-            const startangle = glob_paymentdialogbox.hasClass("flipped") ? 180 : 0;
-            glob_paymentdialogbox.css("transform", "rotateY(" + startangle + "deg)");
+            const startangle = glob_const.paymentdialogbox.hasClass("flipped") ? 180 : 0;
+            glob_const.paymentdialogbox.css("transform", "rotateY(" + startangle + "deg)");
             const preangle = 180 * dragdistance / dialogwidth;
-            glob_angle = glob_paymentdialogbox.hasClass("flipped") ? 180 + preangle : preangle;
-            glob_paymentdialogbox.css("transform", "rotateY(" + glob_angle + "deg)");
+            glob_let.angle = glob_const.paymentdialogbox.hasClass("flipped") ? 180 + preangle : preangle;
+            glob_const.paymentdialogbox.css("transform", "rotateY(" + glob_let.angle + "deg)");
         }
     })
 }
@@ -273,30 +252,30 @@ function flip(dialogwidth, startwidth) {
 function flipend() {
     $(document).on("mouseup mouseleave touchend", "#payment", function() {
         const thisunit = $(this);
-        $(document).off("mousemove touchmove", glob_paymentpopup);
+        $(document).off("mousemove touchmove", glob_const.paymentpopup);
         if (thisunit.hasClass("flipping")) {
-            if (glob_paymentdialogbox.hasClass("flipped")) {
-                if (glob_angle > 250) {
+            if (glob_const.paymentdialogbox.hasClass("flipped")) {
+                if (glob_let.angle > 250) {
                     flip_right2();
-                } else if (glob_angle < 110) {
+                } else if (glob_let.angle < 110) {
                     flip_left2();
                 } else {
                     flip_reset1();
                 }
             } else {
-                if (glob_angle > 70) {
+                if (glob_let.angle > 70) {
                     flip_right1();
-                } else if (glob_angle < -70) {
+                } else if (glob_let.angle < -70) {
                     flip_left1();
                 } else {
                     flip_reset2();
                 }
             }
             thisunit.removeClass("flipping");
-            glob_html.removeClass("swipemode");
+            glob_const.html.removeClass("swipemode");
         }
         setTimeout(function() {
-            glob_html.removeClass("flipmode");
+            glob_const.html.removeClass("flipmode");
         }, 270);
     })
 }
@@ -309,13 +288,13 @@ function flip_right1() {
 
 // Flips the payment dialog to the right (back to front)
 function flip_right2() {
-    glob_paymentdialogbox.css("transform", "rotateY(360deg)").removeClass("flipped");
+    glob_const.paymentdialogbox.css("transform", "rotateY(360deg)").removeClass("flipped");
     face_front();
 }
 
 // Flips the payment dialog to the left (front to back)
 function flip_left1() {
-    glob_paymentdialogbox.css("transform", "rotateY(-180deg)").addClass("flipped");
+    glob_const.paymentdialogbox.css("transform", "rotateY(-180deg)").addClass("flipped");
     face_back();
 }
 
@@ -327,22 +306,22 @@ function flip_left2() {
 
 // Resets the flip when it's currently flipped
 function flip_reset1() {
-    glob_paymentdialogbox.css("transform", "");
+    glob_const.paymentdialogbox.css("transform", "");
 }
 
 // Resets the flip when it's not currently flipped
 function flip_reset2() {
-    glob_paymentdialogbox.css("transform", "rotateY(0deg)");
+    glob_const.paymentdialogbox.css("transform", "rotateY(0deg)");
 }
 
 // Adds the flipped class and rotates the payment dialog
 function add_flip() {
-    glob_paymentdialogbox.css("transform", "rotateY(180deg)").addClass("flipped");
+    glob_const.paymentdialogbox.css("transform", "rotateY(180deg)").addClass("flipped");
 }
 
 // Removes the flipped class and resets the rotation of the payment dialog
 function remove_flip() {
-    glob_paymentdialogbox.css("transform", "rotateY(0deg)").removeClass("flipped");
+    glob_const.paymentdialogbox.css("transform", "rotateY(0deg)").removeClass("flipped");
 }
 
 // Handles the front-facing view of the payment dialog
@@ -354,7 +333,7 @@ function face_front() {
                 requestname = $("#requestname"),
                 amountinput = $("#amountbreak input");
             if (sharebutton.hasClass("sbactive")) {
-                if (amountinput.val().length > 0 && glob_supportsTouch) {
+                if (amountinput.val().length > 0 && glob_const.supportsTouch) {
                     setTimeout(function() {
                         requesttitle.add(requestname).blur();
                     }, 300);
@@ -398,7 +377,7 @@ function face_back() {
                 return
             }
             const amountinput = $("#amountbreak input");
-            if (amountinput.val().length > 0 && glob_supportsTouch) {
+            if (amountinput.val().length > 0 && glob_const.supportsTouch) {
                 setTimeout(function() {
                     amountinput.add(requesttitle).add(requestname).blur();
                 }, 300);
@@ -418,9 +397,9 @@ function face_back() {
 }
 
 function poll_animate() {
-    glob_paymentdialogbox.removeClass("poll");
+    glob_const.paymentdialogbox.removeClass("poll");
     setTimeout(function() {
-        glob_paymentdialogbox.addClass("poll");
+        glob_const.paymentdialogbox.addClass("poll");
     }, 100);
 }
 
@@ -433,18 +412,18 @@ function loadpaymentfunction(pass) {
     if (is_openrequest() === true) { // prevent double load
         return
     }
-    if (!empty_obj(glob_sockets)) {
-        playsound(glob_funk);
+    if (!empty_obj(glob_let.sockets)) {
+        playsound(glob_const.funk);
         notify(translate("closingsockets"));
         return
     }
-    glob_l2s = {};
+    glob_let.l2s = {};
     loader();
-    glob_symbolcache = br_get_local("symbols", true);
-    if (glob_symbolcache) {
+    glob_let.symbolcache = br_get_local("symbols", true);
+    if (glob_let.symbolcache) {
         const gets = geturlparameters();
         if (gets.xss) { //xss detection
-            const content = "<h2 class='icon-warning'>" + glob_xss_alert + "</h2>";
+            const content = "<h2 class='icon-warning'>" + glob_const.xss_alert + "</h2>";
             popdialog(content, "canceldialog");
             closeloader();
             return
@@ -475,10 +454,10 @@ function loadpaymentfunction(pass) {
                     "lnd": false,
                     "lnd_status": false
                 }, // global helper object
-                glob_api_attempt["crypto_price_apis"] = {},
-                glob_api_attempt["fiat_price_apis"] = {},
-                glob_proxy_attempts = {},
-                glob_socket_attempt = {};
+                glob_let.api_attempt["crypto_price_apis"] = {},
+                glob_let.api_attempt["fiat_price_apis"] = {},
+                glob_let.proxy_attempts = {},
+                glob_let.socket_attempt = {};
             if (iserc20 === true) {
                 const token_contract = coindata.contract;
                 if (token_contract) {
@@ -581,7 +560,7 @@ function continue_paymentfunction() {
     //set globals
     const gets = geturlparameters();
     if (gets.xss) { //xss detection
-        const content = "<h2 class='icon-warning'>" + glob_xss_alert + "</h2>";
+        const content = "<h2 class='icon-warning'>" + glob_const.xss_alert + "</h2>";
         popdialog(content, "canceldialog");
         closeloader();
         return
@@ -606,7 +585,7 @@ function continue_paymentfunction() {
         return
     }
     const api_info = check_api(payment, erc20),
-        isrequest = br_get_local("editurl") !== glob_w_loc.search, // check if url is a request
+        isrequest = br_get_local("editurl") !== glob_const.w_loc.search, // check if url is a request
         coindata = request.coindata,
         coinsettings = activecoinsettings(payment),
         uoa = gets.uoa,
@@ -629,7 +608,7 @@ function continue_paymentfunction() {
     }
     const currencysymbol = coindata.ccsymbol,
         requesttype = isrequest ? (type) ? type :
-        glob_inframe ? "checkout" : "incoming" : "local",
+        glob_const.inframe ? "checkout" : "incoming" : "local",
         typecode = requesttype === "local" ? 1 :
         requesttype === "outgoing" || requesttype === "incoming" ? 2 :
         requesttype === "checkout" ? 3 : 4,
@@ -679,7 +658,7 @@ function continue_paymentfunction() {
         statusclass = status ? " " + status : " unknown",
         satclass = payment === "bitcoin" && cs_node("bitcoin", "showsatoshis", true).selected,
         typeclass = " " + requesttype,
-        offlineclass = glob_offline ? " br_offline" : "",
+        offlineclass = glob_const.offline ? " br_offline" : "",
         pendingclass = ispending && monitored && requesttype === "local" ? "ispending" : "",
         has_xmr_ia = xmr_ia === address ? false : xmr_ia,
         showqr = "showqr" in gets,
@@ -736,9 +715,9 @@ function continue_paymentfunction() {
             "class": requestclass + statusclass + showclass + typeclass + offlineclass + iszeroclass
         },
         lnd_switch = payment === "bitcoin" ? (isrequest && !ln ? "" : "<div id='lightning_switch' title='lightning' class='lnswitch'><span class='icon-power'></span></div>") : "",
-        ndef_switch = payment === "bitcoin" && glob_ndef ? "<div id='ndef_switch' title='Tap to pay' class='lnswitch'><span class='icon-connection'></span></div>" : "";
+        ndef_switch = payment === "bitcoin" && glob_const.ndef ? "<div id='ndef_switch' title='Tap to pay' class='lnswitch'><span class='icon-connection'></span></div>" : "";
     settitle(pagename);
-    glob_paymentdialogbox.append("<div id='request_back' class='share_request dialogstyle'></div><div id='request_front' class='dialogstyle'><div id='xratestats'><span id='rq_errlog'></span></div>" + ndef_switch + lnd_switch + "<div class='networks'></div></div>").attr(payment_attributes);
+    glob_const.paymentdialogbox.append("<div id='request_back' class='share_request dialogstyle'></div><div id='request_front' class='dialogstyle'><div id='xratestats'><span id='rq_errlog'></span></div>" + ndef_switch + lnd_switch + "<div class='networks'></div></div>").attr(payment_attributes);
     // Extend global request object
     $.extend(request, extend_data);
     // Extend global helper object
@@ -795,7 +774,7 @@ function lightning_setup() {
                                 "pw": pw
                             };
                         helper.lnd = lnd;
-                        glob_lnd_ph = ph;
+                        glob_let.lnd_ph = ph;
                         const creds = !!(host && key && nid),
                             put = {
                                 "status": lnd_pid,
@@ -808,12 +787,12 @@ function lightning_setup() {
                         lnd_put(ph, pw, put, use_lnurl);
                         return
                     }
-                    console.log("missing payment id");
+                    console.error("error", "missing payment id");
                 } else {
-                    console.log("missing proxy");
+                    console.error("error", "missing proxy");
                 }
             } else {
-                console.log("missing implementation");
+                console.error("error", "missing implementation");
             }
         }
         proceed_pf();
@@ -864,7 +843,7 @@ function lightning_setup() {
                 "selected": ln_dat.selected
             };
         helper.lnd = lnd;
-        glob_lnd_ph = ph;
+        glob_let.lnd_ph = ph;
         const creds = !!(host && key && node_id && !lnurls),
             put = {
                 "status": pid,
@@ -883,7 +862,7 @@ function lightning_setup() {
 // Sends a PUT request to the Lightning Network proxy
 function lnd_put(proxy, key, pl, lnurl) {
     const rqtype = request.requesttype === "local" ? undefined : request.requesttype;
-    glob_proxy_attempts[proxy] = true;
+    glob_let.proxy_attempts[proxy] = true;
     $.ajax({
         "method": "POST",
         "cache": false,
@@ -987,14 +966,14 @@ function proceed_pf(error) {
         return
     }
     const lndstatus = helper.lnd ? (helper.lnd.selected ? (helper.lnd_status ? "lnd_ao" : "lnd_active") : "lnd_inactive") : "no_lnd";
-    glob_paymentdialogbox.attr({
+    glob_const.paymentdialogbox.attr({
         "data-lswitch": lndstatus,
         "data-lnd": lndstatus
     });
     if (request.isrequest === true && !request.showqr) {
         add_flip();
     }
-    if (glob_offline === true) { // no price conversion when app is offline
+    if (glob_const.offline === true) { // no price conversion when app is offline
         rendercurrencypool({
             "EUR": 1,
             "USD": 1.11
@@ -1010,7 +989,7 @@ function proceed_pf(error) {
             thisusdrate = getcache.ccrate,
             apisrc = getcache.apisrc,
             cachetime = timestamp - cachedtimestamp;
-        if (cachetime > glob_cacheperiodcrypto) { //check if cached crypto rates are expired
+        if (cachetime > glob_const.cacheperiodcrypto) { //check if cached crypto rates are expired
             getccexchangerates(apilist, ccapi);
             return
         } //fetch cache
@@ -1025,7 +1004,7 @@ function proceed_pf(error) {
 
 // Fetches cryptocurrency exchange rates from various APIs
 function getccexchangerates(apilist, api) {
-    glob_api_attempt[apilist][api] = true;
+    glob_let.api_attempt[apilist][api] = true;
     loadertext(translate("getccrates", {
         "ccsymbol": request.currencysymbol,
         "api": api
@@ -1102,7 +1081,7 @@ function getccexchangerates(apilist, api) {
 function cc_fail(apilist, api, error_val, is_proxy) {
     function next_proxy() { // try next proxy
         if (get_next_proxy()) {
-            glob_api_attempt[apilist] = {};
+            glob_let.api_attempt[apilist] = {};
             getccexchangerates(apilist, api);
             return true
         }
@@ -1143,7 +1122,7 @@ function initexchangerate(cc_rate, ccapi, cachetime) {
             const xratetimestamp = currencycache.timestamp,
                 timeexpired = timestamp - xratetimestamp,
                 lcrate = xratesnode[request.fiatcurrency];
-            if (timeexpired > glob_cacheperiodfiat || lcrate === undefined) { //check if cache is expired and if fiatcurrency is cached
+            if (timeexpired > glob_const.cacheperiodfiat || lcrate === undefined) { //check if cache is expired and if fiatcurrency is cached
                 get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, cachetime);
                 return
             } //fetch cached exchange rates
@@ -1157,7 +1136,7 @@ function initexchangerate(cc_rate, ccapi, cachetime) {
 
 // Fetches fiat exchange rates from various APIs
 function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, cachetime) {
-    glob_api_attempt[apilist][fiatapi] = true;
+    glob_let.api_attempt[apilist][fiatapi] = true;
     loadertext(translate("fetchingfiatrates", {
         "fiatapi": fiatapi
     }));
@@ -1271,7 +1250,7 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
 function next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, ccapi, cachetime, is_proxy) {
     function next_proxy() { // try next proxy
         if (get_next_proxy()) {
-            glob_api_attempt[apilist] = {};
+            glob_let.api_attempt[apilist] = {};
             get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, cachetime);
             return true
         }
@@ -1311,7 +1290,7 @@ function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cache
         fiatapi === "currencylayer" ? "currencylayer.com" :
         fiatapi === "coinbase" ? "coinbase.com" :
         null,
-        xratedata1 = "<div data-currency='" + request.currencysymbol + "' data-value='' data-xrate='" + ccrateeuro + "' class='cpool ccpool' data-currencyname='" + request.payment + "'><span>" + ccapi + ": <span class='ratesspan'>" + request.currencysymbol + "_" + request.uoa + ": " + (1 / (ccrateeuro / currentrate)).toFixed(2) + "</span></span></div><div class='cachetime'> (" + (cachetimecrypto / 60000).toFixed(1) + " of " + (glob_cacheperiodcrypto / 60000).toFixed(0) + " min. in cache)</div><br/><div class='mainrate'>" + fiatapiurl + ": </div>",
+        xratedata1 = "<div data-currency='" + request.currencysymbol + "' data-value='' data-xrate='" + ccrateeuro + "' class='cpool ccpool' data-currencyname='" + request.payment + "'><span>" + ccapi + ": <span class='ratesspan'>" + request.currencysymbol + "_" + request.uoa + ": " + (1 / (ccrateeuro / currentrate)).toFixed(2) + "</span></span></div><div class='cachetime'> (" + (cachetimecrypto / 60000).toFixed(1) + " of " + (glob_const.cacheperiodcrypto / 60000).toFixed(0) + " min. in cache)</div><br/><div class='mainrate'>" + fiatapiurl + ": </div>",
         xratedata2 = [];
     xrates_array.push({
         "currency": request.currencysymbol,
@@ -1321,7 +1300,7 @@ function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cache
     $.each(data, function(thiscurrency, rate) {
         const parsedrate = (rate / currentrate) / 1,
             ratesspanclass = parsedrate === 1 ? " hide" : "",
-            currencyname = glob_symbolcache[thiscurrency.toUpperCase()],
+            currencyname = glob_let.symbolcache[thiscurrency.toUpperCase()],
             xratedatarray = "<div data-currency='" + thiscurrency + "' data-value='' data-xrate='" + rate + "' class='cpool' data-currencyname='" + currencyname + "'><span class='ratesspan" + ratesspanclass + "'>" + request.uoa + "_" + thiscurrency + ": " + parsedrate.toFixed(2) + "</span></div>";
         xratedata2.push(xratedatarray);
         xrates_array.push({
@@ -1336,7 +1315,7 @@ function rendercurrencypool(data, ccrate, ccapi, fiatapi, cachetimecrypto, cache
         lndstatus_icon = helper.lnd_status ? " <span class='icon-connection'></span>" : " <span class='icon-wifi-off'></span>",
         lnd_nodeinfo = request.isrequest === true ? "" : ": <span id='lnd_nodeinfo_trigger'>" + ln_info.name + "</span>",
         lnd_node_info = ln_info ? "<br/><span id='current_lndnode'><img src='" + c_icons(ln_info.imp) + "' class='lnd_icon' title='" + ln_info.imp + "'/> Lightning node" + lnd_nodeinfo + lndstatus_icon + proxy_icon + "</span>" : "";
-    $("#xratestats").prepend(xratedata1 + xratedata2.join(" | ") + "<div class='cachetime'> (" + (cachetimefiat / 60000).toFixed(1) + " of " + (glob_cacheperiodfiat / 60000).toFixed(0) + " min. in cache)</div><br/><span id='current_socket'></span>" + lnd_node_info);
+    $("#xratestats").prepend(xratedata1 + xratedata2.join(" | ") + "<div class='cachetime'> (" + (cachetimefiat / 60000).toFixed(1) + " of " + (glob_const.cacheperiodfiat / 60000).toFixed(0) + " min. in cache)</div><br/><span id='current_socket'></span>" + lnd_node_info);
     getpayment(ccrateeuro, ccapi);
 }
 
@@ -1365,7 +1344,8 @@ function getpayment(ccrateeuro, ccapi) {
         label_markup = has_label ? "<span id='labelbttn'>" + labelvalue + "</span>" : "", // check if label is set
         thiscurrencyvalueraw = (request.amount / currencyxrate) * ccrateeuro,
         thiscurrencyvaluefixed = parseFloat(thiscurrencyvalueraw.toFixed(6)),
-        thiscurrencyvaluefixedplaceholder = request.iszero ? glob_zeroplaceholder : thiscurrencyvaluefixed,
+        zeroplaceholder = glob_const.zeroplaceholder,
+        thiscurrencyvaluefixedplaceholder = request.iszero ? zeroplaceholder : thiscurrencyvaluefixed,
         thiscurrencyvaluefixedvar = request.iszero ? "" : thiscurrencyvaluefixed,
         satamount = (thiscurrencyvalueraw * 100000000).toFixed(0),
         fiatcurrencyvalue = ((request.amount / currencyxrate) * fiatcurrencyrate).toFixed(2),
@@ -1373,7 +1353,7 @@ function getpayment(ccrateeuro, ccapi) {
         cryptosteps = "0.00001",
         fiatsteps = "0.1",
         steps = request.iscrypto ? cryptosteps : fiatsteps,
-        placeholder = request.iszero ? glob_zeroplaceholder : request.amount,
+        placeholder = request.iszero ? zeroplaceholder : request.amount,
         valueplaceholder = request.iszero ? "" : request.amount,
         satplaceholder = request.iszero ? "000000000" : satamount,
         satamountlet = request.iszero ? "" : satamount,
@@ -1398,12 +1378,12 @@ function getpayment(ccrateeuro, ccapi) {
                     <span id='sharecryptowrap'>" + cryptologo + lndlogo +
         "<span id='sharemainccinputmirror' class='ccmirror mirrordiv'>\
                             <span>" + thiscurrencyvaluefixedplaceholder + "</span>\
-                            <input value='" + thiscurrencyvaluefixedvar + "' step='" + cryptosteps + "' type='number' placeholder='" + glob_zeroplaceholder + "'" + ro_attr + "/>\
+                            <input value='" + thiscurrencyvaluefixedvar + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
                         </span>\
                     </span>\
                     <span id='shareinputmirror' class='fmirror mirrordiv'>\
                         <span>" + placeholder + "</span>\
-                        <input value='" + valueplaceholder + "' step='" + steps + "' type='number' placeholder='" + glob_zeroplaceholder + "'" + ro_attr + "/>\
+                        <input value='" + valueplaceholder + "' step='" + steps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
                     </span>\
                     <span id='sharecurrency'>" + request.uoa + "</span>\
                 </div>\
@@ -1412,7 +1392,7 @@ function getpayment(ccrateeuro, ccapi) {
                         <span class='quote'>(</span>\
                         <span id='sharelcinputmirror' class='lcmirror mirrordiv'>\
                         <span>" + fiatcurrencyvalue + "</span>\
-                        <input value='" + fiatcurrencyvaluelet + "' step='" + fiatsteps + "' type='number' placeholder='" + glob_zeroplaceholder + "'" + ro_attr + "/>\
+                        <input value='" + fiatcurrencyvaluelet + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
                     </span>\
                     <span id='sharelcname'>" + currencynamestring + "</span>\
                     <span class='quote'>)</span>\
@@ -1424,7 +1404,7 @@ function getpayment(ccrateeuro, ccapi) {
                             <span>" +
         thiscurrencyvaluefixedplaceholder +
         "</span>\
-                            <input value='" + thiscurrencyvaluefixedvar + "' step='" + cryptosteps + "' type='number' placeholder='" + glob_zeroplaceholder + "'" + ro_attr + "/>\
+                            <input value='" + thiscurrencyvaluefixedvar + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
                         </span> " +
         request.payment + ")\
                     </span>\
@@ -1493,11 +1473,11 @@ function getpayment(ccrateeuro, ccapi) {
                 <div id='amountbreak' class='inputbreak'>\
                     <span id='mainccinputmirror' class='ccmirror mirrordiv'>\
                         <span>" + thiscurrencyvaluefixedplaceholder + "</span>\
-                        <input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + glob_zeroplaceholder + "'" + ro_attr + ">\
+                        <input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + ">\
                     </span>\
                     <span id='amountinputmirror' class='fmirror mirrordiv'>\
                         <span>" + placeholder + "</span>\
-                        <input value='" + valueplaceholder + "' data-xrate='" + currencyxrate + "' step='" + fiatsteps + "' type='number' placeholder='" + glob_zeroplaceholder + "'" + ro_attr + ">\
+                        <input value='" + valueplaceholder + "' data-xrate='" + currencyxrate + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + ">\
                     </span>\
                     <span id='pickcurrency'>" + request.uoa + "</span>\
                 </div>\
@@ -1510,15 +1490,15 @@ function getpayment(ccrateeuro, ccapi) {
                 <div id='iblc' class='inputbreak'>\
                     (<span id='lcinputmirror' class='lcmirror mirrordiv'>\
                         <span>" + fiatcurrencyvalue + "</span>\
-                        <input value='" + fiatcurrencyvaluelet + "' data-xrate='" + fiatcurrencyrate + "' step='" + fiatsteps + "' type='number' placeholder='" + glob_zeroplaceholder + "'" + ro_attr + "/>\
+                        <input value='" + fiatcurrencyvaluelet + "' data-xrate='" + fiatcurrencyrate + "' step='" + fiatsteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/>\
                     </span> " + request.fiatcurrency + ") \
                 </div>\
-                <div id='txibreak' class='inputbreak'> " + translate("send") + " <span id='ccinputmirror' class='ccmirror mirrordiv'><span>" + thiscurrencyvaluefixedplaceholder + "</span><input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + glob_zeroplaceholder + "'" + ro_attr + "/></span> " + request.currencysymbol + " " + translate("to") + label_markup + ": </div>\
+                <div id='txibreak' class='inputbreak'> " + translate("send") + " <span id='ccinputmirror' class='ccmirror mirrordiv'><span>" + thiscurrencyvaluefixedplaceholder + "</span><input value='" + thiscurrencyvaluefixedvar + "' data-xrate='" + ccrateeuro + "' step='" + cryptosteps + "' type='number' placeholder='" + zeroplaceholder + "'" + ro_attr + "/></span> " + request.currencysymbol + " " + translate("to") + label_markup + ": </div>\
             </div>\
             <div id='paymentaddress' class='copyinput'>" + address_xmr_ia + "</div><div id='paymentaddress_lnd' class='copyinput' data-type='lightning invoice'></div>\
         </div>\
         <div id='apisrc'>" + translate("source") + ": " + ccapi + "</div>" + poweredby);
-    glob_paymentdialogbox.find("#request_back").html("\
+    glob_const.paymentdialogbox.find("#request_back").html("\
         <div class='time_panel'><div class='time_bar'></div></div>\
         <div class='actionbar clearfix'></div>\
         <div id='backwraptop' class='flex'>" + requestinfo + "</div>\
@@ -1548,7 +1528,7 @@ function getpayment(ccrateeuro, ccapi) {
         notify(translate("notmonitored"), 500000, "yes");
     }
     // close loading screen when in iframe
-    if (glob_inframe) {
+    if (glob_const.inframe) {
         parent.postMessage("close_loader", "*");
     }
     const title_node = $("#requesttitle");
@@ -1573,16 +1553,16 @@ function getpayment(ccrateeuro, ccapi) {
 
 // Displays the payment dialog and adjusts the UI accordingly
 function show_paymentdialog() {
-    glob_scrollposition = $(document).scrollTop(); // get scrollposition save as global
-    fixedcheck(glob_scrollposition); // fix nav position
-    glob_html.addClass("paymode blurmain_payment");
-    $(".showmain #mainwrap").css("transform", "translate(0, -" + glob_scrollposition + "px)"); // fake scroll position
-    glob_paymentpopup.addClass("showpu active");
+    glob_let.scrollposition = $(document).scrollTop(); // get scrollposition save as global
+    fixedcheck(glob_let.scrollposition); // fix nav position
+    glob_const.html.addClass("paymode blurmain_payment");
+    $(".showmain #mainwrap").css("transform", "translate(0, -" + glob_let.scrollposition + "px)"); // fake scroll position
+    glob_const.paymentpopup.addClass("showpu active");
 }
 
 // Focuses on the main input field in the payment dialog
 function main_input_focus() {
-    const visible_input = glob_paymentdialogbox.hasClass("flipped") ? $("#paymentdialog #shareamount input:visible:first") :
+    const visible_input = glob_const.paymentdialogbox.hasClass("flipped") ? $("#paymentdialog #shareamount input:visible:first") :
         $("#paymentdialog #amountbreak input:visible:first");
     // hack to move cursor to the end
     const amount_val = visible_input.val();
@@ -1596,7 +1576,7 @@ function lnd_switch_function() {
     $(document).on("click", "#paymentdialogbox #lightning_switch", function() {
         if (helper.lnd) {
             if (helper.lnd_only) {
-                playsound(glob_funk);
+                playsound(glob_const.funk);
                 return
             }
             if (helper.lnd.selected) {
@@ -1610,17 +1590,17 @@ function lnd_switch_function() {
                 save_cc_settings("bitcoin", true);
                 if (helper.lnd_status) {
                     helper.lnd.selected = true;
-                    glob_paymentdialogbox.attr("data-lswitch", "lnd_ao");
+                    glob_const.paymentdialogbox.attr("data-lswitch", "lnd_ao");
                     return
                 }
                 notify("<span id='lnd_offline'>" + translate("lnoffline") + "</span>", 200000, "yes");
                 return
             }
-            playsound(glob_funk);
+            playsound(glob_const.funk);
             return
         }
         if (request.isrequest) {
-            playsound(glob_funk);
+            playsound(glob_const.funk);
             return
         }
         lnd_popup();
@@ -1637,15 +1617,15 @@ function ndef_switch_function() {
 // Updates the Lightning Network status
 function lnd_statusx() {
     if (helper.lnd_status) {
-        if (glob_paymentdialogbox.attr("data-lswitch") === "lnd_ao") {
-            glob_paymentdialogbox.attr("data-lswitch", "");
+        if (glob_const.paymentdialogbox.attr("data-lswitch") === "lnd_ao") {
+            glob_const.paymentdialogbox.attr("data-lswitch", "");
             return
         }
-        glob_paymentdialogbox.attr("data-lswitch", "lnd_ao");
+        glob_const.paymentdialogbox.attr("data-lswitch", "lnd_ao");
         return
     }
     if (request.isrequest) {
-        playsound(glob_funk);
+        playsound(glob_const.funk);
         return
     }
     notify("<span id='lnd_offline'>" + translate("lnoffline") + "</span>", 200000, "yes");
@@ -1691,7 +1671,7 @@ function pickcurrency() {
             number = Number(amountinputvalue),
             this_iszero = number === 0 || isNaN(number),
             newccvaluevar = this_iszero ? "" : nccvalstrip,
-            newccvalueplaceholder = this_iszero ? glob_zeroplaceholder : nccvalstrip,
+            newccvalueplaceholder = this_iszero ? glob_const.zeroplaceholder : nccvalstrip,
             iscrypto = newccsymbol == request.currencysymbol,
             dialogclass = iscrypto ? (newccsymbol === "btc" ? " showsat showlc showcc" : " showlc showcc") : (newccsymbol === request.fiatcurrency ? "" : " showlc"), // set classnames for hiding / showing inputs
             gets = geturlparameters(),
@@ -1712,7 +1692,7 @@ function pickcurrency() {
         $("#sharelcname").text(sharelcname);
         amountinput.val(newccvaluevar).attr("data-xrate", newccrate).prev("span").text(newccvalueplaceholder);
         $("#shareinputmirror > input").val(newccvaluevar).prev("span").text(newccvalueplaceholder);
-        glob_paymentdialogbox.attr("class", helper.requestclass + dialogclass + helper.iszeroclass);
+        glob_const.paymentdialogbox.attr("class", helper.requestclass + dialogclass + helper.iszeroclass);
         main_input_focus();
         set_edit(href);
         settitle(pagename);
@@ -1739,13 +1719,13 @@ function rendercpooltext(nextcurrency, newccrate) {
 // Handles input changes for the fiat amount in the payment dialog
 function pushamount() {
     $(document).on("input", "#paymentdialogbox .fmirror > input", function() {
-        glob_blocktyping = true;
+        glob_let.blocktyping = true;
         const thisnode = $(this),
             thisamount = thisnode.val(),
             iszero = thisamount.length === 0,
-            placeholder = iszero ? glob_zeroplaceholder : thisamount,
+            placeholder = iszero ? glob_const.zeroplaceholder : thisamount,
             thisrate = $("#amountinputmirror > input").attr("data-xrate"),
-            amountinputvalue = iszero ? glob_zeroplaceholder : thisamount;
+            amountinputvalue = iszero ? glob_const.zeroplaceholder : thisamount;
         $("#paymentdialogbox .fmirror > input").not(thisnode).val(thisamount).prev("span").text(placeholder);
         reflectlcvalue(thisamount, thisrate);
         reflectccvalue(thisamount, thisrate);
@@ -1757,7 +1737,7 @@ function pushamount() {
 // Handles input changes for the local currency amount in the payment dialog
 function pushlcamount() {
     $(document).on("input", "#paymentdialogbox .lcmirror > input", function() {
-        glob_blocktyping = true;
+        glob_let.blocktyping = true;
         const thisnode = $(this),
             thisamount = thisnode.val(),
             thisrate = $("#lcinputmirror > input").attr("data-xrate");
@@ -1771,10 +1751,10 @@ function pushlcamount() {
 // Handles input changes for the cryptocurrency amount in the payment dialog
 function pushccamount() {
     $(document).on("input", "#paymentdialogbox .ccmirror > input", function() {
-        glob_blocktyping = true;
+        glob_let.blocktyping = true;
         const thisnode = $(this),
             thisamount = thisnode.val(),
-            placeholder = thisamount.length === 0 ? glob_zeroplaceholder : thisamount,
+            placeholder = thisamount.length === 0 ? glob_const.zeroplaceholder : thisamount,
             thisrate = $("#mainccinputmirror > input").attr("data-xrate");
         $("#paymentdialogbox .ccmirror > input").not(thisnode).val(thisamount).prev("span").text(placeholder);
         reflectfiatvalue(thisamount, thisrate, "crypto");
@@ -1786,7 +1766,7 @@ function pushccamount() {
 // Handles input changes for the satoshi amount in the payment dialog
 function pushsatamount() {
     $(document).on("input", "#satinputmirror > input", function() {
-        glob_blocktyping = true;
+        glob_let.blocktyping = true;
         const thisnode = $(this),
             thisamountpre = thisnode.val(),
             thisamount = thisamountpre.length === 0 ? thisamountpre : thisamountpre / 100000000,
@@ -1801,10 +1781,10 @@ function pushsatamount() {
 function reflectfiatvalue(thisamount, thisrate, fieldtype) { // reflect fiat values
     const amountinputrate = $("#amountinputmirror > input").attr("data-xrate"), //get fiat rate
         iszero = thisamount.length === 0,
-        deter = glob_paymentdialogbox.hasClass("showcc") ? 6 : 2,
+        deter = glob_const.paymentdialogbox.hasClass("showcc") ? 6 : 2,
         thisamountvalue = parseFloat(((thisamount / thisrate) * amountinputrate).toFixed(deter)),
-        thisamountplaceholder = iszero ? glob_zeroplaceholder : thisamountvalue,
-        ccvalue = iszero ? glob_zeroplaceholder : (fieldtype == "crypto" ? thisamount : cryptovalue(thisamount, thisrate));
+        thisamountplaceholder = iszero ? glob_const.zeroplaceholder : thisamountvalue,
+        ccvalue = iszero ? glob_const.zeroplaceholder : (fieldtype == "crypto" ? thisamount : cryptovalue(thisamount, thisrate));
     reflectinputs($("#paymentdialogbox .fmirror > input"), thisamountvalue, thisamountplaceholder); // reflect fiat values on sharedialog
     updatecpool(thisamountvalue, amountinputrate, ccvalue);
 }
@@ -1813,20 +1793,20 @@ function reflectfiatvalue(thisamount, thisrate, fieldtype) { // reflect fiat val
 function reflectlcvalue(thisamount, thisrate) { // reflect local currency value
     const lcrate = $("#popform").attr("data-lcrate"),
         lcvalue = ((thisamount / thisrate) * lcrate).toFixed(2),
-        lcplaceholder = thisamount.length === 0 ? glob_zeroplaceholder : lcvalue;
+        lcplaceholder = thisamount.length === 0 ? glob_const.zeroplaceholder : lcvalue;
     reflectinputs($("#paymentdialogbox .lcmirror > input"), lcvalue, lcplaceholder);
 }
 
 // Reflects cryptocurrency value in the payment dialog
 function reflectccvalue(thisamount, thisrate, fieldtype) { // reflect crypto input
-    const ccvalue = thisamount.length === 0 ? glob_zeroplaceholder : (fieldtype == "crypto" ? thisamount.toFixed(6) : cryptovalue(thisamount, thisrate));
+    const ccvalue = thisamount.length === 0 ? glob_const.zeroplaceholder : (fieldtype == "crypto" ? thisamount.toFixed(6) : cryptovalue(thisamount, thisrate));
     reflectinputs($("#paymentdialogbox .ccmirror > input"), ccvalue, ccvalue);
 }
 
 // Reflects satoshi value in the payment dialog
 function reflectsatvalue(thisamount, thisrate, fieldtype) { // reflect sat input
     const iszero = thisamount.length === 0,
-        ccvalue = iszero ? glob_zeroplaceholder : (fieldtype == "crypto" ? thisamount : cryptovalue(thisamount, thisrate)),
+        ccvalue = iszero ? glob_const.zeroplaceholder : (fieldtype == "crypto" ? thisamount : cryptovalue(thisamount, thisrate)),
         satvalue = (ccvalue * 100000000).toFixed(0),
         satplaceholder = iszero ? "000000000" : satvalue;
     reflectinputs($("#satinputmirror > input"), satvalue, satplaceholder);
@@ -1877,7 +1857,7 @@ function updatecpool(thisamount, thisrate, ccvalue) {
     request.amount = thisamount;
     set_edit(href);
     settitle(pagename);
-    glob_blocktyping = false;
+    glob_let.blocktyping = false;
 }
 
 // Renders the currency pool in the payment dialog
@@ -1918,7 +1898,7 @@ function set_lnd_qr(a, title) {
         rt = srt || request.requesttitle,
         m = rt && rt.length > 1 ? "&m=" + encodeURIComponent(rt) : "",
         nid = ln.lnurl === false ? ln.nid : "",
-        url = glob_lnd_ph + "proxy/v1/ln/?i=" + ln.imp + "&id=" + request.typecode + ln.pid + nid + "&a=" + (a * 100000000000).toFixed(0) + m,
+        url = glob_let.lnd_ph + "proxy/v1/ln/?i=" + ln.imp + "&id=" + request.typecode + ln.pid + nid + "&a=" + (a * 100000000000).toFixed(0) + m,
         lnurl = lnurl_encode("lnurl", url).toUpperCase();
     $("#qrcode_lnd").html("").qrcode(lnurl);
     set_lnd_uris(lnurl, a);
@@ -1947,9 +1927,9 @@ function bch_urlscheme(payment, address, amount, iszero) {
 // Handles switching between different addresses for the same currency
 function switchaddress() {
     $(document).on("click", "#paymentdialogbox.norequest #labelbttn", function() {
-        const timelapsed = now() - glob_sa_timer;
+        const timelapsed = now() - glob_let.sa_timer;
         if (timelapsed < 1500) { // prevent clicking too fast
-            playsound(glob_funk);
+            playsound(glob_const.funk);
             return
         }
         const gets = geturlparameters(),
@@ -1981,9 +1961,9 @@ function switchaddress() {
                 "address": newaddress,
                 "cmcid": newaddressid
             });
-            glob_paymentdialogbox.attr("data-pending", ispending && request.monitored ? "ispending" : "");
+            glob_const.paymentdialogbox.attr("data-pending", ispending && request.monitored ? "ispending" : "");
             request.address = newaddress;
-            glob_sa_timer = now();
+            glob_let.sa_timer = now();
         }
     });
 }
@@ -2005,7 +1985,7 @@ function copyaddress_dblclick() {
     $(document).on("dblclick", "#paymentaddress, #paymentaddress_lnd, .select", function() {
         const thisnode = $(this),
             type = thisnode.attr("data-type") || translate("address");
-        glob_copycontent.val(thisnode.text()).data("type", type);
+        glob_const.copycontent.val(thisnode.text()).data("type", type);
         notify("<span id='copyaddress'>" + translate("copy") + " " + type + "?</span>", 40000, "yes");
     });
 }
@@ -2013,8 +1993,8 @@ function copyaddress_dblclick() {
 // Handles the click event for copying addresses
 function copyaddress() {
     $(document).on("click", "#copyaddress", function() {
-        const val = glob_copycontent.val(),
-            type = glob_copycontent.data("type");
+        const val = glob_const.copycontent.val(),
+            type = glob_const.copycontent.data("type");
         copytoclipboard(val, type);
     });
 }
@@ -2024,7 +2004,7 @@ function copyinputs() {
     $(document).on("dblclick", "#paymentdialogbox.request .mirrordiv input", function() {
         const thisval = $(this).val(),
             typeval = translate("amount");
-        glob_copycontent.val(thisval).data("type", typeval);
+        glob_const.copycontent.val(thisval).data("type", typeval);
         notify("<span id='copyaddress'>" + translate("copy") + " " + typeval + "?</span>", 40000, "yes");
     });
 }
@@ -2080,7 +2060,7 @@ function validaterequestdata(lnurl) {
                 }
             }
         }
-        if (ln_info && glob_paymentdialogbox.attr("data-lswitch") === "lnd_ao") { // lightning data
+        if (ln_info && glob_const.paymentdialogbox.attr("data-lswitch") === "lnd_ao") { // lightning data
             dataobject.imp = ln_info.imp;
             dataobject.lid = ln_info.pid;
             dataobject.proxy = ln_info.proxy_host;
@@ -2116,9 +2096,9 @@ function inputrequestdata() {
 // Validates input steps and prevents invalid inputs
 function validatesteps() {
     $(document).on("keydown", "#paymentdialogbox .mirrordiv input", function(e) {
-        if (glob_blocktyping === true) {
-            playsound(glob_funk);
-            glob_blocktyping = false;
+        if (glob_let.blocktyping === true) {
+            playsound(glob_const.funk);
+            glob_let.blocktyping = false;
             e.preventDefault();
             return
         }
@@ -2130,28 +2110,28 @@ function validatesteps() {
             const v_length = thisvalue.length;
             if (v_length) {
                 if (keycode === 188) {
-                    if ((glob_supportsTouch && glob_is_safari) || glob_is_ios_app) { // prevent commas for mobile safari and ios app
+                    if ((glob_const.supportsTouch && glob_const.is_safari) || glob_const.is_ios_app) { // prevent commas for mobile safari and ios app
                         e.preventDefault();
                         return
                     }
                 }
-                if (glob_prevkey || thisvalue.includes(".") || thisvalue.includes(",") || !e.target.validity.valid || thisnode.hasClass("satinput")) {
+                if (glob_let.prevkey || thisvalue.includes(".") || thisvalue.includes(",") || !e.target.validity.valid || thisnode.hasClass("satinput")) {
                     e.preventDefault();
                 }
-                glob_prevkey = true;
+                glob_let.prevkey = true;
                 return
             }
             e.preventDefault();
             return
         }
         if (keycode === 8) { // alow backspace
-            glob_prevkey = false;
+            glob_let.prevkey = false;
             return
         }
         const command = (keycode === 91 || keycode === 17 || e.metaKey || e.ctrlKey);
         if (command) {
             if (keycode === 65) { // unblock comma on select all
-                glob_prevkey = false;
+                glob_let.prevkey = false;
             }
             return
         }
@@ -2175,11 +2155,11 @@ function validatesteps() {
 function fliprequest() {
     $(document).on("click", "#paymentdialogbox.norequest #sharerequest", function(e) {
         e.preventDefault();
-        if (glob_offline === true) {
+        if (glob_const.offline === true) {
             return
         }
-        const is_lnd = glob_paymentdialogbox.attr("data-lswitch") === "lnd_ao";
-        if (glob_paymentdialogbox.attr("data-pending") === "ispending" && !is_lnd) {
+        const is_lnd = glob_const.paymentdialogbox.attr("data-lswitch") === "lnd_ao";
+        if (glob_const.paymentdialogbox.attr("data-pending") === "ispending" && !is_lnd) {
             if (request.payment === "monero") {
                 notify(translate("addressinuse") + ". <span id='xmrsettings'>" + translate("activateintegrated") + "?</span>", 40000, "yes");
                 return
@@ -2187,7 +2167,7 @@ function fliprequest() {
             pendingrequest();
             return
         }
-        if (is_lnd && glob_paymentdialogbox.hasClass("accept_lnd")) {
+        if (is_lnd && glob_const.paymentdialogbox.hasClass("accept_lnd")) {
             return
         }
         flip_right1();
@@ -2297,7 +2277,7 @@ function pickaddressfromdialog() {
             request.address = picked_address;
             renderqr(payment, picked_address, ccvalue);
             set_edit(href);
-            glob_paymentdialogbox.attr("data-pending", "");
+            glob_const.paymentdialogbox.attr("data-pending", "");
             canceldialog();
         }
     });
@@ -2326,8 +2306,8 @@ function addaddressfromdialog() {
                 "erc20": erc20,
                 "dd": dd
             },
-            scanqr = glob_hascam ? "<div class='qrscanner' data-currency='" + payment + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
-            scanvk = glob_hascam ? "<div class='qrscanner' data-currency='" + payment + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+            scanqr = glob_let.hascam ? "<div class='qrscanner' data-currency='" + payment + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+            scanvk = glob_let.hascam ? "<div class='qrscanner' data-currency='" + payment + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
             vk_box = payment === "monero" ? "<div class='inputwrap'><input type='text' class='vk_input' value='' placeholder='View key'>" + scanvk + "</div>" : "",
             der_src = dd ? (dd.xpubid ? " from Xpub" : " from seed") : "",
             seedstr = dd ? "<div class='popnotify' style='display:block'><span id='addfromseed' class='address_option'>Generate address" + der_src + "</span></div>" : "<div class='popnotify'></div>",
@@ -2407,7 +2387,7 @@ function sharebutton() {
 
 // Checks if request is hybrid or lightning only
 function is_ln_only() {
-    return glob_paymentdialogbox.attr("data-lswitch") === "lnd_ao" ? $("#fallback_address").is(":visible") ? !$("#fallback_address .switchpanel").hasClass("true") : true : false;
+    return glob_const.paymentdialogbox.attr("data-lswitch") === "lnd_ao" ? $("#fallback_address").is(":visible") ? !$("#fallback_address .switchpanel").hasClass("true") : true : false;
 }
 
 // Handles sharing the payment request
@@ -2432,8 +2412,8 @@ function share(thisbutton) {
             thisrequesttitle = thisdata ? dataobject.t : "",
             lightning = thisdata ? !!dataobject.imp : false,
             newdatastring = thisdata ? "&d=" + dataparam : "", // construct data param if exists
-            isipfs = glob_thishostname.includes("ipfs") || glob_thishostname.includes("bitrequest.crypto"),
-            shared_host = isipfs ? glob_c_host : "https://bitrequest.github.io", // check for IFPS
+            isipfs = glob_const.thishostname.includes("ipfs") || glob_const.thishostname.includes("bitrequest.crypto"),
+            shared_host = isipfs ? glob_const.c_host : "https://bitrequest.github.io", // check for IFPS
             url_id = shared_host + "/?p=requests&payment=" + payment + "&uoa=" + thiscurrency + "&amount=" + thisamount + "&address=" + thisaddress,
             sharedurl = url_id + newdatastring,
             thisrequestname_uppercase = capitalize(thisrequestname), // capitalize requestname
@@ -2450,7 +2430,7 @@ function share(thisbutton) {
                 "amount": thisamount,
                 "uoa": thiscurrency
             }),
-            share_icon = lightning ? glob_approot + "img_logos_btc-lnd.png" : glob_cmc_icon_loc + cmcid + ".png";
+            share_icon = lightning ? glob_const.approot + "img_logos_btc-lnd.png" : glob_const.cmc_icon_loc + cmcid + ".png";
         if (isipfs) {
             sharerequest(sharedurl, sharedtitle);
             setlocales();
@@ -2520,13 +2500,13 @@ function firebase_shorten(sharedurl, sharedtitle, sitethumb, unguessable, url_ha
             "cache": false,
             "data": JSON.stringify({
                 "dynamicLinkInfo": {
-                    "domainUriPrefix": glob_firebase_dynamic_link_domain,
+                    "domainUriPrefix": glob_const.firebase_dynamic_link_domain,
                     "link": sharedurl,
                     "androidInfo": {
-                        "androidPackageName": glob_androidpackagename
+                        "androidPackageName": glob_const.androidpackagename
                     },
                     "iosInfo": {
-                        "iosBundleId": glob_androidpackagename,
+                        "iosBundleId": glob_const.androidpackagename,
                         "iosAppStoreId": "1484815377"
                     },
                     "navigationInfo": {
@@ -2584,7 +2564,7 @@ function bitly_shorten(sharedurl, sharedtitle, url_hash) {
         const data = br_result(e).result;
         if (data.id) {
             const linkid = data.id.split("/").pop(),
-                shurl = glob_approot + "?i=4bR" + linkid;
+                shurl = glob_const.approot + "?i=4bR" + linkid;
             sharerequest(shurl, sharedtitle);
             if (url_hash) {
                 br_set_session("bitly_shorturl_" + url_hash, shurl);
@@ -2626,9 +2606,9 @@ function custom_shorten(service, sharedurl, sharedtitle, sitethumb, url_hash) {
             }
             const rqid = data.shorturl;
             if (rqid) {
-                const index = glob_proxy_list.indexOf(serv),
+                const index = glob_const.proxy_list.indexOf(serv),
                     isdefault = index > -1;
-                shurl = isdefault ? glob_approot + "?i=" + index.toString() + rqid : serv + "proxy/v1/inv/4bR" + rqid;
+                shurl = isdefault ? glob_const.approot + "?i=" + index.toString() + rqid : serv + "proxy/v1/inv/4bR" + rqid;
                 sharerequest(shurl, sharedtitle);
                 if (url_hash) {
                     br_set_session("custom_shorturl_" + url_hash, shurl);
@@ -2651,13 +2631,13 @@ function randomId() {
 // Handles the sharing of requests
 function sharerequest(sharedurl, sharedtitle) {
     closeloader();
-    if (glob_is_ios_app) {
+    if (glob_const.is_ios_app) {
         sharefallback(sharedurl, sharedtitle);
         return
     }
-    if (glob_supportsTouch && navigator.canShare) {
+    if (glob_const.supportsTouch && navigator.canShare) {
         navigator.share({
-            "title": sharedtitle + " | " + glob_apptitle,
+            "title": sharedtitle + " | " + glob_const.apptitle,
             "text": sharedtitle + ": \n",
             "url": sharedurl
         }).then(sharecallback).catch(function(err) {
@@ -2670,12 +2650,12 @@ function sharerequest(sharedurl, sharedtitle) {
 
 // Fallback function for sharing when native sharing is not available
 function sharefallback(sharedurl, sharedtitle) {
-    const mobileclass = glob_supportsTouch ? " showtouch" : "";
+    const mobileclass = glob_const.supportsTouch ? " showtouch" : "";
     $("#sharepopup").addClass("showpu active" + mobileclass).data({
         "sharetitle": sharedtitle,
         "shareurl": sharedurl
     });
-    glob_body.addClass("sharemode");
+    glob_const.body.addClass("sharemode");
 }
 
 // Handles sharing via WhatsApp
@@ -2776,7 +2756,7 @@ function open_share_url(type, url) {
             return
         }
         if (type === "location") {
-            glob_w_loc.href = url;
+            glob_const.w_loc.href = url;
         }
     }, 500);
 }
@@ -2797,9 +2777,9 @@ function trigger_open_tx() {
 // Handles viewing transaction details
 function view_tx() {
     $(document).on("click", "#view_tx", function() {
-        if (glob_inframe) {
-            glob_html.removeClass("hide_app");
-        } else if (glob_body.hasClass("showstartpages")) {
+        if (glob_const.inframe) {
+            glob_const.html.removeClass("hide_app");
+        } else if (glob_const.body.hasClass("showstartpages")) {
             cancelpaymentdialog();
             startnext($("#intro"));
             return;
@@ -2942,7 +2922,7 @@ function saverequest(direct, ln) {
                         send_receive = typestate === "incoming" ? "sent" : "received",
                         tlstat = send_receive === "sent" ? translate("paymentsent") : translate("paymentreceived");
                     adjust_paymentdialog("paid", "no", tlstat);
-                    glob_paymentdialogbox.find("span#view_tx").attr("data-txhash", txhash_state);
+                    glob_const.paymentdialogbox.find("span#view_tx").attr("data-txhash", txhash_state);
                     return "nosocket";
                 }
             }
@@ -2980,7 +2960,7 @@ function saverequest(direct, ln) {
             }, 500);
             if (!requestid_param && direct === true) { // Add request_params (make it a request)
                 const request_params = "&requestid=" + requestid + "&status=" + request.status + "&type=" + thisrequesttype;
-                history.replaceState(null, null, glob_w_loc.href + request_params);
+                history.replaceState(null, null, glob_const.w_loc.href + request_params);
             }
             if (coinsettings) {
                 const reuse = coinsettings["Reuse address"];
@@ -3075,7 +3055,7 @@ function pendingdialog(pr) { // show pending dialog if tx is pending
         smart_txhash = txhash || tl_txhash,
         typestate = prdata.requesttype,
         send_receive = typestate === "incoming" ? "sent" : "received",
-        brstatuspanel = glob_paymentdialogbox.find(".brstatuspanel"),
+        brstatuspanel = glob_const.paymentdialogbox.find(".brstatuspanel"),
         viewtx = brstatuspanel.find("#view_tx"),
         pending = prdata.pending,
         thispayment = prdata.payment,
@@ -3084,7 +3064,7 @@ function pendingdialog(pr) { // show pending dialog if tx is pending
     if (pr.hasClass("expired")) {
         if (status === "new" || status === "insufficient") {
             adjust_paymentdialog("expired", "no", translate("txexpired"));
-            glob_paymentdialogbox.find("span#view_tx").hide();
+            glob_const.paymentdialogbox.find("span#view_tx").hide();
         }
         return
     }
@@ -3123,7 +3103,8 @@ function pendingdialog(pr) { // show pending dialog if tx is pending
             return
         }
         adjust_paymentdialog("pending", "polling", translate("txbroadcasted"));
-        const set_confirmations = request.set_confirmations || 0;
+        const set_confirmations = request.set_confirmations || prdata.set_confirmations || 0;
+        request.set_confirmations = set_confirmations;
         tx_polling_init({
             "txhash": smart_txhash,
             "setconfirmations": set_confirmations,
@@ -3134,11 +3115,11 @@ function pendingdialog(pr) { // show pending dialog if tx is pending
 
 // Adjusts the payment dialog based on the current status
 function adjust_paymentdialog(status, pending, status_text) {
-    const play_sound = status === "insufficient" ? glob_funk : glob_blip,
-        brstatuspanel = glob_paymentdialogbox.find(".brstatuspanel");
+    const play_sound = status === "insufficient" ? glob_const.funk : glob_const.blip,
+        brstatuspanel = glob_const.paymentdialogbox.find(".brstatuspanel");
     playsound(play_sound);
     add_flip();
-    glob_paymentdialogbox.addClass("transacting").attr({
+    glob_const.paymentdialogbox.addClass("transacting").attr({
         "data-status": status,
         "data-pending": pending
     });
@@ -3233,7 +3214,7 @@ function updaterequest(ua, save) {
         metalist.find(".payday.pd_fiat .fiatvalue").text(" " + trimdecimals(ua.fiatvalue, 2));
     }
     if (ua.paymenttimestamp) {
-        const fdf = fulldateformat(new Date(ua.paymenttimestamp - glob_timezone), glob_langcode, true);
+        const fdf = fulldateformat(new Date(ua.paymenttimestamp - glob_const.timezone), glob_const.langcode, true);
         metalist.find(".payday.pd_paydate span.paydate").html(" " + fdf);
         metalist.find(".payday.pd_fiat strong span.pd_fiat").html(" " + fdf);
     }
@@ -3260,8 +3241,8 @@ function updaterequest(ua, save) {
         }
         if (this_status === "paid" || this_status === "archive_pending") {
             if (this_status === "paid") {
-                if (glob_inframe === false) {
-                    playsound(glob_blip);
+                if (glob_const.inframe === false) {
+                    playsound(glob_const.blip);
                 }
                 requestlist.addClass("shownotification");
             }
@@ -3326,6 +3307,6 @@ function xmr_integrated(xmr_address, pmid) {
             checksum = bytes + fasthash(bytes).slice(0, 8);
         return base58_encode(hexToBytes(checksum));
     }
-    console.log("invalid xmr payment id");
+    console.error("error", "invalid xmr payment id");
     return xmr_address;
 }

@@ -1,7 +1,3 @@
-const glob_scope = "https://www.googleapis.com/auth/drive.appdata",
-    glob_drivepath = "https://content.googleapis.com",
-    glob_redirect_uri = glob_w_loc.origin + glob_w_loc.pathname + "?p=settings";
-
 $(document).ready(function() {
     init_access();
     // t_expired
@@ -41,7 +37,7 @@ function init_access(ak) {
     }
     const p = GD_pass();
     if (p.pass) {
-        glob_html.addClass("gdauth");
+        glob_const.html.addClass("gdauth");
         return
     }
     if (!p.active) {
@@ -51,7 +47,7 @@ function init_access(ak) {
 
 // Handles token expiration and refreshes access if necessary
 function t_expired(expired, callback) {
-    if (glob_hostlocation === "local") {
+    if (glob_const.hostlocation === "local") {
         return
     }
     if (expired === "norefresh") {
@@ -73,7 +69,7 @@ function fetch_creds(k) {
             "api_url": true,
             "proxy": true,
             "code": decodeURIComponent(k),
-            "redirect_uri": glob_redirect_uri,
+            "redirect_uri": glob_const.redirect_uri,
             "grant_type": "authorization_code"
         }).done(function(e) {
             if (e) {
@@ -105,13 +101,13 @@ function fetch_creds(k) {
                                 br_set_local("rt", JSON.stringify(jtobj));
                             }
                             gdlogin_callbacks();
-                            if (glob_body.hasClass("showstartpage")) { // only show when logged in
+                            if (glob_const.body.hasClass("showstartpage")) { // only show when logged in
                                 trigger_restore();
                             }
                             const timeout = setTimeout(function() {
                                 history.pushState({
                                     "pagename": "settings"
-                                }, "", glob_redirect_uri);
+                                }, "", glob_const.redirect_uri);
                             }, 5000, function() {
                                 clearTimeout(timeout);
                             });
@@ -120,7 +116,7 @@ function fetch_creds(k) {
                 }
             }
         }).fail(function(e) {
-            console.log(e);
+            console.error("error", e);
         }).always(function(e) {});
     }
 }
@@ -167,14 +163,14 @@ function fetch_access(rt, callback) {
                 }
             }
         }).fail(function(e) {
-            console.log(e);
+            console.error("error", e);
         });
     }
 }
 
 // Handles callbacks after refreshing access token
 function refcb(cb) {
-    glob_html.addClass("gdauth");
+    glob_const.html.addClass("gdauth");
     if (cb) {
         if (cb === "uad") {
             const p = GD_pass();
@@ -206,7 +202,7 @@ function rt_obj() {
 
 // Initializes the login dialog based on the provided parameters
 function init_login_dialog(p) {
-    if (glob_hostlocation === "local") {
+    if (glob_const.hostlocation === "local") {
         notify(translate("ganot"));
         return
     }
@@ -322,7 +318,7 @@ function submit_gdbu_dialog() {
 
 // Initiates Google Drive login process
 function g_login() {
-    if (glob_hostlocation === "local") {
+    if (glob_const.hostlocation === "local") {
         notify(translate("ganot"));
         return
     }
@@ -339,13 +335,13 @@ function g_login() {
         }
     }
     const consent = p.expired == "norefresh" ? "&prompt=consent" : "",
-        login_uri = "https://accounts.google.com/o/oauth2/auth?client_id=" + to.ga_id + "&redirect_uri=" + glob_redirect_uri + "&response_type=code&scope=" + glob_scope + "&access_type=offline" + consent;
-    glob_w_loc.href = login_uri;
+        login_uri = "https://accounts.google.com/o/oauth2/auth?client_id=" + to.ga_id + "&redirect_uri=" + glob_const.redirect_uri + "&response_type=code&scope=" + glob_const.scope + "&access_type=offline" + consent;
+    glob_const.w_loc.href = login_uri;
 }
 
 // Performs callbacks after successful Google Drive login
 function gdlogin_callbacks(close) {
-    glob_html.addClass("gdauth");
+    glob_const.html.addClass("gdauth");
     notify(translate("gdsignedin"));
     resetchanges();
     adjust_sp();
@@ -398,7 +394,7 @@ function deactivate() {
 
 // Performs callbacks after Google Drive logout
 function gdlogout_callbacks() {
-    glob_html.removeClass("gdauth");
+    glob_const.html.removeClass("gdauth");
     notify(translate("gdsignedout"));
     const switch_panel = $("#popup.showpu .switchpanel");
     if (switch_panel.length) {
@@ -436,7 +432,7 @@ function updateappdata(p) {
     if (bu_id) {
         br_set_session("gd_timer", now());
         const ddat = {
-            "api_url": glob_drivepath + "/upload/drive/v3/files/" + bu_id + "?uploadType=media&alt=json",
+            "api_url": glob_const.drivepath + "/upload/drive/v3/files/" + bu_id + "?uploadType=media&alt=json",
             "proxy": false,
             "params": {
                 "method": "PATCH",
@@ -490,7 +486,7 @@ function createfile(token) {
             description = {
                 "modified": now_utc(),
                 "device": getdevicetype(),
-                "deviceid": glob_deviceid
+                "deviceid": glob_const.deviceid
             },
             metadata = {
                 "name": complilefilename(),
@@ -547,7 +543,7 @@ function listappdata() {
         return
     }
     api_proxy({
-        "api_url": glob_drivepath + "/drive/v3/files?pageSize=10&spaces=appDataFolder&fields=*",
+        "api_url": glob_const.drivepath + "/drive/v3/files?pageSize=10&spaces=appDataFolder&fields=*",
         "proxy": false,
         "params": {
             "method": "GET",
@@ -572,7 +568,7 @@ function listappdata() {
                     device_id = description.deviceid,
                     dmod = short_date(description.modified),
                     mod = short_date(to_ts(value.modifiedTime)),
-                    trash = (device_id === glob_deviceid) ? "<div class='purge_bu icon-bin'></div>" : "",
+                    trash = (device_id === glob_const.deviceid) ? "<div class='purge_bu icon-bin'></div>" : "",
                     gdbackups = "<li data-gdbu_id='" + value.id + "' data-device-id='" + device_id + "' data-device='" + device + "'><div class='restorefile icon-" + device + "' title='" + device + " (Created: " + dmod + ")'>" + mod + "<span class='lmodified'> (" + (value.size / 1000).toFixed(0) + " KB)</div>" + trash + "</li>";
                 gdbackuppush.push(gdbackups);
             });
@@ -622,7 +618,7 @@ function deletefiletrigger() {
 // Deletes a file from Google Drive
 function deletefile(fileId, thislist, pass) {
     api_proxy({
-        "api_url": glob_drivepath + "/drive/v3/files/" + fileId,
+        "api_url": glob_const.drivepath + "/drive/v3/files/" + fileId,
         "proxy": false,
         "params": {
             "method": "DELETE",
@@ -675,10 +671,10 @@ function GD_pass() {
             }
         }
         if (token && !expired && active) {
-            glob_html.addClass("gdauth");
+            glob_const.html.addClass("gdauth");
             jt.pass = true;
         } else {
-            glob_html.removeClass("gdauth");
+            glob_const.html.removeClass("gdauth");
         }
     } else {
         jt.expired = can_refresh;

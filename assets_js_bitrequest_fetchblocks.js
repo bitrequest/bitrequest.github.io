@@ -1,8 +1,3 @@
-const default_error = {
-    "error": "no transactions found",
-    "console": true
-};
-
 $(document).ready(function() {
 
     // ** API **
@@ -70,7 +65,6 @@ $(document).ready(function() {
     //kaspa_fyi_ws_data
     //lnd_tx_data
     //infura_eth_poll_data
-    //tx_data
 });
 
 // ** Fetch blockchain data from different blockexplorers **
@@ -113,19 +107,19 @@ function lightning_fetch(rd, api_data, rdo) {
         }).done(function(r) {
             const error = r.error,
                 version = r.version;
-            if (version < glob_proxy_version) {
+            if (version < glob_const.proxy_version) {
                 proxy_alert(version);
             }
             if (error) {
                 const message = error ? (error.message || (typeof error === "string" ? error : default_error)) : default_error;
                 tx_api_fail(thislist, statuspanel);
-                handle_api_fails(rd, rdo, {
+                tx_api_scan_fail(rd, "ln", rdo, {
                     "error": message,
                     "console": true
                 });
                 status_field.text(" " + message);
                 if (!ln_only) {
-                    continue_select_api_rpc(rd, api_data, rdo);
+                    continue_select(rd, api_data, rdo);
                 }
                 return
             }
@@ -153,13 +147,13 @@ function lightning_fetch(rd, api_data, rdo) {
                         if (inv_error) {
                             const err_message = inv_error.message || (typeof inv_error === "string" ? inv_error : default_error);
                             tx_api_fail(thislist, statuspanel);
-                            handle_api_fails(rd, rdo, {
+                            tx_api_scan_fail(rd, "ln", rdo, {
                                 "error": err_message,
                                 "console": true
                             });
                             status_field.text(" " + err_message);
                             if (!ln_only) {
-                                continue_select_api_rpc(rd, api_data, rdo);
+                                continue_select(rd, api_data, rdo);
                             }
                             return
                         }
@@ -189,25 +183,25 @@ function lightning_fetch(rd, api_data, rdo) {
                             }
                         }
                         if (!ln_only) {
-                            continue_select_api_rpc(rd, api_data, rdo);
+                            continue_select(rd, api_data, rdo);
                         }
                     }).fail(function(xhr, stat, err) {
                         tx_api_fail(thislist, statuspanel);
                         const error_object = xhr || stat || err;
-                        handle_api_fails(rd, rdo, error_object);
+                        tx_api_scan_fail(rd, "ln", rdo, error_object);
                         if (!ln_only) {
-                            continue_select_api_rpc(rd, api_data, rdo);
+                            continue_select(rd, api_data, rdo);
                         }
                     });
                     return
                 }
                 tx_count(statuspanel, 0);
-                handle_api_fails(rd, rdo, {
+                tx_api_scan_fail(rd, "ln", rdo, {
                     "error": "invoice not found",
                     "console": true
                 });
                 if (!ln_only) {
-                    continue_select_api_rpc(rd, api_data, rdo);
+                    continue_select(rd, api_data, rdo);
                 }
                 return
             }
@@ -219,19 +213,19 @@ function lightning_fetch(rd, api_data, rdo) {
                     "confirmations": 0
                 }, true);
             }
-            handle_api_fails(rd, rdo, {
+            tx_api_scan_fail(rd, "ln", rdo, {
                 "error": "payment id not found",
                 "console": true
             });
             if (!ln_only) {
-                continue_select_api_rpc(rd, api_data, rdo);
+                continue_select(rd, api_data, rdo);
             }
         }).fail(function(xhr, stat, err) {
             tx_api_fail(thislist, statuspanel);
             const error_object = xhr || stat || err;
-            handle_api_fails(rd, rdo, error_object);
+            tx_api_scan_fail(rd, "ln", rdo, error_object);
             if (!ln_only) {
-                continue_select_api_rpc(rd, api_data, rdo);
+                continue_select(rd, api_data, rdo);
             }
         }).always(function() {
             set_api_src(rdo, {
@@ -287,7 +281,7 @@ function lightning_fetch(rd, api_data, rdo) {
                 }).fail(function(xhr, stat, err) {
                     tx_api_fail(thislist, statuspanel);
                     const error_object = xhr || stat || err;
-                    handle_api_fails(rd, rdo, error_object);
+                    tx_api_scan_fail(rd, "ln", rdo, error_object);
                 }).always(function() {
                     set_api_src(rdo, {
                         "name": "proxy"
@@ -296,13 +290,13 @@ function lightning_fetch(rd, api_data, rdo) {
             }
             return
         }
-        handle_api_fails(rd, rdo, {
+        tx_api_scan_fail(rd, "ln", rdo, {
             "error": "invoice not found",
             "console": true
-        }, false);
+        });
         return
     }
-    continue_select_api_rpc(rd, api_data, rdo);
+    continue_select(rd, api_data, rdo);
 }
 
 // ** MyMonero API **
@@ -414,7 +408,7 @@ function monero_fetch(rd, api_data, rdo) {
                 return
             }
         }
-        tx_api_scan_fail(rd, api_data, rdo, default_error);
+        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
     }).fail(function(xhr, stat, err) {
         const is_proxy = is_proxy_fail(this.url),
             error_object = xhr || stat || err;
@@ -476,7 +470,7 @@ function blockchair_xmr_poll(rd, api_data, rdo) {
                 return
             }
         }
-        tx_api_scan_fail(rd, api_data, rdo, default_error);
+        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
     }).fail(function(xhr, stat, err) {
         const is_proxy = is_proxy_fail(this.url),
             error_object = xhr || stat || err;
@@ -518,7 +512,7 @@ function blockchaininfo_fetch_blockheight(rd, api_data, rdo) {
                 return
             }
         }
-        tx_api_scan_fail(rd, api_data, rdo, default_error);
+        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
     }).fail(function(xhr, stat, err) {
         const is_proxy = is_proxy_fail(this.url),
             error_object = xhr || stat || err;
@@ -586,7 +580,7 @@ function blockchaininfo_fetch(rd, api_data, rdo, latestblock) {
                     return
                 }
             }
-            tx_api_scan_fail(rd, api_data, rdo, default_error);
+            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
@@ -626,7 +620,7 @@ function blockchaininfo_fetch(rd, api_data, rdo, latestblock) {
                     scan_match(rd, api_data, rdo, counter, txdat);
                     return
                 }
-                tx_api_scan_fail(rd, api_data, rdo, default_error);
+                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
@@ -687,7 +681,7 @@ function blockcypher_fetch(rd, api_data, rdo) {
                 scan_match(rd, api_data, rdo, counter, txdat);
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, default_error);
+            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
@@ -727,7 +721,7 @@ function blockcypher_fetch(rd, api_data, rdo) {
                     scan_match(rd, api_data, rdo, counter, txdat);
                     return
                 }
-                tx_api_scan_fail(rd, api_data, rdo, default_error);
+                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
@@ -791,7 +785,7 @@ function ethplorer_fetch(rd, rdo, api_data) {
                     return
                 }
             }
-            tx_api_scan_fail(rd, api_data, rdo, default_error, null, l2);
+            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, l2);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
@@ -843,7 +837,7 @@ function ethplorer_fetch(rd, rdo, api_data) {
                     scan_match(rd, api_data, rdo, counter, txdat, l2);
                     return
                 }
-                tx_api_scan_fail(rd, api_data, rdo, default_error, null, l2);
+                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, l2);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
@@ -899,7 +893,7 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                             "error": error.message,
                             "console": true
                         };
-                        tx_api_scan_fail(rd, api_data, rdo, error_object, null, true);
+                        tx_api_scan_fail(rd, api_data, rdo, error_object, null, network);
                         return
                     }
                     const result = data.result;
@@ -924,7 +918,7 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                         return
                     }
                 }
-                tx_api_scan_fail(rd, api_data, rdo, default_error, null, network);
+                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, network);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
@@ -965,11 +959,11 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                                 }
                             }
                         });
+                        scan_match(rd, api_data, rdo, counter, txdat, network);
+                        return
                     }
-                    scan_match(rd, api_data, rdo, counter, txdat, network);
-                    return
                 }
-                tx_api_scan_fail(rd, api_data, rdo, default_error, null, network);
+                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, network);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
@@ -1019,7 +1013,7 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                             return
                         }
                     }
-                    tx_api_scan_fail(rd, api_data, rdo, default_error, null, network);
+                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, network);
                 }).fail(function(xhr, stat, err) {
                     const is_proxy = is_proxy_fail(this.url),
                         error_object = xhr || stat || err;
@@ -1064,7 +1058,7 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                             return
                         }
                     }
-                    tx_api_scan_fail(rd, api_data, rdo, default_error, null, network);
+                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, network);
                 }).fail(function(xhr, stat, err) {
                     const is_proxy = is_proxy_fail(this.url),
                         error_object = xhr || stat || err;
@@ -1212,7 +1206,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                 });
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, default_error);
+            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
@@ -1263,7 +1257,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                         return
                     }
                 }
-                tx_api_scan_fail(rd, api_data, rdo, default_error);
+                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
@@ -1324,7 +1318,7 @@ function nimiq_fetch(rd, api_data, rdo) {
                     scan_match(rd, api_data, rdo, counter, txdat);
                     return
                 }
-                tx_api_scan_fail(rd, api_data, rdo, default_error);
+                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
@@ -1334,7 +1328,7 @@ function nimiq_fetch(rd, api_data, rdo) {
             });
             return
         }
-        tx_api_scan_fail(rd, api_data, rdo, default_error);
+        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
         return
     }
     if (rdo.pending === "polling") {
@@ -1370,7 +1364,7 @@ function nimiq_fetch(rd, api_data, rdo) {
                         scan_match(rd, api_data, rdo, counter, txdat);
                         return
                     }
-                    tx_api_scan_fail(rd, api_data, rdo, default_error);
+                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
                 }).fail(function(xhr, stat, err) {
                     const is_proxy = is_proxy_fail(this.url),
                         error_object = xhr || stat || err;
@@ -1426,7 +1420,7 @@ function nimiq_fetch(rd, api_data, rdo) {
                         });
                         return
                     }
-                    tx_api_scan_fail(rd, api_data, rdo, default_error);
+                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
                 }).fail(function(xhr, stat, err) {
                     const is_proxy = is_proxy_fail(this.url),
                         error_object = xhr || stat || err;
@@ -1471,7 +1465,7 @@ function kaspa_fetch_blockheight(rd, api_data, rdo) {
                 return
             }
         }
-        tx_api_scan_fail(rd, api_data, rdo, default_error);
+        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
     }).fail(function(xhr, stat, err) {
         const is_proxy = is_proxy_fail(this.url),
             error_object = xhr || stat || err;
@@ -1501,7 +1495,7 @@ function kaspa_fetch(rd, api_data, rdo, blockheight) {
             const data = br_result(e).result;
             if (data) {
                 if (empty_obj(data)) {
-                    tx_api_scan_fail(rd, api_data, rdo, default_error);
+                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
                     return
                 }
                 const sortlist = sort_by_date(kaspa_scan_data, data);
@@ -1521,7 +1515,7 @@ function kaspa_fetch(rd, api_data, rdo, blockheight) {
                 scan_match(rd, api_data, rdo, counter, txdat);
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, default_error);
+            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
@@ -1564,7 +1558,7 @@ function kaspa_fetch(rd, api_data, rdo, blockheight) {
                     scan_match(rd, api_data, rdo, counter, txdat);
                     return
                 }
-                tx_api_scan_fail(rd, api_data, rdo, default_error);
+                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
@@ -1620,7 +1614,7 @@ function insight_fetch_dash(rd, api_data, rdo) {
                 scan_match(rd, api_data, rdo, counter, txdat);
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, default_error);
+            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
@@ -1659,7 +1653,7 @@ function insight_fetch_dash(rd, api_data, rdo) {
                     scan_match(rd, api_data, rdo, counter, txdat);
                     return
                 }
-                tx_api_scan_fail(rd, api_data, rdo, default_error);
+                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
@@ -1705,7 +1699,7 @@ function mempoolspace_rpc_blockheight(rd, api_data, rdo, rpc) {
             mempoolspace_rpc(rd, api_data, rdo, rpc, data);
             return
         }
-        tx_api_scan_fail(rd, api_data, rdo, default_error);
+        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
     }).fail(function(xhr, stat, err) {
         const is_proxy = is_proxy_fail(this.url),
             error_object = xhr || stat || err;
@@ -1757,7 +1751,7 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock) {
                     scan_match(rd, api_data, rdo, counter, txdat);
                     return
                 }
-                tx_api_scan_fail(rd, api_data, rdo, default_error);
+                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
             }).fail(function(xhr, stat, err) {
                 const error_object = xhr || stat || err;
                 tx_api_scan_fail(rd, api_data, rdo, error_object);
@@ -1790,7 +1784,7 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock) {
                 scan_match(rd, api_data, rdo, counter, txdat);
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, default_error);
+            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
         }).fail(function(xhr, stat, err) {
             const error_object = xhr || stat || err;
             tx_api_scan_fail(rd, api_data, rdo, error_object);
@@ -1802,13 +1796,28 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock) {
 
 // This function interacts with Infura or similar Ethereum RPC providers to fetch and process transaction data.
 // It handles both ERC20 and regular Ethereum transactions, retrieving block information and calculating confirmations.
-function infura_txd_rpc(rd, api_data, rdo) {
+function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
+    const layer2 = api_data.network;
+    if (rdo.pending === "scanning") {
+        // Use etherscan instead, unable to fetch transactions with infura api
+        let api_dat = api_data;
+        if (layer2) { // switch to default (etherscan) txdata
+            if (rd.erc20) {
+                const l2_setting = cs_node(rd.thiscurrency, "layer2", true),
+                    l2_options = l2_setting.options;
+                api_dat = q_obj(l2_options, layer2 + ".apis.selected");
+            }
+            omniscan_fetch(rd, api_dat, rdo, contract, chainid || 1);
+            return
+        }
+        blockcypher_fetch(rd, api_data, rdo);
+        return
+    }
     const thislist = rdo.thislist,
         transactionlist = rdo.transactionlist,
         statuspanel = rdo.statuspanel,
         rpcurl = get_rpc_url(api_data),
-        layer2 = api_data.network,
-        set_url = layer2 ? api_data.url : rpcurl || glob_main_eth_node,
+        set_url = layer2 ? api_data.url : rpcurl || glob_const.main_eth_node,
         txhash = rd.txhash;
     let counter = 0,
         txdat = false;
@@ -1842,7 +1851,7 @@ function infura_txd_rpc(rd, api_data, rdo) {
                                     };
                                 txd = infura_erc20_poll_data(txdata, rdo.setconfirmations, rd.currencysymbol, layer2);
                             } else {
-                                tx_api_scan_fail(rd, api_data, rdo, default_error); // scan l2's
+                                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error); // scan l2's
                                 return
                             }
                         } else {
@@ -1866,14 +1875,14 @@ function infura_txd_rpc(rd, api_data, rdo) {
                         scan_match(rd, api_data, rdo, counter, txdat);
                         return
                     }
-                    tx_api_scan_fail(rd, api_data, rdo, default_error); // scan l2's
+                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error); // scan l2's
                 }).fail(function(xhr, stat, err) {
                     const error_object = xhr || stat || err;
                     tx_api_scan_fail(rd, api_data, rdo, error_object);
                 });
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, default_error); // scan l2's
+            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error); // scan l2's
         }).fail(function(xhr, stat, err) {
             const error_object = xhr || stat || err;
             tx_api_scan_fail(rd, api_data, rdo, error_object);
@@ -1922,15 +1931,15 @@ function eth_params(set_url, cachetime, method, params) {
             }
         }
     }
-    if (set_url === glob_main_eth_node) {
+    if (set_url === glob_const.main_eth_node) {
         $.extend(payload, {
             "api": "infura"
         });
-    } else if (set_url === glob_main_arbitrum_node) {
+    } else if (set_url === glob_const.main_arbitrum_node) {
         $.extend(payload, {
             "api": "arbitrum"
         });
-    } else if (set_url === glob_main_polygon_node) {
+    } else if (set_url === glob_const.main_polygon_node) {
         $.extend(payload, {
             "api": "polygon"
         });
@@ -1992,7 +2001,7 @@ function nano_rpc(rd, api_data, rdo) {
                 scan_match(rd, api_data, rdo, counter, txdat);
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, default_error);
+            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
@@ -2038,7 +2047,7 @@ function nano_rpc(rd, api_data, rdo) {
                 scan_match(rd, api_data, rdo, counter, txdat);
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, default_error);
+            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
@@ -2075,7 +2084,7 @@ function process_outputs(outputs, address, process_value) {
 function process_timestamp(timestamp, utc) {
     if (!timestamp) return utc ? now_utc() : now();
     const time = timestamp * 1000;
-    return utc ? time + glob_timezone : time;
+    return utc ? time + glob_const.timezone : time;
 }
 
 // Helper function to calculate confirmations
@@ -2111,7 +2120,7 @@ function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) {
     }
     const outputsum = process_outputs(data.out, address, process_value),
         transactiontime = data.time ? data.time * 1000 : null,
-        transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
+        transactiontime_utc = transactiontime ? transactiontime + glob_const.timezone : null;
     return {
         "ccval": outputsum ? outputsum / 1e8 : null,
         "transactiontime": transactiontime_utc,
@@ -2128,7 +2137,7 @@ function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) {
     }
     const outputsum = process_outputs(data.vout, address, process_value),
         transactiontime = data.firstSeen ? data.firstSeen * 1000 : null,
-        transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
+        transactiontime_utc = transactiontime ? transactiontime + glob_const.timezone : null;
     return {
         "ccval": outputsum ? outputsum / 1e8 : null,
         "transactiontime": transactiontime_utc,
@@ -2142,7 +2151,7 @@ function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) {
 function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, latestblock) {
     const status = data.status,
         transactiontime = status.block_time ? status.block_time * 1000 : now(),
-        transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
+        transactiontime_utc = transactiontime ? transactiontime + glob_const.timezone : null;
     if (setconfirmations === "sort") {
         return transactiontime_utc;
     }
@@ -2171,7 +2180,7 @@ function dogechain_ws_data(data, setconfirmations, ccsymbol, address) {
     }
     const outputsum = process_outputs(data.outputs, address, process_value),
         transactiontime = data.time ? data.time * 1000 : now(),
-        transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
+        transactiontime_utc = transactiontime ? transactiontime + glob_const.timezone : null;
     return {
         "ccval": outputsum ? outputsum / 1e8 : null,
         "transactiontime": transactiontime_utc,
@@ -2206,7 +2215,7 @@ function blockcypher_scan_data(data, setconfirmations, ccsymbol) {
 function insight_scan_data(data, setconfirmations, address) {
     const transactiontime = data.time ? data.time : data.blocktime ? data.blocktime : false,
         txtime = transactiontime ? transactiontime * 1000 : now(),
-        transactiontime_utc = txtime ? txtime + glob_timezone : null;
+        transactiontime_utc = txtime ? txtime + glob_const.timezone : null;
     if (setconfirmations === "sort") {
         return transactiontime_utc;
     }
@@ -2260,7 +2269,7 @@ function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) {
 
 function blockchaininfo_scan_data(data, setconfirmations, ccsymbol, address, latestblock) {
     const transactiontime = data.time ? data.time * 1000 : null,
-        transactiontime_utc = transactiontime ? transactiontime + glob_timezone : now();
+        transactiontime_utc = transactiontime ? transactiontime + glob_const.timezone : now();
     if (setconfirmations === "sort") {
         return transactiontime;
     }
@@ -2416,7 +2425,7 @@ function ethplorer_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
 }
 
 function nano_scan_data(data, setconfirmations, ccsymbol, txhash) {
-    const transactiontime = data.local_timestamp ? (data.local_timestamp * 1000) + glob_timezone : null,
+    const transactiontime = data.local_timestamp ? (data.local_timestamp * 1000) + glob_const.timezone : null,
         transactiontime_utc = transactiontime ? transactiontime : now_utc();
     if (setconfirmations === "sort") {
         return transactiontime_utc;
@@ -2470,7 +2479,7 @@ function infura_erc20_poll_data(data, setconfirmations, ccsymbol, eth_layer2) {
 function infura_block_data(data, setconfirmations, ccsymbol, ts) {
     const ccval = data.value ? parseFloat((Number(data.value) / 1e18).toFixed(8)) : null,
         transactiontime = ts ? process_timestamp(Number(ts), true) : now(),
-        transactiontime_utc = transactiontime ? transactiontime + glob_timezone : null;
+        transactiontime_utc = transactiontime ? transactiontime + glob_const.timezone : null;
     return {
         "ccval": ccval,
         "transactiontime": transactiontime_utc,
@@ -2538,7 +2547,7 @@ function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash)
 }
 
 function kaspa_scan_data(data, thisaddress, setconfirmations, latestblock) {
-    const transactiontime = data.block_time + glob_timezone;
+    const transactiontime = data.block_time + glob_const.timezone;
     if (setconfirmations === "sort") {
         return transactiontime;
     }
@@ -2570,7 +2579,7 @@ function kaspa_poll_fyi_data(data, thisaddress, setconfirmations) {
     const outputsum = process_outputs(data.outputs, thisaddress, process_output_value);
     return {
         "ccval": outputsum ? outputsum / 1e8 : null,
-        "transactiontime": parseFloat(data.blockTime) + glob_timezone,
+        "transactiontime": parseFloat(data.blockTime) + glob_const.timezone,
         "txhash": data.transactionId,
         "confirmations": data.isAccepted || data.confirmations || 0,
         "setconfirmations": setconfirmations,
@@ -2611,7 +2620,7 @@ function lnd_tx_data(data) {
         amount = parseFloat(data.amount / 100000000000);
     return {
         "ccval": Math.abs(amount),
-        "transactiontime": txtime + glob_timezone,
+        "transactiontime": txtime + glob_const.timezone,
         "txhash": "lightning" + data.hash,
         "confirmations": data.conf,
         "setconfirmations": 1,
@@ -2632,30 +2641,4 @@ function infura_eth_poll_data(data, setconfirmations, ccsymbol, eth_layer2) {
         "ccsymbol": ccsymbol,
         "eth_layer2": eth_layer2
     };
-}
-
-// This function formats request data and returns an object with various properties related to the transaction request.
-function tx_data(rd) {
-    const requestid = rd.requestid,
-        thislist = $("#" + requestid),
-        requestdate = rd.inout === "incoming" ? rd.timestamp : rd.requestdate,
-        request_timestamp = requestdate - 30000, // 30 seconds compensation for unexpected results
-        getconfirmations = rd.set_confirmations,
-        setconfirmations = getconfirmations ? parseInt(getconfirmations) : 1,
-        canceled = rd.status === "canceled",
-        pending = canceled ? "scanning" : rd.pending,
-        statuspanel = thislist.find(".pmetastatus"),
-        transactionlist = thislist.find("ul.transactionlist");
-    return {
-        requestid,
-        "thislist": thislist,
-        "request_timestamp": request_timestamp,
-        "setconfirmations": setconfirmations,
-        "canceled": canceled,
-        "pending": pending,
-        "statuspanel": statuspanel,
-        "transactionlist": transactionlist,
-        "source": "list",
-        "cachetime": 25
-    }
 }

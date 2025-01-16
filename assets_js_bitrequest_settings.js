@@ -1,10 +1,3 @@
-//globals
-const glob_deviceid = hashcode(getdevicetype() + navigator.appName + navigator.appCodeName);
-let glob_backup_active,
-    glob_backup_result = null,
-    glob_backup_filename = null,
-    glob_resd = {};
-
 $(document).ready(function() {
 
     // ** Settings **
@@ -357,10 +350,10 @@ function submitcurrency() {
 function editlanguage() {
     $(document).on("click", "#langsettings", function() {
         const translation = translate("obj"),
-            current_lang = q_obj(translation, glob_langcode + ".lang"),
-            current_flag = q_obj(translation, glob_langcode + ".flag"),
+            current_lang = q_obj(translation, glob_const.langcode + ".lang"),
+            current_flag = q_obj(translation, glob_const.langcode + ".flag"),
             cf_string = current_flag ? current_flag + " " : "",
-            current_val = cf_string + current_lang + " (" + glob_langcode + ")";
+            current_val = cf_string + current_lang + " (" + glob_const.langcode + ")";
         let langlist = "";
         $.each(translation, function(key, value) {
             const cflag = value.flag ? value.flag + " " : ""
@@ -370,7 +363,7 @@ function editlanguage() {
                 "div": {
                     "class": "popform validated",
                     "attr": {
-                        "data-currentlang": glob_langcode
+                        "data-currentlang": glob_const.langcode
                     },
                     "content": [{
                             "div": {
@@ -439,7 +432,7 @@ function submitlang() {
             "selected": lc2
         }, thisvalue);
         savesettings();
-        glob_w_loc.href = glob_w_loc.pathname + "?p=settings";
+        glob_const.w_loc.href = glob_const.w_loc.pathname + "?p=settings";
         return false;
     })
 }
@@ -556,7 +549,7 @@ function submit_locktime() {
 // Handles the click event for BIP32 passphrase settings
 function trigger_bip32() {
     $(document).on("click", "#bip39_passphrase", function() {
-        if (glob_hasbip === true) {
+        if (glob_let.hasbip === true) {
             all_pinpanel({
                 "func": manage_bip32
             }, null, true);
@@ -575,7 +568,7 @@ function hide_seed_panel_trigger() {
 
 // Hides the seed panel
 function hide_seed_panel() {
-    glob_body.removeClass("seed_dialog");
+    glob_const.body.removeClass("seed_dialog");
     $("#seed_panel").attr("class", "");
     sleep();
 }
@@ -599,7 +592,7 @@ function backupdatabase() {
     const jsonencode = complilebackup(),
         filename = complilefilename(),
         changespush = [];
-    $.each(glob_changes, function(key, value) {
+    $.each(glob_let.changes, function(key, value) {
         if (value > 0) {
             const nrchanges = (value == 1) ? translate("changein") : translate("changesin");
             changespush.push("<li>" + value + " " + nrchanges + " '" + translate(key) + "'</li>");
@@ -613,7 +606,7 @@ function backupdatabase() {
             "nr_changes": nr_changes
         }) + "</p>",
         showhidechangelog = gd_active ? "display:none" : "display:block",
-        changenotification = ((!gd_active && glob_body.hasClass("haschanges")) || glob_html.hasClass("proxyupdate")) ? alert_txt : "",
+        changenotification = ((!gd_active && glob_const.body.hasClass("haschanges")) || glob_const.html.hasClass("proxyupdate")) ? alert_txt : "",
         ddat = [{
                 "div": {
                     "id": "dialogcontent",
@@ -663,7 +656,7 @@ function backupdatabase() {
                                         "attr": {
                                             "href": "data:text/json;charset=utf-16le;base64," + jsonencode + "' download='" + filename,
                                             "title": filename,
-                                            "data-date": new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, '_').replace(/\:/g, '_'),
+                                            "data-date": new Date(now()).toLocaleString(glob_const.langcode).replace(/\s+/g, '_').replace(/\:/g, '_'),
                                             "data-lastbackup": filename,
                                             "download": "download"
                                         },
@@ -751,14 +744,14 @@ function sharebu() {
                 const br_cache = e.ping.br_cache,
                     filetime = br_cache.created_utc,
                     filetimesec = filetime ? filetime * 1000 : now(),
-                    filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
+                    filetime_format = new Date(filetimesec).toLocaleString(glob_const.langcode),
                     sharedtitle = translate("systembackup") + " " + accountname + " (" + filetime_format + ")",
                     set_proxy = c_proxy(),
                     r_dat = btoa(JSON.stringify({
                         "ro": br_cache.filename,
                         "proxy": set_proxy
                     }));
-                shorten_url(sharedtitle, glob_approot + "?p=settings&sbu=" + r_dat, fetch_aws("img_system_backup.png"), true);
+                shorten_url(sharedtitle, glob_const.approot + "?p=settings&sbu=" + r_dat, fetch_aws("img_system_backup.png"), true);
             }).fail(function(xhr, stat, err) {
                 console.error("API proxy error:", xhr, stat, err);
                 closeloader();
@@ -784,7 +777,7 @@ function check_systembu(sbu) {
                 server_time = br_cache.utc_timestamp,
                 filetime = br_cache.created_utc,
                 filetimesec = filetime ? filetime * 1000 : now(),
-                filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
+                filetime_format = new Date(filetimesec).toLocaleString(glob_const.langcode),
                 br_result = ping.br_result,
                 base64 = br_result.base64,
                 account = atob(br_result.account),
@@ -792,7 +785,7 @@ function check_systembu(sbu) {
                 bu_date = filetime_format.replace(/\s+/g, "_").replace(/\:/g, "_"),
                 cache_time = br_cache.cache_time,
                 expires_in = (filetime + cache_time) - server_time,
-                filename = "bitrequest_system_backup_" + glob_langcode + "_" + encodeURIComponent(account) + "_" + bu_date + ".json",
+                filename = "bitrequest_system_backup_" + glob_const.langcode + "_" + encodeURIComponent(account) + "_" + bu_date + ".json",
                 cd = countdown(expires_in * 1000),
                 cd_format = countdown_format(cd),
                 cf_string = cd_format ? translate("expiresin") + cd_format : translate("fileexpired"),
@@ -930,8 +923,8 @@ function complilebackup() {
         if (value === null || excludedKeys.includes(key)) {
             continue;
         } else if (key === "bitrequest_bpdat") {
-            const not_verified = (glob_io.bipv !== "yes");
-            if (not_verified || (glob_test_derive === true && get_setting("backup", "sbu") === true)) {
+            const not_verified = (glob_let.io.bipv !== "yes");
+            if (not_verified || (glob_let.test_derive === true && get_setting("backup", "sbu") === true)) {
                 const val_obj = JSON.parse(value);
                 val_obj.dat = null;
                 jsonfile.push('"' + key + '":' + JSON.stringify(val_obj));
@@ -945,13 +938,13 @@ function complilebackup() {
 
 // Generates a filename for the backup file
 function complilefilename() {
-    return "bitrequest_backup_" + glob_langcode + "_" + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_").replace(/\:/g, "_") + ".json";
+    return "bitrequest_backup_" + glob_const.langcode + "_" + new Date(now()).toLocaleString(glob_const.langcode).replace(/\s+/g, "_").replace(/\:/g, "_") + ".json";
 }
 
 // Handles the submission of backup download
 function submitbackup() {
     $(document).on("click", "#triggerdownload", function(e) {
-        if (glob_body.hasClass("ios")) {
+        if (glob_const.body.hasClass("ios")) {
             e.preventDefault();
             notify(translate("noiosbu"));
             return
@@ -992,7 +985,7 @@ function restorefrombackup() {
 
 // Triggers the restore process and displays the restore dialog
 function trigger_restore() {
-    glob_backup_active = false;
+    glob_let.backup_active = false;
     const restorenode = $("#restore"),
         backupnode = $("#backup"),
         lastfileused = restorenode.data("fileused"),
@@ -1053,7 +1046,7 @@ function restorebackup() {
         const file = this.files[0],
             filesize = file.size,
             filetype = file.type;
-        glob_backup_filename = file.name;
+        glob_let.backup_filename = file.name;
         if (filesize > 5242880) {
             n.preventDefault();
             popnotify("error", translate("filesize"));
@@ -1062,8 +1055,8 @@ function restorebackup() {
         if (filetype === "application/json") {
             const reader = new FileReader();
             reader.onload = function(e) {
-                glob_backup_result = e.target.result;
-                glob_backup_active = true;
+                glob_let.backup_result = e.target.result;
+                glob_let.backup_active = true;
             };
             reader.readAsDataURL(file);
             return
@@ -1084,10 +1077,10 @@ function submitrestore() {
             topnotify(translate("selectbackup"));
             return
         }
-        if (glob_backup_active === true) {
-            if (glob_backup_result) {
-                const jsonobject = JSON.parse(atob(glob_backup_result.substr(glob_backup_result.indexOf(",") + 1)));
-                restore(jsonobject, glob_backup_filename);
+        if (glob_let.backup_active === true) {
+            if (glob_let.backup_result) {
+                const jsonobject = JSON.parse(atob(glob_let.backup_result.substr(glob_let.backup_result.indexOf(",") + 1)));
+                restore(jsonobject, glob_let.backup_filename);
                 return
             }
             topnotify(translate("error"));
@@ -1123,7 +1116,7 @@ function restore(jsonobject, bu_filename) {
 // Checks if the backup is valid
 function check_backup(jsonobject) {
     const is_team_invite = isteaminvite(jsonobject);
-    if (glob_cashier_dat && glob_cashier_dat.cashier && !is_team_invite) {
+    if (glob_let.cashier_dat && glob_let.cashier_dat.cashier && !is_team_invite) {
         notify(translate("cashiernotallowed"));
         return false;
     }
@@ -1179,7 +1172,7 @@ function submit_GD_restore() {
 // Function to scan and restore data from a JSON object
 function scan_restore(jsonobject) {
     // Initialize global result object
-    glob_resd = {
+    glob_let.resd = {
         "pcnt": 0
     }
     // Extract bitrequest backup data
@@ -1188,10 +1181,10 @@ function scan_restore(jsonobject) {
         // Attempt to decode the backup data
         const can_dec = bpdat.dat ? s_decode(bpdat) : bpdat.datenc ? s_decode(bpdat.datenc) : false;
         // Set flags for successful backup unit and same backup ID
-        glob_resd.sbu = true;
-        glob_resd.samebip = (bpdat.id === glob_bipid);
+        glob_let.resd.sbu = true;
+        glob_let.resd.samebip = (bpdat.id === glob_let.bipid);
         // Store decoded backup data
-        glob_resd.bpdat = can_dec;
+        glob_let.resd.bpdat = can_dec;
     }
 }
 
@@ -1202,13 +1195,13 @@ function restore_algo(pass_dat) {
     if (cbu === false) {
         return false;
     }
-    if (glob_resd.sbu) { // has seed backup
-        if (glob_resd.samebip === true) {
+    if (glob_let.resd.sbu) { // has seed backup
+        if (glob_let.resd.samebip === true) {
             // keep existing phrase
             restore_callback(pass_dat, false);
-        } else if (glob_hasbip === true) {
+        } else if (glob_let.hasbip === true) {
             dphrase_dialog(pass_dat);
-        } else if (glob_resd.bpdat) {
+        } else if (glob_let.resd.bpdat) {
             // import and check decode
             restore_callback(pass_dat, true);
         } else {
@@ -1332,11 +1325,11 @@ function submit_pin_dialog() {
             pbdat_eq = pbdat.dat ? pbdat : pbdat.datenc,
             can_dec = s_decode(pbdat_eq, hashcode(thisvalue));
         if (can_dec) {
-            glob_resd.pcnt = 0;
+            glob_let.resd.pcnt = 0;
             const callback = pdat.cb;
             clearpinlock();
             if (callback) {
-                glob_resd.bpdat = can_dec;
+                glob_let.resd.bpdat = can_dec;
                 if (callback === "restore_callback") {
                     restore_callback(pass_dat, true);
                 } else if (callback === "bu_oldseed") {
@@ -1348,17 +1341,17 @@ function submit_pin_dialog() {
             notify(translate("success") + "!");
             return
         }
-        if (glob_resd.pcnt > 1) {
+        if (glob_let.resd.pcnt > 1) {
             $("#pinsettings").data("timeout", now() + 300000); // 5 minutes
             topnotify(translate("maxattempts"));
             const result = confirm(translate("restorewithoutsecretphrase") + "?");
             if (result === true) {
                 restore_callback(pass_dat, false);
             }
-            glob_resd.pcnt = 0;
+            glob_let.resd.pcnt = 0;
             canceldialog();
         } else {
-            glob_resd.pcnt += 1;
+            glob_let.resd.pcnt += 1;
         }
         savesettings();
         shake(dialog);
@@ -1377,10 +1370,10 @@ function restore_cb_init_addresses() {
 
 // Callback for file-based restoration
 function restore_callback_file(pass_dat, np) {
-    const newphrase = glob_hasbip === true ? np : true;
+    const newphrase = glob_let.hasbip === true ? np : true;
     restorestorage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
-    const lastrestore = "last restore: " + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_");
+    const lastrestore = "last restore: " + new Date(now()).toLocaleString(glob_const.langcode).replace(/\s+/g, "_");
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": pass_dat.filename,
@@ -1391,15 +1384,15 @@ function restore_callback_file(pass_dat, np) {
         restore_cb_init_addresses();
     }
     resetchanges();
-    glob_w_loc.href = glob_w_loc.pathname + "?p=settings";
+    glob_const.w_loc.href = glob_const.w_loc.pathname + "?p=settings";
 }
 
 // Callback for Google Drive based restoration
 function restore_callback_gd(pass_dat, np) {
-    const newphrase = (glob_hasbip === true) ? np : true;
+    const newphrase = (glob_let.hasbip === true) ? np : true;
     restorestorage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
-    const lastrestore = "last restore: " + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_");
+    const lastrestore = "last restore: " + new Date(now()).toLocaleString(glob_const.langcode).replace(/\s+/g, "_");
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": pass_dat.filename,
@@ -1408,7 +1401,7 @@ function restore_callback_gd(pass_dat, np) {
     setTimeout(function() {
         savesettings("noalert");
         createfile(); // create new file from backup
-        if (pass_dat.thisdeviceid === glob_deviceid) {
+        if (pass_dat.thisdeviceid === glob_const.deviceid) {
             const p = GD_pass();
             if (p.pass) {
                 deletefile(pass_dat.thisfileid, null, p.token); // delete old backup file
@@ -1419,7 +1412,7 @@ function restore_callback_gd(pass_dat, np) {
         }
         resetchanges();
         setTimeout(function() {
-            glob_w_loc.href = glob_w_loc.pathname + "?p=settings";
+            glob_const.w_loc.href = glob_const.w_loc.pathname + "?p=settings";
         }, 300);
     }, 300);
 }
@@ -1524,7 +1517,7 @@ function keep_current_seed() {
 function restore_bu_seed() {
     const is_dialog = $("#importseedbox"),
         bu_dat = is_dialog.data();
-    if (!glob_resd.bpdat && !is_dialog.hasClass("verified")) {
+    if (!glob_let.resd.bpdat && !is_dialog.hasClass("verified")) {
         pin_dialog(bu_dat, "bu_oldseed");
         return false;
     }
@@ -1562,11 +1555,11 @@ function compare_seeds() {
             if (jasobj) {
                 const pbdat = jasobj.bitrequest_bpdat,
                     pbdat_eq = pbdat.dat ? pbdat : pbdat.datenc;
-                if (pbdat_eq && !glob_resd.bpdat) {
+                if (pbdat_eq && !glob_let.resd.bpdat) {
                     const enterpin = prompt(translate("fourdigitpin")),
                         can_dec = s_decode(pbdat_eq, hashcode(enterpin));
                     if (can_dec) {
-                        glob_resd.bpdat = can_dec;
+                        glob_let.resd.bpdat = can_dec;
                         is_dialog.addClass("verified");
                         cs_callback(true)
                     } else {
@@ -1586,7 +1579,7 @@ function compare_seeds() {
 // Callback function for comparing seeds
 function cs_callback(pass) {
     const existing_so = ls_phrase_obj(),
-        backup_so = ls_phrase_obj_parsed(glob_resd.bpdat),
+        backup_so = ls_phrase_obj_parsed(glob_let.resd.bpdat),
         compare = {
             "s1": existing_so.pob.slice(0, 3),
             "s2": backup_so.pob.slice(0, 3)
@@ -1612,8 +1605,8 @@ function compare_seeds_callback(compare) {
 function restorestorage(jsonobject, newphrase) {
     $.each(jsonobject, function(key, value) {
         if (key === "bitrequest_bpdat") {
-            if (glob_test_derive === true && newphrase === true && glob_resd.bpdat) {
-                localStorage.setItem(key, JSON.stringify(glob_resd.bpdat));
+            if (glob_let.test_derive === true && newphrase === true && glob_let.resd.bpdat) {
+                localStorage.setItem(key, JSON.stringify(glob_let.resd.bpdat));
             }
         } else {
             localStorage.setItem(key, JSON.stringify(value));
@@ -1621,7 +1614,7 @@ function restorestorage(jsonobject, newphrase) {
     });
     localStorage.removeItem("bitrequest_cashier");
     localStorage.removeItem("bitrequest_teamid");
-    glob_resd = {};
+    glob_let.resd = {};
 }
 
 // CSV Export
@@ -1633,7 +1626,7 @@ function csvexport_trigger() {
             has_requests = rq_arr && !empty_obj(rq_arr),
             has_archive = archive_arr && !empty_obj(archive_arr);
         if (has_requests || has_archive) {
-            const filename = "bitrequest_csv_export_" + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_").replace(/:/g, "_") + ".csv",
+            const filename = "bitrequest_csv_export_" + new Date(now()).toLocaleString(glob_const.langcode).replace(/\s+/g, "_").replace(/:/g, "_") + ".csv",
                 show_archive = has_requests ? "false" : "true",
                 content = "<div class='formbox' id='exportcsvbox'>\
                     <h2 class='icon-table'>" + translate("csvexport") + "</h2>\
@@ -1704,7 +1697,7 @@ function csvexport_trigger() {
             popdialog(content, "triggersubmit", null, true);
             return;
         }
-        playsound(glob_funk);
+        playsound(glob_const.funk);
         notify(translate("nocsvexports"));
     });
 }
@@ -1712,7 +1705,7 @@ function csvexport_trigger() {
 // Event handler for submitting CSV export
 function submit_csvexport() {
     $(document).on("click", "#trigger_csvexport", function(e) {
-        if (glob_body.hasClass("ios")) {
+        if (glob_const.body.hasClass("ios")) {
             e.preventDefault();
             notify(translate("noiosbu"));
             return false;
@@ -1883,14 +1876,14 @@ function share_csv() {
                 const br_cache = e.ping.br_cache,
                     filetime = br_cache.created_utc,
                     filetimesec = filetime ? filetime * 1000 : now(),
-                    filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
+                    filetime_format = new Date(filetimesec).toLocaleString(glob_const.langcode),
                     sharedtitle = "CSV Export " + accountname + " (" + filetime_format + ")",
                     set_proxy = c_proxy(),
                     r_dat = btoa(JSON.stringify({
                         "ro": br_cache.filename,
                         "proxy": set_proxy
                     }));
-                shorten_url(sharedtitle, glob_approot + "?p=settings&csv=" + r_dat, fetch_aws("img_system_backup.png"), true);
+                shorten_url(sharedtitle, glob_const.approot + "?p=settings&csv=" + r_dat, fetch_aws("img_system_backup.png"), true);
             }).fail(function(xhr, stat, err) {
                 closeloader();
             });
@@ -1915,7 +1908,7 @@ function check_csvexport(csv) {
                 server_time = br_cache.utc_timestamp,
                 filetime = br_cache.created_utc,
                 filetimesec = filetime ? filetime * 1000 : now(),
-                filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
+                filetime_format = new Date(filetimesec).toLocaleString(glob_const.langcode),
                 br_result = ping.br_result,
                 base64 = br_result.base64,
                 account = atob(br_result.account),
@@ -1990,7 +1983,7 @@ function check_csvexport(csv) {
 // Handles the submission of CSV download
 function submit_csvdownload() {
     $(document).on("click", "#trigger_csvdownload", function(e) {
-        if (glob_body.hasClass("ios")) {
+        if (glob_const.body.hasClass("ios")) {
             e.preventDefault();
             notify(translate("noiosbu"));
             return false;
@@ -2242,7 +2235,7 @@ function editccapi() {
             cmcapikey = cc_apisettings.cmcapikey,
             cmcapikeyval = cc_apisettings.cmcapikey || "",
             cmcapikeyclass = ccapisrc === "coinmarketcap" ? "" : "hide",
-            options = "<span data-pe='none'>" + glob_br_config.apilists.crypto_price_apis.join("</span><span data-pe='none'>") + "</span>",
+            options = "<span data-pe='none'>" + glob_config.apilists.crypto_price_apis.join("</span><span data-pe='none'>") + "</span>",
             ddat = [{
                 "div": {
                     "class": "popform",
@@ -2369,7 +2362,7 @@ function editfiatxrapi() {
         const thisdata = $(this).data(),
             fiatxrapisrc = thisdata.selected,
             fiatxrapikey = thisdata.fxapikey || "",
-            options = "<span data-pe='none'>" + glob_br_config.apilists.fiat_price_apis.join("</span><span data-pe='none'>") + "</span>",
+            options = "<span data-pe='none'>" + glob_config.apilists.fiat_price_apis.join("</span><span data-pe='none'>") + "</span>",
             fiatxrapikeyclass = fiatxrapisrc === "fixer" ? "" : "hide",
             ddat = [{
                 "div": {
@@ -2533,17 +2526,17 @@ function pick_api_proxy() {
                 </div>\
             </div>";
         popdialog(content, "triggersubmit");
-        if (glob_phpsupport === true) {
-            const protocol = glob_localserver ? glob_w_loc.protocol + "//" : "",
-                port = glob_w_loc.port,
+        if (glob_const.phpsupport === true) {
+            const protocol = glob_const.localserver ? glob_const.w_loc.protocol + "//" : "",
+                port = glob_const.w_loc.port,
                 pval = port.length ? ":" + port : "",
-                fixed_url = complete_url(protocol + glob_thishostname + pval + location.pathname);
+                fixed_url = complete_url(protocol + glob_const.thishostname + pval + location.pathname);
             if ($.inArray(fixed_url, proxies) === -1) {
                 proxies.push(fixed_url);
             }
         }
-        if ($.inArray(glob_hosted_proxy, proxies) === -1) { // always keep default proxy
-            proxies.push(glob_hosted_proxy);
+        if ($.inArray(glob_const.hosted_proxy, proxies) === -1) { // always keep default proxy
+            proxies.push(glob_const.hosted_proxy);
         }
         const optionlist = $("#proxyformbox").find(".options");
         $.each(proxies, function(key, value) {
@@ -2636,7 +2629,7 @@ function test_custom_proxy(value) { // make test api call
         proxy_node_data = proxy_node.data(),
         custom_proxies = proxy_node_data.custom_proxies,
         fixed_url = complete_url(value);
-    if ($.inArray(fixed_url, custom_proxies) !== -1 || $.inArray(fixed_url, glob_proxy_list) !== -1) {
+    if ($.inArray(fixed_url, custom_proxies) !== -1 || $.inArray(fixed_url, glob_const.proxy_list) !== -1) {
         popnotify("error", translate("proxyexists"));
         return false;
     }
@@ -2698,7 +2691,7 @@ function remove_proxy() {
                 default_node = (thisoption.hasClass("default")),
                 thisval = thisoption.find("> span").attr("data-value");
             if (default_node === true) {
-                playsound(glob_funk);
+                playsound(glob_const.funk);
                 topnotify(translate("removedefaultnode"));
             } else {
                 const result = confirm(translate("confirmremovenode", {
@@ -2905,7 +2898,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
     if (apikeyval.length > keylength) {
         if (thisref === "infura" || thisref === "alchemy") {
             const txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
-                base_url = thisref === "infura" ? glob_main_eth_node : glob_main_alchemy_node,
+                base_url = thisref === "infura" ? glob_const.main_eth_node : glob_const.main_alchemy_node,
                 payload = {
                     "jsonrpc": "2.0",
                     "id": 3,
@@ -2945,7 +2938,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
         let search = payload + apikeyval;
         if (thisref === "firebase") {
             params.data = {
-                "longDynamicLink": glob_firebase_shortlink + "?link=" + glob_approot + "?p=request"
+                "longDynamicLink": glob_const.firebase_shortlink + "?link=" + glob_const.approot + "?p=request"
             };
         }
         if (thisref === "bitly") {
@@ -3176,7 +3169,7 @@ function edit_contactform(checkout) {
     if (checkout) {
         $("#popup #execute").text("CONTINUE");
         $("#popup #canceldialog").hide();
-        if (glob_inframe) {
+        if (glob_const.inframe) {
             parent.postMessage("close_loader", "*");
         }
     }
@@ -3352,7 +3345,7 @@ function submit_permissions() {
         set_setting("permissions", {
             "selected": thisvalue
         }, thisvalue);
-        glob_html.attr("data-role", thisvalue);
+        glob_const.html.attr("data-role", thisvalue);
         canceldialog();
         notify(translate("datasaved"));
         savesettings();
@@ -3365,7 +3358,7 @@ function submit_permissions() {
 // Team invite trigger
 function team_invite_trigger() {
     $(document).on("click", "#teaminvite", function() {
-        if (glob_hasbip && !glob_bipv) {
+        if (glob_let.hasbip && !glob_let.bipv) {
             bipv_pass();
             notify(translate("pleaseverify"));
             return;
@@ -3428,7 +3421,7 @@ function complile_teaminvite() {
             }
         }
     }
-    const seedobj = glob_hasbip ? ls_phrase_obj() : {
+    const seedobj = glob_let.hasbip ? ls_phrase_obj() : {
         "pid": false,
         "pob": false
     };
@@ -3451,7 +3444,7 @@ function adjust_object(object, seedobj) {
         key = rootkey.slice(0, 64);
         cc = rootkey.slice(64);
     }
-    $.each(glob_br_config.bitrequest_coin_data, function(i, coinconfig) {
+    $.each(glob_config.bitrequest_coin_data, function(i, coinconfig) {
         const currency = coinconfig.currency,
             default_coinsettings = coinconfig.settings,
             bip32dat = default_coinsettings.Xpub,
@@ -3527,7 +3520,7 @@ function share_teaminvite() {
                         "ro": br_cache.filename,
                         "proxy": set_proxy
                     }));
-                shorten_url(sharedtitle, glob_approot + "?p=settings&ro=" + r_dat, glob_approot + "/img_icons_apple-touch-icon.png", true);
+                shorten_url(sharedtitle, glob_const.approot + "?p=settings&ro=" + r_dat, glob_const.approot + "/img_icons_apple-touch-icon.png", true);
             }).fail(function(xhr, stat, err) {
                 closeloader();
             });
@@ -3552,7 +3545,7 @@ function check_teaminvite(ro) {
                 server_time = br_cache.utc_timestamp,
                 filetime = br_cache.created_utc,
                 filetimesec = filetime ? filetime * 1000 : now(),
-                filetime_format = new Date(filetimesec).toLocaleString(glob_langcode),
+                filetime_format = new Date(filetimesec).toLocaleString(glob_const.langcode),
                 br_result = ping.br_result,
                 base64 = br_result.base64,
                 account = atob(br_result.account),
@@ -3565,8 +3558,8 @@ function check_teaminvite(ro) {
                 cd = countdown(expires_in * 1000),
                 cd_format = countdown_format(cd),
                 bpdat_seedid = br_dat.bitrequest_cashier ? br_dat.bitrequest_cashier.seedid || false : false,
-                update = bpdat_seedid === glob_cashier_seedid,
-                master_account = bpdat_seedid === glob_bipid,
+                update = bpdat_seedid === glob_let.cashier_seedid,
+                master_account = bpdat_seedid === glob_let.bipid,
                 teamid = br_get_local("teamid", true),
                 teamid_arr = br_dobj(teamid),
                 is_installed = teamid_arr.includes(ro),
@@ -3630,7 +3623,7 @@ function install_teaminvite_trigger() {
         }
         const update = this_bttn.attr("data-update") === "true",
             installid = this_bttn.attr("data-installid"),
-            installed = (glob_stored_currencies) ? true : false,
+            installed = (glob_let.stored_currencies) ? true : false,
             result_text = update ? translate("updatealert") : translate("installalert"),
             result = installed ? confirm(result_text) : true;
         if (result) {
@@ -3654,7 +3647,7 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
         br_set_local("teamid", teamid_arr, true);
     }
     rendersettings(["restore", "backup"]); // exclude restore and backup settings
-    const lastrestore = translate("lastrestore") + "<br/><span class='icon-folder-open'>" + translate("teaminvite") + " " + new Date(now()).toLocaleString(glob_langcode).replace(/\s+/g, "_") + "</span>";
+    const lastrestore = translate("lastrestore") + "<br/><span class='icon-folder-open'>" + translate("teaminvite") + " " + new Date(now()).toLocaleString(glob_const.langcode).replace(/\s+/g, "_") + "</span>";
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": bu_filename,
@@ -3663,7 +3656,7 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
     savesettings();
     notify(translate("installcomplete"));
     canceldialog();
-    glob_w_loc.href = glob_w_loc.pathname + "?p=home";
+    glob_const.w_loc.href = glob_const.w_loc.pathname + "?p=home";
 }
 
 // Checks if the object is a team invite
@@ -3675,7 +3668,7 @@ function isteaminvite(jsonobject) {
 // Displays user agent information
 function check_useragent() {
     $(document).on("click", "#ua", function() {
-        const refmatch = glob_ref_match ? "<span class='number'>" + glob_referrer + "</span>" : "<span class='number'>" + false + "</span>",
+        const refmatch = glob_const.ref_match ? "<span class='number'>" + glob_const.referrer + "</span>" : "<span class='number'>" + false + "</span>",
             pdat = GD_pass(),
             pass = pdat.expired,
             expiresin = pdat.expires_in,
@@ -3689,18 +3682,18 @@ function check_useragent() {
                     "content": [{
                             "div": {
                                 "class": "pre",
-                                "content": syntaxHighlight(glob_userAgent)
+                                "content": syntaxHighlight(glob_const.useragent)
                             }
                         },
                         {
                             "div": {
                                 "class": "pre",
                                 "content": [
-                                    "android_standalone : <span class='number'>" + glob_android_standalone + "</span>",
-                                    "ios_standalone : <span class='number'>" + glob_ios_standalone + "</span>",
+                                    "android_standalone : <span class='number'>" + glob_const.android_standalone + "</span>",
+                                    "ios_standalone : <span class='number'>" + glob_const.ios_standalone + "</span>",
                                     "referrer : " + refmatch,
-                                    "is_android_app: <span class='number'>" + glob_is_android_app + "</span>",
-                                    "is_ios_app: <span class='number'>" + glob_is_ios_app + "</span>",
+                                    "is_android_app: <span class='number'>" + glob_const.is_android_app + "</span>",
+                                    "is_ios_app: <span class='number'>" + glob_const.is_ios_app + "</span>",
                                     ei_str,
                                     rtstring
                                 ].join(" || ")

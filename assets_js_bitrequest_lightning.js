@@ -101,8 +101,8 @@ function lm_function(replace) {
             cp_id = current_proxy ? current_proxy.id : false,
             p_class = has_proxies ? " haslnurls" : "",
             n_class = has_nodes ? "" : " noln",
-            camclass = glob_hascam ? "" : " nocam";
-        node_name = current_node ? current_node.name : "",
+            camclass = glob_let.hascam ? "" : " nocam",
+            node_name = current_node ? current_node.name : "",
             c_node_id = current_node ? current_node.node_id : "",
             proxy_select = has_proxy ? "<div class='selectbox' id='lnd_proxy_select_input'>" +
             "<input type='text' value='" + cp_format + "' data-pid='" + cp_id + "' placeholder='https://...' readonly='readonly'/>" +
@@ -541,7 +541,7 @@ function lightning_option_li(live, value, selected, invoices, proxy) {
                 (value.serialized ? " " + value.serialized.slice(0, 16) : ""),
                 inv_title = value.memo || value.description || "invoice" + inv_id,
                 timestamp = value.creation_date || value.timestamp || false,
-                inv_date = timestamp ? short_date(parseInt(timestamp * 1000) + glob_timezone) : "",
+                inv_date = timestamp ? short_date(parseInt(timestamp * 1000) + glob_const.timezone) : "",
                 settle_icon = value.settled === true || value.status === "paid" ? "icon-checkmark" :
                 (value.settled === false || value.status === "expired" ? "icon-clock" : false),
                 icon_span = settle_icon ? "<span class='" + settle_icon + "'></span>" : "<img src='" + icon_loc + "' class='lnd_icon'>";
@@ -718,7 +718,7 @@ function lnd_proxy_switch() {
             ln_dat = lnli.data(),
             nodelist = ln_dat.services;
         if (empty_obj(nodelist)) {
-            playsound(glob_funk)
+            playsound(glob_const.funk);
             return
         }
         const this_switch = $(this),
@@ -799,7 +799,7 @@ function lnd_select_node() {
     $(document).on("click", "#ln_nodelist .optionwrap", function() {
         const thisnode = $(this);
         if (thisnode.hasClass("offline")) {
-            playsound(glob_funk);
+            playsound(glob_const.funk);
         }
         $("#ln_nodelist .optionwrap").not(thisnode).removeClass("show");
         thisnode.addClass("show");
@@ -816,7 +816,7 @@ function lnd_select_proxy() {
     $(document).on("click", "#lnd_proxy_select_input .optionwrap", function() {
         const thisnode = $(this);
         if (thisnode.hasClass("offline")) {
-            playsound(glob_funk);
+            playsound(glob_const.funk);
             return
         }
         $("#lnd_proxy_select_input > input").attr("data-pid", thisnode.data("pid"));
@@ -893,11 +893,11 @@ function trigger_ln() {
         if (lndpu_val.length < 10) {
             topnotify(translate("enterserver"));
             lnd_pu_input.val("").focus();
-            playsound(glob_funk);
+            playsound(glob_const.funk);
             return
         }
         const fixed_url = complete_url(lndpu_val),
-            is_default = $.inArray(fixed_url, glob_proxy_list) !== -1;
+            is_default = $.inArray(fixed_url, glob_const.proxy_list) !== -1;
         if (is_default) {
             popnotify("error", translate("defaultproxy", {
                 "fixed_url": fixed_url
@@ -909,13 +909,13 @@ function trigger_ln() {
         if (proxie_exists) {
             topnotify(translate("proxyexists"));
             $("#lnd_proxy_url_input").focus();
-            playsound(glob_funk);
+            playsound(glob_const.funk);
             return
         }
         if (fixed_url.indexOf("http") < 0) {
             topnotify(translate("invalidurl"));
             $("#lnd_proxy_url_input").focus();
-            playsound(glob_funk);
+            playsound(glob_const.funk);
             return
         }
         const p_key = $("#proxy_pw_input").val(),
@@ -1010,7 +1010,7 @@ function trigger_ln() {
             }
             if (thisval.live == "lock") {
                 notify(translate("proxylocked"));
-                playsound(glob_funk);
+                playsound(glob_const.funk);
                 return
             }
             if (empty_obj(thisval)) {
@@ -1023,7 +1023,7 @@ function trigger_ln() {
             notify(translate("proxyoffline", {
                 "proxy_message": proxy_message
             }));
-            playsound(glob_funk);
+            playsound(glob_const.funk);
         }
     }
 }
@@ -1096,7 +1096,7 @@ function add_custom_proxy(value) {
     const proxy_node = $("#api_proxy"),
         proxy_node_data = proxy_node.data(),
         custom_proxies = proxy_node_data.custom_proxies;
-    if (custom_proxies.includes(value) || glob_proxy_list.includes(value)) {
+    if (custom_proxies.includes(value) || glob_const.proxy_list.includes(value)) {
         return false;
     }
     custom_proxies.push(value);
@@ -1301,12 +1301,12 @@ function add_ln_imp(nodelist, node_id, imp, proxydat, host, key, lnurl) {
     const currency = "bitcoin",
         pobox = get_addresslist(currency).children("li");
     if (!pobox.length) {
-        if (glob_body.hasClass("showstartpage")) {
+        if (glob_const.body.hasClass("showstartpage")) {
             const acountname = $("#eninput").val();
             $("#accountsettings").data("selected", acountname).find("p").text(acountname);
             savesettings();
             openpage("?p=home", "home", "loadpage");
-            glob_body.removeClass("showstartpage");
+            glob_const.body.removeClass("showstartpage");
         }
         const ad = {
             "currency": currency,
@@ -1592,7 +1592,7 @@ function lnurl_form(url, pw) {
 // Decodes a Lightning Network URL
 function lnurl_deform(lrl) {
     if (typeof lrl !== "string") {
-        console.log("lnurl must be string")
+        console.error("error", "lnurl must be string")
         return false;
     }
     if (lrl.startsWith("lnurl")) {

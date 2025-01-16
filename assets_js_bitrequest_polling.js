@@ -2,6 +2,7 @@
 
 //tx_polling_init
 //tx_polling
+//clear_tpto
 //address_polling_init
 //address_polling
 //init_xmr_node
@@ -13,9 +14,10 @@
 // pick API / RPC
 // Initializes the payment monitoring process for a transaction
 function tx_polling_init(tx_data, api_data) {
-    glob_api_attempts = {};
-    glob_rpc_attempts = {};
+    glob_let.api_attempts = {};
+    glob_let.rpc_attempts = {};
     tx_polling(tx_data, api_data);
+    glob_const.paymentdialogbox.addClass("transacting");
 }
 
 // Monitors the transaction status using the provided API data
@@ -25,75 +27,99 @@ function tx_polling(tx_data, api_dat) {
         return
     };
     if (tx_data) {
-        confirmations(tx_data, true);
+        if (!request) return;
+        const txhash = tx_data.txhash;
+        if (!txhash) return;
         if (!tx_data.setconfirmations) {
+            confirmations(tx_data, true);
             return
         }
-        if (!request) {
+        const eth_layer2 = tx_data.eth_layer2;
+        if (eth_layer2) {
+            request.txhash = txhash;
+            tx_polling_l2(eth_layer2, api_dat);
             return
         }
-        const eth_layer2 = tx_data.eth_layer2,
-            api_data = eth_layer2 ? api_dat : api_dat || q_obj(helper, "api_info.data"),
-            retry = api_data ? true : false,
-            rdo = {
-                "requestid": request.requestid,
-                "pending": "polling",
-                "txdat": tx_data,
-                "source": "tx_polling",
-                "setconfirmations": request.set_confirmations,
-                "cachetime": 25
-            },
-            rd = {
-                "requestid": request.requestid,
-                "payment": request.payment,
-                "erc20": request.erc20,
-                "txhash": tx_data.txhash,
-                "currencysymbol": request.currencysymbol,
-                "address": gets.address,
-                "decimals": request.decimals,
-                "viewkey": request.viewkey,
-                eth_layer2
-            },
-            to_time = tx_data.ccval ? 30000 : 10,
-            timeout = setTimeout(function() {
-                if (q_obj(api_data, "api") || eth_layer2) {
-                    get_api_inputs(rd, api_data, rdo, retry);
-                } else {
-                    get_rpc_inputs(rd, api_data, rdo, retry);
-                }
-            }, to_time, function() {
-                clearTimeout(timeout);
-            });
-        glob_paymentdialogbox.addClass("transacting");
+        tx_polling_l1(tx_data, api_dat);
     };
 }
 
-function address_polling_init(time_out, socket, cache, rpc, next_api) {
+function tx_polling_l2(eth_layer2, api_dat) {
+    clear_tpto();
+    const to_time = api_dat ? 30000 : 10,
+        l2_options = fertch_l2s(request.payment),
+        api_data = api_dat || q_obj(l2_options, eth_layer2 + ".apis.selected"),
+        ctracts = contracts(request.currencysymbol),
+        contract = ctracts ? ctracts[eth_layer2] : false;
+    glob_let.tpto = setTimeout(function() {
+        omni_poll(api_data, contract);
+    }, to_time, function() {
+        clear_tpto();
+    });
+}
+
+function tx_polling_l1(tx_data, api_dat) {
+    clear_tpto();
+    const to_time = api_dat ? 30000 : 10,
+        api_data = api_dat || q_obj(helper, "api_info.data"),
+        rdo = {
+            "requestid": request.requestid,
+            "pending": "polling",
+            "txdat": tx_data,
+            "source": "tx_polling",
+            "setconfirmations": tx_data.set_confirmations,
+            "cachetime": 25
+        },
+        rd = {
+            "requestid": request.requestid,
+            "payment": request.payment,
+            "erc20": request.erc20,
+            "txhash": request.txhash,
+            "currencysymbol": request.currencysymbol,
+            "address": request.address,
+            "decimals": request.decimals,
+            "viewkey": request.viewkey
+        };
+    glob_let.tpto = setTimeout(function() {
+        continue_select(rd, api_data, rdo);
+    }, to_time, function() {
+        clear_tpto();
+    });
+}
+
+// clear tx_polling timer
+function clear_tpto() {
+    clearTimeout(glob_let.tpto);
+    glob_let.tpto = 0;
+}
+
+// poll address for incoming transactions
+function address_polling_init(time_out, api_dat, retry) {
     const ping_id = request.address,
         timeout = time_out || 7000,
-        api_data = next_api || q_obj(helper, "api_info.data");
+        api_data = api_dat || q_obj(helper, "api_info.data");
     if (api_data) {
-        if (next_api) {
+        if (retry) {
             clearpinging(ping_id);
-            address_polling(timeout, socket, cache, rpc, api_data);
+            address_polling(timeout, api_data);
         }
         socket_info({
             "url": api_data.name
         }, true);
-        glob_pinging[ping_id] = setInterval(function() {
-            address_polling(timeout, socket, cache, rpc, api_data);
+        glob_let.pinging[ping_id] = setInterval(function() {
+            address_polling(timeout, api_data);
         }, timeout);
         return
     }
     notify(translate("websocketoffline"), 500000, "yes");
 }
 
-function address_polling(timeout, socket, cache, rpc, api_data) {
+function address_polling(timeout, api_data) {
     const rq_init = request.rq_init,
-        request_ts_utc = rq_init + glob_timezone,
+        request_ts_utc = rq_init + glob_const.timezone,
         request_ts = request_ts_utc - 15000, // 15 second margin
         set_confirmations = request.set_confirmations || 0,
-        cachetime = cache ? (timeout - 1000) / 1000 : 0,
+        cachetime = (timeout - 1000) / 1000,
         rdo = {
             "requestid": request.requestid,
             "request_timestamp": request_ts,
@@ -101,15 +127,10 @@ function address_polling(timeout, socket, cache, rpc, api_data) {
             "pending": "scanning",
             "erc20": request.erc20,
             "source": "addr_polling",
-            socket,
             timeout,
             cachetime
         };
-    if (rpc) {
-        get_rpc_inputs(request, api_data, rdo);
-    } else {
-        get_api_inputs(request, api_data, rdo);
-    }
+    get_rpc_inputs(request, api_data, rdo);
     poll_animate();
     socket_info(api_data, true);
 }
@@ -153,7 +174,7 @@ function init_xmr_node(cachetime, address, vk, request_ts) {
                 socket_info({
                     "url": "mymonero api"
                 }, true);
-                glob_pinging[address] = setInterval(function() {
+                glob_let.pinging[address] = setInterval(function() {
                     poll_animate();
                     ping_xmr_node(cachetime, address, vk, request_ts);
                 }, 12000);
@@ -251,7 +272,7 @@ function confirmations(tx_data, direct, ln) {
     if (ccsymbol) {
         let new_status = "pending";
         closeloader();
-        clearTimeout(glob_request_timer);
+        clearTimeout(glob_let.request_timer);
         if (tx_data && tx_data.ccval) {
             const pmd = $("#paymentdialogbox"),
                 brstatuspanel = pmd.find(".brstatuspanel"),
@@ -294,7 +315,7 @@ function confirmations(tx_data, direct, ln) {
                 const amount_rel = $("#open_wallet").attr("data-rel"),
                     cc_raw = amount_rel && amount_rel.length ? parseFloat(amount_rel) : 0,
                     receivedutc = tx_data.transactiontime,
-                    receivedtime = receivedutc - glob_timezone,
+                    receivedtime = receivedutc - glob_const.timezone,
                     receivedcc = tx_data.ccval,
                     rccf = parseFloat(receivedcc.toFixed(6)),
                     thiscurrency = request.uoa,
@@ -317,7 +338,7 @@ function confirmations(tx_data, direct, ln) {
                     eth_layer2
                 });
 
-                brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), glob_langcode));
+                brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), glob_const.langcode));
                 if (!iscrypto) {
                     brstatuspanel.find("span.receivedcrypto").text(rccf + " " + ccsymbol);
                 }
@@ -331,7 +352,7 @@ function confirmations(tx_data, direct, ln) {
                     if (pass) {
                         if (xconf >= setconfirmations || zero_conf === true) {
                             forceclosesocket();
-                            playsound(ccsymbol === "doge" ? glob_howl : glob_cashier);
+                            playsound(ccsymbol === "doge" ? glob_const.howl : glob_const.cashier);
                             const status_text = requesttype === "incoming" ? translate("paymentsent") : translate("paymentreceived");
                             pmd.addClass("transacting").attr("data-status", "paid");
                             brheader.text(status_text);
@@ -343,7 +364,7 @@ function confirmations(tx_data, direct, ln) {
                             new_status = "paid";
                         } else {
                             if (!ln) {
-                                playsound(glob_blip);
+                                playsound(glob_const.blip);
                             }
                             pmd.addClass("transacting").attr("data-status", "pending");
                             const bctext = ln ? translate("waitingforpayment") : translate("txbroadcasted");
@@ -364,7 +385,7 @@ function confirmations(tx_data, direct, ln) {
                         brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
                         new_status = "insufficient";
                     }
-                    playsound(glob_funk);
+                    playsound(glob_const.funk);
                 }
             }
         }
@@ -376,17 +397,17 @@ function confirmations(tx_data, direct, ln) {
 // Clears pinging intervals
 function clearpinging(s_id) {
     if (s_id) { // close this interval
-        if (glob_pinging[s_id]) {
-            clearInterval(glob_pinging[s_id]);
-            delete glob_pinging[s_id]
+        if (glob_let.pinging[s_id]) {
+            clearInterval(glob_let.pinging[s_id]);
+            delete glob_let.pinging[s_id]
         }
         return
     }
-    if (!empty_obj(glob_pinging)) {
-        $.each(glob_pinging, function(key, value) {
+    if (!empty_obj(glob_let.pinging)) {
+        $.each(glob_let.pinging, function(key, value) {
             clearInterval(value);
         });
-        glob_pinging = {};
+        glob_let.pinging = {};
     }
 }
 
