@@ -503,7 +503,7 @@ const glob_config = {
                     glob_const.multi_wallets.trezor,
                     glob_const.multi_wallets.ledger,
                     {
-                        "name": "Dash Wallet",
+                        "name": "Dash-Wallet",
                         "website": "https://www.dash.org",
                         "appstore": "https://itunes.apple.com/app/id1206647026",
                         "playstore": "https://play.google.com/store/apps/details?id=hashengineering.darkcoin.wallet",
