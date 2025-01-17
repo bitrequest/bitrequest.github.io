@@ -338,7 +338,7 @@ function confirmations(tx_data, direct, ln) {
                     eth_layer2
                 });
 
-                brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), glob_const.langcode));
+                brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), langcode));
                 if (!iscrypto) {
                     brstatuspanel.find("span.receivedcrypto").text(rccf + " " + ccsymbol);
                 }

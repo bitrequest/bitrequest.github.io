@@ -350,10 +350,10 @@ function submitcurrency() {
 function editlanguage() {
     $(document).on("click", "#langsettings", function() {
         const translation = translate("obj"),
-            current_lang = q_obj(translation, glob_const.langcode + ".lang"),
-            current_flag = q_obj(translation, glob_const.langcode + ".flag"),
+            current_lang = q_obj(translation, langcode + ".lang"),
+            current_flag = q_obj(translation, langcode + ".flag"),
             cf_string = current_flag ? current_flag + " " : "",
-            current_val = cf_string + current_lang + " (" + glob_const.langcode + ")";
+            current_val = cf_string + current_lang + " (" + langcode + ")";
         let langlist = "";
         $.each(translation, function(key, value) {
             const cflag = value.flag ? value.flag + " " : ""
@@ -363,7 +363,7 @@ function editlanguage() {
                 "div": {
                     "class": "popform validated",
                     "attr": {
-                        "data-currentlang": glob_const.langcode
+                        "data-currentlang": langcode
                     },
                     "content": [{
                             "div": {
@@ -656,7 +656,7 @@ function backupdatabase() {
                                         "attr": {
                                             "href": "data:text/json;charset=utf-16le;base64," + jsonencode + "' download='" + filename,
                                             "title": filename,
-                                            "data-date": new Date(now()).toLocaleString(glob_const.langcode).replace(/\s+/g, '_').replace(/\:/g, '_'),
+                                            "data-date": new Date(now()).toLocaleString(langcode).replace(/\s+/g, '_').replace(/\:/g, '_'),
                                             "data-lastbackup": filename,
                                             "download": "download"
                                         },
@@ -744,7 +744,7 @@ function sharebu() {
                 const br_cache = e.ping.br_cache,
                     filetime = br_cache.created_utc,
                     filetimesec = filetime ? filetime * 1000 : now(),
-                    filetime_format = new Date(filetimesec).toLocaleString(glob_const.langcode),
+                    filetime_format = new Date(filetimesec).toLocaleString(langcode),
                     sharedtitle = translate("systembackup") + " " + accountname + " (" + filetime_format + ")",
                     set_proxy = c_proxy(),
                     r_dat = btoa(JSON.stringify({
@@ -777,7 +777,7 @@ function check_systembu(sbu) {
                 server_time = br_cache.utc_timestamp,
                 filetime = br_cache.created_utc,
                 filetimesec = filetime ? filetime * 1000 : now(),
-                filetime_format = new Date(filetimesec).toLocaleString(glob_const.langcode),
+                filetime_format = new Date(filetimesec).toLocaleString(langcode),
                 br_result = ping.br_result,
                 base64 = br_result.base64,
                 account = atob(br_result.account),
@@ -785,7 +785,7 @@ function check_systembu(sbu) {
                 bu_date = filetime_format.replace(/\s+/g, "_").replace(/\:/g, "_"),
                 cache_time = br_cache.cache_time,
                 expires_in = (filetime + cache_time) - server_time,
-                filename = "bitrequest_system_backup_" + glob_const.langcode + "_" + encodeURIComponent(account) + "_" + bu_date + ".json",
+                filename = "bitrequest_system_backup_" + langcode + "_" + encodeURIComponent(account) + "_" + bu_date + ".json",
                 cd = countdown(expires_in * 1000),
                 cd_format = countdown_format(cd),
                 cf_string = cd_format ? translate("expiresin") + cd_format : translate("fileexpired"),
@@ -938,7 +938,7 @@ function complilebackup() {
 
 // Generates a filename for the backup file
 function complilefilename() {
-    return "bitrequest_backup_" + glob_const.langcode + "_" + new Date(now()).toLocaleString(glob_const.langcode).replace(/\s+/g, "_").replace(/\:/g, "_") + ".json";
+    return "bitrequest_backup_" + langcode + "_" + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_").replace(/\:/g, "_") + ".json";
 }
 
 // Handles the submission of backup download
@@ -1373,7 +1373,7 @@ function restore_callback_file(pass_dat, np) {
     const newphrase = glob_let.hasbip === true ? np : true;
     restorestorage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
-    const lastrestore = "last restore: " + new Date(now()).toLocaleString(glob_const.langcode).replace(/\s+/g, "_");
+    const lastrestore = "last restore: " + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_");
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": pass_dat.filename,
@@ -1392,7 +1392,7 @@ function restore_callback_gd(pass_dat, np) {
     const newphrase = (glob_let.hasbip === true) ? np : true;
     restorestorage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
-    const lastrestore = "last restore: " + new Date(now()).toLocaleString(glob_const.langcode).replace(/\s+/g, "_");
+    const lastrestore = "last restore: " + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_");
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": pass_dat.filename,
@@ -1626,7 +1626,7 @@ function csvexport_trigger() {
             has_requests = rq_arr && !empty_obj(rq_arr),
             has_archive = archive_arr && !empty_obj(archive_arr);
         if (has_requests || has_archive) {
-            const filename = "bitrequest_csv_export_" + new Date(now()).toLocaleString(glob_const.langcode).replace(/\s+/g, "_").replace(/:/g, "_") + ".csv",
+            const filename = "bitrequest_csv_export_" + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_").replace(/:/g, "_") + ".csv",
                 show_archive = has_requests ? "false" : "true",
                 content = "<div class='formbox' id='exportcsvbox'>\
                     <h2 class='icon-table'>" + translate("csvexport") + "</h2>\
@@ -1876,7 +1876,7 @@ function share_csv() {
                 const br_cache = e.ping.br_cache,
                     filetime = br_cache.created_utc,
                     filetimesec = filetime ? filetime * 1000 : now(),
-                    filetime_format = new Date(filetimesec).toLocaleString(glob_const.langcode),
+                    filetime_format = new Date(filetimesec).toLocaleString(langcode),
                     sharedtitle = "CSV Export " + accountname + " (" + filetime_format + ")",
                     set_proxy = c_proxy(),
                     r_dat = btoa(JSON.stringify({
@@ -1908,7 +1908,7 @@ function check_csvexport(csv) {
                 server_time = br_cache.utc_timestamp,
                 filetime = br_cache.created_utc,
                 filetimesec = filetime ? filetime * 1000 : now(),
-                filetime_format = new Date(filetimesec).toLocaleString(glob_const.langcode),
+                filetime_format = new Date(filetimesec).toLocaleString(langcode),
                 br_result = ping.br_result,
                 base64 = br_result.base64,
                 account = atob(br_result.account),
@@ -3647,7 +3647,7 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
         br_set_local("teamid", teamid_arr, true);
     }
     rendersettings(["restore", "backup"]); // exclude restore and backup settings
-    const lastrestore = translate("lastrestore") + "<br/><span class='icon-folder-open'>" + translate("teaminvite") + " " + new Date(now()).toLocaleString(glob_const.langcode).replace(/\s+/g, "_") + "</span>";
+    const lastrestore = translate("lastrestore") + "<br/><span class='icon-folder-open'>" + translate("teaminvite") + " " + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_") + "</span>";
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": bu_filename,

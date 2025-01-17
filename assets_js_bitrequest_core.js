@@ -571,8 +571,8 @@ function finishfunctions() {
 
 // Sets the language attributes for the HTML document and meta tags
 function setlocales() {
-    glob_const.html.attr("lang", glob_const.langcode);
-    $("meta[property='og:locale']").attr("content", glob_const.langcode);
+    glob_const.html.attr("lang", langcode);
+    $("meta[property='og:locale']").attr("content", langcode);
     $("meta[property='og:url']").attr("content", glob_const.w_loc.href);
 }
 
@@ -3818,7 +3818,7 @@ function get_pdf_url(rqdat) {
     statustext = status === "new" ? "Waiting for payment" : status,
         lnhash = txhash && txhash.slice(0, 9) === "lightning",
         hybrid = lightning && lightning.hybrid === true,
-        ptsformatted = fulldateformat(new Date(paymenttimestamp - glob_const.timezone), glob_const.langcode),
+        ptsformatted = fulldateformat(new Date(paymenttimestamp - glob_const.timezone), langcode),
         receivedamount_rounded = trimdecimals(receivedamount, 6),
         fiatvalue_rounded = trimdecimals(fiatvalue, 2),
         incoming = requesttype === "incoming",
@@ -3832,7 +3832,7 @@ function get_pdf_url(rqdat) {
         utc = timestamp - glob_const.timezone,
         localtime = requestdate ? requestdate - glob_const.timezone : utc,
         localtimeobject = new Date(localtime),
-        requestdateformatted = fulldateformat(localtimeobject, glob_const.langcode),
+        requestdateformatted = fulldateformat(localtimeobject, langcode),
         created = requestdate ? requestdateformatted : "unknown",
         utc_format = fulldateformat(new Date(utc)),
         lnd_string = lnhash ? " (lightning)" : "",
@@ -4266,11 +4266,11 @@ function appendrequest(rd) {
         isexpired = (status == "expired" || (now() - localtime) >= expirytime && (lnd_expire || status == "new" || insufficient === true)),
         expiredclass = isexpired ? " expired" : "",
         localtimeobject = new Date(localtime),
-        requestdateformatted = fulldateformat(localtimeobject, glob_const.langcode),
-        timeformat = "<span class='rq_month'>" + localtimeobject.toLocaleString(glob_const.langcode, {
+        requestdateformatted = fulldateformat(localtimeobject, langcode),
+        timeformat = "<span class='rq_month'>" + localtimeobject.toLocaleString(langcode, {
             "month": "short"
         }) + "</span> <span class='rq_day'>" + localtimeobject.getDate() + "</span>",
-        ptsformatted = fulldateformat(new Date(paymenttimestamp - glob_const.timezone), glob_const.langcode, true),
+        ptsformatted = fulldateformat(new Date(paymenttimestamp - glob_const.timezone), langcode, true),
         amount_short_rounded = amountshort(amount, receivedamount, fiatvalue, iscrypto),
         amount_short_span = insufficient ? " (" + amount_short_rounded + " " + uoa_upper + " " + translate("amountshort") + ")" : "",
         amount_short_cc_span = iscrypto ? amount_short_span : "",
@@ -4281,7 +4281,7 @@ function appendrequest(rd) {
         requestnamebox = incoming ? rqdata ? "<li><strong>" + translate("from") + ":</strong> " + requestname + "</li>" : "<li><strong>From: unknown</strong></li>" : "",
         requesttitlebox = requesttitle ? "<li><strong>" + translate("title") + ":</strong> '<span class='requesttitlebox'>" + requesttitle + "</span>'</li>" : "",
         ismonitoredspan = !monitored ? " (unmonitored transaction)" : "",
-        timestampbox = incoming ? "<li><strong>" + translate("created") + ":</strong> " + created + "</li><li><strong>" + translate("firstviewed") + ":</strong> " + fulldateformat(new Date(utc), glob_const.langcode) + "</li>" :
+        timestampbox = incoming ? "<li><strong>" + translate("created") + ":</strong> " + created + "</li><li><strong>" + translate("firstviewed") + ":</strong> " + fulldateformat(new Date(utc), langcode) + "</li>" :
         outgoing ? "<li><strong>" + translate("sendon") + ":</strong> " + requestdateformatted + "</li>" :
         local ? "<li><strong>" + translate("created") + ":</strong> " + requestdateformatted + "</li>" : "",
         paymenturl = "&address=" + address + rqdataparam + rqmetaparam + "&requestid=" + requestid,

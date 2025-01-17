@@ -751,7 +751,7 @@ function data_title(dat) {
             cc_upper = dat.ccsymbol ? dat.ccsymbol.toUpperCase() : dat.ccsymbol,
             lc_upper = lcsymbol ? lcsymbol.toUpperCase() : lcsymbol,
             localrate = lc_upper === "USD" ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(6) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2);
-        historic_dat = "Historic data (" + fulldateformat(new Date(timestamp - glob_const.timezone), glob_const.langcode) + "):\n" +
+        historic_dat = "Historic data (" + fulldateformat(new Date(timestamp - glob_const.timezone), langcode) + "):\n" +
             "Fiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" +
             cc_upper + "-USD: " + price.toFixed(6) + "\n" +
             localrate + "\n" +

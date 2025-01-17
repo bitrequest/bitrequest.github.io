@@ -1,8 +1,7 @@
 // To add tour own translation copy the file assets_js_bitrequest_lang_en.js and replace the filename with your countrycode suffix.
 // Read further instruction in your copied file
 
-const language = navigator.language || navigator.userLanguage,
-    br_langcode = setlangcode(); // set saved or system language
+const langcode = setlangcode(); // set saved or system language
 
 $(document).ready(function() {
     //br_get_local
@@ -13,12 +12,6 @@ $(document).ready(function() {
     //translate
     //transclear
 });
-
-// Gets an item from local storage with a prefix
-function br_get_local(pref, parse) {
-    const dat = localStorage.getItem("bitrequest_" + pref);
-    return parse && dat !== null ? JSON.parse(dat) : dat;
-}
 
 function init_tl() {
     // Globals
@@ -47,9 +40,10 @@ function lang_dat(lang) {
 }
 
 function setlangcode() {
-    const settingcache = br_get_local("settings", true);
+    const settingcache = localStorage.getItem("bitrequest_settings");
     if (settingcache) { // get saved language
-        const lang_settings = settingcache[2];
+        const parse_cache = JSON.parse(settingcache),
+            lang_settings = parse_cache[2];
         if (lang_settings) {
             const setlang = lang_settings.selected,
                 sl_length = setlang.length;
@@ -66,7 +60,8 @@ function setlangcode() {
 }
 
 function systemlang() { // get system language
-    const lang = lang_dat(language),
+    const language = navigator.language || navigator.userLanguage,
+        lang = lang_dat(language),
         lang_lower = lang.lower,
         lang_single = lang.single,
         translation = translate("obj"),
@@ -99,7 +94,7 @@ function translate(id, dat) {
         return languages;
     }
     try {
-        const lang_string = languages[br_langcode].obj;
+        const lang_string = languages[langcode].obj;
         if (lang_string) {
             return lang_string;
         }

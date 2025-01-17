@@ -159,7 +159,6 @@ const br_bipobj = br_get_local("bpdat", true),
             "kaspa": false
         },
         "ls_support": check_local(),
-        language,
         "useragent": br_useragent,
         "lower_useragent": br_lower_useragent,
         "titlenode": $("title"),
@@ -197,7 +196,6 @@ const br_bipobj = br_get_local("bpdat", true),
         "wl": navigator.wakeLock,
         "after_scan_timeout": 30000, // Preform extra tx lookup when closing paymentdialog after 30 seconds
         "xss_alert": "xss attempt detected",
-        "langcode": br_langcode, // set saved or system language
         "token_cache": 604800,
         "video": br_video,
         "scanner": new QrScanner(br_video, result => setResult(result), error => {
@@ -207,7 +205,7 @@ const br_bipobj = br_get_local("bpdat", true),
         "ndef": (br_has_ndef && !br_inframe) ? new NDEFReader() : false,
         "cacheperiodcrypto": 120000, //120000 = 2 minutes
         "cacheperiodfiat": 600000, //600000 = 10 minutes
-        "zeroplaceholder": parseFloat((0.00).toLocaleString(br_langcode, {
+        "zeroplaceholder": parseFloat((0.00).toLocaleString(langcode, {
             "minimumFractionDigits": 2,
             "maximumFractionDigits": 2
         })).toFixed(2),
@@ -425,7 +423,11 @@ function br_set_session(pref, dat, str) {
     sessionStorage.setItem("bitrequest_" + pref, ddat);
 }
 
-// Gets an item from local storage with a prefix --> Moved to lang_controller
+// Gets an item from local storage with a prefix
+function br_get_local(pref, parse) {
+    const dat = localStorage.getItem("bitrequest_" + pref);
+    return parse && dat !== null ? JSON.parse(dat) : dat;
+}
 
 // Gets an item from session storage with a prefix
 function br_get_session(pref, parse) {
@@ -823,7 +825,7 @@ function to_ts(ts) {
 
 // Formats a timestamp into a short date string
 function short_date(txtime) {
-    return new Date(txtime - glob_const.timezone).toLocaleString(glob_const.langcode, {
+    return new Date(txtime - glob_const.timezone).toLocaleString(langcode, {
         "day": "2-digit", // numeric, 2-digit
         "month": "2-digit", // numeric, 2-digit, long, short, narrow
         "year": "2-digit", // numeric, 2-digit

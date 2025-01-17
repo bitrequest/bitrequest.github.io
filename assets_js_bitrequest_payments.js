@@ -3214,7 +3214,7 @@ function updaterequest(ua, save) {
         metalist.find(".payday.pd_fiat .fiatvalue").text(" " + trimdecimals(ua.fiatvalue, 2));
     }
     if (ua.paymenttimestamp) {
-        const fdf = fulldateformat(new Date(ua.paymenttimestamp - glob_const.timezone), glob_const.langcode, true);
+        const fdf = fulldateformat(new Date(ua.paymenttimestamp - glob_const.timezone), langcode, true);
         metalist.find(".payday.pd_paydate span.paydate").html(" " + fdf);
         metalist.find(".payday.pd_fiat strong span.pd_fiat").html(" " + fdf);
     }
