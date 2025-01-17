@@ -3541,12 +3541,15 @@ function check_teaminvite(ro) {
     }, ro_proxy).done(function(e) {
         const ping = e.ping;
         if (ping) {
+            if (br_result.error) {
+                systembu_expired();
+                return
+            }
             const br_cache = ping.br_cache,
                 server_time = br_cache.utc_timestamp,
                 filetime = br_cache.created_utc,
                 filetimesec = filetime ? filetime * 1000 : now(),
-                filetime_format = new Date(filetimesec).toLocaleString(glob_const.langcode),
-                br_result = ping.br_result,
+                filetime_format = new Date(filetimesec).toLocaleString(langcode),
                 base64 = br_result.base64,
                 account = atob(br_result.account),
                 br_dat = JSON.parse(atob(base64)),
