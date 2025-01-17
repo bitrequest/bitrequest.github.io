@@ -707,6 +707,7 @@ function backup_continue() {
             $("#seed_steps").removeClass("checked");
             $("#seed_step3").addClass("verify");
             seed_nav(3);
+            return
         }
         topnotify(verify);
     })
