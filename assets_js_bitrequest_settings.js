@@ -3541,73 +3541,76 @@ function check_teaminvite(ro) {
     }, ro_proxy).done(function(e) {
         const ping = e.ping;
         if (ping) {
-            if (br_result.error) {
-                systembu_expired();
+            const br_result = ping.br_result;
+            if (br_result) {
+                if (br_result.error) {
+                    systembu_expired();
+                    return
+                }
+                const br_cache = ping.br_cache,
+                    server_time = br_cache.utc_timestamp,
+                    filetime = br_cache.created_utc,
+                    filetimesec = filetime ? filetime * 1000 : now(),
+                    filetime_format = new Date(filetimesec).toLocaleString(langcode),
+                    base64 = br_result.base64,
+                    account = atob(br_result.account),
+                    br_dat = JSON.parse(atob(base64)),
+                    sharedtitle = "Team invite " + account + " (" + filetime_format + ")",
+                    bu_date = filetime_format.replace(/\s+/g, "_").replace(/\:/g, "_"),
+                    cache_time = br_cache.cache_time,
+                    expires_in = (filetime + cache_time) - server_time,
+                    filename = "bitrequest_team_invite" + encodeURIComponent(account) + "_" + bu_date + ".json",
+                    cd = countdown(expires_in * 1000),
+                    cd_format = countdown_format(cd),
+                    bpdat_seedid = br_dat.bitrequest_cashier ? br_dat.bitrequest_cashier.seedid || false : false,
+                    update = bpdat_seedid === glob_let.cashier_seedid,
+                    master_account = bpdat_seedid === glob_let.bipid,
+                    teamid = br_get_local("teamid", true),
+                    teamid_arr = br_dobj(teamid),
+                    is_installed = teamid_arr.includes(ro),
+                    dialog_heading = update ? translate("teamupdate") : translate("teaminvite"),
+                    cf_string = cd_format ? translate("invitationexpiresin") + " " + cd_format : translate("fileexpired"),
+                    dialogtext = is_installed ? "<p>" + translate("installcompleted") + "</p>" :
+                    update ? "<p>" + translate("teamupdata", {
+                        "account": account
+                    }) + "</p>" :
+                    "<p>" + translate("teamup", {
+                        "account": account
+                    }) + "<br/><br/>" + translate("clickinstall", {
+                        "account": account
+                    }) + "</p>",
+                    button_text = update ? translate("update") : translate("install"),
+                    install_button = is_installed ? "" : "<div id='install_teaminvite' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-download' data-update='" + update + "' data-ismaster='" + master_account + "'data-installid='" + ro + "'>" + button_text + "</div>",
+                    ddat = [{
+                        "div": {
+                            "id": "dialogcontent",
+                            "content": [{
+                                    "div": {
+                                        "class": "error",
+                                        "attr": {
+                                            "style": "margin-top:1em;padding:0.3em 1em"
+                                        },
+                                        "content": cf_string
+                                    }
+                                },
+                                {
+                                    "div": {
+                                        "id": "changelog",
+                                        "content": dialogtext + "<div id='custom_actions'>" + install_button + "</div>"
+                                    }
+                                }
+                            ]
+                        }
+                    }],
+                    content = template_dialog({
+                        "id": "system_backupformbox",
+                        "icon": "icon-users",
+                        "title": dialog_heading,
+                        "elements": ddat
+                    }) + "<div id='backupactions'><div id='backupcd'>" + cancelbttn + "</div></div>";
+                popdialog(content, "triggersubmit", null, true);
                 return
             }
-            const br_cache = ping.br_cache,
-                server_time = br_cache.utc_timestamp,
-                filetime = br_cache.created_utc,
-                filetimesec = filetime ? filetime * 1000 : now(),
-                filetime_format = new Date(filetimesec).toLocaleString(langcode),
-                base64 = br_result.base64,
-                account = atob(br_result.account),
-                br_dat = JSON.parse(atob(base64)),
-                sharedtitle = "Team invite " + account + " (" + filetime_format + ")",
-                bu_date = filetime_format.replace(/\s+/g, "_").replace(/\:/g, "_"),
-                cache_time = br_cache.cache_time,
-                expires_in = (filetime + cache_time) - server_time,
-                filename = "bitrequest_team_invite" + encodeURIComponent(account) + "_" + bu_date + ".json",
-                cd = countdown(expires_in * 1000),
-                cd_format = countdown_format(cd),
-                bpdat_seedid = br_dat.bitrequest_cashier ? br_dat.bitrequest_cashier.seedid || false : false,
-                update = bpdat_seedid === glob_let.cashier_seedid,
-                master_account = bpdat_seedid === glob_let.bipid,
-                teamid = br_get_local("teamid", true),
-                teamid_arr = br_dobj(teamid),
-                is_installed = teamid_arr.includes(ro),
-                dialog_heading = update ? translate("teamupdate") : translate("teaminvite"),
-                cf_string = cd_format ? translate("invitationexpiresin") + " " + cd_format : translate("fileexpired"),
-                dialogtext = is_installed ? "<p>" + translate("installcompleted") + "</p>" :
-                update ? "<p>" + translate("teamupdata", {
-                    "account": account
-                }) + "</p>" :
-                "<p>" + translate("teamup", {
-                    "account": account
-                }) + "<br/><br/>" + translate("clickinstall", {
-                    "account": account
-                }) + "</p>",
-                button_text = update ? translate("update") : translate("install"),
-                install_button = is_installed ? "" : "<div id='install_teaminvite' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-download' data-update='" + update + "' data-ismaster='" + master_account + "'data-installid='" + ro + "'>" + button_text + "</div>",
-                ddat = [{
-                    "div": {
-                        "id": "dialogcontent",
-                        "content": [{
-                                "div": {
-                                    "class": "error",
-                                    "attr": {
-                                        "style": "margin-top:1em;padding:0.3em 1em"
-                                    },
-                                    "content": cf_string
-                                }
-                            },
-                            {
-                                "div": {
-                                    "id": "changelog",
-                                    "content": dialogtext + "<div id='custom_actions'>" + install_button + "</div>"
-                                }
-                            }
-                        ]
-                    }
-                }],
-                content = template_dialog({
-                    "id": "system_backupformbox",
-                    "icon": "icon-users",
-                    "title": dialog_heading,
-                    "elements": ddat
-                }) + "<div id='backupactions'><div id='backupcd'>" + cancelbttn + "</div></div>";
-            popdialog(content, "triggersubmit", null, true);
-            return
         }
         systembu_expired();
     }).fail(function(xhr, stat, err) {
