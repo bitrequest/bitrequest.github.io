@@ -150,7 +150,7 @@ function test_bip39() {
         glob_let.test_derive = false;
         return
     }
-    if (glob_let.has_bigint === false) { // test for js BigInt
+    if (glob_const.has_bigint === false) { // test for js BigInt
         bip39_fail();
         glob_let.test_derive = false;
         return

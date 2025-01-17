@@ -4,8 +4,7 @@ $(document).ready(function() {
     //trigger_requeststates
     //get_requeststates
     //getinputs
-    //get_rpc_inputs_init
-    //get_rpc_inputs
+    //select_rpc_init
     //select_rpc
     //continue_select
     //continue_select_api
@@ -18,7 +17,7 @@ $(document).ready(function() {
     //handle_rpc_fails
     //pick_next_rpc
     //no_results
-    //get_next_api
+    //get_next_l2
     //get_next_rpc
     //api_eror_msg
     //get_api_error_data
@@ -81,8 +80,7 @@ function trigger_requeststates(trigger) {
     if (glob_const.offline === true) {
         return // do nothing when offline
     }
-    glob_let.api_attempts = {}, // reset cache and index
-        glob_let.rpc_attempts = {},
+    glob_let.rpc_attempts = {}, // reset cache and index
         glob_let.proxy_attempts = {},
         glob_let.tx_list = [], // reset transaction index
         glob_let.statuspush = [],
@@ -170,7 +168,7 @@ function getinputs(rd, dl) {
             api_data = api_info.data;
         rdo.thislist.removeClass("pmstatloaded");
         tx_count(rdo.statuspanel, "reset");
-        get_rpc_inputs_init(rd, api_data, rdo);
+        select_rpc_init(rd, api_data, rdo);
         return
     }
     const transactionlist = rdo.transactionlist;
@@ -183,22 +181,30 @@ function getinputs(rd, dl) {
 }
 
 // Initializes API input retrieval
-function get_rpc_inputs_init(rd, api_data, rdo) {
+function select_rpc_init(rd, api_data, rdo) {
     if (api_data) {
         const rq_id = rd.requestid || "",
-            a_prefix = (api_data.api) ? "api_attempts" : "rpc_attempts",
             l2 = q_obj(api_data, "network") || rd.eth_layer2,
             l2_prefix = l2 || "";
-        glob_let[a_prefix][sha_sub(rq_id + api_data.url + l2_prefix, 15)] = null, // reset api attempts
+        glob_let.rpc_attempts[sha_sub(rq_id + api_data.url + l2_prefix, 15)] = null, // reset api attempts
             glob_let.rpc_overflow = 0; // reset overflow limits
-        get_rpc_inputs(rd, api_data, rdo);
+        select_rpc(rd, api_data, rdo);
         return
     }
     console.error("error", "no api data available");
 }
 
-// Retrieves API inputs for a request
-function get_rpc_inputs(rd, api_data, rdo, retry) {
+// Selects the appropriate API based on the request data and API information
+function select_rpc(rd, api_data, rdo) {
+    if (rd.lightning && rdo.source === "list") {
+        lightning_fetch(rd, api_data, rdo);
+        return
+    }
+    continue_select(rd, api_data, rdo);
+}
+
+// Continue after scanning lightning transaction
+function continue_select(rd, api_data, rdo) {
     const src = rdo.source;
     if (src === "list") {
         const thislist = rdo.thislist;
@@ -210,27 +216,8 @@ function get_rpc_inputs(rd, api_data, rdo, retry) {
             }
         }
     }
-    select_rpc(rd, api_data, rdo, retry);
-}
-
-// Selects the appropriate API based on the request data and API information
-function select_rpc(rd, api_data, rdo, retry) {
-    if (q_obj(api_data, "network") || rd.eth_layer2) {
-        const api_dat = retry ? api_data : null; // leave api_data blank on first call for L2
-        query_ethl2_api(rd, rdo, api_dat);
-        return
-    }
     const rq_id = rd.requestid || "";
-    glob_let.api_attempts[sha_sub(rq_id + api_data.url, 15)] = true;
-    if (rd.lightning && rdo.source === "list") {
-        lightning_fetch(rd, api_data, rdo);
-        return
-    }
-    continue_select(rd, api_data, rdo);
-}
-
-// Continue after scanning lightning transaction
-function continue_select(rd, api_data, rdo) {
+    glob_let.rpc_attempts[sha_sub(rq_id + api_data.url, 15)] = true;
     if (api_data.api) {
         continue_select_api(rd, api_data, rdo);
         return
@@ -265,7 +252,7 @@ function continue_select_api(rd, api_data, rdo) {
         return
     }
     if (api_name === "ethplorer") {
-        ethplorer_fetch(rd, rdo, api_data);
+        ethplorer_fetch(rd, api_data, rdo);
         return
     }
     if (api_name === "blockchair") {
@@ -285,7 +272,7 @@ function continue_select_api(rd, api_data, rdo) {
         return
     }
     if (rdo.source === "addr_polling") {
-        glob_let.api_attempts = {}
+        glob_let.rpc_attempts = {}
         select_rpc(rd, api_data, rdo);
         return
     }
@@ -321,6 +308,10 @@ function scan_match(rd, api_data, rdo, counter, txdat, l2) {
     const src = rdo.source;
     if (src === "list") {
         tx_count(rdo.statuspanel, counter);
+        const thislist = rdo.thislist;
+        if (thislist) {
+            thislist.removeClass("no_network");
+        }
     }
     if (txdat) {
         const txhash = rd.txhash || txdat.txhash;
@@ -442,7 +433,7 @@ function handle_rpc_fails(rd, rdo, error, api_data, is_proxy, l2) {
             if (src === "addr_polling") {
                 address_polling_init(timeout, api_data, true);
             } else {
-                get_rpc_inputs(rd, api_data, rdo);
+                select_rpc(rd, api_data, rdo);
             }
             return true
         }
@@ -469,11 +460,11 @@ function handle_rpc_fails(rd, rdo, error, api_data, is_proxy, l2) {
     const requestid = rd.requestid,
         payment = rd.payment;
     if (l2) {
-        const next_l2_api = get_next_api(payment, api_data, requestid, l2);
+        const next_l2_api = get_next_l2(payment, api_data, requestid, l2);
         if (next_l2_api) {
             // Scan eth layer 2
             if (src === "list") {
-                query_ethl2_api(rd, rdo, next_l2_api);
+                query_ethl2_api(rd, rdo, next_l2_api, l2);
                 return
             }
             if (src === "l2_polling") {
@@ -482,11 +473,6 @@ function handle_rpc_fails(rd, rdo, error, api_data, is_proxy, l2) {
             }
         }
     } else {
-        const nextapi = get_next_api(payment, api_data, requestid);
-        if (nextapi) {
-            pick_next_rpc(rd, rdo, nextapi, timeout);
-            return
-        }
         const nextrpc = get_next_rpc(payment, api_data, requestid);
         if (nextrpc) {
             pick_next_rpc(rd, rdo, nextrpc, timeout);
@@ -535,20 +521,18 @@ function no_results(rdo, src, api_data, error_data) {
     notify(translate("websocketoffline"), 500000, "yes");
 }
 
-function get_next_api(this_payment, api_data, requestid, l2) {
+function get_next_l2(this_payment, api_data, requestid, l2) {
     glob_let.rpc_overflow++;
     if (glob_let.rpc_overflow > glob_const.overflow_limit) return false; // prevent overflow
-    const api_settings = l2 ? q_obj(getcoinsettings(this_payment), "layer2.options." + l2 + ".apis") : cs_node(this_payment, "apis", true);
+    const api_settings = q_obj(getcoinsettings(this_payment), "layer2.options." + l2 + ".apis");
     if (api_settings) {
-        const apirpc = api_settings.apis,
-            apilist = apirpc.filter(filter => filter.api),
+        const apilist = api_settings.apis,
             al_length = apilist.length;
-        if (apilist.length) {
+        if (apilist && al_length) {
             const currentIndex = apilist.findIndex(option => option.name === api_data.name),
-                next_api = apilist[(currentIndex + 1) % apilist.length],
-                rq_id = requestid || "",
-                l2_prefix = l2 || "";
-            if (glob_let.api_attempts[sha_sub(rq_id + next_api.url + l2_prefix, 15)] !== true) {
+                next_api = apilist[(currentIndex + 1) % al_length],
+                rq_id = requestid || "";
+            if (glob_let.rpc_attempts[sha_sub(rq_id + next_api.url + l2, 15)] !== true) {
                 return next_api;
             }
         }
@@ -556,21 +540,21 @@ function get_next_api(this_payment, api_data, requestid, l2) {
     return false;
 }
 
-// Retrieves the next available RPC for a given payment method
-function get_next_rpc(this_payment, api_data, requestid) {
+function get_next_rpc(this_payment, api_data, requestid, l2) {
     glob_let.rpc_overflow++;
-    if (glob_let.rpc_overflow > 20) return false; // prevent overflow
-    const rpc_settings = cs_node(this_payment, "apis", true);
-    if (rpc_settings) {
-        const apilist = rpc_settings.apis,
-            rpclist = rpc_settings.options,
-            apirpc = apilist.filter(filter => !filter.api),
-            restlist = (apirpc && rpclist) ? $.merge(apirpc, rpclist) : apirpc;
-        if (restlist.length) {
+    if (glob_let.rpc_overflow > glob_const.overflow_limit) return false; // prevent overflow
+    const api_settings = cs_node(this_payment, "apis", true);
+    if (api_settings) {
+        const apilist = api_settings.apis,
+            rpclist = api_settings.options,
+            restlist = (rpclist && rpclist.length) ? $.merge(apilist, rpclist) : apilist,
+            rl_length = restlist.length;
+        if (restlist && rl_length) {
             const next_scan = restlist.findIndex(option => option.url === api_data.url),
-                next_rpc = restlist[(next_scan + 1) % restlist.length],
-                rq_id = requestid || "";
-            if (glob_let.rpc_attempts[sha_sub(rq_id + next_rpc.url, 15)] !== true) {
+                next_rpc = restlist[(next_scan + 1) % rl_length],
+                rq_id = requestid || "",
+                l2_prefix = l2 || "";
+            if (glob_let.rpc_attempts[sha_sub(rq_id + next_rpc.url + l2_prefix, 15)] !== true) {
                 return next_rpc;
             }
         }

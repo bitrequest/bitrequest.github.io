@@ -34,7 +34,7 @@ function init_socket(socket_node, address, swtch, retry) {
         notify(translate("youareoffline") + ". " + translate("notmonitored"));
         return
     }
-    glob_let.api_attempts = {};
+    glob_let.rpc_attempts = {};
     const payment = request.payment,
         rq_init = request.rq_init,
         request_ts_utc = rq_init + glob_const.timezone,

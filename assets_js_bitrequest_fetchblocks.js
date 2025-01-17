@@ -737,7 +737,7 @@ function blockcypher_fetch(rd, api_data, rdo) {
 
 // This function fetches and processes transaction data using the Ethplorer or Binplorer API.
 // It handles both scanning for incoming transactions and polling for specific transaction details for Ethereum and Binance Smart Chain.
-function ethplorer_fetch(rd, rdo, api_data) {
+function ethplorer_fetch(rd, api_data, rdo) {
     const api_name = api_data.name,
         thislist = rdo.thislist,
         transactionlist = rdo.transactionlist,
@@ -1088,7 +1088,7 @@ function blockchair_fetch(rd, api_data, rdo) {
         txdat = false;
     if (rdo.pending === "scanning") { // scan incoming transactions on address
         const contract = q_obj(rd, "coindata.contract"),
-            scan_url = (rd.erc20 == true && contract) ? "ethereum/erc-20/" + contract + "/dashboards/address/" + rd.address : rd.payment + "/dashboards/address/" + rd.address;
+            scan_url = (rd.erc20 && contract) ? "ethereum/erc-20/" + contract + "/dashboards/address/" + rd.address : rd.payment + "/dashboards/address/" + rd.address;
         api_proxy({
             "api": api_name,
             "search": scan_url,
@@ -1799,18 +1799,27 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock) {
 function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
     const layer2 = api_data.network;
     if (rdo.pending === "scanning") {
-        // Use etherscan instead, unable to fetch transactions with infura api
+        const coin_setting = getcoinsettings(rd.payment);
         let api_dat = api_data;
         if (layer2) { // switch to default (etherscan) txdata
-            if (rd.erc20) {
-                const l2_setting = cs_node(rd.thiscurrency, "layer2", true),
-                    l2_options = l2_setting.options;
-                api_dat = q_obj(l2_options, layer2 + ".apis.selected");
+            api_dat = q_obj(coin_setting, "layer2.options." + layer2 + ".apis.selected");
+            if (api_dat) {
+                omniscan_fetch(rd, api_dat, rdo, contract, chainid || 1);
+                return
             }
-            omniscan_fetch(rd, api_dat, rdo, contract, chainid || 1);
+            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
             return
         }
-        blockcypher_fetch(rd, api_data, rdo);
+        api_dat = q_obj(coin_setting, "apis.selected");
+        if (api_dat) {
+            if (rd.erc20) {
+                ethplorer_fetch(rd, api_dat, rdo);
+                return
+            }
+            omniscan_fetch(rd, api_dat, rdo, null, 1);
+            return
+        }
+        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
         return
     }
     const thislist = rdo.thislist,
@@ -1851,7 +1860,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                                     };
                                 txd = infura_erc20_poll_data(txdata, rdo.setconfirmations, rd.currencysymbol, layer2);
                             } else {
-                                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error); // scan l2's
+                                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
                                 return
                             }
                         } else {
@@ -1875,14 +1884,14 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                         scan_match(rd, api_data, rdo, counter, txdat);
                         return
                     }
-                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error); // scan l2's
+                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
                 }).fail(function(xhr, stat, err) {
                     const error_object = xhr || stat || err;
                     tx_api_scan_fail(rd, api_data, rdo, error_object);
                 });
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error); // scan l2's
+            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
         }).fail(function(xhr, stat, err) {
             const error_object = xhr || stat || err;
             tx_api_scan_fail(rd, api_data, rdo, error_object);

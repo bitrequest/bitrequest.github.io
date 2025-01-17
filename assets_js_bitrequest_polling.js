@@ -14,7 +14,6 @@
 // pick API / RPC
 // Initializes the payment monitoring process for a transaction
 function tx_polling_init(tx_data, api_data) {
-    glob_let.api_attempts = {};
     glob_let.rpc_attempts = {};
     tx_polling(tx_data, api_data);
     glob_const.paymentdialogbox.addClass("transacting");
@@ -130,7 +129,7 @@ function address_polling(timeout, api_data) {
             timeout,
             cachetime
         };
-    get_rpc_inputs(request, api_data, rdo);
+    select_rpc(request, api_data, rdo);
     poll_animate();
     socket_info(api_data, true);
 }

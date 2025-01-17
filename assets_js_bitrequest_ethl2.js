@@ -130,13 +130,13 @@ function scan_ethl2_socket(rdo, api_data) {
 
 // ** Monitors **
 
-function query_ethl2_api(rd, rdo, api_dat) {
-    const l2 = rd.eth_layer2;
-    if (rdo.pending === "polling" && l2) {
-        poll_ethl2_api(rd, rdo, api_dat, l2);
+function query_ethl2_api(rd, rdo, api_dat, l2) {
+    const network = rd.eth_layer2 || l2;
+    if (rdo.pending === "polling" && network) {
+        poll_ethl2_api(rd, rdo, api_dat, network);
         return
     }
-    scan_ethl2_api(rd, rdo, api_dat, l2);
+    scan_ethl2_api(rd, rdo, api_dat, network);
 }
 
 function scan_ethl2_api(rd, rdo, api_dat, l2) {
@@ -161,7 +161,7 @@ function scan_ethl2_api(rd, rdo, api_dat, l2) {
                         api_data,
                         rdo
                     };
-                glob_let.api_attempts[sha_sub(rq_id + api_data.url + l2, 15)] = true;
+                glob_let.rpc_attempts[sha_sub(rq_id + api_data.url + l2, 15)] = true;
                 ethl2_networks(dat, l2);
             }
             return
@@ -187,7 +187,7 @@ function scan_ethl2_api(rd, rdo, api_dat, l2) {
                                     api_data,
                                     rdo
                                 };
-                            glob_let.api_attempts[sha_sub(rq_id + api_data.url + l2, 15)] = true;
+                            glob_let.rpc_attempts[sha_sub(rq_id + api_data.url + l2, 15)] = true;
                             ethl2_networks(dat, l2);
                         }
                     }
@@ -221,7 +221,7 @@ function poll_ethl2_api(rd, rdo, api_dat, l2) {
         api_name = api_data.name,
         network = api_data.network;
     if (api_name && network) {
-        glob_let.api_attempts[sha_sub(rq_id + api_data.url + l2, 15)] = true;
+        glob_let.rpc_attempts[sha_sub(rq_id + api_data.url + l2, 15)] = true;
         const ccsymbol = rd.currencysymbol,
             ctracts = contracts(ccsymbol),
             contract = ctracts[network],
@@ -278,7 +278,7 @@ function bnb_apis(dat) {
     if (api_name === "bscscan") {
         omniscan_fetch(dat.rd, dat.api_data, dat.rdo, dat.contract);
     } else if (api_name === "binplorer") {
-        ethplorer_fetch(dat.rd, dat.rdo, dat.api_data);
+        ethplorer_fetch(dat.rd, dat.api_data, dat.rdo);
     } else if (api_name === "etherscan") {
         omniscan_fetch(dat.rd, dat.api_data, dat.rdo, dat.contract, 56);
     } else if (api_name === "infura") {

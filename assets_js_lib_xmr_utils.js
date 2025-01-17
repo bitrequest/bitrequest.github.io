@@ -280,7 +280,7 @@ class ExtendedPoint {
     // Converts an affine point to an extended point
     static fromAffine(p) {
         if (!(p instanceof xPoint)) {
-            throw new TypeError('ExtendedPoint#fromAffine: expected Point');
+            throw new TypeError("ExtendedPoint#fromAffine: expected Point");
         }
         if (p.equals(xPoint.ZERO))
             return ExtendedPoint.ZERO;
@@ -378,7 +378,7 @@ class ExtendedPoint {
             affinePoint = xPoint.BASE;
         const W = (affinePoint && affinePoint._WINDOW_SIZE) || 1;
         if (256 % W) {
-            throw new Error('Point#wNAF: Invalid precomputation window, must be power of 2');
+            throw new Error("Point#wNAF: Invalid precomputation window, must be power of 2");
         }
         let precomputes = affinePoint && xmr_pointPrecomputes.get(affinePoint);
         if (!precomputes) {
@@ -415,12 +415,12 @@ class ExtendedPoint {
 
     // Multiplies the point by a scalar
     multiply(scalar, affinePoint) {
-        if (typeof scalar !== 'number' && typeof scalar !== 'bigint') {
-            throw new TypeError('Point#multiply: expected number or bigint');
+        if (typeof scalar !== "number" && typeof scalar !== "bigint") {
+            throw new TypeError("Point#multiply: expected number or bigint");
         }
         const n = xmod(BigInt(scalar), xmr_CURVE.n);
         if (n <= 0) {
-            throw new Error('Point#multiply: invalid scalar, expected positive integer');
+            throw new Error("Point#multiply: invalid scalar, expected positive integer");
         }
         return ExtendedPoint.normalizeZ(this.wNAF(n, affinePoint))[0];
     }
@@ -459,7 +459,7 @@ class xPoint {
             normed = Uint8Array.from(Array.from(bytes.slice(0, len)).concat(normedLast)),
             y = bytesToNumberLE(normed);
         if (y >= P) {
-            throw new Error('Point#fromHex expects hex <= Fp');
+            throw new Error("Point#fromHex expects hex <= Fp");
         }
         const sqrY = y * y,
             sqrX = xmod((sqrY - 1n) * xmr_invert(d * sqrY + 1n));
@@ -563,11 +563,11 @@ function xmr_egcd(a, b) {
 // Calculates the modular multiplicative inverse
 function xmr_invert(number, modulo = xmr_CURVE.P) {
     if (number === 0n || modulo <= 0n) {
-        throw new Error('invert: expected positive integers');
+        throw new Error("invert: expected positive integers");
     }
     let [gcd, x] = xmr_egcd(xmod(number, modulo), modulo);
     if (gcd !== 1n) {
-        throw new Error('invert: does not exist');
+        throw new Error("invert: does not exist");
     }
     return xmod(x, modulo);
 }

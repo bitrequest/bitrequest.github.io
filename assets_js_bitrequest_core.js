@@ -13,11 +13,6 @@ $(document).ready(function() {
     forceclosesocket();
     clearpinging();
 
-    //Set classname for ios app	
-    if (glob_const.is_ios_app === true) {
-        glob_const.body.addClass("ios");
-    }
-
     //Set classname for iframe	
     if (glob_const.inframe === true) {
         glob_const.html.addClass("inframe");
@@ -41,7 +36,7 @@ $(document).ready(function() {
             glob_let.bipv = true;
         }
         if (phpsupport) {
-            glob_const.phpsupport = phpsupport === "yes";
+            glob_const.phpsupport = (phpsupport === "yes");
             setsymbols();
         } else {
             checkphp();
@@ -1867,7 +1862,6 @@ function continue_cpd() {
 // After scan initialization
 function after_scan_init(api_data) {
     if (is_scanning()) return;
-    glob_let.api_attempts = {};
     glob_let.rpc_attempts = {};
     forceclosesocket();
     after_scan(api_data);
@@ -1895,7 +1889,7 @@ function after_scan(api_data) {
             "cachetime": 20,
             "source": "after_scan"
         };
-    get_rpc_inputs(request, api_data, rdo);
+    select_rpc(request, api_data, rdo);
     socket_info(api_data, true);
 }
 

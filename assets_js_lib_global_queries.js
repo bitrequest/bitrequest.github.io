@@ -159,6 +159,7 @@ const br_bipobj = br_get_local("bpdat", true),
             "kaspa": false
         },
         "ls_support": check_local(),
+        "has_bigint": hasbigint(),
         "useragent": br_useragent,
         "lower_useragent": br_lower_useragent,
         "titlenode": $("title"),
@@ -220,14 +221,12 @@ const br_bipobj = br_get_local("bpdat", true),
     glob_let = {
         "socket_attempt": {},
         "api_attempt": {},
-        "api_attempts": {},
+        "rpc_attempts": {},
         "statuspush": [],
         "tx_list": [],
-        "rpc_attempts": {},
         "changes": {}, //bip39
         "test_derive": true,
         "phrasearray": null,
-        "has_bigint": hasbigint(),
         "phraseverified": false, // core:
         "scrollposition": 0,
         "symbolcache": false,
@@ -607,8 +606,7 @@ function get_next_proxy() {
         next_i = proxies[cc_index + 1],
         next_p = next_i || proxies[0];
     if (glob_let.proxy_attempts[next_p] !== true) {
-        glob_let.api_attempts = {}, // reset cache and index
-            glob_let.rpc_attempts = {};
+        glob_let.rpc_attempts = {};
         set_setting("api_proxy", { // save next proxy
             "selected": next_p
         }, next_p);

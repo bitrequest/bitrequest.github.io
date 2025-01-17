@@ -3307,6 +3307,6 @@ function xmr_integrated(xmr_address, pmid) {
             checksum = bytes + fasthash(bytes).slice(0, 8);
         return base58_encode(hexToBytes(checksum));
     }
-    console.error("error", "invalid xmr payment id");
+    //console.error("error", "invalid xmr payment id");
     return xmr_address;
 }
