@@ -924,7 +924,7 @@ function complilebackup() {
             continue;
         } else if (key === "bitrequest_bpdat") {
             const not_verified = (glob_let.io.bipv !== "yes");
-            if (not_verified || (glob_let.test_derive === true && get_setting("backup", "sbu") === true)) {
+            if (not_verified || (glob_let.test_derive && get_setting("backup", "sbu") === true)) {
                 const val_obj = JSON.parse(value);
                 val_obj.dat = null;
                 jsonfile.push('"' + key + '":' + JSON.stringify(val_obj));
@@ -1605,7 +1605,7 @@ function compare_seeds_callback(compare) {
 function restorestorage(jsonobject, newphrase) {
     $.each(jsonobject, function(key, value) {
         if (key === "bitrequest_bpdat") {
-            if (glob_let.test_derive === true && newphrase === true && glob_let.resd.bpdat) {
+            if (glob_let.test_derive && newphrase === true && glob_let.resd.bpdat) {
                 localStorage.setItem(key, JSON.stringify(glob_let.resd.bpdat));
             }
         } else {

@@ -2629,7 +2629,7 @@ function canceldialogtrigger() {
 
 // Closes the current dialog
 function canceldialog(pass) {
-    if (glob_const.inframe === true) {
+    if (glob_const.inframe) {
         if (pass !== true) {
             if ($("#contactformbox").length > 0) {
                 return
@@ -5220,7 +5220,6 @@ function handleAddress(result, payment) {
         isxpub = (end_result.length > 103),
         er_val = (payment === "nimiq") ? end_result.replace(/\s/g, "") : end_result,
         validate = isxpub ? check_xpub(end_result, xpub_prefix(payment), payment) : check_address(er_val, payment);
-
     clear_xpub_inputs();
     if (validate === true) {
         $("#popup .formbox input.address").val(er_val);

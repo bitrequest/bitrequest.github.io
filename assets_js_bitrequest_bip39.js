@@ -147,12 +147,10 @@ function bipv_pass() {
 function test_bip39() {
     if (!crypto) { // test for window.crypto
         bip39_fail();
-        glob_let.test_derive = false;
         return
     }
     if (glob_const.has_bigint === false) { // test for js BigInt
         bip39_fail();
-        glob_let.test_derive = false;
         return
     }
     const k_str = glob_const.expected_seed.slice(0, 32),
@@ -160,11 +158,11 @@ function test_bip39() {
         dec_test = aes_dec(enc_test, k_str);
     if (glob_const.test_phrase !== dec_test) { // test encryption
         bip39_fail();
-        glob_let.test_derive = false;
         return
     }
     if (toseed(glob_const.test_phrase) !== glob_const.expected_seed || test_derivation() === false) {
-        const coinsToDeriveFailure = ["bitcoin", "litecoin", "dogecoin", "dash", "ethereum", "bitcoin-cash"];
+        bip39_fail();
+        const coinsToDeriveFailure = ["bitcoin", "litecoin", "dogecoin", "dash", "ethereum", "bitcoin-cash", "monero", "nano"];
         derive_fail(coinsToDeriveFailure);
         coinsToDeriveFailure.forEach(coin => {
             glob_const.c_derive[coin] = false;
@@ -173,6 +171,10 @@ function test_bip39() {
     const derivationChecks = [{
             "check": bech32_check,
             "coin": "bitcoin"
+        },
+        {
+            "check": bech32_check,
+            "coin": "litecoin"
         },
         {
             "check": cashaddr_check,
@@ -187,10 +189,10 @@ function test_bip39() {
             "coin": "monero"
         }
     ];
-    derivationChecks.forEach(({
+    derivationChecks.forEach(function({
         check,
         coin
-    }) => {
+    }) {
         if (check() === false) {
             derive_fail([coin]);
             glob_const.c_derive[coin] = false;
@@ -213,6 +215,7 @@ function test_bip39() {
 // Handles BIP39 failure by adding a CSS class
 function bip39_fail() {
     glob_const.body.addClass("nobip");
+    glob_let.test_derive = false;
 }
 
 // Handles derivation failure for specified cryptocurrencies
@@ -237,71 +240,106 @@ function derive_xpub_fail(arr) {
 
 // Tests derivation process for Bitcoin
 function test_derivation() {
-    const currency = "bitcoin",
-        test_rootkey = get_rootkey(glob_const.expected_seed),
-        bip32dat = getbip32dat(currency),
-        dx_dat = {
-            "dpath": "m/44'/0'/0'/0/0",
-            "key": test_rootkey.slice(0, 64),
-            "cc": test_rootkey.slice(64)
-        },
-        x_keys_dat = derive_x(dx_dat),
-        key_object = format_keys(glob_const.expected_seed, x_keys_dat, bip32dat, 0, currency);
-    return key_object.address === glob_const.expected_address;
+    try {
+        const currency = "bitcoin",
+            test_rootkey = get_rootkey(glob_const.expected_seed),
+            bip32dat = getbip32dat(currency),
+            dx_dat = {
+                "dpath": "m/44'/0'/0'/0/0",
+                "key": test_rootkey.slice(0, 64),
+                "cc": test_rootkey.slice(64)
+            },
+            x_keys_dat = derive_x(dx_dat),
+            key_object = format_keys(glob_const.expected_seed, x_keys_dat, bip32dat, 0, currency);
+        return key_object.address === glob_const.expected_address;
+    } catch (e) {
+        console.error(e.name, e.message);
+        return false;
+    }
 }
 
 // Checks Bech32 address derivation
 function bech32_check() {
-    const bip84_pub = "03bb4a626f63436a64d7cf1e441713cc964c0d53289a5b17acb1b9c262be57cb17",
-        bip84_bech32 = pub_to_address_bech32("bc", bip84_pub);
-    return glob_const.expected_bech32 === bip84_bech32;
+    try {
+        const bip84_pub = "03bb4a626f63436a64d7cf1e441713cc964c0d53289a5b17acb1b9c262be57cb17",
+            bip84_bech32 = pub_to_address_bech32("bc", bip84_pub);
+        return glob_const.expected_bech32 === bip84_bech32;
+    } catch (e) {
+        console.error(e.name, e.message);
+        return false;
+    }
 }
 
 // Checks Bitcoin Cash cashaddr derivation
 function cashaddr_check() {
-    const bch_legacy = "1AVPurYZinnctgGPiXziwU6PuyZKX5rYZU",
-        bch_cashaddr = pub_to_cashaddr(bch_legacy);
-    return glob_const.expected_bch_cashaddr === bch_cashaddr;
+    try {
+        const bch_legacy = "1AVPurYZinnctgGPiXziwU6PuyZKX5rYZU",
+            bch_cashaddr = pub_to_cashaddr(bch_legacy);
+        return glob_const.expected_bch_cashaddr === bch_cashaddr;
+    } catch (e) {
+        console.error(e.name, e.message);
+        return false;
+    }
 }
 
 // Checks Nano address derivation
 function nano_check() {
-    const expected_nano_address = "nano_1mbtirc4x3kixfy5wufxaqakd3gbojpn6gpmk6kjiyngnjwgy6yty3txgztq",
-        xnano_address = NanocurrencyWeb.wallet.accounts(glob_const.expected_seed, 0, 0)[0].address;
-    return expected_nano_address === xnano_address;
+    try {
+        const expected_nano_address = "nano_1mbtirc4x3kixfy5wufxaqakd3gbojpn6gpmk6kjiyngnjwgy6yty3txgztq",
+            xnano_address = NanocurrencyWeb.wallet.accounts(glob_const.expected_seed, 0, 0)[0].address;
+        return expected_nano_address === xnano_address;
+    } catch (e) {
+        console.error(e.name, e.message);
+        return false;
+    }
 }
 
 // Checks Monero (XMR) address derivation
 function xmr_check() { // https://coinomi.github.io/tools/bip39/
-    const expected_xmr_address = "477h3C6E6C4VLMR36bQL3yLcA8Aq3jts1AHLzm5QXipDdXVCYPnKEvUKykh2GTYqkkeQoTEhWpzvVQ4rMgLM1YpeD6qdHbS",
-        ssk = get_ssk(glob_const.expected_seed, true),
-        xko = xmr_getpubs(ssk, 0);
-    return xko.address === expected_xmr_address;
+    try {
+        const expected_xmr_address = "477h3C6E6C4VLMR36bQL3yLcA8Aq3jts1AHLzm5QXipDdXVCYPnKEvUKykh2GTYqkkeQoTEhWpzvVQ4rMgLM1YpeD6qdHbS",
+            ssk = get_ssk(glob_const.expected_seed, true),
+            xko = xmr_getpubs(ssk, 0);
+        return xko.address === expected_xmr_address;
+    } catch (e) {
+        console.error(e.name, e.message);
+        return false;
+    }
 }
 
 // Checks extended public key (xpub) derivation for Bitcoin
 function xpub_check() {
-    const currency = "bitcoin",
-        xpub_keycc = key_cc_xpub("xpub6Cy7dUR4ZKF22HEuVq7epRgRsoXfL2MK1RE81CSvp1ZySySoYGXk5PUY9y9Cc5ExpnSwXyimQAsVhyyPDNDrfj4xjDsKZJNYgsHXoEPNCYQ"),
-        dx_dat = {
-            "dpath": "M/0/0",
-            "key": xpub_keycc.key,
-            "cc": xpub_keycc.cc,
-            "vb": xpub_keycc.version
-        },
-        x_keys_dat = derive_x(dx_dat),
-        bip32dat = getbip32dat(currency),
-        key_object = format_keys(null, x_keys_dat, bip32dat, 0, currency),
-        xpub_address = key_object.address,
-        xpub_wildcard_address = "bc1qk0wlvl4xh3eqe5szqyrlcj4ws8633vz0vhhywl"; // wildcard for bech32 Xpubs (Zpub)
-    return xpub_address === glob_const.expected_address || xpub_address === xpub_wildcard_address;
+    try {
+        const currency = "bitcoin",
+            xpub_keycc = key_cc_xpub("xpub6Cy7dUR4ZKF22HEuVq7epRgRsoXfL2MK1RE81CSvp1ZySySoYGXk5PUY9y9Cc5ExpnSwXyimQAsVhyyPDNDrfj4xjDsKZJNYgsHXoEPNCYQ"),
+            dx_dat = {
+                "dpath": "M/0/0",
+                "key": xpub_keycc.key,
+                "cc": xpub_keycc.cc,
+                "vb": xpub_keycc.version
+            },
+            x_keys_dat = derive_x(dx_dat),
+            bip32dat = getbip32dat(currency),
+            key_object = format_keys(null, x_keys_dat, bip32dat, 0, currency),
+            xpub_address = key_object.address,
+            xpub_wildcard_address = "bc1qk0wlvl4xh3eqe5szqyrlcj4ws8633vz0vhhywl"; // wildcard for bech32 Xpubs (Zpub)
+        return xpub_address === glob_const.expected_address || xpub_address === xpub_wildcard_address;
+    } catch (e) {
+        console.error(e.name, e.message);
+        return false;
+    }
 }
 
 // Checks Ethereum extended public key (xpub) derivation
 function eth_xpub_check() {
-    const eth_pub = "03c026c4b041059c84a187252682b6f80cbbe64eb81497111ab6914b050a8936fd",
-        eth_address = pub_to_eth_address(eth_pub);
-    return glob_const.expected_eth_address === eth_address;
+    try {
+        const eth_pub = "03c026c4b041059c84a187252682b6f80cbbe64eb81497111ab6914b050a8936fd",
+            eth_address = pub_to_eth_address(eth_pub);
+        return glob_const.expected_eth_address === eth_address;
+    } catch (e) {
+        console.error(e.name, e.message);
+        return false;
+    }
 }
 
 // Check derivations
@@ -1757,9 +1795,9 @@ function phrase_info_pu(coin) {
             if (glob_const.c_derive[currency]) {
                 $("#pi_icons").append(icon_node);
                 $("#d_paths").append(dp_node);
+                $("#xpub_box").append(xp_node);
+                $("#segw_box").append(segw_node);
             }
-            $("#xpub_box").append(xp_node);
-            $("#segw_box").append(segw_node);
             $("#supported_wallets").append(sw_node);
             pi_show();
         }

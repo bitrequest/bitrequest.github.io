@@ -615,8 +615,8 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
         const rpcurl = get_rpc_url(rpc_data),
             testadress = {
                 "bitcoin": glob_const.expected_bech32,
-                "litecoin": glob_const.expected_ltc_address,
-                "dogecoin": glob_const.expected_doge_address,
+                "litecoin": "LZakyXotaE29Pehw21SoPuU832UhvJp4LG",
+                "dogecoin": "DKvWg8UhQSycj1J8QVxeBDkRpbjDkw3DiW",
                 "bitcoin-cash": glob_const.expected_bch_cashaddr
             } [currency] || "",
             pload = glob_let.is_btc ? {
