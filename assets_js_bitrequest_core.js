@@ -4220,7 +4220,7 @@ function appendrequest(rd) {
         txhistory,
         paymenttimestamp
     } = rd,
-    uoa_upper = uoa.toUpperCase(),
+        uoa_upper = uoa.toUpperCase(),
         deter = iscrypto === true ? 6 : 2,
         insufficient = status === "insufficient",
         lnhash = txhash && txhash.slice(0, 9) === "lightning",
@@ -4349,6 +4349,7 @@ function appendrequest(rd) {
             <div class='brmarker'></div>\
             <div class='expired_panel'><h2>" + translate("expired") + "</h2></div>\
         </li>");
+    rd.coindata = null, // no need to save coindata
     new_requestli.data(rd).prependTo(requestlist);
     if (render_archive) {
         const transactionlist = requestlist.find("#" + requestid).find(".transactionlist");
