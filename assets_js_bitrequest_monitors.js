@@ -4,7 +4,6 @@ $(document).ready(function() {
     //trigger_requeststates
     //get_requeststates
     //getinputs
-    //select_rpc_init
     //select_rpc
     //continue_select
     //continue_select_api
@@ -94,6 +93,7 @@ function trigger_requeststates(trigger) {
 
 // Retrieves and processes request states
 function get_requeststates(trigger, active_requests) {
+    glob_let.apikey_fails = false; // reset apikey fails
     const request_data = $("#requestlist li.rqli.open").first().data();
     if (request_data) {
         if (trigger === "loop") {
@@ -168,7 +168,7 @@ function getinputs(rd, dl) {
             api_data = api_info.data;
         rdo.thislist.removeClass("pmstatloaded");
         tx_count(rdo.statuspanel, "reset");
-        select_rpc_init(rd, api_data, rdo);
+        select_rpc(rd, api_data, rdo);
         return
     }
     const transactionlist = rdo.transactionlist;
@@ -181,26 +181,20 @@ function getinputs(rd, dl) {
 }
 
 // Initializes API input retrieval
-function select_rpc_init(rd, api_data, rdo) {
+function select_rpc(rd, api_data, rdo) {
     if (api_data) {
-        const rq_id = rd.requestid || "",
-            l2 = q_obj(api_data, "network") || rd.eth_layer2,
-            l2_prefix = l2 || "";
-        glob_let.rpc_attempts[sha_sub(rq_id + api_data.url + l2_prefix, 15)] = null, // reset api attempts
-            glob_let.rpc_overflow = 0; // reset overflow limits
-        select_rpc(rd, api_data, rdo);
+        if (rd.eth_layer2) {
+            query_ethl2_api(rd, rdo);
+            return
+        }
+        if (rd.lightning && rdo.source === "list") {
+            lightning_fetch(rd, api_data, rdo);
+            return
+        }
+        continue_select(rd, api_data, rdo);
         return
     }
     console.error("error", "no api data available");
-}
-
-// Selects the appropriate API based on the request data and API information
-function select_rpc(rd, api_data, rdo) {
-    if (rd.lightning && rdo.source === "list") {
-        lightning_fetch(rd, api_data, rdo);
-        return
-    }
-    continue_select(rd, api_data, rdo);
 }
 
 // Continue after scanning lightning transaction
@@ -273,7 +267,7 @@ function continue_select_api(rd, api_data, rdo) {
     }
     if (rdo.source === "addr_polling") {
         glob_let.rpc_attempts = {}
-        select_rpc(rd, api_data, rdo);
+        continue_select(rd, api_data, rdo);
         return
     }
     api_callback(rdo);
@@ -307,7 +301,9 @@ function fail_dialogs(apisrc, error) {
 function scan_match(rd, api_data, rdo, counter, txdat, l2) {
     const src = rdo.source;
     if (src === "list") {
-        tx_count(rdo.statuspanel, counter);
+        if (counter) {
+            tx_count(rdo.statuspanel, counter);
+        }
         const thislist = rdo.thislist;
         if (thislist) {
             thislist.removeClass("no_network");
@@ -351,8 +347,7 @@ function scan_match(rd, api_data, rdo, counter, txdat, l2) {
                 return
             }
             if (src === "tx_polling" || src === "l2_polling") {
-                glob_let.polling_overflow++;
-                if (glob_let.polling_overflow > glob_const.overflow_limit) return false; // prevent overflow
+                if (block_overflow("polling")) return; // prevent overflow
                 if (eth_layer2) { // Eth layer 2
                     glob_let.l2s = {};
                     set_l2_status(api_data, true);
@@ -428,19 +423,34 @@ function handle_rpc_fails(rd, rdo, error, api_data, is_proxy, l2) {
         timeout = rdo.timeout,
         cachetime = rdo.cachetime;
 
-    function next_proxy() { // try next proxy
+    function next_proxy(type) { // try next proxy
+        if (type === "api_fail" && (error_data.apikey || glob_let.apikey_fails)) return false; // only try next proxy if api key is expired or missing
         if (get_next_proxy()) {
             if (src === "addr_polling") {
                 address_polling_init(timeout, api_data, true);
-            } else {
-                select_rpc(rd, api_data, rdo);
+                return true;
             }
-            return true
+            if (src === "tx_polling" || src === "l2_polling") {
+                if (request) {
+                    tx_polling_init({
+                        "txhash": request.txhash,
+                        "setconfirmations": request.set_confirmations,
+                        "eth_layer2": request.eth_layer2
+                    }, api_data, true);
+                    return true;
+                }
+            }
+            if (l2) {
+                query_ethl2_api(rd, rdo, api_data, l2);
+                return true;
+            }
+            continue_select(rd, api_data, rdo);
+            return true;
         }
-        return false
+        return false;
     }
     if (is_proxy) { // Try next proxy if proxy fails
-        if (next_proxy()) {
+        if (next_proxy("proxy_fail")) {
             return
         }
         no_results(rdo, src, api_data, error_data);
@@ -468,7 +478,7 @@ function handle_rpc_fails(rd, rdo, error, api_data, is_proxy, l2) {
                 return
             }
             if (src === "l2_polling") {
-                tx_polling_l2(l2, next_l2_api);
+                tx_polling_l2(l2, next_l2_api, true);
                 return
             }
         }
@@ -484,13 +494,13 @@ function handle_rpc_fails(rd, rdo, error, api_data, is_proxy, l2) {
             return
         }
     }
-    if (next_proxy()) { // Try next proxy after trying all api's
+    if (next_proxy("api_fail")) { // Try next proxy after trying all api's
         return
     }
     no_results(rdo, src, api_data, error_data);
 }
 
-// Pick next api  rpx. 
+// Pick next api rpc. 
 function pick_next_rpc(rd, rdo, next_rpc, timeout) {
     const src = rdo.source;
     if (src === "addr_polling") {
@@ -498,11 +508,11 @@ function pick_next_rpc(rd, rdo, next_rpc, timeout) {
         return
     }
     if (src === "tx_polling") {
-        tx_polling_l1(rdo.txdat, next_rpc);
+        tx_polling_l1(rdo.txdat, next_rpc, true);
         return
     }
     if (src === "after_scan") {
-        after_scan(next_rpc);
+        after_scan(rd, next_rpc, rdo);
         return
     }
     continue_select(rd, next_rpc, rdo);
@@ -522,8 +532,7 @@ function no_results(rdo, src, api_data, error_data) {
 }
 
 function get_next_l2(this_payment, api_data, requestid, l2) {
-    glob_let.rpc_overflow++;
-    if (glob_let.rpc_overflow > glob_const.overflow_limit) return false; // prevent overflow
+    if (block_overflow("l2")) return false; // prevent overflow
     const api_settings = q_obj(getcoinsettings(this_payment), "layer2.options." + l2 + ".apis");
     if (api_settings) {
         const apilist = api_settings.apis,
@@ -541,8 +550,7 @@ function get_next_l2(this_payment, api_data, requestid, l2) {
 }
 
 function get_next_rpc(this_payment, api_data, requestid, l2) {
-    glob_let.rpc_overflow++;
-    if (glob_let.rpc_overflow > glob_const.overflow_limit) return false; // prevent overflow
+    if (block_overflow("rpc")) return false; // prevent overflow
     const api_settings = cs_node(this_payment, "apis", true);
     if (api_settings) {
         const apilist = api_settings.apis,
@@ -612,6 +620,7 @@ function get_api_error_data(error, proxy) {
         },
         is_proxy = (proxy) ? "proxy " : "";
     console.error("API " + is_proxy + "error:", error_dat);
+    glob_let.apikey_fails = true;
     return error_dat;
 }
 

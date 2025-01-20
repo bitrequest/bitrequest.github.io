@@ -1033,14 +1033,14 @@ const glob_config = {
                     "icon": "sphere",
                     "selected": {
                         "name": "bitrequest.app",
-                        "url": glob_const.main_nano_node,
+                        "url": "https://www.bitrequest.app:8020",
                         "username": "",
                         "password": "",
                         "display": true
                     },
                     "apis": [{
                             "name": "bitrequest.app",
-                            "url": glob_const.main_nano_node,
+                            "url": "https://www.bitrequest.app:8020",
                             "username": "",
                             "password": "",
                             "display": true

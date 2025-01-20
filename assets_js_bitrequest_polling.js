@@ -13,39 +13,47 @@
 
 // pick API / RPC
 // Initializes the payment monitoring process for a transaction
-function tx_polling_init(tx_data, api_data) {
+function tx_polling_init(tx_data, api_data, retry) {
+    reset_overflow();
     glob_let.rpc_attempts = {};
-    tx_polling(tx_data, api_data);
+    glob_let.apikey_fails = false;
+    tx_polling(tx_data, api_data, retry);
     glob_const.paymentdialogbox.addClass("transacting");
 }
 
 // Monitors the transaction status using the provided API data
-function tx_polling(tx_data, api_dat) {
+function tx_polling(tx_data, api_dat, retry) {
     const gets = geturlparameters();
     if (gets.xss) {
         return
-    };
+    }
     if (tx_data) {
-        if (!request) return;
-        const txhash = tx_data.txhash;
-        if (!txhash) return;
-        if (!tx_data.setconfirmations) {
-            confirmations(tx_data, true);
-            return
+        if (isopenrequest()) {
+            if (request) {
+                const txhash = tx_data.txhash;
+                if (txhash) {
+                    if (!tx_data.setconfirmations) {
+                        confirmations(tx_data, true);
+                        return
+                    }
+                    const eth_layer2 = tx_data.eth_layer2;
+                    if (eth_layer2) {
+                        request.txhash = txhash;
+                        tx_polling_l2(eth_layer2, api_dat, retry);
+                        return
+                    }
+                    tx_polling_l1(tx_data, api_dat, retry);
+                    return
+                }
+            }
         }
-        const eth_layer2 = tx_data.eth_layer2;
-        if (eth_layer2) {
-            request.txhash = txhash;
-            tx_polling_l2(eth_layer2, api_dat);
-            return
-        }
-        tx_polling_l1(tx_data, api_dat);
-    };
+    }
+    glob_const.paymentdialogbox.removeClass("transacting");
 }
 
-function tx_polling_l2(eth_layer2, api_dat) {
+function tx_polling_l2(eth_layer2, api_dat, retry) {
     clear_tpto();
-    const to_time = api_dat ? 30000 : 10,
+    const to_time = retry ? 10 : api_dat ? 30000 : 10,
         l2_options = fertch_l2s(request.payment),
         api_data = api_dat || q_obj(l2_options, eth_layer2 + ".apis.selected"),
         ctracts = contracts(request.currencysymbol),
@@ -57,23 +65,23 @@ function tx_polling_l2(eth_layer2, api_dat) {
     });
 }
 
-function tx_polling_l1(tx_data, api_dat) {
+function tx_polling_l1(tx_data, api_dat, retry) {
     clear_tpto();
-    const to_time = api_dat ? 30000 : 10,
+    const to_time = retry ? 10 : api_dat ? 30000 : 10,
         api_data = api_dat || q_obj(helper, "api_info.data"),
         rdo = {
             "requestid": request.requestid,
             "pending": "polling",
             "txdat": tx_data,
             "source": "tx_polling",
-            "setconfirmations": tx_data.set_confirmations,
+            "setconfirmations": tx_data.setconfirmations,
             "cachetime": 25
         },
         rd = {
             "requestid": request.requestid,
             "payment": request.payment,
             "erc20": request.erc20,
-            "txhash": request.txhash,
+            "txhash": tx_data.txhash || request.txhash,
             "currencysymbol": request.currencysymbol,
             "address": request.address,
             "decimals": request.decimals,
@@ -129,7 +137,7 @@ function address_polling(timeout, api_data) {
             timeout,
             cachetime
         };
-    select_rpc(request, api_data, rdo);
+    continue_select(request, api_data, rdo);
     poll_animate();
     socket_info(api_data, true);
 }

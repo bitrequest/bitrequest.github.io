@@ -141,8 +141,7 @@ function query_ethl2_api(rd, rdo, api_dat, l2) {
 
 function scan_ethl2_api(rd, rdo, api_dat, l2) {
     glob_let.l2_fetched = {};
-    const requestid = rd.requestid,
-        req_l2_arr = rd.eth_l2s;
+    const req_l2_arr = rd.eth_l2s;
     if (empty_obj(req_l2_arr)) { // No l2's
         api_callback(rdo);
         return
@@ -153,21 +152,20 @@ function scan_ethl2_api(rd, rdo, api_dat, l2) {
         if (l2) { // l2 network is known so only scan this network
             const api_data = api_dat || q_obj(l2_options, l2 + ".apis.selected")
             if (api_data) {
-                const rq_id = requestid || "",
-                    contract = ctracts[l2],
+                const contract = ctracts[l2],
                     dat = {
                         contract,
                         rd,
                         api_data,
                         rdo
                     };
-                glob_let.rpc_attempts[sha_sub(rq_id + api_data.url + l2, 15)] = true;
                 ethl2_networks(dat, l2);
             }
             return
         }
         // scan all supported l2 networks
-        const l2_length = Object.keys(l2_options).length,
+        const requestid = rd.requestid,
+            l2_length = Object.keys(l2_options).length,
             add_delay = 2000;
         let index = 0,
             delay = 0;
@@ -179,15 +177,13 @@ function scan_ethl2_api(rd, rdo, api_dat, l2) {
                     if (inarr) {
                         const api_data = api_dat || q_obj(l2_dat, "apis.selected");
                         if (api_data) {
-                            const rq_id = requestid || "",
-                                contract = ctracts[l2],
+                            const contract = ctracts[l2],
                                 dat = {
                                     contract,
                                     rd,
                                     api_data,
                                     rdo
                                 };
-                            glob_let.rpc_attempts[sha_sub(rq_id + api_data.url + l2, 15)] = true;
                             ethl2_networks(dat, l2);
                         }
                     }
@@ -214,14 +210,11 @@ function scan_ethl2_api(rd, rdo, api_dat, l2) {
 }
 
 function poll_ethl2_api(rd, rdo, api_dat, l2) {
-    const requestid = rd.requestid,
-        rq_id = requestid || "",
-        l2_options = fertch_l2s(rd.payment),
+    const l2_options = fertch_l2s(rd.payment),
         api_data = api_dat || q_obj(l2_options, l2 + ".apis.selected"),
         api_name = api_data.name,
         network = api_data.network;
     if (api_name && network) {
-        glob_let.rpc_attempts[sha_sub(rq_id + api_data.url + l2, 15)] = true;
         const ccsymbol = rd.currencysymbol,
             ctracts = contracts(ccsymbol),
             contract = ctracts[network],
@@ -238,14 +231,23 @@ function poll_ethl2_api(rd, rdo, api_dat, l2) {
 // ** L2 Networks **
 
 function ethl2_networks(dat, network) {
-    const l2 = network || q_obj(dat, "api_data.network");
-    if (l2 === "arbitrum") {
-        arbitrum_apis(dat);
-    } else if (l2 === "polygon") {
-        polygon_apis(dat);
-    } else if (l2 === "bnb") {
-        bnb_apis(dat);
+    if (dat) {
+        const url = q_obj(dat, "api_data.url");
+        if (url) {
+            const rq_id = q_obj(dat, "rd.requestid") || "",
+                l2 = network || q_obj(dat, "api_data.network");
+            glob_let.rpc_attempts[sha_sub(rq_id + url + l2, 15)] = true;
+            if (l2 === "arbitrum") {
+                arbitrum_apis(dat);
+            } else if (l2 === "polygon") {
+                polygon_apis(dat);
+            } else if (l2 === "bnb") {
+                bnb_apis(dat);
+            }
+            return
+        }
     }
+    console.error("error", "missing api data");
 }
 
 // Handles Arbitrum APIS

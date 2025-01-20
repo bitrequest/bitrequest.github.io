@@ -409,6 +409,8 @@ function poll_animate() {
 
 // Initializes the payment function and handles various scenarios
 function loadpaymentfunction(pass) {
+    reset_overflow();
+    glob_let.apikey_fails = false;
     if (is_openrequest() === true) { // prevent double load
         return
     }
@@ -3104,7 +3106,8 @@ function pendingdialog(pr) { // show pending dialog if tx is pending
         }
         adjust_paymentdialog("pending", "polling", translate("txbroadcasted"));
         const set_confirmations = request.set_confirmations || prdata.set_confirmations || 0;
-        request.set_confirmations = set_confirmations;
+        request.set_confirmations = set_confirmations,
+            request.txhash = smart_txhash;
         tx_polling_init({
             "txhash": smart_txhash,
             "setconfirmations": set_confirmations,

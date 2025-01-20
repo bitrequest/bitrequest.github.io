@@ -854,10 +854,6 @@ function check_systembu(sbu) {
             systembu_expired();
         }
     }).fail(function(xhr, stat, err) {
-        if (get_next_proxy()) {
-            check_systembu(sbu);
-            return
-        }
         console.error("API proxy error:", xhr, stat, err);
         systembu_expired();
     });

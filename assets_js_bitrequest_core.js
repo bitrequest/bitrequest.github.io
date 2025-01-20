@@ -1863,21 +1863,6 @@ function continue_cpd() {
 function after_scan_init(api_data) {
     if (is_scanning()) return;
     glob_let.rpc_attempts = {};
-    forceclosesocket();
-    after_scan(api_data);
-}
-
-// Scan address one last time
-function after_scan(api_data) {
-    if (glob_const.inframe) {
-        loader(true);
-        loadertext(translate("lookuppayment", {
-            "currency": request.payment,
-            "blockexplorer": api_data.name
-        }));
-    } else {
-        hide_paymentdialog();
-    }
     const rq_init = request.rq_init,
         request_ts = rq_init + glob_const.timezone,
         set_confirmations = request.set_confirmations || 0,
@@ -1889,7 +1874,21 @@ function after_scan(api_data) {
             "cachetime": 20,
             "source": "after_scan"
         };
-    select_rpc(request, api_data, rdo);
+    after_scan(request, api_data, rdo);
+}
+
+// Scan address one last time
+function after_scan(rd, api_data, rdo) {
+    if (glob_const.inframe) {
+        loader(true);
+        loadertext(translate("lookuppayment", {
+            "currency": rd.payment,
+            "blockexplorer": api_data.name
+        }));
+    } else {
+        hide_paymentdialog();
+    }
+    continue_select(rd, api_data, rdo);
     socket_info(api_data, true);
 }
 
@@ -2749,8 +2748,8 @@ function reset_paymentdialog() {
         request = null,
         helper = null,
         glob_let.l2s = {},
-        glob_let.socket_overflow = 0,
-        glob_let.polling_overflow = 0;
+        glob_let.apikey_fails = false;
+    reset_overflow(); // reset overflow limits
     const wstimeout = setTimeout(function() {
         closesocket();
     }, 500, function() {
@@ -3069,7 +3068,7 @@ function showtransaction_trigger() {
             rqli = thisnode.closest("li.rqli"),
             li_dat = thislist.data(),
             rql_dat = rqli.data(),
-            txhash = rqli.txhash || rql_dat.txhash;
+            txhash = li_dat.txhash || rql_dat.txhash;
         if (txhash) {
             const lnhash = txhash.startsWith("lightning");
             if (lnhash) {

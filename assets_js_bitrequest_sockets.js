@@ -43,7 +43,7 @@ function init_socket(socket_node, address, swtch, retry) {
     if (socket_node) {
         socket_name = socket_node.name;
         if (socket_name === "poll_fallback") {
-            address_polling_init();
+            address_polling_init(null, null, true);
             return
         } else {
             glob_let.socket_attempt[sha_sub(socket_node.url, 15)] = true;
@@ -1259,8 +1259,7 @@ function ws_recon(recon) {
 // Attempts to find the next available WebSocket
 function try_next_socket(current_socket_data, l2) {
     if (!current_socket_data) return false;
-    glob_let.socket_overflow++;
-    if (glob_let.socket_overflow > glob_const.overflow_limit) return false; // prevent overflow
+    if (block_overflow("socket")) return false; // prevent overflow
     const current_socket_url = current_socket_data.url,
         sockets = l2 ? q_obj(getcoinsettings(request.payment), "layer2.options." + current_socket_data.network + ".websockets") : helper.socket_list,
         socketlist = sockets.options ? $.merge(sockets.apis, sockets.options) : sockets.apis;

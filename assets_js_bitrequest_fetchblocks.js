@@ -572,7 +572,7 @@ function blockchaininfo_fetch(rd, api_data, rdo, latestblock) {
                             scan_match(rd, api_data, rdo, counter, txdat);
                             return
                         }
-                        api_callback(rdo);
+                        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
                     }).fail(function(xhr, stat, err) {
                         const error_object = xhr || stat || err;
                         tx_api_scan_fail(rd, api_data, rdo, error_object);
@@ -1068,8 +1068,8 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                 });
                 return
             }
-            api_callback(rdo);
         }
+        api_callback(rdo);
     }
 }
 
@@ -1081,14 +1081,18 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
 // and adapts its behavior based on the type of transaction and the API being used.
 function blockchair_fetch(rd, api_data, rdo) {
     const api_name = api_data.name,
+        network = api_data.network,
         transactionlist = rdo.transactionlist,
         requestid = rd.requestid,
-        source = rdo.source;
+        source = rdo.source,
+        address = rd.address,
+        address_lower = address.toLowerCase();
+    ccsymbol = rd.currencysymbol,
+        contract = rd.token_contract;
     let counter = 0,
         txdat = false;
     if (rdo.pending === "scanning") { // scan incoming transactions on address
-        const contract = q_obj(rd, "coindata.contract"),
-            scan_url = (rd.erc20 && contract) ? "ethereum/erc-20/" + contract + "/dashboards/address/" + rd.address : rd.payment + "/dashboards/address/" + rd.address;
+        const scan_url = (rd.erc20 && contract) ? "ethereum/erc-20/" + contract + "/dashboards/address/" + address : rd.payment + "/dashboards/address/" + address;
         api_proxy({
             "api": api_name,
             "search": scan_url,
@@ -1110,82 +1114,13 @@ function blockchair_fetch(rd, api_data, rdo) {
                     return
                 }
                 const latestblock = context.state;
-                if (rd.erc20 == true) {
-                    const erc20dat = data.data;
-                    if (erc20dat) {
-                        $.each(erc20dat, function(dat, value) {
-                            const transactions = value.transactions;
-                            if (transactions) {
-                                const sortlist = sort_by_date(blockchair_erc20_scan_data, transactions);
-                                $.each(sortlist, function(dt, val) {
-                                    const txd = blockchair_erc20_scan_data(val, rdo.setconfirmations, rd.currencysymbol, latestblock);
-                                    if ((txd.transactiontime > rdo.request_timestamp) && (str_match(txd.recipient, rd.address) === true) && (str_match(txd.token_symbol, rd.currencysymbol) === true) && txd.ccval) {
-                                        txdat = txd;
-                                        if (source === "list") {
-                                            const tx_listitem = append_tx_li(txd, rd.requesttype);
-                                            if (tx_listitem) {
-                                                transactionlist.append(tx_listitem.data(txd));
-                                                counter++;
-                                            }
-                                        }
-                                    }
-                                });
-                            }
-                        });
-                        scan_match(rd, api_data, rdo, counter, txdat);
-                        return
-                    }
-                    api_callback(rdo);
-                    return
-                }
-                if (rd.payment === "ethereum") {
-                    const ethdat = data.data;
-                    if (ethdat) {
-                        $.each(ethdat, function(dat, value) {
-                            const calls = value.calls;
-                            if (calls) {
-                                const sortlist = sort_by_date(blockchair_eth_scan_data, calls);
-                                $.each(sortlist, function(dt, val) {
-                                    const txd = blockchair_eth_scan_data(val, rdo.setconfirmations, rd.currencysymbol, latestblock);
-                                    if (txd.transactiontime > rdo.request_timestamp && str_match(txd.recipient, rd.address) === true && txd.ccval) {
-                                        txdat = txd;
-                                        if (source === "list") {
-                                            const tx_listitem = append_tx_li(txd, rd.requesttype);
-                                            if (tx_listitem) {
-                                                transactionlist.append(tx_listitem.data(txd));
-                                                counter++;
-                                            }
-                                        }
-                                    }
-                                });
-                            }
-                        });
-                        scan_match(rd, api_data, rdo, counter, txdat);
-                        return
-                    }
-                    api_callback(rdo);
-                    return
-                }
-                const txarray = q_obj(data, "data." + rd.address + ".transactions");
-                if (empty_obj(txarray)) {
-                    api_callback(rdo);
-                    return
-                }
-                api_proxy({
-                    "api": api_name,
-                    "search": rd.payment + "/dashboards/transactions/" + txarray.slice(0, 6), // get last 5 transactions
-                    "cachetime": rdo.cachetime,
-                    "cachefolder": "1h",
-                    "params": {
-                        "method": "GET"
-                    }
-                }).done(function(e) {
-                    const dat = br_result(e).result,
-                        bcdat = dat.data;
-                    if (bcdat) {
-                        $.each(bcdat, function(dt, val) {
-                            const txd = blockchair_scan_data(val, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
-                            if (txd.transactiontime > rdo.request_timestamp && txd.ccval) { // get all transactions after requestdate
+                if (rd.erc20) {
+                    const erc20dat = q_obj(data, "data." + address_lower + ".transactions") || q_obj(data, "data." + address + ".transactions");
+                    if (erc20dat && br_issar(erc20dat)) {
+                        const sortlist = sort_by_date(blockchair_erc20_scan_data, erc20dat);
+                        $.each(sortlist, function(dt, val) {
+                            const txd = blockchair_erc20_scan_data(val, rdo.setconfirmations, ccsymbol, latestblock);
+                            if ((txd.transactiontime > rdo.request_timestamp) && (str_match(txd.recipient, address) === true) && (str_match(txd.token_symbol, ccsymbol) === true) && txd.ccval) {
                                 txdat = txd;
                                 if (source === "list") {
                                     const tx_listitem = append_tx_li(txd, rd.requesttype);
@@ -1199,7 +1134,66 @@ function blockchair_fetch(rd, api_data, rdo) {
                         scan_match(rd, api_data, rdo, counter, txdat);
                         return
                     }
-                    api_callback(rdo);
+                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                    return
+                }
+                if (rd.payment === "ethereum") {
+                    const ethdat = q_obj(data, "data." + address_lower + ".calls") || q_obj(data, "data." + address + ".calls");
+                    if (ethdat && br_issar(ethdat)) {
+                        const sortlist = sort_by_date(blockchair_eth_scan_data, ethdat);
+                        $.each(sortlist, function(dt, val) {
+                            const txd = blockchair_eth_scan_data(val, rdo.setconfirmations, ccsymbol, latestblock);
+                            if (txd.ccval && txd.transactiontime > rdo.request_timestamp && str_match(txd.recipient, address)) {
+                                txdat = txd;
+                                if (source === "list") {
+                                    const tx_listitem = append_tx_li(txd, rd.requesttype);
+                                    if (tx_listitem) {
+                                        transactionlist.append(tx_listitem.data(txd));
+                                        counter++;
+                                    }
+                                }
+                            }
+                        });
+                        scan_match(rd, api_data, rdo, counter, txdat);
+                        return
+                    }
+                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                    return
+                }
+                const txarray = q_obj(data, "data." + address + ".transactions") || q_obj(data, "data." + address_lower + ".transactions");
+                if (empty_obj(txarray)) {
+                    scan_match(rd, api_data, rdo, null, txdat);
+                    return
+                }
+                api_proxy({
+                    "api": api_name,
+                    "search": rd.payment + "/dashboards/transactions/" + txarray.slice(0, 6), // get last 6 transactions
+                    "cachetime": rdo.cachetime,
+                    "cachefolder": "1h",
+                    "params": {
+                        "method": "GET"
+                    }
+                }).done(function(e) {
+                    const dat = br_result(e).result,
+                        bcdat = dat.data;
+                    if (bcdat && br_issar(bcdat)) {
+                        $.each(bcdat, function(dt, val) {
+                            const txd = blockchair_scan_data(val, rdo.setconfirmations, ccsymbol, address, latestblock);
+                            if (txd.transactiontime > rdo.request_timestamp && txd.ccval) { // get all transactions after requestdate
+                                txdat = txd;
+                                if (source === "list") {
+                                    const tx_listitem = append_tx_li(txd, rd.requesttype);
+                                    if (tx_listitem) {
+                                        transactionlist.append(tx_listitem.data(txd));
+                                        counter++;
+                                    }
+                                }
+                            }
+                        });
+                        scan_match(rd, api_data, rdo, counter, glob_const.default_error);
+                        return
+                    }
+                    tx_api_scan_fail(rd, api_data, rdo, error_object);
                 }).fail(function(xhr, stat, err) {
                     const error_object = xhr || stat || err;
                     tx_api_scan_fail(rd, api_data, rdo, error_object);
@@ -1217,7 +1211,7 @@ function blockchair_fetch(rd, api_data, rdo) {
     }
     if (rdo.pending === "polling") { // poll transaction id
         if (rd.txhash) {
-            const poll_url = (rd.erc20 == true) ? "ethereum/dashboards/transaction/" + rd.txhash + "?erc_20=true" : rd.payment + "/dashboards/transaction/" + rd.txhash;
+            const poll_url = (rd.erc20) ? "ethereum/dashboards/transaction/" + rd.txhash + "?erc_20=true" : rd.payment + "/dashboards/transaction/" + rd.txhash;
             api_proxy({
                 "api": api_name,
                 "search": poll_url,
@@ -1239,9 +1233,9 @@ function blockchair_fetch(rd, api_data, rdo) {
                         if (latestblock) {
                             const trxs = q_obj(data, "data." + rd.txhash);
                             if (trxs) {
-                                const txd = (rd.erc20 == true) ? blockchair_erc20_poll_data(trxs, rdo.setconfirmations, rd.currencysymbol, latestblock) :
-                                    (rd.payment === "ethereum") ? blockchair_eth_scan_data(trxs.calls[0], rdo.setconfirmations, rd.currencysymbol, latestblock) :
-                                    blockchair_scan_data(trxs, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
+                                const txd = (rd.erc20) ? blockchair_erc20_poll_data(trxs, rdo.setconfirmations, ccsymbol, latestblock) :
+                                    (rd.payment === "ethereum") ? blockchair_eth_scan_data(trxs.calls[0], rdo.setconfirmations, ccsymbol, latestblock) :
+                                    blockchair_scan_data(trxs, rdo.setconfirmations, ccsymbol, address, latestblock);
                                 if (txd.ccval) {
                                     txdat = txd, counter = 1;
                                     if (source === "list") {
@@ -1729,7 +1723,7 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock) {
                 const data = br_result(e).result;
                 if (data) {
                     if (empty_obj(data)) {
-                        api_callback(rdo);
+                        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
                         return
                     }
                     const sortlist = sort_by_date(mempoolspace_scan_data, data);
@@ -1807,7 +1801,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                 omniscan_fetch(rd, api_dat, rdo, contract, chainid || 1);
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, layer2);
             return
         }
         api_dat = q_obj(coin_setting, "apis.selected");
@@ -1819,7 +1813,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
             omniscan_fetch(rd, api_dat, rdo, null, 1);
             return
         }
-        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, layer2);
         return
     }
     const thislist = rdo.thislist,
@@ -1860,7 +1854,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                                     };
                                 txd = infura_erc20_poll_data(txdata, rdo.setconfirmations, rd.currencysymbol, layer2);
                             } else {
-                                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, layer2);
                                 return
                             }
                         } else {
@@ -1884,22 +1878,22 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                         scan_match(rd, api_data, rdo, counter, txdat);
                         return
                     }
-                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, layer2);
                 }).fail(function(xhr, stat, err) {
                     const error_object = xhr || stat || err;
-                    tx_api_scan_fail(rd, api_data, rdo, error_object);
+                    tx_api_scan_fail(rd, api_data, rdo, error_object, null, layer2);
                 });
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, layer2);
         }).fail(function(xhr, stat, err) {
             const error_object = xhr || stat || err;
-            tx_api_scan_fail(rd, api_data, rdo, error_object);
+            tx_api_scan_fail(rd, api_data, rdo, error_object, null, layer2);
         });
     }).fail(function(xhr, stat, err) {
         const is_proxy = is_proxy_fail(this.url),
             error_object = xhr || stat || err;
-        tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+        tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy, layer2);
     }).always(function() {
         set_api_src(rdo, api_data);
     });
@@ -2340,8 +2334,8 @@ function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latestblock)
         "txhash": data.transaction_hash || null,
         "confirmations": conf,
         "setconfirmations": setconfirmations,
-        "ccsymbol": ccsymbol,
-        "recipient": data.recipient || null
+        "recipient": data.recipient || null,
+        "ccsymbol": ccsymbol
     };
 }
 
@@ -2379,6 +2373,7 @@ function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latestbloc
         "txhash": transaction.hash || null,
         "confirmations": conf,
         "setconfirmations": setconfirmations,
+        "recipient": tokendata.recipient || null,
         "ccsymbol": ccsymbol
     };
 }
@@ -2565,8 +2560,8 @@ function kaspa_scan_data(data, thisaddress, setconfirmations, latestblock) {
         const amount = val.amount;
         return val.script_public_key_address === addr ? Math.abs(amount) : 0;
     }
-    const outputsum = process_outputs(data.outputs, thisaddress, process_output_value);
-    block_bluescore = data.accepting_block_blue_score,
+    const outputsum = process_outputs(data.outputs, thisaddress, process_output_value),
+        block_bluescore = data.accepting_block_blue_score,
         confblocks = (latestblock) ? latestblock - block_bluescore : null,
         conf_calc = data.is_accepted ? Math.max(0, confblocks || 0) : 0,
         conf = latestblock ? conf_calc : 0;

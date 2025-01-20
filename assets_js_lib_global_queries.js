@@ -58,7 +58,6 @@ const br_bipobj = br_get_local("bpdat", true),
         "main_polygon_socket": "wss://polygon-mainnet.infura.io/ws/v3/",
         "main_bnb_socket": "wss://bsc-mainnet.infura.io/ws/v3/",
         "main_alchemy_socket": "wss://eth-mainnet.g.alchemy.com/v2/",
-        "main_nano_node": "https://www.bitrequest.app:8020",
         "main_kas_wss": "wss://api.kaspa.org",
         "sec_kas_wss": "wss://api-v2-do.kas.fyi",
         "aws_bucket": "https://brq.s3.us-west-2.amazonaws.com/",
@@ -216,6 +215,7 @@ const br_bipobj = br_get_local("bpdat", true),
         "socket_attempt": {},
         "api_attempt": {},
         "rpc_attempts": {},
+        "apikey_fails": false,
         "statuspush": [],
         "tx_list": [],
         "changes": {}, //bip39
@@ -258,7 +258,6 @@ const br_bipobj = br_get_local("bpdat", true),
         "ndef_processing": null,
         "ndef_timer": 0,
         "ws_timer": 0,
-        "socket_overflow": 0,
         "l2s": {},
         "tpto": 0, // tx_polling timer
         "blockswipe": false,
@@ -270,8 +269,14 @@ const br_bipobj = br_get_local("bpdat", true),
         "lnd_ph": false,
         "prevkey": false,
         "block_scan": 0,
-        "rpc_overflow": 0,
-        "polling_overflow": 0,
+        "block_overflow": {
+            "l2": 0,
+            "rpc": 0,
+            "polling": 0,
+            "socket": 0,
+            "proxy": 0
+        },
+        "overflow_detected": false,
         "l2_fetched": {}
 
     }
@@ -305,6 +310,8 @@ let request = null,
 //get_api_url
 //get_next_proxy
 //is_proxy_fail
+//block_overflow
+//reset_overflow
 //tofixedspecial
 //get_search
 //renderlnconnect
@@ -593,6 +600,7 @@ function get_api_url(get) {
 
 // Gets the next available proxy from the list
 function get_next_proxy() {
+    if (block_overflow("proxy")) return false; // prevent overflow
     const proxies = all_proxies(),
         current_proxy = d_proxy(),
         c_index = proxies.indexOf(current_proxy),
@@ -605,6 +613,9 @@ function get_next_proxy() {
             "selected": next_p
         }, next_p);
         savesettings();
+        reset_overflow("rpc");
+        reset_overflow("l2");
+        glob_let.apikey_fails = false;
         return next_p;
     }
     return false;
@@ -617,6 +628,36 @@ function is_proxy_fail(stc) {
             return stc.includes(url);
         });
     return (match) ? true : false;
+}
+
+// prevent overflow
+function block_overflow(type, limit) {
+    if (glob_let.overflow_detected) return true;
+    glob_let.block_overflow[type]++;
+    const overflow_limit = limit || glob_const.overflow_limit;
+    if (glob_let.block_overflow[type] > overflow_limit) {
+        glob_let.overflow_detected = true;
+        const content = "<h2 class='icon-warning'>Overflow detected</h2><br/><p><strong style='color:#F00'>Fatal error!</strong><br/>Please close the application ASAP.</p>";
+        popdialog(content, "canceldialog");
+        return true;
+    }
+    return false;
+}
+
+// prevent overflow
+function reset_overflow(type) {
+    glob_let.overflow_detected = false;
+    if (type) {
+        glob_let.block_overflow[type] = 0;
+        return
+    }
+    glob_let.block_overflow = {
+        "l2": 0,
+        "rpc": 0,
+        "polling": 0,
+        "socket": 0,
+        "proxy": 0
+    };
 }
 
 // Converts scientific notation to fixed-point notation
