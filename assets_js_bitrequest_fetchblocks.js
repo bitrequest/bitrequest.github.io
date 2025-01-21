@@ -887,12 +887,9 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
             api_proxy(eth_payload).done(function(e) {
                 const data = br_result(e).result;
                 if (data) {
-                    const error = data.error;
+                    const error = (q_obj(data, "status") == 0) || data.error;
                     if (error) {
-                        const error_object = {
-                            "error": error.message,
-                            "console": true
-                        };
+                        const error_object = data.error || data;
                         tx_api_scan_fail(rd, api_data, rdo, error_object, null, network);
                         return
                     }
@@ -932,12 +929,9 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
             api_proxy(erc20_payload).done(function(e) {
                 const data = br_result(e).result;
                 if (data) {
-                    const error = data.error;
+                    const error = (q_obj(data, "status") == 0) || data.error;
                     if (error) {
-                        const error_object = {
-                            "error": error.message,
-                            "console": true
-                        };
+                        const error_object = data.error || data;
                         tx_api_scan_fail(rd, api_data, rdo, error_object, null, network);
                         return
                     }
@@ -982,12 +976,9 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                 api_proxy(eth_payload).done(function(e) {
                     const data = br_result(e).result;
                     if (data) {
-                        const error = data.error;
+                        const error = (q_obj(data, "status") == 0) || data.error;
                         if (error) {
-                            const error_object = {
-                                "error": error.message,
-                                "console": true
-                            };
+                            const error_object = data.error || data;
                             tx_api_scan_fail(rd, api_data, rdo, error_object, null, network);
                             return
                         }
@@ -1027,12 +1018,9 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                 api_proxy(erc20_payload).done(function(e) {
                     const data = br_result(e).result;
                     if (data) {
-                        const error = data.error;
+                        const error = (q_obj(data, "status") == 0) || data.error;
                         if (error) {
-                            const error_object = {
-                                "error": error.message,
-                                "console": true
-                            };
+                            const error_object = data.error || data;
                             tx_api_scan_fail(rd, api_data, rdo, error_object, null, network);
                             return
                         }

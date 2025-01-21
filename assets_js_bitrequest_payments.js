@@ -1043,11 +1043,9 @@ function getccexchangerates(apilist, api) {
             error_val = "unable to get " + payment + " rate";
         if (data) {
             if (!empty_obj(data)) {
-                const status = data.status,
-                    has_error = data.statusCode === 404 || data.error || (status && status.error_message);
+                const has_error = data.error || q_obj(data, "status.error_code");
                 if (has_error) {
-                    const error_val = data.error || "Unable to get " + payment + " Exchangerate";
-                    cc_fail(apilist, api, error_val);
+                    cc_fail(apilist, api, has_error);
                     return
                 }
                 const pnode = iserc ? contract : payment,
@@ -1081,6 +1079,7 @@ function getccexchangerates(apilist, api) {
 
 // Handles failure scenarios when fetching cryptocurrency rates
 function cc_fail(apilist, api, error_val, is_proxy) {
+    const error_data = get_api_error_data(error_val, is_proxy);
     function next_proxy() { // try next proxy
         if (get_next_proxy()) {
             glob_let.api_attempt[apilist] = {};
@@ -1149,7 +1148,7 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
         fiatapi === "currencylayer" ? "live" :
         fiatapi === "coinbase" ? "exchange-rates" :
         false;
-    if (search === false) {
+    if (!search) {
         loadertext(translate("error"));
         closeloader();
         cancelpaymentdialog();
@@ -1231,15 +1230,15 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
             }
         }
         const nextfiatapi = try_next_api(apilist, fiatapi);
-        if (nextfiatapi === false) {
-            loadertext(translate("error"));
-            closeloader();
-            cancelpaymentdialog();
-            const errorcode = data.error || "Failed to load data from " + fiatapi;
-            fail_dialogs(fiatapi, errorcode);
+        if (nextfiatapi) {
+            get_fiat_exchangerate(apilist, nextfiatapi, ccrate, currencystring, ccapi, cachetime);
             return
         }
-        get_fiat_exchangerate(apilist, nextfiatapi, ccrate, currencystring, ccapi, cachetime);
+        loadertext(translate("error"));
+        closeloader();
+        cancelpaymentdialog();
+        const errorcode = data.error || "Failed to load data from " + fiatapi;
+        fail_dialogs(fiatapi, errorcode);
     }).fail(function(xhr, stat, err) {
         const is_proxy = is_proxy_fail(this.url),
             error_object = xhr || stat || err;

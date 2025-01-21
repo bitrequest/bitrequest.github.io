@@ -422,7 +422,6 @@ function handle_rpc_fails(rd, rdo, error, api_data, is_proxy, l2) {
         error_data = get_api_error_data(error, is_proxy),
         timeout = rdo.timeout,
         cachetime = rdo.cachetime;
-
     function next_proxy(type) { // try next proxy
         if (type === "api_fail" && (error_data.apikey || glob_let.apikey_fails)) return false; // only try next proxy if api key is expired or missing
         if (get_next_proxy()) {
@@ -600,21 +599,23 @@ function api_eror_msg(apisrc, error) {
 // Extracts and formats error data from various API responses
 function get_api_error_data(error, proxy) {
     if (!error) return;
-    const errorcode = error.code || error.status || error.error_code || 0,
-        errormessage = error.error || error.message || error.type || error.error_message || error.statusText || error,
+    const result = error.result,
+        error_code = error.code || error.status || error.error_code || error || 0,
+        error_message = error.message || error.error_message || error.statusText || error.type || error.error || error,
         cons = error.console,
         ak_check = (typeof error === "string") ? (error.indexOf("API calls limits have been reached") > -1 || error.indexOf("Limits reached") > -1) : false, // blockcypher
+        ak_check2 = (result) ? result.indexOf("API Key") > -1 : null, // etherscan
         apikey = (
-            errorcode === 101 || // fixer
-            errorcode === 402 || // blockchair
-            errorcode === 403 || errorcode === 1 || // ethplorer => invalid or missing API key
-            errorcode === 1001 || // coinmarketcap => invalid API key
-            errorcode === 1002 || // coinmarketcap => missing API key
-            ak_check
+            error_code === 101 || // fixer
+            error_code === 402 || // blockchair
+            error_code === 403 || error_code === 1 || // ethplorer => invalid or missing API key
+            error_code === 1001 || // coinmarketcap => invalid API key
+            error_code === 1002 || // coinmarketcap => missing API key
+            ak_check || ak_check2
         );
     const error_dat = {
-            "errorcode": errorcode,
-            "errormessage": errormessage,
+            "errorcode": error_code,
+            "errormessage": error_message,
             "apikey": apikey,
             "console": cons
         },
