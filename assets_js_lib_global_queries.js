@@ -62,37 +62,6 @@ const br_bipobj = br_get_local("bpdat", true),
         "sec_kas_wss": "wss://api-v2-do.kas.fyi",
         "aws_bucket": "https://brq.s3.us-west-2.amazonaws.com/",
         "cmc_icon_loc": "https://s2.coinmarketcap.com/static/img/coins/200x200/",
-        // bip39 (All addresses / xpubs in this app are test addresses derived from the following testphrase, taken from https://github.com/bitcoinbook/bitcoinbook/blob/f8b883dcd4e3d1b9adf40fed59b7e898fbd9241f/ch05.asciidoc)
-        "test_phrase": "army van defense carry jealous true garbage claim echo media make crunch", // random phrase used for test derive
-        "expected_seed": "5b56c417303faa3fcba7e57400e120a0ca83ec5a4fc9ffba757fbe63fbd77a89a1a3be4c67196f57c39a88b76373733891bfaba16ed27a813ceed498804c0570", // expected seed used for test derive
-        "expected_address": "1HQ3rb7nyLPrjnuW85MUknPekwkn7poAUm", // expected addres used for test derive
-        "expected_bech32": "bc1qg0azlj4w2lrq8jssrrz6eprt2fe7f7edm4vpd5", // expected bech32 addres used for test derive
-        "expected_bch_cashaddr": "qp5p0eur784pk8wxy2kzlz3ctnq5whfnuqqpp78u22",
-        "expected_eth_address": "0x2161DedC3Be05B7Bb5aa16154BcbD254E9e9eb68",
-        "c_derive": {
-            "bitcoin": true,
-            "litecoin": true,
-            "dogecoin": true,
-            "dash": true,
-            "nano": true,
-            "monero": true,
-            "ethereum": true,
-            "bitcoin-cash": true,
-            "nimiq": false,
-            "kaspa": false
-        },
-        "can_xpub": {
-            "bitcoin": true,
-            "litecoin": true,
-            "dogecoin": true,
-            "dash": true,
-            "nano": false,
-            "monero": false,
-            "ethereum": true,
-            "bitcoin-cash": true,
-            "nimiq": false,
-            "kaspa": false
-        },
         "ls_support": check_local(),
         "has_bigint": hasbigint(),
         "useragent": br_useragent,

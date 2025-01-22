@@ -58,9 +58,7 @@ $(document).ready(function() {
     selectbox();
     pickselect();
     canceldialogtrigger();
-    console.log({
-        "config": glob_config
-    });
+    console.log({glob_config});
 })
 
 // Check for PHP support by fetching fiat currencies from local API PHP file
@@ -530,9 +528,7 @@ function finishfunctions() {
 
     setTimeout(function() { // wait for ios app detection
         detectapp();
-        console.log({
-            glob_const
-        });
+        console.log({glob_const});
     }, 700);
     //getapp
     close_app_panel();
@@ -2137,7 +2133,7 @@ function addaddress(ad, edit) {
             "currency": currency
         }) + "</span>",
         derive_seed_str = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>" + translate("generatewallet") + "</span>",
-        options = glob_let.hasbip ? choose_wallet_str : (glob_let.test_derive && glob_const.c_derive[currency]) ? (hasbip32(currency) === true ? derive_seed_str : choose_wallet_str) : choose_wallet_str,
+        options = glob_let.hasbip ? choose_wallet_str : (glob_let.test_derive && bip39_const.c_derive[currency]) ? (hasbip32(currency) === true ? derive_seed_str : choose_wallet_str) : choose_wallet_str,
         pnotify = glob_const.body.hasClass("showstartpage") ? "<div class='popnotify' style='display:block'>" + options + "</div>" : "<div class='popnotify'></div>",
         scanqr = glob_let.hascam && !edit ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
         title = edit ? "<h2 class='icon-pencil'>" + translate("editlabel") + "</h2>" : "<h2>" + getcc_icon(ad.cmcid, cpid, ad.erc20) + " " + translate("addcoinaddress", {

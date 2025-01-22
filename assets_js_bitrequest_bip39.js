@@ -1,3 +1,37 @@
+// bip39 (All addresses / xpubs in this app are test addresses derived from the following testphrase, taken from https://github.com/bitcoinbook/bitcoinbook/blob/f8b883dcd4e3d1b9adf40fed59b7e898fbd9241f/ch05.asciidoc)
+const bip39_const = {
+    "test_phrase": "army van defense carry jealous true garbage claim echo media make crunch", // random phrase used for test derive
+    "expected_seed": "5b56c417303faa3fcba7e57400e120a0ca83ec5a4fc9ffba757fbe63fbd77a89a1a3be4c67196f57c39a88b76373733891bfaba16ed27a813ceed498804c0570", // expected seed used for test derive
+    "expected_address": "1HQ3rb7nyLPrjnuW85MUknPekwkn7poAUm", // expected addres used for test derive
+    "expected_bech32": "bc1qg0azlj4w2lrq8jssrrz6eprt2fe7f7edm4vpd5", // expected bech32 addres used for test derive
+    "expected_bch_cashaddr": "qp5p0eur784pk8wxy2kzlz3ctnq5whfnuqqpp78u22",
+    "expected_eth_address": "0x2161DedC3Be05B7Bb5aa16154BcbD254E9e9eb68",
+    "c_derive": {
+        "bitcoin": true,
+        "litecoin": true,
+        "dogecoin": true,
+        "dash": true,
+        "nano": true,
+        "monero": true,
+        "ethereum": true,
+        "bitcoin-cash": true,
+        "nimiq": false,
+        "kaspa": false
+    },
+    "can_xpub": {
+        "bitcoin": true,
+        "litecoin": true,
+        "dogecoin": true,
+        "dash": true,
+        "nano": false,
+        "monero": false,
+        "ethereum": true,
+        "bitcoin-cash": true,
+        "nimiq": false,
+        "kaspa": false
+    }
+}
+
 $(document).ready(function() {
     //istrial
     //bipv_pass
@@ -153,19 +187,19 @@ function test_bip39() {
         bip39_fail();
         return
     }
-    const k_str = glob_const.expected_seed.slice(0, 32),
-        enc_test = aes_enc(glob_const.test_phrase, k_str),
+    const k_str = bip39_const.expected_seed.slice(0, 32),
+        enc_test = aes_enc(bip39_const.test_phrase, k_str),
         dec_test = aes_dec(enc_test, k_str);
-    if (glob_const.test_phrase !== dec_test) { // test encryption
+    if (bip39_const.test_phrase !== dec_test) { // test encryption
         bip39_fail();
         return
     }
-    if (toseed(glob_const.test_phrase) !== glob_const.expected_seed || test_derivation() === false) {
+    if (toseed(bip39_const.test_phrase) !== bip39_const.expected_seed || test_derivation() === false) {
         bip39_fail();
         const coinsToDeriveFailure = ["bitcoin", "litecoin", "dogecoin", "dash", "ethereum", "bitcoin-cash", "monero", "nano"];
         derive_fail(coinsToDeriveFailure);
         coinsToDeriveFailure.forEach(coin => {
-            glob_const.c_derive[coin] = false;
+            bip39_const.c_derive[coin] = false;
         });
     }
     const derivationChecks = [{
@@ -195,7 +229,7 @@ function test_bip39() {
     }) {
         if (check() === false) {
             derive_fail([coin]);
-            glob_const.c_derive[coin] = false;
+            bip39_const.c_derive[coin] = false;
         }
     });
     // check xpub derivation
@@ -203,12 +237,12 @@ function test_bip39() {
         const xpubFailCoins = ["bitcoin", "litecoin", "dogecoin", "dash", "bitcoin-cash"];
         derive_xpub_fail(xpubFailCoins);
         xpubFailCoins.forEach(coin => {
-            glob_const.can_xpub[coin] = false;
+            bip39_const.can_xpub[coin] = false;
         });
     }
     if (eth_xpub_check() === false) { // test for ethereum xpub derivation
         derive_xpub_fail(["ethereum"]);
-        glob_const.can_xpub.ethereum = false;
+        bip39_const.can_xpub.ethereum = false;
     }
 }
 
@@ -242,7 +276,7 @@ function derive_xpub_fail(arr) {
 function test_derivation() {
     try {
         const currency = "bitcoin",
-            test_rootkey = get_rootkey(glob_const.expected_seed),
+            test_rootkey = get_rootkey(bip39_const.expected_seed),
             bip32dat = getbip32dat(currency),
             dx_dat = {
                 "dpath": "m/44'/0'/0'/0/0",
@@ -250,8 +284,8 @@ function test_derivation() {
                 "cc": test_rootkey.slice(64)
             },
             x_keys_dat = derive_x(dx_dat),
-            key_object = format_keys(glob_const.expected_seed, x_keys_dat, bip32dat, 0, currency);
-        return key_object.address === glob_const.expected_address;
+            key_object = format_keys(bip39_const.expected_seed, x_keys_dat, bip32dat, 0, currency);
+        return key_object.address === bip39_const.expected_address;
     } catch (e) {
         console.error(e.name, e.message);
         return false;
@@ -263,7 +297,7 @@ function bech32_check() {
     try {
         const bip84_pub = "03bb4a626f63436a64d7cf1e441713cc964c0d53289a5b17acb1b9c262be57cb17",
             bip84_bech32 = pub_to_address_bech32("bc", bip84_pub);
-        return glob_const.expected_bech32 === bip84_bech32;
+        return bip39_const.expected_bech32 === bip84_bech32;
     } catch (e) {
         console.error(e.name, e.message);
         return false;
@@ -275,7 +309,7 @@ function cashaddr_check() {
     try {
         const bch_legacy = "1AVPurYZinnctgGPiXziwU6PuyZKX5rYZU",
             bch_cashaddr = pub_to_cashaddr(bch_legacy);
-        return glob_const.expected_bch_cashaddr === bch_cashaddr;
+        return bip39_const.expected_bch_cashaddr === bch_cashaddr;
     } catch (e) {
         console.error(e.name, e.message);
         return false;
@@ -286,7 +320,7 @@ function cashaddr_check() {
 function nano_check() {
     try {
         const expected_nano_address = "nano_1mbtirc4x3kixfy5wufxaqakd3gbojpn6gpmk6kjiyngnjwgy6yty3txgztq",
-            xnano_address = NanocurrencyWeb.wallet.accounts(glob_const.expected_seed, 0, 0)[0].address;
+            xnano_address = NanocurrencyWeb.wallet.accounts(bip39_const.expected_seed, 0, 0)[0].address;
         return expected_nano_address === xnano_address;
     } catch (e) {
         console.error(e.name, e.message);
@@ -298,7 +332,7 @@ function nano_check() {
 function xmr_check() { // https://coinomi.github.io/tools/bip39/
     try {
         const expected_xmr_address = "477h3C6E6C4VLMR36bQL3yLcA8Aq3jts1AHLzm5QXipDdXVCYPnKEvUKykh2GTYqkkeQoTEhWpzvVQ4rMgLM1YpeD6qdHbS",
-            ssk = get_ssk(glob_const.expected_seed, true),
+            ssk = get_ssk(bip39_const.expected_seed, true),
             xko = xmr_getpubs(ssk, 0);
         return xko.address === expected_xmr_address;
     } catch (e) {
@@ -323,7 +357,7 @@ function xpub_check() {
             key_object = format_keys(null, x_keys_dat, bip32dat, 0, currency),
             xpub_address = key_object.address,
             xpub_wildcard_address = "bc1qk0wlvl4xh3eqe5szqyrlcj4ws8633vz0vhhywl"; // wildcard for bech32 Xpubs (Zpub)
-        return xpub_address === glob_const.expected_address || xpub_address === xpub_wildcard_address;
+        return xpub_address === bip39_const.expected_address || xpub_address === xpub_wildcard_address;
     } catch (e) {
         console.error(e.name, e.message);
         return false;
@@ -335,7 +369,7 @@ function eth_xpub_check() {
     try {
         const eth_pub = "03c026c4b041059c84a187252682b6f80cbbe64eb81497111ab6914b050a8936fd",
             eth_address = pub_to_eth_address(eth_pub);
-        return glob_const.expected_eth_address === eth_address;
+        return bip39_const.expected_eth_address === eth_address;
     } catch (e) {
         console.error(e.name, e.message);
         return false;
@@ -346,7 +380,7 @@ function eth_xpub_check() {
 
 // Checks derivation method for a given currency
 function check_derivations(currency) {
-    if (glob_let.test_derive && glob_const.c_derive[currency]) {
+    if (glob_let.test_derive && bip39_const.c_derive[currency]) {
         const activepub = active_xpub(currency);
         if (cxpub(currency) && activepub) {
             return "xpub";
@@ -381,7 +415,7 @@ function is_xpub(currency) {
 
 // Checks if a currency can use extended public keys
 function cxpub(currency) {
-    return !!glob_const.can_xpub[currency];
+    return !!bip39_const.can_xpub[currency];
 }
 
 // Retrieves BIP32 data for a given currency
@@ -1138,7 +1172,7 @@ function derive_all(phrase, seedid, extra) {
         const currency = coinconfig.currency,
             coindat = coinconfig.data,
             bip32 = coinconfig.settings.Xpub;
-        if (bip32.active && glob_const.c_derive[currency]) {
+        if (bip32.active && bip39_const.c_derive[currency]) {
             const keycc = {
                 "seed": seed,
                 "key": master_key,
@@ -1165,7 +1199,7 @@ function derive_add_address(currency, ad) {
 
 // Retrieves derivation data for a given currency
 function derive_data(currency, extra) {
-    if (glob_let.test_derive === true && glob_const.c_derive[currency]) {
+    if (glob_let.test_derive === true && bip39_const.c_derive[currency]) {
         const coindat = getcoindata(currency),
             bip32 = getbip32dat(currency),
             activepub = active_xpub(currency);
@@ -1645,7 +1679,7 @@ function format_keys(seed, key_object, bip32, index, coin) {
 
 // Retrieves the extended public key prefix for a given currency
 function xpub_prefix(currency) {
-    const test_rootkey = get_rootkey(glob_const.expected_seed),
+    const test_rootkey = get_rootkey(bip39_const.expected_seed),
         dx_dat = {
             "dpath": "m/0",
             "key": test_rootkey.slice(0, 64),
@@ -1792,7 +1826,7 @@ function phrase_info_pu(coin) {
                     segw_node = $("<li class='clearfix" + coinclass + "' data-currency='" + currency + "'><strong>SegWit:</strong><div class='toggle_segwit ait'>" + switchpanel(hsw, " custom") + "</div></li>");
                 }
             }
-            if (glob_const.c_derive[currency]) {
+            if (bip39_const.c_derive[currency]) {
                 $("#pi_icons").append(icon_node);
                 $("#d_paths").append(dp_node);
                 $("#xpub_box").append(xp_node);
@@ -1910,7 +1944,7 @@ function test_derive_function(thisnode, prev) {
         dp_node = thisnode.closest(".d_path"),
         dnd = dp_node.data(),
         currency = dnd.currency;
-    if (glob_const.c_derive[currency]) {
+    if (bip39_const.c_derive[currency]) {
         const test_derive_box = dp_node.find(".td_box"),
             td_prev = dp_node.find(".td_prev"),
             count = 5,
