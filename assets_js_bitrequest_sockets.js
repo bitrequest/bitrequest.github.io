@@ -325,7 +325,9 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
                                             }
                                             if (result.error) {
                                                 playsound(glob_const.funk);
-                                                api_eror_msg(null, get_api_error_data(result.error));
+                                                fail_dialogs(null, {
+                                                    "error": result.error
+                                                });
                                                 glob_const.paymentdialogbox.removeClass("accept_lnd");
                                                 closenotify();
                                                 glob_let.ndef_processing = false;
@@ -444,7 +446,9 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
 // Handles API failure for NFC operations
 function ndef_apifail(xhr, stat, err) {
     const error_object = xhr || stat || err;
-    api_eror_msg(null, get_api_error_data(error_object));
+    fail_dialogs(null, {
+        "error": error_object
+    });
     glob_const.paymentdialogbox.removeClass("accept_lnd transacting");
     closenotify();
     glob_let.ndef_processing = false;
@@ -500,7 +504,7 @@ function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
             poll_animate();
             const error = e.error;
             if (error) {
-                const message = error?.message ?? (typeof e.error === "string" ? error : default_error);
+                const message = error.message || (typeof error === "string") ? error : default_error;
             }
             const version = e.version;
             if (version < glob_const.proxy_version) {

@@ -84,7 +84,9 @@ function checkphp() {
                     br_set_local("symbols", symbols, true);
                 } else {
                     const this_error = data.error || "Unable to get API data";
-                    fail_dialogs("fixer", this_error);
+                    fail_dialogs("fixer", {
+                        "error": this_error
+                    });
                 }
             }
             glob_let.io.phpsupport = "yes";
@@ -132,7 +134,9 @@ function setsymbols() {
                 return
             }
             const this_error = data.error || "Unable to get API data";
-            fail_dialogs("fixer", this_error);
+            fail_dialogs("fixer", {
+                "error": this_error
+            });
         }
     }).fail(function(xhr, stat, err) {
         if (get_next_proxy()) {
@@ -4220,7 +4224,7 @@ function appendrequest(rd) {
         txhistory,
         paymenttimestamp
     } = rd,
-        uoa_upper = uoa.toUpperCase(),
+    uoa_upper = uoa.toUpperCase(),
         deter = iscrypto === true ? 6 : 2,
         insufficient = status === "insufficient",
         lnhash = txhash && txhash.slice(0, 9) === "lightning",
@@ -4350,7 +4354,7 @@ function appendrequest(rd) {
             <div class='expired_panel'><h2>" + translate("expired") + "</h2></div>\
         </li>");
     rd.coindata = null, // no need to save coindata
-    new_requestli.data(rd).prependTo(requestlist);
+        new_requestli.data(rd).prependTo(requestlist);
     if (render_archive) {
         const transactionlist = requestlist.find("#" + requestid).find(".transactionlist");
         add_historical_data(transactionlist, txhistory);

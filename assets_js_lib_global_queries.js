@@ -62,64 +62,6 @@ const br_bipobj = br_get_local("bpdat", true),
         "sec_kas_wss": "wss://api-v2-do.kas.fyi",
         "aws_bucket": "https://brq.s3.us-west-2.amazonaws.com/",
         "cmc_icon_loc": "https://s2.coinmarketcap.com/static/img/coins/200x200/",
-        "multi_wallets": {
-            "exodus": {
-                "name": "exodus",
-                "website": "https://www.exodus.io",
-                "appstore": "https://apps.apple.com/app/id1414384820",
-                "playstore": "https://play.google.com/store/apps/details?id=exodusmovement.exodus",
-                "desktop": "https://www.exodus.io/desktop",
-                "seed": true
-            },
-            "coinomi": {
-                "name": "coinomi",
-                "website": "https://www.coinomi.com",
-                "appstore": "https://itunes.apple.com/app/id1333588809",
-                "playstore": "https://play.google.com/store/apps/details?id=com.coinomi.wallet",
-                "desktop": "https://www.coinomi.com/en/downloads/",
-                "seed": true
-            },
-            "trezor": {
-                "name": "trezor",
-                "website": "https://trezor.io",
-                "appstore": "https://trezor.io",
-                "playstore": "https://trezor.io",
-                "desktop": "https://trezor.io",
-                "seed": true
-            },
-            "ledger": {
-                "name": "ledger",
-                "website": "https://www.ledger.com",
-                "appstore": "https://itunes.apple.com/app/id1361671700",
-                "playstore": "https://play.google.com/store/apps/details?id=com.ledger.live",
-                "desktop": "https://www.ledger.com/ledger-live/download",
-                "seed": true
-            },
-            "keepkey": {
-                "name": "keepkey",
-                "website": "https://shapeshift.com/keepkey",
-                "appstore": "https://beta.shapeshift.com",
-                "playstore": "https://beta.shapeshift.com",
-                "desktop": "https://beta.shapeshift.com",
-                "seed": true
-            },
-            "atomicwallet": {
-                "name": "atomicwallet",
-                "website": "https://atomicwallet.io",
-                "appstore": "https://apps.apple.com/app/id1478257827",
-                "playstore": "https://play.google.com/store/apps/details?id=io.atomicwallet",
-                "desktop": "https://atomicwallet.io/#download-section-anchor",
-                "seed": true
-            },
-            "cakewallet": {
-                "name": "cakewallet",
-                "website": "https://cakewallet.com",
-                "appstore": "https://apps.apple.com/app/id1334702542",
-                "playstore": "https://play.google.com/store/apps/details?id=com.cakewallet.cake_wallet",
-                "desktop": "https://cakewallet.com",
-                "seed": true
-            }
-        },
         // bip39 (All addresses / xpubs in this app are test addresses derived from the following testphrase, taken from https://github.com/bitcoinbook/bitcoinbook/blob/f8b883dcd4e3d1b9adf40fed59b7e898fbd9241f/ch05.asciidoc)
         "test_phrase": "army van defense carry jealous true garbage claim echo media make crunch", // random phrase used for test derive
         "expected_seed": "5b56c417303faa3fcba7e57400e120a0ca83ec5a4fc9ffba757fbe63fbd77a89a1a3be4c67196f57c39a88b76373733891bfaba16ed27a813ceed498804c0570", // expected seed used for test derive
@@ -203,10 +145,6 @@ const br_bipobj = br_get_local("bpdat", true),
             "minimumFractionDigits": 2,
             "maximumFractionDigits": 2
         })).toFixed(2),
-        "default_error": {
-            "error": "no transactions found",
-            "console": true
-        },
         "scope": "https://www.googleapis.com/auth/drive.appdata",
         "drivepath": "https://content.googleapis.com",
         "redirect_uri": br_w_loc.origin + br_w_loc.pathname + "?p=settings"

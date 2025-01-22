@@ -483,8 +483,8 @@ function loadpaymentfunction(pass) {
         return
     } // need to set fixer API key first
     api_eror_msg("fixer", {
-        "errormessage": "Missing API key",
-        "errorcode": "300"
+        "errorcode": "300",
+        "errormessage": "Missing API key"
     }, true);
 }
 
@@ -517,7 +517,9 @@ function get_tokeninfo(payment, contract) {
                 return
             }
             cancelpaymentdialog();
-            fail_dialogs("ethplorer", error);
+            fail_dialogs("ethplorer", {
+                "error": error
+            });
             return
         }
         const decimals = data.decimals;
@@ -538,7 +540,9 @@ function get_tokeninfo(payment, contract) {
         }
         cancelpaymentdialog();
         const error_object = xhr || stat || err;
-        fail_dialogs("ethplorer", error_object);
+        fail_dialogs("ethplorer", {
+            "error": error_object
+        });
         closeloader();
     });
 }
@@ -889,7 +893,7 @@ function lnd_put(proxy, key, pl, lnurl) {
             error = data.error,
             default_error = translate("unabletoconnect");
         if (error) {
-            const message = error ? (error.message ? error.message : (typeof error === "string" ? error : default_error)) : default_error;
+            const message = error.message || (typeof error === "string") ? error : default_error;
             if (request.isrequest) {
                 if (helper.lnd_only) {
                     topnotify(message);
@@ -957,11 +961,15 @@ function test_lnd(lnurl) {
 }
 
 // Proceeds with the payment function after initial setup
-function proceed_pf(error) {
+function proceed_pf(error_obj) {
     if (helper.lnd_status === false && helper.lnd_only) {
         request.monitored = false;
-        const error_message = helper.lnd_only ? (error ? error.errorcode + ": " + error.errormessage : translate("unabletoconnectln")) : $("#rq_errlog > .rq_err").text(),
-            content = "<h2 class='icon-blocked'>" + error_message + "</h2>";
+        let error_message = translate("unabletoconnectln");
+        if (error_obj) {
+            const error_data = get_api_error_data(error_obj);
+            error_message = error_data.errorcode + ": " + error_data.errormessage;
+        }
+        const content = "<h2 class='icon-blocked'>" + error_message + "</h2>";
         cancelpaymentdialog();
         popdialog(content, "canceldialog");
         closeloader();
@@ -1022,7 +1030,9 @@ function getccexchangerates(apilist, api) {
         loadertext(translate("apierror"));
         closeloader();
         cancelpaymentdialog();
-        fail_dialogs(api, "Crypto price API not defined");
+        fail_dialogs(api, {
+            "error": "Crypto price API not defined"
+        });
         return
     }
     const payload = {
@@ -1080,6 +1090,7 @@ function getccexchangerates(apilist, api) {
 // Handles failure scenarios when fetching cryptocurrency rates
 function cc_fail(apilist, api, error_val, is_proxy) {
     const error_data = get_api_error_data(error_val, is_proxy);
+
     function next_proxy() { // try next proxy
         if (get_next_proxy()) {
             glob_let.api_attempt[apilist] = {};
@@ -1152,7 +1163,9 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
         loadertext(translate("error"));
         closeloader();
         cancelpaymentdialog();
-        fail_dialogs(fiatapi, "Fiat price API not defined");
+        fail_dialogs(fiatapi, {
+            "error": "Fiat price API not defined"
+        });
         return
     }
     api_proxy({
@@ -1210,7 +1223,9 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
                 loadertext(translate("error"));
                 closeloader();
                 cancelpaymentdialog();
-                fail_dialogs(fiatapi, "Fiat price API not defined");
+                fail_dialogs(fiatapi, {
+                    "error": "Fiat price API not defined"
+                });
                 return
             }
             if (localval && usdval) {
@@ -1237,8 +1252,10 @@ function get_fiat_exchangerate(apilist, fiatapi, ccrate, currencystring, ccapi, 
         loadertext(translate("error"));
         closeloader();
         cancelpaymentdialog();
-        const errorcode = data.error || "Failed to load data from " + fiatapi;
-        fail_dialogs(fiatapi, errorcode);
+        const error_code = data.error || "Failed to load data from " + fiatapi;
+        fail_dialogs(fiatapi, {
+            "error": error_code
+        });
     }).fail(function(xhr, stat, err) {
         const is_proxy = is_proxy_fail(this.url),
             error_object = xhr || stat || err;
@@ -1272,11 +1289,13 @@ function next_fiat_api(apilist, fiatapi, error_object, ccrate, currencystring, c
 }
 
 // Show error message if all proxies / apis fail.
-function no_xrate_result(api, error_val) {
+function no_xrate_result(api, error_obj) {
     loadertext(translate("apierror"));
     closeloader();
     cancelpaymentdialog();
-    fail_dialogs(api, error_val);
+    fail_dialogs(api, {
+        "error": error_obj
+    });
 }
 
 // Renders the currency pool with exchange rates and payment details

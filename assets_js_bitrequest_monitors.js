@@ -8,7 +8,6 @@ $(document).ready(function() {
     //continue_select
     //continue_select_api
     //continue_select_rpc
-    //fail_dialogs
     //scan_match
     //tx_count
     //tx_api_scan_fail
@@ -16,10 +15,11 @@ $(document).ready(function() {
     //handle_rpc_fails
     //pick_next_rpc
     //no_results
-    //get_next_l2
-    //get_next_rpc
+    //fail_dialogs
     //api_eror_msg
     //get_api_error_data
+    //get_next_l2
+    //get_next_rpc
     //set_api_src
     //api_src
     //api_callback
@@ -289,16 +289,9 @@ function continue_select_rpc(rd, api_data, rdo) {
     api_callback(rdo);
 }
 
-// API error handling
-
-// Handles API error dialogs
-function fail_dialogs(apisrc, error) {
-    const error_data = get_api_error_data(error);
-    api_eror_msg(apisrc, error_data)
-}
-
 // Processes the scan results and performs appropriate actions based on the match
 function scan_match(rd, api_data, rdo, counter, txdat, l2) {
+    glob_let.apikey_fails = false;
     const src = rdo.source;
     if (src === "list") {
         if (counter) {
@@ -389,24 +382,26 @@ function tx_count(statuspanel, count) {
     }
 }
 
+// API error handling
+
 // Handles API scan failures
-function tx_api_scan_fail(rd, api_data, rdo, error_data, is_proxy, l2) {
-    if (api_data === "ln") {
-        api_eror_msg("lightning", error_data);
-        return
-    }
+function tx_api_scan_fail(error_obj, rd, api_data, rdo, l2) {
     const src = rdo.source;
-    if (l2 && src === "l2_scanning") {
-        handle_socket_fails(api_data, rd.address, rdo.ping_id, l2);
-        return
-    }
     if (src === "list") {
         const thislist = rdo.thislist;
         if (thislist) {
             tx_api_fail(thislist, rdo.statuspanel);
         }
     }
-    handle_rpc_fails(rd, rdo, error_data, api_data, is_proxy, l2);
+    if (api_data === "ln") {
+        fail_dialogs("lightning", error_obj);
+        return
+    }
+    if (l2 && src === "l2_scanning") {
+        handle_socket_fails(api_data, rd.address, rdo.ping_id, l2);
+        return
+    }
+    handle_rpc_fails(rd, rdo, error_obj, api_data, l2);
     return
 }
 
@@ -417,11 +412,12 @@ function tx_api_fail(thislist, statuspanel) {
 }
 
 // Handles API failures and attempts to use alternative APIs or RPCs
-function handle_rpc_fails(rd, rdo, error, api_data, is_proxy, l2) {
+function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
     const src = rdo.source,
-        error_data = get_api_error_data(error, is_proxy),
+        error_data = get_api_error_data(error_obj),
         timeout = rdo.timeout,
         cachetime = rdo.cachetime;
+
     function next_proxy(type) { // try next proxy
         if (type === "api_fail" && (error_data.apikey || glob_let.apikey_fails)) return false; // only try next proxy if api key is expired or missing
         if (get_next_proxy()) {
@@ -448,7 +444,7 @@ function handle_rpc_fails(rd, rdo, error, api_data, is_proxy, l2) {
         }
         return false;
     }
-    if (is_proxy) { // Try next proxy if proxy fails
+    if (error_obj.is_proxy) { // Try next proxy if proxy fails
         if (next_proxy("proxy_fail")) {
             return
         }
@@ -530,6 +526,68 @@ function no_results(rdo, src, api_data, error_data) {
     notify(translate("websocketoffline"), 500000, "yes");
 }
 
+// Handles API error dialogs
+function fail_dialogs(apisrc, error_obj) {
+    const error_data = get_api_error_data(error_obj);
+    api_eror_msg(apisrc, error_data);
+}
+
+// Displays error messages for API-related issues
+function api_eror_msg(apisrc, error_obj) {
+    if (!error_obj) return;
+    const error_dat = error_obj || {
+        "errorcode": null,
+        "errormessage": "errormessage"
+    };
+    if ($("#dialogbody .doselect").length) {
+        return
+    }
+    if (apisrc) {
+        const keyfail = error_dat.apikey === true,
+            error_message = error_dat.errormessage,
+            error_code = error_dat.errorcode !== undefined ? "Error: " + error_dat.errorcode : "",
+            api_bttn = keyfail ? "<div id='add_api' data-api='" + apisrc + "' class='button'>" + translate("addapikey", {
+                "apisrc": apisrc
+            }) + "</div>" : "",
+            t_op = apisrc ? "<span id='proxy_dialog' class='ref'>" + translate("tryotherproxy") + "</span>" : "",
+            content = "<h2 class='icon-blocked'>" + error_code + "</h2><p class='doselect'><strong>" + translate("error") + ": " + error_message + "<br/><br/>" + t_op + "</p>" + api_bttn;
+        popdialog(content, "canceldialog");
+    }
+}
+
+// Extracts and formats error data from various API responses
+function get_api_error_data(error_obj) {
+    const error = q_obj(error_obj, "error");
+    if (!error) return {
+        "errorcode": 0,
+        "errormessage": "unknown"
+    };
+    const result = error.result,
+        error_code = error.code ?? error.status ?? error.error_code ?? error ?? 0,
+        error_message = error.message ?? error.error_message ?? error.responseText ?? error.statusText ?? error.type ?? error.error ?? error,
+        ak_check = (typeof error === "string") ? (error.indexOf("API calls limits have been reached") > -1 || error.indexOf("Limits reached") > -1) : false, // blockcypher
+        ak_check2 = (result) ? result.indexOf("API Key") > -1 : null, // etherscan
+        api_key = (
+            error_code === 101 || // fixer
+            error_code === 402 || // blockchair
+            error_code === 403 || error_code === 1 || // ethplorer => invalid or missing API key
+            error_code === 1001 || // coinmarketcap => invalid API key
+            error_code === 1002 || // coinmarketcap => missing API key
+            ak_check || ak_check2
+        ),
+        error_dat = {
+            "errorcode": error_code,
+            "errormessage": error_message,
+            api_key
+        },
+        is_proxy = (error_obj.is_proxy) ? "proxy " : "";
+    console.error("API " + is_proxy + "error:", error_dat);
+    if (api_key) {
+        glob_let.apikey_fails = true;
+    }
+    return error_dat;
+}
+
 function get_next_l2(this_payment, api_data, requestid, l2) {
     if (block_overflow("l2")) return false; // prevent overflow
     const api_settings = q_obj(getcoinsettings(this_payment), "layer2.options." + l2 + ".apis");
@@ -567,62 +625,6 @@ function get_next_rpc(this_payment, api_data, requestid, l2) {
         }
     }
     return false;
-}
-
-// Displays error messages for API-related issues
-function api_eror_msg(apisrc, error) {
-    if (!error) return;
-    const error_dat = error || {
-        "errormessage": "errormessage",
-        "errorcode": null
-    };
-    if (error.console) {
-        console.error("API error:", error_dat);
-        return
-    }
-    if ($("#dialogbody .doselect").length) {
-        return
-    }
-    if (apisrc) {
-        const keyfail = error.apikey === true,
-            errormessage = error_dat.errormessage,
-            errorcode = error_dat.errorcode ? "Error: " + error_dat.errorcode : "",
-            api_bttn = keyfail ? "<div id='add_api' data-api='" + apisrc + "' class='button'>" + translate("addapikey", {
-                "apisrc": apisrc
-            }) + "</div>" : "",
-            t_op = apisrc ? "<span id='proxy_dialog' class='ref'>" + translate("tryotherproxy") + "</span>" : "",
-            content = "<h2 class='icon-blocked'>" + errorcode + "</h2><p class='doselect'><strong>" + translate("error") + ": " + errormessage + "<br/><br/>" + t_op + "</p>" + api_bttn;
-        popdialog(content, "canceldialog");
-    }
-}
-
-// Extracts and formats error data from various API responses
-function get_api_error_data(error, proxy) {
-    if (!error) return;
-    const result = error.result,
-        error_code = error.code || error.status || error.error_code || error || 0,
-        error_message = error.message || error.error_message || error.statusText || error.type || error.error || error,
-        cons = error.console,
-        ak_check = (typeof error === "string") ? (error.indexOf("API calls limits have been reached") > -1 || error.indexOf("Limits reached") > -1) : false, // blockcypher
-        ak_check2 = (result) ? result.indexOf("API Key") > -1 : null, // etherscan
-        apikey = (
-            error_code === 101 || // fixer
-            error_code === 402 || // blockchair
-            error_code === 403 || error_code === 1 || // ethplorer => invalid or missing API key
-            error_code === 1001 || // coinmarketcap => invalid API key
-            error_code === 1002 || // coinmarketcap => missing API key
-            ak_check || ak_check2
-        );
-    const error_dat = {
-            "errorcode": error_code,
-            "errormessage": error_message,
-            "apikey": apikey,
-            "console": cons
-        },
-        is_proxy = (proxy) ? "proxy " : "";
-    console.error("API " + is_proxy + "error:", error_dat);
-    glob_let.apikey_fails = true;
-    return error_dat;
 }
 
 // Sets the API source for a given request
@@ -744,8 +746,8 @@ function data_title(dat) {
             lc_val = dat.ccval * lc_ccrate,
             cc_upper = dat.ccsymbol ? dat.ccsymbol.toUpperCase() : dat.ccsymbol,
             lc_upper = lcsymbol ? lcsymbol.toUpperCase() : lcsymbol,
-            localrate = lc_upper === "USD" ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(6) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2);
-        historic_dat = "Historic data (" + fulldateformat(new Date(timestamp - glob_const.timezone), langcode) + "):\n" +
+            localrate = lc_upper === "USD" ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(6) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2),
+            historic_dat = "Historic data (" + fulldateformat(new Date(timestamp - glob_const.timezone), langcode) + "):\n" +
             "Fiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" +
             cc_upper + "-USD: " + price.toFixed(6) + "\n" +
             localrate + "\n" +
@@ -926,7 +928,9 @@ function get_historical_fiat_data(rd, rdo, apilist, fiatapi) {
                         get_historical_fiat_data(rd, rdo, apilist, next_historic);
                         return
                     }
-                    fail_dialogs(fiatapi, data.error);
+                    fail_dialogs(fiatapi, {
+                        "error": data.error
+                    });
                     api_callback(rdo);
                     return
                 }
@@ -960,7 +964,9 @@ function get_historical_fiat_data(rd, rdo, apilist, fiatapi) {
                     return
                 }
             }
-            fail_dialogs(fiatapi, "unable to fetch " + lcsymbol + " exchange rate");
+            fail_dialogs(fiatapi, {
+                "error": "unable to fetch " + lcsymbol + " exchange rate"
+            });
             api_callback(rdo);
         }).fail(function(xhr, stat, err) {
             function next_proxy() { // try next proxy
@@ -982,7 +988,9 @@ function get_historical_fiat_data(rd, rdo, apilist, fiatapi) {
                 return
             }
             const error_object = xhr || stat || err;
-            fail_dialogs(fiatapi, error_object);
+            fail_dialogs(fiatapi, {
+                "error": error_object
+            });
             api_callback(rdo);
         });
         return
@@ -1139,7 +1147,9 @@ function get_historical_crypto_data(rd, rdo, fiatapi, apilist, api, lcrate, usdr
             get_historical_crypto_data(rd, rdo, fiatapi, apilist, next_historic, lcrate, usdrate, lcsymbol);
             return
         }
-        fail_dialogs(api, "error retrieving historical price data");
+        fail_dialogs(api, {
+            "error": "error retrieving historical price data"
+        });
         api_callback(rdo);
     }).fail(function(xhr, stat, err) {
         function next_proxy() { // try next proxy
@@ -1161,7 +1171,9 @@ function get_historical_crypto_data(rd, rdo, fiatapi, apilist, api, lcrate, usdr
             return
         }
         const error_object = xhr || stat || err;
-        fail_dialogs(api, error_object);
+        fail_dialogs(api, {
+            "error": error_object
+        });
         api_callback(rdo);
     })
 }

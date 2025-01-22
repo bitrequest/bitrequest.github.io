@@ -1,4 +1,62 @@
-const glob_config = {
+const glob_multi_wallets = {
+    "exodus": {
+        "name": "exodus",
+        "website": "https://www.exodus.io",
+        "appstore": "https://apps.apple.com/app/id1414384820",
+        "playstore": "https://play.google.com/store/apps/details?id=exodusmovement.exodus",
+        "desktop": "https://www.exodus.io/desktop",
+        "seed": true
+    },
+    "coinomi": {
+        "name": "coinomi",
+        "website": "https://www.coinomi.com",
+        "appstore": "https://itunes.apple.com/app/id1333588809",
+        "playstore": "https://play.google.com/store/apps/details?id=com.coinomi.wallet",
+        "desktop": "https://www.coinomi.com/en/downloads/",
+        "seed": true
+    },
+    "trezor": {
+        "name": "trezor",
+        "website": "https://trezor.io",
+        "appstore": "https://trezor.io",
+        "playstore": "https://trezor.io",
+        "desktop": "https://trezor.io",
+        "seed": true
+    },
+    "ledger": {
+        "name": "ledger",
+        "website": "https://www.ledger.com",
+        "appstore": "https://itunes.apple.com/app/id1361671700",
+        "playstore": "https://play.google.com/store/apps/details?id=com.ledger.live",
+        "desktop": "https://www.ledger.com/ledger-live/download",
+        "seed": true
+    },
+    "keepkey": {
+        "name": "keepkey",
+        "website": "https://shapeshift.com/keepkey",
+        "appstore": "https://beta.shapeshift.com",
+        "playstore": "https://beta.shapeshift.com",
+        "desktop": "https://beta.shapeshift.com",
+        "seed": true
+    },
+    "atomicwallet": {
+        "name": "atomicwallet",
+        "website": "https://atomicwallet.io",
+        "appstore": "https://apps.apple.com/app/id1478257827",
+        "playstore": "https://play.google.com/store/apps/details?id=io.atomicwallet",
+        "desktop": "https://atomicwallet.io/#download-section-anchor",
+        "seed": true
+    },
+    "cakewallet": {
+        "name": "cakewallet",
+        "website": "https://cakewallet.com",
+        "appstore": "https://apps.apple.com/app/id1334702542",
+        "playstore": "https://play.google.com/store/apps/details?id=com.cakewallet.cake_wallet",
+        "desktop": "https://cakewallet.com",
+        "seed": true
+    }
+},
+glob_config = {
     "bitrequest_coin_data": [{
             "currency": "bitcoin",
             "active": true,
@@ -14,11 +72,11 @@ const glob_config = {
             "wallets": {
                 "wallet_download_page": "https://bitcoin.org/en/choose-your-wallet",
                 "wallets": [
-                    glob_const.multi_wallets.cakewallet,
-                    glob_const.multi_wallets.exodus,
-                    glob_const.multi_wallets.coinomi,
-                    glob_const.multi_wallets.trezor,
-                    glob_const.multi_wallets.ledger,
+                    glob_multi_wallets.cakewallet,
+                    glob_multi_wallets.exodus,
+                    glob_multi_wallets.coinomi,
+                    glob_multi_wallets.trezor,
+                    glob_multi_wallets.ledger,
                     {
                         "name": "electrum",
                         "website": "https://electrum.org",
@@ -249,12 +307,12 @@ const glob_config = {
             "wallets": {
                 "wallet_download_page": "https://litecoin.org",
                 "wallets": [
-                    glob_const.multi_wallets.cakewallet,
-                    glob_const.multi_wallets.exodus,
-                    glob_const.multi_wallets.coinomi,
-                    glob_const.multi_wallets.trezor,
-                    glob_const.multi_wallets.ledger,
-                    glob_const.multi_wallets.keepkey,
+                    glob_multi_wallets.cakewallet,
+                    glob_multi_wallets.exodus,
+                    glob_multi_wallets.coinomi,
+                    glob_multi_wallets.trezor,
+                    glob_multi_wallets.ledger,
+                    glob_multi_wallets.keepkey,
                     {
                         "name": "electrum",
                         "website": "https://electrum-ltc.org",
@@ -383,11 +441,11 @@ const glob_config = {
             "wallets": {
                 "wallet_download_page": "https://dogecoin.com/getting-started/",
                 "wallets": [
-                    glob_const.multi_wallets.exodus,
-                    glob_const.multi_wallets.coinomi,
-                    glob_const.multi_wallets.trezor,
-                    glob_const.multi_wallets.ledger,
-                    glob_const.multi_wallets.keepkey
+                    glob_multi_wallets.exodus,
+                    glob_multi_wallets.coinomi,
+                    glob_multi_wallets.trezor,
+                    glob_multi_wallets.ledger,
+                    glob_multi_wallets.keepkey
                 ]
             },
             "settings": {
@@ -498,10 +556,10 @@ const glob_config = {
             "wallets": {
                 "wallet_download_page": "https://www.dash.org/downloads/",
                 "wallets": [
-                    glob_const.multi_wallets.exodus,
-                    glob_const.multi_wallets.coinomi,
-                    glob_const.multi_wallets.trezor,
-                    glob_const.multi_wallets.ledger,
+                    glob_multi_wallets.exodus,
+                    glob_multi_wallets.coinomi,
+                    glob_multi_wallets.trezor,
+                    glob_multi_wallets.ledger,
                     {
                         "name": "Dash-Wallet",
                         "website": "https://www.dash.org",
@@ -625,12 +683,12 @@ const glob_config = {
             "wallets": {
                 "wallet_download_page": "https://bch.info/en/wallets",
                 "wallets": [
-                    glob_const.multi_wallets.cakewallet,
-                    glob_const.multi_wallets.exodus,
-                    glob_const.multi_wallets.coinomi,
-                    glob_const.multi_wallets.trezor,
-                    glob_const.multi_wallets.ledger,
-                    glob_const.multi_wallets.atomicwallet,
+                    glob_multi_wallets.cakewallet,
+                    glob_multi_wallets.exodus,
+                    glob_multi_wallets.coinomi,
+                    glob_multi_wallets.trezor,
+                    glob_multi_wallets.ledger,
+                    glob_multi_wallets.atomicwallet,
                     {
                         "name": "electron-cash",
                         "website": "https://electroncash.org",
@@ -740,11 +798,11 @@ const glob_config = {
             "wallets": {
                 "wallet_download_page": "https://ethereum.org/en/wallets/",
                 "wallets": [
-                    glob_const.multi_wallets.cakewallet,
-                    glob_const.multi_wallets.exodus,
-                    glob_const.multi_wallets.trezor,
-                    glob_const.multi_wallets.ledger,
-                    glob_const.multi_wallets.keepkey,
+                    glob_multi_wallets.cakewallet,
+                    glob_multi_wallets.exodus,
+                    glob_multi_wallets.trezor,
+                    glob_multi_wallets.ledger,
+                    glob_multi_wallets.keepkey,
                     {
                         "name": "myetherwallet",
                         "website": "https://www.mewwallet.com",
@@ -986,7 +1044,7 @@ const glob_config = {
             "wallets": {
                 "wallet_download_page": "https://nanowallets.guide",
                 "wallets": [
-                    glob_const.multi_wallets.cakewallet,
+                    glob_multi_wallets.cakewallet,
                     {
                         "name": "nautilus",
                         "website": "https://nautilus.io",
@@ -1150,8 +1208,8 @@ const glob_config = {
             "wallets": {
                 "wallet_download_page": "https://www.getmonero.org/downloads/",
                 "wallets": [
-                    glob_const.multi_wallets.coinomi,
-                    glob_const.multi_wallets.cakewallet,
+                    glob_multi_wallets.coinomi,
+                    glob_multi_wallets.cakewallet,
                     {
                         "name": "monerujo",
                         "website": "https://www.monerujo.io",
@@ -1351,7 +1409,7 @@ const glob_config = {
             "wallets": {
                 "wallet_download_page": "https://www.nimiq.com",
                 "wallets": [
-                    glob_const.multi_wallets.atomicwallet,
+                    glob_multi_wallets.atomicwallet,
                     {
                         "name": "wallet.nimiq.com",
                         "website": "https://wallet.nimiq.com",

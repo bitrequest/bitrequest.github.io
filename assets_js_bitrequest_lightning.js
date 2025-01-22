@@ -247,7 +247,7 @@ function node_option_li(value, selected, fn, proxy, pw) {
                 error = e.error;
             if (error) {
                 const default_error = translate("unabletoconnect"),
-                    message = error ? (error.message ? error.message : (typeof error === "string" ? error : default_error)) : default_error,
+                    message = error.message || (typeof error === "string") ? error : default_error,
                     code = error.code;
                 locked = code && (code === 1 || code === 2) ? "locked" : null;
                 if (fn === "append") {
@@ -1050,7 +1050,7 @@ function test_lnd_proxy(value, pid, pw) { // make test api call
             error = result.error;
         if (error) {
             const default_error = translate("unabletoconnect"),
-                message = error ? (error.message ? error.message : (typeof error === "string" ? error : default_error)) : default_error,
+                message = error.message || (typeof error === "string") ? error : default_error,
                 msg = message === "no write acces" ? translate("folderpermissions") : message,
                 code = error.code;
             popnotify("error", msg);
@@ -1153,7 +1153,7 @@ function test_create_invoice(imp, proxydat, host, key) {
             if (e) {
                 const error = e.error;
                 if (error) {
-                    const message = error.message ? error.message : (typeof error == "string" ? error : default_error),
+                    const message = error.message || (typeof error === "string") ? error : default_error,
                         code = error.code;
                     popnotify("error", message);
                     if (code && (code == 1 || code == 2)) {
@@ -1254,7 +1254,7 @@ function test_create_invoice(imp, proxydat, host, key) {
             if (e) {
                 const error = e.error;
                 if (error) {
-                    const message = error.message ? error.message : (typeof error == "string" ? error : default_error);
+                    const message = error.message || (typeof error === "string") ? error : default_error;
                     popnotify("error", message);
                     return;
                 }
@@ -1487,7 +1487,7 @@ function p_promt(pid) {
             error = result.error;
         if (error) {
             const default_error = translate("unabletoconnect"),
-                message = error ? (error.message ? error.message : (typeof error === "string" ? error : default_error)) : default_error;
+                message = error.message || (typeof error === "string") ? error : default_error;
             popnotify("error", message);
             return
         }
@@ -1693,7 +1693,7 @@ function test_lnurl_status(lnd) {
         const error = e.error;
         if (error) {
             const default_error = translate("unabletoconnect"),
-                message = error ? (error.message ? error.message : (typeof error === "string" ? error : default_error)) : default_error;
+                message = error.message || (typeof error === "string") ? error : default_error;
             if (request.isrequest) {
                 if (helper.lnd_only) {
                     topnotify(message);
@@ -1716,9 +1716,10 @@ function test_lnurl_status(lnd) {
         }
         proceed_pf();
     }).fail(function(xhr, stat, err) {
-        const error_object = xhr || stat || err,
-            error_data = get_api_error_data(error_object);
-        proceed_pf(error_data);
+        const error_object = xhr || stat || err;
+        proceed_pf({
+            "error": error_object
+        });
     });
 }
 
@@ -1747,9 +1748,10 @@ function check_lnd_status(lnd) {
         }
         proceed_pf();
     }).fail(function(xhr, stat, err) {
-        const error_object = xhr || stat || err,
-            error_data = get_api_error_data(error_object);
-        proceed_pf(error_data);
+        const error_object = xhr || stat || err;
+        proceed_pf({
+            "error": error_object
+        });
     });
 }
 
@@ -1779,9 +1781,10 @@ function check_c_lightning_status(lnd) {
         }
         proceed_pf();
     }).fail(function(xhr, stat, err) {
-        const error_object = xhr || stat || err,
-            error_data = get_api_error_data(error_object);
-        proceed_pf(error_data);
+        const error_object = xhr || stat || err;
+        proceed_pf({
+            "error": error_object
+        });
     });
 }
 
@@ -1804,8 +1807,9 @@ function check_eclair_status(lnd) {
         const data = br_result(e).result;
         if (data) {
             if (data.error) {
-                const error_data = get_api_error_data(data.error);
-                proceed_pf(error_data);
+                proceed_pf({
+                    "error": data.error
+                });
                 return
             }
             helper.lnd_status = true;
@@ -1815,9 +1819,10 @@ function check_eclair_status(lnd) {
         }
         proceed_pf();
     }).fail(function(xhr, stat, err) {
-        const error_object = xhr || stat || err,
-            error_data = get_api_error_data(error_object);
-        proceed_pf(error_data);
+        const error_object = xhr || stat || err;
+        proceed_pf({
+            "error": error_object
+        });
     });
 }
 
@@ -1846,9 +1851,10 @@ function check_lnbits_status(lnd) {
         }
         proceed_pf();
     }).fail(function(xhr, stat, err) {
-        const error_object = xhr || stat || err,
-            error_data = get_api_error_data(error_object);
-        proceed_pf(error_data);
+        const error_object = xhr || stat || err;
+        proceed_pf({
+            "error": error_object
+        });
     });
 }
 

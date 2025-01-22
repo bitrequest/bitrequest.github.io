@@ -90,7 +90,7 @@ function lightning_fetch(rd, api_data, rdo) {
         pid = lnd.pid,
         nid = lnd.nid,
         imp = lnd.imp,
-        default_error = "unable to connect",
+        default_error = translate("unabletoconnect"),
         transactionhash = rd.txhash,
         lnhash = transactionhash && transactionhash.slice(0, 9) === "lightning";
     if (rdo.pending === "scanning") {
@@ -111,12 +111,10 @@ function lightning_fetch(rd, api_data, rdo) {
                 proxy_alert(version);
             }
             if (error) {
-                const message = error ? (error.message || (typeof error === "string" ? error : default_error)) : default_error;
-                tx_api_fail(thislist, statuspanel);
-                tx_api_scan_fail(rd, "ln", rdo, {
-                    "error": message,
-                    "console": true
-                });
+                tx_api_scan_fail({
+                    "error": error
+                }, rd, "ln", rdo);
+                const message = error.message || typeof error === "string" ? error : default_error;
                 status_field.text(" " + message);
                 if (!ln_only) {
                     continue_select(rd, api_data, rdo);
@@ -145,12 +143,10 @@ function lightning_fetch(rd, api_data, rdo) {
                     }).done(function(e) {
                         const inv_error = e.error;
                         if (inv_error) {
-                            const err_message = inv_error.message || (typeof inv_error === "string" ? inv_error : default_error);
-                            tx_api_fail(thislist, statuspanel);
-                            tx_api_scan_fail(rd, "ln", rdo, {
-                                "error": err_message,
-                                "console": true
-                            });
+                            tx_api_scan_fail({
+                                "error": inv_error
+                            }, rd, "ln");
+                            const err_message = inv_error.message || typeof inv_error === "string" ? inv_error : default_error;
                             status_field.text(" " + err_message);
                             if (!ln_only) {
                                 continue_select(rd, api_data, rdo);
@@ -186,9 +182,10 @@ function lightning_fetch(rd, api_data, rdo) {
                             continue_select(rd, api_data, rdo);
                         }
                     }).fail(function(xhr, stat, err) {
-                        tx_api_fail(thislist, statuspanel);
                         const error_object = xhr || stat || err;
-                        tx_api_scan_fail(rd, "ln", rdo, error_object);
+                        tx_api_scan_fail({
+                            "error": error_object
+                        }, rd, "ln", rdo);
                         if (!ln_only) {
                             continue_select(rd, api_data, rdo);
                         }
@@ -196,10 +193,9 @@ function lightning_fetch(rd, api_data, rdo) {
                     return
                 }
                 tx_count(statuspanel, 0);
-                tx_api_scan_fail(rd, "ln", rdo, {
-                    "error": "invoice not found",
-                    "console": true
-                });
+                tx_api_scan_fail({
+                    "error": translate("noinvoicesfound")
+                }, rd, "ln", rdo);
                 if (!ln_only) {
                     continue_select(rd, api_data, rdo);
                 }
@@ -213,17 +209,17 @@ function lightning_fetch(rd, api_data, rdo) {
                     "confirmations": 0
                 }, true);
             }
-            tx_api_scan_fail(rd, "ln", rdo, {
-                "error": "payment id not found",
-                "console": true
-            });
+            tx_api_scan_fail({
+                "error": "payment id not found"
+            }, rd, "ln", rdo);
             if (!ln_only) {
                 continue_select(rd, api_data, rdo);
             }
         }).fail(function(xhr, stat, err) {
-            tx_api_fail(thislist, statuspanel);
             const error_object = xhr || stat || err;
-            tx_api_scan_fail(rd, "ln", rdo, error_object);
+            tx_api_scan_fail({
+                "error": error_object
+            }, rd, "ln", rdo);
             if (!ln_only) {
                 continue_select(rd, api_data, rdo);
             }
@@ -279,9 +275,10 @@ function lightning_fetch(rd, api_data, rdo) {
                         }
                     }
                 }).fail(function(xhr, stat, err) {
-                    tx_api_fail(thislist, statuspanel);
                     const error_object = xhr || stat || err;
-                    tx_api_scan_fail(rd, "ln", rdo, error_object);
+                    tx_api_scan_fail({
+                        "error": error_object
+                    }, rd, "ln", rdo);
                 }).always(function() {
                     set_api_src(rdo, {
                         "name": "proxy"
@@ -290,10 +287,9 @@ function lightning_fetch(rd, api_data, rdo) {
             }
             return
         }
-        tx_api_scan_fail(rd, "ln", rdo, {
-            "error": "invoice not found",
-            "console": true
-        });
+        tx_api_scan_fail({
+            "error": translate("noinvoicesfound")
+        }, rd, "ln", rdo);
         return
     }
     continue_select(rd, api_data, rdo);
@@ -403,16 +399,21 @@ function monero_fetch(rd, api_data, rdo) {
                     api_callback(rdo);
                 }).fail(function(xhr, stat, err) {
                     const error_object = xhr || stat || err;
-                    tx_api_scan_fail(rd, api_data, rdo, error_object);
+                    tx_api_scan_fail({
+                        "error": error_object
+                    }, rd, api_data, rdo);
                 });
                 return
             }
         }
-        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+        tx_api_scan_fail(null, rd, api_data, rdo);
     }).fail(function(xhr, stat, err) {
         const is_proxy = is_proxy_fail(this.url),
             error_object = xhr || stat || err;
-        tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+        tx_api_scan_fail({
+            "error": error_object,
+            is_proxy
+        }, rd, api_data, rdo);
     }).always(function() {
         set_api_src(rdo, {
             "name": "mymonero api"
@@ -470,11 +471,14 @@ function blockchair_xmr_poll(rd, api_data, rdo) {
                 return
             }
         }
-        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+        tx_api_scan_fail(null, rd, api_data, rdo);
     }).fail(function(xhr, stat, err) {
         const is_proxy = is_proxy_fail(this.url),
             error_object = xhr || stat || err;
-        tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+        tx_api_scan_fail({
+            "error": error_object,
+            is_proxy
+        }, rd, api_data, rdo);
     }).always(function() {
         set_api_src(rdo, {
             "name": "blockchair api"
@@ -512,11 +516,14 @@ function blockchaininfo_fetch_blockheight(rd, api_data, rdo) {
                 return
             }
         }
-        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+        tx_api_scan_fail(null, rd, api_data, rdo);
     }).fail(function(xhr, stat, err) {
         const is_proxy = is_proxy_fail(this.url),
             error_object = xhr || stat || err;
-        tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+        tx_api_scan_fail({
+            "error": error_object,
+            is_proxy
+        }, rd, api_data, rdo);
     }).always(function() {
         set_api_src(rdo, api_data);
     });
@@ -540,7 +547,9 @@ function blockchaininfo_fetch(rd, api_data, rdo, latestblock) {
             const data = br_result(e).result;
             if (data) {
                 if (data.error) {
-                    tx_api_scan_fail(rd, api_data, rdo, data.error);
+                    tx_api_scan_fail({
+                        "error": data.error
+                    }, rd, api_data, rdo);
                     return
                 }
                 if (br_issar(data)) {
@@ -572,19 +581,24 @@ function blockchaininfo_fetch(rd, api_data, rdo, latestblock) {
                             scan_match(rd, api_data, rdo, counter, txdat);
                             return
                         }
-                        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                        tx_api_scan_fail(null, rd, api_data, rdo);
                     }).fail(function(xhr, stat, err) {
                         const error_object = xhr || stat || err;
-                        tx_api_scan_fail(rd, api_data, rdo, error_object);
+                        tx_api_scan_fail({
+                            "error": error_object
+                        }, rd, api_data, rdo);
                     });
                     return
                 }
             }
-            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+            tx_api_scan_fail(null, rd, api_data, rdo);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
-            tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+            tx_api_scan_fail({
+                "error": error_object,
+                is_proxy
+            }, rd, api_data, rdo);
         }).always(function() {
             set_api_src(rdo, api_data);
         });
@@ -604,7 +618,9 @@ function blockchaininfo_fetch(rd, api_data, rdo, latestblock) {
                 const data = br_result(e).result;
                 if (data) {
                     if (data.error) {
-                        tx_api_scan_fail(rd, api_data, rdo, data.error);
+                        tx_api_scan_fail({
+                            "error": data.error
+                        }, rd, api_data, rdo);
                         return
                     }
                     const txd = blockchaininfo_scan_data(data, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
@@ -620,11 +636,14 @@ function blockchaininfo_fetch(rd, api_data, rdo, latestblock) {
                     scan_match(rd, api_data, rdo, counter, txdat);
                     return
                 }
-                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                tx_api_scan_fail(null, rd, api_data, rdo);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+                tx_api_scan_fail({
+                    "error": error_object,
+                    is_proxy
+                }, rd, api_data, rdo);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -654,7 +673,9 @@ function blockcypher_fetch(rd, api_data, rdo) {
             const data = br_result(e).result;
             if (data) {
                 if (data.error) {
-                    tx_api_scan_fail(rd, api_data, rdo, data.error);
+                    tx_api_scan_fail({
+                        "error": data.error
+                    }, rd, api_data, rdo);
                     return
                 }
                 const conf_tx = data.txrefs,
@@ -681,11 +702,14 @@ function blockcypher_fetch(rd, api_data, rdo) {
                 scan_match(rd, api_data, rdo, counter, txdat);
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+            tx_api_scan_fail(null, rd, api_data, rdo);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
-            tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+            tx_api_scan_fail({
+                "error": error_object,
+                is_proxy
+            }, rd, api_data, rdo);
         }).always(function() {
             set_api_src(rdo, api_data);
         });
@@ -705,7 +729,9 @@ function blockcypher_fetch(rd, api_data, rdo) {
                 const data = br_result(e).result;
                 if (data) {
                     if (data.error) {
-                        tx_api_scan_fail(rd, api_data, rdo, data.error);
+                        tx_api_scan_fail({
+                            "error": data.error
+                        }, rd, api_data, rdo);
                         return
                     }
                     const txd = blockcypher_poll_data(data, rdo.setconfirmations, rd.currencysymbol, rd.address);
@@ -721,11 +747,14 @@ function blockcypher_fetch(rd, api_data, rdo) {
                     scan_match(rd, api_data, rdo, counter, txdat);
                     return
                 }
-                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                tx_api_scan_fail(null, rd, api_data, rdo);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+                tx_api_scan_fail({
+                    "error": error_object,
+                    is_proxy
+                }, rd, api_data, rdo);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -760,7 +789,9 @@ function ethplorer_fetch(rd, api_data, rdo) {
             if (data) {
                 const error = data.error;
                 if (error) {
-                    tx_api_scan_fail(rd, api_data, rdo, data.error, null, l2);
+                    tx_api_scan_fail({
+                        "error": error
+                    }, api_data, rdo, null, l2);
                     return
                 }
                 const operations = data.operations;
@@ -785,11 +816,14 @@ function ethplorer_fetch(rd, api_data, rdo) {
                     return
                 }
             }
-            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, l2);
+            tx_api_scan_fail(null, rd, api_data, rdo, null, l2);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
-            tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy, l2);
+            tx_api_scan_fail({
+                "error": error_object,
+                is_proxy
+            }, rd, api_data, rdo, l2);
         }).always(function() {
             set_api_src(rdo, api_data);
         });
@@ -809,7 +843,9 @@ function ethplorer_fetch(rd, api_data, rdo) {
                 if (data) {
                     const error = data.error;
                     if (error) {
-                        tx_api_scan_fail(rd, api_data, rdo, error, null, l2);
+                        tx_api_scan_fail({
+                            "error": error
+                        }, rd, api_data, rdo, null, l2);
                         return
                     }
                     const input = data.input,
@@ -837,11 +873,14 @@ function ethplorer_fetch(rd, api_data, rdo) {
                     scan_match(rd, api_data, rdo, counter, txdat, l2);
                     return
                 }
-                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, l2);
+                tx_api_scan_fail(null, rd, api_data, rdo, null, l2);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy, l2);
+                tx_api_scan_fail({
+                    "error": error_object,
+                    is_proxy
+                }, rd, api_data, rdo, l2);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -890,7 +929,9 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                     const error = (q_obj(data, "status") == 0) || data.error;
                     if (error) {
                         const error_object = data.error || data;
-                        tx_api_scan_fail(rd, api_data, rdo, error_object, null, network);
+                        tx_api_scan_fail({
+                            "error": error_object
+                        }, rd, api_data, rdo, null, network);
                         return
                     }
                     const result = data.result;
@@ -915,11 +956,14 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                         return
                     }
                 }
-                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, network);
+                tx_api_scan_fail(null, rd, api_data, rdo, null, network);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy, network);
+                tx_api_scan_fail({
+                    "error": error_object,
+                    is_proxy
+                }, rd, api_data, rdo, network);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -932,7 +976,9 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                     const error = (q_obj(data, "status") == 0) || data.error;
                     if (error) {
                         const error_object = data.error || data;
-                        tx_api_scan_fail(rd, api_data, rdo, error_object, null, network);
+                        tx_api_scan_fail({
+                            "error": error_object
+                        }, rd, api_data, rdo, null, network);
                         return
                     }
                     const result = data.result;
@@ -957,11 +1003,14 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                         return
                     }
                 }
-                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, network);
+                tx_api_scan_fail(null, rd, api_data, rdo, null, network);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy, network);
+                tx_api_scan_fail({
+                    "error": error_object,
+                    is_proxy
+                }, rd, api_data, rdo, network);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -979,7 +1028,9 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                         const error = (q_obj(data, "status") == 0) || data.error;
                         if (error) {
                             const error_object = data.error || data;
-                            tx_api_scan_fail(rd, api_data, rdo, error_object, null, network);
+                            tx_api_scan_fail({
+                                "error": error_object
+                            }, rd, api_data, rdo, null, network);
                             return
                         }
                         const result = data.result;
@@ -1004,11 +1055,14 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                             return
                         }
                     }
-                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, network);
+                    tx_api_scan_fail(null, rd, api_data, rdo, null, network);
                 }).fail(function(xhr, stat, err) {
                     const is_proxy = is_proxy_fail(this.url),
                         error_object = xhr || stat || err;
-                    tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy, network);
+                    tx_api_scan_fail({
+                        "error": error_object,
+                        is_proxy
+                    }, rd, api_data, rdo, network);
                 }).always(function() {
                     set_api_src(rdo, api_data);
                 });
@@ -1021,7 +1075,9 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                         const error = (q_obj(data, "status") == 0) || data.error;
                         if (error) {
                             const error_object = data.error || data;
-                            tx_api_scan_fail(rd, api_data, rdo, error_object, null, network);
+                            tx_api_scan_fail({
+                                "error": error_object
+                            }, rd, api_data, rdo, null, network);
                             return
                         }
                         const result = data.result;
@@ -1046,11 +1102,14 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                             return
                         }
                     }
-                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, network);
+                    tx_api_scan_fail(null, rd, api_data, rdo, null, network);
                 }).fail(function(xhr, stat, err) {
                     const is_proxy = is_proxy_fail(this.url),
                         error_object = xhr || stat || err;
-                    tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy, network);
+                    tx_api_scan_fail({
+                        "error": error_object,
+                        is_proxy
+                    }, rd, api_data, rdo, network);
                 }).always(function() {
                     set_api_src(rdo, api_data);
                 });
@@ -1093,12 +1152,16 @@ function blockchair_fetch(rd, api_data, rdo) {
             const data = br_result(e).result;
             if (data) {
                 if (data.error) {
-                    tx_api_scan_fail(rd, api_data, rdo, data.error);
+                    tx_api_scan_fail({
+                        "error": data.error
+                    }, rd, api_data, rdo);
                     return
                 }
                 const context = data.context;
                 if (context.error) {
-                    tx_api_scan_fail(rd, api_data, rdo, data.context);
+                    tx_api_scan_fail({
+                        "error": data.context
+                    }, rd, api_data, rdo);
                     return
                 }
                 const latestblock = context.state;
@@ -1122,7 +1185,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                         scan_match(rd, api_data, rdo, counter, txdat);
                         return
                     }
-                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                    tx_api_scan_fail(null, rd, api_data, rdo);
                     return
                 }
                 if (rd.payment === "ethereum") {
@@ -1145,7 +1208,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                         scan_match(rd, api_data, rdo, counter, txdat);
                         return
                     }
-                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                    tx_api_scan_fail(null, rd, api_data, rdo);
                     return
                 }
                 const txarray = q_obj(data, "data." + address + ".transactions") || q_obj(data, "data." + address_lower + ".transactions");
@@ -1178,21 +1241,28 @@ function blockchair_fetch(rd, api_data, rdo) {
                                 }
                             }
                         });
-                        scan_match(rd, api_data, rdo, counter, glob_const.default_error);
+                        scan_match(rd, api_data, rdo, counter);
                         return
                     }
-                    tx_api_scan_fail(rd, api_data, rdo, error_object);
+                    tx_api_scan_fail({
+                        "error": error_object
+                    }, rd, api_data, rdo);
                 }).fail(function(xhr, stat, err) {
                     const error_object = xhr || stat || err;
-                    tx_api_scan_fail(rd, api_data, rdo, error_object);
+                    tx_api_scan_fail({
+                        "error": error_object
+                    }, rd, api_data, rdo);
                 });
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+            tx_api_scan_fail(null, rd, api_data, rdo);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
-            tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+            tx_api_scan_fail({
+                "error": error_object,
+                is_proxy
+            }, rd, api_data, rdo);
         }).always(function() {
             set_api_src(rdo, api_data);
         });
@@ -1214,7 +1284,9 @@ function blockchair_fetch(rd, api_data, rdo) {
                     const context = data.context;
                     if (context) {
                         if (context.error) {
-                            tx_api_scan_fail(rd, api_data, rdo, context.error);
+                            tx_api_scan_fail({
+                                "error": data.context
+                            }, rd, api_data, rdo);
                             return
                         }
                         const latestblock = context.state;
@@ -1239,11 +1311,14 @@ function blockchair_fetch(rd, api_data, rdo) {
                         return
                     }
                 }
-                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                tx_api_scan_fail(null, rd, api_data, rdo);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+                tx_api_scan_fail({
+                    "error": error_object,
+                    is_proxy
+                }, rd, api_data, rdo);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -1300,17 +1375,20 @@ function nimiq_fetch(rd, api_data, rdo) {
                     scan_match(rd, api_data, rdo, counter, txdat);
                     return
                 }
-                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                tx_api_scan_fail(null, rd, api_data, rdo);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+                tx_api_scan_fail({
+                    "error": error_object,
+                    is_proxy
+                }, rd, api_data, rdo);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
             return
         }
-        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+        tx_api_scan_fail(null, rd, api_data, rdo);
         return
     }
     if (rdo.pending === "polling") {
@@ -1328,7 +1406,9 @@ function nimiq_fetch(rd, api_data, rdo) {
                     const data = br_result(e).result;
                     if (data) {
                         if (data.error) {
-                            tx_api_scan_fail(rd, api_data, rdo, data.error);
+                            tx_api_scan_fail({
+                                "error": data.error
+                            }, rd, api_data, rdo);
                             return
                         }
                         const txd = nimiq_scan_data(data, rdo.setconfirmations);
@@ -1346,11 +1426,14 @@ function nimiq_fetch(rd, api_data, rdo) {
                         scan_match(rd, api_data, rdo, counter, txdat);
                         return
                     }
-                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                    tx_api_scan_fail(null, rd, api_data, rdo);
                 }).fail(function(xhr, stat, err) {
                     const is_proxy = is_proxy_fail(this.url),
                         error_object = xhr || stat || err;
-                    tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+                    tx_api_scan_fail({
+                        "error": error_object,
+                        is_proxy
+                    }, rd, api_data, rdo);
                 }).always(function() {
                     set_api_src(rdo, api_data);
                 });
@@ -1369,7 +1452,9 @@ function nimiq_fetch(rd, api_data, rdo) {
                     const data = br_result(e).result;
                     if (data) {
                         if (data.error) {
-                            tx_api_scan_fail(rd, api_data, rdo, data.error);
+                            tx_api_scan_fail({
+                                "error": data.error
+                            }, rd, api_data, rdo);
                             return
                         }
                         api_proxy({
@@ -1398,15 +1483,20 @@ function nimiq_fetch(rd, api_data, rdo) {
                             scan_match(rd, api_data, rdo, counter, txdat);
                         }).fail(function(xhr, stat, err) {
                             const error_object = xhr || stat || err;
-                            tx_api_scan_fail(rd, api_data, rdo, error_object);
+                            tx_api_scan_fail({
+                                "error": error_object
+                            }, rd, api_data, rdo);
                         });
                         return
                     }
-                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                    tx_api_scan_fail(null, rd, api_data, rdo);
                 }).fail(function(xhr, stat, err) {
                     const is_proxy = is_proxy_fail(this.url),
                         error_object = xhr || stat || err;
-                    tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+                    tx_api_scan_fail({
+                        "error": error_object,
+                        is_proxy
+                    }, rd, api_data, rdo);
                 }).always(function() {
                     set_api_src(rdo, api_data);
                 });
@@ -1447,11 +1537,14 @@ function kaspa_fetch_blockheight(rd, api_data, rdo) {
                 return
             }
         }
-        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+        tx_api_scan_fail(null, rd, api_data, rdo);
     }).fail(function(xhr, stat, err) {
         const is_proxy = is_proxy_fail(this.url),
             error_object = xhr || stat || err;
-        tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+        tx_api_scan_fail({
+            "error": error_object,
+            is_proxy
+        }, rd, api_data, rdo);
     }).always(function() {
         set_api_src(rdo, api_data);
     });
@@ -1477,7 +1570,7 @@ function kaspa_fetch(rd, api_data, rdo, blockheight) {
             const data = br_result(e).result;
             if (data) {
                 if (empty_obj(data)) {
-                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                    tx_api_scan_fail(null, rd, api_data, rdo);
                     return
                 }
                 const sortlist = sort_by_date(kaspa_scan_data, data);
@@ -1497,11 +1590,14 @@ function kaspa_fetch(rd, api_data, rdo, blockheight) {
                 scan_match(rd, api_data, rdo, counter, txdat);
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+            tx_api_scan_fail(null, rd, api_data, rdo);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
-            tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+            tx_api_scan_fail({
+                "error": error_object,
+                is_proxy
+            }, rd, api_data, rdo);
         }).always(function() {
             set_api_src(rdo, api_data);
         });
@@ -1521,7 +1617,9 @@ function kaspa_fetch(rd, api_data, rdo, blockheight) {
                 const data = br_result(e).result;
                 if (data) {
                     if (data.error) {
-                        tx_api_scan_fail(rd, api_data, rdo, data.error);
+                        tx_api_scan_fail({
+                            "error": data.error
+                        }, rd, api_data, rdo);
                         return
                     }
                     const txd = (api_name === "kaspa.org") ? kaspa_scan_data(data, rd.address, rdo.setconfirmations, blockheight) :
@@ -1540,11 +1638,14 @@ function kaspa_fetch(rd, api_data, rdo, blockheight) {
                     scan_match(rd, api_data, rdo, counter, txdat);
                     return
                 }
-                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                tx_api_scan_fail(null, rd, api_data, rdo);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+                tx_api_scan_fail({
+                    "error": error_object,
+                    is_proxy
+                }, rd, api_data, rdo);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -1573,7 +1674,9 @@ function insight_fetch_dash(rd, api_data, rdo) {
             const data = br_result(e).result;
             if (data) {
                 if (data.error) {
-                    tx_api_scan_fail(rd, api_data, rdo, data.error);
+                    tx_api_scan_fail({
+                        "error": data.error
+                    }, rd, api_data, rdo);
                     return
                 }
                 const all_tx = data.txs;
@@ -1596,11 +1699,14 @@ function insight_fetch_dash(rd, api_data, rdo) {
                 scan_match(rd, api_data, rdo, counter, txdat);
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+            tx_api_scan_fail(null, rd, api_data, rdo);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
-            tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+            tx_api_scan_fail({
+                "error": error_object,
+                is_proxy
+            }, rd, api_data, rdo);
         }).always(function() {
             set_api_src(rdo, api_data);
         });
@@ -1619,7 +1725,9 @@ function insight_fetch_dash(rd, api_data, rdo) {
                 const data = br_result(e).result;
                 if (data) {
                     if (data.error) {
-                        tx_api_scan_fail(rd, api_data, rdo, data.error);
+                        tx_api_scan_fail({
+                            "error": data.error
+                        }, rd, api_data, rdo);
                         return
                     }
                     const txd = insight_scan_data(data, rdo.setconfirmations, rd.address);
@@ -1635,11 +1743,14 @@ function insight_fetch_dash(rd, api_data, rdo) {
                     scan_match(rd, api_data, rdo, counter, txdat);
                     return
                 }
-                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                tx_api_scan_fail(null, rd, api_data, rdo);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
-                tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+                tx_api_scan_fail({
+                    "error": error_object,
+                    is_proxy
+                }, rd, api_data, rdo);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -1675,17 +1786,22 @@ function mempoolspace_rpc_blockheight(rd, api_data, rdo, rpc) {
         const data = br_result(e).result;
         if (data) {
             if (data.error) {
-                tx_api_scan_fail(rd, api_data, rdo, data.error);
+                tx_api_scan_fail({
+                    "error": data.error
+                }, rd, api_data, rdo);
                 return
             }
             mempoolspace_rpc(rd, api_data, rdo, rpc, data);
             return
         }
-        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+        tx_api_scan_fail(null, rd, api_data, rdo);
     }).fail(function(xhr, stat, err) {
         const is_proxy = is_proxy_fail(this.url),
             error_object = xhr || stat || err;
-        tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+        tx_api_scan_fail({
+            "error": error_object,
+            is_proxy
+        }, rd, api_data, rdo);
     }).always(function() {
         set_api_src(rdo, api_data);
     });
@@ -1711,7 +1827,7 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock) {
                 const data = br_result(e).result;
                 if (data) {
                     if (empty_obj(data)) {
-                        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                        tx_api_scan_fail(null, rd, api_data, rdo);
                         return
                     }
                     const sortlist = sort_by_date(mempoolspace_scan_data, data);
@@ -1733,10 +1849,12 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock) {
                     scan_match(rd, api_data, rdo, counter, txdat);
                     return
                 }
-                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+                tx_api_scan_fail(null, rd, api_data, rdo);
             }).fail(function(xhr, stat, err) {
                 const error_object = xhr || stat || err;
-                tx_api_scan_fail(rd, api_data, rdo, error_object);
+                tx_api_scan_fail({
+                    "error": error_object
+                }, rd, api_data, rdo);
             }).always(function() {
                 set_api_src(rdo, api_data);
             });
@@ -1766,10 +1884,12 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock) {
                 scan_match(rd, api_data, rdo, counter, txdat);
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+            tx_api_scan_fail(null, rd, api_data, rdo);
         }).fail(function(xhr, stat, err) {
             const error_object = xhr || stat || err;
-            tx_api_scan_fail(rd, api_data, rdo, error_object);
+            tx_api_scan_fail({
+                "error": error_object
+            }, rd, api_data, rdo);
         });
     }, 500);
 }
@@ -1789,7 +1909,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                 omniscan_fetch(rd, api_dat, rdo, contract, chainid || 1);
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, layer2);
+            tx_api_scan_fail(null, rd, api_data, rdo, null, layer2);
             return
         }
         api_dat = q_obj(coin_setting, "apis.selected");
@@ -1801,7 +1921,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
             omniscan_fetch(rd, api_dat, rdo, null, 1);
             return
         }
-        tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, layer2);
+        tx_api_scan_fail(null, rd, api_data, rdo, null, layer2);
         return
     }
     const thislist = rdo.thislist,
@@ -1842,7 +1962,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                                     };
                                 txd = infura_erc20_poll_data(txdata, rdo.setconfirmations, rd.currencysymbol, layer2);
                             } else {
-                                tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, layer2);
+                                tx_api_scan_fail(null, rd, api_data, rdo, null, layer2);
                                 return
                             }
                         } else {
@@ -1866,22 +1986,29 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                         scan_match(rd, api_data, rdo, counter, txdat);
                         return
                     }
-                    tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, layer2);
+                    tx_api_scan_fail(null, rd, api_data, rdo, null, layer2);
                 }).fail(function(xhr, stat, err) {
                     const error_object = xhr || stat || err;
-                    tx_api_scan_fail(rd, api_data, rdo, error_object, null, layer2);
+                    tx_api_scan_fail({
+                        "error": error_object
+                    }, rd, api_data, rdo, null, layer2);
                 });
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error, null, layer2);
+            tx_api_scan_fail(null, rd, api_data, rdo, null, layer2);
         }).fail(function(xhr, stat, err) {
             const error_object = xhr || stat || err;
-            tx_api_scan_fail(rd, api_data, rdo, error_object, null, layer2);
+            tx_api_scan_fail({
+                "error": error_object
+            }, rd, api_data, rdo, null, layer2);
         });
     }).fail(function(xhr, stat, err) {
         const is_proxy = is_proxy_fail(this.url),
             error_object = xhr || stat || err;
-        tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy, layer2);
+        tx_api_scan_fail({
+            "error": error_object,
+            is_proxy
+        }, rd, api_data, rdo, layer2);
     }).always(function() {
         set_api_src(rdo, api_data);
     });
@@ -1973,7 +2100,9 @@ function nano_rpc(rd, api_data, rdo) {
             const data = br_result(e).result;
             if (data && !empty_obj(data)) {
                 if (data.error) {
-                    tx_api_scan_fail(rd, api_data, rdo, data.error);
+                    tx_api_scan_fail({
+                        "error": data.error
+                    }, rd, api_data, rdo);
                     return
                 }
                 $.each(data, function(data, value) {
@@ -1992,11 +2121,14 @@ function nano_rpc(rd, api_data, rdo) {
                 scan_match(rd, api_data, rdo, counter, txdat);
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+            tx_api_scan_fail(null, rd, api_data, rdo);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
-            tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+            tx_api_scan_fail({
+                "error": error_object,
+                is_proxy
+            }, rd, api_data, rdo);
         }).always(function() {
             set_api_src(rdo, api_data);
         });
@@ -2022,7 +2154,9 @@ function nano_rpc(rd, api_data, rdo) {
             const data = br_result(e).result;
             if (data) {
                 if (data.error) {
-                    tx_api_scan_fail(rd, api_data, rdo, data.error);
+                    tx_api_scan_fail({
+                        "error": data.error
+                    }, rd, api_data, rdo);
                     return
                 }
                 const txd = nano_scan_data(data, rdo.setconfirmations, rd.currencysymbol, rd.txhash);
@@ -2038,11 +2172,14 @@ function nano_rpc(rd, api_data, rdo) {
                 scan_match(rd, api_data, rdo, counter, txdat);
                 return
             }
-            tx_api_scan_fail(rd, api_data, rdo, glob_const.default_error);
+            tx_api_scan_fail(null, rd, api_data, rdo);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
-            tx_api_scan_fail(rd, api_data, rdo, error_object, is_proxy);
+            tx_api_scan_fail({
+                "error": error_object,
+                is_proxy
+            }, rd, api_data, rdo);
         }).always(function() {
             set_api_src(rdo, api_data);
         });
