@@ -112,7 +112,7 @@ function address_polling_init(time_out, api_dat, retry) {
         }
         socket_info({
             "url": api_data.name
-        }, true);
+        }, true, true);
         glob_let.pinging[ping_id] = setInterval(function() {
             address_polling(timeout, api_data);
         }, timeout);
@@ -139,7 +139,7 @@ function address_polling(timeout, api_data) {
         };
     continue_select(request, api_data, rdo);
     poll_animate();
-    socket_info(api_data, true);
+    socket_info(api_data, true, true);
 }
 
 // Polling
@@ -147,13 +147,13 @@ function address_polling(timeout, api_data) {
 // XMR Poll
 
 // Initializes Monero node connection
-function init_xmr_node(cachetime, address, vk, request_ts) {
+function init_xmr_node(cachetime, address, vk) {
     const payload = {
         "address": address,
         "view_key": vk,
         "create_account": true,
         "generated_locally": false
-    };
+    }
     api_proxy({
         "api": "mymonero api",
         "search": "login",
@@ -178,9 +178,12 @@ function init_xmr_node(cachetime, address, vk, request_ts) {
             }
             const start_height = data.start_height;
             if (start_height > -1) { // success!
+                const rq_init = request.rq_init,
+                    request_ts_utc = rq_init + glob_const.timezone,
+                    request_ts = request_ts_utc - 30000; // 30 second compensation
                 socket_info({
                     "url": "mymonero api"
-                }, true);
+                }, true, true);
                 glob_let.pinging[address] = setInterval(function() {
                     poll_animate();
                     ping_xmr_node(cachetime, address, vk, request_ts);
@@ -191,7 +194,7 @@ function init_xmr_node(cachetime, address, vk, request_ts) {
         notify(translate("notmonitored"), 500000, "yes");
     }).fail(function(xhr, stat, err) {
         if (get_next_proxy()) {
-            init_xmr_node(cachetime, address, vk, request_ts);
+            init_xmr_node(cachetime, address, vk);
             return
         }
         notify(translate("errorvk"));
@@ -199,7 +202,7 @@ function init_xmr_node(cachetime, address, vk, request_ts) {
 }
 
 // Pings Monero node for transaction updates
-function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
+function ping_xmr_node(cachetime, address, vk, request_ts) {
     if (!isopenrequest()) { // only when request is visible
         forceclosesocket();
         return;
@@ -223,49 +226,39 @@ function ping_xmr_node(cachetime, address, vk, request_ts, txhash) {
             }
         }
     }).done(function(e) {
-        const data = br_result(e).result,
-            transactions = data.transactions;
+        const data = br_result(e).result;
+        if (data.Error) {
+            socket_info({
+                "url": api_name
+            }, false, true);
+            clearpinging(address);
+            return
+        }
+        const transactions = data.transactions;
         if (!transactions) return;
         socket_info({
             "url": api_name
-        }, true);
+        }, true, true);
         const set_confirmations = q_obj(request, "set_confirmations") || 0,
-            txflip = transactions.reverse();
-        $.each(txflip, function(dat, value) {
+            txflip = transactions.reverse(),
+            txflip_strip = txflip.slice(0, 25); // get last 25 transactions
+        $.each(txflip_strip, function(dat, value) {
             const txd = xmr_scan_data(value, set_confirmations, "xmr", data.blockchain_height);
-            if (txd) {
-                if (txd.ccval) {
-                    const tx_hash = txd.txhash;
-                    if (tx_hash) {
-                        if (txhash) {
-                            if (txhash === tx_hash) {
-                                confirmations(txd);
-                            }
-                            return
-                        }
-                        if (txd.transactiontime > request_ts) {
-                            const requestlist = $("#requestlist > li.rqli"),
-                                txid_match = filter_list(requestlist, "txhash", tx_hash); // check if txhash already exists
-                            if (txid_match.length) {
-                                return
-                            }
-                            confirmations(txd, true);
-                            if (set_confirmations > 0) {
-                                clearpinging(address);
-                                tx_polling_init(txd, {
-                                    "api": true,
-                                    "name": "blockchair_xmr",
-                                    "display": true
-                                });
-                            }
-                        }
-                    }
+            if (txd.ccval && txd.transactiontime > request_ts) {
+                confirmations(txd, true);
+                if (set_confirmations > 0) {
+                    clearpinging(address);
+                    tx_polling_init(txd, {
+                        "api": true,
+                        "name": "blockchair_xmr",
+                        "display": true
+                    });
                 }
             }
         });
     }).fail(function() {
         if (get_next_proxy()) {
-            ping_xmr_node(cachetime, address, vk, request_ts, txhash);
+            ping_xmr_node(cachetime, address, vk, request_ts);
             return
         }
         clearpinging(address);

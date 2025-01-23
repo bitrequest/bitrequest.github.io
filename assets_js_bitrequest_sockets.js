@@ -35,10 +35,7 @@ function init_socket(socket_node, address, retry) {
         return
     }
     glob_let.rpc_attempts = {};
-    const payment = request.payment,
-        rq_init = request.rq_init,
-        request_ts_utc = rq_init + glob_const.timezone,
-        request_ts = request_ts_utc - 30000;
+    const payment = request.payment;
     let socket_name;
     if (socket_node) {
         socket_name = socket_node.name;
@@ -151,13 +148,12 @@ function init_socket(socket_node, address, retry) {
     if (payment === "monero") {
         const vk = request.viewkey || get_vk(address);
         if (vk) {
-            trigger_requeststates(); // update outgoing
             const account = vk.account || address,
                 viewkey = vk.vk;
             request.monitored = true;
             request.viewkey = vk;
             closenotify();
-            init_xmr_node(9, account, viewkey, request_ts);
+            init_xmr_node(9, account, viewkey);
             return
         }
         request.monitored = false;
@@ -1321,22 +1317,22 @@ function socket_info(snode, live, polling) {
         console.log("Connected: " + snode.url);
         glob_const.paymentpopup.addClass("live");
         closenotify();
-    } else {
-        setTimeout(function() {
-            if (is_openrequest() !== true) {
-                return
-            }
-            if (glob_const.paymentdialogbox.hasClass("transacting")) {
-                return
-            }
-            if ($("#paymentaddress").hasClass("live")) {
-                return
-            }
-            const l2nws = glob_const.paymentpopup.find("li.nwl2.online");
-            if (!l2nws.length) {
-                glob_const.paymentpopup.removeClass("live");
-                notify(translate("websocketoffline"), 500000, "yes");
-            }
-        }, 1000);
+        return
     }
+    setTimeout(function() {
+        if (!is_openrequest()) {
+            return
+        }
+        const l2nws = glob_const.paymentpopup.find("li.nwl2.online");
+        if (!l2nws.length) {
+            glob_const.paymentpopup.removeClass("live");
+        }
+        if (glob_const.paymentdialogbox.hasClass("transacting")) {
+            return
+        }
+        if ($("#paymentaddress").hasClass("live")) {
+            return
+        }
+        notify(translate("websocketoffline"), 500000, "yes");
+    }, 1000);
 }

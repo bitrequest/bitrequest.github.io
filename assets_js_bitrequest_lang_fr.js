@@ -479,7 +479,7 @@ function lang_fr(id, data) {
         "cardmax": "La demande dépasse le maximum de la carte",
         "minamount": "Le montant minimum de la demande est de " + data.min,
         "waitingforpayment": "En attente de paiement",
-        "websocketoffline": "websocket hors ligne",
+        "websocketoffline": "node hors ligne",
 
         // PIN PANEL
         "pleaseenter": "Veuillez entrer votre code PIN",

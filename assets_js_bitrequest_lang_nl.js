@@ -479,7 +479,7 @@ function lang_nl(id, data) {
         "cardmax": "Bedrag is hoger dan de Boltcard limiet",
         "minamount": "Minimumale verzoek bedrag is " + data.min,
         "waitingforpayment": "In afwachting van betaling",
-        "websocketoffline": "websocket offline",
+        "websocketoffline": "node offline",
 
         // PIN PANEL
         "pleaseenter": "Toets uw pincode in",

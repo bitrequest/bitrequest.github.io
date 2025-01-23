@@ -364,31 +364,17 @@ function monero_fetch(rd, api_data, rdo) {
                             const txd = xmr_scan_data(value, rdo.setconfirmations, "xmr", data.blockchain_height);
                             if (txd) {
                                 const xid_match = match_xmr_pid(xmr_ia, payment_id, txd.payment_id); // match xmr payment_id if set
-                                if (xid_match === true) {
-                                    if (rdo.pending === "polling") {
-                                        if (txd.txhash === rd.txhash && txd.ccval) {
-                                            txdat = txd;
-                                            if (source === "list") {
-                                                const tx_listitem = append_tx_li(txd, rd.requesttype);
-                                                if (tx_listitem) {
-                                                    transactionlist.append(tx_listitem.data(txd));
-                                                    counter++;
-                                                }
+                                if (xid_match) {
+                                    if (txd.ccval && txd.transactiontime > rdo.request_timestamp) {
+                                        txdat = txd;
+                                        if (source === "list") {
+                                            const tx_listitem = append_tx_li(txd, rd.requesttype);
+                                            if (tx_listitem) {
+                                                transactionlist.append(tx_listitem.data(txd));
+                                                counter++;
                                             }
-                                            return false;
                                         }
-                                    } else if (rdo.pending === "scanning") {
-                                        if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
-                                            txdat = txd;
-                                            if (source === "list") {
-                                                const tx_listitem = append_tx_li(txd, rd.requesttype);
-                                                if (tx_listitem) {
-                                                    transactionlist.append(tx_listitem.data(txd));
-                                                    counter++;
-                                                }
-                                            }
-                                            return false;
-                                        }
+                                        return false;
                                     }
                                 }
                             }

@@ -58,7 +58,9 @@ $(document).ready(function() {
     selectbox();
     pickselect();
     canceldialogtrigger();
-    console.log({glob_config});
+    console.log({
+        glob_config
+    });
 })
 
 // Check for PHP support by fetching fiat currencies from local API PHP file
@@ -528,7 +530,9 @@ function finishfunctions() {
 
     setTimeout(function() { // wait for ios app detection
         detectapp();
-        console.log({glob_const});
+        console.log({
+            glob_const
+        });
     }, 700);
     //getapp
     close_app_panel();
@@ -3280,7 +3284,7 @@ function show_vk() {
 function show_vk_cb(kd) {
     const svk_string = kd.svk ? "<br/><strong style='color:#8d8d8d'>" + translate("secretviewkey") + "</strong> <span class='adbox adboxl select' data-type='Viewkey'>" + kd.svk + "</span><br/>" : "",
         ssk_string = kd.ssk ? "<br/><strong style='color:#8d8d8d'>" + translate("secretspendkey") + "</strong> <span class='adbox adboxl select' data-type='Spendkey'>" + kd.ssk + "</span>" : ""
-        
+
     $("#show_vk").text(translate("hide"));
     $("#pk_span").html(svk_string + ssk_string).addClass("shwpk").slideDown(200);
 }

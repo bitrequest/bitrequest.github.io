@@ -479,7 +479,7 @@ function lang_en(id, data) {
         "cardmax": "Request exceeds card's maximum",
         "minamount": "Minimum request amount is " + data.min,
         "waitingforpayment": "Waiting for payment",
-        "websocketoffline": "websocket offline",
+        "websocketoffline": "node offline",
 
         // PIN PANEL
         "pleaseenter": "Please enter your pin",

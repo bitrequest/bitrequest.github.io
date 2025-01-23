@@ -130,13 +130,14 @@ function wake_panel() {
 // Sets a timer to close the request dialog after 3 minutes
 function set_request_timer() {
     // close request dialog after 3 minutes
+    if (!glob_const.paymentpopup.hasClass("live")) return;
     clearTimeout(glob_let.request_timer);
-    glob_const.paymentdialogbox.removeClass("timer");
     glob_let.request_timer = setTimeout(function() {
         cpd_pollcheck();
     }, 180000, function() {
         clearTimeout(glob_let.request_timer);
     });
+    glob_const.paymentdialogbox.removeClass("timer");
     setTimeout(function() {
         glob_const.paymentdialogbox.addClass("timer");
     }, 500);
