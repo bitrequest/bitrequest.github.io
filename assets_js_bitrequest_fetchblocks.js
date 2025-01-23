@@ -367,7 +367,7 @@ function monero_fetch(rd, api_data, rdo) {
                                 if (xid_match) {
                                     if (txd.ccval && txd.transactiontime > rdo.request_timestamp) {
                                         txdat = txd;
-                                        if (source === "list") {
+                                        if (source === "requests") {
                                             const tx_listitem = append_tx_li(txd, rd.requesttype);
                                             if (tx_listitem) {
                                                 transactionlist.append(tx_listitem.data(txd));
@@ -445,7 +445,7 @@ function blockchair_xmr_poll(rd, api_data, rdo) {
                 const txd = blockchair_xmr_data(dat, rdo.setconfirmations);
                 if (txd.txhash === txhash && txd.ccval) {
                     txdat = txd, counter = 1;
-                    if (rdo.source === "list") {
+                    if (rdo.source === "requests") {
                         const tx_listitem = append_tx_li(txd, rd.requesttype);
                         if (tx_listitem) {
                             const transactionlist = rdo.transactionlist;
@@ -555,7 +555,7 @@ function blockchaininfo_fetch(rd, api_data, rdo, latestblock) {
                                 const txd = blockchaininfo_scan_data(val, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
                                 if (txd.transactiontime > rdo.request_timestamp && txd.ccval) { // get all transactions after requestdate
                                     txdat = txd;
-                                    if (source === "list") {
+                                    if (source === "requests") {
                                         const tx_listitem = append_tx_li(txd, rd.requesttype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
@@ -612,7 +612,7 @@ function blockchaininfo_fetch(rd, api_data, rdo, latestblock) {
                     const txd = blockchaininfo_scan_data(data, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
                     if (txd.ccval) {
                         txdat = txd, counter = 1;
-                        if (source === "list") {
+                        if (source === "requests") {
                             const tx_listitem = append_tx_li(txd, rd.requesttype);
                             if (tx_listitem) {
                                 transactionlist.append(tx_listitem.data(txd));
@@ -674,7 +674,7 @@ function blockcypher_fetch(rd, api_data, rdo) {
                             const txd = blockcypher_scan_data(value, rdo.setconfirmations, rd.currencysymbol, rd.payment);
                             if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
                                 txdat = txd;
-                                if (rdo.source === "list") {
+                                if (rdo.source === "requests") {
                                     const tx_listitem = append_tx_li(txd, rd.requesttype);
                                     if (tx_listitem) {
                                         transactionlist.append(tx_listitem.data(txd));
@@ -723,7 +723,7 @@ function blockcypher_fetch(rd, api_data, rdo) {
                     const txd = blockcypher_poll_data(data, rdo.setconfirmations, rd.currencysymbol, rd.address);
                     if (txd.ccval) {
                         txdat = txd, counter = 1;
-                        if (rdo.source === "list") {
+                        if (rdo.source === "requests") {
                             const tx_listitem = append_tx_li(txd, rd.requesttype);
                             if (tx_listitem) {
                                 transactionlist.append(tx_listitem.data(txd));
@@ -788,7 +788,7 @@ function ethplorer_fetch(rd, api_data, rdo) {
                             rt_compensate = (rd.inout === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
                         if (str_match(value.to, rd.address) === true && txd.transactiontime > rt_compensate && str_match(rd.currencysymbol, q_obj(value, "tokenInfo.symbol")) === true && txd.ccval) {
                             txdat = txd;
-                            if (source === "list") {
+                            if (source === "requests") {
                                 api_src(thislist, api_data); // !!overwrite
                                 const tx_listitem = append_tx_li(txd, rd.requesttype);
                                 if (tx_listitem) {
@@ -848,7 +848,7 @@ function ethplorer_fetch(rd, api_data, rdo) {
                         txd = infura_erc20_poll_data(txdata, rdo.setconfirmations, rd.currencysymbol, l2);
                     if (txd.ccval) {
                         txdat = txd, counter = 1;
-                        if (source === "list") {
+                        if (source === "requests") {
                             api_src(thislist, api_data); // !!overwrite
                             const tx_listitem = append_tx_li(txd, rd.requesttype);
                             if (tx_listitem) {
@@ -928,7 +928,7 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                                 rt_compensate = (rd.inout === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
                             if (str_match(value.to, rd.address) && (txd.transactiontime > rt_compensate) && txd.ccval) {
                                 txdat = txd;
-                                if (source === "list") {
+                                if (source === "requests") {
                                     api_src(thislist, api_data); // !!overwrite
                                     const tx_listitem = append_tx_li(txd, rd.requesttype);
                                     if (tx_listitem) {
@@ -975,7 +975,7 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                                 rt_compensate = (rd.inout === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
                             if (str_match(value.to, rd.address) && (txd.transactiontime > rt_compensate) && txd.ccval) {
                                 txdat = txd;
-                                if (source === "list") {
+                                if (source === "requests") {
                                     api_src(thislist, api_data); // !!overwrite
                                     const tx_listitem = append_tx_li(txd, rd.requesttype);
                                     if (tx_listitem) {
@@ -1027,7 +1027,7 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                                     const txd = omniscan_scan_data_eth(value, rdo.setconfirmations, network);
                                     if (txd.ccval) {
                                         txdat = txd, counter = 1;
-                                        if (source === "list") {
+                                        if (source === "requests") {
                                             const tx_listitem = append_tx_li(txd, rd.requesttype);
                                             if (tx_listitem) {
                                                 transactionlist.append(tx_listitem.data(txd));
@@ -1074,7 +1074,7 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                                     const txd = omniscan_scan_data(value, rdo.setconfirmations, rd.currencysymbol, network);
                                     if (txd.ccval) {
                                         txdat = txd, counter = 1;
-                                        if (source === "list") {
+                                        if (source === "requests") {
                                             const tx_listitem = append_tx_li(txd, rd.requesttype);
                                             if (tx_listitem) {
                                                 transactionlist.append(tx_listitem.data(txd));
@@ -1159,7 +1159,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                             const txd = blockchair_erc20_scan_data(val, rdo.setconfirmations, ccsymbol, latestblock);
                             if ((txd.transactiontime > rdo.request_timestamp) && (str_match(txd.recipient, address) === true) && (str_match(txd.token_symbol, ccsymbol) === true) && txd.ccval) {
                                 txdat = txd;
-                                if (source === "list") {
+                                if (source === "requests") {
                                     const tx_listitem = append_tx_li(txd, rd.requesttype);
                                     if (tx_listitem) {
                                         transactionlist.append(tx_listitem.data(txd));
@@ -1182,7 +1182,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                             const txd = blockchair_eth_scan_data(val, rdo.setconfirmations, ccsymbol, latestblock);
                             if (txd.ccval && txd.transactiontime > rdo.request_timestamp && str_match(txd.recipient, address)) {
                                 txdat = txd;
-                                if (source === "list") {
+                                if (source === "requests") {
                                     const tx_listitem = append_tx_li(txd, rd.requesttype);
                                     if (tx_listitem) {
                                         transactionlist.append(tx_listitem.data(txd));
@@ -1218,7 +1218,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                             const txd = blockchair_scan_data(val, rdo.setconfirmations, ccsymbol, address, latestblock);
                             if (txd.transactiontime > rdo.request_timestamp && txd.ccval) { // get all transactions after requestdate
                                 txdat = txd;
-                                if (source === "list") {
+                                if (source === "requests") {
                                     const tx_listitem = append_tx_li(txd, rd.requesttype);
                                     if (tx_listitem) {
                                         transactionlist.append(tx_listitem.data(txd));
@@ -1284,7 +1284,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                                     blockchair_scan_data(trxs, rdo.setconfirmations, ccsymbol, address, latestblock);
                                 if (txd.ccval) {
                                     txdat = txd, counter = 1;
-                                    if (source === "list") {
+                                    if (source === "requests") {
                                         const tx_listitem = append_tx_li(txd, rd.requesttype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
@@ -1348,7 +1348,7 @@ function nimiq_fetch(rd, api_data, rdo) {
                             const txd = nimiq_scan_data(value, rdo.setconfirmations);
                             if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
                                 txdat = txd;
-                                if (source === "list") {
+                                if (source === "requests") {
                                     const tx_listitem = append_tx_li(txd, rd.requesttype);
                                     if (tx_listitem) {
                                         transactionlist.append(tx_listitem.data(txd));
@@ -1401,7 +1401,7 @@ function nimiq_fetch(rd, api_data, rdo) {
                         if (txd) {
                             if (txd.ccval) {
                                 txdat = txd, counter = 1;
-                                if (source === "list") {
+                                if (source === "requests") {
                                     const tx_listitem = append_tx_li(txd, rd.requesttype);
                                     if (tx_listitem) {
                                         transactionlist.append(tx_listitem.data(txd));
@@ -1458,7 +1458,7 @@ function nimiq_fetch(rd, api_data, rdo) {
                             if (txd) {
                                 if (txd.ccval) {
                                     txdat = txd, counter = 1;
-                                    if (source === "list") {
+                                    if (source === "requests") {
                                         const tx_listitem = append_tx_li(txd, rd.requesttype);
                                         if (tx_listitem) {
                                             transactionlist.append(tx_listitem.data(txd));
@@ -1564,7 +1564,7 @@ function kaspa_fetch(rd, api_data, rdo, blockheight) {
                     const txd = kaspa_scan_data(value, rd.address, rdo.setconfirmations, blockheight);
                     if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
                         txdat = txd;
-                        if (source === "list") {
+                        if (source === "requests") {
                             const tx_listitem = append_tx_li(txd, rd.requesttype);
                             if (tx_listitem) {
                                 transactionlist.append(tx_listitem.data(txd));
@@ -1613,7 +1613,7 @@ function kaspa_fetch(rd, api_data, rdo, blockheight) {
                     if (txd) {
                         if (txd.ccval) {
                             txdat = txd, counter = 1;
-                            if (source === "list") {
+                            if (source === "requests") {
                                 const tx_listitem = append_tx_li(txd, rd.requesttype);
                                 if (tx_listitem) {
                                     transactionlist.append(tx_listitem.data(txd));
@@ -1672,7 +1672,7 @@ function insight_fetch_dash(rd, api_data, rdo) {
                         const txd = insight_scan_data(value, rdo.setconfirmations, rd.address);
                         if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
                             txdat = txd;
-                            if (rdo.source === "list") {
+                            if (rdo.source === "requests") {
                                 const tx_listitem = append_tx_li(txd, rd.requesttype);
                                 if (tx_listitem) {
                                     transactionlist.append(tx_listitem.data(txd));
@@ -1719,7 +1719,7 @@ function insight_fetch_dash(rd, api_data, rdo) {
                     const txd = insight_scan_data(data, rdo.setconfirmations, rd.address);
                     if (txd.ccval) {
                         txdat = txd, counter = 1;
-                        if (rdo.source === "list") {
+                        if (rdo.source === "requests") {
                             const tx_listitem = append_tx_li(txd, rd.requesttype);
                             if (tx_listitem) {
                                 transactionlist.append(tx_listitem.data(txd));
@@ -1822,7 +1822,7 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock) {
                             const txd = mempoolspace_scan_data(value, rdo.setconfirmations, rd.currencysymbol, rd.address, latestblock);
                             if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
                                 txdat = txd;
-                                if (source === "list") {
+                                if (source === "requests") {
                                     const tx_listitem = append_tx_li(txd, rd.requesttype);
                                     if (tx_listitem) {
                                         transactionlist.append(tx_listitem.data(txd));
@@ -1859,7 +1859,7 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock) {
                 if (txd) {
                     if (txd.ccval) {
                         txdat = txd, counter = 1;
-                        if (source === "list") {
+                        if (source === "requests") {
                             const tx_listitem = append_tx_li(txd, rd.requesttype);
                             if (tx_listitem) {
                                 transactionlist.append(tx_listitem.data(txd));
@@ -1962,7 +1962,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                         }
                         if (txd.ccval) {
                             txdat = txd, counter = 1;
-                            if (rdo.source === "list") {
+                            if (rdo.source === "requests") {
                                 const tx_listitem = append_tx_li(txd, rd.requesttype);
                                 if (tx_listitem) {
                                     transactionlist.append(tx_listitem.data(txd));
@@ -2095,7 +2095,7 @@ function nano_rpc(rd, api_data, rdo) {
                     const txd = nano_scan_data(value, rdo.setconfirmations, rd.currencysymbol);
                     if ((txd.transactiontime > rdo.request_timestamp) && txd.ccval && (value.subtype === "receive" || value.receivable)) {
                         txdat = txd;
-                        if (source === "list") {
+                        if (source === "requests") {
                             const tx_listitem = append_tx_li(txd, rd.requesttype);
                             if (tx_listitem) {
                                 transactionlist.append(tx_listitem.data(txd));
@@ -2148,7 +2148,7 @@ function nano_rpc(rd, api_data, rdo) {
                 const txd = nano_scan_data(data, rdo.setconfirmations, rd.currencysymbol, rd.txhash);
                 if (txd.ccval) {
                     txdat = txd, counter = 1;
-                    if (source === "list") {
+                    if (source === "requests") {
                         const tx_listitem = append_tx_li(txd, rd.requesttype);
                         if (tx_listitem) {
                             transactionlist.append(tx_listitem.data(txd));

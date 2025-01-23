@@ -187,7 +187,7 @@ function select_rpc(rd, api_data, rdo) {
             query_ethl2_api(rd, rdo);
             return
         }
-        if (rd.lightning && rdo.source === "list") {
+        if (rd.lightning && rdo.source === "requests") {
             lightning_fetch(rd, api_data, rdo);
             return
         }
@@ -200,7 +200,7 @@ function select_rpc(rd, api_data, rdo) {
 // Continue after scanning lightning transaction
 function continue_select(rd, api_data, rdo) {
     const src = rdo.source;
-    if (src === "list") {
+    if (src === "requests") {
         const thislist = rdo.thislist;
         if (thislist) {
             thislist.removeClass("no_network");
@@ -293,7 +293,7 @@ function continue_select_rpc(rd, api_data, rdo) {
 function scan_match(rd, api_data, rdo, counter, txdat, l2) {
     glob_let.apikey_fails = false;
     const src = rdo.source;
-    if (src === "list") {
+    if (src === "requests") {
         if (counter) {
             tx_count(rdo.statuspanel, counter);
         }
@@ -306,7 +306,7 @@ function scan_match(rd, api_data, rdo, counter, txdat, l2) {
         const txhash = rd.txhash || txdat.txhash;
         if (!txhash) return;
         const eth_layer2 = txdat.eth_layer2;
-        if (src === "list") {
+        if (src === "requests") {
             if (eth_layer2) {
                 const hasl2 = rd.eth_layer2;
                 if (!rd.eth_layer2) {
@@ -350,7 +350,7 @@ function scan_match(rd, api_data, rdo, counter, txdat, l2) {
         }
         return
     }
-    if (src === "list") {
+    if (src === "requests") {
         if (rd.erc20 || rd.payment === "ethereum") {
             if (!l2) {
                 // Init eth layer 2's
@@ -387,7 +387,7 @@ function tx_count(statuspanel, count) {
 // Handles API scan failures
 function tx_api_scan_fail(error_obj, rd, api_data, rdo, l2) {
     const src = rdo.source;
-    if (src === "list") {
+    if (src === "requests") {
         const thislist = rdo.thislist;
         if (thislist) {
             tx_api_fail(thislist, rdo.statuspanel);
@@ -453,7 +453,7 @@ function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
     }
     if (!api_data) {
         api_eror_msg(false, error_data);
-        if (src === "list") {
+        if (src === "requests") {
             api_callback(rdo);
             return
         }
@@ -468,7 +468,7 @@ function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
         const next_l2_api = get_next_l2(payment, api_data, requestid, l2);
         if (next_l2_api) {
             // Scan eth layer 2
-            if (src === "list") {
+            if (src === "requests") {
                 query_ethl2_api(rd, rdo, next_l2_api, l2);
                 return
             }
@@ -517,7 +517,7 @@ function pick_next_rpc(rd, rdo, next_rpc, timeout) {
 function no_results(rdo, src, api_data, error_data) {
     const rpc_id = api_data.name || api_data.url || "unknown";
     api_eror_msg(rpc_id, error_data);
-    if (src === "list") {
+    if (src === "requests") {
         api_callback(rdo);
         return
     }
@@ -629,7 +629,7 @@ function get_next_rpc(this_payment, api_data, requestid, l2) {
 
 // Sets the API source for a given request
 function set_api_src(rdo, api_data) {
-    if (rdo.source === "list") {
+    if (rdo.source === "requests") {
         api_src(rdo.thislist, api_data);
     }
 }
@@ -647,10 +647,10 @@ function api_src(thislist, api_data) {
 // Handles the callback after an API request is completed
 function api_callback(rdo) {
     const src = rdo.source;
-    if (!src === "list") {
+    if (!src === "requests") {
         return
     }
-    // src === "list"
+    // src === "requests"
     const thislist = rdo.thislist;
     if (thislist && thislist.hasClass("scan")) {
         thislist.removeClass("scan open").addClass("pmstatloaded");
@@ -1344,7 +1344,7 @@ function tx_data(rd) {
         "pending": pending,
         "statuspanel": statuspanel,
         "transactionlist": transactionlist,
-        "source": "list",
+        "source": "requests",
         "cachetime": 25
     }
 }
