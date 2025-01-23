@@ -1963,7 +1963,7 @@ function switchaddress() {
             const newaddress = nextaddress.data("address"),
                 selected_socket = helper.selected_socket;
             closesocket(currentaddress);
-            init_socket(selected_socket, newaddress, true);
+            init_socket(selected_socket, newaddress);
             const dp = gets.d,
                 has_dat = dp && dp.length > 5,
                 new_dp = has_dat ? "&d=" + dp : "",
@@ -2285,7 +2285,7 @@ function pickaddressfromdialog() {
                 amount = gets.amount,
                 currentaddress = gets.address;
             closesocket(currentaddress);
-            init_socket(helper.selected_socket, picked_address, true);
+            init_socket(helper.selected_socket, picked_address);
             const dp = gets.d,
                 has_dat = dp && dp.length > 5,
                 new_dp = has_dat ? "&d=" + dp : "",

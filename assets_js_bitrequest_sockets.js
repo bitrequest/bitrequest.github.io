@@ -29,7 +29,7 @@ $(document).ready(function() {
 // Websockets / Pollfunctions
 
 // Initializes a socket connection based on the payment type and node configuration
-function init_socket(socket_node, address, swtch, retry) {
+function init_socket(socket_node, address, retry) {
     if (glob_let.offline) {
         notify(translate("youareoffline") + ". " + translate("notmonitored"));
         return
@@ -149,15 +149,13 @@ function init_socket(socket_node, address, swtch, retry) {
         return
     }
     if (payment === "monero") {
-        const vk = swtch ? get_vk(address) : request.viewkey;
+        const vk = request.viewkey || get_vk(address);
         if (vk) {
             trigger_requeststates(); // update outgoing
             const account = vk.account || address,
                 viewkey = vk.vk;
             request.monitored = true;
-            if (swtch) {
-                request.viewkey = vk;
-            }
+            request.viewkey = vk;
             closenotify();
             init_xmr_node(9, account, viewkey, request_ts);
             return

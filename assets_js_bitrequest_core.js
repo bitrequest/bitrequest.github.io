@@ -3278,10 +3278,11 @@ function show_vk() {
 
 // Callback function for showing view key
 function show_vk_cb(kd) {
-    const stat = kd.stat,
-        ststr = (stat) ? "" : "<br/><strong style='color:#8d8d8d'>" + translate("secretviewkey") + "</strong> <span class='adbox adboxl select' data-type='Viewkey'>" + kd.svk + "</span><br/>";
+    const svk_string = kd.svk ? "<br/><strong style='color:#8d8d8d'>" + translate("secretviewkey") + "</strong> <span class='adbox adboxl select' data-type='Viewkey'>" + kd.svk + "</span><br/>" : "",
+        ssk_string = kd.ssk ? "<br/><strong style='color:#8d8d8d'>" + translate("secretspendkey") + "</strong> <span class='adbox adboxl select' data-type='Spendkey'>" + kd.ssk + "</span>" : ""
+        
     $("#show_vk").text(translate("hide"));
-    $("#pk_span").html(ststr + "<br/><strong style='color:#8d8d8d'>" + translate("secretspendkey") + "</strong> <span class='adbox adboxl select' data-type='Spendkey'>" + kd.ssk + "</span>").addClass("shwpk").slideDown(200);
+    $("#pk_span").html(svk_string + ssk_string).addClass("shwpk").slideDown(200);
 }
 
 // Opens a block explorer URL
