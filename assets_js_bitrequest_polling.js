@@ -247,7 +247,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts) {
             if (txd.ccval && txd.transactiontime > request_ts) {
                 const txid_match = get_requestli("txhash", txd.txhash); // check if txhash already exists
                 if (txid_match.length) {
-                    return
+                    return false;
                 }
                 clearpinging(address);
                 tx_polling_init(txd, {
@@ -255,6 +255,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts) {
                     "name": "blockchair_xmr",
                     "display": true
                 });
+                return false;
             }
         });
     }).fail(function() {
