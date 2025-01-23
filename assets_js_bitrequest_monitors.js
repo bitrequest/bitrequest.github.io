@@ -75,7 +75,7 @@ function updaterequeststatesrefresh() {
 }
 
 // Triggers the update of request states
-function trigger_requeststates(trigger) {
+function trigger_requeststates(trigger, rqli) {
     if (glob_const.offline === true) {
         return // do nothing when offline
     }
@@ -84,7 +84,7 @@ function trigger_requeststates(trigger) {
         glob_let.tx_list = [], // reset transaction index
         glob_let.statuspush = [],
         glob_let.l2_fetched = {};
-    const active_requests = $("#requestlist .rqli").filter(function() {
+    const active_requests = rqli || $("#requestlist .rqli").filter(function() {
         return $(this).data("pending") !== "unknown";
     });
     active_requests.addClass("open");

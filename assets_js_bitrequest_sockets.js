@@ -148,6 +148,11 @@ function init_socket(socket_node, address, retry) {
     if (payment === "monero") {
         const vk = request.viewkey || get_vk(address);
         if (vk) {
+            const xmr_requests = get_requestli("payment", "monero"),
+                xmr_pending = filter_list(xmr_requests, "pending", "scanning");
+            if (xmr_pending.length) {
+                trigger_requeststates(true, xmr_pending);
+            }
             const account = vk.account || address,
                 viewkey = vk.vk;
             request.monitored = true;

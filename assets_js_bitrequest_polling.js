@@ -180,7 +180,7 @@ function init_xmr_node(cachetime, address, vk) {
             if (start_height > -1) { // success!
                 const rq_init = request.rq_init,
                     request_ts_utc = rq_init + glob_const.timezone,
-                    request_ts = request_ts_utc - 30000; // 30 second compensation
+                    request_ts = request_ts_utc - 10000; // 10 second compensation
                 socket_info({
                     "url": "mymonero api"
                 }, true, true);
@@ -245,15 +245,16 @@ function ping_xmr_node(cachetime, address, vk, request_ts) {
         $.each(txflip_strip, function(dat, value) {
             const txd = xmr_scan_data(value, set_confirmations, "xmr", data.blockchain_height);
             if (txd.ccval && txd.transactiontime > request_ts) {
-                confirmations(txd, true);
-                if (set_confirmations > 0) {
-                    clearpinging(address);
-                    tx_polling_init(txd, {
-                        "api": true,
-                        "name": "blockchair_xmr",
-                        "display": true
-                    });
+                const txid_match = get_requestli("txhash", txd.txhash); // check if txhash already exists
+                if (txid_match.length) {
+                    return
                 }
+                clearpinging(address);
+                tx_polling_init(txd, {
+                    "api": true,
+                    "name": "blockchair_xmr",
+                    "display": true
+                });
             }
         });
     }).fail(function() {
