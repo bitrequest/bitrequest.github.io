@@ -610,7 +610,7 @@ function continue_paymentfunction() {
                 "vk": dataobject.vk
             } : get_vk(address),
             sharevk = share_vk(),
-            payment_id = payment_id || isrequest ? false : get_xmrpid(),
+            payment_id = payment_id ? payment_id : isrequest ? false : get_xmrpid(),
             xmr_ia = xmr_integrated(address, payment_id);
     }
     const currencysymbol = coindata.ccsymbol,
