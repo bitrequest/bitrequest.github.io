@@ -137,7 +137,7 @@ function lang_en(id, data) {
         "fallbackaddress": "Fallback address",
         "paymentid": "Payment ID",
         "integratedaddress": "Integrated Address",
-        "network": "Netwerk",
+        "network": "Network",
         "incoming": "Incoming",
         "outgoing": "Outgoing",
         "point of sale": "Point of sale",

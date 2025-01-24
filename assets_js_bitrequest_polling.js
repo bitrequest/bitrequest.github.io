@@ -2,10 +2,14 @@
 
 //tx_polling_init
 //tx_polling
+//tx_polling_l1
+//tx_polling_l2
 //clear_tpto
 //address_polling_init
 //address_polling
 //init_xmr_node
+//xmr_node_access
+//init_xmr_ping
 //ping_xmr_node
 //confirmations
 //clearpinging
@@ -51,25 +55,12 @@ function tx_polling(tx_data, api_dat, retry) {
     glob_const.paymentdialogbox.removeClass("transacting");
 }
 
-function tx_polling_l2(eth_layer2, api_dat, retry) {
-    clear_tpto();
-    const to_time = retry ? 10 : api_dat ? 30000 : 10,
-        l2_options = fertch_l2s(request.payment),
-        api_data = api_dat || q_obj(l2_options, eth_layer2 + ".apis.selected"),
-        ctracts = contracts(request.currencysymbol),
-        contract = ctracts ? ctracts[eth_layer2] : false;
-    glob_let.tpto = setTimeout(function() {
-        omni_poll(api_data, contract);
-    }, to_time, function() {
-        clear_tpto();
-    });
-}
-
+// Layer 1 transaction polling
 function tx_polling_l1(tx_data, api_dat, retry) {
     clear_tpto();
     const to_time = retry ? 10 : api_dat ? 30000 : 10,
         api_data = api_dat || q_obj(helper, "api_info.data"),
-        rdo = {
+        rdo = { // request data object
             "requestid": request.requestid,
             "pending": "polling",
             "txdat": tx_data,
@@ -77,7 +68,7 @@ function tx_polling_l1(tx_data, api_dat, retry) {
             "setconfirmations": tx_data.setconfirmations,
             "cachetime": 25
         },
-        rd = {
+        rd = { // custom request data
             "requestid": request.requestid,
             "payment": request.payment,
             "erc20": request.erc20,
@@ -89,6 +80,21 @@ function tx_polling_l1(tx_data, api_dat, retry) {
         };
     glob_let.tpto = setTimeout(function() {
         continue_select(rd, api_data, rdo);
+    }, to_time, function() {
+        clear_tpto();
+    });
+}
+
+// Layer 2 transaction polling
+function tx_polling_l2(eth_layer2, api_dat, retry) {
+    clear_tpto();
+    const to_time = retry ? 10 : api_dat ? 30000 : 10,
+        l2_options = fertch_l2s(request.payment),
+        api_data = api_dat || q_obj(l2_options, eth_layer2 + ".apis.selected"),
+        ctracts = contracts(request.currencysymbol),
+        contract = ctracts ? ctracts[eth_layer2] : false;
+    glob_let.tpto = setTimeout(function() {
+        omni_poll(api_data, contract);
     }, to_time, function() {
         clear_tpto();
     });
@@ -127,7 +133,7 @@ function address_polling(timeout, api_data) {
         request_ts = request_ts_utc - 15000, // 15 second margin
         set_confirmations = request.set_confirmations || 0,
         cachetime = (timeout - 1000) / 1000,
-        rdo = {
+        rdo = { // request data object
             "requestid": request.requestid,
             "request_timestamp": request_ts,
             "setconfirmations": set_confirmations,
@@ -148,6 +154,10 @@ function address_polling(timeout, api_data) {
 
 // Initializes Monero node connection
 function init_xmr_node(cachetime, address, vk) {
+    if (xmr_node_access(vk)) {
+        init_xmr_ping(cachetime, address, vk);
+        return
+    }
     const payload = {
         "address": address,
         "view_key": vk,
@@ -178,16 +188,8 @@ function init_xmr_node(cachetime, address, vk) {
             }
             const start_height = data.start_height;
             if (start_height > -1) { // success!
-                const rq_init = request.rq_init,
-                    request_ts_utc = rq_init + glob_const.timezone,
-                    request_ts = request_ts_utc - 10000; // 10 second compensation
-                socket_info({
-                    "url": "mymonero api"
-                }, true, true);
-                glob_let.pinging[address] = setInterval(function() {
-                    poll_animate();
-                    ping_xmr_node(cachetime, address, vk, request_ts);
-                }, 12000);
+                set_xmr_node_access(vk);
+                init_xmr_ping(cachetime, address, vk);
                 return
             }
         }
@@ -199,6 +201,32 @@ function init_xmr_node(cachetime, address, vk) {
         }
         notify(translate("errorvk"));
     });
+}
+
+function xmr_node_access(vk) {
+    if (vk) {
+        const stored_vk_list = br_get_session("xmrvks", true);
+        if (stored_vk_list) {
+            if (stored_vk_list.includes(vk)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// Initializes Monero node connection
+function init_xmr_ping(cachetime, address, vk) {
+    const rq_init = request.rq_init,
+        request_ts_utc = rq_init + glob_const.timezone,
+        request_ts = request_ts_utc - 10000; // 10 second compensation
+    socket_info({
+        "url": "mymonero api"
+    }, true, true);
+    glob_let.pinging[address] = setInterval(function() {
+        poll_animate();
+        ping_xmr_node(cachetime, address, vk, request_ts);
+    }, 12000);
 }
 
 // Pings Monero node for transaction updates
@@ -245,7 +273,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts) {
         $.each(txflip_strip, function(dat, value) {
             const txd = xmr_scan_data(value, set_confirmations, "xmr", data.blockchain_height);
             if (txd.ccval && txd.transactiontime > request_ts) {
-                const txid_match = get_requestli("txhash", txd.txhash); // check if txhash already exists
+                const txid_match = get_requestli("txhash", txd.txhash); // scan pending xmr tx's to prevent duplicates, mempool tx's don't have correct timestamps
                 if (txid_match.length) {
                     return false;
                 }

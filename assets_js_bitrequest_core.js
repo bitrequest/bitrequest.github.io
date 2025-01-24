@@ -388,6 +388,7 @@ function finishfunctions() {
     //initaddressform
     submit_erc20();
     //validateaddress_vk
+    //set_xmr_node_access
     //validateaddress
     //check_address
     //check_vk
@@ -1870,7 +1871,7 @@ function after_scan_init(api_data) {
     const rq_init = request.rq_init,
         request_ts = rq_init + glob_const.timezone,
         set_confirmations = request.set_confirmations || 0,
-        rdo = {
+        rdo = { // request data object
             "request_timestamp": request_ts,
             "setconfirmations": set_confirmations,
             "pending": "scanning",
@@ -2456,6 +2457,7 @@ function validateaddress_vk(ad) {
                 }
                 const start_height = data.start_height;
                 if (start_height > -1) { // success!
+                    set_xmr_node_access(vkinputval);
                     validateaddress(ad, vkinputval);
                 }
             }).fail(function(xhr, stat, err) {
@@ -2467,6 +2469,17 @@ function validateaddress_vk(ad) {
         return
     }
     popnotify("error", translate("pickacurrency"));
+}
+
+// Save mymonero node status in session
+function set_xmr_node_access(vk) {
+    const stored_vk_list = br_get_session("xmrvks", true);
+    if (stored_vk_list) {
+        stored_vk_list.push(vk);
+        br_set_session("xmrvks", stored_vk_list, true);
+        return
+    }
+    br_set_session("xmrvks", [vk], true);
 }
 
 // Validates the address for the selected currency and handles the addition or editing of the address

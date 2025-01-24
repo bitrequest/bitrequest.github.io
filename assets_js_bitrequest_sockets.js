@@ -150,7 +150,7 @@ function init_socket(socket_node, address, retry) {
         if (vk) {
             const xmr_requests = get_requestli("payment", "monero"),
                 xmr_pending = filter_list(xmr_requests, "pending", "scanning");
-            if (xmr_pending.length) {
+            if (xmr_pending.length) { // update pending xmr tx's to prevent tx duplication
                 trigger_requeststates(true, xmr_pending);
             }
             const account = vk.account || address,

@@ -222,11 +222,11 @@ function continue_select(rd, api_data, rdo) {
 function continue_select_api(rd, api_data, rdo) {
     const api_name = api_data.name;
     if (api_name === "mymonero api") {
-        monero_fetch(rd, api_data, rdo);
+        monero_fetch_init(rd, api_data, rdo);
         return
     }
     if (api_name === "blockchair_xmr") {
-        monero_fetch(rd, api_data, rdo);
+        monero_fetch_init(rd, api_data, rdo);
         return
     }
     if (api_name === "mempool.space") {

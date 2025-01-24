@@ -3,6 +3,7 @@ $(document).ready(function() {
     // ** API **
 
     //lightning_fetch
+    //monero_fetch_init
     //monero_fetch
     //match_xmr_pid
     //blockchair_xmr_poll
@@ -299,28 +300,27 @@ function lightning_fetch(rd, api_data, rdo) {
 
 // This function handles fetching and processing Monero transaction data.
 // It uses different APIs based on the pending status and performs various checks and data manipulations.
-function monero_fetch(rd, api_data, rdo) {
+function monero_fetch_init(rd, api_data, rdo) {
     if (rdo.pending === "polling") {
         blockchair_xmr_poll(rd, api_data, rdo); // use blockchair api for tx lookup
         return
     }
-    const vk = rd.viewkey;
+    const vk = q_obj(rd, "viewkey.vk");
     if (!vk) return;
-    const api_name = api_data.name,
-        transactionlist = rdo.transactionlist,
-        xmr_ia = rd.xmr_ia,
-        payment_id = rd.payment_id,
-        account = vk.account || rd.address,
-        viewkey = vk.vk,
-        source = rdo.source,
+    const viewkey = rd.viewkey;
+    if (xmr_node_access(vk)) {
+        monero_fetch(rd, api_data, rdo, viewkey);
+        return
+    }
+    const account = vk.account || rd.address,
         payload = JSON.stringify({
             "address": account,
-            "view_key": viewkey,
+            "view_key": vk,
             "create_account": true,
             "generated_locally": false
         });
     api_proxy({
-        "api": api_name,
+        "api": "mymonero api",
         "search": "login",
         "cachetime": 25,
         "cachefolder": "1h",
@@ -336,59 +336,8 @@ function monero_fetch(rd, api_data, rdo) {
         const data = br_result(e).result;
         if (data) {
             if (data.start_height > -1) { // success!
-                const pl = {
-                    "address": account,
-                    "view_key": viewkey
-                };
-                api_proxy({
-                    "api": api_name,
-                    "search": "get_address_txs",
-                    "cachetime": 25,
-                    "cachefolder": "1h",
-                    "proxy": true,
-                    "params": {
-                        "method": "POST",
-                        "data": JSON.stringify(pl),
-                        "headers": {
-                            "Content-Type": "application/json"
-                        }
-                    }
-                }).done(function(e) {
-                    const data = br_result(e).result,
-                        transactions = data.transactions;
-                    if (transactions) {
-                        const sortlist = sort_by_date(xmr_scan_data, transactions);
-                        let counter = 0,
-                            txdat = false;
-                        $.each(sortlist, function(dat, value) {
-                            const txd = xmr_scan_data(value, rdo.setconfirmations, "xmr", data.blockchain_height);
-                            if (txd) {
-                                const xid_match = match_xmr_pid(xmr_ia, payment_id, txd.payment_id); // match xmr payment_id if set
-                                if (xid_match) {
-                                    if (txd.ccval && txd.transactiontime > rdo.request_timestamp) {
-                                        txdat = txd;
-                                        if (source === "requests") {
-                                            const tx_listitem = append_tx_li(txd, rd.requesttype);
-                                            if (tx_listitem) {
-                                                transactionlist.append(tx_listitem.data(txd));
-                                                counter++;
-                                            }
-                                        }
-                                        return false;
-                                    }
-                                }
-                            }
-                        });
-                        scan_match(rd, api_data, rdo, counter, txdat);
-                        return
-                    }
-                    api_callback(rdo);
-                }).fail(function(xhr, stat, err) {
-                    const error_object = xhr || stat || err;
-                    tx_api_scan_fail({
-                        "error": error_object
-                    }, rd, api_data, rdo);
-                });
+                set_xmr_node_access(vk);
+                monero_fetch(rd, api_data, rdo, viewkey);
                 return
             }
         }
@@ -404,6 +353,63 @@ function monero_fetch(rd, api_data, rdo) {
         set_api_src(rdo, {
             "name": "mymonero api"
         });
+    });
+}
+
+function monero_fetch(rd, api_data, rdo, viewkey) {
+    const account = viewkey.account || rd.address,
+        pl = {
+            "address": account,
+            "view_key": viewkey.vk
+        };
+    api_proxy({
+        "api": "mymonero api",
+        "search": "get_address_txs",
+        "cachetime": 25,
+        "cachefolder": "1h",
+        "proxy": true,
+        "params": {
+            "method": "POST",
+            "data": JSON.stringify(pl),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }
+    }).done(function(e) {
+        const data = br_result(e).result,
+            transactions = data.transactions;
+        if (transactions) {
+            const sortlist = sort_by_date(xmr_scan_data, transactions);
+            let counter = 0,
+                txdat = false;
+            $.each(sortlist, function(dat, value) {
+                const txd = xmr_scan_data(value, rdo.setconfirmations, "xmr", data.blockchain_height);
+                if (txd) {
+                    const xid_match = match_xmr_pid(rd.xmr_ia, rd.payment_id, txd.payment_id); // match xmr payment_id if set
+                    if (xid_match) {
+                        if (txd.ccval && txd.transactiontime > rdo.request_timestamp) {
+                            txdat = txd;
+                            if (rdo.source === "requests") {
+                                const tx_listitem = append_tx_li(txd, rd.requesttype);
+                                if (tx_listitem) {
+                                    rdo.transactionlist.append(tx_listitem.data(txd));
+                                    counter++;
+                                }
+                            }
+                            return false;
+                        }
+                    }
+                }
+            });
+            scan_match(rd, api_data, rdo, counter, txdat);
+            return
+        }
+        api_callback(rdo);
+    }).fail(function(xhr, stat, err) {
+        const error_object = xhr || stat || err;
+        tx_api_scan_fail({
+            "error": error_object
+        }, rd, api_data, rdo);
     });
 }
 
