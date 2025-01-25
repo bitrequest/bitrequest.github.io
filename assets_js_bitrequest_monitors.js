@@ -107,7 +107,6 @@ function get_requeststates(trigger, active_requests) {
                 requeststates = statuscache.requeststates;
             if (cachetime > 30000 || empty_obj(requeststates)) { //check if cached crypto rates are expired (check every 30 seconds on page refresh or when opening request page)
                 active_requests.addClass("scan");
-                br_remove_session("txstatus"); // remove cached transactions
                 getinputs(request_data, d_lay);
                 return
             }
@@ -138,19 +137,30 @@ function get_requeststates(trigger, active_requests) {
         return
     }
     if (!empty_obj(glob_let.statuspush)) {
+        const tx_states = br_get_session("txstatus", true);
+        if (tx_states) {
+            const txs = tx_states.requeststates,
+                txid = sha_sub(JSON.stringify(txs), 15), // hash arrays to compare for changes
+                new_tx_id = sha_sub(JSON.stringify(glob_let.statuspush), 15);
+            if (txid !== new_tx_id) { // check for updates
+                // Only save on status updates
+                saverequests();
+            }
+        } else {
+            saverequests();
+        }
         const statusobject = {
             "timestamp": now(),
             "requeststates": glob_let.statuspush
         };
         br_set_session("txstatus", statusobject, true);
-        saverequests();
         clearscan();
     }
 }
 
 // Retrieves input data for requests
 function getinputs(rd, dl) {
-    const rdo = tx_data(rd); // fetchblocks.js
+    const rdo = tx_data(rd);
     if (rdo.pending === "scanning" || rdo.pending === "polling") {
         if (dl) {
             const delay = 10000,
@@ -174,7 +184,7 @@ function getinputs(rd, dl) {
     const transactionlist = rdo.transactionlist;
     if (transactionlist) {
         transactionlist.find("li").each(function(i) {
-            glob_let.tx_list.push($(this).data("txhash"));
+            glob_let.tx_list.push($(this).data("txhash")); //index transaction id's
         });
         api_callback(rdo);
     }
@@ -221,6 +231,11 @@ function continue_select(rd, api_data, rdo) {
 
 function continue_select_api(rd, api_data, rdo) {
     const api_name = api_data.name;
+    if (rdo.source === "addr_polling") {
+        glob_let.rpc_attempts = {}
+        continue_select(rd, api_data, rdo);
+        return
+    }
     if (api_name === "mymonero api") {
         monero_fetch_init(rd, api_data, rdo);
         return
@@ -263,11 +278,6 @@ function continue_select_api(rd, api_data, rdo) {
     }
     if (api_name === "dash.org") {
         insight_fetch_dash(rd, api_data, rdo);
-        return
-    }
-    if (rdo.source === "addr_polling") {
-        glob_let.rpc_attempts = {}
-        continue_select(rd, api_data, rdo);
         return
     }
     api_callback(rdo);
@@ -417,6 +427,7 @@ function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
         error_data = get_api_error_data(error_obj),
         timeout = rdo.timeout,
         cachetime = rdo.cachetime;
+
     function next_proxy(type) { // try next proxy
         if (type === "api_fail" && (error_data.apikey || glob_let.apikey_fails)) return false; // only try next proxy if api key is expired or missing
         if (get_next_proxy()) {
@@ -745,8 +756,9 @@ function data_title(dat) {
             lc_val = dat.ccval * lc_ccrate,
             cc_upper = dat.ccsymbol ? dat.ccsymbol.toUpperCase() : dat.ccsymbol,
             lc_upper = lcsymbol ? lcsymbol.toUpperCase() : lcsymbol,
-            localrate = lc_upper === "USD" ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(6) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2),
-            historic_dat = "Historic data (" + fulldateformat(new Date(timestamp - glob_const.timezone), langcode) + "):\n" +
+            localrate = lc_upper === "USD" ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(6) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2);
+        // set historic data
+        historic_dat = "Historic data (" + fulldateformat(new Date(timestamp - glob_const.timezone), langcode) + "):\n" +
             "Fiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" +
             cc_upper + "-USD: " + price.toFixed(6) + "\n" +
             localrate + "\n" +

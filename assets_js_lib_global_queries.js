@@ -122,9 +122,11 @@ const br_bipobj = br_get_local("bpdat", true),
         "socket_attempt": {},
         "api_attempt": {},
         "rpc_attempts": {},
-        "apikey_fails": false,
-        "statuspush": [],
+        "proxy_attempts": {},
         "tx_list": [],
+        "statuspush": [],
+        "l2_fetched": {},
+        "apikey_fails": false,
         "changes": {}, //bip39
         "test_derive": true,
         "phrasearray": null,
@@ -148,7 +150,6 @@ const br_bipobj = br_get_local("bpdat", true),
         "init": br_init,
         "io": br_io,
         "new_address": false, // prevent double address entries
-        "proxy_attempts": {},
         "sockets": {},
         "pinging": {},
         "currencyscan": null,
@@ -183,9 +184,7 @@ const br_bipobj = br_get_local("bpdat", true),
             "socket": 0,
             "proxy": 0
         },
-        "overflow_detected": false,
-        "l2_fetched": {}
-
+        "overflow_detected": false
     }
 
 // Global helpers
