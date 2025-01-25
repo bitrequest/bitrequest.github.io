@@ -923,7 +923,7 @@ function bch_legacy(cadr) {
             unbuf = buf2hex(conc);
         return b58check_encode(unbuf);
     } catch (e) {
-        console.error(e.name, e.message);
+        //console.error(e.name, e.message);
         return cadr
     }
 }

@@ -620,6 +620,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
             popdialog(content, "canceldialog");
             return
         }
+        closesocket();
         tx_polling_init(txd);
     };
     websocket.onclose = function(e) {

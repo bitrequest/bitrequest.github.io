@@ -36,8 +36,8 @@ function tx_polling(tx_data, api_dat, retry) {
             if (request) {
                 const txhash = tx_data.txhash;
                 if (txhash) {
+                    confirmations(tx_data, true);
                     if (!tx_data.setconfirmations) {
-                        confirmations(tx_data, true);
                         return
                     }
                     const eth_layer2 = tx_data.eth_layer2;
