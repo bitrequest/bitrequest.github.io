@@ -1304,13 +1304,14 @@ function closesocket(s_id) {
 
 // Updates the UI with socket connection information
 function socket_info(snode, live, polling) {
-    const l2 = snode.network;
+    const l2 = snode.network,
+        node_name = snode.url || snode.name;
     if (l2) {
         set_l2_status(snode, live);
     } else {
         const islive = live ? " <span class='pulse'></span>" : " <span class='icon-wifi-off'></span>",
             method = polling ? "polling" : "websocket",
-            contents = method + ": " + snode.url + islive,
+            contents = method + ": " + node_name + islive,
             paymentaddress = $("#paymentaddress");
         $("#current_socket").html(contents);
         if (live) {
@@ -1320,7 +1321,7 @@ function socket_info(snode, live, polling) {
         }
     }
     if (live) {
-        console.log("Connected: " + snode.url);
+        console.log("Connected: " + node_name);
         glob_const.paymentpopup.addClass("live");
         closenotify();
         return

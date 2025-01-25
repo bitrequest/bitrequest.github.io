@@ -231,11 +231,6 @@ function continue_select(rd, api_data, rdo) {
 
 function continue_select_api(rd, api_data, rdo) {
     const api_name = api_data.name;
-    if (rdo.source === "addr_polling") {
-        glob_let.rpc_attempts = {}
-        continue_select(rd, api_data, rdo);
-        return
-    }
     if (api_name === "mymonero api") {
         monero_fetch_init(rd, api_data, rdo);
         return
