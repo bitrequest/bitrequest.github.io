@@ -146,7 +146,7 @@ function lightning_fetch(rd, api_data, rdo) {
                         if (inv_error) {
                             tx_api_scan_fail({
                                 "error": inv_error
-                            }, rd, "ln");
+                            }, rd, "ln", rdo);
                             const err_message = inv_error.message || typeof inv_error === "string" ? inv_error : default_error;
                             status_field.text(" " + err_message);
                             if (!ln_only) {
@@ -783,7 +783,7 @@ function ethplorer_fetch(rd, api_data, rdo) {
                 if (error) {
                     tx_api_scan_fail({
                         "error": error
-                    }, api_data, rdo, null, l2);
+                    }, api_data, rdo, l2);
                     return
                 }
                 const operations = data.operations;
@@ -808,7 +808,7 @@ function ethplorer_fetch(rd, api_data, rdo) {
                     return
                 }
             }
-            tx_api_scan_fail(null, rd, api_data, rdo, null, l2);
+            tx_api_scan_fail(null, rd, api_data, rdo, l2);
         }).fail(function(xhr, stat, err) {
             const is_proxy = is_proxy_fail(this.url),
                 error_object = xhr || stat || err;
@@ -837,7 +837,7 @@ function ethplorer_fetch(rd, api_data, rdo) {
                     if (error) {
                         tx_api_scan_fail({
                             "error": error
-                        }, rd, api_data, rdo, null, l2);
+                        }, rd, api_data, rdo, l2);
                         return
                     }
                     const input = data.input,
@@ -865,7 +865,7 @@ function ethplorer_fetch(rd, api_data, rdo) {
                     scan_match(rd, api_data, rdo, counter, txdat, l2);
                     return
                 }
-                tx_api_scan_fail(null, rd, api_data, rdo, null, l2);
+                tx_api_scan_fail(null, rd, api_data, rdo, l2);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
@@ -918,12 +918,12 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
             api_proxy(eth_payload).done(function(e) {
                 const data = br_result(e).result;
                 if (data) {
-                    const error = (q_obj(data, "status") == 0) || data.error;
+                    const error = data.error;
                     if (error) {
                         const error_object = data.error || data;
                         tx_api_scan_fail({
                             "error": error_object
-                        }, rd, api_data, rdo, null, network);
+                        }, rd, api_data, rdo, network);
                         return
                     }
                     const result = data.result;
@@ -948,7 +948,7 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                         return
                     }
                 }
-                tx_api_scan_fail(null, rd, api_data, rdo, null, network);
+                tx_api_scan_fail(null, rd, api_data, rdo, network);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
@@ -965,12 +965,12 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
             api_proxy(erc20_payload).done(function(e) {
                 const data = br_result(e).result;
                 if (data) {
-                    const error = (q_obj(data, "status") == 0) || data.error;
+                    const error = data.error;
                     if (error) {
-                        const error_object = data.error || data;
+                        const error_object = error || data;
                         tx_api_scan_fail({
                             "error": error_object
-                        }, rd, api_data, rdo, null, network);
+                        }, rd, api_data, rdo, network);
                         return
                     }
                     const result = data.result;
@@ -995,7 +995,7 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                         return
                     }
                 }
-                tx_api_scan_fail(null, rd, api_data, rdo, null, network);
+                tx_api_scan_fail(null, rd, api_data, rdo, network);
             }).fail(function(xhr, stat, err) {
                 const is_proxy = is_proxy_fail(this.url),
                     error_object = xhr || stat || err;
@@ -1017,12 +1017,12 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                 api_proxy(eth_payload).done(function(e) {
                     const data = br_result(e).result;
                     if (data) {
-                        const error = (q_obj(data, "status") == 0) || data.error;
+                        const error = data.error;
                         if (error) {
-                            const error_object = data.error || data;
+                            const error_object = error || data;
                             tx_api_scan_fail({
                                 "error": error_object
-                            }, rd, api_data, rdo, null, network);
+                            }, rd, api_data, rdo, network);
                             return
                         }
                         const result = data.result;
@@ -1047,7 +1047,7 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                             return
                         }
                     }
-                    tx_api_scan_fail(null, rd, api_data, rdo, null, network);
+                    tx_api_scan_fail(null, rd, api_data, rdo, network);
                 }).fail(function(xhr, stat, err) {
                     const is_proxy = is_proxy_fail(this.url),
                         error_object = xhr || stat || err;
@@ -1064,12 +1064,12 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                 api_proxy(erc20_payload).done(function(e) {
                     const data = br_result(e).result;
                     if (data) {
-                        const error = (q_obj(data, "status") == 0) || data.error;
+                        const error = data.error;
                         if (error) {
-                            const error_object = data.error || data;
+                            const error_object = error || data;
                             tx_api_scan_fail({
                                 "error": error_object
-                            }, rd, api_data, rdo, null, network);
+                            }, rd, api_data, rdo, network);
                             return
                         }
                         const result = data.result;
@@ -1094,7 +1094,7 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
                             return
                         }
                     }
-                    tx_api_scan_fail(null, rd, api_data, rdo, null, network);
+                    tx_api_scan_fail(null, rd, api_data, rdo, network);
                 }).fail(function(xhr, stat, err) {
                     const is_proxy = is_proxy_fail(this.url),
                         error_object = xhr || stat || err;
@@ -1125,8 +1125,8 @@ function blockchair_fetch(rd, api_data, rdo) {
         requestid = rd.requestid,
         source = rdo.source,
         address = rd.address,
-        address_lower = address.toLowerCase();
-    ccsymbol = rd.currencysymbol,
+        address_lower = address.toLowerCase(),
+        ccsymbol = rd.currencysymbol,
         contract = rd.token_contract;
     let counter = 0,
         txdat = false;
@@ -1901,7 +1901,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                 omniscan_fetch(rd, api_dat, rdo, contract, chainid || 1);
                 return
             }
-            tx_api_scan_fail(null, rd, api_data, rdo, null, layer2);
+            tx_api_scan_fail(null, rd, api_data, rdo, layer2);
             return
         }
         api_dat = q_obj(coin_setting, "apis.selected");
@@ -1913,7 +1913,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
             omniscan_fetch(rd, api_dat, rdo, null, 1);
             return
         }
-        tx_api_scan_fail(null, rd, api_data, rdo, null, layer2);
+        tx_api_scan_fail(null, rd, api_data, rdo, layer2);
         return
     }
     const thislist = rdo.thislist,
@@ -1954,7 +1954,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                                     };
                                 txd = infura_erc20_poll_data(txdata, rdo.setconfirmations, rd.currencysymbol, layer2);
                             } else {
-                                tx_api_scan_fail(null, rd, api_data, rdo, null, layer2);
+                                tx_api_scan_fail(null, rd, api_data, rdo, layer2);
                                 return
                             }
                         } else {
@@ -1978,21 +1978,21 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                         scan_match(rd, api_data, rdo, counter, txdat);
                         return
                     }
-                    tx_api_scan_fail(null, rd, api_data, rdo, null, layer2);
+                    tx_api_scan_fail(null, rd, api_data, rdo, layer2);
                 }).fail(function(xhr, stat, err) {
                     const error_object = xhr || stat || err;
                     tx_api_scan_fail({
                         "error": error_object
-                    }, rd, api_data, rdo, null, layer2);
+                    }, rd, api_data, rdo, layer2);
                 });
                 return
             }
-            tx_api_scan_fail(null, rd, api_data, rdo, null, layer2);
+            tx_api_scan_fail(null, rd, api_data, rdo, layer2);
         }).fail(function(xhr, stat, err) {
             const error_object = xhr || stat || err;
             tx_api_scan_fail({
                 "error": error_object
-            }, rd, api_data, rdo, null, layer2);
+            }, rd, api_data, rdo, layer2);
         });
     }).fail(function(xhr, stat, err) {
         const is_proxy = is_proxy_fail(this.url),

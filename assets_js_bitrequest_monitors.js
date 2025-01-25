@@ -417,7 +417,6 @@ function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
         error_data = get_api_error_data(error_obj),
         timeout = rdo.timeout,
         cachetime = rdo.cachetime;
-
     function next_proxy(type) { // try next proxy
         if (type === "api_fail" && (error_data.apikey || glob_let.apikey_fails)) return false; // only try next proxy if api key is expired or missing
         if (get_next_proxy()) {
