@@ -684,23 +684,19 @@ html.inframe #request_back {
 .networks ul li.nwl2:after {
 	position: absolute;
 	content: "•";
-	color: rgba(255, 255, 255, 0);
+	color: #afafaf;
 	margin: -0.32em 0 0 0.08em;
 	padding: 0;
 	font-size: 2em;
-}
-
-.networks ul li.nwl2.offline {
-	text-decoration-line: line-through;
-	color: #afafaf;
 }
 
 .networks ul li.nwl2.online:after {
 	color: #00c000;
 }
 
-.networks ul li.nwl2.offline:after {
-	color: #FF0000;
+#paymentdialogbox:not(.transacting) .networks ul li.nwl2.offline {
+	text-decoration-line: line-through;
+	color: #afafaf;
 }
 
 #current_socket .pulse {

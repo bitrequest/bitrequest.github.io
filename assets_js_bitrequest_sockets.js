@@ -1188,9 +1188,13 @@ function web3_erc20_websocket(socket_node, thisaddress, contract, ws_id) {
         }
     };
     websocket.onclose = function(e) {
-        console.log("Disconnected from " + socket_node.url);
-        glob_let.ws_timer = 0;
-        handle_socket_fails(socket_node, thisaddress, ws_id, l2network);
+        if (e.code === 1008) { // closed because of API limit, switch to polling
+            console.error("Disconnected from " + socket_node.url);
+            glob_let.ws_timer = 0;
+            handle_socket_fails(socket_node, thisaddress, ws_id, l2network);
+            return
+        }
+        handle_socket_close(socket_node);
     };
     websocket.onerror = function(e) {
         handle_socket_fails(socket_node, thisaddress, ws_id, l2network);
@@ -1304,42 +1308,34 @@ function closesocket(s_id) {
 
 // Updates the UI with socket connection information
 function socket_info(snode, live, polling) {
-    const l2 = snode.network,
-        node_name = snode.url || snode.name;
-    if (l2) {
-        set_l2_status(snode, live);
-    } else {
-        const islive = live ? " <span class='pulse'></span>" : " <span class='icon-wifi-off'></span>",
-            method = polling ? "polling" : "websocket",
-            contents = method + ": " + node_name + islive,
-            paymentaddress = $("#paymentaddress");
-        $("#current_socket").html(contents);
-        if (live) {
-            paymentaddress.addClass("live");
-        } else {
-            paymentaddress.removeClass("live");
-        }
+    if (!is_openrequest()) {
+        return
     }
+    if (snode.network) {
+        set_l2_status(snode, live);
+        return
+    }
+    const node_name = snode.url || snode.name,
+        islive = live ? " <span class='pulse'></span>" : " <span class='icon-wifi-off'></span>",
+        method = polling ? "polling" : "websocket",
+        contents = method + ": " + node_name + islive,
+        paymentaddress = $("#paymentaddress");
+    $("#current_socket").html(contents);
     if (live) {
         console.log("Connected: " + node_name);
+        helper.l1_status = true;
+        paymentaddress.addClass("live");
         glob_const.paymentpopup.addClass("live");
         closenotify();
         return
     }
     setTimeout(function() {
-        if (!is_openrequest()) {
-            return
-        }
-        const l2nws = glob_const.paymentpopup.find("li.nwl2.online");
-        if (!l2nws.length) {
+        if (glob_const.paymentdialogbox.hasClass("transacting")) return;
+        paymentaddress.removeClass("live");
+        helper.l1_status = false;
+        if (helper.l2_status === false) {
             glob_const.paymentpopup.removeClass("live");
+            notify(translate("websocketoffline"), 500000, "yes");
         }
-        if (glob_const.paymentdialogbox.hasClass("transacting")) {
-            return
-        }
-        if ($("#paymentaddress").hasClass("live")) {
-            return
-        }
-        notify(translate("websocketoffline"), 500000, "yes");
     }, 1000);
 }

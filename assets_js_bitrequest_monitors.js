@@ -327,6 +327,10 @@ function scan_match(rd, api_data, rdo, counter, txdat, l2) {
             return
         }
         if (isopenrequest()) { // only when request is visible
+            if (eth_layer2) { // Eth layer 2
+                glob_let.l2s = {};
+                set_l2_status(api_data, true);
+            }
             txdat.txhash = txhash;
             const status = confirmations(txdat);
             if (status === "paid") {
@@ -340,16 +344,12 @@ function scan_match(rd, api_data, rdo, counter, txdat, l2) {
                     glob_const.paymentpopup.addClass("active");
                     closeloader();
                 }
-                clearpinging();
+                forceclosesocket();
                 tx_polling_init(txdat, api_data);
                 return
             }
             if (src === "tx_polling" || src === "l2_polling") {
                 if (block_overflow("polling")) return; // prevent overflow
-                if (eth_layer2) { // Eth layer 2
-                    glob_let.l2s = {};
-                    set_l2_status(api_data, true);
-                }
                 tx_polling(txdat, api_data);
             }
         }

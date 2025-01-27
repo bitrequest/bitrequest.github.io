@@ -455,7 +455,9 @@ function loadpaymentfunction(pass) {
                     "exact": exact,
                     "contactform": contactform,
                     "lnd": false,
-                    "lnd_status": false
+                    "lnd_status": false,
+                    "l1_status": false,
+                    "l2_status": false
                 }, // global helper object
                 glob_let.api_attempt["crypto_price_apis"] = {},
                 glob_let.api_attempt["fiat_price_apis"] = {},

@@ -97,7 +97,6 @@ function omni_scan(socket_node, contract, ping_id, retry) {
         }
         glob_let.pinging[ping_id] = setInterval(function() {
             scan_ethl2_socket(rdo, socket_node);
-            poll_animate();
         }, timeout);
         return
     }
@@ -487,23 +486,39 @@ function set_l2_status(sn, stat) {
         return
     }
     const network = sn.network,
+        l2_object = glob_let.l2s,
         status = stat ? "online" : "offline",
         title1 = "#" + sn.url,
-        val = status + title1;
-    glob_let.l2s[network] = val;
-    const networks = $("#paymentdialogbox .networks");
+        val = status + title1,
+        networks = $("#paymentdialogbox .networks"),
+        l2_length = Object.keys(l2_object).length;
+    l2_object[network] = val;
     let nw_li = "<li>L2's: </i>",
-        empty = true;
+        empty = true,
+        offline_count = 0;
     $.each(glob_let.l2s, function(l2, l2_dat) {
         empty = false;
         const nw_select = l2_dat.split("#"),
-            stat = " " + nw_select[0],
+            st = nw_select[0],
+            stat = " " + st,
             title = nw_select[1],
             nw_name = l2 === "bnb" ? "bnb smart chain" : l2;
         nw_li += "<li class='nwl2" + stat + "' title='" + title + "'>" + nw_name + "</li>";
+        if (st === "offline") {
+            offline_count++
+        }
     });
     if (!empty) {
         networks.html("<ul>" + nw_li + "</ul>");
+        if (glob_const.paymentdialogbox.hasClass("transacting")) return;
+        if (helper) {
+            const l2_status = offline_count < l2_length;
+            helper.l2_status = l2_status;
+            if (l2_status === false && helper.l1_status === false) {
+                glob_const.paymentpopup.removeClass("live");
+                notify(translate("websocketoffline"), 500000, "yes");
+            }
+        }
     }
 }
 
