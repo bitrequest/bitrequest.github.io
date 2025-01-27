@@ -193,6 +193,17 @@ function getinputs(rd, dl) {
 // Initializes API input retrieval
 function select_rpc(rd, api_data, rdo) {
     if (api_data) {
+        const src = rdo.source;
+        if (src === "requests") {
+            const thislist = rdo.thislist;
+            if (thislist) {
+                thislist.removeClass("no_network");
+                const transactionlist = rdo.transactionlist;
+                if (transactionlist) {
+                    transactionlist.empty();
+                }
+            }
+        }
         if (rd.eth_layer2) {
             query_ethl2_api(rd, rdo);
             return
@@ -209,17 +220,6 @@ function select_rpc(rd, api_data, rdo) {
 
 // Continue after scanning lightning transaction
 function continue_select(rd, api_data, rdo) {
-    const src = rdo.source;
-    if (src === "requests") {
-        const thislist = rdo.thislist;
-        if (thislist) {
-            thislist.removeClass("no_network");
-            const transactionlist = rdo.transactionlist;
-            if (transactionlist) {
-                transactionlist.empty();
-            }
-        }
-    }
     const rq_id = rd.requestid || "";
     glob_let.rpc_attempts[sha_sub(rq_id + api_data.url, 15)] = true;
     if (api_data.api) {
