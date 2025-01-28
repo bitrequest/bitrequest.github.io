@@ -1219,7 +1219,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                 }).done(function(e) {
                     const dat = br_result(e).result,
                         bcdat = dat.data;
-                    if (bcdat && br_issar(bcdat)) {
+                    if (bcdat) {
                         $.each(bcdat, function(dt, val) {
                             const txd = blockchair_scan_data(val, rdo.setconfirmations, ccsymbol, address, latestblock);
                             if (txd.transactiontime > rdo.request_timestamp && txd.ccval) { // get all transactions after requestdate
@@ -1236,9 +1236,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                         scan_match(rd, api_data, rdo, counter);
                         return
                     }
-                    tx_api_scan_fail({
-                        "error": error_object
-                    }, rd, api_data, rdo);
+                    tx_api_scan_fail(null, rd, api_data, rdo);
                 }).fail(function(xhr, stat, err) {
                     const error_object = xhr || stat || err;
                     tx_api_scan_fail({

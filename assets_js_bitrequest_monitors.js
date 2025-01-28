@@ -449,7 +449,7 @@ function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
         }
         return false;
     }
-    if (error_obj.is_proxy) { // Try next proxy if proxy fails
+    if (error_obj && error_obj.is_proxy) { // Try next proxy if proxy fails
         if (next_proxy("proxy_fail")) {
             return
         }
