@@ -326,32 +326,32 @@ function scan_match(rd, api_data, rdo, counter, txdat, l2) {
             compareamounts(rd, rdo);
             return
         }
-        if (isopenrequest()) { // only when request is visible
-            if (eth_layer2) { // Eth layer 2
-                glob_let.l2s = {};
-                set_l2_status(api_data, true);
-            }
-            txdat.txhash = txhash;
+        if (eth_layer2) { // Eth layer 2
+            glob_let.l2s = {};
+            set_l2_status(api_data, true);
+        }
+        txdat.txhash = txhash;
+        if (src !== "after_scan") {
             const status = confirmations(txdat);
             if (status === "paid") {
                 forceclosesocket();
                 return
             }
-            if (rdo.pending === "scanning") { // scanning
-                // After scan
-                if (src === "after_scan") {
-                    glob_const.html.addClass("blurmain_payment");
-                    glob_const.paymentpopup.addClass("active");
-                    closeloader();
-                }
-                forceclosesocket();
-                tx_polling_init(txdat, api_data);
-                return
+        }
+        if (rdo.pending === "scanning") { // scanning
+            // After scan
+            if (src === "after_scan") {
+                glob_const.html.addClass("blurmain_payment");
+                glob_const.paymentpopup.addClass("active");
+                closeloader();
             }
-            if (src === "tx_polling" || src === "l2_polling") {
-                if (block_overflow("polling")) return; // prevent overflow
-                tx_polling(txdat, api_data);
-            }
+            forceclosesocket();
+            tx_polling_init(txdat, api_data);
+            return
+        }
+        if (src === "tx_polling" || src === "l2_polling") {
+            if (block_overflow("polling")) return; // prevent overflow
+            tx_polling(txdat, api_data);
         }
         return
     }

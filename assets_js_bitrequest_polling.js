@@ -326,8 +326,6 @@ function confirmations(tx_data, direct, ln) {
                 confboxspan = confbox.find("span"),
                 currentconf = parseFloat(confboxspan.attr("data-conf")),
                 xconf = tx_data.confirmations || 0,
-                txhash = tx_data.txhash,
-                eth_layer2 = tx_data.eth_layer2,
                 zero_conf = setconfirmations === false || tx_data.instant_lock; // Dashpay instant_lock
 
             brstatuspanel.find("span#confnumber").text(conf_text);
@@ -342,7 +340,9 @@ function confirmations(tx_data, direct, ln) {
                     confboxspan.text(xconf).attr("data-conf", xconf);
                 }, 500);
 
-                const amount_rel = $("#open_wallet").attr("data-rel"),
+                const txhash = tx_data.txhash,
+                    eth_layer2 = tx_data.eth_layer2,
+                    amount_rel = $("#open_wallet").attr("data-rel"),
                     cc_raw = amount_rel && amount_rel.length ? parseFloat(amount_rel) : 0,
                     receivedutc = tx_data.transactiontime,
                     receivedtime = receivedutc - glob_const.timezone,
