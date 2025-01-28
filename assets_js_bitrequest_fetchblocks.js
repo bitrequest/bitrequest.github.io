@@ -2099,7 +2099,7 @@ function nano_rpc(rd, api_data, rdo) {
                 }
                 $.each(data, function(data, value) {
                     const txd = nano_scan_data(value, rdo.setconfirmations, rd.currencysymbol);
-                    if ((txd.transactiontime > rdo.request_timestamp) && txd.ccval && (value.subtype === "receive" || value.receivable)) {
+                    if ((txd.transactiontime > (rdo.request_timestamp - 10000)) && txd.ccval && (value.subtype === "receive" || value.receivable)) {
                         txdat = txd;
                         if (source === "requests") {
                             const tx_listitem = append_tx_li(txd, rd.requesttype);
@@ -2557,7 +2557,7 @@ function nano_scan_data(data, setconfirmations, ccsymbol, txhash) {
         "ccval": ccval,
         "transactiontime": transactiontime_utc,
         "txhash": tx_hash,
-        "confirmations": 0,
+        "confirmations": false,
         "setconfirmations": false,
         "ccsymbol": ccsymbol
     };

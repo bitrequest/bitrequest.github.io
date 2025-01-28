@@ -58,7 +58,7 @@ function tx_polling(tx_data, api_dat, retry) {
 // Layer 1 transaction polling
 function tx_polling_l1(tx_data, api_dat, retry) {
     clear_tpto();
-    const to_time = retry ? 10 : api_dat ? 30000 : 10,
+    const to_time = retry ? 10 : 30000,
         api_data = api_dat || q_obj(helper, "api_info.data"),
         rdo = { // request data object
             "requestid": request.requestid,
@@ -88,7 +88,7 @@ function tx_polling_l1(tx_data, api_dat, retry) {
 // Layer 2 transaction polling
 function tx_polling_l2(eth_layer2, api_dat, retry) {
     clear_tpto();
-    const to_time = retry ? 10 : api_dat ? 30000 : 10,
+    const to_time = retry ? 10 : 30000,
         l2_options = fertch_l2s(request.payment),
         api_data = api_dat || q_obj(l2_options, eth_layer2 + ".apis.selected"),
         ctracts = contracts(request.currencysymbol),
@@ -308,7 +308,7 @@ function confirmations(tx_data, direct, ln) {
                 brstatuspanel = pmd.find(".brstatuspanel"),
                 brheader = brstatuspanel.find("h2"),
                 status = tx_data.status;
-            if (status && status === "canceled") {
+            if (status && status === "canceled") { // Lightning
                 brheader.html("<span class='icon-blocked'></span>Invoice canceled");
                 pmd.attr("data-status", "canceled");
                 updaterequest({
@@ -378,20 +378,23 @@ function confirmations(tx_data, direct, ln) {
                     xmr_pass = ccsymbol === "xmr" ? (rccf > (cc_raw * 0.97) && rccf < (cc_raw * 1.03)) : true; // error margin for xmr integrated addresses
 
                 if (xmr_pass) {
-                    const pass = exact && (rccf == cc_raw) ? true : (rccf >= (cc_raw * 0.97));
+                    const pass = exact ? rccf === cc_raw : rccf >= (cc_raw * 0.97);
                     if (pass) {
                         if (xconf >= setconfirmations || zero_conf === true) {
                             forceclosesocket();
                             playsound(ccsymbol === "doge" ? glob_const.howl : glob_const.cashier);
-                            const status_text = requesttype === "incoming" ? translate("paymentsent") : translate("paymentreceived");
+                            const status_text = requesttype === "incoming" ? translate("paymentsent") : translate("paymentreceived"),
+                                insufficient = pmd.hasClass("insufficient"), // keep scanning when amount was insufficient
+                                insufficient_status = insufficient ? "pending" : "paid",
+                                insufficient_pending = insufficient ? "scanning" : "polling";
                             pmd.addClass("transacting").attr("data-status", "paid");
                             brheader.text(status_text);
-                            request.status = "paid",
-                                request.pending = "polling";
+                            request.status = insufficient_status,
+                                request.pending = insufficient_pending;
                             saverequest(direct, ln);
                             $("span#ibstatus").fadeOut(500);
                             closenotify();
-                            new_status = "paid";
+                            new_status = insufficient_status;
                         } else {
                             if (!ln) {
                                 playsound(glob_const.blip);

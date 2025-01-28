@@ -1331,6 +1331,7 @@ function socket_info(snode, live, polling) {
     }
     setTimeout(function() {
         if (glob_const.paymentdialogbox.hasClass("transacting")) return;
+        if (!is_openrequest()) return;
         paymentaddress.removeClass("live");
         helper.l1_status = false;
         if (helper.l2_status === false) {

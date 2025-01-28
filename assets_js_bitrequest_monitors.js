@@ -893,7 +893,7 @@ function init_historical_fiat_data(rd, rdo, conf, latestinput, firstinput) {
         hc_prefix = "historic_" + rd.requestid,
         historiccache = br_get_session(hc_prefix),
         cacheval = latestinput + latestconf;
-    if ((cacheval - historiccache) > 0) { //new input detected; call historic api
+    if ((latestconf || conf === false) && cacheval > historiccache) { //new input detected; call historic api
         br_remove_session(hc_prefix); // remove historic price cache
         const historic_payload = $.extend(rd, {
                 "latestinput": latestinput,

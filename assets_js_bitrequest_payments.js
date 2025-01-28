@@ -2915,7 +2915,6 @@ function saverequest(direct, ln) {
                     "status": request.status,
                     "receivedamount": request.receivedamount,
                     "fiatvalue": request.fiatvalue,
-                    "paymenttimestamp": thispaymenttimestamp,
                     "txhash": savedtxhash,
                     "confirmations": request.confirmations,
                     "pending": request.pending,
@@ -3132,7 +3131,7 @@ function pendingdialog(pr) { // show pending dialog if tx is pending
             "txhash": smart_txhash,
             "setconfirmations": set_confirmations,
             eth_layer2
-        });
+        }, null, true);
     }
 }
 
@@ -3227,90 +3226,94 @@ function download_wallet(currency) {
 
 // Updates the request details in the UI
 function updaterequest(ua, save) {
-    const requestlist = $("#" + ua.requestid),
-        rldata = requestlist.data(),
-        metalist = requestlist.find(".metalist");
-    if (ua.receivedamount) {
-        metalist.find(".receivedamount span").text(" " + trimdecimals(ua.receivedamount, 6));
-    }
-    if (ua.fiatvalue) {
-        metalist.find(".payday.pd_fiat .fiatvalue").text(" " + trimdecimals(ua.fiatvalue, 2));
-    }
-    if (ua.paymenttimestamp) {
-        const fdf = fulldateformat(new Date(ua.paymenttimestamp - glob_const.timezone), langcode, true);
-        metalist.find(".payday.pd_paydate span.paydate").html(" " + fdf);
-        metalist.find(".payday.pd_fiat strong span.pd_fiat").html(" " + fdf);
-    }
-    if (ua.confirmations !== undefined) {
-        const meta_status = metalist.find("li.meta_status"),
-            set_confirmations = (rldata && rldata.set_confirmations) ? rldata.set_confirmations : 1,
-            conftext = (ua.confirmations == 0) ? translate("unconfirmedtx") : ua.confirmations + " / " + set_confirmations + " " + translate("confirmations");
-        meta_status.attr("data-conf", ua.confirmations).find(".txli_conf > span").text(conftext);
-        const confbar = meta_status.find(".txli_conf > .confbar");
-        if (confbar.length > 0) {
-            confbar.each(function(i) {
-                animate_confbar($(this), 0);
-            });
+    const requestlist = $("#" + ua.requestid);
+    if (requestlist.length) {
+        const rldata = requestlist.data(),
+            metalist = requestlist.find(".metalist");
+        if (ua.receivedamount) {
+            metalist.find(".receivedamount span").text(" " + trimdecimals(ua.receivedamount, 6));
         }
-    }
-    if (ua.pending) {
-        requestlist.attr("data-pending", ua.pending)
-    }
-    if (ua.status) {
-        const this_status = ua.status;
-        if (this_status !== "archive_pending") { // don't update if status is archive_pending
-            requestlist.attr("data-status", this_status);
-            metalist.find(".status").text(" " + translate(this_status));
+        if (ua.fiatvalue) {
+            metalist.find(".payday.pd_fiat .fiatvalue").text(" " + trimdecimals(ua.fiatvalue, 2));
         }
-        if (this_status === "paid" || this_status === "archive_pending") {
-            if (this_status === "paid") {
-                if (glob_const.inframe === false) {
-                    playsound(glob_const.blip);
-                }
-                requestlist.addClass("shownotification");
-            }
-            const transactionlist = requestlist.find(".transactionlist"),
-                validtxs = this_status === "archive_pending" ? transactionlist.find("li") : transactionlist.find("li.exceed"); // save all when archiving
-            if (validtxs.length > 0) {
-                const transactionpush = [];
-                validtxs.each(function() {
-                    transactionpush.push($(this).data());
+        if (ua.paymenttimestamp) {
+            const fdf = fulldateformat(new Date(ua.paymenttimestamp - glob_const.timezone), langcode, true);
+            metalist.find(".payday.pd_paydate span.paydate").html(" " + fdf);
+            metalist.find(".payday.pd_fiat strong span.pd_fiat").html(" " + fdf);
+        }
+        if (ua.confirmations !== undefined) {
+            const meta_status = metalist.find("li.meta_status"),
+                set_confirmations = rldata.set_confirmations || 1,
+                conftext = (ua.confirmations == 0) ? translate("unconfirmedtx") : ua.confirmations + " / " + set_confirmations + " " + translate("confirmations");
+            meta_status.attr("data-conf", ua.confirmations).find(".txli_conf > span").text(conftext);
+            const confbar = meta_status.find(".txli_conf > .confbar");
+            if (confbar.length) {
+                confbar.each(function(i) {
+                    animate_confbar($(this), 0);
                 });
-                ua.txhistory = transactionpush;
             }
-            transactionlist.find("li").not(validtxs).slideUp(300);
+        }
+        if (ua.pending) {
+            requestlist.attr("data-pending", ua.pending)
+        }
+        const this_status = ua.status;
+        if (this_status) {
+            if (this_status !== "archive_pending") { // don't update if status is archive_pending
+                requestlist.attr("data-status", this_status);
+                metalist.find(".status").text(" " + translate(this_status));
+            }
+            if (this_status === "paid" || this_status === "archive_pending") {
+                if (this_status === "paid") {
+                    if (glob_const.inframe === false) {
+                        playsound(glob_const.blip);
+                    }
+                    requestlist.addClass("shownotification");
+                }
+                const transactionlist = requestlist.find(".transactionlist"),
+                    validtxs = this_status === "archive_pending" ? transactionlist.find("li") : transactionlist.find("li.exceed"); // save all when archiving
+                if (validtxs.length > 0) {
+                    const transactionpush = [];
+                    validtxs.each(function() {
+                        transactionpush.push($(this).data());
+                    });
+                    ua.txhistory = transactionpush;
+                }
+                transactionlist.find("li").not(validtxs).slideUp(300);
+                setTimeout(function() {
+                    requestlist.removeClass("shownotification");
+                }, 3000);
+            }
+            // adjust insufficient amount
+            const amount_short_span = metalist.find(".amountshort");
+            if (this_status === "insufficient") {
+                const rl_amount = rldata.amount,
+                    rl_iscrypto = rldata.iscrypto,
+                    rl_uoa = rldata.uoa,
+                    amount_short_rounded = amountshort(rl_amount, ua.receivedamount, ua.fiatvalue, rl_iscrypto),
+                    amount_short_span_text = " (" + amount_short_rounded + " " + rl_uoa.toUpperCase() + " " + translate("amountshort") + ")";
+                amount_short_span.text(amount_short_span_text).addClass("show_as");
+            } else {
+                amount_short_span.removeClass("show_as");
+            }
+        }
+        if (ua.requesttitle) {
+            const thisrequesttitle = ua.requesttitle;
+            if (thisrequesttitle === "empty") {
+                return
+            }
+            const textinput = (rldata.requesttitle) ? requestlist.find(".atext h2") :
+                requestlist.find(".rq_subject");
+            textinput.add(metalist.find(".requesttitlebox")).text(thisrequesttitle);
+        }
+        requestlist.data(ua);
+        if (save === true) {
             setTimeout(function() {
-                requestlist.removeClass("shownotification");
-            }, 3000);
+                saverequests();
+            }, 1000);
         }
-        // adjust insufficient amount
-        const amount_short_span = metalist.find(".amountshort");
-        if (this_status === "insufficient") {
-            const rl_amount = rldata.amount,
-                rl_iscrypto = rldata.iscrypto,
-                rl_uoa = rldata.uoa,
-                amount_short_rounded = amountshort(rl_amount, ua.receivedamount, ua.fiatvalue, rl_iscrypto),
-                amount_short_span_text = " (" + amount_short_rounded + " " + rl_uoa.toUpperCase() + " " + translate("amountshort") + ")";
-            amount_short_span.text(amount_short_span_text).addClass("show_as");
-        } else {
-            amount_short_span.removeClass("show_as");
-        }
+        return
     }
-    if (ua.requesttitle) {
-        const thisrequesttitle = ua.requesttitle;
-        if (thisrequesttitle === "empty") {
-            return
-        }
-        const textinput = (rldata.requesttitle) ? requestlist.find(".atext h2") :
-            requestlist.find(".rq_subject");
-        textinput.add(metalist.find(".requesttitlebox")).text(thisrequesttitle);
-    }
-    requestlist.data(ua);
-    if (save === true) {
-        setTimeout(function() {
-            saverequests();
-        }, 1000);
-    }
+    console.error("error", "Request not found");
 }
 
 // Gets the Monero payment ID
