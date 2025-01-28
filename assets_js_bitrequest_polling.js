@@ -36,8 +36,8 @@ function tx_polling(tx_data, api_dat, retry) {
             if (request) {
                 const txhash = tx_data.txhash;
                 if (txhash) {
-                    confirmations(tx_data, true);
                     if (!tx_data.setconfirmations) {
+                        confirmations(tx_data, true);
                         return
                     }
                     const eth_layer2 = tx_data.eth_layer2;
@@ -324,13 +324,13 @@ function confirmations(tx_data, direct, ln) {
                 conf_text = setconfirmations ? setconfirmations.toString() : "",
                 confbox = brstatuspanel.find("span.confbox"),
                 confboxspan = confbox.find("span"),
-                currentconf = parseFloat(confboxspan.attr("data-conf")),
+                data_conf = parseFloat(confboxspan.attr("data-conf")),
+                currentconf = Number.isNaN(data_conf) ? 0 : data_conf,
                 xconf = tx_data.confirmations || 0,
                 zero_conf = setconfirmations === false || tx_data.instant_lock; // Dashpay instant_lock
 
             brstatuspanel.find("span#confnumber").text(conf_text);
             new_status = xconf;
-
             if (xconf > currentconf || zero_conf === true || direct === true) {
                 reset_recent();
                 br_remove_session("txstatus"); // remove cached historical exchange rates

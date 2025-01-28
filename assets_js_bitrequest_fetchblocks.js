@@ -678,7 +678,7 @@ function blockcypher_fetch(rd, api_data, rdo) {
                     $.each(sortlist, function(dat, value) {
                         if (!value.spent) { // filter outgoing transactions
                             const txd = blockcypher_scan_data(value, rdo.setconfirmations, rd.currencysymbol, rd.payment);
-                            if (txd.transactiontime > rdo.request_timestamp && txd.ccval) {
+                            if (txd.ccval && txd.transactiontime > rdo.request_timestamp) {
                                 txdat = txd;
                                 if (rdo.source === "requests") {
                                     const tx_listitem = append_tx_li(txd, rd.requesttype);
@@ -1233,7 +1233,7 @@ function blockchair_fetch(rd, api_data, rdo) {
                                 }
                             }
                         });
-                        scan_match(rd, api_data, rdo, counter);
+                        scan_match(rd, api_data, rdo, counter, txdat);
                         return
                     }
                     tx_api_scan_fail(null, rd, api_data, rdo);
