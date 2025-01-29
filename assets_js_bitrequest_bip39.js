@@ -1340,20 +1340,28 @@ function show_phrase_callback() {
 // Initiates the process of deleting the mnemonic phrase
 function delete_phrase_trigger() {
     $(document).on("click", "#deletephrase", function() {
-        const content = "<h2 style='color:#B33A3A'><span class='icon-warning'></span>" + translate("deletingyoursecretphrase") + "</h2><p><strong>" + translate("continuewithbackup") + "</strong></p>";
+        const check_duplicate = $("#dialogbody").find("#dseedwarning");
+        if (check_duplicate.length) {
+            playsound(glob_const.funk);
+            return
+        }
+        const content = "<h2 style='color:#B33A3A' id='dseedwarning'><span class='icon-warning'></span>" + translate("deletingyoursecretphrase") + "</h2><p><strong>" + translate("continuewithbackup") + "</strong></p>";
         popdialog(content, "delete_phrase_verify");
     });
 }
 
 // Verifies the user's intent to delete the mnemonic phrase
 function delete_phrase_verify() {
-    canceldialog();
-    const phrase = get_phrase(),
-        words = phrase.split(" ");
-    verify_phrase(words, 4);
-    $("#seed_steps").removeClass("checked");
-    $("#seed_step3").addClass("delete");
-    seed_nav(3);
+    const result = confirm(translate("verifycurrent") + "?");
+    if (result) {
+        canceldialog();
+        const phrase = get_phrase(),
+            words = phrase.split(" ");
+        verify_phrase(words, 4);
+        $("#seed_steps").removeClass("checked");
+        $("#seed_step3").addClass("delete");
+        seed_nav(3);
+    }
 }
 
 // Bip 32 Key derivation
