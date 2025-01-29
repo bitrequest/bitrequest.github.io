@@ -1458,7 +1458,7 @@ function nimiq_fetch(rd, api_data, rdo) {
                         }).done(function(res) {
                             const e = br_result(res),
                                 bh = q_obj(e, "result.latest_block.height");
-                            const txd = nimiq_scan_data(data, rdo.setconfirmations, bh, null, rd.txhash);
+                            const txd = nimiq_scan_data(data, rdo.setconfirmations, bh, rd.txhash);
                             if (txd) {
                                 if (txd.ccval) {
                                     txdat = txd, counter = 1;
@@ -2206,12 +2206,17 @@ function process_timestamp(timestamp, utc) {
 }
 
 // Helper function to calculate confirmations
-function calculate_confirmations(block_id, latestblock) {
-    if (!block_id || !latestblock) return 0;
-    if (block_id > 10 && latestblock) {
-        return Math.max(0, (latestblock - block_id) + 1);
+function calculate_confirmations(block_id, latest_block) {
+    // Return 0 if either parameter is missing or invalid
+    if (!block_id || !latest_block || block_id < 0 || latest_block < 0) {
+        return 0;
     }
-    return 0;
+    // Ensure block_id isn't ahead of latest_block
+    if (block_id > latest_block) {
+        return 0;
+    }
+    // Calculate confirmations
+    return latest_block - block_id + 1;
 }
 
 // Default transaction data
@@ -2278,10 +2283,8 @@ function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, lates
         return value.scriptpubkey_address.indexOf(addr) > -1 ? value.value : 0;
     }
     const outputsum = process_outputs(data.vout, address, process_value),
-        block_height = status.block_height,
         confs = status.confirmed ? setconfirmations : 0,
-        conf = (block_height && block_height > 10 && latestblock) ?
-        (latestblock - block_height) + 1 : confs;
+        conf = calculate_confirmations(status.block_height, latestblock) || confs;
     return {
         "ccval": outputsum ? outputsum / 1e8 : null,
         "transactiontime": transactiontime_utc,
@@ -2421,8 +2424,7 @@ function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestb
         const satval = val.value;
         return val.recipient === addr ? Math.abs(satval) : 0;
     }
-    const block_id = transaction.block_id,
-        conf = (block_id && block_id > 10 && latestblock) ? (latestblock - block_id) + 1 : 0,
+    const conf = calculate_confirmations(transaction.block_id, latestblock),
         outputsum = process_outputs(data.outputs, address, process_value);
     return {
         "ccval": outputsum ? outputsum / 1e8 : null,
@@ -2442,7 +2444,7 @@ function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latestblock)
         return transactiontime;
     }
     const ethvalue = data.value ? parseFloat((data.value / 1e18).toFixed(8)) : null,
-        conf = (data.block_id && latestblock) ? latestblock - data.block_id : 0;
+        conf = calculate_confirmations(data.block_id, latestblock);
     return {
         "ccval": ethvalue,
         "transactiontime": transactiontime,
@@ -2460,7 +2462,7 @@ function blockchair_erc20_scan_data(data, setconfirmations, ccsymbol, latestbloc
         return transactiontime;
     }
     const erc20value = data.value ? parseFloat((data.value / (10 ** data.token_decimals)).toFixed(8)) : null,
-        conf = (data.block_id && latestblock) ? latestblock - data.block_id : 0;
+        conf = calculate_confirmations(data.block_id, latestblock);
     return {
         "ccval": erc20value,
         "transactiontime": transactiontime,
@@ -2481,7 +2483,7 @@ function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latestbloc
     }
     const transactiontime = transaction.time ? returntimestamp(transaction.time).getTime() : null,
         erc20value = tokendata.value ? parseFloat((tokendata.value / (10 ** tokendata.token_decimals)).toFixed(8)) : null,
-        conf = (transaction.block_id && latestblock) ? latestblock - transaction.block_id : 0;
+        conf = calculate_confirmations(transaction.block_id, latestblock);
     return {
         "ccval": erc20value,
         "transactiontime": transactiontime,
@@ -2520,7 +2522,7 @@ function omniscan_scan_data_eth(data, setconfirmations, eth_layer2) {
         "ccval": ethvalue,
         "transactiontime": transactiontime,
         "txhash": data.hash || null,
-        "confirmations": data.confirmations,
+        "confirmations": data.confirmations || 0,
         "setconfirmations": setconfirmations,
         "ccsymbol": "eth",
         "eth_layer2": eth_layer2
@@ -2613,9 +2615,7 @@ function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) {
     if (setconfirmations === "sort") {
         return transactiontime;
     }
-    const height = data.height || latestblock,
-        blocks = latestblock - height,
-        conf = (blocks < 0) ? 0 : blocks;
+    const conf = calculate_confirmations(data.height, latestblock);
     return {
         "ccval": data.total_received / 1e12,
         "transactiontime": transactiontime,
@@ -2638,20 +2638,19 @@ function blockchair_xmr_data(data, setconfirmations) {
         "ccval": outputsum / 1e12,
         "transactiontime": transactiontime,
         "txhash": data.tx_hash,
-        "confirmations": data.tx_confirmations,
+        "confirmations": data.tx_confirmations || 0,
         "setconfirmations": setconfirmations,
         "ccsymbol": "xmr",
         "payment_id": data.payment_id || false
     };
 }
 
-function nimiq_scan_data(data, setconfirmations, latestblock, confirmed, txhash) {
+function nimiq_scan_data(data, setconfirmations, latestblock, txhash) {
     const transactiontime = process_timestamp(data.timestamp, true);
     if (setconfirmations === "sort") {
         return transactiontime;
     }
-    const confval = confirmed ? 0 : data.confirmations ||
-        (latestblock && data.height ? Math.max(0, latestblock - data.height) : 0),
+    const confval = data.confirmations || calculate_confirmations(data.height, latestblock),
         conf = (confval < 0) ? 0 : confval,
         thash = txhash || data.hash || null,
         setconf = (confirmed) ? null : setconfirmations;
@@ -2676,10 +2675,7 @@ function kaspa_scan_data(data, thisaddress, setconfirmations, latestblock) {
         return val.script_public_key_address === addr ? Math.abs(amount) : 0;
     }
     const outputsum = process_outputs(data.outputs, thisaddress, process_output_value),
-        block_bluescore = data.accepting_block_blue_score,
-        confblocks = (latestblock) ? latestblock - block_bluescore : null,
-        conf_calc = data.is_accepted ? Math.max(0, confblocks || 0) : 0,
-        conf = latestblock ? conf_calc : 0;
+        conf = data.is_accepted ? calculate_confirmations(data.accepting_block_blue_score, latestblock) : 0;
     return {
         "ccval": outputsum ? outputsum / 1e8 : null,
         "transactiontime": transactiontime,
