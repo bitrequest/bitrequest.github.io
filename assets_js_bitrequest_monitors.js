@@ -811,7 +811,7 @@ function compareamounts(rd, rdo) {
                         paymenttimestamp_cc = tn_dat.transactiontime,
                         txhash_cc = tn_dat.txhash,
                         thissum_cc += parseFloat(tn_dat.ccval) || 0; // sum of outputs
-                    if (confirmations_cc >= conf_correct || rd.no_conf === true || tn_dat.setconfirmations === false) { // check all confirmations + whitelist for currencies unable to fetch confirmations
+                    if (confirmations_cc >= conf_correct || rd.no_conf || tn_dat.setconfirmations === false) { // check all confirmations + whitelist for currencies unable to fetch confirmations
                         confirmed_cc = true;
                         if (thissum_cc >= cc_amount * margin) { // compensation for small fluctuations in rounding amount
                             thisnode.addClass("exceed").nextAll().addClass("exceed");
@@ -889,11 +889,12 @@ function compareamounts(rd, rdo) {
 // Initializes the process of fetching historical fiat data for a request
 function init_historical_fiat_data(rd, rdo, conf, latestinput, firstinput) {
     const confcor = conf || 0,
-        latestconf = rd.no_conf === true ? 0 : confcor, // only update on change
+        no_conf = rd.no_conf || conf === false,
+        latestconf = no_conf ? 0 : confcor, // only update on change
         hc_prefix = "historic_" + rd.requestid,
         historiccache = br_get_session(hc_prefix),
         cacheval = latestinput + latestconf;
-    if ((latestconf || conf === false) && cacheval > historiccache) { //new input detected; call historic api
+    if ((latestconf || no_conf) && cacheval > historiccache) { //new input detected; call historic api
         br_remove_session(hc_prefix); // remove historic price cache
         const historic_payload = $.extend(rd, {
                 "latestinput": latestinput,

@@ -642,9 +642,10 @@ function continue_paymentfunction() {
         requestname = dataobject && dataobject.n ? dataobject.n : null,
         requesttitle = dataobject && dataobject.t ? dataobject.t : null,
         eth_l2s = dataobject && dataobject.l2 ? dataobject.l2 : [],
-        current_conf = coinsettings ? coinsettings.confirmations || 0 : 0,
+        current_conf = q_obj(coinsettings, "confirmations"),
         no_conf = !current_conf || !monitored,
-        set_confirmations = dataobject && dataobject.c ? parseFloat(dataobject.c) : no_conf ? 0 : current_conf.selected,
+        d_obj_conf = q_obj(dataobject, "c"),
+        set_confirmations = parseFloat(d_obj_conf) || no_conf ? 0 : current_conf.selected || 0,
         instant = !set_confirmations,
         pagenameccparam = iscrypto ? "" : payment + " ",
         pagename = requestname ? translate("sharetitlename", {
@@ -2064,13 +2065,12 @@ function validaterequestdata(lnurl) {
     let newurl;
     if (valid) {
         const utc = now_utc(), // UTC
-            no_conf = request.no_conf,
             dataobject = {
                 "ts": utc,
                 "n": requestname_val,
                 "t": requesttitle_val
             };
-        if (!no_conf) {
+        if (!request.no_conf) {
             dataobject.c = request.set_confirmations;
         }
         if (payment === "monero") {
