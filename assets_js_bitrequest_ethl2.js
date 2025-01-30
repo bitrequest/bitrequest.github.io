@@ -73,17 +73,15 @@ function init_l2_sockets(payment, address, ct, socket_node) {
 function init_layer2(socket_node, address, ctracts, retry) {
     const l2 = socket_node.network,
         contract = ctracts ? ctracts[l2] : false;
-    if (contract) {
-        socket_info(socket_node, true);
-        const node_name = socket_node.name,
-            ping_id = sha_sub(socket_node.url + l2, 15);
-        glob_let.socket_attempt[ping_id] = true;
-        if (node_name === "infura") {
-            web3_erc20_websocket(socket_node, address, contract, ping_id);
-            return
-        }
-        omni_scan(socket_node, contract, ping_id, retry);
+    socket_info(socket_node, true);
+    const node_name = socket_node.name,
+        ping_id = sha_sub(socket_node.url + l2, 15);
+    glob_let.socket_attempt[ping_id] = true;
+    if (node_name === "infura") {
+        web3_erc20_websocket(socket_node, address, contract, ping_id);
+        return
     }
+    omni_scan(socket_node, contract, ping_id, retry);
 }
 
 // Initiates Eth layer2 scanning
