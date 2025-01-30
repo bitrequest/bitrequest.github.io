@@ -32,6 +32,9 @@ const br_bipobj = br_get_local("bpdat", true),
     (br_thishostname === "bitrequest.github.io") ? "hosted" :
     (br_thishostname === br_thishostname) ? "selfhosted" : "unknown",
     br_video = $("#qr-video")[0],
+    init_qrscanner = br_hostlocation === "local" ? false : new QrScanner(br_video, result => setResult(result), error => {
+        console.log(error);
+    }),
     glob_const = {
         "stored_currencies": br_get_local("currencies", true),
         "apptitle": "Bitrequest",
@@ -103,9 +106,7 @@ const br_bipobj = br_get_local("bpdat", true),
         "xss_alert": "xss attempt detected",
         "token_cache": 604800,
         "video": br_video,
-        "scanner": new QrScanner(br_video, result => setResult(result), error => {
-            console.log(error);
-        }),
+        "scanner": init_qrscanner,
         "overflow_limit": 25,
         "ndef": (br_has_ndef && !br_inframe) ? new NDEFReader() : false,
         "cacheperiodcrypto": 120000, //120000 = 2 minutes

@@ -923,7 +923,7 @@ function edit_xpub(ad) {
     const currency = ad.currency,
         cpid = ad.ccsymbol + "-" + currency,
         address = ad.address || "",
-        scanqr = (glob_let.hascam === true) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+        scanqr = (glob_let.hascam) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
         addxpub = translate("addxpub", {
             "currency": currency
         }),

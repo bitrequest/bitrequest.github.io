@@ -5128,7 +5128,7 @@ function ln_connect(gets) {
 
 // Initializes the QR scanner, checking if it's in an iframe and if a camera is available
 function init_scan() {
-    if (glob_const.inframe || glob_const.local) {
+    if (glob_const.inframe || glob_let.local) {
         glob_let.hascam = false;
         return
     }
@@ -5277,7 +5277,7 @@ function handleViewkey(result, payment) {
 // Adds a service worker to the application
 function add_serviceworker() {
     if ("serviceWorker" in navigator && !navigator.serviceWorker.controller) {
-        navigator.serviceWorker.register(glob_const.approot + "serviceworker.js", {
+        navigator.serviceWorker.register("serviceworker.js", {
                 "scope": "./"
             })
             .then(function(reg) {
