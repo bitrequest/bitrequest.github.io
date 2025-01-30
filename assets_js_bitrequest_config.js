@@ -609,13 +609,13 @@ glob_config = {
                             "name": "blockcypher",
                             "url": "blockcypher.com",
                             "api": true,
-                            "display": true
+                            "display": false
                         },
                         {
                             "name": "blockchair",
                             "url": "blockchair.com",
                             "api": true,
-                            "display": true
+                            "display": false
                         }
                     ]
                 },
@@ -634,7 +634,7 @@ glob_config = {
                         {
                             "name": "blockcypher wss",
                             "url": glob_const.main_bc_wss,
-                            "display": true
+                            "display": false
                         },
                         {
                             "name": "blockcypher ws",
