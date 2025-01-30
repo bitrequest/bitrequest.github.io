@@ -1088,7 +1088,7 @@ function getcoindata(currency) {
         return cd_object;
     } // if not it's probably erc20 token
     const currencyref = get_currencyli(currency); // check if erc20 token is added
-    if (currencyref.length > 0) {
+    if (currencyref.length) {
         return $.extend(currencyref.data(), glob_config.erc20_dat.data);
     } // else lookup erc20 data
     const tokenobject = fetch_cached_erc20();

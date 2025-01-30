@@ -86,7 +86,8 @@
 	transition: background-color 500ms ease;
 }
 
-.brstatuspanel .confbox.blob {
+.brstatuspanel .confbox.blob,
+#paymentdialogbox .networks li.blob {
 	animation: blob 750ms ease forwards;
 }
 

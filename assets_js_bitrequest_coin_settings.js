@@ -1354,7 +1354,7 @@ function reset_coinsettings_function(currency) {
             coinsettings.Xpub = xpub_settings; // don't reset xpub settings
         }
         br_set_local(currency + "_settings", coinsettings, true);
-        append_coinsetting(currency, coinsettings, false);
+        append_coinsetting(currency, coinsettings);
     }
     canceldialog();
     notify(translate("resetnotify", {

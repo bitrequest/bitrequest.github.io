@@ -1100,12 +1100,11 @@ function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
                             const txda = infura_block_data(val, set_confirmations, request.currencysymbol, result.timestamp);
                             if (str_match(val.to, thisaddress) === true) {
                                 const txd = infura_block_data(val, set_confirmations, request.currencysymbol, result.timestamp);
-                                if (l2network) {
-                                    glob_let.l2s = {};
-                                    set_l2_status(socket_node, true);
-                                }
                                 closesocket();
                                 tx_polling_init(txd);
+                                if (l2network) {
+                                    set_l2_status_init(socket_node, "paid");
+                                }
                                 return
                             }
                         });
@@ -1175,12 +1174,11 @@ function web3_erc20_websocket(socket_node, thisaddress, contract, ws_id) {
                             "ccsymbol": request.currencysymbol,
                             "eth_layer2": l2network
                         };
-                    if (l2network) {
-                        glob_let.l2s = {};
-                        set_l2_status(socket_node, true);
-                    }
                     closesocket();
                     tx_polling_init(txd);
+                    if (l2network) {
+                        set_l2_status_init(socket_node, "paid");
+                    }
                 }
             }
         } catch (error) {
@@ -1312,7 +1310,7 @@ function socket_info(snode, live, polling) {
         return
     }
     if (snode.network) {
-        set_l2_status(snode, live);
+        set_l2_status_init(snode, live);
         return
     }
     const node_name = snode.url || snode.name,

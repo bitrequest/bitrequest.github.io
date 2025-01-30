@@ -30,6 +30,7 @@ $(document).ready(function() {
 
     // ** L2 Helpers **
 
+    //set_l2_status_init
     //set_l2_status
     //fertch_l2s
     //omni_rdo
@@ -480,30 +481,46 @@ function submit_l2() {
 
 // ** L2 Helpers **
 
-// Set and dislay l2 status
-function set_l2_status(sn, stat) {
+// Init l2 status
+function set_l2_status_init(sn, stat) {
     if (!sn) {
         return
     }
+    if (stat === "paid") {
+        const timeout = setTimeout(function() {
+            glob_let.l2s = {};
+            set_l2_status(sn, stat);
+        }, 1000, function() {
+            clearTimeout(timeout);
+        });
+        return
+    }
+    set_l2_status(sn, stat);
+}
+
+// Set and dislay l2 status
+function set_l2_status(sn, stat) {
     const network = sn.network,
         l2_object = glob_let.l2s,
         status = stat ? "online" : "offline",
         title1 = "#" + sn.url,
         val = status + title1,
         networks = $("#paymentdialogbox .networks"),
-        l2_length = Object.keys(l2_object).length;
+        l2_length = Object.keys(l2_object).length,
+        l2_pref = (l2_length > 1) ? "L2's:" : "L2:";
     l2_object[network] = val;
-    let nw_li = "<li>L2's: </i>",
+    let nw_li = "<li>" + l2_pref + "</i>",
         empty = true,
         offline_count = 0;
     $.each(glob_let.l2s, function(l2, l2_dat) {
         empty = false;
         const nw_select = l2_dat.split("#"),
             st = nw_select[0],
-            stat = " " + st,
+            stt = " " + st,
+            anim = (stat === "paid") ? " blob" : "",
             title = nw_select[1],
             nw_name = l2 === "bnb" ? "bnb smart chain" : l2;
-        nw_li += "<li class='nwl2" + stat + "' title='" + title + "'>" + nw_name + "</li>";
+        nw_li += "<li class='nwl2" + stt + anim + "' title='" + title + "'>" + nw_name + "</li>";
         if (st === "offline") {
             offline_count++
         }

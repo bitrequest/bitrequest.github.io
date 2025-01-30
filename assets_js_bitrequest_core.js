@@ -4158,11 +4158,11 @@ function append_coinsetting(currency, settings) {
                             </div>\
                     </li>");
                 coinsettings_li.data(val).appendTo(coinsettings_list);
-            } else {
-                check_setting_li.data(val).find("p").text(ss_translate);
-                if (val.switch === true) {
-                    check_setting_li.find(".switchpanel").removeClass("true false").addClass(selected_string);
-                }
+                return
+            }
+            check_setting_li.data(val).find("p").text(ss_translate);
+            if (val.switch === true) {
+                check_setting_li.find(".switchpanel").removeClass("true false").addClass(selected_string);
             }
         }
     });

@@ -327,8 +327,7 @@ function scan_match(rd, api_data, rdo, counter, txdat, l2) {
             return
         }
         if (eth_layer2) { // Eth layer 2
-            glob_let.l2s = {};
-            set_l2_status(api_data, true);
+            set_l2_status_init(api_data, "paid");
         }
         txdat.txhash = txhash;
         if (src !== "after_scan") {
