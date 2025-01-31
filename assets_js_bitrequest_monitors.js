@@ -892,7 +892,7 @@ function init_historical_fiat_data(rd, rdo, conf, latestinput, firstinput) {
         latestconf = no_conf ? 0 : confcor, // only update on change
         hc_prefix = "historic_" + rd.requestid,
         historiccache = br_get_session(hc_prefix),
-        cacheval = latestinput + latestconf;
+        cacheval = parseInt(latestinput) + parseInt(latestconf);
     if ((latestconf || no_conf) && cacheval > historiccache) { //new input detected; call historic api
         br_remove_session(hc_prefix); // remove historic price cache
         const historic_payload = $.extend(rd, {
@@ -1141,7 +1141,7 @@ function get_historical_crypto_data(rd, rdo, fiatapi, apilist, api, lcrate, usdr
                     "lightning": lnd
                 }, false);
                 if (pending !== "no") {
-                    const cacheval = latestinput + latestconf;
+                    const cacheval = parseInt(latestinput) + parseInt(latestconf);
                     br_set_session("historic_" + rd.requestid, cacheval); // 'cache' historic data
                 }
                 api_callback(rdo);

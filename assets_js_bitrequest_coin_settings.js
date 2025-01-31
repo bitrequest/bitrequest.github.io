@@ -1346,6 +1346,7 @@ function reset_coinsettings_function(currency) {
     if (current_settings) {
         const ln_settings = currency === "bitcoin" ? current_settings["Lightning network"] : false,
             xpub_settings = current_settings.Xpub || false,
+            l2 = current_settings.layer2,
             coinsettings = getcoinsettings(currency);
         if (ln_settings) {
             coinsettings["Lightning network"] = ln_settings; // don't reset lightning settings
@@ -1353,8 +1354,14 @@ function reset_coinsettings_function(currency) {
         if (xpub_settings) {
             coinsettings.Xpub = xpub_settings; // don't reset xpub settings
         }
-        br_set_local(currency + "_settings", coinsettings, true);
-        append_coinsetting(currency, coinsettings);
+        if (l2) {
+            const cs = compress_l2obj2(currency, null, true);
+            br_set_local(currency + "_settings", cs, true);
+            append_coinsetting(currency, cs);
+        } else {
+            br_set_local(currency + "_settings", coinsettings, true);
+            append_coinsetting(currency, coinsettings);
+        }
     }
     canceldialog();
     notify(translate("resetnotify", {

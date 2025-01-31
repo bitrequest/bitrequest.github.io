@@ -90,8 +90,8 @@ function tx_polling_l2(eth_layer2, api_dat, retry) {
     clear_tpto();
     const to_time = retry ? 10 : 30000,
         l2_options = fertch_l2s(request.payment),
-        api_data = api_dat || q_obj(l2_options, eth_layer2 + ".apis.selected"),
-        ctracts = contracts(request.currencysymbol),
+        api_data = api_dat || get_l2_node(request.payment, eth_layer2, l2_options[eth_layer2], "apis");
+    ctracts = contracts(request.currencysymbol),
         contract = ctracts ? ctracts[eth_layer2] : false;
     glob_let.tpto = setTimeout(function() {
         omni_poll(api_data, contract);

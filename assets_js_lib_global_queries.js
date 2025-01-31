@@ -257,6 +257,7 @@ let request = null,
 //d_proxy
 //all_proxies
 //fetch_aws
+//object_from_array
 //fk
 //init_keys
 //makelocal
@@ -919,6 +920,11 @@ function all_proxies() {
 function fetch_aws(filename, bckt) {
     const bucket = bckt || glob_const.aws_bucket;
     return bucket + filename;
+}
+
+// Get object from array by keypair
+function object_from_array(array, key, val) {
+    return $.grep(array, obj => obj[key] === val)[0];
 }
 
 // Retrieves and processes key data

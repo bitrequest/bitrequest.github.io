@@ -33,6 +33,7 @@ $(document).ready(function() {
     //set_l2_status_init
     //set_l2_status
     //fertch_l2s
+    //get_l2_node
     //omni_rdo
 
 });
@@ -49,12 +50,12 @@ function init_l2_sockets(payment, address, ct, socket_node) {
             req_l2_arr = request.eth_l2s;
         let index = 0;
         $.each(l2_options, function(l2, l2_dat) {
-            const set_select = is_request ? false : l2_dat.selected,
+            const set_select = is_request ? false : !empty_obj(l2_dat),
                 inarr = $.inArray(index, req_l2_arr) !== -1,
                 selected = set_select || inarr;
             if (selected) {
                 l2_arr.push(index);
-                const sn = (socket_node && socket_node.network === l2) ? socket_node : q_obj(l2_dat, "websockets.selected");
+                const sn = socket_node || get_l2_node(payment, l2, l2_dat, "websockets");
                 init_layer2(sn, address, ctracts);
             }
             index++;
@@ -71,17 +72,21 @@ function init_l2_sockets(payment, address, ct, socket_node) {
 
 // Init eth and erc20 L2 address scanning
 function init_layer2(socket_node, address, ctracts, retry) {
-    const l2 = socket_node.network,
-        contract = ctracts ? ctracts[l2] : false;
-    socket_info(socket_node, true);
-    const node_name = socket_node.name,
-        ping_id = sha_sub(socket_node.url + l2, 15);
-    glob_let.socket_attempt[ping_id] = true;
-    if (node_name === "infura") {
-        web3_erc20_websocket(socket_node, address, contract, ping_id);
+    const l2 = q_obj(socket_node, "network");
+    if (l2) {
+        const contract = ctracts ? ctracts[l2] : false;
+        socket_info(socket_node, true);
+        const node_name = socket_node.name,
+            ping_id = sha_sub(socket_node.url + l2, 15);
+        glob_let.socket_attempt[ping_id] = true;
+        if (node_name === "infura") {
+            web3_erc20_websocket(socket_node, address, contract, ping_id);
+            return
+        }
+        omni_scan(socket_node, contract, ping_id, retry);
         return
     }
-    omni_scan(socket_node, contract, ping_id, retry);
+    console.error("error", "missing api data");
 }
 
 // Initiates Eth layer2 scanning
@@ -137,27 +142,28 @@ function query_ethl2_api(rd, rdo, api_dat, l2) {
     scan_ethl2_api(rd, rdo, api_dat, network);
 }
 
-function scan_ethl2_api(rd, rdo, api_dat, l2) {
+function scan_ethl2_api(rd, rdo, api_dat, network) {
     glob_let.l2_fetched = {};
     const req_l2_arr = rd.eth_l2s;
     if (empty_obj(req_l2_arr)) { // No l2's
         api_callback(rdo);
         return
     }
-    const l2_options = fertch_l2s(rd.payment);
+    const currency = rd.payment,
+        l2_options = fertch_l2s(currency);
     if (l2_options) {
         const ctracts = contracts(rd.currencysymbol);
-        if (l2) { // l2 network is known so only scan this network
-            const api_data = api_dat || q_obj(l2_options, l2 + ".apis.selected")
+        if (network) { // l2 network is known so only scan this network
+            const api_data = api_dat || get_l2_node(currency, network, l2_options[network], "apis");
             if (api_data) {
-                const contract = ctracts[l2],
+                const contract = ctracts[network],
                     dat = {
                         contract,
                         rd,
                         api_data,
                         rdo
                     };
-                ethl2_networks(dat, l2);
+                ethl2_networks(dat, network);
             }
             return
         }
@@ -173,7 +179,7 @@ function scan_ethl2_api(rd, rdo, api_dat, l2) {
                 } else {
                     const inarr = $.inArray(index, req_l2_arr) !== -1;
                     if (inarr) {
-                        const api_data = api_dat || q_obj(l2_dat, "apis.selected");
+                        const api_data = api_dat || get_l2_node(currency, l2, l2_dat, "apis");
                         if (api_data) {
                             const contract = ctracts[l2],
                                 dat = {
@@ -209,7 +215,7 @@ function scan_ethl2_api(rd, rdo, api_dat, l2) {
 
 function poll_ethl2_api(rd, rdo, api_dat, l2) {
     const l2_options = fertch_l2s(rd.payment),
-        api_data = api_dat || q_obj(l2_options, l2 + ".apis.selected"),
+        api_data = api_dat || get_l2_node(rd.payment, l2, l2_options[l2], "apis"),
         api_name = api_data.name,
         network = api_data.network;
     if (api_name && network) {
@@ -292,7 +298,11 @@ function bnb_apis(dat) {
 function edit_l2() {
     $(document).on("click", ".cc_settinglist li[data-id='layer2']", function() {
         const thiscurrency = $(this).children(".liwrap").attr("data-currency"),
-            l2_options = fertch_l2s(thiscurrency);
+            options = fertch_l2s(thiscurrency),
+            old_format = q_obj(options, "arbitrum.selected"),
+            l2_options = (old_format !== undefined) ? q_obj(compress_l2obj2(thiscurrency), "layer2.options") : options, // convert to compressed l2 format
+            eth_settings = getcoinsettings(thiscurrency),
+            eth_l2_settings = q_obj(eth_settings, "layer2.options");
         if (l2_options) {
             const ccsymbol = fetchsymbol(thiscurrency),
                 symbol = ccsymbol.symbol,
@@ -301,66 +311,68 @@ function edit_l2() {
                 polygon_contract = ctracts.polygon,
                 bnb_contract = ctracts.bnb,
                 networks = [];
-            $.each(l2_options, function(l2, l2_dat) {
-                if (l2 === "arbitrum" && !arb_contract && thiscurrency !== "ethereum") {} else if (l2 === "polygon" && !polygon_contract && thiscurrency !== "ethereum") {} else if (l2 === "bnb" && !bnb_contract && thiscurrency !== "ethereum") {} else {
+            $.each(eth_l2_settings, function(l2, l2_dat) {
+                if (l2_options.hasOwnProperty(l2)) {
                     const nw_name = l2 === "bnb" ? "bnb smart chain" : l2,
-                        nw_selected = l2_dat.selected,
-                        s_boxes = []
+                        select = l2_options[l2],
+                        nw_selected = !empty_obj(select),
+                        s_boxes = [];
                     $.each(l2_dat, function(k, v) {
-                        if (k === "selected") {} else {
-                            const selected = v.selected,
-                                apis = v.apis,
-                                api_push = [];
-                            $.each(apis, function(i, v2) {
-                                api_push.push({
-                                    "span": {
-                                        "data-pe": "none",
-                                        "attr": add_prefix_to_keys(v2),
-                                        "content": v2.name
-                                    }
-                                });
-                            });
-                            s_boxes.push({
-                                "div": {
-                                    "class": "l2_apis",
-                                    "attr": {
-                                        "data-type": k
-                                    },
-                                    "content": [{
-                                        "h3": {
-                                            "content": k
-                                        },
-                                        "div": {
-                                            "class": "selectbox",
-                                            "content": [{
-                                                    "input": {
-                                                        "attr": {
-                                                            "type": "text",
-                                                            "value": selected.name,
-                                                            "placeholder": translate("layer2"),
-                                                            "readonly": "readonly"
-                                                        },
-                                                        "close": true
-                                                    },
-                                                    "div": {
-                                                        "class": "selectarrows icon-menu2",
-                                                        "attr": {
-                                                            "data-pe": "none"
-                                                        }
-                                                    }
-                                                },
-                                                {
-                                                    "div": {
-                                                        "class": "options single",
-                                                        "content": api_push
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    }]
+                        const selected = v.selected
+                        if (k === "selected") return;
+                        const apis = v.apis,
+                            select_name = k === "apis" ? select.apis : select.websockets,
+                            select_val = select_name || selected.name,
+                            api_push = [];
+                        $.each(apis, function(i, v2) {
+                            api_push.push({
+                                "span": {
+                                    "data-pe": "none",
+                                    "attr": add_prefix_to_keys(v2),
+                                    "content": v2.name
                                 }
                             });
-                        }
+                        });
+                        s_boxes.push({
+                            "div": {
+                                "class": "l2_apis",
+                                "attr": {
+                                    "data-type": k
+                                },
+                                "content": [{
+                                    "h3": {
+                                        "content": k
+                                    },
+                                    "div": {
+                                        "class": "selectbox",
+                                        "content": [{
+                                                "input": {
+                                                    "attr": {
+                                                        "type": "text",
+                                                        "value": select_val,
+                                                        "placeholder": translate("layer2"),
+                                                        "readonly": "readonly"
+                                                    },
+                                                    "close": true
+                                                },
+                                                "div": {
+                                                    "class": "selectarrows icon-menu2",
+                                                    "attr": {
+                                                        "data-pe": "none"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "div": {
+                                                    "class": "options single",
+                                                    "content": api_push
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }]
+                            }
+                        });
                     });
                     networks.push({
                         "div": {
@@ -380,6 +392,7 @@ function edit_l2() {
                             }]
                         }
                     });
+
                 }
             });
             networks.push({
@@ -447,29 +460,27 @@ function submit_l2() {
         const payment = $(this).attr("data-currency"),
             csnode = cs_node(payment, "layer2");
         if (csnode) {
-            const cs_node_dat = csnode.data("options"),
+            const options = csnode.data("options"),
                 nw2box = $("#l2_formbox").find(".popform > .nw2box");
             nw2box.each(function() {
-                const this_box = $(this),
+                const l2_type_obj = {},
+                    this_box = $(this),
                     this_network = this_box.data("network"),
                     this_switch = this_box.find(".switchpanel"),
-                    selected = this_switch.hasClass("true"),
-                    l2_apis = this_box.find(".l2_apis");
-                cs_node_dat[this_network].selected = selected;
+                    l2_apis = this_box.find(".l2_apis"),
+                    select = this_switch.hasClass("true");
                 l2_apis.each(function() {
                     const this_nw = $(this),
                         input = this_nw.find(".selectbox > input"),
-                        input_data = input.data();
+                        input_data = input.val();
                     if (!empty_obj(input_data)) {
-                        const this_type = this_nw.data("type"),
-                            new_selected = q_obj(cs_node_dat, this_network + "." + this_type);
-                        if (new_selected) {
-                            new_selected.selected = input_data;
-                        }
+                        const this_type = this_nw.data("type");
+                        l2_type_obj[this_type] = input_data;
                     }
                 });
+                options[this_network] = select ? l2_type_obj : {};
             });
-            csnode.data("options", cs_node_dat).find("p").html("");
+            csnode.data("options", options).find("p").html("");
             canceldialog();
             notify(translate("datasaved"));
             save_cc_settings(payment, true);
@@ -541,6 +552,19 @@ function set_l2_status(sn, stat) {
 function fertch_l2s(currency) {
     const l2_setting = cs_node(currency, "layer2", true);
     return q_obj(l2_setting, "options");
+}
+
+// get node data based on api name
+function get_l2_node(payment, network, l2_dat, type) {
+    const selected = q_obj(l2_dat, type);
+    if (selected) {
+        const eth_settings = getcoinsettings(payment),
+            eth_l2_settings = q_obj(eth_settings, "layer2.options." + network + "." + type + ".apis");
+        if (eth_l2_settings) {
+            return object_from_array(eth_l2_settings, "name", selected);
+        }
+    }
+    return false;
 }
 
 // get l2 request data object
