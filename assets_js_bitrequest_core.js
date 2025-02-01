@@ -390,7 +390,6 @@ function finishfunctions() {
     //validateaddress_vk
     //set_xmr_node_access
     //validateaddress
-    //compress_l2obj2
     //check_address
     //check_vk
     send_trigger();
@@ -2559,7 +2558,7 @@ function validateaddress(ad, vk) {
     if (index === 1) {
         if (iserc20 === true) {
             buildpage(ad, true);
-            append_coinsetting(currency, compress_l2obj2(currency, ccsymbol, true));
+            append_coinsetting(currency, compress_l2obj2(currency, ccsymbol));
             save_cc_settings(currency);
         }
         if (glob_const.body.hasClass("showstartpage")) {
@@ -2586,35 +2585,6 @@ function validateaddress(ad, vk) {
     canceldialog();
     canceloptions();
     clear_savedurl();
-}
-
-function compress_l2obj2(currency, ccsymbol, reset) {
-    // Initialize the result object with the base structure
-    const eth_settings = JSON.parse(JSON.stringify(getcoinsettings(currency))), // make a deep clone to prevent duplicates
-        cc_symbol = ccsymbol || q_obj(fetchsymbol(currency), "symbol"),
-        symbol = cc_symbol || "eth",
-        l2_settings = eth_settings.layer2,
-        ctracts = contracts(symbol),
-        result = {
-            "icon": "new-tab",
-            "selected": false,
-            "options": {}
-        };
-    // Get all networks from options
-    const networks = Object.entries(l2_settings.options);
-
-    // Filter and process only networks that have selected: true
-    networks.forEach(([network_name, network_data]) => {
-        if (ctracts[network_name] || currency === "ethereum") {
-            // Initialize this network in result if it's selected
-            result.options[network_name] = reset ? {} : {
-                "apis": network_data.apis.selected.name,
-                "websockets": network_data.websockets.selected.name
-            };
-        }
-    });
-    eth_settings.layer2 = result;
-    return eth_settings;
 }
 
 // Validates an address for a given currency using a regex pattern

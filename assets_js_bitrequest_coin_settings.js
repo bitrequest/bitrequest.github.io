@@ -1355,7 +1355,7 @@ function reset_coinsettings_function(currency) {
             coinsettings.Xpub = xpub_settings; // don't reset xpub settings
         }
         if (l2) {
-            const cs = compress_l2obj2(currency, null, true);
+            const cs = compress_l2obj2(currency);
             br_set_local(currency + "_settings", cs, true);
             append_coinsetting(currency, cs);
         } else {

@@ -283,9 +283,9 @@ let request = null,
 //activecoinsettings
 //getcoindat
 //getcoinsettings
+//getcoinconfig
 //get_erc20_data
 //get_erc20_settings
-//getcoinconfig
 //add_prefix_to_keys
 //check_params
 //click_pop
@@ -1135,6 +1135,13 @@ function getcoinsettings(currency) {
     return get_erc20_settings();
 }
 
+// Retrieves coin configuration for a given currency
+function getcoinconfig(currency) {
+    return glob_config.bitrequest_coin_data.find(function(filter) {
+        return filter.currency === currency;
+    });
+}
+
 // Retrieves erc20 data
 function get_erc20_data() {
     return glob_config.erc20_dat;
@@ -1143,13 +1150,6 @@ function get_erc20_data() {
 // Retrieves erc20 settings
 function get_erc20_settings() {
     return glob_config.erc20_dat.settings;
-}
-
-// Retrieves coin configuration for a given currency
-function getcoinconfig(currency) {
-    return glob_config.bitrequest_coin_data.find(function(filter) {
-        return filter.currency === currency;
-    });
 }
 
 function add_prefix_to_keys(obj, prefix = "data-") {

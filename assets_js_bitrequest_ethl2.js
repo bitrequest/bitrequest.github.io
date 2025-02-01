@@ -30,6 +30,7 @@ $(document).ready(function() {
 
     // ** L2 Helpers **
 
+    //compress_l2obj2
     //set_l2_status_init
     //set_l2_status
     //fertch_l2s
@@ -297,11 +298,15 @@ function bnb_apis(dat) {
 // Function to handle editing of eth Layer 2 settings
 function edit_l2() {
     $(document).on("click", ".cc_settinglist li[data-id='layer2']", function() {
-        const thiscurrency = $(this).children(".liwrap").attr("data-currency"),
-            options = fertch_l2s(thiscurrency),
-            old_format = q_obj(options, "arbitrum.selected"),
-            l2_options = (old_format !== undefined) ? q_obj(compress_l2obj2(thiscurrency), "layer2.options") : options, // convert to compressed l2 format
-            eth_settings = getcoinsettings(thiscurrency),
+        const thiscurrency = $(this).children(".liwrap").attr("data-currency");
+        let l2_options = fertch_l2s(thiscurrency);
+        const old_format = q_obj(l2_options, "arbitrum.selected") !== undefined; // look for uncompressed l2 format
+        if (old_format) {
+            l2_options = q_obj(compress_l2obj2(thiscurrency), "layer2.options"); // convert to compressed l2 format
+            const csnode = cs_node(thiscurrency, "layer2"); // update l2 settings li data
+            csnode.data("options", l2_options);
+        }
+        const eth_settings = getcoinsettings(thiscurrency),
             eth_l2_settings = q_obj(eth_settings, "layer2.options");
         if (l2_options) {
             const ccsymbol = fetchsymbol(thiscurrency),
@@ -317,6 +322,7 @@ function edit_l2() {
                         select = l2_options[l2],
                         nw_selected = !empty_obj(select),
                         s_boxes = [];
+
                     $.each(l2_dat, function(k, v) {
                         const selected = v.selected
                         if (k === "selected") return;
@@ -473,7 +479,7 @@ function submit_l2() {
                     const this_nw = $(this),
                         input = this_nw.find(".selectbox > input"),
                         input_data = input.val();
-                    if (!empty_obj(input_data)) {
+                    if (input_data) {
                         const this_type = this_nw.data("type");
                         l2_type_obj[this_type] = input_data;
                     }
@@ -489,6 +495,32 @@ function submit_l2() {
 }
 
 // ** L2 Helpers **
+
+function compress_l2obj2(currency, ccsymbol) {
+    // Initialize the result object with the base structure
+    const eth_settings = JSON.parse(JSON.stringify(getcoinsettings(currency))), // make a deep clone to prevent duplicates
+        cc_symbol = ccsymbol || q_obj(fetchsymbol(currency), "symbol"),
+        symbol = cc_symbol || "eth",
+        l2_settings = eth_settings.layer2,
+        ctracts = contracts(symbol),
+        result = {
+            "icon": "new-tab",
+            "selected": false,
+            "options": {}
+        };
+    // Get all networks from options
+    const networks = Object.entries(l2_settings.options);
+
+    // Filter and process only networks that have selected: true
+    networks.forEach(([network_name, network_data]) => {
+        if (ctracts[network_name] || currency === "ethereum") {
+            // Initialize this network in result if it's selected
+            result.options[network_name] = {};
+        }
+    });
+    eth_settings.layer2 = result;
+    return eth_settings;
+}
 
 // Init l2 status
 function set_l2_status_init(sn, stat) {
