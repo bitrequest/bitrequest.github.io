@@ -1292,7 +1292,12 @@ function payrequest() {
         }
         const thisrequestlist = thisnode.closest("li.rqli"),
             rldata = thisrequestlist.data(),
-            rl_payment = rldata.payment,
+            dl2 = rldata.eth_layer2; // detected l2
+        let get_l2_index = false;
+        if (dl2) {
+            get_l2_index = get_network_index(dl2);
+        }
+        const rl_payment = rldata.payment,
             rl_uoa = rldata.uoa,
             rl_status = rldata.status,
             rl_requesttype = rldata.requesttype,
@@ -1311,6 +1316,8 @@ function payrequest() {
                 "proxy": lightning.proxy_host,
                 "nid": lightning.nid,
                 "lid": lightning.pid
+            })) : (get_l2_index !== false) ? "&d=" + btoa(JSON.stringify({
+                "l2": [get_l2_index]
             })) : "",
             paymenturl = "?p=requests&payment=" + rl_payment + "&uoa=" + rl_uoa + "&amount=" + paymenturl_amount + midstring + endstring + d;
         openpage(paymenturl, "", "payment");

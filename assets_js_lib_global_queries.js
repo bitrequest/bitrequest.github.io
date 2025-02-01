@@ -924,7 +924,8 @@ function fetch_aws(filename, bckt) {
 
 // Get object from array by keypair
 function object_from_array(array, key, val) {
-    return $.grep(array, obj => obj[key] === val)[0];
+    const result = array.find(obj => obj[key] === val);
+    return result || false;
 }
 
 // Retrieves and processes key data

@@ -34,6 +34,7 @@ $(document).ready(function() {
     //set_l2_status_init
     //set_l2_status
     //fertch_l2s
+    //get_network_index
     //get_l2_node
     //omni_rdo
 
@@ -584,6 +585,13 @@ function set_l2_status(sn, stat) {
 function fertch_l2s(currency) {
     const l2_setting = cs_node(currency, "layer2", true);
     return q_obj(l2_setting, "options");
+}
+
+// Returns the index of an L2 network in settings, or false if not found
+function get_network_index(l2_network) {
+    const l2s = q_obj(get_erc20_settings(), "layer2.options"),
+        networks = Object.keys(l2s);
+    return networks.indexOf(l2_network) === -1 ? false : networks.indexOf(l2_network);
 }
 
 // get node data based on api name
