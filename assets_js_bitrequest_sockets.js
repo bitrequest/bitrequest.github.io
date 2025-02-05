@@ -252,14 +252,14 @@ function lightning_socket(lnd) {
 
 // Handles NFC (Near Field Communication) functionality for Lightning Network payments
 async function ln_ndef(proxy_host, pk, pid, nid, imp) {
-    if (!glob_let.ndef) return;
+    if (!glob_const.ndef) return;
     glob_let.ndef_processing = false;
     try {
         ndef_controller();
-        await glob_let.ndef.scan({
+        await glob_const.ndef.scan({
             "signal": glob_let.ctrl.signal
         });
-        glob_let.ndef.onreading = event => {
+        glob_const.ndef.onreading = event => {
             if ((now() - 6000) < glob_let.ndef_timer) { // prevent too many taps
                 playsound(glob_const.funk);
                 notify(translate("ndeftablimit"), 6000);
@@ -479,7 +479,7 @@ function ndef_controller() {
 
 // Aborts the NFC operation
 function abort_ndef() {
-    if (glob_let.ndef && glob_let.ctrl) {
+    if (glob_const.ndef && glob_let.ctrl) {
         glob_let.ctrl.abort();
         glob_let.ctrl = null;
     }
