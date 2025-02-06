@@ -118,7 +118,9 @@ function lightning_fetch(rd, api_data, rdo) {
                 status_field.text(" " + message);
                 if (!ln_only) {
                     continue_select(rd, api_data, rdo);
+                    return
                 }
+                api_callback(rdo);
                 return
             }
             const inv_status = r.status;
@@ -150,7 +152,9 @@ function lightning_fetch(rd, api_data, rdo) {
                             status_field.text(" " + err_message);
                             if (!ln_only) {
                                 continue_select(rd, api_data, rdo);
+                                return
                             }
+                            api_callback(rdo);
                             return
                         }
                         const status = e.status;
@@ -180,7 +184,9 @@ function lightning_fetch(rd, api_data, rdo) {
                         }
                         if (!ln_only) {
                             continue_select(rd, api_data, rdo);
+                            return
                         }
+                        api_callback(rdo);
                     }).fail(function(xhr, stat, err) {
                         const error_object = xhr || stat || err;
                         tx_api_scan_fail({
@@ -188,7 +194,9 @@ function lightning_fetch(rd, api_data, rdo) {
                         }, rd, "ln", rdo);
                         if (!ln_only) {
                             continue_select(rd, api_data, rdo);
+                            return
                         }
+                        api_callback(rdo);
                     });
                     return
                 }
@@ -198,7 +206,9 @@ function lightning_fetch(rd, api_data, rdo) {
                 }, rd, "ln", rdo);
                 if (!ln_only) {
                     continue_select(rd, api_data, rdo);
+                    return
                 }
+                api_callback(rdo);
                 return
             }
             if (inv_status === "not found") {
@@ -214,7 +224,9 @@ function lightning_fetch(rd, api_data, rdo) {
             }, rd, "ln", rdo);
             if (!ln_only) {
                 continue_select(rd, api_data, rdo);
+                return
             }
+            api_callback(rdo);
         }).fail(function(xhr, stat, err) {
             const error_object = xhr || stat || err;
             tx_api_scan_fail({
@@ -222,7 +234,9 @@ function lightning_fetch(rd, api_data, rdo) {
             }, rd, "ln", rdo);
             if (!ln_only) {
                 continue_select(rd, api_data, rdo);
+                return
             }
+            api_callback(rdo);
         }).always(function() {
             set_api_src(rdo, {
                 "name": "proxy"
