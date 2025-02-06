@@ -16,7 +16,7 @@
 //reset_recent
 
 // pick API / RPC
-// Initializes the payment monitoring process for a transaction
+// Initiates transaction monitoring and sets UI state for payment processing
 function tx_polling_init(tx_data, api_data, retry) {
     reset_overflow();
     glob_let.rpc_attempts = {};
@@ -25,7 +25,7 @@ function tx_polling_init(tx_data, api_data, retry) {
     glob_const.paymentdialogbox.addClass("transacting");
 }
 
-// Monitors the transaction status using the provided API data
+// Directs transaction monitoring to appropriate chain (L1/L2) based on transaction data
 function tx_polling(tx_data, api_dat, retry) {
     const gets = geturlparameters();
     if (gets.xss) {
@@ -55,7 +55,7 @@ function tx_polling(tx_data, api_dat, retry) {
     glob_const.paymentdialogbox.removeClass("transacting");
 }
 
-// Layer 1 transaction polling
+// Monitors Layer 1 blockchain transactions with configurable retry intervals
 function tx_polling_l1(tx_data, api_dat, retry) {
     clear_tpto();
     const to_time = retry ? 10 : 30000,
@@ -85,7 +85,7 @@ function tx_polling_l1(tx_data, api_dat, retry) {
     });
 }
 
-// Layer 2 transaction polling
+// Monitors Layer 2 blockchain transactions using network-specific API endpoints
 function tx_polling_l2(eth_layer2, api_dat, retry) {
     clear_tpto();
     const to_time = retry ? 10 : 30000,
@@ -100,13 +100,13 @@ function tx_polling_l2(eth_layer2, api_dat, retry) {
     });
 }
 
-// clear tx_polling timer
+// Terminates the active transaction polling timeout
 function clear_tpto() {
     clearTimeout(glob_let.tpto);
     glob_let.tpto = 0;
 }
 
-// poll address for incoming transactions
+// Sets up periodic monitoring of wallet address for incoming transactions
 function address_polling_init(time_out, api_dat, retry) {
     const ping_id = request.address,
         timeout = time_out || 7000,
@@ -127,6 +127,7 @@ function address_polling_init(time_out, api_dat, retry) {
     notify(translate("websocketoffline"), 500000, "yes");
 }
 
+// Executes a single polling cycle to check for new transactions at specified address
 function address_polling(timeout, api_data) {
     const rq_init = request.rq_init,
         request_ts_utc = rq_init + glob_const.timezone,
@@ -152,7 +153,7 @@ function address_polling(timeout, api_data) {
 
 // XMR Poll
 
-// Initializes Monero node connection
+// Establishes initial connection to Monero node with view key authentication
 function init_xmr_node(cachetime, address, vk) {
     if (xmr_node_access(vk)) {
         init_xmr_ping(cachetime, address, vk);
@@ -203,6 +204,7 @@ function init_xmr_node(cachetime, address, vk) {
     });
 }
 
+// Verifies if view key has existing authenticated session with Monero node
 function xmr_node_access(vk) {
     if (vk) {
         const stored_vk_list = br_get_session("xmrvks", true);
@@ -215,7 +217,7 @@ function xmr_node_access(vk) {
     return false;
 }
 
-// Initializes Monero node connection
+// Creates periodic polling interval for Monero address monitoring
 function init_xmr_ping(cachetime, address, vk) {
     const rq_init = request.rq_init,
         request_ts_utc = rq_init + glob_const.timezone,
@@ -229,7 +231,7 @@ function init_xmr_ping(cachetime, address, vk) {
     }, 12000);
 }
 
-// Pings Monero node for transaction updates
+// Queries Monero node for new transactions using view key authentication
 function ping_xmr_node(cachetime, address, vk, request_ts) {
     if (!isopenrequest()) { // only when request is visible
         forceclosesocket();
@@ -296,7 +298,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts) {
     });
 }
 
-// Handles transaction confirmations and updates the UI accordingly
+// Updates UI and payment status based on transaction confirmation count
 function confirmations(tx_data, direct, ln) {
     const ccsymbol = tx_data.ccsymbol;
     if (ccsymbol) {
@@ -427,7 +429,7 @@ function confirmations(tx_data, direct, ln) {
     return false;
 }
 
-// Clears pinging intervals
+// Terminates all active polling intervals or a specific polling instance
 function clearpinging(s_id) {
     if (s_id) { // close this interval
         if (glob_let.pinging[s_id]) {
@@ -444,7 +446,7 @@ function clearpinging(s_id) {
     }
 }
 
-// Resets recent requests and cancels the current dialog
+// Removes completed payment request from local storage and updates UI state
 function reset_recent() {
     if (request) {
         const ls_recentrequests = br_get_local("recent_requests");

@@ -28,7 +28,7 @@ $(document).ready(function() {
 
 // Websockets / Pollfunctions
 
-// Initializes a socket connection based on the payment type and node configuration
+// Establishes WebSocket connections for cryptocurrency payment monitoring based on payment type and node configuration
 function init_socket(socket_node, address, retry) {
     if (glob_let.offline) {
         notify(translate("youareoffline") + ". " + translate("notmonitored"));
@@ -181,7 +181,7 @@ function init_socket(socket_node, address, retry) {
     notify(translate("notmonitored"), 500000, "yes")
 }
 
-// Handles BlockCypher WebSocket connection, falling back to WebSocket if local
+// Attempts WebSocket connection to BlockCypher API with fallback to local WebSocket if running locally
 function blockcypherws(socket_node, address) {
     if (glob_let.local === true) {
         blockcypher_websocket(socket_node, address);
@@ -190,7 +190,7 @@ function blockcypherws(socket_node, address) {
     handle_socket_fails(socket_node, address);
 }
 
-// Sets up a Lightning Network socket connection
+// Establishes WebSocket connection to Lightning Network node for real-time payment monitoring
 function lightning_socket(lnd) {
     glob_let.lnd_confirm = false;
     const p_arr = lnurl_deform(lnd.proxy_host),
@@ -250,7 +250,7 @@ function lightning_socket(lnd) {
     ln_ndef(proxy_host, pk, pid, nid, imp);
 }
 
-// Handles NFC (Near Field Communication) functionality for Lightning Network payments
+// Processes NFC tap events for Lightning Network card payments with LNURL-withdraw protocol
 async function ln_ndef(proxy_host, pk, pid, nid, imp) {
     if (!glob_const.ndef) return;
     glob_let.ndef_processing = false;
@@ -442,7 +442,7 @@ async function ln_ndef(proxy_host, pk, pid, nid, imp) {
     }
 }
 
-// Handles API failure for NFC operations
+// Handles API request failures during NFC card payment processing
 function ndef_apifail(xhr, stat, err) {
     const error_object = xhr || stat || err;
     fail_dialogs(null, {
@@ -453,7 +453,7 @@ function ndef_apifail(xhr, stat, err) {
     glob_let.ndef_processing = false;
 }
 
-// Displays error messages for NFC operations
+// Displays temporary error messages in payment dialog during NFC operations
 function ndef_errormg(message) {
     const pmd = $("#paymentdialogbox"),
         brstatuspanel = pmd.find(".brstatuspanel"),
@@ -468,7 +468,7 @@ function ndef_errormg(message) {
     }, 5000);
 }
 
-// Sets up the NFC controller for scanning
+// Initializes NFC controller with abort signal for scan operations
 function ndef_controller() {
     glob_let.ctrl = new AbortController();
     console.log("Waiting for NDEF messages.");
@@ -477,7 +477,7 @@ function ndef_controller() {
     };
 }
 
-// Aborts the NFC operation
+// Terminates active NFC scanning operation and cleans up controller
 function abort_ndef() {
     if (glob_const.ndef && glob_let.ctrl) {
         glob_let.ctrl.abort();
@@ -485,7 +485,7 @@ function abort_ndef() {
     }
 }
 
-// Polls Lightning Network data for payment status
+// Polls Lightning Network node for payment request status with automatic retry
 function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
     if (isopenrequest()) { // only when request is visible
         const default_error = translate("unabletoconnect");
@@ -535,7 +535,7 @@ function lnd_poll_data(proxy_host, pk, pid, nid, imp) {
     forceclosesocket();
 }
 
-// Polls Lightning Network invoice status
+// Monitors Lightning Network invoice payment status with callback handling
 function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
     if (isopenrequest()) { // only when request is visible
         const default_error = "unable to connect";
@@ -579,7 +579,7 @@ function lnd_poll_invoice(proxy_host, pk, imp, inv, pid, nid) {
     forceclosesocket();
 }
 
-// Handles failure in polling Lightning Network data
+// Handles connection failures during Lightning Network payment status polling
 function lnd_poll_data_fail(pid) {
     clearpinging(pid);
     notify(translate("notmonitored"), 500000, "yes");
@@ -587,7 +587,7 @@ function lnd_poll_data_fail(pid) {
 
 // Websockets
 
-// Initializes and manages BlockCypher WebSocket connection
+// Establishes WebSocket connection to BlockCypher API for transaction confirmation monitoring with automatic ping maintenance
 function blockcypher_websocket(socket_node, thisaddress) {
     if (glob_let.sockets[thisaddress]) {
         return
@@ -632,7 +632,7 @@ function blockcypher_websocket(socket_node, thisaddress) {
     };
 }
 
-// Initializes and manages Blockchain.info WebSocket for Bitcoin
+// Establishes WebSocket connection to Blockchain.info for Bitcoin address monitoring with transaction validation
 function blockchain_btc_socket(socket_node, thisaddress) {
     if (glob_let.sockets[thisaddress]) {
         return
@@ -675,7 +675,7 @@ function blockchain_btc_socket(socket_node, thisaddress) {
     };
 }
 
-// Initializes and manages Blockchain.info WebSocket for Bitcoin Cash
+// Establishes WebSocket connection to Blockchain.info for BCH address monitoring with CashAddr format handling
 function blockchain_bch_socket(socket_node, thisaddress) {
     if (glob_let.sockets[thisaddress]) {
         return
@@ -720,7 +720,7 @@ function blockchain_bch_socket(socket_node, thisaddress) {
     };
 }
 
-// Initializes and manages mempool.space WebSocket for Bitcoin
+// Establishes WebSocket connection to mempool.space for real-time Bitcoin transaction monitoring with address tracking
 function mempoolspace_btc_socket(socket_node, thisaddress) {
     if (glob_let.sockets[thisaddress]) {
         return
@@ -768,12 +768,12 @@ function mempoolspace_btc_socket(socket_node, thisaddress) {
     };
 }
 
-// Initiates Dash.org polling
+// Initiates polling interval for Dash blockchain status with 5-second frequency
 function dashorg_poll() {
     address_polling_init(5000);
 }
 
-// Initializes and manages dogechain.info WebSocket for Dogecoin
+// Establishes WebSocket connection to dogechain.info for Dogecoin address monitoring with transaction validation
 function dogechain_info_socket(socket_node, thisaddress) {
     if (glob_let.sockets[thisaddress]) {
         return
@@ -819,7 +819,7 @@ function dogechain_info_socket(socket_node, thisaddress) {
     };
 }
 
-// Initializes and manages WebSocket for Nano cryptocurrency
+// Establishes WebSocket connection for Nano network with confirmation subscription and XRB/NANO prefix handling
 function nano_socket(socket_node, thisaddress) {
     if (glob_let.sockets[thisaddress]) {
         return
@@ -875,12 +875,12 @@ function nano_socket(socket_node, thisaddress) {
     };
 }
 
-// Initiates Nimiq polling
+// Initiates 5-second interval polling for Nimiq blockchain status
 function nimiq_poll() {
     address_polling_init(5000);
 }
 
-// Init eth and erc20
+// Configures WebSocket connections for Ethereum L1/L2 networks and ERC20 tokens with provider-specific routing
 function init_eth_sockets(payment, socket_node, address, retry) {
     const ctracts = contracts(request.currencysymbol);
     // Always scan for layer 1
@@ -898,7 +898,7 @@ function init_eth_sockets(payment, socket_node, address, retry) {
     init_l2_sockets(payment, address, ctracts);
 }
 
-// Initializes and manages Kaspa WebSocket
+// Establishes WebSocket connection to Kaspa node with Socket.IO protocol and block subscription
 function kaspa_websocket(socket_node, thisaddress) {
     if (glob_let.sockets[thisaddress]) {
         return
@@ -952,7 +952,7 @@ function kaspa_websocket(socket_node, thisaddress) {
     };
 }
 
-// Initializes and manages Kaspa FYI WebSocket
+// Establishes WebSocket connection to Kaspa FYI explorer with Socket.IO protocol and transaction monitoring
 function kaspa_fyi_websocket(socket_node, thisaddress) {
     if (glob_let.sockets[thisaddress]) {
         return
@@ -1009,7 +1009,7 @@ function kaspa_fyi_websocket(socket_node, thisaddress) {
     };
 }
 
-// Initializes and manages Alchemy WebSocket for Ethereum
+// Establishes WebSocket connection to Alchemy API for monitoring pending Ethereum transactions with address filtering
 function alchemy_eth_websocket(socket_node, thisaddress) {
     if (glob_let.sockets[thisaddress]) {
         return
@@ -1058,7 +1058,7 @@ function alchemy_eth_websocket(socket_node, thisaddress) {
     };
 }
 
-// Initializes and manages WebSocket for Ethereum and Ethereum-like networks
+// Establishes WebSocket connection to Ethereum node for monitoring new blocks with RPC-based transaction filtering
 function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
     const l2network = socket_node.network,
         provider_url = socket_node.url,
@@ -1124,7 +1124,7 @@ function web3_eth_websocket(socket_node, thisaddress, rpcurl) {
     };
 }
 
-// Initializes and manages WebSocket for ERC20 tokens on Ethereum and Ethereum-like networks
+// Establishes WebSocket connection for monitoring ERC20 token transfers using contract event logs
 function web3_erc20_websocket(socket_node, thisaddress, contract, ws_id) {
     if (glob_let.sockets[ws_id]) {
         return
@@ -1160,7 +1160,7 @@ function web3_erc20_websocket(socket_node, thisaddress, contract, ws_id) {
                     if (!topic_address || str_match(topic_address, thisaddress.slice(3)) !== true) return;
                     const contractdata = result.data,
                         cd_hex = contractdata.slice(2),
-                        token_value = hexToNumberString(cd_hex),
+                        token_value = hex_to_number_string(cd_hex),
                         token_decimals = request.decimals,
                         ccval = parseFloat((token_value / Math.pow(10, token_decimals)).toFixed(8));
                     if (ccval === Infinity) return;
@@ -1199,7 +1199,7 @@ function web3_erc20_websocket(socket_node, thisaddress, contract, ws_id) {
     };
 }
 
-// Handles WebSocket connection failures
+// Manages WebSocket failures by attempting reconnection through fallback nodes with L1/L2 network handling
 function handle_socket_fails(socket_node, thisaddress, socketid, l2) {
     if (isopenrequest()) { // only when request is visible
         if (request.currencysymbol === "bch" && glob_const.paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
@@ -1238,14 +1238,14 @@ function handle_socket_fails(socket_node, thisaddress, socketid, l2) {
     }
 }
 
-// Handles WebSocket connection closure
+// Updates connection state and resets WebSocket timer on connection closure
 function handle_socket_close(socket_node) {
     socket_info(socket_node, false);
     console.log("Disconnected from " + socket_node.url);
     glob_let.ws_timer = 0;
 }
 
-// Manages Kaspa WebSocket reconnection
+// Implements delayed reconnection logic for Kaspa WebSocket with rate limiting and state validation
 function ws_recon(recon) {
     if (!recon) return;
     const trigger = recon.trigger,
@@ -1262,7 +1262,7 @@ function ws_recon(recon) {
     });
 }
 
-// Attempts to find the next available WebSocket
+// Selects next available WebSocket endpoint from configuration with overflow protection and duplicate attempt prevention
 function try_next_socket(current_socket_data, l2) {
     if (!current_socket_data) return false;
     if (block_overflow("socket")) return false; // prevent overflow
@@ -1289,7 +1289,7 @@ function try_next_socket(current_socket_data, l2) {
     }
 }
 
-// Closes WebSocket connections
+// Terminates specific or all active WebSocket connections and cleans up socket registry
 function closesocket(s_id) {
     if (s_id) { // close this socket
         if (glob_let.sockets[s_id]) {
@@ -1304,7 +1304,7 @@ function closesocket(s_id) {
     }
 }
 
-// Updates the UI with socket connection information
+// Updates UI elements to reflect WebSocket connection status and handles L1/L2 state transitions
 function socket_info(snode, live, polling) {
     if (!is_openrequest()) {
         return

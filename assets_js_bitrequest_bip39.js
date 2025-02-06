@@ -132,7 +132,7 @@ $(document).ready(function() {
     phrase_showxp();
 });
 
-// Determines if the current session is a trial based on a timestamp
+// Validates trial status by checking if timestamp in local storage is within 12-hour window
 function istrial() {
     const trialp = br_get_local("tp");
     if (trialp) {
@@ -146,7 +146,7 @@ function istrial() {
 
 // Reminder to write down secret phrase
 
-// Checks BIP (Bitcoin Improvement Proposal) validation status
+// Enforces address usage limits based on trial status (2 max for trial, 0 for non-trial users)
 function bipv_pass() {
     if (glob_let.hasbip) {
         if (glob_let.bipv) {
@@ -177,7 +177,7 @@ function bipv_pass() {
 
 // dependencies check
 
-// Tests BIP39 implementation and related functionalities
+// Validates BIP39 implementation, crypto support, and address derivation for multiple cryptocurrencies
 function test_bip39() {
     if (!crypto) { // test for window.crypto
         bip39_fail();
@@ -246,13 +246,13 @@ function test_bip39() {
     }
 }
 
-// Handles BIP39 failure by adding a CSS class
+// Marks interface as BIP39 incompatible and disables derivation testing
 function bip39_fail() {
     glob_const.body.addClass("nobip");
     glob_let.test_derive = false;
 }
 
-// Handles derivation failure for specified cryptocurrencies
+// Marks specified cryptocurrencies as non-derivable in UI with 500ms DOM ready delay
 function derive_fail(arr) {
     setTimeout(function() {
         arr.forEach(function(val) {
@@ -261,7 +261,7 @@ function derive_fail(arr) {
     }, 500)
 }
 
-// Handles xpub derivation failure for specified cryptocurrencies
+// Marks specified cryptocurrencies as xpub-incompatible in UI with 500ms DOM ready delay
 function derive_xpub_fail(arr) {
     setTimeout(function() {
         arr.forEach(function(val) {
@@ -272,7 +272,7 @@ function derive_xpub_fail(arr) {
 
 // test derivations
 
-// Tests derivation process for Bitcoin
+// Validates Bitcoin address derivation using BIP44 path against expected test vector
 function test_derivation() {
     try {
         const currency = "bitcoin",
@@ -292,7 +292,7 @@ function test_derivation() {
     }
 }
 
-// Checks Bech32 address derivation
+// Validates Bech32 address format derivation against known test public key
 function bech32_check() {
     try {
         const bip84_pub = "03bb4a626f63436a64d7cf1e441713cc964c0d53289a5b17acb1b9c262be57cb17",
@@ -304,7 +304,7 @@ function bech32_check() {
     }
 }
 
-// Checks Bitcoin Cash cashaddr derivation
+// Validates conversion from legacy to CashAddr format for Bitcoin Cash addresses
 function cashaddr_check() {
     try {
         const bch_legacy = "1AVPurYZinnctgGPiXziwU6PuyZKX5rYZU",
@@ -316,7 +316,7 @@ function cashaddr_check() {
     }
 }
 
-// Checks Nano address derivation
+// Validates Nano address derivation from seed using NanocurrencyWeb library
 function nano_check() {
     try {
         const expected_nano_address = "nano_1mbtirc4x3kixfy5wufxaqakd3gbojpn6gpmk6kjiyngnjwgy6yty3txgztq",
@@ -328,7 +328,7 @@ function nano_check() {
     }
 }
 
-// Checks Monero (XMR) address derivation
+// Validates Monero address derivation from spend key using Coinomi test vector
 function xmr_check() { // https://coinomi.github.io/tools/bip39/
     try {
         const expected_xmr_address = "477h3C6E6C4VLMR36bQL3yLcA8Aq3jts1AHLzm5QXipDdXVCYPnKEvUKykh2GTYqkkeQoTEhWpzvVQ4rMgLM1YpeD6qdHbS",
@@ -341,7 +341,7 @@ function xmr_check() { // https://coinomi.github.io/tools/bip39/
     }
 }
 
-// Checks extended public key (xpub) derivation for Bitcoin
+// Validates Bitcoin xpub derivation against known addresses using both regular and Bech32 formats
 function xpub_check() {
     try {
         const currency = "bitcoin",
@@ -364,7 +364,7 @@ function xpub_check() {
     }
 }
 
-// Checks Ethereum extended public key (xpub) derivation
+// Validates Ethereum xpub derivation by checking public key to address conversion
 function eth_xpub_check() {
     try {
         const eth_pub = "03c026c4b041059c84a187252682b6f80cbbe64eb81497111ab6914b050a8936fd",
@@ -378,7 +378,7 @@ function eth_xpub_check() {
 
 // Check derivations
 
-// Checks derivation method for a given currency
+// Returns derivation method ('xpub', 'seed', or false) based on currency's configuration
 function check_derivations(currency) {
     if (glob_let.test_derive && bip39_const.c_derive[currency]) {
         const activepub = active_xpub(currency);
@@ -392,19 +392,19 @@ function check_derivations(currency) {
     return false;
 }
 
-// Checks if there's an active extended public key for a given currency
+// Returns active xpub data if currency has selected xpub, false otherwise
 function active_xpub(currency) {
     const haspub = has_xpub(currency)
     return haspub && haspub.selected === true ? haspub : false;
 }
 
-// Checks if a currency has an extended public key
+// Returns xpub configuration if currency has valid xpub, false otherwise
 function has_xpub(currency) {
     const ispub = is_xpub(currency);
     return ispub && ispub.key ? ispub : false;
 }
 
-// Checks if a currency is using an extended public key
+// Returns xpub data from currency settings if xpub is supported, false otherwise
 function is_xpub(currency) {
     if (cxpub(currency)) {
         const xpubli_dat = cs_node(currency, "Xpub", true);
@@ -413,12 +413,12 @@ function is_xpub(currency) {
     return false;
 }
 
-// Checks if a currency can use extended public keys
+// Returns boolean indicating if currency supports xpub functionality
 function cxpub(currency) {
     return !!bip39_const.can_xpub[currency];
 }
 
-// Retrieves BIP32 data for a given currency
+// Retrieves BIP32 configuration data from active xpub or coin settings
 function getbip32dat(currency) {
     const xpub_dat = cs_node(currency, "Xpub", true);
     if (xpub_dat && xpub_dat.active === true) {
@@ -434,7 +434,7 @@ function getbip32dat(currency) {
     return false;
 }
 
-// Checks if a currency supports BIP32
+// Checks if currency has BIP32 support in its configuration
 function hasbip32(currency) {
     const coindata = getcoinconfig(currency);
     if (coindata) {
@@ -448,7 +448,7 @@ function hasbip32(currency) {
 
 // Bip 39 seed generation
 
-// Handles the creation of a new seed
+// Handles UI interaction for generating new seed phrases
 function make_seed() {
     $(document).on("click", "#option_makeseed", function() {
         const currency = $(this).attr("data-currency");
@@ -464,7 +464,7 @@ function make_seed() {
     })
 }
 
-// Handles the restoration of a seed
+// Handles UI interaction for restoring existing seed phrases
 function restore_seed() {
     $(document).on("click", "#rest_seed, .applist.pobox li.seedu .address .srcicon", function() {
         if (is_viewonly() === true) {
@@ -491,7 +491,7 @@ function restore_seed() {
     })
 }
 
-// Verifies the restored seed
+// Validates and processes seed phrase restoration attempts
 function restore_seed_verify() {
     $(document).on("click", "#restore_seed", function() {
         if (glob_let.hasbip) {
@@ -520,12 +520,12 @@ function restore_seed_verify() {
     })
 }
 
-// Generates a seed ID from the given words
+// Generates 8-character seed identifier from word array using HMAC-SHA256
 function get_seedid(words) {
     return hmacsha(btoa(JSON.stringify(words)), "sha256").slice(0, 8);
 }
 
-// Manages BIP32 operations
+// Controls BIP32 wallet setup flow and disclaimer acceptance
 function manage_bip32(dat) {
     if (glob_let.hasbip) {
         bip39(dat);
@@ -593,7 +593,7 @@ function manage_bip32(dat) {
     }
 }
 
-// Handles the submission of the disclaimer dialog
+// Processes disclaimer dialog submission and triggers BIP39 setup if confirmed
 function submit_disclaimer() {
     $(document).on("click", "#disclaimer_dialog input.submit", function(e) {
         e.preventDefault();
@@ -610,7 +610,7 @@ function submit_disclaimer() {
     })
 }
 
-// Initializes the BIP39 seed generation process
+// Sets up BIP39 seed generation UI with steps for backup, verification, and restoration
 function bip39(dat) {
     glob_let.phraseverified = false;
     const data = br_dobj(dat, true),
@@ -693,21 +693,21 @@ function bip39(dat) {
 
 // Seed panel nav
 
-// Handles the "Got it" button click in the seed generation process
+// Advances seed generation process from step 1 to step 2
 function got_it() {
     $(document).on("click", "#cfbu1", function() {
         seed_nav(2);
     })
 }
 
-// Handles the back button click from step 2 to step 1
+// Navigates back from step 2 to step 1 in seed generation
 function seed_back1() {
     $(document).on("click", "#seed_steps #seed_step2 .ss_header .icon-arrow-left2", function() {
         seed_nav(1);
     })
 }
 
-// Handles the back button click from step 3 to step 2
+// Navigates back from step 3 to step 2 in seed generation
 function seed_back2() {
     $(document).on("click", "#seed_steps #seed_step3 .ss_header .icon-arrow-left2, #seed_steps #seed_step3 #toseed", function() {
         seed_nav(2);
@@ -715,17 +715,17 @@ function seed_back2() {
     })
 }
 
-// Navigates to a specific step in the seed generation process
+// Changes active panel in seed generation UI to specified step number
 function seed_nav(index) {
     $("#seed_steps").attr("class", "panel" + index);
 }
 
-// Retrieves the phrase object from local storage
+// Retrieves phrase object from global state or returns false
 function ls_phrase_obj() {
     return glob_let.bipobj ? ls_phrase_obj_parsed(glob_let.bipobj) : false;
 }
 
-// Parses the phrase object from local storage
+// Decodes and parses encrypted or plain phrase object from storage
 function ls_phrase_obj_parsed(obj) {
     const pdat_enc = obj.datenc;
     let phrasedat = obj.dat;
@@ -746,7 +746,7 @@ function ls_phrase_obj_parsed(obj) {
     return false;
 }
 
-// Decrypts the seed using a PIN
+// Decrypts seed data using provided PIN and returns parsed object
 function seed_decrypt(pin) {
     if (glob_let.bipobj) {
         const pdat_enc = glob_let.bipobj.datenc;
@@ -765,7 +765,7 @@ function seed_decrypt(pin) {
     return false;
 }
 
-// Handles the continuation of the backup process
+// Validates phrase and triggers verification step in backup process
 function backup_continue() {
     $(document).on("click", "#cfbu2", function() {
         glob_let.phrasearray = null,
@@ -785,7 +785,7 @@ function backup_continue() {
     })
 }
 
-// Checks if the provided phrase is valid
+// Validates seed phrase format, length, and BIP39 compatibility
 function check_phrase(phrase) {
     const words = phrase.split(" "),
         phraselength = words.length;
@@ -807,29 +807,29 @@ function check_phrase(phrase) {
     return translate("mustbe12characters");
 }
 
-// Retrieves the cleaned phrase from the DOM
+// Returns cleaned seed phrase text from DOM element
 function get_phrase() {
-    return cleanstring($("#bip39phrase").text());
+    return clean_string($("#bip39phrase").text());
 }
 
-// Validates a BIP39 mnemonic phrase
+// Validates BIP39 mnemonic using SHA256 hash comparison
 function checkmnemonic(mnemonic) {
-    const b = mnemonicToBinaryString(mnemonic);
+    const b = mnemonic_to_binary_string(mnemonic);
     if (b === null) {
         return false;
     }
     const l = b.length,
         d = b.substring(0, l / 33 * 32),
         h = b.substring(l - l / 33, l),
-        nd = binaryStringToWordArray(d),
+        nd = binary_string_to_word_array(d),
         ndHash = sjcl.hash.sha256.hash(nd),
-        ndHex = sjcl.codec.hex.fromBits(ndHash),
-        ndBstr = zfill(hexStringToBinaryString(ndHex), 256),
+        ndHex = from_bits(ndHash),
+        ndBstr = zfill(hex_string_to_binary_string(ndHex), 256),
         nh = ndBstr.substring(0, l / 33);
     return h === nh;
 }
 
-// Identifies words not in the BIP39 wordlist
+// Returns first word from input array not found in BIP39 wordlist
 function missing_words(words) {
     let missing;
     $.each(words, function(i, word) {
@@ -841,7 +841,7 @@ function missing_words(words) {
     return missing;
 }
 
-// Prepares a phrase verification UI
+// Creates UI elements for verifying selected words from seed phrase
 function verify_phrase(words, count) {
     const wordindex = words.map((word, i) => ({
             "word": word,
@@ -860,7 +860,7 @@ function verify_phrase(words, count) {
     });
 }
 
-// Shuffles an array (Fisher-Yates algorithm)
+// Implements Fisher-Yates shuffle algorithm for array randomization
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -869,7 +869,7 @@ function shuffleArray(array) {
     return array;
 }
 
-// Handles word verification input
+// Handles word verification input and triggers appropriate callbacks
 function verify_words() {
     $(document).on("input", "#seed_verify_box input", function(e) {
         const thisinput = $(this),
@@ -924,7 +924,7 @@ function verify_words() {
     });
 }
 
-// Updates UI after seed changes
+// Updates UI and address lists after seed phrase changes
 function move_seed_cb() {
     $.each(glob_config.bitrequest_coin_data, function(i, coinconfig) {
         const currency = coinconfig.currency,
@@ -948,14 +948,14 @@ function move_seed_cb() {
     });
 }
 
-// Handles the "Continue" button click in seed setup
+// Handles continue button click in seed setup flow
 function continue_seed() {
     $(document).on("click", "#continue_seed", function() {
         finish_seed();
     })
 }
 
-// Handles skipping the verification step
+// Shows warning dialog when skipping seed verification
 function skip_verify() {
     $(document).on("click", "#cfbu3", function() {
         const content = "<h2><span class='icon-warning' style='color:#B33A3A'></span>" + translate("continueatownrisk") + "</h2><p><strong>" + translate("ifyouloseyourdevice") + "</strong></p>";
@@ -963,7 +963,7 @@ function skip_verify() {
     })
 }
 
-// Finalizes the seed setup process
+// Completes seed setup with PIN validation
 function finish_seed() {
     canceldialog();
     if (haspin(true)) {
@@ -977,7 +977,7 @@ function finish_seed() {
     showoptions(content, "pin");
 }
 
-// Callback function after seed setup is complete
+// Processes final seed setup steps and initializes derivation
 function seed_callback() {
     if (!glob_let.hasbip) {
         const seed_object = {},
@@ -1028,7 +1028,7 @@ function seed_callback() {
     hide_seed_panel();
 }
 
-// Deactivates all extended public keys (xpubs) for all supported cryptocurrencies
+// Disables xpub settings across all supported cryptocurrencies
 function deactivate_xpubs() {
     $.each(glob_config.bitrequest_coin_data, function(i, coinconfig) {
         const bip32 = coinconfig.settings.Xpub;
@@ -1045,7 +1045,7 @@ function deactivate_xpubs() {
     });
 }
 
-// Encrypts seed data using the user's PIN
+// Encrypts seed data using PIN-derived key
 function enc_s(dat) {
     if (glob_let.hasbip && glob_let.test_derive) {
         const pn = get_setting("pinsettings", "pinhash");
@@ -1077,12 +1077,12 @@ function enc_s(dat) {
     }
 }
 
-// Checks if encrypted data exists
+// Checks for existence of encrypted seed data
 function has_datenc() {
     return glob_let.hasbip === true && glob_let.bipobj.datenc ? true : false;
 }
 
-// Converts a PIN to a key for encryption
+// Generates encryption key from PIN using wordlist mapping
 function ptokey(p, sid) {
     const pr = p.toString().split(""),
         newarr = pr.map((val, i) => {
@@ -1100,13 +1100,13 @@ function ptokey(p, sid) {
 
 // Test triggers
 
-// Gets the latest index from an address list
+// Returns highest derivation index from address list
 function get_latest_index(alist) {
     const index = dom_to_array(alist, "derive_index");
     return Math.max.apply(Math, index);
 }
 
-// Derives and adds a new address for a given currency
+// Derives and adds new address for specified currency
 function derive_addone(currency, extra) {
     const dd = derive_data(currency, extra);
     if (dd) {
@@ -1116,7 +1116,7 @@ function derive_addone(currency, extra) {
     return false;
 }
 
-// Retrieves key and chaincode from the seed phrase
+// Extracts key and chaincode from seed phrase
 function key_cc() {
     const seedobject = ls_phrase_obj();
     if (seedobject) {
@@ -1136,7 +1136,7 @@ function key_cc() {
     return false;
 }
 
-// Retrieves key and chaincode from an extended public key (xpub)
+// Extracts key and chaincode components from xpub string
 function key_cc_xpub(xpub) {
     const ext_dec = b58check_decode(xpub),
         extend_object = objectify_extended(ext_dec);
@@ -1147,12 +1147,12 @@ function key_cc_xpub(xpub) {
     }
 }
 
-// Generates a root key from a seed
+// Generates master root key from seed using HMAC-SHA512
 function get_rootkey(seed) {
-    return hmac_bits(seed, tobits("Bitcoin seed"), "hex");
+    return hmac_bits(seed, to_bits("Bitcoin seed"), "hex");
 }
 
-// Initializes derivation for all supported currencies
+// Sets initial account settings and derives addresses for all currencies
 function derive_all_init(phrase, seedid, extra) {
     derive_all(phrase, seedid, extra);
     const acountname = $("#eninput").val();
@@ -1162,7 +1162,7 @@ function derive_all_init(phrase, seedid, extra) {
     glob_const.body.removeClass("showstartpage");
 }
 
-// Derives addresses for all supported currencies
+// Derives addresses for all supported coins from master seed
 function derive_all(phrase, seedid, extra) {
     const seed = toseed(phrase),
         rootkey = get_rootkey(seed),
@@ -1187,7 +1187,7 @@ function derive_all(phrase, seedid, extra) {
     });
 }
 
-// Adds a derived address to the UI and saves it
+// Adds derived address to UI and saves to storage
 function derive_add_address(currency, ad) {
     appendaddress(currency, ad);
     saveaddresses(currency, true);
@@ -1197,7 +1197,7 @@ function derive_add_address(currency, ad) {
     homeli.removeClass("hide"); // each
 }
 
-// Retrieves derivation data for a given currency
+// Gets derivation data for currency based on xpub or seed
 function derive_data(currency, extra) {
     if (glob_let.test_derive === true && bip39_const.c_derive[currency]) {
         const coindat = getcoindata(currency),
@@ -1227,7 +1227,7 @@ function derive_data(currency, extra) {
     return false;
 }
 
-// Derives a new address object based on the provided parameters
+// Creates address object with derivation path and key data
 function derive_obj(source, keycc, coindat, bip32, add) {
     const seed = keycc.seed,
         seedid = keycc.seedid,
@@ -1288,12 +1288,12 @@ function derive_obj(source, keycc, coindat, bip32, add) {
     return false;
 }
 
-// Counts the number of unique elements in an array
+// Returns count of unique elements in array using Set
 function get_uniques(arr) {
     return new Set(arr).size;
 }
 
-// Handles the copying of the mnemonic phrase
+// Handles mnemonic phrase copy functionality with confirmation
 function copy_phrase() {
     $(document).on("click", "#copyphrase", function() {
         const phrase = get_phrase(),
@@ -1310,7 +1310,7 @@ function copy_phrase() {
     });
 }
 
-// Toggles the visibility of the mnemonic phrase
+// Controls visibility toggling of mnemonic phrase
 function show_phrase() {
     $(document).on("click", "#showphrase, #phrase_cb.hidephrase #phraseblur", function() {
         const phrase_cb = $("#phrase_cb");
@@ -1332,12 +1332,12 @@ function show_phrase() {
     })
 }
 
-// Callback function to show the mnemonic phrase
+// Updates UI to reveal mnemonic phrase
 function show_phrase_callback() {
     $("#phrase_cb").addClass("showphrase").removeClass("hidephrase");
 }
 
-// Initiates the process of deleting the mnemonic phrase
+// Initiates mnemonic phrase deletion process
 function delete_phrase_trigger() {
     $(document).on("click", "#deletephrase", function() {
         const check_duplicate = $("#dialogbody").find("#dseedwarning");
@@ -1350,7 +1350,7 @@ function delete_phrase_trigger() {
     });
 }
 
-// Verifies the user's intent to delete the mnemonic phrase
+// Validates deletion intent with phrase verification
 function delete_phrase_verify() {
     const result = confirm(translate("verifycurrent") + "?");
     if (result) {
@@ -1366,7 +1366,7 @@ function delete_phrase_verify() {
 
 // Bip 32 Key derivation
 
-// Creates an HMAC encryptor
+// Constructor for HMAC SHA-512 encryptor
 function hmac_encrypt(key) {
     const hasher = new sjcl.misc.hmac(key, sjcl.hash.sha512);
     this.encrypt = function() {
@@ -1374,25 +1374,25 @@ function hmac_encrypt(key) {
     };
 }
 
-// Converts a mnemonic phrase to a seed
+// Converts mnemonic to seed using PBKDF2
 function toseed(mnemonic, passphrase) {
     const parsed = parse_seed(mnemonic, passphrase);
-    return frombits(sjcl.misc.pbkdf2(parsed.mnemonic, parsed.passphrase, 2048, 512, hmac_encrypt));
+    return from_bits(sjcl.misc.pbkdf2(parsed.mnemonic, parsed.passphrase, 2048, 512, hmac_encrypt));
 }
 
-// Parses a mnemonic phrase and passphrase for seed generation
+// Normalizes mnemonic and passphrase for seed generation
 function parse_seed(mnemonic, passphrase1) {
     const passphrase2 = passphrase1 || "",
-        mnemonicNormalized = cleanstring(mnemonic),
-        passphrase3 = normalizestring(passphrase2),
+        mnemonicNormalized = clean_string(mnemonic),
+        passphrase3 = normalize_string(passphrase2),
         passphrase4 = "mnemonic" + passphrase3;
     return {
-        "mnemonic": tobits(mnemonicNormalized),
-        "passphrase": tobits(passphrase4)
+        "mnemonic": to_bits(mnemonicNormalized),
+        "passphrase": to_bits(passphrase4)
     }
 }
 
-// Generates a new mnemonic phrase
+// Generates random mnemonic phrase of specified length
 function newseed(numWords) {
     const strength = numWords / 3 * 32,
         buffer = uint_8Array(strength / 8),
@@ -1400,15 +1400,15 @@ function newseed(numWords) {
     return to_mnemonic(data);
 }
 
-// Converts a byte array to a mnemonic phrase
+// Converts random bytes to mnemonic using wordlist
 function to_mnemonic(byteArray) {
     if (byteArray.length % 4 > 0) {
         throw "Data length in bits should be divisible by 32, but it is not (" + byteArray.length + " bytes = " + byteArray.length * 8 + " bits)."
     }
-    const data = byteArrayToWordArray(byteArray),
+    const data = byte_array_to_word_array(byteArray),
         h = hmacsha(data, "sha256"),
-        a = byteArrayToBinaryString(byteArray),
-        c = zfill(hexStringToBinaryString(h), 256),
+        a = byte_array_to_binary_string(byteArray),
+        c = zfill(hex_string_to_binary_string(h), 256),
         d = c.substring(0, byteArray.length * 8 / 32),
         b = a + d,
         result = [],
@@ -1417,10 +1417,10 @@ function to_mnemonic(byteArray) {
         const idx = parseInt(b.substring(i * 11, (i + 1) * 11), 2);
         result.push(wordlist[idx]);
     }
-    return joinwords(result);
+    return join_words(result);
 }
 
-// Pads a string with leading zeros
+// Pads binary strings with leading zeros
 function zfill(source1, length) {
     let source = source1.toString();
     while (source.length < length) {
@@ -1431,7 +1431,7 @@ function zfill(source1, length) {
 
 // bip32 Derivation
 
-// Converts an extended key to an object with its components
+// Parses extended key format into component parts
 function objectify_extended(extended) {
     const version = extended.slice(0, 8),
         depth = extended.slice(8, 10),
@@ -1451,7 +1451,7 @@ function objectify_extended(extended) {
     };
 }
 
-// Performs hierarchical deterministic key derivation based on the provided data
+// Performs BIP32 hierarchical key derivation
 function derive_x(dx_dat, from_x_priv) {
     const dpath = dx_dat.dpath,
         derive_array = dpath.split("/"),
@@ -1468,7 +1468,7 @@ function derive_x(dx_dat, from_x_priv) {
             } else if (level === "M") {
                 xpub = true;
                 if (from_x_priv === true) {
-                    key = getPublicKey(key);
+                    key = get_publickey(key);
                 }
             } else {
                 return false;
@@ -1478,7 +1478,7 @@ function derive_x(dx_dat, from_x_priv) {
             const hardened = xpub === false && level.indexOf("'") >= 0,
                 childindex = hardened ? level.split("'")[0] : level,
                 childfloat = parseInt(childindex, 10),
-                childnumber = hardened ? dectohex(childfloat + 2147483648) : str_pad(dectohex(childfloat), 8),
+                childnumber = hardened ? dec_to_hex(childfloat + 2147483648) : str_pad(dec_to_hex(childfloat), 8),
                 kd = ckd(key, chaincode, childnumber, xpub, hardened);
             if (i === 1) {
                 purpose = level;
@@ -1501,21 +1501,21 @@ function derive_x(dx_dat, from_x_priv) {
     return keydat;
 }
 
-// Performs child key derivation for a single step in the derivation path
+// Derives child keys using BIP32 algorithm
 function ckd(ckey, cc, index, xpub, hard) {
     const ckd = {},
-        parent_pub = xpub ? ckey : getPublicKey(ckey),
+        parent_pub = xpub ? ckey : get_publickey(ckey),
         pubh60 = hash160(parent_pub),
         fingerprint = pubh60.slice(0, 8),
         keyfeed = xpub ? parent_pub : (hard ? "00" + ckey : parent_pub),
-        rootnode = hmac_bits(keyfeed + index, hextobits(cc), "hex"),
+        rootnode = hmac_bits(keyfeed + index, hex_to_bits(cc), "hex"),
         child_key_pre = rootnode.slice(0, 64),
         child_chaincode = rootnode.slice(64);
     if (xpub) {
         const key_point = secp.Point.fromPrivateKey(child_key_pre);
         ckd.key = secp.Point.fromHex(ckey).add(key_point).toHex(true);
     } else {
-        const child_key_dec = (hextodec(ckey) + hextodec(child_key_pre)) % oc;
+        const child_key_dec = (hex_to_dec(ckey) + hex_to_dec(child_key_pre)) % oc;
         ckd.key = str_pad(child_key_dec.toString(16), 64);
     }
     ckd.chaincode = child_chaincode;
@@ -1523,7 +1523,7 @@ function ckd(ckey, cc, index, xpub, hard) {
     return ckd;
 }
 
-// Generates an array of key pairs for a range of indices
+// Generates array of derived key pairs for given range
 function keypair_array(seed, arr, startindex, d_path, bip32dat, key, chaincode, currency, versionbytes) {
     const derive_array = [];
     $.each(arr, function(i) {
@@ -1542,14 +1542,14 @@ function keypair_array(seed, arr, startindex, d_path, bip32dat, key, chaincode, 
     return derive_array;
 }
 
-// Generates extended keys (private and public) for a given key object
+// Creates extended private and public keys from key object
 function ext_keys(eo, currency) {
     const eko = {},
         ext_payload = b58c_x_payload(eo, currency),
         priv_key = eo.key;
     eko.ext_key = b58check_encode(ext_payload);
     if (eo.xpub === false) {
-        const pub_key = getPublicKey(priv_key),
+        const pub_key = get_publickey(priv_key),
             pub_obj = {
                 "chaincode": eo.chaincode,
                 "purpose": eo.purpose,
@@ -1566,7 +1566,7 @@ function ext_keys(eo, currency) {
     return eko;
 }
 
-// Creates an extended public key object for a given currency and path
+// Builds xpub object containing key, id and prefix
 function xpub_obj(currency, rootpath, cc, key) {
     const dx_dat = {
             "dpath": rootpath.slice(0, -3),
@@ -1584,7 +1584,7 @@ function xpub_obj(currency, rootpath, cc, key) {
     }
 }
 
-// Generates the payload for Base58Check encoding of extended keys
+// Creates Base58Check payload for extended key encoding
 function b58c_x_payload(eo, currency) {
     const xpubdat = getbip32dat(currency);
     if (!xpubdat) {
@@ -1593,7 +1593,7 @@ function b58c_x_payload(eo, currency) {
     const xz_pub = eo.purpose === "84'" ? xpubdat.prefix.pubz : xpubdat.prefix.pubx,
         has_xpub = eo.xpub === true,
         version = has_xpub ? xz_pub : xpubdat.prefix.privx,
-        v_hex = str_pad(dectohex(version), 8),
+        v_hex = str_pad(dec_to_hex(version), 8),
         depth = eo.depth ? str_pad(eo.depth, 2) : "00",
         fingerprint = eo.fingerprint || "00000000",
         childnumber = eo.childnumber ? str_pad(eo.childnumber, 8) : "00000000",
@@ -1607,7 +1607,7 @@ function b58c_x_payload(eo, currency) {
     }
 }
 
-// Formats keys for different cryptocurrencies based on the derived key object
+// Formats keys into currency-specific address formats
 function format_keys(seed, key_object, bip32, index, coin) {
     const ko = {};
     if (coin === "nano") {
@@ -1637,8 +1637,8 @@ function format_keys(seed, key_object, bip32, index, coin) {
     const purpose = key_object.purpose,
         xpub = key_object.xpub,
         prekey = key_object.key,
-        pubkey = xpub === true ? prekey : getPublicKey(prekey),
-        vb = str_pad(dectohex(bip32.prefix.pub), 2);
+        pubkey = xpub === true ? prekey : get_publickey(prekey),
+        vb = str_pad(dec_to_hex(bip32.prefix.pub), 2);
     ko.index = index;
     if (coin === "ethereum") {
         ko.address = pub_to_eth_address(pubkey);
@@ -1678,14 +1678,14 @@ function format_keys(seed, key_object, bip32, index, coin) {
             ko.privkey = "0x" + prekey;
         } else {
             const pkv = bip32.pk_vbytes.wif;
-            ko.privkey = privkey_wif(str_pad(dectohex(pkv), 2), prekey, true);
+            ko.privkey = privkey_wif(str_pad(dec_to_hex(pkv), 2), prekey, true);
         }
 
     }
     return ko;
 }
 
-// Retrieves the extended public key prefix for a given currency
+// Gets xpub prefix for given currency
 function xpub_prefix(currency) {
     const test_rootkey = get_rootkey(bip39_const.expected_seed),
         dx_dat = {
@@ -1700,14 +1700,14 @@ function xpub_prefix(currency) {
 
 // Phrase info
 
-// Sets up event listener for displaying phrase information
+// Sets up phrase info dialog event listener
 function phrase_info() {
     $(document).on("click", "#phrase_info", function() {
         phrase_info_pu(null);
     })
 }
 
-// Generates and displays detailed information about the mnemonic phrase
+// Generates detailed mnemonic phrase analysis UI
 function phrase_info_pu(coin) {
     const phrase_obj = ls_phrase_obj(),
         savedseed = (glob_let.hasbip === true && phrase_obj) ? phrase_obj.pob.join(" ") : false,
@@ -1896,12 +1896,12 @@ function compatible_wallets(coin) {
     });
 }
 
-// Generates the URL for a wallet icon based on the wallet name
+// Builds wallet icon URL with wallet name
 function w_icon(wname) {
     return glob_const.aws_bucket + "img_icons_wallet-icons_" + wname + ".png";
 }
 
-// Sets up event listener for displaying coin-specific information when clicking on coin icons
+// Handles coin icon click to show coin-specific info
 function phrase_coin_info() {
     $(document).on("click", "#pi_icons img", function() {
         $("#ad_info_wrap").attr("data-class", $(this).attr("data-class"));
@@ -1909,7 +1909,7 @@ function phrase_coin_info() {
     })
 }
 
-// Toggles the visibility of derivation paths
+// Controls derivation path drawer visibility
 function toggle_dpaths() {
     $(document).on("click", "#ad_info_wrap .d_path_header", function() {
         const d_body = $(".d_path_body");
@@ -1923,7 +1923,7 @@ function toggle_dpaths() {
     })
 }
 
-// Shows coin-specific information based on the selected coin
+// Updates UI to display selected coin's information
 function pi_show() {
     const mclass = $("#ad_info_wrap").attr("data-class");
     $(".pd_hide").hide();
@@ -1932,21 +1932,21 @@ function pi_show() {
     $("#pi_icons img[data-class='" + mclass + "']").addClass("current");
 }
 
-// Sets up event listener for deriving next set of addresses
+// Sets up next address derivation handler
 function test_derive_next() {
     $(document).on("click", ".td_next", function() {
         test_derive_function($(this));
     })
 }
 
-// Sets up event listener for deriving previous set of addresses
+// Sets up previous address derivation handler
 function test_derive_prev() {
     $(document).on("click", ".td_prev", function() {
         test_derive_function($(this), true);
     })
 }
 
-// Performs address derivation for next or previous set of addresses
+// Derives next/previous set of addresses based on parameters
 function test_derive_function(thisnode, prev) {
     const kd = $("#ad_info_wrap").data(),
         dp_node = thisnode.closest(".d_path"),
@@ -1983,7 +1983,7 @@ function test_derive_function(thisnode, prev) {
     }
 }
 
-// Toggles the visibility of additional information in the phrase info dialog
+// Controls visibility of additional wallet info section
 function phrase_moreinfo() {
     $(document).on("click", "#bip_mi", function() {
         const thisbttn = $(this),
@@ -2001,7 +2001,7 @@ function phrase_moreinfo() {
     })
 }
 
-// Toggles the visibility of extended public key (xpub) information
+// Controls xpub information visibility and QR code generation
 function phrase_showxp() {
     $(document).on("click", ".show_xpub", function() {
         const thisbttn = $(this),

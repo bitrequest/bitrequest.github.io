@@ -42,7 +42,7 @@ $(document).ready(function() {
 
 // ** Sockets / Polling **
 
-// Init l2 eth and erc20
+// Initializes Layer 2 socket connections for Ethereum and ERC20 token transactions
 function init_l2_sockets(payment, address, ct, socket_node) {
     const l2_options = fertch_l2s(payment);
     if (l2_options) {
@@ -72,7 +72,7 @@ function init_l2_sockets(payment, address, ct, socket_node) {
 
 }
 
-// Init eth and erc20 L2 address scanning
+// Sets up Layer 2 blockchain scanning for given address and contract
 function init_layer2(socket_node, address, ctracts, retry) {
     const l2 = q_obj(socket_node, "network");
     if (l2) {
@@ -91,7 +91,7 @@ function init_layer2(socket_node, address, ctracts, retry) {
     console.error("error", "missing api data");
 }
 
-// Initiates Eth layer2 scanning
+// Starts Layer 2 blockchain scanning with configurable interval
 function omni_scan(socket_node, contract, ping_id, retry) {
     const timeout = 7000;
     if (socket_node) {
@@ -109,7 +109,7 @@ function omni_scan(socket_node, contract, ping_id, retry) {
     notify(translate("websocketoffline"), 500000, "yes");
 }
 
-// Initiates Eth layer2 polling
+// Initiates polling-based Layer 2 blockchain monitoring
 function omni_poll(api_data, contract) {
     if (api_data) {
         const rdo = omni_rdo(30000, "polling", contract);
@@ -120,6 +120,7 @@ function omni_poll(api_data, contract) {
     notify(translate("websocketoffline"), 500000, "yes");
 }
 
+// Executes Layer 2 scanning operation with provided config
 function scan_ethl2_socket(rdo, api_data) {
     if (api_data) {
         const contract = rdo.contract,
@@ -135,6 +136,7 @@ function scan_ethl2_socket(rdo, api_data) {
 
 // ** Monitors **
 
+// Routes Layer 2 API queries based on pending status
 function query_ethl2_api(rd, rdo, api_dat, l2) {
     const network = rd.eth_layer2 || l2;
     if (rdo.pending === "polling" && network) {
@@ -144,6 +146,7 @@ function query_ethl2_api(rd, rdo, api_dat, l2) {
     scan_ethl2_api(rd, rdo, api_dat, network);
 }
 
+// Scans Layer 2 networks for transaction data
 function scan_ethl2_api(rd, rdo, api_dat, network) {
     glob_let.l2_fetched = {};
     const req_l2_arr = rd.eth_l2s;
@@ -215,6 +218,7 @@ function scan_ethl2_api(rd, rdo, api_dat, network) {
     }
 }
 
+// Polls specific Layer 2 network API for updates
 function poll_ethl2_api(rd, rdo, api_dat, l2) {
     const l2_options = fertch_l2s(rd.payment),
         api_data = api_dat || get_l2_node(rd.payment, l2, l2_options[l2], "apis"),
@@ -236,6 +240,7 @@ function poll_ethl2_api(rd, rdo, api_dat, l2) {
 
 // ** L2 Networks **
 
+// Routes operations to specific Layer 2 network handlers
 function ethl2_networks(dat, network) {
     if (dat) {
         const url = q_obj(dat, "api_data.url");
@@ -256,7 +261,7 @@ function ethl2_networks(dat, network) {
     console.error("error", "missing api data");
 }
 
-// Handles Arbitrum APIS
+// Manages Arbitrum network API interactions
 function arbitrum_apis(dat) {
     const api_name = q_obj(dat, "api_data.name");
     if (api_name === "arbiscan") {
@@ -268,7 +273,7 @@ function arbitrum_apis(dat) {
     }
 }
 
-// Handles Polygon APIS
+// Manages Polygon network API interactions
 function polygon_apis(dat) {
     const api_name = q_obj(dat, "api_data.name");
     if (api_name === "polygonscan") {
@@ -280,7 +285,7 @@ function polygon_apis(dat) {
     }
 }
 
-// Handles Binance smart chain APIS
+// Manages BNB Chain API interactions
 function bnb_apis(dat) {
     const api_name = q_obj(dat, "api_data.name");
     if (api_name === "bscscan") {
@@ -296,7 +301,7 @@ function bnb_apis(dat) {
 
 // ** L2 Coinsettings **
 
-// Function to handle editing of eth Layer 2 settings
+// Handles Layer 2 settings UI interaction
 function edit_l2() {
     $(document).on("click", ".cc_settinglist li[data-id='layer2']", function() {
         const thiscurrency = $(this).children(".liwrap").attr("data-currency");
@@ -430,6 +435,7 @@ function edit_l2() {
     })
 }
 
+// Controls Layer 2 network panel visibility
 function l2nw_toggle() {
     $(document).on("mouseup", "#l2_formbox h2.nwheading", function(e) {
         const target = $(e.target);
@@ -447,6 +453,7 @@ function l2nw_toggle() {
     })
 }
 
+// Manages Layer 2 network enable/disable switching
 function l2nw_switch() {
     $(document).on("mouseup", "#l2_formbox h2.nwheading .switchpanel", function() {
         const this_switch = $(this),
@@ -460,7 +467,7 @@ function l2nw_switch() {
     })
 }
 
-// Function to handle submission of Layer 2 settings
+// Processes Layer 2 settings form submission
 function submit_l2() {
     $(document).on("click", "#l2_formbox input.submit", function(e) {
         e.preventDefault();
@@ -497,6 +504,7 @@ function submit_l2() {
 
 // ** L2 Helpers **
 
+// Compresses Layer 2 configuration object
 function compress_l2obj2(currency, ccsymbol) {
     // Initialize the result object with the base structure
     const eth_settings = JSON.parse(JSON.stringify(getcoinsettings(currency))), // make a deep clone to prevent duplicates
@@ -523,7 +531,7 @@ function compress_l2obj2(currency, ccsymbol) {
     return eth_settings;
 }
 
-// Init l2 status
+// Initializes Layer 2 network status display
 function set_l2_status_init(sn, stat) {
     if (!sn) {
         return
@@ -540,7 +548,7 @@ function set_l2_status_init(sn, stat) {
     set_l2_status(sn, stat);
 }
 
-// Set and dislay l2 status
+// Updates Layer 2 network status display
 function set_l2_status(sn, stat) {
     const network = sn.network,
         l2_object = glob_let.l2s,
@@ -581,20 +589,20 @@ function set_l2_status(sn, stat) {
     }
 }
 
-// get l2 api data
+// Retrieves Layer 2 configuration for currency
 function fertch_l2s(currency) {
     const l2_setting = cs_node(currency, "layer2", true);
     return q_obj(l2_setting, "options");
 }
 
-// Returns the index of an L2 network in settings, or false if not found
+// Finds index of Layer 2 network in settings
 function get_network_index(l2_network) {
     const l2s = q_obj(get_erc20_settings(), "layer2.options"),
         networks = Object.keys(l2s);
     return networks.indexOf(l2_network) === -1 ? false : networks.indexOf(l2_network);
 }
 
-// get node data based on api name
+// Retrieves node configuration for specified network
 function get_l2_node(payment, network, l2_dat, type) {
     const selected = q_obj(l2_dat, type);
     if (selected) {
@@ -607,7 +615,7 @@ function get_l2_node(payment, network, l2_dat, type) {
     return false;
 }
 
-// get l2 request data object
+// Creates Layer 2 request data object
 function omni_rdo(timeout, pending, contract, ping_id) {
     if (!request) return false;
     const rq_init = request.rq_init,

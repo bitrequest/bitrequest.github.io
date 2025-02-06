@@ -63,7 +63,7 @@ $(document).ready(function() {
     });
 })
 
-// Check for PHP support by fetching fiat currencies from local API PHP file
+// Validates PHP support by testing fixer API endpoint and configures global PHP support status
 function checkphp() {
     api_proxy({
         "api": "fixer",
@@ -107,7 +107,7 @@ function checkphp() {
     });
 }
 
-// Fetch fiat currencies from fixer.io API
+// Retrieves and caches fiat currency symbols from fixer.io with 24h expiration
 function setsymbols() {
     //set globals
     glob_let.local = (glob_const.hostlocation === "local" && glob_const.phpsupport === false),
@@ -148,7 +148,7 @@ function setsymbols() {
     })
 }
 
-// Get top 600 ERC20 tokens from CoinMarketCap
+// Fetches top 2000 ERC20 tokens from CoinMarketCap, filters Ethereum tokens, and caches results
 function geterc20tokens() {
     const in_cache = fetch_cached_erc20(true);
     if (in_cache) {
@@ -194,7 +194,7 @@ function geterc20tokens() {
     });
 }
 
-// Store coin data in local storage
+// Splits and stores token data in localStorage with timestamp for cache management
 function store_coindata(first_half, second_half) {
     if (first_half) {
         const c_arr1 = convert_coinlist(first_half);
@@ -214,6 +214,7 @@ function store_coindata(first_half, second_half) {
     }
 }
 
+// Filters Ethereum-based tokens (platform ID 1027) and maps to simplified token object structure
 function convert_coinlist(og_list) {
     try {
         return og_list.filter(value => value.platform && value.platform.id === 1027).map(value => ({
@@ -228,7 +229,7 @@ function convert_coinlist(og_list) {
     }
 }
 
-// Check if PIN is set and valid
+// Validates PIN configuration and optional locktime settings from DOM data attributes
 function haspin(set) {
     const pinsettings = $("#pinsettings").data(),
         pinhash = pinsettings.pinhash;
@@ -245,7 +246,7 @@ function haspin(set) {
     return false;
 }
 
-// Check if the application is locked
+// Determines if app requires unlock based on configured timeout and last activity timestamp
 function islocked() {
     const gets = geturlparameters(),
         locktime = $("#pinsettings").data("locktime"),
@@ -559,30 +560,30 @@ function finishfunctions() {
     close_cam_trigger();
     //show_cam
     //close_cam(
-    //setResult
-    //handleLnconnect
-    //handleAddress
-    //handleViewkey
+    //set_result
+    //handle_ln_connect
+    //handle_address
+    //handle_viewkey
 
     //add_serviceworker
 }
 
 //checks
 
-// Sets the language attributes for the HTML document and meta tags
+// Updates HTML document language and meta tag attributes based on current language code
 function setlocales() {
     glob_const.html.attr("lang", langcode);
     $("meta[property='og:locale']").attr("content", langcode);
     $("meta[property='og:url']").attr("content", glob_const.w_loc.href);
 }
 
-// Sets the data-role attribute on the HTML element based on selected permissions
+// Sets HTML element data-role based on user permission level
 function setpermissions() {
     const permission = $("#permissions").data("selected");
     glob_const.html.attr("data-role", permission);
 }
 
-// Checks if the current user has view-only (cashier) permissions
+// Returns true if current user has cashier (view-only) permissions
 function is_viewonly() {
     const permission = $("#permissions").data("selected");
     return permission === "cashier";
@@ -590,7 +591,7 @@ function is_viewonly() {
 
 // ** Pincode ** //
 
-// Handles keypress events for PIN entry
+// Binds keyboard number inputs to PIN pad for numeric entry
 function pinkeypress() {
     $(document).keydown(function(e) {
         const pinfloat = $("#pinfloat");
@@ -627,7 +628,7 @@ function pinkeypress() {
     });
 }
 
-// Selects the appropriate PIN press function based on the current mode
+// Routes PIN input to either entry or validation handling based on current mode
 function pinpressselect(node) {
     if ($("#pinfloat").hasClass("enterpin")) {
         pinpress(node);
@@ -636,14 +637,14 @@ function pinpressselect(node) {
     pinvalidate(node)
 }
 
-// Sets up click event listener for PIN pad buttons
+// Initializes click handler for PIN pad numeric buttons
 function pinpresstrigger() {
     $(document).on("click", "#optionspop .enterpin .pinpad .pincell", function() {
         pinpress($(this));
     });
 }
 
-// Handles PIN button press events
+// Processes PIN digit entry, validates length, and manages visual feedback
 function pinpress(thispad) {
     const pinfloat = $("#pinfloat"),
         thisval = thispad.text(),
@@ -673,7 +674,7 @@ function pinpress(thispad) {
     $("#pincode .pinpad").not(thispad).removeClass("activepad");
 }
 
-// Processes the entered PIN and performs corresponding actions
+// Validates PIN entry and manages app access, lockouts, and security timeouts
 function enterapp(pinval) {
     const pinfloat = $("#pinfloat"),
         pinsettings = $("#pinsettings").data(),
@@ -754,7 +755,7 @@ function enterapp(pinval) {
     }
 }
 
-// Clears the PIN lock by resetting timeout and attempts
+// Resets PIN lockout state by clearing timeout and attempt counters
 function clearpinlock() {
     const pinsettings = $("#pinsettings").data();
     pinsettings.timeout = null;
@@ -762,21 +763,21 @@ function clearpinlock() {
     savesettings();
 }
 
-// Sets up event listener for PIN reset button
+// Initializes click handler for PIN reset functionality
 function pin_admin_reset() {
     $(document).on("click", "#reset_pin", function() {
         $("#pinfloat").removeClass("p_admin");
     });
 }
 
-// Sets up click event listener for PIN validation buttons
+// Sets up click handlers for PIN confirmation pad
 function pinvalidatetrigger() {
     $(document).on("click", "#optionspop .validatepin .pinpad .pincell", function() {
         pinvalidate($(this))
     });
 }
 
-// Handles PIN validation process
+// Handles PIN confirmation entry and validates match with initial entry
 function pinvalidate(thispad) {
     const pinfloat = $("#pinfloat"),
         thisval = thispad.text(),
@@ -824,21 +825,21 @@ function pinvalidate(thispad) {
     $("#pincode .pinpad").not(thispad).removeClass("activepad");
 }
 
-// Sets up event listener for PIN backspace in enter mode
+// Binds click handler for PIN backspace in entry mode
 function pinbacktrigger() {
     $(document).on("click", "#optionspop #pinfloat.enterpin #pinback", function() {
         pinback($("#pininput"));
     });
 }
 
-// Sets up event listener for PIN backspace in validate mode
+// Binds click handler for PIN backspace in validation mode
 function pinbackvalidatetrigger() {
     $(document).on("click", "#optionspop #pinfloat.validatepin #pinback", function() {
         pinback($("#validatepin"));
     });
 }
 
-// Handles PIN backspace functionality
+// Removes last entered PIN digit and updates input display
 function pinback(pininput) {
     const pinval = pininput.val(),
         prevval = pinval.slice(0, -1);
@@ -847,13 +848,13 @@ function pinback(pininput) {
 
 // ** IOS Redirects **
 // (Can only be envoked from the IOS app) 
-// Initializes iOS-specific functionality
+// Configures app for iOS-specific behaviors and adds iOS identifier
 function ios_init() {
     glob_const.is_ios_app = true;
     glob_const.body.addClass("ios"); // ios app fingerprint
 }
 
-// Handles iOS-specific page redirections
+// Manages URL routing and page transitions for iOS app integration
 function ios_redirections(url) {
     if (!url) return;
     const search = get_search(url),
@@ -896,14 +897,14 @@ function ios_redirections(url) {
 
 // ** Intropage **
 
-// Sets up event listener for starting the intro process
+// Initializes intro process click handler on intro panel and proceed button
 function starttrigger() {
     $(document).on("click touchend", "#intro .panelwrap, #intro .proceeed", function() {
         startnext($("#intro"));
     });
 }
 
-// Sets up event listener for progressing to the next step in the intro process
+// Sets up click handler for name entry panel in intro flow
 function startnexttrigger() {
     $(document).on("click touchend", "#entername .panelwrap", function(e) {
         if (e.target === this) {
@@ -912,7 +913,7 @@ function startnexttrigger() {
     });
 }
 
-// Handles progression to the next step in the intro process
+// Progresses to next intro panel if current step is valid
 function startnext(thisnode) {
     const thisnext = thisnode.attr("data-next");
     if (!thisnext) return;
@@ -925,7 +926,7 @@ function startnext(thisnode) {
     topnotify(translate("enteryourname"));
 }
 
-// Handles going back to the previous step in the intro process
+// Returns to previous intro panel
 function startprev(thisnode) {
     const thisprev = thisnode.attr("data-prev");
     if (!thisprev) return;
@@ -934,7 +935,7 @@ function startprev(thisnode) {
     $("#eninput").blur();
 }
 
-// Handles keydown events for character limit on input field
+// Manages keydown events and character limits for name input field
 function lettercountkeydown() {
     $(document).on("keydown", "#eninput", function(e) {
         const keycode = e.which || e.keyCode,
@@ -954,7 +955,7 @@ function lettercountkeydown() {
     });
 }
 
-// Handles input events for character count and validation
+// Updates character count and validation state for name input
 function lettercountinput() {
     $(document).on("input", "#eninput", function() {
         const thisinput = $(this),
@@ -969,7 +970,7 @@ function lettercountinput() {
     });
 }
 
-// Handles currency selection from a list
+// Handles currency selection and adds associated address
 function choosecurrency() {
     $(document).on("click touch", "#allcurrencies li.choose_currency", function() {
         const currency = $(this).attr("data-currency"),
@@ -986,7 +987,7 @@ function choosecurrency() {
 
 // ** Navigation **
 
-// Toggles navigation based on header click
+// Controls navigation toggle based on header clicks and app state
 function togglenav() {
     $(document).on("click", "#header", function() {
         if (glob_const.html.hasClass("showmain")) {
@@ -1009,7 +1010,7 @@ function togglenav() {
     });
 }
 
-// Loads the appropriate page based on URL parameters
+// Routes to appropriate page based on URL parameters
 function loadurl() {
     const gets = geturlparameters();
     if (gets.xss) {
@@ -1032,7 +1033,7 @@ function loadurl() {
     }
 }
 
-// Handles clicks on link elements
+// Handles navigation link clicks
 function clicklink() {
     $(document).on("click", ".self", function(e) {
         e.preventDefault();
@@ -1041,13 +1042,13 @@ function clicklink() {
     })
 }
 
-// Loads a page and updates the URL
+// Updates URL and triggers page load
 function loadpage(href) {
     const pagename = href.split("&")[0].split("=").pop();
     openpage(href, pagename, "loadpage");
 }
 
-// Opens a page, updates history, and loads the appropriate function
+// Updates browser history and loads specified page function
 function openpage(href, pagename, event) {
     history.pushState({
         "pagename": pagename,
@@ -1056,9 +1057,8 @@ function openpage(href, pagename, event) {
     loadfunction(pagename, event);
 }
 
-// Handles browser's back/forward navigation
+// Manages browser back/forward navigation state
 function popstate() {
-    // CHANGE: Use addEventListener instead of onpopstate
     window.addEventListener("popstate", function(e) {
         const statemeta = e.state;
         if (statemeta && statemeta.pagename) {
@@ -1069,7 +1069,7 @@ function popstate() {
     });
 }
 
-// Loads the appropriate function based on the page and event
+// Routes to appropriate function based on page type and event
 function loadfunction(pagename, thisevent) {
     if (thisevent === "payment") { //load paymentpopup if payment is set
         loadpaymentfunction();
@@ -1089,7 +1089,7 @@ function loadfunction(pagename, thisevent) {
     cancel_url_dialogs();
 }
 
-// Cancels any active dialogs related to URL changes
+// Closes active dialogs when URL changes
 function cancel_url_dialogs() {
     if (isopenrequest()) {
         cancelpaymentdialog();
@@ -1099,7 +1099,7 @@ function cancel_url_dialogs() {
     }
 }
 
-// Loads a page event, updates UI elements
+// Updates UI elements when loading new page
 function loadpageevent(pagename) {
     $("html, body").animate({
         "scrollTop": 0
@@ -1117,7 +1117,7 @@ function loadpageevent(pagename) {
     }
 }
 
-// Shows or hides navigation based on the current page
+// Toggles navigation visibility based on current page
 function shownav(pagename) {
     if (ishome(pagename) === true) {
         glob_const.html.removeClass("showmain").addClass("hidemain");
@@ -1128,7 +1128,7 @@ function shownav(pagename) {
     $("#relnav .nav").slideDown(300);
 }
 
-// Handles active menu item selection
+// Manages active state of menu items
 function activemenu() {
     $(document).on("click", ".nav li .self", function() {
         const thisitem = $(this);
@@ -1137,7 +1137,7 @@ function activemenu() {
     })
 }
 
-// Handles fixed navigation on scroll
+// Controls fixed navigation on page scroll
 function fixednav() {
     $(document).scroll(function() {
         if (glob_const.html.hasClass("paymode")) {
@@ -1149,7 +1149,7 @@ function fixednav() {
 
 // ** Triggerrequest **
 
-// Handles triggering of transactions
+// Initializes transaction trigger click handlers
 function triggertx() {
     $(document).on("click", ".currencylist li > .rq_icon", function() {
         triggertxfunction($(this));
@@ -1157,7 +1157,7 @@ function triggertx() {
     });
 }
 
-// Processes transaction triggering
+// Processes transaction initiation and validation
 function triggertxfunction(thislink) {
     const currency = thislink.data("currency"),
         can_derive = derive_first_check(currency);
@@ -1202,7 +1202,7 @@ function triggertxfunction(thislink) {
     finishtxfunction(currency, thisaddress, savedurl, title)
 }
 
-// Handles confirmation of missing seed
+// Handles seed confirmation dialog interactions
 function confirm_missing_seed() {
     $(document).on("click", "#addresswarning .submit", function(e) {
         e.preventDefault();
@@ -1224,7 +1224,7 @@ function confirm_missing_seed() {
     })
 }
 
-// Generates HTML for address warning dialog
+// Generates seed warning dialog HTML with confirmation options
 function get_address_warning(id, address, pass_dat) {
     const seedstr = pass_dat.xpubid ? "Xpub" : "Seed",
         rest_str = (seedstr === "Seed") ? (glob_let.hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + pass_dat.seedid + "'>" + translate("resoresecretphrase") + "</div>" : "",
@@ -1252,7 +1252,7 @@ function get_address_warning(id, address, pass_dat) {
     </div>").data(pass_dat);
 }
 
-// Completes the transaction function
+// Completes transaction processing and URL generation
 function finishtxfunction(currency, thisaddress, savedurl, title) {
     glob_let.prevkey = false;
     const gets = geturlparameters();
@@ -1274,12 +1274,12 @@ function finishtxfunction(currency, thisaddress, savedurl, title) {
     openpage(href, thistitle, "payment");
 }
 
-// Clears saved URLs from currency list items
+// Removes saved URLs from currency list entries
 function clear_savedurl() {
     $("#currencylist li > .rq_icon").removeData("url");
 }
 
-// Handles payment request actions
+// Handles payment request initiation
 function payrequest() {
     $(document).on("click", "#requestlist .req_actions .icon-qrcode, #requestlist .payrequest", function(e) {
         e.preventDefault();
@@ -1327,7 +1327,7 @@ function payrequest() {
 
 // ** UX **
 
-// Toggles currency visibility
+// Toggles currency visibility and handles state updates
 function togglecurrency() {
     $(document).on("click", ".togglecurrency", function() {
         const parentlistitem = $(this).closest("li"),
@@ -1357,7 +1357,7 @@ function togglecurrency() {
     });
 }
 
-// Toggles address visibility and handles address validation
+// Controls address visibility and validation state
 function toggleaddress() {
     $(document).on("click", ".toggleaddress", function() {
         const parentlistitem = $(this).closest("li"),
@@ -1407,7 +1407,7 @@ function toggleaddress() {
     });
 }
 
-// Handles confirmation of missing seed for address toggling
+// Handles seed confirmation dialog for address toggle actions
 function confirm_missing_seed_toggle() {
     $(document).on("click", "#addresswarningcheck .submit", function(e) {
         e.preventDefault();
@@ -1430,7 +1430,7 @@ function confirm_missing_seed_toggle() {
     })
 }
 
-// Callback function for confirming missing seed toggle
+// Updates address state and UI after seed confirmation
 function cmst_callback(parentlistitem) {
     const parentlist = parentlistitem.closest("ul.pobox"),
         currency = parentlist.attr("data-currency");
@@ -1440,7 +1440,7 @@ function cmst_callback(parentlistitem) {
     clear_savedurl();
 }
 
-// Adds a seed to the whitelist
+// Adds a new seed ID to localStorage whitelist
 function add_seed_whitelist(seedid) {
     const stored_whitelist = br_get_local("swl", true),
         seed_whitelist = br_dobj(stored_whitelist);
@@ -1450,14 +1450,14 @@ function add_seed_whitelist(seedid) {
     br_set_local("swl", seed_whitelist, true);
 }
 
-// Checks if a seed is in the whitelist
+// Verifies if seed ID exists in whitelist
 function seed_wl(seedid) {
     const stored_whitelist = br_get_local("swl", true),
         seed_whitelist = br_dobj(stored_whitelist);
     return seed_whitelist.includes(seedid);
 }
 
-// Adds an address to the whitelist
+// Adds new address to localStorage whitelist
 function add_address_whitelist(address) {
     const stored_whitelist = br_get_local("awl", true),
         address_whitelist = br_dobj(stored_whitelist);
@@ -1467,14 +1467,14 @@ function add_address_whitelist(address) {
     br_set_local("awl", address_whitelist, true);
 }
 
-// Checks if an address is in the whitelist
+// Verifies if address exists in whitelist
 function addr_whitelist(address) {
     const stored_whitelist = br_get_local("awl", true),
         address_whitelist = br_dobj(stored_whitelist);
     return address_whitelist.includes(address);
 }
 
-// Handles checkbox toggling in popup
+// Manages checkbox state toggling in popup dialogs
 function check_pk() {
     $(document).on("click", "#popup .cb_wrap", function() {
         const thisnode = $(this),
@@ -1487,7 +1487,7 @@ function check_pk() {
     });
 }
 
-// Checks and updates currency status based on address count
+// Updates currency status based on active address count
 function check_currency(currency) {
     const addresscount = filter_addressli(currency, "checked", true).length;
     if (addresscount > 0) {
@@ -1497,7 +1497,7 @@ function check_currency(currency) {
     currency_uncheck(currency);
 }
 
-// Marks a currency as checked and updates UI
+// Activates currency and updates associated UI elements
 function currency_check(currency) {
     const currencylistitem = get_homeli(currency),
         parentcheckbox = get_currencyli(currency);
@@ -1506,7 +1506,7 @@ function currency_check(currency) {
     savecurrencies(false);
 }
 
-// Marks a currency as unchecked and updates UI
+// Deactivates currency and updates associated UI elements
 function currency_uncheck(currency) {
     const currencylistitem = get_homeli(currency),
         parentcheckbox = get_currencyli(currency);
@@ -1515,7 +1515,7 @@ function currency_uncheck(currency) {
     savecurrencies(false);
 }
 
-// Handles toggling of global switches
+// Manages global switch toggle states
 function toggleswitch() {
     $(document).on("mousedown", ".switchpanel.global", function() {
         const thistoggle = $(this);
@@ -1529,7 +1529,7 @@ function toggleswitch() {
 
 // ** Selectbox **
 
-// Shows select options
+// Displays selectbox options dropdown
 function showselect() {
     $(document).on("click", ".selectarrows", function() {
         const all_options = $(".options"),
@@ -1549,7 +1549,7 @@ function showselect() {
     });
 }
 
-// Handles selectbox input click
+// Handles input interaction for selectbox elements
 function selectbox() {
     $(document).on("click", ".selectbox > input:not([readonly])", function() {
         const thisselect = $(this),
@@ -1565,7 +1565,7 @@ function selectbox() {
     })
 }
 
-// Handles selection from selectbox options
+// Processes option selection in selectbox dropdown
 function pickselect() {
     $(document).on("click", ".selectbox > .options span", function() {
         const thisselect = $(this),
@@ -1578,12 +1578,12 @@ function pickselect() {
     })
 }
 
-// Closes all open selectboxes in popup
+// Hides all open selectboxes in popup
 function closeselectbox() {
     $("#popup .selectbox .options").removeClass("showoptions");
 }
 
-// Handles radio button selection
+// Manages radio button selection behavior
 function radio_select() {
     $(document).on("click", ".formbox .pick_conf", function() {
         const thistrigger = $(this),
@@ -1599,7 +1599,7 @@ function radio_select() {
     })
 }
 
-// Handles dialog drawer toggling
+// Controls expandable dialog drawer sections
 function dialog_drawer() {
     $(document).on("click", "#ad_info_wrap .d_trigger", function() {
         const thistrigger = $(this),
@@ -1615,7 +1615,7 @@ function dialog_drawer() {
 
 // ** Reorder Adresses **
 
-// Reorder addresses
+// Initializes drag functionality for address reordering
 function dragstart() {
     $(document).on("mousedown touchstart", ".currentpage .applist li .popoptions", function(e) {
         e.preventDefault();
@@ -1631,7 +1631,7 @@ function dragstart() {
     })
 }
 
-// Handle dragging of addresses
+// Handles ongoing drag movement and position calculation
 function drag(thisli, dialogheight, startheight, thisindex) {
     $(document).on("mousemove touchmove", ".currentpage .applist li", function(e) {
         e.preventDefault();
@@ -1675,7 +1675,7 @@ function drag(thisli, dialogheight, startheight, thisindex) {
     })
 }
 
-// Handle end of address dragging
+// Finalizes drag and drop reordering of addresses
 function dragend() {
     $(document).on("mouseup mouseleave touchend", ".currentpage .applist li", function() {
         $(document).off("mousemove touchmove", ".currentpage .applist li");
@@ -1696,7 +1696,7 @@ function dragend() {
     })
 }
 
-// Handle key presses
+// Manages keyboard input actions across app
 function keyup() {
     $(document).keyup(function(e) {
         if (e.keyCode == 39) { // ArrowRight
@@ -1776,7 +1776,7 @@ function keyup() {
     });
 }
 
-// Handle escape and back functionality
+// Handles escape key and back navigation actions
 function escapeandback() {
     if (glob_const.inframe) {
         const gets = geturlparameters();
@@ -1842,7 +1842,7 @@ function escapeandback() {
     }
 }
 
-// Close payment dialog
+// Closes payment dialog with optional post-scan actions
 function close_paymentdialog(afterscan) {
     if (afterscan) {
         const api_data = q_obj(request, "coinsettings.apis.selected");
@@ -1859,7 +1859,7 @@ function close_paymentdialog(afterscan) {
     continue_cpd();
 }
 
-// Continue closing payment dialog
+// Handles post-payment dialog closing states
 function continue_cpd() {
     if (glob_const.html.hasClass("firstload")) {
         const gets = geturlparameters(),
@@ -1871,7 +1871,7 @@ function continue_cpd() {
     window.history.back();
 }
 
-// After scan initialization
+// Initializes post-scan transaction verification
 function after_scan_init(api_data) {
     if (is_scanning()) return;
     glob_let.rpc_attempts = {};
@@ -1889,7 +1889,7 @@ function after_scan_init(api_data) {
     after_scan(request, api_data, rdo);
 }
 
-// Scan address one last time
+// Performs final transaction scan verification
 function after_scan(rd, api_data, rdo) {
     if (glob_const.inframe) {
         loader(true);
@@ -1904,7 +1904,7 @@ function after_scan(rd, api_data, rdo) {
     socket_info(api_data, true);
 }
 
-// No results found for afterscan
+// Handles failed post-scan verification
 function cancel_after_scan() {
     closeloader();
     if (glob_const.inframe) {
@@ -1916,6 +1916,7 @@ function cancel_after_scan() {
     continue_cpd();
 }
 
+// Updates localStorage with recent payment request data
 function set_recent_requests() {
     if (request) {
         const currency = request.payment,
@@ -1935,7 +1936,7 @@ function set_recent_requests() {
     }
 }
 
-// Handle recent payment check
+// Handles blockchain explorer URL click events with user confirmation
 function check_recent() {
     $(document).on("click", ".check_recent", function(e) {
         e.preventDefault();
@@ -1953,7 +1954,7 @@ function check_recent() {
     })
 }
 
-// Show request history
+// Opens request history dialog when clicking history button
 function request_history() {
     $(document).on("click", "#request_history", function() {
         const ls_recentrequests = br_get_local("recent_requests", true);
@@ -1963,7 +1964,7 @@ function request_history() {
     })
 }
 
-// Display recent requests
+// Displays dialog with formatted list of recent payment requests
 function recent_requests(recent_payments) {
     const addresslist = recent_requests_list(recent_payments);
     if (addresslist.length) {
@@ -1972,7 +1973,7 @@ function recent_requests(recent_payments) {
     }
 }
 
-// Generate list of recent requests
+// Generates HTML list of recent payment requests with transaction info
 function recent_requests_list(recent_payments) {
     let addresslist = "";
     const rp_array = [];
@@ -2003,7 +2004,7 @@ function recent_requests_list(recent_payments) {
     return addresslist;
 }
 
-// Display notification
+// Shows notification popup with optional duration and button style
 function notify(message, settime = 4000, setbutton = "no") {
     const notify = $("#notify");
     $("#notifysign").html(message + "<span class='icon-cross'></div>").attr("class", "button" + setbutton);
@@ -2015,19 +2016,19 @@ function notify(message, settime = 4000, setbutton = "no") {
     });
 }
 
-// Attaches a click event listener to close the notification
+// Closes notification when clicking X icon
 function closenotifytrigger() {
     $(document).on("click", "#notify .icon-cross", function() {
         closenotify()
     });
 }
 
-// Removes the "popupn" class from the notification element
+// Hides active notification
 function closenotify() {
     $("#notify").removeClass("popupn");
 }
 
-// Displays a top notification with a message and auto-hides it after 7 seconds
+// Shows temporary notification at top of screen
 function topnotify(message) {
     const topnotify = $("#topnotify");
     topnotify.text(message).addClass("slidedown");
@@ -2038,7 +2039,7 @@ function topnotify(message) {
     });
 }
 
-// Displays a notification in dialogs with different styles based on the result type
+// Displays styled notification in dialog boxes
 function popnotify(result, message) { // notifications in dialogs
     const notify = $(".popnotify");
     if (result == "error") {
@@ -2056,7 +2057,7 @@ function popnotify(result, message) { // notifications in dialogs
     });
 }
 
-// Creates and displays a popup dialog with custom content and functionality
+// Creates modal dialog with custom content and actions
 function popdialog(content, functionname, trigger, custom, replace) {
     if (custom) {
         $("#popup #actions").addClass("custom");
@@ -2077,7 +2078,7 @@ function popdialog(content, functionname, trigger, custom, replace) {
     }
 }
 
-// Attaches a click event to execute a specified function
+// Binds function to dialog execution button
 function execute(trigger, functionname) {
     $(document).on("click", "#execute", function(e) {
         e.preventDefault();
@@ -2085,14 +2086,14 @@ function execute(trigger, functionname) {
     })
 }
 
-// Attaches a click event to add a currency
+// Initializes currency addition click handler
 function addcurrencytrigger() {
     $(document).on("click", ".addcurrency", function() {
         addcurrency($(this).closest("li").data());
     })
 }
 
-// Adds a currency to the user's portfolio or derives an address if possible
+// Handles adding currency or deriving address
 function addcurrency(cd) {
     const currency = cd.currency;
     if (get_addresslist(currency).children("li").length) {
@@ -2112,7 +2113,7 @@ function addcurrency(cd) {
     addaddress(cd, false);
 }
 
-// Checks if a currency can be derived and performs the derivation if possible
+// Checks for possible address derivation and executes if valid
 function derive_first_check(currency) {
     if (hasbip32(currency) === true) {
         const derives = check_derivations(currency);
@@ -2126,14 +2127,14 @@ function derive_first_check(currency) {
     return false;
 }
 
-// Attaches a click event to add an address
+// Initializes address addition click handler
 function addaddresstrigger() {
     $(document).on("click", ".addaddress", function() {
         addaddress($("#" + $(this).attr("data-currency")).data(), false);
     })
 }
 
-// Adds an address to the user's portfolio or opens the address edit dialog
+// Manages address addition/editing workflow
 function addaddress(ad, edit) {
     const currency = ad.currency,
         cpid = ad.ccsymbol + "-" + currency,
@@ -2183,7 +2184,7 @@ function addaddress(ad, edit) {
     $("#popup input.address").focus();
 }
 
-// Handles changes in the address/xpub input field
+// Validates input for xpub addresses
 function address_xpub_change() {
     $(document).on("input", "#addressformbox.noxpub #address_xpub_input", function(e) {
         const thisnode = $(this),
@@ -2203,7 +2204,7 @@ function address_xpub_change() {
     })
 }
 
-// Checks if there are active derivations for a given currency
+// Checks for active derived addresses
 function active_derives(currency, derive) {
     const addresslist = get_addresslist(currency).children("li");
     if (addresslist.length < 1) {
@@ -2247,7 +2248,7 @@ function active_derives(currency, derive) {
     return true
 }
 
-// Handles the "Get Wallet" button click
+// Opens wallet download dialog
 function get_wallet() {
     $(document).on("click", "#get_wallet", function() {
         const this_currency = $(this).attr("data-currency");
@@ -2258,7 +2259,7 @@ function get_wallet() {
     })
 }
 
-// Handles the submission of the address form
+// Handles address form submission
 function submitaddresstrigger() {
     $(document).on("click", "#addressformbox input.submit", function(e) {
         e.preventDefault();
@@ -2278,7 +2279,7 @@ function submitaddresstrigger() {
     })
 }
 
-// Handles the "Connect Lightning Node" button click
+// Opens Lightning node connection dialog
 function add_lightning() {
     $(document).on("click", "#connectln", function() {
         lm_function();
@@ -2286,7 +2287,7 @@ function add_lightning() {
     })
 }
 
-// Handles the "Add ERC20 Token" button click
+// Opens ERC20 token addition dialog
 function add_erc20() {
     $(document).on("click", "#add_erc20, #choose_erc20", function() {
         const tokenobject = fetch_cached_erc20();
@@ -2330,7 +2331,7 @@ function add_erc20() {
     })
 }
 
-// Handles autocomplete functionality for ERC20 token input
+// Handles ERC20 token search autocomplete
 function autocomplete_erc20token() {
     $(document).on("input", "#ac_input", function() {
         const thisinput = $(this),
@@ -2377,7 +2378,7 @@ function pickerc20select() {
     })
 }
 
-// Initializes the address form for the selected ERC20 token
+// Sets up address form for selected ERC20 token
 function initaddressform(coin_data) {
     const erc20formbox = $("#erc20formbox"),
         erc20_inputs = erc20formbox.find("#erc20_inputs"),
@@ -2394,7 +2395,7 @@ function initaddressform(coin_data) {
     }
 }
 
-// Handles the submission of the ERC20 token form
+// Processes ERC20 token form submission
 function submit_erc20() {
     $(document).on("click", "#erc20formbox input.submit", function(e) {
         e.preventDefault();
@@ -2478,7 +2479,7 @@ function validateaddress_vk(ad) {
     popnotify("error", translate("pickacurrency"));
 }
 
-// Save mymonero node status in session
+// Stores Monero view key in session storage
 function set_xmr_node_access(vk) {
     const stored_vk_list = br_get_session("xmrvks", true);
     if (stored_vk_list) {
@@ -2594,18 +2595,18 @@ function validateaddress(ad, vk) {
     clear_savedurl();
 }
 
-// Validates an address for a given currency using a regex pattern
+// Validates address format against currency regex
 function check_address(address, currency) {
     const regex = getcoindata(currency).regex;
     return regex ? new RegExp(regex).test(address) : false;
 }
 
-// Validates a view key using a regex pattern
+// Validates view key format
 function check_vk(vk) {
     return new RegExp("^[a-fA-F0-9]+$").test(vk);
 }
 
-// Handles the click event for the send button
+// Handles send button clicks and BIP39 compatibility checks
 function send_trigger() {
     $(document).on("click", ".send", function() {
         if (glob_let.hasbip === true) {
@@ -2616,7 +2617,7 @@ function send_trigger() {
     })
 }
 
-// Handles the click event for showing BIP39 information
+// Opens BIP39 information panel
 function showbip39_trigger() {
     $(document).on("click", ".show_bip39", function() {
         all_pinpanel({
@@ -2626,12 +2627,12 @@ function showbip39_trigger() {
     })
 }
 
-// Handles the click event for canceling a dialog
+// Initializes click handler for dialog cancellation
 function canceldialog_click() {
     $(document).on("click", ".cancel_dialog", canceldialog);
 }
 
-// Sets up event listeners for closing dialogs
+// Sets up dialog closing event listeners
 function canceldialogtrigger() {
     $(document).on("click", "#popup", function(e) {
         const target = e.target,
@@ -2651,7 +2652,7 @@ function canceldialogtrigger() {
     });
 }
 
-// Closes the current dialog
+// Closes active dialog and resets state
 function canceldialog(pass) {
     if (glob_const.inframe) {
         if (pass !== true) {
@@ -2675,7 +2676,7 @@ function canceldialog(pass) {
     });
 }
 
-// Blocks canceling of payment dialog when inputs are focused
+// Prevents dialog close when inputs are focused
 function blockcancelpaymentdialog() {
     $(document).on("mousedown", "#payment", function(e) {
         glob_let.blockswipe = false;
@@ -2688,7 +2689,7 @@ function blockcancelpaymentdialog() {
     })
 }
 
-// Handles the cancellation of the payment dialog
+// Handles payment dialog cancellation
 function cancelpaymentdialogtrigger() {
     $(document).on("mouseup", "#payment", function(e) {
         if (glob_let.blockswipe === true) {
@@ -2711,12 +2712,12 @@ function cancelpaymentdialogtrigger() {
     });
 }
 
-// Removes focus from input fields
+// Removes focus from all input fields
 function unfocus_inputs() {
     glob_const.paymentdialogbox.find("input").blur();
 }
 
-// Checks polling conditions and closes payment dialog if necessary
+// Validates polling conditions before closing payment dialog
 function cpd_pollcheck() {
     if (q_obj(request, "received") !== true) {
         const rq_timer = request.rq_timer,
@@ -2733,7 +2734,7 @@ function cpd_pollcheck() {
     close_paymentdialog();
 }
 
-// Cancels the payment dialog and resets related states
+// Cancels payment dialog and resets states
 function cancelpaymentdialog() {
     if (glob_const.html.hasClass("hide_app")) {
         closeloader();
@@ -2745,13 +2746,13 @@ function cancelpaymentdialog() {
 
 }
 
-// Hides the paymentdialog
+// Hides payment dialog UI
 function hide_paymentdialog() {
     glob_const.paymentpopup.removeClass("active live");
     glob_const.html.removeClass("blurmain_payment");
 }
 
-// Resets the paymentdialog states
+// Resets payment dialog state and cleans up resources
 function reset_paymentdialog() {
     const timeout = setTimeout(function() {
         glob_const.paymentpopup.removeClass("showpu outgoing");
@@ -2782,14 +2783,14 @@ function reset_paymentdialog() {
     });
 }
 
-// Forces closure of WebSocket connections
+// Forces WebSocket connection closure
 function forceclosesocket(s_id) {
     console.log("force close");
     clearpinging(s_id);
     closesocket(s_id);
 }
 
-// Sets up event listener for canceling the share dialog
+// Initializes share dialog cancellation handler
 function cancelsharedialogtrigger() {
     $(document).on("click", "#sharepopup", function(e) {
         if (e.target === this) {
@@ -2798,7 +2799,7 @@ function cancelsharedialogtrigger() {
     });
 }
 
-// Cancels the share dialog
+// Closes share dialog and resets UI
 function cancelsharedialog() {
     const sharepopup = $("#sharepopup");
     sharepopup.removeClass("active");
@@ -2837,7 +2838,7 @@ function showoptionstrigger() {
     });
 }
 
-// Shows options dialog
+// Shows options panel with optional class
 function showoptions(content, addclass) {
     if (addclass && addclass.includes("pin")) {
         const pinsettings = $("#pinsettings").data(),
@@ -2858,7 +2859,7 @@ function showoptions(content, addclass) {
     glob_const.body.addClass("blurmain_options");
 }
 
-// Displays the lock screen
+// Displays lock screen with countdown
 function lockscreen(timer) {
     const timeleft = timer - now(),
         cd = countdown(timeleft),
@@ -2883,14 +2884,14 @@ function lockscreen(timer) {
     glob_const.body.addClass("blurmain_options");
 }
 
-// Sets up event listener for seed unlock
+// Handles seed unlock button click
 function seed_unlock_trigger() {
     $(document).on("click", "#lockscreen #seed_unlock", function() {
         $("#lockscreen #phrasewrap").addClass("showph");
     });
 }
 
-// Handles login with recovery phrase
+// Validates recovery phrase login
 function phrase_login() {
     $(document).on("click", "#phrase_login", function() {
         const bip39phrase = $("#lockscreen #bip39phrase"),
@@ -2913,7 +2914,7 @@ function phrase_login() {
     });
 }
 
-// Removes cashier-related data and flags
+// Removes cashier role data and flags
 function remove_cashier() {
     if (glob_let.is_cashier) {
         br_remove_local("cashier");
@@ -2923,7 +2924,7 @@ function remove_cashier() {
     }
 }
 
-// Handles the creation of a new request using an alias
+// Creates new request using alias
 function newrequest_alias() {
     $(document).on("click", "#newrequest_alias", function() {
         if (is_scanning()) return
@@ -2944,7 +2945,7 @@ function newrequest_alias() {
     });
 }
 
-// Handles the creation of a new request
+// Handles new request creation
 function newrequest() {
     $(document).on("click", ".newrequest", function() {
         const thislink = $(this),
@@ -2978,7 +2979,7 @@ function newrequest() {
     });
 }
 
-// Handles confirmation of a new request creation
+// Confirms new request with seed validation
 function confirm_ms_newrequest() {
     $(document).on("click", "#address_newrequest .submit", function(e) {
         e.preventDefault();
@@ -3002,7 +3003,7 @@ function confirm_ms_newrequest() {
     })
 }
 
-// Handles showing requests for a specific address
+// Shows requests for specific address
 function showrequests() {
     $(document).on("click", ".showrequests", function(e) {
         e.preventDefault();
@@ -3011,7 +3012,7 @@ function showrequests() {
     });
 }
 
-// Handles showing requests for an inline address
+// Displays inline address requests
 function showrequests_inlne() {
     $(document).on("click", ".applist.pobox li .usedicon", function() {
         const address = $(this).prev("span").text(),
@@ -3024,7 +3025,7 @@ function showrequests_inlne() {
     });
 }
 
-// Triggers the edit address function
+// Triggers address edit dialog
 function editaddresstrigger() {
     $(document).on("click", ".editaddress", function(e) {
         e.preventDefault();
@@ -3032,7 +3033,7 @@ function editaddresstrigger() {
     })
 }
 
-// Handles the removal of an address
+// Initiates address removal
 function removeaddress() {
     $(document).on("click", ".removeaddress", function(e) {
         e.preventDefault();
@@ -3040,7 +3041,7 @@ function removeaddress() {
     })
 }
 
-// Performs the address removal operation
+// Executes address removal
 function removeaddressfunction(trigger) {
     const result = confirm(translate("areyousure"));
     if (result === true) {
@@ -3074,7 +3075,7 @@ function removeaddressfunction(trigger) {
     }
 }
 
-// Handles showing recent payments for an address
+// Shows recent payments for address
 function rec_payments() {
     $(document).on("click", "#rpayments", function() {
         const ad = $(this).closest("ul").data(),
@@ -3085,7 +3086,7 @@ function rec_payments() {
     })
 }
 
-// Handles showing transaction details
+// Handles transaction detail display
 function showtransaction_trigger() {
     $(document).on("click", ".metalist .show_tx, .transactionlist .tx_val", function() {
         const thisnode = $(this),
@@ -3131,7 +3132,7 @@ function showtransaction_trigger() {
     })
 }
 
-// Handles showing all transactions for an address
+// Shows all transactions for address
 function showtransactions() {
     $(document).on("click", ".showtransactions", function(e) {
         e.preventDefault();
@@ -3143,7 +3144,7 @@ function showtransactions() {
     })
 }
 
-// Displays address information
+// Displays comprehensive address information
 function addressinfo() {
     $(document).on("click", ".address_info", function() {
         const dialogwrap = $(this).closest("ul"),
@@ -3207,7 +3208,7 @@ function addressinfo() {
     })
 }
 
-// Handles showing private key
+// Shows/hides private key after validating view-only status and handling pin panel
 function show_pk() {
     $(document).on("click", "#show_pk", function() {
         if (is_viewonly() === true) {
@@ -3245,7 +3246,7 @@ function show_pk() {
     })
 }
 
-// Callback function for showing private key
+// Callback that displays private key in UI and updates QR code
 function show_pk_cb(pk) {
     $("#show_pk").text(translate("hide"));
     $("#pkspan").text(pk);
@@ -3254,7 +3255,7 @@ function show_pk_cb(pk) {
     $("#qrcodea").slideUp(200);
 }
 
-// Handles showing view key
+// Shows/hides view key after validating view-only status and handling pin panel
 function show_vk() {
     $(document).on("click", "#show_vk", function() {
         if (is_viewonly() === true) {
@@ -3301,7 +3302,7 @@ function show_vk() {
     })
 }
 
-// Callback function for showing view key
+// Callback that displays view key details in UI with proper formatting
 function show_vk_cb(kd) {
     const svk_string = kd.svk ? "<br/><strong style='color:#8d8d8d'>" + translate("secretviewkey") + "</strong> <span class='adbox adboxl select' data-type='Viewkey'>" + kd.svk + "</span><br/>" : "",
         ssk_string = kd.ssk ? "<br/><strong style='color:#8d8d8d'>" + translate("secretspendkey") + "</strong> <span class='adbox adboxl select' data-type='Spendkey'>" + kd.ssk + "</span>" : ""
@@ -3320,7 +3321,7 @@ function open_blockexplorer_url(be_link) {
     }
 }
 
-// Generates a block explorer URL based on currency and transaction type
+// Generates block explorer URL based on currency, transaction type and network parameters
 function blockexplorer_url(currency, tx, erc20, source, layer) {
     const tx_prefix = tx ? "tx/" : "address/";
     if (layer === "bnb") {
@@ -3355,7 +3356,7 @@ function get_blockexplorer(currency) {
     return cs_node(currency, "blockexplorers", true).selected;
 }
 
-// Handles clicking on API source shortcut
+// Sets up click handler for opening API source settings
 function apisrc_shortcut() {
     $(document).on("click", ".api_source", function() {
         const rpc_settings_li = cs_node($(this).closest("li.rqli").data("payment"), "apis");
@@ -3365,7 +3366,7 @@ function apisrc_shortcut() {
     })
 }
 
-// Sets up event listener for canceling options
+// Initializes event listeners for canceling option dialogs
 function canceloptionstrigger() {
     $(document).on("click", "#optionspop, #closeoptions", function(e) {
         if (glob_const.inframe) {
@@ -3378,7 +3379,7 @@ function canceloptionstrigger() {
     });
 }
 
-// Handles canceling options
+// Handles cleanup and state management when canceling options dialog
 function canceloptions(pass) {
     if (pass === true) {
         clearoptions();
@@ -3400,7 +3401,7 @@ function canceloptions(pass) {
     clearoptions();
 }
 
-// Clears options from the UI
+// Removes options dialog from UI with fade animation
 function clearoptions() {
     const optionspop = $("#optionspop");
     optionspop.addClass("fadebg");
@@ -3416,7 +3417,7 @@ function clearoptions() {
 
 // ** Requestlist functions **
 
-// Handles showing request details
+// Expands request details and animates scroll to visible position
 function showrequestdetails() {
     $(document).on("click", ".requestlist .liwrap", function() {
         const thisnode = $(this),
@@ -3448,7 +3449,7 @@ function showrequestdetails() {
     });
 }
 
-// Toggles request metadata visibility
+// Toggles visibility of request metadata panel
 function toggle_request_meta() {
     $(document).on("click", ".requestlist li .req_actions .icon-info", function() {
         const metalist = $(this).closest(".moreinfo").find(".metalist");
@@ -3466,7 +3467,7 @@ function toggle_request_meta() {
     })
 }
 
-// Animates the confirmation bar
+// Animates confirmation progress bar based on transaction data
 function animate_confbar(confbox, index) {
     confbox.css("transform", "translate(-100%)");
     const txdata = confbox.closest("li").data(),
@@ -3478,7 +3479,7 @@ function animate_confbar(confbox, index) {
     }, index * 500);
 }
 
-// Shows transaction metadata on double click
+// Shows transaction metadata on double click for touch devices
 function show_transaction_meta() {
     $(document).on("dblclick", ".requestlist li .transactionlist li", function() {
         if (!glob_const.supportsTouch) return;
@@ -3494,7 +3495,7 @@ function show_transaction_meta() {
     })
 }
 
-// Hides transaction metadata on click
+// Hides transaction metadata when clicking transaction list item
 function hide_transaction_meta() {
     $(document).on("click", ".requestlist li .transactionlist li", function() {
         const thisli = $(this),
@@ -3505,14 +3506,14 @@ function hide_transaction_meta() {
     })
 }
 
-// Handles archiving a request
+// Sets up click handler for archiving requests
 function archive() {
     $(document).on("click", "#requestlist .req_actions .icon-folder-open", function() {
         popdialog("<h2 class='icon-folder-open'>" + translate("archiverequest") + "</h2>", "archivefunction", $(this));
     })
 }
 
-// Performs the archive function
+// Moves request from active list to archive and updates UI/storage
 function archivefunction() {
     const thisreguest = $("#requestlist > li.visible_request"),
         requestdata = thisreguest.data(),
@@ -3535,14 +3536,14 @@ function archivefunction() {
     notify(translate("movedtoarchive"));
 }
 
-// Handles unarchiving a request
+// Sets up click handler for unarchiving requests
 function unarchive() {
     $(document).on("click", "#archivelist .req_actions .icon-undo2", function() {
         popdialog("<h2 class='icon-undo2'>" + translate("unarchiverequest") + "</h2>", "unarchivefunction", $(this));
     })
 }
 
-// Performs the unarchive function
+// Moves request from archive back to active list and updates UI/storage
 function unarchivefunction() {
     const thisreguest = $("#archivelist li.visible_request"),
         requestdata = thisreguest.data(),
@@ -3559,14 +3560,14 @@ function unarchivefunction() {
     notify(translate("requestrestored"));
 }
 
-// Handles removing a request
+// Sets up click handler for removing requests
 function removerequest() {
     $(document).on("click", ".req_actions .icon-bin", function() {
         popdialog("<h2 class='icon-bin'>" + translate("deleterequest") + "?</h2>", "removerequestfunction", $(this));
     })
 }
 
-// Performs the remove request function
+// Deletes request after confirmation and updates UI/storage
 function removerequestfunction() {
     const result = confirm(translate("areyousure"));
     if (result === true) {
@@ -3582,7 +3583,7 @@ function removerequestfunction() {
     }
 }
 
-// Calculates the amount short for a payment
+// Calculates difference between expected and received payment amounts
 function amountshort(amount, receivedamount, fiatvalue, iscrypto) {
     const amount_recieved = iscrypto === true ? receivedamount : fiatvalue,
         amount_short = amount - amount_recieved,
@@ -3590,7 +3591,7 @@ function amountshort(amount, receivedamount, fiatvalue, iscrypto) {
     return (isNaN(numberamount)) ? null : numberamount;
 }
 
-// Handles editing a request
+// Sets up click handler for editing request titles
 function editrequest() {
     $(document).on("click", ".editrequest", function() {
         const thisnode = $(this),
@@ -3612,7 +3613,7 @@ function editrequest() {
     })
 }
 
-// Handles submitting a request description
+// Validates and saves updated request title to storage
 function submit_request_description() {
     $(document).on("click", "#edit_request_formbox input.submit", function(e) {
         const thisnode = $(this),
@@ -3634,7 +3635,7 @@ function submit_request_description() {
 
 // ** Services **
 
-// Handles displaying receipt information
+// Sets up click handler for viewing receipt information
 function receipt() {
     $(document).on("click", ".receipt > p", function() {
         const thisnode = $(this),
@@ -3703,7 +3704,7 @@ function receipt() {
     })
 }
 
-// Handles downloading a receipt
+// Handles download of receipt PDF with user confirmation
 function download_receipt() {
     $(document).on("click", "#dl_receipt", function(e) {
         const thisbttn = $(this),
@@ -3717,7 +3718,7 @@ function download_receipt() {
     })
 }
 
-// Handles sharing a receipt
+// Handles sharing receipt via file sharing APIs
 function share_receipt() {
     $(document).on("click", "#share_receipt", function() {
         const thisbttn = $(this),
@@ -3739,7 +3740,7 @@ function share_receipt() {
     })
 }
 
-// Looks up a Lightning Network invoice
+// Fetches and decodes Lightning Network invoice details from proxy
 function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
     const p_arr = lnurl_deform(proxy),
         proxy_host = p_arr.url,
@@ -3782,7 +3783,7 @@ function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
                     "content": [{
                             "div": {
                                 "class": "invoice_body",
-                                "content": "<pre>" + syntaxHighlight(e) + "</pre><div class='inv_pb'><img src='" + c_icons(imp) + "' class='lnd_icon' title='" + imp + "'/> Powered by " + imp + "</div>"
+                                "content": "<pre>" + syntax_highlight(e) + "</pre><div class='inv_pb'><img src='" + c_icons(imp) + "' class='lnd_icon' title='" + imp + "'/> Powered by " + imp + "</div>"
                             }
                         },
                         {
@@ -3811,7 +3812,7 @@ function lnd_lookup_invoice(proxy, imp, hash, nid, pid, pw) {
     });
 }
 
-// Generates a PDF URL for a receipt
+// Generates PDF receipt URL with formatted transaction details
 function get_pdf_url(rqdat) {
     const {
         requestid,
@@ -3894,7 +3895,7 @@ function get_pdf_url(rqdat) {
 
 // Countdown format
 
-// Calculates the remaining time from a given timestamp
+// Converts timestamp to days/hours/minutes/seconds object
 function countdown(timestamp) {
     let uts = timestamp / 1000,
         days = Math.floor(uts / 86400);
@@ -3913,7 +3914,7 @@ function countdown(timestamp) {
     return cd_object;
 }
 
-// Formats the countdown object into a human-readable string
+// Formats countdown object into human readable string
 function countdown_format(cd) {
     const days = cd.days,
         hours = cd.hours,
@@ -3961,7 +3962,7 @@ function render_currencysettings(thiscurrency) {
     }
 }
 
-// Builds the settings UI
+// Builds the settings UI from configuration data
 function buildsettings() {
     const appsettingslist = $("#appsettings");
     glob_config.app_settings.forEach(function(value) {
@@ -3988,7 +3989,7 @@ function buildsettings() {
     });
 }
 
-// Renders settings from cache, excluding specified settings
+// Updates UI with cached settings excluding specified options
 function rendersettings(excludes) {
     const settingcache = br_get_local("settings", true);
     if (settingcache) {
@@ -4004,14 +4005,14 @@ function rendersettings(excludes) {
     }
 }
 
-// Renders requests from cache
+// Loads and displays cached requests
 function renderrequests() {
     fetchrequests("requests", false);
     fetchrequests("archive", true);
     archive_button();
 }
 
-// Manages the visibility of the archive button
+// Updates archive button visibility based on archived request count
 function archive_button() {
     const viewarchive = $("#viewarchive"),
         archivecount = $("#archivelist > li").length;
@@ -4023,7 +4024,7 @@ function archive_button() {
     viewarchive.slideUp(300);
 }
 
-// Fetches and renders requests from cache
+// Retrieves and renders cached requests with optional archive filtering
 function fetchrequests(cachename, archive) {
     const requestcache = br_get_local(cachename, true);
     if (requestcache) {
@@ -4036,7 +4037,7 @@ function fetchrequests(cachename, archive) {
     }
 }
 
-// Initializes the page when there's no cache
+// Sets up initial cryptocurrency UI when no cache exists
 function initiate() {
     $.each(glob_config.bitrequest_coin_data, function(dat, val) {
         if (val.active === true) {
@@ -4062,7 +4063,7 @@ function initiate() {
     });
 }
 
-// Builds the page for a specific currency
+// Creates and manages the currency page UI with icons, settings, and address management options
 function buildpage(cd, ini) {
     const {
         currency,
@@ -4137,7 +4138,7 @@ function buildpage(cd, ini) {
     </li>");
 }
 
-// Appends coin settings to the UI
+// Renders coin-specific settings with switch panels and translated labels
 function append_coinsetting(currency, settings) {
     const coinsettings_list = $("#" + currency + "_settings ul.cc_settinglist");
     $.each(settings, function(dat, val) {
@@ -4176,7 +4177,7 @@ function append_coinsetting(currency, settings) {
     });
 }
 
-// Appends an address to the UI
+// Creates address list item with source icons, monitoring status, and action buttons
 function appendaddress(currency, ad) {
     const address = ad.address,
         pobox = get_addresslist(currency),
@@ -4207,7 +4208,7 @@ function appendaddress(currency, ad) {
     address_li.data(ad).prependTo(pobox);
 }
 
-// Appends a new request to the UI
+// Generates complete payment request UI with transaction details, metadata, and status indicators
 function appendrequest(rd) {
     const {
         payment,
@@ -4383,7 +4384,7 @@ function appendrequest(rd) {
     }
 }
 
-// Add historical data
+// Renders transaction history list items with associated metadata
 function add_historical_data(transactionlist, txhistory) {
     let tx_listitem = false;
     $.each(txhistory, function(data, value) {
@@ -4400,7 +4401,7 @@ function add_historical_data(transactionlist, txhistory) {
     });
 }
 
-// Determines the network based on the layer
+// Returns network name based on blockchain layer
 function getnetwork(layer) {
     if (!layer) return false;
     switch (layer) {
@@ -4413,7 +4414,7 @@ function getnetwork(layer) {
 
 // ** Store data in localstorage **
 
-// Saves the list of used cryptocurrencies to local storage
+// Persists cryptocurrency list to localStorage and updates change counter
 function savecurrencies(add) {
     const currenciespush = $("#usedcurrencies li").map(function() {
         return $(this).data();
@@ -4422,7 +4423,7 @@ function savecurrencies(add) {
     updatechanges("currencies", add);
 }
 
-// Saves addresses for a specific currency to local storage
+// Stores address list for specific currency and handles ERC20 token settings cleanup
 function saveaddresses(currency, add) {
     const pobox = get_addresslist(currency),
         addresses = pobox.find("li");
@@ -4446,7 +4447,7 @@ function saveaddresses(currency, add) {
     reset_coinsettings_function(currency);
 }
 
-// Saves the list of requests to local storage
+// Saves active requests to localStorage and triggers change notification
 function saverequests() {
     const requestpush = $("ul#requestlist > li").map(function() {
         return $(this).data();
@@ -4463,7 +4464,7 @@ function savearchive() {
     br_set_local("archive", requestpush, true);
 }
 
-// Saves the app settings to local storage
+// Stores application settings and triggers change notification with alert control
 function savesettings(nit) {
     const settingsspush = $("ul#appsettings > li.render").map(function() {
         return $(this).data();
@@ -4472,7 +4473,7 @@ function savesettings(nit) {
     updatechanges("settings", true, nit);
 }
 
-// Saves the settings for a specific cryptocurrency to local storage
+// Saves cryptocurrency-specific settings and updates change counter
 function save_cc_settings(currency, add) {
     const settingbox = {};
     $("#" + currency + "_settings ul.cc_settinglist > li").each(function() {
@@ -4483,12 +4484,12 @@ function save_cc_settings(currency, add) {
     updatechanges("coinsettings", add);
 }
 
-// Updates the changes counter and triggers related actions
+// Manages change counter and triggers backup notifications based on thresholds
 function updatechanges(key, add, nit) {
-    const p = GD_pass();
+    const p = gd_pass();
     if (p.active === false) {} else {
         if (p.pass) {
-            updateappdata(p);
+            update_appdata(p);
             return
         }
         if (p.expired) {
@@ -4507,7 +4508,7 @@ function updatechanges(key, add, nit) {
     }
 }
 
-// Resets the changes counter
+// Resets change counter and clears UI change indicators
 function resetchanges() {
     glob_let.changes = {};
     savechangesstats();
@@ -4517,17 +4518,17 @@ function resetchanges() {
     }
 }
 
-// Saves the changes statistics to local storage
+// Saves change statistics to localStorage for persistence
 function savechangesstats() {
     br_set_local("changes", glob_let.changes, true);
 }
 
-// Renders the changes from local storage or initializes an empty object
+// Loads or initializes change tracking from localStorage
 function renderchanges() {
     glob_let.changes = br_get_local("changes", true) || {};
 }
 
-// Displays an alert for changes and triggers backup if necessary
+// Shows change count alert and triggers backup at specific thresholds
 function change_alert() {
     if (glob_const.is_ios_app === true) {
         return
@@ -4551,12 +4552,12 @@ function change_alert() {
     }
 }
 
-// Calculates the total number of changes
+// Calculates total number of tracked changes across all categories
 function get_total_changes() {
     return Object.values(glob_let.changes).reduce((total, value) => total + (parseInt(value) || 0), 0);
 }
 
-// Renders HTML from a data object
+// Recursively converts data object into HTML with attributes and nested content
 function render_html(dat) {
     return dat.map(function(value) {
         return Object.entries(value).map(function([key, val]) {
@@ -4579,7 +4580,7 @@ function render_attributes(attr) {
 
 // HTML rendering
 
-// Creates a dialog template
+// Generates HTML dialog box with customizable icon, title and content sections
 function template_dialog(ddat) {
     const validated_class = ddat.validated ? " validated" : "",
         dialog_object = [{
@@ -4611,7 +4612,7 @@ function template_dialog(ddat) {
 
 // ** Helpers **
 
-// Handles opening URLs from the application
+// Handles external URL opening with loader and browser targeting
 function open_url() {
     $(document).on("click", "a.exit", function(e) {
         e.preventDefault();
@@ -4636,23 +4637,23 @@ function open_url() {
     })
 }
 
-// Retrieves the BlockCypher API key
+// Returns BlockCypher API key from UI data or default
 function get_blockcypher_apikey() {
     return $("#apikeys").data("blockcypher") || to.bc_id;
 }
 
-// Retrieves the Infura API key
+// Returns Infura API key if URL doesn't contain one already
 function get_infura_apikey(rpcurl) {
     const savedkey = $("#apikeys").data("infura");
     return (/^[A-Za-z0-9]+$/.test(rpcurl.slice(-15))) ? "" : savedkey || to.if_id; // check if rpcurl already contains apikey
 }
 
-// Retrieves the Alchemy API key
+// Returns Alchemy API key from UI data or default
 function get_alchemy_apikey() {
     return $("#apikeys").data("alchemy") || to.al_id;
 }
 
-// Displays an alert for proxy updates
+// Shows proxy update notification with version comparison
 function proxy_alert(version) {
     if (version) {
         glob_const.html.addClass("proxyupdate");
@@ -4663,7 +4664,7 @@ function proxy_alert(version) {
     }
 }
 
-// Fetches the symbol and ID for a given currency name
+// Finds ERC20 token metadata by currency name from cache
 function fetchsymbol(currencyname) {
     const erc20tokens = fetch_cached_erc20();
     return erc20tokens.find(function(token) {
@@ -4671,7 +4672,7 @@ function fetchsymbol(currencyname) {
     }) || {};
 }
 
-// Checks if the fixed navigation should be applied
+// Toggles fixed navigation based on scroll position
 function fixedcheck(livetop) {
     const headerheight = $(".showmain #header").outerHeight();
     if (livetop > headerheight) {
@@ -4681,18 +4682,18 @@ function fixedcheck(livetop) {
     $(".showmain").removeClass("fixednav");
 }
 
-// Checks if the current page is the home page
+// Checks if current URL parameter matches homepage
 function ishome(pagename) {
     const page = pagename || geturlparameters().p;
     return !page || page === "home";
 }
 
-// Triggers the submit action on a dialog
+// Programmatically triggers submit button click in dialog
 function triggersubmit(trigger) {
     trigger.parent("#actions").prev("#dialogbody").find("input.submit").trigger("click");
 }
 
-// Copies content to the clipboard
+// Copies text to clipboard using modern API or fallback
 function copytoclipboard(content, type) {
     if (navigator.clipboard) {
         navigator.clipboard.writeText(content)
@@ -4718,35 +4719,35 @@ function copytoclipboard(content, type) {
     glob_let.copycontent.val("").removeData("type").blur();
 }
 
-// Displays the loader
+// Activates loading overlay with optional top positioning
 function loader(top) {
     $("#loader").addClass(top ? "showpu active toploader" : "showpu active");
 }
 
-// Sets up the event listener for closing the loader
+// Sets up click handler to dismiss loading overlay
 function closeloader_trigger() {
     $(document).on("click", "#loader", closeloader);
 }
 
-// Closes the loader
+// Removes loading overlay and resets text
 function closeloader() {
     $("#loader").removeClass("showpu active toploader");
     loadertext(translate("loading"));
 }
 
-// Sets the text for the loader
+// Updates loading overlay text content
 function loadertext(text) {
     $("#loader #loadtext > span").text(text);
 }
 
-// Sets the title of the page
+// Updates document title and meta tags
 function settitle(title) {
     const page_title = title + " | " + glob_const.apptitle;
     glob_const.titlenode.text(page_title);
     glob_const.ogtitle.attr("content", page_title);
 }
 
-// Displays the PIN panel
+// Manages PIN entry dialog with timeout and callback handling
 function all_pinpanel(cb, top, set) {
     const topclass = (top) ? " ontop" : "";
     if (haspin(set) === true) {
@@ -4765,7 +4766,7 @@ function all_pinpanel(cb, top, set) {
     showoptions(content, "pin" + topclass);
 }
 
-// Generates the HTML for the PIN panel
+// Creates PIN entry UI with keypad and admin controls
 function pinpanel(pinclass, pincb, set) {
     const makeclass = (pinclass === undefined) ? "" : pinclass,
         headertext = haspin(set) === true ? translate("pleaseenter") : translate("createpin");
@@ -4784,7 +4785,7 @@ function pinpanel(pinclass, pincb, set) {
     </div>").data("pincb", pincb);
 }
 
-// Helper function to generate pinpad HTML
+// Builds HTML for numeric PIN entry keypad
 function generatePinpadHTML() {
     let html = "";
     for (let i = 1; i <= 9; i++) {
@@ -4798,12 +4799,12 @@ function generatePinpadHTML() {
     return html;
 }
 
-// Generates HTML for a switch panel
+// Creates toggle switch UI element with mode classes
 function switchpanel(switchmode, mode) {
     return "<div class='switchpanel " + switchmode + mode + "'><div class='switch'></div></div>"
 }
 
-// Attempts to find the next available API in the list
+// Rotates to next available API endpoint in configuration
 function try_next_api(apilistitem, current_apiname) {
     const apilist = glob_config.apilists[apilistitem],
         currentIndex = apilist.indexOf(current_apiname),
@@ -4811,7 +4812,7 @@ function try_next_api(apilistitem, current_apiname) {
     return glob_let.api_attempt[apilistitem][next_api] !== true ? next_api : false;
 }
 
-// Requests a wake lock to keep the screen active
+// Acquires screen wake lock to prevent display sleep
 function wake() {
     if (glob_const.wl) {
         const requestwakelock = async () => {
@@ -4828,7 +4829,7 @@ function wake() {
     }
 }
 
-// Releases the wake lock, allowing the screen to sleep
+// Releases screen wake lock to allow display sleep
 function sleep() {
     if (glob_const.wl) {
         if (glob_let.wakelock) {
@@ -4838,19 +4839,19 @@ function sleep() {
     }
 }
 
-// Blocks certain actions for view-only users
+// Shows notification and plays sound for view-only restrictions
 function vu_block() {
     notify(translate("cashiernotallowed"));
     playsound(glob_const.funk);
 }
 
-// Checks for recent requests and toggles UI accordingly
+// Updates recent requests visibility based on localStorage
 function check_rr() {
     const ls_recentrequests = br_get_local("recent_requests", true);
     toggle_rr(ls_recentrequests && !empty_obj(ls_recentrequests));
 }
 
-// Toggles the visibility of recent requests in the UI
+// Controls display of recent requests UI elements
 function toggle_rr(bool) {
     if (bool) {
         glob_const.html.addClass("show_rr");
@@ -4866,7 +4867,7 @@ function toggle_rr(bool) {
 
 // ** Get_app **
 
-// Detects if the app should be promoted to the user
+// Determines if app promotion should be shown based on device/platform
 function detectapp() {
     const device = getdevicetype();
     glob_const.deviceid = device;
@@ -4900,7 +4901,7 @@ function detectapp() {
     }
 }
 
-// Displays the app download panel
+// Shows platform-specific app store download panel
 function getapp(type) {
     const app_panel = $("#app_panel");
     app_panel.html("");
@@ -4917,7 +4918,7 @@ function getapp(type) {
     br_set_local("appstore_dialog", now());
 }
 
-// Handles closing the app download panel
+// Handles dismissal of app download promotion
 function close_app_panel() {
     $(document).on("click", "#not_now", function() {
         glob_const.body.removeClass("getapp");
@@ -4927,7 +4928,7 @@ function close_app_panel() {
     });
 }
 
-// Returns the appropriate icon for the given platform
+// Returns platform-appropriate app store button image
 function platform_icon(platform) {
     switch (platform) {
         case "playstore":
@@ -4939,17 +4940,17 @@ function platform_icon(platform) {
     }
 }
 
-// Checks if a dialog is currently open
+// Checks if modal dialog is currently displayed
 function is_opendialog() {
     return $("#dialogbody > div.formbox").length > 0;
 }
 
-// Checks if a request is currently open
+// Verifies if payment request form is open
 function is_openrequest() {
     return $("#request_front").length > 0;
 }
 
-// Checks and processes URL scheme intents
+// Processes and validates custom URL scheme handlers
 function check_intents(scheme) {
     if (scheme == "false") {
         return
@@ -4994,7 +4995,7 @@ function check_intents(scheme) {
     }
 }
 
-// Expands a short URL
+// Expands shortened URLs with caching and platform handling
 function expand_shoturl(i_param) {
     if (i_param.startsWith("4bR")) { // handle bitly shortlink
         expand_bitly(i_param);
@@ -5053,7 +5054,7 @@ function expand_shoturl(i_param) {
     }
 }
 
-// Expands a Bitly short URL
+// Handles Bitly URL expansion with API fallback
 function expand_bitly(i_param) {
     if (glob_const.hostlocation === "local") {
         return
@@ -5101,7 +5102,7 @@ function expand_bitly(i_param) {
     });
 }
 
-// Handles Lightning Network connection
+// Sets up Lightning Network connection with credentials
 function ln_connect(gets) {
     const lgets = gets || geturlparameters(),
         lnconnect = lgets.lnconnect,
@@ -5134,7 +5135,7 @@ function ln_connect(gets) {
 
 // ** Scanner UI Integration **//
 
-// Initializes the QR scanner, checking if it's in an iframe and if a camera is available
+// Configures QR scanner based on environment capabilities
 function init_scan() {
     if (glob_const.inframe || glob_let.local) {
         glob_let.hascam = false;
@@ -5143,12 +5144,12 @@ function init_scan() {
     QrScanner.hasCamera().then(hasCamera => detect_cam(hasCamera));
 }
 
-// Sets the global camera availability flag
+// Updates global camera availability state
 function detect_cam(result) {
     glob_let.hascam = result;
 }
 
-// Starts the QR scanner for a specific currency and type
+// Initializes QR scanner for specific cryptocurrency
 function start_scan(currency, type) {
     glob_const.scanner.start().then(() => {
         currencyscan = currency,
@@ -5163,13 +5164,13 @@ function start_scan(currency, type) {
     }).catch((reason) => abort_cam(reason));
 }
 
-// Handles camera initialization errors
+// Handles QR scanner initialization failures
 function abort_cam(reason) {
     console.error("error", reason);
     closeloader();
 }
 
-// Sets up click event listener for QR scanner elements
+// Sets up QR scanner activation handlers
 function cam_trigger() {
     $(document).on("click", ".qrscanner", function() {
         loader(true);
@@ -5181,7 +5182,7 @@ function cam_trigger() {
     });
 }
 
-// Sets up click event listener for closing the camera
+// Manages QR scanner close button behavior
 function close_cam_trigger() {
     $(document).on("click", "#closecam", function(e) {
         if (e.originalEvent) {
@@ -5192,35 +5193,36 @@ function close_cam_trigger() {
     });
 }
 
-// Shows the camera interface
+// Activates camera preview interface
 function show_cam() {
     glob_const.body.addClass("showcam");
 }
 
-// Closes the camera interface and stops the scanner
+// Deactivates camera and cleans up scanner state
 function close_cam() {
     glob_const.body.removeClass("showcam");
     glob_const.scanner.stop();
     currencyscan = null;
 }
 
-// Processes the QR scan result based on the scan type
-function setResult(result) {
+// Routes QR scan results to appropriate handlers
+function set_result(result) {
     glob_const.scanner.stop();
     const payment = currencyscan,
         thistype = scantype;
     if (thistype === "lnconnect") {
-        handleLnconnect(result, payment);
+        handle_ln_connect(result, payment);
     } else if (thistype === "address") {
-        handleAddress(result, payment);
+        handle_address(result, payment);
     } else if (thistype === "viewkey") {
-        handleViewkey(result, payment);
+        handle_viewkey(result, payment);
     }
     window.history.back();
     return false;
 }
 
-function handleLnconnect(result, payment) {
+// Processes Lightning Network connection QR codes
+function handle_ln_connect(result, payment) {
     const params_url = renderlnconnect(result);
     if (params_url) {
         const resturl = params_url.resturl,
@@ -5239,7 +5241,8 @@ function handleLnconnect(result, payment) {
     }
 }
 
-function handleAddress(result, payment) {
+// Validates and processes cryptocurrency address QR codes
+function handle_address(result, payment) {
     const prefix = payment + ":",
         mid_result = (result.indexOf(prefix) >= 0 && payment !== "kaspa") ? result.split(prefix).pop() : result,
         end_result = (result.indexOf("?") >= 0) ? mid_result.split("?")[0] : mid_result,
@@ -5270,7 +5273,8 @@ function handleAddress(result, payment) {
     }
 }
 
-function handleViewkey(result, payment) {
+// Validates and processes view key QR codes
+function handle_viewkey(result, payment) {
     const validate = (result.length === 64) ? check_vk(result) : false;
     if (validate === true) {
         $("#popup .formbox input.vk_input").val(result);
@@ -5282,7 +5286,7 @@ function handleViewkey(result, payment) {
     popnotify("error", "invalid " + payment + " viewkey");
 }
 
-// Adds a service worker to the application
+// Registers service worker for offline functionality
 function add_serviceworker() {
     if ("serviceWorker" in navigator && !navigator.serviceWorker.controller) {
         navigator.serviceWorker.register("serviceworker.js", {

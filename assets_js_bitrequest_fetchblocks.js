@@ -72,8 +72,7 @@ $(document).ready(function() {
 
 // ** Lightning RPC **
 
-// This function handles the fetching and processing of Lightning Network payment data.
-// It performs various API calls to check payment status, handle invoices, and update transaction information.
+// Orchestrates Lightning Network payment processing with status checking, invoice handling, and transaction state management via proxy API
 function lightning_fetch(rd, api_data, rdo) {
     const api_name = api_data.name,
         thislist = rdo.thislist,
@@ -298,8 +297,9 @@ function lightning_fetch(rd, api_data, rdo) {
 
 // ** MyMonero API **
 
-// This function handles fetching and processing Monero transaction data.
-// It uses different APIs based on the pending status and performs various checks and data manipulations.
+// Initializes Monero transaction processing by selecting appropriate API path (Blockchair or MyMonero) based on payment state
+// Manages account creation and authentication with MyMonero service
+// Handles viewkey validation and node access verification for transaction scanning
 function monero_fetch_init(rd, api_data, rdo) {
     if (rdo.pending === "polling") {
         blockchair_xmr_poll(rd, api_data, rdo); // use blockchair api for tx lookup
@@ -356,6 +356,9 @@ function monero_fetch_init(rd, api_data, rdo) {
     });
 }
 
+// Executes Monero transaction lookup using MyMonero API with validated viewkey credentials
+// Processes and sorts transaction data chronologically to identify matching payments
+// Filters transactions based on payment IDs and timestamp validation
 function monero_fetch(rd, api_data, rdo, viewkey) {
     const account = viewkey.account || rd.address,
         pl = {
@@ -413,8 +416,8 @@ function monero_fetch(rd, api_data, rdo, viewkey) {
     });
 }
 
-// This function matches Monero payment IDs.
-// It checks if the provided payment IDs match based on certain conditions.
+// Performs Monero payment ID validation with integrated address support
+// Returns true if payment IDs match when integrated address is used, or if both IDs are empty for standard addresses
 function match_xmr_pid(xmria, xmrpid, xmr_pid) {
     if (xmria) {
         return xmrpid === xmr_pid;
@@ -424,8 +427,9 @@ function match_xmr_pid(xmria, xmrpid, xmr_pid) {
 
 // ** MyMonero API **
 
-// This function polls the Blockchair API for Monero transaction data.
-// It retrieves and processes transaction information based on the provided parameters.
+// Queries Blockchair API for Monero transaction verification using viewkey-based output scanning
+// Validates transaction outputs against provided transaction hash and address
+// Updates transaction UI and confirmation status based on blockchain data
 function blockchair_xmr_poll(rd, api_data, rdo) {
     const vk = rd.viewkey;
     if (!vk) return;
@@ -480,8 +484,7 @@ function blockchair_xmr_poll(rd, api_data, rdo) {
 
 // ** blockchain.info API **
 
-// This function fetches and processes transaction data using the blockchain.info API.
-// It handles both scanning for incoming transactions and polling for specific transaction details.
+// Routes blockchain.info API requests between address polling and transaction scanning with block height verification
 function blockchaininfo_fetch_init(rd, api_data, rdo) {
     if (rdo.source === "addr_polling") {
         blockchaininfo_fetch(rd, api_data, rdo, false);
@@ -490,6 +493,7 @@ function blockchaininfo_fetch_init(rd, api_data, rdo) {
     blockchaininfo_fetch_blockheight(rd, api_data, rdo);
 }
 
+// Fetches and validates current blockchain height for accurate transaction confirmation counting
 function blockchaininfo_fetch_blockheight(rd, api_data, rdo) {
     api_proxy({ // get latest blockheight
         "api": "blockchain.info",
@@ -521,6 +525,7 @@ function blockchaininfo_fetch_blockheight(rd, api_data, rdo) {
     });
 }
 
+// Executes address-based transaction scanning or single transaction polling with UI state management
 function blockchaininfo_fetch(rd, api_data, rdo, latestblock) {
     const transactionlist = rdo.transactionlist,
         source = rdo.source;
@@ -646,8 +651,7 @@ function blockchaininfo_fetch(rd, api_data, rdo, latestblock) {
 
 // ** blockcypher API **
 
-// This function fetches and processes transaction data using the BlockCypher API.
-// It handles both scanning for incoming transactions and polling for specific transaction details.
+// Processes BlockCypher API transactions with support for confirmed and unconfirmed transaction scanning and polling
 function blockcypher_fetch(rd, api_data, rdo) {
     const transactionlist = rdo.transactionlist;
     let counter = 0,
@@ -756,8 +760,7 @@ function blockcypher_fetch(rd, api_data, rdo) {
 
 // ** ethplorer / binplorer API **
 
-// This function fetches and processes transaction data using the Ethplorer or Binplorer API.
-// It handles both scanning for incoming transactions and polling for specific transaction details for Ethereum and Binance Smart Chain.
+// Manages Ethereum and BSC transaction processing via Ethplorer/Binplorer APIs with cross-chain support
 function ethplorer_fetch(rd, api_data, rdo) {
     const api_name = api_data.name,
         thislist = rdo.thislist,
@@ -842,7 +845,7 @@ function ethplorer_fetch(rd, api_data, rdo) {
                     }
                     const input = data.input,
                         amount_hex = input.slice(74),
-                        tokenValue = hexToNumberString(amount_hex),
+                        tokenValue = hex_to_number_string(amount_hex),
                         conf_correct = data.confirmations < 0 ? 0 : data.confirmations,
                         txdata = {
                             "timestamp": data.timestamp,
@@ -880,10 +883,9 @@ function ethplorer_fetch(rd, api_data, rdo) {
     }
 }
 
-// ** arbiscan / Polygonscan API **
+// ** Arbiscan / Polygonscan / Bnbscan API **
 
-// This function fetches and processes transaction data from different ETH layer2 networks.
-// It handles both scanning for incoming transactions and polling for specific transaction details.
+// Handles ETH Layer2 transaction scanning and polling across multiple networks with contract verification
 function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
     const requestid = rd.requestid,
         api_name = api_data.name,
@@ -1114,10 +1116,7 @@ function omniscan_fetch(rd, api_data, rdo, contract, chainid) {
 
 // ** blockchair API **
 
-// This function fetches and processes transaction data from the Blockchair API.
-// It handles both scanning for incoming transactions and polling for specific transaction details.
-// The function supports various cryptocurrencies, including Ethereum and ERC20 tokens,
-// and adapts its behavior based on the type of transaction and the API being used.
+// Orchestrates multi-currency transaction processing via Blockchair API with ERC20 and native token support
 function blockchair_fetch(rd, api_data, rdo) {
     const api_name = api_data.name,
         network = api_data.network,
@@ -1318,9 +1317,7 @@ function blockchair_fetch(rd, api_data, rdo) {
 
 // ** nimiq / mopsus API **
 
-// This function fetches and processes transaction data for Nimiq cryptocurrency.
-// It handles both scanning for incoming transactions and polling for specific transaction details.
-// The function supports multiple APIs (nimiq.watch and mopsus.com) and adapts its behavior based on the API being used.
+// Processes Nimiq transactions through nimiq.watch and mopsus.com APIs with transaction filtering and confirmation tracking
 function nimiq_fetch(rd, api_data, rdo) {
     const api_name = api_data.name,
         transactionlist = rdo.transactionlist,
@@ -1386,7 +1383,7 @@ function nimiq_fetch(rd, api_data, rdo) {
             if (api_name === "nimiq.watch") { // poll nimiq.watch transaction id
                 api_proxy({
                     "api": api_name,
-                    "search": "transaction/" + nimiqhash(rd.txhash),
+                    "search": "transaction/" + nimiq_hash(rd.txhash),
                     "cachetime": rdo.cachetime,
                     "cachefolder": "1h",
                     "params": {
@@ -1497,10 +1494,7 @@ function nimiq_fetch(rd, api_data, rdo) {
 
 // ** kaspa API **
 
-// This function fetches and processes transaction data for the Kaspa cryptocurrency.
-// It handles both scanning for incoming transactions and polling for specific transaction details.
-// The function supports multiple APIs (kaspa.org and kas.fyi) and adapts its behavior based on the API being used.
-// It also manages the retrieval of the current bluescore for transaction confirmation calculations.
+// Routes Kaspa API requests between address polling and transaction scanning with bluescore verification
 function kaspa_fetch_init(rd, api_data, rdo) {
     if (rdo.source === "addr_polling") {
         kaspa_fetch(rd, api_data, rdo, false);
@@ -1509,6 +1503,7 @@ function kaspa_fetch_init(rd, api_data, rdo) {
     kaspa_fetch_blockheight(rd, api_data, rdo);
 }
 
+// Fetches current Kaspa network bluescore for transaction confirmation calculation
 function kaspa_fetch_blockheight(rd, api_data, rdo) {
     api_proxy({
         "api": "kaspa.org",
@@ -1540,6 +1535,7 @@ function kaspa_fetch_blockheight(rd, api_data, rdo) {
     });
 }
 
+// Processes Kaspa transactions through kaspa.org and kas.fyi APIs with address validation and bluescore confirmation
 function kaspa_fetch(rd, api_data, rdo, blockheight) {
     const api_name = api_data.name,
         transactionlist = rdo.transactionlist,
@@ -1645,8 +1641,7 @@ function kaspa_fetch(rd, api_data, rdo, blockheight) {
 
 // ** insight.dash.org **
 
-// This function fetches and processes transaction data for Dash cryptocurrency using the Insight API.
-// It handles both scanning for incoming transactions and polling for specific transaction details.
+// Manages Dash transaction processing via Insight API with incoming payment scanning and confirmation tracking
 function insight_fetch_dash(rd, api_data, rdo) {
     const transactionlist = rdo.transactionlist;
     let counter = 0,
@@ -1752,9 +1747,7 @@ function insight_fetch_dash(rd, api_data, rdo) {
 
 // ** mempool.space RPC **
 
-// This function interacts with the mempool.space API to fetch and process Bitcoin transaction data.
-// It handles both scanning for incoming transactions and polling for specific transaction details.
-// The function also retrieves the latest block height for confirmation calculations.
+// Routes mempool.space API requests between address polling and block height verification for Bitcoin transactions
 function mempoolspace_rpc_init(rd, api_data, rdo, rpc) {
     if (rdo.source === "addr_polling") {
         mempoolspace_rpc(rd, api_data, rdo, rpc, false);
@@ -1763,6 +1756,7 @@ function mempoolspace_rpc_init(rd, api_data, rdo, rpc) {
     mempoolspace_rpc_blockheight(rd, api_data, rdo, rpc);
 }
 
+// Fetches current Bitcoin block height from mempool.space API for confirmation calculations
 function mempoolspace_rpc_blockheight(rd, api_data, rdo, rpc) {
     const url = api_data.url,
         endpoint = (rpc) ? url : "https://" + url;
@@ -1797,6 +1791,7 @@ function mempoolspace_rpc_blockheight(rd, api_data, rdo, rpc) {
     });
 }
 
+// Processes Bitcoin transactions through mempool.space API with transaction filtering and block height validation
 function mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock) {
     const transactionlist = rdo.transactionlist,
         url = api_data.url,
@@ -1886,8 +1881,7 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latestblock) {
 
 // ** infura RPC **
 
-// This function interacts with Infura or similar Ethereum RPC providers to fetch and process transaction data.
-// It handles both ERC20 and regular Ethereum transactions, retrieving block information and calculating confirmations.
+// Manages Ethereum and ERC20 transaction processing via RPC with multi-chain support and confirmation tracking
 function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
     const layer2 = api_data.network;
     if (rdo.pending === "scanning") {
@@ -1942,7 +1936,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
                                 const signature_hex = input.slice(2, 10),
                                     address_hex = input.slice(10, 74),
                                     amount_hex = input.slice(74),
-                                    tokenValue = hexToNumberString(amount_hex),
+                                    tokenValue = hex_to_number_string(amount_hex),
                                     txdata = {
                                         "timestamp": r_3.timestamp,
                                         "hash": txhash,
@@ -2004,7 +1998,7 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
     });
 }
 
-// This function extracts the result from a nested JSON response typically returned by Infura or similar services.
+// Extracts nested result data from Ethereum RPC JSON responses
 function inf_result(r) {
     const ir1 = br_result(r);
     if (ir1) {
@@ -2016,12 +2010,12 @@ function inf_result(r) {
     return false;
 }
 
-// This function generates an error message for failed Ethereum RPC requests.
+// Generates standardized error message for failed Ethereum RPC requests
 function inf_err(set_url) {
     return "error fetching data from " + set_url;
 }
 
-// This function prepares the parameters for Ethereum RPC requests, supporting different node types (Infura, Arbitrum, custom).
+// Constructs RPC request parameters with support for multiple Ethereum node providers
 function eth_params(set_url, cachetime, method, params) {
     const payload = {
         "cachetime": cachetime,
@@ -2062,8 +2056,7 @@ function eth_params(set_url, cachetime, method, params) {
 
 // ** Nano RPC **
 
-// This function interacts with a Nano RPC node to fetch and process transaction data.
-// It handles both scanning for incoming transactions and polling for specific transaction details.
+// Processes Nano transactions via RPC with support for account scanning and block verification
 function nano_rpc(rd, api_data, rdo) {
     const transactionlist = rdo.transactionlist,
         source = rdo.source;
@@ -2178,7 +2171,7 @@ function nano_rpc(rd, api_data, rdo) {
 
 // ** sort transactions by date **
 
-// This function sorts a list of transactions by date in descending order.
+// Sorts transaction list by date in descending order using custom processing function
 function sort_by_date(func, list, rdo, rd) {
     return $(list).sort(function(a, b) {
         const txd1 = func(a, "sort"),
@@ -2187,7 +2180,7 @@ function sort_by_date(func, list, rdo, rd) {
     });
 }
 
-// Helper function to process transaction outputs
+// Calculates total output value for transactions by processing multiple outputs with custom value handler
 function process_outputs(outputs, address, process_value) {
     if (!outputs) return null;
     let outputsum = 0;
@@ -2198,14 +2191,14 @@ function process_outputs(outputs, address, process_value) {
     return outputsum;
 }
 
-// Helper function to process transaction time
+// Converts and normalizes transaction timestamps with optional UTC conversion
 function process_timestamp(timestamp, utc) {
     if (!timestamp) return utc ? now_utc() : now();
     const time = timestamp * 1000;
     return utc ? time + glob_const.timezone : time;
 }
 
-// Helper function to calculate confirmations
+// Computes blockchain confirmation count with validation against latest block height
 function calculate_confirmations(block_id, latest_block) {
     // Return 0 if either parameter is missing or invalid
     if (!block_id || !latest_block || block_id < 0 || latest_block < 0) {
@@ -2219,7 +2212,7 @@ function calculate_confirmations(block_id, latest_block) {
     return latest_block - block_id + 1;
 }
 
-// Default transaction data
+// Provides standardized transaction data structure with null values and default flags
 function default_tx_data() {
     return {
         "ccval": null,
@@ -2235,6 +2228,7 @@ function default_tx_data() {
 
 // ** Unifications
 
+// Processes blockchain.info websocket transaction data with legacy address support
 function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) {
     function process_value(value, addr) {
         return (addr === value.addr ||
@@ -2254,6 +2248,7 @@ function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) {
     };
 }
 
+// Processes mempool.space websocket transaction data with scriptpubkey address validation
 function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) {
     function process_value(value, addr) {
         return addr === value.scriptpubkey_address ? value.value || 0 : 0;
@@ -2271,6 +2266,7 @@ function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) {
     };
 }
 
+// Processes mempool.space transaction data with block height confirmation calculation
 function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, latestblock) {
     const status = data.status,
         transactiontime = status.block_time ? status.block_time * 1000 : now(),
@@ -2295,6 +2291,7 @@ function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, lates
     };
 }
 
+// Processes Dogecoin blockchain websocket data with output value summation
 function dogechain_ws_data(data, setconfirmations, ccsymbol, address) {
     function process_value(value, addr) {
         return addr === value.addr ? value.value || 0 : 0;
@@ -2312,6 +2309,7 @@ function dogechain_ws_data(data, setconfirmations, ccsymbol, address) {
     };
 }
 
+// Processes BlockCypher transaction data with ETH/non-ETH value scaling and hash formatting
 function blockcypher_scan_data(data, setconfirmations, ccsymbol) {
     const datekey = (data.confirmed) ? data.confirmed : (data.received) ? data.received : false,
         transactiontime = to_ts(datekey);
@@ -2333,6 +2331,7 @@ function blockcypher_scan_data(data, setconfirmations, ccsymbol) {
     };
 }
 
+// Processes Insight API transaction data with script pubkey validation and DASH-specific features
 function insight_scan_data(data, setconfirmations, address) {
     const transactiontime = data.time ? data.time : data.blocktime ? data.blocktime : false,
         txtime = transactiontime ? transactiontime * 1000 : now(),
@@ -2365,6 +2364,7 @@ function insight_scan_data(data, setconfirmations, address) {
     };
 }
 
+// Handles BlockCypher polling data with Ethereum-specific address and value formatting
 function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) {
     const is_eth = ccsymbol === "eth",
         transactiontime = to_ts(data.received);
@@ -2388,6 +2388,7 @@ function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) {
     };
 }
 
+// Processes blockchain.info transaction data with mempool status and confirmation calculation
 function blockchaininfo_scan_data(data, setconfirmations, ccsymbol, address, latestblock) {
     const transactiontime = data.time ? data.time * 1000 : null,
         transactiontime_utc = transactiontime ? transactiontime + glob_const.timezone : now();
@@ -2412,6 +2413,7 @@ function blockchaininfo_scan_data(data, setconfirmations, ccsymbol, address, lat
     };
 }
 
+// Processes Blockchair transaction data with recipient validation and instant lock detection
 function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestblock) {
     const transaction = data.transaction;
     if (!transaction) return default_tx_data();
@@ -2438,6 +2440,7 @@ function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestb
     };
 }
 
+// Handles Blockchair Ethereum transaction data with precise ETH value conversion
 function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latestblock) {
     const transactiontime = data.time ? returntimestamp(data.time).getTime() : null;
     if (setconfirmations === "sort") {
@@ -2456,6 +2459,7 @@ function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latestblock)
     };
 }
 
+// Processes Blockchair ERC20 token data with dynamic decimal precision handling
 function blockchair_erc20_scan_data(data, setconfirmations, ccsymbol, latestblock) {
     const transactiontime = data.time ? returntimestamp(data.time).getTime() : null;
     if (setconfirmations === "sort") {
@@ -2475,6 +2479,7 @@ function blockchair_erc20_scan_data(data, setconfirmations, ccsymbol, latestbloc
     };
 }
 
+// Processes Blockchair ERC20 polling data with multi-layer token transaction validation
 function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latestblock) {
     const transaction = data.transaction,
         tokendata = data.layer_2.erc_20[0];
@@ -2495,6 +2500,7 @@ function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latestbloc
     };
 }
 
+// Handles Etherscan/Polygonscan API data with Layer2 network support
 function omniscan_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
     const transactiontime = process_timestamp(data.timeStamp, true);
     if (setconfirmations === "sort") {
@@ -2512,6 +2518,7 @@ function omniscan_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
     };
 }
 
+// Processes Layer2 Ethereum transactions with native ETH value conversion
 function omniscan_scan_data_eth(data, setconfirmations, eth_layer2) {
     const transactiontime = process_timestamp(data.timeStamp, true);
     if (setconfirmations === "sort") {
@@ -2529,6 +2536,7 @@ function omniscan_scan_data_eth(data, setconfirmations, eth_layer2) {
     };
 }
 
+// Handles Ethplorer transaction data with token info and Layer2 support
 function ethplorer_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
     const transactiontime = process_timestamp(data.timestamp, true);
     if (setconfirmations === "sort") {
@@ -2545,6 +2553,7 @@ function ethplorer_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
     };
 }
 
+// Processes Nano transaction data with raw-to-NANO conversion and local timestamp handling
 function nano_scan_data(data, setconfirmations, ccsymbol, txhash) {
     const transactiontime = data.local_timestamp ? (data.local_timestamp * 1000) + glob_const.timezone : null,
         transactiontime_utc = transactiontime ? transactiontime : now_utc();
@@ -2563,6 +2572,7 @@ function nano_scan_data(data, setconfirmations, ccsymbol, txhash) {
     };
 }
 
+// Processes Bitcoin RPC node data with scriptPubKey address validation
 function bitcoin_rpc_data(data, setconfirmations, ccsymbol, address) {
     const transactiontime = process_timestamp(data.time, true);
 
@@ -2581,6 +2591,7 @@ function bitcoin_rpc_data(data, setconfirmations, ccsymbol, address) {
     };
 }
 
+// Handles Infura ERC20 data with dynamic token decimal precision
 function infura_erc20_poll_data(data, setconfirmations, ccsymbol, eth_layer2) {
     const tokenValue = data.value || null,
         decimals = data.decimals || null,
@@ -2597,6 +2608,7 @@ function infura_erc20_poll_data(data, setconfirmations, ccsymbol, eth_layer2) {
     };
 }
 
+// Processes Infura block data with ETH value conversion and timestamp normalization
 function infura_block_data(data, setconfirmations, ccsymbol, ts) {
     const ccval = data.value ? parseFloat((Number(data.value) / 1e18).toFixed(8)) : null,
         transactiontime = ts ? process_timestamp(Number(ts), true) : now(),
@@ -2610,6 +2622,7 @@ function infura_block_data(data, setconfirmations, ccsymbol, ts) {
     };
 }
 
+// Processes Monero transaction data with payment ID validation and piconero conversion
 function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) {
     const transactiontime = to_ts(data.timestamp);
     if (setconfirmations === "sort") {
@@ -2627,6 +2640,7 @@ function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) {
     };
 }
 
+// Handles Blockchair Monero data with output matching and payment ID tracking
 function blockchair_xmr_data(data, setconfirmations) {
     const transactiontime = process_timestamp(data.tx_timestamp, true);
 
@@ -2645,6 +2659,7 @@ function blockchair_xmr_data(data, setconfirmations) {
     };
 }
 
+// Processes Nimiq transaction data with confirmation calculation and value scaling
 function nimiq_scan_data(data, setconfirmations, latestblock, txhash) {
     const transactiontime = process_timestamp(data.timestamp, true);
     if (setconfirmations === "sort") {
@@ -2664,6 +2679,7 @@ function nimiq_scan_data(data, setconfirmations, latestblock, txhash) {
     };
 }
 
+// Handles Kaspa transaction data with blue score confirmation calculation
 function kaspa_scan_data(data, thisaddress, setconfirmations, latestblock) {
     const transactiontime = data.block_time + glob_const.timezone;
     if (setconfirmations === "sort") {
@@ -2686,6 +2702,7 @@ function kaspa_scan_data(data, thisaddress, setconfirmations, latestblock) {
     };
 }
 
+// Processes Kaspa FYI API data with output address validation
 function kaspa_poll_fyi_data(data, thisaddress, setconfirmations) {
     function process_output_value(val, addr) {
         const amount = val.amount;
@@ -2702,6 +2719,7 @@ function kaspa_poll_fyi_data(data, thisaddress, setconfirmations) {
     };
 }
 
+// Handles Kaspa websocket data with realtime transaction processing
 function kaspa_ws_data(data, thisaddress) {
     function process_output_value(val, addr) {
         const amount = val[1];
@@ -2716,6 +2734,7 @@ function kaspa_ws_data(data, thisaddress) {
     };
 }
 
+// Processes Kaspa FYI websocket data with verbose transaction details
 function kaspa_fyi_ws_data(data, thisaddress) {
     function process_output_value(val, addr) {
         const amount = val.value;
@@ -2730,6 +2749,7 @@ function kaspa_fyi_ws_data(data, thisaddress) {
     };
 }
 
+// Handles Lightning Network transaction data with satoshi-to-BTC conversion
 function lnd_tx_data(data) {
     const txtime = data.txtime || data.timestamp,
         amount = parseFloat(data.amount / 100000000000);
@@ -2744,6 +2764,7 @@ function lnd_tx_data(data) {
     };
 }
 
+// Processes Infura Ethereum polling data with Layer2 network support
 function infura_eth_poll_data(data, setconfirmations, ccsymbol, eth_layer2) {
     const transactiontime = process_timestamp(data.timestamp, true),
         ethvalue = data.value ? parseFloat((data.value / 1e18).toFixed(8)) : null;

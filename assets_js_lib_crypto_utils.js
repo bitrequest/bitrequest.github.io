@@ -25,24 +25,25 @@ const CURVE = {
 };
 secp.CURVE = CURVE;
 
-// Basic "mod" function that works with BigInt
+// Performs modular arithmetic (a mod m) with correct handling of negative numbers
 function mod(a, m = CURVE.P) {
     const r = a % m;
     return r >= 0n ? r : m + r;
 }
 
-// Weierstrass curve equation: y² = x³ + ax + b with secp256k1 a=0, b=7 => y² = x³ + 7
+// Evaluates the secp256k1 curve equation y² = x³ + 7 for a given x coordinate
 function weierstrass(x) {
     return mod(x ** 3n + CURVE.b);
 }
 
-// Extended Euclidean Algorithm for modular inverse
+// Implements extended Euclidean algorithm to find Bézout's identity coefficients
 function egcd(a, b) {
     if (a === 0n) return [b, 0n, 1n];
     let [g, x1, y1] = egcd(b % a, a);
     return [g, y1 - (b / a) * x1, x1];
 }
 
+// Calculates the modular multiplicative inverse using extended Euclidean algorithm
 function invert(number, modulo = CURVE.P) {
     if (number === 0n || modulo <= 0n) {
         throw new Error("invert: invalid number");
@@ -53,7 +54,9 @@ function invert(number, modulo = CURVE.P) {
 }
 
 // Some basic hex / byte array helpers
-function hexToBytes(hex) {
+
+// Converts hexadecimal string to Uint8Array with zero-padding for odd length
+function hex_to_bytes(hex) {
     if (typeof hex !== "string") throw new TypeError("hexToBytes: expected string");
     if (hex.length % 2 !== 0) hex = "0" + hex; // pad if needed
     const array = new Uint8Array(hex.length / 2);
@@ -64,7 +67,8 @@ function hexToBytes(hex) {
     return array;
 }
 
-function bytesToHex(uint8a) {
+// Converts Uint8Array to lowercase hexadecimal string with zero-padding
+function bytes_to_hex(uint8a) {
     let hex = "";
     for (let i = 0; i < uint8a.length; i++) {
         hex += uint8a[i].toString(16).padStart(2, "0");
@@ -72,21 +76,23 @@ function bytesToHex(uint8a) {
     return hex;
 }
 
-function hexToNumber(hex) {
+// Converts hexadecimal string to BigInt with 0x prefix
+function hex_to_number(hex) {
     if (typeof hex !== "string") throw new TypeError("hexToNumber: expected string");
     return BigInt("0x" + hex);
 }
 
-function bytesToNumber(bytes) {
-    return hexToNumber(bytesToHex(bytes));
+// Converts Uint8Array to BigInt via intermediate hex representation
+function bytes_to_number(bytes) {
+    return hex_to_number(bytes_to_hex(bytes));
 }
 
-// Pads a number to 64 hex characters (32 bytes)
+// Zero-pads a number's hexadecimal representation to 64 characters (32 bytes)
 function pad64(num) {
     return num.toString(16).padStart(64, "0");
 }
 
-// Minimal Jacobian Point for projective coordinates
+// Implements point addition and doubling in Jacobian projective coordinates
 class JacobianPoint {
     constructor(x, y, z) {
         this.x = x;
@@ -175,7 +181,7 @@ class JacobianPoint {
     }
 }
 
-// Affine Point on the curve y² = x³ + 7
+// Represents a point on secp256k1 curve in affine coordinates (x,y)
 class Point {
     constructor(x, y) {
         this.x = x;
@@ -184,13 +190,13 @@ class Point {
 
     // Create new point from a private key scalar
     static fromPrivateKey(privateKey) {
-        const key = normalizePrivateKey(privateKey);
+        const key = normalize_privatekey(privateKey);
         return Point.BASE.multiply(key);
     }
 
     // Parse a compressed or uncompressed hex/bytes public key
     static fromHex(hex) {
-        const bytes = hex instanceof Uint8Array ? hex : hexToBytes(hex);
+        const bytes = hex instanceof Uint8Array ? hex : hex_to_bytes(hex);
         if (bytes.length === 32) {
             return this.fromX(bytes);
         }
@@ -206,9 +212,9 @@ class Point {
 
     // For 32-byte X only
     static fromX(bytes) {
-        const x = bytesToNumber(bytes),
+        const x = bytes_to_number(bytes),
             y2 = weierstrass(x);
-        let y = sqrtMod(y2); // we need sqrt for y
+        let y = sqrt_mod(y2); // we need sqrt for y
         if ((y & 1n) === 1n) {
             y = mod(-y);
         }
@@ -221,9 +227,9 @@ class Point {
         if (bytes.length !== 33) {
             throw new Error("Compressed pubkey must be 33 bytes");
         }
-        const x = bytesToNumber(bytes.slice(1)),
+        const x = bytes_to_number(bytes.slice(1)),
             y2 = weierstrass(x);
-        let y = sqrtMod(y2);
+        let y = sqrt_mod(y2);
         const odd = (y & 1n) === 1n,
             isFirstByteOdd = (bytes[0] & 1) === 1;
         if (odd !== isFirstByteOdd) {
@@ -238,8 +244,8 @@ class Point {
         if (bytes.length !== 65) {
             throw new Error("Uncompressed pubkey must be 65 bytes");
         }
-        const x = bytesToNumber(bytes.slice(1, 33)),
-            y = bytesToNumber(bytes.slice(33)),
+        const x = bytes_to_number(bytes.slice(1, 33)),
+            y = bytes_to_number(bytes.slice(33)),
             p = new Point(x, y);
         p.assertValidity();
         return p;
@@ -306,12 +312,13 @@ class Point {
 // For sqrt mod P, we can use Tonelli–Shanks or a simplified variant for P ≡ 3 (mod 4) (like secp256k1). P is prime => (p+1)/4 exponent y = x^((p+1)/4) mod p
 const P_1_4 = (CURVE.P + 1n) >> 2n;
 
-function sqrtMod(x) {
-    return powMod(x, P_1_4, CURVE.P);
+// Calculates modular square root using simplified Tonelli-Shanks for p ≡ 3 (mod 4)
+function sqrt_mod(x) {
+    return pow_mod(x, P_1_4, CURVE.P);
 }
 
-// Basic exponentiation mod
-function powMod(base, exponent, modulus) {
+// Performs modular exponentiation using square-and-multiply algorithm
+function pow_mod(base, exponent, modulus) {
     let result = 1n,
         b = mod(base, modulus),
         e = exponent;
@@ -323,15 +330,15 @@ function powMod(base, exponent, modulus) {
     return result;
 }
 
-// Private key normalization helper
-function normalizePrivateKey(privateKey) {
+// Validates and normalizes private key to BigInt within curve order range
+function normalize_privatekey(privateKey) {
     let key = null;
     if (typeof privateKey === "bigint") {
         key = privateKey;
     } else if (typeof privateKey === "string") {
-        key = hexToNumber(privateKey);
+        key = hex_to_number(privateKey);
     } else if (privateKey instanceof Uint8Array) {
-        key = bytesToNumber(privateKey);
+        key = bytes_to_number(privateKey);
     } else {
         throw new Error("Invalid private key type");
     }
@@ -342,8 +349,8 @@ function normalizePrivateKey(privateKey) {
     return key;
 }
 
-// Public export: getPublicKey(privateKey, isCompressed)
-function getPublicKey(privateKey, isCompressed = true) {
+// Derives compressed or uncompressed public key from private key scalar
+function get_publickey(privateKey, isCompressed = true) {
     const P = Point.fromPrivateKey(privateKey);
     return P.toHex(isCompressed);
 }
@@ -355,98 +362,98 @@ secp.Point = Point;
 
 // helpers
 
-// Creates a Uint8Array from an array of bytes
-function uint_8Array(bytes) {
+// Creates a typed array with 8-bit unsigned integers from a byte array
+function uint_8array(bytes) {
     return new Uint8Array(bytes);
 }
 
-// Encodes a string to UTF-8
+// Encodes string to UTF-8 using TextEncoder
 function buffer(enc) {
     return utf8Encoder.encode(enc);
 }
 
-// Decodes a UTF-8 encoded string
+// Decodes UTF-8 encoded data using TextDecoder
 function unbuffer(enc, encoding) {
     return utf8Decoder.decode(enc);
 }
 
-// Converts a string to SJCL bits
-function tobits(val) {
+// Converts UTF-8 string to SJCL bitArray format
+function to_bits(val) {
     return sjcl.codec.utf8String.toBits(val);
 }
 
-// Converts a decimal to hexadecimal
-function dectohex(val) {
+// Converts integer to base-16 string representation
+function dec_to_hex(val) {
     return val.toString(16);
 }
 
-// Converts a hexadecimal to decimal (BigInt)
-function hextodec(val) {
+// Parses hexadecimal string to BigInt with 0x prefix
+function hex_to_dec(val) {
     return BigInt("0x" + val);
 }
 
-// Checks if a string is a valid hexadecimal
+// Validates string contains only hexadecimal characters [0-9a-fA-F]
 function is_hex(str) {
     return new RegExp("^[a-fA-F0-9]+$").test(str);
 }
 
-// Pads a string with leading zeros to a specified byte length
+// Left-pads string with zeros to specified byte length with truncation
 function str_pad(val, bytes) {
     return (bytestring.slice(0, bytes) + val).substr(-bytes);
 }
 
-// Converts a hexadecimal string to SJCL bits
-function hextobits(val) {
+// Converts hexadecimal string to SJCL bitArray format
+function hex_to_bits(val) {
     return sjcl.codec.hex.toBits(val);
 }
 
-// Converts SJCL bits to a hexadecimal string
-function frombits(val) {
+// Converts SJCL bitArray to hexadecimal string
+function from_bits(val) {
     return sjcl.codec.hex.fromBits(val);
 }
 
-// Returns the bit length of an SJCL bitArray
-function bitlength(val) {
+// Calculates total bit length of SJCL bitArray
+function bit_length(val) {
     return sjcl.bitArray.bitLength(val);
 }
 
-// Concatenates two SJCL bitArrays
+// Merges two SJCL bitArrays into single concatenated array
 function concat_array(arr1, arr2) {
     return sjcl.bitArray.concat(arr1, arr2);
 }
 
-// Converts an ArrayBuffer to a hexadecimal string
+// Converts ArrayBuffer to zero-padded hexadecimal string
 function buf2hex(buffer) { // buffer is an ArrayBuffer
-    return Array.prototype.map.call(uint_8Array(buffer), x => ("00" + x.toString(16)).slice(-2)).join("");
+    return Array.prototype.map.call(uint_8array(buffer), x => ("00" + x.toString(16)).slice(-2)).join("");
 }
 
 // mnemonic helpers
 
-// Cleans and normalizes a mnemonic phrase
-function cleanstring(words) {
-    return normalizestring(joinwords(splitwords(words)));
+// Normalizes mnemonic phrase with NFKD normalization after splitting and joining
+function clean_string(words) {
+    return normalize_string(join_words(split_words(words)));
 }
 
-// Joins an array of words into a space-separated string
-function joinwords(words) {
+// Concatenates word array with single space delimiter
+function join_words(words) {
     return words.join(" ");
 }
 
-// Splits a mnemonic phrase into an array of words
-function splitwords(mnemonic) {
+// Splits string on whitespace and removes empty elements
+function split_words(mnemonic) {
     return mnemonic.split(/\s/g).filter(function(x) {
         return x.length;
     });
 }
 
-// Normalizes a string using NFKD normalization
-function normalizestring(str) {
+// Applies Unicode NFKD normalization to string
+function normalize_string(str) {
     return str.normalize("NFKD");
 }
 
-// Converts a mnemonic phrase to a binary string
-function mnemonicToBinaryString(mnemonic) {
-    const mm = splitwords(mnemonic);
+// Converts BIP39 mnemonic to binary string with 11-bit word indices
+function mnemonic_to_binary_string(mnemonic) {
+    const mm = split_words(mnemonic);
     if (mm.length == 0 || mm.length % 3 > 0) {
         return null;
     }
@@ -463,8 +470,8 @@ function mnemonicToBinaryString(mnemonic) {
     return idx.join("");
 }
 
-// Converts a binary string to an array of 32-bit words
-function binaryStringToWordArray(binary) {
+// Chunks 32-bit segments from binary string into decimal integer array
+function binary_string_to_word_array(binary) {
     let aLen = binary.length / 32,
         a = [];
     for (let i = 0; i < aLen; i++) {
@@ -476,8 +483,8 @@ function binaryStringToWordArray(binary) {
     return a;
 }
 
-// Converts a byte array to an array of 32-bit words
-function byteArrayToWordArray(data) {
+// Converts byte array to 32-bit word array using big-endian ordering
+function byte_array_to_word_array(data) {
     const a = [];
     for (let i = 0; i < data.length / 4; i++) {
         let v = 0;
@@ -490,8 +497,8 @@ function byteArrayToWordArray(data) {
     return a;
 }
 
-// Converts a byte array to a binary string
-function byteArrayToBinaryString(data) {
+// Converts byte array to binary string with 8-bit zero-padded values
+function byte_array_to_binary_string(data) {
     let bin = "";
     for (let i = 0; i < data.length; i++) {
         bin += zfill(data[i].toString(2), 8);
@@ -499,8 +506,8 @@ function byteArrayToBinaryString(data) {
     return bin;
 }
 
-// Converts a hexadecimal string to a binary string
-function hexStringToBinaryString(hexString) {
+// Converts hex string to binary string with 4-bit zero-padded values
+function hex_string_to_binary_string(hexString) {
     let binaryString = "";
     for (let i = 0; i < hexString.length; i++) {
         binaryString += zfill(parseInt(hexString[i], 16).toString(2), 4);
@@ -511,13 +518,13 @@ function hexStringToBinaryString(hexString) {
 // base58
 // https://gist.github.com/diafygi/90a3e80ca1c2793220e5/
 
-// Encodes a string or hexadecimal to Base58
+// Encodes data to Base58 string from hex or UTF-8 input
 function b58enc(enc, encode) {
-    const bytestring = (encode = "hex") ? hexToBytes(enc) : buffer(enc);
+    const bytestring = (encode = "hex") ? hex_to_bytes(enc) : buffer(enc);
     return b58enc_uint_array(bytestring);
 }
 
-// Encodes a Uint8Array to Base58
+// Converts Uint8Array to Base58 string using custom alphabet
 function b58enc_uint_array(u) {
     let d = [],
         s = "",
@@ -537,13 +544,13 @@ function b58enc_uint_array(u) {
     return s;
 }
 
-// Decodes a Base58 string to UTF-8 or hexadecimal
+// Decodes Base58 string to UTF-8 or hexadecimal output
 function b58dec(dec, decode) {
     const buffer = b58dec_uint_array(dec);
     return (decode === "hex") ? buf2hex(buffer) : unbuffer(buffer, "utf-8");
 }
 
-// Decodes a Base58 string to a Uint8Array
+// Converts Base58 string to Uint8Array using custom alphabet
 function b58dec_uint_array(dec) {
     let d = [],
         b = [],
@@ -561,17 +568,17 @@ function b58dec_uint_array(dec) {
         }
     }
     while (j--) b.push(d[j]);
-    return uint_8Array(b);
+    return uint_8array(b);
 }
 
 // base58check
-// Encodes a payload with a checksum using Base58Check encoding
+// Implements Base58Check encoding with double SHA256 checksum
 function b58check_encode(payload) {
     const full_bytes = payload + hmacsha(hmacsha(payload, "sha256", "hex"), "sha256", "hex").slice(0, 8);
     return b58enc(full_bytes, "hex");
 }
 
-// Decodes a Base58Check encoded string
+// Decodes Base58Check string and removes 4-byte checksum
 function b58check_decode(val) {
     const full_bytes = b58dec(val, "hex"),
         bytes = full_bytes.substring(0, full_bytes.length - 8);
@@ -580,8 +587,8 @@ function b58check_decode(val) {
 
 //LNurl
 
-// Converts bytes to words (used in bech32 encoding)
-function toWords(bytes) {
+// Converts input byte array to 5-bit word representation for bech32 encoding
+function to_words(bytes) {
     const res = convert(bytes, 8, 5, true);
     if (Array.isArray(res)) {
         return res
@@ -589,8 +596,8 @@ function toWords(bytes) {
     throw new Error(res)
 }
 
-// Converts words to bytes (used in bech32 decoding)
-function fromWords(bytes) {
+// Converts 5-bit word array back to byte representation for bech32 decoding
+function from_words(bytes) {
     const res = convert(bytes, 5, 8, true);
     if (Array.isArray(res)) {
         return res
@@ -598,7 +605,7 @@ function fromWords(bytes) {
     throw new Error(res)
 }
 
-// Converts data between different bit representations
+// Transforms data between different bit-length representations with optional padding
 function convert(data, inBits, outBits, pad) {
     let value = 0,
         bits = 0,
@@ -629,54 +636,54 @@ function convert(data, inBits, outBits, pad) {
 
 //hashing
 
-// Computes HMAC using SJCL
+// Generates HMAC using SJCL with optional hex encoding
 function hmac_bits(message, key, encode) {
-    const enc_msg = (encode == "hex") ? hextobits(message) : message,
+    const enc_msg = (encode == "hex") ? hex_to_bits(message) : message,
         hmac = new sjcl.misc.hmac(key, sjcl.hash.sha512);
-    return frombits(hmac.encrypt(enc_msg));
+    return from_bits(hmac.encrypt(enc_msg));
 }
 
-// Computes HMAC-SHA hash
+// Computes HMAC-SHA hash with optional key encoding
 function hmacsha(key, hash, encode) {
-    const enc_key = (encode == "hex") ? hextobits(key) : key;
-    return frombits(hmacsha_bits(enc_key, hash));
+    const enc_key = (encode == "hex") ? hex_to_bits(key) : key;
+    return from_bits(hmacsha_bits(enc_key, hash));
 }
 
-// Computes HMAC-SHA hash in bits
+// Performs HMAC-SHA hash computation on input key
 function hmacsha_bits(key, hash) {
     return sjcl.hash[hash].hash(key);
 }
 
-// Converts a private key to Wallet Import Format (WIF)
+// Encodes private key to Wallet Import Format (WIF) with optional compression
 function privkey_wif(versionbytes, hexkey, comp) {
     const compressed = (comp) ? "01" : "";
     return b58check_encode(versionbytes + hexkey + compressed);
 }
 
-// Derives public key from private key
+// Generates corresponding public key from a private key
 function priv_to_pub(priv) {
     return secp.getPublicKey(priv, true);
 }
 
-// Expands a compressed public key to uncompressed format
+// Converts compressed public key to full uncompressed format
 function expand_pub(pub) {
     return secp.Point.fromHex(pub).toHex(false);
 }
 
-// Converts a public key to a cryptocurrency address
+// Generates standard cryptocurrency address from public key
 function pub_to_address(versionbytes, pub) {
     return hash160_to_address(versionbytes, hash160(pub));
 }
 
-// Converts a public key to an Ethereum address
+// Derives Ethereum-specific address from public key
 function pub_to_eth_address(pub) {
     const xp_pub = expand_pub(pub),
-        keccak = "0x" + keccak_256(hexToBytes(xp_pub.slice(2))),
+        keccak = "0x" + keccak_256(hex_to_bytes(xp_pub.slice(2))),
         addr = "0x" + keccak.slice(26);
-    return toChecksumAddress(addr);
+    return to_checksum_address(addr);
 }
 
-// Computes RIPEMD160(SHA256(input))
+// Computes double hash: RIPEMD160(SHA256(input))
 function hash160(pub) {
     return hmacsha(hmacsha(pub, "sha256", "hex"), "ripemd160", "hex");
 }
@@ -692,7 +699,7 @@ function sha_sub(val, lim) {
 }
 
 // Converts an Ethereum address to checksum format
-function toChecksumAddress(e) {
+function to_checksum_address(e) {
     if (void 0 === e) {
         return "";
     }
@@ -711,7 +718,7 @@ function toChecksumAddress(e) {
 // Converts a public key to a Bech32 address
 function pub_to_address_bech32(hrp, pubkey) {
     const step1 = hash160(pubkey),
-        step2 = hexStringToBinaryString(step1),
+        step2 = hex_string_to_binary_string(step1),
         step3 = step2.match(/.{1,5}/g),
         step4 = bech32_dec_array(step3);
     return bech32_encode(hrp, step4);
@@ -744,7 +751,7 @@ function polymod(values) {
 }
 
 // Expands the human-readable part for Bech32 encoding
-function hrpExpand(hrp) {
+function hrp_expand(hrp) {
     const ret = [];
     let p;
     for (p = 0; p < hrp.length; ++p) {
@@ -758,13 +765,13 @@ function hrpExpand(hrp) {
 }
 
 // Verifies the checksum in a Bech32 address
-function verifyChecksum(hrp, data) {
-    return polymod(hrpExpand(hrp).concat(data)) === 1;
+function verify_checksum(hrp, data) {
+    return polymod(hrp_expand(hrp).concat(data)) === 1;
 }
 
 // Creates a checksum for Bech32 encoding
-function createChecksum(hrp, data) {
-    const values = hrpExpand(hrp).concat(data).concat([0, 0, 0, 0, 0, 0]),
+function create_checksum(hrp, data) {
+    const values = hrp_expand(hrp).concat(data).concat([0, 0, 0, 0, 0, 0]),
         mod = polymod(values) ^ 1,
         ret = [];
     for (let p = 0; p < 6; ++p) {
@@ -775,7 +782,7 @@ function createChecksum(hrp, data) {
 
 // Encodes data into a Bech32 address
 function bech32_encode(hrp, data) {
-    let combined = data.concat(createChecksum(hrp, data)),
+    let combined = data.concat(create_checksum(hrp, data)),
         ret = hrp + "1";
     for (let p = 0; p < combined.length; ++p) {
         ret += b32ab.charAt(combined[p]);
@@ -784,7 +791,7 @@ function bech32_encode(hrp, data) {
 }
 
 // Decodes a Bech32 encoded string (unused)
-function bech32_decode(bechString) { // unused
+function bech32_decode(bechString) {
     let p,
         has_lower = false,
         has_upper = false;
@@ -816,7 +823,7 @@ function bech32_decode(bechString) { // unused
         }
         data.push(d);
     }
-    if (!verifyChecksum(hrp, data)) {
+    if (!verify_checksum(hrp, data)) {
         return null;
     }
     return {
@@ -855,7 +862,7 @@ function lnurl_decodeb32(lnurl) {
         }
         data.push(d);
     }
-    if (!verifyChecksum(hrp, data)) {
+    if (!verify_checksum(hrp, data)) {
         return null;
     }
     return {
@@ -866,13 +873,13 @@ function lnurl_decodeb32(lnurl) {
 
 // Encrypts data using AES-GCM
 function aes_enc(params, keyString) {
-    const buffer = uint_8Array(16),
-        iv = byteArrayToWordArray(crypto.getRandomValues(buffer)),
+    const buffer = uint_8array(16),
+        iv = byte_array_to_word_array(crypto.getRandomValues(buffer)),
         key = sjcl.codec.base64.toBits(keyString),
         cipher = new sjcl.cipher.aes(key),
-        data = sjcl.codec.utf8String.toBits(params),
+        data = to_bits(params),
         enc = sjcl.mode.gcm.encrypt(cipher, data, iv, {}, 128),
-        concatbitArray = sjcl.bitArray.concat(iv, enc),
+        concatbitArray = concat_array(iv, enc),
         conString = sjcl.codec.base64.fromBits(concatbitArray);
     return conString;
 }
@@ -895,12 +902,12 @@ function aes_dec(content, keyst) {
 }
 
 // Converts a hexadecimal string to a decimal string
-function hexToNumberString(val) {
-    return hex_to_number(val).toString();
+function hex_to_number_string(val) {
+    return hex_to_int(val).toString();
 }
 
 // Converts a hexadecimal string to a number
-function hex_to_number(val) {
+function hex_to_int(val) {
     return parseInt(val, 16);
 }
 
@@ -943,7 +950,7 @@ function bch_cashaddr(prefix, type, legacy) {
 // Nimiq.watch TXD
 
 // Encodes a Nimiq transaction hash for use with Nimiq.watch
-function nimiqhash(tx) {
+function nimiq_hash(tx) {
     return encodeURIComponent(btoa(tx.match(/\w{2}/g).map(function(a) {
         return String.fromCharCode(parseInt(a, 16));
     }).join("")));

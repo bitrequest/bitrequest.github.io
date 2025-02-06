@@ -58,7 +58,7 @@ $(document).ready(function() {
 
 // ** Currency Settings **
 
-// Function to handle editing confirmations for cryptocurrency transactions
+// Handles UI interactions for editing cryptocurrency confirmation settings using emoji-based visual indicators
 function edit_confirmations() {
     $(document).on("click", ".cc_settinglist li[data-id='confirmations'] .edit_trigger", function() {
         const thistrigger = $(this),
@@ -139,7 +139,7 @@ function edit_confirmations() {
     })
 }
 
-// Function to handle submission of confirmation settings
+// Processes form submission for cryptocurrency confirmation count changes with validation
 function submit_confirmations() {
     $(document).on("click", "#conf_formbox input.submit", function(e) {
         e.preventDefault();
@@ -156,7 +156,7 @@ function submit_confirmations() {
     })
 }
 
-// Function to handle the reuse address toggle switch
+// Manages toggling of address reuse settings with user warnings for different cryptocurrencies
 function reuse_address_trigger() {
     $(document).on("mouseup", ".cc_settinglist li[data-id='Reuse address'] .switchpanel.custom", function() {
         const this_switch = $(this),
@@ -189,7 +189,7 @@ function reuse_address_trigger() {
     })
 }
 
-// Function to handle generic cryptocurrency switch toggles
+// Controls generic boolean switch toggles for cryptocurrency settings with automatic state persistence
 function cc_switch() {
     $(document).on("mouseup", ".cc_settinglist li .switchpanel.bool", function() {
         const thistrigger = $(this),
@@ -202,7 +202,7 @@ function cc_switch() {
     })
 }
 
-// Function to handle editing block explorer settings
+// Manages block explorer selection UI with dynamic option population from available explorer list
 function edit_blockexplorer() {
     $(document).on("click", ".cc_settinglist li[data-id='blockexplorers']", function() {
         const current_li = $(this),
@@ -268,7 +268,7 @@ function edit_blockexplorer() {
     })
 }
 
-// Function to handle submission of block explorer settings
+// Processes block explorer selection changes and updates UI state with validation
 function submit_blockexplorer() {
     $(document).on("click", "#be_formbox input.submit", function(e) {
         e.preventDefault();
@@ -284,7 +284,7 @@ function submit_blockexplorer() {
     })
 }
 
-// Function to handle editing RPC node settings for APIs and WebSockets
+// Handles RPC/API endpoint configuration UI for both HTTP and WebSocket connections with placeholder suggestions
 function edit_rpcnode() {
     $(document).on("click", ".cc_settinglist li[data-id='apis'], .cc_settinglist li[data-id='websockets']", function() {
         const current_li = $(this),
@@ -359,7 +359,7 @@ function edit_rpcnode() {
     })
 }
 
-// Function to get RPC placeholders for different currencies and API types
+// Provides template URL examples for different cryptocurrency node configurations and API types
 function get_rpc_placeholder(currency) {
     return {
         "apisnano1": "eg: http://127.0.0.1:7076",
@@ -377,7 +377,7 @@ function get_rpc_placeholder(currency) {
     }
 }
 
-// Function to test and append RPC options for different cryptocurrencies
+// Tests RPC endpoints for connectivity and appends validated options to the selection UI with status indicators
 function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
     if (glob_let.ap_id === "apis") {
         if (thiscurrency === "ethereum" || glob_let.is_erc20t === true) {
@@ -504,7 +504,7 @@ function test_append_rpc(thiscurrency, optionlist, key, value, selected) {
     }
 }
 
-// Function to create and append an RPC option list item
+// Creates and styles a UI element for RPC node options with live status indicators and deletion controls
 function rpc_option_li(optionlist, live, key, value, selected, checked) {
     const liveclass = live ? " live" : " offline",
         selected_class = selected ? " rpc_selected" : "",
@@ -517,7 +517,7 @@ function rpc_option_li(optionlist, live, key, value, selected, checked) {
     option.slideDown(500);
 }
 
-// Function to handle RPC node selection
+// Handles RPC node selection in UI with offline node detection and data persistence
 function test_rpcnode() {
     $(document).on("click", "#settingsbox .selectbox .options > div", function(e) {
         const target = $(e.target);
@@ -539,7 +539,7 @@ function test_rpcnode() {
     })
 }
 
-// Function to handle RPC node submission
+// Validates and processes RPC node submission with duplicate checking and connection testing
 function submit_rpcnode() {
     $(document).on("click", "#settingsbox input.submit", function(e) {
         e.preventDefault();
@@ -575,7 +575,7 @@ function submit_rpcnode() {
     })
 }
 
-// Function to test RPC connection for various cryptocurrencies
+// Tests RPC/WebSocket connectivity for multiple cryptocurrency protocols with error handling
 function test_rpc(rpc_input_box, rpc_data, currency) {
     const cant_connect = translate("unabletoconnect");
     if (glob_let.ap_id === "apis") {
@@ -723,7 +723,7 @@ function test_rpc(rpc_input_box, rpc_data, currency) {
     }
 }
 
-// Function to finalize RPC submission and update settings
+// Updates UI and persists RPC configuration after successful validation
 function pass_rpc_submit(thiscurrency, thisvalue, newnode) {
     const rpc_setting_li = cs_node(thiscurrency, glob_let.ap_id),
         options = rpc_setting_li.data("options"),
@@ -741,7 +741,7 @@ function pass_rpc_submit(thiscurrency, thisvalue, newnode) {
     save_cc_settings(thiscurrency, true);
 }
 
-// Function to handle removal of RPC nodes
+// Manages removal of custom RPC nodes with safeguards for default nodes
 function remove_rpcnode() {
     $(document).on("click", "#settingsbox .options .opt_icon_box .icon-bin", function(e) {
         e.preventDefault();
@@ -782,7 +782,7 @@ function remove_rpcnode() {
     })
 }
 
-// Function to construct RPC URL with optional authentication
+// Constructs authenticated RPC URLs with protocol and credential handling
 function get_rpc_url(rpc_data) {
     if (rpc_data === false) {
         return false;
@@ -796,7 +796,7 @@ function get_rpc_url(rpc_data) {
     return hasprefix ? urlsplit[0] + "://" + login_param + urlsplit[1] : url;
 }
 
-// Function to handle editing of Xpub settings
+// Displays Xpub key information with QR code generation and deletion options
 function edit_xpub_trigger() {
     $(document).on("click", ".cc_settinglist li[data-id='Xpub'] .atext", function() {
         if (!glob_let.test_derive) {
@@ -833,7 +833,7 @@ function edit_xpub_trigger() {
     })
 }
 
-// Function to handle deletion of Xpub
+// Handles Xpub deletion with user confirmation and state cleanup
 function delete_xpub() {
     $(document).on("click", "#delete_xpub", function() {
         const result = confirm(translate("delete") + " " + translate("bip32xpub") + "?");
@@ -856,7 +856,7 @@ function delete_xpub() {
     })
 }
 
-// Function to handle callback after Xpub deletion
+// Updates address list UI after Xpub key deletion
 function delete_xpub_cb(currency, x_pubid, uncheck) {
     const xpublist = filter_addressli(currency, "xpubid", x_pubid);
     xpublist.each(function() {
@@ -868,7 +868,7 @@ function delete_xpub_cb(currency, x_pubid, uncheck) {
     });
 }
 
-// Function to handle callback after adding Xpub
+// Updates address list UI after adding new Xpub key
 function add_xpub_cb(currency, x_pubid) {
     const xpublist = filter_addressli(currency, "xpubid", x_pubid);
     xpublist.each(function() {
@@ -876,7 +876,7 @@ function add_xpub_cb(currency, x_pubid) {
     });
 }
 
-// Function to handle Xpub switch in currency settings
+// Handles enabling/disabling Xpub functionality in currency settings
 function xpub_cc_switch() {
     $(document).on("mouseup", ".cc_settinglist li[data-id='Xpub'] .switchpanel.custom", function() {
         if (glob_let.test_derive !== true) {
@@ -918,7 +918,7 @@ function xpub_cc_switch() {
     })
 }
 
-// Function to handle editing of Xpub
+// Displays form for adding new Xpub key with QR scanning support
 function edit_xpub(ad) {
     const currency = ad.currency,
         cpid = ad.ccsymbol + "-" + currency,
@@ -949,7 +949,7 @@ function edit_xpub(ad) {
     }
 }
 
-// Function to handle Xpub input changes
+// Validates Xpub input format and triggers address derivation on valid input
 function xpub_change() {
     $(document).on("input", "#xpub_input", function(e) {
         const thisnode = $(this),
@@ -965,7 +965,7 @@ function xpub_change() {
     })
 }
 
-// Function to trigger Xpub submission
+// Triggers validation and saving of entered Xpub key
 function submit_xpub_trigger() {
     $(document).on("click", "#xpubformbox input.submit", function(e) {
         e.preventDefault();
@@ -973,7 +973,7 @@ function submit_xpub_trigger() {
     })
 }
 
-// Function to validate Xpub
+// Performs comprehensive validation of Xpub key with address derivation and state updates
 function validate_xpub(thisnode) {
     const this_data = thisnode.data(),
         currency = this_data.currency,
@@ -1065,7 +1065,7 @@ function validate_xpub(thisnode) {
     currency_check(currency);
 }
 
-// Function to handle Xpub validation failure
+// Handles failed Xpub validation with error notification
 function xpub_fail(currency) {
     const errormessage = translate("invalidxpub", {
         "currency": currency
@@ -1074,7 +1074,7 @@ function xpub_fail(currency) {
     clear_xpub_inputs();
 }
 
-// Function to clear Xpub input fields
+// Resets Xpub input form state
 function clear_xpub_inputs() {
     $("#ad_info_wrap").slideUp(200, function() {
         $("#ad_info_wrap .td_box").html("");
@@ -1082,12 +1082,12 @@ function clear_xpub_inputs() {
     clear_xpub_checkboxes();
 }
 
-// Function to clear Xpub checkboxes
+// Resets Xpub confirmation checkboxes
 function clear_xpub_checkboxes() {
     $("#pk_confirmwrap, #matchwrap").attr("data-checked", "false").data("checked", false);
 }
 
-// Function to generate Xpub derivation list
+// Generates preview of derived addresses from Xpub key
 function xpub_derivelists(currency, xpub) {
     try {
         const coindat = getcoindata(currency),
@@ -1115,7 +1115,7 @@ function xpub_derivelists(currency, xpub) {
     }
 }
 
-// Function to check if Xpub is valid
+// Validates Xpub format against currency-specific patterns
 function check_xpub(address, prefix, currency) {
     const prefixes = {
             bitcoin: "zpub|xpub",
@@ -1126,7 +1126,7 @@ function check_xpub(address, prefix, currency) {
     return new RegExp(regex).test(address);
 }
 
-// Function to handle key management
+// Controls UI for key derivation settings and management
 function key_management() {
     $(document).on("click", ".cc_settinglist li[data-id='Key derivations'] .atext", function() {
         const thisnode = $(this),
@@ -1158,7 +1158,7 @@ function key_management() {
     })
 }
 
-// Function to handle SegWit switch
+// Manages SegWit address format switching with confirmations
 function segwit_switch() {
     $(document).on("mouseup", "#segw_box .toggle_segwit .switchpanel", function() {
         if (is_viewonly() === true) {
@@ -1203,12 +1203,12 @@ function segwit_switch() {
     })
 }
 
-// Function to trigger BIP39 settings
+// Triggers BIP39 key derivation settings UI
 function bip39_sc(coinsc) {
     $("#" + coinsc + "_settings .cc_settinglist li[data-id='Key derivations'] .atext").trigger("click");
 }
 
-// Function to display Xpub info popup
+// Displays detailed Xpub information with QR code and derived addresses
 function xpub_info_pu(currency, xpub) {
     const coindat = getcoindata(currency),
         bip32dat = getbip32dat(currency),
@@ -1263,14 +1263,14 @@ function xpub_info_pu(currency, xpub) {
     }, 550);
 }
 
-// Function to trigger API key addition
+// Triggers API key input dialog
 function trigger_apikey() {
     $(document).on("click", "#add_api", function() {
         add_apikey($(this).attr("data-api"));
     })
 }
 
-// Function to add API key
+// Displays form for adding new API key
 function add_apikey(api) {
     const get_key = $("#apikeys").data(api),
         api_key = get_key || "",
@@ -1292,7 +1292,7 @@ function add_apikey(api) {
     }, 800);
 }
 
-// Function to submit API key
+// Validates and saves entered API key
 function submit_apikey() {
     $(document).on("click", "#add_apikey input.submit", function(e) {
         e.preventDefault();
@@ -1317,7 +1317,7 @@ function submit_apikey() {
     })
 }
 
-// Function to reset coin settings
+// Triggers confirmation dialog for resetting coin settings
 function reset_coinsettings_trigger() {
     $(document).on("click", ".reset_cc_settings", function() {
         const thistrigger = $(this),
@@ -1328,7 +1328,7 @@ function reset_coinsettings_trigger() {
     })
 }
 
-// Perform coin settings reset
+// Initiates coin settings reset after user confirmation
 function reset_coinsettings(trigger) {
     const currency = trigger.attr("data-currency"),
         result = confirm(translate("resetconfirm", {
@@ -1340,7 +1340,7 @@ function reset_coinsettings(trigger) {
     reset_coinsettings_function(currency);
 }
 
-// Function to perform coin settings reset
+// Performs coin settings reset while preserving critical configurations
 function reset_coinsettings_function(currency) {
     const current_settings = br_get_local(currency + "_settings", true);
     if (current_settings) {

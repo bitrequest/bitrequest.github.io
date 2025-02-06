@@ -81,7 +81,7 @@ $(document).ready(function() {
     compare_seeds();
     //cs_callback
     //compare_seeds_callback
-    //restorestorage
+    //restore_storage
 
     // Url shortener
     urlshortener();
@@ -141,7 +141,7 @@ $(document).ready(function() {
 // ** Settings **
 
 // Account name
-// Handles the click event for editing account settings
+// Handles popup dialog for editing user account display name
 function editaccount() {
     $(document).on("click", "#accountsettings", function() {
         const ddat = [{
@@ -177,7 +177,7 @@ function editaccount() {
     })
 }
 
-// Handles the submission of account settings
+// Validates and saves new account display name, triggering UI notifications
 function submitaccount() {
     $(document).on("click", "#accountformbox input.submit", function(e) {
         e.preventDefault();
@@ -198,7 +198,7 @@ function submitaccount() {
 }
 
 // Standard fiat currency
-// Handles the click event for editing currency settings
+// Opens currency selection dialog with supported fiat currencies excluding BTC
 function editcurrency() {
     $(document).on("click", "#currencysettings", function() {
         const currencysettings = $("#currencysettings"),
@@ -271,14 +271,14 @@ function editcurrency() {
     })
 }
 
-// Handles the toggle event for setting default currency
+// Tracks state changes of the default currency toggle switch
 function toggle_defaultcurrency() {
     $(document).on("mouseup", "#toggle_defaultcurrency .switchpanel", function(e) {
         $(this).addClass("dc_changed");
     })
 }
 
-// Handles autocomplete functionality for currency input
+// Filters and validates currency input against supported currency list in real-time
 function autocompletecurrency() {
     $(document).on("input", "#currencyformbox input:first", function() {
         const thisinput = $(this),
@@ -301,7 +301,7 @@ function autocompletecurrency() {
     })
 }
 
-// Handles the submission of currency settings
+// Validates and saves currency preferences including symbol and default status
 function submitcurrency() {
     $(document).on("click", "#currencyformbox input.submit", function(e) {
         e.preventDefault();
@@ -346,7 +346,7 @@ function submitcurrency() {
 }
 
 // Language
-// Handles the click event for editing language settings
+// Displays language selection dialog with current locale and available translations
 function editlanguage() {
     $(document).on("click", "#langsettings", function() {
         const translation = translate("obj"),
@@ -415,7 +415,7 @@ function editlanguage() {
     })
 }
 
-// Handles the submission of language settings
+// Updates application language setting and reloads settings page with new locale
 function submitlang() {
     $(document).on("click", "#langformbox input.submit", function(e) {
         e.preventDefault();
@@ -440,7 +440,7 @@ function submitlang() {
 // SECURITY //
 
 // Pincode
-// Handles the click event for editing PIN settings
+// Displays PIN configuration dialog with reset option for existing PINs
 function editpin() {
     $(document).on("click", "#pinsettings", function() {
         if (haspin(true) === true) {
@@ -453,7 +453,7 @@ function editpin() {
     })
 }
 
-// Handles the click event for setting lock time
+// Opens dialog for configuring automatic lock timeout duration
 function locktime() {
     $(document).on("click", "#locktime, #lock_time", function() {
         const locktime = get_setting("pinsettings", "locktime"),
@@ -529,7 +529,7 @@ function locktime() {
     })
 }
 
-// Handles the submission of lock time settings
+// Saves lock timeout preference and updates PIN status notification
 function submit_locktime() {
     $(document).on("click", "#locktime_formbox input.submit", function(e) {
         e.preventDefault();
@@ -546,7 +546,7 @@ function submit_locktime() {
 }
 
 // Bip32 passphrase
-// Handles the click event for BIP32 passphrase settings
+// Initiates BIP32 passphrase management with PIN verification for existing passphrases
 function trigger_bip32() {
     $(document).on("click", "#bip39_passphrase", function() {
         if (glob_let.hasbip === true) {
@@ -559,14 +559,14 @@ function trigger_bip32() {
     })
 }
 
-// Handles the click event for hiding the seed panel
+// Attaches event listener to seed panel close button
 function hide_seed_panel_trigger() {
     $(document).on("click", "#seed_steps .seed_step .ss_header .icon-cross", function() {
         hide_seed_panel();
     })
 }
 
-// Hides the seed panel
+// Removes seed dialog CSS class and resets panel state
 function hide_seed_panel() {
     glob_const.body.removeClass("seed_dialog");
     $("#seed_panel").attr("class", "");
@@ -574,14 +574,14 @@ function hide_seed_panel() {
 }
 
 // Back up
-// Handles the click event for triggering database backup
+// Initiates database backup process via UI button or alert notification
 function backupdatabasetrigger() {
     $(document).on("click", "#backup, #alert", function() {
         backupdatabase();
     })
 }
 
-// Performs the database backup
+// Creates and displays backup dialog with Google Drive integration and change tracking
 function backupdatabase() {
     if ($("#popup").hasClass("showpu")) {
         return
@@ -598,7 +598,7 @@ function backupdatabase() {
             changespush.push("<li>" + value + " " + nrchanges + " '" + translate(key) + "'</li>");
         }
     });
-    const gd_active = (GD_pass().pass) ? true : false,
+    const gd_active = (gd_pass().pass) ? true : false,
         alert_icon = $("#alert > span"),
         nr_changes = alert_icon.text(),
         alert_title = alert_icon.attr("title"),
@@ -705,7 +705,7 @@ function backupdatabase() {
     popdialog(content, "triggersubmit", null, true);
 }
 
-// Handles the switch for including secret phrase in backup
+// Controls secret phrase inclusion toggle with confirmation dialog
 function sbu_switch() {
     $(document).on("mouseup", "#toggle_sbu_span .switchpanel", function() {
         const thistrigger = $(this),
@@ -724,7 +724,7 @@ function sbu_switch() {
     })
 }
 
-// Handles sharing of backup
+// Initiates system backup sharing with server-side caching
 function sharebu() {
     $(document).on("click", "#share_bu", function() {
         const result = confirm(translate("sharebu"));
@@ -760,7 +760,7 @@ function sharebu() {
     })
 }
 
-// Checks and processes system backup
+// Retrieves and displays cached system backup with expiration countdown
 function check_systembu(sbu) {
     const ro_dat = stripb64(sbu),
         ro_id = ro_dat.ro,
@@ -859,13 +859,13 @@ function check_systembu(sbu) {
     });
 }
 
-// Decodes base64 string and returns JSON object
+// Parses base64-encoded JSON data for system backup
 function stripb64(ab) {
     const b64 = ab.indexOf("%") > -1 ? ab.substr(0, ab.indexOf("%")) : ab;
     return JSON.parse(atob(b64));
 }
 
-// Displays message for expired system backup
+// Displays error dialog when system backup file has expired
 function systembu_expired() {
     const content = render_html([{
             "div": {
@@ -884,7 +884,7 @@ function systembu_expired() {
     popdialog(content, "triggersubmit", null, true);
 }
 
-// Handles the restoration of system backup
+// Validates and processes system backup restoration from base64 encoded data
 function restore_systembu() {
     $(document).on("click", "#system_backupformbox #restore_bu", function() {
         const result = confirm(translate("installsb"));
@@ -898,14 +898,14 @@ function restore_systembu() {
     })
 }
 
-// Handles cancellation of backup dialog
+// Closes backup dialog when cancel button is clicked
 function backupcd() {
     $(document).on("click", "#backupcd", function() {
         canceldialog();
     })
 }
 
-// Compiles backup data from localStorage
+// Serializes localStorage data into base64 encoded backup excluding specific keys
 function complilebackup() {
     const jsonfile = [],
         excludedKeys = [
@@ -932,12 +932,12 @@ function complilebackup() {
     return btoa("{" + jsonfile.join(",") + "}");
 }
 
-// Generates a filename for the backup file
+// Generates timestamped JSON backup filename with current locale
 function complilefilename() {
     return "bitrequest_backup_" + langcode + "_" + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_").replace(/\:/g, "_") + ".json";
 }
 
-// Handles the submission of backup download
+// Processes backup file download with iOS detection and confirmation dialog
 function submitbackup() {
     $(document).on("click", "#triggerdownload", function(e) {
         if (glob_const.body.hasClass("ios")) {
@@ -972,14 +972,14 @@ function submitbackup() {
 }
 
 // Restore backup
-// Initiates the restore process from backup
+// Initializes backup restoration interface from UI triggers
 function restorefrombackup() {
     $(document).on("click", "#restore, #rshome", function() {
         trigger_restore();
     })
 }
 
-// Triggers the restore process and displays the restore dialog
+// Displays restore dialog with Google Drive integration and file upload options
 function trigger_restore() {
     glob_let.backup_active = false;
     const restorenode = $("#restore"),
@@ -992,7 +992,7 @@ function trigger_restore() {
         lastbudevice = backupnode.data("device"),
         lastbackupdevice = lastbudevice === "folder-open" ? "" : "google-drive",
         lastbackupstring = lastbackup ? "<p class='icon-" + lastbackupdevice + "'>" + translate("lastbackup") + "<br/><span class='icon-" + lastbudevice + "'>" + lastbackup + "</span></p>" : "",
-        gd_active = GD_pass().pass,
+        gd_active = gd_pass().pass,
         showhidegd = gd_active ? "display:none" : "display:block",
         ddat = [{
                 "div": {
@@ -1032,11 +1032,11 @@ function trigger_restore() {
         });
     popdialog(content, "triggersubmit");
     if (gd_active) {
-        listappdata();
+        list_appdata();
     }
 }
 
-// Handles file selection for backup restoration
+// Validates uploaded backup file size and type before processing
 function restorebackup() {
     $(document).on("change", "#fileupload", function(n) {
         const file = this.files[0],
@@ -1064,7 +1064,7 @@ function restorebackup() {
     })
 }
 
-// Handles the submission of restore process
+// Processes backup restoration based on selected restore method
 function submitrestore() {
     $(document).on("click", "#restoreformbox input.submit", function(e) {
         e.preventDefault();
@@ -1086,7 +1086,7 @@ function submitrestore() {
     })
 }
 
-// Initiates the restore process
+// Validates and executes backup restoration with team invite handling
 function restore(jsonobject, bu_filename) {
     if (!check_backup(jsonobject)) {
         return;
@@ -1109,7 +1109,7 @@ function restore(jsonobject, bu_filename) {
     }
 }
 
-// Checks if the backup is valid
+// Validates backup compatibility with current system state
 function check_backup(jsonobject) {
     const is_team_invite = isteaminvite(jsonobject);
     if (glob_let.cashier_dat && glob_let.cashier_dat.cashier && !is_team_invite) {
@@ -1119,7 +1119,7 @@ function check_backup(jsonobject) {
     return true;
 }
 
-// Handles the restoration process from Google Drive
+// Handles Google Drive backup file restoration with authentication
 function submit_GD_restore() {
     $(document).on("click", "#gd_backuplist .restorefile", function() {
         const thisfield = $(this).parent("li"),
@@ -1130,7 +1130,7 @@ function submit_GD_restore() {
             }));
         if (result) {
             const thisfileid = thisfield.attr("data-gdbu_id"),
-                p = GD_pass();
+                p = gd_pass();
             if (p.pass) {
                 api_proxy({
                     "api_url": "https://www.googleapis.com/drive/v3/files/" + thisfileid + "?alt=media",
@@ -1165,7 +1165,7 @@ function submit_GD_restore() {
     })
 }
 
-// Function to scan and restore data from a JSON object
+// Extracts and decodes seed backup data from JSON object
 function scan_restore(jsonobject) {
     // Initialize global result object
     glob_let.resd = {
@@ -1185,7 +1185,7 @@ function scan_restore(jsonobject) {
 }
 
 
-// Algorithm to handle restoration process based on provided data
+// Determines restoration flow based on seed backup presence and state
 function restore_algo(pass_dat) {
     const cbu = check_backup(pass_dat);
     if (cbu === false) {
@@ -1208,7 +1208,7 @@ function restore_algo(pass_dat) {
     }
 }
 
-// Callback function to handle different types of restoration
+// Routes restoration process to appropriate handler based on backup source
 function restore_callback(pass_dat, newphrase) {
     const type = pass_dat.type;
     if (type) {
@@ -1224,7 +1224,7 @@ function restore_callback(pass_dat, newphrase) {
     return false
 }
 
-// Function to decode encrypted data using a pin hash
+// Decrypts AES-encoded data using PIN hash and validates JSON structure
 function s_decode(pdat, phash) {
     const pinhash = phash || $("#pinsettings").data("pinhash");
     if (!pinhash || !pdat) {
@@ -1251,7 +1251,7 @@ function s_decode(pdat, phash) {
     return false;
 }
 
-// Function to display a PIN entry dialog
+// Creates PIN entry dialog with timeout handling and callback storage
 function pin_dialog(pass_dat, cb) {
     canceldialog();
     const pinsettings = $("#pinsettings").data(),
@@ -1300,7 +1300,7 @@ function pin_dialog(pass_dat, cb) {
     }, 700);
 }
 
-// Event handler for PIN dialog submission
+// Validates PIN input and executes appropriate callback based on decryption result
 function submit_pin_dialog() {
     $(document).on("click", "#pindialog input.submit", function(e) {
         e.preventDefault();
@@ -1355,7 +1355,7 @@ function submit_pin_dialog() {
     })
 }
 
-// Initialize addresses after restoration callback
+// Resets address initialization state after successful backup restoration
 function restore_cb_init_addresses() {
     br_set_local("tp", now());
     const initdat = br_get_local("init", true),
@@ -1364,10 +1364,10 @@ function restore_cb_init_addresses() {
     br_set_local("init", iodat, true);
 }
 
-// Callback for file-based restoration
+// Executes file-based backup restoration and updates restoration history
 function restore_callback_file(pass_dat, np) {
     const newphrase = glob_let.hasbip === true ? np : true;
-    restorestorage(pass_dat.jasobj, newphrase);
+    restore_storage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
     const lastrestore = "last restore: " + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_");
     set_setting("restore", {
@@ -1383,10 +1383,10 @@ function restore_callback_file(pass_dat, np) {
     glob_const.w_loc.href = glob_const.w_loc.pathname + "?p=settings";
 }
 
-// Callback for Google Drive based restoration
+// Processes Google Drive backup restoration with file cleanup and sync
 function restore_callback_gd(pass_dat, np) {
     const newphrase = (glob_let.hasbip === true) ? np : true;
-    restorestorage(pass_dat.jasobj, newphrase);
+    restore_storage(pass_dat.jasobj, newphrase);
     rendersettings(["restore", "backup", "pinsettings"]); // exclude restore and backup settings
     const lastrestore = "last restore: " + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_");
     set_setting("restore", {
@@ -1398,7 +1398,7 @@ function restore_callback_gd(pass_dat, np) {
         savesettings("noalert");
         createfile(); // create new file from backup
         if (pass_dat.thisdeviceid === glob_const.deviceid) {
-            const p = GD_pass();
+            const p = gd_pass();
             if (p.pass) {
                 deletefile(pass_dat.thisfileid, null, p.token); // delete old backup file
             }
@@ -1413,7 +1413,7 @@ function restore_callback_gd(pass_dat, np) {
     }, 300);
 }
 
-// Function to display a dialog for handling different secret phrases during restoration
+// Displays decision dialog for handling conflicting secret phrases during restore
 function dphrase_dialog(pass_dat) {
     canceldialog();
     const sfb = translate("usesecretphrasefrombackup"),
@@ -1484,7 +1484,7 @@ function dphrase_dialog(pass_dat) {
     }, 700);
 }
 
-// Event handler for submitting the different phrase dialog
+// Processes user choice between backup and current secret phrases
 function submit_dphrase() {
     $(document).on("click", "#importseedbox input.submit", function(e) {
         e.preventDefault();
@@ -1499,7 +1499,7 @@ function submit_dphrase() {
     })
 }
 
-// Function to keep the current seed during restoration
+// Confirms and executes retention of current seed during restore process
 function keep_current_seed() {
     const result = confirm(translate("keepexistingsecretphrase"));
     if (result) {
@@ -1509,7 +1509,7 @@ function keep_current_seed() {
     }
 }
 
-// Function to restore using the backup seed
+// Initiates backup seed restoration with PIN verification
 function restore_bu_seed() {
     const is_dialog = $("#importseedbox"),
         bu_dat = is_dialog.data();
@@ -1520,7 +1520,7 @@ function restore_bu_seed() {
     bu_oldseed(bu_dat);
 }
 
-// Function to handle old seed backup
+// Manages seed replacement workflow with phrase verification
 function bu_oldseed(bu_dat) {
     canceldialog();
     manage_bip32({
@@ -1535,7 +1535,7 @@ function bu_oldseed(bu_dat) {
     seed_nav(3);
 }
 
-// Event handler for comparing seeds
+// Toggles seed comparison view with PIN verification for backup seed
 function compare_seeds() {
     $(document).on("click", "#compare_seeds", function() {
         const comparebox = $("#compare_box");
@@ -1572,7 +1572,7 @@ function compare_seeds() {
     })
 }
 
-// Callback function for comparing seeds
+// Prepares seed data for comparison display with PIN verification
 function cs_callback(pass) {
     const existing_so = ls_phrase_obj(),
         backup_so = ls_phrase_obj_parsed(glob_let.resd.bpdat),
@@ -1590,15 +1590,15 @@ function cs_callback(pass) {
     }, true)
 }
 
-// Function to display the comparison of seeds
+// Renders truncated seed phrases comparison in UI
 function compare_seeds_callback(compare) {
     $("#ext_sbox .sbox").text(compare.s1.join(" ") + " ...");
     $("#bu_sbox .sbox").text(compare.s2.join(" ") + " ...");
     $("#compare_box").slideDown(200);
 }
 
-// Function to restore storage data from JSON object
-function restorestorage(jsonobject, newphrase) {
+// Transfers data from JSON backup to localStorage with optional seed phrase handling
+function restore_storage(jsonobject, newphrase) {
     $.each(jsonobject, function(key, value) {
         if (key === "bitrequest_bpdat") {
             if (glob_let.test_derive && newphrase === true && glob_let.resd.bpdat) {
@@ -1614,7 +1614,7 @@ function restorestorage(jsonobject, newphrase) {
 }
 
 // CSV Export
-// Event handler for triggering CSV export
+// Opens CSV export configuration dialog with customizable data filters
 function csvexport_trigger() {
     $(document).on("click", "#csvexport", function() {
         const rq_arr = br_get_local("requests", true),
@@ -1698,7 +1698,7 @@ function csvexport_trigger() {
     });
 }
 
-// Event handler for submitting CSV export
+// Processes CSV file download with iOS compatibility check and user confirmation
 function submit_csvexport() {
     $(document).on("click", "#trigger_csvexport", function(e) {
         if (glob_const.body.hasClass("ios")) {
@@ -1725,7 +1725,7 @@ function submit_csvexport() {
     });
 }
 
-// Compiles the CSV data from requests and archive
+// Generates base64 encoded CSV data based on selected export filters
 function complile_csv() {
     const rq_arr = br_get_local("requests", true),
         archive_arr = br_get_local("archive", true),
@@ -1783,7 +1783,7 @@ function complile_csv() {
             layer = val.eth_layer2,
             network = getnetwork(layer),
             nw_string = network || "";
-        if (shouldIncludeRequest(status, type, incl_paid, incl_ins, incl_new, incl_pending, incl_pos, incl_outgoing, incl_incoming)) {
+        if (should_include_request(status, type, incl_paid, incl_ins, incl_new, incl_pending, incl_pos, incl_outgoing, incl_incoming)) {
             if (incl_from) {
                 csv_request[transclear("from")] = rqname;
             }
@@ -1818,8 +1818,8 @@ function complile_csv() {
     return btoa(csv_body);
 }
 
-// Helper function to determine if a request should be included in the CSV
-function shouldIncludeRequest(status, type, incl_paid, incl_ins, incl_new, incl_pending, incl_pos, incl_outgoing, incl_incoming) {
+// Filters requests based on status and type according to user preferences
+function should_include_request(status, type, incl_paid, incl_ins, incl_new, incl_pending, incl_pos, incl_outgoing, incl_incoming) {
     if (!incl_paid && status === "paid") return false;
     if (!incl_ins && status === "insufficient") return false;
     if (!incl_new && status === "new") return false;
@@ -1830,7 +1830,7 @@ function shouldIncludeRequest(status, type, incl_paid, incl_ins, incl_new, incl_
     return true;
 }
 
-// Renders the CSV data into a string format
+// Converts array of objects into CSV formatted string with headers
 function render_csv(arr) {
     const header_arr = [],
         inner_header_arr = [],
@@ -1851,7 +1851,7 @@ function render_csv(arr) {
     return doc_arr.join("\n");
 }
 
-// Handles sharing of the CSV export
+// Uploads CSV data to server for sharing with cloud storage integration
 function share_csv() {
     $(document).on("click", "#share_csv", function() {
         const csv_encode = complile_csv(),
@@ -1887,7 +1887,7 @@ function share_csv() {
     })
 }
 
-// Checks and processes the CSV export data
+// Validates and processes shared CSV export with expiration handling
 function check_csvexport(csv) {
     const ro_dat = stripb64(csv),
         ro_id = ro_dat.ro,
@@ -1976,7 +1976,7 @@ function check_csvexport(csv) {
     });
 }
 
-// Handles the submission of CSV download
+// Handles CSV download with platform checks and user notifications
 function submit_csvdownload() {
     $(document).on("click", "#trigger_csvdownload", function(e) {
         if (glob_const.body.hasClass("ios")) {
@@ -2002,7 +2002,7 @@ function submit_csvdownload() {
 }
 
 // Url shortener
-// Event handler for URL shortener settings
+// Displays URL shortener configuration dialog with Firebase and Bitly options
 function urlshortener() {
     $(document).on("click", "#url_shorten_settings", function() {
         const us_settings = $("#url_shorten_settings"),
@@ -2107,7 +2107,7 @@ function urlshortener() {
     })
 }
 
-// Toggles URL shortener on/off
+// Manages URL shortener state transitions and form visibility
 function togglebl() {
     $(document).on("mouseup", "#toggle_urlshortener .switchpanel", function(e) {
         const thispanel = $(this),
@@ -2141,7 +2141,7 @@ function togglebl() {
     })
 }
 
-// Handles selection of URL shortener service
+// Updates UI elements based on selected URL shortening service
 function pick_urlshortener_select() {
     $(document).on("click", "#usformbox .selectbox > .options span", function() {
         const thisselect = $(this),
@@ -2166,7 +2166,7 @@ function pick_urlshortener_select() {
     })
 }
 
-// Submits URL shortener settings
+// Validates and saves URL shortener configuration with API key verification
 function submit_urlshortener_select() {
     $(document).on("click", "#usformbox input.submit", function(e) {
         e.preventDefault();
@@ -2223,7 +2223,7 @@ function submit_urlshortener_select() {
     })
 }
 
-// Cryptocurrency price API settings
+// Opens cryptocurrency price API configuration dialog with provider selection
 function editccapi() {
     $(document).on("click", "#cmcapisettings", function() {
         const cc_apisettings = $("#cmcapisettings").data(),
@@ -2301,7 +2301,7 @@ function editccapi() {
     })
 }
 
-// Handles selection of cryptocurrency price API
+// Toggles CoinMarketCap API key input field visibility based on provider selection
 function pickcmcapiselect() {
     $(document).on("click", "#ccapiformbox .selectbox > .options span", function() {
         const thisselect = $(this),
@@ -2316,7 +2316,7 @@ function pickcmcapiselect() {
     })
 }
 
-// Submits cryptocurrency price API settings
+// Processes cryptocurrency API settings with key validation and persistence
 function submitccapi() {
     $(document).on("click", "#ccapiformbox input.submit", function(e) {
         e.preventDefault();
@@ -2352,7 +2352,7 @@ function submitccapi() {
     })
 }
 
-// Fiat price API settings
+// Renders fiat exchange rate API configuration dialog with Fixer integration
 function editfiatxrapi() {
     $(document).on("click", "#fiatapisettings", function() {
         const thisdata = $(this).data(),
@@ -2429,7 +2429,7 @@ function editfiatxrapi() {
     })
 }
 
-// Handles selection of fiat price API
+// Toggles Fixer API key input visibility based on provider selection
 function pickfiatxrapiselect() {
     $(document).on("click", "#fiatxrapiformbox .selectbox > .options span", function() {
         const thisselect = $(this),
@@ -2444,7 +2444,7 @@ function pickfiatxrapiselect() {
     })
 }
 
-// Submits fiat price API settings
+// Validates and persists fiat exchange rate API settings with key verification
 function submitfiatxrapi() {
     $(document).on("click", "#fiatxrapiformbox input.submit", function(e) {
         e.preventDefault();
@@ -2480,7 +2480,7 @@ function submitfiatxrapi() {
     })
 }
 
-// Triggers proxy dialog
+// Redirects to API proxy configuration dialog
 function trigger_proxy_dialog() {
     $(document).on("click", "#proxy_dialog", function() {
         canceldialog();
@@ -2490,7 +2490,7 @@ function trigger_proxy_dialog() {
     })
 }
 
-// API Proxy selection
+// Displays proxy configuration dialog with available servers and custom proxy input
 function pick_api_proxy() {
     $(document).on("click", "#api_proxy", function() {
         const proxies = all_proxies(),
@@ -2542,7 +2542,7 @@ function pick_api_proxy() {
     })
 }
 
-// Tests and appends a proxy to the list
+// Validates proxy endpoint availability via API ping test
 function test_append_proxy(optionlist, key, value, selected, dfault) { // make test api call
     $.ajax({
         "method": "POST",
@@ -2564,7 +2564,7 @@ function test_append_proxy(optionlist, key, value, selected, dfault) { // make t
     });
 }
 
-// Creates a list item for a proxy option
+// Renders proxy option with online status indicator and delete button
 function proxy_option_li(optionlist, live, key, value, selected, dfault) {
     const liveclass = live ? " live" : " offline",
         icon = live ? "connection" : "wifi-off",
@@ -2574,7 +2574,7 @@ function proxy_option_li(optionlist, live, key, value, selected, dfault) {
     option.slideDown(500);
 }
 
-// Submits the selected proxy
+// Validates and saves proxy configuration changes
 function submit_proxy() {
     $(document).on("click", "#proxyformbox input.submit", function(e) {
         e.preventDefault();
@@ -2599,7 +2599,7 @@ function submit_proxy() {
     })
 }
 
-// Hides the custom proxy field when selecting from options
+// Clears custom proxy input when selecting from predefined options
 function hide_custom_proxy_field() {
     $(document).on("click", "#proxyformbox .selectarrows", function() {
         const proxyformbox = $("#proxyformbox"),
@@ -2619,7 +2619,7 @@ function hide_custom_proxy_field() {
     });
 }
 
-// Tests a custom proxy
+// Validates custom proxy URL with server capability check
 function test_custom_proxy(value) { // make test api call
     const proxy_node = $("#api_proxy"),
         proxy_node_data = proxy_node.data(),
@@ -2676,7 +2676,7 @@ function test_custom_proxy(value) { // make test api call
     popnotify("error", translate("invalidurl"));
 }
 
-// Removes a selected proxy
+// Deletes custom proxy with confirmation and default proxy protection
 function remove_proxy() {
     $(document).on("click", "#proxyformbox .options .opt_icon_box .icon-bin", function(e) {
         e.preventDefault();
@@ -2712,18 +2712,18 @@ function remove_proxy() {
     })
 }
 
-// Completes a URL by adding protocol and ensuring it ends with a slash
+// Normalizes URL format with protocol and trailing slash
 function complete_url(url) {
     const cv1 = url.indexOf("://") > -1 ? url : "https://" + url;
     return cv1.slice(-1) === "/" ? cv1 : cv1 + "/";
 }
 
-// Retrieves the current proxy setting
+// Retrieves active proxy configuration from DOM data
 function c_proxy() {
     return $("#api_proxy").data("selected");
 }
 
-// API keys management
+// Opens API key management interface with current key values
 function apikeys() {
     $(document).on("click", "#apikeys", function() {
         const ak_data = $(this).data(),
@@ -2785,14 +2785,14 @@ function apikeys() {
     });
 }
 
-// Detects changes in API key input fields
+// Marks API key fields as modified when values change
 function api_input_change() {
     $(document).on("input", "#apikeyformbox input.ak_input", function() {
         $(this).addClass("changed");
     });
 }
 
-// Submits API keys for validation
+// Processes and validates modified API keys
 function submitapi() {
     $(document).on("click", "#apisubmit", function(e) {
         e.preventDefault();
@@ -2826,7 +2826,7 @@ function submitapi() {
     });
 }
 
-// Checks the validity of an API key
+// Initiates API-specific key validation process
 function checkapikey(thisref, apikeyval, lastinput) {
     const token_data = {
         "arbiscan": {
@@ -2889,7 +2889,7 @@ function checkapikey(thisref, apikeyval, lastinput) {
     json_check_apikey(data.keylength, thisref, data.payload, apikeyval, lastinput);
 }
 
-// Validates an API key using JSON requests
+// Performs HTTP request to verify API key validity
 function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
     if (apikeyval.length > keylength) {
         if (thisref === "infura" || thisref === "alchemy") {
@@ -3067,7 +3067,7 @@ function json_check_apikey(keylength, thisref, payload, apikeyval, lastinput) {
     api_fail(thisref, apikeyval);
 }
 
-// Handles API key validation failure
+// Handles API key validation errors with user feedback
 function api_fail(thisref, thisvalue) {
     const errormsg = translate("invalidapikeyname", {
             "thisref": thisref
@@ -3079,7 +3079,7 @@ function api_fail(thisref, thisvalue) {
     notify(errormsg);
 }
 
-// Updates API key attributes after validation
+// Updates API configuration after successful key validation
 function update_api_attr(thisref, thisvalue, lastinput) {
     const apiformbox = $("#apikeyformbox"),
         changeval = thisvalue || "";
@@ -3103,7 +3103,7 @@ function update_api_attr(thisref, thisvalue, lastinput) {
     cancelpaymentdialog();
 }
 
-// Complements API settings with new key values
+// Updates settings store with validated API credentials
 function complement_apisettings(thisref, thisvalue) {
     const kpairs = {};
     kpairs[thisref] = thisvalue;
@@ -3134,13 +3134,14 @@ function complement_apisettings(thisref, thisvalue) {
 }
 
 // Contact form
+// Initializes contact form dialog event handler
 function edit_contactform_trigger() {
     $(document).on("click", "#contactform", function() {
         edit_contactform();
     });
 }
 
-// Opens and populates the contact form
+// Renders contact/shipping form with prefilled user data
 function edit_contactform(checkout) {
     const contactform = $("#contactform"),
         thisdata = contactform.data(),
@@ -3171,7 +3172,7 @@ function edit_contactform(checkout) {
     }
 }
 
-// Checks and updates the state of contact form inputs
+// Validates contact form input field completeness
 function check_contactform() {
     $("#contactformbox .popform .cf_inputwrap").each(function() {
         const cf_inputwrap = $(this),
@@ -3181,7 +3182,7 @@ function check_contactform() {
     });
 }
 
-// Handles typing in contact form inputs
+// Updates form field validation state during user input
 function type_contactform() {
     $(document).on("input", "#contactformbox .cf_inputwrap input", function() {
         const thisinput = $(this),
@@ -3191,7 +3192,7 @@ function type_contactform() {
     });
 }
 
-// Submits the contact form data
+// Validates and saves contact form data with email format checking
 function submit_contactform() {
     $(document).on("click", "#contactformbox input.submit", function(e) {
         e.preventDefault();
@@ -3257,7 +3258,7 @@ function submit_contactform() {
 }
 
 // Permissions
-// Opens permissions dialog
+// Launches PIN-protected permissions configuration dialog
 function permissions() {
     $(document).on("click", "#permissions", function() {
         all_pinpanel({
@@ -3266,7 +3267,7 @@ function permissions() {
     })
 }
 
-// Callback for permissions dialog
+// Displays role selection dialog for user permissions
 function permissions_callback() {
     const thisnode = $("#permissions"),
         thisdata = thisnode.data(),
@@ -3326,7 +3327,7 @@ function permissions_callback() {
     popdialog(content, "triggersubmit");
 }
 
-// Handles submission of permissions changes
+// Processes and persists user role changes
 function submit_permissions() {
     $(document).on("click", "#permissions_formbox input.submit", function(e) {
         e.preventDefault();
@@ -3351,7 +3352,7 @@ function submit_permissions() {
 
 // Team invite
 
-// Team invite trigger
+// Initiates team invite process with PIN verification
 function team_invite_trigger() {
     $(document).on("click", "#teaminvite", function() {
         if (glob_let.hasbip && !glob_let.bipv) {
@@ -3370,7 +3371,7 @@ function team_invite_trigger() {
     });
 }
 
-// Opens team invite dialog
+// Creates team invite dialog with sharing options
 function team_invite() {
     const jsonencode = complile_teaminvite(),
         filename = "bitrequest_team_invite.json",
@@ -3390,7 +3391,7 @@ function team_invite() {
     popdialog(content, "triggersubmit");
 }
 
-// Compiles team invite data
+// Generates secure team configuration data package
 function complile_teaminvite() {
     const jsonfile = {},
         excludeKeys = [
@@ -3425,7 +3426,7 @@ function complile_teaminvite() {
     return btoa(JSON.stringify(adjusted));
 }
 
-// Adjusts object for team invite
+// Modifies configuration data for team member access
 function adjust_object(object, seedobj) {
     const seedid = seedobj.pid;
     object.bitrequest_cashier = {
@@ -3490,7 +3491,7 @@ function adjust_object(object, seedobj) {
     return object;
 }
 
-// Handles sharing of team invite
+// Processes team invite sharing with server upload
 function share_teaminvite() {
     $(document).on("click", "#send_invite", function() {
         const result = confirm(translate("sendinvite") + "?");
@@ -3524,7 +3525,7 @@ function share_teaminvite() {
     });
 }
 
-// Checks and processes team invite
+// Validates and displays team invite installation dialog
 function check_teaminvite(ro) {
     const ro_dat = stripb64(ro),
         ro_id = ro_dat.ro,
@@ -3614,7 +3615,7 @@ function check_teaminvite(ro) {
     });
 }
 
-// Triggers the installation of a team invite
+// Handles team invite installation confirmation
 function install_teaminvite_trigger() {
     $(document).on("click", "#install_teaminvite", function() {
         const this_bttn = $(this),
@@ -3637,7 +3638,7 @@ function install_teaminvite_trigger() {
     })
 }
 
-// Installs team invite data
+// Applies team configuration data and updates settings
 function install_teaminvite(jsonobject, bu_filename, iid) {
     $.each(jsonobject, function(key, val) {
         localStorage.setItem(key, JSON.stringify(val));
@@ -3661,17 +3662,17 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
     glob_const.w_loc.href = glob_const.w_loc.pathname + "?p=home";
 }
 
-// Checks if the object is a team invite
+// Detects if backup object contains team configuration
 function isteaminvite(jsonobject) {
     const cashier_entry = jsonobject.bitrequest_cashier;
     return (cashier_entry && cashier_entry.cashier) ? true : false;
 }
 
-// Displays user agent information
+// Displays detailed browser and environment information
 function check_useragent() {
     $(document).on("click", "#ua", function() {
         const refmatch = glob_const.ref_match ? "<span class='number'>" + glob_const.referrer + "</span>" : "<span class='number'>" + false + "</span>",
-            pdat = GD_pass(),
+            pdat = gd_pass(),
             pass = pdat.expired,
             expiresin = pdat.expires_in,
             rtoken = rt_obj(),
@@ -3684,7 +3685,7 @@ function check_useragent() {
                     "content": [{
                             "div": {
                                 "class": "pre",
-                                "content": syntaxHighlight(glob_const.useragent)
+                                "content": syntax_highlight(glob_const.useragent)
                             }
                         },
                         {
