@@ -1395,7 +1395,7 @@ function parse_seed(mnemonic, passphrase1) {
 // Generates random mnemonic phrase of specified length
 function newseed(numWords) {
     const strength = numWords / 3 * 32,
-        buffer = uint_8Array(strength / 8),
+        buffer = uint_8array(strength / 8),
         data = crypto.getRandomValues(buffer);
     return to_mnemonic(data);
 }
