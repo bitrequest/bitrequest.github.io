@@ -464,7 +464,7 @@ function mnemonic_to_binary_string(mnemonic) {
         if (wordIndex == -1) {
             return null;
         }
-        const binaryIndex = zfill(wordIndex.toString(2), 11);
+        const binaryIndex = pad_binary(wordIndex.toString(2), 11);
         idx.push(binaryIndex);
     }
     return idx.join("");
@@ -501,7 +501,7 @@ function byte_array_to_word_array(data) {
 function byte_array_to_binary_string(data) {
     let bin = "";
     for (let i = 0; i < data.length; i++) {
-        bin += zfill(data[i].toString(2), 8);
+        bin += pad_binary(data[i].toString(2), 8);
     }
     return bin;
 }
@@ -510,7 +510,7 @@ function byte_array_to_binary_string(data) {
 function hex_string_to_binary_string(hexString) {
     let binaryString = "";
     for (let i = 0; i < hexString.length; i++) {
-        binaryString += zfill(parseInt(hexString[i], 16).toString(2), 4);
+        binaryString += pad_binary(parseInt(hexString[i], 16).toString(2), 4);
     }
     return binaryString;
 }

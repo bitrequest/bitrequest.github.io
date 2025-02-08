@@ -10,8 +10,8 @@ $(document).ready(function() {
     }
 
     //close potential websockets and pings
-    forceclosesocket();
-    clearpinging();
+    force_close_socket();
+    stop_monitors();
 
     //Set classname for iframe	
     if (glob_const.inframe === true) {
@@ -54,9 +54,9 @@ $(document).ready(function() {
             splash_screen.remove();
         }, 600);
     }, 600);
-    showselect();
-    selectbox();
-    pickselect();
+    show_select_options();
+    handle_select_input();
+    handle_option_selection();
     canceldialogtrigger();
     console.log({
         glob_config
@@ -150,7 +150,7 @@ function setsymbols() {
 
 // Fetches top 2000 ERC20 tokens from CoinMarketCap, filters Ethereum tokens, and caches results
 function geterc20tokens() {
-    const cached_tokens = fetch_cached_erc20(true);
+    const cached_tokens = get_cached_tokens(true);
     if (cached_tokens) {
         setfunctions();
         return;
@@ -230,7 +230,7 @@ function convert_coinlist(token_list) {
 }
 
 // Validates PIN configuration and optional locktime settings from DOM data attributes
-function haspin(check_exists) {
+function check_pin_enabled(check_exists) {
     const pin_data = $("#pinsettings").data(),
         pin_hash = pin_data.pinhash;
     if (pin_hash) {
@@ -247,13 +247,13 @@ function haspin(check_exists) {
 }
 
 // Determines if app requires unlock based on configured timeout and last activity timestamp
-function islocked() {
+function check_pin_lock() {
     const url_params = geturlparameters(),
         lock_duration = $("#pinsettings").data("locktime"),
         last_lock = br_get_local("locktime"),
         time_since_lock = now() - last_lock,
         lock_seconds = parseFloat(lock_duration);
-    return url_params.payment ? false : (haspin() === true && time_since_lock > lock_seconds);
+    return url_params.payment ? false : (check_pin_enabled() === true && time_since_lock > lock_seconds);
 }
 
 // Set up various functions for the application
@@ -283,7 +283,7 @@ function setfunctions() {
         finishfunctions();
         return
     }
-    if (islocked() === true) {
+    if (check_pin_lock() === true) {
         const content = pinpanel(" pinwall global");
         showoptions(content, "pin");
         return
@@ -347,7 +347,7 @@ function finishfunctions() {
     //currency_check
     //currency_uncheck
     toggleswitch();
-    closeselectbox();
+    hide_select_options();
     radio_select();
     dialog_drawer();
     dragstart(); // reorder addresses
@@ -404,7 +404,7 @@ function finishfunctions() {
     //cancelpaymentdialog
     //hide_paymentdialog
     //reset_paymentdialog
-    //forceclosesocket
+    //force_close_socket
     cancelsharedialogtrigger();
     //cancelsharedialog
     showoptionstrigger();
@@ -504,22 +504,22 @@ function finishfunctions() {
     //get_alchemy_apikey
     //proxy_alert
     //fetchsymbol
-    //fixedcheck
+    //toggle_fixed_nav
     //ishome
     //triggersubmit
     //copytoclipboard
     //loader
     closeloader_trigger();
     //closeloader
-    //loadertext
-    //settitle
+    //set_loader_text
+    //update_page_title
     //pinpanel
     //generatePinpadHTML
     //switchpanel
     //try_next_api
-    //wake
-    //sleep
-    //vu_block
+    //prevent_screen_sleep
+    //allow_screen_sleep
+    //show_view_only_error
     //countdown
     //countdown_format
 
@@ -531,12 +531,12 @@ function finishfunctions() {
     // ** Get_app **
 
     setTimeout(function() { // wait for ios app detection
-        detectapp();
+        check_app_install_prompt();
         console.log({
             glob_const
         });
     }, 700);
-    //getapp
+    //show_app_download_prompt
     close_app_panel();
     //platform_icon
     gk();
@@ -547,7 +547,7 @@ function finishfunctions() {
     check_params();
     //check_intents;
     //expand_shoturl
-    //expand_bitly
+    //expand_bitly_url
     //ln_connect
 
     // ** Qr scanner **
@@ -680,7 +680,7 @@ function enterapp(pin_input) {
         pin_config = $("#pinsettings").data(),
         stored_pin = pin_config.pinhash,
         attempt_count = pin_config.attempts,
-        hashed_pin = hashcode(pin_input),
+        hashed_pin = generate_hash(pin_input),
         timestamp = now(),
         is_global = pin_container.hasClass("global");
     if (hashed_pin == stored_pin) {
@@ -688,20 +688,20 @@ function enterapp(pin_input) {
             br_set_local("locktime", timestamp);
             finishfunctions();
             setTimeout(function() {
-                playsound(glob_const.waterdrop);
+                play_audio(glob_const.waterdrop);
                 canceloptions(true);
             }, 500);
         } else if (pin_container.hasClass("admin")) {
             br_set_local("locktime", timestamp);
             loadpage("?p=currencies");
             $(".currenciesbttn .self").addClass("activemenu");
-            playsound(glob_const.waterdrop);
+            play_audio(glob_const.waterdrop);
             canceloptions(true);
         } else if (pin_container.hasClass("reset")) {
             br_set_local("locktime", timestamp);
             $("#pintext").text(translate("enternewpin"));
             pin_container.addClass("p_admin").removeClass("pinwall reset");
-            playsound(glob_const.waterdrop);
+            play_audio(glob_const.waterdrop);
             setTimeout(function() {
                 $("#pininput").val("");
             }, 200);
@@ -712,7 +712,7 @@ function enterapp(pin_input) {
             } else {
                 br_set_local("locktime", timestamp);
             }
-            playsound(glob_const.waterdrop);
+            play_audio(glob_const.waterdrop);
             canceloptions(true);
         }
         pin_config.attempts = 0;
@@ -720,7 +720,7 @@ function enterapp(pin_input) {
         remove_cashier();
     } else {
         if (!navigator.vibrate) {
-            playsound(glob_const.funk);
+            play_audio(glob_const.funk);
         }
         shake(pin_container);
         setTimeout(function() {
@@ -787,7 +787,7 @@ function pinvalidate(pin_button) {
         if (updated_input == $("#pininput").val()) {
             const old_pin = get_setting("pinsettings", "pinhash"),
                 pin_settings = $("#pinsettings"),
-                pin_hash = hashcode(updated_input),
+                pin_hash = generate_hash(updated_input),
                 pin_status = "pincode activated",
                 lock_duration = pin_settings.data("locktime");
             pin_settings.data({
@@ -796,18 +796,18 @@ function pinvalidate(pin_button) {
                 "selected": pin_status
             }).find("p").text(pin_status);
             savesettings();
-            playsound(glob_const.waterdrop);
+            play_audio(glob_const.waterdrop);
             canceloptions(true);
             const pin_callback = pin_container.data("pincb");
             if (pin_callback) {
                 pin_callback.func(pin_callback.args);
             }
             notify(translate("datasaved"));
-            enc_s(seed_decrypt(old_pin));
+            encrypt_seed_data(seed_decrypt(old_pin));
         } else {
             topnotify(translate("pinmatch"));
             if (navigator.vibrate) {} else {
-                playsound(glob_const.funk);
+                play_audio(glob_const.funk);
             }
             shake(pin_container);
             confirm_field.val("");
@@ -857,7 +857,7 @@ function ios_init() {
 function ios_redirections(url) {
     if (!url) return;
     const query_string = get_search(url),
-        url_params = renderparameters(query_string);
+        url_params = parse_url_params(query_string);
     if (url_params.xss) return;
     const current_url = glob_const.w_loc.href.toUpperCase(),
         new_url = url.toUpperCase();
@@ -873,7 +873,7 @@ function ios_redirections(url) {
             return
         }
         openpage(url, "", "payment");
-        updaterequeststatesrefresh();
+        refresh_request_states();
         return
     }
     if (url_params.i) {
@@ -947,7 +947,7 @@ function lettercountkeydown() {
             return
         }
         if (chars_remaining === 0) {
-            playsound(glob_const.funk);
+            play_audio(glob_const.funk);
             event.preventDefault();
         }
     });
@@ -972,7 +972,7 @@ function lettercountinput() {
 function choosecurrency() {
     $(document).on("click touch", "#allcurrencies li.choose_currency", function() {
         const currency_code = $(this).attr("data-currency"),
-            currency_data = getcoindata(currency_code);
+            currency_data = get_coin_config(currency_code);
         addaddress({
             "currency": currency_code,
             "ccsymbol": currency_data.ccsymbol,
@@ -992,7 +992,7 @@ function togglenav() {
             $(".navstyle li .self").removeClass("activemenu");
             return
         }
-        if (islocked() === true) {
+        if (check_pin_lock() === true) {
             if (is_viewonly() === true) {
                 loadpage("?p=currencies");
                 $(".currenciesbttn .self").addClass("activemenu");
@@ -1082,7 +1082,7 @@ function loadfunction(page_name, event_type) {
     loadpageevent(page_name);
     const page_translation = translate(page_name),
         display_title = page_translation || page_name;
-    settitle(display_title);
+    update_page_title(display_title);
     cancel_url_dialogs();
 }
 
@@ -1140,7 +1140,7 @@ function fixednav() {
         if (glob_const.html.hasClass("paymode")) {
             return
         }
-        fixedcheck($(document).scrollTop());
+        toggle_fixed_nav($(document).scrollTop());
     });
 }
 
@@ -1169,7 +1169,7 @@ function triggertxfunction(trigger_elem) {
         manual_addresses = address_list.not(".seed"),
         address_count = manual_addresses.length,
         random_pool = (address_count > 1) ? manual_addresses : first_address,
-        random_index = getrandomnumber(1, address_count) - 1,
+        random_index = generate_random_number(1, address_count) - 1,
         selected_address = (use_random === true) ? (first_address.hasClass("seed")) ? first_address : manual_addresses.eq(random_index) : first_address,
         address_data = selected_address.data(),
         wallet_address = address_data.address,
@@ -1191,7 +1191,7 @@ function triggertxfunction(trigger_elem) {
                 return false;
             }
         } else {
-            if (bipv_pass() === false) {
+            if (validate_trial_status() === false) {
                 return false;
             }
         }
@@ -1256,7 +1256,7 @@ function finishtxfunction(currency_code, wallet_address, saved_url, display_titl
     if (url_params.xss) {
         return
     }
-    const coin_data = getcoindata(currency_code),
+    const coin_data = get_coin_config(currency_code),
         settings = $("#currencysettings").data(),
         use_default = settings.default,
         currency_symbol = (use_default === true && glob_const.offline === false) ? settings.currencysymbol : coin_data.ccsymbol,
@@ -1292,7 +1292,7 @@ function payrequest() {
             layer2_network = request_data.eth_layer2; // detected l2
         let layer2_index = false;
         if (layer2_network) {
-            layer2_index = get_network_index(layer2_network);
+            layer2_index = find_network_index(layer2_network);
         }
         const payment_type = request_data.payment,
             unit = request_data.uoa,
@@ -1439,7 +1439,7 @@ function cmst_callback(address_item) {
 // Adds a new seed ID to localStorage whitelist
 function add_seed_whitelist(seed_id) {
     const stored_whitelist = br_get_local("swl", true),
-        seed_list = br_dobj(stored_whitelist);
+        seed_list = get_default_object(stored_whitelist);
     if (!seed_list.includes(seed_id)) {
         seed_list.push(seed_id);
     }
@@ -1449,14 +1449,14 @@ function add_seed_whitelist(seed_id) {
 // Verifies if seed ID exists in whitelist
 function seed_wl(seed_id) {
     const stored_whitelist = br_get_local("swl", true),
-        seed_list = br_dobj(stored_whitelist);
+        seed_list = get_default_object(stored_whitelist);
     return seed_list.includes(seed_id);
 }
 
 // Adds new address to localStorage whitelist
 function add_address_whitelist(wallet_address) {
     const stored_whitelist = br_get_local("awl", true),
-        address_list = br_dobj(stored_whitelist);
+        address_list = get_default_object(stored_whitelist);
     if (!address_list.includes(wallet_address)) {
         address_list.push(wallet_address);
     }
@@ -1466,7 +1466,7 @@ function add_address_whitelist(wallet_address) {
 // Verifies if address exists in whitelist
 function addr_whitelist(wallet_address) {
     const stored_whitelist = br_get_local("awl", true),
-        address_list = br_dobj(stored_whitelist);
+        address_list = get_default_object(stored_whitelist);
     return address_list.includes(wallet_address);
 }
 
@@ -1525,7 +1525,7 @@ function toggleswitch() {
 
 // ** Selectbox **
 // Displays selectbox options dropdown
-function showselect() {
+function show_select_options() {
     $(document).on("click", ".selectarrows", function() {
         const all_option_lists = $(".options"),
             option_list = $(this).next(".options");
@@ -1545,7 +1545,7 @@ function showselect() {
 }
 
 // Handles input interaction for selectbox elements
-function selectbox() {
+function handle_select_input() {
     $(document).on("click", ".selectbox > input:not([readonly])", function() {
         const select_input = $(this),
             current_value = select_input.val(),
@@ -1561,7 +1561,7 @@ function selectbox() {
 }
 
 // Processes option selection in selectbox dropdown
-function pickselect() {
+function handle_option_selection() {
     $(document).on("click", ".selectbox > .options span", function() {
         const selected_option = $(this),
             option_text = selected_option.text(),
@@ -1574,7 +1574,7 @@ function pickselect() {
 }
 
 // Hides all open selectboxes in popup
-function closeselectbox() {
+function hide_select_options() {
     $("#popup .selectbox .options").removeClass("showoptions");
 }
 
@@ -1701,12 +1701,12 @@ function keyup() {
                 return
             }
             if (glob_const.paymentdialogbox.find("input").is(":focus")) {
-                playsound(glob_const.funk);
+                play_audio(glob_const.funk);
                 return
             }
             const time_passed = now() - glob_let.sa_timer;
             if (time_passed < 500) { // prevent clicking too fast
-                playsound(glob_const.funk);
+                play_audio(glob_const.funk);
                 return
             }
             glob_const.paymentpopup.removeClass("flipping");
@@ -1719,7 +1719,7 @@ function keyup() {
                 return
             }
             if (glob_const.paymentdialogbox.hasClass("norequest") && (glob_const.paymentdialogbox.attr("data-pending") == "ispending" || (glob_const.offline === true))) {
-                playsound(glob_const.funk);
+                play_audio(glob_const.funk);
                 return
             }
             flip_right1();
@@ -1733,12 +1733,12 @@ function keyup() {
                 return
             }
             if (glob_const.paymentdialogbox.find("input").is(":focus")) {
-                playsound(glob_const.funk);
+                play_audio(glob_const.funk);
                 return
             }
             const time_passed = now() - glob_let.sa_timer;
             if (time_passed < 500) { // prevent clicking too fast
-                playsound(glob_const.funk);
+                play_audio(glob_const.funk);
                 return
             }
             glob_const.paymentpopup.removeClass("flipping");
@@ -1747,7 +1747,7 @@ function keyup() {
                 return
             }
             if (glob_const.paymentdialogbox.hasClass("norequest") && (glob_const.paymentdialogbox.attr("data-pending") == "ispending" || (glob_const.offline === true))) {
-                playsound(glob_const.funk);
+                play_audio(glob_const.funk);
                 return
             }
             flip_left1();
@@ -1795,7 +1795,7 @@ function escapeandback() {
         return
     }
     if ($("#popup .selectbox .options").hasClass("showoptions")) {
-        closeselectbox();
+        hide_select_options();
         return
     }
     if ($("#popup").hasClass("active")) {
@@ -1888,14 +1888,14 @@ function after_scan_init(api_settings) {
 function after_scan(request_data, api_settings, scan_params) {
     if (glob_const.inframe) {
         loader(true);
-        loadertext(translate("lookuppayment", {
+        set_loader_text(translate("lookuppayment", {
             "currency": request_data.payment,
             "blockexplorer": api_settings.name
         }));
     } else {
         hide_paymentdialog();
     }
-    continue_select(request_data, api_settings, scan_params);
+    route_api_request(request_data, api_settings, scan_params);
     socket_info(api_settings, true);
 }
 
@@ -1917,7 +1917,7 @@ function set_recent_requests() {
         const currency = request.payment,
             wallet_address = request.address,
             stored_requests = br_get_local("recent_requests", true),
-            requests_array = br_dobj(stored_requests, true),
+            requests_array = get_default_object(stored_requests, true),
             payment_data = {
                 "currency": currency,
                 "cmcid": request.cmcid,
@@ -2102,7 +2102,7 @@ function addcurrency(coin_data) {
         return
     }
     if (is_viewonly() === true) {
-        vu_block();
+        show_view_only_error();
         return
     }
     addaddress(coin_data, false);
@@ -2115,7 +2115,7 @@ function derive_first_check(currency) {
         if (derivation_types) {
             const has_active_derives = active_derives(currency, derivation_types);
             if (has_active_derives === false) {
-                return derive_addone(currency);
+                return derive_new_address(currency);
             }
         }
     }
@@ -2195,7 +2195,7 @@ function address_xpub_change() {
             xpub_fail(currency);
             return
         }
-        clear_xpub_inputs();
+        reset_xpub_form();
     })
 }
 
@@ -2277,7 +2277,7 @@ function submitaddresstrigger() {
 // Opens Lightning node connection dialog
 function add_lightning() {
     $(document).on("click", "#connectln", function() {
-        lm_function();
+        render_lightning_interface();
         return
     })
 }
@@ -2285,7 +2285,7 @@ function add_lightning() {
 // Opens ERC20 token addition dialog
 function add_erc20() {
     $(document).on("click", "#add_erc20, #choose_erc20", function() {
-        const token_registry = fetch_cached_erc20();
+        const token_registry = get_cached_tokens();
         let token_options = "";
         $.each(token_registry, function(key, token) {
             token_options += "<span data-id='" + token.cmcid + "' data-currency='" + token.name + "' data-ccsymbol='" + token.symbol.toLowerCase() + "' data-contract='" + token.contract + "' data-pe='none'>" + token.symbol + " | " + token.name + "</span>";
@@ -2561,7 +2561,7 @@ function validateaddress(addr_data, view_key) {
     if (index === 1) {
         if (is_erc20 === true) {
             buildpage(addr_data, true);
-            append_coinsetting(currency, compress_l2obj2(currency, token_symbol));
+            append_coinsetting(currency, compress_layer2_config(currency, token_symbol));
             save_cc_settings(currency);
         }
         if (glob_const.body.hasClass("showstartpage")) {
@@ -2592,7 +2592,7 @@ function validateaddress(addr_data, view_key) {
 
 // Validates address format against currency regex
 function check_address(address, currency) {
-    const regex = getcoindata(currency).regex;
+    const regex = get_coin_config(currency).regex;
     return regex ? new RegExp(regex).test(address) : false;
 }
 
@@ -2605,10 +2605,10 @@ function check_vk(view_key) {
 function send_trigger() {
     $(document).on("click", ".send", function() {
         if (glob_let.hasbip === true) {
-            compatible_wallets($(this).attr("data-currency"));
+            list_compatible_wallets($(this).attr("data-currency"));
             return
         }
-        playsound(glob_const.funk);
+        play_audio(glob_const.funk);
     })
 }
 
@@ -2696,7 +2696,7 @@ function cancelpaymentdialogtrigger() {
         }
         const time_elapsed = now() - glob_let.cp_timer;
         if (time_elapsed < 1500) { // prevent clicking too fast
-            playsound(glob_const.funk);
+            play_audio(glob_const.funk);
             console.log("clicking too fast");
             return
         }
@@ -2759,11 +2759,11 @@ function reset_paymentdialog() {
     }, 600);
     closeloader();
     clearTimeout(glob_let.request_timer);
-    clearpinging();
+    stop_monitors();
     closenotify();
-    sleep();
-    abort_ndef();
-    clear_tpto();
+    allow_screen_sleep();
+    stop_nfc_scan();
+    clear_polling_timeout();
     glob_let.lnd_ph = false,
         request = null,
         helper = null,
@@ -2771,17 +2771,17 @@ function reset_paymentdialog() {
         glob_let.apikey_fails = false;
     reset_overflow(); // reset overflow limits
     const socket_timeout = setTimeout(function() {
-        closesocket();
+        close_socket();
     }, 500, function() {
         clearTimeout(socket_timeout);
     });
 }
 
 // Forces WebSocket connection closure
-function forceclosesocket(socket_id) {
+function force_close_socket(socket_id) {
     console.log("force close");
-    clearpinging(socket_id);
-    closesocket(socket_id);
+    stop_monitors(socket_id);
+    close_socket(socket_id);
 }
 
 // Initializes share dialog cancellation handler
@@ -2811,7 +2811,7 @@ function showoptionstrigger() {
         const addr_data = $(this).closest("li").data(),
             address = addr_data.address;
         if (address === "lnurl") {
-            playsound(glob_const.funk);
+            play_audio(glob_const.funk);
             return
         }
         const saved_request = $("#requestlist li[data-address='" + address + "']"),
@@ -2963,7 +2963,7 @@ function newrequest() {
                     popdialog(warning_content, "triggersubmit");
                     return
                 }
-            } else if (bipv_pass() === false) {
+            } else if (validate_trial_status() === false) {
                 canceloptions();
                 return
             }
@@ -3111,7 +3111,7 @@ function showtransaction_trigger() {
                         }
                     }
                 }
-                playsound(glob_const.funk);
+                play_audio(glob_const.funk);
                 return
             }
             const currency = request_data.payment,
@@ -3206,7 +3206,7 @@ function addressinfo() {
 function show_pk() {
     $(document).on("click", "#show_pk", function() {
         if (is_viewonly() === true) {
-            vu_block();
+            show_view_only_error();
             return
         }
         const show_btn = $(this),
@@ -3253,7 +3253,7 @@ function show_pk_cb(private_key) {
 function show_vk() {
     $(document).on("click", "#show_vk", function() {
         if (is_viewonly() === true) {
-            vu_block();
+            show_view_only_error();
             return
         }
         const show_btn = $(this),
@@ -3334,7 +3334,7 @@ function blockexplorer_url(currency, is_tx, is_erc20, source, network_layer) {
         const explorer_data = glob_config.blockexplorers.find(filter => filter.name === explorer_name);
         if (!explorer_data) return false;
         const base_prefix = explorer_data.prefix,
-            coin_data = getcoindata(currency),
+            coin_data = get_coin_config(currency),
             url_prefix = base_prefix === "currencysymbol" ? coin_data.ccsymbol :
             base_prefix === "currency" ? currency : base_prefix,
             path_segment = url_prefix ? url_prefix + "/" : "",
@@ -3719,10 +3719,10 @@ function share_receipt() {
             }));
         if (user_confirm === true) {
             loader(true);
-            loadertext(translate("generatereceipt"));
+            set_loader_text(translate("generatereceipt"));
             const account_name = $("#accountsettings").data("selected"),
                 shared_title = "bitrequest_receipt_" + request_id + ".pdf",
-                url_hash = hashcode(request_id + shared_title);
+                url_hash = generate_hash(request_id + shared_title);
             shorten_url(shared_title, pdf_url, fetch_aws("img_receipt_icon.png"), true, url_hash);
             closeloader();
         }
@@ -3751,7 +3751,7 @@ function lnd_lookup_invoice(proxy, impl, hash, node_id, peer_id, password) {
             }
         };
     loader(true);
-    loadertext(translate("connecttolnur", {
+    set_loader_text(translate("connecttolnur", {
         "url": lnurl_encode("lnurl", proxy_host)
     }));
     $.ajax(request_data).done(function(response) {
@@ -3772,7 +3772,7 @@ function lnd_lookup_invoice(proxy, impl, hash, node_id, peer_id, password) {
                     "content": [{
                             "div": {
                                 "class": "invoice_body",
-                                "content": "<pre>" + syntax_highlight(response) + "</pre><div class='inv_pb'><img src='" + c_icons(impl) + "' class='lnd_icon' title='" + impl + "'/> Powered by " + impl + "</div>"
+                                "content": "<pre>" + highlight_json_syntax(response) + "</pre><div class='inv_pb'><img src='" + c_icons(impl) + "' class='lnd_icon' title='" + impl + "'/> Powered by " + impl + "</div>"
                             }
                         },
                         {
@@ -3846,17 +3846,17 @@ function get_pdf_url(request_data) {
         ln_suffix = is_lightning ? " (lightning)" : "",
         invoice_data = {
             "Request ID": requestid,
-            [transclear("currency")]: clear_accents(payment + ln_suffix),
+            [transclear("currency")]: remove_diacritics(payment + ln_suffix),
             [transclear("amount")]: formatted_amount + " " + currency_symbol,
             [transclear("status")]: transclear(status_text),
             [transclear("type")]: transclear(request_type),
             [transclear("receivingaddress")]: address
         };
     if (exists(requestname)) {
-        invoice_data[transclear("from")] = clear_accents(requestname);
+        invoice_data[transclear("from")] = remove_diacritics(requestname);
     }
     if (exists(requesttitle)) {
-        invoice_data[transclear("title")] = "'" + clear_accents(requesttitle) + "'";
+        invoice_data[transclear("title")] = "'" + remove_diacritics(requesttitle) + "'";
     }
     if (is_incoming) {
         invoice_data[transclear("created")] = request_date;
@@ -4448,12 +4448,12 @@ function appendrequest(rd) {
 function add_historical_data(transaction_list, tx_history) {
     let history_item = false;
     $.each(tx_history, function(data, tx_data) {
-        history_item = append_tx_li(tx_data);
+        history_item = create_transaction_item(tx_data);
         if (history_item) {
-            const history_title = data_title(tx_data);
+            const history_title = format_transaction_details(tx_data);
             if (history_title) {
                 if (history_item.attr("title") === history_title) {} else {
-                    history_item.append(hs_for(history_title)).attr("title", history_title);
+                    history_item.append(wrap_historic_data(history_title)).attr("title", history_title);
                 }
             }
             transaction_list.append(history_item.data(tx_data));
@@ -4496,7 +4496,7 @@ function saveaddresses(currency, trigger_update) {
         return
     }
     br_remove_local("cc_" + currency);
-    const coin_data = getcoindata(currency);
+    const coin_data = get_coin_config(currency);
     if (coin_data) {
         if (coin_data.erc20) {
             br_remove_local(currency + "_settings");
@@ -4504,7 +4504,7 @@ function saveaddresses(currency, trigger_update) {
             return
         }
     }
-    reset_coinsettings_function(currency);
+    restore_default_settings(currency);
 }
 
 // Saves active requests to localStorage and triggers change notification
@@ -4546,14 +4546,14 @@ function save_cc_settings(currency, trigger_update) {
 
 // Manages change counter and triggers backup notifications based on thresholds
 function updatechanges(key, trigger_update, suppress_alert) {
-    const pass_state = gd_pass();
+    const pass_state = get_auth_status();
     if (pass_state.active === false) {} else {
         if (pass_state.pass) {
-            update_appdata(pass_state);
+            sync_drive_data(pass_state);
             return
         }
         if (pass_state.expired) {
-            t_expired(pass_state.expired, "uad");
+            handle_token_expiration(pass_state.expired, "uad");
             return
         }
     }
@@ -4604,7 +4604,7 @@ function change_alert() {
         if ([25, 50, 150, 200, 250].includes(change_count)) {
             canceldialog();
             const backup_timer = setTimeout(function() {
-                backupdatabase();
+                backup_database();
             }, 3000, function() {
                 clearTimeout(backup_timer);
             });
@@ -4684,7 +4684,7 @@ function open_url() {
             target_type = link_elem.attr("target"),
             dest_url = link_elem.attr("href");
         loader(true);
-        loadertext(translate("loadurl", {
+        set_loader_text(translate("loadurl", {
             "url": dest_url
         }));
         if (glob_const.is_ios_app === true) {
@@ -4730,14 +4730,14 @@ function proxy_alert(version) {
 
 // Finds ERC20 token metadata by currency name from cache
 function fetchsymbol(currency_name) {
-    const token_list = fetch_cached_erc20();
+    const token_list = get_cached_tokens();
     return token_list.find(function(token) {
         return token.name === currency_name;
     }) || {};
 }
 
 // Toggles fixed navigation based on scroll position
-function fixedcheck(scroll_pos) {
+function toggle_fixed_nav(scroll_pos) {
     const header_height = $(".showmain #header").outerHeight();
     if (scroll_pos > header_height) {
         $(".showmain").addClass("fixednav");
@@ -4795,16 +4795,16 @@ function closeloader_trigger() {
 // Removes loading overlay and resets text
 function closeloader() {
     $("#loader").removeClass("showpu active toploader");
-    loadertext(translate("loading"));
+    set_loader_text(translate("loading"));
 }
 
 // Updates loading overlay text content
-function loadertext(loader_text) {
+function set_loader_text(loader_text) {
     $("#loader #loadtext > span").text(loader_text);
 }
 
 // Updates document title and meta tags
-function settitle(page_title) {
+function update_page_title(page_title) {
     const full_title = page_title + " | " + glob_const.apptitle;
     glob_const.titlenode.text(full_title);
     glob_const.ogtitle.attr("content", full_title);
@@ -4813,7 +4813,7 @@ function settitle(page_title) {
 // Manages PIN entry dialog with timeout and callback handling
 function all_pinpanel(callback, show_top, pin_set) {
     const top_class = (show_top) ? " ontop" : "";
-    if (haspin(pin_set) === true) {
+    if (check_pin_enabled(pin_set) === true) {
         const last_lock_time = br_get_local("locktime"),
             time_since_lock = now() - last_lock_time,
             is_recent = (time_since_lock < 10000);
@@ -4832,7 +4832,7 @@ function all_pinpanel(callback, show_top, pin_set) {
 // Creates PIN entry UI with keypad and admin controls
 function pinpanel(panel_class, pin_callback, is_set) {
     const css_class = (panel_class === undefined) ? "" : panel_class,
-        header_text = haspin(is_set) === true ? translate("pleaseenter") : translate("createpin");
+        header_text = check_pin_enabled(is_set) === true ? translate("pleaseenter") : translate("createpin");
     return $("<div id='pinfloat' class='enterpin" + css_class + "'>\
         <p id='pintext'>" + header_text + "</p>\
         <p id='confirmpin'>" + translate("confirmyourpin") + "</p>\
@@ -4876,7 +4876,7 @@ function try_next_api(api_group, current_api) {
 }
 
 // Acquires screen wake lock to prevent display sleep
-function wake() {
+function prevent_screen_sleep() {
     if (glob_const.wl) {
         const request_wakelock = async () => {
             try {
@@ -4893,7 +4893,7 @@ function wake() {
 }
 
 // Releases screen wake lock to allow display sleep
-function sleep() {
+function allow_screen_sleep() {
     if (glob_const.wl) {
         if (glob_let.wakelock) {
             glob_let.wakelock.release();
@@ -4903,9 +4903,9 @@ function sleep() {
 }
 
 // Shows notification and plays sound for view-only restrictions
-function vu_block() {
+function show_view_only_error() {
     notify(translate("cashiernotallowed"));
-    playsound(glob_const.funk);
+    play_audio(glob_const.funk);
 }
 
 // Updates recent requests visibility based on localStorage
@@ -4930,8 +4930,8 @@ function toggle_rr(show_requests) {
 
 // ** Get_app **
 // Determines if app promotion should be shown based on device/platform
-function detectapp() {
-    const device_type = getdevicetype();
+function check_app_install_prompt() {
+    const device_type = detect_device_type();
     glob_const.deviceid = device_type;
     if (glob_const.inframe === true || glob_const.is_android_app === true || glob_const.is_ios_app === true) {
         return
@@ -4953,9 +4953,9 @@ function detectapp() {
                 }
             }
             if (device_type == "iPhone" || device_type == "iPad" || device_type == "Macintosh") {
-                getapp("apple");
+                show_app_download_prompt("apple");
             } else {
-                getapp("android");
+                show_app_download_prompt("android");
             }
         }
     } else {
@@ -4964,7 +4964,7 @@ function detectapp() {
 }
 
 // Shows platform-specific app store download panel
-function getapp(platform_type) {
+function show_app_download_prompt(platform_type) {
     const app_panel = $("#app_panel");
     app_panel.html("");
     const is_android = platform_type === "android",
@@ -5045,7 +5045,7 @@ function check_intents(encoded_scheme) {
                 macaroon_data = connection_data.macaroon;
 
             if (rest_url && macaroon_data) {
-                lm_function();
+                render_lightning_interface();
                 ln_connect({
                     "lnconnect": btoa(rest_url),
                     "macaroon": macaroon_data,
@@ -5074,7 +5074,7 @@ function check_intents(encoded_scheme) {
 // Expands shortened URLs with caching and platform handling
 function expand_shoturl(input_param) {
     if (input_param.startsWith("4bR")) { // handle bitly shortlink
-        expand_bitly(input_param);
+        expand_bitly_url(input_param);
         return
     }
     const cached_url = br_get_session("longurl_" + input_param);
@@ -5112,7 +5112,7 @@ function expand_shoturl(input_param) {
                         if (status == "file exists") {
                             const long_url = parsed_data.sharedurl;
                             if (long_url) {
-                                const local_url = makelocal(long_url);
+                                const local_url = make_local(long_url);
                                 ios_redirections(local_url);
                                 br_set_session("longurl_" + input_param, local_url);
                                 return
@@ -5131,7 +5131,7 @@ function expand_shoturl(input_param) {
 }
 
 // Handles Bitly URL expansion with API fallback
-function expand_bitly(input_param) {
+function expand_bitly_url(input_param) {
     if (glob_const.hostlocation === "local") {
         return
     }
@@ -5171,7 +5171,7 @@ function expand_bitly(input_param) {
         }
     }).fail(function(xhr, status, error) {
         if (get_next_proxy()) {
-            expand_bitly(input_param);
+            expand_bitly_url(input_param);
             return
         }
         glob_const.w_loc.href = "http://bit.ly/" + bitly_id;
@@ -5250,7 +5250,7 @@ function abort_cam(error_reason) {
 function cam_trigger() {
     $(document).on("click", ".qrscanner", function() {
         loader(true);
-        loadertext(translate("loadingcamera"));
+        set_loader_text(translate("loadingcamera"));
         const qr_element = $(this),
             currency = qr_element.attr("data-currency"),
             scan_type = qr_element.attr("data-id");
@@ -5325,7 +5325,7 @@ function handle_address(result, payment) {
         is_extended_pub = (end_result.length > 103),
         cleaned_result = (payment === "nimiq") ? end_result.replace(/\s/g, "") : end_result,
         is_valid = is_extended_pub ? check_xpub(end_result, xpub_prefix(payment), payment) : check_address(cleaned_result, payment);
-    clear_xpub_inputs();
+    reset_xpub_form();
     if (is_valid === true) {
         $("#popup .formbox input.address").val(cleaned_result);
         if (!glob_const.supportsTouch) {

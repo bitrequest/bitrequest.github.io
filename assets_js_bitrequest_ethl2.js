@@ -2,21 +2,21 @@ $(document).ready(function() {
 
     // ** Sockets / Polling **
 
-    //init_l2_sockets
-    //init_layer2
-    //omni_scan
-    //omni_poll
-    //scan_ethl2_socket
+    //initialize_layer2_connections
+    //setup_layer2_monitoring
+    //start_layer2_scan
+    //start_layer2_polling
+    //execute_layer2_scan
 
     // ** Monirors **
 
-    //query_ethl2_api
-    //scan_ethl2_api
-    //poll_ethl2_api
+    //route_layer2_api_request
+    //scan_layer2_networks
+    //poll_layer2_network
 
     // ** L2 Networks **
 
-    //ethl2_networks
+    //route_layer2_operation
     //arbitrum_apis
     //polygon_apis
     //bnb_apis
@@ -24,27 +24,27 @@ $(document).ready(function() {
     // ** L2 Coinsettings **
 
     edit_l2();
-    l2nw_toggle();
-    l2nw_switch();
-    submit_l2();
+    toggle_network_panel();
+    toggle_network_status();
+    save_layer2_settings();
 
     // ** L2 Helpers **
 
-    //compress_l2obj2
-    //set_l2_status_init
-    //set_l2_status
-    //fertch_l2s
-    //get_network_index
-    //get_l2_node
-    //omni_rdo
+    //compress_layer2_config
+    //initialize_network_status
+    //update_network_status
+    //get_layer2_config
+    //find_network_index
+    //get_network_node_config
+    //create_layer2_request
 
 });
 
 // ** Sockets / Polling **
 
 // Initializes Layer 2 socket connections for Ethereum and ERC20 token transactions
-function init_l2_sockets(payment, address, ct, socket_node) {
-    const l2_options = fertch_l2s(payment);
+function initialize_layer2_connections(payment, address, ct, socket_node) {
+    const l2_options = get_layer2_config(payment);
     if (l2_options) {
         const ctracts = ct || contracts(request.currencysymbol),
             l2_arr = [],
@@ -57,8 +57,8 @@ function init_l2_sockets(payment, address, ct, socket_node) {
                 selected = set_select || inarr;
             if (selected) {
                 l2_arr.push(index);
-                const sn = socket_node || get_l2_node(payment, l2, l2_dat, "websockets");
-                init_layer2(sn, address, ctracts);
+                const sn = socket_node || get_network_node_config(payment, l2, l2_dat, "websockets");
+                setup_layer2_monitoring(sn, address, ctracts);
             }
             index++;
         });
@@ -72,7 +72,7 @@ function init_l2_sockets(payment, address, ct, socket_node) {
 }
 
 // Sets up Layer 2 blockchain scanning for given address and contract
-function init_layer2(socket_node, address, ctracts, retry) {
+function setup_layer2_monitoring(socket_node, address, ctracts, retry) {
     const l2 = q_obj(socket_node, "network");
     if (l2) {
         const contract = ctracts ? ctracts[l2] : false;
@@ -84,24 +84,24 @@ function init_layer2(socket_node, address, ctracts, retry) {
             web3_erc20_websocket(socket_node, address, contract, ping_id);
             return
         }
-        omni_scan(socket_node, contract, ping_id, retry);
+        start_layer2_scan(socket_node, contract, ping_id, retry);
         return
     }
     console.error("error", "missing api data");
 }
 
 // Starts Layer 2 blockchain scanning with configurable interval
-function omni_scan(socket_node, contract, ping_id, retry) {
+function start_layer2_scan(socket_node, contract, ping_id, retry) {
     const timeout = 7000;
     if (socket_node) {
-        const rdo = omni_rdo(timeout, "scanning", contract, ping_id);
+        const rdo = create_layer2_request(timeout, "scanning", contract, ping_id);
         if (!rdo) return false;
         if (retry) {
-            clearpinging(ping_id);
-            scan_ethl2_socket(rdo, socket_node);
+            stop_monitors(ping_id);
+            execute_layer2_scan(rdo, socket_node);
         }
         glob_let.pinging[ping_id] = setInterval(function() {
-            scan_ethl2_socket(rdo, socket_node);
+            execute_layer2_scan(rdo, socket_node);
         }, timeout);
         return
     }
@@ -109,18 +109,18 @@ function omni_scan(socket_node, contract, ping_id, retry) {
 }
 
 // Initiates polling-based Layer 2 blockchain monitoring
-function omni_poll(api_data, contract) {
+function start_layer2_polling(api_data, contract) {
     if (api_data) {
-        const rdo = omni_rdo(30000, "polling", contract);
+        const rdo = create_layer2_request(30000, "polling", contract);
         if (!rdo) return false;
-        scan_ethl2_socket(rdo, api_data);
+        execute_layer2_scan(rdo, api_data);
         return
     }
     notify(translate("websocketoffline"), 500000, "yes");
 }
 
 // Executes Layer 2 scanning operation with provided config
-function scan_ethl2_socket(rdo, api_data) {
+function execute_layer2_scan(rdo, api_data) {
     if (api_data) {
         const contract = rdo.contract,
             dat = {
@@ -129,36 +129,36 @@ function scan_ethl2_socket(rdo, api_data) {
                 api_data,
                 rdo
             };
-        ethl2_networks(dat);
+        route_layer2_operation(dat);
     }
 }
 
 // ** Monitors **
 
 // Routes Layer 2 API queries based on pending status
-function query_ethl2_api(rd, rdo, api_dat, l2) {
+function route_layer2_api_request(rd, rdo, api_dat, l2) {
     const network = rd.eth_layer2 || l2;
     if (rdo.pending === "polling" && network) {
-        poll_ethl2_api(rd, rdo, api_dat, network);
+        poll_layer2_network(rd, rdo, api_dat, network);
         return
     }
-    scan_ethl2_api(rd, rdo, api_dat, network);
+    scan_layer2_networks(rd, rdo, api_dat, network);
 }
 
 // Scans Layer 2 networks for transaction data
-function scan_ethl2_api(rd, rdo, api_dat, network) {
+function scan_layer2_networks(rd, rdo, api_dat, network) {
     glob_let.l2_fetched = {};
     const req_l2_arr = rd.eth_l2s;
     if (empty_obj(req_l2_arr)) { // No l2's
-        api_callback(rdo);
+        finalize_request_state(rdo);
         return
     }
     const currency = rd.payment,
-        l2_options = fertch_l2s(currency);
+        l2_options = get_layer2_config(currency);
     if (l2_options) {
         const ctracts = contracts(rd.currencysymbol);
         if (network) { // l2 network is known so only scan this network
-            const api_data = api_dat || get_l2_node(currency, network, l2_options[network], "apis");
+            const api_data = api_dat || get_network_node_config(currency, network, l2_options[network], "apis");
             if (api_data) {
                 const contract = ctracts[network],
                     dat = {
@@ -167,7 +167,7 @@ function scan_ethl2_api(rd, rdo, api_dat, network) {
                         api_data,
                         rdo
                     };
-                ethl2_networks(dat, network);
+                route_layer2_operation(dat, network);
             }
             return
         }
@@ -183,7 +183,7 @@ function scan_ethl2_api(rd, rdo, api_dat, network) {
                 } else {
                     const inarr = $.inArray(index, req_l2_arr) !== -1;
                     if (inarr) {
-                        const api_data = api_dat || get_l2_node(currency, l2, l2_dat, "apis");
+                        const api_data = api_dat || get_network_node_config(currency, l2, l2_dat, "apis");
                         if (api_data) {
                             const contract = ctracts[l2],
                                 dat = {
@@ -192,7 +192,7 @@ function scan_ethl2_api(rd, rdo, api_dat, network) {
                                     api_data,
                                     rdo
                                 };
-                            ethl2_networks(dat, l2);
+                            route_layer2_operation(dat, l2);
                         }
                     }
                 }
@@ -202,10 +202,10 @@ function scan_ethl2_api(rd, rdo, api_dat, network) {
                     const timeout = setTimeout(function() {
                         if (glob_let.l2_fetched.id === requestid) { // Process tx if found
                             rd.eth_layer2 = glob_let.l2_fetched.l2;
-                            compareamounts(rd, rdo);
+                            validate_payment_amounts(rd, rdo);
                             glob_let.l2_fetched = {};
                         } else { // Move to next request
-                            api_callback(rdo);
+                            finalize_request_state(rdo);
                         }
                     }, add_delay, function() {
                         clearTimeout(timeout);
@@ -218,9 +218,9 @@ function scan_ethl2_api(rd, rdo, api_dat, network) {
 }
 
 // Polls specific Layer 2 network API for updates
-function poll_ethl2_api(rd, rdo, api_dat, l2) {
-    const l2_options = fertch_l2s(rd.payment),
-        api_data = api_dat || get_l2_node(rd.payment, l2, l2_options[l2], "apis"),
+function poll_layer2_network(rd, rdo, api_dat, l2) {
+    const l2_options = get_layer2_config(rd.payment),
+        api_data = api_dat || get_network_node_config(rd.payment, l2, l2_options[l2], "apis"),
         api_name = api_data.name,
         network = api_data.network;
     if (api_name && network) {
@@ -233,14 +233,14 @@ function poll_ethl2_api(rd, rdo, api_dat, l2) {
                 api_data,
                 rdo
             };
-        ethl2_networks(dat, network);
+        route_layer2_operation(dat, network);
     }
 }
 
 // ** L2 Networks **
 
 // Routes operations to specific Layer 2 network handlers
-function ethl2_networks(dat, network) {
+function route_layer2_operation(dat, network) {
     if (dat) {
         const url = q_obj(dat, "api_data.url");
         if (url) {
@@ -264,9 +264,9 @@ function ethl2_networks(dat, network) {
 function arbitrum_apis(dat) {
     const api_name = q_obj(dat, "api_data.name");
     if (api_name === "arbiscan") {
-        omniscan_fetch(dat.rd, dat.api_data, dat.rdo, dat.contract);
+        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract);
     } else if (api_name === "etherscan") {
-        omniscan_fetch(dat.rd, dat.api_data, dat.rdo, dat.contract, 42161);
+        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract, 42161);
     } else if (api_name === "infura") {
         infura_txd_rpc(dat.rd, dat.api_data, dat.rdo, dat.contract, 42161);
     }
@@ -276,9 +276,9 @@ function arbitrum_apis(dat) {
 function polygon_apis(dat) {
     const api_name = q_obj(dat, "api_data.name");
     if (api_name === "polygonscan") {
-        omniscan_fetch(dat.rd, dat.api_data, dat.rdo, dat.contract);
+        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract);
     } else if (api_name === "etherscan") {
-        omniscan_fetch(dat.rd, dat.api_data, dat.rdo, dat.contract, 137);
+        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract, 137);
     } else if (api_name === "infura") {
         infura_txd_rpc(dat.rd, dat.api_data, dat.rdo, dat.contract, 137);
     }
@@ -288,11 +288,11 @@ function polygon_apis(dat) {
 function bnb_apis(dat) {
     const api_name = q_obj(dat, "api_data.name");
     if (api_name === "bscscan") {
-        omniscan_fetch(dat.rd, dat.api_data, dat.rdo, dat.contract);
+        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract);
     } else if (api_name === "binplorer") {
-        ethplorer_fetch(dat.rd, dat.api_data, dat.rdo);
+        process_ethereum_transactions(dat.rd, dat.api_data, dat.rdo);
     } else if (api_name === "etherscan") {
-        omniscan_fetch(dat.rd, dat.api_data, dat.rdo, dat.contract, 56);
+        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract, 56);
     } else if (api_name === "infura") {
         infura_txd_rpc(dat.rd, dat.api_data, dat.rdo, dat.contract, 56);
     }
@@ -304,10 +304,10 @@ function bnb_apis(dat) {
 function edit_l2() {
     $(document).on("click", ".cc_settinglist li[data-id='layer2']", function() {
         const thiscurrency = $(this).children(".liwrap").attr("data-currency");
-        let l2_options = fertch_l2s(thiscurrency);
+        let l2_options = get_layer2_config(thiscurrency);
         const old_format = q_obj(l2_options, "arbitrum.selected") !== undefined; // look for uncompressed l2 format
         if (old_format) {
-            l2_options = q_obj(compress_l2obj2(thiscurrency), "layer2.options"); // convert to compressed l2 format
+            l2_options = q_obj(compress_layer2_config(thiscurrency), "layer2.options"); // convert to compressed l2 format
             const csnode = cs_node(thiscurrency, "layer2"); // update l2 settings li data
             csnode.data("options", l2_options);
         }
@@ -435,7 +435,7 @@ function edit_l2() {
 }
 
 // Controls Layer 2 network panel visibility
-function l2nw_toggle() {
+function toggle_network_panel() {
     $(document).on("mouseup", "#l2_formbox h2.nwheading", function(e) {
         const target = $(e.target);
         if (target.hasClass("switchpanel")) {
@@ -453,7 +453,7 @@ function l2nw_toggle() {
 }
 
 // Manages Layer 2 network enable/disable switching
-function l2nw_switch() {
+function toggle_network_status() {
     $(document).on("mouseup", "#l2_formbox h2.nwheading .switchpanel", function() {
         const this_switch = $(this),
             sboxwrap = this_switch.parent("h2.nwheading").next(".sboxwrap");
@@ -467,7 +467,7 @@ function l2nw_switch() {
 }
 
 // Processes Layer 2 settings form submission
-function submit_l2() {
+function save_layer2_settings() {
     $(document).on("click", "#l2_formbox input.submit", function(e) {
         e.preventDefault();
         const payment = $(this).attr("data-currency"),
@@ -504,7 +504,7 @@ function submit_l2() {
 // ** L2 Helpers **
 
 // Compresses Layer 2 configuration object
-function compress_l2obj2(currency, ccsymbol) {
+function compress_layer2_config(currency, ccsymbol) {
     // Initialize the result object with the base structure
     const eth_settings = JSON.parse(JSON.stringify(getcoinsettings(currency))), // make a deep clone to prevent duplicates
         cc_symbol = ccsymbol || q_obj(fetchsymbol(currency), "symbol"),
@@ -531,24 +531,24 @@ function compress_l2obj2(currency, ccsymbol) {
 }
 
 // Initializes Layer 2 network status display
-function set_l2_status_init(sn, stat) {
+function initialize_network_status(sn, stat) {
     if (!sn) {
         return
     }
     if (stat === "paid") {
         const timeout = setTimeout(function() {
             glob_let.l2s = {};
-            set_l2_status(sn, stat);
+            update_network_status(sn, stat);
         }, 1000, function() {
             clearTimeout(timeout);
         });
         return
     }
-    set_l2_status(sn, stat);
+    update_network_status(sn, stat);
 }
 
 // Updates Layer 2 network status display
-function set_l2_status(sn, stat) {
+function update_network_status(sn, stat) {
     const network = sn.network,
         l2_object = glob_let.l2s,
         status = stat ? "online" : "offline",
@@ -589,20 +589,20 @@ function set_l2_status(sn, stat) {
 }
 
 // Retrieves Layer 2 configuration for currency
-function fertch_l2s(currency) {
+function get_layer2_config(currency) {
     const l2_setting = cs_node(currency, "layer2", true);
     return q_obj(l2_setting, "options");
 }
 
 // Finds index of Layer 2 network in settings
-function get_network_index(l2_network) {
+function find_network_index(l2_network) {
     const l2s = q_obj(get_erc20_settings(), "layer2.options"),
         networks = Object.keys(l2s);
     return networks.indexOf(l2_network) === -1 ? false : networks.indexOf(l2_network);
 }
 
 // Retrieves node configuration for specified network
-function get_l2_node(payment, network, l2_dat, type) {
+function get_network_node_config(payment, network, l2_dat, type) {
     const selected = q_obj(l2_dat, type);
     if (selected) {
         const eth_settings = getcoinsettings(payment),
@@ -615,7 +615,7 @@ function get_l2_node(payment, network, l2_dat, type) {
 }
 
 // Creates Layer 2 request data object
-function omni_rdo(timeout, pending, contract, ping_id) {
+function create_layer2_request(timeout, pending, contract, ping_id) {
     if (!request) return false;
     const rq_init = request.rq_init,
         request_ts_utc = rq_init + glob_const.timezone,

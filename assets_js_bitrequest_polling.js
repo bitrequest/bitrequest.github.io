@@ -1,32 +1,32 @@
 // pick API / RPC
 
-//tx_polling_init
+//start_transaction_monitor
 //tx_polling
-//tx_polling_l1
-//tx_polling_l2
-//clear_tpto
-//address_polling_init
-//address_polling
-//init_xmr_node
+//monitor_main_chain
+//monitor_layer2_chain
+//clear_polling_timeout
+//start_address_monitor
+//check_address_transactions
+//connect_monero_node
 //xmr_node_access
-//init_xmr_ping
-//ping_xmr_node
+//start_monero_monitor
+//check_monero_transactions
 //confirmations
-//clearpinging
-//reset_recent
+//stop_monitors
+//clear_recent_requests
 
 // pick API / RPC
 // Initiates transaction monitoring and sets UI state for payment processing
-function tx_polling_init(tx_data, api_data, retry) {
+function start_transaction_monitor(tx_data, api_data, retry) {
     reset_overflow();
     glob_let.rpc_attempts = {};
     glob_let.apikey_fails = false;
-    tx_polling(tx_data, api_data, retry);
+    route_transaction_monitor(tx_data, api_data, retry);
     glob_const.paymentdialogbox.addClass("transacting");
 }
 
 // Directs transaction monitoring to appropriate chain (L1/L2) based on transaction data
-function tx_polling(tx_data, api_dat, retry) {
+function route_transaction_monitor(tx_data, api_dat, retry) {
     const url_params = geturlparameters();
     if (url_params.xss) {
         return
@@ -37,16 +37,16 @@ function tx_polling(tx_data, api_dat, retry) {
                 const tx_hash = tx_data.txhash;
                 if (tx_hash) {
                     if (!tx_data.setconfirmations) {
-                        confirmations(tx_data, true);
+                        validate_confirmations(tx_data, true);
                         return
                     }
                     const is_layer2 = tx_data.eth_layer2;
                     if (is_layer2) {
                         request.txhash = tx_hash;
-                        tx_polling_l2(is_layer2, api_dat, retry);
+                        monitor_layer2_chain(is_layer2, api_dat, retry);
                         return
                     }
-                    tx_polling_l1(tx_data, api_dat, retry);
+                    monitor_main_chain(tx_data, api_dat, retry);
                     return
                 }
             }
@@ -56,8 +56,8 @@ function tx_polling(tx_data, api_dat, retry) {
 }
 
 // Monitors Layer 1 blockchain transactions with configurable retry intervals
-function tx_polling_l1(tx_data, api_dat, retry) {
-    clear_tpto();
+function monitor_main_chain(tx_data, api_dat, retry) {
+    clear_polling_timeout();
     const timeout = retry ? 10 : 30000,
         api_data = api_dat || q_obj(helper, "api_info.data"),
         rdo = { // request data object
@@ -79,48 +79,48 @@ function tx_polling_l1(tx_data, api_dat, retry) {
             "viewkey": request.viewkey
         };
     glob_let.tpto = setTimeout(function() {
-        continue_select(rd, api_data, rdo);
+        route_api_request(rd, api_data, rdo);
     }, timeout, function() {
-        clear_tpto();
+        clear_polling_timeout();
     });
 }
 
 // Monitors Layer 2 blockchain transactions using network-specific API endpoints
-function tx_polling_l2(eth_layer2, api_dat, retry) {
-    clear_tpto();
+function monitor_layer2_chain(eth_layer2, api_dat, retry) {
+    clear_polling_timeout();
     const timeout = retry ? 10 : 30000,
-        l2_config = fertch_l2s(request.payment),
-        api_data = api_dat || get_l2_node(request.payment, eth_layer2, l2_config[eth_layer2], "apis"),
+        l2_config = get_layer2_config(request.payment),
+        api_data = api_dat || get_network_node_config(request.payment, eth_layer2, l2_config[eth_layer2], "apis"),
         contracts_list = contracts(request.currencysymbol),
         contract = contracts_list ? contracts_list[eth_layer2] : false;
     glob_let.tpto = setTimeout(function() {
-        omni_poll(api_data, contract);
+        start_layer2_polling(api_data, contract);
     }, timeout, function() {
-        clear_tpto();
+        clear_polling_timeout();
     });
 }
 
 // Terminates the active transaction polling timeout
-function clear_tpto() {
+function clear_polling_timeout() {
     clearTimeout(glob_let.tpto);
     glob_let.tpto = 0;
 }
 
 // Sets up periodic monitoring of wallet address for incoming transactions
-function address_polling_init(time_out, api_dat, retry) {
+function start_address_monitor(time_out, api_dat, retry) {
     const addr_id = request.address,
         poll_interval = time_out || 7000,
         api_data = api_dat || q_obj(helper, "api_info.data");
     if (api_data) {
         if (retry) {
-            clearpinging(addr_id);
-            address_polling(poll_interval, api_data);
+            stop_monitors(addr_id);
+            check_address_transactions(poll_interval, api_data);
         }
         socket_info({
             "url": api_data.name
         }, true, true);
         glob_let.pinging[addr_id] = setInterval(function() {
-            address_polling(poll_interval, api_data);
+            check_address_transactions(poll_interval, api_data);
         }, poll_interval);
         return
     }
@@ -128,7 +128,7 @@ function address_polling_init(time_out, api_dat, retry) {
 }
 
 // Executes a single polling cycle to check for new transactions at specified address
-function address_polling(timeout, api_data) {
+function check_address_transactions(timeout, api_data) {
     const init_time = request.rq_init,
         req_time_utc = init_time + glob_const.timezone,
         req_time = req_time_utc - 15000, // 15 second margin
@@ -144,7 +144,7 @@ function address_polling(timeout, api_data) {
             timeout,
             "cachetime": cache_time
         };
-    continue_select(request, api_data, rdo);
+    route_api_request(request, api_data, rdo);
     poll_animate();
     socket_info(api_data, true, true);
 }
@@ -154,9 +154,9 @@ function address_polling(timeout, api_data) {
 // XMR Poll
 
 // Establishes initial connection to Monero node with view key authentication
-function init_xmr_node(cachetime, address, vk) {
+function connect_monero_node(cachetime, address, vk) {
     if (xmr_node_access(vk)) {
-        init_xmr_ping(cachetime, address, vk);
+        start_monero_monitor(cachetime, address, vk);
         return
     }
     const payload = {
@@ -190,14 +190,14 @@ function init_xmr_node(cachetime, address, vk) {
             const start_height = response.start_height;
             if (start_height > -1) { // success!
                 set_xmr_node_access(vk);
-                init_xmr_ping(cachetime, address, vk);
+                start_monero_monitor(cachetime, address, vk);
                 return
             }
         }
         notify(translate("notmonitored"), 500000, "yes");
     }).fail(function(xhr, stat, err) {
         if (get_next_proxy()) {
-            init_xmr_node(cachetime, address, vk);
+            connect_monero_node(cachetime, address, vk);
             return
         }
         notify(translate("errorvk"));
@@ -218,7 +218,7 @@ function xmr_node_access(vk) {
 }
 
 // Creates periodic polling interval for Monero address monitoring
-function init_xmr_ping(cachetime, address, vk) {
+function start_monero_monitor(cachetime, address, vk) {
     const init_time = request.rq_init,
         req_time_utc = init_time + glob_const.timezone,
         req_time = req_time_utc - 10000; // 10 second compensation
@@ -227,14 +227,14 @@ function init_xmr_ping(cachetime, address, vk) {
     }, true, true);
     glob_let.pinging[address] = setInterval(function() {
         poll_animate();
-        ping_xmr_node(cachetime, address, vk, req_time);
+        check_monero_transactions(cachetime, address, vk, req_time);
     }, 12000);
 }
 
 // Queries Monero node for new transactions using view key authentication
-function ping_xmr_node(cachetime, address, vk, request_ts) {
+function check_monero_transactions(cachetime, address, vk, request_ts) {
     if (!isopenrequest()) { // only when request is visible
-        forceclosesocket();
+        force_close_socket();
         return;
     }
     const api_name = "mymonero api",
@@ -261,7 +261,7 @@ function ping_xmr_node(cachetime, address, vk, request_ts) {
             socket_info({
                 "url": api_name
             }, false, true);
-            clearpinging(address);
+            stop_monitors(address);
             return
         }
         const txs = response.transactions;
@@ -279,8 +279,8 @@ function ping_xmr_node(cachetime, address, vk, request_ts) {
                 if (tx_exists.length) {
                     return false;
                 }
-                clearpinging(address);
-                tx_polling_init(tx_data, {
+                stop_monitors(address);
+                start_transaction_monitor(tx_data, {
                     "api": true,
                     "name": "blockchair_xmr",
                     "display": true
@@ -290,16 +290,16 @@ function ping_xmr_node(cachetime, address, vk, request_ts) {
         });
     }).fail(function() {
         if (get_next_proxy()) {
-            ping_xmr_node(cachetime, address, vk, request_ts);
+            check_monero_transactions(cachetime, address, vk, request_ts);
             return
         }
-        clearpinging(address);
+        stop_monitors(address);
         notify(translate("websocketoffline"), 500000, "yes");
     });
 }
 
 // Updates UI and payment status based on transaction confirmation count
-function confirmations(tx_data, direct, ln) {
+function validate_confirmations(tx_data, direct, ln) {
     const crypto_symbol = tx_data.ccsymbol;
     if (crypto_symbol) {
         let new_status = "pending";
@@ -319,7 +319,7 @@ function confirmations(tx_data, direct, ln) {
                     "confirmations": 0
                 }, true);
                 notify(translate("invoicecanceled"), 500000);
-                forceclosesocket();
+                force_close_socket();
                 return "canceled";
             }
             const required_confirms = tx_data.setconfirmations ? parseInt(tx_data.setconfirmations, 10) : 0,
@@ -334,7 +334,7 @@ function confirmations(tx_data, direct, ln) {
             status_panel.find("span#confnumber").text(confirm_text);
             new_status = tx_confirms;
             if (tx_confirms > current_confirms || is_instant === true || direct === true) {
-                reset_recent();
+                clear_recent_requests();
                 br_remove_session("txstatus"); // remove cached historical exchange rates
                 confirm_box.removeClass("blob");
                 setTimeout(function() {
@@ -383,8 +383,8 @@ function confirmations(tx_data, direct, ln) {
                     const amount_valid = exact_match ? received_formatted === crypto_amount : received_formatted >= (crypto_amount * 0.97);
                     if (amount_valid) {
                         if (tx_confirms >= required_confirms || is_instant === true) {
-                            forceclosesocket();
-                            playsound(crypto_symbol === "doge" ? glob_const.howl : glob_const.cashier);
+                            force_close_socket();
+                            play_audio(crypto_symbol === "doge" ? glob_const.howl : glob_const.cashier);
                             const status_msg = request_type === "incoming" ? translate("paymentsent") : translate("paymentreceived"),
                                 is_insufficient = payment_dialog.hasClass("insufficient"), // keep scanning when amount was insufficient
                                 insufficient_status = is_insufficient ? "pending" : "paid",
@@ -393,20 +393,20 @@ function confirmations(tx_data, direct, ln) {
                             status_header.text(status_msg);
                             request.status = insufficient_status,
                                 request.pending = insufficient_pending;
-                            saverequest(direct, ln);
+                            save_payment_request(direct, ln);
                             $("span#ibstatus").fadeOut(500);
                             closenotify();
                             new_status = insufficient_status;
                         } else {
                             if (!ln) {
-                                playsound(glob_const.blip);
+                                play_audio(glob_const.blip);
                             }
                             payment_dialog.addClass("transacting").attr("data-status", "pending");
                             const broadcast_msg = ln ? translate("waitingforpayment") : translate("txbroadcasted");
                             status_header.text(broadcast_msg);
                             request.status = "pending",
                                 request.pending = "polling";
-                            saverequest(direct, ln);
+                            save_payment_request(direct, ln);
                         }
                         status_panel.find("#view_tx").attr("data-txhash", tx_hash);
                         return new_status;
@@ -416,11 +416,11 @@ function confirmations(tx_data, direct, ln) {
                         payment_dialog.addClass("transacting").attr("data-status", "insufficient");
                         request.status = "insufficient",
                             request.pending = "scanning";
-                        saverequest(direct, ln);
+                        save_payment_request(direct, ln);
                         status_panel.find("#view_tx").attr("data-txhash", tx_hash);
                         new_status = "insufficient";
                     }
-                    playsound(glob_const.funk);
+                    play_audio(glob_const.funk);
                 }
             }
         }
@@ -430,7 +430,7 @@ function confirmations(tx_data, direct, ln) {
 }
 
 // Terminates all active polling intervals or a specific polling instance
-function clearpinging(socket_id) {
+function stop_monitors(socket_id) {
     if (socket_id) { // close this interval
         if (glob_let.pinging[socket_id]) {
             clearInterval(glob_let.pinging[socket_id]);
@@ -447,7 +447,7 @@ function clearpinging(socket_id) {
 }
 
 // Removes completed payment request from local storage and updates UI state
-function reset_recent() {
+function clear_recent_requests() {
     if (request) {
         const stored_requests = br_get_local("recent_requests");
         if (stored_requests) {

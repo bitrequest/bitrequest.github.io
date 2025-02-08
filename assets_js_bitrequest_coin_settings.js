@@ -3,28 +3,28 @@ $(document).ready(function() {
     // ** Currency Settings **
 
     // Confirmations
-    edit_confirmations();
-    submit_confirmations();
+    setup_confirmation_editor();
+    save_confirmation_settings();
 
     // Reuse addresses
-    reuse_address_trigger();
-    cc_switch();
+    toggle_address_reuse();
+    toggle_currency_setting();
 
     // Blockexplorer
-    edit_blockexplorer();
-    submit_blockexplorer();
+    setup_explorer_selection();
+    save_explorer_settings();
 
     // RPC settings
     edit_rpcnode();
     //get_rpc_placeholder
-    //test_append_rpc
-    //rpc_option_li
-    test_rpcnode();
+    //validate_and_add_rpc_node
+    //create_rpc_node_element
+    handle_rpc_node_selection();
     submit_rpcnode();
-    //test_rpc
-    //pass_rpc_submit
-    remove_rpcnode();
-    //get_rpc_url
+    //validate_rpc_connection
+    //save_rpc_settings
+    delete_rpc_node();
+    //build_rpc_endpoint_url
 
     // Xpub settings
     edit_xpub_trigger();
@@ -33,33 +33,33 @@ $(document).ready(function() {
     //add_xpub_cb
     xpub_cc_switch();
     //edit_xpub
-    xpub_change();
-    submit_xpub_trigger();
+    handle_xpub_input();
+    validate_xpub_input();
     //validate_xpub
     //xpub_fail
-    //clear_xpub_inputs
+    //reset_xpub_form
     //clear_xpub_checkboxes
     //check_xpub
 
     // Key Management
     key_management();
     segwit_switch();
-    //xpub_info_pu
+    //display_xpub_details
 
     // Add apikey
     trigger_apikey();
     //add_apikey;
-    submit_apikey();
+    save_api_key();
 
     reset_coinsettings_trigger();
     //reset_coinsettings
-    //reset_coinsettings_function
+    //restore_default_settings
 });
 
 // ** Currency Settings **
 
 // Handles UI interactions for editing cryptocurrency confirmation settings using emoji-based visual indicators
-function edit_confirmations() {
+function setup_confirmation_editor() {
     $(document).on("click", ".cc_settinglist li[data-id='confirmations'] .edit_trigger", function() {
         const edit_btn = $(this),
             currency_code = edit_btn.attr("data-currency"),
@@ -140,7 +140,7 @@ function edit_confirmations() {
 }
 
 // Processes form submission for cryptocurrency confirmation count changes with validation
-function submit_confirmations() {
+function save_confirmation_settings() {
     $(document).on("click", "#conf_formbox input.submit", function(e) {
         e.preventDefault();
         const submit_btn = $(this),
@@ -157,7 +157,7 @@ function submit_confirmations() {
 }
 
 // Manages toggling of address reuse settings with user warnings for different cryptocurrencies
-function reuse_address_trigger() {
+function toggle_address_reuse() {
     $(document).on("mouseup", ".cc_settinglist li[data-id='Reuse address'] .switchpanel.custom", function() {
         const toggle_btn = $(this),
             settings_item = toggle_btn.closest("li"),
@@ -190,7 +190,7 @@ function reuse_address_trigger() {
 }
 
 // Controls generic boolean switch toggles for cryptocurrency settings with automatic state persistence
-function cc_switch() {
+function toggle_currency_setting() {
     $(document).on("mouseup", ".cc_settinglist li .switchpanel.bool", function() {
         const toggle_btn = $(this),
             settings_item = toggle_btn.closest("li"),
@@ -203,7 +203,7 @@ function cc_switch() {
 }
 
 // Manages block explorer selection UI with dynamic option population from available explorer list
-function edit_blockexplorer() {
+function setup_explorer_selection() {
     $(document).on("click", ".cc_settinglist li[data-id='blockexplorers']", function() {
         const settings_item = $(this),
             item_data = settings_item.data(),
@@ -269,7 +269,7 @@ function edit_blockexplorer() {
 }
 
 // Processes block explorer selection changes and updates UI state with validation
-function submit_blockexplorer() {
+function save_explorer_settings() {
     $(document).on("click", "#be_formbox input.submit", function(e) {
         e.preventDefault();
         const currency_code = $(this).attr("data-currency"),
@@ -306,7 +306,7 @@ function edit_rpcnode() {
                 "h_hint": service_hint
             }),
             node_type = (currency_code === "ethereum" || glob_let.is_erc20t === true) ? "eth" : currency_code,
-            placeholder_key = glob_let.ap_id + node_type + getrandomnumber(1, 3),
+            placeholder_key = glob_let.ap_id + node_type + generate_random_number(1, 3),
             url_placeholder = get_rpc_placeholder(currency_code)[placeholder_key],
             default_placeholder = "eg: some.local-or-remote.node:port",
             input_form = custom_nodes ? "<div id='rpc_input_box' data-currency='" + currency_code + "' data-erc20='" + glob_let.is_erc20t + "'>\
@@ -342,19 +342,19 @@ function edit_rpcnode() {
             if (node_data.display === true) {
                 let is_selected = node_data.url === node_title || node_data.name === node_title;
                 if (currency_code === "nano") {
-                    test_append_rpc(currency_code, node_list, node_id, node_data, is_selected);
+                    validate_and_add_rpc_node(currency_code, node_list, node_id, node_data, is_selected);
                 } else {
-                    rpc_option_li(node_list, true, node_id, node_data, is_selected, false);
+                    create_rpc_node_element(node_list, true, node_id, node_data, is_selected, false);
                 }
             }
         });
         $.each(custom_nodes, function(node_id, node_data) {
             let is_selected = node_data.url === node_title || node_data.name === node_title;
-            test_append_rpc(currency_code, node_list, node_id, node_data, is_selected);
+            validate_and_add_rpc_node(currency_code, node_list, node_id, node_data, is_selected);
         });
         $("#rpc_main_input").data(current_node);
         setTimeout(function() {
-            closesocket();
+            close_socket();
         }, 5000);
     })
 }
@@ -378,7 +378,7 @@ function get_rpc_placeholder(currency) {
 }
 
 // Tests RPC endpoints for connectivity and appends validated options to the selection UI with status indicators
-function test_append_rpc(currency_code, node_list, node_id, node_data, is_selected) {
+function validate_and_add_rpc_node(currency_code, node_list, node_id, node_data, is_selected) {
     if (glob_let.ap_id === "apis") {
         if (currency_code === "ethereum" || glob_let.is_erc20t === true) {
             const test_hash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
@@ -400,13 +400,13 @@ function test_append_rpc(currency_code, node_list, node_id, node_data, is_select
             }).done(function(response) {
                 const parsed_data = br_result(response),
                     response_hash = q_obj(parsed_data, "result.result.hash");
-                rpc_option_li(node_list, response_hash === test_hash, node_id, node_data, is_selected, true);
+                create_rpc_node_element(node_list, response_hash === test_hash, node_id, node_data, is_selected, true);
             }).fail(function(error) {
-                rpc_option_li(node_list, false, node_id, node_data, is_selected, true);
+                create_rpc_node_element(node_list, false, node_id, node_data, is_selected, true);
             });
             return
         }
-        const node_url = get_rpc_url({
+        const node_url = build_rpc_endpoint_url({
             "url": node_data.url,
             "username": node_data.username,
             "password": node_data.password
@@ -435,9 +435,9 @@ function test_append_rpc(currency_code, node_list, node_id, node_data, is_select
             const parsed_data = br_result(response),
                 api_result = parsed_data.result,
                 is_live = empty_obj(api_result) ? false : (currency_code === "nano" ? api_result.network === "live" : true);
-            rpc_option_li(node_list, is_live, node_id, node_data, is_selected, true);
+            create_rpc_node_element(node_list, is_live, node_id, node_data, is_selected, true);
         }).fail(function(error) {
-            rpc_option_li(node_list, false, node_id, node_data, is_selected, true);
+            create_rpc_node_element(node_list, false, node_id, node_data, is_selected, true);
         });
         return
     }
@@ -485,27 +485,27 @@ function test_append_rpc(currency_code, node_list, node_id, node_data, is_select
             console.log("Connected: " + ws_url);
         };
         socket.onmessage = function(event) {
-            rpc_option_li(node_list, true, node_id, node_data, is_selected, true);
+            create_rpc_node_element(node_list, true, node_id, node_data, is_selected, true);
             console.log("socket test success");
             socket.close();
             socket = null;
-            closesocket("ws_test");
+            close_socket("ws_test");
         };
         socket.onclose = function(event) {
             console.log("End socket test");
         };
         socket.onerror = function(event) {
-            rpc_option_li(node_list, false, node_id, node_data, is_selected, true);
+            create_rpc_node_element(node_list, false, node_id, node_data, is_selected, true);
             console.log("socket test failed");
             socket.close();
             socket = null;
-            closesocket("ws_test");
+            close_socket("ws_test");
         };
     }
 }
 
 // Creates and styles a UI element for RPC node options with live status indicators and deletion controls
-function rpc_option_li(node_list, is_live, node_id, node_data, is_selected, is_checked) {
+function create_rpc_node_element(node_list, is_live, node_id, node_data, is_selected, is_checked) {
     const status_class = is_live ? " live" : " offline",
         selected_class = is_selected ? " rpc_selected" : "",
         status_icon = is_live ? "connection" : "wifi-off",
@@ -518,7 +518,7 @@ function rpc_option_li(node_list, is_live, node_id, node_data, is_selected, is_c
 }
 
 // Handles RPC node selection in UI with offline node detection and data persistence
-function test_rpcnode() {
+function handle_rpc_node_selection() {
     $(document).on("click", "#settingsbox .selectbox .options > div", function(e) {
         const clicked_element = $(e.target);
         if (clicked_element.hasClass("icon-bin")) {
@@ -527,7 +527,7 @@ function test_rpcnode() {
         const node_option = $(this),
             node_config = node_option.data();
         if (node_option.hasClass("offline")) {
-            playsound(glob_const.funk);
+            play_audio(glob_const.funk);
             topnotify(translate("unabletoconnect"));
             return
         }
@@ -567,16 +567,16 @@ function submit_rpcnode() {
                         "password": node_password,
                         "default": false
                     };
-                test_rpc(input_section, node_config, currency_code);
+                validate_rpc_connection(input_section, node_config, currency_code);
                 return
             }
         }
-        pass_rpc_submit(currency_code, selected_config, false)
+        save_rpc_settings(currency_code, selected_config, false)
     })
 }
 
 // Tests RPC/WebSocket connectivity for multiple cryptocurrency protocols with error handling
-function test_rpc(input_section, node_config, currency_code) {
+function validate_rpc_connection(input_section, node_config, currency_code) {
     const error_message = translate("unabletoconnect");
     if (glob_let.ap_id === "apis") {
         if (currency_code === "ethereum" || glob_let.is_erc20t === true) {
@@ -601,7 +601,7 @@ function test_rpc(input_section, node_config, currency_code) {
                     response_hash = q_obj(parsed_data, "result.result.hash");
                 if (response_hash === test_hash) {
                     input_section.addClass("live").removeClass("offline");
-                    pass_rpc_submit(currency_code, node_config, true);
+                    save_rpc_settings(currency_code, node_config, true);
                     return
                 }
                 input_section.addClass("offline").removeClass("live");
@@ -612,7 +612,7 @@ function test_rpc(input_section, node_config, currency_code) {
             });
             return
         }
-        const node_url = get_rpc_url(node_config),
+        const node_url = build_rpc_endpoint_url(node_config),
             test_address = {
                 "bitcoin": bip39_const.expected_bech32,
                 "litecoin": "LZakyXotaE29Pehw21SoPuU832UhvJp4LG",
@@ -652,9 +652,9 @@ function test_rpc(input_section, node_config, currency_code) {
                 }
                 return
             }
-            if (api_result && (br_issar(api_result) || api_result.rpc_version)) {
+            if (api_result && (is_array(api_result) || api_result.rpc_version)) {
                 input_section.addClass("live").removeClass("offline");
-                pass_rpc_submit(currency_code, node_config, true);
+                save_rpc_settings(currency_code, node_config, true);
             }
         }).fail(function(error) {
             input_section.addClass("offline").removeClass("live");
@@ -700,11 +700,11 @@ function test_rpc(input_section, node_config, currency_code) {
         };
         socket.onmessage = function(event) {
             input_section.addClass("live").removeClass("offline");
-            pass_rpc_submit(currency_code, node_config, true);
+            save_rpc_settings(currency_code, node_config, true);
             console.log("socket test success");
             socket.close();
             socket = null;
-            closesocket("ws_submit");
+            close_socket("ws_submit");
         };
         socket.onclose = function(event) {
             console.log("End socket test");
@@ -715,16 +715,16 @@ function test_rpc(input_section, node_config, currency_code) {
             console.log("socket test failed");
             socket.close();
             socket = null;
-            closesocket("ws_submit");
+            close_socket("ws_submit");
         };
         setTimeout(function() {
-            closesocket();
+            close_socket();
         }, 5000);
     }
 }
 
 // Updates UI and persists RPC configuration after successful validation
-function pass_rpc_submit(currency_code, node_config, is_new_node) {
+function save_rpc_settings(currency_code, node_config, is_new_node) {
     const settings_item = cs_node(currency_code, glob_let.ap_id),
         custom_nodes = settings_item.data("options"),
         display_name = node_config.name || node_config.url;
@@ -742,7 +742,7 @@ function pass_rpc_submit(currency_code, node_config, is_new_node) {
 }
 
 // Manages removal of custom RPC nodes with safeguards for default nodes
-function remove_rpcnode() {
+function delete_rpc_node() {
     $(document).on("click", "#settingsbox .options .opt_icon_box .icon-bin", function(e) {
         e.preventDefault();
         const delete_btn = $(this),
@@ -759,7 +759,7 @@ function remove_rpcnode() {
                 matching_nodes = nodes_container.find("span[data-value='" + node_url + "']"),
                 has_duplicates = matching_nodes.length > 1;
             if (is_default === true && !has_duplicates) {
-                playsound(glob_const.funk);
+                play_audio(glob_const.funk);
                 topnotify(translate("removedefaultnode"));
                 return
             }
@@ -783,7 +783,7 @@ function remove_rpcnode() {
 }
 
 // Constructs authenticated RPC URLs with protocol and credential handling
-function get_rpc_url(node_config) {
+function build_rpc_endpoint_url(node_config) {
     if (node_config === false) {
         return false;
     }
@@ -800,7 +800,7 @@ function get_rpc_url(node_config) {
 function edit_xpub_trigger() {
     $(document).on("click", ".cc_settinglist li[data-id='Xpub'] .atext", function() {
         if (!glob_let.test_derive) {
-            playsound(glob_const.funk)
+            play_audio(glob_const.funk)
             return
         }
         const xpub_element = $(this),
@@ -811,7 +811,7 @@ function edit_xpub_trigger() {
         }
         const item_wrap = settings_item.find(".liwrap"),
             currency_code = item_wrap.attr("data-currency"),
-            coin_data = getcoindata(currency_code),
+            coin_data = get_coin_config(currency_code),
             xpub_key = xpub_data.key,
             currency_icon = getcc_icon(coin_data.cmcid, coin_data.ccsymbol + "-" + currency_code, coin_data.erc20),
             dialog_html = $("<div id='ad_info_wrap'><h2>" + currency_icon + " " + translate("bip32xpub") + "</h2>\
@@ -880,7 +880,7 @@ function add_xpub_cb(currency_code, xpub_id) {
 function xpub_cc_switch() {
     $(document).on("mouseup", ".cc_settinglist li[data-id='Xpub'] .switchpanel.custom", function() {
         if (glob_let.test_derive !== true) {
-            playsound(glob_const.funk);
+            play_audio(glob_const.funk);
             return
         }
         const toggle_btn = $(this),
@@ -907,7 +907,7 @@ function xpub_cc_switch() {
             currency_check(currency_code);
             return
         }
-        const coin_data = getcoindata(currency_code),
+        const coin_data = get_coin_config(currency_code),
             currency_info = {
                 "currency": currency_code,
                 "ccsymbol": coin_data.ccsymbol,
@@ -950,7 +950,7 @@ function edit_xpub(currency_info) {
 }
 
 // Validates Xpub input format and triggers address derivation on valid input
-function xpub_change() {
+function handle_xpub_input() {
     $(document).on("input", "#xpub_input", function(e) {
         const input_field = $(this),
             xpub_key = input_field.val(),
@@ -966,7 +966,7 @@ function xpub_change() {
 }
 
 // Triggers validation and saving of entered Xpub key
-function submit_xpub_trigger() {
+function validate_xpub_input() {
     $(document).on("click", "#xpubformbox input.submit", function(e) {
         e.preventDefault();
         validate_xpub($(this).closest("#xpubformbox"));
@@ -997,7 +997,7 @@ function validate_xpub(form_container) {
         }, 10);
         return
     }
-    const derived_addresses = xpub_derivelists(currency_code, xpub_key);
+    const derived_addresses = generate_derived_addresses(currency_code, xpub_key);
     if (!derived_addresses) {
         xpub_fail(currency_code);
         return false;
@@ -1041,7 +1041,7 @@ function validate_xpub(form_container) {
     savecurrencies(true);
     save_cc_settings(currency_code, true);
     const key_config = key_cc_xpub(xpub_key),
-        coin_data = getcoindata(currency_code),
+        coin_data = get_coin_config(currency_code),
         bip32_config = getbip32dat(currency_code);
     key_config.seedid = xpub_id;
     const derived_data = derive_obj("xpub", key_config, coin_data, bip32_config);
@@ -1071,11 +1071,11 @@ function xpub_fail(currency_code) {
         "currency": currency_code
     });
     popnotify("error", error_message);
-    clear_xpub_inputs();
+    reset_xpub_form();
 }
 
 // Resets Xpub input form state
-function clear_xpub_inputs() {
+function reset_xpub_form() {
     $("#ad_info_wrap").slideUp(200, function() {
         $("#ad_info_wrap .td_box").html("");
     });
@@ -1088,9 +1088,9 @@ function clear_xpub_checkboxes() {
 }
 
 // Generates preview of derived addresses from Xpub key
-function xpub_derivelists(currency_code, xpub_key) {
+function generate_derived_addresses(currency_code, xpub_key) {
     try {
-        const coin_data = getcoindata(currency_code),
+        const coin_data = get_coin_config(currency_code),
             bip32_config = getbip32dat(currency_code),
             derivation_path = "M/0/",
             start_index = 0,
@@ -1136,7 +1136,7 @@ function key_management() {
             currency_code = item_wrap.attr("data-currency"),
             active_xpub_key = active_xpub(currency_code);
         if (active_xpub_key) {
-            xpub_info_pu(currency_code, active_xpub_key.key);
+            display_xpub_details(currency_code, active_xpub_key.key);
             return
         }
         if (glob_let.hasbip === true) {
@@ -1151,7 +1151,7 @@ function key_management() {
             return
         }
         if (is_viewonly() === true) {
-            vu_block();
+            show_view_only_error();
             return false;
         }
         manage_bip32();
@@ -1162,7 +1162,7 @@ function key_management() {
 function segwit_switch() {
     $(document).on("mouseup", "#segw_box .toggle_segwit .switchpanel", function() {
         if (is_viewonly() === true) {
-            vu_block();
+            show_view_only_error();
             return
         }
         const toggle_btn = $(this),
@@ -1199,7 +1199,7 @@ function segwit_switch() {
         }
         const next_btn = $("#d_paths .pd_" + currency_code + " .d_path_body .td_bar .td_next");
         save_cc_settings(currency_code, true);
-        test_derive_function(next_btn, "replace");
+        derive_address_batch(next_btn, "replace");
     })
 }
 
@@ -1209,8 +1209,8 @@ function bip39_sc(currency_id) {
 }
 
 // Displays detailed Xpub information with QR code and derived addresses
-function xpub_info_pu(currency_code, xpub_key) {
-    const coin_data = getcoindata(currency_code),
+function display_xpub_details(currency_code, xpub_key) {
+    const coin_data = get_coin_config(currency_code),
         bip32_config = getbip32dat(currency_code),
         derivation_path = "M/0/",
         start_index = 0,
@@ -1293,7 +1293,7 @@ function add_apikey(api_name) {
 }
 
 // Validates and saves entered API key
-function submit_apikey() {
+function save_api_key() {
     $(document).on("click", "#add_apikey input.submit", function(e) {
         e.preventDefault();
         const form_container = $(this).closest(".popform"),
@@ -1337,11 +1337,11 @@ function reset_coinsettings(trigger_element) {
     if (user_confirmed !== true) {
         return
     }
-    reset_coinsettings_function(currency_code);
+    restore_default_settings(currency_code);
 }
 
 // Performs coin settings reset while preserving critical configurations
-function reset_coinsettings_function(currency_code) {
+function restore_default_settings(currency_code) {
     const stored_settings = br_get_local(currency_code + "_settings", true);
     if (stored_settings) {
         const lightning_config = currency_code === "bitcoin" ? stored_settings["Lightning network"] : false,
@@ -1355,7 +1355,7 @@ function reset_coinsettings_function(currency_code) {
             default_settings.Xpub = xpub_config; // don't reset xpub settings
         }
         if (layer2_enabled) {
-            const compressed_settings = compress_l2obj2(currency_code);
+            const compressed_settings = compress_layer2_config(currency_code);
             br_set_local(currency_code + "_settings", compressed_settings, true);
             append_coinsetting(currency_code, compressed_settings);
         } else {

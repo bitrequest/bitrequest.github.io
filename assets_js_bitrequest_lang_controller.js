@@ -111,7 +111,7 @@ function translate(id, dat) {
 function transclear(id, dat) {
     const tl = translate(id, dat);
     if (tl) {
-        return clear_accents(tl);
+        return remove_diacritics(tl);
     }
     return tl;
 }

@@ -1,45 +1,45 @@
 $(document).ready(function() {
-    updaterequeststatestrigger();
-    updaterequeststatesrefresh();
-    //trigger_requeststates
-    //get_requeststates
-    //getinputs
-    //select_rpc
-    //continue_select
-    //continue_select_api
-    //continue_select_rpc
-    //scan_match
+    update_request_trigger();
+    refresh_request_states();
+    //scan_pending_requests
+    //process_request_updates
+    //process_transaction_data
+    //route_network_request
+    //route_api_request
+    //route_crypto_api
+    //route_blockchain_rpc
+    //process_scan_results
     //tx_count
     //tx_api_scan_fail
-    //tx_api_fail
-    //handle_rpc_fails
-    //pick_next_rpc
+    //mark_network_failure
+    //handle_api_failure
+    //switch_rpc_endpoint
     //no_results
     //fail_dialogs
-    //api_eror_msg
-    //get_api_error_data
-    //get_next_l2
+    //show_api_error
+    //extract_error_details
+    //get_next_layer2_api
     //get_next_rpc
-    //set_api_src
-    //api_src
-    //api_callback
+    //update_api_source
+    //display_api_source
+    //finalize_request_state
 
     //scan_tx_li
-    //append_tx_li
-    //hs_for
-    //data_title
+    //create_transaction_item
+    //wrap_historic_data
+    //format_transaction_details
 
-    //compareamounts
-    //init_historical_fiat_data
-    //get_historical_fiat_data
+    //validate_payment_amounts
+    //init_fiat_history
+    //fetch_fiat_rates
     //get_historic_fiatprice_api_payload
     //form_date
-    //get_historical_crypto_data
+    //fetch_crypto_rates
     //get_payload_historic_coingecko
     //get_payload_historic_coinpaprika
     //get_payload_historic_coincodex
     //cx_date
-    //compare_historic_prices
+    //match_price_timestamps
     //get_historic_object_coingecko
     //get_historic_object_coinpaprika
 
@@ -54,28 +54,28 @@ $(document).ready(function() {
 // ** Fetch incoming transactions **
 
 // Attaches event listener to trigger request state updates when .requestsbttn.self is clicked
-function updaterequeststatestrigger() {
+function update_request_trigger() {
     $(document).on("click", ".requestsbttn .self", function() {
         if (is_scanning()) return
-        trigger_requeststates(true);
+        scan_pending_requests(true);
     })
 }
 
 // Triggers request state updates with delay if URL parameter indicates requests page
-function updaterequeststatesrefresh() {
+function refresh_request_states() {
     const url_params = geturlparameters();
     if (url_params.xss) {
         return
     }
     if (url_params.p === "requests") { // only trigger on "requests page"
         setTimeout(function() {
-            trigger_requeststates("delay");
+            scan_pending_requests("delay");
         }, 300);
     }
 }
 
 // Initializes request state update process by resetting global state and marking active requests
-function trigger_requeststates(trigger, active_req_list) {
+function scan_pending_requests(trigger, active_req_list) {
     if (glob_const.offline === true) {
         return // do nothing when offline
     }
@@ -88,16 +88,16 @@ function trigger_requeststates(trigger, active_req_list) {
         return $(this).data("pending") !== "unknown";
     });
     requests.addClass("open");
-    get_requeststates(trigger, requests);
+    process_request_updates(trigger, requests);
 }
 
 // Manages request state cache, updates, and UI synchronization based on transaction status
-function get_requeststates(trigger, active_requests) {
+function process_request_updates(trigger, active_requests) {
     glob_let.apikey_fails = false; // reset apikey fails
     const request_data = $("#requestlist li.rqli.open").first().data();
     if (request_data) {
         if (trigger === "loop") {
-            getinputs(request_data);
+            process_transaction_data(request_data);
             return
         }
         const is_delayed = trigger === "delay",
@@ -107,7 +107,7 @@ function get_requeststates(trigger, active_requests) {
                 request_states = status_cache.requeststates;
             if (cache_age > 30000 || empty_obj(request_states)) { //check if cached crypto rates are expired (check every 30 seconds on page refresh or when opening request page)
                 active_requests.addClass("scan");
-                getinputs(request_data, is_delayed);
+                process_transaction_data(request_data, is_delayed);
                 return
             }
             if (trigger === true) {
@@ -133,7 +133,7 @@ function get_requeststates(trigger, active_requests) {
             return
         }
         active_requests.addClass("scan");
-        getinputs(request_data, is_delayed);
+        process_transaction_data(request_data, is_delayed);
         return
     }
     if (!empty_obj(glob_let.statuspush)) {
@@ -159,7 +159,7 @@ function get_requeststates(trigger, active_requests) {
 }
 
 // Processes transaction data and initiates API calls with rate limiting protection
-function getinputs(rd, dl) {
+function process_transaction_data(rd, dl) {
     const rdo = tx_data(rd);
     if (rdo.pending === "scanning" || rdo.pending === "polling") {
         if (dl) {
@@ -168,7 +168,7 @@ function getinputs(rd, dl) {
                 monitor_timer = monitor_timer_cache ? parseInt(monitor_timer_cache, 10) : delay,
                 time_since_last = now() - monitor_timer;
             if (time_since_last < delay) { // prevent over scanning
-                playsound(glob_const.funk);
+                play_audio(glob_const.funk);
                 clearscan();
                 return
             }
@@ -177,8 +177,8 @@ function getinputs(rd, dl) {
         const api_info = check_api(rd.payment),
             api_data = api_info.data;
         rdo.thislist.removeClass("pmstatloaded");
-        tx_count(rdo.statuspanel, "reset");
-        select_rpc(rd, api_data, rdo);
+        update_transaction_count(rdo.statuspanel, "reset");
+        route_network_request(rd, api_data, rdo);
         return
     }
     const transaction_list = rdo.transactionlist;
@@ -186,12 +186,12 @@ function getinputs(rd, dl) {
         transaction_list.find("li").each(function(index) {
             glob_let.tx_list.push($(this).data("txhash")); //index transaction id's
         });
-        api_callback(rdo);
+        finalize_request_state(rdo);
     }
 }
 
 // Routes requests to appropriate handlers based on payment type and network availability
-function select_rpc(rd, api_data, rdo) {
+function route_network_request(rd, api_data, rdo) {
     if (api_data) {
         const src = rdo.source;
         if (src === "requests") {
@@ -205,39 +205,35 @@ function select_rpc(rd, api_data, rdo) {
             }
         }
         if (rd.eth_layer2) {
-            query_ethl2_api(rd, rdo);
+            route_layer2_api_request(rd, rdo);
             return
         }
         if (rd.lightning && rdo.source === "requests") {
-            lightning_fetch(rd, api_data, rdo);
+            process_lightning_payment(rd, api_data, rdo);
             return
         }
-        continue_select(rd, api_data, rdo);
+        route_api_request(rd, api_data, rdo);
         return
     }
     console.error("error", "no api data available");
 }
 
 // Tracks API attempts and routes to specific API or RPC handlers based on availability
-function continue_select(rd, api_data, rdo) {
+function route_api_request(rd, api_data, rdo) {
     const request_id = rd.requestid || "";
     glob_let.rpc_attempts[sha_sub(request_id + api_data.url, 15)] = true;
     if (api_data.api) {
-        continue_select_api(rd, api_data, rdo);
+        route_crypto_api(rd, api_data, rdo);
         return
     }
-    continue_select_rpc(rd, api_data, rdo);
+    route_blockchain_rpc(rd, api_data, rdo);
 }
 
 // Routes cryptocurrency requests to specific API endpoints based on provider capabilities
-function continue_select_api(rd, api_data, rdo) {
+function route_crypto_api(rd, api_data, rdo) {
     const provider = api_data.name;
-    if (provider === "mymonero api") {
-        monero_fetch_init(rd, api_data, rdo);
-        return
-    }
-    if (provider === "blockchair_xmr") {
-        monero_fetch_init(rd, api_data, rdo);
+    if (provider === "mymonero api" || provider === "blockchair_xmr") {
+        initialize_monero_scan(rd, api_data, rdo);
         return
     }
     if (provider === "mempool.space") {
@@ -245,15 +241,15 @@ function continue_select_api(rd, api_data, rdo) {
         return
     }
     if (provider === "blockchain.info") {
-        blockchaininfo_fetch_init(rd, api_data, rdo);
+        initialize_bitcoin_scan(rd, api_data, rdo);
         return
     }
     if (provider === "blockcypher") {
-        blockcypher_fetch(rd, api_data, rdo);
+        process_blockcypher_transactions(rd, api_data, rdo);
         return
     }
     if (provider === "etherscan") {
-        omniscan_fetch(rd, api_data, rdo, null, 1);
+        scan_layer2_transactions(rd, api_data, rdo, null, 1);
         return
     }
     if (provider === "ethplorer") {
@@ -265,22 +261,22 @@ function continue_select_api(rd, api_data, rdo) {
         return
     }
     if (provider === "nimiq.watch" || provider === "mopsus.com") {
-        nimiq_fetch(rd, api_data, rdo);
+        process_nimiq_transactions(rd, api_data, rdo);
         return
     }
     if (rd.payment === "kaspa") {
-        kaspa_fetch_init(rd, api_data, rdo);
+        initialize_kaspa_scan(rd, api_data, rdo);
         return
     }
     if (provider === "dash.org") {
-        insight_fetch_dash(rd, api_data, rdo);
+        process_dash_transactions(rd, api_data, rdo);
         return
     }
-    api_callback(rdo);
+    finalize_request_state(rdo);
 }
 
 // Routes requests to appropriate RPC endpoints for Bitcoin, Ethereum, and Nano networks
-function continue_select_rpc(rd, api_data, rdo) {
+function route_blockchain_rpc(rd, api_data, rdo) {
     if (is_btchain(rd.payment) === true) {
         mempoolspace_rpc_init(rd, api_data, rdo, true);
         return
@@ -293,16 +289,16 @@ function continue_select_rpc(rd, api_data, rdo) {
         nano_rpc(rd, api_data, rdo);
         return
     }
-    api_callback(rdo);
+    finalize_request_state(rdo);
 }
 
 // Processes transaction scan results and handles Ethereum L2, confirmations, and UI updates based on match type
-function scan_match(rd, api_data, rdo, counter, tx_details, l2) {
+function process_scan_results(rd, api_data, rdo, counter, tx_details, l2) {
     glob_let.apikey_fails = false;
     const src = rdo.source;
     if (src === "requests") {
         if (counter) {
-            tx_count(rdo.statuspanel, counter);
+            update_transaction_count(rdo.statuspanel, counter);
         }
         const current_list = rdo.thislist;
         if (current_list) {
@@ -325,17 +321,17 @@ function scan_match(rd, api_data, rdo, counter, tx_details, l2) {
                     return
                 }
             }
-            compareamounts(rd, rdo);
+            validate_payment_amounts(rd, rdo);
             return
         }
         if (eth_layer2) { // Eth layer 2
-            set_l2_status_init(api_data, "paid");
+            initialize_network_status(api_data, "paid");
         }
         tx_details.txhash = tx_hash;
         if (src !== "after_scan") {
-            const status = confirmations(tx_details);
+            const status = validate_confirmations(tx_details);
             if (status === "paid") {
-                forceclosesocket();
+                force_close_socket();
                 return
             }
         }
@@ -346,13 +342,13 @@ function scan_match(rd, api_data, rdo, counter, tx_details, l2) {
                 glob_const.paymentpopup.addClass("active");
                 closeloader();
             }
-            forceclosesocket();
-            tx_polling_init(tx_details, api_data);
+            force_close_socket();
+            start_transaction_monitor(tx_details, api_data);
             return
         }
         if (src === "tx_polling" || src === "l2_polling") {
             if (block_overflow("polling")) return; // prevent overflow
-            tx_polling(tx_details, api_data);
+            route_transaction_monitor(tx_details, api_data);
         }
         return
     }
@@ -360,11 +356,11 @@ function scan_match(rd, api_data, rdo, counter, tx_details, l2) {
         if (rd.erc20 || rd.payment === "ethereum") {
             if (!l2) {
                 // Init eth layer 2's
-                query_ethl2_api(rd, rdo);
+                route_layer2_api_request(rd, rdo);
                 return
             }
         }
-        api_callback(rdo);
+        finalize_request_state(rdo);
         return
     }
     if (src === "after_scan") {
@@ -374,7 +370,7 @@ function scan_match(rd, api_data, rdo, counter, tx_details, l2) {
 }
 
 // Updates and displays the transaction count in the UI status panel with reset functionality
-function tx_count(status_panel, count) {
+function update_transaction_count(status_panel, count) {
     if (count === "reset") {
         status_panel.attr("data-count", 0).text("+ " + 0);
         return
@@ -391,36 +387,36 @@ function tx_count(status_panel, count) {
 // API error handling
 
 // Processes API scan failures and routes to appropriate error handlers based on network type
-function tx_api_scan_fail(error_obj, rd, api_data, rdo, l2) {
+function handle_scan_failure(error_obj, rd, api_data, rdo, l2) {
     const src = rdo.source;
     if (src === "requests") {
         const current_list = rdo.thislist;
         if (current_list) {
-            tx_api_fail(current_list, rdo.statuspanel);
+            mark_network_failure(current_list, rdo.statuspanel);
         }
     }
     if (api_data === "ln") {
-        get_api_error_data(error_obj);
+        extract_error_details(error_obj);
         return
     }
     if (l2 && src === "l2_scanning") {
         handle_socket_fails(api_data, rd.address, rdo.ping_id, l2);
         return
     }
-    handle_rpc_fails(rd, rdo, error_obj, api_data, l2);
+    handle_api_failure(rd, rdo, error_obj, api_data, l2);
     return
 }
 
 // Updates UI elements to indicate network connectivity failure
-function tx_api_fail(current_list, status_panel) {
+function mark_network_failure(current_list, status_panel) {
     current_list.addClass("no_network");
     status_panel.attr("data-count", 0).text("0");
 }
 
 // Manages API failure scenarios by attempting fallback options and proxy switching
-function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
+function handle_api_failure(rd, rdo, error_obj, api_data, l2) {
     const src = rdo.source,
-        error_details = get_api_error_data(error_obj),
+        error_details = extract_error_details(error_obj),
         timeout = rdo.timeout,
         cache_time = rdo.cachetime;
 
@@ -428,12 +424,12 @@ function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
         if (type === "api_fail" && (error_details.apikey || glob_let.apikey_fails)) return false; // only try next proxy if api key is expired or missing
         if (get_next_proxy()) {
             if (src === "addr_polling") {
-                address_polling_init(timeout, api_data, true);
+                start_address_monitor(timeout, api_data, true);
                 return true;
             }
             if (src === "tx_polling" || src === "l2_polling") {
                 if (request) {
-                    tx_polling_init({
+                    start_transaction_monitor({
                         "txhash": request.txhash,
                         "setconfirmations": request.set_confirmations,
                         "eth_layer2": request.eth_layer2
@@ -442,10 +438,10 @@ function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
                 }
             }
             if (l2) {
-                query_ethl2_api(rd, rdo, api_data, l2);
+                route_layer2_api_request(rd, rdo, api_data, l2);
                 return true;
             }
-            continue_select(rd, api_data, rdo);
+            route_api_request(rd, api_data, rdo);
             return true;
         }
         return false;
@@ -458,12 +454,12 @@ function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
         return
     }
     if (!api_data) {
-        api_eror_msg(false, error_details);
+        show_api_error(false, error_details);
         if (src === "requests") {
-            api_callback(rdo);
+            finalize_request_state(rdo);
             return
         }
-        clearpinging();
+        stop_monitors();
         socket_info(api_data, false);
         notify(translate("websocketoffline"), 500000, "yes");
         return
@@ -471,27 +467,27 @@ function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
     const request_id = rd.requestid,
         payment = rd.payment;
     if (l2) {
-        const next_l2_api = get_next_l2(payment, api_data, request_id, l2);
+        const next_l2_api = get_next_layer2_api(payment, api_data, request_id, l2);
         if (next_l2_api) {
             // Scan eth layer 2
             if (src === "requests") {
-                query_ethl2_api(rd, rdo, next_l2_api, l2);
+                route_layer2_api_request(rd, rdo, next_l2_api, l2);
                 return
             }
             if (src === "l2_polling") {
-                tx_polling_l2(l2, next_l2_api, true);
+                monitor_layer2_chain(l2, next_l2_api, true);
                 return
             }
         }
     } else {
         const next_rpc = get_next_rpc(payment, api_data, request_id);
         if (next_rpc) {
-            pick_next_rpc(rd, rdo, next_rpc, timeout);
+            switch_rpc_endpoint(rd, rdo, next_rpc, timeout);
             return
         }
         if (rd.erc20 || payment === "ethereum") {
             // Init eth layer 2
-            query_ethl2_api(rd, rdo);
+            route_layer2_api_request(rd, rdo);
             return
         }
     }
@@ -502,44 +498,44 @@ function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
 }
 
 // Routes requests to next available RPC endpoint based on request source type
-function pick_next_rpc(rd, rdo, next_rpc, timeout) {
+function switch_rpc_endpoint(rd, rdo, next_rpc, timeout) {
     const src = rdo.source;
     if (src === "addr_polling") {
-        address_polling_init(timeout, next_rpc, true);
+        start_address_monitor(timeout, next_rpc, true);
         return
     }
     if (src === "tx_polling") {
-        tx_polling_l1(rdo.txdat, next_rpc, true);
+        monitor_main_chain(rdo.txdat, next_rpc, true);
         return
     }
     if (src === "after_scan") {
         after_scan(rd, next_rpc, rdo);
         return
     }
-    continue_select(rd, next_rpc, rdo);
+    route_api_request(rd, next_rpc, rdo);
 }
 
 // Displays error notifications when all API and proxy attempts fail
 function no_results(rdo, src, api_data, error_details) {
     const rpc_id = api_data.name || api_data.url || "unknown";
-    api_eror_msg(rpc_id, error_details);
+    show_api_error(rpc_id, error_details);
     if (src === "requests") {
-        api_callback(rdo);
+        finalize_request_state(rdo);
         return
     }
-    clearpinging();
+    stop_monitors();
     socket_info(api_data, false);
     notify(translate("websocketoffline"), 500000, "yes");
 }
 
 // Triggers error dialogs for API-related failures
 function fail_dialogs(api_source, error_obj) {
-    const error_details = get_api_error_data(error_obj);
-    api_eror_msg(api_source, error_details);
+    const error_details = extract_error_details(error_obj);
+    show_api_error(api_source, error_details);
 }
 
 // Renders API error messages with optional API key management UI
-function api_eror_msg(api_source, error_obj) {
+function show_api_error(api_source, error_obj) {
     if (!error_obj) return;
     const error_data = error_obj || {
         "errorcode": null,
@@ -562,7 +558,7 @@ function api_eror_msg(api_source, error_obj) {
 }
 
 // Extracts and normalizes error information from various API response formats
-function get_api_error_data(error_obj) {
+function extract_error_details(error_obj) {
     const error = q_obj(error_obj, "error");
     if (!error) return {
         "errorcode": 0,
@@ -595,7 +591,7 @@ function get_api_error_data(error_obj) {
 }
 
 // Retrieves next available Layer 2 API endpoint while preventing overflow
-function get_next_l2(this_payment, api_data, request_id, l2) {
+function get_next_layer2_api(this_payment, api_data, request_id, l2) {
     if (block_overflow("l2")) return false; // prevent overflow
     const api_settings = q_obj(getcoinsettings(this_payment), "layer2.options." + l2 + ".apis");
     if (api_settings) {
@@ -636,14 +632,14 @@ function get_next_rpc(this_payment, api_data, request_id, l2) {
 }
 
 // Updates request data with current API source information
-function set_api_src(rdo, api_data) {
+function update_api_source(rdo, api_data) {
     if (rdo.source === "requests") {
-        api_src(rdo.thislist, api_data);
+        display_api_source(rdo.thislist, api_data);
     }
 }
 
 // Updates UI with API source details and connection status indicators
-function api_src(current_list, api_data) {
+function display_api_source(current_list, api_data) {
     const api_url = api_data.url,
         api_url_short = api_url ? (api_url.length > 40 ? api_url.slice(0, 40) + "..." : api_url) : "",
         provider_name = api_data.name,
@@ -653,7 +649,7 @@ function api_src(current_list, api_data) {
 }
 
 // Processes final state updates and transaction data after API request completion
-function api_callback(rdo) {
+function finalize_request_state(rdo) {
     const src = rdo.source;
     if (!src === "requests") {
         return
@@ -673,9 +669,9 @@ function api_callback(rdo) {
                 if (current_data) {
                     transaction_push.push(current_data);
                     if (current_node.attr("title")) {} else {
-                        const history_string = data_title(current_data);
+                        const history_string = format_transaction_details(current_data);
                         if (history_string) {
-                            current_node.append(hs_for(history_string)).attr("title", history_string);
+                            current_node.append(wrap_historic_data(history_string)).attr("title", history_string);
                         }
                     }
                 }
@@ -694,12 +690,12 @@ function api_callback(rdo) {
             };
             glob_let.statuspush.push(status_box);
         }
-        get_requeststates("loop");
+        process_request_updates("loop");
     }
 }
 
 // Creates and returns a formatted transaction list item with confirmation status
-function append_tx_li(tx_details, request_type) {
+function create_transaction_item(tx_details, request_type) {
     const tx_hash = tx_details.txhash;
     if (!tx_hash) return null;
     const crypto_value = tx_details.ccval,
@@ -732,12 +728,12 @@ function append_tx_li(tx_details, request_type) {
 }
 
 // Generates HTML wrapper for historic transaction metadata
-function hs_for(data) {
+function wrap_historic_data(data) {
     return "<div class='historic_meta'>" + data.split("\n").join("<br/>") + "</div>";
 }
 
 // Generates detailed transaction information string for tooltip display
-function data_title(data) {
+function format_transaction_details(data) {
     const historic = data.historic;
     let historic_details = "";
     if (historic && historic.price) {
@@ -770,7 +766,7 @@ function data_title(data) {
 }
 
 // Validates received cryptocurrency or fiat amounts against requested amounts and updates transaction status
-function compareamounts(rd, rdo) {
+function validate_payment_amounts(rd, rdo) {
     const request_id = rd.requestid,
         current_list = rdo.thislist,
         transaction_items = current_list.find(".transactionlist li"),
@@ -860,7 +856,7 @@ function compareamounts(rd, rdo) {
                         }
                     }
                 } else {
-                    init_historical_fiat_data(rd, rdo, first_confirmations, latest_transaction_time, first_transaction_time);
+                    init_fiat_history(rd, rdo, first_confirmations, latest_transaction_time, first_transaction_time);
                     return
                 }
             }
@@ -876,20 +872,20 @@ function compareamounts(rd, rdo) {
                     "pending": crypto_pending,
                     "lightning": rd.lightning
                 }, false);
-                api_callback(rdo);
+                finalize_request_state(rdo);
                 return
             }
-            init_historical_fiat_data(rd, rdo, first_confirmations, latest_transaction_time, first_transaction_time);
+            init_fiat_history(rd, rdo, first_confirmations, latest_transaction_time, first_transaction_time);
             return
         }
     }
-    api_callback(rdo);
+    finalize_request_state(rdo);
 }
 
 // get historic crypto rates
 
 // Triggers historical fiat data retrieval for transactions based on confirmation status
-function init_historical_fiat_data(rd, rdo, conf, latestinput, firstinput) {
+function init_fiat_history(rd, rdo, conf, latestinput, firstinput) {
     const confirm_level = conf || 0,
         no_confirm = rd.no_conf || conf === false,
         latest_confirm = no_confirm ? 0 : confirm_level, // only update on change
@@ -907,14 +903,14 @@ function init_historical_fiat_data(rd, rdo, conf, latestinput, firstinput) {
             fiat_api = $("#fiatapisettings").data("selected"),
             fiat_api_default = (fiat_api === "coingecko" || fiat_api === "coinbase") ? "fixer" : fiat_api; // exclude coingecko api"
         glob_let.api_attempt[api_list] = {}; // reset global historic fiat price api attempt
-        get_historical_fiat_data(historic_payload, rdo, api_list, fiat_api_default);
+        fetch_fiat_rates(historic_payload, rdo, api_list, fiat_api_default);
         return
     }
-    api_callback(rdo);
+    finalize_request_state(rdo);
 }
 
 // Retrieves historical fiat exchange rates from specified API with fallback options
-function get_historical_fiat_data(rd, rdo, api_list, fiat_api) {
+function fetch_fiat_rates(rd, rdo, api_list, fiat_api) {
     glob_let.api_attempt[api_list][fiat_api] = true;
     const fiat_currency = rd.fiatcurrency;
     if (fiat_currency) {
@@ -934,13 +930,13 @@ function get_historical_fiat_data(rd, rdo, api_list, fiat_api) {
                 if (data.error) {
                     const next_historic = try_next_api(api_list, fiat_api);
                     if (next_historic) {
-                        get_historical_fiat_data(rd, rdo, api_list, next_historic);
+                        fetch_fiat_rates(rd, rdo, api_list, next_historic);
                         return
                     }
                     fail_dialogs(fiat_api, {
                         "error": data.error
                     });
-                    api_callback(rdo);
+                    finalize_request_state(rdo);
                     return
                 }
                 let usd_eur = false,
@@ -964,23 +960,23 @@ function get_historical_fiat_data(rd, rdo, api_list, fiat_api) {
                         picked_historic_api = historic_api === "coinmarketcap" ? "coingecko" : historic_api, // default to "coingecko api"
                         init_api_list = "historic_crypto_price_apis";
                     glob_let.api_attempt[init_api_list] = {};
-                    get_historical_crypto_data(rd, rdo, fiat_api, init_api_list, picked_historic_api, currency_rate, usd_rate, currency_symbol);
+                    fetch_crypto_rates(rd, rdo, fiat_api, init_api_list, picked_historic_api, currency_rate, usd_rate, currency_symbol);
                     return
                 }
                 const next_historic = try_next_api(api_list, fiat_api);
                 if (next_historic) {
-                    get_historical_fiat_data(rd, rdo, api_list, next_historic);
+                    fetch_fiat_rates(rd, rdo, api_list, next_historic);
                     return
                 }
             }
             fail_dialogs(fiat_api, {
                 "error": "unable to fetch " + currency_symbol + " exchange rate"
             });
-            api_callback(rdo);
+            finalize_request_state(rdo);
         }).fail(function(xhr, stat, err) {
             function next_proxy() { // try next proxy
                 if (get_next_proxy()) {
-                    get_historical_fiat_data(rd, rdo, api_list, fiat_api);
+                    fetch_fiat_rates(rd, rdo, api_list, fiat_api);
                     return true
                 }
                 return false
@@ -990,7 +986,7 @@ function get_historical_fiat_data(rd, rdo, api_list, fiat_api) {
             }
             const next_historic = try_next_api(api_list, fiat_api);
             if (next_historic) {
-                get_historical_fiat_data(rd, rdo, api_list, next_historic);
+                fetch_fiat_rates(rd, rdo, api_list, next_historic);
                 return
             }
             if (next_proxy()) { // Try next proxy after trying all api's
@@ -1000,11 +996,11 @@ function get_historical_fiat_data(rd, rdo, api_list, fiat_api) {
             fail_dialogs(fiat_api, {
                 "error": error_details
             });
-            api_callback(rdo);
+            finalize_request_state(rdo);
         });
         return
     }
-    api_callback(rdo);
+    finalize_request_state(rdo);
 }
 
 // Constructs API-specific URL parameters for historical fiat price requests
@@ -1028,7 +1024,7 @@ function form_date(latestinput) {
 }
 
 // Fetches and processes historical cryptocurrency prices with multi-API fallback support
-function get_historical_crypto_data(rd, rdo, fiat_api, api_list, api, currency_rate, usd_rate, currency_symbol) {
+function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd_rate, currency_symbol) {
     glob_let.api_attempt[api_list][api] = true;
     const payment_method = rd.payment,
         crypto_symbol = rd.currencysymbol,
@@ -1095,7 +1091,7 @@ function get_historical_crypto_data(rd, rdo, fiat_api, api_list, api, currency_r
                         "lcsymbol": currency_symbol,
                         "fetched": false
                     },
-                    historic_object = compare_historic_prices(api, values, data, transaction_timestamp),
+                    historic_object = match_price_timestamps(api, values, data, transaction_timestamp),
                     historic_price = historic_object.price,
                     conf_correct = node_data.instant_lock ? 0 : set_confirmations; // correction if dash instant_lock
                 current_node.data("historic", historic_object);
@@ -1147,23 +1143,23 @@ function get_historical_crypto_data(rd, rdo, fiat_api, api_list, api, currency_r
                     const cache_value = parseInt(latest_input) + parseInt(latest_confirm);
                     br_set_session("historic_" + rd.requestid, cache_value); // 'cache' historic data
                 }
-                api_callback(rdo);
+                finalize_request_state(rdo);
                 return
             }
         }
         const next_historic = try_next_api(api_list, api);
         if (next_historic) {
-            get_historical_crypto_data(rd, rdo, fiat_api, api_list, next_historic, currency_rate, usd_rate, currency_symbol);
+            fetch_crypto_rates(rd, rdo, fiat_api, api_list, next_historic, currency_rate, usd_rate, currency_symbol);
             return
         }
         fail_dialogs(api, {
             "error": "error retrieving historical price data"
         });
-        api_callback(rdo);
+        finalize_request_state(rdo);
     }).fail(function(xhr, stat, err) {
         function next_proxy() { // try next proxy
             if (get_next_proxy()) {
-                get_historical_crypto_data(rd, rdo, fiat_api, api_list, api, currency_rate, usd_rate, currency_symbol);
+                fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd_rate, currency_symbol);
                 return true
             }
             return false
@@ -1173,7 +1169,7 @@ function get_historical_crypto_data(rd, rdo, fiat_api, api_list, api, currency_r
         }
         const next_historic = try_next_api(api_list, api);
         if (next_historic) {
-            get_historical_crypto_data(rd, rdo, fiat_api, api_list, next_historic, currency_rate, usd_rate, currency_symbol);
+            fetch_crypto_rates(rd, rdo, fiat_api, api_list, next_historic, currency_rate, usd_rate, currency_symbol);
             return
         }
         if (next_proxy()) { // Try next proxy after trying all api's
@@ -1183,7 +1179,7 @@ function get_historical_crypto_data(rd, rdo, fiat_api, api_list, api, currency_r
         fail_dialogs(api, {
             "error": error_details
         });
-        api_callback(rdo);
+        finalize_request_state(rdo);
     })
 }
 
@@ -1236,7 +1232,7 @@ function cx_date(timestamp) {
 }
 
 // Matches transaction timestamps with closest historical price data point
-function compare_historic_prices(api, values, price_array, transaction_timestamp) {
+function match_price_timestamps(api, values, price_array, transaction_timestamp) {
     for (let i = 0; i < price_array.length; i++) {
         const historic_object = api === "coincodex" ? get_historic_object_coincodex(price_array[i]) :
             api === "coingecko" ? get_historic_object_coingecko(price_array[i]) :
@@ -1303,7 +1299,7 @@ function is_scanning() {
             clearscan();
         }
         glob_let.block_scan += 1;
-        playsound(glob_const.funk);
+        play_audio(glob_const.funk);
     }
     return scanning;
 }

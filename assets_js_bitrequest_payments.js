@@ -1,12 +1,12 @@
 $(document).ready(function() {
     wake_panel();
-    //set_request_timer
-    swipestart();
+    //set_dialog_timeout
+    swipe_start();
     //swipe
-    swipeend();
-    flipstart();
+    swipe_end();
+    flip_start();
     //flip
-    flipend();
+    flip_end();
     //flip_right1
     //flip_right2
     //flip_left1
@@ -44,25 +44,25 @@ $(document).ready(function() {
     lnd_offline();
     lnd_ni();
     //lnd_popup
-    pickcurrency();
-    //rendercpooltext
-    pushamount();
-    pushlcamount();
-    pushccamount();
-    pushsatamount();
-    //reflectfiatvalue
-    //reflectlcvalue
-    //reflectccvalue
-    //reflectsatvalue
-    //reflectinputs
-    //cryptovalue
-    reflectinput();
-    //updatecpool
-    //rendercpool
-    //renderqr
-    //set_uris
-    //set_lnd_qr
-    //set_lnd_uris
+    switch_currency();
+    //update_exchange_rates_text
+    sync_fiat_inputs();
+    sync_local_currency();
+    sync_crypto_inputs();
+    sync_satoshi_input();
+    //update_fiat_display
+    //update_local_currency
+    //update_crypto_display
+    //update_satoshi_display
+    //sync_input_values
+    //calculate_crypto_amount
+    mirror_input_value();
+    //update_currency_pool
+    //refresh_currency_pool
+    //generate_payment_qr
+    //set_wallet_uris
+    //set_lightning_qr
+    //set_lightning_uris
     //btc_urlscheme
     //bch_urlscheme
     switchaddress();
@@ -78,7 +78,7 @@ $(document).ready(function() {
     //pendingrequest
     view_pending_tx();
     pickaddressfromdialog();
-    //set_edit
+    //update_request_url
     addaddressfromdialog();
     add_from_seed();
     scanqr();
@@ -108,8 +108,8 @@ $(document).ready(function() {
     //open_tx
 
     //saverequest
-    //pendingdialog
-    //adjust_paymentdialog
+    //show_pending_status
+    //update_payment_status
     openwallet();
     openwalleturl();
     dw_trigger();
@@ -123,12 +123,12 @@ $(document).ready(function() {
 // Attaches wake-up event handlers to the payment dialog box
 function wake_panel() {
     $(document).on("mousedown touchstart", "#paymentdialogbox", function() {
-        set_request_timer();
+        set_dialog_timeout();
     })
 }
 
 // Sets a 3-minute auto-close timer for the payment request dialog
-function set_request_timer() {
+function set_dialog_timeout() {
     // close request dialog after 3 minutes
     if (!glob_const.paymentpopup.hasClass("live")) return;
     clearTimeout(glob_let.request_timer);
@@ -144,7 +144,7 @@ function set_request_timer() {
 }
 
 // Initializes vertical swipe detection for the payment dialog
-function swipestart() {
+function swipe_start() {
     $(document).on("mousedown touchstart", "#paymentdialog", function(e) {
         glob_let.blockswipe = false;
         const current_dialog = $(this),
@@ -182,7 +182,7 @@ function swipe(dialog_height, start_height) {
 }
 
 // Handles swipe gesture completion and resets dialog state
-function swipeend() {
+function swipe_end() {
     $(document).on("mouseup mouseleave touchend", "#payment", function() {
         $(document).off("mousemove touchmove", "#payment");
         const current_unit = $(this);
@@ -212,7 +212,7 @@ function swipeend() {
 }
 
 // Initializes horizontal flip gesture detection with payment state validation
-function flipstart() {
+function flip_start() {
     $(document).on("mousedown touchstart", "#paymentdialog", function(e) {
         if (glob_const.paymentdialogbox.hasClass("norequest")) {
             if (glob_const.offline === true) {
@@ -250,7 +250,7 @@ function flip(dialog_width, start_width) {
 }
 
 // Handles flip gesture completion and determines final rotation state
-function flipend() {
+function flip_end() {
     $(document).on("mouseup mouseleave touchend", "#payment", function() {
         const current_unit = $(this);
         $(document).off("mousemove touchmove", glob_const.paymentpopup);
@@ -346,7 +346,7 @@ function face_front() {
                 return
             }
             setTimeout(function() {
-                request_title.attr("placeholder", translate("forexample") + ":" + request_title.attr("data-ph" + getrandomnumber(1, 13)));
+                request_title.attr("placeholder", translate("forexample") + ":" + request_title.attr("data-ph" + generate_random_number(1, 13)));
                 amount_input.focus();
             }, 300);
             return
@@ -415,7 +415,7 @@ function loadpaymentfunction(pass) {
         return
     }
     if (!empty_obj(glob_let.sockets)) {
-        playsound(glob_const.funk);
+        play_audio(glob_const.funk);
         notify(translate("closingsockets"));
         return
     }
@@ -436,7 +436,7 @@ function loadpaymentfunction(pass) {
             return
         }
         const payment_currency = url_params.payment,
-            coin_data = getcoindata(payment_currency);
+            coin_data = get_coin_config(payment_currency);
         if (coin_data) {
             const is_erc20 = coin_data.erc20 === true,
                 request_start_time = now(),
@@ -484,7 +484,7 @@ function loadpaymentfunction(pass) {
         closeloader();
         return
     } // need to set fixer API key first
-    api_eror_msg("fixer", {
+    show_api_error("fixer", {
         "errorcode": "300",
         "errormessage": "Missing API key"
     }, true);
@@ -498,7 +498,7 @@ function get_tokeninfo(payment_currency, contract) {
         continue_paymentfunction();
         return
     }
-    loadertext(translate("gettokeninfo"));
+    set_loader_text(translate("gettokeninfo"));
     api_proxy({
         "api": "ethplorer",
         "search": "getTokenInfo/" + contract,
@@ -725,7 +725,7 @@ function continue_paymentfunction() {
         },
         lightning_switch = payment_currency === "bitcoin" ? (is_request && !is_lightning ? "" : "<div id='lightning_switch' title='lightning' class='lnswitch'><span class='icon-power'></span></div>") : "",
         ndef_switch = payment_currency === "bitcoin" && glob_const.ndef ? "<div id='ndef_switch' title='Tap to pay' class='lnswitch'><span class='icon-connection'></span></div>" : "";
-    settitle(page_name);
+    update_page_title(page_name);
     glob_const.paymentdialogbox.append("<div id='request_back' class='share_request dialogstyle'></div><div id='request_front' class='dialogstyle'><div id='xratestats'><span id='rq_errlog'></span></div>" + ndef_switch + lightning_switch + "<div class='networks'></div></div>").attr(payment_attributes);
     // Extend global request object
     $.extend(request, extended_request_data);
@@ -747,7 +747,7 @@ function lightning_setup() {
         if (decoded_data) {
             const implementation = decoded_data.imp;
             if (implementation) { //lightning request
-                loadertext(translate("checklightningstatus", {
+                set_loader_text(translate("checklightningstatus", {
                     "imp": implementation
                 }));
                 const proxy_host_data = decoded_data.proxy,
@@ -807,12 +807,12 @@ function lightning_setup() {
         proceed_pf();
         return
     }
-    const lightning_list = lndli(),
+    const lightning_list = get_lightning_settings(),
         lightning_data = lightning_list.data(),
         selected_service = lightning_data.selected_service;
     if (selected_service) {
         const implementation = selected_service.imp;
-        loadertext(translate("checklightningstatus", {
+        set_loader_text(translate("checklightningstatus", {
             "imp": implementation
         }));
         const node_id = selected_service.node_id,
@@ -943,7 +943,7 @@ function test_lnd(is_lnurl) {
     const node_host = lnd_config.host,
         is_onion_host = node_host && node_host.indexOf(".onion") > 0;
     if (is_lnurl || is_onion_host) {
-        test_lnurl_status(lnd_config);
+        validate_lnurl_connection(lnd_config);
         return
     }
     if (lnd_config.imp === "lnd") {
@@ -970,7 +970,7 @@ function proceed_pf(error_obj) {
         request.monitored = false;
         let error_message = translate("unabletoconnectln");
         if (error_obj) {
-            const error_data = get_api_error_data(error_obj);
+            const error_data = extract_error_details(error_obj);
             error_message = error_data.errorcode + ": " + error_data.errormessage;
         }
         const content = "<h2 class='icon-blocked'>" + error_message + "</h2>";
@@ -1007,7 +1007,7 @@ function proceed_pf(error_obj) {
             getccexchangerates(crypto_api_list, selected_crypto_api);
             return
         } //fetch cache
-        loadertext(translate("readingfromcache", {
+        set_loader_text(translate("readingfromcache", {
             "ccsymbol": request.currencysymbol
         }));
         initexchangerate(usd_exchange_rate, api_source, cache_age); //check for fiat rates and pass usd amount
@@ -1019,7 +1019,7 @@ function proceed_pf(error_obj) {
 // Fetches cryptocurrency rates from multiple APIs (CoinMarketCap, CoinGecko, CoinPaprika) with ERC20 token support
 function getccexchangerates(api_list, selected_api) {
     glob_let.api_attempt[api_list][selected_api] = true;
-    loadertext(translate("getccrates", {
+    set_loader_text(translate("getccrates", {
         "ccsymbol": request.currencysymbol,
         "api": selected_api
     }));
@@ -1031,7 +1031,7 @@ function getccexchangerates(api_list, selected_api) {
         selected_api === "coingecko" ? (is_erc20 ? "simple/token_price/ethereum?contract_addresses=" + token_contract + "&vs_currencies=usd" : "simple/price?ids=" + payment_currency + "&vs_currencies=usd") :
         false;
     if (api_search_path === false) {
-        loadertext(translate("apierror"));
+        set_loader_text(translate("apierror"));
         closeloader();
         cancelpaymentdialog();
         fail_dialogs(selected_api, {
@@ -1068,7 +1068,7 @@ function getccexchangerates(api_list, selected_api) {
                     selected_api === "coingecko" ? q_obj(api_response_data, price_node + ".usd") :
                     null;
                 if (crypto_exchange_rate) {
-                    loadertext(translate("success"));
+                    set_loader_text(translate("success"));
                     const current_timestamp = now(),
                         cached_rate_data = {
                             "timestamp": current_timestamp,
@@ -1093,7 +1093,7 @@ function getccexchangerates(api_list, selected_api) {
 
 // Implements fallback logic for failed cryptocurrency rate fetches using alternative APIs and proxies
 function cc_fail(api_list, selected_api, error_val, is_proxy_failure) {
-    const error_data = get_api_error_data(error_val, is_proxy_failure);
+    const error_data = extract_error_details(error_val, is_proxy_failure);
 
     function next_proxy() { // try next proxy
         if (get_next_proxy()) {
@@ -1119,7 +1119,7 @@ function cc_fail(api_list, selected_api, error_val, is_proxy_failure) {
 
 // Orchestrates fiat currency rate fetching with cache validation and currency parameter preparation
 function initexchangerate(crypto_rate, crypto_api, cache_age) {
-    loadertext(translate("getfiatrates"));
+    set_loader_text(translate("getfiatrates"));
     const inverse_crypto_rate = 1 / crypto_rate,
         current_timestamp = now(),
         is_new_currency = request.fiatcurrency !== request.localcurrency &&
@@ -1147,7 +1147,7 @@ function initexchangerate(crypto_rate, crypto_api, cache_age) {
                 get_fiat_exchangerate(fiat_api_list, fiat_api, inverse_crypto_rate, currency_list, crypto_api, cache_age);
                 return
             } //fetch cached exchange rates
-            loadertext(translate("readingfiatratesfromcache"));
+            set_loader_text(translate("readingfiatratesfromcache"));
             rendercurrencypool(exchange_rates, inverse_crypto_rate, crypto_api, currency_cache.api, cache_age, cache_expiration);
             return
         }
@@ -1158,7 +1158,7 @@ function initexchangerate(crypto_rate, crypto_api, cache_age) {
 // Retrieves fiat exchange rates from multiple providers (Fixer, CoinGecko, ExchangeRatesAPI) with EUR base conversion
 function get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currency_list, crypto_api, cache_age) {
     glob_let.api_attempt[api_list][selected_fiat_api] = true;
-    loadertext(translate("fetchingfiatrates", {
+    set_loader_text(translate("fetchingfiatrates", {
         "fiatapi": selected_fiat_api
     }));
     // set apipath
@@ -1169,7 +1169,7 @@ function get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currenc
         selected_fiat_api === "coinbase" ? "exchange-rates" :
         false;
     if (!api_search_path) {
-        loadertext(translate("error"));
+        set_loader_text(translate("error"));
         closeloader();
         cancelpaymentdialog();
         fail_dialogs(selected_fiat_api, {
@@ -1194,7 +1194,7 @@ function get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currenc
             selected_fiat_api === "coinbase" ? api_response_data.data.rates :
             null;
         if (exchange_rates) {
-            loadertext(translate("success"));
+            set_loader_text(translate("success"));
             const target_currency = request.fiatcurrency,
                 target_currency_upper = target_currency.toUpperCase(),
                 rates = {
@@ -1229,7 +1229,7 @@ function get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currenc
                         local_rate = local_key * usd_rate;
                 }
             } else {
-                loadertext(translate("error"));
+                set_loader_text(translate("error"));
                 closeloader();
                 cancelpaymentdialog();
                 fail_dialogs(selected_fiat_api, {
@@ -1258,7 +1258,7 @@ function get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currenc
             get_fiat_exchangerate(api_list, next_fiat_api, crypto_rate, currency_list, crypto_api, cache_age);
             return
         }
-        loadertext(translate("error"));
+        set_loader_text(translate("error"));
         closeloader();
         cancelpaymentdialog();
         const error_code = api_response_data.error || "Failed to load data from " + selected_fiat_api;
@@ -1299,7 +1299,7 @@ function next_fiat_api(api_list, selected_fiat_api, error_object, crypto_rate, c
 
 // Handles final error state when all exchange rate APIs and proxies fail
 function no_xrate_result(api, error_obj) {
-    loadertext(translate("apierror"));
+    set_loader_text(translate("apierror"));
     closeloader();
     cancelpaymentdialog();
     fail_dialogs(api, {
@@ -1535,24 +1535,24 @@ function getpayment(ccrateeuro, ccapi) {
         <div id='backwrapbottom' class='flex'>" + bottom_content + status_panel + "</div><div class='networks'></div>" + powered_by);
     let save_request;
     show_paymentdialog();
-    rendercpool(request.amount, exchange_rate);
-    renderqr(request.payment, wallet_addr, crypto_value, request.requesttitle);
+    refresh_currency_pool(request.amount, exchange_rate);
+    generate_payment_qr(request.payment, wallet_addr, crypto_value, request.requesttitle);
     if (request.isrequest) { // check for incoming requests
         if (!helper.contactform) { // indicates if it's a online payment so not an incoming request
             if (request.monitored) {
                 if (request.iszero) {
                     main_input_focus();
                 }
-                save_request = saverequest("init");
+                save_request = save_payment_request("init");
             }
         }
     } else {
         main_input_focus();
     }
     if (save_request !== "nosocket") {
-        closesocket();
+        close_socket();
         init_socket(helper.selected_socket, request.address);
-        set_request_timer();
+        set_dialog_timeout();
     }
     if (!request.monitored) {
         notify(translate("notmonitored"), 500000, "yes");
@@ -1562,14 +1562,14 @@ function getpayment(ccrateeuro, ccapi) {
         parent.postMessage("close_loader", "*");
     }
     const title_input = $("#requesttitle");
-    title_input.attr("placeholder", translate("forexample") + ":" + title_input.attr("data-ph" + getrandomnumber(1, 13)));
+    title_input.attr("placeholder", translate("forexample") + ":" + title_input.attr("data-ph" + generate_random_number(1, 13)));
     console.log({
         "request_object": request
     });
     console.log({
         "helper": helper
     });
-    wake();
+    prevent_screen_sleep();
     const lightning_info = helper.lnd;
     if (lightning_info) {
         if (!request.lightning_id) {
@@ -1584,7 +1584,7 @@ function getpayment(ccrateeuro, ccapi) {
 // Activates payment dialog with scroll position preservation and blur effects
 function show_paymentdialog() {
     glob_let.scrollposition = $(document).scrollTop(); // get scrollposition save as global
-    fixedcheck(glob_let.scrollposition); // fix nav position
+    toggle_fixed_nav(glob_let.scrollposition); // fix nav position
     glob_const.html.addClass("paymode blurmain_payment");
     $(".showmain #mainwrap").css("transform", "translate(0, -" + glob_let.scrollposition + "px)"); // fake scroll position
     glob_const.paymentpopup.addClass("showpu active");
@@ -1606,7 +1606,7 @@ function lnd_switch_function() {
     $(document).on("click", "#paymentdialogbox #lightning_switch", function() {
         if (helper.lnd) {
             if (helper.lnd_only) {
-                playsound(glob_const.funk);
+                play_audio(glob_const.funk);
                 return
             }
             if (helper.lnd.selected) {
@@ -1615,7 +1615,7 @@ function lnd_switch_function() {
             }
             const confirm_result = confirm(translate("enablelightning"));
             if (confirm_result === true) {
-                const lnd_list_item = lndli();
+                const lnd_list_item = get_lightning_settings();
                 lnd_list_item.data("selected", true).find(".switchpanel").removeClass("false").addClass("true");
                 save_cc_settings("bitcoin", true);
                 if (helper.lnd_status) {
@@ -1626,11 +1626,11 @@ function lnd_switch_function() {
                 notify("<span id='lnd_offline'>" + translate("lnoffline") + "</span>", 200000, "yes");
                 return
             }
-            playsound(glob_const.funk);
+            play_audio(glob_const.funk);
             return
         }
         if (request.isrequest) {
-            playsound(glob_const.funk);
+            play_audio(glob_const.funk);
             return
         }
         lnd_popup();
@@ -1655,7 +1655,7 @@ function lnd_statusx() {
         return
     }
     if (request.isrequest) {
-        playsound(glob_const.funk);
+        play_audio(glob_const.funk);
         return
     }
     notify("<span id='lnd_offline'>" + translate("lnoffline") + "</span>", 200000, "yes");
@@ -1677,11 +1677,11 @@ function lnd_ni() {
 
 // Triggers Lightning Network configuration interface
 function lnd_popup() {
-    lndli().find(".atext").trigger("click");
+    get_lightning_settings().find(".atext").trigger("click");
 }
 
 // Manages currency switching with dynamic UI updates and URL state management
-function pickcurrency() {
+function switch_currency() {
     $(document).on("click", "#paymentdialogbox #pickcurrency", function() {
         const current_node = $(this),
             currencyarray = helper.currencyarray,
@@ -1724,14 +1724,14 @@ function pickcurrency() {
         $("#shareinputmirror > input").val(newccvaluevar).prev("span").text(newccvalueplaceholder);
         glob_const.paymentdialogbox.attr("class", helper.requestclass + dialogclass + helper.iszeroclass);
         main_input_focus();
-        set_edit(href);
-        settitle(pagename);
-        rendercpooltext(newccsymbol, newccrate);
+        update_request_url(href);
+        update_page_title(pagename);
+        update_exchange_rates_text(newccsymbol, newccrate);
     });
 }
 
 // Updates exchange rate display text for all currencies in the pool
-function rendercpooltext(nextcurrency, newccrate) {
+function update_exchange_rates_text(nextcurrency, newccrate) {
     $("#paymentdialog .cpool").each(function() {
         const current_node = $(this),
             current_node_rate = current_node.attr("data-xrate"),
@@ -1747,7 +1747,7 @@ function rendercpooltext(nextcurrency, newccrate) {
 }
 
 // Synchronizes fiat amount inputs across the payment dialog
-function pushamount() {
+function sync_fiat_inputs() {
     $(document).on("input", "#paymentdialogbox .fmirror > input", function() {
         glob_let.blocktyping = true;
         const current_node = $(this),
@@ -1757,29 +1757,29 @@ function pushamount() {
             current_rate = $("#amountinputmirror > input").attr("data-xrate"),
             amount_input_value = is_zero ? glob_const.zeroplaceholder : current_amount;
         $("#paymentdialogbox .fmirror > input").not(current_node).val(current_amount).prev("span").text(placeholder);
-        reflectlcvalue(current_amount, current_rate);
-        reflectccvalue(current_amount, current_rate);
-        reflectsatvalue(current_amount, current_rate);
-        updatecpool(amount_input_value, current_rate, cryptovalue(current_amount, current_rate));
+        update_local_currency(current_amount, current_rate);
+        update_crypto_display(current_amount, current_rate);
+        update_satoshi_display(current_amount, current_rate);
+        update_currency_pool(amount_input_value, current_rate, calculate_crypto_amount(current_amount, current_rate));
     });
 }
 
 // Synchronizes local currency inputs and updates related values
-function pushlcamount() {
+function sync_local_currency() {
     $(document).on("input", "#paymentdialogbox .lcmirror > input", function() {
         glob_let.blocktyping = true;
         const current_node = $(this),
             current_amount = current_node.val(),
             current_rate = $("#lcinputmirror > input").attr("data-xrate");
         $("#paymentdialogbox .lcmirror > input").not(current_node).val(current_amount).prev("span").text(current_amount);
-        reflectfiatvalue(current_amount, current_rate, "fiat");
-        reflectccvalue(current_amount, current_rate, "fiat");
-        reflectsatvalue(current_amount, current_rate);
+        update_fiat_display(current_amount, current_rate, "fiat");
+        update_crypto_display(current_amount, current_rate, "fiat");
+        update_satoshi_display(current_amount, current_rate);
     });
 }
 
 // Synchronizes cryptocurrency amount inputs across the interface
-function pushccamount() {
+function sync_crypto_inputs() {
     $(document).on("input", "#paymentdialogbox .ccmirror > input", function() {
         glob_let.blocktyping = true;
         const current_node = $(this),
@@ -1787,92 +1787,92 @@ function pushccamount() {
             placeholder = current_amount.length === 0 ? glob_const.zeroplaceholder : current_amount,
             current_rate = $("#mainccinputmirror > input").attr("data-xrate");
         $("#paymentdialogbox .ccmirror > input").not(current_node).val(current_amount).prev("span").text(placeholder);
-        reflectfiatvalue(current_amount, current_rate, "crypto");
-        reflectlcvalue(current_amount, current_rate);
-        reflectsatvalue(current_amount, current_rate);
+        update_fiat_display(current_amount, current_rate, "crypto");
+        update_local_currency(current_amount, current_rate);
+        update_satoshi_display(current_amount, current_rate);
     });
 }
 
 // Manages satoshi value input and corresponding conversions
-function pushsatamount() {
+function sync_satoshi_input() {
     $(document).on("input", "#satinputmirror > input", function() {
         glob_let.blocktyping = true;
         const current_node = $(this),
             current_amount_pre = current_node.val(),
             current_amount = current_amount_pre.length === 0 ? current_amount_pre : current_amount_pre / 100000000,
             current_rate = $("#mainccinputmirror > input").attr("data-xrate");
-        reflectfiatvalue(current_amount, current_rate, "crypto");
-        reflectlcvalue(current_amount, current_rate);
-        reflectccvalue(current_amount, current_rate, "crypto");
+        update_fiat_display(current_amount, current_rate, "crypto");
+        update_local_currency(current_amount, current_rate);
+        update_crypto_display(current_amount, current_rate, "crypto");
     });
 }
 
 // Updates fiat currency values based on input changes
-function reflectfiatvalue(current_amount, current_rate, field_type) { // reflect fiat values
+function update_fiat_display(current_amount, current_rate, field_type) { // reflect fiat values
     const amount_input_rate = $("#amountinputmirror > input").attr("data-xrate"), //get fiat rate
         is_zero = current_amount.length === 0,
         decimal_places = glob_const.paymentdialogbox.hasClass("showcc") ? 6 : 2,
         current_amount_value = parseFloat(((current_amount / current_rate) * amount_input_rate).toFixed(decimal_places)),
         current_amount_placeholder = is_zero ? glob_const.zeroplaceholder : current_amount_value,
-        cc_value = is_zero ? glob_const.zeroplaceholder : (field_type == "crypto" ? current_amount : cryptovalue(current_amount, current_rate));
-    reflectinputs($("#paymentdialogbox .fmirror > input"), current_amount_value, current_amount_placeholder); // reflect fiat values on sharedialog
-    updatecpool(current_amount_value, amount_input_rate, cc_value);
+        cc_value = is_zero ? glob_const.zeroplaceholder : (field_type == "crypto" ? current_amount : calculate_crypto_amount(current_amount, current_rate));
+    sync_input_values($("#paymentdialogbox .fmirror > input"), current_amount_value, current_amount_placeholder); // reflect fiat values on sharedialog
+    update_currency_pool(current_amount_value, amount_input_rate, cc_value);
 }
 
 // Updates local currency display based on current rates
-function reflectlcvalue(current_amount, current_rate) { // reflect local currency value
+function update_local_currency(current_amount, current_rate) { // reflect local currency value
     const lc_rate = $("#popform").attr("data-lcrate"),
         lc_value = ((current_amount / current_rate) * lc_rate).toFixed(2),
         lc_placeholder = current_amount.length === 0 ? glob_const.zeroplaceholder : lc_value;
-    reflectinputs($("#paymentdialogbox .lcmirror > input"), lc_value, lc_placeholder);
+    sync_input_values($("#paymentdialogbox .lcmirror > input"), lc_value, lc_placeholder);
 }
 
 // Updates cryptocurrency value displays across the interface
-function reflectccvalue(current_amount, current_rate, field_type) { // reflect crypto input
-    const cc_value = current_amount.length === 0 ? glob_const.zeroplaceholder : (field_type == "crypto" ? current_amount.toFixed(6) : cryptovalue(current_amount, current_rate));
-    reflectinputs($("#paymentdialogbox .ccmirror > input"), cc_value, cc_value);
+function update_crypto_display(current_amount, current_rate, field_type) { // reflect crypto input
+    const cc_value = current_amount.length === 0 ? glob_const.zeroplaceholder : (field_type == "crypto" ? current_amount.toFixed(6) : calculate_crypto_amount(current_amount, current_rate));
+    sync_input_values($("#paymentdialogbox .ccmirror > input"), cc_value, cc_value);
 }
 
 // Updates satoshi value display based on current amount
-function reflectsatvalue(current_amount, current_rate, field_type) { // reflect sat input
+function update_satoshi_display(current_amount, current_rate, field_type) { // reflect sat input
     const is_zero = current_amount.length === 0,
-        cc_value = is_zero ? glob_const.zeroplaceholder : (field_type == "crypto" ? current_amount : cryptovalue(current_amount, current_rate)),
+        cc_value = is_zero ? glob_const.zeroplaceholder : (field_type == "crypto" ? current_amount : calculate_crypto_amount(current_amount, current_rate)),
         sat_value = (cc_value * 100000000).toFixed(0),
         sat_placeholder = is_zero ? "000000000" : sat_value;
-    reflectinputs($("#satinputmirror > input"), sat_value, sat_placeholder);
+    sync_input_values($("#satinputmirror > input"), sat_value, sat_placeholder);
 }
 
 // Synchronizes input field values and their visual placeholders
-function reflectinputs(input_node, value, placeholder) {
+function sync_input_values(input_node, value, placeholder) {
     const val_correct = (value == 0 || value == "0.00") ? "" : value;
     input_node.val(val_correct).prev("span").text(placeholder);
 }
 
 // Calculates cryptocurrency value based on input amount and exchange rate
-function cryptovalue(current_amount, current_rate) { // get ccrate
+function calculate_crypto_amount(current_amount, current_rate) { // get ccrate
     return parseFloat(((current_amount / current_rate) * $("#paymentdialogbox .ccpool").attr("data-xrate")).toFixed(6));
 }
 
 // Handles real-time input mirroring across payment dialog
-function reflectinput() {
+function mirror_input_value() {
     $(document).on("input change", ".mirrordiv > input", function() {
         const current_input = $(this),
             current_value = current_input.val(),
             mirror_div = current_input.prev("span"),
             placeholder = current_input.hasClass("satinput") ? "000000000" : current_input.attr("placeholder");
         mirror_div.text(current_value.length === 0 ? placeholder : current_value);
-        set_request_timer();
+        set_dialog_timeout();
     });
 }
 
 // Updates currency pool values and related UI elements
-function updatecpool(current_amount, current_rate, cc_value) {
-    rendercpool(current_amount, current_rate);
+function update_currency_pool(current_amount, current_rate, cc_value) {
+    refresh_currency_pool(current_amount, current_rate);
     const url_params = geturlparameters(),
         payment = url_params.payment,
         address = url_params.address,
         address_xmr_ia = request.xmr_ia || address;
-    renderqr(payment, address_xmr_ia, cc_value);
+    generate_payment_qr(payment, address_xmr_ia, cc_value);
     const page = url_params.p,
         currency = url_params.uoa,
         data_param = url_params.d ? "&d=" + url_params.d : "",
@@ -1885,13 +1885,13 @@ function updatecpool(current_amount, current_rate, cc_value) {
         });
     helper.currencylistitem.data("url", href);
     request.amount = current_amount;
-    set_edit(href);
-    settitle(page_name);
+    update_request_url(href);
+    update_page_title(page_name);
     glob_let.blocktyping = false;
 }
 
 // Refreshes currency pool display with current values
-function rendercpool(current_amount, current_rate) {
+function refresh_currency_pool(current_amount, current_rate) {
     $("#paymentdialog .cpool").each(function() {
         const current_node = $(this),
             current_node_value = parseFloat((current_amount / current_rate) * current_node.attr("data-xrate")),
@@ -1901,20 +1901,20 @@ function rendercpool(current_amount, current_rate) {
 }
 
 // Generates and displays payment QR codes with amount information
-function renderqr(payment, address, amount, title) {
+function generate_payment_qr(payment, address, amount, title) {
     const number = Number(amount),
         is_zero = number === 0 || isNaN(number),
         url_scheme = request.erc20 ? "ethereum:" + address :
         request.coindata.urlscheme(payment, address, amount, is_zero);
     $("#qrcode").empty().qrcode(url_scheme);
-    set_uris(url_scheme, amount);
+    set_wallet_uris(url_scheme, amount);
     if (helper.lnd) { // lightning
-        set_lnd_qr(amount, title);
+        set_lightning_qr(amount, title);
     }
 }
 
 // Sets wallet URI schemes for payment initiation
-function set_uris(url_scheme, amount) {
+function set_wallet_uris(url_scheme, amount) {
     $("#paymentdialogbox .openwallet").attr({
         "data-rel": amount,
         "title": url_scheme
@@ -1922,7 +1922,7 @@ function set_uris(url_scheme, amount) {
 }
 
 // Configures Lightning Network QR code display
-function set_lnd_qr(a, title) {
+function set_lightning_qr(a, title) {
     const ln = helper.lnd,
         srt = title || $("#paymentdialog input#requesttitle").val(),
         rt = srt || request.requesttitle,
@@ -1931,11 +1931,11 @@ function set_lnd_qr(a, title) {
         url = glob_let.lnd_ph + "proxy/v1/ln/?i=" + ln.imp + "&id=" + request.typecode + ln.pid + nid + "&a=" + (a * 100000000000).toFixed(0) + m,
         lnurl = lnurl_encode("lnurl", url).toUpperCase();
     $("#qrcode_lnd").html("").qrcode(lnurl);
-    set_lnd_uris(lnurl, a);
+    set_lightning_uris(lnurl, a);
 }
 
 // Sets Lightning Network wallet URIs and address display
-function set_lnd_uris(url_scheme, amount) {
+function set_lightning_uris(url_scheme, amount) {
     $("#paymentdialogbox .openwallet_lnd").attr({
         "data-rel": amount,
         "title": "lightning:" + url_scheme
@@ -1959,7 +1959,7 @@ function switchaddress() {
     $(document).on("click", "#paymentdialogbox.norequest #labelbttn", function() {
         const time_elapsed = now() - glob_let.sa_timer;
         if (time_elapsed < 1500) { // prevent clicking too fast
-            playsound(glob_const.funk);
+            play_audio(glob_const.funk);
             return
         }
         const url_params = geturlparameters(),
@@ -1972,7 +1972,7 @@ function switchaddress() {
         if (next_address_item) {
             const new_address = next_address_item.data("address"),
                 selected_socket = helper.selected_socket;
-            closesocket(current_address);
+            close_socket(current_address);
             init_socket(selected_socket, new_address);
             const data_param = url_params.d,
                 has_data = data_param && data_param.length > 5,
@@ -1983,8 +1983,8 @@ function switchaddress() {
                 page = url_params.p,
                 start_url = page ? "?p=" + page + "&payment=" : "?payment=",
                 href = start_url + payment + "&uoa=" + url_params.uoa + "&amount=" + url_params.amount + "&address=" + new_address + new_data_param;
-            renderqr(payment, new_address, cc_value);
-            set_edit(href);
+            generate_payment_qr(payment, new_address, cc_value);
+            update_request_url(href);
             $("#paymentaddress").text(new_address);
             $(this).text(new_address_label);
             const is_pending = ch_pending({
@@ -2096,7 +2096,7 @@ function validaterequestdata(lnurl) {
             if (!lightning_info.lnurl) {
                 data_object.nid = lightning_info.nid;
             }
-            set_lnd_qr($("#ccinputmirror > input").val(), request_title);
+            set_lightning_qr($("#ccinputmirror > input").val(), request_title);
         }
         // Include eth l2 chain data
         if (request.eth_l2s.length) {
@@ -2111,14 +2111,14 @@ function validaterequestdata(lnurl) {
         share_button.removeClass("sbactive");
     }
     helper.currencylistitem.data("url", new_url);
-    set_edit(new_url);
+    update_request_url(new_url);
 }
 
 // Triggers request data validation on form input changes
 function inputrequestdata() {
     $(document).on("input", "#shareform input", function() {
         validaterequestdata();
-        set_request_timer();
+        set_dialog_timeout();
     });
 }
 
@@ -2126,7 +2126,7 @@ function inputrequestdata() {
 function validatesteps() {
     $(document).on("keydown", "#paymentdialogbox .mirrordiv input", function(e) {
         if (glob_let.blocktyping === true) {
-            playsound(glob_const.funk);
+            play_audio(glob_const.funk);
             glob_let.blocktyping = false;
             e.preventDefault();
             return
@@ -2293,7 +2293,7 @@ function pickaddressfromdialog() {
                 currency = url_params.uoa,
                 amount = url_params.amount,
                 current_address = url_params.address;
-            closesocket(current_address);
+            close_socket(current_address);
             init_socket(helper.selected_socket, picked_address);
             const data_param = url_params.d,
                 has_data = data_param && data_param.length > 5,
@@ -2304,8 +2304,8 @@ function pickaddressfromdialog() {
             $("#paymentaddress").text(picked_address);
             $("#labelbttn").text(picked_label);
             request.address = picked_address;
-            renderqr(payment, picked_address, cc_value);
-            set_edit(href);
+            generate_payment_qr(payment, picked_address, cc_value);
+            update_request_url(href);
             glob_const.paymentdialogbox.attr("data-pending", "");
             canceldialog();
         }
@@ -2313,7 +2313,7 @@ function pickaddressfromdialog() {
 }
 
 // Updates browser history and local storage with current payment URL
-function set_edit(url) {
+function update_request_url(url) {
     history.replaceState(null, null, url);
     br_set_local("editurl", url);
 }
@@ -2464,7 +2464,7 @@ function share(current_button) {
             setlocales();
             return
         }
-        const url_hash = hashcode(url_id + shared_title);
+        const url_hash = generate_hash(url_id + shared_title);
         shorten_url(shared_title, shared_url, share_icon, null, url_hash);
         setlocales();
         return
@@ -2486,7 +2486,7 @@ function share(current_button) {
 
 // Manages URL shortening with multiple service fallbacks
 function shorten_url(shared_title, shared_url, site_thumb, unguessable, url_hash) {
-    loadertext(translate("generatelink"));
+    set_loader_text(translate("generatelink"));
     const url_shorten_settings = $("#url_shorten_settings"),
         is_url_shorten_active = url_shorten_settings.data("us_active") === "active";
     if (is_url_shorten_active) {
@@ -2765,7 +2765,7 @@ function sharecallback() {
             request.requesttype = "outgoing",
             request.status = "new",
             request.pending = (request.monitored === false) ? "unknown" : "scanning";
-        saverequest();
+        save_payment_request();
         loadpage("?p=requests");
         cancelpaymentdialog();
     } else {
@@ -2846,7 +2846,7 @@ function open_tx(transaction_node) {
 // ** Save and update request **
 
 // Processes and stores payment request data with multi-currency and Lightning Network support
-function saverequest(direct, lightning_url) {
+function save_payment_request(direct, lightning_url) {
     const url_params = geturlparameters();
     if (url_params.xss) {
         return
@@ -2873,7 +2873,7 @@ function saverequest(direct, lightning_url) {
         unhashed_request_data = current_payment + current_currency + amount_string + current_address + request.requestname + request.requesttitle + confirmation_string + lightning_id,
         saved_transaction_hash = request.txhash,
         is_local = current_request_type === "local",
-        request_id = is_local && saved_transaction_hash ? hashcode(saved_transaction_hash) : hashcode(unhashed_request_data),
+        request_id = is_local && saved_transaction_hash ? generate_hash(saved_transaction_hash) : generate_hash(unhashed_request_data),
         request_cache = br_get_local("requests", true),
         request_id_param = url_params.requestid,
         is_checkout = direct !== "init" && current_request_type === "checkout",
@@ -2937,7 +2937,7 @@ function saverequest(direct, lightning_url) {
                 return false;
             } else {
                 if (pending_state === "polling" || request_list_item.hasClass("expired")) {
-                    pendingdialog(request_list_item);
+                    show_pending_status(request_list_item);
                     if (lightning_object) {
                         return false;
                     }
@@ -2949,7 +2949,7 @@ function saverequest(direct, lightning_url) {
                         type_state = request_item_data.requesttype,
                         send_receive = type_state === "incoming" ? "sent" : "received",
                         transaction_status = send_receive === "sent" ? translate("paymentsent") : translate("paymentreceived");
-                    adjust_paymentdialog("paid", "no", transaction_status);
+                    update_payment_status("paid", "no", transaction_status);
                     glob_const.paymentdialogbox.find("span#view_tx").attr("data-txhash", transaction_hash_state);
                     return "nosocket";
                 }
@@ -2998,7 +2998,7 @@ function saverequest(direct, lightning_url) {
                             const address_list_item = filter_addressli(current_payment, "address", current_address);
                             address_list_item.addClass("used").data("used", true);
                             saveaddresses(current_payment, false);
-                            derive_addone(current_payment);
+                            derive_new_address(current_payment);
                         }
                     }
                 }
@@ -3069,7 +3069,7 @@ function saverequest(direct, lightning_url) {
 }
 
 // Displays pending transaction status with appropriate UI updates
-function pendingdialog(payment_request) { // show pending dialog if tx is pending
+function show_pending_status(payment_request) { // show pending dialog if tx is pending
     request.received = true;
     const req_data = payment_request.data(),
         request_id = req_data.requestid,
@@ -3090,7 +3090,7 @@ function pendingdialog(payment_request) { // show pending dialog if tx is pendin
     tx_view.attr("data-txhash", primary_tx_hash);
     if (payment_request.hasClass("expired")) {
         if (status === "new" || status === "insufficient") {
-            adjust_paymentdialog("expired", "no", translate("txexpired"));
+            update_payment_status("expired", "no", translate("txexpired"));
             glob_const.paymentdialogbox.find("span#view_tx").hide();
         }
         return
@@ -3100,11 +3100,11 @@ function pendingdialog(payment_request) { // show pending dialog if tx is pendin
         if (invoice) {
             if (invoice.status === "paid") {
                 const tx_status = payment_direction === "sent" ? translate("paymentsent") : translate("paymentreceived");
-                adjust_paymentdialog("paid", "no", tx_status);
+                update_payment_status("paid", "no", tx_status);
                 return
             }
             if (invoice.status === "pending") {
-                adjust_paymentdialog("pending", "polling", translate("waitingforpayment"));
+                update_payment_status("pending", "polling", translate("waitingforpayment"));
                 return
             }
             return
@@ -3112,28 +3112,28 @@ function pendingdialog(payment_request) { // show pending dialog if tx is pendin
     }
     if (current_payment === "nano") { // 0 confirmation so payment must be sent
         if (status === "insufficient") {
-            adjust_paymentdialog("insufficient", "scanning", translate("insufficientamount"));
+            update_payment_status("insufficient", "scanning", translate("insufficientamount"));
             return
         }
         const tx_status = payment_direction === "sent" ? translate("paymentsent") : translate("paymentreceived");
-        adjust_paymentdialog("paid", "no", tx_status);
+        update_payment_status("paid", "no", tx_status);
         return
     }
     if (primary_tx_hash) {
         add_flip();
         if (is_pending === "scanning") {
             if (status === "insufficient") {
-                adjust_paymentdialog("insufficient", "scanning", translate("insufficientamount"));
+                update_payment_status("insufficient", "scanning", translate("insufficientamount"));
                 return
             }
-            adjust_paymentdialog("pending", "scanning", translate("pendingrequest"));
+            update_payment_status("pending", "scanning", translate("pendingrequest"));
             return
         }
-        adjust_paymentdialog("pending", "polling", translate("txbroadcasted"));
+        update_payment_status("pending", "polling", translate("txbroadcasted"));
         const confirm_threshold = request.set_confirmations || req_data.set_confirmations || 0;
         request.set_confirmations = confirm_threshold,
             request.txhash = primary_tx_hash;
-        tx_polling_init({
+        start_transaction_monitor({
             "txhash": primary_tx_hash,
             "setconfirmations": confirm_threshold,
             layer2_network
@@ -3142,10 +3142,10 @@ function pendingdialog(payment_request) { // show pending dialog if tx is pendin
 }
 
 // Updates payment dialog UI elements based on transaction status
-function adjust_paymentdialog(status, pending, status_text) {
+function update_payment_status(status, pending, status_text) {
     const sound_effect = status === "insufficient" ? glob_const.funk : glob_const.blip,
         status_panel = glob_const.paymentdialogbox.find(".brstatuspanel");
-    playsound(sound_effect);
+    play_audio(sound_effect);
     add_flip();
     glob_const.paymentdialogbox.addClass("transacting").attr({
         "data-status": status,
@@ -3191,7 +3191,7 @@ function dw_trigger() {
 function download_wallet(currency) {
     const is_lightning = currency === "lightning",
         base_currency = is_lightning ? "bitcoin" : currency,
-        coin_details = getcoindat(base_currency),
+        coin_details = get_coin_metadata(base_currency),
         wallet_options = is_lightning ? coin_details.lightning_wallets : coin_details.wallets,
         download_page = wallet_options.wallet_download_page,
         wallet_list = wallet_options.wallets;
@@ -3212,7 +3212,7 @@ function download_wallet(currency) {
         popdialog(content, "canceldialog");
         if (wallet_list) {
             const wallet_container = $("#formbox_ul"),
-                device_type = getdevicetype(),
+                device_type = detect_device_type(),
                 platform = getplatform(device_type),
                 store_icon = platform_icon(platform),
                 store_tag = store_icon ? "<img src='" + store_icon + "'/>" : "<span class='icon-download'></span> ";
@@ -3221,7 +3221,7 @@ function download_wallet(currency) {
                 if (platform_url) {
                     const wallet_name = wallet_info.name,
                         wallet_website = wallet_info.website,
-                        wallet_icon = is_lightning ? "<img src='img_logos_btc-lnd.png' class='wallet_icon'/>" : "<img src='" + w_icon(wallet_name) + "' class='wallet_icon'/>",
+                        wallet_icon = is_lightning ? "<img src='img_logos_btc-lnd.png' class='wallet_icon'/>" : "<img src='" + get_wallet_icon_url(wallet_name) + "' class='wallet_icon'/>",
                         wallet_item = "<li><a href='" + wallet_website + "' target='_blank' class='exit app_dll'>" + wallet_icon + wallet_name + "</a><a href='" + platform_url + "' target='_blank' class='exit store_tag'>" + store_tag + "</a></li>";
                     wallet_container.append(wallet_item);
                 }
@@ -3271,7 +3271,7 @@ function updaterequest(update_args, should_save) {
             if (current_status === "paid" || current_status === "archive_pending") {
                 if (current_status === "paid") {
                     if (glob_const.inframe === false) {
-                        playsound(glob_const.blip);
+                        play_audio(glob_const.blip);
                     }
                     request_element.addClass("shownotification");
                 }

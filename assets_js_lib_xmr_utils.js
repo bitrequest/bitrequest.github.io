@@ -77,7 +77,7 @@ function sc_reduce32(hex) {
 
 // Derives a Monero secret spend key from either a BIP39 mnemonic phrase or its seed
 function get_ssk(bip39, seed) {
-    const p_rootkey = (seed === true) ? get_rootkey(bip39) : get_rootkey(toseed(bip39)),
+    const p_rootkey = (seed === true) ? get_rootkey(bip39) : get_rootkey(mnemonic_to_seed(bip39)),
         dx_dat = {
             "dpath": "m/44'/128'/0'/0/0",
             "key": p_rootkey.slice(0, 64),
