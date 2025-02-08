@@ -69,7 +69,6 @@ function init_l2_sockets(payment, address, ct, socket_node) {
             }
         }
     }
-
 }
 
 // Sets up Layer 2 blockchain scanning for given address and contract

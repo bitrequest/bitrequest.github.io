@@ -305,13 +305,12 @@ function hasbigint() {
 }
 
 // Manage local storage
-
 // Tests browser's localStorage API availability through write and remove operations
 function check_local() {
-    const tdat = "testdat"; // Local storage
+    const test_key = "testdat"; // Local storage
     try {
-        localStorage.setItem(tdat, tdat);
-        localStorage.removeItem(tdat);
+        localStorage.setItem(test_key, test_key);
+        localStorage.removeItem(test_key);
         return true;
     } catch (e) {
         return false;
@@ -320,26 +319,26 @@ function check_local() {
 
 // Persists data to localStorage with 'bitrequest_' prefix and optional JSON stringification
 function br_set_local(pref, dat, str) {
-    const ddat = str ? JSON.stringify(dat ?? null) : dat;
-    localStorage.setItem("bitrequest_" + pref, ddat);
+    const storage_data = str ? JSON.stringify(dat ?? null) : dat;
+    localStorage.setItem("bitrequest_" + pref, storage_data);
 }
 
 // Stores data in sessionStorage with 'bitrequest_' prefix and optional JSON stringification
 function br_set_session(pref, dat, str) {
-    const ddat = str ? JSON.stringify(dat ?? null) : dat;
-    sessionStorage.setItem("bitrequest_" + pref, ddat);
+    const storage_data = str ? JSON.stringify(dat ?? null) : dat;
+    sessionStorage.setItem("bitrequest_" + pref, storage_data);
 }
 
 // Retrieves and optionally parses JSON data from localStorage with 'bitrequest_' prefix
 function br_get_local(pref, parse) {
-    const dat = localStorage.getItem("bitrequest_" + pref);
-    return parse && dat !== null ? JSON.parse(dat) : dat;
+    const stored_data = localStorage.getItem("bitrequest_" + pref);
+    return parse && stored_data !== null ? JSON.parse(stored_data) : stored_data;
 }
 
 // Retrieves and optionally parses JSON data from sessionStorage with 'bitrequest_' prefix
 function br_get_session(pref, parse) {
-    const dat = sessionStorage.getItem("bitrequest_" + pref);
-    return parse && dat !== null ? JSON.parse(dat) : dat;
+    const stored_data = sessionStorage.getItem("bitrequest_" + pref);
+    return parse && stored_data !== null ? JSON.parse(stored_data) : stored_data;
 }
 
 // Deletes item with 'bitrequest_' prefix from localStorage
@@ -356,8 +355,8 @@ function br_remove_session(pref) {
 
 // Determines if currency is within predefined Bitcoin-family blockchains
 function is_btchain(currency) {
-    const btchains = ["bitcoin", "litecoin", "dogecoin", "bitcoin-cash"];
-    return btchains.includes(currency);
+    const btc_chains = ["bitcoin", "litecoin", "dogecoin", "bitcoin-cash"];
+    return btc_chains.includes(currency);
 }
 
 // Returns empty object/array or provided object based on falsy input value
@@ -381,12 +380,12 @@ function br_issar(e) {
 // Traverses nested object properties using dot notation path string
 function q_obj(obj, path) {
     try {
-        const p_arr = path.split(".");
-        for (let i = 0; i < p_arr.length; i++) {
+        const path_parts = path.split(".");
+        for (let i = 0; i < path_parts.length; i++) {
             if (obj === null || typeof obj !== "object") {
                 return false;
             }
-            obj = obj[p_arr[i]];
+            obj = obj[path_parts[i]];
         }
         return obj;
     } catch (e) {
@@ -406,24 +405,24 @@ function empty_obj(val) {
 // Handles API requests through proxy with automatic failover and authentication
 function api_proxy(ad, p_proxy) {
     const custom_url = ad.api_url || false,
-        apiname = ad.api,
-        aud = custom_url ? {} :
+        api_name = ad.api,
+        api_url_data = custom_url ? {} :
         get_api_url({
-            "api": apiname,
+            "api": api_name,
             "search": ad.search
         }),
-        set_proxy = p_proxy || d_proxy();
-    glob_let.proxy_attempts[set_proxy] = true;
-    if (aud) {
+        active_proxy = p_proxy || d_proxy();
+    glob_let.proxy_attempts[active_proxy] = true;
+    if (api_url_data) {
         const proxy = ad.proxy,
-            api_key = aud.api_key,
-            set_key = Boolean(api_key),
-            nokey = api_key === "no_key",
-            key_pass = nokey || set_key;
-        if (proxy === false || (proxy !== true && key_pass)) {
+            api_key = api_url_data.api_key,
+            has_key = Boolean(api_key),
+            no_key_needed = api_key === "no_key",
+            is_key_valid = no_key_needed || has_key;
+        if (proxy === false || (proxy !== true && is_key_valid)) {
             const params = ad.params,
                 bearer = ad.bearer;
-            params.url = custom_url || aud.api_url_key;
+            params.url = custom_url || api_url_data.api_url_key;
             if (bearer && api_key) {
                 if (params.headers) {
                     params.headers["Authorization"] = "Bearer " + api_key;
@@ -436,35 +435,35 @@ function api_proxy(ad, p_proxy) {
             return $.ajax(params);
         }
         // use api proxy
-        ad.api = c_apiname(apiname);
-        const api_location = "proxy/v1/",
-            app_root = ad.localhost ? "" : set_proxy,
-            proxy_data = {
+        ad.api = c_apiname(api_name);
+        const api_path = "proxy/v1/",
+            root_url = ad.localhost ? "" : active_proxy,
+            proxy_config = {
                 "method": "POST",
                 "cache": false,
                 "timeout": 5000,
-                "url": app_root + api_location,
-                "data": $.extend(ad, aud, {
-                    "nokey": nokey
+                "url": root_url + api_path,
+                "data": $.extend(ad, api_url_data, {
+                    "nokey": no_key_needed
                 })
             };
-        return $.ajax(proxy_data);
+        return $.ajax(proxy_config);
     }
     return $.ajax();
 }
 
 // Normalizes API names for consistent proxy handling
-function c_apiname(apiname) {
-    if (apiname === "arbitrum" || apiname === "polygon") return "infura";
-    if (apiname === "binplorer") return "ethplorer";
-    return apiname;
+function c_apiname(api_name) {
+    if (api_name === "arbitrum" || api_name === "polygon") return "infura";
+    if (api_name === "binplorer") return "ethplorer";
+    return api_name;
 }
 
 // Processes API response and handles proxy-specific data and version checks
 function br_result(e) {
     const ping = e.ping,
-        proxy = Boolean(ping);
-    if (proxy && ping.br_cache) {
+        is_proxy = Boolean(ping);
+    if (is_proxy && ping.br_cache) {
         const version = ping.br_cache.version;
         if (version < glob_const.proxy_version) {
             proxy_alert(version);
@@ -476,29 +475,29 @@ function br_result(e) {
         }
     }
     return {
-        "proxy": proxy,
-        "result": proxy ? (ping.br_cache ? ping.br_result : ping) : e
+        "proxy": is_proxy,
+        "result": is_proxy ? (ping.br_cache ? ping.br_result : ping) : e
     }
 }
 
 // Constructs API endpoint URL with authentication parameters and search queries
 function get_api_url(get) {
     const api = get.api,
-        ad = get_api_data(api);
-    if (ad) {
+        api_data = get_api_data(api);
+    if (api_data) {
         const search = get.search || "",
-            base_url = ad.base_url,
-            key_param = ad.key_param || "",
+            base_url = api_data.base_url,
+            key_param = api_data.key_param || "",
             saved_key = $("#apikeys").data(api),
-            key_val = saved_key || ad.api_key,
-            ampersand = (search) ? (search.indexOf("?") > -1 || search.indexOf("&") > -1) ? "&" : "?" : "",
-            api_param = key_param !== "bearer" && saved_key ? ampersand + key_param + saved_key : "",
-            api_url = base_url + search;
+            key_value = saved_key || api_data.api_key,
+            concat_char = (search) ? (search.indexOf("?") > -1 || search.indexOf("&") > -1) ? "&" : "?" : "",
+            param_string = key_param !== "bearer" && saved_key ? concat_char + key_param + saved_key : "",
+            full_url = base_url + search;
         return {
-            "api_url": api_url,
-            "api_url_key": api_url + api_param,
-            "api_key": key_val,
-            "ampersand": ampersand,
+            "api_url": full_url,
+            "api_url_key": full_url + param_string,
+            "api_key": key_value,
+            "ampersand": concat_char,
             "key_param": key_param
         }
     }
@@ -509,21 +508,21 @@ function get_api_url(get) {
 function get_next_proxy() {
     if (block_overflow("proxy")) return false; // prevent overflow
     const proxies = all_proxies(),
-        current_proxy = d_proxy(),
-        c_index = proxies.indexOf(current_proxy),
-        cc_index = c_index === -1 ? 0 : c_index,
-        next_i = proxies[cc_index + 1],
-        next_p = next_i || proxies[0];
-    if (glob_let.proxy_attempts[next_p] !== true) {
+        current = d_proxy(),
+        current_index = proxies.indexOf(current),
+        safe_index = current_index === -1 ? 0 : current_index,
+        next_proxy = proxies[safe_index + 1],
+        next_active = next_proxy || proxies[0];
+    if (glob_let.proxy_attempts[next_active] !== true) {
         glob_let.rpc_attempts = {};
         set_setting("api_proxy", { // save next proxy
-            "selected": next_p
-        }, next_p);
+            "selected": next_active
+        }, next_active);
         savesettings();
         reset_overflow("rpc");
         reset_overflow("l2");
         glob_let.apikey_fails = false;
-        return next_p;
+        return next_active;
     }
     return false;
 }
@@ -541,16 +540,15 @@ function is_proxy_fail(stc) {
 function block_overflow(type, limit) {
     if (glob_let.overflow_detected) return true;
     glob_let.block_overflow[type]++;
-    const overflow_limit = limit || glob_const.overflow_limit;
-    if (glob_let.block_overflow[type] > overflow_limit) {
+    const max_limit = limit || glob_const.overflow_limit;
+    if (glob_let.block_overflow[type] > max_limit) {
         glob_let.overflow_detected = true;
-        const content = "<h2 class='icon-warning'>Overflow detected</h2><br/><p><strong style='color:#F00'>Fatal error!</strong><br/>Please close the application ASAP.</p>";
-        popdialog(content, "canceldialog");
+        const error_msg = "<h2 class='icon-warning'>Overflow detected</h2><br/><p><strong style='color:#F00'>Fatal error!</strong><br/>Please close the application ASAP.</p>";
+        popdialog(error_msg, "canceldialog");
         return true;
     }
     return false;
 }
-
 // Resets overflow counters for specified or all request types
 function reset_overflow(type) {
     glob_let.overflow_detected = false;
@@ -572,23 +570,23 @@ function tofixedspecial(str, n) {
     if (str.indexOf("e+") < 0) {
         return str;
     }
-    const convert = str.replace(".", "").split("e+").reduce(function(p, b) {
+    const decimal_str = str.replace(".", "").split("e+").reduce(function(p, b) {
         return p + "0".repeat(b - p.length + 1);
     }) + "." + "0".repeat(n);
-    return convert.slice(0, -1);
+    return decimal_str.slice(0, -1);
 }
 
 // Parses Lightning Network connection string into URL and parameters
 function renderlnconnect(str) {
-    const spitsearch = str.split("?"),
-        url = spitsearch[0],
-        s_string = spitsearch[1],
-        proto = url.includes("https://") ? "https://" : url.includes("http://") ? "http://" : "://",
-        search = s_string ? renderparameters(s_string) : false,
-        bare_url = url.split(proto).pop(),
-        rest_url = search.lnconnect ? atob(search.lnconnect) : (proto === "://") ? "https://" + bare_url : proto + bare_url;
-    search.resturl = rest_url;
-    return search;
+    const url_parts = str.split("?"),
+        base_url = url_parts[0],
+        param_str = url_parts[1],
+        protocol = base_url.includes("https://") ? "https://" : base_url.includes("http://") ? "http://" : "://",
+        params = param_str ? renderparameters(param_str) : false,
+        clean_url = base_url.split(protocol).pop(),
+        rest_url = params.lnconnect ? atob(params.lnconnect) : (protocol === "://") ? "https://" + clean_url : protocol + clean_url;
+    params.resturl = rest_url;
+    return params;
 }
 
 // Formats base64 strings for URL-safe usage by replacing '+' and '/' characters
@@ -598,12 +596,12 @@ function cleanb64(str) {
 
 // Converts URL-safe base64 string to original format and attempts SJCL bit decoding
 function b64urldecode(str) {
-    const cstr = cleanb64(str);
-    if (is_hex(cstr) === true) {
-        return cstr;
+    const clean_str = cleanb64(str);
+    if (is_hex(clean_str) === true) {
+        return clean_str;
     }
     try {
-        return from_bits(sjcl.codec.base64url.toBits(cstr));
+        return from_bits(sjcl.codec.base64url.toBits(clean_str));
     } catch (e) {
         return false;
     }
@@ -621,40 +619,40 @@ function geturlparameters(str) {
 
 // Parses URL query string into object while checking for XSS vulnerabilities
 function renderparameters(str) {
-    const xss = xss_search(str);
-    if (xss) {
+    const has_xss = xss_search(str);
+    if (has_xss) {
         return {
             "xss": true
         }
     }
-    const getvalues = str.split("&"),
-        get_object = {};
-    getvalues.forEach(function(val) {
-        const keyval = val.split("=");
-        get_object[decodeURIComponent(keyval[0])] = decodeURIComponent(keyval[1]);
+    const param_pairs = str.split("&"),
+        param_obj = {};
+    param_pairs.forEach(function(pair) {
+        const key_val = pair.split("=");
+        param_obj[decodeURIComponent(key_val[0])] = decodeURIComponent(key_val[1]);
     });
-    const dp = get_object.d,
-        mp = get_object.m;
-    if (dp) {
-        const isxx = scanmeta(dp);
-        if (isxx) {
-            get_object.xss = true;
+    const data_param = param_obj.d,
+        meta_param = param_obj.m;
+    if (data_param) {
+        const is_xss = scanmeta(data_param);
+        if (is_xss) {
+            param_obj.xss = true;
         }
     }
-    if (mp) {
-        const isxx = scanmeta(mp);
-        if (isxx) {
-            get_object.xss = true;
+    if (meta_param) {
+        const is_xss = scanmeta(meta_param);
+        if (is_xss) {
+            param_obj.xss = true;
         }
     }
-    return get_object;
+    return param_obj;
 }
 
 // Validates base64 encoded metadata for XSS attack patterns
 function scanmeta(val) {
-    const isd = (val?.length > 5) ? atob(val) : false,
-        xssdat = xss_search(isd);
-    if (xssdat) { //xss detection
+    const decoded = (val?.length > 5) ? atob(val) : false,
+        has_xss = xss_search(decoded);
+    if (has_xss) { //xss detection
         return true;
     }
     return false;
@@ -663,13 +661,13 @@ function scanmeta(val) {
 // Detects common XSS attack patterns in strings and triggers security alerts
 function xss_search(val) {
     if (val) {
-        const val_lower = val.toLowerCase();
-        if (val_lower.includes("<scrip")) {
+        const lowercase = val.toLowerCase();
+        if (lowercase.includes("<scrip")) {
             vibrate();
             notify(glob_const.xss_alert);
             return true
         }
-        if (val_lower.includes("onerror")) {
+        if (lowercase.includes("onerror")) {
             vibrate();
             notify(glob_const.xss_alert);
             return true
@@ -682,12 +680,10 @@ function xss_search(val) {
 function getrandomnumber(min, max) {
     return Math.floor(Math.random() * (max - min) + min);
 }
-
 // Returns random element from array using Math.random() distribution
 function random_array_item(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
 }
-
 // Generates deterministic 32-bit hash from string using bit manipulation
 function hashcode(str) {
     if (str) {
@@ -712,16 +708,16 @@ function getcc_icon(cmcid, cpid, erc20) {
 
 // Identifies device type from user agent string and app environment flags
 function getdevicetype() {
-    const ua = br_useragent;
+    const useragent = br_useragent;
     return (glob_const.is_android_app === true) ? "android-app" :
         (glob_let.is_ios_app === true) ? "apple-app" :
-        (/iPad/.test(ua)) ? "iPad" :
-        (/iPhone/.test(ua)) ? "iPhone" :
-        (/Android/.test(ua)) ? "Android" :
-        (/Macintosh/.test(ua)) ? "Macintosh" :
-        (/Windows/.test(ua)) ? "Windows" :
+        (/iPad/.test(useragent)) ? "iPad" :
+        (/iPhone/.test(useragent)) ? "iPhone" :
+        (/Android/.test(useragent)) ? "Android" :
+        (/Macintosh/.test(useragent)) ? "Macintosh" :
+        (/Windows/.test(useragent)) ? "Windows" :
         "unknown";
-};
+}
 
 // Maps device type to platform marketplace or environment category
 function getplatform(device) {
@@ -740,36 +736,36 @@ function getplatform(device) {
 }
 
 // Combines date and time parts into standardized datetime string
-function makedatestring(datetimeparts) {
-    const [date, time] = datetimeparts,
-    split = time.includes(".") ? "." : "Z";
-    return date + " " + time.split(split)[0];
+function makedatestring(datetime_parts) {
+    const [date, time] = datetime_parts,
+        delimiter = time.includes(".") ? "." : "Z";
+    return date + " " + time.split(delimiter)[0];
 }
 
 // Parses datetime string into JavaScript Date timestamp
-function returntimestamp(datestring) {
-    const [date, time] = datestring.split(" "),
+function returntimestamp(date_string) {
+    const [date, time] = date_string.split(" "),
         [year, month, day] = date.split("-"),
         [hours, minutes, seconds] = time.split(":");
     return new Date(year, parseInt(month, 10) - 1, day, hours, minutes, seconds);
 }
 
 // Converts ISO timestamp string to milliseconds since epoch
-function to_ts(ts) {
-    if (ts) {
-        const tstamp = ts.split("T");
-        return tstamp?.length ? returntimestamp(makedatestring(tstamp)).getTime() : null;
+function to_ts(timestamp) {
+    if (timestamp) {
+        const time_parts = timestamp.split("T");
+        return time_parts?.length ? returntimestamp(makedatestring(time_parts)).getTime() : null;
     }
     return null;
 }
 
 // Formats timestamp into localized short date with time
-function short_date(txtime) {
-    return new Date(txtime - glob_const.timezone).toLocaleString(langcode, {
-        "day": "2-digit", // numeric, 2-digit
-        "month": "2-digit", // numeric, 2-digit, long, short, narrow
-        "year": "2-digit", // numeric, 2-digit
-        "hour": "numeric", // numeric, 2-digit
+function short_date(tx_time) {
+    return new Date(tx_time - glob_const.timezone).toLocaleString(langcode, {
+        "day": "2-digit",
+        "month": "2-digit",
+        "year": "2-digit",
+        "hour": "numeric",
         "minute": "numeric"
     })
 }
@@ -788,20 +784,20 @@ function weekdays() {
 }
 
 // Formats date object into localized full date string with optional markup
-function fulldateformat(date, lng, markup) {
+function fulldateformat(date, lang, markup) {
     const year = date.getFullYear(),
-        currentyear = new Date().getFullYear(),
-        yearstring = year == currentyear ? "" : ", " + year,
+        current_year = new Date().getFullYear(),
+        year_suffix = year == current_year ? "" : ", " + year,
         time = formattime(date),
-        time_str = markup ? " | <div class='fdtime'>" + time + "</div>" : " | " + time;
-    return weekdays()[date.getDay()] + ", " + date.toLocaleString(lng, {
+        time_markup = markup ? " | <div class='fdtime'>" + time + "</div>" : " | " + time;
+    return weekdays()[date.getDay()] + ", " + date.toLocaleString(lang, {
         "month": "long"
-    }) + " " + date.getDate() + yearstring + time_str;
+    }) + " " + date.getDate() + year_suffix + time_markup;
 }
 
 // Creates HTML-formatted full date string with separated time component
-function fulldateformatmarkup(date, lng) {
-    return weekdays()[date.getDay()] + " " + date.toLocaleString(lng, {
+function fulldateformatmarkup(date, lang) {
+    return weekdays()[date.getDay()] + " " + date.toLocaleString(lang, {
         "month": "long"
     }) + " " + date.getDate() + " | <div class='fdtime'>" + formattime(date) + "</div>";
 }
@@ -816,9 +812,9 @@ function formattime(date) {
 
 // Initiates audio playback with promise-based error handling
 function playsound(audio) {
-    const promise = audio[0].play();
-    if (promise) {
-        promise.then(function() {
+    const play_promise = audio[0].play();
+    if (play_promise) {
+        play_promise.then(function() {
             // Autoplay started!
         }).catch(function(error) {
             console.error("Autoplay failed:", error);
@@ -842,8 +838,8 @@ function vibrate() {
 
 // Retrieves API configuration object by identifier from global config
 function get_api_data(api_id) {
-    return glob_config.apis.find(function(val) {
-        return val.name === api_id;
+    return glob_config.apis.find(function(item) {
+        return item.name === api_id;
     });
 }
 
@@ -860,8 +856,8 @@ function str_incudes(main, chunk) {
     if (main && chunk) {
         const main_upper = main.toUpperCase(),
             chunk_upper = chunk.toUpperCase(),
-            includes = main_upper.includes(chunk_upper);
-        return includes;
+            is_included = main_upper.includes(chunk_upper);
+        return is_included;
     }
     return false
 }
@@ -872,13 +868,13 @@ function trimdecimals(amount, decimals) {
 }
 
 // Updates specific properties of objects within array using ID matching
-function adjust_objectarray(array, mods) {
-    const newarray = array;
-    $.each(mods, function(i, val) {
-        const index = array.findIndex((obj => obj.id == val.id));
-        newarray[index][val.change] = val.val;
+function adjust_objectarray(array, modifications) {
+    const updated_array = array;
+    $.each(modifications, function(i, mod) {
+        const target_index = array.findIndex((obj => obj.id == mod.id));
+        updated_array[target_index][mod.change] = mod.val;
     });
-    return newarray;
+    return updated_array;
 }
 
 // Returns current timestamp in milliseconds since epoch
@@ -892,9 +888,9 @@ function now_utc() {
 }
 
 // Extracts data attributes from jQuery collection into array
-function dom_to_array(dom, dat) {
+function dom_to_array(dom, data_attr) {
     return dom.map(function() {
-        return $(this).data(dat);
+        return $(this).data(data_attr);
     }).get();
 }
 
@@ -910,33 +906,33 @@ function d_proxy() {
 
 // Concatenates default and custom proxy lists
 function all_proxies() {
-    const pdat = proxy_dat(),
-        cproxies = pdat.custom_proxies;
-    return glob_const.proxy_list.concat(cproxies);
+    const proxy_data = proxy_dat(),
+        custom_proxies = proxy_data.custom_proxies;
+    return glob_const.proxy_list.concat(custom_proxies);
 }
 
 // Constructs complete AWS S3 URL for given filename
 function fetch_aws(filename, bckt) {
-    const bucket = bckt || glob_const.aws_bucket;
-    return bucket + filename;
+    const bucket_url = bckt || glob_const.aws_bucket;
+    return bucket_url + filename;
 }
 
 // Finds first object in array matching key-value pair
 function object_from_array(array, key, val) {
-    const result = array.find(obj => obj[key] === val);
-    return result || false;
+    const matched_item = array.find(obj => obj[key] === val);
+    return matched_item || false;
 }
 
 // Initializes API keys from encoded storage or triggers fresh key generation
 function gk() {
-    const k = glob_let.io.k;
-    if (k) {
-        const pk = JSON.parse(atob(k));
-        if (pk.if_id === "" || pk.ga_id === "" || pk.bc_id === "" || pk.al_id === "") {
+    const stored_key = glob_let.io.k;
+    if (stored_key) {
+        const parsed_key = JSON.parse(atob(stored_key));
+        if (parsed_key.if_id === "" || parsed_key.ga_id === "" || parsed_key.bc_id === "" || parsed_key.al_id === "") {
             fk();
             return
         }
-        init_keys(k, true);
+        init_keys(stored_key, true);
         return
     }
     fk();
@@ -951,9 +947,9 @@ function fk() {
     }).done(function(e) {
         const res = br_result(e);
         result = res.result,
-            ko = result.k;
-        if (ko) {
-            init_keys(ko, false);
+            key_obj = result.k;
+        if (key_obj) {
+            init_keys(key_obj, false);
         }
     }).fail(function() {
         //init_keys();
@@ -961,10 +957,10 @@ function fk() {
 }
 
 // Persists decrypted API keys to local storage with optional initialization
-function init_keys(ko, set) { // set required keys
-    const k = JSON.parse(atob(ko));
-    to = k;
-    glob_let.io.k = ko;
+function init_keys(key_obj, set) { // set required keys
+    const key_data = JSON.parse(atob(key_obj));
+    to = key_data;
+    glob_let.io.k = key_obj;
     if (set === false) {
         br_set_local("init", glob_let.io, true);
     }
@@ -972,14 +968,14 @@ function init_keys(ko, set) { // set required keys
 
 // Converts remote URLs to file:// protocol paths in local development environment
 function makelocal(url) {
-    const pathname = glob_const.w_loc.pathname;
-    return (glob_let.local || glob_let.localserver) ? (url.includes("?")) ? "file://" + pathname + "?" + url.split("?")[1] : pathname : url;
+    const current_path = glob_const.w_loc.pathname;
+    return (glob_let.local || glob_let.localserver) ? (url.includes("?")) ? "file://" + current_path + "?" + url.split("?")[1] : current_path : url;
 }
 
 // Sanitizes string by removing Unicode control characters and invalid code points
 function clean_str(string) {
-    const iv = /[\0-\x1F\x7F-\x9F\xAD\u0378\u0379\u037F-\u0383\u038B\u038D\u03A2\u0528-\u0530\u0557\u0558\u0560\u0588\u058B-\u058E\u0590\u05C8-\u05CF\u05EB-\u05EF\u05F5-\u0605\u061C\u061D\u06DD\u070E\u070F\u074B\u074C\u07B2-\u07BF\u07FB-\u07FF\u082E\u082F\u083F\u085C\u085D\u085F-\u089F\u08A1\u08AD-\u08E3\u08FF\u0978\u0980\u0984\u098D\u098E\u0991\u0992\u09A9\u09B1\u09B3-\u09B5\u09BA\u09BB\u09C5\u09C6\u09C9\u09CA\u09CF-\u09D6\u09D8-\u09DB\u09DE\u09E4\u09E5\u09FC-\u0A00\u0A04\u0A0B-\u0A0E\u0A11\u0A12\u0A29\u0A31\u0A34\u0A37\u0A3A\u0A3B\u0A3D\u0A43-\u0A46\u0A49\u0A4A\u0A4E-\u0A50\u0A52-\u0A58\u0A5D\u0A5F-\u0A65\u0A76-\u0A80\u0A84\u0A8E\u0A92\u0AA9\u0AB1\u0AB4\u0ABA\u0ABB\u0AC6\u0ACA\u0ACE\u0ACF\u0AD1-\u0ADF\u0AE4\u0AE5\u0AF2-\u0B00\u0B04\u0B0D\u0B0E\u0B11\u0B12\u0B29\u0B31\u0B34\u0B3A\u0B3B\u0B45\u0B46\u0B49\u0B4A\u0B4E-\u0B55\u0B58-\u0B5B\u0B5E\u0B64\u0B65\u0B78-\u0B81\u0B84\u0B8B-\u0B8D\u0B91\u0B96-\u0B98\u0B9B\u0B9D\u0BA0-\u0BA2\u0BA5-\u0BA7\u0BAB-\u0BAD\u0BBA-\u0BBD\u0BC3-\u0BC5\u0BC9\u0BCE\u0BCF\u0BD1-\u0BD6\u0BD8-\u0BE5\u0BFB-\u0C00\u0C04\u0C0D\u0C11\u0C29\u0C34\u0C3A-\u0C3C\u0C45\u0C49\u0C4E-\u0C54\u0C57\u0C5A-\u0C5F\u0C64\u0C65\u0C70-\u0C77\u0C80\u0C81\u0C84\u0C8D\u0C91\u0CA9\u0CB4\u0CBA\u0CBB\u0CC5\u0CC9\u0CCE-\u0CD4\u0CD7-\u0CDD\u0CDF\u0CE4\u0CE5\u0CF0\u0CF3-\u0D01\u0D04\u0D0D\u0D11\u0D3B\u0D3C\u0D45\u0D49\u0D4F-\u0D56\u0D58-\u0D5F\u0D64\u0D65\u0D76-\u0D78\u0D80\u0D81\u0D84\u0D97-\u0D99\u0DB2\u0DBC\u0DBE\u0DBF\u0DC7-\u0DC9\u0DCB-\u0DCE\u0DD5\u0DD7\u0DE0-\u0DF1\u0DF5-\u0E00\u0E3B-\u0E3E\u0E5C-\u0E80\u0E83\u0E85\u0E86\u0E89\u0E8B\u0E8C\u0E8E-\u0E93\u0E98\u0EA0\u0EA4\u0EA6\u0EA8\u0EA9\u0EAC\u0EBA\u0EBE\u0EBF\u0EC5\u0EC7\u0ECE\u0ECF\u0EDA\u0EDB\u0EE0-\u0EFF\u0F48\u0F6D-\u0F70\u0F98\u0FBD\u0FCD\u0FDB-\u0FFF\u10C6\u10C8-\u10CC\u10CE\u10CF\u1249\u124E\u124F\u1257\u1259\u125E\u125F\u1289\u128E\u128F\u12B1\u12B6\u12B7\u12BF\u12C1\u12C6\u12C7\u12D7\u1311\u1316\u1317\u135B\u135C\u137D-\u137F\u139A-\u139F\u13F5-\u13FF\u169D-\u169F\u16F1-\u16FF\u170D\u1715-\u171F\u1737-\u173F\u1754-\u175F\u176D\u1771\u1774-\u177F\u17DE\u17DF\u17EA-\u17EF\u17FA-\u17FF\u180F\u181A-\u181F\u1878-\u187F\u18AB-\u18AF\u18F6-\u18FF\u191D-\u191F\u192C-\u192F\u193C-\u193F\u1941-\u1943\u196E\u196F\u1975-\u197F\u19AC-\u19AF\u19CA-\u19CF\u19DB-\u19DD\u1A1C\u1A1D\u1A5F\u1A7D\u1A7E\u1A8A-\u1A8F\u1A9A-\u1A9F\u1AAE-\u1AFF\u1B4C-\u1B4F\u1B7D-\u1B7F\u1BF4-\u1BFB\u1C38-\u1C3A\u1C4A-\u1C4C\u1C80-\u1CBF\u1CC8-\u1CCF\u1CF7-\u1CFF\u1DE7-\u1DFB\u1F16\u1F17\u1F1E\u1F1F\u1F46\u1F47\u1F4E\u1F4F\u1F58\u1F5A\u1F5C\u1F5E\u1F7E\u1F7F\u1FB5\u1FC5\u1FD4\u1FD5\u1FDC\u1FF0\u1FF1\u1FF5\u1FFF\u200B-\u200F\u202A-\u202E\u2060-\u206F\u2072\u2073\u208F\u209D-\u209F\u20BB-\u20CF\u20F1-\u20FF\u218A-\u218F\u23F4-\u23FF\u2427-\u243F\u244B-\u245F\u2700\u2B4D-\u2B4F\u2B5A-\u2BFF\u2C2F\u2C5F\u2CF4-\u2CF8\u2D26\u2D28-\u2D2C\u2D2E\u2D2F\u2D68-\u2D6E\u2D71-\u2D7E\u2D97-\u2D9F\u2DA7\u2DAF\u2DB7\u2DBF\u2DC7\u2DCF\u2DD7\u2DDF\u2E3C-\u2E7F\u2E9A\u2EF4-\u2EFF\u2FD6-\u2FEF\u2FFC-\u2FFF\u3040\u3097\u3098\u3100-\u3104\u312E-\u3130\u318F\u31BB-\u31BF\u31E4-\u31EF\u321F\u32FF\u4DB6-\u4DBF\u9FCD-\u9FFF\uA48D-\uA48F\uA4C7-\uA4CF\uA62C-\uA63F\uA698-\uA69E\uA6F8-\uA6FF\uA78F\uA794-\uA79F\uA7AB-\uA7F7\uA82C-\uA82F\uA83A-\uA83F\uA878-\uA87F\uA8C5-\uA8CD\uA8DA-\uA8DF\uA8FC-\uA8FF\uA954-\uA95E\uA97D-\uA97F\uA9CE\uA9DA-\uA9DD\uA9E0-\uA9FF\uAA37-\uAA3F\uAA4E\uAA4F\uAA5A\uAA5B\uAA7C-\uAA7F\uAAC3-\uAADA\uAAF7-\uAB00\uAB07\uAB08\uAB0F\uAB10\uAB17-\uAB1F\uAB27\uAB2F-\uABBF\uABEE\uABEF\uABFA-\uABFF\uD7A4-\uD7AF\uD7C7-\uD7CA\uD7FC-\uF8FF\uFA6E\uFA6F\uFADA-\uFAFF\uFB07-\uFB12\uFB18-\uFB1C\uFB37\uFB3D\uFB3F\uFB42\uFB45\uFBC2-\uFBD2\uFD40-\uFD4F\uFD90\uFD91\uFDC8-\uFDEF\uFDFE\uFDFF\uFE1A-\uFE1F\uFE27-\uFE2F\uFE53\uFE67\uFE6C-\uFE6F\uFE75\uFEFD-\uFF00\uFFBF-\uFFC1\uFFC8\uFFC9\uFFD0\uFFD1\uFFD8\uFFD9\uFFDD-\uFFDF\uFFE7\uFFEF-\uFFFB\uFFFE\uFFFF]/g;
-    return string.replace(iv, "");
+    const invalid_chars = /[\0-\x1F\x7F-\x9F\xAD\u0378\u0379\u037F-\u0383\u038B\u038D\u03A2\u0528-\u0530\u0557\u0558\u0560\u0588\u058B-\u058E\u0590\u05C8-\u05CF\u05EB-\u05EF\u05F5-\u0605\u061C\u061D\u06DD\u070E\u070F\u074B\u074C\u07B2-\u07BF\u07FB-\u07FF\u082E\u082F\u083F\u085C\u085D\u085F-\u089F\u08A1\u08AD-\u08E3\u08FF\u0978\u0980\u0984\u098D\u098E\u0991\u0992\u09A9\u09B1\u09B3-\u09B5\u09BA\u09BB\u09C5\u09C6\u09C9\u09CA\u09CF-\u09D6\u09D8-\u09DB\u09DE\u09E4\u09E5\u09FC-\u0A00\u0A04\u0A0B-\u0A0E\u0A11\u0A12\u0A29\u0A31\u0A34\u0A37\u0A3A\u0A3B\u0A3D\u0A43-\u0A46\u0A49\u0A4A\u0A4E-\u0A50\u0A52-\u0A58\u0A5D\u0A5F-\u0A65\u0A76-\u0A80\u0A84\u0A8E\u0A92\u0AA9\u0AB1\u0AB4\u0ABA\u0ABB\u0AC6\u0ACA\u0ACE\u0ACF\u0AD1-\u0ADF\u0AE4\u0AE5\u0AF2-\u0B00\u0B04\u0B0D\u0B0E\u0B11\u0B12\u0B29\u0B31\u0B34\u0B3A\u0B3B\u0B45\u0B46\u0B49\u0B4A\u0B4E-\u0B55\u0B58-\u0B5B\u0B5E\u0B64\u0B65\u0B78-\u0B81\u0B84\u0B8B-\u0B8D\u0B91\u0B96-\u0B98\u0B9B\u0B9D\u0BA0-\u0BA2\u0BA5-\u0BA7\u0BAB-\u0BAD\u0BBA-\u0BBD\u0BC3-\u0BC5\u0BC9\u0BCE\u0BCF\u0BD1-\u0BD6\u0BD8-\u0BE5\u0BFB-\u0C00\u0C04\u0C0D\u0C11\u0C29\u0C34\u0C3A-\u0C3C\u0C45\u0C49\u0C4E-\u0C54\u0C57\u0C5A-\u0C5F\u0C64\u0C65\u0C70-\u0C77\u0C80\u0C81\u0C84\u0C8D\u0C91\u0CA9\u0CB4\u0CBA\u0CBB\u0CC5\u0CC9\u0CCE-\u0CD4\u0CD7-\u0CDD\u0CDF\u0CE4\u0CE5\u0CF0\u0CF3-\u0D01\u0D04\u0D0D\u0D11\u0D3B\u0D3C\u0D45\u0D49\u0D4F-\u0D56\u0D58-\u0D5F\u0D64\u0D65\u0D76-\u0D78\u0D80\u0D81\u0D84\u0D97-\u0D99\u0DB2\u0DBC\u0DBE\u0DBF\u0DC7-\u0DC9\u0DCB-\u0DCE\u0DD5\u0DD7\u0DE0-\u0DF1\u0DF5-\u0E00\u0E3B-\u0E3E\u0E5C-\u0E80\u0E83\u0E85\u0E86\u0E89\u0E8B\u0E8C\u0E8E-\u0E93\u0E98\u0EA0\u0EA4\u0EA6\u0EA8\u0EA9\u0EAC\u0EBA\u0EBE\u0EBF\u0EC5\u0EC7\u0ECE\u0ECF\u0EDA\u0EDB\u0EE0-\u0EFF\u0F48\u0F6D-\u0F70\u0F98\u0FBD\u0FCD\u0FDB-\u0FFF\u10C6\u10C8-\u10CC\u10CE\u10CF\u1249\u124E\u124F\u1257\u1259\u125E\u125F\u1289\u128E\u128F\u12B1\u12B6\u12B7\u12BF\u12C1\u12C6\u12C7\u12D7\u1311\u1316\u1317\u135B\u135C\u137D-\u137F\u139A-\u139F\u13F5-\u13FF\u169D-\u169F\u16F1-\u16FF\u170D\u1715-\u171F\u1737-\u173F\u1754-\u175F\u176D\u1771\u1774-\u177F\u17DE\u17DF\u17EA-\u17EF\u17FA-\u17FF\u180F\u181A-\u181F\u1878-\u187F\u18AB-\u18AF\u18F6-\u18FF\u191D-\u191F\u192C-\u192F\u193C-\u193F\u1941-\u1943\u196E\u196F\u1975-\u197F\u19AC-\u19AF\u19CA-\u19CF\u19DB-\u19DD\u1A1C\u1A1D\u1A5F\u1A7D\u1A7E\u1A8A-\u1A8F\u1A9A-\u1A9F\u1AAE-\u1AFF\u1B4C-\u1B4F\u1B7D-\u1B7F\u1BF4-\u1BFB\u1C38-\u1C3A\u1C4A-\u1C4C\u1C80-\u1CBF\u1CC8-\u1CCF\u1CF7-\u1CFF\u1DE7-\u1DFB\u1F16\u1F17\u1F1E\u1F1F\u1F46\u1F47\u1F4E\u1F4F\u1F58\u1F5A\u1F5C\u1F5E\u1F7E\u1F7F\u1FB5\u1FC5\u1FD4\u1FD5\u1FDC\u1FF0\u1FF1\u1FF5\u1FFF\u200B-\u200F\u202A-\u202E\u2060-\u206F\u2072\u2073\u208F\u209D-\u209F\u20BB-\u20CF\u20F1-\u20FF\u218A-\u218F\u23F4-\u23FF\u2427-\u243F\u244B-\u245F\u2700\u2B4D-\u2B4F\u2B5A-\u2BFF\u2C2F\u2C5F\u2CF4-\u2CF8\u2D26\u2D28-\u2D2C\u2D2E\u2D2F\u2D68-\u2D6E\u2D71-\u2D7E\u2D97-\u2D9F\u2DA7\u2DAF\u2DB7\u2DBF\u2DC7\u2DCF\u2DD7\u2DDF\u2E3C-\u2E7F\u2E9A\u2EF4-\u2EFF\u2FD6-\u2FEF\u2FFC-\u2FFF\u3040\u3097\u3098\u3100-\u3104\u312E-\u3130\u318F\u31BB-\u31BF\u31E4-\u31EF\u321F\u32FF\u4DB6-\u4DBF\u9FCD-\u9FFF\uA48D-\uA48F\uA4C7-\uA4CF\uA62C-\uA63F\uA698-\uA69E\uA6F8-\uA6FF\uA78F\uA794-\uA79F\uA7AB-\uA7F7\uA82C-\uA82F\uA83A-\uA83F\uA878-\uA87F\uA8C5-\uA8CD\uA8DA-\uA8DF\uA8FC-\uA8FF\uA954-\uA95E\uA97D-\uA97F\uA9CE\uA9DA-\uA9DD\uA9E0-\uA9FF\uAA37-\uAA3F\uAA4E\uAA4F\uAA5A\uAA5B\uAA7C-\uAA7F\uAAC3-\uAADA\uAAF7-\uAB00\uAB07\uAB08\uAB0F\uAB10\uAB17-\uAB1F\uAB27\uAB2F-\uABBF\uABEE\uABEF\uABFA-\uABFF\uD7A4-\uD7AF\uD7C7-\uD7CA\uD7FC-\uF8FF\uFA6E\uFA6F\uFADA-\uFAFF\uFB07-\uFB12\uFB18-\uFB1C\uFB37\uFB3D\uFB3F\uFB42\uFB45\uFBC2-\uFBD2\uFD40-\uFD4F\uFD90\uFD91\uFDC8-\uFDEF\uFDFE\uFDFF\uFE1A-\uFE1F\uFE27-\uFE2F\uFE53\uFE67\uFE6C-\uFE6F\uFE75\uFEFD-\uFF00\uFFBF-\uFFC1\uFFC8\uFFC9\uFFD0\uFFD1\uFFD8\uFFD9\uFFDD-\uFFDF\uFFE7\uFFEF-\uFFFB\uFFFE\uFFFF]/g;
+    return string.replace(invalid_chars, "");
 }
 
 // Removes diacritical marks from string using Unicode normalization
@@ -993,7 +989,6 @@ function capitalize(str) {
 }
 
 // ** Query helpers ** //
-
 // Verifies if payment request modal is currently active
 function isopenrequest() {
     return glob_const.paymentpopup.hasClass("active");
@@ -1006,23 +1001,23 @@ function get_setting(setting, dat) {
 
 // Updates settings DOM element data attributes and optional display text
 function set_setting(setting, keypairs, title) {
-    const set_node = $("#" + setting);
-    set_node.data(keypairs);
+    const settings_elem = $("#" + setting);
+    settings_elem.data(keypairs);
     if (title) {
-        set_node.find("p").text(title);
+        settings_elem.find("p").text(title);
     }
 }
 
 // Queries request list items by matching specific data attribute
-function get_requestli(datakey, dataval) {
+function get_requestli(data_key, data_value) {
     return $("#requestlist li.rqli").filter(function() {
-        return $(this).data(datakey) === dataval;
+        return $(this).data(data_key) === data_value;
     })
 }
 
 // Detects existing pending transaction requests by matching multiple attributes
-function ch_pending(dat) {
-    return $("#requestlist li.rqli[data-address='" + dat.address + "'][data-pending='scanning'][data-cmcid='" + dat.cmcid + "']").length > 0;
+function ch_pending(request_data) {
+    return $("#requestlist li.rqli[data-address='" + request_data.address + "'][data-pending='scanning'][data-cmcid='" + request_data.cmcid + "']").length > 0;
 }
 
 // Retrieves DOM container for currency-specific address listings
@@ -1031,20 +1026,20 @@ function get_addresslist(currency) {
 }
 
 // Filters address elements by matching specific data attribute
-function filter_addressli(currency, datakey, dataval) {
-    const addressli = get_addresslist(currency).children("li");
-    return filter_list(addressli, datakey, dataval);
+function filter_addressli(currency, data_key, data_value) {
+    const address_items = get_addresslist(currency).children("li");
+    return filter_list(address_items, data_key, data_value);
 }
 
 // Searches all address elements across currencies by data attribute
-function filter_all_addressli(datakey, dataval) {
-    return filter_list($(".adli"), datakey, dataval);
+function filter_all_addressli(data_key, data_value) {
+    return filter_list($(".adli"), data_key, data_value);
 }
 
 // Filters any DOM collection by matching data attribute value
-function filter_list(list, datakey, dataval) {
+function filter_list(list, data_key, data_value) {
     return list.filter(function() {
-        return $(this).data(datakey) === dataval;
+        return $(this).data(data_key) === data_value;
     })
 }
 
@@ -1060,57 +1055,57 @@ function get_homeli(currency) {
 
 // Retrieves currency settings node or data by identifier
 function cs_node(currency, id, data) {
-    const coinnode = $("#" + currency + "_settings .cc_settinglist li[data-id='" + id + "']");
-    if (coinnode.length) {
+    const settings_node = $("#" + currency + "_settings .cc_settinglist li[data-id='" + id + "']");
+    if (settings_node.length) {
         if (data) {
-            const coindat = coinnode.data();
-            if (coindat) {
-                return coindat;
+            const node_data = settings_node.data();
+            if (node_data) {
+                return node_data;
             }
         }
-        return coinnode;
+        return settings_node;
     }
-    const coindata = getcoinsettings(currency);
-    if (coindata) {
-        return coindata[id];
+    const coin_settings = getcoinsettings(currency);
+    if (coin_settings) {
+        return coin_settings[id];
     }
     return false
 }
 
 // Fetches cryptocurrency configuration including ERC20 token handling
 function getcoindata(currency) {
-    const coindata_object = getcoinconfig(currency);
-    if (coindata_object) {
-        const coindata = coindata_object.data,
-            settings = coindata_object.settings,
-            cd_object = {
-                "currency": coindata.currency,
-                "ccsymbol": coindata.ccsymbol,
-                "cmcid": coindata.cmcid,
+    const coin_config = getcoinconfig(currency);
+    if (coin_config) {
+        const coin_data = coin_config.data,
+            settings = coin_config.settings,
+            config_object = {
+                "currency": coin_data.currency,
+                "ccsymbol": coin_data.ccsymbol,
+                "cmcid": coin_data.cmcid,
                 "monitored": true,
-                "urlscheme": coindata.urlscheme,
-                "regex": coindata.address_regex,
+                "urlscheme": coin_data.urlscheme,
+                "regex": coin_data.address_regex,
                 "erc20": false
             };
-        return cd_object;
+        return config_object;
     } // if not it's probably erc20 token
-    const currencyref = get_currencyli(currency); // check if erc20 token is added
-    if (currencyref.length) {
-        return $.extend(currencyref.data(), glob_config.erc20_dat.data);
+    const currency_ref = get_currencyli(currency); // check if erc20 token is added
+    if (currency_ref.length) {
+        return $.extend(currency_ref.data(), glob_config.erc20_dat.data);
     } // else lookup erc20 data
-    const tokenobject = fetch_cached_erc20();
-    if (tokenobject) {
-        const erc20data = tokenobject.find(function(filter) {
-            return filter.name === currency;
+    const token_list = fetch_cached_erc20();
+    if (token_list) {
+        const token_data = token_list.find(function(token) {
+            return token.name === currency;
         });
-        if (erc20data) {
-            const fetched_data = {
-                "currency": erc20data.name,
-                "ccsymbol": erc20data.symbol,
-                "cmcid": erc20data.cmcid.toString(),
-                "contract": erc20data.contract
+        if (token_data) {
+            const token_config = {
+                "currency": token_data.name,
+                "ccsymbol": token_data.symbol,
+                "cmcid": token_data.cmcid.toString(),
+                "contract": token_data.contract
             }
-            return $.extend(fetched_data, glob_config.erc20_dat.data);
+            return $.extend(token_config, glob_config.erc20_dat.data);
         }
     }
     return false;
@@ -1118,8 +1113,8 @@ function getcoindata(currency) {
 
 // Retrieves current cryptocurrency settings with local storage override
 function activecoinsettings(currency) {
-    const saved_coinsettings = br_get_local(currency + "_settings", true);
-    return saved_coinsettings || getcoinsettings(currency);
+    const local_settings = br_get_local(currency + "_settings", true);
+    return local_settings || getcoinsettings(currency);
 }
 
 // Returns combined cryptocurrency metadata and configuration
@@ -1129,17 +1124,17 @@ function getcoindat(currency) {
 
 // Fetches cryptocurrency-specific settings configuration
 function getcoinsettings(currency) {
-    const coindata = getcoinconfig(currency);
-    if (coindata) {
-        return coindata.settings;
+    const coin_config = getcoinconfig(currency);
+    if (coin_config) {
+        return coin_config.settings;
     } // return erc20 settings
     return get_erc20_settings();
 }
 
 // Queries cryptocurrency definition from global configuration
 function getcoinconfig(currency) {
-    return glob_config.bitrequest_coin_data.find(function(filter) {
-        return filter.currency === currency;
+    return glob_config.bitrequest_coin_data.find(function(coin) {
+        return coin.currency === currency;
     });
 }
 
@@ -1155,30 +1150,30 @@ function get_erc20_settings() {
 
 // Prepends specified prefix to all object keys
 function add_prefix_to_keys(obj, prefix = "data-") {
-    return Object.entries(obj).reduce((acc, [key, value]) => {
-        acc[prefix + key] = value;
-        return acc;
+    return Object.entries(obj).reduce((result, [key, value]) => {
+        result[prefix + key] = value;
+        return result;
     }, {});
 }
 
 // Retrieves cached ERC20 token data with optional timestamp validation
 function fetch_cached_erc20(check) {
-    const first_arr = br_get_local("erc20tokens_init", true);
-    if (first_arr) {
-        const timestamp = first_arr.timestamp;
-        if (timestamp) {
+    const initial_tokens = br_get_local("erc20tokens_init", true);
+    if (initial_tokens) {
+        const cache_timestamp = initial_tokens.timestamp;
+        if (cache_timestamp) {
             if (check) {
-                const time_in_cache = now() - timestamp;
+                const cache_age = now() - cache_timestamp;
                 // flush cache every week
-                if (time_in_cache < glob_const.token_cache * 1000) {
+                if (cache_age < glob_const.token_cache * 1000) {
                     return true;
                 } else {
                     return false;
                 }
             }
-            const second_arr = br_get_local("erc20tokens", true);
-            if (second_arr) {
-                return first_arr.token_arr.concat(second_arr);
+            const additional_tokens = br_get_local("erc20tokens", true);
+            if (additional_tokens) {
+                return initial_tokens.token_arr.concat(additional_tokens);
             }
         }
     }
@@ -1186,48 +1181,47 @@ function fetch_cached_erc20(check) {
 }
 
 // ** Check params ** //
-
 // Processes URL parameters for routing and action dispatch
-function check_params(gets) {
-    const lgets = gets || geturlparameters();
-    if (lgets.xss) {
+function check_params(params) {
+    const url_params = params || geturlparameters();
+    if (url_params.xss) {
         return
     }
-    if (lgets.i) {
-        expand_shoturl(lgets.i);
+    if (url_params.i) {
+        expand_shoturl(url_params.i);
         return
     }
-    if (lgets.cl) {
-        click_pop(lgets.cl);
+    if (url_params.cl) {
+        click_pop(url_params.cl);
     }
-    const page = lgets.p;
-    if (page === "settings") {
-        if (lgets.ro) {
-            check_teaminvite(lgets.ro);
-        } else if (lgets.sbu) {
-            check_systembu(lgets.sbu);
-        } else if (lgets.csv) {
-            check_csvexport(lgets.csv);
-        } else if (lgets.code) {
-            init_access(lgets.code);
+    const page_param = url_params.p;
+    if (page_param === "settings") {
+        if (url_params.ro) {
+            check_teaminvite(url_params.ro);
+        } else if (url_params.sbu) {
+            check_systembu(url_params.sbu);
+        } else if (url_params.csv) {
+            check_csvexport(url_params.csv);
+        } else if (url_params.code) {
+            init_access(url_params.code);
         }
         return
     }
-    if (lgets.scheme) {
-        check_intents(lgets.scheme);
+    if (url_params.scheme) {
+        check_intents(url_params.scheme);
         return
     }
-    if (lgets.lnconnect) {
+    if (url_params.lnconnect) {
         lm_function();
         ln_connect();
     }
 }
 
 // Schedules delayed click event trigger on specified element
-function click_pop(fn) {
-    const timeout = setTimeout(function() {
-        $("#" + fn).trigger("click");
+function click_pop(element_id) {
+    const click_timer = setTimeout(function() {
+        $("#" + element_id).trigger("click");
     }, 1200, function() {
-        clearTimeout(timeout);
+        clearTimeout(click_timer);
     });
 }

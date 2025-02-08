@@ -62,124 +62,124 @@ function t_expired(expired, callback) {
 }
 
 // Makes API request to fetch OAuth credentials using an authorization code
-function fetch_creds(k) {
-    if (k) {
+function fetch_creds(auth_code) {
+    if (auth_code) {
         api_proxy({
             "custom": "fetch_creds",
             "api_url": true,
             "proxy": true,
-            "code": decodeURIComponent(k),
+            "code": decodeURIComponent(auth_code),
             "redirect_uri": glob_const.redirect_uri,
             "grant_type": "authorization_code"
-        }).done(function(e) {
-            if (e) {
-                const data = br_result(e);
-                if (data) {
-                    const result = data.result;
-                    if (result) {
-                        const error = result.error;
+        }).done(function(response) {
+            if (response) {
+                const parsed_data = br_result(response);
+                if (parsed_data) {
+                    const auth_result = parsed_data.result;
+                    if (auth_result) {
+                        const error = auth_result.error;
                         if (error) {
-                            const ed = result.error_description,
-                                em = (ed) ? " || " + ed : "";
-                            notify(error + em);
+                            const error_desc = auth_result.error_description,
+                                error_msg = (error_desc) ? " || " + error_desc : "";
+                            notify(error + error_msg);
                             return
                         }
-                        const ga_token = result.access_token;
-                        if (ga_token) {
-                            const jt = {
+                        const access_token = auth_result.access_token;
+                        if (access_token) {
+                            const token_data = {
                                 "created": now(),
                                 "active": true,
-                                "access_token": ga_token,
-                                "expires_in": result.expires_in
+                                "access_token": access_token,
+                                "expires_in": auth_result.expires_in
                             };
-                            br_set_local("dat", JSON.stringify(jt));
-                            const rt = result.refresh_token;
-                            if (rt) {
-                                const jtobj = {
-                                    "d": lnurl_encode("xz", rt)
+                            br_set_local("dat", JSON.stringify(token_data));
+                            const refresh_token = auth_result.refresh_token;
+                            if (refresh_token) {
+                                const encoded_token = {
+                                    "d": lnurl_encode("xz", refresh_token)
                                 }
-                                br_set_local("rt", JSON.stringify(jtobj));
+                                br_set_local("rt", JSON.stringify(encoded_token));
                             }
                             gdlogin_callbacks();
                             if (glob_const.body.hasClass("showstartpage")) { // only show when logged in
                                 trigger_restore();
                             }
-                            const timeout = setTimeout(function() {
+                            const redirect_timer = setTimeout(function() {
                                 history.pushState({
                                     "pagename": "settings"
                                 }, "", glob_const.redirect_uri);
                             }, 5000, function() {
-                                clearTimeout(timeout);
+                                clearTimeout(redirect_timer);
                             });
                         }
                     }
                 }
             }
-        }).fail(function(e) {
-            console.error("error", e);
-        }).always(function(e) {});
+        }).fail(function(error) {
+            console.error("error", error);
+        }).always(function(response) {});
     }
 }
 
 // Requests new access token using a refresh token and updates local storage
-function fetch_access(rt, callback) {
-    if (rt) {
+function fetch_access(refresh_token, callback) {
+    if (refresh_token) {
         api_proxy({
             "custom": "fetch_creds",
             "api_url": true,
             "proxy": true,
-            "refresh_token": rt,
+            "refresh_token": refresh_token,
             "grant_type": "refresh_token"
-        }).done(function(e) {
-            if (e) {
-                const data = br_result(e);
-                if (data) {
-                    const result = data.result;
-                    if (result) {
-                        const error = result.error;
+        }).done(function(response) {
+            if (response) {
+                const parsed_data = br_result(response);
+                if (parsed_data) {
+                    const auth_result = parsed_data.result;
+                    if (auth_result) {
+                        const error = auth_result.error;
                         if (error) {
-                            const ed = result.error_description,
-                                em = ed ? " || " + ed : "";
-                            if (ed.indexOf("expired") >= 0 || ed.indexOf("revoked") >= 0) {
+                            const error_desc = auth_result.error_description,
+                                error_msg = error_desc ? " || " + error_desc : "";
+                            if (error_desc.indexOf("expired") >= 0 || error_desc.indexOf("revoked") >= 0) {
                                 br_remove_local("rt");
                                 oauth_pop_delay();
                                 return;
                             }
-                            notify(error + em);
+                            notify(error + error_msg);
                             return
                         }
-                        const ga_token = result.access_token;
-                        if (ga_token) {
-                            const jt = {
+                        const access_token = auth_result.access_token;
+                        if (access_token) {
+                            const token_data = {
                                 "created": now(),
                                 "active": true,
-                                "access_token": ga_token,
-                                "expires_in": result.expires_in
+                                "access_token": access_token,
+                                "expires_in": auth_result.expires_in
                             };
-                            br_set_local("dat", JSON.stringify(jt));
+                            br_set_local("dat", JSON.stringify(token_data));
                             refcb(callback);
                         }
                     }
                 }
             }
-        }).fail(function(e) {
-            console.error("error", e);
+        }).fail(function(error) {
+            console.error("error", error);
         });
     }
 }
 
 // Executes post-refresh callbacks and updates UI authentication state
-function refcb(cb) {
+function refcb(callback) {
     glob_const.html.addClass("gdauth");
-    if (cb) {
-        if (cb === "uad") {
-            const p = gd_pass();
-            if (p.pass) {
-                update_appdata(p);
+    if (callback) {
+        if (callback === "uad") {
+            const pass_data = gd_pass();
+            if (pass_data.pass) {
+                update_appdata(pass_data);
                 return
             }
         }
-        if (cb === "gcb") {
+        if (callback === "gcb") {
             adjust_sp();
         }
     }
@@ -187,52 +187,52 @@ function refcb(cb) {
 
 // Retrieves and parses the access token data from local storage
 function lca_obj() {
-    const bdat = br_get_local("dat", true);
-    if (bdat) {
-        return bdat;
+    const stored_token = br_get_local("dat", true);
+    if (stored_token) {
+        return stored_token;
     }
     return false;
 }
 
 // Retrieves and decodes the refresh token from local storage
 function rt_obj() {
-    const rtdat = br_get_local("rt", true);
-    return rtdat ? rtdat.d : false;
+    const stored_refresh = br_get_local("rt", true);
+    return stored_refresh ? stored_refresh.d : false;
 }
 
 // Determines appropriate login flow based on current authentication state
-function init_login_dialog(p) {
+function init_login_dialog(auth_state) {
     if (glob_const.hostlocation === "local") {
         notify(translate("ganot"));
         return
     }
-    if (p.expired) {
-        t_expired(p.expired, "gcb");
+    if (auth_state.expired) {
+        t_expired(auth_state.expired, "gcb");
         return
     }
-    if (p.active) {
+    if (auth_state.active) {
         g_login();
         return
     }
-    if (p.token) {
+    if (auth_state.token) {
         activate();
         gdlogin_callbacks();
     }
 }
 
 // Schedules OAuth popup display with configurable delay and abort option
-function oauth_pop_delay(ab) {
+function oauth_pop_delay(abort_option) {
     canceldialog();
-    const timeout = setTimeout(function() {
-        oauth_pop(ab);
+    const popup_timer = setTimeout(function() {
+        oauth_pop(abort_option);
     }, 1200, function() {
-        clearTimeout(timeout);
+        clearTimeout(popup_timer);
     });
 }
 
 // Renders and displays Google Drive authentication dialog with consent options
-function oauth_pop(ab) {
-    const cbx = ab ? render_html([{
+function oauth_pop(abort_option) {
+    const checkbox_html = abort_option ? render_html([{
             "div": {
                 "id": "pk_confirmwrap",
                 "class": "cb_wrap",
@@ -248,9 +248,8 @@ function oauth_pop(ab) {
             "span": {
                 "content": translate("stopgauth")
             }
-
         }]) : "",
-        ddat = [{
+        dialog_elements = [{
                 "div": {
                     "class": "popform",
                     "content": [{
@@ -272,7 +271,7 @@ function oauth_pop(ab) {
                 "div": {
                     "id": "pk_confirm",
                     "class": "noselect",
-                    "content": cbx
+                    "content": checkbox_html
                 }
             },
             {
@@ -285,13 +284,13 @@ function oauth_pop(ab) {
                 }
             }
         ],
-        content = template_dialog({
+        dialog_content = template_dialog({
             "id": "gdbu_dialog",
             "icon": "icon-googledrive",
             "title": translate("backuptogd"),
-            "elements": ddat
+            "elements": dialog_elements
         });
-    popdialog(content, "triggersubmit");
+    popdialog(dialog_content, "triggersubmit");
 }
 
 // Binds click handler to Google Drive login button
@@ -303,12 +302,12 @@ function gd_login_trigger() {
 
 // Handles Google Drive backup dialog form submission and logout confirmation
 function submit_gdbu_dialog() {
-    $(document).on("click", "#gdbu_dialog input.submit", function(e) {
-        e.preventDefault();
-        const gdbu_dialog = $("#gdbu_dialog"),
-            gd_checkbox = gdbu_dialog.find("#pk_confirmwrap"),
-            gd_checked = gd_checkbox.data("checked");
-        if (gd_checked == true) {
+    $(document).on("click", "#gdbu_dialog input.submit", function(event) {
+        event.preventDefault();
+        const dialog = $("#gdbu_dialog"),
+            checkbox = dialog.find("#pk_confirmwrap"),
+            is_checked = checkbox.data("checked");
+        if (is_checked == true) {
             g_logout();
             return
         }
@@ -322,30 +321,30 @@ function g_login() {
         notify(translate("ganot"));
         return
     }
-    const p = gd_pass();
-    if (p.pass) {
+    const auth_state = gd_pass();
+    if (auth_state.pass) {
         gdlogin_callbacks();
         return
     }
-    if (!p.active && !p.expired) {
-        if (p.token) {
+    if (!auth_state.active && !auth_state.expired) {
+        if (auth_state.token) {
             activate();
             gdlogin_callbacks();
             return
         }
     }
-    const consent = p.expired == "norefresh" ? "&prompt=consent" : "",
-        login_uri = "https://accounts.google.com/o/oauth2/auth?client_id=" + to.ga_id + "&redirect_uri=" + glob_const.redirect_uri + "&response_type=code&scope=" + glob_const.scope + "&access_type=offline" + consent;
-    glob_const.w_loc.href = login_uri;
+    const consent_param = auth_state.expired == "norefresh" ? "&prompt=consent" : "",
+        auth_url = "https://accounts.google.com/o/oauth2/auth?client_id=" + to.ga_id + "&redirect_uri=" + glob_const.redirect_uri + "&response_type=code&scope=" + glob_const.scope + "&access_type=offline" + consent_param;
+    glob_const.w_loc.href = auth_url;
 }
 
 // Updates UI and triggers data sync after successful Google Drive authentication
-function gdlogin_callbacks(close) {
+function gdlogin_callbacks(close_dialog) {
     glob_const.html.addClass("gdauth");
     notify(translate("gdsignedin"));
     resetchanges();
     adjust_sp();
-    if (close) {
+    if (close_dialog) {
         canceldialog();
     }
 }
@@ -355,8 +354,8 @@ function adjust_sp() {
     const switch_panel = $("#popup.showpu .switchpanel");
     if (switch_panel.length) {
         switch_panel.addClass("true").removeClass("false");
-        const lad = $("#listappdata");
-        if (lad.length) {
+        const app_data_list = $("#listappdata");
+        if (app_data_list.length) {
             list_appdata();
             return
         }
@@ -367,8 +366,8 @@ function adjust_sp() {
 
 // Initiates Google Drive logout process with user confirmation
 function g_logout() {
-    const result = confirm(translate("stopgdalert"));
-    if (result) {
+    const user_confirmed = confirm(translate("stopgdalert"));
+    if (user_confirmed) {
         deactivate();
         gdlogout_callbacks();
     }
@@ -376,19 +375,19 @@ function g_logout() {
 
 // Sets authentication state to active in local storage
 function activate() {
-    const bdat = lca_obj();
-    if (bdat) {
-        bdat.active = true;
-        br_set_local("dat", JSON.stringify(bdat));
+    const stored_token = lca_obj();
+    if (stored_token) {
+        stored_token.active = true;
+        br_set_local("dat", JSON.stringify(stored_token));
     }
 }
 
 // Sets authentication state to inactive in local storage
 function deactivate() {
-    const bdat = lca_obj();
-    if (bdat) {
-        bdat.active = false;
-        br_set_local("dat", JSON.stringify(bdat));
+    const stored_token = lca_obj();
+    if (stored_token) {
+        stored_token.active = false;
+        br_set_local("dat", JSON.stringify(stored_token));
     }
 }
 
@@ -409,57 +408,57 @@ function gdlogout_callbacks() {
 // Binds click handler to Drive Backup toggle switch
 function drive_backup_trigger() {
     $(document).on("click", "#gdtrigger .switchpanel", function() {
-        const p = gd_pass();
-        if (p.pass) {
+        const auth_state = gd_pass();
+        if (auth_state.pass) {
             g_logout();
             return
         }
-        init_login_dialog(p);
+        init_login_dialog(auth_state);
     })
 }
 
 // Updates Google Drive app data with rate limiting and error handling
-function update_appdata(p) {
-    const gd_timer = br_get_session("gd_timer"); // prevent Ddos
-    if (gd_timer && (now() - gd_timer) < 3000) {
+function update_appdata(auth_state) {
+    const last_update = br_get_session("gd_timer"); // prevent Ddos
+    if (last_update && (now() - last_update) < 3000) {
         return;
     }
-    const token = p.token;
-    if (!token) {
+    const access_token = auth_state.token;
+    if (!access_token) {
         return
     }
-    const bu_id = br_get_local("backupfile_id");
-    if (bu_id) {
+    const backup_id = br_get_local("backupfile_id");
+    if (backup_id) {
         br_set_session("gd_timer", now());
-        const ddat = {
-            "api_url": glob_const.drivepath + "/upload/drive/v3/files/" + bu_id + "?uploadType=media&alt=json",
+        const request_data = {
+            "api_url": glob_const.drivepath + "/upload/drive/v3/files/" + backup_id + "?uploadType=media&alt=json",
             "proxy": false,
             "params": {
                 "method": "PATCH",
                 "dataType": "json",
                 "contentType": "application/json",
                 "headers": {
-                    "Authorization": "Bearer " + token
+                    "Authorization": "Bearer " + access_token
                 },
                 "data": complilebackup()
             }
         };
-        api_proxy(ddat).done(function(e) {
+        api_proxy(request_data).done(function(response) {
             // Success handling if needed  
-        }).fail(function(xhr, stat, err) {
+        }).fail(function(xhr, status, error) {
             if (textStatus === "error") {
-                const error_object = xhr;
-                if (error_object) {
-                    const resp_obj = error_object.responseJSON;
-                    if (resp_obj) {
-                        const resp = resp_obj.error;
-                        if (resp) {
-                            if (resp.code === 401) {
+                const error_response = xhr;
+                if (error_response) {
+                    const error_json = error_response.responseJSON;
+                    if (error_json) {
+                        const error_details = error_json.error;
+                        if (error_details) {
+                            if (error_details.code === 401) {
                                 notify(translate("unauthorized"));
                                 return
                             }
-                            if (resp.code === 404) {
-                                createfile(token); // create file
+                            if (error_details.code === 404) {
+                                createfile(access_token); // create file
                                 return
                             }
                         }
@@ -470,46 +469,46 @@ function update_appdata(p) {
         });
         return
     }
-    createfile(token) // create file
+    createfile(access_token) // create file
 }
 
 // Creates new app data file in Google Drive with metadata
-function createfile(token) {
-    const jt = gd_pass(),
-        jtp = jt.pass,
-        pass = token || (jtp ? jt.token : false),
-        backup = complilebackup();
-    if (pass) {
-        const file = new Blob([backup], {
+function createfile(access_token) {
+    const token_data = gd_pass(),
+        token_valid = token_data.pass,
+        final_token = access_token || (token_valid ? token_data.token : false),
+        backup_content = complilebackup();
+    if (final_token) {
+        const file_blob = new Blob([backup_content], {
                 "type": "text/plain"
             }),
-            description = {
+            file_meta = {
                 "modified": now_utc(),
                 "device": getdevicetype(),
                 "deviceid": glob_const.deviceid
             },
-            metadata = {
+            file_config = {
                 "name": complilefilename(),
                 "parents": ["appDataFolder"],
                 "mimeType": "text/plain",
-                "description": JSON.stringify(description)
+                "description": JSON.stringify(file_meta)
             },
-            form = new FormData(),
-            xhr = new XMLHttpRequest();
-        form.append("metadata", new Blob([JSON.stringify(metadata)], {
+            form_data = new FormData(),
+            request = new XMLHttpRequest();
+        form_data.append("metadata", new Blob([JSON.stringify(file_config)], {
             "type": "application/json"
         }));
-        form.append("file", file);
-        xhr.open("post", "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id");
-        xhr.setRequestHeader("Authorization", "Bearer " + pass);
-        xhr.responseType = "json";
-        xhr.onload = function() {
-            const response_id = xhr.response.id;
-            if (response_id) {
-                br_set_local("backupfile_id", response_id.toString());
+        form_data.append("file", file_blob);
+        request.open("post", "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id");
+        request.setRequestHeader("Authorization", "Bearer " + final_token);
+        request.responseType = "json";
+        request.onload = function() {
+            const file_id = request.response.id;
+            if (file_id) {
+                br_set_local("backupfile_id", file_id.toString());
             }
         };
-        xhr.send(form);
+        request.send(form_data);
     }
 }
 
@@ -522,24 +521,24 @@ function lad_trigger() {
 
 // Fetches and displays list of Google Drive app data files
 function list_appdata() {
-    const p = gd_pass();
-    if (!p.pass) {
-        init_login_dialog(p);
+    const auth_state = gd_pass();
+    if (!auth_state.pass) {
+        init_login_dialog(auth_state);
         return
     }
-    const thistrigger = $("#listappdata .switchpanel"),
-        backuplist = $("#gd_backuplist"),
-        importjsonlist = $("#importjson");
-    if (backuplist.find("li").length) {
-        if (thistrigger.hasClass("true")) {
-            thistrigger.removeClass("true");
-            backuplist.slideUp(300);
-            importjsonlist.slideDown(300);
+    const list_trigger = $("#listappdata .switchpanel"),
+        backup_list = $("#gd_backuplist"),
+        import_list = $("#importjson");
+    if (backup_list.find("li").length) {
+        if (list_trigger.hasClass("true")) {
+            list_trigger.removeClass("true");
+            backup_list.slideUp(300);
+            import_list.slideDown(300);
             return
         }
-        thistrigger.addClass("true");
-        backuplist.slideDown(300);
-        importjsonlist.slideUp(300);
+        list_trigger.addClass("true");
+        backup_list.slideDown(300);
+        import_list.slideUp(300);
         return
     }
     api_proxy({
@@ -548,46 +547,46 @@ function list_appdata() {
         "params": {
             "method": "GET",
             "headers": {
-                "Authorization": "Bearer " + p.token
+                "Authorization": "Bearer " + auth_state.token
             }
         }
-    }).done(function(e) {
-        const filelist = e.files;
-        if (filelist.length) {
-            const sorted_filelist = filelist.sort(function(a, b) { // sort array by timestamp
-                    const amod = a.modifiedTime,
-                        bmod = b.modifiedTime,
-                        d1 = amod ? to_ts(amod) : 2,
-                        d2 = bmod ? to_ts(bmod) : 1;
-                    return d2 - d1; // descending order
+    }).done(function(response) {
+        const files = response.files;
+        if (files.length) {
+            const sorted_files = files.sort(function(a, b) { // sort array by timestamp
+                    const time_a = a.modifiedTime,
+                        time_b = b.modifiedTime,
+                        timestamp_a = time_a ? to_ts(time_a) : 2,
+                        timestamp_b = time_b ? to_ts(time_b) : 1;
+                    return timestamp_b - timestamp_a; // descending order
                 }),
-                gdbackuppush = [];
-            $.each(sorted_filelist, function(i, value) {
-                const description = JSON.parse(value.description),
-                    device = description.device,
-                    device_id = description.deviceid,
-                    dmod = short_date(description.modified),
-                    mod = short_date(to_ts(value.modifiedTime)),
-                    trash = (device_id === glob_const.deviceid) ? "<div class='purge_bu icon-bin'></div>" : "",
-                    gdbackups = "<li data-gdbu_id='" + value.id + "' data-device-id='" + device_id + "' data-device='" + device + "'><div class='restorefile icon-" + device + "' title='" + device + " (Created: " + dmod + ")'>" + mod + "<span class='lmodified'> (" + (value.size / 1000).toFixed(0) + " KB)</div>" + trash + "</li>";
-                gdbackuppush.push(gdbackups);
+                backup_items = [];
+            $.each(sorted_files, function(i, file) {
+                const file_meta = JSON.parse(file.description),
+                    device_type = file_meta.device,
+                    device_id = file_meta.deviceid,
+                    created_date = short_date(file_meta.modified),
+                    modified_date = short_date(to_ts(file.modifiedTime)),
+                    delete_btn = (device_id === glob_const.deviceid) ? "<div class='purge_bu icon-bin'></div>" : "",
+                    backup_html = "<li data-gdbu_id='" + file.id + "' data-device-id='" + device_id + "' data-device='" + device_type + "'><div class='restorefile icon-" + device_type + "' title='" + device_type + " (Created: " + created_date + ")'>" + modified_date + "<span class='lmodified'> (" + (file.size / 1000).toFixed(0) + " KB)</div>" + delete_btn + "</li>";
+                backup_items.push(backup_html);
             });
-            backuplist.prepend(gdbackuppush.join("")).slideDown(300);
+            backup_list.prepend(backup_items.join("")).slideDown(300);
         } else {
-            backuplist.prepend("<li>No files found</li>").slideDown(300);
+            backup_list.prepend("<li>No files found</li>").slideDown(300);
         }
-        importjsonlist.slideUp(300);
-        thistrigger.addClass("true");
-    }).fail(function(xhr, stat, err) {
-        if (stat === "error") {
-            if (err === "Unauthorized") {
-                thistrigger.removeClass("true");
-                backuplist.slideUp(300);
-                importjsonlist.slideDown(300);
+        import_list.slideUp(300);
+        list_trigger.addClass("true");
+    }).fail(function(xhr, status, error) {
+        if (status === "error") {
+            if (error === "Unauthorized") {
+                list_trigger.removeClass("true");
+                backup_list.slideUp(300);
+                import_list.slideDown(300);
                 notify(translate("unauthorized"));
                 return
             }
-            if (err === "Not Found") {
+            if (error === "Not Found") {
                 createfile(); // create file
                 return
             }
@@ -599,41 +598,41 @@ function list_appdata() {
 // Binds click handler to file deletion buttons
 function deletefile_trigger() {
     $(document).on("click", ".purge_bu", function() {
-        const p = gd_pass();
-        if (!p.pass) {
-            init_login_dialog(p);
+        const auth_state = gd_pass();
+        if (!auth_state.pass) {
+            init_login_dialog(auth_state);
             return
         }
-        const thislist = $(this).parent("li"),
-            fileid = thislist.attr("data-gdbu_id"),
-            result = confirm(translate("deletefile", {
-                "file": thislist.text()
+        const list_item = $(this).parent("li"),
+            file_id = list_item.attr("data-gdbu_id"),
+            user_confirmed = confirm(translate("deletefile", {
+                "file": list_item.text()
             }));
-        if (result) {
-            deletefile(fileid, thislist, p.token);
+        if (user_confirmed) {
+            deletefile(file_id, list_item, auth_state.token);
         }
     })
 }
 
 // Deletes specified file from Google Drive app data
-function deletefile(fileId, thislist, pass) {
+function deletefile(file_id, list_item, access_token) {
     api_proxy({
-        "api_url": glob_const.drivepath + "/drive/v3/files/" + fileId,
+        "api_url": glob_const.drivepath + "/drive/v3/files/" + file_id,
         "proxy": false,
         "params": {
             "method": "DELETE",
             "headers": {
-                "Authorization": "Bearer " + pass
+                "Authorization": "Bearer " + access_token
             }
         }
-    }).done(function(e) {
-        if (thislist) {
-            thislist.slideUp(300);
+    }).done(function(response) {
+        if (list_item) {
+            list_item.slideUp(300);
             notify(translate("filedeleted"));
         }
-    }).fail(function(xhr, stat, err) {
-        if (stat === "error") {
-            if (err === "Not Found") {
+    }).fail(function(xhr, status, error) {
+        if (status === "error") {
+            if (error === "Not Found") {
                 notify(translate("error") + ": " + translate("filenotfound"));
                 return
             }
@@ -644,40 +643,40 @@ function deletefile(fileId, thislist, pass) {
 
 // Retrieves and validates current Google Drive authentication state
 function gd_pass() {
-    const jt = {
+    const auth_state = {
             "token": false,
             "active": false,
             "expired": false,
             "pass": false
         },
-        bdat = lca_obj(),
-        rtoken = rt_obj(),
-        can_refresh = rtoken || "norefresh";
-    if (bdat) {
-        const token = bdat.access_token,
-            ttime = (now() - bdat.created) + 60000,
-            extime = bdat.expires_in * 1000,
-            expired = (ttime > extime),
-            expirin = (extime - ttime),
-            active = bdat.active;
-        if (token) {
-            jt.token = token;
-            jt.expires_in = expirin;
-            if (expired) {
-                jt.expired = can_refresh;
+        stored_token = lca_obj(),
+        refresh_token = rt_obj(),
+        can_refresh = refresh_token || "norefresh";
+    if (stored_token) {
+        const access_token = stored_token.access_token,
+            elapsed_time = (now() - stored_token.created) + 60000,
+            expiry_time = stored_token.expires_in * 1000,
+            is_expired = (elapsed_time > expiry_time),
+            time_remaining = (expiry_time - elapsed_time),
+            is_active = stored_token.active;
+        if (access_token) {
+            auth_state.token = access_token;
+            auth_state.expires_in = time_remaining;
+            if (is_expired) {
+                auth_state.expired = can_refresh;
             }
-            if (active) {
-                jt.active = true;
+            if (is_active) {
+                auth_state.active = true;
             }
         }
-        if (token && !expired && active) {
+        if (access_token && !is_expired && is_active) {
             glob_const.html.addClass("gdauth");
-            jt.pass = true;
+            auth_state.pass = true;
         } else {
             glob_const.html.removeClass("gdauth");
         }
     } else {
-        jt.expired = can_refresh;
+        auth_state.expired = can_refresh;
     }
-    return jt;
+    return auth_state;
 }

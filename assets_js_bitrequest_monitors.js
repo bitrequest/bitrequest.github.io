@@ -63,11 +63,11 @@ function updaterequeststatestrigger() {
 
 // Triggers request state updates with delay if URL parameter indicates requests page
 function updaterequeststatesrefresh() {
-    const gets = geturlparameters();
-    if (gets.xss) {
+    const url_params = geturlparameters();
+    if (url_params.xss) {
         return
     }
-    if (gets.p === "requests") { // only trigger on "requests page"
+    if (url_params.p === "requests") { // only trigger on "requests page"
         setTimeout(function() {
             trigger_requeststates("delay");
         }, 300);
@@ -75,7 +75,7 @@ function updaterequeststatesrefresh() {
 }
 
 // Initializes request state update process by resetting global state and marking active requests
-function trigger_requeststates(trigger, rqli) {
+function trigger_requeststates(trigger, active_req_list) {
     if (glob_const.offline === true) {
         return // do nothing when offline
     }
@@ -84,11 +84,11 @@ function trigger_requeststates(trigger, rqli) {
         glob_let.tx_list = [], // reset transaction index
         glob_let.statuspush = [],
         glob_let.l2_fetched = {};
-    const active_requests = rqli || $("#requestlist .rqli").filter(function() {
+    const requests = active_req_list || $("#requestlist .rqli").filter(function() {
         return $(this).data("pending") !== "unknown";
     });
-    active_requests.addClass("open");
-    get_requeststates(trigger, active_requests);
+    requests.addClass("open");
+    get_requeststates(trigger, requests);
 }
 
 // Manages request state cache, updates, and UI synchronization based on transaction status
@@ -100,14 +100,14 @@ function get_requeststates(trigger, active_requests) {
             getinputs(request_data);
             return
         }
-        const d_lay = trigger === "delay",
-            statuscache = br_get_session("txstatus", true);
-        if (statuscache) {
-            const cachetime = now() - statuscache.timestamp,
-                requeststates = statuscache.requeststates;
-            if (cachetime > 30000 || empty_obj(requeststates)) { //check if cached crypto rates are expired (check every 30 seconds on page refresh or when opening request page)
+        const is_delayed = trigger === "delay",
+            status_cache = br_get_session("txstatus", true);
+        if (status_cache) {
+            const cache_age = now() - status_cache.timestamp,
+                request_states = status_cache.requeststates;
+            if (cache_age > 30000 || empty_obj(request_states)) { //check if cached crypto rates are expired (check every 30 seconds on page refresh or when opening request page)
                 active_requests.addClass("scan");
-                getinputs(request_data, d_lay);
+                getinputs(request_data, is_delayed);
                 return
             }
             if (trigger === true) {
@@ -115,25 +115,25 @@ function get_requeststates(trigger, active_requests) {
             }
             // Only update on page refresh
             // parse cached transaction data
-            $.each(requeststates, function(i, value) {
-                const thislist = $("#" + value.requestid),
-                    thisdata = thislist.data();
-                if (thisdata) {
-                    const pendingstatus = thisdata.pending;
-                    if (pendingstatus === "scanning" || pendingstatus === "polling") {
-                        const statuspanel = thislist.find(".pmetastatus"),
-                            transactionlist = thislist.find(".transactionlist");
-                        statuspanel.text(value.status);
-                        transactionlist.empty();
-                        add_historical_data(transactionlist, value.transactions);
-                        thislist.addClass("pmstatloaded");
+            $.each(request_states, function(index, state) {
+                const current_list = $("#" + state.requestid),
+                    current_data = current_list.data();
+                if (current_data) {
+                    const pending_status = current_data.pending;
+                    if (pending_status === "scanning" || pending_status === "polling") {
+                        const status_panel = current_list.find(".pmetastatus"),
+                            transaction_list = current_list.find(".transactionlist");
+                        status_panel.text(state.status);
+                        transaction_list.empty();
+                        add_historical_data(transaction_list, state.transactions);
+                        current_list.addClass("pmstatloaded");
                     }
                 }
             });
             return
         }
         active_requests.addClass("scan");
-        getinputs(request_data, d_lay);
+        getinputs(request_data, is_delayed);
         return
     }
     if (!empty_obj(glob_let.statuspush)) {
@@ -149,11 +149,11 @@ function get_requeststates(trigger, active_requests) {
         } else {
             saverequests();
         }
-        const statusobject = {
+        const status_object = {
             "timestamp": now(),
             "requeststates": glob_let.statuspush
         };
-        br_set_session("txstatus", statusobject, true);
+        br_set_session("txstatus", status_object, true);
         clearscan();
     }
 }
@@ -164,10 +164,10 @@ function getinputs(rd, dl) {
     if (rdo.pending === "scanning" || rdo.pending === "polling") {
         if (dl) {
             const delay = 10000,
-                mtlc = br_get_session("monitor_timer"),
-                monitor_timer = mtlc ? parseInt(mtlc, 10) : delay,
-                timelapsed = now() - monitor_timer;
-            if (timelapsed < delay) { // prevent over scanning
+                monitor_timer_cache = br_get_session("monitor_timer"),
+                monitor_timer = monitor_timer_cache ? parseInt(monitor_timer_cache, 10) : delay,
+                time_since_last = now() - monitor_timer;
+            if (time_since_last < delay) { // prevent over scanning
                 playsound(glob_const.funk);
                 clearscan();
                 return
@@ -181,9 +181,9 @@ function getinputs(rd, dl) {
         select_rpc(rd, api_data, rdo);
         return
     }
-    const transactionlist = rdo.transactionlist;
-    if (transactionlist) {
-        transactionlist.find("li").each(function(i) {
+    const transaction_list = rdo.transactionlist;
+    if (transaction_list) {
+        transaction_list.find("li").each(function(index) {
             glob_let.tx_list.push($(this).data("txhash")); //index transaction id's
         });
         api_callback(rdo);
@@ -195,12 +195,12 @@ function select_rpc(rd, api_data, rdo) {
     if (api_data) {
         const src = rdo.source;
         if (src === "requests") {
-            const thislist = rdo.thislist;
-            if (thislist) {
-                thislist.removeClass("no_network");
-                const transactionlist = rdo.transactionlist;
-                if (transactionlist) {
-                    transactionlist.empty();
+            const current_list = rdo.thislist;
+            if (current_list) {
+                current_list.removeClass("no_network");
+                const transaction_list = rdo.transactionlist;
+                if (transaction_list) {
+                    transaction_list.empty();
                 }
             }
         }
@@ -220,8 +220,8 @@ function select_rpc(rd, api_data, rdo) {
 
 // Tracks API attempts and routes to specific API or RPC handlers based on availability
 function continue_select(rd, api_data, rdo) {
-    const rq_id = rd.requestid || "";
-    glob_let.rpc_attempts[sha_sub(rq_id + api_data.url, 15)] = true;
+    const request_id = rd.requestid || "";
+    glob_let.rpc_attempts[sha_sub(request_id + api_data.url, 15)] = true;
     if (api_data.api) {
         continue_select_api(rd, api_data, rdo);
         return
@@ -231,40 +231,40 @@ function continue_select(rd, api_data, rdo) {
 
 // Routes cryptocurrency requests to specific API endpoints based on provider capabilities
 function continue_select_api(rd, api_data, rdo) {
-    const api_name = api_data.name;
-    if (api_name === "mymonero api") {
+    const provider = api_data.name;
+    if (provider === "mymonero api") {
         monero_fetch_init(rd, api_data, rdo);
         return
     }
-    if (api_name === "blockchair_xmr") {
+    if (provider === "blockchair_xmr") {
         monero_fetch_init(rd, api_data, rdo);
         return
     }
-    if (api_name === "mempool.space") {
+    if (provider === "mempool.space") {
         mempoolspace_rpc_init(rd, api_data, rdo, false);
         return
     }
-    if (api_name === "blockchain.info") {
+    if (provider === "blockchain.info") {
         blockchaininfo_fetch_init(rd, api_data, rdo);
         return
     }
-    if (api_name === "blockcypher") {
+    if (provider === "blockcypher") {
         blockcypher_fetch(rd, api_data, rdo);
         return
     }
-    if (api_name === "etherscan") {
+    if (provider === "etherscan") {
         omniscan_fetch(rd, api_data, rdo, null, 1);
         return
     }
-    if (api_name === "ethplorer") {
+    if (provider === "ethplorer") {
         ethplorer_fetch(rd, api_data, rdo);
         return
     }
-    if (api_name === "blockchair") {
+    if (provider === "blockchair") {
         blockchair_fetch(rd, api_data, rdo);
         return
     }
-    if (api_name === "nimiq.watch" || api_name === "mopsus.com") {
+    if (provider === "nimiq.watch" || provider === "mopsus.com") {
         nimiq_fetch(rd, api_data, rdo);
         return
     }
@@ -272,7 +272,7 @@ function continue_select_api(rd, api_data, rdo) {
         kaspa_fetch_init(rd, api_data, rdo);
         return
     }
-    if (api_name === "dash.org") {
+    if (provider === "dash.org") {
         insight_fetch_dash(rd, api_data, rdo);
         return
     }
@@ -297,25 +297,25 @@ function continue_select_rpc(rd, api_data, rdo) {
 }
 
 // Processes transaction scan results and handles Ethereum L2, confirmations, and UI updates based on match type
-function scan_match(rd, api_data, rdo, counter, txdat, l2) {
+function scan_match(rd, api_data, rdo, counter, tx_details, l2) {
     glob_let.apikey_fails = false;
     const src = rdo.source;
     if (src === "requests") {
         if (counter) {
             tx_count(rdo.statuspanel, counter);
         }
-        const thislist = rdo.thislist;
-        if (thislist) {
-            thislist.removeClass("no_network");
+        const current_list = rdo.thislist;
+        if (current_list) {
+            current_list.removeClass("no_network");
         }
     }
-    if (txdat) {
-        const txhash = rd.txhash || txdat.txhash;
-        if (!txhash) return;
-        const eth_layer2 = txdat.eth_layer2;
+    if (tx_details) {
+        const tx_hash = rd.txhash || tx_details.txhash;
+        if (!tx_hash) return;
+        const eth_layer2 = tx_details.eth_layer2;
         if (src === "requests") {
             if (eth_layer2) {
-                const hasl2 = rd.eth_layer2;
+                const has_l2 = rd.eth_layer2;
                 if (!rd.eth_layer2) {
                     // save eth l2 chain
                     rd.eth_layer2 = eth_layer2;
@@ -331,9 +331,9 @@ function scan_match(rd, api_data, rdo, counter, txdat, l2) {
         if (eth_layer2) { // Eth layer 2
             set_l2_status_init(api_data, "paid");
         }
-        txdat.txhash = txhash;
+        tx_details.txhash = tx_hash;
         if (src !== "after_scan") {
-            const status = confirmations(txdat);
+            const status = confirmations(tx_details);
             if (status === "paid") {
                 forceclosesocket();
                 return
@@ -347,12 +347,12 @@ function scan_match(rd, api_data, rdo, counter, txdat, l2) {
                 closeloader();
             }
             forceclosesocket();
-            tx_polling_init(txdat, api_data);
+            tx_polling_init(tx_details, api_data);
             return
         }
         if (src === "tx_polling" || src === "l2_polling") {
             if (block_overflow("polling")) return; // prevent overflow
-            tx_polling(txdat, api_data);
+            tx_polling(tx_details, api_data);
         }
         return
     }
@@ -374,17 +374,17 @@ function scan_match(rd, api_data, rdo, counter, txdat, l2) {
 }
 
 // Updates and displays the transaction count in the UI status panel with reset functionality
-function tx_count(statuspanel, count) {
+function tx_count(status_panel, count) {
     if (count === "reset") {
-        statuspanel.attr("data-count", 0).text("+ " + 0);
+        status_panel.attr("data-count", 0).text("+ " + 0);
         return
     }
-    const current_count = parseInt(statuspanel.attr("data-count")),
+    const current_count = parseInt(status_panel.attr("data-count")),
         new_count = current_count + count;
     if (!new_count) return;
-    statuspanel.attr("data-count", new_count).text("+ " + new_count);
+    status_panel.attr("data-count", new_count).text("+ " + new_count);
     if (new_count > 1) {
-        statuspanel.closest(".rqli").find(".metalist .show_tx").hide();
+        status_panel.closest(".rqli").find(".metalist .show_tx").hide();
     }
 }
 
@@ -394,9 +394,9 @@ function tx_count(statuspanel, count) {
 function tx_api_scan_fail(error_obj, rd, api_data, rdo, l2) {
     const src = rdo.source;
     if (src === "requests") {
-        const thislist = rdo.thislist;
-        if (thislist) {
-            tx_api_fail(thislist, rdo.statuspanel);
+        const current_list = rdo.thislist;
+        if (current_list) {
+            tx_api_fail(current_list, rdo.statuspanel);
         }
     }
     if (api_data === "ln") {
@@ -412,20 +412,19 @@ function tx_api_scan_fail(error_obj, rd, api_data, rdo, l2) {
 }
 
 // Updates UI elements to indicate network connectivity failure
-function tx_api_fail(thislist, statuspanel) {
-    thislist.addClass("no_network");
-    statuspanel.attr("data-count", 0).text("0");
+function tx_api_fail(current_list, status_panel) {
+    current_list.addClass("no_network");
+    status_panel.attr("data-count", 0).text("0");
 }
 
 // Manages API failure scenarios by attempting fallback options and proxy switching
 function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
     const src = rdo.source,
-        error_data = get_api_error_data(error_obj),
+        error_details = get_api_error_data(error_obj),
         timeout = rdo.timeout,
-        cachetime = rdo.cachetime;
-
+        cache_time = rdo.cachetime;
     function next_proxy(type) { // try next proxy
-        if (type === "api_fail" && (error_data.apikey || glob_let.apikey_fails)) return false; // only try next proxy if api key is expired or missing
+        if (type === "api_fail" && (error_details.apikey || glob_let.apikey_fails)) return false; // only try next proxy if api key is expired or missing
         if (get_next_proxy()) {
             if (src === "addr_polling") {
                 address_polling_init(timeout, api_data, true);
@@ -454,11 +453,11 @@ function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
         if (next_proxy("proxy_fail")) {
             return
         }
-        no_results(rdo, src, api_data, error_data);
+        no_results(rdo, src, api_data, error_details);
         return
     }
     if (!api_data) {
-        api_eror_msg(false, error_data);
+        api_eror_msg(false, error_details);
         if (src === "requests") {
             api_callback(rdo);
             return
@@ -468,10 +467,10 @@ function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
         notify(translate("websocketoffline"), 500000, "yes");
         return
     }
-    const requestid = rd.requestid,
+    const request_id = rd.requestid,
         payment = rd.payment;
     if (l2) {
-        const next_l2_api = get_next_l2(payment, api_data, requestid, l2);
+        const next_l2_api = get_next_l2(payment, api_data, request_id, l2);
         if (next_l2_api) {
             // Scan eth layer 2
             if (src === "requests") {
@@ -484,9 +483,9 @@ function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
             }
         }
     } else {
-        const nextrpc = get_next_rpc(payment, api_data, requestid);
-        if (nextrpc) {
-            pick_next_rpc(rd, rdo, nextrpc, timeout);
+        const next_rpc = get_next_rpc(payment, api_data, request_id);
+        if (next_rpc) {
+            pick_next_rpc(rd, rdo, next_rpc, timeout);
             return
         }
         if (rd.erc20 || payment === "ethereum") {
@@ -498,7 +497,7 @@ function handle_rpc_fails(rd, rdo, error_obj, api_data, l2) {
     if (next_proxy("api_fail")) { // Try next proxy after trying all api's
         return
     }
-    no_results(rdo, src, api_data, error_data);
+    no_results(rdo, src, api_data, error_details);
 }
 
 // Routes requests to next available RPC endpoint based on request source type
@@ -520,9 +519,9 @@ function pick_next_rpc(rd, rdo, next_rpc, timeout) {
 }
 
 // Displays error notifications when all API and proxy attempts fail
-function no_results(rdo, src, api_data, error_data) {
+function no_results(rdo, src, api_data, error_details) {
     const rpc_id = api_data.name || api_data.url || "unknown";
-    api_eror_msg(rpc_id, error_data);
+    api_eror_msg(rpc_id, error_details);
     if (src === "requests") {
         api_callback(rdo);
         return
@@ -533,30 +532,30 @@ function no_results(rdo, src, api_data, error_data) {
 }
 
 // Triggers error dialogs for API-related failures
-function fail_dialogs(apisrc, error_obj) {
-    const error_data = get_api_error_data(error_obj);
-    api_eror_msg(apisrc, error_data);
+function fail_dialogs(api_source, error_obj) {
+    const error_details = get_api_error_data(error_obj);
+    api_eror_msg(api_source, error_details);
 }
 
 // Renders API error messages with optional API key management UI
-function api_eror_msg(apisrc, error_obj) {
+function api_eror_msg(api_source, error_obj) {
     if (!error_obj) return;
-    const error_dat = error_obj || {
+    const error_data = error_obj || {
         "errorcode": null,
         "errormessage": "errormessage"
     };
     if ($("#dialogbody .doselect").length) {
         return
     }
-    if (apisrc) {
-        const keyfail = error_dat.apikey === true,
-            error_message = error_dat.errormessage,
-            error_code = error_dat.errorcode !== undefined ? "Error: " + error_dat.errorcode : "",
-            api_bttn = keyfail ? "<div id='add_api' data-api='" + apisrc + "' class='button'>" + translate("addapikey", {
-                "apisrc": apisrc
+    if (api_source) {
+        const key_fail = error_data.apikey === true,
+            error_message = error_data.errormessage,
+            error_code = error_data.errorcode !== undefined ? "Error: " + error_data.errorcode : "",
+            api_button = key_fail ? "<div id='add_api' data-api='" + api_source + "' class='button'>" + translate("addapikey", {
+                "apisrc": api_source
             }) + "</div>" : "",
-            t_op = apisrc ? "<span id='proxy_dialog' class='ref'>" + translate("tryotherproxy") + "</span>" : "",
-            content = "<h2 class='icon-blocked'>" + error_code + "</h2><p class='doselect'><strong>" + translate("error") + ": " + error_message + "<br/><br/>" + t_op + "</p>" + api_bttn;
+            try_other = api_source ? "<span id='proxy_dialog' class='ref'>" + translate("tryotherproxy") + "</span>" : "",
+            content = "<h2 class='icon-blocked'>" + error_code + "</h2><p class='doselect'><strong>" + translate("error") + ": " + error_message + "<br/><br/>" + try_other + "</p>" + api_button;
         popdialog(content, "canceldialog");
     }
 }
@@ -571,40 +570,40 @@ function get_api_error_data(error_obj) {
     const result = error.result,
         error_code = error.code ?? error.status ?? error.error_code ?? error ?? 0,
         error_message = error.message ?? error.error_message ?? error.responseText ?? error.statusText ?? error.type ?? error.error ?? error,
-        ak_check = (typeof error === "string") ? (error.indexOf("API calls limits have been reached") > -1 || error.indexOf("Limits reached") > -1) : false, // blockcypher
-        ak_check2 = (result) ? result.indexOf("API Key") > -1 : null, // etherscan
+        api_key_check = (typeof error === "string") ? (error.indexOf("API calls limits have been reached") > -1 || error.indexOf("Limits reached") > -1) : false, // blockcypher
+        api_key_check2 = (result) ? result.indexOf("API Key") > -1 : null, // etherscan
         api_key = (
             error_code === 101 || // fixer
             error_code === 402 || // blockchair
             error_code === 403 || error_code === 1 || // ethplorer => invalid or missing API key
             error_code === 1001 || // coinmarketcap => invalid API key
             error_code === 1002 || // coinmarketcap => missing API key
-            ak_check || ak_check2
+            api_key_check || api_key_check2
         ),
-        error_dat = {
+        error_details = {
             "errorcode": error_code,
             "errormessage": error_message,
             api_key
         },
         is_proxy = (error_obj.is_proxy) ? "proxy " : "";
-    console.error("API " + is_proxy + "error:", error_dat);
+    console.error("API " + is_proxy + "error:", error_details);
     if (api_key) {
         glob_let.apikey_fails = true;
     }
-    return error_dat;
+    return error_details;
 }
 
 // Retrieves next available Layer 2 API endpoint while preventing overflow
-function get_next_l2(this_payment, api_data, requestid, l2) {
+function get_next_l2(this_payment, api_data, request_id, l2) {
     if (block_overflow("l2")) return false; // prevent overflow
     const api_settings = q_obj(getcoinsettings(this_payment), "layer2.options." + l2 + ".apis");
     if (api_settings) {
-        const apilist = api_settings.apis,
-            al_length = apilist.length;
-        if (apilist && al_length) {
-            const currentIndex = apilist.findIndex(option => option.name === api_data.name),
-                next_api = apilist[(currentIndex + 1) % al_length],
-                rq_id = requestid || "";
+        const api_list = api_settings.apis,
+            list_length = api_list.length;
+        if (api_list && list_length) {
+            const current_index = api_list.findIndex(option => option.name === api_data.name),
+                next_api = api_list[(current_index + 1) % list_length],
+                rq_id = request_id || "";
             if (glob_let.rpc_attempts[sha_sub(rq_id + next_api.url + l2, 15)] !== true) {
                 return next_api;
             }
@@ -614,18 +613,18 @@ function get_next_l2(this_payment, api_data, requestid, l2) {
 }
 
 // Retrieves next available RPC endpoint while preventing overflow
-function get_next_rpc(this_payment, api_data, requestid, l2) {
+function get_next_rpc(this_payment, api_data, request_id, l2) {
     if (block_overflow("rpc")) return false; // prevent overflow
     const api_settings = cs_node(this_payment, "apis", true);
     if (api_settings) {
-        const apilist = api_settings.apis,
-            rpclist = api_settings.options,
-            restlist = (rpclist && rpclist.length) ? $.merge(apilist, rpclist) : apilist,
-            rl_length = restlist.length;
-        if (restlist && rl_length) {
-            const next_scan = restlist.findIndex(option => option.url === api_data.url),
-                next_rpc = restlist[(next_scan + 1) % rl_length],
-                rq_id = requestid || "",
+        const api_list = api_settings.apis,
+            rpc_list = api_settings.options,
+            combined_list = (rpc_list && rpc_list.length) ? $.merge(api_list, rpc_list) : api_list,
+            list_length = combined_list.length;
+        if (combined_list && list_length) {
+            const next_index = combined_list.findIndex(option => option.url === api_data.url),
+                next_rpc = combined_list[(next_index + 1) % list_length],
+                rq_id = request_id || "",
                 l2_prefix = l2 || "";
             if (glob_let.rpc_attempts[sha_sub(rq_id + next_rpc.url + l2_prefix, 15)] !== true) {
                 return next_rpc;
@@ -643,13 +642,13 @@ function set_api_src(rdo, api_data) {
 }
 
 // Updates UI with API source details and connection status indicators
-function api_src(thislist, api_data) {
+function api_src(current_list, api_data) {
     const api_url = api_data.url,
         api_url_short = api_url ? (api_url.length > 40 ? api_url.slice(0, 40) + "..." : api_url) : "",
-        aoi_name = api_data.name,
-        api_title = aoi_name === "mempool.space" ? api_url : aoi_name,
+        provider_name = api_data.name,
+        api_title = provider_name === "mempool.space" ? api_url : provider_name,
         api_source = api_title || api_url_short;
-    thislist.data("source", api_source).find(".api_source").html("<span class='src_txt' title='" + api_url_short + "'>" + translate("source") + ": " + api_source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
+    current_list.data("source", api_source).find(".api_source").html("<span class='src_txt' title='" + api_url_short + "'>" + translate("source") + ": " + api_source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
 }
 
 // Processes final state updates and transaction data after API request completion
@@ -659,228 +658,227 @@ function api_callback(rdo) {
         return
     }
     // src === "requests"
-    const thislist = rdo.thislist;
-    if (thislist && thislist.hasClass("scan")) {
-        thislist.removeClass("scan open").addClass("pmstatloaded");
-        const requestid = rdo.requestid,
-            transactionli = rdo.transactionlist,
-            txli = transactionli.children("li");
-        if (txli.length) {
-            const transactionpush = [];
-            txli.each(function() {
-                const thisnode = $(this),
-                    thisdata = thisnode.data();
-                if (thisdata) {
-                    transactionpush.push(thisdata);
-                    if (thisnode.attr("title")) {} else {
-                        const h_string = data_title(thisdata);
-                        if (h_string) {
-                            thisnode.append(hs_for(h_string)).attr("title", h_string);
+    const current_list = rdo.thislist;
+    if (current_list && current_list.hasClass("scan")) {
+        current_list.removeClass("scan open").addClass("pmstatloaded");
+        const request_id = rdo.requestid,
+            transaction_list = rdo.transactionlist,
+            transaction_items = transaction_list.children("li");
+        if (transaction_items.length) {
+            const transaction_push = [];
+            transaction_items.each(function() {
+                const current_node = $(this),
+                    current_data = current_node.data();
+                if (current_data) {
+                    transaction_push.push(current_data);
+                    if (current_node.attr("title")) {} else {
+                        const history_string = data_title(current_data);
+                        if (history_string) {
+                            current_node.append(hs_for(history_string)).attr("title", history_string);
                         }
                     }
                 }
             });
-            const statuspanel = thislist.find(".pmetastatus"),
-                statusbox = {
-                    "requestid": requestid,
-                    "status": statuspanel.attr("data-count"),
-                    "transactions": transactionpush
+            const status_panel = current_list.find(".pmetastatus"),
+                status_box = {
+                    "requestid": request_id,
+                    "status": status_panel.attr("data-count"),
+                    "transactions": transaction_push
                 };
-            glob_let.statuspush.push(statusbox);
+            glob_let.statuspush.push(status_box);
         } else {
-            const statusbox = {
-                "requestid": requestid,
+            const status_box = {
+                "requestid": request_id,
                 "status": 0
             };
-            glob_let.statuspush.push(statusbox);
+            glob_let.statuspush.push(status_box);
         }
         get_requeststates("loop");
     }
 }
 
 // Creates and returns a formatted transaction list item with confirmation status
-function append_tx_li(txd, rqtype) {
-    const txhash = txd.txhash;
-    if (!txhash) return null;
-    const ccval = txd.ccval,
-        ccval_rounded = trimdecimals(ccval, 6),
-        transactiontime = txd.transactiontime,
-        conf = txd.confirmations,
-        setconfirmations = txd.setconfirmations,
-        ccsymbol = txd.ccsymbol,
-        set_ccsymbol = ccsymbol ? ccsymbol.toUpperCase() : "",
-        ln = txhash && txhash.slice(0, 9) === "lightning",
-        lnstr = ln ? " <span class='icon-power'></span>" : "",
-        valstr = (ln && !conf) ? "" : ccval_rounded + " " + set_ccsymbol + lnstr,
-        date_format = transactiontime ? short_date(transactiontime) : "",
-        no_conf = setconfirmations === false,
-        instant_lock = txd.instant_lock,
-        confirmed = instant_lock || no_conf || (conf && conf >= setconfirmations),
-        conf_count = no_conf ? "" : conf + " / " + setconfirmations + " " + translate("confirmations"),
+function append_tx_li(tx_details, request_type) {
+    const tx_hash = tx_details.txhash;
+    if (!tx_hash) return null;
+    const crypto_value = tx_details.ccval,
+        crypto_value_rounded = trimdecimals(crypto_value, 6),
+        transaction_time = tx_details.transactiontime,
+        confirmations = tx_details.confirmations,
+        set_confirmations = tx_details.setconfirmations,
+        crypto_symbol = tx_details.ccsymbol,
+        formatted_crypto_symbol = crypto_symbol ? crypto_symbol.toUpperCase() : "",
+        is_lightning = tx_hash && tx_hash.slice(0, 9) === "lightning",
+        lightning_icon = is_lightning ? " <span class='icon-power'></span>" : "",
+        value_string = (is_lightning && !confirmations) ? "" : crypto_value_rounded + " " + formatted_crypto_symbol + lightning_icon,
+        formatted_date = transaction_time ? short_date(transaction_time) : "",
+        no_confirmation_requirement = set_confirmations === false,
+        instant_lock = tx_details.instant_lock,
+        is_confirmed = instant_lock || no_confirmation_requirement || (confirmations && confirmations >= set_confirmations),
+        confirmation_count = no_confirmation_requirement ? "" : confirmations + " / " + set_confirmations + " " + translate("confirmations"),
         instant_lock_text = instant_lock ? " (instant_lock)" : "",
-        conf_title = instant_lock ? "instant_lock" : conf_count,
-        unconf_text = translate("unconfirmedtx"),
-        checked_span = "<span class='icon-checkmark' title='" + conf_title + "'></span>",
-        confspan = confirmed ? checked_span : conf ? "<div class='txli_conf' title='" + conf_title + "'><div class='confbar'></div><span>" + conf_title + "</span></div>" :
-        "<div class='txli_conf' title='" + unconf_text + "'><div class='confbar'></div><span>" + unconf_text + "</span></div>",
-        tx_listitem = $("<li><div class='txli_content'>" + date_format + confspan + "<div class='txli_conf txl_canceled'><span class='icon-blocked'></span>Canceled</div><span class='tx_val'> + " + valstr + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>");
-    if (glob_let.tx_list.includes(txhash)) { // check for indexed transaction id's
-        return rqtype === "outgoing" ? null : tx_listitem;
+        confirmation_title = instant_lock ? "instant_lock" : confirmation_count,
+        unconfirmed_text = translate("unconfirmedtx"),
+        checked_span = "<span class='icon-checkmark' title='" + confirmation_title + "'></span>",
+        confirmation_span = is_confirmed ? checked_span : confirmations ? "<div class='txli_conf' title='" + confirmation_title + "'><div class='confbar'></div><span>" + confirmation_title + "</span></div>" :
+        "<div class='txli_conf' title='" + unconfirmed_text + "'><div class='confbar'></div><span>" + unconfirmed_text + "</span></div>",
+        tx_list_item = $("<li><div class='txli_content'>" + formatted_date + confirmation_span + "<div class='txli_conf txl_canceled'><span class='icon-blocked'></span>Canceled</div><span class='tx_val'> + " + value_string + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>");
+    if (glob_let.tx_list.includes(tx_hash)) { // check for indexed transaction id's
+        return request_type === "outgoing" ? null : tx_list_item;
     }
-    glob_let.tx_list.push(txhash);
-    return tx_listitem;
+    glob_let.tx_list.push(tx_hash);
+    return tx_list_item;
 }
 
 // Generates HTML wrapper for historic transaction metadata
-function hs_for(dat) {
-    return "<div class='historic_meta'>" + dat.split("\n").join("<br/>") + "</div>";
+function hs_for(data) {
+    return "<div class='historic_meta'>" + data.split("\n").join("<br/>") + "</div>";
 }
 
 // Generates detailed transaction information string for tooltip display
-function data_title(dat) {
-    const historic = dat.historic;
-    let historic_dat = "";
+function data_title(data) {
+    const historic = data.historic;
+    let historic_details = "";
     if (historic && historic.price) {
         const timestamp = historic.timestamp,
             price = historic.price,
-            fiatsrc = historic.fiatapisrc,
-            src = historic.apisrc,
-            lcsymbol = historic.lcsymbol,
-            lc_eur_rate = historic.lcrate,
+            fiat_source = historic.fiatapisrc,
+            crypto_source = historic.apisrc,
+            local_symbol = historic.lcsymbol,
+            local_eur_rate = historic.lcrate,
             usd_eur_rate = historic.usdrate,
-            fetched = historic.fetched,
-            lc_usd_rate = 1 / (lc_eur_rate / usd_eur_rate),
-            lc_ccrate = price / lc_usd_rate,
-            lc_val = dat.ccval * lc_ccrate,
-            cc_upper = dat.ccsymbol ? dat.ccsymbol.toUpperCase() : dat.ccsymbol,
-            lc_upper = lcsymbol ? lcsymbol.toUpperCase() : lcsymbol,
-            localrate = lc_upper === "USD" ? "" : cc_upper + "-" + lc_upper + ": " + lc_ccrate.toFixed(6) + "\n" + lc_upper + "-USD: " + lc_usd_rate.toFixed(2);
+            local_usd_rate = 1 / (local_eur_rate / usd_eur_rate),
+            local_crypto_rate = price / local_usd_rate,
+            local_value = data.ccval * local_crypto_rate,
+            crypto_symbol_upper = data.ccsymbol ? data.ccsymbol.toUpperCase() : data.ccsymbol,
+            local_symbol_upper = local_symbol ? local_symbol.toUpperCase() : local_symbol,
+            local_rate_info = local_symbol_upper === "USD" ? "" : crypto_symbol_upper + "-" + local_symbol_upper + ": " + local_crypto_rate.toFixed(6) + "\n" + local_symbol_upper + "-USD: " + local_usd_rate.toFixed(2);
         // set historic data
-        historic_dat = "Historic data (" + fulldateformat(new Date(timestamp - glob_const.timezone), langcode) + "):\n" +
-            "Fiatvalue: " + lc_val.toFixed(2) + " " + lc_upper + "\n" +
-            cc_upper + "-USD: " + price.toFixed(6) + "\n" +
-            localrate + "\n" +
-            "Source: " + fiatsrc + "/" + src + "\n";
+        historic_details = "Historic data (" + fulldateformat(new Date(timestamp - glob_const.timezone), langcode) + "):\n" +
+            "Fiatvalue: " + local_value.toFixed(2) + " " + local_symbol_upper + "\n" +
+            crypto_symbol_upper + "-USD: " + price.toFixed(6) + "\n" +
+            local_rate_info + "\n" +
+            "Source: " + fiat_source + "/" + crypto_source + "\n";
     }
-    const conf_ratio = dat.confirmations ? dat.confirmations + "/" + dat.setconfirmations : translate("unconfirmedtx"),
-        conf_var = dat.instant_lock ? "(instant_lock)" : conf_ratio,
-        cf_info = dat.setconfirmations === false ? "" : "Confirmations: " + conf_var,
-        l2src = dat.l2 ? "\nLayer: " + dat.l2 : "",
-        title_string = historic_dat + cf_info + l2src;
+    const confirmation_details = data.confirmations ? data.confirmations + "/" + data.setconfirmations : translate("unconfirmedtx"),
+        confirmation_var = data.instant_lock ? "(instant_lock)" : confirmation_details,
+        confirmation_info = data.setconfirmations === false ? "" : "Confirmations: " + confirmation_var,
+        layer2_source = data.l2 ? "\nLayer: " + data.l2 : "",
+        title_string = historic_details + confirmation_info + layer2_source;
     return title_string.length ? title_string : false;
 }
 
 // Validates received cryptocurrency or fiat amounts against requested amounts and updates transaction status
 function compareamounts(rd, rdo) {
-    const thisrequestid = rd.requestid,
-        requestli = rdo.thislist,
-        txlist = requestli.find(".transactionlist li"),
-        txlist_length = txlist.length;
-    if (txlist_length) {
-        const lastlist = txlist.last(),
-            firstinput = lastlist.data("transactiontime");
-        if (firstinput) {
-            const iscrypto = rd.iscrypto,
-                pendingstatus = rd.pending,
-                getconfirmations = rd.set_confirmations,
-                getconfint = getconfirmations === false ? 0 : (getconfirmations ? parseInt(getconfirmations) : 1),
-                setconfirmations = rd.lightning ? 1 : getconfint, // set minimum confirmations to 1
-                firstlist = txlist.first(),
-                conf = firstlist.data("confirmations"),
-                latestinput = firstlist.data("transactiontime"),
-                offset = Math.abs(now() - (firstinput - glob_const.timezone)),
-                one_tx = txlist_length === 1,
-                recent = offset < 300000 && one_tx,
-                cc_amount = parseFloat(rd.cc_amount),
-                margin = 0.95;
-            let recent_dat = false,
-                tx_counter = 0,
-                status_cc = "pending",
-                pending_cc = pendingstatus,
-                confirmed_cc = false,
-                confirmations_cc = 0,
-                paymenttimestamp_cc,
-                txhash_cc,
-                thissum_cc = 0,
-                fiatvalue = rd.fiatvalue;
-            if (iscrypto || recent) {
-                const txreverse = txlist_length > 1 ? txlist.get().reverse() : txlist;
-                $(txreverse).each(function(i) {
-                    tx_counter++;
-                    const thisnode = $(this),
-                        tn_dat = thisnode.data(),
-                        conf_correct = tn_dat.instant_lock ? 0 : setconfirmations; // correction if dash instant_lock
-                    confirmations_cc = tn_dat.confirmations,
-                        paymenttimestamp_cc = tn_dat.transactiontime,
-                        txhash_cc = tn_dat.txhash,
-                        thissum_cc += parseFloat(tn_dat.ccval) || 0; // sum of outputs
-                    if (confirmations_cc >= conf_correct || rd.no_conf || tn_dat.setconfirmations === false) { // check all confirmations + whitelist for currencies unable to fetch confirmations
-                        confirmed_cc = true;
-                        if (thissum_cc >= cc_amount * margin) { // compensation for small fluctuations in rounding amount
-                            thisnode.addClass("exceed").nextAll().addClass("exceed");
+    const request_id = rd.requestid,
+        current_list = rdo.thislist,
+        transaction_items = current_list.find(".transactionlist li"),
+        transaction_count = transaction_items.length;
+    if (transaction_count) {
+        const last_transaction = transaction_items.last(),
+            first_transaction_time = last_transaction.data("transactiontime");
+        if (first_transaction_time) {
+            const is_crypto = rd.iscrypto,
+                pending_status = rd.pending,
+                required_confirmations = rd.set_confirmations,
+                confirmation_interval = required_confirmations === false ? 0 : (required_confirmations ? parseInt(required_confirmations) : 1),
+                minimum_confirmations = rd.lightning ? 1 : confirmation_interval, // set minimum confirmations to 1
+                first_transaction = transaction_items.first(),
+                first_confirmations = first_transaction.data("confirmations"),
+                latest_transaction_time = first_transaction.data("transactiontime"),
+                time_offset = Math.abs(now() - (first_transaction_time - glob_const.timezone)),
+                single_transaction = transaction_count === 1,
+                is_recent = time_offset < 300000 && single_transaction,
+                crypto_amount = parseFloat(rd.cc_amount),
+                amount_margin = 0.95;
+            let recent_data = false,
+                transaction_counter = 0,
+                crypto_status = "pending",
+                crypto_pending = pending_status,
+                is_crypto_confirmed = false,
+                crypto_confirmations = 0,
+                crypto_payment_timestamp,
+                crypto_transaction_hash,
+                total_crypto_amount = 0,
+                fiat_value = rd.fiatvalue;
+            if (is_crypto || is_recent) {
+                const transaction_reverse = transaction_count > 1 ? transaction_items.get().reverse() : transaction_items;
+                $(transaction_reverse).each(function(index) {
+                    transaction_counter++;
+                    const current_transaction = $(this),
+                        transaction_data = current_transaction.data(),
+                        correction_confirmations = transaction_data.instant_lock ? 0 : minimum_confirmations; // correction if dash instant_lock
+                    crypto_confirmations = transaction_data.confirmations,
+                        crypto_payment_timestamp = transaction_data.transactiontime,
+                        crypto_transaction_hash = transaction_data.txhash,
+                        total_crypto_amount += parseFloat(transaction_data.ccval) || 0; // sum of outputs
+                    if (crypto_confirmations >= correction_confirmations || rd.no_conf || transaction_data.setconfirmations === false) { // check all confirmations + whitelist for currencies unable to fetch confirmations
+                        is_crypto_confirmed = true;
+                        if (total_crypto_amount >= crypto_amount * amount_margin) { // compensation for small fluctuations in rounding amount
+                            current_transaction.addClass("exceed").nextAll().addClass("exceed");
                             return
                         }
                     } else {
-                        confirmed_cc = false;
+                        is_crypto_confirmed = false;
                     }
-                    const confbar = thisnode.find(".confbar");
-                    if (confbar.length > 0) {
-                        confbar.each(function(i) {
-                            animate_confbar($(this), i);
+                    const confirmation_bar = current_transaction.find(".confbar");
+                    if (confirmation_bar.length > 0) {
+                        confirmation_bar.each(function(bar_index) {
+                            animate_confbar($(this), bar_index);
                         });
                     };
                 });
-                if (thissum_cc >= cc_amount * margin) { // compensation for small fluctuations in rounding amount
-                    if (confirmed_cc === false) { // check confirmations outside the loop
-                        status_cc = "pending",
-                            pending_cc = one_tx && txhash_cc ? "polling" : pendingstatus; // switch to tx polling if there's only one transaction and txhash is known
+                if (total_crypto_amount >= crypto_amount * amount_margin) { // compensation for small fluctuations in rounding amount
+                    if (is_crypto_confirmed === false) { // check confirmations outside the loop
+                        crypto_status = "pending",
+                            crypto_pending = single_transaction && crypto_transaction_hash ? "polling" : pending_status; // switch to tx polling if there's only one transaction and txhash is known
                     } else {
-                        status_cc = "paid",
-                            pending_cc = "no";
+                        crypto_status = "paid",
+                            crypto_pending = "no";
                     }
                 } else {
-                    status_cc = "insufficient",
-                        pending_cc = "scanning";
+                    crypto_status = "insufficient",
+                        crypto_pending = "scanning";
                 }
             }
-            if (recent && !iscrypto) { // get local fiat rates when request is less then 15 minutes old
-                const ccsymbol = rd.currencysymbol,
-                    exchangerates = br_get_session("exchangerates", true),
-                    cc_xrates = br_get_session("xrates_" + ccsymbol, true);
-                if (exchangerates && cc_xrates) {
-                    const fiat_exchangerates = exchangerates.fiat_exchangerates,
-                        local_xrate = fiat_exchangerates ? fiat_exchangerates[rd.fiatcurrency] : null,
-                        usd_eur_xrate = fiat_exchangerates ? fiat_exchangerates.usd : null;
-                    if (local_xrate && usd_eur_xrate) {
-                        const usd_rate = cc_xrates ? cc_xrates.ccrate : null;
+            if (is_recent && !is_crypto) { // get local fiat rates when request is less then 15 minutes old
+                const crypto_symbol = rd.currencysymbol,
+                    exchange_rates = br_get_session("exchangerates", true),
+                    crypto_exchange_rates = br_get_session("xrates_" + crypto_symbol, true);
+                if (exchange_rates && crypto_exchange_rates) {
+                    const fiat_exchange_rates = exchange_rates.fiat_exchangerates,
+                        local_exchange_rate = fiat_exchange_rates ? fiat_exchange_rates[rd.fiatcurrency] : null,
+                        usd_eur_exchange_rate = fiat_exchange_rates ? fiat_exchange_rates.usd : null;
+                    if (local_exchange_rate && usd_eur_exchange_rate) {
+                        const usd_rate = crypto_exchange_rates ? crypto_exchange_rates.ccrate : null;
                         if (usd_rate) {
-                            const usdval = thissum_cc * usd_rate,
-                                eurval = usdval / usd_eur_xrate;
-                            fiatvalue = eurval * local_xrate,
-                                recent_dat = true;
+                            const usd_value = total_crypto_amount * usd_rate,
+                                eur_value = usd_value / usd_eur_exchange_rate;
+                            fiat_value = eur_value * local_exchange_rate,
+                                recent_data = true;
                         }
                     }
                 } else {
-                    init_historical_fiat_data(rd, rdo, conf, latestinput, firstinput);
+                    init_historical_fiat_data(rd, rdo, first_confirmations, latest_transaction_time, first_transaction_time);
                     return
                 }
             }
-            if (iscrypto || recent_dat) {
+            if (is_crypto || recent_data) {
                 updaterequest({
                     "requestid": rd.requestid,
-                    "status": status_cc,
-                    "receivedamount": thissum_cc,
-                    "fiatvalue": fiatvalue,
-                    "paymenttimestamp": paymenttimestamp_cc,
-                    "txhash": txhash_cc,
-                    "confirmations": confirmations_cc,
-                    "pending": pending_cc,
+                    "status": crypto_status,
+                    "receivedamount": total_crypto_amount,
+                    "fiatvalue": fiat_value,
+                    "paymenttimestamp": crypto_payment_timestamp,
+                    "txhash": crypto_transaction_hash,
+                    "confirmations": crypto_confirmations,
+                    "pending": crypto_pending,
                     "lightning": rd.lightning
                 }, false);
                 api_callback(rdo);
                 return
             }
-            init_historical_fiat_data(rd, rdo, conf, latestinput, firstinput);
+            init_historical_fiat_data(rd, rdo, first_confirmations, latest_transaction_time, first_transaction_time);
             return
         }
     }
@@ -891,38 +889,38 @@ function compareamounts(rd, rdo) {
 
 // Triggers historical fiat data retrieval for transactions based on confirmation status
 function init_historical_fiat_data(rd, rdo, conf, latestinput, firstinput) {
-    const confcor = conf || 0,
-        no_conf = rd.no_conf || conf === false,
-        latestconf = no_conf ? 0 : confcor, // only update on change
-        hc_prefix = "historic_" + rd.requestid,
-        historiccache = br_get_session(hc_prefix),
-        cacheval = parseInt(latestinput) + parseInt(latestconf);
-    if ((latestconf || no_conf) && cacheval > historiccache) { //new input detected; call historic api
-        br_remove_session(hc_prefix); // remove historic price cache
+    const confirm_level = conf || 0,
+        no_confirm = rd.no_conf || conf === false,
+        latest_confirm = no_confirm ? 0 : confirm_level, // only update on change
+        cache_prefix = "historic_" + rd.requestid,
+        historic_cache = br_get_session(cache_prefix),
+        cache_value = parseInt(latestinput) + parseInt(latest_confirm);
+    if ((latest_confirm || no_confirm) && cache_value > historic_cache) { //new input detected; call historic api
+        br_remove_session(cache_prefix); // remove historic price cache
         const historic_payload = $.extend(rd, {
                 "latestinput": latestinput,
-                "latestconf": latestconf,
+                "latestconf": latest_confirm,
                 "firstinput": firstinput
             }),
-            apilist = "historic_fiat_price_apis",
-            fiatapi = $("#fiatapisettings").data("selected"),
-            fiatapi_default = (fiatapi === "coingecko" || fiatapi === "coinbase") ? "fixer" : fiatapi; // exclude coingecko api"
-        glob_let.api_attempt[apilist] = {}; // reset global historic fiat price api attempt
-        get_historical_fiat_data(historic_payload, rdo, apilist, fiatapi_default);
+            api_list = "historic_fiat_price_apis",
+            fiat_api = $("#fiatapisettings").data("selected"),
+            fiat_api_default = (fiat_api === "coingecko" || fiat_api === "coinbase") ? "fixer" : fiat_api; // exclude coingecko api"
+        glob_let.api_attempt[api_list] = {}; // reset global historic fiat price api attempt
+        get_historical_fiat_data(historic_payload, rdo, api_list, fiat_api_default);
         return
     }
     api_callback(rdo);
 }
 
 // Retrieves historical fiat exchange rates from specified API with fallback options
-function get_historical_fiat_data(rd, rdo, apilist, fiatapi) {
-    glob_let.api_attempt[apilist][fiatapi] = true;
-    const fiatcurrency = rd.fiatcurrency;
-    if (fiatcurrency) {
-        const lcsymbol = fiatcurrency.toUpperCase(),
-            payload = get_historic_fiatprice_api_payload(fiatapi, lcsymbol, rd.latestinput);
+function get_historical_fiat_data(rd, rdo, api_list, fiat_api) {
+    glob_let.api_attempt[api_list][fiat_api] = true;
+    const fiat_currency = rd.fiatcurrency;
+    if (fiat_currency) {
+        const currency_symbol = fiat_currency.toUpperCase(),
+            payload = get_historic_fiatprice_api_payload(fiat_api, currency_symbol, rd.latestinput);
         api_proxy({
-            "api": fiatapi,
+            "api": fiat_api,
             "search": payload,
             "cachetime": 86400,
             "cachefolder": "1d",
@@ -933,55 +931,55 @@ function get_historical_fiat_data(rd, rdo, apilist, fiatapi) {
             const data = br_result(e).result;
             if (data) {
                 if (data.error) {
-                    const next_historic = try_next_api(apilist, fiatapi);
+                    const next_historic = try_next_api(api_list, fiat_api);
                     if (next_historic) {
-                        get_historical_fiat_data(rd, rdo, apilist, next_historic);
+                        get_historical_fiat_data(rd, rdo, api_list, next_historic);
                         return
                     }
-                    fail_dialogs(fiatapi, {
+                    fail_dialogs(fiat_api, {
                         "error": data.error
                     });
                     api_callback(rdo);
                     return
                 }
-                let usdeur = false,
-                    usdloc = false,
-                    usdrate = false,
-                    get_lcrate = false;
-                if (fiatapi === "currencylayer") {
-                    usdeur = q_obj(data, "quotes.USDEUR"),
-                        usdloc = q_obj(data, "quotes.USD" + lcsymbol);
-                    if (usdeur && usdloc) {
-                        usdrate = 1 / usdeur,
-                            get_lcrate = usdloc * usdrate;
+                let usd_eur = false,
+                    usd_local = false,
+                    usd_rate = false,
+                    local_rate = false;
+                if (fiat_api === "currencylayer") {
+                    usd_eur = q_obj(data, "quotes.USDEUR"),
+                        usd_local = q_obj(data, "quotes.USD" + currency_symbol);
+                    if (usd_eur && usd_local) {
+                        usd_rate = 1 / usd_eur,
+                            local_rate = usd_local * usd_rate;
                     }
                 } else {
-                    usdrate = q_obj(data, "rates.USD"),
-                        get_lcrate = q_obj(data, "rates." + lcsymbol);
+                    usd_rate = q_obj(data, "rates.USD"),
+                        local_rate = q_obj(data, "rates." + currency_symbol);
                 }
-                if (usdrate && get_lcrate) {
-                    const lcrate = lcsymbol === "EUR" ? 1 : get_lcrate,
+                if (usd_rate && local_rate) {
+                    const currency_rate = currency_symbol === "EUR" ? 1 : local_rate,
                         historic_api = $("#cmcapisettings").data("selected"),
                         picked_historic_api = historic_api === "coinmarketcap" ? "coingecko" : historic_api, // default to "coingecko api"
-                        init_apilist = "historic_crypto_price_apis";
-                    glob_let.api_attempt[init_apilist] = {};
-                    get_historical_crypto_data(rd, rdo, fiatapi, init_apilist, picked_historic_api, lcrate, usdrate, lcsymbol);
+                        init_api_list = "historic_crypto_price_apis";
+                    glob_let.api_attempt[init_api_list] = {};
+                    get_historical_crypto_data(rd, rdo, fiat_api, init_api_list, picked_historic_api, currency_rate, usd_rate, currency_symbol);
                     return
                 }
-                const next_historic = try_next_api(apilist, fiatapi);
+                const next_historic = try_next_api(api_list, fiat_api);
                 if (next_historic) {
-                    get_historical_fiat_data(rd, rdo, apilist, next_historic);
+                    get_historical_fiat_data(rd, rdo, api_list, next_historic);
                     return
                 }
             }
-            fail_dialogs(fiatapi, {
-                "error": "unable to fetch " + lcsymbol + " exchange rate"
+            fail_dialogs(fiat_api, {
+                "error": "unable to fetch " + currency_symbol + " exchange rate"
             });
             api_callback(rdo);
         }).fail(function(xhr, stat, err) {
             function next_proxy() { // try next proxy
                 if (get_next_proxy()) {
-                    get_historical_fiat_data(rd, rdo, apilist, fiatapi);
+                    get_historical_fiat_data(rd, rdo, api_list, fiat_api);
                     return true
                 }
                 return false
@@ -989,17 +987,17 @@ function get_historical_fiat_data(rd, rdo, apilist, fiatapi) {
             if (is_proxy_fail(this.url) && next_proxy()) { // Try next proxy if proxy fails
                 return
             }
-            const next_historic = try_next_api(apilist, fiatapi);
+            const next_historic = try_next_api(api_list, fiat_api);
             if (next_historic) {
-                get_historical_fiat_data(rd, rdo, apilist, next_historic);
+                get_historical_fiat_data(rd, rdo, api_list, next_historic);
                 return
             }
             if (next_proxy()) { // Try next proxy after trying all api's
                 return
             }
-            const error_object = xhr || stat || err;
-            fail_dialogs(fiatapi, {
-                "error": error_object
+            const error_details = xhr || stat || err;
+            fail_dialogs(fiat_api, {
+                "error": error_details
             });
             api_callback(rdo);
         });
@@ -1009,42 +1007,42 @@ function get_historical_fiat_data(rd, rdo, apilist, fiatapi) {
 }
 
 // Constructs API-specific URL parameters for historical fiat price requests
-function get_historic_fiatprice_api_payload(fiatapi, lcsymbol, latestinput) {
-    const dateformat = form_date(latestinput),
-        payload = (fiatapi === "fixer") ? dateformat + "?symbols=" + lcsymbol + ",USD" :
-        (fiatapi === "currencylayer") ? "historical?date=" + dateformat :
-        dateformat + "?base=EUR"; // <- exchangeratesapi
+function get_historic_fiatprice_api_payload(fiat_api, currency_symbol, latestinput) {
+    const formatted_date = form_date(latestinput),
+        payload = (fiat_api === "fixer") ? formatted_date + "?symbols=" + currency_symbol + ",USD" :
+        (fiat_api === "currencylayer") ? "historical?date=" + formatted_date :
+        formatted_date + "?base=EUR"; // <- exchangeratesapi
     return payload;
 }
 
 // Converts timestamp to YYYY-MM-DD format for API requests
 function form_date(latestinput) {
-    const dateobject = new Date(parseFloat(latestinput)),
-        getmonth = dateobject.getUTCMonth() + 1,
-        getday = dateobject.getUTCDate(),
-        year = dateobject.getUTCFullYear(),
-        month = getmonth < 10 ? "0" + getmonth : getmonth,
-        day = getday < 10 ? "0" + getday : getday;
+    const date_object = new Date(parseFloat(latestinput)),
+        month_raw = date_object.getUTCMonth() + 1,
+        day_raw = date_object.getUTCDate(),
+        year = date_object.getUTCFullYear(),
+        month = month_raw < 10 ? "0" + month_raw : month_raw,
+        day = day_raw < 10 ? "0" + day_raw : day_raw;
     return year + "-" + month + "-" + day;
 }
 
 // Fetches and processes historical cryptocurrency prices with multi-API fallback support
-function get_historical_crypto_data(rd, rdo, fiatapi, apilist, api, lcrate, usdrate, lcsymbol) {
-    glob_let.api_attempt[apilist][api] = true;
-    const thispayment = rd.payment,
-        ccsymbol = rd.currencysymbol,
-        latestinput = rd.latestinput,
-        firstinput = rd.firstinput,
-        coin_id = api === "coincodex" ? ccsymbol : // coincodex id
-        api === "coingecko" ? thispayment : // coingecko id
-        ccsymbol + "-" + thispayment, // coinpaprika id
-        starttimesec = (firstinput - glob_const.timezone) / 1000,
-        endtimesec = (latestinput - glob_const.timezone) / 1000,
+function get_historical_crypto_data(rd, rdo, fiat_api, api_list, api, currency_rate, usd_rate, currency_symbol) {
+    glob_let.api_attempt[api_list][api] = true;
+    const payment_method = rd.payment,
+        crypto_symbol = rd.currencysymbol,
+        latest_input = rd.latestinput,
+        first_input = rd.firstinput,
+        coin_id = api === "coincodex" ? crypto_symbol : // coincodex id
+        api === "coingecko" ? payment_method : // coingecko id
+        crypto_symbol + "-" + payment_method, // coinpaprika id
+        start_time_sec = (first_input - glob_const.timezone) / 1000,
+        end_time_sec = (latest_input - glob_const.timezone) / 1000,
         erc20_contract = rd.token_contract,
         history_api = api,
-        search = history_api === "coincodex" ? get_payload_historic_coincodex(coin_id, starttimesec, endtimesec) :
-        history_api === "coinmarketcap" || history_api === "coingecko" ? get_payload_historic_coingecko(coin_id, starttimesec, endtimesec, erc20_contract) :
-        get_payload_historic_coinpaprika(coin_id, starttimesec, endtimesec);
+        search = history_api === "coincodex" ? get_payload_historic_coincodex(coin_id, start_time_sec, end_time_sec) :
+        history_api === "coinmarketcap" || history_api === "coingecko" ? get_payload_historic_coingecko(coin_id, start_time_sec, end_time_sec, erc20_contract) :
+        get_payload_historic_coinpaprika(coin_id, start_time_sec, end_time_sec);
     api_proxy({
         "api": api,
         "search": search,
@@ -1057,104 +1055,104 @@ function get_historical_crypto_data(rd, rdo, fiatapi, apilist, api, lcrate, usdr
     }).done(function(e) {
         const api_result = br_result(e).result,
             data = api === "coingecko" ? (api_result ? api_result.prices : null) :
-            api === "coincodex" ? (api_result ? api_result[ccsymbol.toUpperCase()] : null) :
+            api === "coincodex" ? (api_result ? api_result[crypto_symbol.toUpperCase()] : null) :
             api_result;
         if (data && !data.error) {
-            const requestli = rdo.thislist,
-                txlist = requestli.find(".transactionlist li"),
-                txlist_length = txlist.length,
-                txreverse = txlist_length > 1 ? txlist.get().reverse() : txlist,
-                latestconf = rd.latestconf,
-                thisamount = rd.amount,
-                getconfirmations = rd.set_confirmations,
-                getconfint = getconfirmations === false ? 0 : (getconfirmations ? parseInt(getconfirmations) : 1),
-                lnd = rd.lightning,
-                setconfirmations = lnd ? 1 : getconfint, // set minimum confirmations to 1
-                iserc20 = rd.erc20,
-                historicusdvalue = (thisamount / lcrate) * usdrate,
-                margin = historicusdvalue < 2 ? 0.60 : 0.95; // be flexible with small amounts
+            const request_list = rdo.thislist,
+                tx_list = request_list.find(".transactionlist li"),
+                tx_list_length = tx_list.length,
+                tx_reverse = tx_list_length > 1 ? tx_list.get().reverse() : tx_list,
+                latest_confirm = rd.latestconf,
+                total_amount = rd.amount,
+                get_confirmations = rd.set_confirmations,
+                confirm_interval = get_confirmations === false ? 0 : (get_confirmations ? parseInt(get_confirmations) : 1),
+                is_lightning = rd.lightning,
+                set_confirmations = is_lightning ? 1 : confirm_interval, // set minimum confirmations to 1
+                is_erc20 = rd.erc20,
+                historic_usd_value = (total_amount / currency_rate) * usd_rate,
+                margin = historic_usd_value < 2 ? 0.60 : 0.95; // be flexible with small amounts
             let tx_counter = 0,
-                conf = 0,
-                paymenttimestamp,
-                txhash,
-                receivedcc = 0,
-                receivedusd = 0,
+                confirmations = 0,
+                payment_timestamp,
+                tx_hash,
+                received_crypto = 0,
+                received_usd = 0,
                 confirmed = false,
                 status = "pending",
                 pending = rd.pending;
-            $(txreverse).each(function(i) {
+            $(tx_reverse).each(function(i) {
                 tx_counter++;
-                const thisnode = $(this),
-                    tn_dat = thisnode.data(),
-                    thistimestamp = tn_dat.transactiontime,
-                    thisvalue = tn_dat.ccval,
+                const current_node = $(this),
+                    node_data = current_node.data(),
+                    transaction_timestamp = node_data.transactiontime,
+                    transaction_value = node_data.ccval,
                     values = {
-                        "fiatapisrc": fiatapi,
+                        "fiatapisrc": fiat_api,
                         "apisrc": api,
-                        "lcrate": lcrate,
-                        "usdrate": usdrate,
-                        "lcsymbol": lcsymbol,
+                        "lcrate": currency_rate,
+                        "usdrate": usd_rate,
+                        "lcsymbol": currency_symbol,
                         "fetched": false
                     },
-                    historic_object = compare_historic_prices(api, values, data, thistimestamp),
+                    historic_object = compare_historic_prices(api, values, data, transaction_timestamp),
                     historic_price = historic_object.price,
-                    conf_correct = tn_dat.instant_lock ? 0 : setconfirmations; // correction if dash instant_lock
-                thisnode.data("historic", historic_object);
-                conf = tn_dat.confirmations, // check confirmations
-                    paymenttimestamp = thistimestamp,
-                    txhash = tn_dat.txhash,
-                    receivedcc += parseFloat(thisvalue) || 0; // sum of outputs CC
-                if ((historic_price && conf >= conf_correct) || rd.no_conf === true || tn_dat.setconfirmations === false) { // check all confirmations + whitelist for currencies unable to fetch confirmations
+                    conf_correct = node_data.instant_lock ? 0 : set_confirmations; // correction if dash instant_lock
+                current_node.data("historic", historic_object);
+                confirmations = node_data.confirmations, // check confirmations
+                    payment_timestamp = transaction_timestamp,
+                    tx_hash = node_data.txhash,
+                    received_crypto += parseFloat(transaction_value) || 0; // sum of outputs CC
+                if ((historic_price && confirmations >= conf_correct) || rd.no_conf === true || node_data.setconfirmations === false) { // check all confirmations + whitelist for currencies unable to fetch confirmations
                     confirmed = true;
                 } else {
                     confirmed = false;
                 }
-                let thisusdsum = receivedusd += parseFloat(historic_price * thisvalue) || 0;
-                if (thisusdsum >= historicusdvalue * margin) { //minus 5% dollar for volatility compensation
-                    thisnode.addClass("exceed").nextAll().addClass("exceed");
+                let current_usd_sum = received_usd += parseFloat(historic_price * transaction_value) || 0;
+                if (current_usd_sum >= historic_usd_value * margin) { //minus 5% dollar for volatility compensation
+                    current_node.addClass("exceed").nextAll().addClass("exceed");
                 }
-                const confbar = thisnode.find(".confbar");
-                if (confbar.length > 0) {
-                    confbar.each(function(i) {
+                const conf_bar = current_node.find(".confbar");
+                if (conf_bar.length > 0) {
+                    conf_bar.each(function(i) {
                         animate_confbar($(this), i);
                     });
                 };
             });
-            if (receivedusd) {
-                if (receivedusd >= historicusdvalue * margin) { // check total incoming amount // minus 5% dollar for volatility compensation
+            if (received_usd) {
+                if (received_usd >= historic_usd_value * margin) { // check total incoming amount // minus 5% dollar for volatility compensation
                     if (confirmed === false) { // check confirmations outside the loop
                         status = "pending",
-                            pending = tx_counter === 1 && txhash ? "polling" : pending; // switch to tx polling if there's only one transaction and txhash is known
+                            pending = tx_counter === 1 && tx_hash ? "polling" : pending; // switch to tx polling if there's only one transaction and txhash is known
                     } else {
                         status = "paid",
                             pending = "no";
                     }
                 } else {
-                    status = receivedusd === 0 ? status : "insufficient",
+                    status = received_usd === 0 ? status : "insufficient",
                         pending = "scanning";
                 }
                 updaterequest({
                     "requestid": rd.requestid,
                     "status": status,
-                    "receivedamount": receivedcc,
-                    "fiatvalue": (receivedusd / usdrate) * lcrate,
-                    "paymenttimestamp": paymenttimestamp,
-                    "txhash": txhash,
-                    "confirmations": conf,
+                    "receivedamount": received_crypto,
+                    "fiatvalue": (received_usd / usd_rate) * currency_rate,
+                    "paymenttimestamp": payment_timestamp,
+                    "txhash": tx_hash,
+                    "confirmations": confirmations,
                     "pending": pending,
-                    "lightning": lnd
+                    "lightning": is_lightning
                 }, false);
                 if (pending !== "no") {
-                    const cacheval = parseInt(latestinput) + parseInt(latestconf);
-                    br_set_session("historic_" + rd.requestid, cacheval); // 'cache' historic data
+                    const cache_value = parseInt(latest_input) + parseInt(latest_confirm);
+                    br_set_session("historic_" + rd.requestid, cache_value); // 'cache' historic data
                 }
                 api_callback(rdo);
                 return
             }
         }
-        const next_historic = try_next_api(apilist, api);
+        const next_historic = try_next_api(api_list, api);
         if (next_historic) {
-            get_historical_crypto_data(rd, rdo, fiatapi, apilist, next_historic, lcrate, usdrate, lcsymbol);
+            get_historical_crypto_data(rd, rdo, fiat_api, api_list, next_historic, currency_rate, usd_rate, currency_symbol);
             return
         }
         fail_dialogs(api, {
@@ -1164,7 +1162,7 @@ function get_historical_crypto_data(rd, rdo, fiatapi, apilist, api, lcrate, usdr
     }).fail(function(xhr, stat, err) {
         function next_proxy() { // try next proxy
             if (get_next_proxy()) {
-                get_historical_crypto_data(rd, rdo, fiatapi, apilist, api, lcrate, usdrate, lcsymbol);
+                get_historical_crypto_data(rd, rdo, fiat_api, api_list, api, currency_rate, usd_rate, currency_symbol);
                 return true
             }
             return false
@@ -1172,37 +1170,37 @@ function get_historical_crypto_data(rd, rdo, fiatapi, apilist, api, lcrate, usdr
         if (is_proxy_fail(this.url) && next_proxy()) { // Try next proxy if proxy fails
             return
         }
-        const next_historic = try_next_api(apilist, api);
+        const next_historic = try_next_api(api_list, api);
         if (next_historic) {
-            get_historical_crypto_data(rd, rdo, fiatapi, apilist, next_historic, lcrate, usdrate, lcsymbol);
+            get_historical_crypto_data(rd, rdo, fiat_api, api_list, next_historic, currency_rate, usd_rate, currency_symbol);
             return
         }
         if (next_proxy()) { // Try next proxy after trying all api's
             return
         }
-        const error_object = xhr || stat || err;
+        const error_details = xhr || stat || err;
         fail_dialogs(api, {
-            "error": error_object
+            "error": error_details
         });
         api_callback(rdo);
     })
 }
 
 // Builds CoinGecko API request URL for historical price data
-function get_payload_historic_coingecko(coin_id, starttime, endtime, erc20_contract) {
-    const time_range = Math.abs(endtime - starttime),
-        start_time = time_range < 3600 ? 5200 : 3600; // compensation for minimum range
+function get_payload_historic_coingecko(coin_id, start_time, end_time, erc20_contract) {
+    const time_range = Math.abs(end_time - start_time),
+        adjusted_start_time = time_range < 3600 ? 5200 : 3600; // compensation for minimum range
     if (erc20_contract) {
-        return "coins/ethereum/contract/" + erc20_contract + "/market_chart/range?vs_currency=usd&from=" + (starttime - start_time) + "&to=" + (endtime + 3600); // expand range with one hour for error margin
+        return "coins/ethereum/contract/" + erc20_contract + "/market_chart/range?vs_currency=usd&from=" + (start_time - adjusted_start_time) + "&to=" + (end_time + 3600); // expand range with one hour for error margin
     }
-    return "coins/" + coin_id + "/market_chart/range?vs_currency=usd&from=" + (starttime - start_time) + "&to=" + (endtime + 3600); // expand range with one hour for error margin
+    return "coins/" + coin_id + "/market_chart/range?vs_currency=usd&from=" + (start_time - adjusted_start_time) + "&to=" + (end_time + 3600); // expand range with one hour for error margin
 }
 
 // Builds CoinPaprika API request URL with dynamic time intervals
-function get_payload_historic_coinpaprika(coin_id, starttime, endtime) {
-    const ts_start = starttime - 36000,
-        ts_end = endtime + 36000, // add ten hours flex both ways otherwise api can return empty result
-        timespan = ts_end - ts_start,
+function get_payload_historic_coinpaprika(coin_id, start_time, end_time) {
+    const timestamp_start = start_time - 36000,
+        timestamp_end = end_time + 36000, // add ten hours flex both ways otherwise api can return empty result
+        time_span = timestamp_end - timestamp_start,
         // api limit = 1000 rows (default)
         // 3day = 259200 = max 864 rows (5 min interval)
         // 6day = 518400 = max 864 rows (10 min interval)
@@ -1211,50 +1209,49 @@ function get_payload_historic_coinpaprika(coin_id, starttime, endtime) {
         // 27day = 2332800 = max 864 rows (45 min interval)
         // 35day = 3024000 = max 864 rows (1 hour interval)
         // 72day = 6220800 = max 864 rows (2 hour interval) (max 2 months)
-        interval = timespan < 259200 ? "5m" :
-        timespan < 518400 ? "10m" :
-        timespan < 777600 ? "15m" :
-        timespan < 1555200 ? "30m" :
-        timespan < 2332800 ? "45m" :
-        timespan < 3024000 ? "1h" : "2h",
-        cp_querystring = starttime === endtime ?
-        starttime - 300 + "&limit=1" :
-        ts_start + "&end=" + endtime + "&interval=" + interval; // query for one or multiple dates (-300 seconds for instant update)
-    return coin_id + "/historical?start=" + cp_querystring;
+        interval = time_span < 259200 ? "5m" :
+        time_span < 518400 ? "10m" :
+        time_span < 777600 ? "15m" :
+        time_span < 1555200 ? "30m" :
+        time_span < 2332800 ? "45m" :
+        time_span < 3024000 ? "1h" : "2h",
+        coinpaprika_query_string = start_time === end_time ?
+        start_time - 300 + "&limit=1" :
+        timestamp_start + "&end=" + end_time + "&interval=" + interval; // query for one or multiple dates (-300 seconds for instant update)
+    return coin_id + "/historical?start=" + coinpaprika_query_string;
 }
 
 // Builds CoinCodex API request URL for historical price data
-function get_payload_historic_coincodex(coin_id, starttime, endtime) {
-    const st_format = cx_date(starttime),
-        et_format = cx_date(endtime),
-        tquery = starttime == endtime ? st_format + "/" + st_format : st_format + "/" + et_format;
-    return "get_coin_history/" + coin_id + "/" + tquery + "/" + 1000;
+function get_payload_historic_coincodex(coin_id, start_time, end_time) {
+    const start_date = cx_date(start_time),
+        end_date = cx_date(end_time),
+        time_query = start_time == end_time ? start_date + "/" + start_date : start_date + "/" + end_date;
+    return "get_coin_history/" + coin_id + "/" + time_query + "/" + 1000;
 }
 
 // Formats Unix timestamp to YYYY-MM-DD for CoinCodex API
-function cx_date(ts) {
-    return new Date(ts * 1000).toISOString().split("T")[0];
+function cx_date(timestamp) {
+    return new Date(timestamp * 1000).toISOString().split("T")[0];
 }
 
 // Matches transaction timestamps with closest historical price data point
-function compare_historic_prices(api, values, price_array, thistimestamp) {
+function compare_historic_prices(api, values, price_array, transaction_timestamp) {
     for (let i = 0; i < price_array.length; i++) {
         const historic_object = api === "coincodex" ? get_historic_object_coincodex(price_array[i]) :
             api === "coingecko" ? get_historic_object_coingecko(price_array[i]) :
             get_historic_object_coinpaprika(price_array[i]);
-        if (historic_object && historic_object.timestamp > thistimestamp) {
+        if (historic_object && historic_object.timestamp > transaction_timestamp) {
             values.timestamp = historic_object.timestamp;
             values.price = historic_object.price;
             values.fetched = true;
             return values;
         }
     }
-
     // If no matching timestamp get latest
-    const lastitem = price_array[price_array.length - 1],
-        last_historic_object = api === "coincodex" ? get_historic_object_coincodex(lastitem) :
-        api === "coingecko" ? get_historic_object_coingecko(lastitem) :
-        get_historic_object_coinpaprika(lastitem);
+    const last_item = price_array[price_array.length - 1],
+        last_historic_object = api === "coincodex" ? get_historic_object_coincodex(last_item) :
+        api === "coingecko" ? get_historic_object_coingecko(last_item) :
+        get_historic_object_coinpaprika(last_item);
     if (last_historic_object) {
         values.timestamp = last_historic_object.timestamp;
         values.price = last_historic_object.price;
@@ -1297,7 +1294,6 @@ function get_historic_object_coinpaprika(value) {
 }
 
 // ** Helpers **
-
 // Checks if any requests are currently being scanned and prevents concurrent scans
 function is_scanning() {
     const scanning = $("#requestlist li.rqli.scan").length > 0;
@@ -1335,25 +1331,25 @@ function check_api(payment) {
 
 // Formats and normalizes request data for transaction processing
 function tx_data(rd) {
-    const requestid = rd.requestid,
-        thislist = $("#" + requestid),
-        requestdate = rd.inout === "incoming" ? rd.timestamp : rd.requestdate,
-        request_timestamp = requestdate - 30000, // 30 seconds compensation for unexpected results
-        getconfirmations = rd.set_confirmations,
-        setconfirmations = getconfirmations ? parseInt(getconfirmations) : 1,
-        canceled = rd.status === "canceled",
-        pending = canceled ? "scanning" : rd.pending,
-        statuspanel = thislist.find(".pmetastatus"),
-        transactionlist = thislist.find("ul.transactionlist");
+    const request_id = rd.requestid,
+        request_list = $("#" + request_id),
+        request_date = rd.inout === "incoming" ? rd.timestamp : rd.requestdate,
+        request_timestamp = request_date - 30000, // 30 seconds compensation for unexpected results
+        get_confirmations = rd.set_confirmations,
+        set_confirmations = get_confirmations ? parseInt(get_confirmations) : 1,
+        is_canceled = rd.status === "canceled",
+        pending_status = is_canceled ? "scanning" : rd.pending,
+        status_panel = request_list.find(".pmetastatus"),
+        transaction_list = request_list.find("ul.transactionlist");
     return {
-        requestid,
-        "thislist": thislist,
+        "requestid": request_id,
+        "thislist": request_list,
         "request_timestamp": request_timestamp,
-        "setconfirmations": setconfirmations,
-        "canceled": canceled,
-        "pending": pending,
-        "statuspanel": statuspanel,
-        "transactionlist": transactionlist,
+        "setconfirmations": set_confirmations,
+        "canceled": is_canceled,
+        "pending": pending_status,
+        "statuspanel": status_panel,
+        "transactionlist": transaction_list,
         "source": "requests",
         "cachetime": 25
     }

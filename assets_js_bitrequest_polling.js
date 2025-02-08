@@ -27,23 +27,23 @@ function tx_polling_init(tx_data, api_data, retry) {
 
 // Directs transaction monitoring to appropriate chain (L1/L2) based on transaction data
 function tx_polling(tx_data, api_dat, retry) {
-    const gets = geturlparameters();
-    if (gets.xss) {
+    const url_params = geturlparameters();
+    if (url_params.xss) {
         return
     }
     if (tx_data) {
         if (isopenrequest()) {
             if (request) {
-                const txhash = tx_data.txhash;
-                if (txhash) {
+                const tx_hash = tx_data.txhash;
+                if (tx_hash) {
                     if (!tx_data.setconfirmations) {
                         confirmations(tx_data, true);
                         return
                     }
-                    const eth_layer2 = tx_data.eth_layer2;
-                    if (eth_layer2) {
-                        request.txhash = txhash;
-                        tx_polling_l2(eth_layer2, api_dat, retry);
+                    const is_layer2 = tx_data.eth_layer2;
+                    if (is_layer2) {
+                        request.txhash = tx_hash;
+                        tx_polling_l2(is_layer2, api_dat, retry);
                         return
                     }
                     tx_polling_l1(tx_data, api_dat, retry);
@@ -58,7 +58,7 @@ function tx_polling(tx_data, api_dat, retry) {
 // Monitors Layer 1 blockchain transactions with configurable retry intervals
 function tx_polling_l1(tx_data, api_dat, retry) {
     clear_tpto();
-    const to_time = retry ? 10 : 30000,
+    const timeout = retry ? 10 : 30000,
         api_data = api_dat || q_obj(helper, "api_info.data"),
         rdo = { // request data object
             "requestid": request.requestid,
@@ -80,7 +80,7 @@ function tx_polling_l1(tx_data, api_dat, retry) {
         };
     glob_let.tpto = setTimeout(function() {
         continue_select(rd, api_data, rdo);
-    }, to_time, function() {
+    }, timeout, function() {
         clear_tpto();
     });
 }
@@ -88,14 +88,14 @@ function tx_polling_l1(tx_data, api_dat, retry) {
 // Monitors Layer 2 blockchain transactions using network-specific API endpoints
 function tx_polling_l2(eth_layer2, api_dat, retry) {
     clear_tpto();
-    const to_time = retry ? 10 : 30000,
-        l2_options = fertch_l2s(request.payment),
-        api_data = api_dat || get_l2_node(request.payment, eth_layer2, l2_options[eth_layer2], "apis");
-    ctracts = contracts(request.currencysymbol),
-        contract = ctracts ? ctracts[eth_layer2] : false;
+    const timeout = retry ? 10 : 30000,
+        l2_config = fertch_l2s(request.payment),
+        api_data = api_dat || get_l2_node(request.payment, eth_layer2, l2_config[eth_layer2], "apis"),
+        contracts_list = contracts(request.currencysymbol),
+        contract = contracts_list ? contracts_list[eth_layer2] : false;
     glob_let.tpto = setTimeout(function() {
         omni_poll(api_data, contract);
-    }, to_time, function() {
+    }, timeout, function() {
         clear_tpto();
     });
 }
@@ -108,20 +108,20 @@ function clear_tpto() {
 
 // Sets up periodic monitoring of wallet address for incoming transactions
 function address_polling_init(time_out, api_dat, retry) {
-    const ping_id = request.address,
-        timeout = time_out || 7000,
+    const addr_id = request.address,
+        poll_interval = time_out || 7000,
         api_data = api_dat || q_obj(helper, "api_info.data");
     if (api_data) {
         if (retry) {
-            clearpinging(ping_id);
-            address_polling(timeout, api_data);
+            clearpinging(addr_id);
+            address_polling(poll_interval, api_data);
         }
         socket_info({
             "url": api_data.name
         }, true, true);
-        glob_let.pinging[ping_id] = setInterval(function() {
-            address_polling(timeout, api_data);
-        }, timeout);
+        glob_let.pinging[addr_id] = setInterval(function() {
+            address_polling(poll_interval, api_data);
+        }, poll_interval);
         return
     }
     notify(translate("websocketoffline"), 500000, "yes");
@@ -129,20 +129,20 @@ function address_polling_init(time_out, api_dat, retry) {
 
 // Executes a single polling cycle to check for new transactions at specified address
 function address_polling(timeout, api_data) {
-    const rq_init = request.rq_init,
-        request_ts_utc = rq_init + glob_const.timezone,
-        request_ts = request_ts_utc - 15000, // 15 second margin
-        set_confirmations = request.set_confirmations || 0,
-        cachetime = (timeout - 1000) / 1000,
+    const init_time = request.rq_init,
+        req_time_utc = init_time + glob_const.timezone,
+        req_time = req_time_utc - 15000, // 15 second margin
+        conf_required = request.set_confirmations || 0,
+        cache_time = (timeout - 1000) / 1000,
         rdo = { // request data object
             "requestid": request.requestid,
-            "request_timestamp": request_ts,
-            "setconfirmations": set_confirmations,
+            "request_timestamp": req_time,
+            "setconfirmations": conf_required,
             "pending": "scanning",
             "erc20": request.erc20,
             "source": "addr_polling",
             timeout,
-            cachetime
+            "cachetime": cache_time
         };
     continue_select(request, api_data, rdo);
     poll_animate();
@@ -179,15 +179,15 @@ function init_xmr_node(cachetime, address, vk) {
             }
         }
     }).done(function(e) {
-        const data = br_result(e).result;
-        if (data) {
-            const errormessage = data.Error;
-            if (errormessage) {
-                const error = errormessage || translate("invalidvk");
+        const response = br_result(e).result;
+        if (response) {
+            const error_msg = response.Error;
+            if (error_msg) {
+                const error = error_msg || translate("invalidvk");
                 popnotify("error", error);
                 return
             }
-            const start_height = data.start_height;
+            const start_height = response.start_height;
             if (start_height > -1) { // success!
                 set_xmr_node_access(vk);
                 init_xmr_ping(cachetime, address, vk);
@@ -207,9 +207,9 @@ function init_xmr_node(cachetime, address, vk) {
 // Verifies if view key has existing authenticated session with Monero node
 function xmr_node_access(vk) {
     if (vk) {
-        const stored_vk_list = br_get_session("xmrvks", true);
-        if (stored_vk_list) {
-            if (stored_vk_list.includes(vk)) {
+        const stored_keys = br_get_session("xmrvks", true);
+        if (stored_keys) {
+            if (stored_keys.includes(vk)) {
                 return true;
             }
         }
@@ -219,15 +219,15 @@ function xmr_node_access(vk) {
 
 // Creates periodic polling interval for Monero address monitoring
 function init_xmr_ping(cachetime, address, vk) {
-    const rq_init = request.rq_init,
-        request_ts_utc = rq_init + glob_const.timezone,
-        request_ts = request_ts_utc - 10000; // 10 second compensation
+    const init_time = request.rq_init,
+        req_time_utc = init_time + glob_const.timezone,
+        req_time = req_time_utc - 10000; // 10 second compensation
     socket_info({
         "url": "mymonero api"
     }, true, true);
     glob_let.pinging[address] = setInterval(function() {
         poll_animate();
-        ping_xmr_node(cachetime, address, vk, request_ts);
+        ping_xmr_node(cachetime, address, vk, req_time);
     }, 12000);
 }
 
@@ -256,31 +256,31 @@ function ping_xmr_node(cachetime, address, vk, request_ts) {
             }
         }
     }).done(function(e) {
-        const data = br_result(e).result;
-        if (data.Error) {
+        const response = br_result(e).result;
+        if (response.Error) {
             socket_info({
                 "url": api_name
             }, false, true);
             clearpinging(address);
             return
         }
-        const transactions = data.transactions;
-        if (!transactions) return;
+        const txs = response.transactions;
+        if (!txs) return;
         socket_info({
             "url": api_name
         }, true, true);
-        const set_confirmations = q_obj(request, "set_confirmations") || 0,
-            txflip = transactions.reverse(),
-            txflip_strip = txflip.slice(0, 25); // get last 25 transactions
-        $.each(txflip_strip, function(dat, value) {
-            const txd = xmr_scan_data(value, set_confirmations, "xmr", data.blockchain_height);
-            if (txd.ccval && txd.transactiontime > request_ts) {
-                const txid_match = get_requestli("txhash", txd.txhash); // scan pending xmr tx's to prevent duplicates, mempool tx's don't have correct timestamps
-                if (txid_match.length) {
+        const conf_required = q_obj(request, "set_confirmations") || 0,
+            txs_reversed = txs.reverse(),
+            recent_txs = txs_reversed.slice(0, 25); // get last 25 transactions
+        $.each(recent_txs, function(dat, value) {
+            const tx_data = xmr_scan_data(value, conf_required, "xmr", response.blockchain_height);
+            if (tx_data.ccval && tx_data.transactiontime > request_ts) {
+                const tx_exists = get_requestli("txhash", tx_data.txhash); // scan pending xmr tx's to prevent duplicates, mempool tx's don't have correct timestamps
+                if (tx_exists.length) {
                     return false;
                 }
                 clearpinging(address);
-                tx_polling_init(txd, {
+                tx_polling_init(tx_data, {
                     "api": true,
                     "name": "blockchair_xmr",
                     "display": true
@@ -300,19 +300,19 @@ function ping_xmr_node(cachetime, address, vk, request_ts) {
 
 // Updates UI and payment status based on transaction confirmation count
 function confirmations(tx_data, direct, ln) {
-    const ccsymbol = tx_data.ccsymbol;
-    if (ccsymbol) {
+    const crypto_symbol = tx_data.ccsymbol;
+    if (crypto_symbol) {
         let new_status = "pending";
         closeloader();
         clearTimeout(glob_let.request_timer);
         if (tx_data && tx_data.ccval) {
-            const pmd = $("#paymentdialogbox"),
-                brstatuspanel = pmd.find(".brstatuspanel"),
-                brheader = brstatuspanel.find("h2"),
-                status = tx_data.status;
-            if (status && status === "canceled") { // Lightning
-                brheader.html("<span class='icon-blocked'></span>Invoice canceled");
-                pmd.attr("data-status", "canceled");
+            const payment_dialog = $("#paymentdialogbox"),
+                status_panel = payment_dialog.find(".brstatuspanel"),
+                status_header = status_panel.find("h2"),
+                tx_status = tx_data.status;
+            if (tx_status && tx_status === "canceled") { // Lightning
+                status_header.html("<span class='icon-blocked'></span>Invoice canceled");
+                payment_dialog.attr("data-status", "canceled");
                 updaterequest({
                     "requestid": request.requestid,
                     "status": "canceled",
@@ -322,75 +322,75 @@ function confirmations(tx_data, direct, ln) {
                 forceclosesocket();
                 return "canceled";
             }
-            const setconfirmations = tx_data.setconfirmations ? parseInt(tx_data.setconfirmations, 10) : 0,
-                conf_text = setconfirmations ? setconfirmations.toString() : "",
-                confbox = brstatuspanel.find("span.confbox"),
-                confboxspan = confbox.find("span"),
-                data_conf = parseFloat(confboxspan.attr("data-conf")),
-                currentconf = Number.isNaN(data_conf) ? 0 : data_conf,
-                xconf = tx_data.confirmations || 0,
-                zero_conf = setconfirmations === false || tx_data.instant_lock; // Dashpay instant_lock
+            const required_confirms = tx_data.setconfirmations ? parseInt(tx_data.setconfirmations, 10) : 0,
+                confirm_text = required_confirms ? required_confirms.toString() : "",
+                confirm_box = status_panel.find("span.confbox"),
+                confirm_span = confirm_box.find("span"),
+                stored_confirms = parseFloat(confirm_span.attr("data-conf")),
+                current_confirms = Number.isNaN(stored_confirms) ? 0 : stored_confirms,
+                tx_confirms = tx_data.confirmations || 0,
+                is_instant = required_confirms === false || tx_data.instant_lock; // Dashpay instant_lock
 
-            brstatuspanel.find("span#confnumber").text(conf_text);
-            new_status = xconf;
-            if (xconf > currentconf || zero_conf === true || direct === true) {
+            status_panel.find("span#confnumber").text(confirm_text);
+            new_status = tx_confirms;
+            if (tx_confirms > current_confirms || is_instant === true || direct === true) {
                 reset_recent();
                 br_remove_session("txstatus"); // remove cached historical exchange rates
-                confbox.removeClass("blob");
+                confirm_box.removeClass("blob");
                 setTimeout(function() {
-                    confbox.addClass("blob");
-                    confboxspan.text(xconf).attr("data-conf", xconf);
+                    confirm_box.addClass("blob");
+                    confirm_span.text(tx_confirms).attr("data-conf", tx_confirms);
                 }, 500);
 
-                const txhash = tx_data.txhash,
-                    eth_layer2 = tx_data.eth_layer2,
+                const tx_hash = tx_data.txhash,
+                    layer2_tx = tx_data.eth_layer2,
                     amount_rel = $("#open_wallet").attr("data-rel"),
-                    cc_raw = amount_rel && amount_rel.length ? parseFloat(amount_rel) : 0,
-                    receivedutc = tx_data.transactiontime,
-                    receivedtime = receivedutc - glob_const.timezone,
-                    receivedcc = tx_data.ccval,
-                    rccf = parseFloat(receivedcc.toFixed(6)),
-                    thiscurrency = request.uoa,
-                    requesttype = request.requesttype,
-                    iscrypto = thiscurrency === ccsymbol,
-                    fiatvalue = iscrypto ? null : (rccf / parseFloat($("#paymentdialogbox .ccpool").attr("data-xrate"))) * parseFloat($("#paymentdialog .cpool[data-currency='" + thiscurrency + "']").attr("data-xrate")), // calculate fiat value
-                    fiatrounded = iscrypto ? null : fiatvalue.toFixed(2),
-                    receivedrounded = iscrypto ? receivedcc : fiatrounded;
+                    crypto_amount = amount_rel && amount_rel.length ? parseFloat(amount_rel) : 0,
+                    received_utc = tx_data.transactiontime,
+                    received_local = received_utc - glob_const.timezone,
+                    received_crypto = tx_data.ccval,
+                    received_formatted = parseFloat(received_crypto.toFixed(6)),
+                    current_currency = request.uoa,
+                    request_type = request.requesttype,
+                    is_crypto = current_currency === crypto_symbol,
+                    fiat_value = is_crypto ? null : (received_formatted / parseFloat($("#paymentdialogbox .ccpool").attr("data-xrate"))) * parseFloat($("#paymentdialog .cpool[data-currency='" + current_currency + "']").attr("data-xrate")), // calculate fiat value
+                    fiat_rounded = is_crypto ? null : fiat_value.toFixed(2),
+                    received_amount = is_crypto ? received_crypto : fiat_rounded;
 
                 // extend global request object
                 $.extend(request, {
                     "received": true,
-                    "inout": requesttype,
-                    "receivedamount": rccf,
-                    "fiatvalue": fiatvalue,
-                    "paymenttimestamp": receivedutc,
-                    "txhash": txhash,
-                    "confirmations": xconf,
-                    "set_confirmations": setconfirmations,
-                    eth_layer2
+                    "inout": request_type,
+                    "receivedamount": received_formatted,
+                    "fiatvalue": fiat_value,
+                    "paymenttimestamp": received_utc,
+                    "txhash": tx_hash,
+                    "confirmations": tx_confirms,
+                    "set_confirmations": required_confirms,
+                    eth_layer2: layer2_tx
                 });
 
-                brstatuspanel.find("span.paymentdate").html(fulldateformat(new Date(receivedtime), langcode));
-                if (!iscrypto) {
-                    brstatuspanel.find("span.receivedcrypto").text(rccf + " " + ccsymbol);
+                status_panel.find("span.paymentdate").html(fulldateformat(new Date(received_local), langcode));
+                if (!is_crypto) {
+                    status_panel.find("span.receivedcrypto").text(received_formatted + " " + crypto_symbol);
                 }
-                brstatuspanel.find("span.receivedfiat").text(" (" + receivedrounded + " " + thiscurrency + ")");
+                status_panel.find("span.receivedfiat").text(" (" + received_amount + " " + current_currency + ")");
 
-                const exact = helper.exact,
-                    xmr_pass = ccsymbol === "xmr" ? (rccf > (cc_raw * 0.97) && rccf < (cc_raw * 1.03)) : true; // error margin for xmr integrated addresses
+                const exact_match = helper.exact,
+                    monero_valid = crypto_symbol === "xmr" ? (received_formatted > (crypto_amount * 0.97) && received_formatted < (crypto_amount * 1.03)) : true; // error margin for xmr integrated addresses
 
-                if (xmr_pass) {
-                    const pass = exact ? rccf === cc_raw : rccf >= (cc_raw * 0.97);
-                    if (pass) {
-                        if (xconf >= setconfirmations || zero_conf === true) {
+                if (monero_valid) {
+                    const amount_valid = exact_match ? received_formatted === crypto_amount : received_formatted >= (crypto_amount * 0.97);
+                    if (amount_valid) {
+                        if (tx_confirms >= required_confirms || is_instant === true) {
                             forceclosesocket();
-                            playsound(ccsymbol === "doge" ? glob_const.howl : glob_const.cashier);
-                            const status_text = requesttype === "incoming" ? translate("paymentsent") : translate("paymentreceived"),
-                                insufficient = pmd.hasClass("insufficient"), // keep scanning when amount was insufficient
-                                insufficient_status = insufficient ? "pending" : "paid",
-                                insufficient_pending = insufficient ? "scanning" : "polling";
-                            pmd.addClass("transacting").attr("data-status", "paid");
-                            brheader.text(status_text);
+                            playsound(crypto_symbol === "doge" ? glob_const.howl : glob_const.cashier);
+                            const status_msg = request_type === "incoming" ? translate("paymentsent") : translate("paymentreceived"),
+                                is_insufficient = payment_dialog.hasClass("insufficient"), // keep scanning when amount was insufficient
+                                insufficient_status = is_insufficient ? "pending" : "paid",
+                                insufficient_pending = is_insufficient ? "scanning" : "polling";
+                            payment_dialog.addClass("transacting").attr("data-status", "paid");
+                            status_header.text(status_msg);
                             request.status = insufficient_status,
                                 request.pending = insufficient_pending;
                             saverequest(direct, ln);
@@ -401,23 +401,23 @@ function confirmations(tx_data, direct, ln) {
                             if (!ln) {
                                 playsound(glob_const.blip);
                             }
-                            pmd.addClass("transacting").attr("data-status", "pending");
-                            const bctext = ln ? translate("waitingforpayment") : translate("txbroadcasted");
-                            brheader.text(bctext);
+                            payment_dialog.addClass("transacting").attr("data-status", "pending");
+                            const broadcast_msg = ln ? translate("waitingforpayment") : translate("txbroadcasted");
+                            status_header.text(broadcast_msg);
                             request.status = "pending",
                                 request.pending = "polling";
                             saverequest(direct, ln);
                         }
-                        brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
+                        status_panel.find("#view_tx").attr("data-txhash", tx_hash);
                         return new_status;
                     }
-                    if (!exact) {
-                        brheader.text(translate("insufficientamount"));
-                        pmd.addClass("transacting").attr("data-status", "insufficient");
+                    if (!exact_match) {
+                        status_header.text(translate("insufficientamount"));
+                        payment_dialog.addClass("transacting").attr("data-status", "insufficient");
                         request.status = "insufficient",
                             request.pending = "scanning";
                         saverequest(direct, ln);
-                        brstatuspanel.find("#view_tx").attr("data-txhash", txhash);
+                        status_panel.find("#view_tx").attr("data-txhash", tx_hash);
                         new_status = "insufficient";
                     }
                     playsound(glob_const.funk);
@@ -430,11 +430,11 @@ function confirmations(tx_data, direct, ln) {
 }
 
 // Terminates all active polling intervals or a specific polling instance
-function clearpinging(s_id) {
-    if (s_id) { // close this interval
-        if (glob_let.pinging[s_id]) {
-            clearInterval(glob_let.pinging[s_id]);
-            delete glob_let.pinging[s_id]
+function clearpinging(socket_id) {
+    if (socket_id) { // close this interval
+        if (glob_let.pinging[socket_id]) {
+            clearInterval(glob_let.pinging[socket_id]);
+            delete glob_let.pinging[socket_id]
         }
         return
     }
@@ -449,14 +449,14 @@ function clearpinging(s_id) {
 // Removes completed payment request from local storage and updates UI state
 function reset_recent() {
     if (request) {
-        const ls_recentrequests = br_get_local("recent_requests");
-        if (ls_recentrequests) {
+        const stored_requests = br_get_local("recent_requests");
+        if (stored_requests) {
             try {
-                const lsrr_arr = JSON.parse(ls_recentrequests);
-                if (lsrr_arr[request.payment]) {
-                    delete lsrr_arr[request.payment];
-                    br_set_local("recent_requests", lsrr_arr, true);
-                    if (empty_obj(lsrr_arr)) {
+                const request_list = JSON.parse(stored_requests);
+                if (request_list[request.payment]) {
+                    delete request_list[request.payment];
+                    br_set_local("recent_requests", request_list, true);
+                    if (empty_obj(request_list)) {
                         toggle_rr(false);
                     }
                 }
