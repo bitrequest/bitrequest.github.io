@@ -2388,6 +2388,7 @@ function insight_scan_data(data, setconfirmations, address) {
 function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) {
     const is_eth = ccsymbol === "eth",
         tx_timestamp = to_ts(data.received);
+
     function process_output_value(output, target_addr) {
         const output_value = output.value;
         return (str_match(target_addr, output.addresses[0].slice(3)) === true) ? Math.abs(output_value) : 0;
@@ -2414,6 +2415,7 @@ function blockchaininfo_scan_data(data, setconfirmations, ccsymbol, address, lat
     if (setconfirmations === "sort") {
         return tx_timestamp;
     }
+
     function process_output_value(output, target_addr) {
         return str_match(output.address, target_addr) ? Math.abs(output.value) : 0;
     }
@@ -2439,6 +2441,7 @@ function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestb
     if (setconfirmations === "sort") {
         return tx_timestamp;
     }
+
     function process_value(output, target_addr) {
         const output_value = output.value;
         return output.recipient === target_addr ? Math.abs(output_value) : 0;
@@ -2592,6 +2595,7 @@ function nano_scan_data(data, setconfirmations, ccsymbol, txhash) {
 // Processes Bitcoin RPC node data with scriptPubKey address validation
 function bitcoin_rpc_data(data, setconfirmations, ccsymbol, address) {
     const tx_timestamp = process_timestamp(data.time, true);
+
     function process_output_value(output, target_addr) {
         const sat_value = output.value * 1e8;
         return output.scriptPubKey.addresses[0] === target_addr ? Math.abs(sat_value) : 0;
@@ -2659,6 +2663,7 @@ function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) {
 // Handles Blockchair Monero data with output matching and payment ID tracking
 function blockchair_xmr_data(data, setconfirmations) {
     const tx_timestamp = process_timestamp(data.tx_timestamp, true);
+
     function process_output_value(output) {
         return output.match ? output.amount : 0;
     }
@@ -2700,6 +2705,7 @@ function kaspa_scan_data(data, thisaddress, setconfirmations, latestblock) {
     if (setconfirmations === "sort") {
         return tx_time_utc;
     }
+
     function process_output_value(output, target_addr) {
         const output_amount = output.amount;
         return output.script_public_key_address === target_addr ? Math.abs(output_amount) : 0;

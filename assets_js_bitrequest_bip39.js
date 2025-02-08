@@ -1720,16 +1720,16 @@ function phrase_info_pu(selected_coin) {
         },
         view_class = selected_coin ? "single" : "",
         coin_class = selected_coin ? "pd_" + selected_coin : "pd_bitcoin",
-        seed_info = selected_coin ? "<li><strong>" + translate("source") + ": </strong> Seed</li>" : 
-            "<li><strong>BIP39 Seed: </strong><span class='adboxl adbox select' data-type='BIP39 Seed'>" + seed_hex + "</span></li>",
+        seed_info = selected_coin ? "<li><strong>" + translate("source") + ": </strong> Seed</li>" :
+        "<li><strong>BIP39 Seed: </strong><span class='adboxl adbox select' data-type='BIP39 Seed'>" + seed_hex + "</span></li>",
         coin_data = selected_coin ? getcoindata(selected_coin) : null,
         coin_icon = selected_coin ? getcc_icon(coin_data.cmcid, coin_data.ccsymbol + "-" + selected_coin, coin_data.erc20) : "",
         header = selected_coin ? "<h2>" + coin_icon + " <span>" + selected_coin + " Key Derivation</span></h2>" : "",
         backup_setting = get_setting("backup", "sbu"),
-        backup_toggle = has_datenc() === true ? 
-            "<li class='clearfix'><strong>" + translate("backupsecretphrase") + ":</strong><div id='toggle_sbu_span' class='ait'>" + 
-            switchpanel(backup_setting, " global") + "</div></li>" : "",
-        delete_option = selected_coin ? "" : (glob_let.hasbip === true ? backup_toggle + 
+        backup_toggle = has_datenc() === true ?
+        "<li class='clearfix'><strong>" + translate("backupsecretphrase") + ":</strong><div id='toggle_sbu_span' class='ait'>" +
+        switchpanel(backup_setting, " global") + "</div></li>" : "",
+        delete_option = selected_coin ? "" : (glob_let.hasbip === true ? backup_toggle +
             "<li class='clearfix'><div id='deletephrase' class='icon-bin'></div></li>" : ""),
         dialog_content = $("<div id='ad_info_wrap' class='" + view_class + "' data-class='" + coin_class + "'>" + header + "<ul>" +
             seed_info +
@@ -1778,7 +1778,7 @@ function phrase_info_pu(selected_coin) {
             }
             $.each(derived_addresses, function(i, address_data) {
                 const current_index = start_index + i;
-                derive_list += "<li class='adbox der_li' data-index='" + current_index + "'><strong>" + derive_path + current_index + 
+                derive_list += "<li class='adbox der_li' data-index='" + current_index + "'><strong>" + derive_path + current_index +
                     "</strong> <span class='mspace'>" + line_break + address_data.address + "</span></li>";
             });
             if (wallet_data) {
@@ -1792,7 +1792,7 @@ function phrase_info_pu(selected_coin) {
                         const wallet_name = wallet_config.name,
                             wallet_site = wallet_config.website,
                             wallet_logo = "<img src='" + w_icon(wallet_name) + "' class='wallet_icon'/>";
-                        wallet_list += "<li><a href='" + wallet_site + "' target='_blank' class='exit app_dll'>" + wallet_logo + wallet_name + 
+                        wallet_list += "<li><a href='" + wallet_site + "' target='_blank' class='exit app_dll'>" + wallet_logo + wallet_name +
                             "</a><a href='" + platform_url + "' target='_blank' class='exit store_tag'>" + store_badge + "</a></li>";
                     }
                 });
@@ -1805,9 +1805,9 @@ function phrase_info_pu(selected_coin) {
                     "currency": coin
                 },
                 monero_phrase = (coin === "monero") ? (is_viewonly() === true) ? false :
-                    secret_spend_key_to_words(get_ssk(seed_hex, true)) : false,
-                monero_box = monero_phrase ? "<div><strong>XMR Seed words: </strong><br/><span class='adboxl adbox select' data-type='XMR Seed words'>" + 
-                    monero_phrase + "</span></div>" : "",
+                secret_spend_key_to_words(get_ssk(seed_hex, true)) : false,
+                monero_box = monero_phrase ? "<div><strong>XMR Seed words: </strong><br/><span class='adboxl adbox select' data-type='XMR Seed words'>" +
+                monero_phrase + "</span></div>" : "",
                 path_element = $("<div class='d_path" + display_class + "'>\
                 <div class='d_path_header'><strong>" + translate("derivationpath") + ": </strong><span class='ref'>" + derive_path + "</span></div>" +
                     monero_box +
@@ -1833,7 +1833,7 @@ function phrase_info_pu(selected_coin) {
                     </div>");
                 if (coin === "bitcoin" || coin === "litecoin") {
                     const has_segwit = derive_path.indexOf("m/84") > -1;
-                    segwit_element = $("<li class='clearfix" + display_class + "' data-currency='" + coin + 
+                    segwit_element = $("<li class='clearfix" + display_class + "' data-currency='" + coin +
                         "'><strong>SegWit:</strong><div class='toggle_segwit ait'>" + switchpanel(has_segwit, " custom") + "</div></li>");
                 }
             }
@@ -1851,7 +1851,7 @@ function phrase_info_pu(selected_coin) {
 
 // Displays a list of compatible wallets for a given coin
 function compatible_wallets(coin) {
-    const dialog_content = $("<div id='ad_info_wrap' class='' data-class='pd_" + coin + "'><h2><span class='icon-warning' style='color:#B33A3A'/>" + 
+    const dialog_content = $("<div id='ad_info_wrap' class='' data-class='pd_" + coin + "'><h2><span class='icon-warning' style='color:#B33A3A'/>" +
         translate("cannotsendfunds") + "</span></h2><ul>\
             <li class='noline'><strong style='color:#6a6a6a'>" + translate("importtosend") + "</strong></li>\
             <li id='pi_li' class='noline'>\
@@ -1885,7 +1885,7 @@ function compatible_wallets(coin) {
                         const wallet_name = wallet_config.name,
                             wallet_site = wallet_config.website,
                             wallet_logo = "<img src='" + w_icon(wallet_name) + "' class='wallet_icon'/>";
-                        wallet_list += "<li><a href='" + wallet_site + "' target='_blank' class='exit app_dll'>" + wallet_logo + wallet_name + 
+                        wallet_list += "<li><a href='" + wallet_site + "' target='_blank' class='exit app_dll'>" + wallet_logo + wallet_name +
                             "</a><a href='" + platform_url + "' target='_blank' class='exit store_tag'>" + store_badge + "</a></li>";
                     }
                 });
@@ -1964,9 +1964,9 @@ function test_derive_function(trigger_element, is_prev) {
             target_item = is_prev === true ? address_list.find(".der_li").first() : address_list.find(".der_li").last(),
             current_index = target_item.length ? parseInt(target_item.attr("data-index")) : 0,
             start_index = current_index === 0 ? 0 :
-                is_prev === "replace" ? current_index - 4 :
-                is_prev === true ? current_index - batch_size :
-                current_index + 1;
+            is_prev === "replace" ? current_index - 4 :
+            is_prev === true ? current_index - batch_size :
+            current_index + 1;
 
         if (start_index > 1) {
             prev_button.show();
@@ -1985,8 +1985,8 @@ function test_derive_function(trigger_element, is_prev) {
         address_list.html("");
         $.each(derived_addresses, function(i, address_data) {
             const current_index = start_index + i,
-                address_item = "<li class='adbox der_li' data-index='" + current_index + "'><strong>" + derive_path + current_index + 
-                    "</strong> " + line_break + "<span class='mspace'>" + address_data.address + "</span></li>";
+                address_item = "<li class='adbox der_li' data-index='" + current_index + "'><strong>" + derive_path + current_index +
+                "</strong> " + line_break + "<span class='mspace'>" + address_data.address + "</span></li>";
             address_list.append(address_item);
         });
     }

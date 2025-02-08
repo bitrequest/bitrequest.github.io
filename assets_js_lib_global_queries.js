@@ -738,7 +738,7 @@ function getplatform(device) {
 // Combines date and time parts into standardized datetime string
 function makedatestring(datetime_parts) {
     const [date, time] = datetime_parts,
-        delimiter = time.includes(".") ? "." : "Z";
+    delimiter = time.includes(".") ? "." : "Z";
     return date + " " + time.split(delimiter)[0];
 }
 

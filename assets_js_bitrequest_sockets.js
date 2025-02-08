@@ -722,477 +722,477 @@ function blockchain_bch_socket(socket_node, wallet_address) {
 
 // Establishes WebSocket connection to mempool.space for real-time Bitcoin transaction monitoring with address tracking
 function mempoolspace_btc_socket(socket_node, wallet_address) {
-   if (glob_let.sockets[wallet_address]) {
-       return
-   }
-   const ws_endpoint = socket_node.url,
-       mempool_socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-   mempool_socket.onopen = function(e) {
-       socket_info(socket_node, true);
-       const ping_payload = JSON.stringify({
-           "track-address": wallet_address
-       });
-       mempool_socket.send(ping_payload);
-       glob_let.pinging[wallet_address] = setInterval(function() {
-           mempool_socket.send(ping_payload);
-           poll_animate();
-       }, 55000);
-   };
-   mempool_socket.onmessage = function(e) {
-       try {
-           const ws_data = JSON.parse(e.data),
-               tx_batch = ws_data["address-transactions"];
-           if (tx_batch) {
-               const tx_data = tx_batch[0];
-               if (tx_data) {
-                   const tx_hash = tx_data.txid;
-                   if (!tx_hash) return;
-                   const required_confirms = request.set_confirmations || 0,
-                       tx_details = mempoolspace_ws_data(tx_data, required_confirms, request.currencysymbol, wallet_address);
-                   if (tx_details) {
-                       closesocket();
-                       tx_polling_init(tx_details);
-                   }
-               }
-           }
-       } catch (error) {
-           console.error("Error parsing WebSocket message:", error);
-       }
-   };
-   mempool_socket.onclose = function(e) {
-       handle_socket_close(socket_node);
-   };
-   mempool_socket.onerror = function(e) {
-       handle_socket_fails(socket_node, wallet_address);
-       return
-   };
+    if (glob_let.sockets[wallet_address]) {
+        return
+    }
+    const ws_endpoint = socket_node.url,
+        mempool_socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
+    mempool_socket.onopen = function(e) {
+        socket_info(socket_node, true);
+        const ping_payload = JSON.stringify({
+            "track-address": wallet_address
+        });
+        mempool_socket.send(ping_payload);
+        glob_let.pinging[wallet_address] = setInterval(function() {
+            mempool_socket.send(ping_payload);
+            poll_animate();
+        }, 55000);
+    };
+    mempool_socket.onmessage = function(e) {
+        try {
+            const ws_data = JSON.parse(e.data),
+                tx_batch = ws_data["address-transactions"];
+            if (tx_batch) {
+                const tx_data = tx_batch[0];
+                if (tx_data) {
+                    const tx_hash = tx_data.txid;
+                    if (!tx_hash) return;
+                    const required_confirms = request.set_confirmations || 0,
+                        tx_details = mempoolspace_ws_data(tx_data, required_confirms, request.currencysymbol, wallet_address);
+                    if (tx_details) {
+                        closesocket();
+                        tx_polling_init(tx_details);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Error parsing WebSocket message:", error);
+        }
+    };
+    mempool_socket.onclose = function(e) {
+        handle_socket_close(socket_node);
+    };
+    mempool_socket.onerror = function(e) {
+        handle_socket_fails(socket_node, wallet_address);
+        return
+    };
 }
 
 // Initiates polling interval for Dash blockchain status with 5-second frequency
 function dashorg_poll() {
-   address_polling_init(5000);
+    address_polling_init(5000);
 }
 
 // Establishes WebSocket connection to dogechain.info for Dogecoin address monitoring with transaction validation  
 function dogechain_info_socket(socket_node, wallet_address) {
-   if (glob_let.sockets[wallet_address]) {
-       return
-   }
-   const ws_endpoint = socket_node.url,
-       socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-   socket.onopen = function(e) {
-       socket_info(socket_node, true);
-       const ping_payload = JSON.stringify({
-           "op": "addr_sub",
-           "addr": wallet_address
-       });
-       socket.send(ping_payload);
-       glob_let.pinging[wallet_address] = setInterval(function() {
-           socket.send(ping_payload);
-           poll_animate();
-       }, 55000);
-   };
-   socket.onmessage = function(e) {
-       try {
-           const msg_data = JSON.parse(e.data),
-               tx_data = msg_data.x;
-           if (tx_data) {
-               const tx_hash = tx_data.hash;
-               if (!tx_hash) return;
-               const required_confirms = request.set_confirmations || 0,
-                   tx_details = dogechain_ws_data(tx_data, required_confirms, request.currencysymbol, wallet_address);
-               if (tx_details) {
-                   closesocket();
-                   tx_polling_init(tx_details);
-               }
-           }
-       } catch (error) {
-           console.error("Error parsing WebSocket message:", error);
-       }
-   };
-   socket.onclose = function(e) {
-       handle_socket_close(socket_node);
-   };
-   socket.onerror = function(e) {
-       handle_socket_fails(socket_node, wallet_address);
-       return
-   };
+    if (glob_let.sockets[wallet_address]) {
+        return
+    }
+    const ws_endpoint = socket_node.url,
+        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
+    socket.onopen = function(e) {
+        socket_info(socket_node, true);
+        const ping_payload = JSON.stringify({
+            "op": "addr_sub",
+            "addr": wallet_address
+        });
+        socket.send(ping_payload);
+        glob_let.pinging[wallet_address] = setInterval(function() {
+            socket.send(ping_payload);
+            poll_animate();
+        }, 55000);
+    };
+    socket.onmessage = function(e) {
+        try {
+            const msg_data = JSON.parse(e.data),
+                tx_data = msg_data.x;
+            if (tx_data) {
+                const tx_hash = tx_data.hash;
+                if (!tx_hash) return;
+                const required_confirms = request.set_confirmations || 0,
+                    tx_details = dogechain_ws_data(tx_data, required_confirms, request.currencysymbol, wallet_address);
+                if (tx_details) {
+                    closesocket();
+                    tx_polling_init(tx_details);
+                }
+            }
+        } catch (error) {
+            console.error("Error parsing WebSocket message:", error);
+        }
+    };
+    socket.onclose = function(e) {
+        handle_socket_close(socket_node);
+    };
+    socket.onerror = function(e) {
+        handle_socket_fails(socket_node, wallet_address);
+        return
+    };
 }
 
 // Establishes WebSocket connection for Nano network with confirmation subscription and XRB/NANO prefix handling
 function nano_socket(socket_node, wallet_address) {
-   if (glob_let.sockets[wallet_address]) {
-       return
-   }
-   const normalized_address = (wallet_address.match("^xrb")) ? "nano_" + wallet_address.split("_").pop() : wallet_address, // change nano address prefix xrb_ to nano untill websocket support
-       ws_endpoint = socket_node.url,
-       socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-   socket.onopen = function(e) {
-       socket_info(socket_node, true);
-       const ping_payload = JSON.stringify({
-           "action": "subscribe", 
-           "topic": "confirmation",
-           "all_local_accounts": true,
-           "options": {
-               "accounts": [normalized_address]
-           },
-           "ack": true
-       });
-       socket.send(ping_payload);
-       glob_let.pinging[wallet_address] = setInterval(function() {
-           socket.send(ping_payload);
-           poll_animate();
-       }, 55000);
-   };
-   socket.onmessage = function(e) {
-       try {
-           const current_utc = now_utc(),
-               msg_data = JSON.parse(e.data),
-               tx_data = (msg_data.message) ? msg_data.message : (msg_data.account) ? msg_data : null;
-           if (tx_data) {
-               if (tx_data.account === wallet_address) {
-                   return // block outgoing transactions
-               }
-               if (!tx_data.hash) return;
-               const tx_details = nano_scan_data(tx_data, undefined, request.currencysymbol),
-                   tx_time = tx_details.transactiontime,
-                   time_delta = Math.abs(tx_time - current_utc);
-               if (time_delta < 60000) { // filter transactions longer then a minute ago
-                   closesocket();
-                   tx_polling_init(tx_details);
-               }
-           }
-       } catch (error) {
-           console.error("Error parsing WebSocket message:", error);
-       }
-   };
-   socket.onclose = function(e) {
-       handle_socket_close(socket_node);
-   };
-   socket.onerror = function(e) {
-       handle_socket_fails(socket_node, wallet_address);
-       return
-   };
+    if (glob_let.sockets[wallet_address]) {
+        return
+    }
+    const normalized_address = (wallet_address.match("^xrb")) ? "nano_" + wallet_address.split("_").pop() : wallet_address, // change nano address prefix xrb_ to nano untill websocket support
+        ws_endpoint = socket_node.url,
+        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
+    socket.onopen = function(e) {
+        socket_info(socket_node, true);
+        const ping_payload = JSON.stringify({
+            "action": "subscribe",
+            "topic": "confirmation",
+            "all_local_accounts": true,
+            "options": {
+                "accounts": [normalized_address]
+            },
+            "ack": true
+        });
+        socket.send(ping_payload);
+        glob_let.pinging[wallet_address] = setInterval(function() {
+            socket.send(ping_payload);
+            poll_animate();
+        }, 55000);
+    };
+    socket.onmessage = function(e) {
+        try {
+            const current_utc = now_utc(),
+                msg_data = JSON.parse(e.data),
+                tx_data = (msg_data.message) ? msg_data.message : (msg_data.account) ? msg_data : null;
+            if (tx_data) {
+                if (tx_data.account === wallet_address) {
+                    return // block outgoing transactions
+                }
+                if (!tx_data.hash) return;
+                const tx_details = nano_scan_data(tx_data, undefined, request.currencysymbol),
+                    tx_time = tx_details.transactiontime,
+                    time_delta = Math.abs(tx_time - current_utc);
+                if (time_delta < 60000) { // filter transactions longer then a minute ago
+                    closesocket();
+                    tx_polling_init(tx_details);
+                }
+            }
+        } catch (error) {
+            console.error("Error parsing WebSocket message:", error);
+        }
+    };
+    socket.onclose = function(e) {
+        handle_socket_close(socket_node);
+    };
+    socket.onerror = function(e) {
+        handle_socket_fails(socket_node, wallet_address);
+        return
+    };
 }
 
 // Initiates 5-second interval polling for Nimiq blockchain status
 function nimiq_poll() {
-   address_polling_init(5000);
+    address_polling_init(5000);
 }
 
 // Configures WebSocket connections for Ethereum L1/L2 networks and ERC20 tokens with provider-specific routing
 function init_eth_sockets(payment_type, socket_node, wallet_address, retry) {
-   const token_contracts = contracts(request.currencysymbol);
-   // Always scan for layer 1
-   if (payment_type === "ethereum") {
-       if (socket_node.url === glob_const.main_alchemy_socket) {
-           alchemy_eth_websocket(socket_node, wallet_address); // L1 Alchemy
-       } else {
-           web3_eth_websocket(socket_node, wallet_address, glob_const.main_eth_node); // L1 Infura
-       }
-   } else {
-       web3_erc20_websocket(socket_node, wallet_address, token_contracts.main);
-   }
-   if (retry) return
-   // Check for layer 2
-   init_l2_sockets(payment_type, wallet_address, token_contracts);
+    const token_contracts = contracts(request.currencysymbol);
+    // Always scan for layer 1
+    if (payment_type === "ethereum") {
+        if (socket_node.url === glob_const.main_alchemy_socket) {
+            alchemy_eth_websocket(socket_node, wallet_address); // L1 Alchemy
+        } else {
+            web3_eth_websocket(socket_node, wallet_address, glob_const.main_eth_node); // L1 Infura
+        }
+    } else {
+        web3_erc20_websocket(socket_node, wallet_address, token_contracts.main);
+    }
+    if (retry) return
+    // Check for layer 2
+    init_l2_sockets(payment_type, wallet_address, token_contracts);
 }
 
 // Establishes WebSocket connection to Kaspa node with Socket.IO protocol and block subscription
 function kaspa_websocket(socket_node, wallet_address) {
-   if (glob_let.sockets[wallet_address]) {
-       return
-   }
-   const ws_endpoint = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket&sid=" + now(),
-       socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-   socket.onopen = function(e) {
-       glob_let.ws_timer = now();
-       socket_info(socket_node, true);
-       socket.send("2probe");
-   };
-   socket.onmessage = function(e) {
-       const msg_data = e.data;
-       if (!msg_data) return;
-       const msg_type = msg_data.slice(0, 2);
-       if (msg_data === "3probe") {
-           socket.send('42["join-room","blocks"]');
-           return;
-       }
-       if (msg_type === "42") {
-           const parsed_data = msg_data.slice(2),
-               socket_data = JSON.parse(parsed_data),
-               block_data = socket_data[1];
-           if (block_data) {
-               const block_txs = block_data.txs;
-               if (block_txs) {
-                   $.each(block_txs, function(dat, value) {
-                       const tx_details = kaspa_ws_data(value, wallet_address);
-                       if (tx_details.ccval) {
-                           closesocket();
-                           tx_polling_init(tx_details);
-                           return
-                       }
-                   });
-               }
-           }
-       }
-   };
-   socket.onclose = function(e) {
-       ws_recon({ // reconnect if ws closes
-           "function": kaspa_websocket,
-           "node": socket_node,
-           "address": wallet_address,
-           "trigger": e.code
-       });
-       handle_socket_close(socket_node);
-   };
-   socket.onerror = function(e) {
-       handle_socket_fails(socket_node, wallet_address);
-       return
-   };
+    if (glob_let.sockets[wallet_address]) {
+        return
+    }
+    const ws_endpoint = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket&sid=" + now(),
+        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
+    socket.onopen = function(e) {
+        glob_let.ws_timer = now();
+        socket_info(socket_node, true);
+        socket.send("2probe");
+    };
+    socket.onmessage = function(e) {
+        const msg_data = e.data;
+        if (!msg_data) return;
+        const msg_type = msg_data.slice(0, 2);
+        if (msg_data === "3probe") {
+            socket.send('42["join-room","blocks"]');
+            return;
+        }
+        if (msg_type === "42") {
+            const parsed_data = msg_data.slice(2),
+                socket_data = JSON.parse(parsed_data),
+                block_data = socket_data[1];
+            if (block_data) {
+                const block_txs = block_data.txs;
+                if (block_txs) {
+                    $.each(block_txs, function(dat, value) {
+                        const tx_details = kaspa_ws_data(value, wallet_address);
+                        if (tx_details.ccval) {
+                            closesocket();
+                            tx_polling_init(tx_details);
+                            return
+                        }
+                    });
+                }
+            }
+        }
+    };
+    socket.onclose = function(e) {
+        ws_recon({ // reconnect if ws closes
+            "function": kaspa_websocket,
+            "node": socket_node,
+            "address": wallet_address,
+            "trigger": e.code
+        });
+        handle_socket_close(socket_node);
+    };
+    socket.onerror = function(e) {
+        handle_socket_fails(socket_node, wallet_address);
+        return
+    };
 }
 
 // Establishes WebSocket connection to Kaspa FYI explorer with Socket.IO protocol and transaction monitoring
 function kaspa_fyi_websocket(socket_node, wallet_address) {
-   if (glob_let.sockets[wallet_address]) {
-       return
-   }
-   const ws_endpoint = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket",
-       socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-   socket.onopen = function(e) {
-       socket_info(socket_node, true);
-       socket.send("40");
-   };
-   socket.onmessage = function(e) {
-       const msg_data = e.data;
-       if (!msg_data) return;
-       const msg_type = msg_data.slice(0, 2);
-       if (msg_type == "40") {
-           socket.send('42["join-room","blocks"]');
-           return;
-       }
-       if (msg_type == "42") {
-           try {
-               const parsed_data = msg_data.slice(2),
-                   socket_data = JSON.parse(parsed_data),
-                   block_data = socket_data[1];
-               if (block_data) {
-                   const block_txs = block_data.transactions;
-                   if (block_txs) {
-                       $.each(block_txs, function(dat, value) {
-                           const tx_details = kaspa_fyi_ws_data(value, wallet_address);
-                           if (tx_details.ccval) {
-                               closesocket();
-                               tx_polling_init(tx_details);
-                               return
-                           }
-                       });
-                   }
-               }
-           } catch (error) {
-               console.error("Error processing Kaspa FYI message:", error);
-           }
-       }
-   };
-   socket.onclose = function(e) {
-       ws_recon({ // reconnect if ws closes
-           "function": kaspa_fyi_websocket,
-           "node": socket_node,
-           "address": wallet_address,
-           "trigger": e.code
-       });
-       handle_socket_close(socket_node);
-   };
-   socket.onerror = function(e) {
-       handle_socket_fails(socket_node, wallet_address);
-       return
-   };
+    if (glob_let.sockets[wallet_address]) {
+        return
+    }
+    const ws_endpoint = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket",
+        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
+    socket.onopen = function(e) {
+        socket_info(socket_node, true);
+        socket.send("40");
+    };
+    socket.onmessage = function(e) {
+        const msg_data = e.data;
+        if (!msg_data) return;
+        const msg_type = msg_data.slice(0, 2);
+        if (msg_type == "40") {
+            socket.send('42["join-room","blocks"]');
+            return;
+        }
+        if (msg_type == "42") {
+            try {
+                const parsed_data = msg_data.slice(2),
+                    socket_data = JSON.parse(parsed_data),
+                    block_data = socket_data[1];
+                if (block_data) {
+                    const block_txs = block_data.transactions;
+                    if (block_txs) {
+                        $.each(block_txs, function(dat, value) {
+                            const tx_details = kaspa_fyi_ws_data(value, wallet_address);
+                            if (tx_details.ccval) {
+                                closesocket();
+                                tx_polling_init(tx_details);
+                                return
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error("Error processing Kaspa FYI message:", error);
+            }
+        }
+    };
+    socket.onclose = function(e) {
+        ws_recon({ // reconnect if ws closes
+            "function": kaspa_fyi_websocket,
+            "node": socket_node,
+            "address": wallet_address,
+            "trigger": e.code
+        });
+        handle_socket_close(socket_node);
+    };
+    socket.onerror = function(e) {
+        handle_socket_fails(socket_node, wallet_address);
+        return
+    };
 }
 
 // Establishes WebSocket connection to Alchemy API for monitoring pending Ethereum transactions with address filtering
 function alchemy_eth_websocket(socket_node, wallet_address) {
-   if (glob_let.sockets[wallet_address]) {
-       return
-   }
-   const base_url = socket_node.url,
-       api_key = get_alchemy_apikey(),
-       ws_endpoint = base_url + api_key,
-       socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-   socket.onopen = function(e) {
-       socket_info(socket_node, true);
-       const ping_payload = JSON.stringify({
-           "jsonrpc": "2.0",
-           "id": 1,
-           "method": "eth_subscribe",
-           "params": ["alchemy_pendingTransactions", {
-               "toAddress": [wallet_address],
-               "hashesOnly": false
-           }]
-       });
-       socket.send(ping_payload);
-       glob_let.pinging[wallet_address] = setInterval(function() {
-           socket.send(ping_payload);
-           poll_animate();
-       }, 55000);
-   };
-   socket.onmessage = function(e) {
-       try {
-           const msg_data = JSON.parse(e.data),
-               tx_data = q_obj(msg_data, "params.result");
-           if (tx_data && tx_data.hash && str_match(tx_data.to, wallet_address)) {
-               const required_confirms = request.set_confirmations || 0,
-                   tx_details = infura_block_data(tx_data, required_confirms, request.currencysymbol);
-               closesocket();
-               tx_polling_init(tx_details);
-           }
-       } catch (error) {
-           console.error("Error parsing WebSocket message:", error);
-       }
-   };
-   socket.onclose = function(e) {
-       handle_socket_close(socket_node);
-   };
-   socket.onerror = function(e) {
-       handle_socket_fails(socket_node, wallet_address);
-       return
-   };
+    if (glob_let.sockets[wallet_address]) {
+        return
+    }
+    const base_url = socket_node.url,
+        api_key = get_alchemy_apikey(),
+        ws_endpoint = base_url + api_key,
+        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
+    socket.onopen = function(e) {
+        socket_info(socket_node, true);
+        const ping_payload = JSON.stringify({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "eth_subscribe",
+            "params": ["alchemy_pendingTransactions", {
+                "toAddress": [wallet_address],
+                "hashesOnly": false
+            }]
+        });
+        socket.send(ping_payload);
+        glob_let.pinging[wallet_address] = setInterval(function() {
+            socket.send(ping_payload);
+            poll_animate();
+        }, 55000);
+    };
+    socket.onmessage = function(e) {
+        try {
+            const msg_data = JSON.parse(e.data),
+                tx_data = q_obj(msg_data, "params.result");
+            if (tx_data && tx_data.hash && str_match(tx_data.to, wallet_address)) {
+                const required_confirms = request.set_confirmations || 0,
+                    tx_details = infura_block_data(tx_data, required_confirms, request.currencysymbol);
+                closesocket();
+                tx_polling_init(tx_details);
+            }
+        } catch (error) {
+            console.error("Error parsing WebSocket message:", error);
+        }
+    };
+    socket.onclose = function(e) {
+        handle_socket_close(socket_node);
+    };
+    socket.onerror = function(e) {
+        handle_socket_fails(socket_node, wallet_address);
+        return
+    };
 }
 
 // Establishes WebSocket connection to Ethereum node for monitoring new blocks with RPC-based transaction filtering
 function web3_eth_websocket(socket_node, wallet_address, rpc_url) {
-   const network_type = socket_node.network,
-       base_url = socket_node.url,
-       infura_key = get_infura_apikey(base_url),
-       ws_endpoint = base_url + infura_key,
-       socket_id = sha_sub(ws_endpoint, 10);
-   if (glob_let.sockets[socket_id]) {
-       return
-   }
-   const socket = glob_let.sockets[socket_id] = new WebSocket(ws_endpoint);
-   socket.onopen = function(e) {
-       socket_info(socket_node, true);
-       const ping_payload = JSON.stringify({
-           "jsonrpc": "2.0",
-           "id": 1,
-           "method": "eth_subscribe",
-           "params": ["newHeads"]
-       });
-       socket.send(ping_payload);
-       glob_let.pinging[wallet_address] = setInterval(function() {
-           socket.send(ping_payload);
-           poll_animate();
-       }, 55000);
-   };
-   socket.onmessage = function(e) {
-       try {
-           const msg_data = JSON.parse(e.data),
-               block_data = q_obj(msg_data, "params.result");
-           if (block_data && block_data.hash) {
-               const api_data = helper ? q_obj(helper, "api_info.data") : null;
-               if (!api_data) return;
-               const node_url = api_data.default === false ? api_data.url : rpc_url;
-               api_proxy(eth_params(node_url, 25, "eth_getBlockByHash", [block_data.hash, true])).done(function(response) {
-                   const result_data = inf_result(response),
-                       transactions = result_data.transactions;
-                   if (transactions) {
-                       const required_confirms = request.set_confirmations || 0;
-                       $.each(transactions, function(i, tx) {
-                           if (str_match(tx.to, wallet_address) === true) {
-                               const tx_details = infura_block_data(tx, required_confirms, request.currencysymbol, block_data.timestamp);
-                               closesocket();
-                               tx_polling_init(tx_details);
-                               if (network_type) {
-                                   set_l2_status_init(socket_node, "paid");
-                               }
-                               return
-                           }
-                       });
-                   }
-               })
-           }
-       } catch (error) {
-           console.error("Error parsing WebSocket message:", error);
-       }
-   };
-   socket.onclose = function(e) {
-       handle_socket_close(socket_node);
-   };
-   socket.onerror = function(e) {
-       handle_socket_fails(socket_node, wallet_address, socket_id);
-       return
-   };
+    const network_type = socket_node.network,
+        base_url = socket_node.url,
+        infura_key = get_infura_apikey(base_url),
+        ws_endpoint = base_url + infura_key,
+        socket_id = sha_sub(ws_endpoint, 10);
+    if (glob_let.sockets[socket_id]) {
+        return
+    }
+    const socket = glob_let.sockets[socket_id] = new WebSocket(ws_endpoint);
+    socket.onopen = function(e) {
+        socket_info(socket_node, true);
+        const ping_payload = JSON.stringify({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "eth_subscribe",
+            "params": ["newHeads"]
+        });
+        socket.send(ping_payload);
+        glob_let.pinging[wallet_address] = setInterval(function() {
+            socket.send(ping_payload);
+            poll_animate();
+        }, 55000);
+    };
+    socket.onmessage = function(e) {
+        try {
+            const msg_data = JSON.parse(e.data),
+                block_data = q_obj(msg_data, "params.result");
+            if (block_data && block_data.hash) {
+                const api_data = helper ? q_obj(helper, "api_info.data") : null;
+                if (!api_data) return;
+                const node_url = api_data.default === false ? api_data.url : rpc_url;
+                api_proxy(eth_params(node_url, 25, "eth_getBlockByHash", [block_data.hash, true])).done(function(response) {
+                    const result_data = inf_result(response),
+                        transactions = result_data.transactions;
+                    if (transactions) {
+                        const required_confirms = request.set_confirmations || 0;
+                        $.each(transactions, function(i, tx) {
+                            if (str_match(tx.to, wallet_address) === true) {
+                                const tx_details = infura_block_data(tx, required_confirms, request.currencysymbol, block_data.timestamp);
+                                closesocket();
+                                tx_polling_init(tx_details);
+                                if (network_type) {
+                                    set_l2_status_init(socket_node, "paid");
+                                }
+                                return
+                            }
+                        });
+                    }
+                })
+            }
+        } catch (error) {
+            console.error("Error parsing WebSocket message:", error);
+        }
+    };
+    socket.onclose = function(e) {
+        handle_socket_close(socket_node);
+    };
+    socket.onerror = function(e) {
+        handle_socket_fails(socket_node, wallet_address, socket_id);
+        return
+    };
 }
 
 // Establishes WebSocket connection for monitoring ERC20 token transfers using contract event logs
 function web3_erc20_websocket(socket_node, wallet_address, contract_address, socket_id) {
-   if (glob_let.sockets[socket_id]) {
-       return
-   }
-   const network_type = socket_node.network,
-       base_url = complete_url(socket_node.url),
-       infura_key = get_infura_apikey(base_url),
-       ws_endpoint = base_url + infura_key,
-       socket = glob_let.sockets[socket_id] = new WebSocket(ws_endpoint);
-   socket.onopen = function(e) {
-       socket_info(socket_node, true);
-       const ping_payload = JSON.stringify({
-           "jsonrpc": "2.0",
-           "id": 1,
-           "method": "eth_subscribe",
-           "params": [
-               "logs",
-               {
-                   "address": contract_address,
-                   "topics": []
-               }
-           ]
-       });
-       socket.send(ping_payload);
-   };
-   socket.onmessage = function(e) {
-       try {
-           const msg_data = JSON.parse(e.data),
-               log_data = q_obj(msg_data, "params.result");
-           if (log_data && log_data.topics) {
-               const target_address = log_data.topics[2];
-               if (!target_address || str_match(target_address, wallet_address.slice(3)) !== true) return;
-               const contract_data = log_data.data.slice(2),
-                   raw_value = hex_to_number_string(contract_data),
-                   token_decimals = request.decimals,
-                   token_amount = parseFloat((raw_value / Math.pow(10, token_decimals)).toFixed(8));
-               if (token_amount === Infinity) return;
-               const required_confirms = request.set_confirmations || 0,
-                   tx_details = {
-                       "ccval": token_amount,
-                       "transactiontime": now_utc(),
-                       "txhash": log_data.transactionHash,
-                       "confirmations": 0,
-                       "setconfirmations": required_confirms,
-                       "ccsymbol": request.currencysymbol,
-                       "eth_layer2": network_type
-                   };
-               closesocket();
-               tx_polling_init(tx_details);
-               if (network_type) {
-                   set_l2_status_init(socket_node, "paid");
-               }
-           }
-       } catch (error) {
-           console.error("Error parsing WebSocket message:", error);
-       }
-   };
-   socket.onclose = function(e) {
-       if (e.code === 1008) { // closed because of API limit, switch to polling
-           console.error("Disconnected from " + socket_node.url);
-           glob_let.ws_timer = 0;
-           handle_socket_fails(socket_node, wallet_address, socket_id, network_type);
-           return
-       }
-       handle_socket_close(socket_node);
-   };
-   socket.onerror = function(e) {
-       handle_socket_fails(socket_node, wallet_address, socket_id, network_type);
-   };
+    if (glob_let.sockets[socket_id]) {
+        return
+    }
+    const network_type = socket_node.network,
+        base_url = complete_url(socket_node.url),
+        infura_key = get_infura_apikey(base_url),
+        ws_endpoint = base_url + infura_key,
+        socket = glob_let.sockets[socket_id] = new WebSocket(ws_endpoint);
+    socket.onopen = function(e) {
+        socket_info(socket_node, true);
+        const ping_payload = JSON.stringify({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "eth_subscribe",
+            "params": [
+                "logs",
+                {
+                    "address": contract_address,
+                    "topics": []
+                }
+            ]
+        });
+        socket.send(ping_payload);
+    };
+    socket.onmessage = function(e) {
+        try {
+            const msg_data = JSON.parse(e.data),
+                log_data = q_obj(msg_data, "params.result");
+            if (log_data && log_data.topics) {
+                const target_address = log_data.topics[2];
+                if (!target_address || str_match(target_address, wallet_address.slice(3)) !== true) return;
+                const contract_data = log_data.data.slice(2),
+                    raw_value = hex_to_number_string(contract_data),
+                    token_decimals = request.decimals,
+                    token_amount = parseFloat((raw_value / Math.pow(10, token_decimals)).toFixed(8));
+                if (token_amount === Infinity) return;
+                const required_confirms = request.set_confirmations || 0,
+                    tx_details = {
+                        "ccval": token_amount,
+                        "transactiontime": now_utc(),
+                        "txhash": log_data.transactionHash,
+                        "confirmations": 0,
+                        "setconfirmations": required_confirms,
+                        "ccsymbol": request.currencysymbol,
+                        "eth_layer2": network_type
+                    };
+                closesocket();
+                tx_polling_init(tx_details);
+                if (network_type) {
+                    set_l2_status_init(socket_node, "paid");
+                }
+            }
+        } catch (error) {
+            console.error("Error parsing WebSocket message:", error);
+        }
+    };
+    socket.onclose = function(e) {
+        if (e.code === 1008) { // closed because of API limit, switch to polling
+            console.error("Disconnected from " + socket_node.url);
+            glob_let.ws_timer = 0;
+            handle_socket_fails(socket_node, wallet_address, socket_id, network_type);
+            return
+        }
+        handle_socket_close(socket_node);
+    };
+    socket.onerror = function(e) {
+        handle_socket_fails(socket_node, wallet_address, socket_id, network_type);
+    };
 }
 
 // Manages WebSocket failures by attempting reconnection through fallback nodes with L1/L2 network handling

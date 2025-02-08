@@ -618,7 +618,7 @@ function test_rpc(input_section, node_config, currency_code) {
                 "litecoin": "LZakyXotaE29Pehw21SoPuU832UhvJp4LG",
                 "dogecoin": "DKvWg8UhQSycj1J8QVxeBDkRpbjDkw3DiW",
                 "bitcoin-cash": bip39_const.expected_bch_cashaddr
-            }[currency_code] || "",
+            } [currency_code] || "",
             api_request = glob_let.is_btc ? {
                 "api_url": node_url + "/api/address/" + test_address + "/txs",
                 "proxy": false,

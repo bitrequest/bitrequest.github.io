@@ -963,8 +963,8 @@ function trigger_ln() {
             if (node_key) {
                 const key_length = node_key.length;
                 if (key_length < 5) {
-                    const key_name = (implementation == "lnbits") ? "API key" : 
-                                     (implementation == "eclair") ? "Password" : "Invoice Macaroon",
+                    const key_name = (implementation == "lnbits") ? "API key" :
+                        (implementation == "eclair") ? "Password" : "Invoice Macaroon",
                         full_key_name = implementation + " " + key_name;
                     popnotify("error", translate("selectkeyname", {
                         "impkeyname": full_key_name
@@ -1121,14 +1121,14 @@ function test_create_invoice(implementation, proxy_data, node_host, node_key) {
         is_node_existing = node_exists(node_services, node_id),
         default_error = translate("unabletoconnect"),
         unique_id = sha_sub(now(), 10);
-    
+
     if (is_node_existing) {
         popnotify("error", translate("proxynameexists", {
             "imp": implementation
         }));
         return
     }
-    
+
     if (proxy_url) {
         loader(true);
         loadertext(translate("connecttolnur", {
@@ -1183,7 +1183,7 @@ function test_create_invoice(implementation, proxy_data, node_host, node_key) {
         });
         return
     }
-    
+
     const api_call_configs = {
         "lnd": {
             "api_url": node_host + "/v1/invoices",
@@ -1240,7 +1240,7 @@ function test_create_invoice(implementation, proxy_data, node_host, node_key) {
             "successKey": "payment_hash"
         }
     };
-    
+
     if (api_call_configs[implementation]) {
         const api_params = api_call_configs[implementation];
         api_proxy({
@@ -1360,8 +1360,8 @@ function remove_rpc_proxy() {
                 updated_proxy_list = fetch_other_proxies(proxy_list, current_proxy_id),
                 is_proxy_list_empty = empty_obj(updated_proxy_list),
                 final_proxy_list = is_proxy_list_empty ? [] : updated_proxy_list,
-                selected_proxy = is_proxy_list_empty ? false : 
-                    (current_proxy.id === current_proxy_id) ? updated_proxy_list[0] : current_proxy;
+                selected_proxy = is_proxy_list_empty ? false :
+                (current_proxy.id === current_proxy_id) ? updated_proxy_list[0] : current_proxy;
             lightning_item.data({
                 "selected_proxy": selected_proxy,
                 "proxies": final_proxy_list
@@ -1676,12 +1676,12 @@ function test_lnurl_status(lightning_node) {
         proxy_host = proxy_details.url,
         proxy_key = proxy_details.k,
         proxy_url = proxy_host + "proxy/v1/ln/api/";
-    
+
     if (!proxy_host) {
         notify(translate("proxydatamissing"));
         return
     }
-    
+
     $.ajax({
         "method": "POST",
         "cache": false,

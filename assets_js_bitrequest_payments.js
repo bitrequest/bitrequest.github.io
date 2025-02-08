@@ -1094,6 +1094,7 @@ function getccexchangerates(api_list, selected_api) {
 // Implements fallback logic for failed cryptocurrency rate fetches using alternative APIs and proxies
 function cc_fail(api_list, selected_api, error_val, is_proxy_failure) {
     const error_data = get_api_error_data(error_val, is_proxy_failure);
+
     function next_proxy() { // try next proxy
         if (get_next_proxy()) {
             glob_let.api_attempt[api_list] = {};
@@ -1121,13 +1122,13 @@ function initexchangerate(crypto_rate, crypto_api, cache_age) {
     loadertext(translate("getfiatrates"));
     const inverse_crypto_rate = 1 / crypto_rate,
         current_timestamp = now(),
-        is_new_currency = request.fiatcurrency !== request.localcurrency && 
-            request.fiatcurrency !== "eur" && 
-            request.fiatcurrency !== "usd" && 
-            request.fiatcurrency !== request.currencysymbol, //check if currency request is other then usd, eur or localcurrency
-        local_currency_param = request.localcurrency === "usd" || request.localcurrency === "btc" ? "usd,eur" : 
-            request.localcurrency === "eur" ? "eur,usd" : 
-            request.localcurrency + ",usd,eur", // set correct local currency / prevent btc
+        is_new_currency = request.fiatcurrency !== request.localcurrency &&
+        request.fiatcurrency !== "eur" &&
+        request.fiatcurrency !== "usd" &&
+        request.fiatcurrency !== request.currencysymbol, //check if currency request is other then usd, eur or localcurrency
+        local_currency_param = request.localcurrency === "usd" || request.localcurrency === "btc" ? "usd,eur" :
+        request.localcurrency === "eur" ? "eur,usd" :
+        request.localcurrency + ",usd,eur", // set correct local currency / prevent btc
         new_currency_param = is_new_currency ? "," + request.fiatcurrency : "",
         currency_list = local_currency_param + new_currency_param,
         full_currency_string = request.currencysymbol + "," + currency_list,
@@ -1203,29 +1204,29 @@ function get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currenc
                 local_rate;
             if (selected_fiat_api === "fixer") {
                 usd_rate = exchange_rates.USD,
-                local_rate = exchange_rates[target_currency_upper];
+                    local_rate = exchange_rates[target_currency_upper];
             } else if (selected_fiat_api === "coingecko") {
                 if (exchange_rates[target_currency]) {
                     const eur_rate = exchange_rates.eur.value;
                     usd_rate = exchange_rates.usd.value / eur_rate,
-                    local_rate = exchange_rates[target_currency].value / eur_rate;
+                        local_rate = exchange_rates[target_currency].value / eur_rate;
                 }
             } else if (selected_fiat_api === "exchangeratesapi") {
                 if (exchange_rates[target_currency_upper]) {
                     usd_rate = exchange_rates.USD,
-                    local_rate = target_currency_upper === "EUR" ? 1 : exchange_rates[target_currency_upper];
+                        local_rate = target_currency_upper === "EUR" ? 1 : exchange_rates[target_currency_upper];
                 }
             } else if (selected_fiat_api === "currencylayer") {
                 const local_key = exchange_rates["USD" + target_currency_upper];
                 if (local_key) {
                     usd_rate = 1 / exchange_rates.USDEUR,
-                    local_rate = local_key * usd_rate;
+                        local_rate = local_key * usd_rate;
                 }
             } else if (selected_fiat_api === "coinbase") {
                 const local_key = exchange_rates[target_currency_upper];
                 if (local_key) {
                     usd_rate = 1 / exchange_rates.EUR,
-                    local_rate = local_key * usd_rate;
+                        local_rate = local_key * usd_rate;
                 }
             } else {
                 loadertext(translate("error"));
@@ -2634,8 +2635,8 @@ function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash)
             if (request_id) {
                 const server_index = glob_const.proxy_list.indexOf(server),
                     is_default_server = server_index > -1;
-                const short_url = is_default_server ? 
-                    glob_const.approot + "?i=" + server_index.toString() + request_id : 
+                const short_url = is_default_server ?
+                    glob_const.approot + "?i=" + server_index.toString() + request_id :
                     server + "proxy/v1/inv/4bR" + request_id;
                 sharerequest(short_url, shared_title);
                 if (url_hash) {
