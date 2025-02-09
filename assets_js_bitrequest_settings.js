@@ -34,7 +34,7 @@ $(document).ready(function() {
     // Bip32 passphrase
     manage_bip32_passphrase();
     hide_seed_panel_trigger();
-    //close_seed_dialog
+    //hide_seed_panel
 
     // Pincode
     configure_pin_settings();
@@ -594,12 +594,12 @@ function manage_bip32_passphrase() {
 // Attaches event listener to seed panel close button
 function hide_seed_panel_trigger() {
     $(document).on("click", "#seed_steps .seed_step .ss_header .icon-cross", function() {
-        close_seed_dialog();
+        hide_seed_panel();
     });
 }
 
 // Removes seed dialog CSS class and resets panel state
-function close_seed_dialog() {
+function hide_seed_panel() {
     glob_const.body.removeClass("seed_dialog");
     $("#seed_panel").attr("class", "");
     allow_screen_sleep();

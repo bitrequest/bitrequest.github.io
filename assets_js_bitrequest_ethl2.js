@@ -87,7 +87,6 @@ function setup_layer2_monitoring(socket_node, address, ctracts, retry) {
         start_layer2_scan(socket_node, contract, ping_id, retry);
         return
     }
-    console.error("error", "missing api data");
 }
 
 // Starts Layer 2 blockchain scanning with configurable interval

@@ -202,9 +202,6 @@ function process_lightning_payment(rd, api_data, rdo) {
                     return
                 }
                 update_transaction_count(status_panel, 0);
-                handle_scan_failure({
-                    "error": translate("noinvoicesfound")
-                }, rd, "ln", rdo);
                 if (!lightning_only) {
                     route_api_request(rd, api_data, rdo);
                     return
