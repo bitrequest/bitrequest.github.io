@@ -503,7 +503,7 @@ function lnd_poll_data(proxy_host, proxy_key, payment_id, node_id, invoice_mode)
             poll_animate();
             const error = response.error;
             if (error) {
-                const error_message = error.message || (typeof error === "string") ? error : default_error;
+                const error_message = error.message || (typeof error === "string" ? error : default_error);
             }
             const proxy_version = response.version;
             if (proxy_version < glob_const.proxy_version) {

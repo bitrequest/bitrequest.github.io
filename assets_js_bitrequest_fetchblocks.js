@@ -115,7 +115,7 @@ function process_lightning_payment(rd, api_data, rdo) {
                 handle_scan_failure({
                     "error": error
                 }, rd, "ln", rdo);
-                const error_msg = error.message || typeof error === "string" ? error : error_default;
+                const error_msg = error.message || (typeof error === "string" ? error : error_default);
                 status_display.text(" " + error_msg);
                 if (!lightning_only) {
                     route_api_request(rd, api_data, rdo);
@@ -149,7 +149,7 @@ function process_lightning_payment(rd, api_data, rdo) {
                             handle_scan_failure({
                                 "error": invoice_error
                             }, rd, "ln", rdo);
-                            const invoice_error_msg = invoice_error.message || typeof invoice_error === "string" ? invoice_error : error_default;
+                            const invoice_error_msg = invoice_error.message || (typeof invoice_error === "string" ? invoice_error : error_default);
                             status_display.text(" " + invoice_error_msg);
                             if (!lightning_only) {
                                 route_api_request(rd, api_data, rdo);

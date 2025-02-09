@@ -70,11 +70,11 @@ $remote_tracking = $setup["remote_tracking"] === "yes" ? "yes" : "no";
 
 // Check if API key is required and validate it
 if ($api_key && !$lnget) {
-    if ($post_apikey === "false") {
+    if ($provided_api_key === "false") {
         echo json_encode(r_err($key_error, 1));
         return;
     }
-    if ($post_apikey !== $key_hash) {
+    if ($post_api_key !== $key_hash) {
         echo json_encode(r_err($wrong_key, 2));
         return;
     }

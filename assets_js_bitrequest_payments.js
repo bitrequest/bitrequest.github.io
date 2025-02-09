@@ -896,7 +896,7 @@ function lnd_put(proxy_url, proxy_key, payload, is_lnurl) {
             response_error = data.error,
             default_error_message = translate("unabletoconnect");
         if (response_error) {
-            const error_message = response_error.message || (typeof response_error === "string") ? response_error : default_error_message;
+            const error_message = response_error.message || (typeof response_error === "string" ? response_error : default_error_message);
             if (request.isrequest) {
                 if (helper.lnd_only) {
                     topnotify(error_message);

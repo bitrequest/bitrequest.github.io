@@ -246,7 +246,7 @@ function node_option_li(node_info, selected, action, proxy_url, proxy_key) {
                 error = response.error;
             if (error) {
                 const default_error = translate("unabletoconnect"),
-                    error_message = error.message || (typeof error === "string") ? error : default_error,
+                    error_message = error.message || (typeof error === "string" ? error : default_error),
                     error_code = error.code;
                 locked = error_code && (error_code === 1 || error_code === 2) ? "locked" : null;
                 if (action === "append") {
@@ -893,6 +893,8 @@ function trigger_ln() {
         }
         const proxy_key = $("#proxy_pw_input").val(),
             proxy_key_hash = proxy_key ? sha_sub(proxy_key, 10) : false;
+        console.log(proxy_key);
+        console.log(proxy_key_hash);
         test_lnd_proxy(normalized_url, proxy_id, proxy_key_hash);
         if (no_proxy_change || !current_proxy) {} else {
             notify(translate("datasaved"));
@@ -1024,7 +1026,7 @@ function test_lnd_proxy(proxy_url, proxy_id, proxy_key) {
             error = result.error;
         if (error) {
             const default_error = translate("unabletoconnect"),
-                error_message = error.message || (typeof error === "string") ? error : default_error,
+                error_message = error.message || (typeof error === "string" ? error : default_error),
                 formatted_message = error_message === "no write acces" ? translate("folderpermissions") : error_message,
                 error_code = error.code;
             popnotify("error", formatted_message);
@@ -1129,7 +1131,7 @@ function test_create_invoice(implementation, proxy_data, node_host, node_key) {
             if (response) {
                 const error = response.error;
                 if (error) {
-                    const error_message = error.message || (typeof error === "string") ? error : default_error,
+                    const error_message = error.message || (typeof error === "string" ? error : default_error),
                         error_code = error.code;
                     popnotify("error", error_message);
                     if (error_code && (error_code == 1 || error_code == 2)) {
@@ -1231,7 +1233,7 @@ function test_create_invoice(implementation, proxy_data, node_host, node_key) {
             if (response) {
                 const error = response.error;
                 if (error) {
-                    const error_message = error.message || (typeof error === "string") ? error : default_error;
+                    const error_message = error.message || (typeof error === "string" ? error : default_error);
                     popnotify("error", error_message);
                     return;
                 }
@@ -1467,7 +1469,7 @@ function prompt_proxy_unlock(proxy_id) {
             error = result.error;
         if (error) {
             const default_error = translate("unabletoconnect"),
-                error_message = error.message || (typeof error === "string") ? error : default_error;
+                error_message = error.message || (typeof error === "string" ? error : default_error);
             popnotify("error", error_message);
             return
         }
@@ -1673,7 +1675,7 @@ function validate_lnurl_connection(lightning_node) {
         const error = response.error;
         if (error) {
             const default_error = translate("unabletoconnect"),
-                error_message = error.message || (typeof error === "string") ? error : default_error;
+                error_message = error.message || (typeof error === "string" ? error : default_error);
             if (request.isrequest) {
                 if (helper.lnd_only) {
                     topnotify(error_message);
