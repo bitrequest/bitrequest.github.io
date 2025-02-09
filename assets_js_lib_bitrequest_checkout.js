@@ -1,5 +1,5 @@
 const root_html = document.documentElement,
-    base_url = "https://bitrequest.github.io";
+    b_url = "https://bitrequest.github.io";
 
 document.addEventListener("DOMContentLoaded", function() {
     checkout();
@@ -40,7 +40,7 @@ function iframe_loaded() {
     payment_frame.addEventListener("load", function() {
         const frame_url = payment_frame.getAttribute("src");
         if (frame_url) {
-            if (frame_url === base_url) {
+            if (frame_url === b_url) {
                 return
             }
             showframe();
@@ -95,7 +95,7 @@ function closeframe() {
             root_html.classList.remove("showframe");
             const payment_frame = document.querySelector("#br_framebox iframe");
             if (payment_frame) {
-                payment_frame.setAttribute("src", base_url);
+                payment_frame.setAttribute("src", b_url);
             }
         }, 400);
     }
