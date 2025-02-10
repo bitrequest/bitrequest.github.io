@@ -1320,9 +1320,11 @@ function socket_info(socket_node, is_connected, is_polling) {
         helper.l1_status = true;
         payment_address.addClass("live");
         glob_const.paymentpopup.addClass("live");
+        glob_const.paymentdialogbox.removeClass("switching");
         closenotify();
         return
     }
+    if (glob_const.paymentdialogbox.hasClass("switching")) return; // prevents offline modus when switching addresses
     setTimeout(function() {
         if (glob_const.paymentdialogbox.hasClass("transacting")) return;
         if (!is_openrequest()) return;

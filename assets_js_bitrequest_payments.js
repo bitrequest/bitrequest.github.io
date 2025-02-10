@@ -65,7 +65,7 @@ $(document).ready(function() {
     //set_lightning_uris
     //btc_urlscheme
     //bch_urlscheme
-    switchaddress();
+    switch_address();
     copyaddress_dblclick();
     copyaddress();
     copyinputs();
@@ -1955,7 +1955,7 @@ function bch_urlscheme(payment, address, amount, is_zero) {
 }
 
 // Manages address switching functionality with socket handling
-function switchaddress() {
+function switch_address() {
     $(document).on("click", "#paymentdialogbox.norequest #labelbttn", function() {
         const time_elapsed = now() - glob_let.sa_timer;
         if (time_elapsed < 1500) { // prevent clicking too fast
@@ -1965,16 +1965,32 @@ function switchaddress() {
         const url_params = geturlparameters(),
             payment = url_params.payment;
         if (payment === "monero") {
+            //disable address switching for Monero
+            play_audio(glob_const.funk);
+            return
+        }
+        if (payment === "ethereum" && request.eth_l2s.length) {
+            //disable address switching for ethereum layer 2's
+            play_audio(glob_const.funk);
+            return
+        }
+        if (request.erc20) {
+            //disable address switching for erc20 tokens
+            play_audio(glob_const.funk);
+            return
+        }
+        if (q_obj(request, "coinsettings.Lightning network.selected")) {
+            //disable address switching on lightning payments
+            play_audio(glob_const.funk);
             return
         }
         const current_address = url_params.address,
             next_address_item = newaddresli(payment, current_address);
         if (next_address_item) {
+            glob_const.paymentdialogbox.addClass("switching");
             const new_address = next_address_item.data("address"),
-                selected_socket = helper.selected_socket;
-            close_socket(current_address);
-            init_socket(selected_socket, new_address);
-            const data_param = url_params.d,
+                selected_socket = helper.selected_socket,
+                data_param = url_params.d,
                 has_data = data_param && data_param.length > 5,
                 new_data_param = has_data ? "&d=" + data_param : "",
                 cc_value = $("#paymentdialogbox .ccpool").attr("data-value"),
@@ -1994,6 +2010,8 @@ function switchaddress() {
             glob_const.paymentdialogbox.attr("data-pending", is_pending && request.monitored ? "ispending" : "");
             request.address = new_address;
             glob_let.sa_timer = now();
+            force_close_socket();
+            init_socket(selected_socket, new_address);
         }
     });
 }

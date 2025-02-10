@@ -253,7 +253,7 @@ function route_crypto_api(rd, api_data, rdo) {
         return
     }
     if (provider === "ethplorer") {
-        ethplorer_fetch(rd, api_data, rdo);
+        process_ethereum_transactions(rd, api_data, rdo);
         return
     }
     if (provider === "blockchair") {
