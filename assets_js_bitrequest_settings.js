@@ -1,47 +1,33 @@
 $(document).ready(function() {
+    // ** CORE SETTINGS: **
 
-    // ** Settings **
-
-    // Account name
+    // ** Account name: **
     edit_account_name();
     save_account_name();
 
-    // Contact form
-    edit_contactform_trigger();
-    //edit_contactform;
-    type_contactform();
-    submit_contactform();
-
-    // Standard fiat currency
+    // ** Local fiat currency: **
     select_default_currency();
     toggle_defaultcurrency();
     filter_currency_input();
     save_currency_settings();
 
-    // Language
+    // ** Language: **
     select_language();
     save_language_settings();
 
-    // CSV Export
-    csvexport_trigger();
-    submit_csvexport();
-    //complile_csv
-    //render_csv
-    share_csv();
-    //check_csvexport
-    submit_csvdownload();
+    // ** SECURITY: **
 
-    // Bip32 passphrase
-    manage_bip32_passphrase();
-    hide_seed_panel_trigger();
-    //hide_seed_panel
-
-    // Pincode
+    // ** Passcode lock: **
     configure_pin_settings();
     select_lock_timeout();
     save_lock_timeout();
 
-    // Back up
+    // ** Secret phrase: **
+    manage_bip32_passphrase();
+    hide_seed_panel_trigger();
+    //hide_seed_panel
+
+    // ** Backup app data: **
     start_backup_process();
     //backup_database
     toggle_secret_phrase();
@@ -53,17 +39,16 @@ $(document).ready(function() {
     cancel_backup_dialog();
     //generate_backup_data
     //generate_backup_filename
-    submitbackup();
+    submit_backup();
 
-    // Restore backup
-
-    restorefrombackup();
+    // ** Restore app data: **
+    restore_from_backup();
     //trigger_restore
-    restorebackup();
-    submitrestore();
+    restore_backup();
+    submit_restore();
     //restore
     //check_backup
-    submit_GD_restore();
+    submit_gd_restore();
     //scan_restore
     //restore_algo
     //restore_callback
@@ -74,7 +59,7 @@ $(document).ready(function() {
     //restore_callback_file
     //restore_callback_gd
     //dphrase_dialog
-    submit_dphrase();
+    //submit_dphrase
     //keep_current_seed
     //restore_bu_seed
     //bu_oldseed
@@ -83,33 +68,35 @@ $(document).ready(function() {
     //compare_seeds_callback
     //restore_storage
 
-    // Url shortener
+    // ** ADVANCED: **
+
+    // ** Export CSV: **
+    csvexport_trigger();
+    submit_csvexport();
+    //complile_csv
+    //should_include_request
+    //render_csv
+    share_csv();
+    //check_csvexport
+    submit_csvdownload();
+
+    // ** URL Shortener: **
     urlshortener();
     toggle_url_shortener();
     pick_urlshortener_select();
     submit_urlshortener_select();
 
-    // Cryptocurrency price api
+    // ** Cryptocurrency price data: **
     configure_crypto_api();
     select_crypto_api();
     save_crypto_api_settings();
 
-    // Fiat price api
+    // ** FIAT price data: **
     configure_fiat_api();
     select_fiat_api();
     save_fiat_api_settings();
 
-    // API keys	
-    apikeys();
-    api_input_change();
-    submitapi();
-    //validate_api_key
-    //json_check_apikey
-    //api_fail
-    //update_api_attr
-    //complement_apisettings
-
-    // API Proxy
+    // ** API Proxy: **
     trigger_proxy_dialog();
     pick_api_proxy();
     //test_append_proxy
@@ -121,26 +108,47 @@ $(document).ready(function() {
     //complete_url
     //c_proxy
 
-    // PERMISSIONS
+    // ** API Keys: **
+    apikeys();
+    api_input_change();
+    submit_api();
+    //validate_api_key
+    //json_check_apikey
+    //api_fail
+    //update_api_attr
+    //complement_apisettings
+
+    // ** Contact Form: **
+    edit_contactform_trigger();
+    //edit_contactform
+    //check_contactform
+    type_contactform();
+    submit_contactform();
+
+    // ** Permissions: **
     permissions();
+    //permissions_callback
     submit_permissions();
 
-    // TEAM INVITE
-    team_invite_trigger()
+    // ** Team invite: **
+    team_invite_trigger();
     //team_invite
     //complile_teaminvite
     //adjust_object
-    share_teaminvite()
+    share_teaminvite();
     //check_teaminvite
-    install_teaminvite_trigger()
+    install_teaminvite_trigger();
     //install_teaminvite
-    //isteaminvite
+    //is_team_invite
+
+    // ** Utility Functions: **
     check_useragent();
 });
 
-// ** Settings **
+// ** CORE SETTINGS: **
 
-// Account name
+// ** Account name: **
+
 // Handles popup dialog for editing user account display name
 function edit_account_name() {
     $(document).on("click", "#accountsettings", function() {
@@ -198,11 +206,12 @@ function save_account_name() {
 
         canceldialog();
         notify(translate("datasaved"));
-        savesettings();
+        save_settings();
     });
 }
 
-// Standard fiat currency
+// ** Local fiat currency: **
+
 // Opens currency selection dialog with supported fiat currencies excluding BTC
 function select_default_currency() {
     $(document).on("click", "#currencysettings", function() {
@@ -253,7 +262,7 @@ function select_default_currency() {
                         "div": {
                             "id": "toggle_defaultcurrency",
                             "class": "clearfix",
-                            "content": "<h3>" + translate("setasdefault") + switchpanel(switchmode, " global") + "</h3>"
+                            "content": "<h3>" + translate("setasdefault") + switch_panel(switchmode, " global") + "</h3>"
                         }
                     },
                     {
@@ -354,7 +363,7 @@ function save_currency_settings() {
 
             canceldialog();
             notify(translate("currencysaved"));
-            savesettings();
+            save_settings();
             return false;
         }
 
@@ -366,7 +375,8 @@ function save_currency_settings() {
     });
 }
 
-// Language
+// ** Language: **
+
 // Displays language selection dialog with current locale and available translations
 function select_language() {
     $(document).on("click", "#langsettings", function() {
@@ -459,15 +469,16 @@ function save_language_settings() {
             "selected": lang
         }, value);
 
-        savesettings();
+        save_settings();
         glob_const.w_loc.href = glob_const.w_loc.pathname + "?p=settings";
         return false;
     });
 }
 
-// SECURITY //
+// ** SECURITY: **
 
-// Pincode
+// ** Passcode lock: **
+
 // Displays PIN configuration dialog with reset option for existing PINs
 function configure_pin_settings() {
     $(document).on("click", "#pinsettings", function() {
@@ -573,11 +584,12 @@ function save_lock_timeout() {
 
         canceldialog();
         canceloptions();
-        savesettings();
+        save_settings();
     });
 }
 
-// Bip32 passphrase
+// ** Secret phrase: **
+
 // Initiates BIP32 passphrase management with PIN verification for existing passphrases
 function manage_bip32_passphrase() {
     $(document).on("click", "#bip39_passphrase", function() {
@@ -605,7 +617,8 @@ function hide_seed_panel() {
     allow_screen_sleep();
 }
 
-// Back up
+// ** Backup app data: **
+
 // Initiates database backup process via UI button or alert notification
 function start_backup_process() {
     $(document).on("click", "#backup, #alert", function() {
@@ -661,7 +674,7 @@ function backup_database() {
                                                     "div": {
                                                         "id": "gdtrigger",
                                                         "class": "ait",
-                                                        "content": switchpanel(gd_on, " custom")
+                                                        "content": switch_panel(gd_on, " custom")
                                                     }
                                                 }]
                                             }
@@ -761,7 +774,7 @@ function toggle_secret_phrase() {
         set_setting("backup", {
             "sbu": value
         });
-        savesettings();
+        save_settings();
     });
 }
 
@@ -993,7 +1006,7 @@ function generate_backup_filename() {
 }
 
 // Processes backup file download with iOS detection and confirmation dialog 
-function submitbackup() {
+function submit_backup() {
     $(document).on("click", "#triggerdownload", function(e) {
         if (glob_const.body.hasClass("ios")) {
             e.preventDefault();
@@ -1022,8 +1035,8 @@ function submitbackup() {
             "device": "folder-open"
         }, last_saved);
 
-        savesettings("noalert");
-        resetchanges();
+        save_settings("noalert");
+        reset_changes();
         canceldialog();
         notify(translate("downloaded", {
             "file": last_backup
@@ -1031,9 +1044,10 @@ function submitbackup() {
     });
 }
 
-// Restore backup
+// ** Restore app data: **
+
 // Initializes backup restoration interface from UI triggers
-function restorefrombackup() {
+function restore_from_backup() {
     $(document).on("click", "#restore, #rshome", function() {
         trigger_restore();
     });
@@ -1067,7 +1081,7 @@ function trigger_restore() {
             "div": {
                 "id": "listappdata",
                 "content": "<h3 class='icon-googledrive'>" + translate("restorewithgd") +
-                    switchpanel(gd_on, " custom") + "</h3>"
+                    switch_panel(gd_on, " custom") + "</h3>"
             }
         },
         {
@@ -1105,7 +1119,7 @@ function trigger_restore() {
 }
 
 // Validates uploaded backup file size and type before processing
-function restorebackup() {
+function restore_backup() {
     $(document).on("change", "#fileupload", function(n) {
         const file = this.files[0],
             size = file.size,
@@ -1136,7 +1150,7 @@ function restorebackup() {
 }
 
 // Processes backup restoration based on selected restore method
-function submitrestore() {
+function submit_restore() {
     $(document).on("click", "#restoreformbox input.submit", function(e) {
         e.preventDefault();
         const panel = $("#popup #listappdata .switchpanel");
@@ -1171,7 +1185,7 @@ function restore(json, filename) {
     }));
 
     if (result) {
-        if (isteaminvite(json)) {
+        if (is_team_invite(json)) {
             install_teaminvite(json, filename, false);
             return;
         }
@@ -1190,7 +1204,7 @@ function restore(json, filename) {
 
 // Validates backup compatibility with current system state
 function check_backup(json) {
-    const is_team = isteaminvite(json);
+    const is_team = is_team_invite(json);
     if (glob_let.cashier_dat && glob_let.cashier_dat.cashier && !is_team) {
         notify(translate("cashiernotallowed"));
         return false;
@@ -1199,7 +1213,7 @@ function check_backup(json) {
 }
 
 // Handles Google Drive backup file restoration with authentication
-function submit_GD_restore() {
+function submit_gd_restore() {
     $(document).on("click", "#gd_backuplist .restorefile", function() {
         const field = $(this).parent("li"),
             device = field.attr("data-device"),
@@ -1449,7 +1463,7 @@ function submit_pin_dialog() {
             glob_let.resd.pcnt += 1;
         }
 
-        savesettings();
+        save_settings();
         shake(dialog);
         input.val("");
     });
@@ -1468,7 +1482,7 @@ function restore_cb_init_addresses() {
 function restore_callback_file(data, np) {
     const newphrase = glob_let.hasbip === true ? np : true;
     restore_storage(data.jasobj, newphrase);
-    rendersettings(["restore", "backup", "pinsettings"]);
+    render_settings(["restore", "backup", "pinsettings"]);
 
     const restore_time = "last restore: " + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_");
     set_setting("restore", {
@@ -1477,11 +1491,11 @@ function restore_callback_file(data, np) {
         "device": "folder-open"
     }, restore_time);
 
-    savesettings("noalert");
+    save_settings("noalert");
     if (newphrase === true) {
         restore_cb_init_addresses();
     }
-    resetchanges();
+    reset_changes();
     glob_const.w_loc.href = glob_const.w_loc.pathname + "?p=settings";
 }
 
@@ -1489,7 +1503,7 @@ function restore_callback_file(data, np) {
 function restore_callback_gd(data, np) {
     const newphrase = (glob_let.hasbip === true) ? np : true;
     restore_storage(data.jasobj, newphrase);
-    rendersettings(["restore", "backup", "pinsettings"]);
+    render_settings(["restore", "backup", "pinsettings"]);
 
     const restore_time = "last restore: " + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_");
     set_setting("restore", {
@@ -1499,9 +1513,8 @@ function restore_callback_gd(data, np) {
     }, restore_time);
 
     setTimeout(function() {
-        savesettings("noalert");
+        save_settings("noalert");
         create_drive_file();
-
         if (data.thisdeviceid === glob_const.deviceid) {
             const p = get_auth_status();
             if (p.pass) {
@@ -1512,8 +1525,7 @@ function restore_callback_gd(data, np) {
         if (newphrase === true) {
             restore_cb_init_addresses();
         }
-        resetchanges();
-
+        reset_changes();
         setTimeout(function() {
             glob_const.w_loc.href = glob_const.w_loc.pathname + "?p=settings";
         }, 300);
@@ -1728,6 +1740,10 @@ function restore_storage(jsonobject, newphrase) {
     localStorage.removeItem("bitrequest_teamid");
     glob_let.resd = {};
 }
+
+// ** ADVANCED: **
+
+// ** Export CSV: **
 
 // Opens CSV export configuration dialog with customizable data filters
 function csvexport_trigger() {
@@ -2120,6 +2136,8 @@ function submit_csvdownload() {
     })
 }
 
+// ** URL Shortener: **
+
 // Displays URL shortener configuration dialog with Firebase and Bitly options
 function urlshortener() {
     $(document).on("click", "#url_shorten_settings", function() {
@@ -2140,7 +2158,7 @@ function urlshortener() {
                     "div": {
                         "id": "toggle_urlshortener",
                         "class": "clearfix",
-                        "content": "<h3 class='" + header_icon + "'>" + translate("enable") + " " + translate("url_shorten_settings") + switchpanel(is_active, " global") + "</h3>"
+                        "content": "<h3 class='" + header_icon + "'>" + translate("enable") + " " + translate("url_shorten_settings") + switch_panel(is_active, " global") + "</h3>"
                     }
                 },
                 {
@@ -2254,7 +2272,7 @@ function toggle_url_shortener() {
             "selected": title,
             "us_active": state
         }, title);
-        savesettings();
+        save_settings();
         panel.addClass("us_changed");
     })
 }
@@ -2336,10 +2354,12 @@ function submit_urlshortener_select() {
         }
         canceldialog();
         notify(translate("datasaved"));
-        savesettings();
+        save_settings();
         return false;
     })
 }
+
+// ** Cryptocurrency price data: **
 
 // Opens cryptocurrency price API configuration dialog with provider selection
 function configure_crypto_api() {
@@ -2465,10 +2485,12 @@ function save_crypto_api_settings() {
         }
         canceldialog();
         notify(translate("datasaved"));
-        savesettings();
+        save_settings();
         return false;
     })
 }
+
+// ** FIAT price data: **
 
 // Renders fiat exchange rate API configuration dialog with Fixer integration
 function configure_fiat_api() {
@@ -2593,10 +2615,12 @@ function save_fiat_api_settings() {
         }
         canceldialog();
         notify(translate("datasaved"));
-        savesettings();
+        save_settings();
         return false;
     })
 }
+
+// ** API Proxy: **
 
 // Redirects to API proxy configuration dialog
 function trigger_proxy_dialog() {
@@ -2713,7 +2737,7 @@ function submit_proxy() {
         }, selectval);
         canceldialog();
         notify(translate("datasaved"));
-        savesettings();
+        save_settings();
     })
 }
 
@@ -2776,7 +2800,7 @@ function test_custom_proxy(value) {
                     }, url);
                     canceldialog();
                     notify(translate("datasaved"));
-                    savesettings();
+                    save_settings();
                     setTimeout(function() {
                         $("#apikeys").trigger("click");
                     }, 800);
@@ -2822,7 +2846,7 @@ function remove_proxy() {
                         "custom_proxies": filtered
                     });
                     notify(translate("proxyremoved"));
-                    savesettings();
+                    save_settings();
                 }
             }
         }
@@ -2840,6 +2864,8 @@ function complete_url(url) {
 function c_proxy() {
     return $("#api_proxy").data("selected");
 }
+
+// ** API Keys: **
 
 // Opens API key management interface with current key values 
 function apikeys() {
@@ -2913,7 +2939,7 @@ function api_input_change() {
 }
 
 // Processes and validates modified API keys
-function submitapi() {
+function submit_api() {
     $(document).on("click", "#apisubmit", function(e) {
         e.preventDefault();
         $("#apikeyformbox").addClass("pass");
@@ -3212,7 +3238,7 @@ function update_api_attr(thisref, thisvalue, lastinput) {
         if (lastinput) {
             canceldialog();
             notify(translate("datasaved"));
-            savesettings();
+            save_settings();
         }
         return;
     }
@@ -3220,11 +3246,11 @@ function update_api_attr(thisref, thisvalue, lastinput) {
     complement_apisettings(thisref, val);
     canceldialog();
     notify(translate("datasaved"));
-    savesettings();
+    save_settings();
 
     br_remove_session(thisref + "_api_attempt");
     br_remove_session("txstatus");
-    cancelpaymentdialog();
+    cancel_paymentdialog();
 }
 
 // Updates settings store with validated API credentials
@@ -3261,7 +3287,8 @@ function complement_apisettings(thisref, thisvalue) {
     }
 }
 
-// Contact form
+// ** Contact Form: **
+
 // Initializes contact form dialog event handler
 function edit_contactform_trigger() {
     $(document).on("click", "#contactform", () => edit_contactform());
@@ -3365,9 +3392,9 @@ function submit_contactform() {
         }
         set_setting("contactform", cf_data);
         canceldialog(true);
-        savesettings();
-        if (geturlparameters().contactform !== undefined) {
-            loadpaymentfunction(true);
+        save_settings();
+        if (get_urlparameters().contactform !== undefined) {
+            load_request(true);
             return;
         }
         notify(translate("datasaved"));
@@ -3379,7 +3406,8 @@ function submit_contactform() {
     }
 }
 
-// Permissions
+// ** Permissions: **
+
 // Launches PIN-protected permissions configuration dialog
 function permissions() {
     $(document).on("click", "#permissions", function() {
@@ -3470,12 +3498,12 @@ function submit_permissions() {
         glob_const.html.attr("data-role", val);
         canceldialog();
         notify(translate("datasaved"));
-        savesettings();
+        save_settings();
         return false;
     })
 }
 
-// Team invite
+// ** Team invite: **
 
 // Initiates team invite process with PIN verification
 function team_invite_trigger() {
@@ -3774,24 +3802,26 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
         teamid_arr.push(iid);
         br_set_local("teamid", teamid_arr, true);
     }
-    rendersettings(["restore", "backup"]); // exclude restore and backup settings
+    render_settings(["restore", "backup"]); // exclude restore and backup settings
     const lastrestore = translate("lastrestore") + "<br/><span class='icon-folder-open'>" + translate("teaminvite") + " " + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_") + "</span>";
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": bu_filename,
         "device": "folder-open"
     }, lastrestore);
-    savesettings();
+    save_settings();
     notify(translate("installcomplete"));
     canceldialog();
     glob_const.w_loc.href = glob_const.w_loc.pathname + "?p=home";
 }
 
 // Detects if backup object contains team configuration
-function isteaminvite(jsonobject) {
+function is_team_invite(jsonobject) {
     const cashier_entry = jsonobject.bitrequest_cashier;
     return (cashier_entry && cashier_entry.cashier) ? true : false;
 }
+
+// ** Utility Functions: **
 
 // Displays detailed browser and environment information
 function check_useragent() {

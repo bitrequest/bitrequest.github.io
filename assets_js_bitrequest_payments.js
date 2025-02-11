@@ -1,9 +1,16 @@
 $(document).ready(function() {
+    // ** Core Dialog Management: **
     wake_panel();
     //set_dialog_timeout
+    //show_paymentdialog
+    //main_input_focus
+
+    // ** Swipe Controls: **
     swipe_start();
     //swipe
     swipe_end();
+
+    // ** Flip Controls: **
     flip_start();
     //flip
     flip_end();
@@ -19,33 +26,37 @@ $(document).ready(function() {
     //face_back
     //poll_animate
 
-    // ** Paymentdialog **
-
-    //loadpaymentfunction
+    // ** Payment Flow: **
+    //load_request
     //get_tokeninfo
     //get_tokeninfo_local
-    //continue_paymentfunction
+    //continue_request
     //lightning_setup
+    //lnd_put
     //test_lnd
     //proceed_pf
-    //getccexchangerates
+    //get_cc_exchangerates
     //cc_fail
-    //initexchangerate
+    //init_exchangerate
     //get_fiat_exchangerate
     //next_fiat_api
     //no_xrate_result
-    //rendercurrencypool
-    //getpayment
-    //show_paymentdialog
-    //main_input_focus
-    lnd_switch_function();
-    ndef_switch_function();
-    //lnd_statusx
-    lnd_offline();
-    lnd_ni();
-    //lnd_popup
-    switch_currency();
+
+    // ** UI State Management: **
+    //render_currencypool
+    //get_payment
     //update_exchange_rates_text
+    //update_currency_pool
+    //refresh_currency_pool
+    //generate_payment_qr
+    //set_wallet_uris
+    //set_lightning_qr
+    //set_lightning_uris
+    scan_qr();
+    show_api_stats();
+    hide_api_stats();
+
+    // ** Input Sync: **
     sync_fiat_inputs();
     sync_local_currency();
     sync_crypto_inputs();
@@ -57,64 +68,75 @@ $(document).ready(function() {
     //sync_input_values
     //calculate_crypto_amount
     mirror_input_value();
-    //update_currency_pool
-    //refresh_currency_pool
-    //generate_payment_qr
-    //set_wallet_uris
-    //set_lightning_qr
-    //set_lightning_uris
-    //btc_urlscheme
-    //bch_urlscheme
-    switch_address();
-    copyaddress_dblclick();
-    copyaddress();
-    copyinputs();
-    xmrsettings();
-    //validaterequestdata
-    inputrequestdata();
-    validatesteps();
-    fliprequest();
-    revealtitle();
-    //pendingrequest
+
+    // ** Lightning & NFC: **
+    lnd_switch_function();
+    ndef_switch_function();
+    //lnd_statusx
+    lnd_offline();
+    lnd_ni();
+    //lnd_popup
+
+    // ** Request Management: **
+    switch_currency();
+    //validate_request_data
+    input_requestdata();
+    validate_steps();
+    flip_request();
+    reveal_title();
+    //pending_request
     view_pending_tx();
-    pickaddressfromdialog();
     //update_request_url
-    addaddressfromdialog();
+    //show_pending_status
+    //update_payment_status
+
+    // ** Address Management: **
+    switch_address();
+    //new_addresli
+    copy_address_dblclick();
+    copy_address();
+    copy_inputs();
+    pick_address_from_dialog();
+    add_address_from_dialog();
     add_from_seed();
-    scanqr();
-    showapistats();
-    hideapistats();
-    sharebutton();
+
+    // ** Sharing: **
+    share_button();
     //is_ln_only
     //share
     //shorten_url
-    //bitly_shorten
     //firebase_shorten
+    //bitly_shorten
     //custom_shorten
-    //randomId
-    //sharerequest
-    //sharefallback
-    whatsappshare();
+    //random_id
+    //share_request
+    //share_fallback
+    whatsapp_share();
     mailto();
-    copyurl();
-    gmailshare();
-    telegramshare();
-    outlookshare();
-    //getshareinfo
-    //sharecallback
+    copy_url();
+    gmail_share();
+    telegram_share();
+    outlook_share();
+    //get_share_info
+    //share_callback
     //open_share_url
+
+    // ** Transaction Viewing: **
     trigger_open_tx();
     view_tx();
     //open_tx
+    xmr_settings();
 
-    //saverequest
-    //show_pending_status
-    //update_payment_status
-    openwallet();
-    openwalleturl();
+    // ** Wallet Operations: **
+    open_wallet();
+    open_wallet_url();
     dw_trigger();
     //download_wallet
-    //updaterequest
+
+    // ** Request Updates: **
+    //save_payment_request
+    //update_request
+    //get_xmrpid
     //xmr_integrated
 });
 
@@ -142,6 +164,26 @@ function set_dialog_timeout() {
         glob_const.paymentdialogbox.addClass("timer");
     }, 500);
 }
+
+// Activates payment dialog with scroll position preservation and blur effects
+function show_paymentdialog() {
+    glob_let.scrollposition = $(document).scrollTop(); // get scrollposition save as global
+    toggle_fixed_nav(glob_let.scrollposition); // fix nav position
+    glob_const.html.addClass("paymode blurmain_payment");
+    $(".showmain #mainwrap").css("transform", "translate(0, -" + glob_let.scrollposition + "px)"); // fake scroll position
+    glob_const.paymentpopup.addClass("showpu active");
+}
+
+// Sets focus to appropriate amount input field based on dialog state
+function main_input_focus() {
+    const visible_input = glob_const.paymentdialogbox.hasClass("flipped") ? $("#paymentdialog #shareamount input:visible:first") :
+        $("#paymentdialog #amountbreak input:visible:first");
+    // hack to move cursor to the end
+    const amount_value = visible_input.val();
+    visible_input.val("").val(amount_value).focus();
+}
+
+// ** Swipe Controls: **
 
 // Initializes vertical swipe detection for the payment dialog
 function swipe_start() {
@@ -210,6 +252,8 @@ function swipe_end() {
         }
     })
 }
+
+// ** Flip Controls: **
 
 // Initializes horizontal flip gesture detection with payment state validation
 function flip_start() {
@@ -405,10 +449,10 @@ function poll_animate() {
     }, 100);
 }
 
-// ** Paymentdialog **
-//loadpayment (check for crypto rates)
+// ** Payment Flow: **
+
 // Initializes the payment process and validates request parameters
-function loadpaymentfunction(pass) {
+function load_request(pass) {
     reset_overflow();
     glob_let.apikey_fails = false;
     if (is_openrequest() === true) { // prevent double load
@@ -423,7 +467,7 @@ function loadpaymentfunction(pass) {
     loader();
     glob_let.symbolcache = br_get_local("symbols", true);
     if (glob_let.symbolcache) {
-        const url_params = geturlparameters();
+        const url_params = get_urlparameters();
         if (url_params.xss) { //xss detection
             const content = "<h2 class='icon-warning'>" + glob_const.xss_alert + "</h2>";
             popdialog(content, "canceldialog");
@@ -474,7 +518,7 @@ function loadpaymentfunction(pass) {
                 closeloader();
                 return
             }
-            continue_paymentfunction();
+            continue_request();
             return
         }
         const content = "<h2 class='icon-blocked'>" + translate("currencynotsupported", {
@@ -495,7 +539,7 @@ function get_tokeninfo(payment_currency, contract) {
     const cached_decimals = br_get_local("decimals_" + payment_currency);
     if (cached_decimals) { // check for cached values
         request.decimals = cached_decimals;
-        continue_paymentfunction();
+        continue_request();
         return
     }
     set_loader_text(translate("gettokeninfo"));
@@ -514,11 +558,11 @@ function get_tokeninfo(payment_currency, contract) {
             const fallback_decimals = get_tokeninfo_local();
             if (fallback_decimals) {
                 request.decimals = fallback_decimals;
-                continue_paymentfunction();
+                continue_request();
                 br_set_local("decimals_" + payment_currency, fallback_decimals); //cache token decimals
                 return
             }
-            cancelpaymentdialog();
+            cancel_paymentdialog();
             fail_dialogs("ethplorer", {
                 "error": token_error
             });
@@ -526,13 +570,13 @@ function get_tokeninfo(payment_currency, contract) {
         }
         const token_decimals = data.decimals;
         request.decimals = token_decimals;
-        continue_paymentfunction();
+        continue_request();
         br_set_local("decimals_" + payment_currency, token_decimals); //cache token decimals
     }).fail(function(xhr, status, error) {
         const fallback_decimals = get_tokeninfo_local();
         if (fallback_decimals) {
             request.decimals = fallback_decimals;
-            continue_paymentfunction();
+            continue_request();
             br_set_local("decimals_" + payment_currency, fallback_decimals); //cache token decimals
             return
         }
@@ -540,7 +584,7 @@ function get_tokeninfo(payment_currency, contract) {
             get_tokeninfo(payment_currency, contract);
             return
         }
-        cancelpaymentdialog();
+        cancel_paymentdialog();
         const error_object = xhr || status || error;
         fail_dialogs("ethplorer", {
             "error": error_object
@@ -564,9 +608,9 @@ function get_tokeninfo_local() {
 }
 
 // Sets up payment dialog UI and initializes payment monitoring
-function continue_paymentfunction() {
+function continue_request() {
     //set globals
-    const url_params = geturlparameters();
+    const url_params = get_urlparameters();
     if (url_params.xss) { //xss detection
         const content = "<h2 class='icon-warning'>" + glob_const.xss_alert + "</h2>";
         popdialog(content, "canceldialog");
@@ -595,7 +639,7 @@ function continue_paymentfunction() {
     const api_details = check_api(payment_currency, is_erc20),
         is_request = br_get_local("editurl") !== glob_const.w_loc.search, // check if url is a request
         coin_data = request.coindata,
-        coin_settings = activecoinsettings(payment_currency),
+        coin_settings = active_coinsettings(payment_currency),
         unit_of_account = url_params.uoa,
         payment_amount = Number(url_params.amount),
         request_type = url_params.type,
@@ -737,8 +781,6 @@ function continue_paymentfunction() {
         proceed_pf();
     }
 }
-
-// Check for lightning
 
 // Configures Lightning Network payment settings and validates node credentials for incoming or local requests
 function lightning_setup() {
@@ -974,7 +1016,7 @@ function proceed_pf(error_obj) {
             error_message = error_data.errorcode + ": " + error_data.errormessage;
         }
         const content = "<h2 class='icon-blocked'>" + error_message + "</h2>";
-        cancelpaymentdialog();
+        cancel_paymentdialog();
         popdialog(content, "canceldialog");
         closeloader();
         return
@@ -988,7 +1030,7 @@ function proceed_pf(error_obj) {
         add_flip();
     }
     if (glob_const.offline === true) { // no price conversion when app is offline
-        rendercurrencypool({
+        render_currencypool({
             "EUR": 1,
             "USD": 1.11
         }, 0, 000018, "coinmarketcap", "fixer", 0, 0);
@@ -1004,20 +1046,20 @@ function proceed_pf(error_obj) {
             api_source = cached_exchange_rates.apisrc,
             cache_age = current_timestamp - cached_timestamp;
         if (cache_age > glob_const.cacheperiodcrypto) { //check if cached crypto rates are expired
-            getccexchangerates(crypto_api_list, selected_crypto_api);
+            get_cc_exchangerates(crypto_api_list, selected_crypto_api);
             return
         } //fetch cache
         set_loader_text(translate("readingfromcache", {
             "ccsymbol": request.currencysymbol
         }));
-        initexchangerate(usd_exchange_rate, api_source, cache_age); //check for fiat rates and pass usd amount
+        init_exchangerate(usd_exchange_rate, api_source, cache_age); //check for fiat rates and pass usd amount
         return
     }
-    getccexchangerates(crypto_api_list, selected_crypto_api);
+    get_cc_exchangerates(crypto_api_list, selected_crypto_api);
 }
 
 // Fetches cryptocurrency rates from multiple APIs (CoinMarketCap, CoinGecko, CoinPaprika) with ERC20 token support
-function getccexchangerates(api_list, selected_api) {
+function get_cc_exchangerates(api_list, selected_api) {
     glob_let.api_attempt[api_list][selected_api] = true;
     set_loader_text(translate("getccrates", {
         "ccsymbol": request.currencysymbol,
@@ -1033,7 +1075,7 @@ function getccexchangerates(api_list, selected_api) {
     if (api_search_path === false) {
         set_loader_text(translate("apierror"));
         closeloader();
-        cancelpaymentdialog();
+        cancel_paymentdialog();
         fail_dialogs(selected_api, {
             "error": "Crypto price API not defined"
         });
@@ -1076,7 +1118,7 @@ function getccexchangerates(api_list, selected_api) {
                             "apisrc": selected_api
                         };
                     br_set_session("xrates_" + request.currencysymbol, cached_rate_data, true); //cache crypto rates in sessionstorage
-                    initexchangerate(crypto_exchange_rate, selected_api, 0); //pass usd amount, check for fiat rates
+                    init_exchangerate(crypto_exchange_rate, selected_api, 0); //pass usd amount, check for fiat rates
                     return
                 }
                 cc_fail(api_list, selected_api, default_error_message);
@@ -1098,7 +1140,7 @@ function cc_fail(api_list, selected_api, error_val, is_proxy_failure) {
     function next_proxy() { // try next proxy
         if (get_next_proxy()) {
             glob_let.api_attempt[api_list] = {};
-            getccexchangerates(api_list, selected_api);
+            get_cc_exchangerates(api_list, selected_api);
             return true
         }
         return false
@@ -1108,7 +1150,7 @@ function cc_fail(api_list, selected_api, error_val, is_proxy_failure) {
     }
     const next_crypto_api = try_next_api(api_list, selected_api);
     if (next_crypto_api) {
-        getccexchangerates(api_list, next_crypto_api);
+        get_cc_exchangerates(api_list, next_crypto_api);
         return
     }
     if (next_proxy()) { // Try next proxy after trying all api's
@@ -1118,7 +1160,7 @@ function cc_fail(api_list, selected_api, error_val, is_proxy_failure) {
 }
 
 // Orchestrates fiat currency rate fetching with cache validation and currency parameter preparation
-function initexchangerate(crypto_rate, crypto_api, cache_age) {
+function init_exchangerate(crypto_rate, crypto_api, cache_age) {
     set_loader_text(translate("getfiatrates"));
     const inverse_crypto_rate = 1 / crypto_rate,
         current_timestamp = now(),
@@ -1148,7 +1190,7 @@ function initexchangerate(crypto_rate, crypto_api, cache_age) {
                 return
             } //fetch cached exchange rates
             set_loader_text(translate("readingfiatratesfromcache"));
-            rendercurrencypool(exchange_rates, inverse_crypto_rate, crypto_api, currency_cache.api, cache_age, cache_expiration);
+            render_currencypool(exchange_rates, inverse_crypto_rate, crypto_api, currency_cache.api, cache_age, cache_expiration);
             return
         }
     }
@@ -1171,7 +1213,7 @@ function get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currenc
     if (!api_search_path) {
         set_loader_text(translate("error"));
         closeloader();
-        cancelpaymentdialog();
+        cancel_paymentdialog();
         fail_dialogs(selected_fiat_api, {
             "error": "Fiat price API not defined"
         });
@@ -1231,7 +1273,7 @@ function get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currenc
             } else {
                 set_loader_text(translate("error"));
                 closeloader();
-                cancelpaymentdialog();
+                cancel_paymentdialog();
                 fail_dialogs(selected_fiat_api, {
                     "error": "Fiat price API not defined"
                 });
@@ -1242,7 +1284,7 @@ function get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currenc
                 if (target_currency !== "eur" && target_currency !== "usd" && target_currency !== "btc") {
                     rates[target_currency] = local_rate;
                 }
-                rendercurrencypool(rates, crypto_rate, crypto_api, selected_fiat_api, cache_age, "0"); // render exchangerates
+                render_currencypool(rates, crypto_rate, crypto_api, selected_fiat_api, cache_age, "0"); // render exchangerates
                 // cache exchange rates
                 const exchange_rate_cache = {
                     "timestamp": now(),
@@ -1260,7 +1302,7 @@ function get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currenc
         }
         set_loader_text(translate("error"));
         closeloader();
-        cancelpaymentdialog();
+        cancel_paymentdialog();
         const error_code = api_response_data.error || "Failed to load data from " + selected_fiat_api;
         fail_dialogs(selected_fiat_api, {
             "error": error_code
@@ -1301,14 +1343,16 @@ function next_fiat_api(api_list, selected_fiat_api, error_object, crypto_rate, c
 function no_xrate_result(api, error_obj) {
     set_loader_text(translate("apierror"));
     closeloader();
-    cancelpaymentdialog();
+    cancel_paymentdialog();
     fail_dialogs(api, {
         "error": error_obj
     });
 }
 
+// ** UI State Management: **
+
 // Processes and displays multi-currency exchange rates with Lightning Network status information
-function rendercurrencypool(data, crypto_rate, crypto_api, fiat_api, cache_age_crypto, cache_age_fiat) {
+function render_currencypool(data, crypto_rate, crypto_api, fiat_api, cache_age_crypto, cache_age_fiat) {
     const exchange_rates_list = [],
         usd_rate = data.usd, //cryptocurrency rate is in dollar, needs to be converted to euro
         crypto_rate_euro = crypto_rate * usd_rate,
@@ -1345,11 +1389,11 @@ function rendercurrencypool(data, crypto_rate, crypto_api, fiat_api, cache_age_c
         lightning_node_name = request.isrequest === true ? "" : ": <span id='lnd_nodeinfo_trigger'>" + lightning_info.name + "</span>",
         lightning_node_info = lightning_info ? "<br/><span id='current_lndnode'><img src='" + c_icons(lightning_info.imp) + "' class='lnd_icon' title='" + lightning_info.imp + "'/> Lightning node" + lightning_node_name + lightning_status_icon + proxy_icon + "</span>" : "";
     $("#xratestats").prepend(crypto_rate_html + rate_html_list.join(" | ") + "<div class='cachetime'> (" + (cache_age_fiat / 60000).toFixed(1) + " of " + (glob_const.cacheperiodfiat / 60000).toFixed(0) + " min. in cache)</div><br/><span id='current_socket'></span>" + lightning_node_info);
-    getpayment(crypto_rate_euro, crypto_api);
+    get_payment(crypto_rate_euro, crypto_api);
 }
 
 // Renders comprehensive payment dialog UI with currency conversions, QR codes, and dynamic form elements
-function getpayment(ccrateeuro, ccapi) {
+function get_payment(ccrateeuro, ccapi) {
     closeloader();
     const currency_pool = $("#paymentdialog .cpool[data-currency='" + request.uoa + "']"),
         currency_name = currency_pool.attr("data-currencyname"),
@@ -1462,7 +1506,7 @@ function getpayment(ccrateeuro, ccapi) {
             </div>",
         readonly_attr = is_viewonly() ? " readonly='readonly'" : "",
         fallback_label = has_label ? " (" + label_text + ")" : "",
-        fallback_html = (request.payment === "bitcoin" && !helper.lnd_only) ? "<div id='fallback_address'>Fallback address:<br/><span id='fb_addr'>" + request.address + fallback_label + "</span> " + switchpanel(false, " global") + "</div>" : "",
+        fallback_html = (request.payment === "bitcoin" && !helper.lnd_only) ? "<div id='fallback_address'>Fallback address:<br/><span id='fb_addr'>" + request.address + fallback_label + "</span> " + switch_panel(false, " global") + "</div>" : "",
         share_form = "\
             <div id='shareformbox'>\
                 <div id='shareformib' class='inputbreak'>\
@@ -1581,155 +1625,6 @@ function getpayment(ccrateeuro, ccapi) {
     }
 }
 
-// Activates payment dialog with scroll position preservation and blur effects
-function show_paymentdialog() {
-    glob_let.scrollposition = $(document).scrollTop(); // get scrollposition save as global
-    toggle_fixed_nav(glob_let.scrollposition); // fix nav position
-    glob_const.html.addClass("paymode blurmain_payment");
-    $(".showmain #mainwrap").css("transform", "translate(0, -" + glob_let.scrollposition + "px)"); // fake scroll position
-    glob_const.paymentpopup.addClass("showpu active");
-}
-
-// Sets focus to appropriate amount input field based on dialog state
-function main_input_focus() {
-    const visible_input = glob_const.paymentdialogbox.hasClass("flipped") ? $("#paymentdialog #shareamount input:visible:first") :
-        $("#paymentdialog #amountbreak input:visible:first");
-    // hack to move cursor to the end
-    const amount_value = visible_input.val();
-    visible_input.val("").val(amount_value).focus();
-}
-
-// ** Paymentdialog functions **
-
-// Handles Lightning Network toggle with status validation and user confirmation
-function lnd_switch_function() {
-    $(document).on("click", "#paymentdialogbox #lightning_switch", function() {
-        if (helper.lnd) {
-            if (helper.lnd_only) {
-                play_audio(glob_const.funk);
-                return
-            }
-            if (helper.lnd.selected) {
-                lnd_statusx();
-                return
-            }
-            const confirm_result = confirm(translate("enablelightning"));
-            if (confirm_result === true) {
-                const lnd_list_item = get_lightning_settings();
-                lnd_list_item.data("selected", true).find(".switchpanel").removeClass("false").addClass("true");
-                save_cc_settings("bitcoin", true);
-                if (helper.lnd_status) {
-                    helper.lnd.selected = true;
-                    glob_const.paymentdialogbox.attr("data-lswitch", "lnd_ao");
-                    return
-                }
-                notify("<span id='lnd_offline'>" + translate("lnoffline") + "</span>", 200000, "yes");
-                return
-            }
-            play_audio(glob_const.funk);
-            return
-        }
-        if (request.isrequest) {
-            play_audio(glob_const.funk);
-            return
-        }
-        lnd_popup();
-    });
-}
-
-// Manages NFC payment functionality for compatible devices
-function ndef_switch_function() {
-    $(document).on("click", "#paymentdialogbox #ndef_switch", function() {
-        notify(translate("tabyourboldcard"), 10000);
-    });
-}
-
-// Toggles Lightning Network payment mode with status validation
-function lnd_statusx() {
-    if (helper.lnd_status) {
-        if (glob_const.paymentdialogbox.attr("data-lswitch") === "lnd_ao") {
-            glob_const.paymentdialogbox.attr("data-lswitch", "");
-            return
-        }
-        glob_const.paymentdialogbox.attr("data-lswitch", "lnd_ao");
-        return
-    }
-    if (request.isrequest) {
-        play_audio(glob_const.funk);
-        return
-    }
-    notify("<span id='lnd_offline'>" + translate("lnoffline") + "</span>", 200000, "yes");
-}
-
-// Binds click handler for Lightning Network offline status notification
-function lnd_offline() {
-    $(document).on("click", "#lnd_offline", lnd_popup);
-}
-
-// Attaches click handler for Lightning Network node information display
-function lnd_ni() {
-    $(document).on("click", "#paymentdialogbox #current_lndnode #lnd_nodeinfo_trigger", function(e) {
-        e.stopPropagation();
-        lnd_popup();
-        topnotify(translate("addlightningnode"));
-    });
-}
-
-// Triggers Lightning Network configuration interface
-function lnd_popup() {
-    get_lightning_settings().find(".atext").trigger("click");
-}
-
-// Manages currency switching with dynamic UI updates and URL state management
-function switch_currency() {
-    $(document).on("click", "#paymentdialogbox #pickcurrency", function() {
-        const current_node = $(this),
-            currencyarray = helper.currencyarray,
-            payment = request.payment,
-            next_currency_scan = currencyarray[$.inArray(request.uoa, currencyarray) + 1],
-            next_currency = next_currency_scan || currencyarray[0],
-            newccnode = $("#paymentdialog .cpool[data-currency='" + next_currency + "']"),
-            newccsymbol = newccnode.attr("data-currency"),
-            newccname = newccnode.attr("data-currencyname"),
-            newccvalue = newccnode.attr("data-value"),
-            nccvalstrip = newccvalue.replace(/\.00$/, ""),
-            newccrate = newccnode.attr("data-xrate"),
-            sharelcname = newccname === "Euro" ? "" : (newccnode.hasClass("ccpool") ? request.fiatcurrencyname : newccname),
-            mirrordiv = current_node.prev("#amountinputmirror"),
-            amountinput = mirrordiv.children("input"),
-            amount_input_value = amountinput.val(),
-            number = Number(amount_input_value),
-            this_iszero = number === 0 || isNaN(number),
-            newccvaluevar = this_iszero ? "" : nccvalstrip,
-            newccvalueplaceholder = this_iszero ? glob_const.zeroplaceholder : nccvalstrip,
-            iscrypto = newccsymbol == request.currencysymbol,
-            dialogclass = iscrypto ? (newccsymbol === "btc" ? " showsat showlc showcc" : " showlc showcc") : (newccsymbol === request.fiatcurrency ? "" : " showlc"), // set classnames for hiding / showing inputs
-            gets = geturlparameters(),
-            page = gets.p,
-            address = gets.address,
-            data = gets.d && gets.d.length > 5 ? "&d=" + gets.d : "",
-            starturl = page ? "?p=" + page + "&payment=" : "?payment=",
-            href = starturl + payment + "&uoa=" + newccsymbol + "&amount=" + nccvalstrip + "&address=" + address + data,
-            pagename = translate("sharetitlechange", {
-                "payment": payment,
-                "newccvalue": nccvalstrip,
-                "newccsymbol": newccsymbol
-            });
-        request.uoa = next_currency,
-            request.amount = nccvalstrip,
-            request.iscrypto = iscrypto;
-        current_node.add("#sharecurrency").text(newccsymbol);
-        $("#sharelcname").text(sharelcname);
-        amountinput.val(newccvaluevar).attr("data-xrate", newccrate).prev("span").text(newccvalueplaceholder);
-        $("#shareinputmirror > input").val(newccvaluevar).prev("span").text(newccvalueplaceholder);
-        glob_const.paymentdialogbox.attr("class", helper.requestclass + dialogclass + helper.iszeroclass);
-        main_input_focus();
-        update_request_url(href);
-        update_page_title(pagename);
-        update_exchange_rates_text(newccsymbol, newccrate);
-    });
-}
-
 // Updates exchange rate display text for all currencies in the pool
 function update_exchange_rates_text(nextcurrency, newccrate) {
     $("#paymentdialog .cpool").each(function() {
@@ -1745,6 +1640,110 @@ function update_exchange_rates_text(nextcurrency, newccrate) {
         rates_span.toggleClass("hide", parsed_rate == 1).text(current_node_text);
     });
 }
+
+// Updates currency pool values and related UI elements
+function update_currency_pool(current_amount, current_rate, cc_value) {
+    refresh_currency_pool(current_amount, current_rate);
+    const url_params = get_urlparameters(),
+        payment = url_params.payment,
+        address = url_params.address,
+        address_xmr_ia = request.xmr_ia || address;
+    generate_payment_qr(payment, address_xmr_ia, cc_value);
+    const page = url_params.p,
+        currency = url_params.uoa,
+        data_param = url_params.d ? "&d=" + url_params.d : "",
+        start_url = page ? "?p=" + page + "&payment=" : "?payment=",
+        href = start_url + payment + "&uoa=" + currency + "&amount=" + current_amount + "&address=" + address + data_param,
+        page_name = translate("sharetitlechange", {
+            "payment": payment,
+            "newccvalue": current_amount,
+            "newccsymbol": currency
+        });
+    helper.currencylistitem.data("url", href);
+    request.amount = current_amount;
+    update_request_url(href);
+    update_page_title(page_name);
+    glob_let.blocktyping = false;
+}
+
+// Refreshes currency pool display with current values
+function refresh_currency_pool(current_amount, current_rate) {
+    $("#paymentdialog .cpool").each(function() {
+        const current_node = $(this),
+            current_node_value = parseFloat((current_amount / current_rate) * current_node.attr("data-xrate")),
+            display_value = current_node.hasClass("ccpool") ? current_node_value.toFixed(6) : current_node_value.toFixed(2);
+        current_node.attr("data-value", display_value);
+    });
+}
+
+// Generates and displays payment QR codes with amount information
+function generate_payment_qr(payment, address, amount, title) {
+    const number = Number(amount),
+        is_zero = number === 0 || isNaN(number),
+        url_scheme = request.erc20 ? "ethereum:" + address :
+        request.coindata.urlscheme(payment, address, amount, is_zero);
+    $("#qrcode").empty().qrcode(url_scheme);
+    set_wallet_uris(url_scheme, amount);
+    if (helper.lnd) { // lightning
+        set_lightning_qr(amount, title);
+    }
+}
+
+// Sets wallet URI schemes for payment initiation
+function set_wallet_uris(url_scheme, amount) {
+    $("#paymentdialogbox .openwallet").attr({
+        "data-rel": amount,
+        "title": url_scheme
+    });
+}
+
+// Configures Lightning Network QR code display
+function set_lightning_qr(a, title) {
+    const ln = helper.lnd,
+        srt = title || $("#paymentdialog input#requesttitle").val(),
+        rt = srt || request.requesttitle,
+        m = rt && rt.length > 1 ? "&m=" + encodeURIComponent(rt) : "",
+        nid = ln.lnurl === false ? ln.nid : "",
+        url = glob_let.lnd_ph + "proxy/v1/ln/?i=" + ln.imp + "&id=" + request.typecode + ln.pid + nid + "&a=" + (a * 100000000000).toFixed(0) + m,
+        lnurl = lnurl_encode("lnurl", url).toUpperCase();
+    $("#qrcode_lnd").html("").qrcode(lnurl);
+    set_lightning_uris(lnurl, a);
+}
+
+// Sets Lightning Network wallet URIs and address display
+function set_lightning_uris(url_scheme, amount) {
+    $("#paymentdialogbox .openwallet_lnd").attr({
+        "data-rel": amount,
+        "title": "lightning:" + url_scheme
+    });
+    $("#paymentaddress_lnd").text(url_scheme);
+}
+
+// Handles QR code scanner activation with form state management
+function scan_qr() {
+    $(document).on("click", "#scanqr", function() {
+        remove_flip();
+        if (request.iszero_request) {
+            $("#amountbreak input").focus();
+        }
+    });
+}
+
+// Toggles visibility of API statistics panel
+function show_api_stats() {
+    $(document).on("click", "#apisrc", function() {
+        $("#xratestats").toggleClass("show");
+    });
+}
+
+// Collapses API statistics panel
+function hide_api_stats() {
+    $(document).on("click", "#xratestats", function() {
+        $(this).removeClass("show");
+    });
+}
+
+// ** Input Sync: **
 
 // Synchronizes fiat amount inputs across the payment dialog
 function sync_fiat_inputs() {
@@ -1865,215 +1864,142 @@ function mirror_input_value() {
     });
 }
 
-// Updates currency pool values and related UI elements
-function update_currency_pool(current_amount, current_rate, cc_value) {
-    refresh_currency_pool(current_amount, current_rate);
-    const url_params = geturlparameters(),
-        payment = url_params.payment,
-        address = url_params.address,
-        address_xmr_ia = request.xmr_ia || address;
-    generate_payment_qr(payment, address_xmr_ia, cc_value);
-    const page = url_params.p,
-        currency = url_params.uoa,
-        data_param = url_params.d ? "&d=" + url_params.d : "",
-        start_url = page ? "?p=" + page + "&payment=" : "?payment=",
-        href = start_url + payment + "&uoa=" + currency + "&amount=" + current_amount + "&address=" + address + data_param,
-        page_name = translate("sharetitlechange", {
-            "payment": payment,
-            "newccvalue": current_amount,
-            "newccsymbol": currency
-        });
-    helper.currencylistitem.data("url", href);
-    request.amount = current_amount;
-    update_request_url(href);
-    update_page_title(page_name);
-    glob_let.blocktyping = false;
-}
+// ** Lightning & NFC: **
 
-// Refreshes currency pool display with current values
-function refresh_currency_pool(current_amount, current_rate) {
-    $("#paymentdialog .cpool").each(function() {
-        const current_node = $(this),
-            current_node_value = parseFloat((current_amount / current_rate) * current_node.attr("data-xrate")),
-            display_value = current_node.hasClass("ccpool") ? current_node_value.toFixed(6) : current_node_value.toFixed(2);
-        current_node.attr("data-value", display_value);
+// Handles Lightning Network toggle with status validation and user confirmation
+function lnd_switch_function() {
+    $(document).on("click", "#paymentdialogbox #lightning_switch", function() {
+        if (helper.lnd) {
+            if (helper.lnd_only) {
+                play_audio(glob_const.funk);
+                return
+            }
+            if (helper.lnd.selected) {
+                lnd_statusx();
+                return
+            }
+            const confirm_result = confirm(translate("enablelightning"));
+            if (confirm_result === true) {
+                const lnd_list_item = get_lightning_settings();
+                lnd_list_item.data("selected", true).find(".switchpanel").removeClass("false").addClass("true");
+                save_cc_settings("bitcoin", true);
+                if (helper.lnd_status) {
+                    helper.lnd.selected = true;
+                    glob_const.paymentdialogbox.attr("data-lswitch", "lnd_ao");
+                    return
+                }
+                notify("<span id='lnd_offline'>" + translate("lnoffline") + "</span>", 200000, "yes");
+                return
+            }
+            play_audio(glob_const.funk);
+            return
+        }
+        if (request.isrequest) {
+            play_audio(glob_const.funk);
+            return
+        }
+        lnd_popup();
     });
 }
 
-// Generates and displays payment QR codes with amount information
-function generate_payment_qr(payment, address, amount, title) {
-    const number = Number(amount),
-        is_zero = number === 0 || isNaN(number),
-        url_scheme = request.erc20 ? "ethereum:" + address :
-        request.coindata.urlscheme(payment, address, amount, is_zero);
-    $("#qrcode").empty().qrcode(url_scheme);
-    set_wallet_uris(url_scheme, amount);
-    if (helper.lnd) { // lightning
-        set_lightning_qr(amount, title);
+// Manages NFC payment functionality for compatible devices
+function ndef_switch_function() {
+    $(document).on("click", "#paymentdialogbox #ndef_switch", function() {
+        notify(translate("tabyourboldcard"), 10000);
+    });
+}
+
+// Toggles Lightning Network payment mode with status validation
+function lnd_statusx() {
+    if (helper.lnd_status) {
+        if (glob_const.paymentdialogbox.attr("data-lswitch") === "lnd_ao") {
+            glob_const.paymentdialogbox.attr("data-lswitch", "");
+            return
+        }
+        glob_const.paymentdialogbox.attr("data-lswitch", "lnd_ao");
+        return
     }
+    if (request.isrequest) {
+        play_audio(glob_const.funk);
+        return
+    }
+    notify("<span id='lnd_offline'>" + translate("lnoffline") + "</span>", 200000, "yes");
 }
 
-// Sets wallet URI schemes for payment initiation
-function set_wallet_uris(url_scheme, amount) {
-    $("#paymentdialogbox .openwallet").attr({
-        "data-rel": amount,
-        "title": url_scheme
+// Binds click handler for Lightning Network offline status notification
+function lnd_offline() {
+    $(document).on("click", "#lnd_offline", lnd_popup);
+}
+
+// Attaches click handler for Lightning Network node information display
+function lnd_ni() {
+    $(document).on("click", "#paymentdialogbox #current_lndnode #lnd_nodeinfo_trigger", function(e) {
+        e.stopPropagation();
+        lnd_popup();
+        topnotify(translate("addlightningnode"));
     });
 }
 
-// Configures Lightning Network QR code display
-function set_lightning_qr(a, title) {
-    const ln = helper.lnd,
-        srt = title || $("#paymentdialog input#requesttitle").val(),
-        rt = srt || request.requesttitle,
-        m = rt && rt.length > 1 ? "&m=" + encodeURIComponent(rt) : "",
-        nid = ln.lnurl === false ? ln.nid : "",
-        url = glob_let.lnd_ph + "proxy/v1/ln/?i=" + ln.imp + "&id=" + request.typecode + ln.pid + nid + "&a=" + (a * 100000000000).toFixed(0) + m,
-        lnurl = lnurl_encode("lnurl", url).toUpperCase();
-    $("#qrcode_lnd").html("").qrcode(lnurl);
-    set_lightning_uris(lnurl, a);
+// Triggers Lightning Network configuration interface
+function lnd_popup() {
+    get_lightning_settings().find(".atext").trigger("click");
 }
 
-// Sets Lightning Network wallet URIs and address display
-function set_lightning_uris(url_scheme, amount) {
-    $("#paymentdialogbox .openwallet_lnd").attr({
-        "data-rel": amount,
-        "title": "lightning:" + url_scheme
-    });
-    $("#paymentaddress_lnd").text(url_scheme);
-}
+// ** Request Management: **
 
-// Generates the URL scheme for Bitcoin payments
-function btc_urlscheme(payment, address, amount, is_zero) {
-    return payment + ":" + address + (is_zero ? "" : "?amount=" + amount);
-}
-
-// Generates Bitcoin Cash payment URI scheme
-function bch_urlscheme(payment, address, amount, is_zero) {
-    const cleaned_address = address.indexOf("bitcoincash:") > -1 ? address.split("bitcoincash:").pop() : address;
-    return "bitcoincash:" + cleaned_address + (is_zero ? "" : "?amount=" + amount);
-}
-
-// Manages address switching functionality with socket handling
-function switch_address() {
-    $(document).on("click", "#paymentdialogbox.norequest #labelbttn", function() {
-        const time_elapsed = now() - glob_let.sa_timer;
-        if (time_elapsed < 1500) { // prevent clicking too fast
-            play_audio(glob_const.funk);
-            return
-        }
-        const url_params = geturlparameters(),
-            payment = url_params.payment;
-        if (payment === "monero") {
-            //disable address switching for Monero
-            play_audio(glob_const.funk);
-            return
-        }
-        if (payment === "ethereum" && request.eth_l2s.length) {
-            //disable address switching for ethereum layer 2's
-            play_audio(glob_const.funk);
-            return
-        }
-        if (request.erc20) {
-            //disable address switching for erc20 tokens
-            play_audio(glob_const.funk);
-            return
-        }
-        if (q_obj(request, "coinsettings.Lightning network.selected")) {
-            //disable address switching on lightning payments
-            play_audio(glob_const.funk);
-            return
-        }
-        const current_address = url_params.address,
-            next_address_item = newaddresli(payment, current_address);
-        if (next_address_item) {
-            glob_const.paymentdialogbox.addClass("switching");
-            const new_address = next_address_item.data("address"),
-                selected_socket = helper.selected_socket,
-                data_param = url_params.d,
-                has_data = data_param && data_param.length > 5,
-                new_data_param = has_data ? "&d=" + data_param : "",
-                cc_value = $("#paymentdialogbox .ccpool").attr("data-value"),
-                new_address_id = next_address_item.data("cmcid"),
-                new_address_label = next_address_item.data("label"),
-                page = url_params.p,
-                start_url = page ? "?p=" + page + "&payment=" : "?payment=",
-                href = start_url + payment + "&uoa=" + url_params.uoa + "&amount=" + url_params.amount + "&address=" + new_address + new_data_param;
-            generate_payment_qr(payment, new_address, cc_value);
-            update_request_url(href);
-            $("#paymentaddress").text(new_address);
-            $(this).text(new_address_label);
-            const is_pending = ch_pending({
-                "address": new_address,
-                "cmcid": new_address_id
-            });
-            glob_const.paymentdialogbox.attr("data-pending", is_pending && request.monitored ? "ispending" : "");
-            request.address = new_address;
-            glob_let.sa_timer = now();
-            force_close_socket();
-            init_socket(selected_socket, new_address);
-        }
-    });
-}
-
-// Locates next valid address for currency payments
-function newaddresli(currency, address) {
-    const valid_addresses = filter_addressli(currency, "checked", true),
-        labeled_addresses = valid_addresses.filter(function() { // only pick addresses with label
-            return $(this).data("label").length > 0;
-        }),
-        current_address_item = filter_addressli(currency, "address", address),
-        next_address_item = current_address_item.next(".adli[data-checked='true']"),
-        first_address_item = labeled_addresses.not(".adli[data-address='" + address + "']").first();
-    return first_address_item.length === 0 ? false : (next_address_item.length ? next_address_item : first_address_item);
-}
-
-// Handles double-click events for copying address data
-function copyaddress_dblclick() {
-    $(document).on("dblclick", "#paymentaddress, #paymentaddress_lnd, .select", function() {
+// Manages currency switching with dynamic UI updates and URL state management
+function switch_currency() {
+    $(document).on("click", "#paymentdialogbox #pickcurrency", function() {
         const current_node = $(this),
-            address_type = current_node.attr("data-type") || translate("address");
-        glob_const.copycontent.val(current_node.text()).data("type", address_type);
-        notify("<span id='copyaddress'>" + translate("copy") + " " + address_type + "?</span>", 40000, "yes");
-    });
-}
-
-// Processes address copy requests
-function copyaddress() {
-    $(document).on("click", "#copyaddress", function() {
-        const address_value = glob_const.copycontent.val(),
-            address_type = glob_const.copycontent.data("type");
-        copytoclipboard(address_value, address_type);
-    });
-}
-
-// Manages double-click copying of payment amounts
-function copyinputs() {
-    $(document).on("dblclick", "#paymentdialogbox.request .mirrordiv input", function() {
-        const input_value = $(this).val(),
-            value_type = translate("amount");
-        glob_const.copycontent.val(input_value).data("type", value_type);
-        notify("<span id='copyaddress'>" + translate("copy") + " " + value_type + "?</span>", 40000, "yes");
-    });
-}
-
-// Navigates to Monero settings page after user confirmation
-function xmrsettings() {
-    $(document).on("click", "#xmrsettings", function() {
-        let confirm_result = confirm(translate("opencoinsettings", {
-            "currency": "Monero"
-        }));
-        if (confirm_result) {
-            let page_title = "monero_settings";
-            openpage("?p=" + page_title, page_title, "loadpage");
-            cancelpaymentdialog();
-        }
+            currencyarray = helper.currencyarray,
+            payment = request.payment,
+            next_currency_scan = currencyarray[$.inArray(request.uoa, currencyarray) + 1],
+            next_currency = next_currency_scan || currencyarray[0],
+            newccnode = $("#paymentdialog .cpool[data-currency='" + next_currency + "']"),
+            newccsymbol = newccnode.attr("data-currency"),
+            newccname = newccnode.attr("data-currencyname"),
+            newccvalue = newccnode.attr("data-value"),
+            nccvalstrip = newccvalue.replace(/\.00$/, ""),
+            newccrate = newccnode.attr("data-xrate"),
+            sharelcname = newccname === "Euro" ? "" : (newccnode.hasClass("ccpool") ? request.fiatcurrencyname : newccname),
+            mirrordiv = current_node.prev("#amountinputmirror"),
+            amountinput = mirrordiv.children("input"),
+            amount_input_value = amountinput.val(),
+            number = Number(amount_input_value),
+            this_iszero = number === 0 || isNaN(number),
+            newccvaluevar = this_iszero ? "" : nccvalstrip,
+            newccvalueplaceholder = this_iszero ? glob_const.zeroplaceholder : nccvalstrip,
+            iscrypto = newccsymbol == request.currencysymbol,
+            dialogclass = iscrypto ? (newccsymbol === "btc" ? " showsat showlc showcc" : " showlc showcc") : (newccsymbol === request.fiatcurrency ? "" : " showlc"), // set classnames for hiding / showing inputs
+            gets = get_urlparameters(),
+            page = gets.p,
+            address = gets.address,
+            data = gets.d && gets.d.length > 5 ? "&d=" + gets.d : "",
+            starturl = page ? "?p=" + page + "&payment=" : "?payment=",
+            href = starturl + payment + "&uoa=" + newccsymbol + "&amount=" + nccvalstrip + "&address=" + address + data,
+            pagename = translate("sharetitlechange", {
+                "payment": payment,
+                "newccvalue": nccvalstrip,
+                "newccsymbol": newccsymbol
+            });
+        request.uoa = next_currency,
+            request.amount = nccvalstrip,
+            request.iscrypto = iscrypto;
+        current_node.add("#sharecurrency").text(newccsymbol);
+        $("#sharelcname").text(sharelcname);
+        amountinput.val(newccvaluevar).attr("data-xrate", newccrate).prev("span").text(newccvalueplaceholder);
+        $("#shareinputmirror > input").val(newccvaluevar).prev("span").text(newccvalueplaceholder);
+        glob_const.paymentdialogbox.attr("class", helper.requestclass + dialogclass + helper.iszeroclass);
+        main_input_focus();
+        update_request_url(href);
+        update_page_title(pagename);
+        update_exchange_rates_text(newccsymbol, newccrate);
     });
 }
 
 // Validates and encodes request metadata including Lightning Network and Monero-specific data
-function validaterequestdata(lnurl) {
-    const url_params = geturlparameters(),
+function validate_request_data(lnurl) {
+    const url_params = get_urlparameters(),
         request_name = $("input#requestname").val(),
         request_title = $("input#requesttitle").val(),
         is_valid = request_name.length > 2 && request_title.length > 1,
@@ -2133,15 +2059,15 @@ function validaterequestdata(lnurl) {
 }
 
 // Triggers request data validation on form input changes
-function inputrequestdata() {
+function input_requestdata() {
     $(document).on("input", "#shareform input", function() {
-        validaterequestdata();
+        validate_request_data();
         set_dialog_timeout();
     });
 }
 
 // Enforces numeric input constraints and step validation for payment amounts
-function validatesteps() {
+function validate_steps() {
     $(document).on("keydown", "#paymentdialogbox .mirrordiv input", function(e) {
         if (glob_let.blocktyping === true) {
             play_audio(glob_const.funk);
@@ -2151,8 +2077,8 @@ function validatesteps() {
         }
         const current_input = $(this),
             current_value = current_input.val(),
-            key_code = e.keyCode;
-        const restricted_key_codes = [188, 190, 108, 110, 229];
+            key_code = e.keyCode,
+            restricted_key_codes = [188, 190, 108, 110, 229];
         if (restricted_key_codes.includes(key_code)) { // prevent double commas and dots
             const value_length = current_value.length;
             if (value_length) {
@@ -2199,7 +2125,7 @@ function validatesteps() {
 }
 
 // Toggles payment request form display with pending payment validation
-function fliprequest() {
+function flip_request() {
     $(document).on("click", "#paymentdialogbox.norequest #sharerequest", function(e) {
         e.preventDefault();
         if (glob_const.offline === true) {
@@ -2211,7 +2137,7 @@ function fliprequest() {
                 notify(translate("addressinuse") + ". <span id='xmrsettings'>" + translate("activateintegrated") + "?</span>", 40000, "yes");
                 return
             }
-            pendingrequest();
+            pending_request();
             return
         }
         if (is_lightning_mode && glob_const.paymentdialogbox.hasClass("accept_lnd")) {
@@ -2222,7 +2148,7 @@ function fliprequest() {
 }
 
 // Toggles between shortened and full title display for long request titles
-function revealtitle() {
+function reveal_title() {
     $(document).on("click", "#paymentdialogbox.request #sharetitle.title_exceed", function(e) {
         const current_node = $(this),
             long_text = current_node.attr("title"),
@@ -2233,7 +2159,7 @@ function revealtitle() {
 }
 
 // Manages pending request handling and alternative address selection
-function pendingrequest() {
+function pending_request() {
     const current_address = request.address,
         payment = request.payment,
         currency_id = request.cmcid,
@@ -2284,48 +2210,7 @@ function view_pending_tx() {
             openpage("?p=requests", "requests", "loadpage");
             open_tx($("#" + $(this).attr("data-requestid")));
             canceldialog();
-            cancelpaymentdialog();
-        }
-    });
-}
-
-// Processes address selection from pending request dialog
-function pickaddressfromdialog() {
-    $(document).on("click", "#addresslock #pending_pick_address", function(e) {
-        e.preventDefault();
-        const address_input = $("#selec_address"),
-            address_input_value = address_input.val(),
-            confirm_result = confirm(translate("useinstead", {
-                "thisinputvalue": address_input_value
-            }));
-        if (confirm_result) {
-            const url_params = geturlparameters();
-            if (url_params.xss) {
-                return
-            }
-            const picked_value = address_input_value.split(" | "),
-                picked_label = picked_value[0],
-                picked_address = picked_value[1],
-                page = url_params.p,
-                payment = url_params.payment,
-                currency = url_params.uoa,
-                amount = url_params.amount,
-                current_address = url_params.address;
-            close_socket(current_address);
-            init_socket(helper.selected_socket, picked_address);
-            const data_param = url_params.d,
-                has_data = data_param && data_param.length > 5,
-                new_data_param = has_data ? "&d=" + data_param : "",
-                start_url = page ? "?p=" + page + "&payment=" : "?payment=",
-                href = start_url + payment + "&uoa=" + currency + "&amount=" + amount + "&address=" + picked_address + new_data_param,
-                cc_value = $("#paymentdialogbox .ccpool").attr("data-value");
-            $("#paymentaddress").text(picked_address);
-            $("#labelbttn").text(picked_label);
-            request.address = picked_address;
-            generate_payment_qr(payment, picked_address, cc_value);
-            update_request_url(href);
-            glob_const.paymentdialogbox.attr("data-pending", "");
-            canceldialog();
+            cancel_paymentdialog();
         }
     });
 }
@@ -2334,756 +2219,6 @@ function pickaddressfromdialog() {
 function update_request_url(url) {
     history.replaceState(null, null, url);
     br_set_local("editurl", url);
-}
-
-// Initializes new address creation dialog with currency-specific fields
-function addaddressfromdialog() {
-    $(document).on("click", "#addresslock #pending_add_address, #addaddress", function(e) {
-        e.preventDefault();
-        const form_box = $(this).closest("#addresslock"),
-            payment = request.payment,
-            currency_id = request.cmcid,
-            is_erc20 = request.erc20,
-            derived_data = derive_data(payment, true),
-            address_data = {
-                "currency": payment,
-                "ccsymbol": request.currencysymbol,
-                "cmcid": currency_id,
-                "checked": true,
-                "erc20": is_erc20,
-                "dd": derived_data
-            },
-            qr_scanner = glob_let.hascam ? "<div class='qrscanner' data-currency='" + payment + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
-            viewkey_scanner = glob_let.hascam ? "<div class='qrscanner' data-currency='" + payment + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
-            viewkey_box = payment === "monero" ? "<div class='inputwrap'><input type='text' class='vk_input' value='' placeholder='View key'>" + viewkey_scanner + "</div>" : "",
-            derivation_source = derived_data ? (derived_data.xpubid ? " from Xpub" : " from seed") : "",
-            seed_message = derived_data ? "<div class='popnotify' style='display:block'><span id='addfromseed' class='address_option'>Generate address" + derivation_source + "</span></div>" : "<div class='popnotify'></div>",
-            content = $("<div class='formbox form add' id='addressformbox'><h2>" + getcc_icon(currency_id, request.cpid, is_erc20) + " " + translate("addcoinaddress", {
-                "currency": payment
-            }) + "</h2>" + seed_message + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' class='address' value='' placeholder='" + translate("nopub") + "'>" + qr_scanner + "</div>" + viewkey_box + "<input type='text' class='addresslabel' value='' placeholder='label'><div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + translate("pkownership") + "</span></div><input type='submit' class='submit' value='" + translate("okbttn") + "'></form></div>").data(address_data);
-        form_box.parent("#dialogbody").html(content);
-    });
-}
-
-// Generates new cryptocurrency address from stored seed data
-function add_from_seed() {
-    $(document).on("click", "#addfromseed", function() {
-        const address_data = $("#addressformbox").data(),
-            currency = address_data.currency,
-            derived_data = address_data.dd;
-        if (currency && derived_data && derived_data.address) {
-            const confirm_result = confirm(translate("generatenewaddress", {
-                "currency": currency
-            }));
-            if (confirm_result) {
-                derive_add_address(currency, derived_data);
-                canceldialog();
-            }
-        }
-    });
-}
-
-// Handles QR code scanner activation with form state management
-function scanqr() {
-    $(document).on("click", "#scanqr", function() {
-        remove_flip();
-        if (request.iszero_request) {
-            $("#amountbreak input").focus();
-        }
-    });
-}
-
-// Toggles visibility of API statistics panel
-function showapistats() {
-    $(document).on("click", "#apisrc", function() {
-        $("#xratestats").toggleClass("show");
-    });
-}
-
-// Collapses API statistics panel
-function hideapistats() {
-    $(document).on("click", "#xratestats", function() {
-        $(this).removeClass("show");
-    });
-}
-
-// ** Share **
-// Processes share button clicks with Lightning Network validation
-function sharebutton() {
-    $(document).on("click", "#sharebutton", function() {
-        const current_button = $(this);
-        if (request.payment === "bitcoin" && helper.lnd_status) {
-            const is_lightning_only = is_ln_only();
-            validaterequestdata(is_lightning_only);
-            setTimeout(function() { // wait for url to change
-                share(current_button);
-            }, 100);
-            return
-        }
-        if (!geturlparameters().d) {
-            validaterequestdata();
-            setTimeout(function() { // wait for url to change
-                share(current_button);
-            }, 100);
-            return
-        }
-        share(current_button);
-    });
-}
-
-// Determines if request is Lightning Network-only or hybrid
-function is_ln_only() {
-    return glob_const.paymentdialogbox.attr("data-lswitch") === "lnd_ao" ? $("#fallback_address").is(":visible") ? !$("#fallback_address .switchpanel").hasClass("true") : true : false;
-}
-
-// Processes and validates payment request sharing
-function share(current_button) {
-    if (current_button.hasClass("sbactive")) {
-        const url_params = geturlparameters();
-        if (url_params.xss) {
-            current_button.removeClass("sbactive")
-            return
-        }
-        loader(true);
-        const payment = url_params.payment,
-            current_currency = url_params.uoa,
-            current_amount = url_params.amount,
-            current_address = url_params.address,
-            data_param = url_params.d,
-            currency_id = request.cmcid,
-            currency_symbol = request.currencysymbol,
-            has_data = data_param && data_param.length > 5,
-            data_object = has_data ? JSON.parse(atob(data_param)) : null, // decode data param if exists
-            request_name = has_data ? data_object.n : $("#accountsettings").data("selected"),
-            request_title = has_data ? data_object.t : "",
-            is_lightning = has_data ? !!data_object.imp : false,
-            new_data_string = has_data ? "&d=" + data_param : "", // construct data param if exists
-            is_ipfs = glob_const.thishostname.includes("ipfs") || glob_const.thishostname.includes("bitrequest.crypto"),
-            shared_host = is_ipfs ? glob_const.c_host : "https://bitrequest.github.io", // check for IFPS
-            url_id = shared_host + "/?p=requests&payment=" + payment + "&uoa=" + current_currency + "&amount=" + current_amount + "&address=" + current_address,
-            shared_url = url_id + new_data_string,
-            request_name_uppercase = capitalize(request_name), // capitalize requestname
-            payment_uppercase = capitalize(payment),
-            payment_name = is_lightning ? "Lightning" : payment_uppercase,
-            shared_title = has_data ? translate("sharetitlename", {
-                "requestname": request_name_uppercase,
-                "pagenameccparam": payment_name,
-                "amount": current_amount,
-                "uoa": current_currency.toUpperCase(),
-                "requesttitle": request_title
-            }) : translate("sharetitle", {
-                "pagenameccparam": payment_name,
-                "amount": current_amount,
-                "uoa": current_currency
-            }),
-            share_icon = is_lightning ? glob_const.approot + "img_logos_btc-lnd.png" : glob_const.cmc_icon_loc + currency_id + ".png";
-        if (is_ipfs) {
-            sharerequest(shared_url, shared_title);
-            setlocales();
-            return
-        }
-        const url_hash = generate_hash(url_id + shared_title);
-        shorten_url(shared_title, shared_url, share_icon, null, url_hash);
-        setlocales();
-        return
-    }
-    const request_name_input = $("#requestname"),
-        request_title_input = $("#requesttitle"),
-        name_length = request_name_input.val().length,
-        title_length = request_title_input.val().length,
-        name_check_message = name_length < 1 ? translate("enteryourname") : name_length < 3 ? translate("minimal3") : translate("checkyourform"),
-        title_check_message = title_length < 1 ? translate("entertitle") : title_length < 2 ? translate("minimal2") : translate("checkyourform"),
-        check_message = name_length < 3 ? name_check_message : title_length < 2 ? title_check_message : translate("requiredfields");
-    topnotify(check_message);
-    if (name_length < 3) {
-        request_name_input.focus();
-    } else if (title_length < 2) {
-        request_title_input.focus();
-    }
-}
-
-// Manages URL shortening with multiple service fallbacks
-function shorten_url(shared_title, shared_url, site_thumb, unguessable, url_hash) {
-    set_loader_text(translate("generatelink"));
-    const url_shorten_settings = $("#url_shorten_settings"),
-        is_url_shorten_active = url_shorten_settings.data("us_active") === "active";
-    if (is_url_shorten_active) {
-        const url_service = url_shorten_settings.data("selected"),
-            is_custom_service = url_service.indexOf("https://") >= 0;
-        if (url_hash) {
-            const cache_prefix = is_custom_service ? "custom" : url_service,
-                cached_short_url = br_get_session(cache_prefix + "_shorturl_" + url_hash);
-            if (cached_short_url) {
-                sharerequest(cached_short_url, shared_title);
-                return;
-            }
-        }
-        if (url_service === "firebase") {
-            firebase_shorten(shared_url, shared_title, site_thumb, unguessable, url_hash);
-            return;
-        }
-        if (url_service === "bitly") {
-            bitly_shorten(shared_url, shared_title, url_hash);
-            return;
-        }
-        if (is_custom_service) {
-            custom_shorten(url_service, shared_url, shared_title, site_thumb, url_hash);
-            return;
-        }
-    }
-    sharerequest(shared_url, shared_title);
-}
-
-// Handles Firebase Dynamic Links URL shortening
-function firebase_shorten(shared_url, shared_title, site_thumb, unguessable, url_hash) {
-    const security = unguessable ? "UNGUESSABLE" : "SHORT";
-    api_proxy({
-        "api": "firebase",
-        "search": "shortLinks",
-        "params": {
-            "method": "POST",
-            "cache": false,
-            "data": JSON.stringify({
-                "dynamicLinkInfo": {
-                    "domainUriPrefix": glob_const.firebase_dynamic_link_domain,
-                    "link": shared_url,
-                    "androidInfo": {
-                        "androidPackageName": glob_const.androidpackagename
-                    },
-                    "iosInfo": {
-                        "iosBundleId": glob_const.androidpackagename,
-                        "iosAppStoreId": "1484815377"
-                    },
-                    "navigationInfo": {
-                        "enableForcedRedirect": "1"
-                    },
-                    "socialMetaTagInfo": {
-                        "socialTitle": "Bitrequest",
-                        "socialDescription": "Accept crypto anywhere",
-                        "socialImageLink": site_thumb
-                    }
-                },
-                "suffix": {
-                    "option": security
-                }
-            })
-        }
-    }).done(function(response) {
-        const data = br_result(response).result;
-        if (data) {
-            if (data.error) {
-                custom_shorten(false, shared_url, shared_title, site_thumb, url_hash);
-                return
-            }
-            const short_url = data.shortLink;
-            if (short_url) {
-                sharerequest(short_url, shared_title);
-                if (url_hash) {
-                    br_set_session("firebase_shorturl_" + url_hash, short_url);
-                }
-                return
-            }
-        }
-        custom_shorten(false, shared_url, shared_title, site_thumb, url_hash);
-    }).fail(function() {
-        custom_shorten(false, shared_url, shared_title, site_thumb, url_hash);
-    });
-}
-
-// Processes Bitly API URL shortening
-function bitly_shorten(shared_url, shared_title, url_hash) {
-    api_proxy({
-        "api": "bitly",
-        "search": "bitlinks",
-        "cachetime": 84600,
-        "cachefolder": "1d",
-        "bearer": true,
-        "params": {
-            "method": "POST",
-            "contentType": "application/json",
-            "data": JSON.stringify({
-                "long_url": shared_url
-            })
-        }
-    }).done(function(response) {
-        const data = br_result(response).result;
-        if (data.id) {
-            const link_id = data.id.split("/").pop(),
-                short_url = glob_const.approot + "?i=4bR" + link_id;
-            sharerequest(short_url, shared_title);
-            if (url_hash) {
-                br_set_session("bitly_shorturl_" + url_hash, short_url);
-            }
-            return
-        }
-        sharerequest(shared_url, shared_title);
-    }).fail(function() {
-        sharerequest(shared_url, shared_title);
-    });
-}
-
-// Manages custom proxy server URL shortening
-function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash) {
-    const server = service || d_proxy(),
-        request_data = btoa(JSON.stringify({
-            "sharedurl": shared_url,
-            "sitethumb": site_thumb
-        })),
-        short_url_id = randomId(),
-        payload = {
-            "function": "post",
-            "longurl": request_data,
-            "shorturl": short_url_id
-        };
-    $.ajax({
-        "method": "POST",
-        "cache": false,
-        "timeout": 5000,
-        "url": server + "proxy/v1/inv/api/",
-        "data": payload
-    }).done(function(response) {
-        const data = br_result(response).result;
-        if (data) {
-            if (data.error) {
-                notify(server + ": " + data.error, 500000, "yes");
-                bitly_shorten(shared_url, shared_title, url_hash);
-                return
-            }
-            const request_id = data.shorturl;
-            if (request_id) {
-                const server_index = glob_const.proxy_list.indexOf(server),
-                    is_default_server = server_index > -1;
-                const short_url = is_default_server ?
-                    glob_const.approot + "?i=" + server_index.toString() + request_id :
-                    server + "proxy/v1/inv/4bR" + request_id;
-                sharerequest(short_url, shared_title);
-                if (url_hash) {
-                    br_set_session("custom_shorturl_" + url_hash, short_url);
-                }
-                return
-            }
-        }
-        bitly_shorten(shared_url, shared_title, url_hash);
-    }).fail(function() {
-        bitly_shorten(shared_url, shared_title, url_hash);
-    });
-}
-
-// Generates cryptographically secure random ID for URL shortening
-function randomId() {
-    const random_value = crypto.getRandomValues(new Uint32Array(1))[0];
-    return random_value.toString(16);
-}
-
-// Initiates request sharing with platform-specific handlers
-function sharerequest(shared_url, shared_title) {
-    closeloader();
-    if (glob_const.is_ios_app) {
-        sharefallback(shared_url, shared_title);
-        return
-    }
-    if (glob_const.supportsTouch && navigator.canShare) {
-        navigator.share({
-            "title": shared_title + " | " + glob_const.apptitle,
-            "text": shared_title + ": \n",
-            "url": shared_url
-        }).then(sharecallback).catch(function(error) {
-            console.error("Sharing failed:", error);
-        });
-        return
-    }
-    sharefallback(shared_url, shared_title);
-}
-
-// Provides alternative sharing UI when native sharing is unavailable
-function sharefallback(shared_url, shared_title) {
-    const mobile_class = glob_const.supportsTouch ? " showtouch" : "";
-    $("#sharepopup").addClass("showpu active" + mobile_class).data({
-        "sharetitle": shared_title,
-        "shareurl": shared_url
-    });
-    glob_const.body.addClass("sharemode");
-}
-
-// Handles WhatsApp sharing integration
-function whatsappshare() {
-    $(document).on("click", "#whatsappshare", function() {
-        sharecallback();
-        const share_info = getshareinfo(),
-            encoded_share_text = encodeURIComponent(share_info.body),
-            share_url = "whatsapp://send?text=" + encoded_share_text;
-        open_share_url("location", share_url);
-    });
-}
-
-// Handles email sharing via default mail client
-function mailto() {
-    $(document).on("click", "#mailto", function() {
-        sharecallback();
-        const share_info = getshareinfo(),
-            share_url = "mailto:?subject=" + encodeURIComponent(share_info.title) + "&body=" + encodeURIComponent(share_info.body);
-        open_share_url("location", share_url);
-    });
-}
-
-// Manages URL copying to clipboard
-function copyurl() {
-    $(document).on("click", "#copyurl", function() {
-        copytoclipboard(getshareinfo().url, "Request url");
-        sharecallback();
-    });
-}
-
-// Handles Gmail sharing integration
-function gmailshare() {
-    $(document).on("click", "#gmailshare", function() {
-        sharecallback();
-        const share_info = getshareinfo(),
-            share_url = "https://mail.google.com/mail/?view=cm&fs=1&su=" + encodeURIComponent(share_info.title) + "&body=" + encodeURIComponent(share_info.body);
-        open_share_url("open", share_url);
-    });
-}
-
-// Handles Telegram sharing integration
-function telegramshare() {
-    $(document).on("click", "#telegramshare", function() {
-        sharecallback();
-        const share_info = getshareinfo(),
-            share_url = "https://telegram.me/share/url?url=" + share_info.url + "&text=" + encodeURIComponent(share_info.body);
-        open_share_url("open", share_url);
-    });
-}
-
-// Handles Outlook sharing integration
-function outlookshare() {
-    $(document).on("click", "#outlookshare", function() {
-        sharecallback();
-        const share_info = getshareinfo(),
-            share_url = "ms-outlook://compose?subject=" + encodeURIComponent(share_info.title) + "&body=" + encodeURIComponent(share_info.body);
-        open_share_url("location", share_url);
-    });
-}
-
-// Retrieves formatted sharing metadata from UI
-function getshareinfo() {
-    const share_popup = $("#sharepopup"),
-        share_title = share_popup.data("sharetitle"),
-        share_url = share_popup.data("shareurl");
-    return {
-        "title": share_title,
-        "url": share_url,
-        "body": share_title + ": \n " + share_url
-    }
-}
-
-// Processes post-sharing actions and UI updates
-function sharecallback() {
-    if (request) {
-        request.received = true,
-            request.requesttype = "outgoing",
-            request.status = "new",
-            request.pending = (request.monitored === false) ? "unknown" : "scanning";
-        save_payment_request();
-        loadpage("?p=requests");
-        cancelpaymentdialog();
-    } else {
-        canceldialog();
-    }
-    cancelsharedialog();
-    notify(translate("successshare") + " 🎉");
-}
-
-// Handles share URL opening with timing controls
-function open_share_url(type, url) {
-    loader(true);
-    setTimeout(function() {
-        closeloader();
-        if (type === "open") {
-            window.open(url);
-            return
-        }
-        if (type === "location") {
-            glob_const.w_loc.href = url;
-        }
-    }, 500);
-}
-
-// Opens transaction details based on URL hash parameter
-function trigger_open_tx() {
-    const url_params = geturlparameters();
-    if (url_params.xss) {
-        return
-    }
-    const transaction_hash = url_params.txhash;
-    if (transaction_hash) {
-        const transaction_node = get_requestli("txhash", transaction_hash);
-        open_tx(transaction_node);
-    }
-}
-
-// Handles transaction view event and navigation
-function view_tx() {
-    $(document).on("click", "#view_tx", function() {
-        if (glob_const.inframe) {
-            glob_const.html.removeClass("hide_app");
-        } else if (glob_const.body.hasClass("showstartpages")) {
-            cancelpaymentdialog();
-            startnext($("#intro"));
-            return;
-        }
-        openpage("?p=requests", "requests", "loadpage");
-        const transaction_hash = $(this).attr("data-txhash"),
-            transaction_node = get_requestli("txhash", transaction_hash);
-        open_tx(transaction_node);
-    });
-}
-
-// Expands transaction details with animation and scrolling
-function open_tx(transaction_node) {
-    const selected_request = transaction_node.length > 0 ? transaction_node : $("#requestlist .rqli").first(),
-        info_panel = selected_request.find(".moreinfo"),
-        meta_list = info_panel.find(".metalist");
-    $(".moreinfo").not(info_panel).slideUp(500);
-    $(".metalist").not(meta_list).slideUp(500);
-    $(".historic_meta").slideUp(200);
-    info_panel.add(meta_list).slideDown(500);
-    selected_request.addClass("visible_request");
-    const confirmation_bar = selected_request.find(".transactionlist .confbar");
-    if (confirmation_bar.length > 0) {
-        confirmation_bar.each(function(index) {
-            animate_confbar($(this), index);
-        });
-    }
-    setTimeout(function() { // wait for url to change
-        $("html, body").animate({
-            "scrollTop": selected_request.offset().top - $("#fixednav").height()
-        }, 500);
-    }, 1000);
-}
-
-// ** Save and update request **
-
-// Processes and stores payment request data with multi-currency and Lightning Network support
-function save_payment_request(direct, lightning_url) {
-    const url_params = geturlparameters();
-    if (url_params.xss) {
-        return
-    }
-    const current_payment = url_params.payment,
-        current_currency = url_params.uoa,
-        current_amount = url_params.amount,
-        currency_symbol = request.currencysymbol,
-        current_request_type = request.requesttype,
-        current_payment_timestamp = request.paymenttimestamp,
-        set_confirmations = request.set_confirmations,
-        lightning_info = helper.lnd,
-        lightning_id = lightning_info ? lightning_info.pid : "",
-        confirmation_string = lightning_info ? "1" : (set_confirmations ? set_confirmations.toString() : "0"),
-        amount_string = current_amount ? current_amount.toString() : "0",
-        current_address = lightning_url ? "lnurl" : url_params.address,
-        current_data = url_params.d,
-        current_meta = url_params.m,
-        current_timestamp = now_utc(), // UTC
-        request_data_hash = current_data && current_data.length > 5 ? current_data : null, // check if data param exists
-        request_meta_hash = current_meta && current_meta.length > 5 ? current_meta : null, // check if meta param exists
-        data_object = request_data_hash ? JSON.parse(atob(request_data_hash)) : null, // decode data param if exists
-        request_timestamp = current_payment_timestamp || (data_object && data_object.ts) || (current_request_type === "incoming" ? null : current_timestamp), // null is unknown timestamp
-        unhashed_request_data = current_payment + current_currency + amount_string + current_address + request.requestname + request.requesttitle + confirmation_string + lightning_id,
-        saved_transaction_hash = request.txhash,
-        is_local = current_request_type === "local",
-        request_id = is_local && saved_transaction_hash ? generate_hash(saved_transaction_hash) : generate_hash(unhashed_request_data),
-        request_cache = br_get_local("requests", true),
-        request_id_param = url_params.requestid,
-        is_checkout = direct !== "init" && current_request_type === "checkout",
-        is_crypto_currency = current_currency === currency_symbol,
-        is_lightning = data_object && data_object.imp,
-        ethereum_layer2 = request.eth_layer2,
-        ethereum_l2s = request.eth_l2s;
-    let matching_request_in_cache,
-        is_lightning_only = false,
-        lightning_invoice = false,
-        lightning_object = false;
-    if (lightning_info) {
-        if (current_address === "lnurl") {
-            is_lightning_only = true;
-        }
-        lightning_invoice = lightning_info.invoice,
-            lightning_object = current_request_type === "outgoing" && !is_lightning ? false : {
-                "imp": lightning_info.imp,
-                "host": lightning_info.host,
-                "key": lightning_info.key,
-                "pid": lightning_info.pid,
-                "nid": lightning_info.nid,
-                "pw": lightning_info.pw,
-                "invoice": lightning_invoice,
-                "proxy_host": lightning_info.proxy_host,
-                "hybrid": !is_lightning_only
-            };
-    }
-    if (request_cache) {
-        matching_request_in_cache = $.grep(request_cache, function(filter) { //filter pending requests
-            return filter.requestid === request_id;
-        });
-    }
-    const is_request_in_cache = matching_request_in_cache && matching_request_in_cache.length > 0;
-    if (is_request_in_cache || request_id_param) { // do not save if request already exists
-        const smart_id = request_id_param || request_id,
-            request_list_item = $("#" + smart_id),
-            request_item_data = request_list_item.data(),
-            pending_state = request_item_data.pending;
-        if (saved_transaction_hash) { // check if request is opened or updated
-            request.received = true;
-            if (pending_state !== "paid") {
-                const update_data = {
-                    "requestid": smart_id,
-                    "status": request.status,
-                    "receivedamount": request.receivedamount,
-                    "fiatvalue": request.fiatvalue,
-                    "txhash": saved_transaction_hash,
-                    "confirmations": request.confirmations,
-                    "pending": request.pending,
-                    "lightning": lightning_object,
-                    ethereum_layer2,
-                    ethereum_l2s
-                };
-                br_remove_session("historic_" + smart_id); // remove historic price cache
-                updaterequest(update_data, true);
-            }
-        } else {
-            const request_status = request_item_data.status;
-            if (pending_state === "scanning" || request_status === "canceled") { // do nothing
-                return false;
-            } else {
-                if (pending_state === "polling" || request_list_item.hasClass("expired")) {
-                    show_pending_status(request_list_item);
-                    if (lightning_object) {
-                        return false;
-                    }
-                    return "nosocket";
-                }
-                if (pending_state === "no") {
-                    request.received = true;
-                    const transaction_hash_state = request_item_data.txhash,
-                        type_state = request_item_data.requesttype,
-                        send_receive = type_state === "incoming" ? "sent" : "received",
-                        transaction_status = send_receive === "sent" ? translate("paymentsent") : translate("paymentreceived");
-                    update_payment_status("paid", "no", transaction_status);
-                    glob_const.paymentdialogbox.find("span#view_tx").attr("data-txhash", transaction_hash_state);
-                    return "nosocket";
-                }
-            }
-        }
-    } else {
-        //overwrite global request object
-        request.address = current_address,
-            request.requestid = request_id,
-            request.iscrypto = is_crypto_currency,
-            request.fiatcurrency = is_crypto_currency ? request.localcurrency : current_currency,
-            request.currencyname = $("#xratestats .cpool[data-currency='" + current_currency + "']").attr("data-currencyname"),
-            request.cc_amount = parseFloat($("#open_wallet").attr("data-rel"));
-        const number_amount = Number(current_amount),
-            is_zero_amount = number_amount === 0 || isNaN(number_amount);
-        if (direct === "init" && request.shared === false) { // when first opened only save shared requests
-            // Do nothing
-        } else if (is_zero_amount === true) { // don't save requests with zero value
-            // Do nothing
-        } else {
-            const coin_settings = request.coinsettings,
-                append_object = $.extend(request, {
-                    "archive": false,
-                    "showarchive": false,
-                    "timestamp": current_timestamp,
-                    "requestdate": request_timestamp,
-                    "rqdata": request_data_hash,
-                    "rqmeta": request_meta_hash,
-                    "lightning": lightning_object
-                });
-            delete append_object.coinsettings; // don't save coinsettings in request
-            appendrequest(append_object);
-            setTimeout(function() {
-                saverequests();
-            }, 500);
-            if (!request_id_param && direct === true) { // Add request_params (make it a request)
-                const request_params = "&requestid=" + request_id + "&status=" + request.status + "&type=" + current_request_type;
-                history.replaceState(null, null, glob_const.w_loc.href + request_params);
-            }
-            if (coin_settings) {
-                const reuse = coin_settings["Reuse address"];
-                if (reuse) {
-                    if (reuse.selected === false) {
-                        // Derive new address
-                        if (!is_lightning_only) {
-                            const address_list_item = filter_addressli(current_payment, "address", current_address);
-                            address_list_item.addClass("used").data("used", true);
-                            saveaddresses(current_payment, false);
-                            derive_new_address(current_payment);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    // post to parent
-    if (is_checkout) {
-        const contact_param = url_params.contactform,
-            meta_data_object = request_meta_hash ? JSON.parse(atob(request_meta_hash)) : null, // decode meta param if exists
-            fiat_value_rounded = trimdecimals(request.fiatvalue, 2),
-            received_in_currency = is_crypto_currency ? request.receivedamount : fiat_value_rounded,
-            transaction_payment_timestamp = current_payment_timestamp || current_timestamp,
-            transaction_data = {
-                "currencyname": request.currencyname,
-                "requestid": request_id,
-                "cmcid": request.cmcid,
-                "payment": current_payment,
-                "ccsymbol": currency_symbol,
-                "iscrypto": is_crypto_currency,
-                "amount": current_amount,
-                "receivedamount": received_in_currency,
-                "receivedcc": request.receivedamount,
-                "fiatvalue": fiat_value_rounded,
-                "status": request.status,
-                "txhash": saved_transaction_hash,
-                "receiver": current_address,
-                "confirmations": request.confirmations,
-                "set_confirmations": set_confirmations,
-                "transactiontime": transaction_payment_timestamp,
-                "pending": request.pending,
-                "lightning": lightning_object,
-                "erc20": request.erc20,
-                ethereum_layer2,
-                ethereum_l2s
-            };
-        let contact_data;
-        if (contact_param) {
-            const contact_form_data = $("#contactform").data(),
-                contact_form_address = contact_form_data.address;
-            if (contact_form_address) {
-                contact_data = {
-                    "name": contact_form_data.name,
-                    "address": contact_form_address,
-                    "zipcode": contact_form_data.zipcode,
-                    "city": contact_form_data.city,
-                    "country": contact_form_data.country,
-                    "email": contact_form_data.email
-                }
-            }
-        }
-        const post_data = {
-            "txdata": transaction_data,
-            "data": data_object,
-            "meta": meta_data_object,
-            "contact": contact_data
-        };
-        parent.postMessage({
-            "id": "result",
-            "data": post_data
-        }, "*");
-    }
-    if (current_request_type !== "incoming") {
-        helper.currencylistitem.removeData("url"); // remove saved url / reset lightning id
-        br_remove_local("editurl");
-        br_remove_session("lndpid");
-    }
 }
 
 // Displays pending transaction status with appropriate UI updates
@@ -3172,8 +2307,674 @@ function update_payment_status(status, pending, status_text) {
     status_panel.find("h2").text(status_text);
 }
 
+// ** Address Management: **
+
+// Manages address switching functionality with socket handling
+function switch_address() {
+    $(document).on("click", "#paymentdialogbox.norequest #labelbttn", function() {
+        const time_elapsed = now() - glob_let.sa_timer;
+        if (time_elapsed < 1500) { // prevent clicking too fast
+            play_audio(glob_const.funk);
+            return
+        }
+        const url_params = get_urlparameters(),
+            payment = url_params.payment;
+        if (payment === "monero") {
+            //disable address switching for Monero
+            play_audio(glob_const.funk);
+            return
+        }
+        if (payment === "ethereum" && request.eth_l2s.length) {
+            //disable address switching for ethereum layer 2's
+            play_audio(glob_const.funk);
+            return
+        }
+        if (request.erc20) {
+            //disable address switching for erc20 tokens
+            play_audio(glob_const.funk);
+            return
+        }
+        if (q_obj(request, "coinsettings.Lightning network.selected")) {
+            //disable address switching on lightning payments
+            play_audio(glob_const.funk);
+            return
+        }
+        const current_address = url_params.address,
+            next_address_item = new_addresli(payment, current_address);
+        if (next_address_item) {
+            glob_const.paymentdialogbox.addClass("switching");
+            const new_address = next_address_item.data("address"),
+                selected_socket = helper.selected_socket,
+                data_param = url_params.d,
+                has_data = data_param && data_param.length > 5,
+                new_data_param = has_data ? "&d=" + data_param : "",
+                cc_value = $("#paymentdialogbox .ccpool").attr("data-value"),
+                new_address_id = next_address_item.data("cmcid"),
+                new_address_label = next_address_item.data("label"),
+                page = url_params.p,
+                start_url = page ? "?p=" + page + "&payment=" : "?payment=",
+                href = start_url + payment + "&uoa=" + url_params.uoa + "&amount=" + url_params.amount + "&address=" + new_address + new_data_param;
+            generate_payment_qr(payment, new_address, cc_value);
+            update_request_url(href);
+            $("#paymentaddress").text(new_address);
+            $(this).text(new_address_label);
+            const is_pending = ch_pending({
+                "address": new_address,
+                "cmcid": new_address_id
+            });
+            glob_const.paymentdialogbox.attr("data-pending", is_pending && request.monitored ? "ispending" : "");
+            request.address = new_address;
+            glob_let.sa_timer = now();
+            force_close_socket();
+            init_socket(selected_socket, new_address);
+        }
+    });
+}
+
+// Locates next valid address for currency payments
+function new_addresli(currency, address) {
+    const valid_addresses = filter_addressli(currency, "checked", true),
+        labeled_addresses = valid_addresses.filter(function() { // only pick addresses with label
+            return $(this).data("label").length > 0;
+        }),
+        current_address_item = filter_addressli(currency, "address", address),
+        next_address_item = current_address_item.next(".adli[data-checked='true']"),
+        first_address_item = labeled_addresses.not(".adli[data-address='" + address + "']").first();
+    return first_address_item.length === 0 ? false : (next_address_item.length ? next_address_item : first_address_item);
+}
+
+// Handles double-click events for copying address data
+function copy_address_dblclick() {
+    $(document).on("dblclick", "#paymentaddress, #paymentaddress_lnd, .select", function() {
+        const current_node = $(this),
+            address_type = current_node.attr("data-type") || translate("address");
+        glob_const.copycontent.val(current_node.text()).data("type", address_type);
+        notify("<span id='copyaddress'>" + translate("copy") + " " + address_type + "?</span>", 40000, "yes");
+    });
+}
+
+// Processes address copy requests
+function copy_address() {
+    $(document).on("click", "#copyaddress", function() {
+        const address_value = glob_const.copycontent.val(),
+            address_type = glob_const.copycontent.data("type");
+        copy_to_clipboard(address_value, address_type);
+    });
+}
+
+// Manages double-click copying of payment amounts
+function copy_inputs() {
+    $(document).on("dblclick", "#paymentdialogbox.request .mirrordiv input", function() {
+        const input_value = $(this).val(),
+            value_type = translate("amount");
+        glob_const.copycontent.val(input_value).data("type", value_type);
+        notify("<span id='copyaddress'>" + translate("copy") + " " + value_type + "?</span>", 40000, "yes");
+    });
+}
+
+// Processes address selection from pending request dialog
+function pick_address_from_dialog() {
+    $(document).on("click", "#addresslock #pending_pick_address", function(e) {
+        e.preventDefault();
+        const address_input = $("#selec_address"),
+            address_input_value = address_input.val(),
+            confirm_result = confirm(translate("useinstead", {
+                "thisinputvalue": address_input_value
+            }));
+        if (confirm_result) {
+            const url_params = get_urlparameters();
+            if (url_params.xss) {
+                return
+            }
+            const picked_value = address_input_value.split(" | "),
+                picked_label = picked_value[0],
+                picked_address = picked_value[1],
+                page = url_params.p,
+                payment = url_params.payment,
+                currency = url_params.uoa,
+                amount = url_params.amount,
+                current_address = url_params.address;
+            close_socket(current_address);
+            init_socket(helper.selected_socket, picked_address);
+            const data_param = url_params.d,
+                has_data = data_param && data_param.length > 5,
+                new_data_param = has_data ? "&d=" + data_param : "",
+                start_url = page ? "?p=" + page + "&payment=" : "?payment=",
+                href = start_url + payment + "&uoa=" + currency + "&amount=" + amount + "&address=" + picked_address + new_data_param,
+                cc_value = $("#paymentdialogbox .ccpool").attr("data-value");
+            $("#paymentaddress").text(picked_address);
+            $("#labelbttn").text(picked_label);
+            request.address = picked_address;
+            generate_payment_qr(payment, picked_address, cc_value);
+            update_request_url(href);
+            glob_const.paymentdialogbox.attr("data-pending", "");
+            canceldialog();
+        }
+    });
+}
+
+// Initializes new address creation dialog with currency-specific fields
+function add_address_from_dialog() {
+    $(document).on("click", "#addresslock #pending_add_address, #addaddress", function(e) {
+        e.preventDefault();
+        const form_box = $(this).closest("#addresslock"),
+            payment = request.payment,
+            currency_id = request.cmcid,
+            is_erc20 = request.erc20,
+            derived_data = derive_data(payment, true),
+            address_data = {
+                "currency": payment,
+                "ccsymbol": request.currencysymbol,
+                "cmcid": currency_id,
+                "checked": true,
+                "erc20": is_erc20,
+                "dd": derived_data
+            },
+            qr_scanner = glob_let.hascam ? "<div class='qrscanner' data-currency='" + payment + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+            viewkey_scanner = glob_let.hascam ? "<div class='qrscanner' data-currency='" + payment + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+            viewkey_box = payment === "monero" ? "<div class='inputwrap'><input type='text' class='vk_input' value='' placeholder='View key'>" + viewkey_scanner + "</div>" : "",
+            derivation_source = derived_data ? (derived_data.xpubid ? " from Xpub" : " from seed") : "",
+            seed_message = derived_data ? "<div class='popnotify' style='display:block'><span id='addfromseed' class='address_option'>Generate address" + derivation_source + "</span></div>" : "<div class='popnotify'></div>",
+            content = $("<div class='formbox form add' id='addressformbox'><h2>" + getcc_icon(currency_id, request.cpid, is_erc20) + " " + translate("addcoinaddress", {
+                "currency": payment
+            }) + "</h2>" + seed_message + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' class='address' value='' placeholder='" + translate("nopub") + "'>" + qr_scanner + "</div>" + viewkey_box + "<input type='text' class='addresslabel' value='' placeholder='label'><div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + translate("pkownership") + "</span></div><input type='submit' class='submit' value='" + translate("okbttn") + "'></form></div>").data(address_data);
+        form_box.parent("#dialogbody").html(content);
+    });
+}
+
+// Generates new cryptocurrency address from stored seed data
+function add_from_seed() {
+    $(document).on("click", "#addfromseed", function() {
+        const address_data = $("#addressformbox").data(),
+            currency = address_data.currency,
+            derived_data = address_data.dd;
+        if (currency && derived_data && derived_data.address) {
+            const confirm_result = confirm(translate("generatenewaddress", {
+                "currency": currency
+            }));
+            if (confirm_result) {
+                derive_add_address(currency, derived_data);
+                canceldialog();
+            }
+        }
+    });
+}
+
+// ** Sharing: **
+
+// Processes share button clicks with Lightning Network validation
+function share_button() {
+    $(document).on("click", "#sharebutton", function() {
+        const current_button = $(this);
+        if (request.payment === "bitcoin" && helper.lnd_status) {
+            const is_lightning_only = is_ln_only();
+            validate_request_data(is_lightning_only);
+            setTimeout(function() { // wait for url to change
+                share(current_button);
+            }, 100);
+            return
+        }
+        if (!get_urlparameters().d) {
+            validate_request_data();
+            setTimeout(function() { // wait for url to change
+                share(current_button);
+            }, 100);
+            return
+        }
+        share(current_button);
+    });
+}
+
+// Determines if request is Lightning Network-only or hybrid
+function is_ln_only() {
+    return glob_const.paymentdialogbox.attr("data-lswitch") === "lnd_ao" ? $("#fallback_address").is(":visible") ? !$("#fallback_address .switchpanel").hasClass("true") : true : false;
+}
+
+// Processes and validates payment request sharing
+function share(current_button) {
+    if (current_button.hasClass("sbactive")) {
+        const url_params = get_urlparameters();
+        if (url_params.xss) {
+            current_button.removeClass("sbactive")
+            return
+        }
+        loader(true);
+        const payment = url_params.payment,
+            current_currency = url_params.uoa,
+            current_amount = url_params.amount,
+            current_address = url_params.address,
+            data_param = url_params.d,
+            currency_id = request.cmcid,
+            currency_symbol = request.currencysymbol,
+            has_data = data_param && data_param.length > 5,
+            data_object = has_data ? JSON.parse(atob(data_param)) : null, // decode data param if exists
+            request_name = has_data ? data_object.n : $("#accountsettings").data("selected"),
+            request_title = has_data ? data_object.t : "",
+            is_lightning = has_data ? !!data_object.imp : false,
+            new_data_string = has_data ? "&d=" + data_param : "", // construct data param if exists
+            is_ipfs = glob_const.thishostname.includes("ipfs") || glob_const.thishostname.includes("bitrequest.crypto"),
+            shared_host = is_ipfs ? glob_const.c_host : "https://bitrequest.github.io", // check for IFPS
+            url_id = shared_host + "/?p=requests&payment=" + payment + "&uoa=" + current_currency + "&amount=" + current_amount + "&address=" + current_address,
+            shared_url = url_id + new_data_string,
+            request_name_uppercase = capitalize(request_name), // capitalize requestname
+            payment_uppercase = capitalize(payment),
+            payment_name = is_lightning ? "Lightning" : payment_uppercase,
+            shared_title = has_data ? translate("sharetitlename", {
+                "requestname": request_name_uppercase,
+                "pagenameccparam": payment_name,
+                "amount": current_amount,
+                "uoa": current_currency.toUpperCase(),
+                "requesttitle": request_title
+            }) : translate("sharetitle", {
+                "pagenameccparam": payment_name,
+                "amount": current_amount,
+                "uoa": current_currency
+            }),
+            share_icon = is_lightning ? glob_const.approot + "img_logos_btc-lnd.png" : glob_const.cmc_icon_loc + currency_id + ".png";
+        if (is_ipfs) {
+            share_request(shared_url, shared_title);
+            set_locales();
+            return
+        }
+        const url_hash = generate_hash(url_id + shared_title);
+        shorten_url(shared_title, shared_url, share_icon, null, url_hash);
+        set_locales();
+        return
+    }
+    const request_name_input = $("#requestname"),
+        request_title_input = $("#requesttitle"),
+        name_length = request_name_input.val().length,
+        title_length = request_title_input.val().length,
+        name_check_message = name_length < 1 ? translate("enteryourname") : name_length < 3 ? translate("minimal3") : translate("checkyourform"),
+        title_check_message = title_length < 1 ? translate("entertitle") : title_length < 2 ? translate("minimal2") : translate("checkyourform"),
+        check_message = name_length < 3 ? name_check_message : title_length < 2 ? title_check_message : translate("requiredfields");
+    topnotify(check_message);
+    if (name_length < 3) {
+        request_name_input.focus();
+    } else if (title_length < 2) {
+        request_title_input.focus();
+    }
+}
+
+// Manages URL shortening with multiple service fallbacks
+function shorten_url(shared_title, shared_url, site_thumb, unguessable, url_hash) {
+    set_loader_text(translate("generatelink"));
+    const url_shorten_settings = $("#url_shorten_settings"),
+        is_url_shorten_active = url_shorten_settings.data("us_active") === "active";
+    if (is_url_shorten_active) {
+        const url_service = url_shorten_settings.data("selected"),
+            is_custom_service = url_service.indexOf("https://") >= 0;
+        if (url_hash) {
+            const cache_prefix = is_custom_service ? "custom" : url_service,
+                cached_short_url = br_get_session(cache_prefix + "_shorturl_" + url_hash);
+            if (cached_short_url) {
+                share_request(cached_short_url, shared_title);
+                return;
+            }
+        }
+        if (url_service === "firebase") {
+            firebase_shorten(shared_url, shared_title, site_thumb, unguessable, url_hash);
+            return;
+        }
+        if (url_service === "bitly") {
+            bitly_shorten(shared_url, shared_title, url_hash);
+            return;
+        }
+        if (is_custom_service) {
+            custom_shorten(url_service, shared_url, shared_title, site_thumb, url_hash);
+            return;
+        }
+    }
+    share_request(shared_url, shared_title);
+}
+
+// Handles Firebase Dynamic Links URL shortening
+function firebase_shorten(shared_url, shared_title, site_thumb, unguessable, url_hash) {
+    const security = unguessable ? "UNGUESSABLE" : "SHORT";
+    api_proxy({
+        "api": "firebase",
+        "search": "shortLinks",
+        "params": {
+            "method": "POST",
+            "cache": false,
+            "data": JSON.stringify({
+                "dynamicLinkInfo": {
+                    "domainUriPrefix": glob_const.firebase_dynamic_link_domain,
+                    "link": shared_url,
+                    "androidInfo": {
+                        "androidPackageName": glob_const.androidpackagename
+                    },
+                    "iosInfo": {
+                        "iosBundleId": glob_const.androidpackagename,
+                        "iosAppStoreId": "1484815377"
+                    },
+                    "navigationInfo": {
+                        "enableForcedRedirect": "1"
+                    },
+                    "socialMetaTagInfo": {
+                        "socialTitle": "Bitrequest",
+                        "socialDescription": "Accept crypto anywhere",
+                        "socialImageLink": site_thumb
+                    }
+                },
+                "suffix": {
+                    "option": security
+                }
+            })
+        }
+    }).done(function(response) {
+        const data = br_result(response).result;
+        if (data) {
+            if (data.error) {
+                custom_shorten(false, shared_url, shared_title, site_thumb, url_hash);
+                return
+            }
+            const short_url = data.shortLink;
+            if (short_url) {
+                share_request(short_url, shared_title);
+                if (url_hash) {
+                    br_set_session("firebase_shorturl_" + url_hash, short_url);
+                }
+                return
+            }
+        }
+        custom_shorten(false, shared_url, shared_title, site_thumb, url_hash);
+    }).fail(function() {
+        custom_shorten(false, shared_url, shared_title, site_thumb, url_hash);
+    });
+}
+
+// Processes Bitly API URL shortening
+function bitly_shorten(shared_url, shared_title, url_hash) {
+    api_proxy({
+        "api": "bitly",
+        "search": "bitlinks",
+        "cachetime": 84600,
+        "cachefolder": "1d",
+        "bearer": true,
+        "params": {
+            "method": "POST",
+            "contentType": "application/json",
+            "data": JSON.stringify({
+                "long_url": shared_url
+            })
+        }
+    }).done(function(response) {
+        const data = br_result(response).result;
+        if (data.id) {
+            const link_id = data.id.split("/").pop(),
+                short_url = glob_const.approot + "?i=4bR" + link_id;
+            share_request(short_url, shared_title);
+            if (url_hash) {
+                br_set_session("bitly_shorturl_" + url_hash, short_url);
+            }
+            return
+        }
+        share_request(shared_url, shared_title);
+    }).fail(function() {
+        share_request(shared_url, shared_title);
+    });
+}
+
+// Manages custom proxy server URL shortening
+function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash) {
+    const server = service || d_proxy(),
+        request_data = btoa(JSON.stringify({
+            "sharedurl": shared_url,
+            "sitethumb": site_thumb
+        })),
+        short_url_id = random_id(),
+        payload = {
+            "function": "post",
+            "longurl": request_data,
+            "shorturl": short_url_id
+        };
+    $.ajax({
+        "method": "POST",
+        "cache": false,
+        "timeout": 5000,
+        "url": server + "proxy/v1/inv/api/",
+        "data": payload
+    }).done(function(response) {
+        const data = br_result(response).result;
+        if (data) {
+            if (data.error) {
+                notify(server + ": " + data.error, 500000, "yes");
+                bitly_shorten(shared_url, shared_title, url_hash);
+                return
+            }
+            const request_id = data.shorturl;
+            if (request_id) {
+                const server_index = glob_const.proxy_list.indexOf(server),
+                    is_default_server = server_index > -1;
+                const short_url = is_default_server ?
+                    glob_const.approot + "?i=" + server_index.toString() + request_id :
+                    server + "proxy/v1/inv/4bR" + request_id;
+                share_request(short_url, shared_title);
+                if (url_hash) {
+                    br_set_session("custom_shorturl_" + url_hash, short_url);
+                }
+                return
+            }
+        }
+        bitly_shorten(shared_url, shared_title, url_hash);
+    }).fail(function() {
+        bitly_shorten(shared_url, shared_title, url_hash);
+    });
+}
+
+// Generates cryptographically secure random ID for URL shortening
+function random_id() {
+    const random_value = crypto.getRandomValues(new Uint32Array(1))[0];
+    return random_value.toString(16);
+}
+
+// Initiates request sharing with platform-specific handlers
+function share_request(shared_url, shared_title) {
+    closeloader();
+    if (glob_const.is_ios_app) {
+        share_fallback(shared_url, shared_title);
+        return
+    }
+    if (glob_const.supportsTouch && navigator.canShare) {
+        navigator.share({
+            "title": shared_title + " | " + glob_const.apptitle,
+            "text": shared_title + ": \n",
+            "url": shared_url
+        }).then(share_callback).catch(function(error) {
+            console.error("Sharing failed:", error);
+        });
+        return
+    }
+    share_fallback(shared_url, shared_title);
+}
+
+// Provides alternative sharing UI when native sharing is unavailable
+function share_fallback(shared_url, shared_title) {
+    const mobile_class = glob_const.supportsTouch ? " showtouch" : "";
+    $("#sharepopup").addClass("showpu active" + mobile_class).data({
+        "sharetitle": shared_title,
+        "shareurl": shared_url
+    });
+    glob_const.body.addClass("sharemode");
+}
+
+// Handles WhatsApp sharing integration
+function whatsapp_share() {
+    $(document).on("click", "#whatsappshare", function() {
+        share_callback();
+        const share_info = get_share_info(),
+            encoded_share_text = encodeURIComponent(share_info.body),
+            share_url = "whatsapp://send?text=" + encoded_share_text;
+        open_share_url("location", share_url);
+    });
+}
+
+// Handles email sharing via default mail client
+function mailto() {
+    $(document).on("click", "#mailto", function() {
+        share_callback();
+        const share_info = get_share_info(),
+            share_url = "mailto:?subject=" + encodeURIComponent(share_info.title) + "&body=" + encodeURIComponent(share_info.body);
+        open_share_url("location", share_url);
+    });
+}
+
+// Manages URL copying to clipboard
+function copy_url() {
+    $(document).on("click", "#copyurl", function() {
+        copy_to_clipboard(get_share_info().url, "Request url");
+        share_callback();
+    });
+}
+
+// Handles Gmail sharing integration
+function gmail_share() {
+    $(document).on("click", "#gmailshare", function() {
+        share_callback();
+        const share_info = get_share_info(),
+            share_url = "https://mail.google.com/mail/?view=cm&fs=1&su=" + encodeURIComponent(share_info.title) + "&body=" + encodeURIComponent(share_info.body);
+        open_share_url("open", share_url);
+    });
+}
+
+// Handles Telegram sharing integration
+function telegram_share() {
+    $(document).on("click", "#telegramshare", function() {
+        share_callback();
+        const share_info = get_share_info(),
+            share_url = "https://telegram.me/share/url?url=" + share_info.url + "&text=" + encodeURIComponent(share_info.body);
+        open_share_url("open", share_url);
+    });
+}
+
+// Handles Outlook sharing integration
+function outlook_share() {
+    $(document).on("click", "#outlookshare", function() {
+        share_callback();
+        const share_info = get_share_info(),
+            share_url = "ms-outlook://compose?subject=" + encodeURIComponent(share_info.title) + "&body=" + encodeURIComponent(share_info.body);
+        open_share_url("location", share_url);
+    });
+}
+
+// Retrieves formatted sharing metadata from UI
+function get_share_info() {
+    const share_popup = $("#sharepopup"),
+        share_title = share_popup.data("sharetitle"),
+        share_url = share_popup.data("shareurl");
+    return {
+        "title": share_title,
+        "url": share_url,
+        "body": share_title + ": \n " + share_url
+    }
+}
+
+// Processes post-sharing actions and UI updates
+function share_callback() {
+    if (request) {
+        request.received = true,
+            request.requesttype = "outgoing",
+            request.status = "new",
+            request.pending = (request.monitored === false) ? "unknown" : "scanning";
+        save_payment_request();
+        loadpage("?p=requests");
+        cancel_paymentdialog();
+    } else {
+        canceldialog();
+    }
+    cancel_sharedialog();
+    notify(translate("successshare") + " 🎉");
+}
+
+// Handles share URL opening with timing controls
+function open_share_url(type, url) {
+    loader(true);
+    setTimeout(function() {
+        closeloader();
+        if (type === "open") {
+            window.open(url);
+            return
+        }
+        if (type === "location") {
+            glob_const.w_loc.href = url;
+        }
+    }, 500);
+}
+
+// ** Transaction Viewing: **
+
+// Opens transaction details based on URL hash parameter
+function trigger_open_tx() {
+    const url_params = get_urlparameters();
+    if (url_params.xss) {
+        return
+    }
+    const transaction_hash = url_params.txhash;
+    if (transaction_hash) {
+        const transaction_node = get_requestli("txhash", transaction_hash);
+        open_tx(transaction_node);
+    }
+}
+
+// Handles transaction view event and navigation
+function view_tx() {
+    $(document).on("click", "#view_tx", function() {
+        if (glob_const.inframe) {
+            glob_const.html.removeClass("hide_app");
+        } else if (glob_const.body.hasClass("showstartpages")) {
+            cancel_paymentdialog();
+            start_next($("#intro"));
+            return;
+        }
+        openpage("?p=requests", "requests", "loadpage");
+        const transaction_hash = $(this).attr("data-txhash"),
+            transaction_node = get_requestli("txhash", transaction_hash);
+        open_tx(transaction_node);
+    });
+}
+
+// Expands transaction details with animation and scrolling
+function open_tx(transaction_node) {
+    const selected_request = transaction_node.length > 0 ? transaction_node : $("#requestlist .rqli").first(),
+        info_panel = selected_request.find(".moreinfo"),
+        meta_list = info_panel.find(".metalist");
+    $(".moreinfo").not(info_panel).slideUp(500);
+    $(".metalist").not(meta_list).slideUp(500);
+    $(".historic_meta").slideUp(200);
+    info_panel.add(meta_list).slideDown(500);
+    selected_request.addClass("visible_request");
+    const confirmation_bar = selected_request.find(".transactionlist .confbar");
+    if (confirmation_bar.length > 0) {
+        confirmation_bar.each(function(index) {
+            animate_confbar($(this), index);
+        });
+    }
+    setTimeout(function() { // wait for url to change
+        $("html, body").animate({
+            "scrollTop": selected_request.offset().top - $("#fixednav").height()
+        }, 500);
+    }, 1000);
+}
+
+// Navigates to Monero settings page after user confirmation
+function xmr_settings() {
+    $(document).on("click", "#xmrsettings", function() {
+        let confirm_result = confirm(translate("opencoinsettings", {
+            "currency": "Monero"
+        }));
+        if (confirm_result) {
+            let page_title = "monero_settings";
+            openpage("?p=" + page_title, page_title, "loadpage");
+            cancel_paymentdialog();
+        }
+    });
+}
+
+// ** Wallet Operations: **
+
 // Initializes wallet opening dialog based on currency type
-function openwallet() {
+function open_wallet() {
     $(document).on("click", ".openwallet, .openwallet_lnd", function() {
         const clicked_node = $(this),
             currency = clicked_node.attr("data-currency"),
@@ -3188,7 +2989,7 @@ function openwallet() {
 }
 
 // Processes wallet URL opening event
-function openwalleturl() {
+function open_wallet_url() {
     $(document).on("click", "#openwalleturl", function() {
         canceldialog();
     });
@@ -3231,7 +3032,7 @@ function download_wallet(currency) {
         if (wallet_list) {
             const wallet_container = $("#formbox_ul"),
                 device_type = detect_device_type(),
-                platform = getplatform(device_type),
+                platform = get_platform(device_type),
                 store_icon = platform_icon(platform),
                 store_tag = store_icon ? "<img src='" + store_icon + "'/>" : "<span class='icon-download'></span> ";
             $.each(wallet_list, function(key, wallet_info) {
@@ -3248,8 +3049,233 @@ function download_wallet(currency) {
     }
 }
 
+// ** Request Updates: **
+
+// Processes and stores payment request data with multi-currency and Lightning Network support
+function save_payment_request(direct, lightning_url) {
+    const url_params = get_urlparameters();
+    if (url_params.xss) {
+        return
+    }
+    const current_payment = url_params.payment,
+        current_currency = url_params.uoa,
+        current_amount = url_params.amount,
+        currency_symbol = request.currencysymbol,
+        current_request_type = request.requesttype,
+        current_payment_timestamp = request.paymenttimestamp,
+        set_confirmations = request.set_confirmations,
+        lightning_info = helper.lnd,
+        lightning_id = lightning_info ? lightning_info.pid : "",
+        confirmation_string = lightning_info ? "1" : (set_confirmations ? set_confirmations.toString() : "0"),
+        amount_string = current_amount ? current_amount.toString() : "0",
+        current_address = lightning_url ? "lnurl" : url_params.address,
+        current_data = url_params.d,
+        current_meta = url_params.m,
+        current_timestamp = now_utc(), // UTC
+        request_data_hash = current_data && current_data.length > 5 ? current_data : null, // check if data param exists
+        request_meta_hash = current_meta && current_meta.length > 5 ? current_meta : null, // check if meta param exists
+        data_object = request_data_hash ? JSON.parse(atob(request_data_hash)) : null, // decode data param if exists
+        request_timestamp = current_payment_timestamp || (data_object && data_object.ts) || (current_request_type === "incoming" ? null : current_timestamp), // null is unknown timestamp
+        unhashed_request_data = current_payment + current_currency + amount_string + current_address + request.requestname + request.requesttitle + confirmation_string + lightning_id,
+        saved_transaction_hash = request.txhash,
+        is_local = current_request_type === "local",
+        request_id = is_local && saved_transaction_hash ? generate_hash(saved_transaction_hash) : generate_hash(unhashed_request_data),
+        request_cache = br_get_local("requests", true),
+        request_id_param = url_params.requestid,
+        is_checkout = direct !== "init" && current_request_type === "checkout",
+        is_crypto_currency = current_currency === currency_symbol,
+        is_lightning = data_object && data_object.imp,
+        ethereum_layer2 = request.eth_layer2,
+        ethereum_l2s = request.eth_l2s;
+    let matching_request_in_cache,
+        is_lightning_only = false,
+        lightning_invoice = false,
+        lightning_object = false;
+    if (lightning_info) {
+        if (current_address === "lnurl") {
+            is_lightning_only = true;
+        }
+        lightning_invoice = lightning_info.invoice,
+            lightning_object = current_request_type === "outgoing" && !is_lightning ? false : {
+                "imp": lightning_info.imp,
+                "host": lightning_info.host,
+                "key": lightning_info.key,
+                "pid": lightning_info.pid,
+                "nid": lightning_info.nid,
+                "pw": lightning_info.pw,
+                "invoice": lightning_invoice,
+                "proxy_host": lightning_info.proxy_host,
+                "hybrid": !is_lightning_only
+            };
+    }
+    if (request_cache) {
+        matching_request_in_cache = $.grep(request_cache, function(filter) { //filter pending requests
+            return filter.requestid === request_id;
+        });
+    }
+    const is_request_in_cache = matching_request_in_cache && matching_request_in_cache.length > 0;
+    if (is_request_in_cache || request_id_param) { // do not save if request already exists
+        const smart_id = request_id_param || request_id,
+            request_list_item = $("#" + smart_id),
+            request_item_data = request_list_item.data(),
+            pending_state = request_item_data.pending;
+        if (saved_transaction_hash) { // check if request is opened or updated
+            request.received = true;
+            if (pending_state !== "paid") {
+                const update_data = {
+                    "requestid": smart_id,
+                    "status": request.status,
+                    "receivedamount": request.receivedamount,
+                    "fiatvalue": request.fiatvalue,
+                    "txhash": saved_transaction_hash,
+                    "confirmations": request.confirmations,
+                    "pending": request.pending,
+                    "lightning": lightning_object,
+                    ethereum_layer2,
+                    ethereum_l2s
+                };
+                br_remove_session("historic_" + smart_id); // remove historic price cache
+                update_request(update_data, true);
+            }
+        } else {
+            const request_status = request_item_data.status;
+            if (pending_state === "scanning" || request_status === "canceled") { // do nothing
+                return false;
+            } else {
+                if (pending_state === "polling" || request_list_item.hasClass("expired")) {
+                    show_pending_status(request_list_item);
+                    if (lightning_object) {
+                        return false;
+                    }
+                    return "nosocket";
+                }
+                if (pending_state === "no") {
+                    request.received = true;
+                    const transaction_hash_state = request_item_data.txhash,
+                        type_state = request_item_data.requesttype,
+                        send_receive = type_state === "incoming" ? "sent" : "received",
+                        transaction_status = send_receive === "sent" ? translate("paymentsent") : translate("paymentreceived");
+                    update_payment_status("paid", "no", transaction_status);
+                    glob_const.paymentdialogbox.find("span#view_tx").attr("data-txhash", transaction_hash_state);
+                    return "nosocket";
+                }
+            }
+        }
+    } else {
+        //overwrite global request object
+        request.address = current_address,
+            request.requestid = request_id,
+            request.iscrypto = is_crypto_currency,
+            request.fiatcurrency = is_crypto_currency ? request.localcurrency : current_currency,
+            request.currencyname = $("#xratestats .cpool[data-currency='" + current_currency + "']").attr("data-currencyname"),
+            request.cc_amount = parseFloat($("#open_wallet").attr("data-rel"));
+        const number_amount = Number(current_amount),
+            is_zero_amount = number_amount === 0 || isNaN(number_amount);
+        if (direct === "init" && request.shared === false) { // when first opened only save shared requests
+            // Do nothing
+        } else if (is_zero_amount === true) { // don't save requests with zero value
+            // Do nothing
+        } else {
+            const coin_settings = request.coinsettings,
+                append_object = $.extend(request, {
+                    "archive": false,
+                    "showarchive": false,
+                    "timestamp": current_timestamp,
+                    "requestdate": request_timestamp,
+                    "rqdata": request_data_hash,
+                    "rqmeta": request_meta_hash,
+                    "lightning": lightning_object
+                });
+            delete append_object.coinsettings; // don't save coinsettings in request
+            append_request(append_object);
+            setTimeout(function() {
+                save_requests();
+            }, 500);
+            if (!request_id_param && direct === true) { // Add request_params (make it a request)
+                const request_params = "&requestid=" + request_id + "&status=" + request.status + "&type=" + current_request_type;
+                history.replaceState(null, null, glob_const.w_loc.href + request_params);
+            }
+            if (coin_settings) {
+                const reuse = coin_settings["Reuse address"];
+                if (reuse) {
+                    if (reuse.selected === false) {
+                        // Derive new address
+                        if (!is_lightning_only) {
+                            const address_list_item = filter_addressli(current_payment, "address", current_address);
+                            address_list_item.addClass("used").data("used", true);
+                            save_addresses(current_payment, false);
+                            derive_new_address(current_payment);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // post to parent
+    if (is_checkout) {
+        const contact_param = url_params.contactform,
+            meta_data_object = request_meta_hash ? JSON.parse(atob(request_meta_hash)) : null, // decode meta param if exists
+            fiat_value_rounded = trimdecimals(request.fiatvalue, 2),
+            received_in_currency = is_crypto_currency ? request.receivedamount : fiat_value_rounded,
+            transaction_payment_timestamp = current_payment_timestamp || current_timestamp,
+            transaction_data = {
+                "currencyname": request.currencyname,
+                "requestid": request_id,
+                "cmcid": request.cmcid,
+                "payment": current_payment,
+                "ccsymbol": currency_symbol,
+                "iscrypto": is_crypto_currency,
+                "amount": current_amount,
+                "receivedamount": received_in_currency,
+                "receivedcc": request.receivedamount,
+                "fiatvalue": fiat_value_rounded,
+                "status": request.status,
+                "txhash": saved_transaction_hash,
+                "receiver": current_address,
+                "confirmations": request.confirmations,
+                "set_confirmations": set_confirmations,
+                "transactiontime": transaction_payment_timestamp,
+                "pending": request.pending,
+                "lightning": lightning_object,
+                "erc20": request.erc20,
+                ethereum_layer2,
+                ethereum_l2s
+            };
+        let contact_data;
+        if (contact_param) {
+            const contact_form_data = $("#contactform").data(),
+                contact_form_address = contact_form_data.address;
+            if (contact_form_address) {
+                contact_data = {
+                    "name": contact_form_data.name,
+                    "address": contact_form_address,
+                    "zipcode": contact_form_data.zipcode,
+                    "city": contact_form_data.city,
+                    "country": contact_form_data.country,
+                    "email": contact_form_data.email
+                }
+            }
+        }
+        const post_data = {
+            "txdata": transaction_data,
+            "data": data_object,
+            "meta": meta_data_object,
+            "contact": contact_data
+        };
+        parent.postMessage({
+            "id": "result",
+            "data": post_data
+        }, "*");
+    }
+    if (current_request_type !== "incoming") {
+        helper.currencylistitem.removeData("url"); // remove saved url / reset lightning id
+        br_remove_local("editurl");
+        br_remove_session("lndpid");
+    }
+}
+
 // Updates request UI elements and metadata with transaction status
-function updaterequest(update_args, should_save) {
+function update_request(update_args, should_save) {
     const request_element = $("#" + update_args.requestid);
     if (request_element.length) {
         const request_data = request_element.data(),
@@ -3332,7 +3358,7 @@ function updaterequest(update_args, should_save) {
         request_element.data(update_args);
         if (should_save === true) {
             setTimeout(function() {
-                saverequests();
+                save_requests();
             }, 1000);
         }
         return

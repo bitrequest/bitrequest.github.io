@@ -2,6 +2,19 @@ const l = 7237005577332262213973186563042994240857116359379907606001950938285454
     xmr_words = [
         "abbey", "abducts", "ability", "ablaze", "abnormal", "abort", "abrasive", "absorb", "abyss", "academy", "aces", "aching", "acidic", "acoustic", "acquire", "across", "actress", "acumen", "adapt", "addicted", "adept", "adhesive", "adjust", "adopt", "adrenalin", "adult", "adventure", "aerial", "afar", "affair", "afield", "afloat", "afoot", "afraid", "after", "against", "agenda", "aggravate", "agile", "aglow", "agnostic", "agony", "agreed", "ahead", "aided", "ailments", "aimless", "airport", "aisle", "ajar", "akin", "alarms", "album", "alchemy", "alerts", "algebra", "alkaline", "alley", "almost", "aloof", "alpine", "already", "also", "altitude", "alumni", "always", "amaze", "ambush", "amended", "amidst", "ammo", "amnesty", "among", "amply", "amused", "anchor", "android", "anecdote", "angled", "ankle", "annoyed", "answers", "antics", "anvil", "anxiety", "anybody", "apart", "apex", "aphid", "aplomb", "apology", "apply", "apricot", "aptitude", "aquarium", "arbitrary", "archer", "ardent", "arena", "argue", "arises", "army", "around", "arrow", "arsenic", "artistic", "ascend", "ashtray", "aside", "asked", "asleep", "aspire", "assorted", "asylum", "athlete", "atlas", "atom", "atrium", "attire", "auburn", "auctions", "audio", "august", "aunt", "austere", "autumn", "avatar", "avidly", "avoid", "awakened", "awesome", "awful", "awkward", "awning", "awoken", "axes", "axis", "axle", "aztec", "azure", "baby", "bacon", "badge", "baffles", "bagpipe", "bailed", "bakery", "balding", "bamboo", "banjo", "baptism", "basin", "batch", "bawled", "bays", "because", "beer", "befit", "begun", "behind", "being", "below", "bemused", "benches", "berries", "bested", "betting", "bevel", "beware", "beyond", "bias", "bicycle", "bids", "bifocals", "biggest", "bikini", "bimonthly", "binocular", "biology", "biplane", "birth", "biscuit", "bite", "biweekly", "blender", "blip", "bluntly", "boat", "bobsled", "bodies", "bogeys", "boil", "boldly", "bomb", "border", "boss", "both", "bounced", "bovine", "bowling", "boxes", "boyfriend", "broken", "brunt", "bubble", "buckets", "budget", "buffet", "bugs", "building", "bulb", "bumper", "bunch", "business", "butter", "buying", "buzzer", "bygones", "byline", "bypass", "cabin", "cactus", "cadets", "cafe", "cage", "cajun", "cake", "calamity", "camp", "candy", "casket", "catch", "cause", "cavernous", "cease", "cedar", "ceiling", "cell", "cement", "cent", "certain", "chlorine", "chrome", "cider", "cigar", "cinema", "circle", "cistern", "citadel", "civilian", "claim", "click", "clue", "coal", "cobra", "cocoa", "code", "coexist", "coffee", "cogs", "cohesive", "coils", "colony", "comb", "cool", "copy", "corrode", "costume", "cottage", "cousin", "cowl", "criminal", "cube", "cucumber", "cuddled", "cuffs", "cuisine", "cunning", "cupcake", "custom", "cycling", "cylinder", "cynical", "dabbing", "dads", "daft", "dagger", "daily", "damp", "dangerous", "dapper", "darted", "dash", "dating", "dauntless", "dawn", "daytime", "dazed", "debut", "decay", "dedicated", "deepest", "deftly", "degrees", "dehydrate", "deity", "dejected", "delayed", "demonstrate", "dented", "deodorant", "depth", "desk", "devoid", "dewdrop", "dexterity", "dialect", "dice", "diet", "different", "digit", "dilute", "dime", "dinner", "diode", "diplomat", "directed", "distance", "ditch", "divers", "dizzy", "doctor", "dodge", "does", "dogs", "doing", "dolphin", "domestic", "donuts", "doorway", "dormant", "dosage", "dotted", "double", "dove", "down", "dozen", "dreams", "drinks", "drowning", "drunk", "drying", "dual", "dubbed", "duckling", "dude", "duets", "duke", "dullness", "dummy", "dunes", "duplex", "duration", "dusted", "duties", "dwarf", "dwelt", "dwindling", "dying", "dynamite", "dyslexic", "each", "eagle", "earth", "easy", "eating", "eavesdrop", "eccentric", "echo", "eclipse", "economics", "ecstatic", "eden", "edgy", "edited", "educated", "eels", "efficient", "eggs", "egotistic", "eight", "either", "eject", "elapse", "elbow", "eldest", "eleven", "elite", "elope", "else", "eluded", "emails", "ember", "emerge", "emit", "emotion", "empty", "emulate", "energy", "enforce", "enhanced", "enigma", "enjoy", "enlist", "enmity", "enough", "enraged", "ensign", "entrance", "envy", "epoxy", "equip", "erase", "erected", "erosion", "error", "eskimos", "espionage", "essential", "estate", "etched", "eternal", "ethics", "etiquette", "evaluate", "evenings", "evicted", "evolved", "examine", "excess", "exhale", "exit", "exotic", "exquisite", "extra", "exult", "fabrics", "factual", "fading", "fainted", "faked", "fall", "family", "fancy", "farming", "fatal", "faulty", "fawns", "faxed", "fazed", "feast", "february", "federal", "feel", "feline", "females", "fences", "ferry", "festival", "fetches", "fever", "fewest", "fiat", "fibula", "fictional", "fidget", "fierce", "fifteen", "fight", "films", "firm", "fishing", "fitting", "five", "fixate", "fizzle", "fleet", "flippant", "flying", "foamy", "focus", "foes", "foggy", "foiled", "folding", "fonts", "foolish", "fossil", "fountain", "fowls", "foxes", "foyer", "framed", "friendly", "frown", "fruit", "frying", "fudge", "fuel", "fugitive", "fully", "fuming", "fungal", "furnished", "fuselage", "future", "fuzzy", "gables", "gadget", "gags", "gained", "galaxy", "gambit", "gang", "gasp", "gather", "gauze", "gave", "gawk", "gaze", "gearbox", "gecko", "geek", "gels", "gemstone", "general", "geometry", "germs", "gesture", "getting", "geyser", "ghetto", "ghost", "giant", "giddy", "gifts", "gigantic", "gills", "gimmick", "ginger", "girth", "giving", "glass", "gleeful", "glide", "gnaw", "gnome", "goat", "goblet", "godfather", "goes", "goggles", "going", "goldfish", "gone", "goodbye", "gopher", "gorilla", "gossip", "gotten", "gourmet", "governing", "gown", "greater", "grunt", "guarded", "guest", "guide", "gulp", "gumball", "guru", "gusts", "gutter", "guys", "gymnast", "gypsy", "gyrate", "habitat", "hacksaw", "haggled", "hairy", "hamburger", "happens", "hashing", "hatchet", "haunted", "having", "hawk", "haystack", "hazard", "hectare", "hedgehog", "heels", "hefty", "height", "hemlock", "hence", "heron", "hesitate", "hexagon", "hickory", "hiding", "highway", "hijack", "hiker", "hills", "himself", "hinder", "hippo", "hire", "history", "hitched", "hive", "hoax", "hobby", "hockey", "hoisting", "hold", "honked", "hookup", "hope", "hornet", "hospital", "hotel", "hounded", "hover", "howls", "hubcaps", "huddle", "huge", "hull", "humid", "hunter", "hurried", "husband", "huts", "hybrid", "hydrogen", "hyper", "iceberg", "icing", "icon", "identity", "idiom", "idled", "idols", "igloo", "ignore", "iguana", "illness", "imagine", "imbalance", "imitate", "impel", "inactive", "inbound", "incur", "industrial", "inexact", "inflamed", "ingested", "initiate", "injury", "inkling", "inline", "inmate", "innocent", "inorganic", "input", "inquest", "inroads", "insult", "intended", "inundate", "invoke", "inwardly", "ionic", "irate", "iris", "irony", "irritate", "island", "isolated", "issued", "italics", "itches", "items", "itinerary", "itself", "ivory", "jabbed", "jackets", "jaded", "jagged", "jailed", "jamming", "january", "jargon", "jaunt", "javelin", "jaws", "jazz", "jeans", "jeers", "jellyfish", "jeopardy", "jerseys", "jester", "jetting", "jewels", "jigsaw", "jingle", "jittery", "jive", "jobs", "jockey", "jogger", "joining", "joking", "jolted", "jostle", "journal", "joyous", "jubilee", "judge", "juggled", "juicy", "jukebox", "july", "jump", "junk", "jury", "justice", "juvenile", "kangaroo", "karate", "keep", "kennel", "kept", "kernels", "kettle", "keyboard", "kickoff", "kidneys", "king", "kiosk", "kisses", "kitchens", "kiwi", "knapsack", "knee", "knife", "knowledge", "knuckle", "koala", "laboratory", "ladder", "lagoon", "lair", "lakes", "lamb", "language", "laptop", "large", "last", "later", "launching", "lava", "lawsuit", "layout", "lazy", "lectures", "ledge", "leech", "left", "legion", "leisure", "lemon", "lending", "leopard", "lesson", "lettuce", "lexicon", "liar", "library", "licks", "lids", "lied", "lifestyle", "light", "likewise", "lilac", "limits", "linen", "lion", "lipstick", "liquid", "listen", "lively", "loaded", "lobster", "locker", "lodge", "lofty", "logic", "loincloth", "long", "looking", "lopped", "lordship", "losing", "lottery", "loudly", "love", "lower", "loyal", "lucky", "luggage", "lukewarm", "lullaby", "lumber", "lunar", "lurk", "lush", "luxury", "lymph", "lynx", "lyrics", "macro", "madness", "magically", "mailed", "major", "makeup", "malady", "mammal", "maps", "masterful", "match", "maul", "maverick", "maximum", "mayor", "maze", "meant", "mechanic", "medicate", "meeting", "megabyte", "melting", "memoir", "menu", "merger", "mesh", "metro", "mews", "mice", "midst", "mighty", "mime", "mirror", "misery", "mittens", "mixture", "moat", "mobile", "mocked", "mohawk", "moisture", "molten", "moment", "money", "moon", "mops", "morsel", "mostly", "motherly", "mouth", "movement", "mowing", "much", "muddy", "muffin", "mugged", "mullet", "mumble", "mundane", "muppet", "mural", "musical", "muzzle", "myriad", "mystery", "myth", "nabbing", "nagged", "nail", "names", "nanny", "napkin", "narrate", "nasty", "natural", "nautical", "navy", "nearby", "necklace", "needed", "negative", "neither", "neon", "nephew", "nerves", "nestle", "network", "neutral", "never", "newt", "nexus", "nibs", "niche", "niece", "nifty", "nightly", "nimbly", "nineteen", "nirvana", "nitrogen", "nobody", "nocturnal", "nodes", "noises", "nomad", "noodles", "northern", "nostril", "noted", "nouns", "novelty", "nowhere", "nozzle", "nuance", "nucleus", "nudged", "nugget", "nuisance", "null", "number", "nuns", "nurse", "nutshell", "nylon", "oaks", "oars", "oasis", "oatmeal", "obedient", "object", "obliged", "obnoxious", "observant", "obtains", "obvious", "occur", "ocean", "october", "odds", "odometer", "offend", "often", "oilfield", "ointment", "okay", "older", "olive", "olympics", "omega", "omission", "omnibus", "onboard", "oncoming", "oneself", "ongoing", "onion", "online", "onslaught", "onto", "onward", "oozed", "opacity", "opened", "opposite", "optical", "opus", "orange", "orbit", "orchid", "orders", "organs", "origin", "ornament", "orphans", "oscar", "ostrich", "otherwise", "otter", "ouch", "ought", "ounce", "ourselves", "oust", "outbreak", "oval", "oven", "owed", "owls", "owner", "oxidant", "oxygen", "oyster", "ozone", "pact", "paddles", "pager", "pairing", "palace", "pamphlet", "pancakes", "paper", "paradise", "pastry", "patio", "pause", "pavements", "pawnshop", "payment", "peaches", "pebbles", "peculiar", "pedantic", "peeled", "pegs", "pelican", "pencil", "people", "pepper", "perfect", "pests", "petals", "phase", "pheasants", "phone", "phrases", "physics", "piano", "picked", "pierce", "pigment", "piloted", "pimple", "pinched", "pioneer", "pipeline", "pirate", "pistons", "pitched", "pivot", "pixels", "pizza", "playful", "pledge", "pliers", "plotting", "plus", "plywood", "poaching", "pockets", "podcast", "poetry", "point", "poker", "polar", "ponies", "pool", "popular", "portents", "possible", "potato", "pouch", "poverty", "powder", "pram", "present", "pride", "problems", "pruned", "prying", "psychic", "public", "puck", "puddle", "puffin", "pulp", "pumpkins", "punch", "puppy", "purged", "push", "putty", "puzzled", "pylons", "pyramid", "python", "queen", "quick", "quote", "rabbits", "racetrack", "radar", "rafts", "rage", "railway", "raking", "rally", "ramped", "randomly", "rapid", "rarest", "rash", "rated", "ravine", "rays", "razor", "react", "rebel", "recipe", "reduce", "reef", "refer", "regular", "reheat", "reinvest", "rejoices", "rekindle", "relic", "remedy", "renting", "reorder", "repent", "request", "reruns", "rest", "return", "reunion", "revamp", "rewind", "rhino", "rhythm", "ribbon", "richly", "ridges", "rift", "rigid", "rims", "ringing", "riots", "ripped", "rising", "ritual", "river", "roared", "robot", "rockets", "rodent", "rogue", "roles", "romance", "roomy", "roped", "roster", "rotate", "rounded", "rover", "rowboat", "royal", "ruby", "rudely", "ruffled", "rugged", "ruined", "ruling", "rumble", "runway", "rural", "rustled", "ruthless", "sabotage", "sack", "sadness", "safety", "saga", "sailor", "sake", "salads", "sample", "sanity", "sapling", "sarcasm", "sash", "satin", "saucepan", "saved", "sawmill", "saxophone", "sayings", "scamper", "scenic", "school", "science", "scoop", "scrub", "scuba", "seasons", "second", "sedan", "seeded", "segments", "seismic", "selfish", "semifinal", "sensible", "september", "sequence", "serving", "session", "setup", "seventh", "sewage", "shackles", "shelter", "shipped", "shocking", "shrugged", "shuffled", "shyness", "siblings", "sickness", "sidekick", "sieve", "sifting", "sighting", "silk", "simplest", "sincerely", "sipped", "siren", "situated", "sixteen", "sizes", "skater", "skew", "skirting", "skulls", "skydive", "slackens", "sleepless", "slid", "slower", "slug", "smash", "smelting", "smidgen", "smog", "smuggled", "snake", "sneeze", "sniff", "snout", "snug", "soapy", "sober", "soccer", "soda", "software", "soggy", "soil", "solved", "somewhere", "sonic", "soothe", "soprano", "sorry", "southern", "sovereign", "sowed", "soya", "space", "speedy", "sphere", "spiders", "splendid", "spout", "sprig", "spud", "spying", "square", "stacking", "stellar", "stick", "stockpile", "strained", "stunning", "stylishly", "subtly", "succeed", "suddenly", "suede", "suffice", "sugar", "suitcase", "sulking", "summon", "sunken", "superior", "surfer", "sushi", "suture", "swagger", "swept", "swiftly", "sword", "swung", "syllabus", "symptoms", "syndrome", "syringe", "system", "taboo", "tacit", "tadpoles", "tagged", "tail", "taken", "talent", "tamper", "tanks", "tapestry", "tarnished", "tasked", "tattoo", "taunts", "tavern", "tawny", "taxi", "teardrop", "technical", "tedious", "teeming", "tell", "template", "tender", "tepid", "tequila", "terminal", "testing", "tether", "textbook", "thaw", "theatrics", "thirsty", "thorn", "threaten", "thumbs", "thwart", "ticket", "tidy", "tiers", "tiger", "tilt", "timber", "tinted", "tipsy", "tirade", "tissue", "titans", "toaster", "tobacco", "today", "toenail", "toffee", "together", "toilet", "token", "tolerant", "tomorrow", "tonic", "toolbox", "topic", "torch", "tossed", "total", "touchy", "towel", "toxic", "toyed", "trash", "trendy", "tribal", "trolling", "truth", "trying", "tsunami", "tubes", "tucks", "tudor", "tuesday", "tufts", "tugs", "tuition", "tulips", "tumbling", "tunnel", "turnip", "tusks", "tutor", "tuxedo", "twang", "tweezers", "twice", "twofold", "tycoon", "typist", "tyrant", "ugly", "ulcers", "ultimate", "umbrella", "umpire", "unafraid", "unbending", "uncle", "under", "uneven", "unfit", "ungainly", "unhappy", "union", "unjustly", "unknown", "unlikely", "unmask", "unnoticed", "unopened", "unplugs", "unquoted", "unrest", "unsafe", "until", "unusual", "unveil", "unwind", "unzip", "upbeat", "upcoming", "update", "upgrade", "uphill", "upkeep", "upload", "upon", "upper", "upright", "upstairs", "uptight", "upwards", "urban", "urchins", "urgent", "usage", "useful", "usher", "using", "usual", "utensils", "utility", "utmost", "utopia", "uttered", "vacation", "vague", "vain", "value", "vampire", "vane", "vapidly", "vary", "vastness", "vats", "vaults", "vector", "veered", "vegan", "vehicle", "vein", "velvet", "venomous", "verification", "vessel", "veteran", "vexed", "vials", "vibrate", "victim", "video", "viewpoint", "vigilant", "viking", "village", "vinegar", "violin", "vipers", "virtual", "visited", "vitals", "vivid", "vixen", "vocal", "vogue", "voice", "volcano", "vortex", "voted", "voucher", "vowels", "voyage", "vulture", "wade", "waffle", "wagtail", "waist", "waking", "wallets", "wanted", "warped", "washing", "water", "waveform", "waxing", "wayside", "weavers", "website", "wedge", "weekday", "weird", "welders", "went", "wept", "were", "western", "wetsuit", "whale", "when", "whipped", "whole", "wickets", "width", "wield", "wife", "wiggle", "wildly", "winter", "wipeout", "wiring", "wise", "withdrawn", "wives", "wizard", "wobbly", "woes", "woken", "wolf", "womanly", "wonders", "woozy", "worry", "wounded", "woven", "wrap", "wrist", "wrong", "yacht", "yahoo", "yanks", "yard", "yawning", "yearbook", "yellow", "yesterday", "yeti", "yields", "yodel", "yoga", "younger", "yoyo", "zapped", "zeal", "zebra", "zero", "zesty", "zigzags", "zinger", "zippers", "zodiac", "zombie", "zones", "zoom"
     ],
+    xmr_CURVE = {
+        a: -1n,
+        d: 37095705934669439343138083508754565189542113879843219016388785533085940283555n,
+        P: 2n ** 255n - 19n,
+        n: 2n ** 252n + 27742317777372353535851937790883648493n,
+        h: 8n,
+        Gx: 15112221349535400772501151409588531511454012693041857206046113283949847762202n,
+        Gy: 46316835694926478169428394003475163141307993866256225615783033603165251855960n,
+    },
+    ENCODING_LENGTH = 32,
+    DIV_8_MINUS_3 = (xmr_CURVE.P + 3n) / 8n,
+    xmr_I = xpow_mod(2n, (xmr_CURVE.P + 1n) / 4n, xmr_CURVE.P),
+    xmr_pointPrecomputes = new WeakMap(),
     cn_base_58 = (function() {
         const b58 = {},
             alphabet_str = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
@@ -70,126 +83,53 @@ const l = 7237005577332262213973186563042994240857116359379907606001950938285454
         return b58;
     })();
 
-// Performs modular reduction of a 32-byte hex string against Monero's curve order l
-function sc_reduce32(hex) {
-    return hex_to_bytes(str_pad((BigInt("0x" + bytes_to_hex(hex_to_bytes(hex).reverse())) % l).toString(16), 64)).reverse();
-}
+// ** Core Buffer & Conversion Utilities: **
+//str_to_bin  
+//uint64_to_8be
+//bytesToNumberLE
+//uint32_hex
+//xmr_numberToHex
 
-// Derives a Monero secret spend key from either a BIP39 mnemonic phrase or its seed
-function get_ssk(bip39, seed) {
-    const p_rootkey = (seed === true) ? get_rootkey(bip39) : get_rootkey(mnemonic_to_seed(bip39)),
-        dx_dat = {
-            "dpath": "m/44'/128'/0'/0/0",
-            "key": p_rootkey.slice(0, 64),
-            "cc": p_rootkey.slice(64)
-        },
-        x_keys_dat = derive_x(dx_dat),
-        rootkey = x_keys_dat.key;
-    return sc_reduce32(fasthash(rootkey));
-}
+// ** Mathematical Foundations: **
+//xmod
+//xpow_mod
+//xmr_egcd
+//xmr_invert
+//xmr_invert_batch
 
-// Generates a standardized Monero address from public keys with network-specific prefix (12 for mainnet, 2a for subaddress)
-function pub_keys_to_address(psk, pvk, index) {
-    const pref = (index < 1) ? "12" : "2a",
-        res_hex = pref + psk + pvk,
-        cpa = res_hex + fasthash(res_hex).slice(0, 8);
-    return base58_encode(hex_to_bytes(cpa));
-}
+// ** Base Classes & Points: **
+//ExtendedPoint class 
+//xPoint class
+//xmr_getpoint
+//point_multiply
+//xmr_get_publickey
 
-// Computes and returns a Keccak-256 hash of input hexadecimal data
-function fasthash(hex) {
-    return keccak256(hex_to_bytes(hex));
-}
+// ** Mnemonic & Secret Key Generation: **
+//mn_random
+//secret_spend_key_to_words
+//get_ssk
+//sc_reduce32
+//crc_32
+//make_crc_table
 
-// Generates Monero keys and addresses from secret spend key, supporting both standard and subaddresses via index
-function xmr_getpubs(ssk, index) {
-    const sskh = bytes_to_hex(ssk),
-        svk = bytes_to_hex(sc_reduce32(fasthash(sskh))),
-        psk = xmr_get_publickey(sskh),
-        pvk = xmr_get_publickey(svk),
-        account = pub_keys_to_address(psk, pvk, 0);
-    if (index < 1) {
-        return {
-            "index": 0,
-            "account": account,
-            "address": account,
-            "ssk": sskh,
-            "svk": svk,
-            "psk": psk,
-            "pvk": pvk
-        }
-    }
-    const pubp = point_multiply(sc_reduce32(fasthash(5375624164647200 + svk + uint32_hex(0) + uint32_hex(index)))),
-        pskp = xmr_getpoint(psk),
-        np = pskp.add(pubp),
-        sub_psk = np.toHex(),
-        sub_pvk = np.multiply(xmr_getpoint(svk).y).toHex();
-    return {
-        "index": index,
-        "account": account,
-        "address": pub_keys_to_address(sub_psk, sub_pvk, index),
-        "ssk": sskh,
-        "svk": svk,
-        "psk": sub_psk,
-        "pvk": sub_pvk
-    }
-}
+// ** Address Generation: **
+//pub_keys_to_address
+//xmr_getpubs
+//fasthash
 
-// Constructs a lookup table for CRC-32 polynomial 0xEDB88320 calculations
-function make_crc_table() {
-    let c,
-        crcTable = [];
-    for (let n = 0; n < 256; n++) {
-        c = n;
-        for (let k = 0; k < 8; k++) {
-            c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
-        }
-        crcTable[n] = c;
-    }
-    return crcTable;
-}
+// ** Base58 Encoding: **
+//base58_encode
 
-// Calculates a 32-bit CRC checksum using the IEEE 802.3 polynomial
-function crc_32(str) {
-    let crcTable = window.crcTable || (window.crcTable = make_crc_table()),
-        crc = 0 ^ (-1);
-    for (let i = 0; i < str.length; i++) {
-        crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
-    }
-    return (crc ^ (-1)) >>> 0;
-}
+// ** View Key Management: **
+//get_vk
+//vk_obj
+//share_vk
 
-// Converts a 32-byte secret spend key into a 25-word Monero mnemonic with checksum
-function secret_spend_key_to_words(ssk) {
-    const seed = [];
-    let for_checksum = "";
-    for (let i = 0; i < 32; i += 4) {
-        let w0 = 0;
-        for (let j = 3; j >= 0; j--) w0 = w0 * 256 + ssk[i + j];
-        let xmrwl = xmr_words.length,
-            w1 = w0 % xmrwl,
-            w2 = ((w0 / xmrwl | 0) + w1) % xmrwl,
-            w3 = (((w0 / xmrwl | 0) / xmrwl | 0) + w2) % xmrwl;
-        seed.push(xmr_words[w1]);
-        seed.push(xmr_words[w2]);
-        seed.push(xmr_words[w3]);
-        for_checksum += xmr_words[w1].substring(0, 3);
-        for_checksum += xmr_words[w2].substring(0, 3);
-        for_checksum += xmr_words[w3].substring(0, 3);
-    }
-    seed.push(seed[crc_32(for_checksum) % 24]);
-    return seed.join(" ");
-}
+// ** Payment ID Functions: **
+//xmr_pid
+//check_pid
 
-// helpers
-
-// Formats a 32-bit number as an 8-character little-endian hex string
-function uint32_hex(value) {
-    let h = value.toString(16);
-    if (h.length > 8) throw "value must not equal or exceed 2^32";
-    while (h.length < 8) h = "0" + h;
-    return h.match(/../g).reverse().join("");
-}
+// ** Core Buffer & Conversion Utilities: **
 
 // Creates a Uint8Array from a string by converting each character to its ASCII value
 function str_to_bin(str) {
@@ -214,60 +154,101 @@ function uint64_to_8be(num, size) {
     return res;
 }
 
-// Implements Monero's modified Base58 encoding algorithm for address generation
-function base58_encode(data) {
-    const ab = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
-        ab_map = {},
-        btl = [0, 2, 3, 5, 6, 7, 9, 10, 11],
-        base = ab.length;
-    for (let z = 0; z < ab.length; z++) {
-        const x = ab.charAt(z);
-        if (ab_map[x] !== undefined) throw new TypeError(x + " is ambiguous");
-        ab_map[x] = z;
+// Converts a byte array to BigInt using little-endian byte ordering with bit-shifting
+function bytesToNumberLE(uint8a) {
+    let value = 0n;
+    for (let i = 0; i < uint8a.length; i++) {
+        value += BigInt(uint8a[i]) << (8n * BigInt(i));
     }
-
-    function encode_partial(data, pos) {
-        let len = 8;
-        if (pos + len > data.length) len = data.length - pos;
-        const digits = [0];
-        for (let i = 0; i < len; ++i) {
-            for (var j = 0, carry = data[pos + i]; j < digits.length; ++j) {
-                carry += digits[j] << 8;
-                digits[j] = carry % base;
-                carry = (carry / base) | 0;
-            }
-            while (carry > 0) {
-                digits.push(carry % base);
-                carry = (carry / base) | 0;
-            }
-        }
-        let res = "";
-        for (let k = digits.length; k < btl[len]; ++k) res += ab[0];
-        for (let q = digits.length - 1; q >= 0; --q) res += ab[digits[q]];
-        return res;
-    }
-    let resu = "";
-    for (let i = 0; i < data.length; i += 8) {
-        resu += encode_partial(data, i);
-    }
-    return resu;
+    return value;
 }
 
-// Code based on / credits: https://github.com/paulmillr/noble-ed25519
+// Formats a 32-bit number as an 8-character little-endian hex string
+function uint32_hex(value) {
+    let h = value.toString(16);
+    if (h.length > 8) throw "value must not equal or exceed 2^32";
+    while (h.length < 8) h = "0" + h;
+    return h.match(/../g).reverse().join("");
+}
 
-const xmr_CURVE = {
-        a: -1n,
-        d: 37095705934669439343138083508754565189542113879843219016388785533085940283555n,
-        P: 2n ** 255n - 19n,
-        n: 2n ** 252n + 27742317777372353535851937790883648493n,
-        h: 8n,
-        Gx: 15112221349535400772501151409588531511454012693041857206046113283949847762202n,
-        Gy: 46316835694926478169428394003475163141307993866256225615783033603165251855960n,
-    },
-    ENCODING_LENGTH = 32,
-    DIV_8_MINUS_3 = (xmr_CURVE.P + 3n) / 8n,
-    xmr_I = xpowMod(2n, (xmr_CURVE.P + 1n) / 4n, xmr_CURVE.P),
-    xmr_pointPrecomputes = new WeakMap();
+// Converts a positive integer to hexadecimal with leading zero padding
+function xmr_numberToHex(num) {
+    const hex = num.toString(16);
+    return hex.length & 1 ? `0${hex}` : hex;
+}
+
+// ** Mathematical Foundations: **
+
+// Performs modular arithmetic with optional modulus defaulting to Monero curve order P
+function xmod(a, b = xmr_CURVE.P) {
+    const res = a % b;
+    return res >= 0n ? res : b + res;
+}
+
+// Computes modular exponentiation using square-and-multiply algorithm with optional modulus P
+function xpow_mod(a, power, m = xmr_CURVE.P) {
+    let res = 1n;
+    while (power > 0n) {
+        if (power & 1n) {
+            res = xmod(res * a, m);
+        }
+        power >>= 1n;
+        a = xmod(a * a, m);
+    }
+    return res;
+}
+
+// Implements Extended Euclidean Algorithm to find GCD and Bézout's identity coefficients
+function xmr_egcd(a, b) {
+    let [x, y, u, v] = [0n, 1n, 1n, 0n];
+    while (a !== 0n) {
+        let q = b / a,
+            r = b % a,
+            m = x - u * q,
+            n = y - v * q;
+        [b, a] = [a, r];
+        [x, y] = [u, v];
+        [u, v] = [m, n];
+    }
+    let gcd = b;
+    return [gcd, x, y];
+}
+
+// Computes modular multiplicative inverse using Extended Euclidean Algorithm with optional curve modulus
+function xmr_invert(number, modulo = xmr_CURVE.P) {
+    if (number === 0n || modulo <= 0n) {
+        throw new Error("invert: expected positive integers");
+    }
+    let [gcd, x] = xmr_egcd(xmod(number, modulo), modulo);
+    if (gcd !== 1n) {
+        throw new Error("invert: does not exist");
+    }
+    return xmod(x, modulo);
+}
+
+// Efficiently computes multiple modular inverses using Montgomery's batch inversion algorithm
+function xmr_invert_batch(nums, n = xmr_CURVE.P) {
+    const len = nums.length,
+        scratch = new Array(len);
+    let acc = 1n;
+    for (let i = 0; i < len; i++) {
+        if (nums[i] === 0n)
+            continue;
+        scratch[i] = acc;
+        acc = xmod(acc * nums[i], n);
+    }
+    acc = xmr_invert(acc, n);
+    for (let i = len - 1; i >= 0; i--) {
+        if (nums[i] === 0n)
+            continue;
+        let tmp = xmod(acc * nums[i], n);
+        nums[i] = xmod(acc * scratch[i], n);
+        acc = tmp;
+    }
+    return nums;
+}
+
+// ** Base Classes & Points: **
 
 class ExtendedPoint {
     constructor(x, y, z, t) {
@@ -289,7 +270,7 @@ class ExtendedPoint {
 
     // Converts a batch of extended points to affine points
     static toAffineBatch(points) {
-        const toInv = xmr_invertBatch(points.map((p) => p.z));
+        const toInv = xmr_invert_batch(points.map((p) => p.z));
         return points.map((p, i) => p.toAffine(toInv[i]));
     }
 
@@ -463,7 +444,7 @@ class xPoint {
         }
         const sqrY = y * y,
             sqrX = xmod((sqrY - 1n) * xmr_invert(d * sqrY + 1n));
-        let x = xpowMod(sqrX, DIV_8_MINUS_3);
+        let x = xpow_mod(sqrX, DIV_8_MINUS_3);
         if (xmod(x * x - sqrX) !== 0n) {
             x = xmod(x * xmr_I);
         }
@@ -510,90 +491,6 @@ xPoint.BASE = new xPoint(xmr_CURVE.Gx, xmr_CURVE.Gy);
 xPoint.ZERO = new xPoint(0n, 1n);
 xPoint.BASE._setWindowSize(8);
 
-// Converts a positive integer to hexadecimal with leading zero padding
-function xmr_numberToHex(num) {
-    const hex = num.toString(16);
-    return hex.length & 1 ? `0${hex}` : hex;
-}
-
-// Converts a byte array to BigInt using little-endian byte ordering with bit-shifting
-function bytesToNumberLE(uint8a) {
-    let value = 0n;
-    for (let i = 0; i < uint8a.length; i++) {
-        value += BigInt(uint8a[i]) << (8n * BigInt(i));
-    }
-    return value;
-}
-
-// Performs modular arithmetic with optional modulus defaulting to Monero curve order P
-function xmod(a, b = xmr_CURVE.P) {
-    const res = a % b;
-    return res >= 0n ? res : b + res;
-}
-
-// Computes modular exponentiation using square-and-multiply algorithm with optional modulus P
-function xpowMod(a, power, m = xmr_CURVE.P) {
-    let res = 1n;
-    while (power > 0n) {
-        if (power & 1n) {
-            res = xmod(res * a, m);
-        }
-        power >>= 1n;
-        a = xmod(a * a, m);
-    }
-    return res;
-}
-
-// Implements Extended Euclidean Algorithm to find GCD and Bézout's identity coefficients
-function xmr_egcd(a, b) {
-    let [x, y, u, v] = [0n, 1n, 1n, 0n];
-    while (a !== 0n) {
-        let q = b / a,
-            r = b % a,
-            m = x - u * q,
-            n = y - v * q;
-        [b, a] = [a, r];
-        [x, y] = [u, v];
-        [u, v] = [m, n];
-    }
-    let gcd = b;
-    return [gcd, x, y];
-}
-
-// Computes modular multiplicative inverse using Extended Euclidean Algorithm with optional curve modulus
-function xmr_invert(number, modulo = xmr_CURVE.P) {
-    if (number === 0n || modulo <= 0n) {
-        throw new Error("invert: expected positive integers");
-    }
-    let [gcd, x] = xmr_egcd(xmod(number, modulo), modulo);
-    if (gcd !== 1n) {
-        throw new Error("invert: does not exist");
-    }
-    return xmod(x, modulo);
-}
-
-// Efficiently computes multiple modular inverses using Montgomery's batch inversion algorithm
-function xmr_invertBatch(nums, n = xmr_CURVE.P) {
-    const len = nums.length,
-        scratch = new Array(len);
-    let acc = 1n;
-    for (let i = 0; i < len; i++) {
-        if (nums[i] === 0n)
-            continue;
-        scratch[i] = acc;
-        acc = xmod(acc * nums[i], n);
-    }
-    acc = xmr_invert(acc, n);
-    for (let i = len - 1; i >= 0; i--) {
-        if (nums[i] === 0n)
-            continue;
-        let tmp = xmod(acc * nums[i], n);
-        nums[i] = xmod(acc * scratch[i], n);
-        acc = tmp;
-    }
-    return nums;
-}
-
 // Constructs an elliptic curve point from a 32-byte hex string representation
 function xmr_getpoint(hex) {
     return xPoint.fromHex(hex);
@@ -609,23 +506,7 @@ function xmr_get_publickey(privateKey) {
     return point_multiply(privateKey).toHex();
 }
 
-// Generates a 16-byte cryptographically secure random payment ID
-function xmr_pid() {
-    return mn_random(256).slice(0, 16);
-}
-
-// Validates payment ID format: must be 16 hexadecimal characters
-function check_pid(payment_id) {
-    const payment_id_length = payment_id.length;
-    if (payment_id_length !== 16) {
-        return false // invalid length
-    }
-    const pattern = RegExp("^[0-9a-fA-F]{16}$");
-    if (pattern.test(payment_id) != true) {
-        return false;
-    }
-    return true;
-}
+// ** Mnemonic & Secret Key Generation: **
 
 // Generates cryptographically secure random bits using browser's crypto API
 function mn_random(bits) {
@@ -655,6 +536,162 @@ function mn_random(bits) {
     }
     return out;
 }
+
+// Converts a 32-byte secret spend key into a 25-word Monero mnemonic with checksum
+function secret_spend_key_to_words(ssk) {
+    const seed = [];
+    let for_checksum = "";
+    for (let i = 0; i < 32; i += 4) {
+        let w0 = 0;
+        for (let j = 3; j >= 0; j--) w0 = w0 * 256 + ssk[i + j];
+        let xmrwl = xmr_words.length,
+            w1 = w0 % xmrwl,
+            w2 = ((w0 / xmrwl | 0) + w1) % xmrwl,
+            w3 = (((w0 / xmrwl | 0) / xmrwl | 0) + w2) % xmrwl;
+        seed.push(xmr_words[w1]);
+        seed.push(xmr_words[w2]);
+        seed.push(xmr_words[w3]);
+        for_checksum += xmr_words[w1].substring(0, 3);
+        for_checksum += xmr_words[w2].substring(0, 3);
+        for_checksum += xmr_words[w3].substring(0, 3);
+    }
+    seed.push(seed[crc_32(for_checksum) % 24]);
+    return seed.join(" ");
+}
+
+// Derives a Monero secret spend key from either a BIP39 mnemonic phrase or its seed
+function get_ssk(bip39, seed) {
+    const p_rootkey = (seed === true) ? get_rootkey(bip39) : get_rootkey(mnemonic_to_seed(bip39)),
+        dx_dat = {
+            "dpath": "m/44'/128'/0'/0/0",
+            "key": p_rootkey.slice(0, 64),
+            "cc": p_rootkey.slice(64)
+        },
+        x_keys_dat = derive_x(dx_dat),
+        rootkey = x_keys_dat.key;
+    return sc_reduce32(fasthash(rootkey));
+}
+
+// Performs modular reduction of a 32-byte hex string against Monero's curve order l
+function sc_reduce32(hex) {
+    return hex_to_bytes(str_pad((BigInt("0x" + bytes_to_hex(hex_to_bytes(hex).reverse())) % l).toString(16), 64)).reverse();
+}
+
+// Calculates a 32-bit CRC checksum using the IEEE 802.3 polynomial
+function crc_32(str) {
+    let crcTable = window.crcTable || (window.crcTable = make_crc_table()),
+        crc = 0 ^ (-1);
+    for (let i = 0; i < str.length; i++) {
+        crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
+    }
+    return (crc ^ (-1)) >>> 0;
+}
+
+// Constructs a lookup table for CRC-32 polynomial 0xEDB88320 calculations
+function make_crc_table() {
+    let c,
+        crcTable = [];
+    for (let n = 0; n < 256; n++) {
+        c = n;
+        for (let k = 0; k < 8; k++) {
+            c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+        }
+        crcTable[n] = c;
+    }
+    return crcTable;
+}
+
+// ** Address Generation: **
+
+// Generates a standardized Monero address from public keys with network-specific prefix (12 for mainnet, 2a for subaddress)
+function pub_keys_to_address(psk, pvk, index) {
+    const pref = (index < 1) ? "12" : "2a",
+        res_hex = pref + psk + pvk,
+        cpa = res_hex + fasthash(res_hex).slice(0, 8);
+    return base58_encode(hex_to_bytes(cpa));
+}
+
+// Generates Monero keys and addresses from secret spend key, supporting both standard and subaddresses via index
+function xmr_getpubs(ssk, index) {
+    const sskh = bytes_to_hex(ssk),
+        svk = bytes_to_hex(sc_reduce32(fasthash(sskh))),
+        psk = xmr_get_publickey(sskh),
+        pvk = xmr_get_publickey(svk),
+        account = pub_keys_to_address(psk, pvk, 0);
+    if (index < 1) {
+        return {
+            "index": 0,
+            "account": account,
+            "address": account,
+            "ssk": sskh,
+            "svk": svk,
+            "psk": psk,
+            "pvk": pvk
+        }
+    }
+    const pubp = point_multiply(sc_reduce32(fasthash(5375624164647200 + svk + uint32_hex(0) + uint32_hex(index)))),
+        pskp = xmr_getpoint(psk),
+        np = pskp.add(pubp),
+        sub_psk = np.toHex(),
+        sub_pvk = np.multiply(xmr_getpoint(svk).y).toHex();
+    return {
+        "index": index,
+        "account": account,
+        "address": pub_keys_to_address(sub_psk, sub_pvk, index),
+        "ssk": sskh,
+        "svk": svk,
+        "psk": sub_psk,
+        "pvk": sub_pvk
+    }
+}
+
+// Computes and returns a Keccak-256 hash of input hexadecimal data
+function fasthash(hex) {
+    return keccak256(hex_to_bytes(hex));
+}
+
+// ** Base58 Encoding: **
+
+// Implements Monero's modified Base58 encoding algorithm for address generation
+function base58_encode(data) {
+    const ab = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz",
+        ab_map = {},
+        btl = [0, 2, 3, 5, 6, 7, 9, 10, 11],
+        base = ab.length;
+    for (let z = 0; z < ab.length; z++) {
+        const x = ab.charAt(z);
+        if (ab_map[x] !== undefined) throw new TypeError(x + " is ambiguous");
+        ab_map[x] = z;
+    }
+
+    function encode_partial(data, pos) {
+        let len = 8;
+        if (pos + len > data.length) len = data.length - pos;
+        const digits = [0];
+        for (let i = 0; i < len; ++i) {
+            for (var j = 0, carry = data[pos + i]; j < digits.length; ++j) {
+                carry += digits[j] << 8;
+                digits[j] = carry % base;
+                carry = (carry / base) | 0;
+            }
+            while (carry > 0) {
+                digits.push(carry % base);
+                carry = (carry / base) | 0;
+            }
+        }
+        let res = "";
+        for (let k = digits.length; k < btl[len]; ++k) res += ab[0];
+        for (let q = digits.length - 1; q >= 0; --q) res += ab[digits[q]];
+        return res;
+    }
+    let resu = "";
+    for (let i = 0; i < data.length; i += 8) {
+        resu += encode_partial(data, i);
+    }
+    return resu;
+}
+
+// ** View Key Management: **
 
 // Retrieves cached view key data for a Monero address from storage
 function get_vk(address) {
@@ -691,6 +728,26 @@ function share_vk() {
         return true;
     }
     return false;
+}
+
+// ** Payment ID Functions: **
+
+// Generates a 16-byte cryptographically secure random payment ID
+function xmr_pid() {
+    return mn_random(256).slice(0, 16);
+}
+
+// Validates payment ID format: must be 16 hexadecimal characters
+function check_pid(payment_id) {
+    const payment_id_length = payment_id.length;
+    if (payment_id_length !== 16) {
+        return false // invalid length
+    }
+    const pattern = RegExp("^[0-9a-fA-F]{16}$");
+    if (pattern.test(payment_id) != true) {
+        return false;
+    }
+    return true;
 }
 
 /**

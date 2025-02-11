@@ -1,46 +1,41 @@
 $(document).ready(function() {
-
-    // ** Sockets / Polling **
-
+    // ** Core L2 Management: **
     //initialize_layer2_connections
-    //setup_layer2_monitoring
+    //setup_layer2_monitoring 
     //start_layer2_scan
     //start_layer2_polling
     //execute_layer2_scan
 
-    // ** Monirors **
+    // ** Network Operations: **
+    //route_layer2_operation
+    //arbitrum_apis
+    //polygon_apis 
+    //bnb_apis
 
+    // ** API Request Handling: **
     //route_layer2_api_request
     //scan_layer2_networks
     //poll_layer2_network
 
-    // ** L2 Networks **
-
-    //route_layer2_operation
-    //arbitrum_apis
-    //polygon_apis
-    //bnb_apis
-
-    // ** L2 Coinsettings **
-
+    // ** Settings Management: **
     edit_l2();
     toggle_network_panel();
     toggle_network_status();
     save_layer2_settings();
 
-    // ** L2 Helpers **
-
+    // ** Configuration Helpers: **
     //compress_layer2_config
-    //initialize_network_status
-    //update_network_status
     //get_layer2_config
     //find_network_index
     //get_network_node_config
-    //create_layer2_request
 
+    // ** Status Management: **
+    //initialize_network_status
+    //update_network_status
+    //create_layer2_request
 });
 
-// ** Sockets / Polling **
+// ** Core L2 Management: **
 
 // Initializes Layer 2 socket connections for Ethereum and ERC20 token transactions
 function initialize_layer2_connections(payment, address, ct, socket_node) {
@@ -132,7 +127,68 @@ function execute_layer2_scan(rdo, api_data) {
     }
 }
 
-// ** Monitors **
+// ** Network Operations: **
+
+// Routes operations to specific Layer 2 network handlers
+function route_layer2_operation(dat, network) {
+    if (dat) {
+        const url = q_obj(dat, "api_data.url");
+        if (url) {
+            const rq_id = q_obj(dat, "rd.requestid") || "",
+                l2 = network || q_obj(dat, "api_data.network");
+            glob_let.rpc_attempts[sha_sub(rq_id + url + l2, 15)] = true;
+            if (l2 === "arbitrum") {
+                arbitrum_apis(dat);
+            } else if (l2 === "polygon") {
+                polygon_apis(dat);
+            } else if (l2 === "bnb") {
+                bnb_apis(dat);
+            }
+            return
+        }
+    }
+    console.error("error", "missing api data");
+}
+
+// Manages Arbitrum network API interactions
+function arbitrum_apis(dat) {
+    const api_name = q_obj(dat, "api_data.name");
+    if (api_name === "arbiscan") {
+        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract);
+    } else if (api_name === "etherscan") {
+        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract, 42161);
+    } else if (api_name === "infura") {
+        infura_txd_rpc(dat.rd, dat.api_data, dat.rdo, dat.contract, 42161);
+    }
+}
+
+// Manages Polygon network API interactions
+function polygon_apis(dat) {
+    const api_name = q_obj(dat, "api_data.name");
+    if (api_name === "polygonscan") {
+        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract);
+    } else if (api_name === "etherscan") {
+        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract, 137);
+    } else if (api_name === "infura") {
+        infura_txd_rpc(dat.rd, dat.api_data, dat.rdo, dat.contract, 137);
+    }
+}
+
+// Manages BNB Chain API interactions
+function bnb_apis(dat) {
+    const api_name = q_obj(dat, "api_data.name");
+    if (api_name === "bscscan") {
+        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract);
+    } else if (api_name === "binplorer") {
+        process_ethereum_transactions(dat.rd, dat.api_data, dat.rdo);
+    } else if (api_name === "etherscan") {
+        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract, 56);
+    } else if (api_name === "infura") {
+        infura_txd_rpc(dat.rd, dat.api_data, dat.rdo, dat.contract, 56);
+    }
+}
+
+// ** API Request Handling: **
 
 // Routes Layer 2 API queries based on pending status
 function route_layer2_api_request(rd, rdo, api_dat, l2) {
@@ -236,68 +292,7 @@ function poll_layer2_network(rd, rdo, api_dat, l2) {
     }
 }
 
-// ** L2 Networks **
-
-// Routes operations to specific Layer 2 network handlers
-function route_layer2_operation(dat, network) {
-    if (dat) {
-        const url = q_obj(dat, "api_data.url");
-        if (url) {
-            const rq_id = q_obj(dat, "rd.requestid") || "",
-                l2 = network || q_obj(dat, "api_data.network");
-            glob_let.rpc_attempts[sha_sub(rq_id + url + l2, 15)] = true;
-            if (l2 === "arbitrum") {
-                arbitrum_apis(dat);
-            } else if (l2 === "polygon") {
-                polygon_apis(dat);
-            } else if (l2 === "bnb") {
-                bnb_apis(dat);
-            }
-            return
-        }
-    }
-    console.error("error", "missing api data");
-}
-
-// Manages Arbitrum network API interactions
-function arbitrum_apis(dat) {
-    const api_name = q_obj(dat, "api_data.name");
-    if (api_name === "arbiscan") {
-        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract);
-    } else if (api_name === "etherscan") {
-        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract, 42161);
-    } else if (api_name === "infura") {
-        infura_txd_rpc(dat.rd, dat.api_data, dat.rdo, dat.contract, 42161);
-    }
-}
-
-// Manages Polygon network API interactions
-function polygon_apis(dat) {
-    const api_name = q_obj(dat, "api_data.name");
-    if (api_name === "polygonscan") {
-        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract);
-    } else if (api_name === "etherscan") {
-        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract, 137);
-    } else if (api_name === "infura") {
-        infura_txd_rpc(dat.rd, dat.api_data, dat.rdo, dat.contract, 137);
-    }
-}
-
-// Manages BNB Chain API interactions
-function bnb_apis(dat) {
-    const api_name = q_obj(dat, "api_data.name");
-    if (api_name === "bscscan") {
-        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract);
-    } else if (api_name === "binplorer") {
-        process_ethereum_transactions(dat.rd, dat.api_data, dat.rdo);
-    } else if (api_name === "etherscan") {
-        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract, 56);
-    } else if (api_name === "infura") {
-        infura_txd_rpc(dat.rd, dat.api_data, dat.rdo, dat.contract, 56);
-    }
-}
-
-// ** L2 Coinsettings **
+// ** Settings Management: **
 
 // Handles Layer 2 settings UI interaction
 function edit_l2() {
@@ -310,10 +305,10 @@ function edit_l2() {
             const csnode = cs_node(thiscurrency, "layer2"); // update l2 settings li data
             csnode.data("options", l2_options);
         }
-        const eth_settings = getcoinsettings(thiscurrency),
+        const eth_settings = get_coinsettings(thiscurrency),
             eth_l2_settings = q_obj(eth_settings, "layer2.options");
         if (l2_options) {
-            const ccsymbol = fetchsymbol(thiscurrency),
+            const ccsymbol = fetch_symbol(thiscurrency),
                 symbol = ccsymbol.symbol,
                 ctracts = contracts(symbol),
                 arb_contract = ctracts.arbitrum,
@@ -393,7 +388,7 @@ function edit_l2() {
                             "content": [{
                                 "h2": {
                                     "class": "nwheading",
-                                    "content": nw_name + switchpanel(nw_selected, " custom")
+                                    "content": nw_name + switch_panel(nw_selected, " custom")
                                 },
                                 "div": {
                                     "class": "sboxwrap hide",
@@ -500,13 +495,13 @@ function save_layer2_settings() {
     })
 }
 
-// ** L2 Helpers **
+// ** Configuration Helpers: **
 
 // Compresses Layer 2 configuration object
 function compress_layer2_config(currency, ccsymbol) {
     // Initialize the result object with the base structure
-    const eth_settings = JSON.parse(JSON.stringify(getcoinsettings(currency))), // make a deep clone to prevent duplicates
-        cc_symbol = ccsymbol || q_obj(fetchsymbol(currency), "symbol"),
+    const eth_settings = JSON.parse(JSON.stringify(get_coinsettings(currency))), // make a deep clone to prevent duplicates
+        cc_symbol = ccsymbol || q_obj(fetch_symbol(currency), "symbol"),
         symbol = cc_symbol || "eth",
         l2_settings = eth_settings.layer2,
         ctracts = contracts(symbol),
@@ -528,6 +523,34 @@ function compress_layer2_config(currency, ccsymbol) {
     eth_settings.layer2 = result;
     return eth_settings;
 }
+
+// Retrieves Layer 2 configuration for currency
+function get_layer2_config(currency) {
+    const l2_setting = cs_node(currency, "layer2", true);
+    return q_obj(l2_setting, "options");
+}
+
+// Finds index of Layer 2 network in settings
+function find_network_index(l2_network) {
+    const l2s = q_obj(get_erc20_settings(), "layer2.options"),
+        networks = Object.keys(l2s);
+    return networks.indexOf(l2_network) === -1 ? false : networks.indexOf(l2_network);
+}
+
+// Retrieves node configuration for specified network
+function get_network_node_config(payment, network, l2_dat, type) {
+    const selected = q_obj(l2_dat, type);
+    if (selected) {
+        const eth_settings = get_coinsettings(payment),
+            eth_l2_settings = q_obj(eth_settings, "layer2.options." + network + "." + type + ".apis");
+        if (eth_l2_settings) {
+            return object_from_array(eth_l2_settings, "name", selected);
+        }
+    }
+    return false;
+}
+
+// ** Status Management: **
 
 // Initializes Layer 2 network status display
 function initialize_network_status(sn, stat) {
@@ -585,32 +608,6 @@ function update_network_status(sn, stat) {
             }
         }
     }
-}
-
-// Retrieves Layer 2 configuration for currency
-function get_layer2_config(currency) {
-    const l2_setting = cs_node(currency, "layer2", true);
-    return q_obj(l2_setting, "options");
-}
-
-// Finds index of Layer 2 network in settings
-function find_network_index(l2_network) {
-    const l2s = q_obj(get_erc20_settings(), "layer2.options"),
-        networks = Object.keys(l2s);
-    return networks.indexOf(l2_network) === -1 ? false : networks.indexOf(l2_network);
-}
-
-// Retrieves node configuration for specified network
-function get_network_node_config(payment, network, l2_dat, type) {
-    const selected = q_obj(l2_dat, type);
-    if (selected) {
-        const eth_settings = getcoinsettings(payment),
-            eth_l2_settings = q_obj(eth_settings, "layer2.options." + network + "." + type + ".apis");
-        if (eth_l2_settings) {
-            return object_from_array(eth_l2_settings, "name", selected);
-        }
-    }
-    return false;
 }
 
 // Creates Layer 2 request data object

@@ -1,32 +1,45 @@
-$(document).ready(function() {
-    //init_socket
-    //blockcypherws
-    //lightning_socket
-    //process_nfc_payment
-    //handle_nfc_api_error
-    //show_nfc_error
-    //setup_nfc_controller
-    //stop_nfc_scan
-    //blockcypher_websocket
-    //blockchain_btc_socket
-    //blockchain_bch_socket
-    //mempoolspace_btc_socket
-    //poll_dash_network
-    //nano_socket
-    //poll_nimiq_network
-    //init_eth_sockets
-    //kaspa_websocket
-    //kaspa_fyi_websocket
-    //handle_socket_fails
-    //handle_socket_close
-    //reconnect_websocket
-    //try_next_socket
-    //current_socket
-    //close_socket
-    //socket_info
-});
+// ** Core WebSocket Initialization & Management: **
+//init_socket
+//socket_info
+//close_socket 
+//handle_socket_fails
+//handle_socket_close
+//reconnect_websocket
+//try_next_socket
 
-// Websockets / Pollfunctions
+// ** Lightning Network & NFC Handling: **
+//lightning_socket
+//process_nfc_payment
+//handle_nfc_api_error
+//show_nfc_error
+//setup_nfc_controller
+//stop_nfc_scan
+//lnd_poll_data
+//lnd_poll_invoice
+//lnd_poll_data_fail
+
+// ** Bitcoin & Bitcoin-like Cryptocurrencies: **
+//blockcypherws
+//blockcypher_websocket
+//blockchain_btc_socket
+//blockchain_bch_socket
+//mempoolspace_btc_socket
+//dogechain_info_socket
+//poll_dash_network
+
+// ** Ethereum & Layer-2 Networks: **
+//init_eth_sockets
+//alchemy_eth_websocket
+//web3_eth_websocket
+//web3_erc20_websocket
+
+// ** Other Cryptocurrencies: **
+//nano_socket
+//poll_nimiq_network
+//kaspa_websocket
+//kaspa_fyi_websocket
+
+// ** Core WebSocket Initialization & Management: **
 
 // Establishes WebSocket connections for cryptocurrency payment monitoring based on payment type and node configuration
 function init_socket(socket_node, wallet_address, retry) {
@@ -181,14 +194,149 @@ function init_socket(socket_node, wallet_address, retry) {
     notify(translate("notmonitored"), 500000, "yes")
 }
 
-// Attempts WebSocket connection to BlockCypher API with fallback to local WebSocket if running locally
-function blockcypherws(socket_node, wallet_address) {
-    if (glob_let.local === true) {
-        blockcypher_websocket(socket_node, wallet_address);
+// Updates UI elements to reflect WebSocket connection status and handles L1/L2 state transitions
+function socket_info(socket_node, is_connected, is_polling) {
+    if (!is_openrequest()) {
         return
     }
-    handle_socket_fails(socket_node, wallet_address);
+    if (socket_node.network) {
+        initialize_network_status(socket_node, is_connected);
+        return
+    }
+    const node_identifier = socket_node.url || socket_node.name,
+        status_icon = is_connected ? " <span class='pulse'></span>" : " <span class='icon-wifi-off'></span>",
+        connection_type = is_polling ? "polling" : "websocket",
+        status_text = connection_type + ": " + node_identifier + status_icon,
+        payment_address = $("#paymentaddress");
+    $("#current_socket").html(status_text);
+    if (is_connected) {
+        console.log("Connected: " + node_identifier);
+        helper.l1_status = true;
+        payment_address.addClass("live");
+        glob_const.paymentpopup.addClass("live");
+        glob_const.paymentdialogbox.removeClass("switching");
+        closenotify();
+        return
+    }
+    if (glob_const.paymentdialogbox.hasClass("switching")) return; // prevents offline modus when switching addresses
+    setTimeout(function() {
+        if (glob_const.paymentdialogbox.hasClass("transacting")) return;
+        if (!is_openrequest()) return;
+        payment_address.removeClass("live");
+        helper.l1_status = false;
+        if (helper.l2_status === false) {
+            glob_const.paymentpopup.removeClass("live");
+            notify(translate("websocketoffline"), 500000, "yes");
+        }
+    }, 1000);
 }
+
+// Terminates specific or all active WebSocket connections and cleans up socket registry
+function close_socket(socket_id) {
+    if (socket_id) { // close this socket
+        if (glob_let.sockets[socket_id]) {
+            glob_let.sockets[socket_id].close();
+            delete glob_let.sockets[socket_id];
+        }
+    } else { // close all sockets
+        $.each(glob_let.sockets, function(key, socket) {
+            socket.close();
+        });
+        glob_let.sockets = {};
+    }
+}
+
+// Manages WebSocket failures by attempting reconnection through fallback nodes with L1/L2 network handling
+function handle_socket_fails(socket_node, wallet_address, socket_id, is_layer2) {
+    if (isopenrequest()) { // only when request is visible
+        if (request.currencysymbol === "bch" && glob_const.paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
+            return
+        }
+        const ws_id = socket_id || wallet_address;
+        force_close_socket(ws_id);
+        const fallback_node = try_next_socket(socket_node, is_layer2);
+        if (fallback_node) {
+            if (is_layer2) {
+                const token_contracts = contracts(request.currencysymbol);
+                if (token_contracts && socket_id) {
+                    stop_monitors(socket_id);
+                    setup_layer2_monitoring(fallback_node, wallet_address, token_contracts, true);
+                }
+                return
+            }
+            init_socket(fallback_node, wallet_address, null, true);
+            return
+        }
+        if (is_layer2) {
+            // No poll fallback for L2
+        } else {
+            const coin_config = get_coinsettings(request.payment),
+                has_poll_fallback = q_obj(coin_config, "websockets.poll_fallback");
+            if (has_poll_fallback) {
+                init_socket({
+                    "name": "poll_fallback",
+                    "display": false
+                }, wallet_address, null, true);
+                return
+            }
+        }
+        socket_info(socket_node, false);
+        console.error("Socket error:", "unable to connect to " + socket_node.name);
+    }
+}
+
+// Updates connection state and resets WebSocket timer on connection closure
+function handle_socket_close(socket_node) {
+    socket_info(socket_node, false);
+    console.log("Disconnected from " + socket_node.url);
+    glob_let.ws_timer = 0;
+}
+
+// Implements delayed reconnection logic for Kaspa WebSocket with rate limiting and state validation
+function reconnect_websocket(recon_data) {
+    if (!recon_data) return;
+    const close_code = recon_data.trigger,
+        wallet_address = recon_data.address;
+    if (close_code !== 1000 || !wallet_address || glob_const.paymentdialogbox.attr("data-status") !== "new") return;
+    const elapsed_time = now() - glob_let.ws_timer;
+    if (elapsed_time < 10000) return;
+    const retry_timeout = setTimeout(function() {
+        if (isopenrequest()) {
+            recon_data.function(recon_data.node, wallet_address);
+        }
+    }, 2000, function() {
+        clearTimeout(retry_timeout);
+    });
+}
+
+// Selects next available WebSocket endpoint from configuration with overflow protection and duplicate attempt prevention
+function try_next_socket(current_node, is_layer2) {
+    if (!current_node) return false;
+    if (block_overflow("socket")) return false; // prevent overflow
+    const current_url = current_node.url,
+        socket_config = is_layer2 ? q_obj(get_coinsettings(request.payment), "layer2.options." + current_node.network + ".websockets") : helper.socket_list,
+        available_nodes = socket_config.options ? $.merge(socket_config.apis, socket_config.options) : socket_config.apis;
+    if (!available_nodes.length) return false;
+    let current_index;
+    $.each(available_nodes, function(i, node) {
+        if (node.url == current_url) {
+            current_index = i;
+        }
+    });
+    if (current_index > -1) {
+        const next_node = available_nodes[current_index + 1],
+            fallback_node = next_node || available_nodes[0],
+            network_prefix = is_layer2 || "";
+        if (glob_let.socket_attempt[sha_sub(fallback_node.url + network_prefix, 15)] === true) {
+            return false;
+        }
+        if (fallback_node) {
+            return fallback_node;
+        }
+    }
+}
+
+// ** Lightning Network & NFC Handling: **
 
 // Establishes WebSocket connection to Lightning Network node for real-time payment monitoring
 function lightning_socket(lnd) {
@@ -585,7 +733,16 @@ function lnd_poll_data_fail(payment_id) {
     notify(translate("notmonitored"), 500000, "yes");
 }
 
-// Websockets
+// ** Bitcoin & Bitcoin-like Cryptocurrencies: **
+
+// Attempts WebSocket connection to BlockCypher API with fallback to local WebSocket if running locally
+function blockcypherws(socket_node, wallet_address) {
+    if (glob_let.local === true) {
+        blockcypher_websocket(socket_node, wallet_address);
+        return
+    }
+    handle_socket_fails(socket_node, wallet_address);
+}
 
 // Establishes WebSocket connection to BlockCypher API for transaction confirmation monitoring with automatic ping maintenance
 function blockcypher_websocket(socket_node, wallet_address) {
@@ -768,11 +925,6 @@ function mempoolspace_btc_socket(socket_node, wallet_address) {
     };
 }
 
-// Initiates polling interval for Dash blockchain status with 5-second frequency
-function poll_dash_network() {
-    start_address_monitor(5000);
-}
-
 // Establishes WebSocket connection to dogechain.info for Dogecoin address monitoring with transaction validation  
 function dogechain_info_socket(socket_node, wallet_address) {
     if (glob_let.sockets[wallet_address]) {
@@ -819,66 +971,12 @@ function dogechain_info_socket(socket_node, wallet_address) {
     };
 }
 
-// Establishes WebSocket connection for Nano network with confirmation subscription and XRB/NANO prefix handling
-function nano_socket(socket_node, wallet_address) {
-    if (glob_let.sockets[wallet_address]) {
-        return
-    }
-    const normalized_address = (wallet_address.match("^xrb")) ? "nano_" + wallet_address.split("_").pop() : wallet_address, // change nano address prefix xrb_ to nano untill websocket support
-        ws_endpoint = socket_node.url,
-        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-    socket.onopen = function(e) {
-        socket_info(socket_node, true);
-        const ping_payload = JSON.stringify({
-            "action": "subscribe",
-            "topic": "confirmation",
-            "all_local_accounts": true,
-            "options": {
-                "accounts": [normalized_address]
-            },
-            "ack": true
-        });
-        socket.send(ping_payload);
-        glob_let.pinging[wallet_address] = setInterval(function() {
-            socket.send(ping_payload);
-            poll_animate();
-        }, 55000);
-    };
-    socket.onmessage = function(e) {
-        try {
-            const current_utc = now_utc(),
-                msg_data = JSON.parse(e.data),
-                tx_data = (msg_data.message) ? msg_data.message : (msg_data.account) ? msg_data : null;
-            if (tx_data) {
-                if (tx_data.account === wallet_address) {
-                    return // block outgoing transactions
-                }
-                if (!tx_data.hash) return;
-                const tx_details = nano_scan_data(tx_data, undefined, request.currencysymbol),
-                    tx_time = tx_details.transactiontime,
-                    time_delta = Math.abs(tx_time - current_utc);
-                if (time_delta < 60000) { // filter transactions longer then a minute ago
-                    close_socket();
-                    start_transaction_monitor(tx_details);
-                }
-            }
-        } catch (error) {
-            console.error("Error parsing WebSocket message:", error);
-        }
-    };
-    socket.onclose = function(e) {
-        handle_socket_close(socket_node);
-    };
-    socket.onerror = function(e) {
-        handle_socket_fails(socket_node, wallet_address);
-        return
-    };
-}
-
-// Initiates 5-second interval polling for Nimiq blockchain status
-function poll_nimiq_network() {
+// Initiates polling interval for Dash blockchain status with 5-second frequency
+function poll_dash_network() {
     start_address_monitor(5000);
 }
+
+// ** Ethereum & Layer-2 Networks: **
 
 // Configures WebSocket connections for Ethereum L1/L2 networks and ERC20 tokens with provider-specific routing
 function init_eth_sockets(payment_type, socket_node, wallet_address, retry) {
@@ -896,117 +994,6 @@ function init_eth_sockets(payment_type, socket_node, wallet_address, retry) {
     if (retry) return
     // Check for layer 2
     initialize_layer2_connections(payment_type, wallet_address, token_contracts);
-}
-
-// Establishes WebSocket connection to Kaspa node with Socket.IO protocol and block subscription
-function kaspa_websocket(socket_node, wallet_address) {
-    if (glob_let.sockets[wallet_address]) {
-        return
-    }
-    const ws_endpoint = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket&sid=" + now(),
-        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-    socket.onopen = function(e) {
-        glob_let.ws_timer = now();
-        socket_info(socket_node, true);
-        socket.send("2probe");
-    };
-    socket.onmessage = function(e) {
-        const msg_data = e.data;
-        if (!msg_data) return;
-        const msg_type = msg_data.slice(0, 2);
-        if (msg_data === "3probe") {
-            socket.send('42["join-room","blocks"]');
-            return;
-        }
-        if (msg_type === "42") {
-            const parsed_data = msg_data.slice(2),
-                socket_data = JSON.parse(parsed_data),
-                block_data = socket_data[1];
-            if (block_data) {
-                const block_txs = block_data.txs;
-                if (block_txs) {
-                    $.each(block_txs, function(dat, value) {
-                        const tx_details = kaspa_ws_data(value, wallet_address);
-                        if (tx_details.ccval) {
-                            close_socket();
-                            start_transaction_monitor(tx_details);
-                            return
-                        }
-                    });
-                }
-            }
-        }
-    };
-    socket.onclose = function(e) {
-        reconnect_websocket({ // reconnect if ws closes
-            "function": kaspa_websocket,
-            "node": socket_node,
-            "address": wallet_address,
-            "trigger": e.code
-        });
-        handle_socket_close(socket_node);
-    };
-    socket.onerror = function(e) {
-        handle_socket_fails(socket_node, wallet_address);
-        return
-    };
-}
-
-// Establishes WebSocket connection to Kaspa FYI explorer with Socket.IO protocol and transaction monitoring
-function kaspa_fyi_websocket(socket_node, wallet_address) {
-    if (glob_let.sockets[wallet_address]) {
-        return
-    }
-    const ws_endpoint = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket",
-        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-    socket.onopen = function(e) {
-        socket_info(socket_node, true);
-        socket.send("40");
-    };
-    socket.onmessage = function(e) {
-        const msg_data = e.data;
-        if (!msg_data) return;
-        const msg_type = msg_data.slice(0, 2);
-        if (msg_type == "40") {
-            socket.send('42["join-room","blocks"]');
-            return;
-        }
-        if (msg_type == "42") {
-            try {
-                const parsed_data = msg_data.slice(2),
-                    socket_data = JSON.parse(parsed_data),
-                    block_data = socket_data[1];
-                if (block_data) {
-                    const block_txs = block_data.transactions;
-                    if (block_txs) {
-                        $.each(block_txs, function(dat, value) {
-                            const tx_details = kaspa_fyi_ws_data(value, wallet_address);
-                            if (tx_details.ccval) {
-                                close_socket();
-                                start_transaction_monitor(tx_details);
-                                return
-                            }
-                        });
-                    }
-                }
-            } catch (error) {
-                console.error("Error processing Kaspa FYI message:", error);
-            }
-        }
-    };
-    socket.onclose = function(e) {
-        reconnect_websocket({ // reconnect if ws closes
-            "function": kaspa_fyi_websocket,
-            "node": socket_node,
-            "address": wallet_address,
-            "trigger": e.code
-        });
-        handle_socket_close(socket_node);
-    };
-    socket.onerror = function(e) {
-        handle_socket_fails(socket_node, wallet_address);
-        return
-    };
 }
 
 // Establishes WebSocket connection to Alchemy API for monitoring pending Ethereum transactions with address filtering
@@ -1195,144 +1182,176 @@ function web3_erc20_websocket(socket_node, wallet_address, contract_address, soc
     };
 }
 
-// Manages WebSocket failures by attempting reconnection through fallback nodes with L1/L2 network handling
-function handle_socket_fails(socket_node, wallet_address, socket_id, is_layer2) {
-    if (isopenrequest()) { // only when request is visible
-        if (request.currencysymbol === "bch" && glob_const.paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
-            return
-        }
-        const ws_id = socket_id || wallet_address;
-        force_close_socket(ws_id);
-        const fallback_node = try_next_socket(socket_node, is_layer2);
-        if (fallback_node) {
-            if (is_layer2) {
-                const token_contracts = contracts(request.currencysymbol);
-                if (token_contracts && socket_id) {
-                    stop_monitors(socket_id);
-                    setup_layer2_monitoring(fallback_node, wallet_address, token_contracts, true);
-                }
-                return
-            }
-            init_socket(fallback_node, wallet_address, null, true);
-            return
-        }
-        if (is_layer2) {
-            // No poll fallback for L2
-        } else {
-            const coin_config = getcoinsettings(request.payment),
-                has_poll_fallback = q_obj(coin_config, "websockets.poll_fallback");
-            if (has_poll_fallback) {
-                init_socket({
-                    "name": "poll_fallback",
-                    "display": false
-                }, wallet_address, null, true);
-                return
-            }
-        }
-        socket_info(socket_node, false);
-        console.error("Socket error:", "unable to connect to " + socket_node.name);
+// ** Other Cryptocurrencies: **
+
+// Establishes WebSocket connection for Nano network with confirmation subscription and XRB/NANO prefix handling
+function nano_socket(socket_node, wallet_address) {
+    if (glob_let.sockets[wallet_address]) {
+        return
     }
-}
-
-// Updates connection state and resets WebSocket timer on connection closure
-function handle_socket_close(socket_node) {
-    socket_info(socket_node, false);
-    console.log("Disconnected from " + socket_node.url);
-    glob_let.ws_timer = 0;
-}
-
-// Implements delayed reconnection logic for Kaspa WebSocket with rate limiting and state validation
-function reconnect_websocket(recon_data) {
-    if (!recon_data) return;
-    const close_code = recon_data.trigger,
-        wallet_address = recon_data.address;
-    if (close_code !== 1000 || !wallet_address || glob_const.paymentdialogbox.attr("data-status") !== "new") return;
-    const elapsed_time = now() - glob_let.ws_timer;
-    if (elapsed_time < 10000) return;
-    const retry_timeout = setTimeout(function() {
-        if (isopenrequest()) {
-            recon_data.function(recon_data.node, wallet_address);
-        }
-    }, 2000, function() {
-        clearTimeout(retry_timeout);
-    });
-}
-
-// Selects next available WebSocket endpoint from configuration with overflow protection and duplicate attempt prevention
-function try_next_socket(current_node, is_layer2) {
-    if (!current_node) return false;
-    if (block_overflow("socket")) return false; // prevent overflow
-    const current_url = current_node.url,
-        socket_config = is_layer2 ? q_obj(getcoinsettings(request.payment), "layer2.options." + current_node.network + ".websockets") : helper.socket_list,
-        available_nodes = socket_config.options ? $.merge(socket_config.apis, socket_config.options) : socket_config.apis;
-    if (!available_nodes.length) return false;
-    let current_index;
-    $.each(available_nodes, function(i, node) {
-        if (node.url == current_url) {
-            current_index = i;
-        }
-    });
-    if (current_index > -1) {
-        const next_node = available_nodes[current_index + 1],
-            fallback_node = next_node || available_nodes[0],
-            network_prefix = is_layer2 || "";
-        if (glob_let.socket_attempt[sha_sub(fallback_node.url + network_prefix, 15)] === true) {
-            return false;
-        }
-        if (fallback_node) {
-            return fallback_node;
-        }
-    }
-}
-
-// Terminates specific or all active WebSocket connections and cleans up socket registry
-function close_socket(socket_id) {
-    if (socket_id) { // close this socket
-        if (glob_let.sockets[socket_id]) {
-            glob_let.sockets[socket_id].close();
-            delete glob_let.sockets[socket_id];
-        }
-    } else { // close all sockets
-        $.each(glob_let.sockets, function(key, socket) {
-            socket.close();
+    const normalized_address = (wallet_address.match("^xrb")) ? "nano_" + wallet_address.split("_").pop() : wallet_address, // change nano address prefix xrb_ to nano untill websocket support
+        ws_endpoint = socket_node.url,
+        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
+    socket.onopen = function(e) {
+        socket_info(socket_node, true);
+        const ping_payload = JSON.stringify({
+            "action": "subscribe",
+            "topic": "confirmation",
+            "all_local_accounts": true,
+            "options": {
+                "accounts": [normalized_address]
+            },
+            "ack": true
         });
-        glob_let.sockets = {};
-    }
+        socket.send(ping_payload);
+        glob_let.pinging[wallet_address] = setInterval(function() {
+            socket.send(ping_payload);
+            poll_animate();
+        }, 55000);
+    };
+    socket.onmessage = function(e) {
+        try {
+            const current_utc = now_utc(),
+                msg_data = JSON.parse(e.data),
+                tx_data = (msg_data.message) ? msg_data.message : (msg_data.account) ? msg_data : null;
+            if (tx_data) {
+                if (tx_data.account === wallet_address) {
+                    return // block outgoing transactions
+                }
+                if (!tx_data.hash) return;
+                const tx_details = nano_scan_data(tx_data, undefined, request.currencysymbol),
+                    tx_time = tx_details.transactiontime,
+                    time_delta = Math.abs(tx_time - current_utc);
+                if (time_delta < 60000) { // filter transactions longer then a minute ago
+                    close_socket();
+                    start_transaction_monitor(tx_details);
+                }
+            }
+        } catch (error) {
+            console.error("Error parsing WebSocket message:", error);
+        }
+    };
+    socket.onclose = function(e) {
+        handle_socket_close(socket_node);
+    };
+    socket.onerror = function(e) {
+        handle_socket_fails(socket_node, wallet_address);
+        return
+    };
 }
 
-// Updates UI elements to reflect WebSocket connection status and handles L1/L2 state transitions
-function socket_info(socket_node, is_connected, is_polling) {
-    if (!is_openrequest()) {
+// Initiates 5-second interval polling for Nimiq blockchain status
+function poll_nimiq_network() {
+    start_address_monitor(5000);
+}
+
+// Establishes WebSocket connection to Kaspa node with Socket.IO protocol and block subscription
+function kaspa_websocket(socket_node, wallet_address) {
+    if (glob_let.sockets[wallet_address]) {
         return
     }
-    if (socket_node.network) {
-        initialize_network_status(socket_node, is_connected);
-        return
-    }
-    const node_identifier = socket_node.url || socket_node.name,
-        status_icon = is_connected ? " <span class='pulse'></span>" : " <span class='icon-wifi-off'></span>",
-        connection_type = is_polling ? "polling" : "websocket",
-        status_text = connection_type + ": " + node_identifier + status_icon,
-        payment_address = $("#paymentaddress");
-    $("#current_socket").html(status_text);
-    if (is_connected) {
-        console.log("Connected: " + node_identifier);
-        helper.l1_status = true;
-        payment_address.addClass("live");
-        glob_const.paymentpopup.addClass("live");
-        glob_const.paymentdialogbox.removeClass("switching");
-        closenotify();
-        return
-    }
-    if (glob_const.paymentdialogbox.hasClass("switching")) return; // prevents offline modus when switching addresses
-    setTimeout(function() {
-        if (glob_const.paymentdialogbox.hasClass("transacting")) return;
-        if (!is_openrequest()) return;
-        payment_address.removeClass("live");
-        helper.l1_status = false;
-        if (helper.l2_status === false) {
-            glob_const.paymentpopup.removeClass("live");
-            notify(translate("websocketoffline"), 500000, "yes");
+    const ws_endpoint = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket&sid=" + now(),
+        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
+    socket.onopen = function(e) {
+        glob_let.ws_timer = now();
+        socket_info(socket_node, true);
+        socket.send("2probe");
+    };
+    socket.onmessage = function(e) {
+        const msg_data = e.data;
+        if (!msg_data) return;
+        const msg_type = msg_data.slice(0, 2);
+        if (msg_data === "3probe") {
+            socket.send('42["join-room","blocks"]');
+            return;
         }
-    }, 1000);
+        if (msg_type === "42") {
+            const parsed_data = msg_data.slice(2),
+                socket_data = JSON.parse(parsed_data),
+                block_data = socket_data[1];
+            if (block_data) {
+                const block_txs = block_data.txs;
+                if (block_txs) {
+                    $.each(block_txs, function(dat, value) {
+                        const tx_details = kaspa_ws_data(value, wallet_address);
+                        if (tx_details.ccval) {
+                            close_socket();
+                            start_transaction_monitor(tx_details);
+                            return
+                        }
+                    });
+                }
+            }
+        }
+    };
+    socket.onclose = function(e) {
+        reconnect_websocket({ // reconnect if ws closes
+            "function": kaspa_websocket,
+            "node": socket_node,
+            "address": wallet_address,
+            "trigger": e.code
+        });
+        handle_socket_close(socket_node);
+    };
+    socket.onerror = function(e) {
+        handle_socket_fails(socket_node, wallet_address);
+        return
+    };
+}
+
+// Establishes WebSocket connection to Kaspa FYI explorer with Socket.IO protocol and transaction monitoring
+function kaspa_fyi_websocket(socket_node, wallet_address) {
+    if (glob_let.sockets[wallet_address]) {
+        return
+    }
+    const ws_endpoint = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket",
+        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
+    socket.onopen = function(e) {
+        socket_info(socket_node, true);
+        socket.send("40");
+    };
+    socket.onmessage = function(e) {
+        const msg_data = e.data;
+        if (!msg_data) return;
+        const msg_type = msg_data.slice(0, 2);
+        if (msg_type == "40") {
+            socket.send('42["join-room","blocks"]');
+            return;
+        }
+        if (msg_type == "42") {
+            try {
+                const parsed_data = msg_data.slice(2),
+                    socket_data = JSON.parse(parsed_data),
+                    block_data = socket_data[1];
+                if (block_data) {
+                    const block_txs = block_data.transactions;
+                    if (block_txs) {
+                        $.each(block_txs, function(dat, value) {
+                            const tx_details = kaspa_fyi_ws_data(value, wallet_address);
+                            if (tx_details.ccval) {
+                                close_socket();
+                                start_transaction_monitor(tx_details);
+                                return
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error("Error processing Kaspa FYI message:", error);
+            }
+        }
+    };
+    socket.onclose = function(e) {
+        reconnect_websocket({ // reconnect if ws closes
+            "function": kaspa_fyi_websocket,
+            "node": socket_node,
+            "address": wallet_address,
+            "trigger": e.code
+        });
+        handle_socket_close(socket_node);
+    };
+    socket.onerror = function(e) {
+        handle_socket_fails(socket_node, wallet_address);
+        return
+    };
 }

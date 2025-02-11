@@ -1,7 +1,5 @@
-// pick API / RPC
-
-//start_transaction_monitor
-//tx_polling
+    //start_transaction_monitor
+//route_transaction_monitor
 //monitor_main_chain
 //monitor_layer2_chain
 //clear_polling_timeout
@@ -11,11 +9,10 @@
 //xmr_node_access
 //start_monero_monitor
 //check_monero_transactions
-//confirmations
+//validate_confirmations
 //stop_monitors
 //clear_recent_requests
 
-// pick API / RPC
 // Initiates transaction monitoring and sets UI state for payment processing
 function start_transaction_monitor(tx_data, api_data, retry) {
     reset_overflow();
@@ -27,7 +24,7 @@ function start_transaction_monitor(tx_data, api_data, retry) {
 
 // Directs transaction monitoring to appropriate chain (L1/L2) based on transaction data
 function route_transaction_monitor(tx_data, api_dat, retry) {
-    const url_params = geturlparameters();
+    const url_params = get_urlparameters();
     if (url_params.xss) {
         return
     }
@@ -313,7 +310,7 @@ function validate_confirmations(tx_data, direct, ln) {
             if (tx_status && tx_status === "canceled") { // Lightning
                 status_header.html("<span class='icon-blocked'></span>Invoice canceled");
                 payment_dialog.attr("data-status", "canceled");
-                updaterequest({
+                update_request({
                     "requestid": request.requestid,
                     "status": "canceled",
                     "confirmations": 0

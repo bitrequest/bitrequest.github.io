@@ -1,35 +1,43 @@
 $(document).ready(function() {
+    // ** Core Request Management: **
     update_request_trigger();
     refresh_request_states();
     //scan_pending_requests
     //process_request_updates
     //process_transaction_data
+    //finalize_request_state
+
+    // ** Network and API Handling: **
     //route_network_request
     //route_api_request
     //route_crypto_api
     //route_blockchain_rpc
     //process_scan_results
-    //tx_count
-    //tx_api_scan_fail
+
+    // ** Error Handling: **
+    //handle_scan_failure
     //mark_network_failure
     //handle_api_failure
-    //switch_rpc_endpoint
-    //no_results
-    //fail_dialogs
     //show_api_error
     //extract_error_details
+    //fail_dialogs
+    //no_results
+
+    // ** API Management: **
     //get_next_layer2_api
     //get_next_rpc
+    //switch_rpc_endpoint
     //update_api_source
     //display_api_source
-    //finalize_request_state
 
-    //scan_tx_li
+    // ** Transaction Processing: **
     //create_transaction_item
     //wrap_historic_data
     //format_transaction_details
-
     //validate_payment_amounts
+    //update_transaction_count
+
+    // ** Historical Data Processing: **
     //init_fiat_history
     //fetch_fiat_rates
     //get_historic_fiatprice_api_payload
@@ -42,9 +50,9 @@ $(document).ready(function() {
     //match_price_timestamps
     //get_historic_object_coingecko
     //get_historic_object_coinpaprika
+    //get_historic_object_coincodex
 
-    // ** Helpers **
-
+    // ** Utility Functions: **
     //is_scanning
     //clearscan
     //check_api
@@ -63,7 +71,7 @@ function update_request_trigger() {
 
 // Triggers request state updates with delay if URL parameter indicates requests page
 function refresh_request_states() {
-    const url_params = geturlparameters();
+    const url_params = get_urlparameters();
     if (url_params.xss) {
         return
     }
@@ -144,10 +152,10 @@ function process_request_updates(trigger, active_requests) {
                 new_tx_id = sha_sub(JSON.stringify(glob_let.statuspush), 15);
             if (txid !== new_tx_id) { // check for updates
                 // Only save on status updates
-                saverequests();
+                save_requests();
             }
         } else {
-            saverequests();
+            save_requests();
         }
         const status_object = {
             "timestamp": now(),
@@ -189,6 +197,54 @@ function process_transaction_data(rd, dl) {
         finalize_request_state(rdo);
     }
 }
+
+// Processes final state updates and transaction data after API request completion
+function finalize_request_state(rdo) {
+    const src = rdo.source;
+    if (!src === "requests") {
+        return
+    }
+    // src === "requests"
+    const current_list = rdo.thislist;
+    if (current_list && current_list.hasClass("scan")) {
+        current_list.removeClass("scan open").addClass("pmstatloaded");
+        const request_id = rdo.requestid,
+            transaction_list = rdo.transactionlist,
+            transaction_items = transaction_list.children("li");
+        if (transaction_items.length) {
+            const transaction_push = [];
+            transaction_items.each(function() {
+                const current_node = $(this),
+                    current_data = current_node.data();
+                if (current_data) {
+                    transaction_push.push(current_data);
+                    if (current_node.attr("title")) {} else {
+                        const history_string = format_transaction_details(current_data);
+                        if (history_string) {
+                            current_node.append(wrap_historic_data(history_string)).attr("title", history_string);
+                        }
+                    }
+                }
+            });
+            const status_panel = current_list.find(".pmetastatus"),
+                status_box = {
+                    "requestid": request_id,
+                    "status": status_panel.attr("data-count"),
+                    "transactions": transaction_push
+                };
+            glob_let.statuspush.push(status_box);
+        } else {
+            const status_box = {
+                "requestid": request_id,
+                "status": 0
+            };
+            glob_let.statuspush.push(status_box);
+        }
+        process_request_updates("loop");
+    }
+}
+
+// ** Network and API Handling: **
 
 // Routes requests to appropriate handlers based on payment type and network availability
 function route_network_request(rd, api_data, rdo) {
@@ -369,22 +425,7 @@ function process_scan_results(rd, api_data, rdo, counter, tx_details, l2) {
     }
 }
 
-// Updates and displays the transaction count in the UI status panel with reset functionality
-function update_transaction_count(status_panel, count) {
-    if (count === "reset") {
-        status_panel.attr("data-count", 0).text("+ " + 0);
-        return
-    }
-    const current_count = parseInt(status_panel.attr("data-count")),
-        new_count = current_count + count;
-    if (!new_count) return;
-    status_panel.attr("data-count", new_count).text("+ " + new_count);
-    if (new_count > 1) {
-        status_panel.closest(".rqli").find(".metalist .show_tx").hide();
-    }
-}
-
-// API error handling
+// ** Error Handling: **
 
 // Processes API scan failures and routes to appropriate error handlers based on network type
 function handle_scan_failure(error_obj, rd, api_data, rdo, l2) {
@@ -497,43 +538,6 @@ function handle_api_failure(rd, rdo, error_obj, api_data, l2) {
     no_results(rdo, src, api_data, error_details);
 }
 
-// Routes requests to next available RPC endpoint based on request source type
-function switch_rpc_endpoint(rd, rdo, next_rpc, timeout) {
-    const src = rdo.source;
-    if (src === "addr_polling") {
-        start_address_monitor(timeout, next_rpc, true);
-        return
-    }
-    if (src === "tx_polling") {
-        monitor_main_chain(rdo.txdat, next_rpc, true);
-        return
-    }
-    if (src === "after_scan") {
-        after_scan(rd, next_rpc, rdo);
-        return
-    }
-    route_api_request(rd, next_rpc, rdo);
-}
-
-// Displays error notifications when all API and proxy attempts fail
-function no_results(rdo, src, api_data, error_details) {
-    const rpc_id = api_data.name || api_data.url || "unknown";
-    show_api_error(rpc_id, error_details);
-    if (src === "requests") {
-        finalize_request_state(rdo);
-        return
-    }
-    stop_monitors();
-    socket_info(api_data, false);
-    notify(translate("websocketoffline"), 500000, "yes");
-}
-
-// Triggers error dialogs for API-related failures
-function fail_dialogs(api_source, error_obj) {
-    const error_details = extract_error_details(error_obj);
-    show_api_error(api_source, error_details);
-}
-
 // Renders API error messages with optional API key management UI
 function show_api_error(api_source, error_obj) {
     if (!error_obj) return;
@@ -590,10 +594,31 @@ function extract_error_details(error_obj) {
     return error_details;
 }
 
+// Triggers error dialogs for API-related failures
+function fail_dialogs(api_source, error_obj) {
+    const error_details = extract_error_details(error_obj);
+    show_api_error(api_source, error_details);
+}
+
+// Displays error notifications when all API and proxy attempts fail
+function no_results(rdo, src, api_data, error_details) {
+    const rpc_id = api_data.name || api_data.url || "unknown";
+    show_api_error(rpc_id, error_details);
+    if (src === "requests") {
+        finalize_request_state(rdo);
+        return
+    }
+    stop_monitors();
+    socket_info(api_data, false);
+    notify(translate("websocketoffline"), 500000, "yes");
+}
+
+// ** API Management: **
+
 // Retrieves next available Layer 2 API endpoint while preventing overflow
 function get_next_layer2_api(this_payment, api_data, request_id, l2) {
     if (block_overflow("l2")) return false; // prevent overflow
-    const api_settings = q_obj(getcoinsettings(this_payment), "layer2.options." + l2 + ".apis");
+    const api_settings = q_obj(get_coinsettings(this_payment), "layer2.options." + l2 + ".apis");
     if (api_settings) {
         const api_list = api_settings.apis,
             list_length = api_list.length;
@@ -631,6 +656,24 @@ function get_next_rpc(this_payment, api_data, request_id, l2) {
     return false;
 }
 
+// Routes requests to next available RPC endpoint based on request source type
+function switch_rpc_endpoint(rd, rdo, next_rpc, timeout) {
+    const src = rdo.source;
+    if (src === "addr_polling") {
+        start_address_monitor(timeout, next_rpc, true);
+        return
+    }
+    if (src === "tx_polling") {
+        monitor_main_chain(rdo.txdat, next_rpc, true);
+        return
+    }
+    if (src === "after_scan") {
+        after_scan(rd, next_rpc, rdo);
+        return
+    }
+    route_api_request(rd, next_rpc, rdo);
+}
+
 // Updates request data with current API source information
 function update_api_source(rdo, api_data) {
     if (rdo.source === "requests") {
@@ -648,51 +691,7 @@ function display_api_source(current_list, api_data) {
     current_list.data("source", api_source).find(".api_source").html("<span class='src_txt' title='" + api_url_short + "'>" + translate("source") + ": " + api_source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
 }
 
-// Processes final state updates and transaction data after API request completion
-function finalize_request_state(rdo) {
-    const src = rdo.source;
-    if (!src === "requests") {
-        return
-    }
-    // src === "requests"
-    const current_list = rdo.thislist;
-    if (current_list && current_list.hasClass("scan")) {
-        current_list.removeClass("scan open").addClass("pmstatloaded");
-        const request_id = rdo.requestid,
-            transaction_list = rdo.transactionlist,
-            transaction_items = transaction_list.children("li");
-        if (transaction_items.length) {
-            const transaction_push = [];
-            transaction_items.each(function() {
-                const current_node = $(this),
-                    current_data = current_node.data();
-                if (current_data) {
-                    transaction_push.push(current_data);
-                    if (current_node.attr("title")) {} else {
-                        const history_string = format_transaction_details(current_data);
-                        if (history_string) {
-                            current_node.append(wrap_historic_data(history_string)).attr("title", history_string);
-                        }
-                    }
-                }
-            });
-            const status_panel = current_list.find(".pmetastatus"),
-                status_box = {
-                    "requestid": request_id,
-                    "status": status_panel.attr("data-count"),
-                    "transactions": transaction_push
-                };
-            glob_let.statuspush.push(status_box);
-        } else {
-            const status_box = {
-                "requestid": request_id,
-                "status": 0
-            };
-            glob_let.statuspush.push(status_box);
-        }
-        process_request_updates("loop");
-    }
-}
+// ** Transaction Processing: **
 
 // Creates and returns a formatted transaction list item with confirmation status
 function create_transaction_item(tx_details, request_type) {
@@ -861,7 +860,7 @@ function validate_payment_amounts(rd, rdo) {
                 }
             }
             if (is_crypto || recent_data) {
-                updaterequest({
+                update_request({
                     "requestid": rd.requestid,
                     "status": crypto_status,
                     "receivedamount": total_crypto_amount,
@@ -882,7 +881,22 @@ function validate_payment_amounts(rd, rdo) {
     finalize_request_state(rdo);
 }
 
-// get historic crypto rates
+// Updates and displays the transaction count in the UI status panel with reset functionality
+function update_transaction_count(status_panel, count) {
+    if (count === "reset") {
+        status_panel.attr("data-count", 0).text("+ " + 0);
+        return
+    }
+    const current_count = parseInt(status_panel.attr("data-count")),
+        new_count = current_count + count;
+    if (!new_count) return;
+    status_panel.attr("data-count", new_count).text("+ " + new_count);
+    if (new_count > 1) {
+        status_panel.closest(".rqli").find(".metalist .show_tx").hide();
+    }
+}
+
+// ** Historical Data Processing: **
 
 // Triggers historical fiat data retrieval for transactions based on confirmation status
 function init_fiat_history(rd, rdo, conf, latestinput, firstinput) {
@@ -1128,7 +1142,7 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
                     status = received_usd === 0 ? status : "insufficient",
                         pending = "scanning";
                 }
-                updaterequest({
+                update_request({
                     "requestid": rd.requestid,
                     "status": status,
                     "receivedamount": received_crypto,
@@ -1257,17 +1271,6 @@ function match_price_timestamps(api, values, price_array, transaction_timestamp)
     return values;
 }
 
-// Extracts timestamp and price from CoinCodex API response format
-function get_historic_object_coincodex(value) {
-    if (value) {
-        return {
-            "timestamp": value[0] * 1000 + glob_const.timezone + 60000, // add 1 minute for compensation margin
-            "price": value[1]
-        };
-    }
-    return false;
-}
-
 // Extracts timestamp and price from CoinGecko API response format
 function get_historic_object_coingecko(value) {
     if (value) {
@@ -1290,7 +1293,19 @@ function get_historic_object_coinpaprika(value) {
     return false;
 }
 
-// ** Helpers **
+// Extracts timestamp and price from CoinCodex API response format
+function get_historic_object_coincodex(value) {
+    if (value) {
+        return {
+            "timestamp": value[0] * 1000 + glob_const.timezone + 60000, // add 1 minute for compensation margin
+            "price": value[1]
+        };
+    }
+    return false;
+}
+
+// ** Utility Functions: **
+
 // Checks if any requests are currently being scanned and prevents concurrent scans
 function is_scanning() {
     const scanning = $("#requestlist li.rqli.scan").length > 0;

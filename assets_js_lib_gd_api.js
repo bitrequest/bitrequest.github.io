@@ -1,33 +1,41 @@
 $(document).ready(function() {
+    // ** Core Authentication State Management: **
     validate_auth_state();
-    // handle_token_expiration
-    // get_oauth_credentials
-    // refresh_access_token
-    // handle_refresh_callback
-    // get_access_token_data
-    // start_auth_flow
-    // schedule_oauth_popup
-    // show_oauth_dialog
+    //get_auth_status
+    //get_access_token_data  
+    //get_refresh_token
+    //set_auth_active
+    //set_auth_inactive
+
+    // ** OAuth Flow & Token Management: **
+    //start_auth_flow
+    //get_oauth_credentials
+    //refresh_access_token
+    //handle_refresh_callback
+    //handle_token_expiration
+
+    // ** UI Authentication Flow: **
+    //show_oauth_dialog
+    //schedule_oauth_popup
     init_google_login();
+    //start_google_auth
+    //handle_auth_success
+    //start_google_logout
+    //handle_logout_success
+    //update_switch_panel
+
+    // ** Backup & File Management: **
     handle_backup_dialog();
-    // start_google_auth
-    // handle_auth_success
-    // update_switch_panel
-    // start_google_logout
-    // set_auth_active
-    // set_auth_inactive
-    // handle_logout_success
     init_backup_toggle();
-    // sync_drive_data
-    // create_drive_file
+    //sync_drive_data
+    //create_drive_file
     init_appdata_list();
-    // fetch_drive_files
-    init_file_delete()
-    // delete_drive_file
-    // get_auth_status
+    //fetch_drive_files
+    init_file_delete();
+    //delete_drive_file
 });
 
-// ** Google api **
+// ** Core Authentication State Management: **
 
 // Validates and initializes authentication based on access key or global password
 function validate_auth_state(ak) {
@@ -45,20 +53,99 @@ function validate_auth_state(ak) {
     }
 }
 
-// Handles token expiration by either triggering Google login or OAuth popup
-function handle_token_expiration(expired, callback) {
-    if (glob_const.hostlocation === "local") {
-        return
-    }
-    if (expired === "norefresh") {
-        if (callback === "gcb") {
-            start_google_auth();
-            return
+// Retrieves and validates current Google Drive authentication state
+function get_auth_status() {
+    const auth_state = {
+            "token": false,
+            "active": false,
+            "expired": false,
+            "pass": false
+        },
+        stored_token = get_access_token_data(),
+        refresh_token = get_refresh_token(),
+        can_refresh = refresh_token || "norefresh";
+    if (stored_token) {
+        const access_token = stored_token.access_token,
+            elapsed_time = (now() - stored_token.created) + 60000,
+            expiry_time = stored_token.expires_in * 1000,
+            is_expired = (elapsed_time > expiry_time),
+            time_remaining = (expiry_time - elapsed_time),
+            is_active = stored_token.active;
+        if (access_token) {
+            auth_state.token = access_token;
+            auth_state.expires_in = time_remaining;
+            if (is_expired) {
+                auth_state.expired = can_refresh;
+            }
+            if (is_active) {
+                auth_state.active = true;
+            }
         }
-        schedule_oauth_popup(true);
+        if (access_token && !is_expired && is_active) {
+            glob_const.html.addClass("gdauth");
+            auth_state.pass = true;
+        } else {
+            glob_const.html.removeClass("gdauth");
+        }
+    } else {
+        auth_state.expired = can_refresh;
+    }
+    return auth_state;
+}
+
+// Retrieves and parses the access token data from local storage
+function get_access_token_data() {
+    const stored_token = br_get_local("dat", true);
+    if (stored_token) {
+        return stored_token;
+    }
+    return false;
+}
+
+// Retrieves and decodes the refresh token from local storage
+function get_refresh_token() {
+    const stored_refresh = br_get_local("rt", true);
+    return stored_refresh ? stored_refresh.d : false;
+}
+
+// Sets authentication state to active in local storage
+function set_auth_active() {
+    const stored_token = get_access_token_data();
+    if (stored_token) {
+        stored_token.active = true;
+        br_set_local("dat", JSON.stringify(stored_token));
+    }
+}
+
+// Sets authentication state to inactive in local storage
+function set_auth_inactive() {
+    const stored_token = get_access_token_data();
+    if (stored_token) {
+        stored_token.active = false;
+        br_set_local("dat", JSON.stringify(stored_token));
+    }
+}
+
+// ** OAuth Flow & Token Management: **
+
+// Determines appropriate login flow based on current authentication state
+function start_auth_flow(auth_state) {
+    if (glob_const.hostlocation === "local") {
+        notify(translate("ganot"));
         return
     }
-    refresh_access_token(lnurl_decode_c(expired), callback);
+    if (auth_state.expired) {
+        handle_token_expiration(auth_state.expired, "gcb");
+        return
+    }
+    if (auth_state.active) {
+        start_google_auth();
+        return
+    }
+    if (auth_state.token) {
+        set_auth_active();
+        handle_auth_success();
+    }
 }
 
 // Makes API request to fetch OAuth credentials using an authorization code
@@ -185,50 +272,23 @@ function handle_refresh_callback(callback) {
     }
 }
 
-// Retrieves and parses the access token data from local storage
-function get_access_token_data() {
-    const stored_token = br_get_local("dat", true);
-    if (stored_token) {
-        return stored_token;
-    }
-    return false;
-}
-
-// Retrieves and decodes the refresh token from local storage
-function get_refresh_token() {
-    const stored_refresh = br_get_local("rt", true);
-    return stored_refresh ? stored_refresh.d : false;
-}
-
-// Determines appropriate login flow based on current authentication state
-function start_auth_flow(auth_state) {
+// Handles token expiration by either triggering Google login or OAuth popup
+function handle_token_expiration(expired, callback) {
     if (glob_const.hostlocation === "local") {
-        notify(translate("ganot"));
         return
     }
-    if (auth_state.expired) {
-        handle_token_expiration(auth_state.expired, "gcb");
+    if (expired === "norefresh") {
+        if (callback === "gcb") {
+            start_google_auth();
+            return
+        }
+        schedule_oauth_popup(true);
         return
     }
-    if (auth_state.active) {
-        start_google_auth();
-        return
-    }
-    if (auth_state.token) {
-        set_auth_active();
-        handle_auth_success();
-    }
+    refresh_access_token(lnurl_decode_c(expired), callback);
 }
 
-// Schedules OAuth popup display with configurable delay and abort option
-function schedule_oauth_popup(abort_option) {
-    canceldialog();
-    const popup_timer = setTimeout(function() {
-        show_oauth_dialog(abort_option);
-    }, 1200, function() {
-        clearTimeout(popup_timer);
-    });
-}
+// ** UI Authentication Flow: **
 
 // Renders and displays Google Drive authentication dialog with consent options
 function show_oauth_dialog(abort_option) {
@@ -293,24 +353,19 @@ function show_oauth_dialog(abort_option) {
     popdialog(dialog_content, "triggersubmit");
 }
 
+// Schedules OAuth popup display with configurable delay and abort option
+function schedule_oauth_popup(abort_option) {
+    canceldialog();
+    const popup_timer = setTimeout(function() {
+        show_oauth_dialog(abort_option);
+    }, 1200, function() {
+        clearTimeout(popup_timer);
+    });
+}
+
 // Binds click handler to Google Drive login button
 function init_google_login() {
     $(document).on("click", "#oauth_onload", function() {
-        start_google_auth();
-    })
-}
-
-// Handles Google Drive backup dialog form submission and logout confirmation
-function handle_backup_dialog() {
-    $(document).on("click", "#gdbu_dialog input.submit", function(event) {
-        event.preventDefault();
-        const dialog = $("#gdbu_dialog"),
-            checkbox = dialog.find("#pk_confirmwrap"),
-            is_checked = checkbox.data("checked");
-        if (is_checked == true) {
-            start_google_logout();
-            return
-        }
         start_google_auth();
     })
 }
@@ -342,25 +397,10 @@ function start_google_auth() {
 function handle_auth_success(close_dialog) {
     glob_const.html.addClass("gdauth");
     notify(translate("gdsignedin"));
-    resetchanges();
+    reset_changes();
     update_switch_panel();
     if (close_dialog) {
         canceldialog();
-    }
-}
-
-// Updates switch panel state after successful Google Drive authentication
-function update_switch_panel() {
-    const switch_panel = $("#popup.showpu .switchpanel");
-    if (switch_panel.length) {
-        switch_panel.addClass("true").removeClass("false");
-        const app_data_list = $("#listappdata");
-        if (app_data_list.length) {
-            fetch_drive_files();
-            return
-        }
-        $("#changelog").slideUp(300);
-        return
     }
 }
 
@@ -373,36 +413,50 @@ function start_google_logout() {
     }
 }
 
-// Sets authentication state to active in local storage
-function set_auth_active() {
-    const stored_token = get_access_token_data();
-    if (stored_token) {
-        stored_token.active = true;
-        br_set_local("dat", JSON.stringify(stored_token));
-    }
-}
-
-// Sets authentication state to inactive in local storage
-function set_auth_inactive() {
-    const stored_token = get_access_token_data();
-    if (stored_token) {
-        stored_token.active = false;
-        br_set_local("dat", JSON.stringify(stored_token));
-    }
-}
-
 // Updates UI and cleans up state after Google Drive logout
 function handle_logout_success() {
     glob_const.html.removeClass("gdauth");
     notify(translate("gdsignedout"));
-    const switch_panel = $("#popup.showpu .switchpanel");
-    if (switch_panel.length) {
-        switch_panel.removeClass("true").addClass("false");
+    const sp = $("#popup.showpu .switchpanel");
+    if (sp.length) {
+        sp.removeClass("true").addClass("false");
         $("#changelog").slideDown(300);
         return
     }
-    resetchanges();
+    reset_changes();
     canceldialog();
+}
+
+// Updates switch panel state after successful Google Drive authentication
+function update_switch_panel() {
+    const sp = $("#popup.showpu .switchpanel");
+    if (sp.length) {
+        sp.addClass("true").removeClass("false");
+        const app_data_list = $("#listappdata");
+        if (app_data_list.length) {
+            fetch_drive_files();
+            return
+        }
+        $("#changelog").slideUp(300);
+        return
+    }
+}
+
+// ** Backup & File Management: **
+
+// Handles Google Drive backup dialog form submission and logout confirmation
+function handle_backup_dialog() {
+    $(document).on("click", "#gdbu_dialog input.submit", function(event) {
+        event.preventDefault();
+        const dialog = $("#gdbu_dialog"),
+            checkbox = dialog.find("#pk_confirmwrap"),
+            is_checked = checkbox.data("checked");
+        if (is_checked == true) {
+            start_google_logout();
+            return
+        }
+        start_google_auth();
+    })
 }
 
 // Binds click handler to Drive Backup toggle switch
@@ -639,44 +693,4 @@ function delete_drive_file(file_id, list_item, access_token) {
             notify(translate("error"));
         }
     });
-}
-
-// Retrieves and validates current Google Drive authentication state
-function get_auth_status() {
-    const auth_state = {
-            "token": false,
-            "active": false,
-            "expired": false,
-            "pass": false
-        },
-        stored_token = get_access_token_data(),
-        refresh_token = get_refresh_token(),
-        can_refresh = refresh_token || "norefresh";
-    if (stored_token) {
-        const access_token = stored_token.access_token,
-            elapsed_time = (now() - stored_token.created) + 60000,
-            expiry_time = stored_token.expires_in * 1000,
-            is_expired = (elapsed_time > expiry_time),
-            time_remaining = (expiry_time - elapsed_time),
-            is_active = stored_token.active;
-        if (access_token) {
-            auth_state.token = access_token;
-            auth_state.expires_in = time_remaining;
-            if (is_expired) {
-                auth_state.expired = can_refresh;
-            }
-            if (is_active) {
-                auth_state.active = true;
-            }
-        }
-        if (access_token && !is_expired && is_active) {
-            glob_const.html.addClass("gdauth");
-            auth_state.pass = true;
-        } else {
-            glob_const.html.removeClass("gdauth");
-        }
-    } else {
-        auth_state.expired = can_refresh;
-    }
-    return auth_state;
 }

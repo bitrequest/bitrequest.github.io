@@ -1,76 +1,68 @@
-$(document).ready(function() {
+// ** API Request Handling: **
+//process_lightning_payment
+//process_ethereum_transactions 
+//blockchair_fetch
+//scan_layer2_transactions
+//initialize_monero_scan
+//scan_monero_transactions
+//validate_monero_payment_id
+//poll_monero_blockchair
+//initialize_bitcoin_scan
+//get_bitcoin_block_height
+//scan_bitcoin_transactions
+//process_blockcypher_transactions
+//process_nimiq_transactions
+//initialize_kaspa_scan
+//scan_kaspa_transactions
+//process_dash_transactions
 
-    // ** API **
+// ** RPC Interactions: **
+//mempoolspace_rpc_init
+//mempoolspace_rpc_blockheight  
+//mempoolspace_rpc
+//infura_txd_rpc
+//eth_params
+//inf_result
+//inf_err
+//nano_rpc
 
-    //process_lightning_payment
-    //initialize_monero_scan
-    //scan_monero_transactions
-    //validate_monero_payment_id
-    //poll_monero_blockchair
-    //initialize_bitcoin_scan
-    //get_bitcoin_block_height
-    //scan_bitcoin_transactions
-    //process_blockcypher_transactions
-    //process_ethereum_transactions
-    //scan_layer2_transactions
-    //blockchair_fetch
-    //process_nimiq_transactions
-    //initialize_kaspa_scan
-    //kaspa_fetch_blockheight
-    //scan_kaspa_transactions
-    //process_dash_transactions
+// ** Transaction Data Processing: **
+//sort_transactions_by_date
+//calculate_total_outputs
+//normalize_timestamp 
+//get_block_confirmations
+//default_tx_data
 
-    // ** RPC **
+// ** Blockchain-Specific Data Handlers: **
+//blockchain_ws_data
+//mempoolspace_ws_data
+//mempoolspace_scan_data
+//blockcypher_scan_data
+//insight_scan_data
+//blockcypher_poll_data
+//blockchaininfo_scan_data
+//blockchair_scan_data
+//blockchair_eth_scan_data
+//blockchair_erc20_scan_data
+//blockchair_erc20_poll_data
+//omniscan_scan_data
+//omniscan_scan_data_eth
+//ethplorer_scan_data
+//nano_scan_data
+//bitcoin_rpc_data
+//infura_erc20_poll_data
+//infura_block_data
+//xmr_scan_data
+//blockchair_xmr_data
+//nimiq_scan_data
+//kaspa_scan_data
+//kaspa_poll_fyi_data
+//kaspa_ws_data
+//kaspa_fyi_ws_data
+//lnd_tx_data
+//infura_eth_poll_data
 
-    //mempoolspace_rpc_init
-    //mempoolspace_rpc_blockheight
-    //mempoolspace_rpc
-    //infura_txd_rpc
-    //inf_result
-    //inf_err
-    //eth_params
-    //nano_rpc
-
-    // ** Unified TXdata **
-
-    //sort_transactions_by_date
-    //calculate_total_outputs
-    //process_timestam
-    //calculate_confirmation
-    //default_tx_data
-    //blockchain_ws_dat
-    //mempoolspace_ws_data
-    //mempoolspace_scan_dat
-    //dogechain_ws_dat
-    //blockcypher_scan_data
-    //insight_scan_data
-    //blockcypher_poll_dat
-    //blockchaininfo_scan_dat
-    //blockchair_scan_data
-    //blockchair_eth_scan_data
-    //blockchair_erc20_scan_dat
-    //blockchair_erc20_poll_dat
-    //omniscan_scan_data
-    //omniscan_scan_data_et
-    //ethplorer_scan_dat
-    //nano_scan_data
-    //bitcoin_rpc_data
-    //infura_erc20_poll_data
-    //infura_block_data
-    //xmr_scan_data
-    //blockchair_xmr_data
-    //nimiq_scan_dat
-    //kaspa_scan_data
-    //kaspa_poll_fyi_data
-    //kaspa_ws_dat
-    //kaspa_fyi_ws_data
-    //lnd_tx_data
-    //infura_eth_poll_data
-});
-
-// ** Fetch blockchain data from different blockexplorers **
-
-// ** Lightning RPC **
+// ** API Request Handling: **
 
 // Orchestrates Lightning Network payment processing with status checking, invoice handling, and transaction state management via proxy API
 function process_lightning_payment(rd, api_data, rdo) {
@@ -170,7 +162,7 @@ function process_lightning_payment(rd, api_data, rdo) {
                                     tx_list.append(tx_item.data(tx_data));
                                     update_transaction_count(status_panel, tx_data.confirmations);
                                     if (status === "canceled") {
-                                        updaterequest({
+                                        update_request({
                                             "requestid": request_id,
                                             "status": "canceled",
                                             "confirmations": 0
@@ -210,7 +202,7 @@ function process_lightning_payment(rd, api_data, rdo) {
                 return
             }
             if (invoice_status === "not found") {
-                updaterequest({
+                update_request({
                     "requestid": request_id,
                     "status": "expired",
                     "pending": "no",
@@ -274,7 +266,7 @@ function process_lightning_payment(rd, api_data, rdo) {
                                 tx_list.append(tx_item.data(tx_data));
                                 update_transaction_count(status_panel, tx_data.confirmations);
                                 if (status === "canceled") {
-                                    updaterequest({
+                                    update_request({
                                         "requestid": request_id,
                                         "status": "canceled",
                                         "confirmations": 0
@@ -305,468 +297,6 @@ function process_lightning_payment(rd, api_data, rdo) {
         return
     }
     route_api_request(rd, api_data, rdo);
-}
-
-// ** MyMonero API **
-
-// Initializes Monero transaction processing by selecting appropriate API path (Blockchair or MyMonero) based on payment state
-// Manages account creation and authentication with MyMonero service
-// Handles viewkey validation and node access verification for transaction scanning
-function initialize_monero_scan(rd, api_data, rdo) {
-    if (rdo.pending === "polling") {
-        poll_monero_blockchair(rd, api_data, rdo); // use blockchair api for tx lookup
-        return
-    }
-    const view_key = q_obj(rd, "viewkey.vk");
-    if (!view_key) return;
-    const viewkey = rd.viewkey;
-    if (xmr_node_access(view_key)) {
-        scan_monero_transactions(rd, api_data, rdo, viewkey);
-        return
-    }
-    const wallet_address = view_key.account || rd.address,
-        login_data = JSON.stringify({
-            "address": wallet_address,
-            "view_key": view_key,
-            "create_account": true,
-            "generated_locally": false
-        });
-    api_proxy({
-        "api": "mymonero api",
-        "search": "login",
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "proxy": true,
-        "params": {
-            "method": "POST",
-            "data": login_data,
-            "headers": {
-                "Content-Type": "application/json"
-            }
-        }
-    }).done(function(response) {
-        const api_result = br_result(response).result;
-        if (api_result) {
-            if (api_result.start_height > -1) { // success!
-                set_xmr_node_access(view_key);
-                scan_monero_transactions(rd, api_data, rdo, viewkey);
-                return
-            }
-        }
-        handle_scan_failure(null, rd, api_data, rdo);
-    }).fail(function(xhr, stat, err) {
-        const is_proxy_error = is_proxy_fail(this.url),
-            error_data = xhr || stat || err;
-        handle_scan_failure({
-            "error": error_data,
-            "is_proxy": is_proxy_error
-        }, rd, api_data, rdo);
-    }).always(function() {
-        update_api_source(rdo, {
-            "name": "mymonero api"
-        });
-    });
-}
-
-// Executes Monero transaction lookup using MyMonero API with validated viewkey credentials
-// Processes and sorts transaction data chronologically to identify matching payments
-// Filters transactions based on payment IDs and timestamp validation
-function scan_monero_transactions(rd, api_data, rdo, viewkey) {
-    const wallet_address = viewkey.account || rd.address,
-        request_payload = {
-            "address": wallet_address,
-            "view_key": viewkey.vk
-        };
-    api_proxy({
-        "api": "mymonero api",
-        "search": "get_address_txs",
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "proxy": true,
-        "params": {
-            "method": "POST",
-            "data": JSON.stringify(request_payload),
-            "headers": {
-                "Content-Type": "application/json"
-            }
-        }
-    }).done(function(response) {
-        const api_result = br_result(response).result,
-            transactions = api_result.transactions;
-        if (transactions) {
-            const sorted_txs = sort_transactions_by_date(xmr_scan_data, transactions);
-            let tx_count = 0,
-                matched_tx = false;
-            $.each(sorted_txs, function(date, tx) {
-                const tx_data = xmr_scan_data(tx, rdo.setconfirmations, "xmr", api_result.blockchain_height);
-                if (tx_data) {
-                    const pid_matches = validate_monero_payment_id(rd.xmr_ia, rd.payment_id, tx_data.payment_id); // match xmr payment_id if set
-                    if (pid_matches) {
-                        if (tx_data.ccval && tx_data.transactiontime > rdo.request_timestamp) {
-                            matched_tx = tx_data;
-                            if (rdo.source === "requests") {
-                                const tx_item = create_transaction_item(tx_data, rd.requesttype);
-                                if (tx_item) {
-                                    rdo.transactionlist.append(tx_item.data(tx_data));
-                                    tx_count++;
-                                }
-                            }
-                            return false;
-                        }
-                    }
-                }
-            });
-            process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
-            return
-        }
-        finalize_request_state(rdo);
-    }).fail(function(xhr, stat, err) {
-        const error_data = xhr || stat || err;
-        handle_scan_failure({
-            "error": error_data
-        }, rd, api_data, rdo);
-    });
-}
-
-// Performs Monero payment ID validation with integrated address support
-// Returns true if payment IDs match when integrated address is used, or if both IDs are empty for standard addresses
-function validate_monero_payment_id(xmria, xmrpid, xmr_pid) {
-    if (xmria) {
-        return xmrpid === xmr_pid;
-    }
-    return !xmrpid && !xmr_pid;
-}
-
-// ** MyMonero API **
-// Queries Blockchair API for Monero transaction verification using viewkey-based output scanning
-// Validates transaction outputs against provided transaction hash and address
-// Updates transaction UI and confirmation status based on blockchain data
-function poll_monero_blockchair(rd, api_data, rdo) {
-    const viewkey = rd.viewkey;
-    if (!viewkey) return;
-    const tx_hash = rd.txhash,
-        is_integrated = rd.xmr_ia,
-        wallet_address = viewkey.account || rd.address,
-        view_key = viewkey.vk;
-    api_proxy({
-        "api_url": "https://api.blockchair.com/monero/raw/outputs?txprove=0&txhash=" + tx_hash + "&address=" + wallet_address + "&viewkey=" + view_key,
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "proxy": true,
-        "params": {
-            "method": "GET"
-        }
-    }).done(function(response) {
-        const api_result = br_result(response).result;
-        let tx_count = 0,
-            matched_tx = false;
-        if (api_result) {
-            const tx_data = api_result.data;
-            if (tx_data) {
-                const parsed_tx = blockchair_xmr_data(tx_data, rdo.setconfirmations);
-                if (parsed_tx.txhash === tx_hash && parsed_tx.ccval) {
-                    matched_tx = parsed_tx;
-                    tx_count = 1;
-                    if (rdo.source === "requests") {
-                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                        if (tx_item) {
-                            const tx_list = rdo.transactionlist;
-                            tx_list.append(tx_item.data(parsed_tx));
-                        }
-                    }
-                }
-                process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
-                return
-            }
-        }
-        handle_scan_failure(null, rd, api_data, rdo);
-    }).fail(function(xhr, stat, err) {
-        const is_proxy_error = is_proxy_fail(this.url),
-            error_data = xhr || stat || err;
-        handle_scan_failure({
-            "error": error_data,
-            "is_proxy": is_proxy_error
-        }, rd, api_data, rdo);
-    }).always(function() {
-        update_api_source(rdo, {
-            "name": "blockchair api"
-        });
-    });
-}
-
-// ** blockchain.info API **
-// Routes blockchain.info API requests between address polling and transaction scanning with block height verification
-function initialize_bitcoin_scan(rd, api_data, rdo) {
-    if (rdo.source === "addr_polling") {
-        scan_bitcoin_transactions(rd, api_data, rdo, false);
-        return
-    }
-    get_bitcoin_block_height(rd, api_data, rdo);
-}
-
-// Fetches and validates current blockchain height for accurate transaction confirmation counting
-function get_bitcoin_block_height(rd, api_data, rdo) {
-    api_proxy({ // get latest blockheight
-        "api": "blockchain.info",
-        "search": rd.currencysymbol + "/block/best",
-        "cachetime": rdo.cachetime,
-        "cachefolder": "1h",
-        "params": {
-            "method": "GET"
-        }
-    }).done(function(block_response) {
-        const block_data = br_result(block_response);
-        if (block_data) {
-            const block_height = q_obj(block_data, "result.height");
-            if (block_height) {
-                scan_bitcoin_transactions(rd, api_data, rdo, block_height);
-                return
-            }
-        }
-        handle_scan_failure(null, rd, api_data, rdo);
-    }).fail(function(xhr, stat, err) {
-        const is_proxy_error = is_proxy_fail(this.url),
-            error_data = xhr || stat || err;
-        handle_scan_failure({
-            "error": error_data,
-            "is_proxy": is_proxy_error
-        }, rd, api_data, rdo);
-    }).always(function() {
-        update_api_source(rdo, api_data);
-    });
-}
-
-// Executes address-based transaction scanning or single transaction polling with UI state management
-function scan_bitcoin_transactions(rd, api_data, rdo, block_height) {
-    const tx_list = rdo.transactionlist,
-        source = rdo.source;
-    let tx_count = 0,
-        matched_tx = false;
-    if (rdo.pending === "scanning") { // scan incoming transactions on address
-        api_proxy({
-            "api": "blockchain.info",
-            "search": rd.currencysymbol + "/address/" + rd.address + "/transactions?limit=20&offset=0",
-            "cachetime": rdo.cachetime,
-            "cachefolder": "1h",
-            "params": {
-                "method": "GET"
-            }
-        }).done(function(address_response) {
-            const address_data = br_result(address_response).result;
-            if (address_data) {
-                if (address_data.error) {
-                    handle_scan_failure({
-                        "error": address_data.error
-                    }, rd, api_data, rdo);
-                    return
-                }
-                if (is_array(address_data)) {
-                    const tx_ids = address_data.map(item => item.txid).join(",");
-                    api_proxy({
-                        "api": "blockchain.info",
-                        "search": rd.currencysymbol + "/transactions?txids=" + tx_ids, // get transactions
-                        "cachetime": rdo.cachetime,
-                        "cachefolder": "1h",
-                        "params": {
-                            "method": "GET"
-                        }
-                    }).done(function(tx_response) {
-                        const tx_data = br_result(tx_response).result;
-                        if (tx_data) {
-                            $.each(tx_data, function(date, transaction) {
-                                const parsed_tx = blockchaininfo_scan_data(transaction, rdo.setconfirmations, rd.currencysymbol, rd.address, block_height);
-                                if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) { // get all transactions after requestdate
-                                    matched_tx = parsed_tx;
-                                    if (source === "requests") {
-                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                        if (tx_item) {
-                                            tx_list.append(tx_item.data(parsed_tx));
-                                            tx_count++;
-                                        }
-                                    }
-                                }
-                            });
-                            process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
-                            return
-                        }
-                        handle_scan_failure(null, rd, api_data, rdo);
-                    }).fail(function(xhr, stat, err) {
-                        const error_data = xhr || stat || err;
-                        handle_scan_failure({
-                            "error": error_data
-                        }, rd, api_data, rdo);
-                    });
-                    return
-                }
-            }
-            handle_scan_failure(null, rd, api_data, rdo);
-        }).fail(function(xhr, stat, err) {
-            const is_proxy_error = is_proxy_fail(this.url),
-                error_data = xhr || stat || err;
-            handle_scan_failure({
-                "error": error_data,
-                "is_proxy": is_proxy_error
-            }, rd, api_data, rdo);
-        }).always(function() {
-            update_api_source(rdo, api_data);
-        });
-        return
-    }
-    if (rdo.pending === "polling") { // poll transaction id
-        if (rd.txhash) {
-            api_proxy({
-                "api": "blockchain.info",
-                "search": rd.currencysymbol + "/transaction/" + rd.txhash,
-                "cachetime": rdo.cachetime,
-                "cachefolder": "1h",
-                "params": {
-                    "method": "GET"
-                }
-            }).done(function(tx_response) {
-                const tx_data = br_result(tx_response).result;
-                if (tx_data) {
-                    if (tx_data.error) {
-                        handle_scan_failure({
-                            "error": tx_data.error
-                        }, rd, api_data, rdo);
-                        return
-                    }
-                    const parsed_tx = blockchaininfo_scan_data(tx_data, rdo.setconfirmations, rd.currencysymbol, rd.address, block_height);
-                    if (parsed_tx.ccval) {
-                        matched_tx = parsed_tx;
-                        tx_count = 1;
-                        if (source === "requests") {
-                            const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                            if (tx_item) {
-                                tx_list.append(tx_item.data(parsed_tx));
-                            }
-                        }
-                    }
-                    process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
-                    return
-                }
-                handle_scan_failure(null, rd, api_data, rdo);
-            }).fail(function(xhr, stat, err) {
-                const is_proxy_error = is_proxy_fail(this.url),
-                    error_data = xhr || stat || err;
-                handle_scan_failure({
-                    "error": error_data,
-                    "is_proxy": is_proxy_error
-                }, rd, api_data, rdo);
-            }).always(function() {
-                update_api_source(rdo, api_data);
-            });
-        }
-    }
-}
-
-// ** blockcypher API **
-// Processes BlockCypher API transactions with support for confirmed and unconfirmed transaction scanning and polling
-function process_blockcypher_transactions(rd, api_data, rdo) {
-    const tx_list = rdo.transactionlist;
-    let tx_count = 0,
-        matched_tx = false;
-    if (rdo.pending === "scanning") { // scan incoming transactions on address
-        api_proxy({
-            "api": "blockcypher",
-            "search": rd.currencysymbol + "/main/addrs/" + rd.address,
-            "cachetime": rdo.cachetime,
-            "cachefolder": "1h",
-            "params": {
-                "method": "GET"
-            }
-        }).done(function(response) {
-            const api_result = br_result(response).result;
-            if (api_result) {
-                if (api_result.error) {
-                    handle_scan_failure({
-                        "error": api_result.error
-                    }, rd, api_data, rdo);
-                    return
-                }
-                const confirmed_txs = api_result.txrefs,
-                    unconfirmed_txs = api_result.unconfirmed_txrefs,
-                    all_transactions = (unconfirmed_txs && confirmed_txs) ? unconfirmed_txs.concat(confirmed_txs) : confirmed_txs || unconfirmed_txs;
-                if (all_transactions && !empty_obj(all_transactions)) {
-                    const sorted_txs = sort_transactions_by_date(blockcypher_scan_data, all_transactions);
-                    $.each(sorted_txs, function(date, tx) {
-                        if (!tx.spent) { // filter outgoing transactions
-                            const parsed_tx = blockcypher_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, rd.payment);
-                            if (parsed_tx.ccval && parsed_tx.transactiontime > rdo.request_timestamp) {
-                                matched_tx = parsed_tx;
-                                if (rdo.source === "requests") {
-                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                    if (tx_item) {
-                                        tx_list.append(tx_item.data(parsed_tx));
-                                        tx_count++;
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
-                process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
-                return
-            }
-            handle_scan_failure(null, rd, api_data, rdo);
-        }).fail(function(xhr, stat, err) {
-            const is_proxy_error = is_proxy_fail(this.url),
-                error_data = xhr || stat || err;
-            handle_scan_failure({
-                "error": error_data,
-                "is_proxy": is_proxy_error
-            }, rd, api_data, rdo);
-        }).always(function() {
-            update_api_source(rdo, api_data);
-        });
-        return
-    }
-    if (rdo.pending === "polling") { // poll transaction id
-        if (rd.txhash) {
-            api_proxy({
-                "api": "blockcypher",
-                "search": rd.currencysymbol + "/main/txs/" + rd.txhash,
-                "cachetime": rdo.cachetime,
-                "cachefolder": "1h",
-                "params": {
-                    "method": "GET"
-                }
-            }).done(function(response) {
-                const api_result = br_result(response).result;
-                if (api_result) {
-                    if (api_result.error) {
-                        handle_scan_failure({
-                            "error": api_result.error
-                        }, rd, api_data, rdo);
-                        return
-                    }
-                    const parsed_tx = blockcypher_poll_data(api_result, rdo.setconfirmations, rd.currencysymbol, rd.address);
-                    if (parsed_tx.ccval) {
-                        matched_tx = parsed_tx;
-                        tx_count = 1;
-                        if (rdo.source === "requests") {
-                            const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                            if (tx_item) {
-                                tx_list.append(tx_item.data(parsed_tx));
-                            }
-                        }
-                    }
-                    process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
-                    return
-                }
-                handle_scan_failure(null, rd, api_data, rdo);
-            }).fail(function(xhr, stat, err) {
-                const is_proxy_error = is_proxy_fail(this.url),
-                    error_data = xhr || stat || err;
-                handle_scan_failure({
-                    "error": error_data,
-                    "is_proxy": is_proxy_error
-                }, rd, api_data, rdo);
-            }).always(function() {
-                update_api_source(rdo, api_data);
-            });
-        }
-    }
 }
 
 // ** ethplorer / binplorer API **
@@ -887,6 +417,206 @@ function process_ethereum_transactions(rd, api_data, rdo) {
                     "error": error_data,
                     "is_proxy": is_proxy_error
                 }, rd, api_data, rdo, chain_type);
+            }).always(function() {
+                update_api_source(rdo, api_data);
+            });
+        }
+    }
+}
+
+// Orchestrates multi-currency transaction processing via Blockchair API with ERC20 and native token support
+function blockchair_fetch(rd, api_data, rdo) {
+    const api_name = api_data.name,
+        network = api_data.network,
+        tx_list = rdo.transactionlist,
+        request_id = rd.requestid,
+        source = rdo.source,
+        wallet_address = rd.address,
+        address_normalized = wallet_address.toLowerCase(),
+        currency_symbol = rd.currencysymbol,
+        token_contract = rd.token_contract;
+    let tx_count = 0,
+        matched_tx = false;
+    if (rdo.pending === "scanning") { // scan incoming transactions on address
+        const endpoint_url = (rd.erc20 && token_contract) ? "ethereum/erc-20/" + token_contract + "/dashboards/address/" + wallet_address : rd.payment + "/dashboards/address/" + wallet_address;
+        api_proxy({
+            "api": api_name,
+            "search": endpoint_url,
+            "cachetime": rdo.cachetime,
+            "cachefolder": "1h",
+            "params": {
+                "method": "GET"
+            }
+        }).done(function(response) {
+            const api_result = br_result(response).result;
+            if (api_result) {
+                if (api_result.error) {
+                    handle_scan_failure({
+                        "error": api_result.error
+                    }, rd, api_data, rdo);
+                    return
+                }
+                const blockchain_state = api_result.context;
+                if (blockchain_state.error) {
+                    handle_scan_failure({
+                        "error": api_result.context
+                    }, rd, api_data, rdo);
+                    return
+                }
+                const block_height = blockchain_state.state;
+                if (rd.erc20) {
+                    const token_txs = q_obj(api_result, "data." + address_normalized + ".transactions") || q_obj(api_result, "data." + wallet_address + ".transactions");
+                    if (token_txs && is_array(token_txs)) {
+                        const sorted_txs = sort_transactions_by_date(blockchair_erc20_scan_data, token_txs);
+                        $.each(sorted_txs, function(date, tx) {
+                            const parsed_tx = blockchair_erc20_scan_data(tx, rdo.setconfirmations, currency_symbol, block_height);
+                            if ((parsed_tx.transactiontime > rdo.request_timestamp) && (str_match(parsed_tx.recipient, wallet_address) === true) && (str_match(parsed_tx.token_symbol, currency_symbol) === true) && parsed_tx.ccval) {
+                                matched_tx = parsed_tx;
+                                if (source === "requests") {
+                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                    if (tx_item) {
+                                        tx_list.append(tx_item.data(parsed_tx));
+                                        tx_count++;
+                                    }
+                                }
+                            }
+                        });
+                        process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
+                        return
+                    }
+                    handle_scan_failure(null, rd, api_data, rdo);
+                    return
+                }
+                if (rd.payment === "ethereum") {
+                    const eth_txs = q_obj(api_result, "data." + address_normalized + ".calls") || q_obj(api_result, "data." + wallet_address + ".calls");
+                    if (eth_txs && is_array(eth_txs)) {
+                        const sorted_txs = sort_transactions_by_date(blockchair_eth_scan_data, eth_txs);
+                        $.each(sorted_txs, function(date, tx) {
+                            const parsed_tx = blockchair_eth_scan_data(tx, rdo.setconfirmations, currency_symbol, block_height);
+                            if (parsed_tx.ccval && parsed_tx.transactiontime > rdo.request_timestamp && str_match(parsed_tx.recipient, wallet_address)) {
+                                matched_tx = parsed_tx;
+                                if (source === "requests") {
+                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                    if (tx_item) {
+                                        tx_list.append(tx_item.data(parsed_tx));
+                                        tx_count++;
+                                    }
+                                }
+                            }
+                        });
+                        process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
+                        return
+                    }
+                    handle_scan_failure(null, rd, api_data, rdo);
+                    return
+                }
+                const tx_hashes = q_obj(api_result, "data." + wallet_address + ".transactions") || q_obj(api_result, "data." + address_normalized + ".transactions");
+                if (empty_obj(tx_hashes)) {
+                    process_scan_results(rd, api_data, rdo, null, matched_tx);
+                    return
+                }
+                api_proxy({
+                    "api": api_name,
+                    "search": rd.payment + "/dashboards/transactions/" + tx_hashes.slice(0, 6), // get last 6 transactions
+                    "cachetime": rdo.cachetime,
+                    "cachefolder": "1h",
+                    "params": {
+                        "method": "GET"
+                    }
+                }).done(function(tx_response) {
+                    const tx_result = br_result(tx_response).result,
+                        blockchain_data = tx_result.data;
+                    if (blockchain_data) {
+                        $.each(blockchain_data, function(date, tx) {
+                            const parsed_tx = blockchair_scan_data(tx, rdo.setconfirmations, currency_symbol, wallet_address, block_height);
+                            if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) { // get all transactions after requestdate
+                                matched_tx = parsed_tx;
+                                if (source === "requests") {
+                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                    if (tx_item) {
+                                        tx_list.append(tx_item.data(parsed_tx));
+                                        tx_count++;
+                                    }
+                                }
+                            }
+                        });
+                        process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
+                        return
+                    }
+                    handle_scan_failure(null, rd, api_data, rdo);
+                }).fail(function(xhr, stat, err) {
+                    const error_data = xhr || stat || err;
+                    handle_scan_failure({
+                        "error": error_data
+                    }, rd, api_data, rdo);
+                });
+                return
+            }
+            handle_scan_failure(null, rd, api_data, rdo);
+        }).fail(function(xhr, stat, err) {
+            const is_proxy_error = is_proxy_fail(this.url),
+                error_data = xhr || stat || err;
+            handle_scan_failure({
+                "error": error_data,
+                "is_proxy": is_proxy_error
+            }, rd, api_data, rdo);
+        }).always(function() {
+            update_api_source(rdo, api_data);
+        });
+    }
+    if (rdo.pending === "polling") { // poll transaction id
+        if (rd.txhash) {
+            const endpoint_url = (rd.erc20) ? "ethereum/dashboards/transaction/" + rd.txhash + "?erc_20=true" : rd.payment + "/dashboards/transaction/" + rd.txhash;
+            api_proxy({
+                "api": api_name,
+                "search": endpoint_url,
+                "cachetime": rdo.cachetime,
+                "cachefolder": "1h",
+                "params": {
+                    "method": "GET"
+                }
+            }).done(function(response) {
+                const api_result = br_result(response).result;
+                if (api_result) {
+                    const blockchain_state = api_result.context;
+                    if (blockchain_state) {
+                        if (blockchain_state.error) {
+                            handle_scan_failure({
+                                "error": api_result.context
+                            }, rd, api_data, rdo);
+                            return
+                        }
+                        const block_height = blockchain_state.state;
+                        if (block_height) {
+                            const tx_data = q_obj(api_result, "data." + rd.txhash);
+                            if (tx_data) {
+                                const parsed_tx = (rd.erc20) ? blockchair_erc20_poll_data(tx_data, rdo.setconfirmations, currency_symbol, block_height) :
+                                    (rd.payment === "ethereum") ? blockchair_eth_scan_data(tx_data.calls[0], rdo.setconfirmations, currency_symbol, block_height) :
+                                    blockchair_scan_data(tx_data, rdo.setconfirmations, currency_symbol, wallet_address, block_height);
+                                if (parsed_tx.ccval) {
+                                    matched_tx = parsed_tx;
+                                    tx_count = 1;
+                                    if (source === "requests") {
+                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                        if (tx_item) {
+                                            tx_list.append(tx_item.data(parsed_tx));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
+                        return
+                    }
+                }
+                handle_scan_failure(null, rd, api_data, rdo);
+            }).fail(function(xhr, stat, err) {
+                const is_proxy_error = is_proxy_fail(this.url),
+                    error_data = xhr || stat || err;
+                handle_scan_failure({
+                    "error": error_data,
+                    "is_proxy": is_proxy_error
+                }, rd, api_data, rdo);
             }).always(function() {
                 update_api_source(rdo, api_data);
             });
@@ -1126,135 +856,292 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
     }
 }
 
-// ** blockchair API **
+// Initializes Monero transaction processing by selecting appropriate API path (Blockchair or MyMonero) based on payment state
+// Manages account creation and authentication with MyMonero service
+// Handles viewkey validation and node access verification for transaction scanning
+function initialize_monero_scan(rd, api_data, rdo) {
+    if (rdo.pending === "polling") {
+        poll_monero_blockchair(rd, api_data, rdo); // use blockchair api for tx lookup
+        return
+    }
+    const view_key = q_obj(rd, "viewkey.vk");
+    if (!view_key) return;
+    const viewkey = rd.viewkey;
+    if (xmr_node_access(view_key)) {
+        scan_monero_transactions(rd, api_data, rdo, viewkey);
+        return
+    }
+    const wallet_address = view_key.account || rd.address,
+        login_data = JSON.stringify({
+            "address": wallet_address,
+            "view_key": view_key,
+            "create_account": true,
+            "generated_locally": false
+        });
+    api_proxy({
+        "api": "mymonero api",
+        "search": "login",
+        "cachetime": 25,
+        "cachefolder": "1h",
+        "proxy": true,
+        "params": {
+            "method": "POST",
+            "data": login_data,
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }
+    }).done(function(response) {
+        const api_result = br_result(response).result;
+        if (api_result) {
+            if (api_result.start_height > -1) { // success!
+                set_xmr_node_access(view_key);
+                scan_monero_transactions(rd, api_data, rdo, viewkey);
+                return
+            }
+        }
+        handle_scan_failure(null, rd, api_data, rdo);
+    }).fail(function(xhr, stat, err) {
+        const is_proxy_error = is_proxy_fail(this.url),
+            error_data = xhr || stat || err;
+        handle_scan_failure({
+            "error": error_data,
+            "is_proxy": is_proxy_error
+        }, rd, api_data, rdo);
+    }).always(function() {
+        update_api_source(rdo, {
+            "name": "mymonero api"
+        });
+    });
+}
 
-// Orchestrates multi-currency transaction processing via Blockchair API with ERC20 and native token support
-function blockchair_fetch(rd, api_data, rdo) {
-    const api_name = api_data.name,
-        network = api_data.network,
-        tx_list = rdo.transactionlist,
-        request_id = rd.requestid,
-        source = rdo.source,
-        wallet_address = rd.address,
-        address_normalized = wallet_address.toLowerCase(),
-        currency_symbol = rd.currencysymbol,
-        token_contract = rd.token_contract;
+// Executes Monero transaction lookup using MyMonero API with validated viewkey credentials
+// Processes and sorts transaction data chronologically to identify matching payments
+// Filters transactions based on payment IDs and timestamp validation
+function scan_monero_transactions(rd, api_data, rdo, viewkey) {
+    const wallet_address = viewkey.account || rd.address,
+        request_payload = {
+            "address": wallet_address,
+            "view_key": viewkey.vk
+        };
+    api_proxy({
+        "api": "mymonero api",
+        "search": "get_address_txs",
+        "cachetime": 25,
+        "cachefolder": "1h",
+        "proxy": true,
+        "params": {
+            "method": "POST",
+            "data": JSON.stringify(request_payload),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }
+    }).done(function(response) {
+        const api_result = br_result(response).result,
+            transactions = api_result.transactions;
+        if (transactions) {
+            const sorted_txs = sort_transactions_by_date(xmr_scan_data, transactions);
+            let tx_count = 0,
+                matched_tx = false;
+            $.each(sorted_txs, function(date, tx) {
+                const tx_data = xmr_scan_data(tx, rdo.setconfirmations, "xmr", api_result.blockchain_height);
+                if (tx_data) {
+                    const pid_matches = validate_monero_payment_id(rd.xmr_ia, rd.payment_id, tx_data.payment_id); // match xmr payment_id if set
+                    if (pid_matches) {
+                        if (tx_data.ccval && tx_data.transactiontime > rdo.request_timestamp) {
+                            matched_tx = tx_data;
+                            if (rdo.source === "requests") {
+                                const tx_item = create_transaction_item(tx_data, rd.requesttype);
+                                if (tx_item) {
+                                    rdo.transactionlist.append(tx_item.data(tx_data));
+                                    tx_count++;
+                                }
+                            }
+                            return false;
+                        }
+                    }
+                }
+            });
+            process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
+            return
+        }
+        finalize_request_state(rdo);
+    }).fail(function(xhr, stat, err) {
+        const error_data = xhr || stat || err;
+        handle_scan_failure({
+            "error": error_data
+        }, rd, api_data, rdo);
+    });
+}
+
+// Performs Monero payment ID validation with integrated address support
+function validate_monero_payment_id(xmria, xmrpid, xmr_pid) {
+    if (xmria) {
+        return xmrpid === xmr_pid;
+    }
+    return !xmrpid && !xmr_pid;
+}
+
+// Queries Blockchair API for Monero transaction verification using viewkey-based output scanning
+// Validates transaction outputs against provided transaction hash and address
+// Updates transaction UI and confirmation status based on blockchain data
+function poll_monero_blockchair(rd, api_data, rdo) {
+    const viewkey = rd.viewkey;
+    if (!viewkey) return;
+    const tx_hash = rd.txhash,
+        is_integrated = rd.xmr_ia,
+        wallet_address = viewkey.account || rd.address,
+        view_key = viewkey.vk;
+    api_proxy({
+        "api_url": "https://api.blockchair.com/monero/raw/outputs?txprove=0&txhash=" + tx_hash + "&address=" + wallet_address + "&viewkey=" + view_key,
+        "cachetime": 25,
+        "cachefolder": "1h",
+        "proxy": true,
+        "params": {
+            "method": "GET"
+        }
+    }).done(function(response) {
+        const api_result = br_result(response).result;
+        let tx_count = 0,
+            matched_tx = false;
+        if (api_result) {
+            const tx_data = api_result.data;
+            if (tx_data) {
+                const parsed_tx = blockchair_xmr_data(tx_data, rdo.setconfirmations);
+                if (parsed_tx.txhash === tx_hash && parsed_tx.ccval) {
+                    matched_tx = parsed_tx;
+                    tx_count = 1;
+                    if (rdo.source === "requests") {
+                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                        if (tx_item) {
+                            const tx_list = rdo.transactionlist;
+                            tx_list.append(tx_item.data(parsed_tx));
+                        }
+                    }
+                }
+                process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
+                return
+            }
+        }
+        handle_scan_failure(null, rd, api_data, rdo);
+    }).fail(function(xhr, stat, err) {
+        const is_proxy_error = is_proxy_fail(this.url),
+            error_data = xhr || stat || err;
+        handle_scan_failure({
+            "error": error_data,
+            "is_proxy": is_proxy_error
+        }, rd, api_data, rdo);
+    }).always(function() {
+        update_api_source(rdo, {
+            "name": "blockchair api"
+        });
+    });
+}
+
+// Routes blockchain.info API requests between address polling and transaction scanning with block height verification
+function initialize_bitcoin_scan(rd, api_data, rdo) {
+    if (rdo.source === "addr_polling") {
+        scan_bitcoin_transactions(rd, api_data, rdo, false);
+        return
+    }
+    get_bitcoin_block_height(rd, api_data, rdo);
+}
+
+// Fetches and validates current blockchain height for accurate transaction confirmation counting
+function get_bitcoin_block_height(rd, api_data, rdo) {
+    api_proxy({ // get latest blockheight
+        "api": "blockchain.info",
+        "search": rd.currencysymbol + "/block/best",
+        "cachetime": rdo.cachetime,
+        "cachefolder": "1h",
+        "params": {
+            "method": "GET"
+        }
+    }).done(function(block_response) {
+        const block_data = br_result(block_response);
+        if (block_data) {
+            const block_height = q_obj(block_data, "result.height");
+            if (block_height) {
+                scan_bitcoin_transactions(rd, api_data, rdo, block_height);
+                return
+            }
+        }
+        handle_scan_failure(null, rd, api_data, rdo);
+    }).fail(function(xhr, stat, err) {
+        const is_proxy_error = is_proxy_fail(this.url),
+            error_data = xhr || stat || err;
+        handle_scan_failure({
+            "error": error_data,
+            "is_proxy": is_proxy_error
+        }, rd, api_data, rdo);
+    }).always(function() {
+        update_api_source(rdo, api_data);
+    });
+}
+
+// Executes address-based transaction scanning or single transaction polling with UI state management
+function scan_bitcoin_transactions(rd, api_data, rdo, block_height) {
+    const tx_list = rdo.transactionlist,
+        source = rdo.source;
     let tx_count = 0,
         matched_tx = false;
     if (rdo.pending === "scanning") { // scan incoming transactions on address
-        const endpoint_url = (rd.erc20 && token_contract) ? "ethereum/erc-20/" + token_contract + "/dashboards/address/" + wallet_address : rd.payment + "/dashboards/address/" + wallet_address;
         api_proxy({
-            "api": api_name,
-            "search": endpoint_url,
+            "api": "blockchain.info",
+            "search": rd.currencysymbol + "/address/" + rd.address + "/transactions?limit=20&offset=0",
             "cachetime": rdo.cachetime,
             "cachefolder": "1h",
             "params": {
                 "method": "GET"
             }
-        }).done(function(response) {
-            const api_result = br_result(response).result;
-            if (api_result) {
-                if (api_result.error) {
+        }).done(function(address_response) {
+            const address_data = br_result(address_response).result;
+            if (address_data) {
+                if (address_data.error) {
                     handle_scan_failure({
-                        "error": api_result.error
+                        "error": address_data.error
                     }, rd, api_data, rdo);
                     return
                 }
-                const blockchain_state = api_result.context;
-                if (blockchain_state.error) {
-                    handle_scan_failure({
-                        "error": api_result.context
-                    }, rd, api_data, rdo);
-                    return
-                }
-                const block_height = blockchain_state.state;
-                if (rd.erc20) {
-                    const token_txs = q_obj(api_result, "data." + address_normalized + ".transactions") || q_obj(api_result, "data." + wallet_address + ".transactions");
-                    if (token_txs && is_array(token_txs)) {
-                        const sorted_txs = sort_transactions_by_date(blockchair_erc20_scan_data, token_txs);
-                        $.each(sorted_txs, function(date, tx) {
-                            const parsed_tx = blockchair_erc20_scan_data(tx, rdo.setconfirmations, currency_symbol, block_height);
-                            if ((parsed_tx.transactiontime > rdo.request_timestamp) && (str_match(parsed_tx.recipient, wallet_address) === true) && (str_match(parsed_tx.token_symbol, currency_symbol) === true) && parsed_tx.ccval) {
-                                matched_tx = parsed_tx;
-                                if (source === "requests") {
-                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                    if (tx_item) {
-                                        tx_list.append(tx_item.data(parsed_tx));
-                                        tx_count++;
+                if (is_array(address_data)) {
+                    const tx_ids = address_data.map(item => item.txid).join(",");
+                    api_proxy({
+                        "api": "blockchain.info",
+                        "search": rd.currencysymbol + "/transactions?txids=" + tx_ids, // get transactions
+                        "cachetime": rdo.cachetime,
+                        "cachefolder": "1h",
+                        "params": {
+                            "method": "GET"
+                        }
+                    }).done(function(tx_response) {
+                        const tx_data = br_result(tx_response).result;
+                        if (tx_data) {
+                            $.each(tx_data, function(date, transaction) {
+                                const parsed_tx = blockchaininfo_scan_data(transaction, rdo.setconfirmations, rd.currencysymbol, rd.address, block_height);
+                                if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) { // get all transactions after requestdate
+                                    matched_tx = parsed_tx;
+                                    if (source === "requests") {
+                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                        if (tx_item) {
+                                            tx_list.append(tx_item.data(parsed_tx));
+                                            tx_count++;
+                                        }
                                     }
                                 }
-                            }
-                        });
-                        process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
-                        return
-                    }
-                    handle_scan_failure(null, rd, api_data, rdo);
+                            });
+                            process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
+                            return
+                        }
+                        handle_scan_failure(null, rd, api_data, rdo);
+                    }).fail(function(xhr, stat, err) {
+                        const error_data = xhr || stat || err;
+                        handle_scan_failure({
+                            "error": error_data
+                        }, rd, api_data, rdo);
+                    });
                     return
                 }
-                if (rd.payment === "ethereum") {
-                    const eth_txs = q_obj(api_result, "data." + address_normalized + ".calls") || q_obj(api_result, "data." + wallet_address + ".calls");
-                    if (eth_txs && is_array(eth_txs)) {
-                        const sorted_txs = sort_transactions_by_date(blockchair_eth_scan_data, eth_txs);
-                        $.each(sorted_txs, function(date, tx) {
-                            const parsed_tx = blockchair_eth_scan_data(tx, rdo.setconfirmations, currency_symbol, block_height);
-                            if (parsed_tx.ccval && parsed_tx.transactiontime > rdo.request_timestamp && str_match(parsed_tx.recipient, wallet_address)) {
-                                matched_tx = parsed_tx;
-                                if (source === "requests") {
-                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                    if (tx_item) {
-                                        tx_list.append(tx_item.data(parsed_tx));
-                                        tx_count++;
-                                    }
-                                }
-                            }
-                        });
-                        process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
-                        return
-                    }
-                    handle_scan_failure(null, rd, api_data, rdo);
-                    return
-                }
-                const tx_hashes = q_obj(api_result, "data." + wallet_address + ".transactions") || q_obj(api_result, "data." + address_normalized + ".transactions");
-                if (empty_obj(tx_hashes)) {
-                    process_scan_results(rd, api_data, rdo, null, matched_tx);
-                    return
-                }
-                api_proxy({
-                    "api": api_name,
-                    "search": rd.payment + "/dashboards/transactions/" + tx_hashes.slice(0, 6), // get last 6 transactions
-                    "cachetime": rdo.cachetime,
-                    "cachefolder": "1h",
-                    "params": {
-                        "method": "GET"
-                    }
-                }).done(function(tx_response) {
-                    const tx_result = br_result(tx_response).result,
-                        blockchain_data = tx_result.data;
-                    if (blockchain_data) {
-                        $.each(blockchain_data, function(date, tx) {
-                            const parsed_tx = blockchair_scan_data(tx, rdo.setconfirmations, currency_symbol, wallet_address, block_height);
-                            if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) { // get all transactions after requestdate
-                                matched_tx = parsed_tx;
-                                if (source === "requests") {
-                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                    if (tx_item) {
-                                        tx_list.append(tx_item.data(parsed_tx));
-                                        tx_count++;
-                                    }
-                                }
-                            }
-                        });
-                        process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
-                        return
-                    }
-                    handle_scan_failure(null, rd, api_data, rdo);
-                }).fail(function(xhr, stat, err) {
-                    const error_data = xhr || stat || err;
-                    handle_scan_failure({
-                        "error": error_data
-                    }, rd, api_data, rdo);
-                });
-                return
             }
             handle_scan_failure(null, rd, api_data, rdo);
         }).fail(function(xhr, stat, err) {
@@ -1267,51 +1154,40 @@ function blockchair_fetch(rd, api_data, rdo) {
         }).always(function() {
             update_api_source(rdo, api_data);
         });
+        return
     }
     if (rdo.pending === "polling") { // poll transaction id
         if (rd.txhash) {
-            const endpoint_url = (rd.erc20) ? "ethereum/dashboards/transaction/" + rd.txhash + "?erc_20=true" : rd.payment + "/dashboards/transaction/" + rd.txhash;
             api_proxy({
-                "api": api_name,
-                "search": endpoint_url,
+                "api": "blockchain.info",
+                "search": rd.currencysymbol + "/transaction/" + rd.txhash,
                 "cachetime": rdo.cachetime,
                 "cachefolder": "1h",
                 "params": {
                     "method": "GET"
                 }
-            }).done(function(response) {
-                const api_result = br_result(response).result;
-                if (api_result) {
-                    const blockchain_state = api_result.context;
-                    if (blockchain_state) {
-                        if (blockchain_state.error) {
-                            handle_scan_failure({
-                                "error": api_result.context
-                            }, rd, api_data, rdo);
-                            return
-                        }
-                        const block_height = blockchain_state.state;
-                        if (block_height) {
-                            const tx_data = q_obj(api_result, "data." + rd.txhash);
-                            if (tx_data) {
-                                const parsed_tx = (rd.erc20) ? blockchair_erc20_poll_data(tx_data, rdo.setconfirmations, currency_symbol, block_height) :
-                                    (rd.payment === "ethereum") ? blockchair_eth_scan_data(tx_data.calls[0], rdo.setconfirmations, currency_symbol, block_height) :
-                                    blockchair_scan_data(tx_data, rdo.setconfirmations, currency_symbol, wallet_address, block_height);
-                                if (parsed_tx.ccval) {
-                                    matched_tx = parsed_tx;
-                                    tx_count = 1;
-                                    if (source === "requests") {
-                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                        if (tx_item) {
-                                            tx_list.append(tx_item.data(parsed_tx));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
+            }).done(function(tx_response) {
+                const tx_data = br_result(tx_response).result;
+                if (tx_data) {
+                    if (tx_data.error) {
+                        handle_scan_failure({
+                            "error": tx_data.error
+                        }, rd, api_data, rdo);
                         return
                     }
+                    const parsed_tx = blockchaininfo_scan_data(tx_data, rdo.setconfirmations, rd.currencysymbol, rd.address, block_height);
+                    if (parsed_tx.ccval) {
+                        matched_tx = parsed_tx;
+                        tx_count = 1;
+                        if (source === "requests") {
+                            const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                            if (tx_item) {
+                                tx_list.append(tx_item.data(parsed_tx));
+                            }
+                        }
+                    }
+                    process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
+                    return
                 }
                 handle_scan_failure(null, rd, api_data, rdo);
             }).fail(function(xhr, stat, err) {
@@ -1328,7 +1204,113 @@ function blockchair_fetch(rd, api_data, rdo) {
     }
 }
 
-// ** nimiq / mopsus API **
+// Processes BlockCypher API transactions with support for confirmed and unconfirmed transaction scanning and polling
+function process_blockcypher_transactions(rd, api_data, rdo) {
+    const tx_list = rdo.transactionlist;
+    let tx_count = 0,
+        matched_tx = false;
+    if (rdo.pending === "scanning") { // scan incoming transactions on address
+        api_proxy({
+            "api": "blockcypher",
+            "search": rd.currencysymbol + "/main/addrs/" + rd.address,
+            "cachetime": rdo.cachetime,
+            "cachefolder": "1h",
+            "params": {
+                "method": "GET"
+            }
+        }).done(function(response) {
+            const api_result = br_result(response).result;
+            if (api_result) {
+                if (api_result.error) {
+                    handle_scan_failure({
+                        "error": api_result.error
+                    }, rd, api_data, rdo);
+                    return
+                }
+                const confirmed_txs = api_result.txrefs,
+                    unconfirmed_txs = api_result.unconfirmed_txrefs,
+                    all_transactions = (unconfirmed_txs && confirmed_txs) ? unconfirmed_txs.concat(confirmed_txs) : confirmed_txs || unconfirmed_txs;
+                if (all_transactions && !empty_obj(all_transactions)) {
+                    const sorted_txs = sort_transactions_by_date(blockcypher_scan_data, all_transactions);
+                    $.each(sorted_txs, function(date, tx) {
+                        if (!tx.spent) { // filter outgoing transactions
+                            const parsed_tx = blockcypher_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, rd.payment);
+                            if (parsed_tx.ccval && parsed_tx.transactiontime > rdo.request_timestamp) {
+                                matched_tx = parsed_tx;
+                                if (rdo.source === "requests") {
+                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                    if (tx_item) {
+                                        tx_list.append(tx_item.data(parsed_tx));
+                                        tx_count++;
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
+                return
+            }
+            handle_scan_failure(null, rd, api_data, rdo);
+        }).fail(function(xhr, stat, err) {
+            const is_proxy_error = is_proxy_fail(this.url),
+                error_data = xhr || stat || err;
+            handle_scan_failure({
+                "error": error_data,
+                "is_proxy": is_proxy_error
+            }, rd, api_data, rdo);
+        }).always(function() {
+            update_api_source(rdo, api_data);
+        });
+        return
+    }
+    if (rdo.pending === "polling") { // poll transaction id
+        if (rd.txhash) {
+            api_proxy({
+                "api": "blockcypher",
+                "search": rd.currencysymbol + "/main/txs/" + rd.txhash,
+                "cachetime": rdo.cachetime,
+                "cachefolder": "1h",
+                "params": {
+                    "method": "GET"
+                }
+            }).done(function(response) {
+                const api_result = br_result(response).result;
+                if (api_result) {
+                    if (api_result.error) {
+                        handle_scan_failure({
+                            "error": api_result.error
+                        }, rd, api_data, rdo);
+                        return
+                    }
+                    const parsed_tx = blockcypher_poll_data(api_result, rdo.setconfirmations, rd.currencysymbol, rd.address);
+                    if (parsed_tx.ccval) {
+                        matched_tx = parsed_tx;
+                        tx_count = 1;
+                        if (rdo.source === "requests") {
+                            const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                            if (tx_item) {
+                                tx_list.append(tx_item.data(parsed_tx));
+                            }
+                        }
+                    }
+                    process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
+                    return
+                }
+                handle_scan_failure(null, rd, api_data, rdo);
+            }).fail(function(xhr, stat, err) {
+                const is_proxy_error = is_proxy_fail(this.url),
+                    error_data = xhr || stat || err;
+                handle_scan_failure({
+                    "error": error_data,
+                    "is_proxy": is_proxy_error
+                }, rd, api_data, rdo);
+            }).always(function() {
+                update_api_source(rdo, api_data);
+            });
+        }
+    }
+}
 
 // Processes Nimiq transactions through nimiq.watch and mopsus.com APIs with transaction filtering and confirmation tracking
 function process_nimiq_transactions(rd, api_data, rdo) {
@@ -1507,8 +1489,6 @@ function process_nimiq_transactions(rd, api_data, rdo) {
     }
 }
 
-// ** kaspa API **
-
 // Routes Kaspa API requests between address polling and transaction scanning with bluescore verification
 function initialize_kaspa_scan(rd, api_data, rdo) {
     if (rdo.source === "addr_polling") {
@@ -1655,8 +1635,6 @@ function scan_kaspa_transactions(rd, api_data, rdo, blue_score) {
     }
 }
 
-// ** insight.dash.org **
-
 // Manages Dash transaction processing via Insight API with incoming payment scanning and confirmation tracking
 function process_dash_transactions(rd, api_data, rdo) {
     const tx_list = rdo.transactionlist;
@@ -1760,8 +1738,8 @@ function process_dash_transactions(rd, api_data, rdo) {
     }
 }
 
-// ** Node RPC's **
-// ** mempool.space RPC **
+// ** RPC Interactions: **
+
 // Routes mempool.space API requests between address polling and block height verification for Bitcoin transactions
 function mempoolspace_rpc_init(rd, api_data, rdo, rpc) {
     if (rdo.source === "addr_polling") {
@@ -1895,13 +1873,11 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, block_height) {
     }, 500);
 }
 
-// ** infura RPC **
-
 // Manages Ethereum and ERC20 transaction processing via RPC with multi-chain support and confirmation tracking
 function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
     const network_type = api_data.network;
     if (rdo.pending === "scanning") {
-        const coin_config = getcoinsettings(rd.payment);
+        const coin_config = get_coinsettings(rd.payment);
         let selected_api = api_data;
         if (network_type) { // switch to default (etherscan) txdata
             selected_api = q_obj(coin_config, "layer2.options." + network_type + ".apis.selected");
@@ -2015,23 +1991,6 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
     });
 }
 
-// Extracts nested result data from Ethereum RPC JSON responses
-function inf_result(response) {
-    const json_result = br_result(response);
-    if (json_result) {
-        const rpc_result = json_result.result;
-        if (rpc_result) {
-            return rpc_result.result;
-        }
-    }
-    return false;
-}
-
-// Generates standardized error message for failed Ethereum RPC requests
-function inf_err(node_url) {
-    return "error fetching data from " + node_url;
-}
-
 // Constructs RPC request parameters with support for multiple Ethereum node providers
 function eth_params(node_url, cache_time, method, params) {
     const request_payload = {
@@ -2069,6 +2028,23 @@ function eth_params(node_url, cache_time, method, params) {
         });
     }
     return request_payload;
+}
+
+// Extracts nested result data from Ethereum RPC JSON responses
+function inf_result(response) {
+    const json_result = br_result(response);
+    if (json_result) {
+        const rpc_result = json_result.result;
+        if (rpc_result) {
+            return rpc_result.result;
+        }
+    }
+    return false;
+}
+
+// Generates standardized error message for failed Ethereum RPC requests
+function inf_err(node_url) {
+    return "error fetching data from " + node_url;
 }
 
 // ** Nano RPC **
@@ -2187,7 +2163,8 @@ function nano_rpc(rd, api_data, rdo) {
     }
 }
 
-// ** sort transactions by date **
+// ** Transaction Data Processing: **
+
 // Sorts transaction list by date in descending order using custom processing function
 function sort_transactions_by_date(process_func, tx_list, rdo, rd) {
     return $(tx_list).sort(function(tx_a, tx_b) {
@@ -2243,7 +2220,7 @@ function default_tx_data() {
     };
 }
 
-// ** Unifications
+// ** Blockchain-Specific Data Handlers: **
 
 // Processes blockchain.info websocket transaction data with legacy address support
 function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) {

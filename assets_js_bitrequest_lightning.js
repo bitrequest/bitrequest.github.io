@@ -1,13 +1,23 @@
 $(document).ready(function() {
+    // ** Core Lightning Settings: **
     setup_lightning_settings();
     toggle_lightning_network();
     //render_lightning_interface
+    //template_dialog_temp
+    //get_lightning_settings
+
+    // ** Node Management: **
     //node_option_li
     //test_lnd_option_li
-    //test_eclair_option_li
+    //test_c_lightning_option_li
+    //test_eclair_option_li 
     //test_lnbits_option_li
-    //update_connection_status
     //lightning_option_li
+    //update_connection_status
+    remove_lnd();
+    handle_node_selection();
+
+    // ** Proxy Management: **
     //add_proxy_option
     //create_proxy_option
     toggle_proxy_drawer();
@@ -15,25 +25,28 @@ $(document).ready(function() {
     toggle_proxy_input();
     handle_node_proxy_toggle();
     //test_proxy_connection
-    handle_node_selection();
     handle_proxy_selection();
+    remove_rpc_proxy();
+    //test_lnd_proxy
+    //add_custom_proxy
+
+    // ** Implementation Management: **
     handle_implementation_selection();
     toggle_invoice_details();
     //trigger_ln
-    //test_lnd_proxy
-    //add_custom_proxy
     //test_create_invoice
     //add_ln_imp
-    remove_rpc_proxy();
+
+    // ** Proxy Authentication: **
     unlock_proxy1();
     unlock_proxy2();
     unlock_proxy3();
     unlock_proxy4();
     //prompt_proxy_unlock
-    remove_lnd();
 
-    /* helpers */
-    //get_lightning_settings
+    // ** Utility Functions: **
+    //lnd_pick_proxy
+    //s_lnd_proxy
     //is_local_node
     //cancelpd
     //node_exists
@@ -47,7 +60,17 @@ $(document).ready(function() {
     //lnurl_encode
     //lnurl_decode
     //lnurl_decode_c
+
+    // ** Node Status Functions: **
+    //validate_lnurl_connection
+    //check_lnd_status
+    //check_c_lightning_status
+    //check_eclair_status
+    //check_lnbits_status
+    //set_ln_fields
 });
+
+// ** Core Lightning Settings: **
 
 // Establishes event handler for Lightning Network settings menu activation
 function setup_lightning_settings() {
@@ -147,7 +170,7 @@ function render_lightning_interface(replace) {
             "</div>" +
             "</div>" +
             "<div class='switch_wrap'>" +
-            "<div id='lnurl_s'><span id='toggle_lnd' class='ref'>RPC proxy</span>" + switchpanel(has_proxies, " custom") + "</div>" +
+            "<div id='lnurl_s'><span id='toggle_lnd' class='ref'>RPC proxy</span>" + switch_panel(has_proxies, " custom") + "</div>" +
             "</div>" +
             "</div>" +
             "</li>" +
@@ -219,6 +242,43 @@ function render_lightning_interface(replace) {
         }
     }
 }
+
+// Generates formatted HTML dialog template with specified parameters
+function template_dialog_temp(dialog_data) {
+    const validated_class = dialog_data.validated ? " validated" : "",
+        dialog_object = [{
+            "div": {
+                "id": dialog_data.id,
+                "class": "formbox",
+                "content": [{
+                        "h2": {
+                            "class": dialog_data.icon,
+                            "content": dialog_data.title
+                        }
+                    },
+                    {
+                        "div": {
+                            "class": "popnotify"
+                        }
+                    },
+                    {
+                        "div": {
+                            "class": "pfwrap",
+                            "content": dialog_data.elements
+                        }
+                    }
+                ]
+            }
+        }]
+    return render_html(dialog_object);
+}
+
+// Returns Lightning Network settings DOM node
+function get_lightning_settings() {
+    return cs_node("bitcoin", "Lightning network");
+}
+
+// ** Node Management: **
 
 // Creates node option elements with proxy connection validation and status handling
 function node_option_li(node_info, selected, action, proxy_url, proxy_key) {
@@ -497,18 +557,6 @@ function test_lnbits_option_li(node_info, selected, action) {
     });
 }
 
-// Updates Lightning node connection status UI indicators based on test results
-function update_connection_status(is_connected) {
-    const node_container = $("#lnsettingsbox .ln_info_wrap:visible");
-    if (is_connected) {
-        node_container.addClass("live");
-        $("#ln_nodeselect").data("live", "connection");
-    } else {
-        node_container.removeClass("live");
-        $("#ln_nodeselect").data("live", "wifi-off");
-    }
-}
-
 // Creates and renders Lightning node UI elements with invoice history and status information
 function lightning_option_li(is_live, node_info, selected, invoices, proxy_url) {
     const has_invoices = (invoices && invoices !== "locked") ? true : false,
@@ -576,7 +624,7 @@ function lightning_option_li(is_live, node_info, selected, invoices, proxy_url) 
             "<span class='offline_stat'> Offline <span class='icon-wifi-off'></span></span>" +
             "<span class='locked_stat'> <span id='pw_unlock_info' data-pid='" + proxy_id + "' class='ref'>Locked</span> <span class='icon-lock'></span></span></br/>" +
             "</div>" +
-            "<div class='lnurl_p'>Proxy" + switchpanel(has_proxy, " custom") + "</div>" +
+            "<div class='lnurl_p'>Proxy" + switch_panel(has_proxy, " custom") + "</div>" +
             "</div></div></li>"),
         invoice_markup = $("<li class='noln_ref" + hide_class + "' data-id='" + node_id + "'>" +
             "<div class='d_trigger'><span class='ref'><span class='icon-files-empty'></span>Invoices</span></div>" +
@@ -584,6 +632,82 @@ function lightning_option_li(is_live, node_info, selected, invoices, proxy_url) 
     $("#lnsettingsbox #ad_info_wrap > ul").prepend(info_markup, invoice_markup);
     $("#ad_info_wrap .node_selected").delay(500).slideDown(300);
 }
+
+// Updates Lightning node connection status UI indicators based on test results
+function update_connection_status(is_connected) {
+    const node_container = $("#lnsettingsbox .ln_info_wrap:visible");
+    if (is_connected) {
+        node_container.addClass("live");
+        $("#ln_nodeselect").data("live", "connection");
+    } else {
+        node_container.removeClass("live");
+        $("#ln_nodeselect").data("live", "wifi-off");
+    }
+}
+
+// Manages Lightning node removal with confirmation and state persistence
+function remove_lnd() {
+    $(document).on("click", "#select_ln_node .options .opt_icon_box .icon-bin", function() {
+        const selected_icon = $(this),
+            selected_option = selected_icon.closest(".optionwrap"),
+            node_info = selected_option.data(),
+            confirm_removal = confirm(translate("confirmremovenode", {
+                "thisval": node_info.name
+            }));
+        if (confirm_removal === true) {
+            const lightning_item = get_lightning_settings(),
+                lightning_data = lightning_item.data(),
+                node_services = lightning_data.services,
+                updated_node_list = fetch_other_nodes(node_services, node_info.node_id),
+                is_node_list_empty = empty_obj(updated_node_list);
+            selected_option.slideUp(500, function() {
+                $(this).remove();
+            });
+            const final_node_list = is_node_list_empty ? [] : updated_node_list,
+                selected_service = is_node_list_empty ? false : updated_node_list[0],
+                is_selected = !is_node_list_empty;
+            lightning_item.data({
+                "selected_service": selected_service,
+                "selected": is_selected,
+                "services": final_node_list
+            });
+            if (is_node_list_empty) {
+                lightning_item.find(".switchpanel").removeClass("true").addClass("false");
+                selected_icon.closest(".selectbox").slideUp(500);
+                $("#lnsettingsbox .popform").addClass("noln");
+                save_cc_settings("bitcoin", true);
+                canceldialog();
+            } else {
+                save_cc_settings("bitcoin", true);
+                $("#ln_nodeselect").val(selected_service.host);
+                $("#dialogbody").slideUp(300, function() {
+                    render_lightning_interface(true);
+                });
+            }
+            notify(translate("serviceremoved"));
+            cancelpd();
+        }
+    })
+}
+
+// Manages Lightning node selection UI with status updates and info panel display
+function handle_node_selection() {
+    $(document).on("click", "#ln_nodelist .optionwrap", function() {
+        const selected_node = $(this);
+        if (selected_node.hasClass("offline")) {
+            play_audio(glob_const.funk);
+        }
+        $("#ln_nodelist .optionwrap").not(selected_node).removeClass("show");
+        selected_node.addClass("show");
+        const node_id = selected_node.data("node_id"),
+            all_node_refs = $("#lnsettingsbox #ad_info_wrap .noln_ref"),
+            matching_node_refs = $("#lnsettingsbox #ad_info_wrap .noln_ref[data-id='" + node_id + "']");
+        all_node_refs.hide();
+        matching_node_refs.show().find(".infodrawer").slideDown(300);
+    })
+}
+
+// ** Proxy Management: **
 
 // Tests proxy connection and adds proxy option to UI with status indicators
 function add_proxy_option(option_list, key, proxy_info, selected) {
@@ -767,23 +891,6 @@ function test_proxy_connection(node_info, proxy_url, proxy_key) {
     }
 }
 
-// Manages Lightning node selection UI with status updates and info panel display
-function handle_node_selection() {
-    $(document).on("click", "#ln_nodelist .optionwrap", function() {
-        const selected_node = $(this);
-        if (selected_node.hasClass("offline")) {
-            play_audio(glob_const.funk);
-        }
-        $("#ln_nodelist .optionwrap").not(selected_node).removeClass("show");
-        selected_node.addClass("show");
-        const node_id = selected_node.data("node_id"),
-            all_node_refs = $("#lnsettingsbox #ad_info_wrap .noln_ref"),
-            matching_node_refs = $("#lnsettingsbox #ad_info_wrap .noln_ref[data-id='" + node_id + "']");
-        all_node_refs.hide();
-        matching_node_refs.show().find(".infodrawer").slideDown(300);
-    })
-}
-
 // Handles proxy selection interface with offline state validation
 function handle_proxy_selection() {
     $(document).on("click", "#lnd_proxy_select_input .optionwrap", function() {
@@ -798,6 +905,138 @@ function handle_proxy_selection() {
     })
 }
 
+// Handles removal of RPC proxy with node dependency checking and state updates
+function remove_rpc_proxy() {
+    $(document).on("click", "#lnd_proxy_select_input .options .opt_icon_box .icon-bin", function() {
+        const selected_icon = $(this),
+            selected_option = selected_icon.closest(".optionwrap"),
+            proxy_info = selected_option.data(),
+            confirm_removal = confirm(translate("confirmremovenode", {
+                "thisval": proxy_info.value
+            }));
+        if (confirm_removal === true) {
+            const lightning_item = get_lightning_settings(),
+                lightning_data = lightning_item.data(),
+                current_proxy_id = proxy_info.pid,
+                dependent_nodes = lightning_data.services.find(node => node.proxy_id === current_proxy_id);
+            if (dependent_nodes) {
+                popnotify("error", translate("proxyinuse", {
+                    "imp": dependent_nodes.imp,
+                    "name": dependent_nodes.name
+                }));
+                return
+            }
+            const proxy_list = lightning_data.proxies,
+                current_proxy = lightning_data.selected_proxy,
+                updated_proxy_list = fetch_other_proxies(proxy_list, current_proxy_id),
+                is_proxy_list_empty = empty_obj(updated_proxy_list),
+                final_proxy_list = is_proxy_list_empty ? [] : updated_proxy_list,
+                selected_proxy = is_proxy_list_empty ? false :
+                (current_proxy.id === current_proxy_id) ? updated_proxy_list[0] : current_proxy;
+            lightning_item.data({
+                "selected_proxy": selected_proxy,
+                "proxies": final_proxy_list
+            });
+            if (is_proxy_list_empty) {
+                selected_icon.closest(".selectbox").slideUp(500, function() {
+                    render_lightning_interface(true);
+                });
+                cancelpd();
+            } else {
+                $("#lnd_proxy_select_input > input")
+                    .val(lnurl_deform(selected_proxy.proxy).url)
+                    .attr("data-pid", selected_proxy.id);
+                selected_option.slideUp(500, function() {
+                    selected_icon.remove();
+                });
+            }
+            save_cc_settings("bitcoin", true);
+            notify(translate("proxyremoved"));
+            cancelpd();
+        }
+    })
+}
+
+// Validates and adds new Lightning proxy with error handling and persistence
+function test_lnd_proxy(proxy_url, proxy_id, proxy_key) {
+    loader(true);
+    set_loader_text(translate("connecttolnur", {
+        "url": proxy_url
+    }));
+    $.ajax({
+        "method": "POST",
+        "cache": false,
+        "timeout": 5000,
+        "url": proxy_url + "proxy/v1/ln/api/",
+        "data": {
+            "add": true,
+            "x-api": proxy_key
+        }
+    }).done(function(response) {
+        closeloader();
+        const api_result = br_result(response),
+            result = api_result.result,
+            error = result.error;
+        if (error) {
+            const default_error = translate("unabletoconnect"),
+                error_message = error.message || (typeof error === "string" ? error : default_error),
+                formatted_message = error_message === "no write acces" ? translate("folderpermissions") : error_message,
+                error_code = error.code;
+            popnotify("error", formatted_message);
+            if (error_code && (error_code === 1 || error_code === 2)) {
+                $("#proxy_pw_input").slideDown(200, function() {
+                    $(this).focus();
+                })
+            }
+            return
+        }
+        if (result.add) {
+            const lightning_item = get_lightning_settings(),
+                lightning_data = lightning_item.data(),
+                current_proxy_list = lightning_data.proxies,
+                new_proxy = {
+                    "proxy": lnurl_form(proxy_url, proxy_key),
+                    "id": proxy_id
+                };
+            current_proxy_list.push(new_proxy);
+            lightning_item.data({
+                "proxies": current_proxy_list,
+                "selected_proxy": new_proxy
+            });
+            save_cc_settings("bitcoin", true);
+            notify(translate("proxyadded"));
+            $("#dialogbody").slideUp(300, function() {
+                render_lightning_interface(true);
+            });
+            add_custom_proxy(proxy_url);
+            return
+        }
+        popnotify("error", translate("unabletoconnectto", {
+            "value": proxy_url
+        }));
+    }).fail(function(xhr, status, error) {
+        closeloader();
+        popnotify("error", translate("unabletoconnect"));
+    });
+}
+
+// Registers custom proxy URL to global proxy list with duplication prevention
+function add_custom_proxy(proxy_url) {
+    const proxy_node = $("#api_proxy"),
+        proxy_node_data = proxy_node.data(),
+        custom_proxies = proxy_node_data.custom_proxies;
+    if (custom_proxies.includes(proxy_url) || glob_const.proxy_list.includes(proxy_url)) {
+        return false;
+    }
+    custom_proxies.push(proxy_url);
+    set_setting("api_proxy", {
+        "custom_proxies": custom_proxies
+    });
+    save_settings();
+}
+
+// ** Implementation Management: **
+
 // Controls Lightning implementation selection with proxy requirements and credential form management
 function handle_implementation_selection() {
     $(document).on("click", "#implements .imp_select", function(e) {
@@ -810,15 +1049,6 @@ function handle_implementation_selection() {
             selected_credential_section = $("#lnd_credentials .cs_" + implementation),
             proxy_switch = $("#lnsettingsbox #lnurl_s .switchpanel.custom"),
             has_proxy = proxy_switch.hasClass("true");
-        /*if (implementation == "lnd" || implementation == "eclair" || implementation == "c-lightning") {
-            if (has_proxy === false || has_proxies === false) {
-                popnotify("error", implementation + " requires a proxy server");
-                $("#add_proxy_drawer").slideDown(200);
-                //$("#lnd_proxy_url_input").focus();
-                credential_sections.hide();
-                return
-            }
-        }*/
         $("#add_proxy_drawer").slideUp(200);
         $("#lnd_proxy_url_input").blur();
         credential_sections.not(selected_credential_section).hide();
@@ -893,8 +1123,6 @@ function trigger_ln() {
         }
         const proxy_key = $("#proxy_pw_input").val(),
             proxy_key_hash = proxy_key ? sha_sub(proxy_key, 10) : false;
-        console.log(proxy_key);
-        console.log(proxy_key_hash);
         test_lnd_proxy(normalized_url, proxy_id, proxy_key_hash);
         if (no_proxy_change || !current_proxy) {} else {
             notify(translate("datasaved"));
@@ -1002,84 +1230,6 @@ function trigger_ln() {
             play_audio(glob_const.funk);
         }
     }
-}
-
-// Validates and adds new Lightning proxy with error handling and persistence
-function test_lnd_proxy(proxy_url, proxy_id, proxy_key) {
-    loader(true);
-    set_loader_text(translate("connecttolnur", {
-        "url": proxy_url
-    }));
-    $.ajax({
-        "method": "POST",
-        "cache": false,
-        "timeout": 5000,
-        "url": proxy_url + "proxy/v1/ln/api/",
-        "data": {
-            "add": true,
-            "x-api": proxy_key
-        }
-    }).done(function(response) {
-        closeloader();
-        const api_result = br_result(response),
-            result = api_result.result,
-            error = result.error;
-        if (error) {
-            const default_error = translate("unabletoconnect"),
-                error_message = error.message || (typeof error === "string" ? error : default_error),
-                formatted_message = error_message === "no write acces" ? translate("folderpermissions") : error_message,
-                error_code = error.code;
-            popnotify("error", formatted_message);
-            if (error_code && (error_code === 1 || error_code === 2)) {
-                $("#proxy_pw_input").slideDown(200, function() {
-                    $(this).focus();
-                })
-            }
-            return
-        }
-        if (result.add) {
-            const lightning_item = get_lightning_settings(),
-                lightning_data = lightning_item.data(),
-                current_proxy_list = lightning_data.proxies,
-                new_proxy = {
-                    "proxy": lnurl_form(proxy_url, proxy_key),
-                    "id": proxy_id
-                };
-            current_proxy_list.push(new_proxy);
-            lightning_item.data({
-                "proxies": current_proxy_list,
-                "selected_proxy": new_proxy
-            });
-            save_cc_settings("bitcoin", true);
-            notify(translate("proxyadded"));
-            $("#dialogbody").slideUp(300, function() {
-                render_lightning_interface(true);
-            });
-            add_custom_proxy(proxy_url);
-            return
-        }
-        popnotify("error", translate("unabletoconnectto", {
-            "value": proxy_url
-        }));
-    }).fail(function(xhr, status, error) {
-        closeloader();
-        popnotify("error", translate("unabletoconnect"));
-    });
-}
-
-// Registers custom proxy URL to global proxy list with duplication prevention
-function add_custom_proxy(proxy_url) {
-    const proxy_node = $("#api_proxy"),
-        proxy_node_data = proxy_node.data(),
-        custom_proxies = proxy_node_data.custom_proxies;
-    if (custom_proxies.includes(proxy_url) || glob_const.proxy_list.includes(proxy_url)) {
-        return false;
-    }
-    custom_proxies.push(proxy_url);
-    set_setting("api_proxy", {
-        "custom_proxies": custom_proxies
-    });
-    savesettings();
 }
 
 // Validates Lightning implementation by testing invoice creation capability
@@ -1283,7 +1433,7 @@ function add_ln_imp(node_services, node_id, implementation, proxy_data, node_hos
         if (glob_const.body.hasClass("showstartpage")) {
             const account_name = $("#eninput").val();
             $("#accountsettings").data("selected", account_name).find("p").text(account_name);
-            savesettings();
+            save_settings();
             openpage("?p=home", "home", "loadpage");
             glob_const.body.removeClass("showstartpage");
         }
@@ -1298,8 +1448,8 @@ function add_ln_imp(node_services, node_id, implementation, proxy_data, node_hos
             "a_id": "btc1",
             "vk": false
         };
-        appendaddress(currency, address_data);
-        saveaddresses(currency, true);
+        append_address(currency, address_data);
+        save_addresses(currency, true);
         currency_check(currency);
     }
     notify(translate("datasaved"));
@@ -1309,102 +1459,7 @@ function add_ln_imp(node_services, node_id, implementation, proxy_data, node_hos
     cancelpd();
 }
 
-// Handles removal of RPC proxy with node dependency checking and state updates
-function remove_rpc_proxy() {
-    $(document).on("click", "#lnd_proxy_select_input .options .opt_icon_box .icon-bin", function() {
-        const selected_icon = $(this),
-            selected_option = selected_icon.closest(".optionwrap"),
-            proxy_info = selected_option.data(),
-            confirm_removal = confirm(translate("confirmremovenode", {
-                "thisval": proxy_info.value
-            }));
-        if (confirm_removal === true) {
-            const lightning_item = get_lightning_settings(),
-                lightning_data = lightning_item.data(),
-                current_proxy_id = proxy_info.pid,
-                dependent_nodes = lightning_data.services.find(node => node.proxy_id === current_proxy_id);
-            if (dependent_nodes) {
-                popnotify("error", translate("proxyinuse", {
-                    "imp": dependent_nodes.imp,
-                    "name": dependent_nodes.name
-                }));
-                return
-            }
-            const proxy_list = lightning_data.proxies,
-                current_proxy = lightning_data.selected_proxy,
-                updated_proxy_list = fetch_other_proxies(proxy_list, current_proxy_id),
-                is_proxy_list_empty = empty_obj(updated_proxy_list),
-                final_proxy_list = is_proxy_list_empty ? [] : updated_proxy_list,
-                selected_proxy = is_proxy_list_empty ? false :
-                (current_proxy.id === current_proxy_id) ? updated_proxy_list[0] : current_proxy;
-            lightning_item.data({
-                "selected_proxy": selected_proxy,
-                "proxies": final_proxy_list
-            });
-            if (is_proxy_list_empty) {
-                selected_icon.closest(".selectbox").slideUp(500, function() {
-                    render_lightning_interface(true);
-                });
-                cancelpd();
-            } else {
-                $("#lnd_proxy_select_input > input")
-                    .val(lnurl_deform(selected_proxy.proxy).url)
-                    .attr("data-pid", selected_proxy.id);
-                selected_option.slideUp(500, function() {
-                    selected_icon.remove();
-                });
-            }
-            save_cc_settings("bitcoin", true);
-            notify(translate("proxyremoved"));
-            cancelpd();
-        }
-    })
-}
-
-// Manages Lightning node removal with confirmation and state persistence
-function remove_lnd() {
-    $(document).on("click", "#select_ln_node .options .opt_icon_box .icon-bin", function() {
-        const selected_icon = $(this),
-            selected_option = selected_icon.closest(".optionwrap"),
-            node_info = selected_option.data(),
-            confirm_removal = confirm(translate("confirmremovenode", {
-                "thisval": node_info.name
-            }));
-        if (confirm_removal === true) {
-            const lightning_item = get_lightning_settings(),
-                lightning_data = lightning_item.data(),
-                node_services = lightning_data.services,
-                updated_node_list = fetch_other_nodes(node_services, node_info.node_id),
-                is_node_list_empty = empty_obj(updated_node_list);
-            selected_option.slideUp(500, function() {
-                $(this).remove();
-            });
-            const final_node_list = is_node_list_empty ? [] : updated_node_list,
-                selected_service = is_node_list_empty ? false : updated_node_list[0],
-                is_selected = !is_node_list_empty;
-            lightning_item.data({
-                "selected_service": selected_service,
-                "selected": is_selected,
-                "services": final_node_list
-            });
-            if (is_node_list_empty) {
-                lightning_item.find(".switchpanel").removeClass("true").addClass("false");
-                selected_icon.closest(".selectbox").slideUp(500);
-                $("#lnsettingsbox .popform").addClass("noln");
-                save_cc_settings("bitcoin", true);
-                canceldialog();
-            } else {
-                save_cc_settings("bitcoin", true);
-                $("#ln_nodeselect").val(selected_service.host);
-                $("#dialogbody").slideUp(300, function() {
-                    render_lightning_interface(true);
-                });
-            }
-            notify(translate("serviceremoved"));
-            cancelpd();
-        }
-    })
-}
+// ** Proxy Authentication: **
 
 // Handles proxy unlock request from proxy selection interface
 function unlock_proxy1() {
@@ -1503,11 +1558,7 @@ function prompt_proxy_unlock(proxy_id) {
     });
 }
 
-/* helpers */
-// Returns Lightning Network settings DOM node
-function get_lightning_settings() {
-    return cs_node("bitcoin", "Lightning network");
-}
+// ** Utility Functions: **
 
 // Selects default or saved Lightning Network proxy
 function lnd_pick_proxy() {
@@ -1531,7 +1582,7 @@ function is_local_node(host) {
 // Cancels payment dialog when specific conditions are met
 function cancelpd() {
     if (is_openrequest() === true) { // update request dialog
-        cancelpaymentdialog();
+        cancel_paymentdialog();
     }
 }
 
@@ -1610,36 +1661,7 @@ function lnurl_decode_c(lnurl) {
     return sanitize_string(lnurl_decode(lnurl));
 }
 
-/* Tools */
-// Generates formatted HTML dialog template with specified parameters
-function template_dialog_temp(dialog_data) {
-    const validated_class = dialog_data.validated ? " validated" : "",
-        dialog_object = [{
-            "div": {
-                "id": dialog_data.id,
-                "class": "formbox",
-                "content": [{
-                        "h2": {
-                            "class": dialog_data.icon,
-                            "content": dialog_data.title
-                        }
-                    },
-                    {
-                        "div": {
-                            "class": "popnotify"
-                        }
-                    },
-                    {
-                        "div": {
-                            "class": "pfwrap",
-                            "content": dialog_data.elements
-                        }
-                    }
-                ]
-            }
-        }]
-    return render_html(dialog_object);
-}
+// ** Node Status Functions: **
 
 // Validates LNURL connectivity with status updates
 function validate_lnurl_connection(lightning_node) {

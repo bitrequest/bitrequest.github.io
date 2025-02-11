@@ -33,24 +33,33 @@ const bip39_const = {
 }
 
 $(document).ready(function() {
-    //istrial
-    //validate_trial_status
+    // ** Core Initialization & Setup: **
     test_bip39();
-    //disable_bip39_support
+    //disable_bip39_support 
     //mark_coins_non_derivable
     //mark_coins_xpub_incompatible
-    //test_derivation
+    //is_trial
+    //validate_trial_status
 
-    // Check derivationsn
+    // ** BIP39 Test Functions: **
+    //test_derivation
+    //bech32_check
+    //cashaddr_check 
+    //nano_check
+    //xmr_check
+    //xpub_check
+    //eth_xpub_check
+
+    // ** Derivation Support Functions: **
     //check_derivations
     //active_xpub
     //has_xpub
     //is_xpub
     //cxpub
-    //getbip32dat
-    //hasbip32
+    //get_bip32dat
+    //has_bip32
 
-    // Bip 39 seed generation
+    // ** Seed Generation & Management: **
     make_seed();
     restore_seed();
     restore_seed_verify();
@@ -59,7 +68,7 @@ $(document).ready(function() {
     submit_disclaimer();
     //bip39
 
-    // Seed panel nav
+    // ** Seed Panel Navigation: **
     got_it();
     seed_back1();
     seed_back2();
@@ -67,13 +76,15 @@ $(document).ready(function() {
     //ls_phrase_obj
     //ls_phrase_obj_parsed
     //seed_decrypt
+
+    // ** Phrase Verification & Backup: **
     backup_continue();
     //check_phrase
     //get_mnemonic_phrase
     //validate_mnemonic
     //find_invalid_word
     //verify_phrase
-    //shuffleArray
+    //shuffle_array
     verify_words();
     //update_address_lists
     continue_seed();
@@ -81,6 +92,29 @@ $(document).ready(function() {
     //complete_seed_setup
     //seed_callback
     //deactivate_xpubs
+    //encrypt_seed_data
+    //has_encrypted_data
+    //pin_to_encryption_key
+
+    // ** Key Derivation Core: **
+    //hmac_encrypt
+    //mnemonic_to_seed
+    //parse_seed
+    //generate_mnemonic
+    //to_mnemonic
+
+    // ** BIP32 Derivation: **
+    //objectify_extended
+    //derive_x
+    //derive_child_key
+    //keypair_array
+    //ext_keys
+    //xpub_obj
+    //b58c_x_payload
+    //format_keys
+    //xpub_prefix
+
+    // ** Address Generation: **
     //derive_new_address
     //get_latest_index
     //key_cc
@@ -92,32 +126,13 @@ $(document).ready(function() {
     //derive_data
     //derive_obj
     //count_unique_elements
+
+    // ** UI & Information Display: **
     copy_phrase();
     toggle_phrase_visibility();
     //reveal_mnemonic
     delete_phrase_trigger();
     //delete_phrase_verify
-
-    // Bip 32 Key derivation
-    //hmac_encrypt
-    //mnemonic_to_seed
-    //parse_seed
-    //generate_mnemonic
-    //to_mnemonic
-    //pad_binary
-
-    // bip32 Derivation
-    //objectify_extended
-    //derive_x
-    //derive_child_key
-    //keypair_array
-    //ext_keys
-    //xpub_obj
-    //b58c_x_payload
-    //format_keys
-    //xpub_prefix
-
-    // Phrase info
     phrase_info();
     //phrase_info_pu
     //list_compatible_wallets
@@ -132,50 +147,7 @@ $(document).ready(function() {
     phrase_showxp();
 });
 
-// Validates trial status by checking if timestamp in local storage is within 12-hour window
-function istrial() {
-    const trial_timestamp = br_get_local("tp");
-    if (trial_timestamp) {
-        const trial_duration = 43200000;
-        if ((now() - parseFloat(trial_timestamp)) < trial_duration) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// Reminder to write down secret phrase
-
-// Enforces address usage limits based on trial status (2 max for trial, 0 for non-trial users)
-function validate_trial_status() {
-    if (glob_let.hasbip) {
-        if (glob_let.bipv) {
-            return true;
-        }
-        const active_addresses = filter_all_addressli("seedid", glob_let.bipid).filter(".used"),
-            is_trial_active = istrial();
-        if (is_trial_active) {
-            if (active_addresses.length > 1) {
-                manage_bip32({
-                    "type": "popup"
-                });
-            }
-            if (active_addresses.length > 2) {
-                return false;
-            }
-        } else {
-            manage_bip32({
-                "type": "popup"
-            });
-            if (active_addresses.length > 0) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-// dependencies check
+// ** Core Initialization & Setup: **
 
 // Validates BIP39 implementation, crypto support, and address derivation for multiple cryptocurrencies
 function test_bip39() {
@@ -270,14 +242,56 @@ function mark_coins_xpub_incompatible(arr) {
     }, 500)
 }
 
-// test derivations
+// Validates trial status by checking if timestamp in local storage is within 12-hour window
+function is_trial() {
+    const trial_timestamp = br_get_local("tp");
+    if (trial_timestamp) {
+        const trial_duration = 43200000;
+        if ((now() - parseFloat(trial_timestamp)) < trial_duration) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Reminder to write down secret phrase
+// Enforces address usage limits based on trial status (2 max for trial, 0 for non-trial users)
+function validate_trial_status() {
+    if (glob_let.hasbip) {
+        if (glob_let.bipv) {
+            return true;
+        }
+        const active_addresses = filter_all_addressli("seedid", glob_let.bipid).filter(".used"),
+            is_trial_active = is_trial();
+        if (is_trial_active) {
+            if (active_addresses.length > 1) {
+                manage_bip32({
+                    "type": "popup"
+                });
+            }
+            if (active_addresses.length > 2) {
+                return false;
+            }
+        } else {
+            manage_bip32({
+                "type": "popup"
+            });
+            if (active_addresses.length > 0) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+// ** BIP39 Test Functions: **
 
 // Validates Bitcoin address derivation using BIP44 path against expected test vector
 function test_derivation() {
     try {
         const coin = "bitcoin",
             root_key = get_rootkey(bip39_const.expected_seed),
-            bip32_config = getbip32dat(coin),
+            bip32_config = get_bip32dat(coin),
             derive_params = {
                 "dpath": "m/44'/0'/0'/0/0",
                 "key": root_key.slice(0, 64),
@@ -353,7 +367,7 @@ function xpub_check() {
                 "vb": xpub_data.version
             },
             derived_keys = derive_x(derive_params),
-            bip32_config = getbip32dat(coin),
+            bip32_config = get_bip32dat(coin),
             derived_address = format_keys(null, derived_keys, bip32_config, 0, coin),
             bech32_address = "bc1qk0wlvl4xh3eqe5szqyrlcj4ws8633vz0vhhywl"; // wildcard for bech32 Xpubs (Zpub)
         return derived_address.address === bip39_const.expected_address || derived_address.address === bech32_address;
@@ -375,7 +389,8 @@ function eth_xpub_check() {
     }
 }
 
-// Check derivations
+// ** Derivation Support Functions: **
+
 // Returns derivation method ('xpub', 'seed', or false) based on currency's configuration
 function check_derivations(coin) {
     if (glob_let.test_derive && bip39_const.c_derive[coin]) {
@@ -417,7 +432,7 @@ function cxpub(coin) {
 }
 
 // Retrieves BIP32 configuration data from active xpub or coin settings
-function getbip32dat(coin) {
+function get_bip32dat(coin) {
     const xpub_settings = cs_node(coin, "Xpub", true);
     if (xpub_settings && xpub_settings.active === true) {
         return xpub_settings;
@@ -433,7 +448,7 @@ function getbip32dat(coin) {
 }
 
 // Checks if currency has BIP32 support in its configuration
-function hasbip32(coin) {
+function has_bip32(coin) {
     const coin_config = get_coin_definition(coin);
     if (coin_config) {
         const has_xpub = q_obj(coin_config, "settings.Xpub.active");
@@ -444,7 +459,8 @@ function hasbip32(coin) {
     return false;
 }
 
-// Bip 39 seed generation
+// ** Seed Generation & Management: **
+
 // Handles UI interaction for generating new seed phrases
 function make_seed() {
     $(document).on("click", "#option_makeseed", function() {
@@ -687,7 +703,7 @@ function bip39(dat) {
     prevent_screen_sleep();
 }
 
-// Seed panel nav
+// ** Seed Panel Navigation: **
 
 // Advances seed generation process from step 1 to step 2
 function got_it() {
@@ -760,6 +776,8 @@ function seed_decrypt(pin) {
     }
     return false;
 }
+
+// ** Phrase Verification & Backup: **
 
 // Validates phrase and triggers verification step in backup process
 function backup_continue() {
@@ -843,7 +861,7 @@ function verify_phrase(word_list, word_count) {
             "word": word,
             "index": i + 1
         })),
-        randomized_words = shuffleArray(word_indices),
+        randomized_words = shuffle_array(word_indices),
         selected_words = randomized_words.slice(0, word_count),
         verify_box = $("#seed_verify_box");
     verify_box.html("");
@@ -857,7 +875,7 @@ function verify_phrase(word_list, word_count) {
 }
 
 // Implements Fisher-Yates shuffle algorithm for array randomization
-function shuffleArray(array) {
+function shuffle_array(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const rand_index = Math.floor(Math.random() * (i + 1));
         [array[i], array[rand_index]] = [array[rand_index], array[i]];
@@ -938,7 +956,7 @@ function update_address_lists() {
                     }
                 }
             });
-            saveaddresses(coin, false);
+            save_addresses(coin, false);
             check_currency(coin);
         }
     });
@@ -1006,7 +1024,7 @@ function seed_callback() {
             }
             deactivate_xpubs();
             derive_all(seed_phrase, seed_id);
-            savecurrencies(true);
+            save_currencies(true);
         }
         encrypt_seed_data(phrase_obj);
     }
@@ -1094,273 +1112,8 @@ function pin_to_encryption_key(pin, seed_id) {
     return hmacsha(word_mapping.join(" ") + seed_id, "sha256").slice(0, 32);
 }
 
-// Test triggers
+// ** Key Derivation Core: **
 
-// Returns highest derivation index from address list
-function get_latest_index(address_list) {
-    const indices = dom_to_array(address_list, "derive_index");
-    return Math.max.apply(Math, indices);
-}
-
-// Derives and adds new address for specified currency
-function derive_new_address(coin, extra) {
-    const derived_data = derive_data(coin, extra);
-    if (derived_data) {
-        derive_add_address(coin, derived_data);
-        return true;
-    }
-    return false;
-}
-
-// Extracts key and chaincode from seed phrase
-function key_cc() {
-    const seed_obj = ls_phrase_obj();
-    if (seed_obj) {
-        const seed_id = seed_obj.pid,
-            phrase = seed_obj.pob.join(" "),
-            seed_hex = mnemonic_to_seed(phrase),
-            root_key = get_rootkey(seed_hex),
-            master_key = root_key.slice(0, 64),
-            chain_code = root_key.slice(64);
-        return {
-            "key": master_key,
-            "cc": chain_code,
-            "seed": seed_hex,
-            "seedid": seed_id
-        };
-    }
-    return false;
-}
-
-// Extracts key and chaincode components from xpub string
-function key_cc_xpub(xpub) {
-    const decoded_key = b58check_decode(xpub),
-        key_parts = objectify_extended(decoded_key);
-    return {
-        "key": key_parts.key,
-        "cc": key_parts.chaincode,
-        "version": key_parts.version
-    }
-}
-
-// Generates master root key from seed using HMAC-SHA512
-function get_rootkey(seed) {
-    return hmac_bits(seed, to_bits("Bitcoin seed"), "hex");
-}
-
-// Sets initial account settings and derives addresses for all currencies
-function derive_all_init(phrase, seed_id, extra) {
-    derive_all(phrase, seed_id, extra);
-    const account_name = $("#eninput").val();
-    $("#accountsettings").data("selected", account_name).find("p").text(account_name);
-    savesettings();
-    savecurrencies(true);
-    glob_const.body.removeClass("showstartpage");
-}
-
-// Derives addresses for all supported coins from master seed
-function derive_all(phrase, seed_id, extra) {
-    const seed_hex = mnemonic_to_seed(phrase),
-        root_key = get_rootkey(seed_hex),
-        master_key = root_key.slice(0, 64),
-        chain_code = root_key.slice(64);
-    $.each(glob_config.bitrequest_coin_data, function(i, coin_config) {
-        const coin = coin_config.currency,
-            coin_data = coin_config.data,
-            bip32_settings = coin_config.settings.Xpub;
-        if (bip32_settings.active && bip39_const.c_derive[coin]) {
-            const key_data = {
-                "seed": seed_hex,
-                "key": master_key,
-                "cc": chain_code,
-                "seedid": seed_id
-            }
-            const derived_address = derive_obj("seed", key_data, coin_data, bip32_settings, extra);
-            if (derived_address) {
-                derive_add_address(coin, derived_address);
-            }
-        }
-    });
-}
-
-// Adds derived address to UI and saves to storage
-function derive_add_address(coin, address_data) {
-    appendaddress(coin, address_data);
-    saveaddresses(coin, true);
-    const currency_item = get_currencyli(coin),
-        home_item = get_homeli(coin);
-    currency_item.attr("data-checked", "true").data("checked", true);
-    home_item.removeClass("hide");
-}
-
-// Gets derivation data for currency based on xpub or seed
-function derive_data(coin, extra) {
-    if (glob_let.test_derive === true && bip39_const.c_derive[coin]) {
-        const coin_data = get_coin_config(coin),
-            bip32_settings = getbip32dat(coin),
-            active_pubkey = active_xpub(coin);
-        if (bip32_settings) {
-            if (active_pubkey) {
-                const xpub_key = active_pubkey.key,
-                    xpub_id = active_pubkey.key_id,
-                    key_data = key_cc_xpub(xpub_key);
-                key_data.seedid = xpub_id;
-                const derived_address = derive_obj("xpub", key_data, coin_data, bip32_settings, extra);
-                if (derived_address) {
-                    return derived_address;
-                }
-            } else {
-                const key_data = key_cc();
-                if (key_data) {
-                    const derived_address = derive_obj("seed", key_data, coin_data, bip32_settings, extra);
-                    if (derived_address) {
-                        return derived_address;
-                    }
-                }
-            }
-        }
-    }
-    return false;
-}
-
-// Creates address object with derivation path and key data
-function derive_obj(key_source, key_data, coin_data, bip32_settings, add) {
-    const seed_hex = key_data.seed,
-        seed_id = key_data.seedid,
-        master_key = key_data.key,
-        chain_code = key_data.cc,
-        version_bytes = key_data.version,
-        coin = coin_data.currency,
-        id_key = key_source + "id",
-        root_path = bip32_settings.root_path,
-        purpose = root_path.split("/")[1],
-        address_list = get_addresslist(coin).children("li"),
-        seed_items = filter_list(address_list, id_key, seed_id),
-        derive_items = filter_list(seed_items, "purpose", purpose),
-        unused_items = derive_items.not(".used"),
-        has_pending = unused_items.length ? ch_pending(unused_items.first().data()) : false;
-    if (!unused_items.length || has_pending === true || add) {
-        const total_items = derive_items.length,
-            next_index = total_items > 1 ? get_latest_index(derive_items) + 1 : total_items,
-            base_path = key_source === "xpub" ? "M/0/" : (key_source === "seed" ? root_path : ""),
-            full_path = base_path + next_index,
-            derive_params = {
-                "dpath": full_path,
-                "key": master_key,
-                "cc": chain_code,
-                "vb": version_bytes
-            },
-            derived_keys = derive_x(derive_params),
-            key_result = format_keys(seed_hex, derived_keys, bip32_settings, next_index, coin),
-            address = key_result.address,
-            coin_symbol = coin_data.ccsymbol,
-            index_num = next_index || 0,
-            seed_addresses = address_list.filter(".seed"),
-            seed_ids = dom_to_array(seed_addresses, id_key),
-            unique_count = count_unique_elements(seed_ids),
-            label_index = $.inArray(seed_id, seed_ids) === -1 ? unique_count : unique_count - 1,
-            alpha_prefixes = "abcdefghijklmnopqrstuvwxyz",
-            label_prefix = alpha_prefixes.charAt(label_index),
-            address_label = key_source + "_" + label_prefix + index_num,
-            address_data = {
-                "derive_index": next_index,
-                "currency": coin,
-                "address": address,
-                "ccsymbol": coin_symbol,
-                "cmcid": coin_data.cmcid,
-                "erc20": false,
-                "checked": true,
-                "label": "",
-                "a_id": address_label,
-                "purpose": purpose
-            },
-            view_key = key_result.vk;
-        if (view_key) {
-            address_data.vk = view_key;
-        }
-        address_data[key_source + "id"] = seed_id;
-        return address_data;
-    }
-    return false;
-}
-
-// Returns count of unique elements in array using Set
-function count_unique_elements(arr) {
-    return new Set(arr).size;
-}
-
-// Handles mnemonic phrase copy functionality with confirmation
-function copy_phrase() {
-    $(document).on("click", "#copyphrase", function() {
-        const phrase = get_mnemonic_phrase(),
-            is_valid = check_phrase(phrase),
-            phrase_label = translate("bip39_passphrase");
-        if (is_valid) {
-            const confirm_copy = confirm(translate("copy") + " " + phrase_label + "?");
-            if (confirm_copy) {
-                copytoclipboard(phrase, phrase_label);
-            }
-        } else {
-            topnotify(is_valid);
-        }
-    });
-}
-
-// Controls visibility toggling of mnemonic phrase
-function toggle_phrase_visibility() {
-    $(document).on("click", "#showphrase, #phrase_cb.hidephrase #phraseblur", function() {
-        const phrase_container = $("#phrase_cb");
-        if (phrase_container.hasClass("showphrase")) {
-            phrase_container.removeClass("showphrase").addClass("hidephrase");
-            return
-        }
-        if (glob_let.hasbip) {
-            if (glob_let.bipv) {
-                reveal_mnemonic();
-                return
-            }
-            all_pinpanel({
-                "func": reveal_mnemonic
-            }, null, true)
-            return
-        }
-        reveal_mnemonic();
-    })
-}
-
-// Updates UI to reveal mnemonic phrase
-function reveal_mnemonic() {
-    $("#phrase_cb").addClass("showphrase").removeClass("hidephrase");
-}
-
-// Initiates mnemonic phrase deletion process
-function delete_phrase_trigger() {
-    $(document).on("click", "#deletephrase", function() {
-        const warning_exists = $("#dialogbody").find("#dseedwarning");
-        if (warning_exists.length) {
-            play_audio(glob_const.funk);
-            return
-        }
-        const warning_content = "<h2 style='color:#B33A3A' id='dseedwarning'><span class='icon-warning'></span>" + translate("deletingyoursecretphrase") + "</h2><p><strong>" + translate("continuewithbackup") + "</strong></p>";
-        popdialog(warning_content, "delete_phrase_verify");
-    });
-}
-
-// Validates deletion intent with phrase verification
-function delete_phrase_verify() {
-    const confirm_delete = confirm(translate("verifycurrent") + "?");
-    if (confirm_delete) {
-        canceldialog();
-        const input_phrase = get_mnemonic_phrase(),
-            phrase_words = input_phrase.split(" ");
-        verify_phrase(phrase_words, 4);
-        $("#seed_steps").removeClass("checked");
-        $("#seed_step3").addClass("delete");
-        seed_nav(3);
-    }
-}
-
-// Bip 32 Key derivation
 // Constructor for HMAC SHA-512 encryptor
 function hmac_encrypt(key) {
     const hmac = new sjcl.misc.hmac(key, sjcl.hash.sha512);
@@ -1415,16 +1168,8 @@ function to_mnemonic(byte_array) {
     return join_words(word_list);
 }
 
-// Pads binary strings with leading zeros
-function pad_binary(binary_str, target_length) {
-    let padded_str = binary_str.toString();
-    while (padded_str.length < target_length) {
-        padded_str = "0" + padded_str;
-    }
-    return padded_str;
-}
+// ** BIP32 Derivation: **
 
-// bip32 Derivation
 // Parses extended key format into component parts
 function objectify_extended(extended_key) {
     const version_bytes = extended_key.slice(0, 8),
@@ -1580,7 +1325,7 @@ function xpub_obj(coin, root_path, chain_code, key) {
 
 // Creates Base58Check payload for extended key encoding
 function b58c_x_payload(key_data, coin) {
-    const xpub_config = getbip32dat(coin);
+    const xpub_config = get_bip32dat(coin);
     if (!xpub_config) {
         return false;
     }
@@ -1691,7 +1436,273 @@ function xpub_prefix(coin) {
     return extended_keys.ext_pub.slice(0, 4);
 }
 
-// Phrase info
+// ** Address Generation: **
+
+// Derives and adds new address for specified currency
+function derive_new_address(coin, extra) {
+    const derived_data = derive_data(coin, extra);
+    if (derived_data) {
+        derive_add_address(coin, derived_data);
+        return true;
+    }
+    return false;
+}
+
+// Returns highest derivation index from address list
+function get_latest_index(address_list) {
+    const indices = dom_to_array(address_list, "derive_index");
+    return Math.max.apply(Math, indices);
+}
+
+// Extracts key and chaincode from seed phrase
+function key_cc() {
+    const seed_obj = ls_phrase_obj();
+    if (seed_obj) {
+        const seed_id = seed_obj.pid,
+            phrase = seed_obj.pob.join(" "),
+            seed_hex = mnemonic_to_seed(phrase),
+            root_key = get_rootkey(seed_hex),
+            master_key = root_key.slice(0, 64),
+            chain_code = root_key.slice(64);
+        return {
+            "key": master_key,
+            "cc": chain_code,
+            "seed": seed_hex,
+            "seedid": seed_id
+        };
+    }
+    return false;
+}
+
+// Extracts key and chaincode components from xpub string
+function key_cc_xpub(xpub) {
+    const decoded_key = b58check_decode(xpub),
+        key_parts = objectify_extended(decoded_key);
+    return {
+        "key": key_parts.key,
+        "cc": key_parts.chaincode,
+        "version": key_parts.version
+    }
+}
+
+// Generates master root key from seed using HMAC-SHA512
+function get_rootkey(seed) {
+    return hmac_bits(seed, to_bits("Bitcoin seed"), "hex");
+}
+
+// Sets initial account settings and derives addresses for all currencies
+function derive_all_init(phrase, seed_id, extra) {
+    derive_all(phrase, seed_id, extra);
+    const account_name = $("#eninput").val();
+    $("#accountsettings").data("selected", account_name).find("p").text(account_name);
+    save_settings();
+    save_currencies(true);
+    glob_const.body.removeClass("showstartpage");
+}
+
+// Derives addresses for all supported coins from master seed
+function derive_all(phrase, seed_id, extra) {
+    const seed_hex = mnemonic_to_seed(phrase),
+        root_key = get_rootkey(seed_hex),
+        master_key = root_key.slice(0, 64),
+        chain_code = root_key.slice(64);
+    $.each(glob_config.bitrequest_coin_data, function(i, coin_config) {
+        const coin = coin_config.currency,
+            coin_data = coin_config.data,
+            bip32_settings = coin_config.settings.Xpub;
+        if (bip32_settings.active && bip39_const.c_derive[coin]) {
+            const key_data = {
+                "seed": seed_hex,
+                "key": master_key,
+                "cc": chain_code,
+                "seedid": seed_id
+            }
+            const derived_address = derive_obj("seed", key_data, coin_data, bip32_settings, extra);
+            if (derived_address) {
+                derive_add_address(coin, derived_address);
+            }
+        }
+    });
+}
+
+// Adds derived address to UI and saves to storage
+function derive_add_address(coin, address_data) {
+    append_address(coin, address_data);
+    save_addresses(coin, true);
+    const currency_item = get_currencyli(coin),
+        home_item = get_homeli(coin);
+    currency_item.attr("data-checked", "true").data("checked", true);
+    home_item.removeClass("hide");
+}
+
+// Gets derivation data for currency based on xpub or seed
+function derive_data(coin, extra) {
+    if (glob_let.test_derive === true && bip39_const.c_derive[coin]) {
+        const coin_data = get_coin_config(coin),
+            bip32_settings = get_bip32dat(coin),
+            active_pubkey = active_xpub(coin);
+        if (bip32_settings) {
+            if (active_pubkey) {
+                const xpub_key = active_pubkey.key,
+                    xpub_id = active_pubkey.key_id,
+                    key_data = key_cc_xpub(xpub_key);
+                key_data.seedid = xpub_id;
+                const derived_address = derive_obj("xpub", key_data, coin_data, bip32_settings, extra);
+                if (derived_address) {
+                    return derived_address;
+                }
+            } else {
+                const key_data = key_cc();
+                if (key_data) {
+                    const derived_address = derive_obj("seed", key_data, coin_data, bip32_settings, extra);
+                    if (derived_address) {
+                        return derived_address;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+// Creates address object with derivation path and key data
+function derive_obj(key_source, key_data, coin_data, bip32_settings, add) {
+    const seed_hex = key_data.seed,
+        seed_id = key_data.seedid,
+        master_key = key_data.key,
+        chain_code = key_data.cc,
+        version_bytes = key_data.version,
+        coin = coin_data.currency,
+        id_key = key_source + "id",
+        root_path = bip32_settings.root_path,
+        purpose = root_path.split("/")[1],
+        address_list = get_addresslist(coin).children("li"),
+        seed_items = filter_list(address_list, id_key, seed_id),
+        derive_items = filter_list(seed_items, "purpose", purpose),
+        unused_items = derive_items.not(".used"),
+        has_pending = unused_items.length ? ch_pending(unused_items.first().data()) : false;
+    if (!unused_items.length || has_pending === true || add) {
+        const total_items = derive_items.length,
+            next_index = total_items > 1 ? get_latest_index(derive_items) + 1 : total_items,
+            base_path = key_source === "xpub" ? "M/0/" : (key_source === "seed" ? root_path : ""),
+            full_path = base_path + next_index,
+            derive_params = {
+                "dpath": full_path,
+                "key": master_key,
+                "cc": chain_code,
+                "vb": version_bytes
+            },
+            derived_keys = derive_x(derive_params),
+            key_result = format_keys(seed_hex, derived_keys, bip32_settings, next_index, coin),
+            address = key_result.address,
+            coin_symbol = coin_data.ccsymbol,
+            index_num = next_index || 0,
+            seed_addresses = address_list.filter(".seed"),
+            seed_ids = dom_to_array(seed_addresses, id_key),
+            unique_count = count_unique_elements(seed_ids),
+            label_index = $.inArray(seed_id, seed_ids) === -1 ? unique_count : unique_count - 1,
+            alpha_prefixes = "abcdefghijklmnopqrstuvwxyz",
+            label_prefix = alpha_prefixes.charAt(label_index),
+            address_label = key_source + "_" + label_prefix + index_num,
+            address_data = {
+                "derive_index": next_index,
+                "currency": coin,
+                "address": address,
+                "ccsymbol": coin_symbol,
+                "cmcid": coin_data.cmcid,
+                "erc20": false,
+                "checked": true,
+                "label": "",
+                "a_id": address_label,
+                "purpose": purpose
+            },
+            view_key = key_result.vk;
+        if (view_key) {
+            address_data.vk = view_key;
+        }
+        address_data[key_source + "id"] = seed_id;
+        return address_data;
+    }
+    return false;
+}
+
+// Returns count of unique elements in array using Set
+function count_unique_elements(arr) {
+    return new Set(arr).size;
+}
+
+// ** UI & Information Display: **
+
+// Handles mnemonic phrase copy functionality with confirmation
+function copy_phrase() {
+    $(document).on("click", "#copyphrase", function() {
+        const phrase = get_mnemonic_phrase(),
+            is_valid = check_phrase(phrase),
+            phrase_label = translate("bip39_passphrase");
+        if (is_valid) {
+            const confirm_copy = confirm(translate("copy") + " " + phrase_label + "?");
+            if (confirm_copy) {
+                copy_to_clipboard(phrase, phrase_label);
+            }
+        } else {
+            topnotify(is_valid);
+        }
+    });
+}
+
+// Controls visibility toggling of mnemonic phrase
+function toggle_phrase_visibility() {
+    $(document).on("click", "#showphrase, #phrase_cb.hidephrase #phraseblur", function() {
+        const phrase_container = $("#phrase_cb");
+        if (phrase_container.hasClass("showphrase")) {
+            phrase_container.removeClass("showphrase").addClass("hidephrase");
+            return
+        }
+        if (glob_let.hasbip) {
+            if (glob_let.bipv) {
+                reveal_mnemonic();
+                return
+            }
+            all_pinpanel({
+                "func": reveal_mnemonic
+            }, null, true)
+            return
+        }
+        reveal_mnemonic();
+    })
+}
+
+// Updates UI to reveal mnemonic phrase
+function reveal_mnemonic() {
+    $("#phrase_cb").addClass("showphrase").removeClass("hidephrase");
+}
+
+// Initiates mnemonic phrase deletion process
+function delete_phrase_trigger() {
+    $(document).on("click", "#deletephrase", function() {
+        const warning_exists = $("#dialogbody").find("#dseedwarning");
+        if (warning_exists.length) {
+            play_audio(glob_const.funk);
+            return
+        }
+        const warning_content = "<h2 style='color:#B33A3A' id='dseedwarning'><span class='icon-warning'></span>" + translate("deletingyoursecretphrase") + "</h2><p><strong>" + translate("continuewithbackup") + "</strong></p>";
+        popdialog(warning_content, "delete_phrase_verify");
+    });
+}
+
+// Validates deletion intent with phrase verification
+function delete_phrase_verify() {
+    const confirm_delete = confirm(translate("verifycurrent") + "?");
+    if (confirm_delete) {
+        canceldialog();
+        const input_phrase = get_mnemonic_phrase(),
+            phrase_words = input_phrase.split(" ");
+        verify_phrase(phrase_words, 4);
+        $("#seed_steps").removeClass("checked");
+        $("#seed_step3").addClass("delete");
+        seed_nav(3);
+    }
+}
 
 // Sets up phrase info dialog event listener
 function phrase_info() {
@@ -1728,7 +1739,7 @@ function phrase_info_pu(selected_coin) {
         backup_setting = get_setting("backup", "sbu"),
         backup_toggle = has_encrypted_data() === true ?
         "<li class='clearfix'><strong>" + translate("backupsecretphrase") + ":</strong><div id='toggle_sbu_span' class='ait'>" +
-        switchpanel(backup_setting, " global") + "</div></li>" : "",
+        switch_panel(backup_setting, " global") + "</div></li>" : "",
         delete_option = selected_coin ? "" : (glob_let.hasbip === true ? backup_toggle +
             "<li class='clearfix'><div id='deletephrase' class='icon-bin'></div></li>" : ""),
         dialog_content = $("<div id='ad_info_wrap' class='" + view_class + "' data-class='" + coin_class + "'>" + header + "<ul>" +
@@ -1762,7 +1773,7 @@ function phrase_info_pu(selected_coin) {
         const coin = coin_config.currency,
             coin_symbol = coin_config.data.ccsymbol,
             wallet_data = coin_config.wallets,
-            bip32_config = getbip32dat(coin);
+            bip32_config = get_bip32dat(coin);
         if (bip32_config.active === true) {
             const derive_path = bip32_config.root_path,
                 line_break = (coin === "nano") ? "<br/>" : " ",
@@ -1782,7 +1793,7 @@ function phrase_info_pu(selected_coin) {
                     "</strong> <span class='mspace'>" + line_break + address_data.address + "</span></li>";
             });
             if (wallet_data) {
-                const device_platform = getplatform(detect_device_type()),
+                const device_platform = get_platform(detect_device_type()),
                     store_icon = platform_icon(device_platform),
                     store_badge = store_icon ? "<img src='" + store_icon + "'/>" : "<span class='icon-download'></span> ",
                     wallet_configs = wallet_data.wallets;
@@ -1834,7 +1845,7 @@ function phrase_info_pu(selected_coin) {
                 if (coin === "bitcoin" || coin === "litecoin") {
                     const has_segwit = derive_path.indexOf("m/84") > -1;
                     segwit_element = $("<li class='clearfix" + display_class + "' data-currency='" + coin +
-                        "'><strong>SegWit:</strong><div class='toggle_segwit ait'>" + switchpanel(has_segwit, " custom") + "</div></li>");
+                        "'><strong>SegWit:</strong><div class='toggle_segwit ait'>" + switch_panel(has_segwit, " custom") + "</div></li>");
                 }
             }
             if (bip39_const.c_derive[coin]) {
@@ -1875,7 +1886,7 @@ function list_compatible_wallets(coin) {
         if (bip32_config.active === true) {
             let wallet_list = "";
             if (wallet_data) {
-                const device_platform = getplatform(detect_device_type()),
+                const device_platform = get_platform(detect_device_type()),
                     store_icon = platform_icon(device_platform),
                     store_badge = store_icon ? "<img src='" + store_icon + "'/>" : "<span class='icon-download'></span> ",
                     wallet_configs = wallet_data.wallets;

@@ -1,3 +1,105 @@
+// ** Core Helpers: **
+//uint_8array
+//buffer 
+//unbuffer
+//buf2hex
+//is_hex
+//str_pad
+//dec_to_hex
+//hex_to_dec
+//hex_to_number_string
+//hex_to_int
+//pad_binary
+
+// ** SJCL Bitwise Operations: **
+//to_bits
+//hex_to_bits 
+//from_bits
+//bit_length
+//concat_array
+
+// ** Base Conversion: **
+//binary_string_to_word_array
+//byte_array_to_word_array
+//byte_array_to_binary_string
+//hex_string_to_binary_string
+
+// ** Base58: **
+//b58enc
+//b58enc_uint_array
+//b58dec
+//b58dec_uint_array
+//b58check_encode
+//b58check_decode
+
+// ** Bech32: **
+//to_words
+//from_words
+//convert
+//polymod
+//hrp_expand
+//verify_checksum
+//create_checksum 
+//bech32_encode
+//bech32_decode
+//bech32_dec_array
+//pub_to_address_bech32
+
+// ** Secp256k1: **
+//mod
+//weierstrass
+//egcd
+//invert
+//hex_to_bytes
+//bytes_to_hex
+//hex_to_number
+//bytes_to_number
+//pad64
+//JacobianPoint
+//Point
+//sqrt_mod
+//pow_mod
+//normalize_privatekey
+//get_publickey
+
+// ** Hash Functions: **
+//hmac_bits
+//hmacsha
+//hmacsha_bits 
+//hash160
+//sha_sub
+
+// ** Key & Address Generation: **
+//privkey_wif
+//priv_to_pub
+//expand_pub
+//pub_to_address
+//pub_to_eth_address
+//hash160_to_address
+//to_checksum_address
+
+// ** Bitcoin Cash Specific: **
+//pub_to_cashaddr
+//bch_legacy
+//bch_cashaddr
+
+// ** LNURL & Lightning: **
+//lnurl_decodeb32
+
+// ** Mnemonic Functions: **
+//clean_string
+//join_words
+//split_words
+//normalize_string
+//mnemonic_to_binary_string
+
+// ** Encryption: **
+//aes_enc
+//aes_dec
+
+// ** Miscellaneous: **
+//nimiq_hash
+
 "use strict";
 
 const crypto = window.crypto,
@@ -12,18 +114,387 @@ const crypto = window.crypto,
         "fatal": true
     });
 
-const secp = {};
-
 // Minimal curve params for secp256k1
-const CURVE = {
-    a: 0n,
-    b: 7n,
-    P: (2n ** 256n) - (2n ** 32n) - 977n,
-    n: (2n ** 256n) - 432420386565659656852420866394968145599n,
-    Gx: 55066263022277343669578718895168534326250603453777594175500187360389116729240n,
-    Gy: 32670510020758816978083085130507043184471273380659243275938904335757337482424n
-};
+const secp = {},
+    CURVE = {
+        a: 0n,
+        b: 7n,
+        P: (2n ** 256n) - (2n ** 32n) - 977n,
+        n: (2n ** 256n) - 432420386565659656852420866394968145599n,
+        Gx: 55066263022277343669578718895168534326250603453777594175500187360389116729240n,
+        Gy: 32670510020758816978083085130507043184471273380659243275938904335757337482424n
+    };
 secp.CURVE = CURVE;
+
+// ** Core Helpers: **
+
+// Creates a typed array with 8-bit unsigned integers from a byte array
+function uint_8array(bytes) {
+    return new Uint8Array(bytes);
+}
+
+// Encodes string to UTF-8 using TextEncoder
+function buffer(enc) {
+    return utf8Encoder.encode(enc);
+}
+
+// Decodes UTF-8 encoded data using TextDecoder
+function unbuffer(enc, encoding) {
+    return utf8Decoder.decode(enc);
+}
+
+// Converts ArrayBuffer to zero-padded hexadecimal string
+function buf2hex(buffer) { // buffer is an ArrayBuffer
+    return Array.prototype.map.call(uint_8array(buffer), x => ("00" + x.toString(16)).slice(-2)).join("");
+}
+
+// Validates string contains only hexadecimal characters [0-9a-fA-F]
+function is_hex(str) {
+    return new RegExp("^[a-fA-F0-9]+$").test(str);
+}
+
+// Left-pads string with zeros to specified byte length with truncation
+function str_pad(val, bytes) {
+    return (bytestring.slice(0, bytes) + val).substr(-bytes);
+}
+
+// Converts integer to base-16 string representation
+function dec_to_hex(val) {
+    return val.toString(16);
+}
+
+// Parses hexadecimal string to BigInt with 0x prefix
+function hex_to_dec(val) {
+    return BigInt("0x" + val);
+}
+
+// Converts a hexadecimal string to a decimal string
+function hex_to_number_string(val) {
+    return hex_to_int(val).toString();
+}
+
+// Converts a hexadecimal string to a number
+function hex_to_int(val) {
+    return parseInt(val, 16);
+}
+
+// Pads binary strings with leading zeros
+function pad_binary(binary_str, target_length) {
+    let padded_str = binary_str.toString();
+    while (padded_str.length < target_length) {
+        padded_str = "0" + padded_str;
+    }
+    return padded_str;
+}
+
+// ** SJCL Bitwise Operations: **
+
+// Converts UTF-8 string to SJCL bitArray format
+function to_bits(val) {
+    return sjcl.codec.utf8String.toBits(val);
+}
+
+// Converts hexadecimal string to SJCL bitArray format
+function hex_to_bits(val) {
+    return sjcl.codec.hex.toBits(val);
+}
+
+// Converts SJCL bitArray to hexadecimal string
+function from_bits(val) {
+    return sjcl.codec.hex.fromBits(val);
+}
+
+// Calculates total bit length of SJCL bitArray
+function bit_length(val) {
+    return sjcl.bitArray.bitLength(val);
+}
+
+// Merges two SJCL bitArrays into single concatenated array
+function concat_array(arr1, arr2) {
+    return sjcl.bitArray.concat(arr1, arr2);
+}
+
+// ** Base Conversion: **
+
+// Chunks 32-bit segments from binary string into decimal integer array
+function binary_string_to_word_array(binary) {
+    let aLen = binary.length / 32,
+        a = [];
+    for (let i = 0; i < aLen; i++) {
+        let valueStr = binary.substring(0, 32),
+            value = parseInt(valueStr, 2);
+        a.push(value);
+        binary = binary.slice(32);
+    }
+    return a;
+}
+
+// Converts byte array to 32-bit word array using big-endian ordering
+function byte_array_to_word_array(data) {
+    const a = [];
+    for (let i = 0; i < data.length / 4; i++) {
+        let v = 0;
+        v += data[i * 4 + 0] << 8 * 3;
+        v += data[i * 4 + 1] << 8 * 2;
+        v += data[i * 4 + 2] << 8 * 1;
+        v += data[i * 4 + 3] << 8 * 0;
+        a.push(v);
+    }
+    return a;
+}
+
+// Converts byte array to binary string with 8-bit zero-padded values
+function byte_array_to_binary_string(data) {
+    let bin = "";
+    for (let i = 0; i < data.length; i++) {
+        bin += pad_binary(data[i].toString(2), 8);
+    }
+    return bin;
+}
+
+// Converts hex string to binary string with 4-bit zero-padded values
+function hex_string_to_binary_string(hexString) {
+    let binaryString = "";
+    for (let i = 0; i < hexString.length; i++) {
+        binaryString += pad_binary(parseInt(hexString[i], 16).toString(2), 4);
+    }
+    return binaryString;
+}
+
+// ** Base58: **
+
+// Encodes data to Base58 string from hex or UTF-8 input
+function b58enc(enc, encode) {
+    const bytestring = (encode = "hex") ? hex_to_bytes(enc) : buffer(enc);
+    return b58enc_uint_array(bytestring);
+}
+
+// Converts Uint8Array to Base58 string using custom alphabet
+function b58enc_uint_array(u) {
+    let d = [],
+        s = "",
+        i, j, c, n;
+    for (i in u) {
+        j = 0, c = u[i];
+        s += c || s.length ^ i ? "" : 1;
+        while (j in d || c) {
+            n = d[j];
+            n = n ? n * 256 + c : c;
+            c = n / 58 | 0;
+            d[j] = n % 58;
+            j++
+        }
+    }
+    while (j--) s += b58ab[d[j]];
+    return s;
+}
+
+// Decodes Base58 string to UTF-8 or hexadecimal output
+function b58dec(dec, decode) {
+    const buffer = b58dec_uint_array(dec);
+    return (decode === "hex") ? buf2hex(buffer) : unbuffer(buffer, "utf-8");
+}
+
+// Converts Base58 string to Uint8Array using custom alphabet
+function b58dec_uint_array(dec) {
+    let d = [],
+        b = [],
+        i, j, c, n;
+    for (i in dec) {
+        j = 0, c = b58ab.indexOf(dec[i]);
+        if (c < 0) return undefined;
+        c || b.length ^ i ? i : b.push(0);
+        while (j in d || c) {
+            n = d[j];
+            n = n ? n * 58 + c : c;
+            c = n >> 8;
+            d[j] = n % 256;
+            j++
+        }
+    }
+    while (j--) b.push(d[j]);
+    return uint_8array(b);
+}
+
+// base58check
+// Implements Base58Check encoding with double SHA256 checksum
+function b58check_encode(payload) {
+    const full_bytes = payload + hmacsha(hmacsha(payload, "sha256", "hex"), "sha256", "hex").slice(0, 8);
+    return b58enc(full_bytes, "hex");
+}
+
+// Decodes Base58Check string and removes 4-byte checksum
+function b58check_decode(val) {
+    const full_bytes = b58dec(val, "hex"),
+        bytes = full_bytes.substring(0, full_bytes.length - 8);
+    return bytes;
+}
+
+// ** Bech32: **
+
+// Converts input byte array to 5-bit word representation for bech32 encoding
+function to_words(bytes) {
+    const res = convert(bytes, 8, 5, true);
+    if (Array.isArray(res)) {
+        return res
+    }
+    throw new Error(res)
+}
+
+// Converts 5-bit word array back to byte representation for bech32 decoding
+function from_words(bytes) {
+    const res = convert(bytes, 5, 8, true);
+    if (Array.isArray(res)) {
+        return res
+    }
+    throw new Error(res)
+}
+
+// Transforms data between different bit-length representations with optional padding
+function convert(data, inBits, outBits, pad) {
+    let value = 0,
+        bits = 0,
+        maxV = (1 << outBits) - 1,
+        result = [];
+    for (let i = 0; i < data.length; ++i) {
+        value = (value << inBits) | data[i];
+        bits += inBits;
+        while (bits >= outBits) {
+            bits -= outBits;
+            result.push((value >> bits) & maxV);
+        }
+    }
+    if (pad) {
+        if (bits > 0) {
+            result.push((value << (outBits - bits)) & maxV);
+        }
+    } else {
+        if (bits >= inBits) {
+            return "Excess padding"
+        }
+        if ((value << (outBits - bits)) & maxV) {
+            return "Non-zero padding"
+        }
+    }
+    return result
+}
+
+// Computes the Bech32 checksum
+function polymod(values) {
+    let chk = 1;
+    for (let p = 0; p < values.length; ++p) {
+        let top = chk >> 25;
+        chk = (chk & 0x1ffffff) << 5 ^ values[p];
+        for (let i = 0; i < 5; ++i) {
+            if ((top >> i) & 1) {
+                chk ^= generator[i];
+            }
+        }
+    }
+    return chk;
+}
+
+// Expands the human-readable part for Bech32 encoding
+function hrp_expand(hrp) {
+    const ret = [];
+    let p;
+    for (p = 0; p < hrp.length; ++p) {
+        ret.push(hrp.charCodeAt(p) >> 5);
+    }
+    ret.push(0);
+    for (p = 0; p < hrp.length; ++p) {
+        ret.push(hrp.charCodeAt(p) & 31);
+    }
+    return ret;
+}
+
+// Verifies the checksum in a Bech32 address
+function verify_checksum(hrp, data) {
+    return polymod(hrp_expand(hrp).concat(data)) === 1;
+}
+
+// Creates a checksum for Bech32 encoding
+function create_checksum(hrp, data) {
+    const values = hrp_expand(hrp).concat(data).concat([0, 0, 0, 0, 0, 0]),
+        mod = polymod(values) ^ 1,
+        ret = [];
+    for (let p = 0; p < 6; ++p) {
+        ret.push((mod >> 5 * (5 - p)) & 31);
+    }
+    return ret;
+}
+
+// Encodes data into a Bech32 address
+function bech32_encode(hrp, data) {
+    let combined = data.concat(create_checksum(hrp, data)),
+        ret = hrp + "1";
+    for (let p = 0; p < combined.length; ++p) {
+        ret += b32ab.charAt(combined[p]);
+    }
+    return ret;
+}
+
+// Decodes a Bech32 encoded string (unused)
+function bech32_decode(bechString) {
+    let p,
+        has_lower = false,
+        has_upper = false;
+    for (p = 0; p < bechString.length; ++p) {
+        if (bechString.charCodeAt(p) < 33 || bechString.charCodeAt(p) > 126) {
+            return null;
+        }
+        if (bechString.charCodeAt(p) >= 97 && bechString.charCodeAt(p) <= 122) {
+            has_lower = true;
+        }
+        if (bechString.charCodeAt(p) >= 65 && bechString.charCodeAt(p) <= 90) {
+            has_upper = true;
+        }
+    }
+    if (has_lower && has_upper) {
+        return null;
+    }
+    bechString = bechString.toLowerCase();
+    const pos = bechString.lastIndexOf("1");
+    if (pos < 1 || pos + 7 > bechString.length || bechString.length > 90) {
+        return null;
+    }
+    const hrp = bechString.substring(0, pos),
+        data = [];
+    for (p = pos + 1; p < bechString.length; ++p) {
+        const d = b32ab.indexOf(bechString.charAt(p));
+        if (d === -1) {
+            return null;
+        }
+        data.push(d);
+    }
+    if (!verify_checksum(hrp, data)) {
+        return null;
+    }
+    return {
+        "hrp": hrp,
+        "data": data.slice(0, data.length - 6)
+    };
+}
+
+// Converts a binary array to decimal array for Bech32 encoding
+function bech32_dec_array(bitarr) {
+    const hexstr = [0];
+    $.each(bitarr, function(i, bits) {
+        hexstr.push(parseInt(bits, 2));
+    });
+    return hexstr;
+}
+
+// Converts a public key to a Bech32 address
+function pub_to_address_bech32(hrp, pubkey) {
+    const step1 = hash160(pubkey),
+        step2 = hex_string_to_binary_string(step1),
+        step3 = step2.match(/.{1,5}/g),
+        step4 = bech32_dec_array(step3);
+    return bech32_encode(hrp, step4);
+}
+
+// ** Secp256k1: **
 
 // Performs modular arithmetic (a mod m) with correct handling of negative numbers
 function mod(a, m = CURVE.P) {
@@ -358,283 +829,7 @@ function get_publickey(privateKey, isCompressed = true) {
 // Export the main Point class
 secp.Point = Point;
 
-// End secp256k1
-
-// helpers
-
-// Creates a typed array with 8-bit unsigned integers from a byte array
-function uint_8array(bytes) {
-    return new Uint8Array(bytes);
-}
-
-// Encodes string to UTF-8 using TextEncoder
-function buffer(enc) {
-    return utf8Encoder.encode(enc);
-}
-
-// Decodes UTF-8 encoded data using TextDecoder
-function unbuffer(enc, encoding) {
-    return utf8Decoder.decode(enc);
-}
-
-// Converts UTF-8 string to SJCL bitArray format
-function to_bits(val) {
-    return sjcl.codec.utf8String.toBits(val);
-}
-
-// Converts integer to base-16 string representation
-function dec_to_hex(val) {
-    return val.toString(16);
-}
-
-// Parses hexadecimal string to BigInt with 0x prefix
-function hex_to_dec(val) {
-    return BigInt("0x" + val);
-}
-
-// Validates string contains only hexadecimal characters [0-9a-fA-F]
-function is_hex(str) {
-    return new RegExp("^[a-fA-F0-9]+$").test(str);
-}
-
-// Left-pads string with zeros to specified byte length with truncation
-function str_pad(val, bytes) {
-    return (bytestring.slice(0, bytes) + val).substr(-bytes);
-}
-
-// Converts hexadecimal string to SJCL bitArray format
-function hex_to_bits(val) {
-    return sjcl.codec.hex.toBits(val);
-}
-
-// Converts SJCL bitArray to hexadecimal string
-function from_bits(val) {
-    return sjcl.codec.hex.fromBits(val);
-}
-
-// Calculates total bit length of SJCL bitArray
-function bit_length(val) {
-    return sjcl.bitArray.bitLength(val);
-}
-
-// Merges two SJCL bitArrays into single concatenated array
-function concat_array(arr1, arr2) {
-    return sjcl.bitArray.concat(arr1, arr2);
-}
-
-// Converts ArrayBuffer to zero-padded hexadecimal string
-function buf2hex(buffer) { // buffer is an ArrayBuffer
-    return Array.prototype.map.call(uint_8array(buffer), x => ("00" + x.toString(16)).slice(-2)).join("");
-}
-
-// mnemonic helpers
-
-// Normalizes mnemonic phrase with NFKD normalization after splitting and joining
-function clean_string(words) {
-    return normalize_string(join_words(split_words(words)));
-}
-
-// Concatenates word array with single space delimiter
-function join_words(words) {
-    return words.join(" ");
-}
-
-// Splits string on whitespace and removes empty elements
-function split_words(mnemonic) {
-    return mnemonic.split(/\s/g).filter(function(x) {
-        return x.length;
-    });
-}
-
-// Applies Unicode NFKD normalization to string
-function normalize_string(str) {
-    return str.normalize("NFKD");
-}
-
-// Converts BIP39 mnemonic to binary string with 11-bit word indices
-function mnemonic_to_binary_string(mnemonic) {
-    const mm = split_words(mnemonic);
-    if (mm.length == 0 || mm.length % 3 > 0) {
-        return null;
-    }
-    const idx = [];
-    for (let i = 0; i < mm.length; i++) {
-        const word = mm[i],
-            wordIndex = wordlist.indexOf(word);
-        if (wordIndex == -1) {
-            return null;
-        }
-        const binaryIndex = pad_binary(wordIndex.toString(2), 11);
-        idx.push(binaryIndex);
-    }
-    return idx.join("");
-}
-
-// Chunks 32-bit segments from binary string into decimal integer array
-function binary_string_to_word_array(binary) {
-    let aLen = binary.length / 32,
-        a = [];
-    for (let i = 0; i < aLen; i++) {
-        let valueStr = binary.substring(0, 32),
-            value = parseInt(valueStr, 2);
-        a.push(value);
-        binary = binary.slice(32);
-    }
-    return a;
-}
-
-// Converts byte array to 32-bit word array using big-endian ordering
-function byte_array_to_word_array(data) {
-    const a = [];
-    for (let i = 0; i < data.length / 4; i++) {
-        let v = 0;
-        v += data[i * 4 + 0] << 8 * 3;
-        v += data[i * 4 + 1] << 8 * 2;
-        v += data[i * 4 + 2] << 8 * 1;
-        v += data[i * 4 + 3] << 8 * 0;
-        a.push(v);
-    }
-    return a;
-}
-
-// Converts byte array to binary string with 8-bit zero-padded values
-function byte_array_to_binary_string(data) {
-    let bin = "";
-    for (let i = 0; i < data.length; i++) {
-        bin += pad_binary(data[i].toString(2), 8);
-    }
-    return bin;
-}
-
-// Converts hex string to binary string with 4-bit zero-padded values
-function hex_string_to_binary_string(hexString) {
-    let binaryString = "";
-    for (let i = 0; i < hexString.length; i++) {
-        binaryString += pad_binary(parseInt(hexString[i], 16).toString(2), 4);
-    }
-    return binaryString;
-}
-
-// base58
-// https://gist.github.com/diafygi/90a3e80ca1c2793220e5/
-
-// Encodes data to Base58 string from hex or UTF-8 input
-function b58enc(enc, encode) {
-    const bytestring = (encode = "hex") ? hex_to_bytes(enc) : buffer(enc);
-    return b58enc_uint_array(bytestring);
-}
-
-// Converts Uint8Array to Base58 string using custom alphabet
-function b58enc_uint_array(u) {
-    let d = [],
-        s = "",
-        i, j, c, n;
-    for (i in u) {
-        j = 0, c = u[i];
-        s += c || s.length ^ i ? "" : 1;
-        while (j in d || c) {
-            n = d[j];
-            n = n ? n * 256 + c : c;
-            c = n / 58 | 0;
-            d[j] = n % 58;
-            j++
-        }
-    }
-    while (j--) s += b58ab[d[j]];
-    return s;
-}
-
-// Decodes Base58 string to UTF-8 or hexadecimal output
-function b58dec(dec, decode) {
-    const buffer = b58dec_uint_array(dec);
-    return (decode === "hex") ? buf2hex(buffer) : unbuffer(buffer, "utf-8");
-}
-
-// Converts Base58 string to Uint8Array using custom alphabet
-function b58dec_uint_array(dec) {
-    let d = [],
-        b = [],
-        i, j, c, n;
-    for (i in dec) {
-        j = 0, c = b58ab.indexOf(dec[i]);
-        if (c < 0) return undefined;
-        c || b.length ^ i ? i : b.push(0);
-        while (j in d || c) {
-            n = d[j];
-            n = n ? n * 58 + c : c;
-            c = n >> 8;
-            d[j] = n % 256;
-            j++
-        }
-    }
-    while (j--) b.push(d[j]);
-    return uint_8array(b);
-}
-
-// base58check
-// Implements Base58Check encoding with double SHA256 checksum
-function b58check_encode(payload) {
-    const full_bytes = payload + hmacsha(hmacsha(payload, "sha256", "hex"), "sha256", "hex").slice(0, 8);
-    return b58enc(full_bytes, "hex");
-}
-
-// Decodes Base58Check string and removes 4-byte checksum
-function b58check_decode(val) {
-    const full_bytes = b58dec(val, "hex"),
-        bytes = full_bytes.substring(0, full_bytes.length - 8);
-    return bytes;
-}
-
-//LNurl
-
-// Converts input byte array to 5-bit word representation for bech32 encoding
-function to_words(bytes) {
-    const res = convert(bytes, 8, 5, true);
-    if (Array.isArray(res)) {
-        return res
-    }
-    throw new Error(res)
-}
-
-// Converts 5-bit word array back to byte representation for bech32 decoding
-function from_words(bytes) {
-    const res = convert(bytes, 5, 8, true);
-    if (Array.isArray(res)) {
-        return res
-    }
-    throw new Error(res)
-}
-
-// Transforms data between different bit-length representations with optional padding
-function convert(data, inBits, outBits, pad) {
-    let value = 0,
-        bits = 0,
-        maxV = (1 << outBits) - 1,
-        result = [];
-    for (let i = 0; i < data.length; ++i) {
-        value = (value << inBits) | data[i];
-        bits += inBits;
-        while (bits >= outBits) {
-            bits -= outBits;
-            result.push((value >> bits) & maxV);
-        }
-    }
-    if (pad) {
-        if (bits > 0) {
-            result.push((value << (outBits - bits)) & maxV);
-        }
-    } else {
-        if (bits >= inBits) {
-            return "Excess padding"
-        }
-        if ((value << (outBits - bits)) & maxV) {
-            return "Non-zero padding"
-        }
-    }
-    return result
-}
-
-//hashing
+// ** Hash Functions: **
 
 // Generates HMAC using SJCL with optional hex encoding
 function hmac_bits(message, key, encode) {
@@ -653,6 +848,18 @@ function hmacsha(key, hash, encode) {
 function hmacsha_bits(key, hash) {
     return sjcl.hash[hash].hash(key);
 }
+
+// Computes double hash: RIPEMD160(SHA256(input))
+function hash160(pub) {
+    return hmacsha(hmacsha(pub, "sha256", "hex"), "ripemd160", "hex");
+}
+
+// Computes a substring of SHA256 hash
+function sha_sub(val, lim) {
+    return hmacsha(val, "sha256").slice(0, lim);
+}
+
+// ** Key & Address Generation: **
 
 // Encodes private key to Wallet Import Format (WIF) with optional compression
 function privkey_wif(versionbytes, hexkey, comp) {
@@ -683,19 +890,9 @@ function pub_to_eth_address(pub) {
     return to_checksum_address(addr);
 }
 
-// Computes double hash: RIPEMD160(SHA256(input))
-function hash160(pub) {
-    return hmacsha(hmacsha(pub, "sha256", "hex"), "ripemd160", "hex");
-}
-
 // Converts RIPEMD160 hash to a cryptocurrency address
 function hash160_to_address(versionbytes, h160) {
     return b58check_encode(versionbytes + h160);
-}
-
-// Computes a substring of SHA256 hash
-function sha_sub(val, lim) {
-    return hmacsha(val, "sha256").slice(0, lim);
 }
 
 // Converts an Ethereum address to checksum format
@@ -713,124 +910,43 @@ function to_checksum_address(e) {
     return r;
 }
 
-// Bech 32
+// ** Bitcoin Cash Specific: **
 
-// Converts a public key to a Bech32 address
-function pub_to_address_bech32(hrp, pubkey) {
-    const step1 = hash160(pubkey),
-        step2 = hex_string_to_binary_string(step1),
-        step3 = step2.match(/.{1,5}/g),
-        step4 = bech32_dec_array(step3);
-    return bech32_encode(hrp, step4);
+// Converts a legacy Bitcoin Cash address to CashAddr format
+function pub_to_cashaddr(legacy) {
+    const c_addr = bch_cashaddr("bitcoincash", "P2PKH", legacy);
+    return c_addr.split(":")[1];
 }
 
-// Converts a binary array to decimal array for Bech32 encoding
-function bech32_dec_array(bitarr) {
-    const hexstr = [0];
-    $.each(bitarr, function(i, bits) {
-        hexstr.push(parseInt(bits, 2));
-    });
-    return hexstr;
+// Converts a CashAddr format address to legacy Bitcoin Cash address
+function bch_legacy(cadr) {
+    try {
+        const version = 0,
+            dec = cashaddr.decode(cadr),
+            bytes = dec.hash,
+            bytesarr = Array.from(bytes),
+            conc = concat_array([0], bytesarr),
+            unbuf = buf2hex(conc);
+        return b58check_encode(unbuf);
+    } catch (e) {
+        //console.error(e.name, e.message);
+        return cadr
+    }
 }
 
-// from https://github.com/sipa/bech32/tree/master/ref/javascript
-
-// Computes the Bech32 checksum
-function polymod(values) {
-    let chk = 1;
-    for (let p = 0; p < values.length; ++p) {
-        let top = chk >> 25;
-        chk = (chk & 0x1ffffff) << 5 ^ values[p];
-        for (let i = 0; i < 5; ++i) {
-            if ((top >> i) & 1) {
-                chk ^= generator[i];
-            }
-        }
+// Converts a legacy Bitcoin Cash address to CashAddr format
+function bch_cashaddr(prefix, type, legacy) {
+    try {
+        const lbytes = b58dec_uint_array(legacy),
+            lbslice = lbytes.slice(1, 21);
+        return cashaddr.encode(prefix, type, lbslice);
+    } catch (e) {
+        console.error(e.name, e.message);
+        return legacy
     }
-    return chk;
 }
 
-// Expands the human-readable part for Bech32 encoding
-function hrp_expand(hrp) {
-    const ret = [];
-    let p;
-    for (p = 0; p < hrp.length; ++p) {
-        ret.push(hrp.charCodeAt(p) >> 5);
-    }
-    ret.push(0);
-    for (p = 0; p < hrp.length; ++p) {
-        ret.push(hrp.charCodeAt(p) & 31);
-    }
-    return ret;
-}
-
-// Verifies the checksum in a Bech32 address
-function verify_checksum(hrp, data) {
-    return polymod(hrp_expand(hrp).concat(data)) === 1;
-}
-
-// Creates a checksum for Bech32 encoding
-function create_checksum(hrp, data) {
-    const values = hrp_expand(hrp).concat(data).concat([0, 0, 0, 0, 0, 0]),
-        mod = polymod(values) ^ 1,
-        ret = [];
-    for (let p = 0; p < 6; ++p) {
-        ret.push((mod >> 5 * (5 - p)) & 31);
-    }
-    return ret;
-}
-
-// Encodes data into a Bech32 address
-function bech32_encode(hrp, data) {
-    let combined = data.concat(create_checksum(hrp, data)),
-        ret = hrp + "1";
-    for (let p = 0; p < combined.length; ++p) {
-        ret += b32ab.charAt(combined[p]);
-    }
-    return ret;
-}
-
-// Decodes a Bech32 encoded string (unused)
-function bech32_decode(bechString) {
-    let p,
-        has_lower = false,
-        has_upper = false;
-    for (p = 0; p < bechString.length; ++p) {
-        if (bechString.charCodeAt(p) < 33 || bechString.charCodeAt(p) > 126) {
-            return null;
-        }
-        if (bechString.charCodeAt(p) >= 97 && bechString.charCodeAt(p) <= 122) {
-            has_lower = true;
-        }
-        if (bechString.charCodeAt(p) >= 65 && bechString.charCodeAt(p) <= 90) {
-            has_upper = true;
-        }
-    }
-    if (has_lower && has_upper) {
-        return null;
-    }
-    bechString = bechString.toLowerCase();
-    const pos = bechString.lastIndexOf("1");
-    if (pos < 1 || pos + 7 > bechString.length || bechString.length > 90) {
-        return null;
-    }
-    const hrp = bechString.substring(0, pos),
-        data = [];
-    for (p = pos + 1; p < bechString.length; ++p) {
-        const d = b32ab.indexOf(bechString.charAt(p));
-        if (d === -1) {
-            return null;
-        }
-        data.push(d);
-    }
-    if (!verify_checksum(hrp, data)) {
-        return null;
-    }
-    return {
-        "hrp": hrp,
-        "data": data.slice(0, data.length - 6)
-    };
-}
+// ** LNURL & Lightning: **
 
 // Decodes a Bech32 encoded LNURL
 function lnurl_decodeb32(lnurl) {
@@ -871,6 +987,50 @@ function lnurl_decodeb32(lnurl) {
     };
 }
 
+// ** Mnemonic Functions: **
+
+function clean_string(words) {
+    return normalize_string(join_words(split_words(words)));
+}
+
+// Concatenates word array with single space delimiter
+function join_words(words) {
+    return words.join(" ");
+}
+
+// Splits string on whitespace and removes empty elements
+function split_words(mnemonic) {
+    return mnemonic.split(/\s/g).filter(function(x) {
+        return x.length;
+    });
+}
+
+// Applies Unicode NFKD normalization to string
+function normalize_string(str) {
+    return str.normalize("NFKD");
+}
+
+// Converts BIP39 mnemonic to binary string with 11-bit word indices
+function mnemonic_to_binary_string(mnemonic) {
+    const mm = split_words(mnemonic);
+    if (mm.length == 0 || mm.length % 3 > 0) {
+        return null;
+    }
+    const idx = [];
+    for (let i = 0; i < mm.length; i++) {
+        const word = mm[i],
+            wordIndex = wordlist.indexOf(word);
+        if (wordIndex == -1) {
+            return null;
+        }
+        const binaryIndex = pad_binary(wordIndex.toString(2), 11);
+        idx.push(binaryIndex);
+    }
+    return idx.join("");
+}
+
+// ** Encryption: **
+
 // Encrypts data using AES-GCM
 function aes_enc(params, keyString) {
     const buffer = uint_8array(16),
@@ -901,53 +1061,7 @@ function aes_dec(content, keyst) {
     }
 }
 
-// Converts a hexadecimal string to a decimal string
-function hex_to_number_string(val) {
-    return hex_to_int(val).toString();
-}
-
-// Converts a hexadecimal string to a number
-function hex_to_int(val) {
-    return parseInt(val, 16);
-}
-
-// CashAddr
-
-// Converts a legacy Bitcoin Cash address to CashAddr format
-function pub_to_cashaddr(legacy) {
-    const c_addr = bch_cashaddr("bitcoincash", "P2PKH", legacy);
-    return c_addr.split(":")[1];
-}
-
-// Converts a CashAddr format address to legacy Bitcoin Cash address
-function bch_legacy(cadr) {
-    try {
-        const version = 0,
-            dec = cashaddr.decode(cadr),
-            bytes = dec.hash,
-            bytesarr = Array.from(bytes),
-            conc = concat_array([0], bytesarr),
-            unbuf = buf2hex(conc);
-        return b58check_encode(unbuf);
-    } catch (e) {
-        //console.error(e.name, e.message);
-        return cadr
-    }
-}
-
-// Converts a legacy Bitcoin Cash address to CashAddr format
-function bch_cashaddr(prefix, type, legacy) {
-    try {
-        const lbytes = b58dec_uint_array(legacy),
-            lbslice = lbytes.slice(1, 21);
-        return cashaddr.encode(prefix, type, lbslice);
-    } catch (e) {
-        console.error(e.name, e.message);
-        return legacy
-    }
-}
-
-// Nimiq.watch TXD
+// ** Miscellaneous: **
 
 // Encodes a Nimiq transaction hash for use with Nimiq.watch
 function nimiq_hash(tx) {
