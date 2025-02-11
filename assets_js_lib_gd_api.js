@@ -494,7 +494,7 @@ function sync_drive_data(auth_state) {
                 "headers": {
                     "Authorization": "Bearer " + access_token
                 },
-                "data": complilebackup()
+                "data": generate_backup_data()
             }
         };
         api_proxy(request_data).done(function(response) {
@@ -531,7 +531,7 @@ function create_drive_file(access_token) {
     const token_data = get_auth_status(),
         token_valid = token_data.pass,
         final_token = access_token || (token_valid ? token_data.token : false),
-        backup_content = complilebackup();
+        backup_content = generate_backup_data();
     if (final_token) {
         const file_blob = new Blob([backup_content], {
                 "type": "text/plain"
@@ -542,7 +542,7 @@ function create_drive_file(access_token) {
                 "deviceid": glob_const.deviceid
             },
             file_config = {
-                "name": complilefilename(),
+                "name": generate_backup_filename(),
                 "parents": ["appDataFolder"],
                 "mimeType": "text/plain",
                 "description": JSON.stringify(file_meta)
