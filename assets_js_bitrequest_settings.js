@@ -2678,8 +2678,9 @@ function pick_api_proxy() {
         }
         const options = $("#proxyformbox").find(".options");
         $.each(proxies, function(key, value) {
-            const selected = (value === proxy);
-            test_append_proxy(options, key, value, selected, true);
+            const selected = (value === proxy),
+                dfault = $.inArray(value, glob_const.proxy_list) !== -1;
+            test_append_proxy(options, key, value, selected, dfault);
         });
     })
 }
