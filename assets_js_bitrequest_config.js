@@ -54,6 +54,14 @@ const glob_multi_wallets = {
             "playstore": "https://play.google.com/store/apps/details?id=com.cakewallet.cake_wallet",
             "desktop": "https://cakewallet.com",
             "seed": true
+        },
+        "stackwallet": {
+            "name": "stackwallet",
+            "website": "https://stackwallet.com",
+            "appstore": "https://apps.apple.com/app/id1634811534",
+            "playstore": "https://play.google.com/store/apps/details?id=com.cypherstack.stackwallet",
+            "desktop": "https://stackwallet.com",
+            "seed": true
         }
     },
     glob_config = {
@@ -77,6 +85,7 @@ const glob_multi_wallets = {
                         glob_multi_wallets.coinomi,
                         glob_multi_wallets.trezor,
                         glob_multi_wallets.ledger,
+                        glob_multi_wallets.stackwallet,
                         {
                             "name": "electrum",
                             "website": "https://electrum.org",
@@ -313,6 +322,7 @@ const glob_multi_wallets = {
                         glob_multi_wallets.trezor,
                         glob_multi_wallets.ledger,
                         glob_multi_wallets.keepkey,
+                        glob_multi_wallets.stackwallet,
                         {
                             "name": "electrum",
                             "website": "https://electrum-ltc.org",
@@ -445,7 +455,8 @@ const glob_multi_wallets = {
                         glob_multi_wallets.coinomi,
                         glob_multi_wallets.trezor,
                         glob_multi_wallets.ledger,
-                        glob_multi_wallets.keepkey
+                        glob_multi_wallets.keepkey,
+                        glob_multi_wallets.stackwallet,
                     ]
                 },
                 "settings": {
@@ -560,6 +571,7 @@ const glob_multi_wallets = {
                         glob_multi_wallets.coinomi,
                         glob_multi_wallets.trezor,
                         glob_multi_wallets.ledger,
+                        glob_multi_wallets.stackwallet,
                         {
                             "name": "Dash-Wallet",
                             "website": "https://www.dash.org",
@@ -689,6 +701,7 @@ const glob_multi_wallets = {
                         glob_multi_wallets.trezor,
                         glob_multi_wallets.ledger,
                         glob_multi_wallets.atomicwallet,
+                        glob_multi_wallets.stackwallet,
                         {
                             "name": "electron-cash",
                             "website": "https://electroncash.org",
@@ -803,6 +816,7 @@ const glob_multi_wallets = {
                         glob_multi_wallets.trezor,
                         glob_multi_wallets.ledger,
                         glob_multi_wallets.keepkey,
+                        glob_multi_wallets.stackwallet,
                         {
                             "name": "myetherwallet",
                             "website": "https://www.mewwallet.com",
@@ -1210,6 +1224,7 @@ const glob_multi_wallets = {
                     "wallets": [
                         glob_multi_wallets.coinomi,
                         glob_multi_wallets.cakewallet,
+                        glob_multi_wallets.stackwallet,
                         {
                             "name": "monerujo",
                             "website": "https://www.monerujo.io",
