@@ -86,9 +86,9 @@ const l = 7237005577332262213973186563042994240857116359379907606001950938285454
 // ** Core Buffer & Conversion Utilities: **
 //str_to_bin  
 //uint64_to_8be
-//bytesToNumberLE
+//bytes_to_number_le
 //uint32_hex
-//xmr_numberToHex
+//xmr_number_to_hex
 
 // ** Mathematical Foundations: **
 //xmod
@@ -155,7 +155,7 @@ function uint64_to_8be(num, size) {
 }
 
 // Converts a byte array to BigInt using little-endian byte ordering with bit-shifting
-function bytesToNumberLE(uint8a) {
+function bytes_to_number_le(uint8a) {
     let value = 0n;
     for (let i = 0; i < uint8a.length; i++) {
         value += BigInt(uint8a[i]) << (8n * BigInt(i));
@@ -172,9 +172,8 @@ function uint32_hex(value) {
 }
 
 // Converts a positive integer to hexadecimal with leading zero padding
-function xmr_numberToHex(num) {
-    const hex = num.toString(16);
-    return hex.length & 1 ? `0${hex}` : hex;
+function xmr_number_to_hex(num) {
+    return num.toString(16).padStart(2, "0");
 }
 
 // ** Mathematical Foundations: **
@@ -438,7 +437,7 @@ class xPoint {
             normedLast = bytes[len] & ~0x80,
             isLastByteOdd = (bytes[len] & 0x80) !== 0,
             normed = Uint8Array.from(Array.from(bytes.slice(0, len)).concat(normedLast)),
-            y = bytesToNumberLE(normed);
+            y = bytes_to_number_le(normed);
         if (y >= P) {
             throw new Error("Point#fromHex expects hex <= Fp");
         }
@@ -457,7 +456,7 @@ class xPoint {
 
     // Converts the point to raw bytes
     toRawBytes() {
-        const hex = xmr_numberToHex(this.y),
+        const hex = xmr_number_to_hex(this.y),
             u8 = uint_8array(ENCODING_LENGTH);
         for (let i = hex.length - 2, j = 0; j < ENCODING_LENGTH && i >= 0; i -= 2, j++) {
             u8[j] = parseInt(hex[i] + hex[i + 1], 16);
