@@ -1273,7 +1273,8 @@ const glob_multi_wallets = {
                     },
                     "blockexplorers": {
                         "icon": "eye",
-                        "selected": "blockchair.com"
+                        "selected": "blockchair.com",
+                        "options": ["blockchair.com", "monero.com"]
                     },
                     "apis": {
                         "icon": "sphere",
@@ -2308,6 +2309,13 @@ const glob_multi_wallets = {
                 "prefix": "currency",
                 "tx_prefix": "tx.dws?",
                 "address_prefix": "address.dws?"
+            },
+            {
+                "name": "monero.com",
+                "url": "https://monero.com/",
+                "prefix": null,
+                "tx_prefix": "tx/",
+                "address_prefix": null
             }
         ]
     };
