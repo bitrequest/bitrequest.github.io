@@ -466,7 +466,7 @@ function make_seed() {
     $(document).on("click", "#option_makeseed", function() {
         const coin = $(this).attr("data-currency");
         if (glob_let.hasbip) {
-            topnotify(translate("alreadyhavesecretphrase"));
+            topnotify(tl("alreadyhavesecretphrase"));
             return
         }
         canceldialog();
@@ -487,7 +487,7 @@ function restore_seed() {
         if (glob_let.hasbip) {
             return false;
         }
-        const confirm_restore = confirm(translate("resoresecretphrase") + "?");
+        const confirm_restore = confirm(tl("resoresecretphrase") + "?");
         if (confirm_restore) {
             const seed_id = $(this).attr("data-seedid");
             canceloptions();
@@ -526,7 +526,7 @@ function restore_seed_verify() {
                 return
             }
             shake($("#bip39phrase"));
-            topnotify(translate("wrongsecretphrase"));
+            topnotify(tl("wrongsecretphrase"));
             return
         }
         topnotify(is_valid);
@@ -551,7 +551,7 @@ function manage_bip32(dat) {
                     "content": [{
                         "div": {
                             "class": "inputwrap",
-                            "content": "<p>" + translate("cannotbespend") + "</p>"
+                            "content": "<p>" + tl("cannotbespend") + "</p>"
                         },
                     }]
                 }
@@ -574,7 +574,7 @@ function manage_bip32(dat) {
                             }]
                         },
                         "span": {
-                            "content": translate("understandandok")
+                            "content": tl("understandandok")
                         }
                     }]
                 }
@@ -592,7 +592,7 @@ function manage_bip32(dat) {
         dialog_content = $(template_dialog({
             "id": "disclaimer_dialog",
             "icon": "icon-warning",
-            "title": translate("disclaimer"),
+            "title": tl("disclaimer"),
             "elements": dialog_elements
         })).data(dialog_data);
     if ($("#option_makeseed").length) {
@@ -617,7 +617,7 @@ function submit_disclaimer() {
             canceldialog();
             bip39(dialog_data);
         } else {
-            popnotify("error", translate("consent"));
+            popnotify("error", tl("consent"));
         }
     })
 }
@@ -635,10 +635,10 @@ function bip39(dat) {
         phrase_class = ui_state === "nobip" ? " showphrase" : " hidephrase",
         existing_seed = glob_let.hasbip ? (saved_phrase ? saved_phrase.pob.join(" ") : false) : false,
         seed_phrase = is_restore ? "" : existing_seed || generate_mnemonic(12),
-        reminder_text = dialog_type === "restore" ? "<p>" + translate("overwritten") + "</p>" : "<p>" + translate("pleaseverify") + "</p>",
-        verify_header = dialog_type === "restore" ? translate("verifycurrent") : translate("verifybackup"),
-        save_prompt = is_restore ? translate("entersecretphrase") : translate("writedownsecretphrase"),
-        verify_button = is_restore ? "<div id='restore_seed' class='button' data-seedid='" + dialog_data.seedid + "'>" + translate("restorebttn") + "</div>" : "<div id='cfbu2' class='button'>" + translate("ivebackeditup") + "</div>",
+        reminder_text = dialog_type === "restore" ? "<p>" + tl("overwritten") + "</p>" : "<p>" + tl("pleaseverify") + "</p>",
+        verify_header = dialog_type === "restore" ? tl("verifycurrent") : tl("verifybackup"),
+        save_prompt = is_restore ? tl("entersecretphrase") : tl("writedownsecretphrase"),
+        verify_button = is_restore ? "<div id='restore_seed' class='button' data-seedid='" + dialog_data.seedid + "'>" + tl("restorebttn") + "</div>" : "<div id='cfbu2' class='button'>" + tl("ivebackeditup") + "</div>",
         markup = $("<div id='seed_steps' class='panel" + current_step + "' data-goal='" + dialog_type + "'>\
         <div id='seed_step1' class='seed_step'>\
             <div class='ss_header'>\
@@ -646,14 +646,14 @@ function bip39(dat) {
             </div>\
             <div class='ss_content flex'>\
                 <div class='ss_content_box'>\
-                    <h2 style='color:#eeac57'>" + translate("important") + "</h2>\
-                    <p><strong>" + translate("abouttobecome") + "</strong><br/>" + translate("inthenextscreen") + " <strong style='color:#eeac57'>" + translate("makesure") + "</strong></p>\
-                    <p><strong>" + translate("ifyouloseyourdevice") + "</strong></p>\
-                    <p class='p_warning' style='text-transform:uppercase'><strong>" + translate("ifyouloseyourphrase") + "</strong></p>\
+                    <h2 style='color:#eeac57'>" + tl("important") + "</h2>\
+                    <p><strong>" + tl("abouttobecome") + "</strong><br/>" + tl("inthenextscreen") + " <strong style='color:#eeac57'>" + tl("makesure") + "</strong></p>\
+                    <p><strong>" + tl("ifyouloseyourdevice") + "</strong></p>\
+                    <p class='p_warning' style='text-transform:uppercase'><strong>" + tl("ifyouloseyourphrase") + "</strong></p>\
                 </div>\
             </div>\
             <div class='ss_footer'>\
-                <div id='cfbu1' class='button'>" + translate("understand") + "</div>\
+                <div id='cfbu1' class='button'>" + tl("understand") + "</div>\
             </div>\
         </div>\
         <div id='seed_step2' class='seed_step'>\
@@ -663,12 +663,12 @@ function bip39(dat) {
             </div>\
             <div class='ss_content flex'>\
                 <div id='phrase_cb' class='ss_content_box" + phrase_class + "'>\
-                    <h2 id='showphrase'><span class='icon-eye-blocked eye'></span><span class='icon-eye eye'></span>" + translate("bip39_passphrase") + ":</h2>\
+                    <h2 id='showphrase'><span class='icon-eye-blocked eye'></span><span class='icon-eye eye'></span>" + tl("bip39_passphrase") + ":</h2>\
                     <p>" + save_prompt + "</p>\
                     <div id='phrasewrap'>\
                         <div id='bip39phrase' contenteditable='" + can_edit + "' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' lang='en' class='noselect'>" + seed_phrase + "</div>\
                         <div id='phrase_actions'>\
-                            <div id='copyphrase' class='button'>" + translate("copy") + "</div>\
+                            <div id='copyphrase' class='button'>" + tl("copy") + "</div>\
                             <div id='phrase_info' title='seed info'><span class='icon-info'></span></div>\
                         </div>\
                         <div id='phraseblur'></div>\
@@ -682,11 +682,11 @@ function bip39(dat) {
                 <div class='icon-arrow-left2 ssnav'></div>\
             </div>\
             <div class='ss_content flex'>\
-                <div class='ss_content_box'><h2>" + verify_header + "</h2><p id='reminder_seed_backup'>" + translate("congratulations") + "<br/></p>\
-                <p id='gpp'>" + translate("withgreatpower") + "<br/><strong>" + translate("remember") + "</strong></p>" + reminder_text + "<div id='seed_verify_box'>\
+                <div class='ss_content_box'><h2>" + verify_header + "</h2><p id='reminder_seed_backup'>" + tl("congratulations") + "<br/></p>\
+                <p id='gpp'>" + tl("withgreatpower") + "<br/><strong>" + tl("remember") + "</strong></p>" + reminder_text + "<div id='seed_verify_box'>\
                     </div>\
                     <div id='cfbu3_w'>\
-                        <div id='cfbu3' class='button'>" + translate("idothislater") + "</div>\
+                        <div id='cfbu3' class='button'>" + tl("idothislater") + "</div>\
                     </div>\
                 </div>\
             </div>\
@@ -804,21 +804,21 @@ function check_phrase(input_phrase) {
     const phrase_words = input_phrase.split(" "),
         word_count = phrase_words.length;
     if (word_count < 2) {
-        return translate("emptyphrase");
+        return tl("emptyphrase");
     }
     if (word_count === 12) {
         if (validate_mnemonic(input_phrase) === false) {
             const invalid_word = find_invalid_word(phrase_words);
             if (invalid_word) {
-                return translate("notinwordlist", {
+                return tl("notinwordlist", {
                     "missing_word": invalid_word
                 });
             }
-            return translate("notbip39compatible");
+            return tl("notbip39compatible");
         }
         return true;
     }
-    return translate("mustbe12characters");
+    return tl("mustbe12characters");
 }
 
 // Returns cleaned seed phrase text from DOM element
@@ -869,7 +869,7 @@ function verify_phrase(word_list, word_count) {
         const word = word_data.word,
             word_num = word_data.index,
             focus_attr = (i === 0) ? " autofocus" : "",
-            input_element = "<div class='checkword_box uncheck'><input type='text' placeholder='" + translate("word") + " #" + word_num + "' data-word='" + word + "'" + focus_attr + " autocorrect='off' autocapitalize='none'/><span class='icon-checkmark'></span></div>";
+            input_element = "<div class='checkword_box uncheck'><input type='text' placeholder='" + tl("word") + " #" + word_num + "' data-word='" + word + "'" + focus_attr + " autocorrect='off' autocapitalize='none'/><span class='icon-checkmark'></span></div>";
         verify_box.append(input_element);
     });
 }
@@ -904,7 +904,7 @@ function verify_words() {
             }
             const verification_step = $("#seed_step3");
             if (verification_step.hasClass("delete")) {
-                const confirm_delete = confirm(translate("areyousuredfp"));
+                const confirm_delete = confirm(tl("areyousuredfp"));
                 if (confirm_delete) {
                     br_remove_local("bpdat");
                     const init_data = br_get_local("init", true),
@@ -917,12 +917,12 @@ function verify_words() {
                     glob_let.bipid = false;
                     update_address_lists();
                     hide_seed_panel();
-                    notify(translate("secretphrasedeleted"));
+                    notify(tl("secretphrasedeleted"));
                 }
                 return
             }
             if (verification_step.hasClass("replace")) {
-                const confirm_restore = confirm(translate("restoresecretphrasefrombackup"));
+                const confirm_restore = confirm(tl("restoresecretphrasefrombackup"));
                 if (confirm_restore) {
                     const backup_data = $("#seed_steps").data().dat;
                     restore_callback(backup_data, true);
@@ -972,7 +972,7 @@ function continue_seed() {
 // Shows warning dialog when skipping seed verification
 function skip_verify() {
     $(document).on("click", "#cfbu3", function() {
-        const warning_content = "<h2><span class='icon-warning' style='color:#B33A3A'></span>" + translate("continueatownrisk") + "</h2><p><strong>" + translate("ifyouloseyourdevice") + "</strong></p>";
+        const warning_content = "<h2><span class='icon-warning' style='color:#B33A3A'></span>" + tl("continueatownrisk") + "</h2><p><strong>" + tl("ifyouloseyourdevice") + "</strong></p>";
         popdialog(warning_content, "complete_seed_setup");
     })
 }
@@ -1008,7 +1008,7 @@ function seed_callback() {
         glob_let.bipobj = storage_data,
             glob_let.hasbip = true,
             glob_let.bipid = phrase_id;
-        notify("🎉 " + translate("congratulations") + " 🎉");
+        notify("🎉 " + tl("congratulations") + " 🎉");
         const seed_id = phrase_id,
             seed_phrase = glob_let.phrasearray.join(" ");
         if (glob_const.body.hasClass("showstartpage")) {
@@ -1035,9 +1035,9 @@ function seed_callback() {
         updated_init.bipv = "yes";
         br_set_local("init", updated_init, true);
         glob_let.bipv = true;
-        topnotify(translate("passphraseverified"));
+        topnotify(tl("passphraseverified"));
     } else {
-        notify(translate("backupasap"));
+        notify(tl("backupasap"));
     }
     hide_seed_panel();
 }
@@ -1638,9 +1638,9 @@ function copy_phrase() {
     $(document).on("click", "#copyphrase", function() {
         const phrase = get_mnemonic_phrase(),
             is_valid = check_phrase(phrase),
-            phrase_label = translate("bip39_passphrase");
+            phrase_label = tl("bip39_passphrase");
         if (is_valid) {
-            const confirm_copy = confirm(translate("copy") + " " + phrase_label + "?");
+            const confirm_copy = confirm(tl("copy") + " " + phrase_label + "?");
             if (confirm_copy) {
                 copy_to_clipboard(phrase, phrase_label);
             }
@@ -1685,14 +1685,14 @@ function delete_phrase_trigger() {
             play_audio(glob_const.funk);
             return
         }
-        const warning_content = "<h2 style='color:#B33A3A' id='dseedwarning'><span class='icon-warning'></span>" + translate("deletingyoursecretphrase") + "</h2><p><strong>" + translate("continuewithbackup") + "</strong></p>";
+        const warning_content = "<h2 style='color:#B33A3A' id='dseedwarning'><span class='icon-warning'></span>" + tl("deletingyoursecretphrase") + "</h2><p><strong>" + tl("continuewithbackup") + "</strong></p>";
         popdialog(warning_content, "delete_phrase_verify");
     });
 }
 
 // Validates deletion intent with phrase verification
 function delete_phrase_verify() {
-    const confirm_delete = confirm(translate("verifycurrent") + "?");
+    const confirm_delete = confirm(tl("verifycurrent") + "?");
     if (confirm_delete) {
         canceldialog();
         const input_phrase = get_mnemonic_phrase(),
@@ -1731,14 +1731,14 @@ function phrase_info_pu(selected_coin) {
         },
         view_class = selected_coin ? "single" : "",
         coin_class = selected_coin ? "pd_" + selected_coin : "pd_bitcoin",
-        seed_info = selected_coin ? "<li><strong>" + translate("source") + ": </strong> Seed</li>" :
+        seed_info = selected_coin ? "<li><strong>" + tl("source") + ": </strong> Seed</li>" :
         "<li><strong>BIP39 Seed: </strong><span class='adboxl adbox select' data-type='BIP39 Seed'>" + seed_hex + "</span></li>",
         coin_data = selected_coin ? get_coin_config(selected_coin) : null,
         coin_icon = selected_coin ? getcc_icon(coin_data.cmcid, coin_data.ccsymbol + "-" + selected_coin, coin_data.erc20) : "",
         header = selected_coin ? "<h2>" + coin_icon + " <span>" + selected_coin + " Key Derivation</span></h2>" : "",
         backup_setting = get_setting("backup", "sbu"),
         backup_toggle = has_encrypted_data() === true ?
-        "<li class='clearfix'><strong>" + translate("backupsecretphrase") + ":</strong><div id='toggle_sbu_span' class='ait'>" +
+        "<li class='clearfix'><strong>" + tl("backupsecretphrase") + ":</strong><div id='toggle_sbu_span' class='ait'>" +
         switch_panel(backup_setting, " global") + "</div></li>" : "",
         delete_option = selected_coin ? "" : (glob_let.hasbip === true ? backup_toggle +
             "<li class='clearfix'><div id='deletephrase' class='icon-bin'></div></li>" : ""),
@@ -1758,7 +1758,7 @@ function phrase_info_pu(selected_coin) {
         <li id='xpub_box' class='clearfix noline'>\
         </li>\
         <li>\
-            <div id='bip_mi'><strong>" + translate("compatiblewallets") + ": </strong><span class='xpref ref'>" + translate("hide") + "</span></div>\
+            <div id='bip_mi'><strong>" + tl("compatiblewallets") + ": </strong><span class='xpref ref'>" + tl("hide") + "</span></div>\
             <div id='bip_mibox' class='clearfix drawer'>\
                 <div id='supported_wallets'>\
                 </div>\
@@ -1820,11 +1820,11 @@ function phrase_info_pu(selected_coin) {
                 monero_box = monero_phrase ? "<div><strong>XMR Seed words: </strong><br/><span class='adboxl adbox select' data-type='XMR Seed words'>" +
                 monero_phrase + "</span></div>" : "",
                 path_element = $("<div class='d_path" + display_class + "'>\
-                <div class='d_path_header'><strong>" + translate("derivationpath") + ": </strong><span class='ref'>" + derive_path + "</span></div>" +
+                <div class='d_path_header'><strong>" + tl("derivationpath") + ": </strong><span class='ref'>" + derive_path + "</span></div>" +
                     monero_box +
                     "<div class='d_path_body drawer clearfix'>\
                         <div class='td_bar'>\
-                            <div class='td_next button'>" + translate("next") + "</div><div class='td_prev button'>" + translate("prev") + "</div>\
+                            <div class='td_next button'>" + tl("next") + "</div><div class='td_prev button'>" + tl("prev") + "</div>\
                         </div>\
                         <ul class='td_box'>" + derive_list + "</ul>\
                     </div>\
@@ -1834,7 +1834,7 @@ function phrase_info_pu(selected_coin) {
                 segwit_element = "";
             if (xpub_key) {
                 xpub_element = $("<div class='xpub_ib clearfix" + display_class + "' data-xpub='" + xpub_key + "'>\
-                    <div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>" + translate("show") + "</span></div>\
+                    <div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>" + tl("show") + "</span></div>\
                         <div class='xp_span drawer'>\
                             <div class='qrwrap flex'>\
                                 <div class='qrcode'></div><img src='" + coin_icon_src + "' class='cmc_icon'>\
@@ -1863,8 +1863,8 @@ function phrase_info_pu(selected_coin) {
 // Displays a list of compatible wallets for a given coin
 function list_compatible_wallets(coin) {
     const dialog_content = $("<div id='ad_info_wrap' class='' data-class='pd_" + coin + "'><h2><span class='icon-warning' style='color:#B33A3A'/>" +
-        translate("cannotsendfunds") + "</span></h2><ul>\
-            <li class='noline'><strong style='color:#6a6a6a'>" + translate("importtosend") + "</strong></li>\
+        tl("cannotsendfunds") + "</span></h2><ul>\
+            <li class='noline'><strong style='color:#6a6a6a'>" + tl("importtosend") + "</strong></li>\
             <li id='pi_li' class='noline'>\
                 <div id='pi_icons'>\
                 </div>\
@@ -1935,7 +1935,7 @@ function toggle_dpaths() {
             path_drawer.slideDown(200);
             $(".drawer").not(path_drawer).slideUp(200);
         }
-        $(".xpref").text(translate("show"));
+        $(".xpref").text(tl("show"));
     })
 }
 
@@ -2010,14 +2010,14 @@ function phrase_moreinfo() {
             toggle_text = info_button.find(".xpref"),
             info_drawer = $("#bip_mibox");
         if (info_drawer.is(":visible")) {
-            toggle_text.text(translate("show"));
+            toggle_text.text(tl("show"));
             info_drawer.slideUp(200);
         } else {
-            toggle_text.text(translate("hide"));
+            toggle_text.text(tl("hide"));
             info_drawer.slideDown(200);
             $(".drawer").not(info_drawer).slideUp(200);
         }
-        $(".xpref").not(toggle_text).text(translate("show"));
+        $(".xpref").not(toggle_text).text(tl("show"));
     })
 }
 
@@ -2030,7 +2030,7 @@ function phrase_showxp() {
             toggle_text = xpub_container.find(".xpref"),
             xpub_drawer = $(".xp_span");
         if (xpub_drawer.is(":visible")) {
-            toggle_text.text(translate("show"));
+            toggle_text.text(tl("show"));
             xpub_drawer.slideUp(200);
         } else {
             if (!xpub_container.hasClass("rendered")) {
@@ -2042,10 +2042,10 @@ function phrase_showxp() {
                 });
                 xpub_container.addClass("rendered");
             }
-            toggle_text.text(translate("hide"));
+            toggle_text.text(tl("hide"));
             xpub_drawer.slideDown(200);
             $(".drawer").not(xpub_drawer).slideUp(200);
         }
-        $(".xpref").not(toggle_text).text(translate("show"));
+        $(".xpref").not(toggle_text).text(tl("show"));
     })
 }

@@ -403,13 +403,13 @@ function format_time_24h(date) {
 // Returns array of localized weekday names in user's language
 function weekdays() {
     return [
-        translate("sunday"),
-        translate("monday"),
-        translate("tuesday"),
-        translate("wednesday"),
-        translate("thursday"),
-        translate("friday"),
-        translate("saturday")
+        tl("sunday"),
+        tl("monday"),
+        tl("tuesday"),
+        tl("wednesday"),
+        tl("thursday"),
+        tl("friday"),
+        tl("saturday")
     ];
 }
 

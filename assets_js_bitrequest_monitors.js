@@ -502,7 +502,7 @@ function handle_api_failure(rd, rdo, error_obj, api_data, l2) {
         }
         stop_monitors();
         socket_info(api_data, false);
-        notify(translate("websocketoffline"), 500000, "yes");
+        notify(tl("websocketoffline"), 500000, "yes");
         return
     }
     const request_id = rd.requestid,
@@ -552,11 +552,11 @@ function show_api_error(api_source, error_obj) {
         const key_fail = error_data.apikey === true,
             error_message = error_data.errormessage,
             error_code = error_data.errorcode !== undefined ? "Error: " + error_data.errorcode : "",
-            api_button = key_fail ? "<div id='add_api' data-api='" + api_source + "' class='button'>" + translate("addapikey", {
+            api_button = key_fail ? "<div id='add_api' data-api='" + api_source + "' class='button'>" + tl("addapikey", {
                 "apisrc": api_source
             }) + "</div>" : "",
-            try_other = api_source ? "<span id='proxy_dialog' class='ref'>" + translate("tryotherproxy") + "</span>" : "",
-            content = "<h2 class='icon-blocked'>" + error_code + "</h2><p class='doselect'><strong>" + translate("error") + ": " + error_message + "<br/><br/>" + try_other + "</p>" + api_button;
+            try_other = api_source ? "<span id='proxy_dialog' class='ref'>" + tl("tryotherproxy") + "</span>" : "",
+            content = "<h2 class='icon-blocked'>" + error_code + "</h2><p class='doselect'><strong>" + tl("error") + ": " + error_message + "<br/><br/>" + try_other + "</p>" + api_button;
         popdialog(content, "canceldialog");
     }
 }
@@ -610,7 +610,7 @@ function no_results(rdo, src, api_data, error_details) {
     }
     stop_monitors();
     socket_info(api_data, false);
-    notify(translate("websocketoffline"), 500000, "yes");
+    notify(tl("websocketoffline"), 500000, "yes");
 }
 
 // ** API Management: **
@@ -688,7 +688,7 @@ function display_api_source(current_list, api_data) {
         provider_name = api_data.name,
         api_title = provider_name === "mempool.space" ? api_url : provider_name,
         api_source = api_title || api_url_short;
-    current_list.data("source", api_source).find(".api_source").html("<span class='src_txt' title='" + api_url_short + "'>" + translate("source") + ": " + api_source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
+    current_list.data("source", api_source).find(".api_source").html("<span class='src_txt' title='" + api_url_short + "'>" + tl("source") + ": " + api_source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
 }
 
 // ** Transaction Processing: **
@@ -711,10 +711,10 @@ function create_transaction_item(tx_details, request_type) {
         no_confirmation_requirement = set_confirmations === false,
         instant_lock = tx_details.instant_lock,
         is_confirmed = instant_lock || no_confirmation_requirement || (confirmations && confirmations >= set_confirmations),
-        confirmation_count = no_confirmation_requirement ? "" : confirmations + " / " + set_confirmations + " " + translate("confirmations"),
+        confirmation_count = no_confirmation_requirement ? "" : confirmations + " / " + set_confirmations + " " + tl("confirmations"),
         instant_lock_text = instant_lock ? " (instant_lock)" : "",
         confirmation_title = instant_lock ? "instant_lock" : confirmation_count,
-        unconfirmed_text = translate("unconfirmedtx"),
+        unconfirmed_text = tl("unconfirmedtx"),
         checked_span = "<span class='icon-checkmark' title='" + confirmation_title + "'></span>",
         confirmation_span = is_confirmed ? checked_span : confirmations ? "<div class='txli_conf' title='" + confirmation_title + "'><div class='confbar'></div><span>" + confirmation_title + "</span></div>" :
         "<div class='txli_conf' title='" + unconfirmed_text + "'><div class='confbar'></div><span>" + unconfirmed_text + "</span></div>",
@@ -756,7 +756,7 @@ function format_transaction_details(data) {
             local_rate_info + "\n" +
             "Source: " + fiat_source + "/" + crypto_source + "\n";
     }
-    const confirmation_details = data.confirmations ? data.confirmations + "/" + data.setconfirmations : translate("unconfirmedtx"),
+    const confirmation_details = data.confirmations ? data.confirmations + "/" + data.setconfirmations : tl("unconfirmedtx"),
         confirmation_var = data.instant_lock ? "(instant_lock)" : confirmation_details,
         confirmation_info = data.setconfirmations === false ? "" : "Confirmations: " + confirmation_var,
         layer2_source = data.l2 ? "\nLayer: " + data.l2 : "",

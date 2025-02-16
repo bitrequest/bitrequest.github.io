@@ -111,7 +111,7 @@ function setup_confirmation_editor() {
                                 "class": "submit",
                                 "attr": {
                                     "type": "submit",
-                                    "value": translate("okbttn"),
+                                    "value": tl("okbttn"),
                                     "data-currency": currency_code
                                 }
                             }
@@ -122,7 +122,7 @@ function setup_confirmation_editor() {
             dialog_html = template_dialog({
                 "id": "conf_formbox",
                 "icon": "icon-clock",
-                "title": translate("confirmations"),
+                "title": tl("confirmations"),
                 "elements": dialog_data
             });
         popdialog(dialog_html, "triggersubmit");
@@ -144,7 +144,7 @@ function save_confirmation_settings() {
         if (settings_node) {
             settings_node.data("selected", conf_value).find("p").html(conf_value);
             canceldialog();
-            notify(translate("datasaved"));
+            notify(tl("datasaved"));
             save_cc_settings(currency_code, true);
         }
     })
@@ -161,7 +161,7 @@ function toggle_address_reuse() {
         if (toggle_btn.hasClass("true")) {
             let can_disable = true;
             if (warn_msg) {
-                can_disable = confirm(translate("reusewarningalert", {
+                can_disable = confirm(tl("reusewarningalert", {
                     "thiscurrency": currency_code
                 }));
             }
@@ -172,7 +172,7 @@ function toggle_address_reuse() {
             }
             return
         }
-        const user_confirmed = confirm(translate("reusealert", {
+        const user_confirmed = confirm(tl("reusealert", {
             "thiscurrency": currency_code
         }));
         if (user_confirmed) {
@@ -205,7 +205,7 @@ function setup_explorer_selection() {
         if (explorer_list) {
             const currency_code = settings_item.children(".liwrap").attr("data-currency"),
                 selected_explorer = item_data.selected,
-                dialog_title = translate("chooseblockexplorer"),
+                dialog_title = tl("chooseblockexplorer"),
                 explorer_options = explorer_list.map(function(explorer) {
                     return "<span data-pe='none'>" + explorer + "</span>";
                 }).join(""),
@@ -244,7 +244,7 @@ function setup_explorer_selection() {
                                 "class": "submit",
                                 "attr": {
                                     "type": "submit",
-                                    "value": translate("okbttn"),
+                                    "value": tl("okbttn"),
                                     "data-currency": currency_code
                                 }
                             }
@@ -272,7 +272,7 @@ function save_explorer_settings() {
         if (settings_node) {
             settings_node.data("selected", selected_explorer).find("p").html(selected_explorer);
             canceldialog();
-            notify(translate("datasaved"));
+            notify(tl("datasaved"));
             save_cc_settings(currency_code, true);
         }
     })
@@ -296,9 +296,9 @@ function edit_rpcnode() {
             glob_let.is_erc20t = ($("#" + currency_code + "_settings").attr("data-erc20") == "true"),
             glob_let.is_btc = is_btchain(currency_code) === true;
         const service_hint = glob_let.is_btc ? "mempool.space" : (currency_code === "ethereum" || glob_let.is_erc20t === true) ? "Infura" : "",
-            dialog_title = glob_let.ap_id === "websockets" ? translate("addwebsocket", {
+            dialog_title = glob_let.ap_id === "websockets" ? tl("addwebsocket", {
                 "h_hint": service_hint
-            }) : translate("addapi", {
+            }) : tl("addapi", {
                 "h_hint": service_hint
             }),
             node_type = (currency_code === "ethereum" || glob_let.is_erc20t === true) ? "eth" : currency_code,
@@ -319,7 +319,7 @@ function edit_rpcnode() {
             node_title = current_node.name || current_node.url,
             dialog_html = "\
             <div class='formbox' id='settingsbox' data-id='" + glob_let.ap_id + "'>\
-                <h2 class='icon-sphere'>" + translate("choose") + " " + currency_code + " " + glob_let.ap_id + "</h2>\
+                <h2 class='icon-sphere'>" + tl("choose") + " " + currency_code + " " + glob_let.ap_id + "</h2>\
                 <div class='popnotify'></div>\
                 <div class='popform'>\
                     <div class='selectbox'>\
@@ -329,7 +329,7 @@ function edit_rpcnode() {
                         </div>\
                     </div>" +
             input_form +
-            "<input type='submit' class='submit' value='" + translate("okbttn") + "' data-currency='" + currency_code + "'/>\
+            "<input type='submit' class='submit' value='" + tl("okbttn") + "' data-currency='" + currency_code + "'/>\
                 </div>\
             </div>";
         popdialog(dialog_html, "triggersubmit");
@@ -524,7 +524,7 @@ function handle_rpc_node_selection() {
             node_config = node_option.data();
         if (node_option.hasClass("offline")) {
             play_audio(glob_const.funk);
-            topnotify(translate("unabletoconnect"));
+            topnotify(tl("unabletoconnect"));
             return
         }
         const dialog_box = $("#settingsbox"),
@@ -552,7 +552,7 @@ function submit_rpcnode() {
                     url_exists = matching_nodes.length > 0;
                 if (url_exists || node_url.indexOf("mempool.space") > -1 ||
                     node_url.indexOf("litecoinspace.org") > -1) {
-                    popnotify("error", translate("nodealreadyadded"));
+                    popnotify("error", tl("nodealreadyadded"));
                     return
                 }
                 const node_username = input_section.find("#rpc_username_input").val(),
@@ -573,7 +573,7 @@ function submit_rpcnode() {
 
 // Tests RPC/WebSocket connectivity for multiple cryptocurrency protocols with error handling
 function validate_rpc_connection(input_section, node_config, currency_code) {
-    const error_message = translate("unabletoconnect");
+    const error_message = tl("unabletoconnect");
     if (glob_let.ap_id === "apis") {
         if (currency_code === "ethereum" || glob_let.is_erc20t === true) {
             const test_hash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1", // random tx
@@ -733,7 +733,7 @@ function save_rpc_settings(currency_code, node_config, is_new_node) {
         }
     }
     canceldialog();
-    notify(translate("datasaved"));
+    notify(tl("datasaved"));
     save_cc_settings(currency_code, true);
 }
 
@@ -756,11 +756,11 @@ function delete_rpc_node() {
                 has_duplicates = matching_nodes.length > 1;
             if (is_default === true && !has_duplicates) {
                 play_audio(glob_const.funk);
-                topnotify(translate("removedefaultnode"));
+                topnotify(tl("removedefaultnode"));
                 return
             }
             const node_name = node_config.name || node_url,
-                user_confirmed = confirm(translate("confirmremovenode", {
+                user_confirmed = confirm(tl("confirmremovenode", {
                     "thisname": node_name
                 }));
             if (user_confirmed) {
@@ -769,7 +769,7 @@ function delete_rpc_node() {
                     $(this).remove();
                 });
                 settings_item.data("options", filtered_nodes);
-                notify(translate("rpcnoderemoved"));
+                notify(tl("rpcnoderemoved"));
                 $("#rpc_url_input").val("");
                 save_cc_settings(currency_code, true);
             }
@@ -843,7 +843,7 @@ function segwit_switch() {
             coin_code = current_path.split("/")[2],
             path_display = $("#d_paths .pd_" + currency_code + " .d_path_header span.ref");
         if (is_segwit === true) {
-            const user_confirmed = confirm(translate("uselegacy", {
+            const user_confirmed = confirm(tl("uselegacy", {
                 "thiscurrency": currency_code
             }));
             if (user_confirmed === false) {
@@ -854,7 +854,7 @@ function segwit_switch() {
             toggle_btn.removeClass("true").addClass("false");
             path_display.text(legacy_path);
         } else {
-            const user_confirmed = confirm(translate("usesegwit", {
+            const user_confirmed = confirm(tl("usesegwit", {
                 "thiscurrency": currency_code
             }));
             if (user_confirmed === false) {
@@ -899,10 +899,10 @@ function display_xpub_details(currency_code, xpub_key) {
         }).join(""),
         currency_symbol = coin_data.ccsymbol,
         currency_icon = getcc_icon(coin_data.cmcid, currency_symbol + "-" + currency_code, coin_data.erc20),
-        dialog_content = $("<div id='ad_info_wrap'><h2>" + currency_icon + " <span>" + currency_code + " " + translate("Key derivations") + "</span></h2><ul>\
+        dialog_content = $("<div id='ad_info_wrap'><h2>" + currency_icon + " <span>" + currency_code + " " + tl("Key derivations") + "</span></h2><ul>\
         <li id='xpub_box' class='clearfix noline'>\
             <div class='xpub_ib clearfix pd_" + currency_code + "' data-xpub='" + xpub_key + "'>\
-                <div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>" + translate("show") + "</span></div>\
+                <div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>" + tl("show") + "</span></div>\
                     <div class='xp_span drawer'>\
                         <div class='qrwrap flex'><div class='qrcode'></div>" + currency_icon + "</div>\
                         <p class='adbox adboxl select' data-type='Xpub'>" + xpub_key + "</p>\
@@ -921,7 +921,7 @@ function display_xpub_details(currency_code, xpub_key) {
         path_element = $("<div class='d_path pd_" + currency_code + "'>\
             <div class='d_path_header'><strong>Derivation path: </strong><span class='ref'>" + derivation_path + "</span></div>\
             <div class='d_path_body clearfix'>\
-                <div class='td_bar'><div class='td_next button'>" + translate("next") + "</div><div class='td_prev button'>" + translate("prev") + "</div></div>\
+                <div class='td_bar'><div class='td_next button'>" + tl("next") + "</div><div class='td_prev button'>" + tl("prev") + "</div></div>\
                 <ul class='td_box'>" + address_list + "</ul>\
             </div>\
         </div>").data(path_config);
@@ -949,13 +949,13 @@ function edit_xpub_trigger() {
             coin_data = get_coin_config(currency_code),
             xpub_key = xpub_data.key,
             currency_icon = getcc_icon(coin_data.cmcid, coin_data.ccsymbol + "-" + currency_code, coin_data.erc20),
-            dialog_html = $("<div id='ad_info_wrap'><h2>" + currency_icon + " " + translate("bip32xpub") + "</h2>\
+            dialog_html = $("<div id='ad_info_wrap'><h2>" + currency_icon + " " + tl("bip32xpub") + "</h2>\
                 <div class='d_ulwrap'>\
                     <ul>\
                         <li><strong>Key: </strong><span class='adbox adboxl select'>" + xpub_key + "</span>\
                         <div id='qrcodexp' class='qrwrap flex'><div class='qrcode'></div>" + currency_icon + "</div>\
                         </li>\
-                        <li><strong>" + translate("derivationpath") + ":</strong> M/0/</li>\
+                        <li><strong>" + tl("derivationpath") + ":</strong> M/0/</li>\
                     </ul>\
                 </div>\
                 <div id='backupactions'>\
@@ -974,7 +974,7 @@ function edit_xpub(currency_info) {
         display_id = currency_info.ccsymbol + "-" + currency_code,
         initial_address = currency_info.address || "",
         qr_scanner = (glob_let.hascam) ? "<div class='qrscanner' data-currency='" + currency_code + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
-        form_title = translate("addxpub", {
+        form_title = tl("addxpub", {
             "currency": currency_code
         }),
         dialog_content = $("<div class='formbox form add' id='xpubformbox'>\
@@ -986,13 +986,13 @@ function edit_xpub(currency_info) {
                     <ul class='td_box'>\
                     </ul>\
                     <div id='pk_confirm' class='noselect'>\
-                        <div id='matchwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + translate("xpubmatch", {
+                        <div id='matchwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + tl("xpubmatch", {
             "currency": currency_code
         }) + "</span><br/>\
-                        <div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + translate("xpubkeys") + "</span>\
+                        <div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + tl("xpubkeys") + "</span>\
                     </div>\
                 </div>\
-                <input type='submit' class='submit' value='" + translate("okbttn") + "'></form>").data(currency_info);
+                <input type='submit' class='submit' value='" + tl("okbttn") + "'></form>").data(currency_info);
     popdialog(dialog_content, "triggersubmit");
     if (!glob_const.supportsTouch) {
         $("#popup input.address").focus();
@@ -1038,7 +1038,7 @@ function validate_xpub(form_container) {
         address_list = $("#ad_info_wrap .td_box"),
         details_panel = $("#ad_info_wrap");
     if (is_valid !== true) {
-        const error_message = translate("invalidxpub", {
+        const error_message = tl("invalidxpub", {
             "currency": currency_code
         });
         popnotify("error", error_message);
@@ -1059,11 +1059,11 @@ function validate_xpub(form_container) {
         match_confirm = form_container.find("#matchwrap"),
         match_confirmed = match_confirm.data("checked");
     if (!match_confirmed) {
-        popnotify("error", translate("confirmmatch"));
+        popnotify("error", tl("confirmmatch"));
         return false;
     }
     if (!key_confirmed) {
-        popnotify("error", translate("confirmpkownership"));
+        popnotify("error", tl("confirmpkownership"));
         return false;
     }
     const settings_item = cs_node(currency_code, "Xpub"),
@@ -1073,7 +1073,7 @@ function validate_xpub(form_container) {
             canceldialog();
             return false;
         }
-        if (!confirm(translate("replacexpub"))) {
+        if (!confirm(tl("replacexpub"))) {
             return false;
         }
     }
@@ -1109,7 +1109,7 @@ function validate_xpub(form_container) {
         home_button.find(".rq_icon").trigger("click");
         return
     }
-    notify(translate("xpubsaved"));
+    notify(tl("xpubsaved"));
     add_xpub_cb(currency_code, xpub_id);
     save_addresses(currency_code, false);
     currency_check(currency_code);
@@ -1117,7 +1117,7 @@ function validate_xpub(form_container) {
 
 // Handles failed Xpub validation with error notification
 function xpub_fail(currency_code) {
-    const error_message = translate("invalidxpub", {
+    const error_message = tl("invalidxpub", {
         "currency": currency_code
     });
     popnotify("error", error_message);
@@ -1189,7 +1189,7 @@ function xpub_cc_switch() {
             currency_code = parent_wrap.attr("data-currency"),
             xpub_data = settings_item.data();
         if (toggle_btn.hasClass("true")) {
-            const user_confirmed = confirm(translate("disablexpub"));
+            const user_confirmed = confirm(tl("disablexpub"));
             if (user_confirmed) {
                 settings_item.data("selected", false).find("p").html("false");
                 toggle_btn.removeClass("true").addClass("false");
@@ -1221,7 +1221,7 @@ function xpub_cc_switch() {
 // Handles Xpub deletion with user confirmation and state cleanup
 function delete_xpub() {
     $(document).on("click", "#delete_xpub", function() {
-        const user_confirmed = confirm(translate("delete") + " " + translate("bip32xpub") + "?");
+        const user_confirmed = confirm(tl("delete") + " " + tl("bip32xpub") + "?");
         if (user_confirmed) {
             const currency_code = $(this).attr("data-currency"),
                 settings_item = cs_node(currency_code, "Xpub"),
@@ -1283,7 +1283,7 @@ function add_apikey(api_name) {
             <div class='popnotify'></div>\
             <div class='popform' data-api='" + api_name + "'>\
                 <input type='text' value='" + current_key + "' placeholder='API key' data-apikey='" + current_key + "' data-checkchange='" + current_key + "'>\
-                <input type='submit' class='submit' value='" + translate("okbttn") + "'/>\
+                <input type='submit' class='submit' value='" + tl("okbttn") + "'/>\
             </div>" + signup_link +
         "</div>";
     canceldialog();
@@ -1301,7 +1301,7 @@ function save_api_key() {
             new_key = key_input.val(),
             existing_key = key_input.attr("data-apikey");
         if (!new_key) {
-            popnotify("error", translate("validateapikey"));
+            popnotify("error", tl("validateapikey"));
             return;
         }
         if (new_key === existing_key) {
@@ -1309,7 +1309,7 @@ function save_api_key() {
             return
         }
         if (key_input.attr("data-checkchange") === new_key) {
-            popnotify("error", translate("validateapikey"));
+            popnotify("error", tl("validateapikey"));
             return
         }
         key_input.attr("data-checkchange", new_key);
@@ -1324,7 +1324,7 @@ function reset_coinsettings_trigger() {
     $(document).on("click", ".reset_cc_settings", function() {
         const reset_btn = $(this),
             currency_code = reset_btn.attr("data-currency");
-        popdialog("<h2 class='icon-bin'>" + translate("resetdialog", {
+        popdialog("<h2 class='icon-bin'>" + tl("resetdialog", {
             "currency": currency_code
         }) + "</h2>", "reset_coinsettings", reset_btn);
     })
@@ -1333,7 +1333,7 @@ function reset_coinsettings_trigger() {
 // Initiates coin settings reset after user confirmation
 function reset_coinsettings(trigger_element) {
     const currency_code = trigger_element.attr("data-currency"),
-        user_confirmed = confirm(translate("resetconfirm", {
+        user_confirmed = confirm(tl("resetconfirm", {
             "currency": currency_code
         }));
     if (user_confirmed !== true) {
@@ -1366,7 +1366,7 @@ function restore_default_settings(currency_code) {
         }
     }
     canceldialog();
-    notify(translate("resetnotify", {
+    notify(tl("resetnotify", {
         "currency": currency_code
     }));
 }

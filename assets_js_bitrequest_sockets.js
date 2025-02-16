@@ -44,7 +44,7 @@
 // Establishes WebSocket connections for cryptocurrency payment monitoring based on payment type and node configuration
 function init_socket(socket_node, wallet_address, retry) {
     if (glob_let.offline) {
-        notify(translate("youareoffline") + ". " + translate("notmonitored"));
+        notify(tl("youareoffline") + ". " + tl("notmonitored"));
         return
     }
     glob_let.rpc_attempts = {};
@@ -176,7 +176,7 @@ function init_socket(socket_node, wallet_address, retry) {
         }
         request.monitored = false;
         request.viewkey = false;
-        notify(translate("notmonitored"), 500000, "yes");
+        notify(tl("notmonitored"), 500000, "yes");
         return
     }
     if (payment_type === "kaspa") {
@@ -191,7 +191,7 @@ function init_socket(socket_node, wallet_address, retry) {
         kaspa_websocket(socket_node, wallet_address);
         return
     }
-    notify(translate("notmonitored"), 500000, "yes")
+    notify(tl("notmonitored"), 500000, "yes")
 }
 
 // Updates UI elements to reflect WebSocket connection status and handles L1/L2 state transitions
@@ -226,7 +226,7 @@ function socket_info(socket_node, is_connected, is_polling) {
         helper.l1_status = false;
         if (helper.l2_status === false) {
             glob_const.paymentpopup.removeClass("live");
-            notify(translate("websocketoffline"), 500000, "yes");
+            notify(tl("websocketoffline"), 500000, "yes");
         }
     }, 1000);
 }
@@ -377,7 +377,7 @@ function lightning_socket(lnd) {
             if (socket_data.status === "confirm" && !glob_let.lnd_confirm) {
                 glob_let.lnd_confirm = true;
                 glob_const.paymentdialogbox.addClass("accept_lnd");
-                notify(translate("acceptthepayment"), 500000);
+                notify(tl("acceptthepayment"), 500000);
                 vibrate();
                 play_audio(glob_const.blip);
             }
@@ -410,7 +410,7 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
         glob_const.ndef.onreading = event => {
             if ((now() - 6000) < glob_let.ndef_timer) { // prevent too many taps
                 play_audio(glob_const.funk);
-                notify(translate("ndeftablimit"), 6000);
+                notify(tl("ndeftablimit"), 6000);
                 return;
             }
             glob_let.ndef_timer = now();
@@ -433,7 +433,7 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                                             milli_sats = (crypto_amount * 100000000000).toFixed(0);
                                         if (crypto_amount <= 0) {
                                             play_audio(glob_const.funk);
-                                            notify(translate("enteramount"), 5000);
+                                            notify(tl("enteramount"), 5000);
                                             return
                                         }
                                         if (glob_let.ndef_processing) {
@@ -457,7 +457,7 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                                             const api_response = br_result(e).result;
                                             if (!api_response) { // catch lightning node connection failure
                                                 play_audio(glob_const.funk);
-                                                notify(translate("unabletoconnectln"), 5000);
+                                                notify(tl("unabletoconnectln"), 5000);
                                                 glob_const.paymentdialogbox.removeClass("accept_lnd");
                                                 glob_let.ndef_processing = false;
                                                 return
@@ -482,14 +482,14 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                                             }
                                             if (milli_sats > api_response.maxWithdrawable) {
                                                 play_audio(glob_const.funk);
-                                                notify(translate("cardmax"), 5000);
+                                                notify(tl("cardmax"), 5000);
                                                 glob_const.paymentdialogbox.removeClass("accept_lnd");
                                                 glob_let.ndef_processing = false;
                                                 return
                                             }
                                             if (milli_sats < api_response.minWithdrawable) {
                                                 play_audio(glob_const.funk);
-                                                notify(translate("minamount", {
+                                                notify(tl("minamount", {
                                                     "min": api_response.minWithdrawable
                                                 }), 5000);
                                                 glob_const.paymentdialogbox.removeClass("accept_lnd");
@@ -612,7 +612,7 @@ function show_nfc_error(error_text) {
     closenotify();
     setTimeout(function() {
         payment_dialog.removeClass("accept_lnd transacting pd_error");
-        status_header.text(translate("waitingforpayment"));
+        status_header.text(tl("waitingforpayment"));
     }, 5000);
 }
 
@@ -636,7 +636,7 @@ function stop_nfc_scan() {
 // Polls Lightning Network node for payment request status with automatic retry
 function lnd_poll_data(proxy_host, proxy_key, payment_id, node_id, invoice_mode) {
     if (isopenrequest()) { // only when request is visible
-        const default_error = translate("unabletoconnect");
+        const default_error = tl("unabletoconnect");
         $.ajax({
             "method": "POST",
             "cache": false,
@@ -669,7 +669,7 @@ function lnd_poll_data(proxy_host, proxy_key, payment_id, node_id, invoice_mode)
                 if (response.status == "confirm" && !glob_let.lnd_confirm) {
                     glob_let.lnd_confirm = true;
                     glob_const.paymentdialogbox.addClass("accept_lnd");
-                    notify(translate("acceptthepayment"), 500000);
+                    notify(tl("acceptthepayment"), 500000);
                     play_audio(glob_const.blip);
                 }
                 return
@@ -707,7 +707,7 @@ function lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_data, pay
             const payment_status = response.status;
             if (payment_status) {
                 request.address = "lnurl"; // make it a lightning request
-                notify(translate("waitingforpayment"), 500000);
+                notify(tl("waitingforpayment"), 500000);
                 helper.lnd.invoice = response;
                 const tx_data = lnd_tx_data(response);
                 validate_confirmations(tx_data, true, true);
@@ -730,7 +730,7 @@ function lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_data, pay
 // Handles connection failures during Lightning Network payment status polling
 function lnd_poll_data_fail(payment_id) {
     stop_monitors(payment_id);
-    notify(translate("notmonitored"), 500000, "yes");
+    notify(tl("notmonitored"), 500000, "yes");
 }
 
 // ** Bitcoin & Bitcoin-like Cryptocurrencies: **

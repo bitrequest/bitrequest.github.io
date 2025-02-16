@@ -144,7 +144,7 @@ function set_symbols() {
             set_symbols();
             return
         }
-        const error_msg = "<h2 class='icon-bin'>" + translate("apicallfailed") + "</h2><p class='doselect'>" + textStatus + "<br/>" + translate("apididnotrespond") + "<br/><br/><span id='proxy_dialog' class='ref'>" + translate("tryotherproxy") + "</span></p>";
+        const error_msg = "<h2 class='icon-bin'>" + tl("apicallfailed") + "</h2><p class='doselect'>" + textStatus + "<br/>" + tl("apididnotrespond") + "<br/><br/><span id='proxy_dialog' class='ref'>" + tl("tryotherproxy") + "</span></p>";
         popdialog(error_msg, "canceldialog");
     })
 }
@@ -181,14 +181,14 @@ function get_erc20tokens() {
                 }
             }
         }
-        const error_msg = "<h2 class='icon-bin'>" + translate("apicallfailed") + "</h2><p class='doselect'>" + translate("nofetchtokeninfo") + "</p>";
+        const error_msg = "<h2 class='icon-bin'>" + tl("apicallfailed") + "</h2><p class='doselect'>" + tl("nofetchtokeninfo") + "</p>";
         popdialog(error_msg, "canceldialog");
     }).fail(function(xhr, stat, err) {
         if (get_next_proxy()) {
             get_erc20tokens();
             return
         }
-        const error_msg = "<h2 class='icon-bin'>" + translate("apicallfailed") + "</h2><p class='doselect'>" + translate("nofetchtokeninfo") + "</p>";
+        const error_msg = "<h2 class='icon-bin'>" + tl("apicallfailed") + "</h2><p class='doselect'>" + tl("nofetchtokeninfo") + "</p>";
         popdialog(error_msg, "canceldialog");
     }).always(function() {
         set_functions();
@@ -712,7 +712,7 @@ function enterapp(pin_input) {
             canceloptions(true);
         } else if (pin_container.hasClass("reset")) {
             br_set_local("locktime", timestamp);
-            $("#pintext").text(translate("enternewpin"));
+            $("#pintext").text(tl("enternewpin"));
             pin_container.addClass("p_admin").removeClass("pinwall reset");
             play_audio(glob_const.waterdrop);
             setTimeout(function() {
@@ -815,10 +815,10 @@ function pinvalidate(pin_button) {
             if (pin_callback) {
                 pin_callback.func(pin_callback.args);
             }
-            notify(translate("datasaved"));
+            notify(tl("datasaved"));
             encrypt_seed_data(seed_decrypt(old_pin));
         } else {
-            topnotify(translate("pinmatch"));
+            topnotify(tl("pinmatch"));
             if (navigator.vibrate) {} else {
                 play_audio(glob_const.funk);
             }
@@ -948,7 +948,7 @@ function loadfunction(page_name, event_type) {
         return
     }
     loadpageevent(page_name);
-    const page_translation = translate(page_name),
+    const page_translation = tl(page_name),
         display_title = page_translation || page_name;
     update_page_title(display_title);
     cancel_url_dialogs();
@@ -1149,7 +1149,7 @@ function payrequest() {
         const request_btn = $(this);
         if (glob_const.offline === true && request_btn.hasClass("isfiat")) {
             // do not trigger fiat request when offline because of unknown exchange rate
-            notify(translate("xratesx"));
+            notify(tl("xratesx"));
             return
         }
         const request_item = request_btn.closest("li.rqli"),
@@ -1238,7 +1238,7 @@ function after_scan_init(api_settings) {
 function after_scan(request_data, api_settings, scan_params) {
     if (glob_const.inframe) {
         loader(true);
-        set_loader_text(translate("lookuppayment", {
+        set_loader_text(tl("lookuppayment", {
             "currency": request_data.payment,
             "blockexplorer": api_settings.name
         }));
@@ -1456,7 +1456,7 @@ function closeloader_trigger() {
 // Removes loading overlay and resets text
 function closeloader() {
     $("#loader").removeClass("showpu active toploader");
-    set_loader_text(translate("loading"));
+    set_loader_text(tl("loading"));
 }
 
 // Updates loading overlay text content
@@ -1505,7 +1505,7 @@ function abort_cam(error_reason) {
 function cam_trigger() {
     $(document).on("click", ".qrscanner", function() {
         loader(true);
-        set_loader_text(translate("loadingcamera"));
+        set_loader_text(tl("loadingcamera"));
         const qr_element = $(this),
             currency = qr_element.attr("data-currency"),
             scan_type = qr_element.attr("data-id");
@@ -1628,7 +1628,7 @@ function open_url() {
             target_type = link_elem.attr("target"),
             dest_url = link_elem.attr("href");
         loader(true);
-        set_loader_text(translate("loadurl", {
+        set_loader_text(tl("loadurl", {
             "url": dest_url
         }));
         if (glob_const.is_ios_app === true) {
@@ -1665,7 +1665,7 @@ function get_alchemy_apikey() {
 function proxy_alert(version) {
     if (version) {
         glob_const.html.addClass("proxyupdate");
-        $("#alert > span").text("!").attr("title", translate("updateproxy", {
+        $("#alert > span").text("!").attr("title", tl("updateproxy", {
             "version": version,
             "proxy_version": glob_const.proxy_version
         }) + " " + d_proxy());
@@ -1706,22 +1706,22 @@ function copy_to_clipboard(content, content_type) {
     if (navigator.clipboard) {
         navigator.clipboard.writeText(content)
             .then(function() {
-                notify(content_type + " " + translate("copied"), 2500, "no");
+                notify(content_type + " " + tl("copied"), 2500, "no");
             })
             .catch(function() {
-                notify(translate("xcopy") + " " + content_type, 2500, "no");
+                notify(tl("xcopy") + " " + content_type, 2500, "no");
             });
         return;
     }
     glob_let.copycontent.val(content).select();
     try {
         if (document.execCommand("copy")) {
-            notify(content_type + " " + translate("copied"), 2500, "no");
+            notify(content_type + " " + tl("copied"), 2500, "no");
         } else {
-            notify(translate("xcopy") + " " + content_type, 2500, "no");
+            notify(tl("xcopy") + " " + content_type, 2500, "no");
         }
     } catch (err) {
-        notify(translate("xcopy") + " " + content_type, 2500, "no");
+        notify(tl("xcopy") + " " + content_type, 2500, "no");
     }
     glob_let.copycontent.val("").removeData("type").blur();
 }
@@ -1755,7 +1755,7 @@ function allow_screen_sleep() {
 
 // Shows notification and plays sound for view-only restrictions
 function show_view_only_error() {
-    notify(translate("cashiernotallowed"));
+    notify(tl("cashiernotallowed"));
     play_audio(glob_const.funk);
 }
 
@@ -1784,13 +1784,13 @@ function countdown_format(cd) {
         hours = cd.hours,
         minutes = cd.minutes,
         seconds = cd.seconds,
-        day_text = days ? (days < 2) ? days + " " + translate("day") : days + " " + translate("days") : "",
+        day_text = days ? (days < 2) ? days + " " + tl("day") : days + " " + tl("days") : "",
         hour_sep = days ? ", " : "",
-        hour_text = hours ? (hours < 2) ? hour_sep + hours + " " + translate("hour") : hour_sep + hours + " " + translate("hours") : "",
+        hour_text = hours ? (hours < 2) ? hour_sep + hours + " " + tl("hour") : hour_sep + hours + " " + tl("hours") : "",
         min_sep = hours ? ", " : "",
-        min_text = minutes ? (minutes < 2) ? min_sep + minutes + " " + translate("minute") : min_sep + minutes + " " + translate("minutes") : "",
-        sec_sep = minutes ? " " + translate("and") + " " : "",
-        sec_text = seconds ? sec_sep + seconds + " " + translate("seconds") : "",
+        min_text = minutes ? (minutes < 2) ? min_sep + minutes + " " + tl("minute") : min_sep + minutes + " " + tl("minutes") : "",
+        sec_sep = minutes ? " " + tl("and") + " " : "",
+        sec_text = seconds ? sec_sep + seconds + " " + tl("seconds") : "",
         formatted_time = cd ? day_text + hour_text + min_text + sec_text : false;
     return formatted_time;
 }
@@ -2019,7 +2019,7 @@ function start_next(panel_node) {
         $("#eninput").blur();
         return
     }
-    topnotify(translate("enteryourname"));
+    topnotify(tl("enteryourname"));
 }
 
 // Returns to previous intro panel
@@ -2373,17 +2373,17 @@ function showoptionstrigger() {
             return
         }
         const saved_request = $("#requestlist li[data-address='" + address + "']"),
-            show_requests = (saved_request.length > 0) ? "<li><div class='showrequests'><span class='icon-qrcode'></span> " + translate("showrequests") + "</div></li>" : "",
+            show_requests = (saved_request.length > 0) ? "<li><div class='showrequests'><span class='icon-qrcode'></span> " + tl("showrequests") + "</div></li>" : "",
             new_request = (addr_data.checked === true) ? "<li>\
                 <div data-rel='' class='newrequest' title='create request'>\
-                    <span class='icon-plus'></span>" + translate("newrequest") + "</div>\
+                    <span class='icon-plus'></span>" + tl("newrequest") + "</div>\
             </li>" : "",
             options_content = $("\
                 <ul id='optionslist''>" + new_request + show_requests +
-                "<li><div class='address_info'><span class='icon-info'></span> " + translate("addressinfo") + "</div></li>\
-                    <li><div class='editaddress'> <span class='icon-pencil'></span> " + translate("editlabel") + "</div></li>\
-                    <li><div class='removeaddress'><span class='icon-bin'></span> " + translate("removeaddress") + "</div></li>\
-                    <li><div id='rpayments'><span class='icon-history'></span> " + translate("recentpayments") + "</div></li>\
+                "<li><div class='address_info'><span class='icon-info'></span> " + tl("addressinfo") + "</div></li>\
+                    <li><div class='editaddress'> <span class='icon-pencil'></span> " + tl("editlabel") + "</div></li>\
+                    <li><div class='removeaddress'><span class='icon-bin'></span> " + tl("removeaddress") + "</div></li>\
+                    <li><div id='rpayments'><span class='icon-history'></span> " + tl("recentpayments") + "</div></li>\
                 </ul>").data(addr_data);
         showoptions(options_content);
         return
@@ -2464,18 +2464,18 @@ function clearoptions() {
 function lockscreen(timeout) {
     const time_left = timeout - now(),
         countdown_data = countdown(time_left),
-        days_str = (countdown_data.days) ? countdown_data.days + " " + translate("days") + "<br/>" : "",
-        hours_str = (countdown_data.hours) ? countdown_data.hours + " " + translate("hours") + "<br/>" : "",
-        mins_str = (countdown_data.minutes) ? countdown_data.minutes + " " + translate("minutes") + "<br/>" : "",
-        secs_str = (countdown_data.seconds) ? countdown_data.seconds + " " + translate("seconds") : "",
+        days_str = (countdown_data.days) ? countdown_data.days + " " + tl("days") + "<br/>" : "",
+        hours_str = (countdown_data.hours) ? countdown_data.hours + " " + tl("hours") + "<br/>" : "",
+        mins_str = (countdown_data.minutes) ? countdown_data.minutes + " " + tl("minutes") + "<br/>" : "",
+        secs_str = (countdown_data.seconds) ? countdown_data.seconds + " " + tl("seconds") : "",
         countdown_text = days_str + hours_str + mins_str + secs_str,
         unlock_attempts = $("#pinsettings").data("attempts"),
         has_seed = (glob_let.hasbip || glob_let.cashier_seedid) ? true : false,
-        unlock_seed_btn = (has_seed === true && unlock_attempts > 5) ? "<p id='seed_unlock'>" + translate("unlockwithsecretphrase") + "</p>" : "",
-        lock_content = "<h1 id='lock_heading'>Bitrequest</h1><div id='lockscreen'><h2><span class='icon-lock'></span></h2><p class='tmua'>" + translate("tomanyunlocks") + "</p>\
-        <p><br/>" + translate("tryagainin") + "<br/>" + countdown_text + "</p>" + unlock_seed_btn +
+        unlock_seed_btn = (has_seed === true && unlock_attempts > 5) ? "<p id='seed_unlock'>" + tl("unlockwithsecretphrase") + "</p>" : "",
+        lock_content = "<h1 id='lock_heading'>Bitrequest</h1><div id='lockscreen'><h2><span class='icon-lock'></span></h2><p class='tmua'>" + tl("tomanyunlocks") + "</p>\
+        <p><br/>" + tl("tryagainin") + "<br/>" + countdown_text + "</p>" + unlock_seed_btn +
         "<div id='phrasewrap'>\
-            <p><br/>" + translate("enter12words") + "</p>\
+            <p><br/>" + tl("enter12words") + "</p>\
                 <div id='bip39phrase' contenteditable='contenteditable' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' lang='en' class='noselect'></div>\
                 <div id='phrase_login' class='button'>Unlock</div>\
             </div>\
@@ -2493,7 +2493,7 @@ function newrequest_alias() {
             active_coins = currency_list.find("li").not(".hide"),
             active_count = active_coins.length;
         if (active_count === 0) {
-            notify(translate("noactivecurrencies"));
+            notify(tl("noactivecurrencies"));
             return
         }
         if (active_count > 1) {
@@ -2551,7 +2551,7 @@ function confirm_ms_newrequest() {
             save_checkbox = dialog_el.find("#dontshowwrap"),
             save_confirmed = save_checkbox.data("checked");
         if (!key_confirmed == true) {
-            popnotify("error", translate("confirmpkownership"));
+            popnotify("error", tl("confirmpkownership"));
             return
         }
         if (save_confirmed == true) { // whitlist seed id
@@ -2582,7 +2582,7 @@ function showtransaction_trigger() {
                 if (invoice_data) {
                     const invoice_hash = invoice_data.hash;
                     if (invoice_hash) {
-                        const user_confirm = confirm(translate("openinvoice", {
+                        const user_confirm = confirm(tl("openinvoice", {
                             "hash": invoice_hash
                         }));
                         if (user_confirm) {
@@ -2641,7 +2641,7 @@ function addressinfo() {
             is_active_source = is_seed ? (seed_id === glob_let.bipid) : (is_xpub ? (active_xpub_data && xpub_id === active_xpub_data.key_id) : false),
             address = dialog_data.address,
             addr_whitelist_status = addr_whitelist(address),
-            restore_btn = is_seed ? (glob_let.hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + seed_id + "'>" + translate("resoresecretphrase") + "</div>" : "",
+            restore_btn = is_seed ? (glob_let.hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + seed_id + "'>" + tl("resoresecretphrase") + "</div>" : "",
             source_label = source_type ? (is_active_source) ? source_type + " <span class='icon-checkmark'>" : source_type + " (Unavailable)" + restore_btn : "external",
             derive_index = dialog_data.derive_index,
             purpose = dialog_data.purpose;
@@ -2655,20 +2655,20 @@ function addressinfo() {
             dialog_data.bip32dat = bip32_data,
             dialog_data.address = address;
         const currency_icon = getcc_icon(dialog_data.cmcid, dialog_data.ccsymbol + "-" + currency, dialog_data.erc20),
-            path_info = is_seed ? "<li><strong>" + translate("derivationpath") + ":</strong> " + deriv_path + "</li>" : "",
+            path_info = is_seed ? "<li><strong>" + tl("derivationpath") + ":</strong> " + deriv_path + "</li>" : "",
             pk_verified = "Unknown <span class='icon-checkmark'></span>",
             view_key_obj = view_key ? vk_obj(view_key) : false,
             view_key_data = view_key_obj ? (is_seed && is_active_source ? "derive" : view_key_obj.vk) : false,
-            show_label = translate("show"),
+            show_label = tl("show"),
             pk_display = view_key_data ? "<span id='show_vk' class='ref' data-vk='" + view_key_data + "'>" + show_label + "</span>" :
             (is_seed ? (is_active_source ? "<span id='show_pk' class='ref'>" + show_label + "</span>" :
                 (addr_whitelist_status === true ? pk_verified : "Unknown")) : pk_verified);
-        privatekey_label = translate("privatekey"),
+        privatekey_label = tl("privatekey"),
             info_content = $("<div id='ad_info_wrap'><h2>" + currency_icon + " <span>" + label + "</span></h2><ul>\
-               <li><strong>" + translate("address") + ": </strong><span class='adbox adboxl select'>" + address + "</span>\
+               <li><strong>" + tl("address") + ": </strong><span class='adbox adboxl select'>" + address + "</span>\
                <div id='qrcodea' class='qrwrap flex'><div class='qrcode'></div>" + currency_icon + "</div>\
                </li>\
-               <li><strong>" + translate("source") + ": </strong>" + source_label + "</li>" +
+               <li><strong>" + tl("source") + ": </strong>" + source_label + "</li>" +
                 path_info +
                 "<li><strong>" + privatekey_label + ": </strong>" + pk_display +
                 "<div id='pk_span'>\
@@ -2677,7 +2677,7 @@ function addressinfo() {
                        <p id='pkspan' class='adbox adboxl select' data-type='" + privatekey_label + "'></p>\
                </div>\
                </li>\
-               <li><div class='showtransactions ref'><span class='icon-eye'></span>" + translate("showtransactions") + "</div></li>\
+               <li><div class='showtransactions ref'><span class='icon-eye'></span>" + tl("showtransactions") + "</div></li>\
                </ul>\
            </div>").data(dialog_data);
         popdialog(info_content, "canceldialog");
@@ -2697,12 +2697,12 @@ function show_pk() {
             key_panel = $("#pk_span");
         if (key_panel.is(":visible")) {
             key_panel.slideUp(200);
-            show_btn.text(translate("show"));
+            show_btn.text(tl("show"));
             return
         }
         if (key_panel.hasClass("shwpk")) {
             key_panel.slideDown(200);
-            show_btn.text(translate("hide"));
+            show_btn.text(tl("hide"));
             return
         }
         $("#optionsbox").html("");
@@ -2726,7 +2726,7 @@ function show_pk() {
 
 // Callback that displays private key in UI and updates QR code
 function show_pk_cb(private_key) {
-    $("#show_pk").text(translate("hide"));
+    $("#show_pk").text(tl("hide"));
     $("#pkspan").text(private_key);
     $("#qrcode").qrcode(private_key);
     $("#pk_span").addClass("shwpk").slideDown(200);
@@ -2745,12 +2745,12 @@ function show_vk() {
             key_panel = $("#pk_span");
         if (key_panel.is(":visible")) {
             key_panel.slideUp(200);
-            show_btn.text(translate("show"));
+            show_btn.text(tl("show"));
             return
         }
         if (key_panel.hasClass("shwpk")) {
             key_panel.slideDown(200);
-            show_btn.text(translate("hide"));
+            show_btn.text(tl("hide"));
             return
         }
         $("#optionsbox").html("");
@@ -2782,9 +2782,9 @@ function show_vk() {
 
 // Callback that displays view key details in UI with proper formatting
 function show_vk_cb(key_data) {
-    const view_key_text = key_data.svk ? "<br/><strong style='color:#8d8d8d'>" + translate("secretviewkey") + "</strong> <span class='adbox adboxl select' data-type='Viewkey'>" + key_data.svk + "</span><br/>" : "",
-        spend_key_text = key_data.ssk ? "<br/><strong style='color:#8d8d8d'>" + translate("secretspendkey") + "</strong> <span class='adbox adboxl select' data-type='Spendkey'>" + key_data.ssk + "</span>" : ""
-    $("#show_vk").text(translate("hide"));
+    const view_key_text = key_data.svk ? "<br/><strong style='color:#8d8d8d'>" + tl("secretviewkey") + "</strong> <span class='adbox adboxl select' data-type='Viewkey'>" + key_data.svk + "</span><br/>" : "",
+        spend_key_text = key_data.ssk ? "<br/><strong style='color:#8d8d8d'>" + tl("secretspendkey") + "</strong> <span class='adbox adboxl select' data-type='Spendkey'>" + key_data.ssk + "</span>" : ""
+    $("#show_vk").text(tl("hide"));
     $("#pk_span").html(view_key_text + spend_key_text).addClass("shwpk").slideDown(200);
 }
 
@@ -2906,17 +2906,17 @@ function check_pk() {
 // Creates PIN entry UI with keypad and admin controls
 function pinpanel(panel_class, pin_callback, is_set) {
     const css_class = (panel_class === undefined) ? "" : panel_class,
-        header_text = check_pin_enabled(is_set) === true ? translate("pleaseenter") : translate("createpin");
+        header_text = check_pin_enabled(is_set) === true ? tl("pleaseenter") : tl("createpin");
     return $("<div id='pinfloat' class='enterpin" + css_class + "'>\
         <p id='pintext'>" + header_text + "</p>\
-        <p id='confirmpin'>" + translate("confirmyourpin") + "</p>\
+        <p id='confirmpin'>" + tl("confirmyourpin") + "</p>\
         <input id='pininput' type='password' readonly='readonly'/>\
         <input id='validatepin' type='password' readonly='readonly'/>\
         <div id='pinkeypad'>" + generate_pinpad_html() + "</div>\
         <div id='pin_admin' class='flex'>\
             <div id='pin_admin_float'>\
-                <div id='lock_time'><span class='icomoon'></span> " + translate("locktime") + "</div>\
-                <div id='reset_pin'> " + translate("resetpin") + "</div>\
+                <div id='lock_time'><span class='icomoon'></span> " + tl("locktime") + "</div>\
+                <div id='reset_pin'> " + tl("resetpin") + "</div>\
             </div>\
         </div>\
     </div>").data("pincb", pin_callback);
@@ -3018,37 +3018,37 @@ function addaddress(addr_data, is_edit) {
         addr_label = addr_data.label || "",
         input_readonly = (is_edit === true) ? " readonly" : "",
         no_pubkey = glob_let.test_derive === false || (is_xpub(currency) === false || has_xpub(currency) !== false),
-        wallet_prompt = "<span id='get_wallet' class='address_option' data-currency='" + currency + "'>" + translate("noaddressyet", {
+        wallet_prompt = "<span id='get_wallet' class='address_option' data-currency='" + currency + "'>" + tl("noaddressyet", {
             "currency": currency
         }) + "</span>",
-        seed_prompt = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>" + translate("generatewallet") + "</span>",
+        seed_prompt = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>" + tl("generatewallet") + "</span>",
         addr_options = glob_let.hasbip ? wallet_prompt : (glob_let.test_derive && bip39_const.c_derive[currency]) ? (has_bip32(currency) === true ? seed_prompt : wallet_prompt) : wallet_prompt,
         notify_html = glob_const.body.hasClass("showstartpage") ? "<div class='popnotify' style='display:block'>" + addr_options + "</div>" : "<div class='popnotify'></div>",
         scan_btn = glob_let.hascam && !is_edit ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
-        dialog_title = is_edit ? "<h2 class='icon-pencil'>" + translate("editlabel") + "</h2>" : "<h2>" + getcc_icon(addr_data.cmcid, currency_pair_id, addr_data.erc20) + " " + translate("addcoinaddress", {
+        dialog_title = is_edit ? "<h2 class='icon-pencil'>" + tl("editlabel") + "</h2>" : "<h2>" + getcc_icon(addr_data.cmcid, currency_pair_id, addr_data.erc20) + " " + tl("addcoinaddress", {
             "currency": currency
         }) + "</h2>",
-        privkey_confirm = is_edit ? "" : "<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + translate("pkownership") + "</span></div>",
+        privkey_confirm = is_edit ? "" : "<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + tl("pkownership") + "</span></div>",
         form_mode_class = is_edit ? "edit" : "add",
         pubkey_class = no_pubkey ? " hasxpub" : " noxpub",
-        addr_placeholder = no_pubkey ? translate("entercoinaddress", {
+        addr_placeholder = no_pubkey ? tl("entercoinaddress", {
             "currency": currency
-        }) : translate("nopub"),
+        }) : tl("nopub"),
         viewkey_val = addr_data.vk || "",
         has_viewkey = (viewkey_val !== ""),
         viewkey_scan = glob_let.hascam ? "<div class='qrscanner' data-currency='" + currency + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
-        viewkey_input = (currency == "monero") ? has_viewkey ? "" : "<div class='inputwrap'><input type='text' class='vk_input' value='" + viewkey_val + "' placeholder='" + translate("secretviewkey") + "'>" + viewkey_scan + "</div>" : "",
-        form_content = $("<div class='formbox form" + form_mode_class + pubkey_class + "' id='addressformbox'>" + dialog_title + notify_html + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' id='address_xpub_input' class='address' value='" + wallet_address + "' data-currency='" + currency + "' placeholder='" + addr_placeholder + "'" + input_readonly + ">" + scan_btn + "</div>" + viewkey_input + "<input type='text' class='addresslabel' value='" + addr_label + "' placeholder='" + translate("label") + "'>\
+        viewkey_input = (currency == "monero") ? has_viewkey ? "" : "<div class='inputwrap'><input type='text' class='vk_input' value='" + viewkey_val + "' placeholder='" + tl("secretviewkey") + "'>" + viewkey_scan + "</div>" : "",
+        form_content = $("<div class='formbox form" + form_mode_class + pubkey_class + "' id='addressformbox'>" + dialog_title + notify_html + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' id='address_xpub_input' class='address' value='" + wallet_address + "' data-currency='" + currency + "' placeholder='" + addr_placeholder + "'" + input_readonly + ">" + scan_btn + "</div>" + viewkey_input + "<input type='text' class='addresslabel' value='" + addr_label + "' placeholder='" + tl("label") + "'>\
         <div id='ad_info_wrap' style='display:none'>\
             <ul class='td_box'>\
             </ul>\
             <div id='pk_confirm' class='noselect'>\
-                <div id='matchwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + translate("xpubmatch", {
+                <div id='matchwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + tl("xpubmatch", {
                 "currency": currency
             }) + "</span>\
             </div>\
         </div>" + privkey_confirm +
-            "<input type='submit' class='submit' value='" + translate("okbttn") + "'></form>").data(addr_data);
+            "<input type='submit' class='submit' value='" + tl("okbttn") + "'></form>").data(addr_data);
     popdialog(form_content, "triggersubmit");
     if (glob_const.supportsTouch) {
         return
@@ -3184,24 +3184,24 @@ function add_erc20() {
             scan_button = glob_let.hascam ? "<div class='qrscanner' data-currency='ethereum' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
             dialog_content = $("\
             <div class='formbox' id='erc20formbox'>\
-                <h2 class='icon-coin-dollar'>" + translate("adderc20token") + "</h2>\
+                <h2 class='icon-coin-dollar'>" + tl("adderc20token") + "</h2>\
                 <div class='popnotify'></div>\
                 <form id='addressform' class='popform'>\
                     <div class='selectbox'>\
-                        <input type='text' value='' placeholder='" + translate("erc20placeholder") + "' id='ac_input'/>\
+                        <input type='text' value='' placeholder='" + tl("erc20placeholder") + "' id='ac_input'/>\
                         <div class='selectarrows icon-menu2' data-pe='none'></div>\
                         <div id='ac_options' class='options'>" + token_options + "</div>\
                     </div>\
                     <div id='erc20_inputs'>\
-                    <div class='inputwrap'><input type='text' class='address' value='" + eth_addr_value + "' placeholder='" + translate("enteraddress") + "'/>" + scan_button + "</div>\
-                    <input type='text' class='addresslabel' value='" + eth_label_value + "' placeholder='" + translate("label") + "'/>\
+                    <div class='inputwrap'><input type='text' class='address' value='" + eth_addr_value + "' placeholder='" + tl("enteraddress") + "'/>" + scan_button + "</div>\
+                    <input type='text' class='addresslabel' value='" + eth_label_value + "' placeholder='" + tl("label") + "'/>\
                     <div id='pk_confirm' class='noselect'>\
                         <div id='pk_confirmwrap' class='cb_wrap' data-checked='false'>\
                             <span class='checkbox'></span>\
                         </div>\
-                        <span>" + translate("pkownership") + "</span>\
+                        <span>" + tl("pkownership") + "</span>\
                     </div></div>\
-                    <input type='submit' class='submit' value='" + translate("okbttn") + "'/>\
+                    <input type='submit' class='submit' value='" + tl("okbttn") + "'/>\
                 </form></div>").data(form_data);
         popdialog(dialog_content, "triggersubmit");
     })
@@ -3262,7 +3262,7 @@ function init_addressform(token_data) {
         label_field = form_container.find("input.addresslabel");
     addr_field.add(label_field);
     form_container.data(token_data);
-    addr_field.attr("placeholder", translate("entercoinaddress", {
+    addr_field.attr("placeholder", tl("entercoinaddress", {
         "currency": token_data.currency
     }));
     if (!input_section.is(":visible")) {
@@ -3285,7 +3285,7 @@ function validate_address_vk(addr_data) {
         addr_field = $("#addressform .address"),
         addr_value = addr_field.val();
     if (!addr_value) {
-        const error_msg = translate("entercoinaddress", {
+        const error_msg = tl("entercoinaddress", {
             "currency": currency
         });
         popnotify("error", error_msg);
@@ -3298,16 +3298,16 @@ function validate_address_vk(addr_data) {
             viewkey_length = viewkey_value.length;
         if (viewkey_length) {
             if (viewkey_length !== 64) {
-                popnotify("error", translate("invalidvk"));
+                popnotify("error", tl("invalidvk"));
                 return
             }
             if (!check_vk(viewkey_value)) {
-                popnotify("error", translate("invalidvk"));
+                popnotify("error", tl("invalidvk"));
                 return
             }
             const is_valid = check_address(addr_value, currency);
             if (!is_valid === true) {
-                const error_msg = addr_value + " " + translate("novalidaddress", {
+                const error_msg = addr_value + " " + tl("novalidaddress", {
                     "currency": currency
                 });
                 popnotify("error", error_msg);
@@ -3335,7 +3335,7 @@ function validate_address_vk(addr_data) {
                 const api_data = br_result(response).result,
                     api_error = api_data.Error;
                 if (api_error) {
-                    const error_msg = api_error || translate("invalidvk");
+                    const error_msg = api_error || tl("invalidvk");
                     popnotify("error", error_msg);
                     return
                 }
@@ -3345,14 +3345,14 @@ function validate_address_vk(addr_data) {
                     validate_address(addr_data, viewkey_value);
                 }
             }).fail(function(xhr, stat, err) {
-                popnotify("error", translate("errorvk"));
+                popnotify("error", tl("errorvk"));
             });
             return
         }
         validate_address(addr_data, false);
         return
     }
-    popnotify("error", translate("pickacurrency"));
+    popnotify("error", tl("pickacurrency"));
 }
 
 // Validates the address for the selected currency and handles the addition or editing of the address
@@ -3371,7 +3371,7 @@ function validate_address(addr_data, view_key) {
         label_input = label_field.val(),
         clean_label = label_input || "";
     if (!clean_addr) {
-        popnotify("error", translate("entercoinaddress", {
+        popnotify("error", tl("entercoinaddress", {
             "currency": currency
         }));
         addr_field.focus();
@@ -3382,7 +3382,7 @@ function validate_address(addr_data, view_key) {
         curr_addr = addr_data.address,
         curr_label = addr_data.label;
     if (is_duplicate && curr_addr !== parsed_addr) {
-        popnotify("error", translate("alreadyexists"));
+        popnotify("error", tl("alreadyexists"));
         addr_field.select();
         return
     }
@@ -3392,7 +3392,7 @@ function validate_address(addr_data, view_key) {
     }
     const is_valid = check_address(parsed_addr, currency_type);
     if (!is_valid) {
-        popnotify("error", parsed_addr + " " + translate("novalidaddress", {
+        popnotify("error", parsed_addr + " " + tl("novalidaddress", {
             "currency": currency
         }));
         setTimeout(function() {
@@ -3402,7 +3402,7 @@ function validate_address(addr_data, view_key) {
     }
     const is_label_addr = check_address(clean_label, currency_type);
     if (is_label_addr === true) {
-        popnotify("error", translate("invalidlabel"));
+        popnotify("error", tl("invalidlabel"));
         label_field.val(curr_label).select();
         return
     }
@@ -3425,7 +3425,7 @@ function validate_address(addr_data, view_key) {
     const key_checkbox = $("#pk_confirmwrap"),
         key_confirmed = key_checkbox.data("checked");
     if (!key_confirmed) {
-        popnotify("error", translate("confirmpkownership"));
+        popnotify("error", tl("confirmpkownership"));
         return
     }
     if (index === 1) {
@@ -3498,7 +3498,7 @@ function check_recent() {
         e.preventDefault();
         const link_elem = $(this),
             explorer_url = link_elem.attr("href"),
-            user_confirm = confirm(translate("openurl", {
+            user_confirm = confirm(tl("openurl", {
                 "url": explorer_url
             }));
         if (user_confirm) {
@@ -3526,7 +3526,7 @@ function request_history() {
 function recent_requests(recent_payments) {
     const history_list = recent_requests_list(recent_payments);
     if (history_list.length) {
-        const dialog_content = "<div class='formbox'><h2 class='icon-history'>" + translate("recentrequests") + ":</h2><div id='ad_info_wrap'><ul>" + history_list + "</ul></div></div>";
+        const dialog_content = "<div class='formbox'><h2 class='icon-history'>" + tl("recentrequests") + ":</h2><div id='ad_info_wrap'><ul>" + history_list + "</ul></div></div>";
         popdialog(dialog_content, "canceldialog");
     }
 }
@@ -3625,7 +3625,7 @@ function showrequests() {
 function showrequests_inline() {
     $(document).on("click", ".applist.pobox li .usedicon", function() {
         const wallet_addr = $(this).prev("span").text(),
-            user_confirm = confirm(translate("showrequestsfor", {
+            user_confirm = confirm(tl("showrequestsfor", {
                 "address": wallet_addr
             }));
         if (user_confirm === true) {
@@ -3646,13 +3646,13 @@ function editaddress_trigger() {
 function remove_address() {
     $(document).on("click", ".removeaddress", function(event) {
         event.preventDefault();
-        popdialog("<h2 class='icon-bin'>" + translate("removeaddress") + "</h2>", "remove_address_function", $(this));
+        popdialog("<h2 class='icon-bin'>" + tl("removeaddress") + "</h2>", "remove_address_function", $(this));
     })
 }
 
 // Executes address removal
 function remove_address_function(trigger) {
-    const user_confirm = confirm(translate("areyousure"));
+    const user_confirm = confirm(tl("areyousure"));
     if (user_confirm === true) {
         const options_list = trigger.closest("ul#optionslist"),
             addr_data = options_list.data(),
@@ -3679,7 +3679,7 @@ function remove_address_function(trigger) {
         glob_let.new_address = null; // prevent double entries
         canceldialog();
         canceloptions();
-        notify(translate("addressremoved") + " 🗑");
+        notify(tl("addressremoved") + " 🗑");
         save_addresses(currency, true);
     }
 }
@@ -3703,14 +3703,14 @@ function edit_request() {
             request_elem = $("#" + request_id),
             current_title = request_elem.data("requesttitle"),
             title_input = current_title || "",
-            form_header = current_title ? translate("edit") : translate("enter"),
+            form_header = current_title ? tl("edit") : tl("enter"),
             dialog_content = "\
             <div class='formbox' id='edit_request_formbox'>\
-                <h2 class='icon-pencil'>" + form_header + " " + translate("title") + "</h2>\
+                <h2 class='icon-pencil'>" + form_header + " " + tl("title") + "</h2>\
                 <div class='popnotify'></div>\
                 <div class='popform'>\
-                    <input type='text' value='" + title_input + "' placeholder='" + translate("title") + "'/>\
-                    <input type='submit' class='submit' value='" + translate("okbttn") + "' data-requestid='" + request_id + "'/>\
+                    <input type='text' value='" + title_input + "' placeholder='" + tl("title") + "'/>\
+                    <input type='submit' class='submit' value='" + tl("okbttn") + "' data-requestid='" + request_id + "'/>\
                 </div>\
             </div>";
         popdialog(dialog_content, "triggersubmit");
@@ -3730,10 +3730,10 @@ function submit_request_description() {
                 "requesttitle": final_title
             }, true);
             canceldialog();
-            notify(translate("requestsaved"));
+            notify(tl("requestsaved"));
             return
         }
-        popnotify("error", translate("title") + " " + translate("requiredfield"));
+        popnotify("error", tl("title") + " " + tl("requiredfield"));
     })
 }
 
@@ -3745,7 +3745,7 @@ function receipt() {
             request_data = request_item.data(),
             request_id = request_data.requestid,
             pdf_url = get_pdf_url(request_data),
-            pdf_name = "bitrequest_" + translate("receipt") + "_" + request_id + ".pdf",
+            pdf_name = "bitrequest_" + tl("receipt") + "_" + request_id + ".pdf",
             dialog_elems = [{
                 "div": {
                     "class": "popform"
@@ -3827,12 +3827,12 @@ function share_receipt() {
             pdf_url = share_btn.attr("data-receiptdat"),
             request_id = share_btn.attr("data-requestid"),
             file_name = "bitrequest_receipt_" + request_id + ".pdf",
-            user_confirm = confirm(translate("sharefile", {
+            user_confirm = confirm(tl("sharefile", {
                 "filename": file_name
             }));
         if (user_confirm === true) {
             loader(true);
-            set_loader_text(translate("generatereceipt"));
+            set_loader_text(tl("generatereceipt"));
             const account_name = $("#accountsettings").data("selected"),
                 shared_title = "bitrequest_receipt_" + request_id + ".pdf",
                 url_hash = generate_hash(request_id + shared_title);
@@ -3927,7 +3927,7 @@ function get_pdf_url(request_data) {
 // Sets up click handler for archiving requests
 function archive() {
     $(document).on("click", "#requestlist .req_actions .icon-folder-open", function() {
-        popdialog("<h2 class='icon-folder-open'>" + translate("archiverequest") + "</h2>", "archivefunction", $(this));
+        popdialog("<h2 class='icon-folder-open'>" + tl("archiverequest") + "</h2>", "archivefunction", $(this));
     })
 }
 
@@ -3951,13 +3951,13 @@ function archivefunction() {
     }, 350);
     archive_button();
     canceldialog();
-    notify(translate("movedtoarchive"));
+    notify(tl("movedtoarchive"));
 }
 
 // Sets up click handler for unarchiving requests
 function unarchive() {
     $(document).on("click", "#archivelist .req_actions .icon-undo2", function() {
-        popdialog("<h2 class='icon-undo2'>" + translate("unarchiverequest") + "</h2>", "unarchive_function", $(this));
+        popdialog("<h2 class='icon-undo2'>" + tl("unarchiverequest") + "</h2>", "unarchive_function", $(this));
     })
 }
 
@@ -3975,19 +3975,19 @@ function unarchive_function() {
         archive_button();
     }, 350);
     canceldialog();
-    notify(translate("requestrestored"));
+    notify(tl("requestrestored"));
 }
 
 // Sets up click handler for removing requests
 function remove_request() {
     $(document).on("click", ".req_actions .icon-bin", function() {
-        popdialog("<h2 class='icon-bin'>" + translate("deleterequest") + "?</h2>", "remove_request_function", $(this));
+        popdialog("<h2 class='icon-bin'>" + tl("deleterequest") + "?</h2>", "remove_request_function", $(this));
     })
 }
 
 // Deletes request after confirmation and updates UI/storage
 function remove_request_function() {
-    const user_confirm = confirm(translate("areyousure"));
+    const user_confirm = confirm(tl("areyousure"));
     if (user_confirm === true) {
         const target_request = $(".requestlist > li.visible_request");
         target_request.slideUp(300);
@@ -3997,7 +3997,7 @@ function remove_request_function() {
             save_archive();
         }, 350);
         canceldialog();
-        notify(translate("requestdeleted") + " 🗑");
+        notify(tl("requestdeleted") + " 🗑");
     }
 }
 
@@ -4028,7 +4028,7 @@ function animate_confbar(conf_bar, delay_index) {
         capped_percent = (confirm_ratio > 100) ? 100 : confirm_ratio,
         final_position = (capped_percent - 100).toFixed(2);
     setTimeout(function() {
-        conf_bar.css("transform", "translate(" + final_position + "%)");
+        conf_bar.css("transform", "tl(" + final_position + "%)");
     }, delay_index * 500);
 }
 
@@ -4081,12 +4081,12 @@ function lnd_lookup_invoice(proxy, impl, hash, node_id, peer_id, password) {
             }
         };
     loader(true);
-    set_loader_text(translate("connecttolnur", {
+    set_loader_text(tl("connecttolnur", {
         "url": lnurl_encode("lnurl", proxy_host)
     }));
     $.ajax(request_data).done(function(response) {
         if (!response) {
-            notify(translate("nofetchincoice"));
+            notify(tl("nofetchincoice"));
             closeloader();
             return
         }
@@ -4126,7 +4126,7 @@ function lnd_lookup_invoice(proxy, impl, hash, node_id, peer_id, password) {
         popdialog(dialog_content, "canceldialog");
         closeloader();
     }).fail(function(xhr, status, error) {
-        notify(translate("nofetchincoice"));
+        notify(tl("nofetchincoice"));
         closeloader();
     });
 }
@@ -4144,7 +4144,7 @@ function confirm_missing_seed() {
             save_checkbox = warning_dialog.find("#dontshowwrap"),
             save_preference = save_checkbox.data("checked");
         if (key_confirmed !== true) {
-            popnotify("error", translate("confirmpkownership"));
+            popnotify("error", tl("confirmpkownership"));
             return false
         }
         if (save_preference === true) { // whitlist seed id
@@ -4158,12 +4158,12 @@ function confirm_missing_seed() {
 // Generates seed warning dialog HTML with confirmation options
 function get_address_warning(dialog_id, wallet_address, dialog_data) {
     const key_type = dialog_data.xpubid ? "Xpub" : "Seed",
-        restore_link = (key_type === "Seed") ? (glob_let.hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + dialog_data.seedid + "'>" + translate("resoresecretphrase") + "</div>" : "",
-        key_title = (key_type === "Seed") ? translate("bip39_passphrase") : key_type;
+        restore_link = (key_type === "Seed") ? (glob_let.hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + dialog_data.seedid + "'>" + tl("resoresecretphrase") + "</div>" : "",
+        key_title = (key_type === "Seed") ? tl("bip39_passphrase") : key_type;
     return $("<div class='formbox addwarning' id='" + dialog_id + "'>\
-        <h2 class='icon-warning'>" + translate("warning") + "</h2>\
+        <h2 class='icon-warning'>" + tl("warning") + "</h2>\
         <div class='popnotify'></div>\
-        <p><strong>" + translate("missingkeywarning", {
+        <p><strong>" + tl("missingkeywarning", {
             "seedstrtitle": key_title,
             "address": wallet_address
         }) + "</strong></p>\
@@ -4171,14 +4171,14 @@ function get_address_warning(dialog_id, wallet_address, dialog_data) {
             <div class='inputwrap'>\
                 <div class='pk_wrap noselect'>\
                     <div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
-                    <span>" + translate("pkownership") + "</span>\
+                    <span>" + tl("pkownership") + "</span>\
                 </div>\
                 <div class='pk_wrap noselect'>\
                     <div id='dontshowwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div>\
-                    <span>" + translate("dontshowagain") + "</span>\
+                    <span>" + tl("dontshowagain") + "</span>\
                 </div>" + restore_link +
         "</div>\
-            <input type='submit' class='submit' value='" + translate("okbttn") + "'>\
+            <input type='submit' class='submit' value='" + tl("okbttn") + "'>\
         </form>\
     </div>").data(dialog_data);
 }
@@ -4194,7 +4194,7 @@ function confirm_missing_seed_toggle() {
             save_checkbox = warning_dialog.find("#dontshowwrap"),
             save_preference = save_checkbox.data("checked");
         if (key_confirmed !== true) {
-            popnotify("error", translate("confirmpkownership"));
+            popnotify("error", tl("confirmpkownership"));
             return
         }
         if (save_preference === true) { // whitlist seed id
@@ -4355,7 +4355,7 @@ function check_intents(encoded_scheme) {
         protocol = decoded_url.split(":")[0];
 
     if (protocol == "eclair" || protocol == "acinq" || protocol == "lnbits") {
-        const warning_content = "<h2 class='icon-warning'>" + translate("proto", {
+        const warning_content = "<h2 class='icon-warning'>" + tl("proto", {
             "proto": protocol
         }) + "</h2>";
         popdialog(warning_content, "canceldialog");
@@ -4381,19 +4381,19 @@ function check_intents(encoded_scheme) {
                 });
                 return
             }
-            popnotify("error", translate("decodeqr"));
+            popnotify("error", tl("decodeqr"));
         }
         return
     }
 
     if (protocol.length < 1) {
-        const error_content = "<h2 class='icon-warning'>" + translate("invalidurlscheme") + "</h2>";
+        const error_content = "<h2 class='icon-warning'>" + tl("invalidurlscheme") + "</h2>";
         popdialog(error_content, "canceldialog");
         return
     }
 
     if (protocol && protocol.length > 0) {
-        const unsupported_content = "<h2 class='icon-warning'>" + translate("usnotsupported") + "</h2>";
+        const unsupported_content = "<h2 class='icon-warning'>" + tl("usnotsupported") + "</h2>";
         popdialog(unsupported_content, "canceldialog");
         return
     }
@@ -4432,7 +4432,7 @@ function expand_shoturl(input_param) {
                     const status = parsed_data.status;
                     if (status) {
                         if (status == "file not found") {
-                            const error_content = "<h2 class='icon-warning'>" + translate("shorturlnotfound") + "</h2>";
+                            const error_content = "<h2 class='icon-warning'>" + tl("shorturlnotfound") + "</h2>";
                             popdialog(error_content, "canceldialog");
                             closeloader();
                             return
@@ -4449,7 +4449,7 @@ function expand_shoturl(input_param) {
                     }
                 }
             }).fail(function(xhr, status, error) {
-                const error_content = "<h2 class='icon-warning'>" + translate("failedtofetchrequest") + "</h2>";
+                const error_content = "<h2 class='icon-warning'>" + tl("failedtofetchrequest") + "</h2>";
                 popdialog(error_content, "canceldialog");
                 closeloader();
                 return
@@ -4508,7 +4508,7 @@ function expand_bitly_url(input_param) {
 
 // Opens a block explorer URL
 function open_blockexplorer_url(explorer_url) {
-    const user_confirm = confirm(translate("openurl", {
+    const user_confirm = confirm(tl("openurl", {
         "url": explorer_url
     }));
     if (user_confirm === true) {
@@ -4710,10 +4710,10 @@ function ln_connect(params) {
             console.error("error", "Unable to set data");
             return
         }
-        notify(translate("invalidmacaroon"));
+        notify(tl("invalidmacaroon"));
         return
     }
-    notify(translate("invalidformat"));
+    notify(tl("invalidformat"));
 }
 
 // ** Page Building & Rendering: **
@@ -4735,8 +4735,8 @@ function rendercurrencies() {
             }
         });
     }
-    $("ul#allcurrencies").append("<li id='choose_erc20' data-currency='erc20 token' class='start_cli'><div class='liwrap'><h2><img src='" + c_icons("ph") + "'/>" + translate("more") + "...</h2></div></li>\
-    <li id='rshome' class='restore start_cli' data-currency='erc20 token'><div class='liwrap'><h2><span class='icon-upload'> " + translate("restorefrombackup") + "</h2></div></li><li id='start_cli_margin' class='start_cli'><div class='liwrap'><h2></h2></div></li>").prepend("<li id='connectln' data-currency='bitcoin' class='start_cli'><div class='liwrap'><h2><img src='img_logos_btc-lnd.png'/>Lightning</h2></div></li>");
+    $("ul#allcurrencies").append("<li id='choose_erc20' data-currency='erc20 token' class='start_cli'><div class='liwrap'><h2><img src='" + c_icons("ph") + "'/>" + tl("more") + "...</h2></div></li>\
+    <li id='rshome' class='restore start_cli' data-currency='erc20 token'><div class='liwrap'><h2><span class='icon-upload'> " + tl("restorefrombackup") + "</h2></div></li><li id='start_cli_margin' class='start_cli'><div class='liwrap'><h2></h2></div></li>").prepend("<li id='connectln' data-currency='bitcoin' class='start_cli'><div class='liwrap'><h2><img src='img_logos_btc-lnd.png'/>Lightning</h2></div></li>");
 }
 
 // Routes to appropriate page based on URL parameters
@@ -4776,16 +4776,16 @@ function build_settings() {
     glob_config.app_settings.forEach(function(setting) {
         const setting_id = setting.id,
             selected_val = setting.selected,
-            trans_val = translate(selected_val),
+            trans_val = tl(selected_val),
             display_val = trans_val || selected_val,
             settings_item = (setting_id === "heading") ? $("<li class='set_heading'>\
-              <h2>" + translate(setting.heading) + "</h2>\
+              <h2>" + tl(setting.heading) + "</h2>\
         </li>") :
             $("<li class='render' id='" + setting_id + "'>\
               <div class='liwrap iconright'>\
                  <span class='" + setting.icon + "'></span>\
                  <div class='atext'>\
-                    <h2>" + translate(setting_id) + "</h2>\
+                    <h2>" + tl(setting_id) + "</h2>\
                     <p>" + display_val + "</p>\
                  </div>\
                  <div class='iconbox'>\
@@ -4805,7 +4805,7 @@ function render_settings(excludes) {
             const setting_id = setting.id;
             if ($.inArray(setting_id, excludes) === -1) { // exclude excludes
                 const selected_val = setting.selected,
-                    trans_val = translate(selected_val),
+                    trans_val = tl(selected_val),
                     display_val = setting_id === "accountsettings" ? selected_val : (trans_val || selected_val); // Exclude translations
                 $("#" + setting.id).data(setting).find("p").text(display_val);
             }
@@ -4909,20 +4909,20 @@ function buildpage(cd, ini) {
         const settings_panel = has_settings ? "\
         <div class='page' id='" + currency + "_settings' data-erc20='" + erc20 + "'>\
             <div class='content'>\
-                <h2 class='heading'>" + getcc_icon(cmcid, coin_page_id, erc20) + " " + currency + " " + translate("settings") + "</h2>\
+                <h2 class='heading'>" + getcc_icon(cmcid, coin_page_id, erc20) + " " + currency + " " + tl("settings") + "</h2>\
                 <ul class='cc_settinglist settinglist applist listyle2'></ul>\
                 <div class='reset_cc_settings button' data-currency='" + currency + "'>\
-                    <span>" + translate("resetbutton") + "</span>\
+                    <span>" + tl("resetbutton") + "</span>\
                 </div>\
             </div>\
         </div>" : "";
         const settings_btn = has_settings ? "<div data-rel='?p=" + currency + "_settings' class='self icon-cog'></div>" : "",
-            send_btn = glob_let.hasbip ? "<div class='button send' data-currency='" + currency + "'><span class='icon-telegram'>" + translate("send") + "</span></div>" : "",
+            send_btn = glob_let.hasbip ? "<div class='button send' data-currency='" + currency + "'><span class='icon-telegram'>" + tl("send") + "</span></div>" : "",
             coin_page = $("<div class='page' id='" + currency + "'>\
             <div class='content'>\
                 <h2 class='heading'>" + getcc_icon(cmcid, coin_page_id, erc20) + " " + currency + settings_btn + "</h2>\
                 <ul class='applist listyle2 pobox' data-currency='" + currency + "'>\
-                    <div class='endli'><div class='button addaddress' data-currency='" + currency + "'><span class='icon-plus'>" + translate("addaddress") + "</span></div>" + send_btn + "</div>\
+                    <div class='endli'><div class='button addaddress' data-currency='" + currency + "'><span class='icon-plus'>" + tl("addaddress") + "</span></div>" + send_btn + "</div>\
                     <div class='addone' data-currency='" + currency + "'>Add one</div>\
                 </ul>\
             </div>\
@@ -4957,7 +4957,7 @@ function append_coinsetting(currency, settings) {
         if (display_val !== undefined) {
             const val_str = display_val.toString(),
                 filtered_val = val_str === "true" || val_str === "false" ? "" : val_str,
-                trans_val = translate(filtered_val),
+                trans_val = tl(filtered_val),
                 display_text = trans_val || filtered_val,
                 existing_item = settings_list.children("li[data-id='" + key + "']");
             if (existing_item.length === 0) {
@@ -4967,7 +4967,7 @@ function append_coinsetting(currency, settings) {
                         <div class='liwrap edit_trigger iconright' data-currency='" + currency + "'>\
                             <span class='icon-" + setting.icon + "'></span>\
                             <div class='atext'>\
-                                <h2>" + translate(key) + "</h2>\
+                                <h2>" + tl(key) + "</h2>\
                                 <p>" + display_text + "</p>\
                             </div>\
                             <div class='iconbox'>" + control + "</div>\
@@ -5083,7 +5083,7 @@ function append_request(rd) {
         is_outgoing = requesttype === "outgoing",
         tx_direction = is_incoming ? "sent" : "received",
         type_label = is_checkout ? "online purchase" : is_local ? "point of sale" : requesttype,
-        type_text = translate(type_label),
+        type_text = tl(type_label),
         type_icon_class = is_checkout ? " typeicon icon-cart" :
         is_local ? " icon-qrcode" :
         is_incoming ? " typeicon icon-arrow-down-right2" :
@@ -5117,35 +5117,35 @@ function append_request(rd) {
         }) + "</span> <span class='rq_day'>" + time_obj.getDate() + "</span>",
         payment_time = fulldateformat(new Date(paymenttimestamp - glob_const.timezone), langcode, true),
         amount_short = amountshort(amount, receivedamount, fiatvalue, iscrypto),
-        short_suffix = is_insufficient ? " (" + amount_short + " " + unit + " " + translate("amountshort") + ")" : "",
+        short_suffix = is_insufficient ? " (" + amount_short + " " + unit + " " + tl("amountshort") + ")" : "",
         short_crypto = iscrypto ? short_suffix : "",
         date_created = requestdate ? date_full : "<strong>unknown</strong>",
-        amount_label = is_incoming ? translate("amountpaid") : translate("amountreceived"),
+        amount_label = is_incoming ? tl("amountpaid") : tl("amountreceived"),
         fiat_box = iscrypto || !fiatvalue ? "" :
-        "<li class='payday pd_fiat'><strong>" + translate("fiatvalueon") +
+        "<li class='payday pd_fiat'><strong>" + tl("fiatvalueon") +
         "<span class='pd_fiat'> " + payment_time + "</span> :</strong>" +
         "<span class='fiatvalue'> " + fiat_formatted + "</span> " + currencyname +
         "<div class='show_as amountshort'>" + short_suffix + "</div></li>",
-        payment_info = "<li class='payday pd_paydate'><strong>" + translate("paidon") +
+        payment_info = "<li class='payday pd_paydate'><strong>" + tl("paidon") +
         ":</strong><span class='paydate'> " + payment_time + "</span></li>" +
         "<li class='receivedamount'><strong>" + amount_label + ":</strong><span> " +
         received_formatted + "</span> " + payment +
         "<div class='show_as amountshort'>" + short_crypto + "</div></li>" + fiat_box,
         name_box = is_incoming ? rqdata ?
-        "<li><strong>" + translate("from") + ":</strong> " + requestname + "</li>" :
+        "<li><strong>" + tl("from") + ":</strong> " + requestname + "</li>" :
         "<li><strong>From: unknown</strong></li>" : "",
         title_box = requesttitle ?
-        "<li><strong>" + translate("title") + ":</strong> '<span class='requesttitlebox'>" +
+        "<li><strong>" + tl("title") + ":</strong> '<span class='requesttitlebox'>" +
         requesttitle + "</span>'</li>" : "",
         monitor_status = !monitored ? " (unmonitored transaction)" : "",
         time_box = is_incoming ?
-        "<li><strong>" + translate("created") + ":</strong> " + date_created + "</li>" +
-        "<li><strong>" + translate("firstviewed") + ":</strong> " +
+        "<li><strong>" + tl("created") + ":</strong> " + date_created + "</li>" +
+        "<li><strong>" + tl("firstviewed") + ":</strong> " +
         fulldateformat(new Date(time_utc), langcode) + "</li>" :
         is_outgoing ?
-        "<li><strong>" + translate("sendon") + ":</strong> " + date_full + "</li>" :
+        "<li><strong>" + tl("sendon") + ":</strong> " + date_full + "</li>" :
         is_local ?
-        "<li><strong>" + translate("created") + ":</strong> " + date_full + "</li>" : "",
+        "<li><strong>" + tl("created") + ":</strong> " + date_full + "</li>" : "",
         payment_url = "&address=" + address + data_param + meta_param + "&requestid=" + requestid,
         addr_label = $("main #" + payment + " li[data-address='" + address + "']").data("label"),
         label_display = addr_label ? " <span class='requestlabel'>(" + addr_label + ")</span>" : "",
@@ -5154,7 +5154,7 @@ function append_request(rd) {
         confirm_count > 0 ?
         "<div class='txli_conf'><div class='confbar'></div><span>" +
         confirm_count + " / " + set_confirmations + " " +
-        translate("confirmations") + "</span></div>" :
+        tl("confirmations") + "</span></div>" :
         confirm_count === 0 ?
         "<div class='txli_conf' data-conf='0'><div class='confbar'></div>" +
         "<span>Unconfirmed transaction<span></div>" : "",
@@ -5162,28 +5162,28 @@ function append_request(rd) {
         tx_view = (tx_count > 1) ? "" :
         is_lightning_tx ?
         "<li><strong class='show_tx'><span class='icon-power'></span>" +
-        "<span class='ref'>" + translate("viewinvoice") + "</span></strong></li>" :
+        "<span class='ref'>" + tl("viewinvoice") + "</span></strong></li>" :
         (txhash) ?
         "<li><strong class='show_tx'><span class='icon-eye'></span>" +
-        translate("viewon") + " blockchain</strong></li>" : "",
+        tl("viewon") + " blockchain</strong></li>" : "",
         status_text = !monitored ? "" :
         (status == "new") ? "Waiting for payment" : status,
         source_html = source ?
-        "<span class='src_txt'>" + translate("source") + ": " + source + "</span>" +
+        "<span class='src_txt'>" + tl("source") + ": " + source + "</span>" +
         "<span class='icon-wifi-off'></span><span class='icon-connection'></span>" : "",
         crypto_class = iscrypto ? "" : " isfiat",
         archive_btn = showarchive || is_expired ?
         "<div class='icon-folder-open' title='archive request'></div>" : "",
         show_history = txhistory && (pending === "no" || archive),
-        history_text = show_history ? translate("transactions") : "",
+        history_text = show_history ? tl("transactions") : "",
         edit_btn = is_local ?
         "<div class='editrequest icon-pencil' title='edit request' data-requestid='" +
         requestid + "'></div>" : "",
         payment_id_box = payment_id ?
-        "<li><strong>" + translate("paymentid") + ":</strong> " +
+        "<li><strong>" + tl("paymentid") + ":</strong> " +
         "<span class='select' data-type='payment ID'>" + payment_id + "</span></li>" : "",
         int_addr_box = xmr_ia ?
-        "<li><p class='address'><strong>" + translate("integratedaddress") +
+        "<li><p class='address'><strong>" + tl("integratedaddress") +
         ":</strong> <span class='requestaddress select'>" + xmr_ia + "</span></p></li>" : "",
         ln_icon = is_lightning_tx ? " <span class='icon-power'></span>" : "",
         ln_logo = "<img src='img_logos_btc-lnd.png' class='cmc_icon'>" +
@@ -5192,15 +5192,15 @@ function append_request(rd) {
         logo_display = lightning ?
         (txhash && !is_lightning_tx) ? coin_logo : ln_logo :
         coin_logo,
-        addr_title = is_hybrid ? translate("fallbackaddress") : translate("receivingaddress"),
+        addr_title = is_hybrid ? tl("fallbackaddress") : tl("receivingaddress"),
         addr_box = lightning && (is_lightning_tx || is_hybrid === false) ? "" :
         "<li><p class='address'><strong>" + addr_title + ":</strong> " +
         "<span class='requestaddress select'>" + address + "</span>" + label_display + "</p></li>",
         network_name = getnetwork(eth_layer2),
         network_box = network_name ?
-        "<li><p><strong>" + translate("network") + ":</strong> " + network_name + "</p></li>" : "",
+        "<li><p><strong>" + tl("network") + ":</strong> " + network_name + "</p></li>" : "",
         status_final = tx_direction === "sent" ?
-        translate("paymentsent") : translate("paymentreceived"),
+        tl("paymentsent") : tl("paymentreceived"),
         request_item = $("<li class='rqli " + type_class + expired_class + lightning_class +
             "' id='" + requestid + "' data-cmcid='" + cmcid + "' data-status='" + status +
             "' data-address='" + address + "' data-pending='" + pending +
@@ -5213,7 +5213,7 @@ function append_request(rd) {
                 <p class='rq_date' title='" + date_full + "'>" + time_display + "</p><br/>\
                 <div class='pmetastatus' data-count='0'>+ 0</div>\
                 <div data-rel='" + payment_url + "' class='payrequest button" + crypto_class + "'>\
-                    <span class='icon-qrcode'>" + translate("pay") + "</span>\
+                    <span class='icon-qrcode'>" + tl("pay") + "</span>\
                 </div>\
             </div>\
             <div class='moreinfo'>\
@@ -5224,16 +5224,16 @@ function append_request(rd) {
             "<div class='icon-undo2' title='unarchive request'></div>\
                     <div class='icon-info' title='show info'></div>" + edit_btn + "</div>\
                 <ul class='metalist'>\
-                    <li class='cnamemeta'><strong>" + translate("currency") + ":</strong> " +
+                    <li class='cnamemeta'><strong>" + tl("currency") + ":</strong> " +
             payment + ln_icon + "</li>" +
             name_box +
             title_box +
-            "<li><strong>" + translate("amount") + ":</strong> " + amount_formatted + " " +
+            "<li><strong>" + tl("amount") + ":</strong> " + amount_formatted + " " +
             unit + "</li>\
                     <li class='meta_status' data-conf='" + confirm_count +
-            "'><strong>" + translate("status") + ":</strong><span class='status'> " +
-            translate(status_text) + "</span> " + confirm_display + "</li>\
-                    <li><strong>" + translate("type") + ":</strong> " + type_text +
+            "'><strong>" + tl("status") + ":</strong><span class='status'> " +
+            tl(status_text) + "</span> " + confirm_display + "</li>\
+                    <li><strong>" + tl("type") + ":</strong> " + type_text +
             monitor_status + "</li>" +
             time_box +
             payment_info +
@@ -5242,7 +5242,7 @@ function append_request(rd) {
             payment_id_box +
             int_addr_box +
             "<li class='receipt'><p><span class='icon-file-pdf' title='View receipt'/>" +
-            translate("receipt") + "</p></li>" + tx_view +
+            tl("receipt") + "</p></li>" + tx_view +
             "</ul>\
                 <ul class='transactionlist'>\
                     <h2>" + history_text + "</h2>\
@@ -5254,7 +5254,7 @@ function append_request(rd) {
                 <h2>" + status_final + "</h2>\
             </div>\
             <div class='brmarker'></div>\
-            <div class='expired_panel'><h2>" + translate("expired") + "</h2></div>\
+            <div class='expired_panel'><h2>" + tl("expired") + "</h2></div>\
         </li>");
     rd.coindata = null, // no need to save coindata
         request_item.data(rd).prependTo(request_container);
@@ -5366,7 +5366,7 @@ function reset_changes() {
     save_changestats();
     glob_const.body.removeClass("haschanges");
     if (!glob_const.html.hasClass("proxyupdate")) {
-        $("#alert > span").text("0").attr("title", translate("nochanges"));
+        $("#alert > span").text("0").attr("title", tl("nochanges"));
     }
 }
 
@@ -5387,7 +5387,7 @@ function change_alert() {
     }
     const change_count = get_total_changes();
     if (change_count > 24) {
-        $("#alert > span").text(change_count).attr("title", translate("totalchanges", {
+        $("#alert > span").text(change_count).attr("title", tl("totalchanges", {
             "total_changes": change_count
         }));
         setTimeout(function() {

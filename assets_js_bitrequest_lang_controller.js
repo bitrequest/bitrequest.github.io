@@ -15,19 +15,19 @@ $(document).ready(function() {
 
 function init_tl() {
     // Globals
-    cancelbttn = translate("cancelbttn");
-    okbttn = translate("okbttn");
-    $(".tl_page1").text(translate("currencies"));
-    $(".tl_page2").text(translate("requests"));
-    $(".tl_page3").text(translate("settings"));
-    $(".tl_page4").text(translate("payoff"));
-    $(".tl_page5").attr("placeholder", translate("accountsettings"));
-    $(".tl_page6").text(translate("iwouldliketogetpaid"));
-    $(".tl_page6").text(translate("iwouldliketogetpaid"));
+    cancelbttn = tl("cancelbttn");
+    okbttn = tl("okbttn");
+    $(".tl_page1").text(tl("currencies"));
+    $(".tl_page2").text(tl("requests"));
+    $(".tl_page3").text(tl("settings"));
+    $(".tl_page4").text(tl("payoff"));
+    $(".tl_page5").attr("placeholder", tl("accountsettings"));
+    $(".tl_page6").text(tl("iwouldliketogetpaid"));
+    $(".tl_page6").text(tl("iwouldliketogetpaid"));
     $("#canceldialog").text(cancelbttn);
     $("#execute").text(okbttn);
-    $("#add_erc20 .icon-plus").text(translate("more"));
-    $("#scanner_toolbar > p").text(translate("encodeyoraddress"));
+    $("#add_erc20 .icon-plus").text(tl("more"));
+    $("#scanner_toolbar > p").text(tl("encodeyoraddress"));
 }
 
 function lang_dat(lang) {
@@ -48,7 +48,7 @@ function setlangcode() {
             const setlang = lang_settings.selected,
                 sl_length = setlang.length;
             if (sl_length && sl_length < 7) {
-                const translation = translate("obj");
+                const translation = tl("obj");
                 if (translation[setlang]) {
                     return setlang;
                 }
@@ -64,14 +64,14 @@ function systemlang() { // get system language
         lang = lang_dat(language),
         lang_lower = lang.lower,
         lang_single = lang.single,
-        translation = translate("obj"),
+        translation = tl("obj"),
         tl_long = translation[lang_lower],
         tl_short = translation[lang_single];
     return (tl_long) ? lang_lower :
         (tl_short) ? lang_single : "en";
 }
 
-function translate(id, dat) {
+function tl(id, dat) {
     const data = (dat) ? dat : {},
         languages = {
             "en": {
@@ -109,7 +109,7 @@ function translate(id, dat) {
 
 // translate and clear accents
 function transclear(id, dat) {
-    const tl = translate(id, dat);
+    const tl = tl(id, dat);
     if (tl) {
         return remove_diacritics(tl);
     }

@@ -121,7 +121,7 @@ function start_address_monitor(time_out, api_dat, retry) {
         }, poll_interval);
         return
     }
-    notify(translate("websocketoffline"), 500000, "yes");
+    notify(tl("websocketoffline"), 500000, "yes");
 }
 
 // Executes a single polling cycle to check for new transactions at specified address
@@ -180,7 +180,7 @@ function connect_monero_node(cachetime, address, vk) {
         if (response) {
             const error_msg = response.Error;
             if (error_msg) {
-                const error = error_msg || translate("invalidvk");
+                const error = error_msg || tl("invalidvk");
                 popnotify("error", error);
                 return
             }
@@ -191,13 +191,13 @@ function connect_monero_node(cachetime, address, vk) {
                 return
             }
         }
-        notify(translate("notmonitored"), 500000, "yes");
+        notify(tl("notmonitored"), 500000, "yes");
     }).fail(function(xhr, stat, err) {
         if (get_next_proxy()) {
             connect_monero_node(cachetime, address, vk);
             return
         }
-        notify(translate("errorvk"));
+        notify(tl("errorvk"));
     });
 }
 
@@ -291,7 +291,7 @@ function check_monero_transactions(cachetime, address, vk, request_ts) {
             return
         }
         stop_monitors(address);
-        notify(translate("websocketoffline"), 500000, "yes");
+        notify(tl("websocketoffline"), 500000, "yes");
     });
 }
 
@@ -315,7 +315,7 @@ function validate_confirmations(tx_data, direct, ln) {
                     "status": "canceled",
                     "confirmations": 0
                 }, true);
-                notify(translate("invoicecanceled"), 500000);
+                notify(tl("invoicecanceled"), 500000);
                 force_close_socket();
                 return "canceled";
             }
@@ -382,7 +382,7 @@ function validate_confirmations(tx_data, direct, ln) {
                         if (tx_confirms >= required_confirms || is_instant === true) {
                             force_close_socket();
                             play_audio(crypto_symbol === "doge" ? glob_const.howl : glob_const.cashier);
-                            const status_msg = request_type === "incoming" ? translate("paymentsent") : translate("paymentreceived"),
+                            const status_msg = request_type === "incoming" ? tl("paymentsent") : tl("paymentreceived"),
                                 is_insufficient = payment_dialog.hasClass("insufficient"), // keep scanning when amount was insufficient
                                 insufficient_status = is_insufficient ? "pending" : "paid",
                                 insufficient_pending = is_insufficient ? "scanning" : "polling";
@@ -399,7 +399,7 @@ function validate_confirmations(tx_data, direct, ln) {
                                 play_audio(glob_const.blip);
                             }
                             payment_dialog.addClass("transacting").attr("data-status", "pending");
-                            const broadcast_msg = ln ? translate("waitingforpayment") : translate("txbroadcasted");
+                            const broadcast_msg = ln ? tl("waitingforpayment") : tl("txbroadcasted");
                             status_header.text(broadcast_msg);
                             request.status = "pending",
                                 request.pending = "polling";
@@ -409,7 +409,7 @@ function validate_confirmations(tx_data, direct, ln) {
                         return new_status;
                     }
                     if (!exact_match) {
-                        status_header.text(translate("insufficientamount"));
+                        status_header.text(tl("insufficientamount"));
                         payment_dialog.addClass("transacting").attr("data-status", "insufficient");
                         request.status = "insufficient",
                             request.pending = "scanning";

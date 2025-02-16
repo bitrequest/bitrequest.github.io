@@ -85,7 +85,7 @@ function toggle_lightning_network() {
         const network_switch = $(this),
             lightning_item = get_lightning_settings();
         if (network_switch.hasClass("true")) {
-            const confirm_result = confirm(translate("disablelightning"));
+            const confirm_result = confirm(tl("disablelightning"));
             if (confirm_result === true) {
                 lightning_item.data("selected", false);
                 network_switch.removeClass("true").addClass("false");
@@ -116,7 +116,7 @@ function render_lightning_interface(replace) {
         } = lightning_data,
         has_nodes = Boolean(node_services && !empty_obj(node_services)),
             has_proxies = Boolean(lightning_proxies && !empty_obj(lightning_proxies)),
-            node_title = has_nodes ? translate("lightningnode") : translate("addlightningnode"),
+            node_title = has_nodes ? tl("lightningnode") : tl("addlightningnode"),
             has_proxy = Boolean(current_proxy),
             proxy_data = has_proxy ? lnurl_deform(current_proxy.proxy) : false,
             current_proxy_url = proxy_data ? proxy_data.url : "",
@@ -130,7 +130,7 @@ function render_lightning_interface(replace) {
             "<input type='text' value='" + current_proxy_url + "' data-pid='" + current_proxy_id + "' placeholder='https://...' readonly='readonly'/>" +
             "<div class='selectarrows icon-menu2' data-pe='none'></div>" +
             "<div class='options'></div>" +
-            "</div><div id='add_proxy'><span class='ref'>" + translate("addrpcproxy") + "</span></div>" : "",
+            "</div><div id='add_proxy'><span class='ref'>" + tl("addrpcproxy") + "</span></div>" : "",
             lightning_markup = "<div class='popform" + node_class + proxy_class + camera_class + "'>" +
             "<div id='select_ln_node' class='selectbox' data-nodeid='" + current_node_id + "'>" +
             "<input type='text' value='" + node_name + "' placeholder='Select lightning node' readonly='readonly' id='ln_nodeselect'/>" +
@@ -139,10 +139,10 @@ function render_lightning_interface(replace) {
             "</div>" +
             "<div id='ad_info_wrap'>" +
             "<ul>" +
-            "<li><div class='d_trigger' id='add_lndnode_trigger'><span class='ref'><span class='icon-power'></span>" + translate("addnode") + "</span></div>" +
+            "<li><div class='d_trigger' id='add_lndnode_trigger'><span class='ref'><span class='icon-power'></span>" + tl("addnode") + "</span></div>" +
             "<div class='drawer2' id='adln_drawer'>" +
             "<div class='selectbox'>" +
-            "<input type='text' value='' placeholder='" + translate("implementation") + "' id='lnd_select_input' readonly='readonly'/>" +
+            "<input type='text' value='' placeholder='" + tl("implementation") + "' id='lnd_select_input' readonly='readonly'/>" +
             "<div class='selectarrows icon-menu2' data-pe='none'></div>" +
             "<div class='options' id='implements'>" +
             "<span data-value='lnd' class='imp_select'><img src='" + c_icons("lnd") + "' class='lnd_icon'> LND</span>" +
@@ -177,10 +177,10 @@ function render_lightning_interface(replace) {
             "<li><div class='d_trigger' id='add_proxy_trigger'><span class='ref'><span class='icon-sphere'></span>RPC proxy</span></div>" +
             "<div class='drawer2" + proxy_class + "' id='add_proxy_drawer'>" + proxy_select +
             "<div id='lnurl_proxy_drawer' class='lpd'>" +
-            "<p id='lnurls_info'>" + translate("controlyourlnkeys") + "<br/><br/>" +
-            "<strong>1.</strong> " + translate("lnnodestep1") + "<br/>" +
-            "<strong>2.</strong> " + translate("lnnodestep2") + "<br/>" +
-            "<strong>3.</strong> " + translate("lnnodestep3") + "<br/><br/>" +
+            "<p id='lnurls_info'>" + tl("controlyourlnkeys") + "<br/><br/>" +
+            "<strong>1.</strong> " + tl("lnnodestep1") + "<br/>" +
+            "<strong>2.</strong> " + tl("lnnodestep2") + "<br/>" +
+            "<strong>3.</strong> " + tl("lnnodestep3") + "<br/><br/>" +
             "</p>" +
             "<input type='text' value='' placeholder='https://...' id='lnd_proxy_url_input'/>" +
             "<input type='password' value='' placeholder='API key' id='proxy_pw_input'/>" +
@@ -283,7 +283,7 @@ function get_lightning_settings() {
 // Creates node option elements with proxy connection validation and status handling
 function node_option_li(node_info, selected, action, proxy_url, proxy_key) {
     loader(true);
-    set_loader_text(translate("connecttolnur", {
+    set_loader_text(tl("connecttolnur", {
         "url": proxy_url
     }));
     const implementation = node_info.imp,
@@ -305,7 +305,7 @@ function node_option_li(node_info, selected, action, proxy_url, proxy_key) {
             const invoices = response.invoices,
                 error = response.error;
             if (error) {
-                const default_error = translate("unabletoconnect"),
+                const default_error = tl("unabletoconnect"),
                     error_message = error.message || (typeof error === "string" ? error : default_error),
                     error_code = error.code;
                 locked = error_code && (error_code === 1 || error_code === 2) ? "locked" : null;
@@ -347,7 +347,7 @@ function test_lnd_option_li(node_info, selected, action) {
     const node_host = node_info.host,
         is_onion_host = node_host.indexOf(".onion") > 0;
     loader(true);
-    set_loader_text(translate("connecttolnur", {
+    set_loader_text(tl("connecttolnur", {
         "url": node_host
     }));
     api_proxy({
@@ -398,7 +398,7 @@ function test_c_lightning_option_li(node_info, selected, action) {
     const node_host = node_info.host,
         is_onion_host = node_host.indexOf(".onion") > 0;
     loader(true);
-    set_loader_text(translate("connecttolnur", {
+    set_loader_text(tl("connecttolnur", {
         "url": node_host
     }));
     api_proxy({
@@ -450,7 +450,7 @@ function test_eclair_option_li(node_info, selected, action) {
     const node_host = node_info.host,
         is_onion_host = node_host.indexOf(".onion") > 0;
     loader(true);
-    set_loader_text(translate("connecttolnur", {
+    set_loader_text(tl("connecttolnur", {
         "url": node_host
     }));
     api_proxy({
@@ -511,7 +511,7 @@ function test_lnbits_option_li(node_info, selected, action) {
     const node_host = node_info.host,
         is_onion_host = node_host.indexOf(".onion") > 0;
     loader(true);
-    set_loader_text(translate("connecttolnur", {
+    set_loader_text(tl("connecttolnur", {
         "url": node_host
     }));
     api_proxy({
@@ -598,9 +598,9 @@ function lightning_option_li(is_live, node_info, selected, invoices, proxy_url) 
                 "<div class='invoice_body'><pre>" + highlight_json_syntax(invoice) + "</pre></div></div>";
         });
     } else {
-        const invoice_msg = is_locked ? translate("invoiceslocked", {
+        const invoice_msg = is_locked ? tl("invoiceslocked", {
             "proxy_id": proxy_id
-        }) : (is_live === true ? translate("noinvoicesfound") : translate("invoiceoffline"));
+        }) : (is_live === true ? tl("noinvoicesfound") : tl("invoiceoffline"));
         invoices_list = "<p>" + invoice_msg + "</p>";
     }
     const node_host = node_info.host,
@@ -651,7 +651,7 @@ function remove_lnd() {
         const selected_icon = $(this),
             selected_option = selected_icon.closest(".optionwrap"),
             node_info = selected_option.data(),
-            confirm_removal = confirm(translate("confirmremovenode", {
+            confirm_removal = confirm(tl("confirmremovenode", {
                 "thisval": node_info.name
             }));
         if (confirm_removal === true) {
@@ -684,7 +684,7 @@ function remove_lnd() {
                     render_lightning_interface(true);
                 });
             }
-            notify(translate("serviceremoved"));
+            notify(tl("serviceremoved"));
             cancelpd();
         }
     })
@@ -715,7 +715,7 @@ function add_proxy_option(option_list, key, proxy_info, selected) {
         proxy_url = proxy_data.url;
     let is_locked = false;
     loader(true);
-    set_loader_text(translate("connecttolnur", {
+    set_loader_text(tl("connecttolnur", {
         "url": proxy_url
     }));
     $.ajax({
@@ -823,7 +823,7 @@ function handle_node_proxy_toggle() {
             current_node_id = current_list_item.data("id"),
             current_node = fetch_node(node_services, current_node_id);
         if (!current_node) {
-            popnotify("error", translate("nodenotfound"));
+            popnotify("error", tl("nodenotfound"));
             return
         }
         const proxy_list = lightning_data.proxies,
@@ -835,12 +835,12 @@ function handle_node_proxy_toggle() {
             proxy_key = proxy_data.k;
         let proxy_text = "";
         if (!proxy_url) {
-            popnotify("error", translate("proxynotfound"));
+            popnotify("error", tl("proxynotfound"));
             return
         }
         const filtered_node_services = fetch_other_nodes(node_services, current_node_id);
         if (network_switch.hasClass("true")) {
-            const confirm_disable = confirm(translate("disableproxy", {
+            const confirm_disable = confirm(tl("disableproxy", {
                 "set_proxy_val": proxy_url
             }));
             if (confirm_disable === true) {
@@ -851,7 +851,7 @@ function handle_node_proxy_toggle() {
                 return
             }
         } else {
-            const confirm_enable = confirm(translate("enableproxy", {
+            const confirm_enable = confirm(tl("enableproxy", {
                 "set_proxy_val": proxy_url
             }));
             if (confirm_enable === true) {
@@ -911,7 +911,7 @@ function remove_rpc_proxy() {
         const selected_icon = $(this),
             selected_option = selected_icon.closest(".optionwrap"),
             proxy_info = selected_option.data(),
-            confirm_removal = confirm(translate("confirmremovenode", {
+            confirm_removal = confirm(tl("confirmremovenode", {
                 "thisval": proxy_info.value
             }));
         if (confirm_removal === true) {
@@ -920,7 +920,7 @@ function remove_rpc_proxy() {
                 current_proxy_id = proxy_info.pid,
                 dependent_nodes = lightning_data.services.find(node => node.proxy_id === current_proxy_id);
             if (dependent_nodes) {
-                popnotify("error", translate("proxyinuse", {
+                popnotify("error", tl("proxyinuse", {
                     "imp": dependent_nodes.imp,
                     "name": dependent_nodes.name
                 }));
@@ -951,7 +951,7 @@ function remove_rpc_proxy() {
                 });
             }
             save_cc_settings("bitcoin", true);
-            notify(translate("proxyremoved"));
+            notify(tl("proxyremoved"));
             cancelpd();
         }
     })
@@ -960,7 +960,7 @@ function remove_rpc_proxy() {
 // Validates and adds new Lightning proxy with error handling and persistence
 function test_lnd_proxy(proxy_url, proxy_id, proxy_key) {
     loader(true);
-    set_loader_text(translate("connecttolnur", {
+    set_loader_text(tl("connecttolnur", {
         "url": proxy_url
     }));
     $.ajax({
@@ -978,9 +978,9 @@ function test_lnd_proxy(proxy_url, proxy_id, proxy_key) {
             result = api_result.result,
             error = result.error;
         if (error) {
-            const default_error = translate("unabletoconnect"),
+            const default_error = tl("unabletoconnect"),
                 error_message = error.message || (typeof error === "string" ? error : default_error),
-                formatted_message = error_message === "no write acces" ? translate("folderpermissions") : error_message,
+                formatted_message = error_message === "no write acces" ? tl("folderpermissions") : error_message,
                 error_code = error.code;
             popnotify("error", formatted_message);
             if (error_code && (error_code === 1 || error_code === 2)) {
@@ -1004,19 +1004,19 @@ function test_lnd_proxy(proxy_url, proxy_id, proxy_key) {
                 "selected_proxy": new_proxy
             });
             save_cc_settings("bitcoin", true);
-            notify(translate("proxyadded"));
+            notify(tl("proxyadded"));
             $("#dialogbody").slideUp(300, function() {
                 render_lightning_interface(true);
             });
             add_custom_proxy(proxy_url);
             return
         }
-        popnotify("error", translate("unabletoconnectto", {
+        popnotify("error", tl("unabletoconnectto", {
             "value": proxy_url
         }));
     }).fail(function(xhr, status, error) {
         closeloader();
-        popnotify("error", translate("unabletoconnect"));
+        popnotify("error", tl("unabletoconnect"));
     });
 }
 
@@ -1089,12 +1089,12 @@ function trigger_ln() {
             current_proxy = fetched_proxy;
             save_cc_settings("bitcoin", true);
         } else {
-            notify(translate("proxynotfound"));
+            notify(tl("proxynotfound"));
         }
     }
     if ($("#lnurl_proxy_drawer").is(":visible")) {
         if (input_proxy_url.length < 10) {
-            topnotify(translate("enterserver"));
+            topnotify(tl("enterserver"));
             proxy_url_input.val("").focus();
             play_audio(glob_const.funk);
             return
@@ -1102,7 +1102,7 @@ function trigger_ln() {
         const normalized_url = complete_url(input_proxy_url),
             is_default_proxy = $.inArray(normalized_url, glob_const.proxy_list) !== -1;
         if (is_default_proxy) {
-            popnotify("error", translate("defaultproxy", {
+            popnotify("error", tl("defaultproxy", {
                 "fixed_url": normalized_url
             }));
             return
@@ -1110,13 +1110,13 @@ function trigger_ln() {
         const proxy_id = sha_sub(normalized_url, 6),
             existing_proxy = fetch_proxy(proxy_list, proxy_id);
         if (existing_proxy) {
-            topnotify(translate("proxyexists"));
+            topnotify(tl("proxyexists"));
             $("#lnd_proxy_url_input").focus();
             play_audio(glob_const.funk);
             return
         }
         if (normalized_url.indexOf("http") < 0) {
-            topnotify(translate("invalidurl"));
+            topnotify(tl("invalidurl"));
             $("#lnd_proxy_url_input").focus();
             play_audio(glob_const.funk);
             return
@@ -1125,7 +1125,7 @@ function trigger_ln() {
             proxy_key_hash = proxy_key ? sha_sub(proxy_key, 10) : false;
         test_lnd_proxy(normalized_url, proxy_id, proxy_key_hash);
         if (no_proxy_change || !current_proxy) {} else {
-            notify(translate("datasaved"));
+            notify(tl("datasaved"));
         }
         return
     }
@@ -1134,7 +1134,7 @@ function trigger_ln() {
             implementation_data = implementation_select.data();
         implementation = implementation_data.value;
         if (!implementation) {
-            popnotify("error", translate("selectimplementation"));
+            popnotify("error", tl("selectimplementation"));
             implementation_select.focus();
             return
         }
@@ -1156,7 +1156,7 @@ function trigger_ln() {
                 node_key_raw = node_key_input.val(),
                 host_length = node_host ? node_host.length : -1;
             if (host_length < 10) {
-                popnotify("error", translate("selectlnhost", {
+                popnotify("error", tl("selectlnhost", {
                     "imp": implementation
                 }));
                 node_host_input.focus();
@@ -1169,19 +1169,19 @@ function trigger_ln() {
                     const key_name = (implementation == "lnbits") ? "API key" :
                         (implementation == "eclair") ? "Password" : "Invoice Macaroon",
                         full_key_name = implementation + " " + key_name;
-                    popnotify("error", translate("selectkeyname", {
+                    popnotify("error", tl("selectkeyname", {
                         "impkeyname": full_key_name
                     }));
                     node_key_input.focus();
                     return
                 }
                 if (key_length > 300) { // invoice macaroons should be less than 300 characters
-                    popnotify("error", translate("entermacaroon"));
+                    popnotify("error", tl("entermacaroon"));
                     return
                 }
                 test_create_invoice(implementation, current_proxy, node_host, node_key);
             } else {
-                popnotify("error", translate("invalidkeyformat"));
+                popnotify("error", tl("invalidkeyformat"));
             }
             return
         }
@@ -1207,13 +1207,13 @@ function trigger_ln() {
                     "selected_service": selected_service
                 }).find(".switchpanel").removeClass("false").addClass("true");
                 canceldialog();
-                notify(translate("datasaved"));
+                notify(tl("datasaved"));
                 save_cc_settings("bitcoin", true);
                 cancelpd();
                 return
             }
             if (node_selection.live == "lock") {
-                notify(translate("proxylocked"));
+                notify(tl("proxylocked"));
                 play_audio(glob_const.funk);
                 return
             }
@@ -1224,7 +1224,7 @@ function trigger_ln() {
             const status_panel = $("#lnsettingsbox #ad_info_wrap .noln_ref:visible .switchpanel"),
                 is_proxy_enabled = status_panel.hasClass("true"),
                 proxy_action = is_proxy_enabled ? "disabling" : "enabling";
-            notify(translate("proxyoffline", {
+            notify(tl("proxyoffline", {
                 "proxy_message": proxy_action
             }));
             play_audio(glob_const.funk);
@@ -1244,11 +1244,11 @@ function test_create_invoice(implementation, proxy_data, node_host, node_key) {
         node_id_source = node_host ? (implementation == "lnbits" ? node_key : node_host) : proxy_url + implementation,
         node_id = sha_sub(node_id_source, 10),
         is_node_existing = node_exists(node_services, node_id),
-        default_error = translate("unabletoconnect"),
+        default_error = tl("unabletoconnect"),
         unique_id = sha_sub(now(), 10);
 
     if (is_node_existing) {
-        popnotify("error", translate("proxynameexists", {
+        popnotify("error", tl("proxynameexists", {
             "imp": implementation
         }));
         return
@@ -1256,7 +1256,7 @@ function test_create_invoice(implementation, proxy_data, node_host, node_key) {
 
     if (proxy_url) {
         loader(true);
-        set_loader_text(translate("connecttolnur", {
+        set_loader_text(tl("connecttolnur", {
             "url": proxy_url
         }));
         $.ajax({
@@ -1452,7 +1452,7 @@ function add_ln_imp(node_services, node_id, implementation, proxy_data, node_hos
         save_addresses(currency, true);
         currency_check(currency);
     }
-    notify(translate("datasaved"));
+    notify(tl("datasaved"));
     $("#dialogbody").slideUp(300, function() {
         render_lightning_interface(true);
     })
@@ -1500,12 +1500,12 @@ function prompt_proxy_unlock(proxy_id) {
         proxy_list = lightning_data.proxies,
         current_proxy = fetch_proxy(proxy_list, proxy_id);
     if (empty_obj(current_proxy)) {
-        popnotify("error", translate("unknownproxy"));
+        popnotify("error", tl("unknownproxy"));
         return
     }
     const proxy_details = lnurl_deform(current_proxy.proxy),
         proxy_url = proxy_details.url,
-        proxy_password = prompt(translate("enterlnapikey", {
+        proxy_password = prompt(tl("enterlnapikey", {
             "proxy": proxy_url
         })),
         proxy_key_hash = proxy_password ? sha_sub(proxy_password, 10) : false;
@@ -1523,7 +1523,7 @@ function prompt_proxy_unlock(proxy_id) {
             result = api_result.result,
             error = result.error;
         if (error) {
-            const default_error = translate("unabletoconnect"),
+            const default_error = tl("unabletoconnect"),
                 error_message = error.message || (typeof error === "string" ? error : default_error);
             popnotify("error", error_message);
             return
@@ -1544,17 +1544,17 @@ function prompt_proxy_unlock(proxy_id) {
                 lightning_item.data("selected_proxy", new_proxy);
             }
             save_cc_settings("bitcoin", true);
-            notify(translate("proxyunlocked"));
+            notify(tl("proxyunlocked"));
             $("#dialogbody").slideUp(300, function() {
                 render_lightning_interface(true);
             });
             return
         }
-        popnotify("error", translate("unabletoconnectto", {
+        popnotify("error", tl("unabletoconnectto", {
             "value": proxy_url
         }));
     }).fail(function(xhr, status, error) {
-        popnotify("error", translate("unabletoconnect"));
+        popnotify("error", tl("unabletoconnect"));
     });
 }
 
@@ -1675,7 +1675,7 @@ function validate_lnurl_connection(lightning_node) {
         proxy_url = proxy_host + "proxy/v1/ln/api/";
 
     if (!proxy_host) {
-        notify(translate("proxydatamissing"));
+        notify(tl("proxydatamissing"));
         return
     }
 
@@ -1696,12 +1696,12 @@ function validate_lnurl_connection(lightning_node) {
     }).done(function(response) {
         const error = response.error;
         if (error) {
-            const default_error = translate("unabletoconnect"),
+            const default_error = tl("unabletoconnect"),
                 error_message = error.message || (typeof error === "string" ? error : default_error);
             if (request.isrequest) {
                 if (helper.lnd_only) {
                     topnotify(error_message);
-                    notify(translate("notmonitored"), 500000, "yes");
+                    notify(tl("notmonitored"), 500000, "yes");
                 }
             } else {
                 notify(error_message);

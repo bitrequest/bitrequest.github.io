@@ -82,7 +82,7 @@ function process_lightning_payment(rd, api_data, rdo) {
         payment_id = lightning.pid,
         node_id = lightning.nid,
         implementation = lightning.imp,
-        error_default = translate("unabletoconnect"),
+        error_default = tl("unabletoconnect"),
         tx_hash = rd.txhash,
         is_lightning_hash = tx_hash && tx_hash.slice(0, 9) === "lightning";
 
@@ -292,7 +292,7 @@ function process_lightning_payment(rd, api_data, rdo) {
             return
         }
         handle_scan_failure({
-            "error": translate("noinvoicesfound")
+            "error": tl("noinvoicesfound")
         }, rd, "ln", rdo);
         return
     }

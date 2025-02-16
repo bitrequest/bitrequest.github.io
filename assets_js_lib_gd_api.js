@@ -131,7 +131,7 @@ function set_auth_inactive() {
 // Determines appropriate login flow based on current authentication state
 function start_auth_flow(auth_state) {
     if (glob_const.hostlocation === "local") {
-        notify(translate("ganot"));
+        notify(tl("ganot"));
         return
     }
     if (auth_state.expired) {
@@ -306,7 +306,7 @@ function show_oauth_dialog(abort_option) {
                 }]
             },
             "span": {
-                "content": translate("stopgauth")
+                "content": tl("stopgauth")
             }
         }]) : "",
         dialog_elements = [{
@@ -315,13 +315,13 @@ function show_oauth_dialog(abort_option) {
                     "content": [{
                             "div": {
                                 "class": "inputwrap",
-                                "content": "<p><strong>" + translate("gauthsafely") + "</strong><br/>" + translate("gauthsync") + "</p>"
+                                "content": "<p><strong>" + tl("gauthsafely") + "</strong><br/>" + tl("gauthsync") + "</p>"
                             },
                         },
                         {
                             "div": {
                                 "class": "inputwrap",
-                                "content": "<div id='oauth_onload'><span class='icon-google2'></span>" + translate("signin") + "</div>"
+                                "content": "<div id='oauth_onload'><span class='icon-google2'></span>" + tl("signin") + "</div>"
                             }
                         }
                     ]
@@ -339,7 +339,7 @@ function show_oauth_dialog(abort_option) {
                     "class": "submit",
                     "attr": {
                         "type": "submit",
-                        "value": translate("okbttn")
+                        "value": tl("okbttn")
                     }
                 }
             }
@@ -347,7 +347,7 @@ function show_oauth_dialog(abort_option) {
         dialog_content = template_dialog({
             "id": "gdbu_dialog",
             "icon": "icon-googledrive",
-            "title": translate("backuptogd"),
+            "title": tl("backuptogd"),
             "elements": dialog_elements
         });
     popdialog(dialog_content, "triggersubmit");
@@ -373,7 +373,7 @@ function init_google_login() {
 // Initiates OAuth flow for Google Drive authentication
 function start_google_auth() {
     if (glob_const.hostlocation === "local") {
-        notify(translate("ganot"));
+        notify(tl("ganot"));
         return
     }
     const auth_state = get_auth_status();
@@ -396,7 +396,7 @@ function start_google_auth() {
 // Updates UI and triggers data sync after successful Google Drive authentication
 function handle_auth_success(close_dialog) {
     glob_const.html.addClass("gdauth");
-    notify(translate("gdsignedin"));
+    notify(tl("gdsignedin"));
     reset_changes();
     update_switch_panel();
     if (close_dialog) {
@@ -406,7 +406,7 @@ function handle_auth_success(close_dialog) {
 
 // Initiates Google Drive logout process with user confirmation
 function start_google_logout() {
-    const user_confirmed = confirm(translate("stopgdalert"));
+    const user_confirmed = confirm(tl("stopgdalert"));
     if (user_confirmed) {
         set_auth_inactive();
         handle_logout_success();
@@ -416,7 +416,7 @@ function start_google_logout() {
 // Updates UI and cleans up state after Google Drive logout
 function handle_logout_success() {
     glob_const.html.removeClass("gdauth");
-    notify(translate("gdsignedout"));
+    notify(tl("gdsignedout"));
     const sp = $("#popup.showpu .switchpanel");
     if (sp.length) {
         sp.removeClass("true").addClass("false");
@@ -508,7 +508,7 @@ function sync_drive_data(auth_state) {
                         const error_details = error_json.error;
                         if (error_details) {
                             if (error_details.code === 401) {
-                                notify(translate("unauthorized"));
+                                notify(tl("unauthorized"));
                                 return
                             }
                             if (error_details.code === 404) {
@@ -518,7 +518,7 @@ function sync_drive_data(auth_state) {
                         }
                     }
                 }
-                notify(translate("error"));
+                notify(tl("error"));
             }
         });
         return
@@ -637,14 +637,14 @@ function fetch_drive_files() {
                 list_trigger.removeClass("true");
                 backup_list.slideUp(300);
                 import_list.slideDown(300);
-                notify(translate("unauthorized"));
+                notify(tl("unauthorized"));
                 return
             }
             if (error === "Not Found") {
                 create_drive_file(); // create file
                 return
             }
-            notify(translate("error"));
+            notify(tl("error"));
         }
     });
 }
@@ -659,7 +659,7 @@ function init_file_delete() {
         }
         const list_item = $(this).parent("li"),
             file_id = list_item.attr("data-gdbu_id"),
-            user_confirmed = confirm(translate("deletefile", {
+            user_confirmed = confirm(tl("deletefile", {
                 "file": list_item.text()
             }));
         if (user_confirmed) {
@@ -682,15 +682,15 @@ function delete_drive_file(file_id, list_item, access_token) {
     }).done(function(response) {
         if (list_item) {
             list_item.slideUp(300);
-            notify(translate("filedeleted"));
+            notify(tl("filedeleted"));
         }
     }).fail(function(xhr, status, error) {
         if (status === "error") {
             if (error === "Not Found") {
-                notify(translate("error") + ": " + translate("filenotfound"));
+                notify(tl("error") + ": " + tl("filenotfound"));
                 return
             }
-            notify(translate("error"));
+            notify(tl("error"));
         }
     });
 }

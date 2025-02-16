@@ -99,7 +99,7 @@ function start_layer2_scan(socket_node, contract, ping_id, retry) {
         }, timeout);
         return
     }
-    notify(translate("websocketoffline"), 500000, "yes");
+    notify(tl("websocketoffline"), 500000, "yes");
 }
 
 // Initiates polling-based Layer 2 blockchain monitoring
@@ -110,7 +110,7 @@ function start_layer2_polling(api_data, contract) {
         execute_layer2_scan(rdo, api_data);
         return
     }
-    notify(translate("websocketoffline"), 500000, "yes");
+    notify(tl("websocketoffline"), 500000, "yes");
 }
 
 // Executes Layer 2 scanning operation with provided config
@@ -355,7 +355,7 @@ function edit_l2() {
                                                     "attr": {
                                                         "type": "text",
                                                         "value": select_val,
-                                                        "placeholder": translate("layer2"),
+                                                        "placeholder": tl("layer2"),
                                                         "readonly": "readonly"
                                                     },
                                                     "close": true
@@ -405,7 +405,7 @@ function edit_l2() {
                     "class": "submit",
                     "attr": {
                         "type": "submit",
-                        "value": translate("okbttn"),
+                        "value": tl("okbttn"),
                         "data-currency": thiscurrency
                     }
                 }
@@ -420,7 +420,7 @@ function edit_l2() {
                 content = template_dialog({
                     "id": "l2_formbox",
                     "icon": "icon-new-tab",
-                    "title": translate("layer2"),
+                    "title": tl("layer2"),
                     "elements": ddat
                 });
             popdialog(content, "triggersubmit");
@@ -489,7 +489,7 @@ function save_layer2_settings() {
             });
             csnode.data("options", options).find("p").html("");
             canceldialog();
-            notify(translate("datasaved"));
+            notify(tl("datasaved"));
             save_cc_settings(payment, true);
         }
     })
@@ -604,7 +604,7 @@ function update_network_status(sn, stat) {
             helper.l2_status = l2_status;
             if (l2_status === false && helper.l1_status === false) {
                 glob_const.paymentpopup.removeClass("live");
-                notify(translate("websocketoffline"), 500000, "yes");
+                notify(tl("websocketoffline"), 500000, "yes");
             }
         }
     }

@@ -168,7 +168,7 @@ function edit_account_name() {
                             "class": "submit",
                             "attr": {
                                 "type": "submit",
-                                "value": translate("okbttn")
+                                "value": tl("okbttn")
                             }
                         }
                     }
@@ -179,7 +179,7 @@ function edit_account_name() {
         const content = template_dialog({
             "id": "accountformbox",
             "icon": "icon-user",
-            "title": translate("accountsettings"),
+            "title": tl("accountsettings"),
             "elements": ddat
         });
 
@@ -195,7 +195,7 @@ function save_account_name() {
         const value = input.val();
 
         if (value.length < 1) {
-            popnotify("error", translate("nameisrequired"));
+            popnotify("error", tl("nameisrequired"));
             input.focus();
             return false;
         }
@@ -205,7 +205,7 @@ function save_account_name() {
         }, value);
 
         canceldialog();
-        notify(translate("datasaved"));
+        notify(tl("datasaved"));
         save_settings();
     });
 }
@@ -262,7 +262,7 @@ function select_default_currency() {
                         "div": {
                             "id": "toggle_defaultcurrency",
                             "class": "clearfix",
-                            "content": "<h3>" + translate("setasdefault") + switch_panel(switchmode, " global") + "</h3>"
+                            "content": "<h3>" + tl("setasdefault") + switch_panel(switchmode, " global") + "</h3>"
                         }
                     },
                     {
@@ -270,7 +270,7 @@ function select_default_currency() {
                             "class": "submit",
                             "attr": {
                                 "type": "submit",
-                                "value": translate("okbttn")
+                                "value": tl("okbttn")
                             }
                         }
                     }
@@ -281,7 +281,7 @@ function select_default_currency() {
         const content = template_dialog({
             "id": "currencyformbox",
             "icon": "icon-dollar",
-            "title": translate("entercurrency"),
+            "title": tl("entercurrency"),
             "elements": ddat
         });
 
@@ -362,12 +362,12 @@ function save_currency_settings() {
             }, input_val);
 
             canceldialog();
-            notify(translate("currencysaved"));
+            notify(tl("currencysaved"));
             save_settings();
             return false;
         }
 
-        popnotify("error", translate("currencynotsupported", {
+        popnotify("error", tl("currencynotsupported", {
             "currency": input_val.toUpperCase()
         }));
         input.focus();
@@ -380,7 +380,7 @@ function save_currency_settings() {
 // Displays language selection dialog with current locale and available translations
 function select_language() {
     $(document).on("click", "#langsettings", function() {
-        const translation = translate("obj"),
+        const translation = tl("obj"),
             curr_lang = q_obj(translation, langcode + ".lang"),
             curr_flag = q_obj(translation, langcode + ".flag"),
             flag_str = curr_flag ? curr_flag + " " : "",
@@ -431,7 +431,7 @@ function select_language() {
                             "class": "submit",
                             "attr": {
                                 "type": "submit",
-                                "value": translate("okbttn")
+                                "value": tl("okbttn")
                             }
                         }
                     }
@@ -442,7 +442,7 @@ function select_language() {
         const content = template_dialog({
             "id": "langformbox",
             "icon": "icon-dollar",
-            "title": translate("chooselanguage"),
+            "title": tl("chooselanguage"),
             "elements": ddat
         });
 
@@ -498,31 +498,31 @@ function select_lock_timeout() {
         const locktime = get_setting("pinsettings", "locktime"),
             locktime_opts = [{
                     "value": "0",
-                    "text": "0 " + translate("minutes")
+                    "text": "0 " + tl("minutes")
                 },
                 {
                     "value": "60000",
-                    "text": "1 " + translate("minute")
+                    "text": "1 " + tl("minute")
                 },
                 {
                     "value": "300000",
-                    "text": "5 " + translate("minutes")
+                    "text": "5 " + tl("minutes")
                 },
                 {
                     "value": "600000",
-                    "text": "10 " + translate("minutes")
+                    "text": "10 " + tl("minutes")
                 },
                 {
                     "value": "900000",
-                    "text": "15 " + translate("minutes")
+                    "text": "15 " + tl("minutes")
                 },
                 {
                     "value": "1800000",
-                    "text": "30 " + translate("minutes")
+                    "text": "30 " + tl("minutes")
                 },
                 {
                     "value": "never",
-                    "text": translate("never")
+                    "text": tl("never")
                 }
             ],
             options = locktime_opts.map(option =>
@@ -548,7 +548,7 @@ function select_lock_timeout() {
                                 "class": "submit",
                                 "attr": {
                                     "type": "submit",
-                                    "value": translate("okbttn")
+                                    "value": tl("okbttn")
                                 }
                             }
                         }
@@ -558,7 +558,7 @@ function select_lock_timeout() {
             content = template_dialog({
                 "id": "locktime_formbox",
                 "icon": "icon-clock",
-                "title": translate("locktime"),
+                "title": tl("locktime"),
                 "elements": ddat
             });
 
@@ -580,7 +580,7 @@ function save_lock_timeout() {
         set_setting("pinsettings", {
             "locktime": value,
             "selected": title
-        }, translate(title));
+        }, tl(title));
 
         canceldialog();
         canceloptions();
@@ -639,8 +639,8 @@ function backup_database() {
         changes = [];
     $.each(glob_let.changes, function(key, value) {
         if (value > 0) {
-            const num_changes = (value == 1) ? translate("changein") : translate("changesin");
-            changes.push("<li>" + value + " " + num_changes + " '" + translate(key) + "'</li>");
+            const num_changes = (value == 1) ? tl("changein") : tl("changesin");
+            changes.push("<li>" + value + " " + num_changes + " '" + tl(key) + "'</li>");
         }
     });
     const gd_on = (get_auth_status().pass) ? true : false,
@@ -649,7 +649,7 @@ function backup_database() {
         alert_title = alert_icon.attr("title"),
         alert_text = (num_changes === "!") ?
         "<span class='warning'>! " + alert_title + " </span>" :
-        "<p>" + translate("nrchanges", {
+        "<p>" + tl("nrchanges", {
             "nr_changes": num_changes
         }) + "</p>",
         show_changelog = gd_on ? "display:none" : "display:block",
@@ -669,7 +669,7 @@ function backup_database() {
                                                 "content": [{
                                                     "strong": {
                                                         "content": "<span class='icon-googledrive'></span> " +
-                                                            translate("backupwithgd")
+                                                            tl("backupwithgd")
                                                     },
                                                     "div": {
                                                         "id": "gdtrigger",
@@ -711,7 +711,7 @@ function backup_database() {
                                             "data-lastbackup": filename,
                                             "download": "download"
                                         },
-                                        "content": translate("downloadbu")
+                                        "content": tl("downloadbu")
                                     }
                                 }]
                             }
@@ -750,7 +750,7 @@ function backup_database() {
         content = template_dialog({
             "id": "backupformbox",
             "icon": "icon-download",
-            "title": translate("backup"),
+            "title": tl("backup"),
             "elements": ddat
         });
 
@@ -764,7 +764,7 @@ function toggle_secret_phrase() {
             value = trigger.hasClass("true");
 
         if (value === true) {
-            const result = confirm(translate("includesecretphrase"));
+            const result = confirm(tl("includesecretphrase"));
             if (result === false) {
                 trigger.removeClass("true").addClass("false");
                 return false;
@@ -781,10 +781,10 @@ function toggle_secret_phrase() {
 // Initiates system backup sharing with server-side caching
 function share_backup_file() {
     $(document).on("click", "#share_bu", function() {
-        const result = confirm(translate("sharebu"));
+        const result = confirm(tl("sharebu"));
         if (result === true) {
             loader(true);
-            set_loader_text(translate("generatebu"));
+            set_loader_text(tl("generatebu"));
             const acc_name = $("#accountsettings").data("selected");
 
             api_proxy({
@@ -800,7 +800,7 @@ function share_backup_file() {
                     file_time = cache.created_utc,
                     time_ms = file_time ? file_time * 1000 : now(),
                     time_format = new Date(time_ms).toLocaleString(langcode),
-                    title = translate("systembackup") + " " + acc_name + " (" + time_format + ")",
+                    title = tl("systembackup") + " " + acc_name + " (" + time_format + ")",
                     proxy = c_proxy(),
                     data = btoa(JSON.stringify({
                         "ro": cache.filename,
@@ -840,7 +840,7 @@ function check_systembu(sbu) {
                 result = ping.br_result,
                 base64 = result.base64,
                 account = atob(result.account),
-                title = translate("systembackup") + " " + account + " (" + time_format + ")",
+                title = tl("systembackup") + " " + account + " (" + time_format + ")",
                 bu_date = time_format.replace(/\s+/g, "_").replace(/\:/g, "_"),
                 cache_time = cache.cache_time,
                 expires = (file_time + cache_time) - server_time,
@@ -848,7 +848,7 @@ function check_systembu(sbu) {
                 encodeURIComponent(account) + "_" + bu_date + ".json",
                 cd = countdown(expires * 1000),
                 cd_format = countdown_format(cd),
-                exp_text = cd_format ? translate("expiresin") + cd_format : translate("fileexpired");
+                exp_text = cd_format ? tl("expiresin") + cd_format : tl("fileexpired");
 
             const ddat = [{
                 "div": {
@@ -885,7 +885,7 @@ function check_systembu(sbu) {
                                                     "data-date": bu_date,
                                                     "data-lastbackup": filename
                                                 },
-                                                "content": translate("downloadbu")
+                                                "content": tl("downloadbu")
                                             },
                                             "div": {
                                                 "id": "restore_bu",
@@ -894,7 +894,7 @@ function check_systembu(sbu) {
                                                     "data-base64": base64,
                                                     "data-filename": filename
                                                 },
-                                                "content": translate("installlbu")
+                                                "content": tl("installlbu")
                                             }
                                         }]
                                     }
@@ -908,7 +908,7 @@ function check_systembu(sbu) {
             const content = template_dialog({
                 "id": "system_backupformbox",
                 "icon": "icon-download",
-                "title": translate("systembackup"),
+                "title": tl("systembackup"),
                 "elements": ddat
             }) + "<div id='backupactions'><div id='backupcd'>" + cancelbttn + "</div></div>";
 
@@ -934,7 +934,7 @@ function systembu_expired() {
             "div": {
                 "id": "system_backupformbox",
                 "class": "formbox",
-                "content": "<h2 class='icon-download'>" + translate("fileexpired") + "</h2>"
+                "content": "<h2 class='icon-download'>" + tl("fileexpired") + "</h2>"
             }
         },
         {
@@ -951,7 +951,7 @@ function systembu_expired() {
 // Validates and processes system backup restoration from base64 encoded data
 function restore_systembu() {
     $(document).on("click", "#system_backupformbox #restore_bu", function() {
-        const result = confirm(translate("installsb"));
+        const result = confirm(tl("installsb"));
         if (result === true) {
             const btn = $(this),
                 backup_data = btn.attr("data-base64"),
@@ -1010,14 +1010,14 @@ function submit_backup() {
     $(document).on("click", "#triggerdownload", function(e) {
         if (glob_const.body.hasClass("ios")) {
             e.preventDefault();
-            notify(translate("noiosbu"));
+            notify(tl("noiosbu"));
             return;
         }
 
         const node = $(this),
             href = node.attr("href"),
             title = node.attr("title"),
-            result = confirm(translate("downloadfile", {
+            result = confirm(tl("downloadfile", {
                 "file": title
             }));
 
@@ -1038,7 +1038,7 @@ function submit_backup() {
         save_settings("noalert");
         reset_changes();
         canceldialog();
-        notify(translate("downloaded", {
+        notify(tl("downloaded", {
             "file": last_backup
         }));
     });
@@ -1061,12 +1061,12 @@ function trigger_restore() {
         file_used = restore_node.data("fileused"),
         last_device = restore_node.data("device"),
         device = last_device === "folder-open" ? "" : "google-drive",
-        file_str = file_used ? "<p class='icon-" + device + "'>" + translate("lastrestore") +
+        file_str = file_used ? "<p class='icon-" + device + "'>" + tl("lastrestore") +
         "<br/><span class='icon-" + last_device + "'>" + file_used + "</span></p>" : "",
         last_backup = backup_node.data("lastbackup"),
         bu_device = backup_node.data("device"),
         backup_device = bu_device === "folder-open" ? "" : "google-drive",
-        backup_str = last_backup ? "<p class='icon-" + backup_device + "'>" + translate("lastbackup") +
+        backup_str = last_backup ? "<p class='icon-" + backup_device + "'>" + tl("lastbackup") +
         "<br/><span class='icon-" + bu_device + "'>" + last_backup + "</span></p>" : "",
         gd_on = get_auth_status().pass,
         show_gd = gd_on ? "display:none" : "display:block";
@@ -1080,7 +1080,7 @@ function trigger_restore() {
         {
             "div": {
                 "id": "listappdata",
-                "content": "<h3 class='icon-googledrive'>" + translate("restorewithgd") +
+                "content": "<h3 class='icon-googledrive'>" + tl("restorewithgd") +
                     switch_panel(gd_on, " custom") + "</h3>"
             }
         },
@@ -1096,9 +1096,9 @@ function trigger_restore() {
                         "attr": {
                             "style": show_gd
                         },
-                        "content": "<h3 class='icon-folder-open'>" + translate("restorefromfile") +
+                        "content": "<h3 class='icon-folder-open'>" + tl("restorefromfile") +
                             "</h3><input type='file' id='fileupload'/><input type='submit' class='submit' value='" +
-                            translate("okbttn") + "'/>"
+                            tl("okbttn") + "'/>"
                     }
                 }]
             }
@@ -1108,7 +1108,7 @@ function trigger_restore() {
     const content = template_dialog({
         "id": "restoreformbox",
         "icon": "icon-upload",
-        "title": translate("restore"),
+        "title": tl("restore"),
         "elements": ddat
     });
 
@@ -1129,7 +1129,7 @@ function restore_backup() {
 
         if (size > 5242880) {
             n.preventDefault();
-            popnotify("error", translate("filesize"));
+            popnotify("error", tl("filesize"));
             return;
         }
 
@@ -1143,7 +1143,7 @@ function restore_backup() {
             return;
         }
 
-        popnotify("error", translate("filetype", {
+        popnotify("error", tl("filetype", {
             "filetype": type
         }));
     });
@@ -1156,7 +1156,7 @@ function submit_restore() {
         const panel = $("#popup #listappdata .switchpanel");
 
         if (panel.hasClass("true")) {
-            topnotify(translate("selectbackup"));
+            topnotify(tl("selectbackup"));
             return;
         }
 
@@ -1166,11 +1166,11 @@ function submit_restore() {
                 restore(json, glob_let.backup_filename);
                 return;
             }
-            topnotify(translate("error"));
+            topnotify(tl("error"));
             return;
         }
 
-        topnotify(translate("selectbackup"));
+        topnotify(tl("selectbackup"));
     });
 }
 
@@ -1180,7 +1180,7 @@ function restore(json, filename) {
         return;
     }
 
-    const result = confirm(translate("restorefile", {
+    const result = confirm(tl("restorefile", {
         "file": filename
     }));
 
@@ -1206,7 +1206,7 @@ function restore(json, filename) {
 function check_backup(json) {
     const is_team = is_team_invite(json);
     if (glob_let.cashier_dat && glob_let.cashier_dat.cashier && !is_team) {
-        notify(translate("cashiernotallowed"));
+        notify(tl("cashiernotallowed"));
         return false;
     }
     return true;
@@ -1217,7 +1217,7 @@ function submit_gd_restore() {
     $(document).on("click", "#gd_backuplist .restorefile", function() {
         const field = $(this).parent("li"),
             device = field.attr("data-device"),
-            result = confirm(translate("restorefromdevice", {
+            result = confirm(tl("restorefromdevice", {
                 "file": field.text(),
                 "device": device
             }));
@@ -1256,7 +1256,7 @@ function submit_gd_restore() {
                     console.error("API request failed:", stat, err);
                     if (textStatus === "error") {
                         notify(errorThrown === "Unauthorized" ?
-                            translate("unauthorized") : translate("error"));
+                            tl("unauthorized") : tl("error"));
                     }
                 });
             }
@@ -1380,7 +1380,7 @@ function pin_dialog(data, cb) {
                         "class": "submit",
                         "attr": {
                             "type": "submit",
-                            "value": translate("okbttn")
+                            "value": tl("okbttn")
                         }
                     }
                 }
@@ -1391,7 +1391,7 @@ function pin_dialog(data, cb) {
     const content = $(template_dialog({
         "id": "pindialog",
         "icon": "icon-lock",
-        "title": translate("fourdigitpin"),
+        "title": tl("fourdigitpin"),
         "elements": ddat
     })).data({
         "pass_dat": data,
@@ -1411,7 +1411,7 @@ function submit_pin_dialog() {
             value = input.val();
 
         if (!value.length) {
-            popnotify("error", translate("fourdigitpin"));
+            popnotify("error", tl("fourdigitpin"));
             return;
         }
 
@@ -1444,15 +1444,15 @@ function submit_pin_dialog() {
                 }
             }
 
-            notify(translate("success") + "!");
+            notify(tl("success") + "!");
             return;
         }
 
         if (glob_let.resd.pcnt > 1) {
             $("#pinsettings").data("timeout", now() + 300000);
-            topnotify(translate("maxattempts"));
+            topnotify(tl("maxattempts"));
 
-            const result = confirm(translate("restorewithoutsecretphrase") + "?");
+            const result = confirm(tl("restorewithoutsecretphrase") + "?");
             if (result === true) {
                 restore_callback(pass_dat, false);
             }
@@ -1536,8 +1536,8 @@ function restore_callback_gd(data, np) {
 function dphrase_dialog(data) {
     canceldialog();
 
-    const phrase_backup = translate("usesecretphrasefrombackup"),
-        phrase_current = translate("keepcurrentsecretphrase"),
+    const phrase_backup = tl("usesecretphrasefrombackup"),
+        phrase_current = tl("keepcurrentsecretphrase"),
         ddat = [{
                 "ul": {
                     "class": "conf_options noselect",
@@ -1549,7 +1549,7 @@ function dphrase_dialog(data) {
                 "div": {
                     "id": "compare_seeds",
                     "class": "ref",
-                    "content": translate("comparesecretphrases")
+                    "content": tl("comparesecretphrases")
                 }
             },
             {
@@ -1559,7 +1559,7 @@ function dphrase_dialog(data) {
                             "div": {
                                 "id": "bu_sbox",
                                 "class": "swrap",
-                                "content": "<strong>" + translate("secretphrasefrombackup") +
+                                "content": "<strong>" + tl("secretphrasefrombackup") +
                                     "</strong><div class='sbox'></div>"
                             }
                         },
@@ -1567,7 +1567,7 @@ function dphrase_dialog(data) {
                             "div": {
                                 "id": "ext_sbox",
                                 "class": "swrap",
-                                "content": "<strong>" + translate("currentsecretphrase") +
+                                "content": "<strong>" + tl("currentsecretphrase") +
                                     "</strong><div class='sbox'></div>"
                             }
                         }
@@ -1590,7 +1590,7 @@ function dphrase_dialog(data) {
                                 "class": "submit",
                                 "attr": {
                                     "type": "submit",
-                                    "value": translate("okbttn")
+                                    "value": tl("okbttn")
                                 }
                             }
                         }
@@ -1602,7 +1602,7 @@ function dphrase_dialog(data) {
     const content = $(template_dialog({
         "id": "importseedbox",
         "title": "<span class='icon-warning' style='color:#B33A3A'></span>" +
-            translate("differentsecretphrase"),
+            tl("differentsecretphrase"),
         "elements": ddat
     })).data(data);
 
@@ -1618,9 +1618,9 @@ function submit_dphrase() {
         const input = $(this).prev("input"),
             value = input.val();
 
-        if (value === translate("usesecretphrasefrombackup")) {
+        if (value === tl("usesecretphrasefrombackup")) {
             restore_bu_seed();
-        } else if (value === translate("keepcurrentsecretphrase")) {
+        } else if (value === tl("keepcurrentsecretphrase")) {
             keep_current_seed();
         }
         return false;
@@ -1629,7 +1629,7 @@ function submit_dphrase() {
 
 // Confirms and executes retention of current seed during restore process
 function keep_current_seed() {
-    const result = confirm(translate("keepexistingsecretphrase"));
+    const result = confirm(tl("keepexistingsecretphrase"));
     if (result) {
         const dialog = $("#importseedbox"),
             data = dialog.data();
@@ -1680,14 +1680,14 @@ function compare_seeds() {
                 const pbdat = jas.bitrequest_bpdat,
                     pbeq = pbdat.dat ? pbdat : pbdat.datenc;
                 if (pbeq && !glob_let.resd.bpdat) {
-                    const pin = prompt(translate("fourdigitpin")),
+                    const pin = prompt(tl("fourdigitpin")),
                         decoded = s_decode(pbeq, generate_hash(pin));
                     if (decoded) {
                         glob_let.resd.bpdat = decoded;
                         dialog.addClass("verified");
                         cs_callback(true)
                     } else {
-                        popnotify("error", translate("wrongpin"));
+                        popnotify("error", tl("wrongpin"));
                         shake(dialog);
                     }
                     return false;
@@ -1756,7 +1756,7 @@ function csvexport_trigger() {
             const filename = "bitrequest_csv_export_" + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_").replace(/:/g, "_") + ".csv",
                 show_archive = has_requests ? "false" : "true",
                 content = "<div class='formbox' id='exportcsvbox'>\
-                    <h2 class='icon-table'>" + translate("csvexport") + "</h2>\
+                    <h2 class='icon-table'>" + tl("csvexport") + "</h2>\
                     <div class='popnotify'></div>\
                     <div id='ad_info_wrap'>\
                         <ul id='ecsv_options'>\
@@ -1764,49 +1764,49 @@ function csvexport_trigger() {
                                 <strong>Info</strong>\
                             </li>\
                             <li id='escv_from'>\
-                                <span>" + translate("from") + "</span><div class='switchpanel true global'><div class='switch'></div></div>\
+                                <span>" + tl("from") + "</span><div class='switchpanel true global'><div class='switch'></div></div>\
                             </li>\
                             <li id='escv_desc'>\
-                                <span>" + translate("title") + "</span><div class='switchpanel true global'><div class='switch'></div></div>\
+                                <span>" + tl("title") + "</span><div class='switchpanel true global'><div class='switch'></div></div>\
                             </li>\
                             <li id='escv_address'>\
-                                <span>" + translate("receivingaddress") + "</span><div class='switchpanel true global'><div class='switch'></div></div>\
+                                <span>" + tl("receivingaddress") + "</span><div class='switchpanel true global'><div class='switch'></div></div>\
                             </li>\
                             <li class='escv_heading'>\
-                                <strong>" + translate("status") + "</strong>\
+                                <strong>" + tl("status") + "</strong>\
                             </li>\
                             <li id='escv_paid'>\
-                                <span>" + translate("paid") + "</span><div class='switchpanel true global'><div class='switch'></div></div>\
+                                <span>" + tl("paid") + "</span><div class='switchpanel true global'><div class='switch'></div></div>\
                             </li>\
                             <li id='escv_ins'>\
-                                <span>" + translate("insufficient") + "</span><div class='switchpanel true global'><div class='switch'></div></div>\
+                                <span>" + tl("insufficient") + "</span><div class='switchpanel true global'><div class='switch'></div></div>\
                             </li>\
                             <li id='escv_new'>\
-                                <span>" + translate("new") + "</span><div class='switchpanel false global'><div class='switch'></div></div>\
+                                <span>" + tl("new") + "</span><div class='switchpanel false global'><div class='switch'></div></div>\
                             </li>\
                             <li id='escv_pending'>\
-                                <span>" + translate("pending") + "</span><div class='switchpanel false global'><div class='switch'></div></div>\
+                                <span>" + tl("pending") + "</span><div class='switchpanel false global'><div class='switch'></div></div>\
                             </li>\
                             <li class='escv_heading'>\
-                                <strong>" + translate("type") + "</strong>\
+                                <strong>" + tl("type") + "</strong>\
                             </li>\
                             <li id='escv_pos'>\
-                                <span>" + translate("point of sale") + "</span><div class='switchpanel true global'><div class='switch'></div></div>\
+                                <span>" + tl("point of sale") + "</span><div class='switchpanel true global'><div class='switch'></div></div>\
                             </li>\
                             <li id='escv_outgoing'>\
-                                <span>" + translate("outgoing") + "</span><div class='switchpanel true global'><div class='switch'></div></div>\
+                                <span>" + tl("outgoing") + "</span><div class='switchpanel true global'><div class='switch'></div></div>\
                             </li>\
                             <li id='escv_incoming'>\
-                                <span>" + translate("incoming") + "</span><div class='switchpanel false global'><div class='switch'></div></div>\
+                                <span>" + tl("incoming") + "</span><div class='switchpanel false global'><div class='switch'></div></div>\
                             </li>\
                             <li class='noline'>\
                                 <strong></strong>\
                             </li>\
                             <li id='escv_archive'>\
-                                <span>" + translate("includearchive") + "</span><div class='switchpanel global " + show_archive + "'><div class='switch'></div></div>\
+                                <span>" + tl("includearchive") + "</span><div class='switchpanel global " + show_archive + "'><div class='switch'></div></div>\
                             </li>\
                             <li id='escv_receipt'>\
-                                <span>" + translate("includereceipt") + " (PDF download)</span><div class='switchpanel false global'><div class='switch'></div></div>\
+                                <span>" + tl("includereceipt") + " (PDF download)</span><div class='switchpanel false global'><div class='switch'></div></div>\
                             </li>\
                         </ul>\
                     </div>\
@@ -1825,7 +1825,7 @@ function csvexport_trigger() {
             return;
         }
         play_audio(glob_const.funk);
-        notify(translate("nocsvexports"));
+        notify(tl("nocsvexports"));
     });
 }
 
@@ -1834,7 +1834,7 @@ function submit_csvexport() {
     $(document).on("click", "#trigger_csvexport", function(e) {
         if (glob_const.body.hasClass("ios")) {
             e.preventDefault();
-            notify(translate("noiosbu"));
+            notify(tl("noiosbu"));
             return false;
         }
         const btn = $(this),
@@ -1842,7 +1842,7 @@ function submit_csvexport() {
             dataurl = "data:text/csv;charset=utf-16le;base64," + csv;
         btn.attr("href", dataurl);
         const title = btn.attr("title"),
-            result = confirm(translate("downloadfile", {
+            result = confirm(tl("downloadfile", {
                 "file": title
             }));
         if (result === false) {
@@ -1850,7 +1850,7 @@ function submit_csvexport() {
             return false;
         }
         canceldialog();
-        notify(translate("downloaded", {
+        notify(tl("downloaded", {
             "file": "CSV"
         }));
     });
@@ -1990,10 +1990,10 @@ function render_csv(arr) {
 function share_csv() {
     $(document).on("click", "#share_csv", function() {
         const csv = complile_csv(),
-            result = confirm(translate("sharecsvexport"));
+            result = confirm(tl("sharecsvexport"));
         if (result) {
             loader(true);
-            set_loader_text(translate("generatebu"));
+            set_loader_text(tl("generatebu"));
             const account = $("#accountsettings").data("selected");
             api_proxy({
                 "custom": "system_bu",
@@ -2050,7 +2050,7 @@ function check_csvexport(csv) {
                 filename = "bitrequest_csv_export_" + encodeURIComponent(account) + "_" + budate + ".csv",
                 cd = countdown(expires * 1000),
                 cdstr = countdown_format(cd),
-                expstr = cdstr ? translate("expiresin") + " " + cdstr : translate("fileexpired"),
+                expstr = cdstr ? tl("expiresin") + " " + cdstr : tl("fileexpired"),
                 ddat = [{
                     "div": {
                         "id": "dialogcontent",
@@ -2099,7 +2099,7 @@ function check_csvexport(csv) {
                 content = template_dialog({
                     "id": "system_backupformbox",
                     "icon": "icon-download",
-                    "title": translate("csvexport"),
+                    "title": tl("csvexport"),
                     "elements": ddat
                 }) + "<div id='backupactions'><div id='backupcd'>" + cancelbttn + "</div></div>";
             popdialog(content, "triggersubmit", null, true);
@@ -2116,13 +2116,13 @@ function submit_csvdownload() {
     $(document).on("click", "#trigger_csvdownload", function(e) {
         if (glob_const.body.hasClass("ios")) {
             e.preventDefault();
-            notify(translate("noiosbu"));
+            notify(tl("noiosbu"));
             return false;
         }
         const btn = $(this),
             href = btn.attr("href"),
             title = btn.attr("title"),
-            result = confirm(translate("downloadfile", {
+            result = confirm(tl("downloadfile", {
                 "file": title
             }));
         if (result === false) {
@@ -2130,7 +2130,7 @@ function submit_csvdownload() {
             return false;
         }
         canceldialog();
-        notify(translate("downloaded", {
+        notify(tl("downloaded", {
             "file": "CSV"
         }));
     })
@@ -2158,7 +2158,7 @@ function urlshortener() {
                     "div": {
                         "id": "toggle_urlshortener",
                         "class": "clearfix",
-                        "content": "<h3 class='" + header_icon + "'>" + translate("enable") + " " + translate("url_shorten_settings") + switch_panel(is_active, " global") + "</h3>"
+                        "content": "<h3 class='" + header_icon + "'>" + tl("enable") + " " + tl("url_shorten_settings") + switch_panel(is_active, " global") + "</h3>"
                     }
                 },
                 {
@@ -2175,7 +2175,7 @@ function urlshortener() {
                                                 "attr": {
                                                     "type": "text",
                                                     "value": val,
-                                                    "placeholder": translate("choose") + " " + translate("url_shorten_settings"),
+                                                    "placeholder": tl("choose") + " " + tl("url_shorten_settings"),
                                                     "readonly": "readonly"
                                                 },
                                                 "close": true
@@ -2202,7 +2202,7 @@ function urlshortener() {
                                     "attr": {
                                         "type": "text",
                                         "value": fb_key,
-                                        "placeholder": "Firebase " + translate("apikey"),
+                                        "placeholder": "Firebase " + tl("apikey"),
                                         "data-apikey": fb_key,
                                         "data-checkchange": fb_key
                                     }
@@ -2214,7 +2214,7 @@ function urlshortener() {
                                     "attr": {
                                         "type": "text",
                                         "value": bitly_token,
-                                        "placeholder": "Bitly " + translate("apikey"),
+                                        "placeholder": "Bitly " + tl("apikey"),
                                         "data-apikey": bitly_token,
                                         "data-checkchange": bitly_token
                                     }
@@ -2225,7 +2225,7 @@ function urlshortener() {
                                     "class": "submit",
                                     "attr": {
                                         "type": "submit",
-                                        "value": translate("okbttn")
+                                        "value": tl("okbttn")
                                     }
                                 }
                             }
@@ -2236,7 +2236,7 @@ function urlshortener() {
             content = template_dialog({
                 "id": "usformbox",
                 "icon": "icon-link",
-                "title": translate("choose") + " " + translate("url_shorten_settings"),
+                "title": tl("choose") + " " + tl("url_shorten_settings"),
                 "elements": ddat
             });
         popdialog(content, "triggersubmit");
@@ -2257,7 +2257,7 @@ function toggle_url_shortener() {
             title = value;
             form.slideDown(300);
         } else {
-            const result = confirm(translate("disableshorturls"));
+            const result = confirm(tl("disableshorturls"));
             if (result) {
                 state = "inactive";
                 title = "inactive";
@@ -2335,7 +2335,7 @@ function submit_urlshortener_select() {
                 cur_bitly = bitly_input.attr("data-apikey");
             if (fb_val !== cur_fb) {
                 if (fb_check === fb_val) {
-                    popnotify("error", translate("validateapikey"));
+                    popnotify("error", tl("validateapikey"));
                     return false;
                 }
                 fb_input.attr("data-checkchange", fb_val);
@@ -2344,7 +2344,7 @@ function submit_urlshortener_select() {
             }
             if (bitly_val !== cur_bitly) {
                 if (bitly_check === bitly_val) {
-                    popnotify("error", translate("validateapikey"));
+                    popnotify("error", tl("validateapikey"));
                     return false;
                 }
                 bitly_input.attr("data-checkchange", bitly_val);
@@ -2353,7 +2353,7 @@ function submit_urlshortener_select() {
             }
         }
         canceldialog();
-        notify(translate("datasaved"));
+        notify(tl("datasaved"));
         save_settings();
         return false;
     })
@@ -2411,7 +2411,7 @@ function configure_crypto_api() {
                                 "attr": {
                                     "type": "text",
                                     "value": keyval,
-                                    "placeholder": translate("apikey"),
+                                    "placeholder": tl("apikey"),
                                     "data-apikey": keyval,
                                     "data-checkchange": apikey
                                 }
@@ -2422,7 +2422,7 @@ function configure_crypto_api() {
                                 "class": "submit",
                                 "attr": {
                                     "type": "submit",
-                                    "value": translate("okbttn")
+                                    "value": tl("okbttn")
                                 }
                             }
                         }
@@ -2432,7 +2432,7 @@ function configure_crypto_api() {
             content = template_dialog({
                 "id": "ccapiformbox",
                 "icon": "icon-stats-dots",
-                "title": translate("cmcapisettings"),
+                "title": tl("cmcapisettings"),
                 "elements": ddat
             });
         popdialog(content, "triggersubmit");
@@ -2476,7 +2476,7 @@ function save_crypto_api_settings() {
         }
         if (apival !== api_input.attr("data-apikey")) {
             if (check === apival) {
-                popnotify("error", translate("validateapikey"));
+                popnotify("error", tl("validateapikey"));
                 return false;
             }
             api_input.attr("data-checkchange", apival);
@@ -2484,7 +2484,7 @@ function save_crypto_api_settings() {
             return false;
         }
         canceldialog();
-        notify(translate("datasaved"));
+        notify(tl("datasaved"));
         save_settings();
         return false;
     })
@@ -2541,7 +2541,7 @@ function configure_fiat_api() {
                                 "attr": {
                                     "type": "text",
                                     "value": apikey,
-                                    "placeholder": translate("apikey"),
+                                    "placeholder": tl("apikey"),
                                     "data-apikey": apikey,
                                     "data-checkchange": apikey
                                 }
@@ -2552,7 +2552,7 @@ function configure_fiat_api() {
                                 "class": "submit",
                                 "attr": {
                                     "type": "submit",
-                                    "value": translate("okbttn")
+                                    "value": tl("okbttn")
                                 }
                             }
                         }
@@ -2562,7 +2562,7 @@ function configure_fiat_api() {
             content = template_dialog({
                 "id": "fiatxrapiformbox",
                 "icon": "icon-stats-bars",
-                "title": translate("fiatapisettings"),
+                "title": tl("fiatapisettings"),
                 "elements": ddat
             });
         popdialog(content, "triggersubmit");
@@ -2606,7 +2606,7 @@ function save_fiat_api_settings() {
         }
         if (apival !== api_input.attr("data-apikey")) {
             if (check === apival) {
-                popnotify("error", translate("validateapikey"));
+                popnotify("error", tl("validateapikey"));
                 return false;
             }
             api_input.attr("data-checkchange", apival);
@@ -2614,7 +2614,7 @@ function save_fiat_api_settings() {
             return false;
         }
         canceldialog();
-        notify(translate("datasaved"));
+        notify(tl("datasaved"));
         save_settings();
         return false;
     })
@@ -2648,11 +2648,11 @@ function pick_api_proxy() {
                        <div class='options'></div>\
                    </div>\
                    <div id='rpc_input_box'>\
-                       <h3 class='icon-plus'>" + translate("addapiproxy") + "</h3>\
-                       <div id='proxy_info'>" + translate("controlyourkeys") + "<br/><br/>\
-                           <strong>1.</strong> " + translate("proxystep1") + "<br/>\
-                           <strong>2.</strong> " + translate("proxystep2") + "<br/>\
-                           <strong>3.</strong> " + translate("proxystep3") + "<br/><br/>\
+                       <h3 class='icon-plus'>" + tl("addapiproxy") + "</h3>\
+                       <div id='proxy_info'>" + tl("controlyourkeys") + "<br/><br/>\
+                           <strong>1.</strong> " + tl("proxystep1") + "<br/>\
+                           <strong>2.</strong> " + tl("proxystep2") + "<br/>\
+                           <strong>3.</strong> " + tl("proxystep3") + "<br/><br/>\
                        </div>\
                        <div id='rpc_input'>\
                            <input type='text' value='' placeholder='https://...' id='proxy_url_input'/>\
@@ -2660,7 +2660,7 @@ function pick_api_proxy() {
                            <div class='c_stat icon-connection'></div>\
                        </div>\
                    </div>\
-                   <input type='submit' class='submit' value='" + translate("okbttn") + "'/>\
+                   <input type='submit' class='submit' value='" + tl("okbttn") + "'/>\
                </div>\
            </div>";
         popdialog(content, "triggersubmit");
@@ -2737,7 +2737,7 @@ function submit_proxy() {
             "selected": selectval
         }, selectval);
         canceldialog();
-        notify(translate("datasaved"));
+        notify(tl("datasaved"));
         save_settings();
     })
 }
@@ -2769,7 +2769,7 @@ function test_custom_proxy(value) {
         proxies = data.custom_proxies,
         url = complete_url(value);
     if ($.inArray(url, proxies) !== -1 || $.inArray(url, glob_const.proxy_list) !== -1) {
-        popnotify("error", translate("proxyexists"));
+        popnotify("error", tl("proxyexists"));
         return false;
     }
     if (url.indexOf("http") > -1) {
@@ -2789,7 +2789,7 @@ function test_custom_proxy(value) {
                 if (error) {
                     const msg = error.message;
                     if (msg && msg === "no write acces") {
-                        popnotify("error", translate("folderpermissions"));
+                        popnotify("error", tl("folderpermissions"));
                         return
                     }
                 }
@@ -2800,7 +2800,7 @@ function test_custom_proxy(value) {
                         "custom_proxies": proxies
                     }, url);
                     canceldialog();
-                    notify(translate("datasaved"));
+                    notify(tl("datasaved"));
                     save_settings();
                     setTimeout(function() {
                         $("#apikeys").trigger("click");
@@ -2808,15 +2808,15 @@ function test_custom_proxy(value) {
                     return
                 }
             }
-            popnotify("error", translate("unabletopost", {
+            popnotify("error", tl("unabletopost", {
                 "fixed_url": url
             }));
         }).fail(function(xhr, stat, err) {
-            popnotify("error", translate("unabletoconnect"));
+            popnotify("error", tl("unabletoconnect"));
         });
         return
     }
-    popnotify("error", translate("invalidurl"));
+    popnotify("error", tl("invalidurl"));
 }
 
 // Deletes custom proxy with confirmation and default proxy protection
@@ -2831,9 +2831,9 @@ function remove_proxy() {
                 val = opt.find("> span").attr("data-value");
             if (isDefault === true) {
                 play_audio(glob_const.funk);
-                topnotify(translate("removedefaultnode"));
+                topnotify(tl("removedefaultnode"));
             } else {
-                const result = confirm(translate("confirmremovenode", {
+                const result = confirm(tl("confirmremovenode", {
                     "thisval": val
                 }));
                 if (result) {
@@ -2846,7 +2846,7 @@ function remove_proxy() {
                     set_setting(node, {
                         "custom_proxies": filtered
                     });
-                    notify(translate("proxyremoved"));
+                    notify(tl("proxyremoved"));
                     save_settings();
                 }
             }
@@ -2889,10 +2889,10 @@ function apikeys() {
                 "infura": data.infura || "",
                 "polygonscan": data.polygonscan || ""
             },
-            keyph = translate("apikey"),
+            keyph = tl("apikey"),
             content = "\
            <div class='formbox' id='apikeyformbox'>\
-               <h2 class='icon-key'>" + translate("apikeys") + "</h2>\
+               <h2 class='icon-key'>" + tl("apikeys") + "</h2>\
                <div class='popnotify'></div>\
                <div class='popform'>\
                    <h3>Alchemy</h3>\
@@ -2923,7 +2923,7 @@ function apikeys() {
                    <input type='text' value='" + keys.fixer + "' placeholder='Fixer " + keyph + "' data-ref='fixer' data-checkchange='" + keys.fixer + "' class='ak_input'/>\
                    <h3>Infura</h3>\
                    <input type='text' value='" + keys.infura + "' placeholder='Infura Project ID' data-ref='infura' data-checkchange='" + keys.infura + "' class='ak_input'/>\
-                   <input type='submit' class='submit' value='" + translate("okbttn") + "' id='apisubmit'/>\
+                   <input type='submit' class='submit' value='" + tl("okbttn") + "' id='apisubmit'/>\
                    <h3>Polygonscan</h3>\
                    <input type='text' value='" + keys.polygonscan + "' placeholder='Polygonscan " + keyph + "' data-ref='polygonscan' data-checkchange='" + keys.polygonscan + "' class='ak_input'/>\
                </div>\
@@ -2952,7 +2952,7 @@ function submit_api() {
             count = changed.length;
         if (count === 0) {
             if (inputs.hasClass("input_error")) {
-                const msg = translate("invalidapikey");
+                const msg = tl("invalidapikey");
                 popnotify("error", msg);
                 notify(msg);
                 $(".input_error").select();
@@ -3108,12 +3108,12 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
         api_proxy(reqData).done(function(e) {
             const data = br_result(e).result;
             if (data) {
-                const failMsg = translate("apicallfailed");
+                const failMsg = tl("apicallfailed");
                 if ((ref === "etherscan" || ref === "arbiscan" || ref === "polygonscan" || ref === "bscscan") && data.status != 1) {
                     if (str_match(data.result, "Invalid API Key")) {
                         api_fail(ref, keyval);
                     } else {
-                        notify(translate("apicallerror"));
+                        notify(tl("apicallerror"));
                         const content = "<h2 class='icon-blocked'>" + failMsg + "</h2><p class='doselect'>" + data.message + "</p>";
                         popdialog(content, "canceldialog");
                     }
@@ -3130,7 +3130,7 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
                     } else if (code == 402) {
                         api_fail(ref, keyval);
                     } else {
-                        notify(translate("apicallerror"));
+                        notify(tl("apicallerror"));
                         const content = "<h2 class='icon-blocked'>" + failMsg + "</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
@@ -3154,7 +3154,7 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
                     if (data.error.code == 101) {
                         api_fail(ref, keyval);
                     } else {
-                        notify(translate("apicallerror"));
+                        notify(tl("apicallerror"));
                         const content = "<h2 class='icon-blocked'>" + failMsg + "</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
@@ -3167,7 +3167,7 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
                         if (data.error.code == 1) {
                             api_fail(ref, keyval);
                         } else {
-                            notify(translate("apicallerror"));
+                            notify(tl("apicallerror"));
                             const content = "<h2 class='icon-blocked'>" + failMsg + "</h2><p class='doselect'>" + data.error + "</p>";
                             popdialog(content, "canceldialog");
                         }
@@ -3180,7 +3180,7 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
                         if (ec === "invalid_access_key") {
                             api_fail(ref, keyval);
                         } else {
-                            notify(translate("apicallerror"));
+                            notify(tl("apicallerror"));
                             const content = "<h2 class='icon-blocked'>" + failMsg + "</h2><p class='doselect'>" + ec + "</p>";
                             popdialog(content, "canceldialog");
                         }
@@ -3191,7 +3191,7 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
                     if (data.error.code == 101) {
                         api_fail(ref, keyval);
                     } else {
-                        notify(translate("apicallerror"));
+                        notify(tl("apicallerror"));
                         const content = "<h2 class='icon-blocked'>" + failMsg + "</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
@@ -3215,7 +3215,7 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
 
 // Handles API key validation errors with user feedback
 function api_fail(ref, val) {
-    const msg = translate("invalidapikeyname", {
+    const msg = tl("invalidapikeyname", {
             "thisref": ref
         }),
         form = $("#apikeyformbox");
@@ -3238,7 +3238,7 @@ function update_api_attr(thisref, thisvalue, lastinput) {
 
         if (lastinput) {
             canceldialog();
-            notify(translate("datasaved"));
+            notify(tl("datasaved"));
             save_settings();
         }
         return;
@@ -3246,7 +3246,7 @@ function update_api_attr(thisref, thisvalue, lastinput) {
 
     complement_apisettings(thisref, val);
     canceldialog();
-    notify(translate("datasaved"));
+    notify(tl("datasaved"));
     save_settings();
 
     br_remove_session(thisref + "_api_attempt");
@@ -3299,20 +3299,20 @@ function edit_contactform_trigger() {
 function edit_contactform(checkout) {
     const form = $("#contactform"),
         data = form.data(),
-        title = checkout ? translate("contactform") + " / " + translate("shipping") : translate("contactform"),
-        subtitle = checkout ? "" : "<p>" + translate("yourdetails") + "</p>",
+        title = checkout ? tl("contactform") + " / " + tl("shipping") : tl("contactform"),
+        subtitle = checkout ? "" : "<p>" + tl("yourdetails") + "</p>",
         content = "\
     <div class='formbox' id='contactformbox'>\
         <h2 class='icon-sphere'>" + title + "</h2>" + subtitle +
         "<div class='popnotify'></div>\
         <div class='popform'>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + data.name + "' placeholder='" + translate("phname") + "' class='cf_nameinput'/><span class='required'>*</span></div>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + data.address + "' placeholder='" + translate("phaddress") + "' class='cf_addressinput'/><span class='required'>*</span></div>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + data.zipcode + "' placeholder='" + translate("phzipcode") + "' class='cf_zipcodeinput'/><span class='required'>*</span></div>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + data.city + "' placeholder='" + translate("phcity") + "' class='cf_cityinput'/><span class='required'>*</span></div>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + data.country + "' placeholder='" + translate("phcountry") + "' class='cf_countryinput'/><span class='required'>*</span></div>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + data.email + "' placeholder='" + translate("phemail") + "' class='cf_emailinput'/><span class='required'>*</span></div>\
-            <input type='submit' class='submit' value='" + translate("okbttn") + "'/>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + data.name + "' placeholder='" + tl("phname") + "' class='cf_nameinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + data.address + "' placeholder='" + tl("phaddress") + "' class='cf_addressinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + data.zipcode + "' placeholder='" + tl("phzipcode") + "' class='cf_zipcodeinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + data.city + "' placeholder='" + tl("phcity") + "' class='cf_cityinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + data.country + "' placeholder='" + tl("phcountry") + "' class='cf_countryinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + data.email + "' placeholder='" + tl("phemail") + "' class='cf_emailinput'/><span class='required'>*</span></div>\
+            <input type='submit' class='submit' value='" + tl("okbttn") + "'/>\
         </div>\
     </div>";
 
@@ -3385,7 +3385,7 @@ function submit_contactform() {
                     return;
                 }
                 if (!email_regex.test(val)) {
-                    popnotify("error", translate("phemail") + " " + translate("invalidchars"));
+                    popnotify("error", tl("phemail") + " " + tl("invalidchars"));
                     input.focus().parent(".cf_inputwrap").addClass("empty");
                     return;
                 }
@@ -3398,11 +3398,11 @@ function submit_contactform() {
             load_request(true);
             return;
         }
-        notify(translate("datasaved"));
+        notify(tl("datasaved"));
     });
 
     function showError(input, translationKey) {
-        popnotify("error", translate(translationKey) + " " + translate("requiredfield"));
+        popnotify("error", tl(translationKey) + " " + tl("requiredfield"));
         input.focus().parent(".cf_inputwrap").addClass("empty");
     }
 }
@@ -3462,7 +3462,7 @@ function permissions_callback() {
                             "class": "submit",
                             "attr": {
                                 "type": "submit",
-                                "value": translate("okbttn")
+                                "value": tl("okbttn")
                             }
                         }
                     }
@@ -3472,7 +3472,7 @@ function permissions_callback() {
         content = template_dialog({
             "id": "permissions_formbox",
             "icon": "icon-user",
-            "title": translate("permissions"),
+            "title": tl("permissions"),
             "elements": ddat
         });
     popdialog(content, "triggersubmit");
@@ -3498,7 +3498,7 @@ function submit_permissions() {
 
         glob_const.html.attr("data-role", val);
         canceldialog();
-        notify(translate("datasaved"));
+        notify(tl("datasaved"));
         save_settings();
         return false;
     })
@@ -3511,7 +3511,7 @@ function team_invite_trigger() {
     $(document).on("click", "#teaminvite", function() {
         if (glob_let.hasbip && !glob_let.bipv) {
             validate_trial_status();
-            notify(translate("pleaseverify"));
+            notify(tl("pleaseverify"));
             return;
         }
         if (check_pin_enabled(true) === true) {
@@ -3532,14 +3532,14 @@ function team_invite() {
         ddat = [{
             "div": {
                 "class": "popform",
-                "content": "<p><strong>" + translate("inviteteammembers") + "</strong><br/>" + translate("teaminviteexplainer") + "<br/>" + translate("teaminviteaccess") + "</p>\
-           <div id='send_invite' data-url='" + jsonencode + "' class='button'><span class='icon-share2'></span>" + translate("sendinvite") + "</div>"
+                "content": "<p><strong>" + tl("inviteteammembers") + "</strong><br/>" + tl("teaminviteexplainer") + "<br/>" + tl("teaminviteaccess") + "</p>\
+           <div id='send_invite' data-url='" + jsonencode + "' class='button'><span class='icon-share2'></span>" + tl("sendinvite") + "</div>"
             }
         }],
         content = template_dialog({
             "id": "team_invite",
             "icon": "icon-users",
-            "title": translate("teaminvite"),
+            "title": tl("teaminvite"),
             "elements": ddat
         }) + "<div id='backupactions'><div id='backupcd'>" + cancelbttn + "</div></div>";
     popdialog(content, "triggersubmit");
@@ -3648,10 +3648,10 @@ function adjust_object(object, seedobj) {
 // Processes team invite sharing with server upload
 function share_teaminvite() {
     $(document).on("click", "#send_invite", function() {
-        const result = confirm(translate("sendinvite") + "?");
+        const result = confirm(tl("sendinvite") + "?");
         if (result) {
             loader(true);
-            set_loader_text(translate("installationpackage"));
+            set_loader_text(tl("installationpackage"));
             const account = $("#accountsettings").data("selected");
             api_proxy({
                 "custom": "system_bu",
@@ -3663,7 +3663,7 @@ function share_teaminvite() {
                 }
             }).done(function(e) {
                 const cache = e.ping.br_cache,
-                    title = translate("teaminviteharetitle", {
+                    title = tl("teaminviteharetitle", {
                         "accountname": account
                     }),
                     proxy = c_proxy(),
@@ -3719,18 +3719,18 @@ function check_teaminvite(ro) {
                     teamid = br_get_local("teamid", true),
                     teamid_arr = get_default_object(teamid),
                     is_installed = teamid_arr.includes(ro),
-                    dialog_heading = update ? translate("teamupdate") : translate("teaminvite"),
-                    cf_string = cd_format ? translate("invitationexpiresin") + " " + cd_format : translate("fileexpired"),
-                    dialogtext = is_installed ? "<p>" + translate("installcompleted") + "</p>" :
-                    update ? "<p>" + translate("teamupdata", {
+                    dialog_heading = update ? tl("teamupdate") : tl("teaminvite"),
+                    cf_string = cd_format ? tl("invitationexpiresin") + " " + cd_format : tl("fileexpired"),
+                    dialogtext = is_installed ? "<p>" + tl("installcompleted") + "</p>" :
+                    update ? "<p>" + tl("teamupdata", {
                         "account": account
                     }) + "</p>" :
-                    "<p>" + translate("teamup", {
+                    "<p>" + tl("teamup", {
                         "account": account
-                    }) + "<br/><br/>" + translate("clickinstall", {
+                    }) + "<br/><br/>" + tl("clickinstall", {
                         "account": account
                     }) + "</p>",
-                    button_text = update ? translate("update") : translate("install"),
+                    button_text = update ? tl("update") : tl("install"),
                     install_button = is_installed ? "" : "<div id='install_teaminvite' data-base64='" + base64 + "' data-filename='" + filename + "' class='button icon-download' data-update='" + update + "' data-ismaster='" + master_account + "'data-installid='" + ro + "'>" + button_text + "</div>",
                     ddat = [{
                         "div": {
@@ -3775,13 +3775,13 @@ function install_teaminvite_trigger() {
         const btn = $(this),
             ismaster = btn.attr("data-ismaster") === "true";
         if (ismaster) {
-            notify(translate("owndevice"));
+            notify(tl("owndevice"));
             return
         }
         const update = btn.attr("data-update") === "true",
             installid = btn.attr("data-installid"),
             installed = (glob_let.stored_currencies) ? true : false,
-            result_text = update ? translate("updatealert") : translate("installalert"),
+            result_text = update ? tl("updatealert") : tl("installalert"),
             result = installed ? confirm(result_text) : true;
         if (result) {
             const bu_dat = btn.attr("data-base64"),
@@ -3804,14 +3804,14 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
         br_set_local("teamid", teamid_arr, true);
     }
     render_settings(["restore", "backup"]); // exclude restore and backup settings
-    const lastrestore = translate("lastrestore") + "<br/><span class='icon-folder-open'>" + translate("teaminvite") + " " + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_") + "</span>";
+    const lastrestore = tl("lastrestore") + "<br/><span class='icon-folder-open'>" + tl("teaminvite") + " " + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_") + "</span>";
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": bu_filename,
         "device": "folder-open"
     }, lastrestore);
     save_settings();
-    notify(translate("installcomplete"));
+    notify(tl("installcomplete"));
     canceldialog();
     glob_const.w_loc.href = glob_const.w_loc.pathname + "?p=home";
 }
