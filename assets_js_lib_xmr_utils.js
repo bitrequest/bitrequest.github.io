@@ -93,7 +93,6 @@ const l = 7237005577332262213973186563042994240857116359379907606001950938285454
 // ** Mathematical Foundations: **
 //xmod
 //xpow_mod
-//xmr_egcd
 //xmr_invert
 //xmr_invert_batch
 
@@ -173,7 +172,8 @@ function uint32_hex(value) {
 
 // Converts a positive integer to hexadecimal with leading zero padding
 function xmr_number_to_hex(num) {
-    return num.toString(16).padStart(2, "0");
+    const hex = num.toString(16);
+    return hex.length % 2 === 1 ? "0" + hex : hex;
 }
 
 // ** Mathematical Foundations: **
@@ -197,28 +197,12 @@ function xpow_mod(a, power, m = xmr_CURVE.P) {
     return res;
 }
 
-// Implements Extended Euclidean Algorithm to find GCD and Bézout's identity coefficients
-function xmr_egcd(a, b) {
-    let [x, y, u, v] = [0n, 1n, 1n, 0n];
-    while (a !== 0n) {
-        let q = b / a,
-            r = b % a,
-            m = x - u * q,
-            n = y - v * q;
-        [b, a] = [a, r];
-        [x, y] = [u, v];
-        [u, v] = [m, n];
-    }
-    let gcd = b;
-    return [gcd, x, y];
-}
-
 // Computes modular multiplicative inverse using Extended Euclidean Algorithm with optional curve modulus
 function xmr_invert(number, modulo = xmr_CURVE.P) {
     if (number === 0n || modulo <= 0n) {
         throw new Error("invert: expected positive integers");
     }
-    let [gcd, x] = xmr_egcd(xmod(number, modulo), modulo);
+    let [gcd, x] = egcd(xmod(number, modulo), modulo);
     if (gcd !== 1n) {
         throw new Error("invert: does not exist");
     }

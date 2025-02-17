@@ -507,11 +507,22 @@ function weierstrass(x) {
     return mod(x ** 3n + CURVE.b);
 }
 
-// Implements extended Euclidean algorithm to find Bézout's identity coefficients
+// Implements Extended Euclidean Algorithm to find GCD and Bézout's identity coefficients
 function egcd(a, b) {
-    if (a === 0n) return [b, 0n, 1n];
-    let [g, x1, y1] = egcd(b % a, a);
-    return [g, y1 - (b / a) * x1, x1];
+    if (typeof a === 'number') a = BigInt(a);
+    if (typeof b === 'number') b = BigInt(b);
+    
+    let [x, y, u, v] = [0n, 1n, 1n, 0n];
+    while (a !== 0n) {
+        const q = b / a,
+              r = b % a;
+        let m = x - u * q,
+            n = y - v * q;
+        [b, a] = [a, r];
+        [x, y] = [u, v];
+        [u, v] = [m, n];
+    }
+    return [b, x, y];
 }
 
 // Calculates the modular multiplicative inverse using extended Euclidean algorithm
@@ -799,6 +810,19 @@ function pow_mod(base, exponent, modulus) {
         e >>= 1n;
     }
     return result;
+}
+
+// Computes modular exponentiation using square-and-multiply algorithm with optional modulus P
+function xpow_mod(a, power, m = xmr_CURVE.P) {
+    let res = 1n;
+    while (power > 0n) {
+        if (power & 1n) {
+            res = xmod(res * a, m);
+        }
+        power >>= 1n;
+        a = xmod(a * a, m);
+    }
+    return res;
 }
 
 // Validates and normalizes private key to BigInt within curve order range
