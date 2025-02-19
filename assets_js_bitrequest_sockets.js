@@ -423,7 +423,7 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                     if (first_record) {
                         const card_data = first_record.data;
                         if (card_data) {
-                            const lnurl_withdraw = utf8Decoder.decode(card_data);
+                            const lnurl_withdraw = utf8_decoder.decode(card_data);
                             if (lnurl_withdraw) {
                                 if (lnurl_withdraw.indexOf("p=") && lnurl_withdraw.indexOf("c=")) {
                                     const url_parts = lnurl_withdraw.split("urlw://");

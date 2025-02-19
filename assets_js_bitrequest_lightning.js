@@ -1653,7 +1653,7 @@ function lnurl_encode(human_readable_part, url) {
 
 // Decodes LNURL string to original data format
 function lnurl_decode(lnurl) {
-    return utf8Decoder.decode(uint_8array(from_words(lnurl_decodeb32(lnurl).data)));
+    return utf8_decoder.decode(uint_8array(from_words(lnurl_decodeb32(lnurl).data)));
 }
 
 // Decodes and sanitizes LNURL string
