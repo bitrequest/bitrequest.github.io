@@ -1,7 +1,6 @@
 <?php
     
     include "../../../api.php";
-
     const DEFAULT_NODE = "https://www.bitrequest.app:8020";
     const MAX_HISTORY_COUNT = 15;
     const MAX_PENDING_COUNT = 15;

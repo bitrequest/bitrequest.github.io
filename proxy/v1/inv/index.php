@@ -1,4 +1,5 @@
 <?php
+	
 	// Constants
 	const CACHE_TIME = "2m";
 	const CACHE_DIR = "api/cache/" . CACHE_TIME . "/";

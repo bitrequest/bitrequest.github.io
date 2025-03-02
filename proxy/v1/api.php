@@ -1,6 +1,6 @@
 <?php
-	// PROXY
 	
+	// PROXY
 	const VERSION = "0.018";
 	const CACHE_DURATIONS = [
 	    "2m" => 6220800,  // 2 months in seconds
@@ -164,15 +164,12 @@
 	function curl_get($url, $data, $headers) {
 	    try {
 	        // Handle electrum requests
-	        if ($url == "electrum") {
+	        if ($url === "electrum") {
 	            $file_path = "custom/rpcs/electrum/index.php";
 	            if (file_exists($file_path)) {
 	                include_once $file_path;
-	                if (function_exists("socket_fetch")) {
-	                    $ssl_fetch = socket_fetch(json_decode($data, true));
-	                    return json_encode($ssl_fetch);
-	                }
-	                return error_object("500", "socket_fetch function not found");
+	                $ssl_fetch = socket_fetch(json_decode($data, true));
+	                return json_encode($ssl_fetch);
 	            }
 	            return error_object("404", "Electrum file not found: " . $file_path);
 	        }
@@ -182,10 +179,7 @@
 	            $tor_path = "ln/tor/index.php";
 	            if (file_exists($tor_path)) {
 	                require_once $tor_path;
-	                if (function_exists("fetch_tor")) {
-	                    return fetch_tor($url, $data, $headers);
-	                }
-	                return error_object("500", "fetch_tor function not found");
+	                return fetch_tor($url, $data, $headers);
 	            }
 	            return error_object("404", "Tor file not found");
 	        }
