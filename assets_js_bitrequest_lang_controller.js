@@ -109,9 +109,9 @@ function tl(id, dat) {
 
 // translate and clear accents
 function transclear(id, dat) {
-    const tl = tl(id, dat);
-    if (tl) {
-        return remove_diacritics(tl);
+    const translate = tl(id, dat);
+    if (translate) {
+        return remove_diacritics(translate);
     }
-    return tl;
+    return translate;
 }
