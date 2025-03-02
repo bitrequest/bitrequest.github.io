@@ -10,4 +10,4 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)4bR(.*)$  %{ENV:BASE}/inv/index.php?invoice=$2 [L]
 
-##php_flag display_errors 1
+php_flag display_errors 1

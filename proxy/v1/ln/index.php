@@ -1,5 +1,5 @@
 <?php
-    // Set headers for JSON response and CORS
+    
     header("Content-Type: application/json");
     header("Access-Control-Allow-Headers: Cache-Control, Pragma");
     //header("Access-Control-Allow-Origin: *"); // uncomment for nginx
@@ -89,3 +89,4 @@
         ]);
         return;
     }
+?>

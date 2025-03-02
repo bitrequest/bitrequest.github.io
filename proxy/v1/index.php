@@ -1,108 +1,28 @@
 <?php
-    // Set headers
+    
     header("Content-Type: application/json");
     header("Access-Control-Allow-Headers: Cache-Control, Pragma");
     //header("Access-Control-Allow-Origin: *"); // uncomment for nginx
 
     // Include necessary files
-    include "../config.php";
-    include "api.php";
+    try {
+        include_once "../config.php";
+        include_once "api.php";
+    } catch (Exception $e) {
+        die(json_encode([
+            "error" => [
+                "code" => "500",
+                "message" => "Failed to include required files"
+            ]
+        ]));
+    }
 
-    // Function to get a value from POST data or return a default
+    // Retrieves a value from POST data with optional default value
     function get_postvalue($key, $default = false) {
         return $_POST[$key] ?? $default;
     }
 
-    // Extract POST data
-    $postdata = $_POST;
-    $params = get_postvalue("params", []);
-    $method = $params["method"] ?? false;
-    $proxyheaders = $params["headers"] ?? false;
-    $payload = $params["data"] ?? false;
-    $rpc = get_postvalue("rpc");
-    $custom = get_postvalue("custom");
-    $apiname = get_postvalue("api");
-    $apiurl = get_postvalue("api_url");
-    $apikey = get_postvalue("api_key");
-    $keyparam = get_postvalue("key_param");
-    $ampersand = get_postvalue("ampersand");
-    $search = get_postvalue("search");
-    $nokey = get_postvalue("nokey");
-    $auth_header = get_postvalue("auth_header");
-    $bearer = get_postvalue("bearer");
-    $cache_time = get_postvalue("cachetime");
-    $cache_folder = get_postvalue("cachefolder");
-
-    // Define data
-    $data_var = $payload ?: null;
-
-    // Define key
-    $accesstoken = $keys[$apiname] ?? false;
-    $auth_token = $apikey ?: $accesstoken;
-
-    // Construct headers
-    $postheaders = [];
-    if ($proxyheaders || $method == "POST" || $bearer) {
-        $postheaders[] = "Content-Type: application/json";
-        if (isset($payload)) {
-            $postheaders[] = "Content-Length: " . strlen($payload);
-        }
-        if ($proxyheaders) {
-            foreach ($proxyheaders as $key => $value) {
-                $postheaders[] = $key . ": " . $value;
-            }
-        }
-    }
-
-    // Add Authorization header if needed
-    if ($bearer) {
-        if ($auth_token) {
-            $postheaders[] = "Authorization: Bearer " . $auth_token;
-        }
-        if ($bearer == "tls_wildcard") {
-            $postheaders["tls_wildcard"] = true;
-        }
-    }
-
-    // Construct URL
-    $key_param1 = $keyparam ?: "";
-    $ampersand1 = $ampersand ?: "";
-    $key_param_var = ($auth_token && $keyparam != "bearer") ? $ampersand1 . $key_param1 . $auth_token : "";
-    $key_param2 = ($apikey && $nokey == "true") ? "" : $key_param_var;
-    $new_url = $apiurl . $key_param2;
-
-    // Handle custom requests
-    if ($custom) {
-        $result = handle_custom_request($custom, $postdata, $params, $data_var, $postheaders, $cache_time, $cache_folder, $keys);
-        echo json_encode(["ping" => $result]);
-        exit;
-    }
-
-    // Handle regular API request
-    $result = api($new_url, $data_var, $postheaders, $cache_time, $cache_folder, null, null);
-    echo json_encode(["ping" => $result]);
-
-    // Handle custom requests
-    function handle_custom_request($custom, $postdata, $params, $data_var, $postheaders, $cache_time, $cache_folder, $keys) {
-        switch ($custom) {
-            case "gk":
-                return handle_gk_request($keys);
-            case "add":
-                return api(null, json_encode($postdata), null, 0, "1d", null, null);
-            case "nano_txd":
-                return handle_nano_txd_request($data_var, $postheaders, $cache_time, $cache_folder);
-            case "system_bu":
-                return handle_systembu_request($params, $postheaders);
-            case "get_system_bu":
-                return api(null, null, null, 604800, "1w", null, $params);
-            case "fetch_creds":
-                return handle_fetchcreds_request($postdata, $keys);
-            default:
-                return null;
-        }
-    }
-
-    // Handle key request
+    // Handles API key request and returns formatted key data
     function handle_gk_request($keys) {
         $key_data = [
             "if_id" => $keys["infura"] ?? "",
@@ -119,7 +39,7 @@
         return api($nano_url, $data_var, $postheaders, $cache_time, $cache_folder, null, null);
     }
 
-    // Handle System BU request
+    // Handles System BU request for account data
     function handle_systembu_request($params, $postheaders) {
         $bu_data = json_encode([
             "base64" => $params["url"] ?? "",
@@ -128,10 +48,123 @@
         return api(null, $bu_data, $postheaders, 604800, "1w", null, null);
     }
 
-    // Handle Fetch Creds request
+    // Handles credential fetch requests to Google OAuth API
     function handle_fetchcreds_request($postdata, $keys) {
         $postdata["MIME-type"] = "application/x-www-form-urlencoded; charset=UTF-8";
         $postdata["client_id"] = $keys["googleauth"] ?? "";
         $postdata["client_secret"] = $keys["google_secret"] ?? "";
         return api("https://oauth2.googleapis.com/token", $postdata, null, 0, "1d", null, null);
     }
+
+    // Handles various custom request types and routes to appropriate handlers
+    function handle_custom_request($custom, $postdata, $params, $data_var, $postheaders, $cache_time, $cache_folder, $keys) {
+        switch ($custom) {
+            case "gk":
+                return handle_gk_request($keys);
+            case "add":
+                return api(null, json_encode($postdata), null, 0, "1d", null, null);
+            case "nano_txd":
+                return handle_nano_txd_request($data_var, $postheaders, $cache_time, $cache_folder);
+            case "electrum":
+                return api("electrum", $data_var, $postheaders, $cache_time, $cache_folder, null, null);
+            case "system_bu":
+                return handle_systembu_request($params, $postheaders);
+            case "get_system_bu":
+                return api(null, null, null, 604800, "1w", null, $params);
+            case "fetch_creds":
+                return handle_fetchcreds_request($postdata, $keys);
+            default:
+                return ["error" => ["message" => "Unknown custom request type"]];
+        }
+    }
+
+    // Creates a structured error response with code and message
+    function create_error_response($code, $message) {
+        return [
+            "error" => [
+                "code" => $code,
+                "message" => $message
+            ]
+        ];
+    }
+
+    // Main execution begins here
+    try {
+        // Extract POST data
+        $postdata = $_POST;
+        $params = get_postvalue("params", []);
+        $method = $params["method"] ?? false;
+        $proxyheaders = $params["headers"] ?? false;
+        $payload = $params["data"] ?? false;
+        $custom = get_postvalue("custom");
+        $apiname = get_postvalue("api");
+        $apiurl = get_postvalue("api_url");
+        $apikey = get_postvalue("api_key");
+        $keyparam = get_postvalue("key_param");
+        $ampersand = get_postvalue("ampersand");
+        $nokey = get_postvalue("nokey");
+        $bearer = get_postvalue("bearer");
+        $cache_time = get_postvalue("cachetime");
+        $cache_folder = get_postvalue("cachefolder");
+
+        // Validate API URL for non-custom requests
+        if (!$custom && !$apiurl) {
+            echo json_encode(["ping" => create_error_response("400", "Missing API URL")]);
+            exit;
+        }
+
+        // Define data
+        $data_var = $payload ?: null;
+
+        // Define key
+        $accesstoken = isset($keys) && isset($apiname) && isset($keys[$apiname]) ? $keys[$apiname] : false;
+        $auth_token = $apikey ?: $accesstoken;
+
+        // Construct headers
+        $postheaders = [];
+        if ($proxyheaders || $method == "POST" || $bearer) {
+            $postheaders[] = "Content-Type: application/json";
+            if (isset($payload) && is_string($payload)) {
+                $postheaders[] = "Content-Length: " . strlen($payload);
+            }
+            if ($proxyheaders && is_array($proxyheaders)) {
+                foreach ($proxyheaders as $key => $value) {
+                    if (is_string($key) && is_string($value)) {
+                        $postheaders[] = $key . ": " . $value;
+                    }
+                }
+            }
+        }
+
+        // Add Authorization header if needed
+        if ($bearer) {
+            if ($auth_token) {
+                $postheaders[] = "Authorization: Bearer " . $auth_token;
+            }
+            if ($bearer == "tls_wildcard") {
+                $postheaders["tls_wildcard"] = true;
+            }
+        }
+
+        // Construct URL
+        $key_param1 = $keyparam ?: "";
+        $ampersand1 = $ampersand ?: "";
+        $key_param_var = ($auth_token && $keyparam != "bearer") ? $ampersand1 . $key_param1 . $auth_token : "";
+        $key_param2 = ($apikey && $nokey == "true") ? "" : $key_param_var;
+        $new_url = $apiurl . $key_param2;
+
+        // Handle custom or standard API requests
+        if ($custom) {
+            $result = handle_custom_request($custom, $postdata, $params, $data_var, $postheaders, $cache_time, $cache_folder, $keys ?? []);
+        } else {
+            $result = api($new_url, $data_var, $postheaders, $cache_time, $cache_folder, null, null);
+        }
+
+        // Output the result
+        echo json_encode(["ping" => $result]);
+    } catch (Exception $e) {
+        echo json_encode([
+            "ping" => create_error_response("500", "Unexpected error: " . $e->getMessage())
+        ]);
+    }
+?>
