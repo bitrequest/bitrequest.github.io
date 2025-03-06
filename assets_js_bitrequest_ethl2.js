@@ -330,11 +330,15 @@ function edit_l2() {
                             select_val = select_name || selected.name,
                             api_push = [];
                         $.each(apis, function(i, v2) {
+                            const node_name = v2.name,
+                                node_icon_url = get_node_icon(node_name),
+                                node_icon = (node_icon_url) ? "<img src='" + fetch_aws(node_icon_url) + ".png' class='icon'>" : "";
                             api_push.push({
                                 "span": {
+                                    "class": "optionwrap",
                                     "data-pe": "none",
                                     "attr": add_prefix_to_keys(v2),
-                                    "content": v2.name
+                                    "content": node_icon + node_name
                                 }
                             });
                         });
@@ -544,7 +548,7 @@ function get_network_node_config(payment, network, l2_dat, type) {
         const eth_settings = get_coinsettings(payment),
             eth_l2_settings = q_obj(eth_settings, "layer2.options." + network + "." + type + ".apis");
         if (eth_l2_settings) {
-            return object_from_array(eth_l2_settings, "name", selected);
+            return object_from_array(eth_l2_settings, "network", network);
         }
     }
     return false;
