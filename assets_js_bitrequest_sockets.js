@@ -260,7 +260,7 @@ function handle_socket_fails(socket_node, wallet_address, socket_id, is_layer2) 
                 const token_contracts = contracts(request.currencysymbol);
                 if (token_contracts && socket_id) {
                     stop_monitors(socket_id);
-                    setup_layer2_monitoring(fallback_node, wallet_address, token_contracts, true);
+                    setup_layer2_monitoring(is_layer2, fallback_node, wallet_address, token_contracts, true);
                 }
                 return
             }

@@ -48,12 +48,12 @@ function initialize_layer2_connections(payment, address, ct, socket_node) {
         let index = 0;
         $.each(l2_options, function(l2, l2_dat) {
             const set_select = is_request ? false : !empty_obj(l2_dat),
-                inarr = $.inArray(index, req_l2_arr) !== -1,
+                inarr = ($.inArray(index, req_l2_arr) > -1),
                 selected = set_select || inarr;
             if (selected) {
                 l2_arr.push(index);
                 const sn = socket_node || get_network_node_config(payment, l2, l2_dat, "websockets");
-                setup_layer2_monitoring(sn, address, ctracts);
+                setup_layer2_monitoring(l2, sn, address, ctracts);
             }
             index++;
         });
@@ -67,20 +67,22 @@ function initialize_layer2_connections(payment, address, ct, socket_node) {
 }
 
 // Sets up Layer 2 blockchain scanning for given address and contract
-function setup_layer2_monitoring(socket_node, address, ctracts, retry) {
-    const l2 = q_obj(socket_node, "network");
-    if (l2) {
-        const contract = ctracts ? ctracts[l2] : false;
-        socket_info(socket_node, true);
-        const node_name = socket_node.name,
-            ping_id = sha_sub(socket_node.url + l2, 15);
-        glob_let.socket_attempt[ping_id] = true;
-        if (node_name === "infura") {
-            web3_erc20_websocket(socket_node, address, contract, ping_id);
-            return
+function setup_layer2_monitoring(l2, sn, address, ctracts, retry) {
+    const layer2 = l2 || q_obj(sn, "network");
+    if (layer2) {
+        const socket_node = sn || q_obj(get_erc20_settings(), "layer2.options." + layer2 + ".websockets.selected");
+        if (socket_node) {
+            const contract = ctracts ? ctracts[layer2] : false,
+                node_name = socket_node.name,
+                ping_id = sha_sub(socket_node.url + layer2, 15);
+            socket_info(socket_node, true);
+            glob_let.socket_attempt[ping_id] = true;
+            if (node_name === "infura") {
+                web3_erc20_websocket(socket_node, address, contract, ping_id);
+                return
+            }
+            start_layer2_scan(socket_node, contract, ping_id, retry);
         }
-        start_layer2_scan(socket_node, contract, ping_id, retry);
-        return
     }
 }
 
