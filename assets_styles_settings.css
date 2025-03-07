@@ -246,7 +246,13 @@ ul.conf_options li .conf_emoji {
 	display: none;
 }
 
-.selectbox .options span.show {
+.selectbox .options>.optionwrap img.icon {
+	width:2em;
+	margin-right:0.4em;
+	vertical-align: middle;
+}
+
+.selectbox .options.show_options span.show {
 	display: block;
 }
 
@@ -279,6 +285,17 @@ ul.conf_options li .conf_emoji {
 	margin-bottom: 0.6em;
 }
 
+#rpc_list .selectarrows {
+	opacity:0;
+	pointer-events: none;
+	transition: opacity 1000ms ease;
+}
+
+#rpc_list.show_select .selectarrows {
+	opacity:1;
+	pointer-events: all;
+}
+
 #rpc_input .c_stat {
 	position: absolute;
 	top: 1px;
@@ -292,11 +309,11 @@ ul.conf_options li .conf_emoji {
 	transition: opacity 1000ms ease;
 }
 
-#rpc_input_box.live .c_stat.icon-connection {
+#rpc_input .optionwrap.live .c_stat.icon-connection {
 	opacity: 1;
 }
 
-#rpc_input_box.offline .c_stat.icon-wifi-off {
+#rpc_input .optionwrap.offline .c_stat.icon-wifi-off {
 	opacity: 1;
 }
 

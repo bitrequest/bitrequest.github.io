@@ -297,7 +297,7 @@ function route_crypto_api(rd, api_data, rdo) {
         return
     }
     if (provider === "blockchain.info") {
-        initialize_bitcoin_scan(rd, api_data, rdo);
+        current_block_height(rd, api_data, rdo);
         return
     }
     if (provider === "blockcypher") {
@@ -333,8 +333,8 @@ function route_crypto_api(rd, api_data, rdo) {
 
 // Routes requests to appropriate RPC endpoints for Bitcoin, Ethereum, and Nano networks
 function route_blockchain_rpc(rd, api_data, rdo) {
-    if (is_btchain(rd.payment) === true) {
-        mempoolspace_rpc_init(rd, api_data, rdo, true);
+    if (is_btchain(rd.payment)) {
+        current_block_height(rd, api_data, rdo);
         return
     }
     if (rd.payment === "ethereum" || rd.erc20 === true) {
@@ -640,8 +640,8 @@ function get_next_rpc(this_payment, api_data, request_id, l2) {
     const api_settings = cs_node(this_payment, "apis", true);
     if (api_settings) {
         const api_list = api_settings.apis,
-            rpc_list = api_settings.options,
-            combined_list = (rpc_list && rpc_list.length) ? $.merge(api_list, rpc_list) : api_list,
+            rpc_list = api_settings.options;
+        combined_list = (rpc_list && rpc_list.length) ? $.merge(api_list, rpc_list) : api_list,
             list_length = combined_list.length;
         if (combined_list && list_length) {
             const next_index = combined_list.findIndex(option => option.url === api_data.url),
@@ -686,7 +686,7 @@ function display_api_source(current_list, api_data) {
     const api_url = api_data.url,
         api_url_short = api_url ? (api_url.length > 40 ? api_url.slice(0, 40) + "..." : api_url) : "",
         provider_name = api_data.name,
-        api_title = provider_name === "mempool.space" ? api_url : provider_name,
+        api_title = provider_name === "mempool.space" ? api_url : provider_name === "electrum" ? get_string_before_last_colon(api_url_short) : provider_name,
         api_source = api_title || api_url_short;
     current_list.data("source", api_source).find(".api_source").html("<span class='src_txt' title='" + api_url_short + "'>" + tl("source") + ": " + api_source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
 }

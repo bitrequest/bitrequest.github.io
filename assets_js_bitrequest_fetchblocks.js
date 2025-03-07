@@ -17,8 +17,12 @@
 //process_dash_transactions
 
 // ** RPC Interactions: **
+//current_block_height
+//electrum_rpc_blockheight
 //mempoolspace_rpc_init
-//mempoolspace_rpc_blockheight  
+//mempoolspace_rpc_blockheight
+//mempoolspace_blockheight_fails
+//electrum_rpc
 //mempoolspace_rpc
 //infura_txd_rpc
 //eth_params
@@ -1740,6 +1744,57 @@ function process_dash_transactions(rd, api_data, rdo) {
 
 // ** RPC Interactions: **
 
+// Get the current block height
+function current_block_height(rd, api_data, rdo) {
+    const api_name = api_data.name;
+    if (api_name === "electrum") {
+        electrum_rpc_blockheight(rd, api_data, rdo);
+        return
+    }
+    if (api_name === "blockchain.info") {
+        initialize_bitcoin_scan(rd, api_data, rdo);
+        return
+    }
+    mempoolspace_rpc_init(rd, api_data, rdo, true);
+}
+
+// Fetches current Bitcoin block height from Electrum servers for confirmation calculations
+function electrum_rpc_blockheight(rd, api_data, rdo) {
+    const rpc_url = api_data.url;
+    api_proxy({ // get latest blockheight
+        "api": rd.payment,
+        "cachetime": rdo.cachetime,
+        "cachefolder": "1h",
+        "custom": "electrum",
+        "api_url": rpc_url,
+        "proxy": true,
+        "params": {
+            "method": "POST",
+            "cache": true,
+            "data": JSON.stringify({
+                "id": "blockheight",
+                "method": "blockchain.headers.subscribe",
+                "node": rpc_url
+            })
+        }
+    }).done(function(response) {
+        const api_result = br_result(response).result;
+        let latest_block = null;
+        if (api_result) {
+            latest_block = api_result.height;
+            if (latest_block) {
+                electrum_rpc(rd, api_data, rdo, latest_block);
+                return
+            }
+        }
+        mempoolspace_rpc_blockheight(rd, api_data, rdo);
+    }).fail(function(xhr, stat, err) {
+        mempoolspace_rpc_blockheight(rd, api_data, rdo);
+    }).always(function() {
+        update_api_source(rdo, api_data);
+    });
+}
+
 // Routes mempool.space API requests between address polling and block height verification for Bitcoin transactions
 function mempoolspace_rpc_init(rd, api_data, rdo, rpc) {
     if (rdo.source === "addr_polling") {
@@ -1751,8 +1806,16 @@ function mempoolspace_rpc_init(rd, api_data, rdo, rpc) {
 
 // Fetches current Bitcoin block height from mempool.space API for confirmation calculations
 function mempoolspace_rpc_blockheight(rd, api_data, rdo, rpc) {
+    const currency = rd.payment,
+        btc_base = glob_const.mempool_space[currency];
+    if (!btc_base) {
+        mempoolspace_blockheight_fails(rd, api_data, rdo, rpc);
+        return
+    }
     const api_url = api_data.url,
-        base_url = (rpc) ? api_url : "https://" + api_url;
+        base_url = rpc ? api_url : btc_base,
+        api_name = api_data.name;
+    let block_height = null;
     api_proxy({ // get latest blockheight
         "api_url": base_url + "/api/blocks/tip/height",
         "proxy": false,
@@ -1762,30 +1825,155 @@ function mempoolspace_rpc_blockheight(rd, api_data, rdo, rpc) {
     }).done(function(response) {
         const api_result = br_result(response).result;
         if (api_result) {
-            if (api_result.error) {
-                handle_scan_failure({
-                    "error": api_result.error
-                }, rd, api_data, rdo);
-                return
+            if (!api_result.error) {
+                block_height = api_result;
             }
-            mempoolspace_rpc(rd, api_data, rdo, rpc, api_result);
+        }
+        if (api_name === "electrum") {
+            electrum_rpc(rd, api_data, rdo, block_height);
             return
         }
-        handle_scan_failure(null, rd, api_data, rdo);
+        mempoolspace_rpc(rd, api_data, rdo, rpc, block_height);
     }).fail(function(xhr, stat, err) {
-        const is_proxy_error = is_proxy_fail(this.url),
-            error_data = xhr || stat || err;
-        handle_scan_failure({
-            "error": error_data,
-            "is_proxy": is_proxy_error
-        }, rd, api_data, rdo);
+        mempoolspace_blockheight_fails(rd, api_data, rdo, rpc);
     }).always(function() {
         update_api_source(rdo, api_data);
     });
 }
 
+function mempoolspace_blockheight_fails(rd, api_data, rdo, rpc) {
+    if (api_data.name === "electrum") {
+        electrum_rpc(rd, api_data, rdo);
+        return
+    }
+    mempoolspace_rpc(rd, api_data, rdo, rpc);
+}
+
+// Processes Nano transactions via RPC with support for account scanning and block verification
+function electrum_rpc(rd, api_data, rdo, latest_block) {
+    const currency = rd.payment,
+        tx_list = rdo.transactionlist,
+        source = rdo.source,
+        address = rd.address,
+        script_pub = address_to_scripthash(address, currency),
+        script_hash = script_pub.hash,
+        script_pub_key = script_pub.script_pub_key,
+        rpc_url = api_data.url,
+        pending = rdo.pending,
+        set_confirmations = latest_block ? rdo.setconfirmations : 1;
+    let tx_count = 0,
+        matched_tx = false;
+    if (pending === "scanning") { // scan incoming transactions on address
+        api_proxy({
+            "api": currency,
+            "cachetime": rdo.cachetime,
+            "cachefolder": "1h",
+            "custom": "electrum",
+            "api_url": rpc_url,
+            "proxy": true,
+            "params": {
+                "method": "POST",
+                "cache": true,
+                "data": JSON.stringify({
+                    "id": "scanning",
+                    "method": "blockchain.scripthash.get_history",
+                    "ref": script_hash,
+                    "node": rpc_url
+                })
+            }
+        }).done(function(response) {
+            const api_result = br_result(response).result;
+            if (api_result) {
+                if (api_result.error) {
+                    handle_scan_failure({
+                        "error": api_result.error
+                    }, rd, api_data, rdo);
+                    return
+                }
+                $.each(api_result, function(key, tx) {
+                    const parsed_tx = electrum_scan_data(tx, set_confirmations, rd.currencysymbol, script_pub_key, latest_block);
+                    if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) {
+                        matched_tx = parsed_tx;
+                        if (source === "requests") {
+                            const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                            if (tx_item) {
+                                tx_list.append(tx_item.data(parsed_tx));
+                                tx_count++;
+                            }
+                        }
+                    }
+                });
+                process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
+                return
+            }
+            handle_scan_failure(null, rd, api_data, rdo);
+        }).fail(function(xhr, stat, err) {
+            const error_data = xhr || stat || err;
+            handle_scan_failure({
+                "error": error_data
+            }, rd, api_data, rdo);
+        }).always(function() {
+            update_api_source(rdo, api_data);
+        });
+        return
+    }
+    if (pending === "polling") {
+        const tx_hash = rd.txhash;
+        api_proxy({
+            "api": currency,
+            "cachetime": rdo.cachetime,
+            "cachefolder": "1h",
+            "custom": "electrum",
+            "api_url": rpc_url,
+            "proxy": true,
+            "params": {
+                "method": "POST",
+                "cache": true,
+                "data": JSON.stringify({
+                    "id": "polling",
+                    "tx_hash": tx_hash,
+                    "method": "blockchain.scripthash.get_history",
+                    "ref": script_hash,
+                    "node": rpc_url
+                })
+            }
+        }).done(function(response) {
+            const api_result = br_result(response).result;
+            if (api_result) {
+                if (api_result.error) {
+                    handle_scan_failure({
+                        "error": api_result.error
+                    }, rd, api_data, rdo);
+                    return
+                }
+                const parsed_tx = electrum_scan_data(api_result, set_confirmations, rd.currencysymbol, script_pub_key, latest_block, tx_hash);
+                if (parsed_tx.ccval) {
+                    matched_tx = parsed_tx;
+                    tx_count = 1;
+                    if (source === "requests") {
+                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                        if (tx_item) {
+                            tx_list.append(tx_item.data(parsed_tx));
+                        }
+                    }
+                }
+                process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
+                return
+            }
+            handle_scan_failure(null, rd, api_data, rdo);
+        }).fail(function(xhr, stat, err) {
+            const error_data = xhr || stat || err;
+            handle_scan_failure({
+                "error": error_data
+            }, rd, api_data, rdo);
+        }).always(function() {
+            update_api_source(rdo, api_data);
+        });
+    }
+}
+
 // Processes Bitcoin transactions through mempool.space API with transaction filtering and block height validation
-function mempoolspace_rpc(rd, api_data, rdo, rpc, block_height) {
+function mempoolspace_rpc(rd, api_data, rdo, rpc, latest_block) {
     const tx_list = rdo.transactionlist,
         api_url = api_data.url,
         base_url = (rpc) ? api_url : "https://" + api_url,
@@ -1808,10 +1996,11 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, block_height) {
                         handle_scan_failure(null, rd, api_data, rdo);
                         return
                     }
-                    const sorted_txs = sort_transactions_by_date(mempoolspace_scan_data, api_result);
+                    const sorted_txs = sort_transactions_by_date(mempoolspace_scan_data, api_result),
+                        set_confirmations = latest_block ? rdo.setconfirmations : 1;
                     $.each(sorted_txs, function(date, tx) {
                         if (tx.txid) { // filter outgoing transactions
-                            const parsed_tx = mempoolspace_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, rd.address, block_height);
+                            const parsed_tx = mempoolspace_scan_data(tx, set_confirmations, rd.currencysymbol, rd.address, latest_block);
                             if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) {
                                 matched_tx = parsed_tx;
                                 if (source === "requests") {
@@ -1847,7 +2036,7 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, block_height) {
         }).done(function(response) {
             const api_result = br_result(response).result;
             if (api_result) {
-                const parsed_tx = mempoolspace_scan_data(api_result, rdo.setconfirmations, rd.currencysymbol, rd.address, block_height);
+                const parsed_tx = mempoolspace_scan_data(api_result, rdo.setconfirmations, rd.currencysymbol, rd.address, latest_block);
                 if (parsed_tx) {
                     if (parsed_tx.ccval) {
                         matched_tx = parsed_tx;
@@ -2166,7 +2355,7 @@ function nano_rpc(rd, api_data, rdo) {
 // ** Transaction Data Processing: **
 
 // Sorts transaction list by date in descending order using custom processing function
-function sort_transactions_by_date(process_func, tx_list, rdo, rd) {
+function sort_transactions_by_date(process_func, tx_list) {
     return $(tx_list).sort(function(tx_a, tx_b) {
         const time_a = process_func(tx_a, "sort"),
             time_b = process_func(tx_b, "sort");
@@ -2224,10 +2413,9 @@ function default_tx_data() {
 
 // Processes blockchain.info websocket transaction data with legacy address support
 function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) {
-    function process_value(output, target_addr) {
-        return (target_addr === output.addr ||
-            "bitcoincash:" + target_addr === output.addr ||
-            legacy === output.addr) ? output.value || 0 : 0;
+    function process_value(output, target_addr, legacy) {
+        const output_addr = output.addr;
+        return str_match(output_addr, target_addr) || str_match(output_addr, "bitcoincash:" + target_addr) || str_match(output_addr, legacy) ? output.value || 0 : 0;
     }
     const total_output = calculate_total_outputs(data.out, address, process_value),
         tx_timestamp = data.time ? data.time * 1000 : null,
@@ -2245,7 +2433,7 @@ function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) {
 // Processes mempool.space websocket transaction data with scriptpubkey address validation
 function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) {
     function process_value(output, target_addr) {
-        return target_addr === output.scriptpubkey_address ? output.value || 0 : 0;
+        return str_match(output.scriptpubkey_address, target_addr) ? output.value || 0 : 0;
     }
     const total_output = calculate_total_outputs(data.vout, address, process_value),
         tx_timestamp = data.firstSeen ? data.firstSeen * 1000 : null,
@@ -2261,34 +2449,60 @@ function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) {
 }
 
 // Processes mempool.space transaction data with block height confirmation calculation
-function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, latestblock) {
+function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, latest_block) {
     const status = data.status,
         tx_timestamp = status.block_time ? status.block_time * 1000 : now(),
-        tx_time_utc = tx_timestamp ? tx_timestamp + glob_const.timezone : null;
+        transactiontime = tx_timestamp ? tx_timestamp + glob_const.timezone : null;
     if (setconfirmations === "sort") {
-        return tx_time_utc;
+        return transactiontime;
     }
 
     function process_value(output, target_addr) {
-        return output.scriptpubkey_address.indexOf(target_addr) > -1 ? output.value : 0;
+        return str_match(output.scriptpubkey_address, target_addr) ? output.value || 0 : 0;
     }
     const total_output = calculate_total_outputs(data.vout, address, process_value),
-        min_confs = status.confirmed ? setconfirmations : 0,
-        block_confs = get_block_confirmations(status.block_height, latestblock) || min_confs;
+        height = status.block_height,
+        min_confs = status.confirmed ? 1 : 0,
+        confirmations = latest_block ? get_block_confirmations(status.block_height, latest_block) : min_confs || height;
     return {
         "ccval": total_output ? total_output / 1e8 : null,
-        "transactiontime": tx_time_utc,
+        transactiontime,
         "txhash": data.txid,
-        "confirmations": block_confs,
-        "setconfirmations": setconfirmations,
-        "ccsymbol": ccsymbol
+        confirmations,
+        setconfirmations,
+        ccsymbol
+    };
+}
+
+// Processes Electrum transaction data
+function electrum_scan_data(data, setconfirmations, ccsymbol, script_pub, latest_block, tx_hash) {
+    const outputs = data.outputs,
+        height = data.height || 0,
+        timestamp = height ? data.timestamp : null,
+        transactiontime = normalize_timestamp(timestamp, true),
+        confirmations = latest_block ? get_block_confirmations(height, latest_block) : height;
+    let outputsum = 0;
+    if (outputs) {
+        $.each(outputs, function(dat, value) {
+            if (value.scriptPubKey === script_pub) {
+                outputsum += value.amount || 0; // sum of outputs
+            }
+        });
+    }
+    return {
+        "ccval": (outputsum) ? outputsum / 100000000 : null,
+        transactiontime,
+        "txhash": data.tx_hash || tx_hash,
+        confirmations,
+        setconfirmations,
+        ccsymbol
     };
 }
 
 // Processes Dogecoin blockchain websocket data with output value summation
 function dogechain_ws_data(data, setconfirmations, ccsymbol, address) {
     function process_value(output, target_addr) {
-        return target_addr === output.addr ? output.value || 0 : 0;
+        return str_match(output.addr, target_addr) ? output.value || 0 : 0;
     }
     const total_output = calculate_total_outputs(data.outputs, address, process_value),
         tx_timestamp = data.time ? data.time * 1000 : now(),
@@ -2383,7 +2597,7 @@ function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) {
 }
 
 // Processes blockchain.info transaction data with mempool status and confirmation calculation
-function blockchaininfo_scan_data(data, setconfirmations, ccsymbol, address, latestblock) {
+function blockchaininfo_scan_data(data, setconfirmations, ccsymbol, address, latest_block) {
     const tx_timestamp = data.time ? data.time * 1000 : null,
         tx_time_utc = tx_timestamp ? tx_timestamp + glob_const.timezone : now();
     if (setconfirmations === "sort") {
@@ -2394,7 +2608,7 @@ function blockchaininfo_scan_data(data, setconfirmations, ccsymbol, address, lat
         return str_match(output.address, target_addr) ? Math.abs(output.value) : 0;
     }
     const block_height = q_obj(data, "block.height"),
-        block_confs = get_block_confirmations(block_height, latestblock),
+        block_confs = get_block_confirmations(block_height, latest_block),
         final_confs = q_obj(data, "block.mempool") ? 0 : block_confs,
         total_output = calculate_total_outputs(data.outputs, address, process_output_value);
     return {
@@ -2408,7 +2622,7 @@ function blockchaininfo_scan_data(data, setconfirmations, ccsymbol, address, lat
 }
 
 // Processes Blockchair transaction data with recipient validation and instant lock detection
-function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestblock) {
+function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latest_block) {
     const tx_data = data.transaction;
     if (!tx_data) return default_tx_data();
     const tx_timestamp = tx_data.time ? parse_datetime_string(tx_data.time).getTime() : null;
@@ -2418,9 +2632,9 @@ function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestb
 
     function process_value(output, target_addr) {
         const output_value = output.value;
-        return output.recipient === target_addr ? Math.abs(output_value) : 0;
+        return str_match(output.recipient, target_addr) ? Math.abs(output_value) || 0 : 0;
     }
-    const block_confs = get_block_confirmations(tx_data.block_id, latestblock),
+    const block_confs = get_block_confirmations(tx_data.block_id, latest_block),
         total_output = calculate_total_outputs(data.outputs, address, process_value);
     return {
         "ccval": total_output ? total_output / 1e8 : null,
@@ -2435,13 +2649,13 @@ function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latestb
 }
 
 // Handles Blockchair Ethereum transaction data with precise ETH value conversion
-function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latestblock) {
+function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latest_block) {
     const tx_timestamp = data.time ? parse_datetime_string(data.time).getTime() : null;
     if (setconfirmations === "sort") {
         return tx_timestamp;
     }
     const eth_value = data.value ? parseFloat((data.value / 1e18).toFixed(8)) : null,
-        block_confs = get_block_confirmations(data.block_id, latestblock);
+        block_confs = get_block_confirmations(data.block_id, latest_block);
     return {
         "ccval": eth_value,
         "transactiontime": tx_timestamp,
@@ -2454,13 +2668,13 @@ function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latestblock)
 }
 
 // Processes Blockchair ERC20 token data with dynamic decimal precision handling
-function blockchair_erc20_scan_data(data, setconfirmations, ccsymbol, latestblock) {
+function blockchair_erc20_scan_data(data, setconfirmations, ccsymbol, latest_block) {
     const tx_timestamp = data.time ? parse_datetime_string(data.time).getTime() : null;
     if (setconfirmations === "sort") {
         return tx_timestamp;
     }
     const token_value = data.value ? parseFloat((data.value / (10 ** data.token_decimals)).toFixed(8)) : null,
-        block_confs = get_block_confirmations(data.block_id, latestblock);
+        block_confs = get_block_confirmations(data.block_id, latest_block);
     return {
         "ccval": token_value,
         "transactiontime": tx_timestamp,
@@ -2474,7 +2688,7 @@ function blockchair_erc20_scan_data(data, setconfirmations, ccsymbol, latestbloc
 }
 
 // Processes Blockchair ERC20 polling data with multi-layer token transaction validation
-function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latestblock) {
+function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latest_block) {
     const tx_data = data.transaction,
         token_data = data.layer_2.erc_20[0];
     if (!tx_data || !token_data) {
@@ -2482,7 +2696,7 @@ function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latestbloc
     }
     const tx_timestamp = tx_data.time ? parse_datetime_string(tx_data.time).getTime() : null,
         token_value = token_data.value ? parseFloat((token_data.value / (10 ** token_data.token_decimals)).toFixed(8)) : null,
-        block_confs = get_block_confirmations(tx_data.block_id, latestblock);
+        block_confs = get_block_confirmations(tx_data.block_id, latest_block);
     return {
         "ccval": token_value,
         "transactiontime": tx_timestamp,
@@ -2617,12 +2831,12 @@ function infura_block_data(data, setconfirmations, ccsymbol, ts) {
 }
 
 // Processes Monero transaction data with payment ID validation and piconero conversion
-function xmr_scan_data(data, setconfirmations, ccsymbol, latestblock) {
+function xmr_scan_data(data, setconfirmations, ccsymbol, latest_block) {
     const tx_timestamp = to_ts(data.timestamp);
     if (setconfirmations === "sort") {
         return tx_timestamp;
     }
-    const block_confs = get_block_confirmations(data.height, latestblock);
+    const block_confs = get_block_confirmations(data.height, latest_block);
     return {
         "ccval": data.total_received / 1e12,
         "transactiontime": tx_timestamp,
@@ -2654,12 +2868,12 @@ function blockchair_xmr_data(data, setconfirmations) {
 }
 
 // Processes Nimiq transaction data with confirmation calculation and value scaling
-function nimiq_scan_data(data, setconfirmations, latestblock, txhash) {
+function nimiq_scan_data(data, setconfirmations, latest_block, txhash) {
     const tx_timestamp = normalize_timestamp(data.timestamp, true);
     if (setconfirmations === "sort") {
         return tx_timestamp;
     }
-    const raw_confs = data.confirmations || get_block_confirmations(data.height, latestblock),
+    const raw_confs = data.confirmations || get_block_confirmations(data.height, latest_block),
         block_confs = (raw_confs < 0) ? 0 : raw_confs,
         tx_hash = txhash || data.hash || null,
         final_confs = (confirmed) ? null : setconfirmations;
@@ -2674,7 +2888,7 @@ function nimiq_scan_data(data, setconfirmations, latestblock, txhash) {
 }
 
 // Handles Kaspa transaction data with blue score confirmation calculation
-function kaspa_scan_data(data, thisaddress, setconfirmations, latestblock) {
+function kaspa_scan_data(data, thisaddress, setconfirmations, latest_block) {
     const tx_time_utc = data.block_time + glob_const.timezone;
     if (setconfirmations === "sort") {
         return tx_time_utc;
@@ -2685,7 +2899,7 @@ function kaspa_scan_data(data, thisaddress, setconfirmations, latestblock) {
         return output.script_public_key_address === target_addr ? Math.abs(output_amount) : 0;
     }
     const total_output = calculate_total_outputs(data.outputs, thisaddress, process_output_value),
-        block_confs = data.is_accepted ? get_block_confirmations(data.accepting_block_blue_score, latestblock) : 0;
+        block_confs = data.is_accepted ? get_block_confirmations(data.accepting_block_blue_score, latest_block) : 0;
     return {
         "ccval": total_output ? total_output / 1e8 : null,
         "transactiontime": tx_time_utc,

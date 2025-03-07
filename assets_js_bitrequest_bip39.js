@@ -3,9 +3,6 @@ const bip39_const = {
     "test_phrase": "army van defense carry jealous true garbage claim echo media make crunch", // random phrase used for test derive
     "expected_seed": "5b56c417303faa3fcba7e57400e120a0ca83ec5a4fc9ffba757fbe63fbd77a89a1a3be4c67196f57c39a88b76373733891bfaba16ed27a813ceed498804c0570", // expected seed used for test derive
     "expected_address": "1HQ3rb7nyLPrjnuW85MUknPekwkn7poAUm", // expected addres used for test derive
-    "expected_bech32": "bc1qg0azlj4w2lrq8jssrrz6eprt2fe7f7edm4vpd5", // expected bech32 addres used for test derive
-    "expected_bch_cashaddr": "qp5p0eur784pk8wxy2kzlz3ctnq5whfnuqqpp78u22",
-    "expected_eth_address": "0x2161DedC3Be05B7Bb5aa16154BcbD254E9e9eb68",
     "c_derive": {
         "bitcoin": true,
         "litecoin": true,
@@ -311,7 +308,7 @@ function bech32_check() {
     try {
         const test_pubkey = "03bb4a626f63436a64d7cf1e441713cc964c0d53289a5b17acb1b9c262be57cb17",
             derived_address = pub_to_address_bech32("bc", test_pubkey);
-        return bip39_const.expected_bech32 === derived_address;
+        return glob_const.test_address.bitcoin === derived_address;
     } catch (e) {
         console.error(e.name, e.message);
         return false;
@@ -323,7 +320,7 @@ function cashaddr_check() {
     try {
         const legacy_address = "1AVPurYZinnctgGPiXziwU6PuyZKX5rYZU",
             cash_address = pub_to_cashaddr(legacy_address);
-        return bip39_const.expected_bch_cashaddr === cash_address;
+        return glob_const.test_address["bitcoin-cash"] === cash_address;
     } catch (e) {
         console.error(e.name, e.message);
         return false;
@@ -382,7 +379,7 @@ function eth_xpub_check() {
     try {
         const test_pubkey = "03c026c4b041059c84a187252682b6f80cbbe64eb81497111ab6914b050a8936fd",
             derived_address = pub_to_eth_address(test_pubkey);
-        return bip39_const.expected_eth_address === derived_address;
+        return glob_const.test_address["ethereum"] === derived_address;
     } catch (e) {
         console.error(e.name, e.message);
         return false;

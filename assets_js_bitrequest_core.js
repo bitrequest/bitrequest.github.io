@@ -1,7 +1,8 @@
 // Initialize the application when the document is ready
 $(document).ready(function() {
     $.ajaxSetup({
-        "cache": false
+        "cache": false,
+        "timeout": 10000
     });
     build_settings(); // build settings first
 
@@ -55,6 +56,7 @@ $(document).ready(function() {
         }, 600);
     }, 600);
     handle_select_input();
+    handle_select_change();
     handle_option_selection();
     canceldialog_trigger();
     console.log({
@@ -232,328 +234,328 @@ function convert_coinlist(token_list) {
 
 // Set up various functions for the application
 function set_functions() {
-        set_locales(); //set meta attribute
-        set_permissions();
-    
+    set_locales(); //set meta attribute
+    set_permissions();
+
     // ** Pincode **
-        pinkeypress();
-        //pinpressselect
-        pinpress_trigger();
-        //pinpress
-        pinvalidate_trigger();
-        pin_admin_reset();
-        //pinvalidate
-        pinback_trigger();
-        pinback_validate_trigger();
-        //pinback
-        seed_unlock_trigger();
-        phrase_login();
-        //remove_cashier
-        canceloptions_trigger();
-        //canceloptions
-        keyup();
-        if (is_viewonly() === true || ishome() === true) {
-            finish_functions();
-            return
-        }
-        if (check_pin_lock() === true) {
-            const content = pinpanel(" pinwall global");
-            showoptions(content, "pin");
-            return
-        }
+    pinkeypress();
+    //pinpressselect
+    pinpress_trigger();
+    //pinpress
+    pinvalidate_trigger();
+    pin_admin_reset();
+    //pinvalidate
+    pinback_trigger();
+    pinback_validate_trigger();
+    //pinback
+    seed_unlock_trigger();
+    phrase_login();
+    //remove_cashier
+    canceloptions_trigger();
+    //canceloptions
+    keyup();
+    if (is_viewonly() === true || ishome() === true) {
         finish_functions();
+        return
+    }
+    if (check_pin_lock() === true) {
+        const content = pinpanel(" pinwall global");
+        showoptions(content, "pin");
+        return
+    }
+    finish_functions();
 }
 
 // Set up remaining functions for the application
 function finish_functions() {
     // ** Navigation & Routing: **
-        //loadurl
-        clicklink();
-        //loadpage
-        //openpage
-        popstate();
-        //loadfunction
-        //loadpageevent
-        //shownav
-        active_menu();
-        fixednav();
-        //cancel_url_dialogs
-        //ios_redirections
-        //ios_init
-        
+    //loadurl
+    clicklink();
+    //loadpage
+    //openpage
+    popstate();
+    //loadfunction
+    //loadpageevent
+    //shownav
+    active_menu();
+    fixednav();
+    //cancel_url_dialogs
+    //ios_redirections
+    //ios_init
+
     // ** Request & Payment Handling: **
-        triggertx();
-        //triggertx_function
-        //finishtx_function
-        //clear_savedurl
-        payrequest();
-        //close_paymentdialog
-        //continue_cpd
-        //after_scan_init
-        //after_scan
-        //cancel_after_scan
-        //set_recent_requests
-        
+    triggertx();
+    //triggertx_function
+    //finishtx_function
+    //clear_savedurl
+    payrequest();
+    //close_paymentdialog
+    //continue_cpd
+    //after_scan_init
+    //after_scan
+    //cancel_after_scan
+    //set_recent_requests
+
     // ** UI Components: **
-        toggle_currency();
-        toggle_address();
-        //check_currency
-        //currency_check
-        //currency_uncheck
-        toggle_switch();
-        show_select_options();
-        hide_select_options();
-        dialog_drawer();
-        //loader
-        closeloader_trigger();
-        //closeloader
-        //set_loader_text
-        
+    toggle_currency();
+    toggle_address();
+    //check_currency
+    //currency_check
+    //currency_uncheck
+    toggle_switch();
+    show_select_options();
+    hide_select_options();
+    dialog_drawer();
+    //loader
+    closeloader_trigger();
+    //closeloader
+    //set_loader_text
+
     // ** Scanner & QR: **  
-        init_scan();
-        //detect_cam
-        //start_scan
-        //abort_cam
-        cam_trigger();
-        close_cam_trigger();
-        //show_cam
-        //close_cam(
-        //set_result
-        //handle_ln_connect
-        //handle_address
-        //handle_viewkey
-        
+    init_scan();
+    //detect_cam
+    //start_scan
+    //abort_cam
+    cam_trigger();
+    close_cam_trigger();
+    //show_cam
+    //close_cam(
+    //set_result
+    //handle_ln_connect
+    //handle_address
+    //handle_viewkey
+
     // ** Helper Functions: **
-        open_url();
-        //get_blockcypher_apikey
-        //get_infura_apikey
-        //get_alchemy_apikey
-        //proxy_alert
-        //fetch_symbol
-        //toggle_fixed_nav
-        //ishome
-        //triggersubmit
-        //copy_to_clipboard
-        //prevent_screen_sleep
-        //allow_screen_sleep
-        //show_view_only_error
-        //countdown
-        //countdown_format
-        //add_serviceworker
-        
+    open_url();
+    //get_blockcypher_apikey
+    //get_infura_apikey
+    //get_alchemy_apikey
+    //proxy_alert
+    //fetch_symbol
+    //toggle_fixed_nav
+    //ishome
+    //triggersubmit
+    //copy_to_clipboard
+    //prevent_screen_sleep
+    //allow_screen_sleep
+    //show_view_only_error
+    //countdown
+    //countdown_format
+    //add_serviceworker
+
     // ** Core Navigation & State Management: **
-        togglenav();
-        //escape_and_back 
-        //keyup
-        //is_opendialog
-        //is_openrequest
-    
+    togglenav();
+    //escape_and_back 
+    //keyup
+    //is_opendialog
+    //is_openrequest
+
     // ** Intro Flow: **
-        start_trigger();
-        start_next_trigger();
-        //start_next
-        //start_prev
-        lettercount_keydown();
-        lettercount_input();
-        choose_currency();
-    
+    start_trigger();
+    start_next_trigger();
+    //start_next
+    //start_prev
+    lettercount_keydown();
+    lettercount_input();
+    choose_currency();
+
     // ** Dialog & Modal Management: **
-        //popdialog
-        //execute
-        canceldialog_click();
-        //canceldialog_trigger
-        //canceldialog
-        //render_html
-        //render_attributes 
-        //template_dialog
-        //update_page_title
-    
+    //popdialog
+    //execute
+    canceldialog_click();
+    //canceldialog_trigger
+    //canceldialog
+    //render_html
+    //render_attributes 
+    //template_dialog
+    //update_page_title
+
     // ** Payment Dialog Control: **
-        block_cancel_paymentdialog();
-        cancel_paymentdialog_trigger();
-        //unfocus_inputs
-        //cpd_pollcheck
-        //cancel_paymentdialog
-        //hide_paymentdialog
-        //reset_paymentdialog
-        //force_close_socket
-        cancel_sharedialog_trigger();
-        //cancel_sharedialog
-    
+    block_cancel_paymentdialog();
+    cancel_paymentdialog_trigger();
+    //unfocus_inputs
+    //cpd_pollcheck
+    //cancel_paymentdialog
+    //hide_paymentdialog
+    //reset_paymentdialog
+    //force_close_socket
+    cancel_sharedialog_trigger();
+    //cancel_sharedialog
+
     // ** Options & UI Panel Management: **
-        showoptionstrigger();
-        //showoptions
-        //canceloptions_trigger
-        //canceloptions
-        //clearoptions
-        //lockscreen
-        newrequest_alias();
-        newrequest();
-        confirm_ms_newrequest();
-        showtransaction_trigger();
-        showtransactions();
-        addressinfo();
-        show_pk();
-        //show_pk_cb
-        show_vk();
-        //show_vk_cb
-    
+    showoptionstrigger();
+    //showoptions
+    //canceloptions_trigger
+    //canceloptions
+    //clearoptions
+    //lockscreen
+    newrequest_alias();
+    newrequest();
+    confirm_ms_newrequest();
+    showtransaction_trigger();
+    showtransactions();
+    addressinfo();
+    show_pk();
+    //show_pk_cb
+    show_vk();
+    //show_vk_cb
+
     // ** Notifications: **
-        //notify
-        closenotifytrigger();
-        //closenotify
-        //topnotify
-        //popnotify
-    
+    //notify
+    closenotifytrigger();
+    //closenotify
+    //topnotify
+    //popnotify
+
     // ** Form & Input Handling: **
-        //handle_select_input
-        //handle_option_selection
-        radio_select();
-        check_pk();
-        //pinpanel
-        //generate_pinpad_html
-        //switch_panel
-        //all_pinpanel
-    
+    radio_select();
+    check_pk();
+    //pinpanel
+    //generate_pinpad_html
+    //switch_panel
+    //all_pinpanel
+
     // ** Address & Seed Management: **
-        addcurrencytrigger();
-        //addcurrency
-        //derive_first_check
-        addaddress_trigger();
-        //addaddress
-        address_xpub_change();
-        //active_derives
-        get_wallet();
-        submit_address_trigger();
-        add_lightning();
-        add_erc20();
-        autocomplete_erc20token();
-        pick_erc20_select();
-        //init_addressform
-        submit_erc20();
-        //validate_address_vk
-        //validate_address
-        //check_address
-        //check_vk
-        send_trigger();
-        showbip39_trigger();
-        check_recent();
-    
+    addcurrencytrigger();
+    //addcurrency
+    //derive_first_check
+    addaddress_trigger();
+    //addaddress
+    address_xpub_change();
+    //active_derives
+    get_wallet();
+    submit_address_trigger();
+    add_lightning();
+    add_erc20();
+    autocomplete_erc20token();
+    pick_erc20_select();
+    //init_addressform
+    submit_erc20();
+    //validate_address_vk
+    //validate_address
+    //check_address
+    //check_vk
+    send_trigger();
+    showbip39_trigger();
+    check_recent();
+
     // ** Request Management: **
-        request_history();
-        //recent_requests
-        //recent_requests_list
-        show_request_details();
-        toggle_request_meta();
-        showrequests();
-        showrequests_inline();
-        editaddress_trigger();
-        remove_address();
-        //remove_address_function
-        rec_payments();
-        edit_request();
-        submit_request_description();
-        receipt();
-        download_receipt();
-        share_receipt();
-        //get_pdf_url
-    
+    request_history();
+    //recent_requests
+    //recent_requests_list
+    show_request_details();
+    toggle_request_meta();
+    showrequests();
+    showrequests_inline();
+    editaddress_trigger();
+    remove_address();
+    //remove_address_function
+    rec_payments();
+    edit_request();
+    submit_request_description();
+    receipt();
+    download_receipt();
+    share_receipt();
+    //get_pdf_url
+
     // ** Archive Management: **
-        archive();
-        //archivefunction
-        unarchive();
-        //unarchive_function
-        remove_request();
-        //remove_request_function
-    
+    archive();
+    //archivefunction
+    unarchive();
+    //unarchive_function
+    remove_request();
+    //remove_request_function
+
     // ** Transaction History: **
-        //add_historical_data
-        //animate_confbar
-        show_transaction_meta();
-        hide_transaction_meta();
-        //lnd_lookup_invoice
-    
+    //add_historical_data
+    //animate_confbar
+    show_transaction_meta();
+    hide_transaction_meta();
+    //lnd_lookup_invoice
+
     // ** Seed & Security: **
-        confirm_missing_seed();
-        //get_address_warning
-        confirm_missing_seed_toggle();
-        //cmst_callback
-        //add_seed_whitelist
-        //seed_wl
-        //add_address_whitelist
-        //addr_whitelist
-    
+    confirm_missing_seed();
+    //get_address_warning
+    confirm_missing_seed_toggle();
+    //cmst_callback
+    //add_seed_whitelist
+    //seed_wl
+    //add_address_whitelist
+    //addr_whitelist
+
     // ** Address Reordering: **
-        dragstart();
-        //drag
-        dragend();
-    
+    dragstart();
+    //drag
+    dragend();
+
     // ** URL & Link Handling: **
-        //set_xmr_node_access
-        //check_intents
-        //expand_shoturl
-        //expand_bitly_url
-        //open_blockexplorer_url
-        //blockexplorer_url
-        //get_blockexplorer
-        apisrc_shortcut();
-        //try_next_api
-    
+    //set_xmr_node_access
+    //check_intents
+    //expand_shoturl
+    //expand_bitly_url
+    //open_blockexplorer_url
+    //blockexplorer_url
+    //get_blockexplorer
+    apisrc_shortcut();
+    //try_next_api
+
     // ** App Install & Platform: **
-        setTimeout(function() { // wait for ios app detection
-            check_app_install_prompt();
-            console.log({
-                glob_const
-            });
-        }, 700);
-        //show_app_download_prompt
-        close_app_panel();
-        //platform_icon
-        gk();
-        glob_const.html.addClass("loaded");
-        check_params();
-        //getnetwork
-    
+    setTimeout(function() { // wait for ios app detection
+        check_app_install_prompt();
+        console.log({
+            glob_const
+        });
+    }, 700);
+    //show_app_download_prompt
+    close_app_panel();
+    //platform_icon
+    gk();
+    glob_const.html.addClass("loaded");
+    check_params();
+    //getnetwork
+
     // ** Recent Request Management: **
-        //check_rr
-        //toggle_rr
-    
+    //check_rr
+    //toggle_rr
+
     // ** Lightning Network: **
-        //ln_connect
-    
+    //ln_connect
+
     // ** Page Building & Rendering: **
-        rendercurrencies();
-        setTimeout(function() {
-            loadurl(); //initiate page
-        }, 100);
-        //render_currencysettings
-        //build_settings
-        //render_settings
-        render_requests();
-        //archive_button
-        //fetch_requests
-        //initiate
-        //buildpage
-        //append_coinsetting
-        //append_address
-        //append_request
-    
+    rendercurrencies();
+    setTimeout(function() {
+        loadurl(); //initiate page
+    }, 100);
+    //render_currencysettings
+    //build_settings
+    //render_settings
+    render_requests();
+    //archive_button
+    //fetch_requests
+    //initiate
+    //buildpage
+    //append_coinsetting
+    //setting_sub_address
+    //truncate
+    //append_address
+    //append_request
+
     // ** Storage Management: **
-        //save_currencies
-        //save_addresses
-        //save_requests
-        //save_archive
-        //save_settings
-        //save_cc_settings
-        //update_changes
-        //reset_changes
-        //save_changestats
-        render_changes();
-        //change_alert
-        //get_total_changes
-        
+    //save_currencies
+    //save_addresses
+    //save_requests
+    //save_archive
+    //save_settings
+    //save_cc_settings
+    //update_changes
+    //reset_changes
+    //save_changestats
+    render_changes();
+    //change_alert
+    //get_total_changes
+
     // ** Utility Functions: **
-        //amountshort
+    //amountshort
 }
 
 // Updates HTML document language and meta tag attributes based on current language code
@@ -2124,10 +2126,10 @@ function canceldialog_trigger() {
             jtarget = $(target),
             target_id = jtarget.attr("id"),
             options = $("#dialog").find(".options");
-        if (options.length > 0 && options.hasClass("showoptions")) {
+        if (options.length > 0 && (options.hasClass("showoptions") || options.hasClass("show_options"))) {
             const pointer_event = jtarget.attr("data-pe");
             if (pointer_event !== "none") {
-                options.removeClass("showoptions");
+                options.removeClass("showoptions show_options");
             }
             return
         }
@@ -2850,14 +2852,31 @@ function handle_select_input() {
     $(document).on("click", ".selectbox > input:not([readonly])", function() {
         const select_input = $(this),
             current_value = select_input.val(),
-            option_items = select_input.parent(".selectbox").find(".options span");
-        if (option_items.hasClass("show")) {
+            options = select_input.parent(".selectbox").find(".options"),
+            option_items = options.find("span");
+        if (options.hasClass("show_options")) {
+            options.removeClass("show_options");
             option_items.removeClass("show");
-        } else {
-            option_items.filter(function() {
-                return $(this).text() !== current_value;
-            }).addClass("show");
+            return
         }
+        options.addClass("show_options");
+        option_items.filter(function() {
+            return $(this).text() !== current_value;
+        }).addClass("show");
+    })
+}
+
+// Handles input change for selectbox elements
+function handle_select_change() {
+    $(document).on("input", ".selectbox > input:not([readonly])", function() {
+        const select_input = $(this),
+            current_value = select_input.val(),
+            options = $(this).parent(".selectbox").find(".options");
+        if (current_value) {
+            options.removeClass("show_options");
+            return
+        }
+        options.addClass("show_options");
     })
 }
 
@@ -2865,8 +2884,8 @@ function handle_select_input() {
 function handle_option_selection() {
     $(document).on("click", ".selectbox > .options span", function() {
         const selected_option = $(this),
-            option_text = selected_option.text(),
             option_data = selected_option.data(),
+            option_text = option_data.value || selected_option.text(),
             parent_box = selected_option.closest(".selectbox"),
             target_input = parent_box.children("input");
         target_input.val(option_text).data(option_data);
@@ -4786,7 +4805,7 @@ function build_settings() {
                  <span class='" + setting.icon + "'></span>\
                  <div class='atext'>\
                     <h2>" + tl(setting_id) + "</h2>\
-                    <p>" + display_val + "</p>\
+                    <p>" + truncate(display_val) + "</p>\
                  </div>\
                  <div class='iconbox'>\
                      <span class='icon-pencil'></span>\
@@ -4807,7 +4826,7 @@ function render_settings(excludes) {
                 const selected_val = setting.selected,
                     trans_val = tl(selected_val),
                     display_val = setting_id === "accountsettings" ? selected_val : (trans_val || selected_val); // Exclude translations
-                $("#" + setting.id).data(setting).find("p").text(display_val);
+                $("#" + setting.id).data(setting).find("p").text(truncate(display_val));
             }
         });
     }
@@ -4952,13 +4971,16 @@ function append_coinsetting(currency, settings) {
         if (setting.xpub === false) {
             return
         }
-        const selected = setting.selected,
-            display_val = selected.name || selected.url || selected;
-        if (display_val !== undefined) {
-            const val_str = display_val.toString(),
+        const selected = setting.selected;
+        if (selected !== undefined) {
+            const url = selected.url,
+                name = selected.name,
+                display_val = name || selected,
+                val_str = display_val.toString(),
                 filtered_val = val_str === "true" || val_str === "false" ? "" : val_str,
                 trans_val = tl(filtered_val),
                 display_text = trans_val || filtered_val,
+                display_trunc = setting_sub_address(currency, display_text, url),
                 existing_item = settings_list.children("li[data-id='" + key + "']");
             if (existing_item.length === 0) {
                 const switch_type = setting.custom_switch ? " custom" : " global bool",
@@ -4966,9 +4988,9 @@ function append_coinsetting(currency, settings) {
                     settings_item = $("<li data-id='" + key + "'>\
                         <div class='liwrap edit_trigger iconright' data-currency='" + currency + "'>\
                             <span class='icon-" + setting.icon + "'></span>\
-                            <div class='atext'>\
+                            <div class='rpc_list'>\
                                 <h2>" + tl(key) + "</h2>\
-                                <p>" + display_text + "</p>\
+                                <p>" + display_trunc + "</p>\
                             </div>\
                             <div class='iconbox'>" + control + "</div>\
                             </div>\
@@ -4976,12 +4998,33 @@ function append_coinsetting(currency, settings) {
                 settings_item.data(setting).appendTo(settings_list);
                 return
             }
-            existing_item.data(setting).find("p").text(display_text);
+            existing_item.data(setting).find("p").text(display_trunc);
             if (setting.switch === true) {
                 existing_item.find(".switchpanel").removeClass("true false").addClass(val_str);
             }
         }
     });
+}
+
+// Subtitle for settings
+function setting_sub_address(currency, name, url) {
+    const sub_title = (name === "electrum" || currency === "ethereum") ? url || name : name || url;
+    return exists(sub_title) ? truncate(sub_title) : "";
+}
+
+// Shorten long titles
+function truncate(str) {
+    // Check if value is a string
+    if (typeof str === "string") {
+        // If the string is too short to truncate, return it as is
+        if (str.length <= 35) {
+            return str;
+        }
+        const first_part = str.substring(0, 15),
+            last_part = str.substring(str.length - 20);
+        return first_part + "..." + last_part;
+    }
+    return str;
 }
 
 // Creates address list item with source icons, monitoring status, and action buttons

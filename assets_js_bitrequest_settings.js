@@ -238,7 +238,8 @@ function select_default_currency() {
                                         "attr": {
                                             "type": "text",
                                             "value": currency,
-                                            "placeholder": "Pick currency"
+                                            "placeholder": "Pick currency",
+                                            "data-pe": "none"
                                         },
                                         "close": true
                                     },
@@ -251,7 +252,7 @@ function select_default_currency() {
                                 },
                                 {
                                     "div": {
-                                        "class": "options",
+                                        "class": "options show_options",
                                         "content": symbollist
                                     }
                                 }
@@ -406,7 +407,8 @@ function select_language() {
                                         "attr": {
                                             "type": "text",
                                             "value": curr_val,
-                                            "placeholder": "Pick language"
+                                            "placeholder": "Pick language",
+                                            "readonly": "readonly"
                                         },
                                         "close": true
                                     },

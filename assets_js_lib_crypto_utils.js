@@ -42,6 +42,7 @@
 //create_checksum 
 //bech32_encode
 //bech32_decode
+//verify_checksum_with_type
 //bech32_dec_array
 //pub_to_address_bech32
 
@@ -100,6 +101,10 @@
 // ** Miscellaneous: **
 //nimiq_hash
 
+// ** Scripthash: **
+//address_to_scripthash
+//convert5to8
+
 "use strict";
 
 const crypto = window.crypto,
@@ -112,7 +117,10 @@ const crypto = window.crypto,
     utf8_encoder = new TextEncoder(),
     utf8_decoder = new TextDecoder("utf-8", {
         "fatal": true
-    });
+    }),
+    // Constants for bech32 and bech32m
+    BECH32_CONST = 1,
+    BECH32M_CONST = 0x2bc830a3;
 
 // Minimal curve params for secp256k1
 const secp = {},
@@ -434,11 +442,12 @@ function bech32_encode(hrp, data) {
     return ret;
 }
 
-// Decodes a Bech32 encoded string (unused)
+// Decodes a Bech32 encoded string
 function bech32_decode(bechString) {
-    let p,
-        has_lower = false,
+    let p, has_lower = false,
         has_upper = false;
+
+    // Check for mixed case and valid character range
     for (p = 0; p < bechString.length; ++p) {
         if (bechString.charCodeAt(p) < 33 || bechString.charCodeAt(p) > 126) {
             return null;
@@ -453,13 +462,19 @@ function bech32_decode(bechString) {
     if (has_lower && has_upper) {
         return null;
     }
+
+    // Convert to lowercase and find separator
     bechString = bechString.toLowerCase();
     const pos = bechString.lastIndexOf("1");
     if (pos < 1 || pos + 7 > bechString.length || bechString.length > 90) {
         return null;
     }
+
+    // Extract HRP and data
     const hrp = bechString.substring(0, pos),
         data = [];
+
+    // Convert data characters to 5-bit integers
     for (p = pos + 1; p < bechString.length; ++p) {
         const d = b32ab.indexOf(bechString.charAt(p));
         if (d === -1) {
@@ -467,13 +482,35 @@ function bech32_decode(bechString) {
         }
         data.push(d);
     }
-    if (!verify_checksum(hrp, data)) {
+
+    // Verify checksum and determine encoding type
+    const encoding = verify_checksum_with_type(hrp, data);
+    if (!encoding) {
+        return null;
+    }
+
+    // For Taproot (witness version 1), ensure bech32m encoding
+    if (data[0] === 1 && encoding !== "bech32m") {
+        return null;
+    }
+    // For version 0, ensure bech32 encoding
+    if (data[0] === 0 && encoding !== "bech32") {
         return null;
     }
     return {
         "hrp": hrp,
-        "data": data.slice(0, data.length - 6)
+        "data": data.slice(0, data.length - 6),
+        "encoding": encoding
     };
+}
+
+// Modified polymod function to support both bech32 and bech32m
+function verify_checksum_with_type(hrp, data) {
+    const modulo = polymod(hrp_expand(hrp).concat(data));
+    // Returns the encoding type: "bech32", "bech32m", or null if invalid
+    if (modulo === BECH32_CONST) return "bech32";
+    if (modulo === BECH32M_CONST) return "bech32m";
+    return null;
 }
 
 // Converts a binary array to decimal array for Bech32 encoding
@@ -514,7 +551,7 @@ function egcd(a, b) {
     let [x, y, u, v] = [0n, 1n, 1n, 0n];
     while (a !== 0n) {
         const q = b / a,
-              r = b % a;
+            r = b % a;
         let m = x - u * q,
             n = y - v * q;
         [b, a] = [a, r];
@@ -944,8 +981,9 @@ function pub_to_cashaddr(legacy) {
 // Converts a CashAddr format address to legacy Bitcoin Cash address
 function bch_legacy(cadr) {
     try {
-        const version = 0,
-            dec = cashaddr.decode(cadr),
+        const address = (cadr.indexOf(":") === -1) ? "bitcoincash:" + cadr : cadr,
+            version = 0,
+            dec = cashaddr.decode(address),
             bytes = dec.hash,
             bytesarr = Array.from(bytes),
             conc = concat_array([0], bytesarr),
@@ -1091,4 +1129,101 @@ function nimiq_hash(tx) {
     return encodeURIComponent(btoa(tx.match(/\w{2}/g).map(function(a) {
         return String.fromCharCode(parseInt(a, 16));
     }).join("")));
+}
+
+// Convert address to scripthash, with support for Bitcoin Cash addresses
+function address_to_scripthash(addr, currency) {
+    // Convert BCH address to legacy
+    const address = (currency === "bitcoin-cash") ? bch_legacy(addr) : addr;
+    // Determine address type and create scriptPubKey
+    let script_pub_key;
+    // Handle Bech32 addresses (BTC and LTC SegWit)
+    if (address.startsWith("bc1") || address.startsWith("tb1") || address.startsWith("ltc1")) {
+        // For native SegWit and Taproot addresses (bech32/bech32m)
+        try {
+            const decoded = bech32_decode(address);
+            if (!decoded) throw new Error("Invalid bech32 address");
+            // Convert the witness program from 5-bit words to bytes
+            const program = convert5to8(decoded.data.slice(1));
+            if (!program) throw new Error("Invalid witness program");
+            if (decoded.data[0] === 1) { // Taproot
+                // P2TR: OP_1 <32-byte public key>
+                if (program.length !== 32) {
+                    throw new Error("Invalid Taproot program length: " + program.length);
+                }
+                script_pub_key = "5120" + program.map(function(b) {
+                    return b.toString(16).padStart(2, "0");
+                }).join("");
+            } else if (decoded.data[0] === 0) { // SegWit v0
+                // P2WPKH/P2WSH: OP_0 <program length in bytes> <program>
+                if (program.length === 20) {
+                    // P2WPKH (20-byte pubkey hash)
+                    script_pub_key = "0014" + program.map(function(b) {
+                        return b.toString(16).padStart(2, "0");
+                    }).join("");
+                } else if (program.length === 32) {
+                    // P2WSH (32-byte script hash)
+                    script_pub_key = "0020" + program.map(function(b) {
+                        return b.toString(16).padStart(2, "0");
+                    }).join("");
+                } else {
+                    throw new Error("Invalid witness program length: " + program.length);
+                }
+            } else {
+                throw new Error("Unsupported witness version");
+            }
+        } catch (error) {
+            throw new Error("Invalid bech32 address: " + error.message);
+        }
+    } else {
+        // For legacy or P2SH addresses
+        try {
+            const decoded = b58check_decode(address),
+                version = decoded.slice(0, 2),
+                hash = decoded.slice(2);
+
+            // BTC versions: 00 (P2PKH), 05 (P2SH)
+            // LTC versions: 30 (P2PKH), 32 or 05 (P2SH)
+            if (version === "00" || version === "30") {
+                // P2PKH: OP_DUP OP_HASH160 <pubKeyHash> OP_EQUALVERIFY OP_CHECKSIG
+                script_pub_key = "76a914" + hash + "88ac";
+            } else if (version === "05" || version === "32") {
+                // P2SH: OP_HASH160 <scriptHash> OP_EQUAL
+                script_pub_key = "a914" + hash + "87";
+            } else {
+                throw new Error("Unsupported address version: " + version);
+            }
+        } catch (error) {
+            throw new Error("Invalid base58 address: " + error.message);
+        }
+    }
+
+    // Calculate the SHA256 hash of the scriptPubKey
+    const script_hash = hmacsha(script_pub_key, "sha256", "hex");
+    // Reverse the bytes for the expected format
+    return {
+        "script_pub_key": script_pub_key,
+        "hash": script_hash.match(/.{2}/g).reverse().join("")
+    }
+}
+
+// Helper function for converting groups of 5 bits to 8 bits
+function convert5to8(data) {
+    const acc = new Array(Math.floor(data.length * 5 / 8));
+    let index = 0,
+        bits = 0,
+        value = 0;
+    for (let i = 0; i < data.length; ++i) {
+        value = (value << 5) | data[i];
+        bits += 5;
+        while (bits >= 8) {
+            bits -= 8;
+            acc[index] = (value >> bits) & 0xff;
+            index += 1;
+        }
+    }
+    if (bits >= 5 || ((value << (8 - bits)) & 0xff)) {
+        return null;
+    }
+    return acc;
 }

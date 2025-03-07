@@ -223,6 +223,11 @@ const glob_multi_wallets = {
                                 "display": true
                             },
                             {
+                                "name": "electrum",
+                                "url": "electrum.blockstream.info:50002",
+                                "display": true
+                            },
+                            {
                                 "name": "blockcypher",
                                 "url": "blockcypher.com",
                                 "api": true,
@@ -372,6 +377,11 @@ const glob_multi_wallets = {
                                 "name": "blockcypher",
                                 "url": "blockcypher.com",
                                 "api": true,
+                                "display": true
+                            },
+                            {
+                                "name": "electrum",
+                                "url": "ltc.aftrek.org:50002",
                                 "display": true
                             },
                             {
@@ -748,6 +758,11 @@ const glob_multi_wallets = {
                                 "display": true
                             },
                             {
+                                "name": "electrum",
+                                "url": "electroncash.de:50002",
+                                "display": true
+                            },
+                            {
                                 "name": "blockchair",
                                 "url": "blockchair.com",
                                 "api": true,
@@ -882,7 +897,7 @@ const glob_multi_wallets = {
                                 "display": false
                             },
                             {
-                                "name": "infura_main_rpc",
+                                "name": "infura",
                                 "url": glob_const.main_eth_node,
                                 "display": true
                             }
@@ -1557,7 +1572,7 @@ const glob_multi_wallets = {
                             "display": true
                         },
                         {
-                            "name": "infura_main_rpc",
+                            "name": "infura",
                             "url": glob_const.main_eth_node,
                             "display": true
                         }
