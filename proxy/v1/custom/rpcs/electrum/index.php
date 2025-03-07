@@ -77,12 +77,12 @@
 	    $errno = 0;
 	    $errstr = "";
 	    
-	    // Connect to Tor's SOCKS proxy - fixed typo from 'locslhost' to 'localhost'
+		// Connect to Tor's SOCKS proxy with "127.0.0.1"
 	    $proxy = @fsockopen("127.0.0.1", 9050, $errno, $errstr, 30);
 	    
-	    // You can also try using IP address directly if hostname doesn't resolve
 	    if (!$proxy) {
-	        $proxy = @fsockopen("127.0.0.1", 9150, $errno, $errstr, 30);
+			// Connect to Tor's SOCKS proxy with "localhost"
+	        $proxy = @fsockopen("localhost", 9050, $errno, $errstr, 30);
 	    }
 	    
 	    if (!$proxy) {
@@ -133,7 +133,7 @@
 	        $response = fgets($proxy);
 	        fclose($proxy);
 	        
-	        if ($response) {
+	        if (isset($response)) {
 	            return fetch_methods($response, $pl);
 	        }
 	        
@@ -147,23 +147,74 @@
 	    }
 	}
 	
-	// Handles communication with Electrum servers via SSL    
+// Handles communication with Electrum servers via SSL    
 	function socket_fetch_ssl($pl) {
+	    // Define error codes
+	    $ERROR_MISSING_PARAMS = 400;
+	    $ERROR_SSL_CONNECTION = 1100;
+	    $ERROR_NO_RESPONSE = 1103;
+	    $ERROR_TIMEOUT = 1104;
+	    
+	    // Input validation
+	    if (!isset($pl["node"])) {
+	        return ["error" => "Missing required node parameter", "error_code" => $ERROR_MISSING_PARAMS];
+	    }
+	    
 	    $request = request_data($pl);
 	    $jsonRequest = json_encode($request) . "\n";
-	    $response = null;
-	    $context = @stream_context_create(["ssl" => ["verify_peer" => false, "verify_peer_name" => false]]);
-	    $socket = @stream_socket_client("ssl://" . $pl["node"], $errno, $errstr, 10, STREAM_CLIENT_CONNECT, $context);
-	    if ($socket) {
+	    $socket = null;
+	    
+	    try {
+	        // Create SSL context without verification (not recommended for production)
+	        $context = stream_context_create([
+	            "ssl" => [
+	                "verify_peer" => false, 
+	                "verify_peer_name" => false
+	            ]
+	        ]);
+	        
+	        // Connect to the SSL server
+	        $socket = stream_socket_client(
+	            "ssl://" . $pl["node"], 
+	            $errno, 
+	            $errstr, 
+	            10, 
+	            STREAM_CLIENT_CONNECT, 
+	            $context
+	        );
+	        
+	        if (!$socket) {
+	            return [
+	                "error" => "Could not connect to SSL server: $errstr", 
+	                "error_code" => $ERROR_SSL_CONNECTION
+	            ];
+	        }
+	        
+	        // Set timeout and send request
 	        stream_set_timeout($socket, 60);
 	        fwrite($socket, $jsonRequest);
 	        $response = fgets($socket);
-	        fclose($socket);
-	        if (isset($response)) {
+	        
+	        // Check for timeout
+	        $info = stream_get_meta_data($socket);
+	        if ($info["timed_out"]) {
+	            return ["error" => "Connection timed out", "error_code" => $ERROR_TIMEOUT];
+	        }
+	        
+	        if (!empty($response)) {
 	            return fetch_methods($response, $pl);
 	        }
+	        
+	        return ["error" => "Failed to read response", "error_code" => $ERROR_NO_RESPONSE];
+	        
+	    } catch (Exception $e) {
+	        return ["error" => $e->getMessage(), "error_code" => $e->getCode()];
+	    } finally {
+	        // Always close the socket resource if it exists
+	        if (isset($socket) && is_resource($socket)) {
+	            fclose($socket);
+	        }
 	    }
-	    return ["error" => $errstr];
 	}
 	
 	// Prepares request data for Electrum protocol
@@ -181,33 +232,48 @@
 	// Processes response data based on the requested method
 	function fetch_methods($response, $pl) {
 	    $rep_json = json_decode($response, true);
-	    $result = $rep_json["result"] ?? null;
-	    if ($result) {
-	        $method = $pl["method"];
+	    if (isset($rep_json["result"])) {
+		    $result = $rep_json["result"];
+		    $method = $pl["method"];
 	        if ($method == "blockchain.scripthash.get_history") {
-		        $node = $pl["node"];
-	            if ($pl["id"] == "scanning") {
-	                $last_four = get_last_four_reversed($result);
-	                return output_tx_hashes($node, $last_four);
-	            }
-	            $tx_hash = $pl["tx_hash"];
-	            if ($tx_hash) {
-	                $find_tx = find_transaction($result, $tx_hash);
-	                if ($find_tx) {
-	                    return complement_tx($node, $find_tx);
-	                }
-	            }
+		        if (is_array($result)) {
+			        $count = count($result);
+			        if ($count === 0) {
+				        return [];
+			        }
+			        $node = $pl["node"];
+		            if ($pl["id"] == "scanning") {
+			            if ($count > 1) {
+					        $last_four = get_last_four_reversed($result);
+							return output_tx_hashes($node, $last_four);
+				        }
+				        return complement_tx($node, $result);
+		            }
+		            $tx_hash = $pl["tx_hash"];
+		            if ($tx_hash) {
+		                $find_tx = find_transaction($result, $tx_hash);
+		                if ($find_tx) {
+		                    return complement_tx($node, $find_tx);
+		                }
+		                return [];
+		            }
+		        }
+		        return [];
 	        }
 	        if ($method == "blockchain.block.header") {
-	            return get_timestamp($result);
+	            return ["timestamp" => get_timestamp($result)];
+	        }
+	        if (is_numeric($result)) {
+	            return ["value" => $result];
 	        }
 	        return $result;
-	    }
+		}
+	    return error_obj("4112", "no result");
 	}
 	
 	// Extracts timestamp from a block header hex string
 	function get_timestamp($hex) {
-	    return hexdec(implode("", array_reverse(str_split(substr($hex, 136, 8), 2))));
+		return (int)hexdec(implode("", array_reverse(str_split(substr($hex, 136, 8), 2))));
 	}
 	
 	// Gets the last 4 transactions and reverses their order
@@ -229,7 +295,7 @@
 	            return $transaction;
 	        }
 	    } 
-	    return null;
+	    return [];
 	}
 	
 	// Processes multiple transactions and complements them with additional data
@@ -264,10 +330,10 @@
 	        ]);
 	        $fetch_tx["tx_hash"] = $tx_hash;
 	        $fetch_tx["height"] = $height;
-	        $fetch_tx["timestamp"] = $fetch_block;
+	        $fetch_tx["timestamp"] = $fetch_block["timestamp"];
 	        return $fetch_tx;
 	    }
-	    return null;
+	    return ["error" => "Could not fetch transaction data", "error_code" => 4120];
 	}
 	
 	// Generates a random ID for requests
@@ -276,62 +342,62 @@
 	}
 	
 	// Decodes a Bitcoin transaction from hex format
-	function decode_bitcoin_tx($hexData) {
+	function decode_bitcoin_tx($hex_data) {
 	    // Initialize position and convert hex to binary
 	    $position = 0;
-	    $data = hex2bin($hexData);
+	    $data = hex2bin($hex_data);
 	    
 	    // Helper functions for reading data
-	    $readBytes = function($length) use (&$data, &$position) {
+	    $read_bytes = function($length) use (&$data, &$position) {
 	        $result = substr($data, $position, $length);
 	        $position += $length;
 	        return $result;
 	    };
 	    
-	    $readUInt16 = function() use (&$readBytes) {
-	        return unpack("v", $readBytes(2))[1];
+	    $read_uint16 = function() use (&$read_bytes) {
+	        return unpack("v", $read_bytes(2))[1];
 	    };
 	    
-	    $readUInt32 = function() use (&$readBytes) {
-	        return unpack("V", $readBytes(4))[1];
+	    $read_uint32 = function() use (&$read_bytes) {
+	        return unpack("V", $read_bytes(4))[1];
 	    };
 	    
-	    $readUInt64 = function() use (&$readBytes) {
-	        $values = unpack("V2", $readBytes(8));
+	    $read_uint64 = function() use (&$read_bytes) {
+	        $values = unpack("V2", $read_bytes(8));
 	        return $values[1] + ($values[2] * 4294967296);
 	    };
 	    
-	    $readVarInt = function() use (&$readBytes, &$readUInt16, &$readUInt32, &$readUInt64) {
-	        $first = ord($readBytes(1));
+	    $read_var_int = function() use (&$read_bytes, &$read_uint16, &$read_uint32, &$read_uint64) {
+	        $first = ord($read_bytes(1));
 	        if ($first < 0xfd) return $first;
-	        if ($first === 0xfd) return $readUInt16();
-	        if ($first === 0xfe) return $readUInt32();
-	        return $readUInt64();
+	        if ($first === 0xfd) return $read_uint16();
+	        if ($first === 0xfe) return $read_uint32();
+	        return $read_uint64();
 	    };
 	    
-	    $readString = function() use (&$readVarInt, &$readBytes) {
-	        return bin2hex($readBytes($readVarInt()));
+	    $read_string = function() use (&$read_var_int, &$read_bytes) {
+	        return bin2hex($read_bytes($read_var_int()));
 	    };
 	    
-	    $flipEndianness = function($hex) {
+	    $flip_endianness = function($hex) {
 	        return implode("", array_reverse(str_split($hex, 2)));
 	    };
 	    
 	    // Address encoding functions - simplified for common use cases
-	    $base58Encode = function($binary) {
-	        if (!extension_loaded('bcmath')) return 'BCMath required';
+	    $base58_encode = function($binary) {
+	        if (!extension_loaded("bcmath")) return "BCMath required";
 	        
 	        $alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 	        $base = strlen($alphabet);
 	        
-	        $decimal = '0';
+	        $decimal = "0";
 	        $length = strlen($binary);
 	        for ($i = 0; $i < $length; $i++) {
-	            $decimal = bcadd($decimal, bcmul(bcpow('256', (string)($length - 1 - $i)), (string)ord($binary[$i])));
+	            $decimal = bcadd($decimal, bcmul(bcpow("256", (string)($length - 1 - $i)), (string)ord($binary[$i])));
 	        }
 	        
 	        $output = "";
-	        while (bccomp($decimal, '0') > 0) {
+	        while (bccomp($decimal, "0") > 0) {
 	            $div = bcdiv($decimal, (string)$base, 0);
 	            $mod = bcmod($decimal, (string)$base);
 	            $output = $alphabet[(int)$mod] . $output;
@@ -344,21 +410,21 @@
 	        return $output;
 	    };
 	    
-	    $hash160ToAddress = function($hash, $version) use (&$base58Encode) {
+	    $hash160_to_address = function($hash, $version) use (&$base58_encode) {
 	        $data = $version . $hash;
 	        $binary = hex2bin($data);
 	        $checksum = hash("sha256", hash("sha256", $binary, true), true);
-	        return $base58Encode($binary . substr($checksum, 0, 4));
+	        return $base58_encode($binary . substr($checksum, 0, 4));
 	    };
 	    
-	    $scriptPubKeyToAddress = function($script) use (&$hash160ToAddress) {
+	    $script_pubkey_to_address = function($script) use (&$hash160_to_address) {
 	        $type = substr($script, 0, 2);
 	        
 	        if ($type === "76" && substr($script, 0, 6) === "76a914") {
-	            return $hash160ToAddress(substr($script, 6, 40), "00");
+	            return $hash160_to_address(substr($script, 6, 40), "00");
 	        }
 	        if ($type === "a9" && substr($script, 0, 4) === "a914") {
-	            return $hash160ToAddress(substr($script, 4, 40), "05");
+	            return $hash160_to_address(substr($script, 4, 40), "05");
 	        }
 	        if ($type === "00" && substr($script, 0, 4) === "0014") {
 	            return "P2WPKH: " . substr($script, 4, 40);
@@ -370,7 +436,7 @@
 	    };
 	    
 	    // Determine script type
-	    $getScriptType = function($script) {
+	    $get_script_type = function($script) {
 	        if (empty($script)) return "unknown";
 	        
 	        $len = strlen($script);
@@ -386,15 +452,15 @@
 	    };
 	    
 	    // Start decoding the transaction
-	    $version = $readUInt32();
+	    $version = $read_uint32();
 	    
 	    // Check for segwit marker and flag
-	    $hasWitness = false;
-	    $marker = ord($readBytes(1));
+	    $has_witness = false;
+	    $marker = ord($read_bytes(1));
 	    if ($marker === 0) {
-	        $flag = ord($readBytes(1));
+	        $flag = ord($read_bytes(1));
 	        if ($flag === 1) {
-	            $hasWitness = true;
+	            $has_witness = true;
 	        } else {
 	            $position -= 2;
 	        }
@@ -403,38 +469,38 @@
 	    }
 	
 	    // Read inputs
-	    $inputCount = $readVarInt();
+	    $input_count = $read_var_int();
 	    $inputs = [];
-	    for ($i = 0; $i < $inputCount; $i++) {
-	        $txid = $flipEndianness(bin2hex($readBytes(32)));
-	        $vout = $readUInt32();
-	        $scriptLength = $readVarInt();
-	        $scriptSig = bin2hex($readBytes($scriptLength));
-	        $sequence = $readUInt32();
+	    for ($i = 0; $i < $input_count; $i++) {
+	        $txid = $flip_endianness(bin2hex($read_bytes(32)));
+	        $vout = $read_uint32();
+	        $script_length = $read_var_int();
+	        $script_sig = bin2hex($read_bytes($script_length));
+	        $sequence = $read_uint32();
 	        
 	        $inputs[] = [
 	            "txid" => $txid,
 	            "vout" => $vout,
-	            "scriptSig" => $scriptSig,
+	            "scriptSig" => $script_sig,
 	            "sequence" => $sequence
 	        ];
 	    }
 	
 	    // Read outputs
-	    $outputCount = $readVarInt();
+	    $output_count = $read_var_int();
 	    $outputs = [];
-	    for ($i = 0; $i < $outputCount; $i++) {
-	        $value = $readUInt64();
-	        $scriptLength = $readVarInt();
-	        $scriptPubKey = bin2hex($readBytes($scriptLength));
+	    for ($i = 0; $i < $output_count; $i++) {
+	        $value = $read_uint64();
+	        $script_length = $read_var_int();
+	        $script_pubkey = bin2hex($read_bytes($script_length));
 	        
 	        $output = [
 	            "amount" => $value,
-	            "scriptPubKey" => $scriptPubKey,
-	            "type" => $getScriptType($scriptPubKey)
+	            "scriptPubKey" => $script_pubkey,
+	            "type" => $get_script_type($script_pubkey)
 	        ];
 	        
-	        $address = $scriptPubKeyToAddress($scriptPubKey);
+	        $address = $script_pubkey_to_address($script_pubkey);
 	        if ($address !== null) {
 	            $output["address"] = $address;
 	        }
@@ -444,40 +510,40 @@
 	
 	    // Read witness data
 	    $witness = [];
-	    if ($hasWitness) {
-	        for ($i = 0; $i < $inputCount; $i++) {
-	            $witnessCount = $readVarInt();
-	            $witnessData = [];
-	            for ($j = 0; $j < $witnessCount; $j++) {
-	                $witnessData[] = $readString();
+	    if ($has_witness) {
+	        for ($i = 0; $i < $input_count; $i++) {
+	            $witness_count = $read_var_int();
+	            $witness_data = [];
+	            for ($j = 0; $j < $witness_count; $j++) {
+	                $witness_data[] = $read_string();
 	            }
-	            $witness[] = $witnessData;
+	            $witness[] = $witness_data;
 	        }
 	    }
 	
 	    // Read locktime
-	    $locktime = $readUInt32();
+	    $locktime = $read_uint32();
 	
 	    // Calculate sizes
-	    $txSize = strlen($hexData) / 2;
-	    $txWeight = $hasWitness ? ($position - strlen($data)) + ($txSize - ($position - strlen($data))) * 4 : $txSize * 4;
-	    $vsize = (int)ceil($txWeight / 4);
+	    $tx_size = strlen($hex_data) / 2;
+	    $tx_weight = $has_witness ? ($position - strlen($data)) + ($tx_size - ($position - strlen($data))) * 4 : $tx_size * 4;
+	    $vsize = (int)ceil($tx_weight / 4);
 	
 	    // Create hash for the transaction
-	    $txHash = hash("sha256", hash("sha256", hex2bin($hexData), true));
-	    $txHash = $flipEndianness($txHash);
+	    $tx_hash = hash("sha256", hash("sha256", hex2bin($hex_data), true));
+	    $tx_hash = $flip_endianness($tx_hash);
 	
 	    return [
 	        "version" => $version,
 	        "inputs" => $inputs,
 	        "outputs" => $outputs,
-	        "witness" => $hasWitness ? $witness : [],
+	        "witness" => $has_witness ? $witness : [],
 	        "locktime" => $locktime,
-	        "size" => $txSize,
+	        "size" => $tx_size,
 	        "vsize" => $vsize,
-	        "weight" => $txWeight,
-	        "hasWitness" => $hasWitness,
-	        "tx_hash" => $txHash
+	        "weight" => $tx_weight,
+	        "hasWitness" => $has_witness,
+	        "tx_hash" => $tx_hash
 	    ];
 	}
 	
@@ -493,21 +559,19 @@
 	
 	// Checks if Tor is available on the system
 	function has_tor() {
-	    // Try the main Tor port
-	    $socket = @fsockopen("127.0.0.1", 9050, $errno, $errstr, 1);
-	    if ($socket) {
-	        fclose($socket);
-	        return true;
-	    }
-	    
-	    // Try the Tor Browser port
-	    $socket = @fsockopen("127.0.0.1", 9150, $errno, $errstr, 1);
-	    if ($socket) {
-	        fclose($socket);
-	        return true;
-	    }
-	    
-	    return false;
+		// Connect to Tor's SOCKS proxy with "127.0.0.1"
+		$socket = @fsockopen("127.0.0.1", 9050, $errno, $errstr, 1);
+		if ($socket) {
+			fclose($socket);
+			return true;
+		}	    
+		// Connect to Tor's SOCKS proxy with "localhost"
+		$socket = @fsockopen("localhost", 9050, $errno, $errstr, 1);
+		if ($socket) {
+			fclose($socket);
+			return true;
+		} 
+		return false;
 	}
 
 ?>

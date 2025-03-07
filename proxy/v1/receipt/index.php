@@ -1,9 +1,5 @@
 <?php
     
-    // Enable error reporting for debugging (comment out in production)
-    ini_set("display_errors", 1);
-    error_reporting(E_ALL);
-    
     // Compressed helper functions
     function get_param($key, $default = null) { return $_GET[$key] ?? $default; }
     

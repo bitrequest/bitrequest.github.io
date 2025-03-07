@@ -92,7 +92,7 @@
 	        return;
 	    }
 	
-	    $decoded = json_decode(base64_decode($content) ?: "");
+	    $decoded = json_decode(base64_decode($content), true);
 	    if ($decoded === null) {
 	        send_response(["error" => "Invalid cache data"]);
 	        return;

@@ -49,7 +49,7 @@ const br_bipobj = br_get_local("bpdat", true),
         "ln_socket": "wss://bitrequest.app:8030",
         "proxy_list": br_proxy_list,
         "hosted_proxy": br_hosted_proxy,
-        "proxy_version": "0.016",
+        "proxy_version": "0.018",
         "firebase_dynamic_link_domain": br_firebase_dynamic_link_domain,
         "firebase_shortlink": "https://" + br_firebase_dynamic_link_domain + "/",
         "androidpackagename": br_androidpackagename,
@@ -122,7 +122,28 @@ const br_bipobj = br_get_local("bpdat", true),
         })).toFixed(2),
         "scope": "https://www.googleapis.com/auth/drive.appdata",
         "drivepath": "https://content.googleapis.com",
-        "redirect_uri": br_w_loc.origin + br_w_loc.pathname + "?p=settings"
+        "redirect_uri": br_w_loc.origin + br_w_loc.pathname + "?p=settings",
+        "test_tx": {
+            "bitcoin": "b84fc802ad3ead719583b6f87ab36c95ae6544a291f2c2b8abb328989703f64a",
+            "litecoin": "a507149c0918d3a9403a39675c65929feb9c69c5cc5c412217b9ea48f0510ab6",
+            "dogecoin": "4830dee8e225309e8a643895f637e604285a306b3e365302b64939fdaf4ccc79",
+            "bitcoin-cash": "f7b74b3208fccc600919f4181114a0858a28c7862ace5cba1f408fcfe7b5d147",
+            "etehereum": "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1"
+        },
+        "test_address": {
+            "bitcoin": "bc1qg0azlj4w2lrq8jssrrz6eprt2fe7f7edm4vpd5",
+            "litecoin": "LZakyXotaE29Pehw21SoPuU832UhvJp4LG",
+            "dogecoin": "DKvWg8UhQSycj1J8QVxeBDkRpbjDkw3DiW",
+            "bitcoin-cash": "qp5p0eur784pk8wxy2kzlz3ctnq5whfnuqqpp78u22",
+            "ethereum": "0x2161DedC3Be05B7Bb5aa16154BcbD254E9e9eb68",
+            "nano": "nano_1hedzz9g3oq1pw49hf9u9koqgwwg8in49o73xwrnfu9j43qk533r7hhuratx"
+        },
+        "mempool_space": {
+            "bitcoin": "https://mempool.space",
+            "litecoin": "https://litecoinspace.org",
+            "dogecoin": null,
+            "bitcoin-cash": null
+        }
     },
     glob_let = {
         "socket_attempt": {},
@@ -255,7 +276,8 @@ let request = null,
 
 // ** URL & Parameter Handling: **
 //get_search
-//get_urlparameters 
+//get_urlparameters
+//get_string_before_last_colon
 //parse_url_params
 //make_local
 //scanmeta
@@ -529,7 +551,7 @@ function get_default_object(object, obj) { // Default object
 
 // Validates if value is defined, non-null, and has length property greater than zero
 function exists(val) {
-    if (val === undefined || val === null || !val.length) {
+    if (val == undefined || val == null || !val.length) {
         return false;
     }
     return true;
@@ -883,6 +905,14 @@ function get_search(str) {
 // Retrieves URL parameters from current window location's search string
 function get_urlparameters(str) {
     return parse_url_params(glob_const.w_loc.search.substring(1));
+}
+
+function get_string_before_last_colon(str) {
+    const last_colon_index = str.lastIndexOf(":");
+    if (last_colon_index === -1) {
+        return str; // Return the original string if no colon is found
+    }
+    return str.substring(0, last_colon_index);
 }
 
 // Parses URL query string into object while checking for XSS vulnerabilities

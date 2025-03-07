@@ -10,7 +10,7 @@
 	    $pd_obj = json_decode($pd, true);
 	    if (isset($pd_obj)) {
 	        echo curl_get_tor($pd_obj);
-	        exit;
+	        return;
 	    }
 	}
 	
@@ -24,7 +24,7 @@
 	    
 	    if (has_tor()) { // check for TOR support
 	        $response = curl_get_tor($plo);
-	        if ($response !== false) {
+	        if ($response) {
 	            return $response;
 	        }
 	        return err_obj("411", "Failed to connect via Tor");
@@ -106,7 +106,7 @@
 	        }
 	        
 	        // Set Tor proxy settings
-	        curl_setopt($ch, CURLOPT_PROXY, "localhost:9050");
+	        curl_setopt($ch, CURLOPT_PROXY, "127.0.0.1:9050");
 	        curl_setopt($ch, CURLOPT_PROXYTYPE, 7); // CURLPROXY_SOCKS5_HOSTNAME
 	        
 	        // Set additional options
@@ -152,20 +152,19 @@
 	
 	// Checks if Tor is available on the system
 	function has_tor() {
-	    // Try the main Tor port
-	    $socket = @fsockopen("127.0.0.1", 9050, $errno, $errstr, 1);
-	    if ($socket) {
-	        fclose($socket);
-	        return true;
-	    }
-	    
-	    // Try the Tor Browser port
-	    $socket = @fsockopen("127.0.0.1", 9150, $errno, $errstr, 1);
-	    if ($socket) {
-	        fclose($socket);
-	        return true;
-	    }
-	    
-	    return false;
+		// Connect to Tor's SOCKS proxy with "127.0.0.1"
+		$socket = @fsockopen("127.0.0.1", 9050, $errno, $errstr, 1);
+		if ($socket) {
+			fclose($socket);
+			return true;
+		}	    
+		// Connect to Tor's SOCKS proxy with "localhost"
+		$socket = @fsockopen("localhost", 9050, $errno, $errstr, 1);
+		if ($socket) {
+			fclose($socket);
+			return true;
+		} 
+		return false;
 	}
+	
 ?>

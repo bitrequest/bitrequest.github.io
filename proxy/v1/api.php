@@ -176,7 +176,7 @@
 	        
 	        // Handle .onion URL requests via Tor
 	        if (strpos($url, ".onion") !== false) {
-	            $tor_path = "ln/tor/index.php";
+	            $tor_path = __DIR__ . "/ln/tor/index.php";
 	            if (file_exists($tor_path)) {
 	                require_once $tor_path;
 	                return fetch_tor($url, $data, $headers);
