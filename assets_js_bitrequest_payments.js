@@ -1942,7 +1942,7 @@ function lnd_ni() {
 
 // Triggers Lightning Network configuration interface
 function lnd_popup() {
-    get_lightning_settings().find(".atext").trigger("click");
+    render_lightning_interface();
 }
 
 // ** Request Management: **
