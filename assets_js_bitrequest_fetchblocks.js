@@ -1771,6 +1771,7 @@ function electrum_rpc_blockheight(rd, api_data, rdo) {
         "params": {
             "method": "POST",
             "cache": true,
+            "timeout": 20000,
             "data": JSON.stringify({
                 "id": "blockheight",
                 "method": "blockchain.headers.subscribe",
@@ -1874,6 +1875,7 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
             "params": {
                 "method": "POST",
                 "cache": true,
+                "timeout": 20000,
                 "data": JSON.stringify({
                     "id": "scanning",
                     "method": "blockchain.scripthash.get_history",
@@ -1929,6 +1931,7 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
             "params": {
                 "method": "POST",
                 "cache": true,
+                "timeout": 20000,
                 "data": JSON.stringify({
                     "id": "polling",
                     "tx_hash": tx_hash,

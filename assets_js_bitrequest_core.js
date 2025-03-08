@@ -1,8 +1,7 @@
 // Initialize the application when the document is ready
 $(document).ready(function() {
     $.ajaxSetup({
-        "cache": false,
-        "timeout": 10000
+        "cache": false
     });
     build_settings(); // build settings first
 

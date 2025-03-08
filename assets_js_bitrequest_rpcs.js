@@ -45,7 +45,7 @@ function edit_rpcnode() {
             placeholder_key = glob_let.ap_id + node_type + generate_random_number(1, 3),
             url_placeholder = get_rpc_placeholder(currency_name)[placeholder_key],
             btc_chain = is_btchain(currency_name) === true,
-            default_placeholder = "eg: some.local-or-remote.node:port",
+            default_placeholder = "some.node:port",
             node_select = btc_chain ? "<div class='selectarrows icon-menu2' data-pe='none'></div><div class='options'></div>" : "",
             input_form = custom_nodes ? "<div id='rpc_input_box' data-currency='" + currency_name + "' data-erc20='" + glob_let.is_erc20t + "'>\
                     <h3 class='icon-plus'>" + dialog_title + "</h3>\
@@ -151,8 +151,8 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
             }
         }).done(function(e) {
             const api_result = br_result(e),
-                result = q_obj(api_result, "result");
-            list_length = result.length;
+                result = q_obj(api_result, "result"),
+                list_length = result.length;
             let done = false;
             if (list_length && result) {
                 $.each(result, function(node_id, nd) {
@@ -184,6 +184,7 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                             "params": {
                                 "method": "POST",
                                 "cache": true,
+                                "timeout": 20000,
                                 "data": JSON.stringify({
                                     "id": sha_sub(rpc_url2, 6),
                                     "method": "blockchain.transaction.get",
@@ -242,18 +243,18 @@ function check_node_exists(url_to_find, node_array) {
 // Provides template URL examples for different cryptocurrency node configurations and API types
 function get_rpc_placeholder(currency) {
     return {
-        "apisnano1": "eg: http://127.0.0.1:7076",
-        "apisnano2": "eg: http://some.local-or-remote.node:7076",
-        "apisnano3": "eg: http://localhost:7076",
-        "websocketsnano1": "eg: ws://127.0.0.1:7078",
-        "websocketsnano2": "eg: ws://some.local-or-remote.node:7078",
-        "websocketsnano3": "eg: ws://localhost:7078",
-        "apiseth1": "eg: http://localhost:8545",
-        "apiseth2": "eg: http://some.local-or-remote.node:8546",
-        "apiseth3": "eg: https://mainnet.infura.io/v3/YOUR-PROJECT-ID",
-        "websocketseth1": "eg: ws://localhost:8545",
-        "websocketseth2": "eg: ws://some.local-or-remote.node:8546",
-        "websocketseth3": "eg: wss://mainnet.infura.io/ws/v3/YOUR-PROJECT-ID"
+        "apisnano1": "http://127.0.0.1:50001",
+        "apisnano2": "http://some.node:50001",
+        "apisnano3": "http://localhost:50001",
+        "websocketsnano1": "ws://127.0.0.1:7078",
+        "websocketsnano2": "ws://some.node:7078",
+        "websocketsnano3": "ws://localhost:7078",
+        "apiseth1": "http://localhost:8545",
+        "apiseth2": "http://some.node:8546",
+        "apiseth3": "https://mainnet.infura.io/v3/YOUR-PROJECT-ID",
+        "websocketseth1": "ws://localhost:8545",
+        "websocketseth2": "ws://some.node:8546",
+        "websocketseth3": "wss://mainnet.infura.io/ws/v3/YOUR-PROJECT-ID"
     }
 }
 
@@ -302,6 +303,7 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_data, 
                     "params": {
                         "method": "POST",
                         "cache": true,
+                        "timeout": 20000,
                         "data": JSON.stringify({
                             "id": sha_sub(rpc_url, 6),
                             "method": "blockchain.transaction.get",
@@ -589,6 +591,7 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                 "params": {
                     "method": "POST",
                     "cache": true,
+                    "timeout": 20000,
                     "data": JSON.stringify({
                         "id": sha_sub(rpc_url, 6),
                         "method": "blockchain.transaction.get",
@@ -612,6 +615,7 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                         "params": {
                             "method": "POST",
                             "cache": true,
+                            "timeout": 20000,
                             "data": JSON.stringify({
                                 "id": "scanning",
                                 "method": "blockchain.scripthash.get_history",
