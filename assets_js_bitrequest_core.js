@@ -4991,7 +4991,7 @@ function append_coinsetting(currency, settings) {
                     settings_item = $("<li data-id='" + key + "'>\
                         <div class='liwrap edit_trigger iconright' data-currency='" + currency + "'>\
                             <span class='icon-" + setting.icon + "'></span>\
-                            <div class='rpc_list'>\
+                            <div class='atext'>\
                                 <h2>" + tl(key) + "</h2>\
                                 <p>" + display_trunc + "</p>\
                             </div>\
