@@ -106,13 +106,13 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
         random_node = get_random_electrum_node(predefined_nodes);
     if (random_node) {
         const rpc_list = $("#rpc_list"),
-            api_options = rpc_list.find(".options");
-        get_session_nodes = br_get_session("electrum_" + currency, true),
+            api_options = rpc_list.find(".options"),
+            get_session_nodes = br_get_session("electrum_" + currency, true),
             existing_nodes = $.extend(predefined_nodes, custom_nodes);
         if (get_session_nodes) {
             let has_nodes = false;
             $.each(get_session_nodes, function(index, val) {
-                const rpc_url = val.rpc_url,
+                const rpc_url = val.rpc_url2,
                     node_exists = check_node_exists(rpc_url, existing_nodes);
                 if (!node_exists) {
                     node_data = {
