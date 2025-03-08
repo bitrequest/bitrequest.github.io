@@ -259,6 +259,7 @@ let request = null,
 //empty_obj
 //adjust_objectarray
 //dom_to_array
+//clone
 //object_from_array
 
 // ** DOM & UI Utilities: **
@@ -602,6 +603,11 @@ function dom_to_array(dom, data_attr) {
     return dom.map(function() {
         return $(this).data(data_attr);
     }).get();
+}
+
+// Clone object
+function clone(object) {
+    return JSON.parse(JSON.stringify(object));
 }
 
 // Finds first object in array matching key-value pair

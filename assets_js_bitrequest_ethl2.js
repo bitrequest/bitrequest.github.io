@@ -506,7 +506,7 @@ function save_layer2_settings() {
 // Compresses Layer 2 configuration object
 function compress_layer2_config(currency, ccsymbol) {
     // Initialize the result object with the base structure
-    const eth_settings = JSON.parse(JSON.stringify(get_coinsettings(currency))), // make a deep clone to prevent duplicates
+    const eth_settings = clone(get_coinsettings(currency)), // make a deep clone to prevent duplicates
         cc_symbol = ccsymbol || q_obj(fetch_symbol(currency), "symbol"),
         symbol = cc_symbol || "eth",
         l2_settings = eth_settings.layer2,

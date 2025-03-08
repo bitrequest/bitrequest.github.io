@@ -2129,7 +2129,10 @@ function canceldialog_trigger() {
         if (options.length > 0 && (options.hasClass("showoptions") || options.hasClass("show_options"))) {
             const pointer_event = jtarget.attr("data-pe");
             if (pointer_event !== "none") {
-                options.removeClass("showoptions show_options");
+                options.removeClass("showoptions");
+            }
+            if (pointer_event !== "block") {
+                options.removeClass("show_options");
             }
             return
         }
@@ -2868,7 +2871,7 @@ function handle_select_input() {
 
 // Handles input change for selectbox elements
 function handle_select_change() {
-    $(document).on("input", ".selectbox > input:not([readonly])", function() {
+    $(document).on("input", "#rpc_list.selectbox > input:not([readonly])", function() {
         const select_input = $(this),
             current_value = select_input.val(),
             options = $(this).parent(".selectbox").find(".options");

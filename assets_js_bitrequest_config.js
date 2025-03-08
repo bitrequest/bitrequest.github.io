@@ -374,14 +374,14 @@ const glob_multi_wallets = {
                                 "display": true
                             },
                             {
-                                "name": "blockcypher",
-                                "url": "blockcypher.com",
-                                "api": true,
+                                "name": "electrum",
+                                "url": "ltc.aftrek.org:50002",
                                 "display": true
                             },
                             {
-                                "name": "electrum",
-                                "url": "ltc.aftrek.org:50002",
+                                "name": "blockcypher",
+                                "url": "blockcypher.com",
+                                "api": true,
                                 "display": true
                             },
                             {

@@ -25,12 +25,12 @@ function edit_rpcnode() {
     $(document).on("click", ".cc_settinglist li[data-id='apis'], .cc_settinglist li[data-id='websockets']", function() {
         const settings_item = $(this),
             item_data = settings_item.data(),
-            custom_nodes = item_data.options,
-            predefined_nodes = item_data.apis;
+            currency_name = settings_item.children(".liwrap").attr("data-currency"),
+            predefined_nodes = clone(q_obj(get_coinsettings(currency_name), "apis.apis")),
+            custom_nodes = item_data.options;
         if (!exists(custom_nodes) && !exists(predefined_nodes)) {
             return
         }
-        const currency_name = settings_item.children(".liwrap").attr("data-currency");
         glob_let.ap_id = settings_item.attr("data-id"),
             glob_let.test_rpc_call = item_data.rpc_test_command,
             glob_let.is_erc20t = ($("#" + currency_name + "_settings").attr("data-erc20") == "true"),
@@ -51,7 +51,7 @@ function edit_rpcnode() {
                     <h3 class='icon-plus'>" + dialog_title + "</h3>\
                     <div id='rpc_input'>\
                         <div class='selectbox' id='rpc_list'>\
-                            <input type='text' value='' placeholder='" + (url_placeholder || default_placeholder) + "' id='rpc_url_input' data-pe='none'/>\
+                            <input type='text' value='' placeholder='" + (url_placeholder || default_placeholder) + "' id='rpc_url_input' data-pe='block'/>\
                             <div class='c_stat icon-wifi-off'></div>\
                             <div class='c_stat icon-connection'></div>" + node_select + "</div>\
                     </div>\
@@ -78,8 +78,8 @@ function edit_rpcnode() {
         const api_list = $("#api_list").find(".options");
         $.each(predefined_nodes, function(node_id, node_data) {
             if (node_data.display === true) {
-                const is_selected = node_data.url === node_url,
-                  this_node_name = node_data.name;
+                const is_selected = (node_data.url === node_url),
+                    this_node_name = node_data.name;
                 if (currency_name === "nano" || this_node_name === "electrum" || this_node_name === "mempool.space") {
                     validate_and_add_rpc_node(currency_name, api_list, node_id, node_data, is_selected);
                 } else {
@@ -88,7 +88,7 @@ function edit_rpcnode() {
             }
         });
         $.each(custom_nodes, function(node_id, node_data) {
-            const is_selected = node_data.url === node_url;
+            const is_selected = (node_data.url === node_url);
             validate_and_add_rpc_node(currency_name, api_list, node_id, node_data, is_selected);
         });
         $("#rpc_main_input").data(current_node);
@@ -96,33 +96,39 @@ function edit_rpcnode() {
             close_socket();
         }, 5000);
         if (btc_chain) {
-            existing_nodes = $.extend(predefined_nodes, custom_nodes);
-            fetch_electrum_nodes(currency_name, node_url, existing_nodes);
+            fetch_electrum_nodes(currency_name, node_url, predefined_nodes, custom_nodes);
         }
     })
 }
 
-function fetch_electrum_nodes(currency, node_url, existing_nodes) {
+function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes) {
     const coin_settings = get_coinsettings(currency),
-        apis = q_obj(coin_settings, "apis.apis"),
-        random_node = get_random_electrum_node(apis);
+        random_node = get_random_electrum_node(predefined_nodes);
     if (random_node) {
         const rpc_list = $("#rpc_list"),
             api_options = rpc_list.find(".options");
-            get_session_nodes = br_get_session("electrum_" + currency, true);
+        get_session_nodes = br_get_session("electrum_" + currency, true),
+            existing_nodes = $.extend(predefined_nodes, custom_nodes);
         if (get_session_nodes) {
+            let has_nodes = false;
             $.each(get_session_nodes, function(index, val) {
                 const rpc_url = val.rpc_url,
+                    node_exists = check_node_exists(rpc_url, existing_nodes);
+                if (!node_exists) {
                     node_data = {
-                    "name": "electrum",
-                    "url": rpc_url,
-                    "display": true
-                },
-                node_id = val.node_id,
-                is_selected = rpc_url === node_url;
-                create_rpc_node_element(api_options, true, node_id, node_data, is_selected, true);
+                            "name": "electrum",
+                            "url": rpc_url,
+                            "display": true
+                        },
+                        node_id = val.node_id,
+                        is_selected = rpc_url === node_url;
+                    create_rpc_node_element(api_options, true, node_id, node_data, is_selected, true);
+                    has_nodes = true;
+                }
             });
-            rpc_list.addClass("show_select");
+            if (has_nodes) {
+                rpc_list.addClass("show_select");
+            }
             return
         }
         const node_list_obj = [],
@@ -146,7 +152,7 @@ function fetch_electrum_nodes(currency, node_url, existing_nodes) {
         }).done(function(e) {
             const api_result = br_result(e),
                 result = q_obj(api_result, "result");
-                list_length = result.length;
+            list_length = result.length;
             let done = false;
             if (list_length && result) {
                 $.each(result, function(node_id, nd) {
@@ -159,42 +165,45 @@ function fetch_electrum_nodes(currency, node_url, existing_nodes) {
                         }
                     }
                     const port = tport ? ((/^\d/.test(tport)) ? ":" + port : ":" + tport.slice(1)) : "",
-                        rpc_url = url + port;
-                        node_exists = check_node_exists(rpc_url, existing_nodes);
+                        rpc_url2 = url + port,
+                        node_exists = check_node_exists(rpc_url2, existing_nodes);
                     if (!node_exists) {
                         const node_data = {
-                            "name": "electrum",
-                            "url": rpc_url,
-                            "display": true
-                        },
-                        is_selected = rpc_url === node_url,
-                        test_tx = glob_const.test_tx[currency];
+                                "name": "electrum",
+                                "url": rpc_url2,
+                                "display": true
+                            },
+                            test_tx = glob_const.test_tx[currency];
                         api_proxy({
                             "api": currency,
                             "cachetime": 25,
                             "cachefolder": "1h",
                             "custom": "electrum",
-                            "api_url": rpc_url,
+                            "api_url": rpc_url2,
                             "proxy": true,
                             "params": {
                                 "method": "POST",
                                 "cache": true,
                                 "data": JSON.stringify({
-                                    "id": sha_sub(rpc_url, 6),
+                                    "id": sha_sub(rpc_url2, 6),
                                     "method": "blockchain.transaction.get",
                                     "ref": test_tx,
-                                    "node": rpc_url
+                                    "node": rpc_url2
                                 })
                             }
                         }).done(function(e) {
                             const api_result = br_result(e),
                                 result = q_obj(api_result, "result");
                             if (is_valid_tx_hex(result)) {
+                                const is_selected = rpc_url2 === node_url;
                                 create_rpc_node_element(api_options, true, node_id, node_data, is_selected, true);
-                                node_list_obj.push({node_id, rpc_url});
+                                node_list_obj.push({
+                                    node_id,
+                                    rpc_url2
+                                });
                             }
                         }).always(function() {
-                            if (done) return;  
+                            if (done) return;
                             const count = list_length - node_id;
                             if (count === 1 || count === 2 || count === 3) { // some margin for flexibility
                                 done = true;
@@ -208,15 +217,14 @@ function fetch_electrum_nodes(currency, node_url, existing_nodes) {
                         });
                     }
                 });
-                return
             }
         });
     }
 }
 
 // Filter the array to only include objects with name = "electrum"
-function get_random_electrum_node(apis) {
-    const electrum_nodes = apis.filter(node => node.name === "electrum");
+function get_random_electrum_node(predefined_nodes) {
+    const electrum_nodes = predefined_nodes.filter(node => node.name === "electrum");
     // Check if we have any matching nodes
     if (electrum_nodes.length) {
         // Generate a random index within the filtered array's bounds
@@ -252,7 +260,7 @@ function get_rpc_placeholder(currency) {
 // Tests RPC endpoints for connectivity and appends validated options to the selection UI with status indicators
 function validate_and_add_rpc_node(currency_name, api_list, node_id, node_data, is_selected) {
     const rpc_url = node_data.url;
-      rpc_name = node_data.name;
+    rpc_name = node_data.name;
     if (glob_let.ap_id === "apis") {
         if (currency_name === "ethereum" || glob_let.is_erc20t === true) {
             const test_hash = glob_const.test_tx.ethereum, // random tx
@@ -273,8 +281,9 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_data, 
                 }
             }).done(function(response) {
                 const parsed_data = br_result(response),
-                    response_hash = q_obj(parsed_data, "result.result.hash");
-                create_rpc_node_element(api_list, response_hash === test_hash, node_id, node_data, is_selected, true);
+                    response_hash = q_obj(parsed_data, "result.result.hash"),
+                    is_live = (response_hash === test_hash);
+                create_rpc_node_element(api_list, is_live, node_id, node_data, is_selected, true);
             }).fail(function(error) {
                 create_rpc_node_element(api_list, false, node_id, node_data, is_selected, true);
             });
@@ -316,14 +325,14 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_data, 
             if (rpc_name === "mempool.space") {
                 const api_rpc_url = node_data.api ? glob_const.mempool_space[currency_name] : rpc_url;
                 api_proxy({ // mempoolspace API
-                      "api_url": api_rpc_url + "/api/v1/difficulty-adjustment",
-                      "proxy": false,
-                      "params": {
-                          "method": "GET"
-                      }
-                  }).done(function(e) {
+                    "api_url": api_rpc_url + "/api/v1/difficulty-adjustment",
+                    "proxy": false,
+                    "params": {
+                        "method": "GET"
+                    }
+                }).done(function(e) {
                     const result = e.progressPercent || e.difficultyChange || e.estimatedRetargetDate;
-                        is_live = (result) ? true : false;
+                    is_live = (result) ? true : false;
                     create_rpc_node_element(api_list, is_live, node_id, node_data, is_selected, true);
                 }).fail(function(xhr, stat, err) {
                     create_rpc_node_element(api_list, false, node_id, node_data, is_selected, true);
@@ -331,22 +340,22 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_data, 
                 return
             }
             return
-        } 
+        }
         if (currency_name === "nano") {
             api_proxy({
-                  "api": "nano",
-                  "search": "test",
-                  "cachetime": 25,
-                  "cachefolder": "1h",
-                  "api_url": rpc_url,
-                  "params": {
-                      "method": "POST",
-                      "data": JSON.stringify(glob_let.test_rpc_call),
-                      "headers": {
-                          "Content-Type": "text/plain"
-                      }
-                  }
-              }).done(function(e) {
+                "api": "nano",
+                "search": "test",
+                "cachetime": 25,
+                "cachefolder": "1h",
+                "api_url": rpc_url,
+                "params": {
+                    "method": "POST",
+                    "data": JSON.stringify(glob_let.test_rpc_call),
+                    "headers": {
+                        "Content-Type": "text/plain"
+                    }
+                }
+            }).done(function(e) {
                 const parsed_data = br_result(e),
                     node_vendor = q_obj(parsed_data, "result.node_vendor"),
                     is_live = (node_vendor) ? true : false;
@@ -440,7 +449,7 @@ function create_rpc_node_element(api_list, is_live, node_id, node_data, is_selec
         display_name = setting_sub_address(null, node_name, node_url) + vendor_string,
         node_icon_url = get_node_icon(node_name),
         node_icon = (node_icon_url) ? "<img src='" + fetch_aws(node_icon_url) + ".png' class='icon'>" : "",
-        node_element = $("<div class='optionwrap" + status_class + selected_class + default_class + "' style='display:none' data-pe='none' title='" + node_url + "'><span" + node_key + " data-value='" + node_url + "' data-pe='none'>" + node_icon  + display_name + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon c_stat icon-" + status_icon + "' data-pe='none'></div><div class='opt_icon icon-bin' data-pe='none'></div></div>");
+        node_element = $("<div class='optionwrap" + status_class + selected_class + default_class + "' style='display:none' data-pe='none' title='" + node_url + "'><span" + node_key + " data-value='" + node_url + "' data-pe='none'>" + node_icon + display_name + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon c_stat icon-" + status_icon + "' data-pe='none'></div><div class='opt_icon icon-bin' data-pe='none'></div></div>");
     node_element.data(node_data).appendTo(api_list);
     node_element.slideDown(500);
 }
@@ -485,6 +494,10 @@ function submit_rpcnode() {
                     popnotify("error", tl("nodealreadyadded"));
                     return
                 }
+                loader(true);
+                set_loader_text(tl("connecttolnur", {
+                    "url": truncate(node_url)
+                }));
                 const node_config = {
                     "url": node_url,
                     "default": false
@@ -558,6 +571,8 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
             }).fail(function(error) {
                 input_section.addClass("offline").removeClass("live");
                 popnotify("error", error_message);
+            }).always(function() {
+                closeloader();
             });
             return
         }
@@ -621,12 +636,15 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                         test_mempoolspace(input_section, node_config, rpc_url, currency_name);
                     }).fail(function(xhr, stat, err) {
                         test_mempoolspace(input_section, node_config, rpc_url, currency_name);
+                    }).always(function() {
+                        closeloader();
                     });
                     return
                 }
                 test_mempoolspace(input_section, node_config, rpc_url, currency_name);
             }).fail(function(xhr, stat, err) {
                 test_mempoolspace(input_section, node_config, rpc_url, currency_name);
+                closeloader();
             });
             return
         }
@@ -654,6 +672,8 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
             }).fail(function(xhr, stat, err) {
                 input_section.addClass("offline").removeClass("live");
                 topnotify(error_message);
+            }).always(function() {
+                closeloader();
             });
             return
         }
@@ -819,14 +839,14 @@ function delete_rpc_node() {
 
 function get_node_icon(node_name) {
     return (node_name === "electrum") ? "electrum_node" :
-    (node_name === "mempool.space") ? "mempool_node" :
-    (node_name === "infura") ? "infura" :
-    (node_name === "blockcypher") ? "blockcypher" :
-    (node_name === "blockchain.info") ? "blockchain_info" :
-    (node_name === "blockchair") ? "blockchair" :
-    (node_name === "etherscan") ? "etherscan" :
-    (node_name === "arbiscan") ? "arbiscan" :
-    (node_name === "polygonscan") ? "polygonscan" :
-    (node_name === "bscscan") ? "bscscan" :
-    (node_name === "binplorer") ? "binplorer" : "node";
+        (node_name === "mempool.space") ? "mempool_node" :
+        (node_name === "infura") ? "infura" :
+        (node_name === "blockcypher") ? "blockcypher" :
+        (node_name === "blockchain.info") ? "blockchain_info" :
+        (node_name === "blockchair") ? "blockchair" :
+        (node_name === "etherscan") ? "etherscan" :
+        (node_name === "arbiscan") ? "arbiscan" :
+        (node_name === "polygonscan") ? "polygonscan" :
+        (node_name === "bscscan") ? "bscscan" :
+        (node_name === "binplorer") ? "binplorer" : "node";
 }
