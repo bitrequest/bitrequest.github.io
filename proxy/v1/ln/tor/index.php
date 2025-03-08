@@ -30,13 +30,17 @@
 	        return err_obj("411", "Failed to connect via Tor");
 	    }
 	    
+	    if ((strpos(TOR_HOST, $_SERVER["HTTP_HOST"]) !== false)) {
+	        return error_obj("411", "Failed to connect via Tor");
+        }
+	    
 	    // Call default proxy if TOR is not installed
 	    $ch = curl_init();
 	    if ($ch === false) {
 	        return err_obj("411", "Failed to initialize CURL");
 	    }
 	    
-	    curl_setopt($ch, CURLOPT_URL, "https://www.bitrequest.app/proxy/v1/ln/tor/");
+	    curl_setopt($ch, CURLOPT_URL, TOR_HOST. "/proxy/v1/ln/tor/");
 	    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($plo));
 	    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);

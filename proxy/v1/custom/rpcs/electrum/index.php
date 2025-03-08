@@ -21,10 +21,13 @@
 	
 	// Main socket fetch function that handles both Tor and non-Tor connections
 	function socket_fetch($pl) {
-	    $node = $pl["node"];
+		$node = $pl["node"];
 	    if (strpos($node, ".onion") !== false) {
 	        if (has_tor()) { // check for TOR support
 	            return socket_fetch_tor_stream($pl);
+	        }
+	        if ((strpos(TOR_HOST, $_SERVER["HTTP_HOST"]) !== false)) {
+		        return error_obj("411", "Failed to connect via Tor");
 	        }
 	        // Call default proxy if TOR is not installed
 	        $ch = curl_init();
@@ -33,7 +36,7 @@
 	        }
 	        $payload = ["fetch" => "true"];
 	        $merged = array_merge($payload, $pl);
-	        curl_setopt($ch, CURLOPT_URL, "https://www.bitrequest.app/proxy/v1/custom/rpcs/electrum/index.php");
+	        curl_setopt($ch, CURLOPT_URL, TOR_HOST . "/proxy/v1/custom/rpcs/electrum/index.php");
 	        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($merged));
 	        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
@@ -58,6 +61,10 @@
 	
 	// Handles communication with Electrum servers via Tor's SOCKS proxy
 	function socket_fetch_tor_stream($pl) {
+		// Add better error handling for missing input
+	    if (!isset($pl["node"]) || !isset($pl["method"])) {
+	        return ["error" => "Missing required parameters", "error_code" => 400];
+	    }
 	    $request = [
 	        "id" => $pl["id"],
 	        "method" => $pl["method"]
@@ -73,7 +80,12 @@
 	    $port = isset($parts[1]) ? intval($parts[1]) : 50001; // Default to 50001 if port not specified
 	    
 	    // Try raw socket connection through Tor's SOCKS proxy
-	    $context = @stream_context_create([]);
+	    $context = @stream_context_create([
+            "ssl" => [
+                "verify_peer" => true, 
+                "verify_peer_name" => true
+            ]
+        ]);
 	    $errno = 0;
 	    $errstr = "";
 	    
@@ -300,40 +312,62 @@
 	
 	// Processes multiple transactions and complements them with additional data
 	function output_tx_hashes($node, $transactions) {
-	    $result_array = [];
-	    $index = 0;
-	    foreach ($transactions as $transaction) {
-	        $result_array[] = complement_tx($node, $transaction);
-	        $index++;
-	    }
-	    // Return the populated array
-	    return $result_array;
+	    $result_array = [];  
+	    if (empty($transactions) || !is_array($transactions)) {
+	        return ["error" => "No transactions to process", "error_code" => 4110];
+	    }	    
+	    foreach ($transactions as $index => $transaction) {
+	        if ($index > 0) {
+	            usleep(300000);
+	        }
+	        $result = complement_tx($node, $transaction);
+	        if (isset($result) && !isset($result["error"])) {
+		        $result_array[] = $result;
+	        }
+	    }    
+	    return empty($result_array) ? ["error" => "Failed to process any transactions", "error_code" => 4111] : $result_array;
 	}
 	
 	// Complements a transaction with additional data from the blockchain
 	function complement_tx($node, $transaction) {
-	    $tx_hash = $transaction["tx_hash"];
+		$tx_hash = $transaction["tx_hash"];
+	    
+	    // First TOR request
 	    $tx_hex = socket_fetch([
 	        "id" => get_random_id(),
 	        "method" => "blockchain.transaction.get",
 	        "ref" => $tx_hash,
 	        "node" => $node
 	    ]);
-	    if ($tx_hex) {
-	        $height = $transaction["height"];
-	        $fetch_tx = decode_bitcoin_tx($tx_hex);
-	        $fetch_block = socket_fetch([
-	            "id" => get_random_id(),
-	            "method" => "blockchain.block.header",
-	            "ref" => $height,
-	            "node" => $node
-	        ]);
-	        $fetch_tx["tx_hash"] = $tx_hash;
-	        $fetch_tx["height"] = $height;
-	        $fetch_tx["timestamp"] = $fetch_block["timestamp"];
-	        return $fetch_tx;
+	    
+	    if (!$tx_hex) {
+	        return ["error" => "Could not fetch transaction data", "error_code" => 4120];
 	    }
-	    return ["error" => "Could not fetch transaction data", "error_code" => 4120];
+	    
+	    // Process transaction data
+	    $fetch_tx = decode_bitcoin_tx($tx_hex);
+	    // Add delay between the two TOR requests
+	    usleep(200000); // 200ms delay
+	    
+	    // Second TOR request
+	    $height = $transaction["height"];
+	    $fetch_block = socket_fetch([
+	        "id" => get_random_id(),
+	        "method" => "blockchain.block.header",
+	        "ref" => $height,
+	        "node" => $node
+	    ]);
+	    
+	    if (!$fetch_block || !isset($fetch_block["timestamp"])) {
+	        return ["error" => "Could not fetch block data", "error_code" => 4121];
+	    }
+	    
+	    // Complete the transaction data
+	    $fetch_tx["tx_hash"] = $tx_hash;
+	    $fetch_tx["height"] = $height;
+	    $fetch_tx["timestamp"] = $fetch_block["timestamp"];
+	    
+	    return $fetch_tx;
 	}
 	
 	// Generates a random ID for requests

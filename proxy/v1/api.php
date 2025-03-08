@@ -1,7 +1,7 @@
 <?php
 	
 	// PROXY
-	const VERSION = "0.018";
+	const VERSION = "0.019";
 	const CACHE_DURATIONS = [
 	    "2m" => 6220800,  // 2 months in seconds
 	    "1w" => 604800,   // 1 week in seconds
@@ -9,10 +9,11 @@
 	    "1d" => 86400,    // 1 day in seconds
 	    "1h" => 3600      // 1 hour in seconds
 	];
+	const TOR_HOST = "https://www.bitrequest.app";
 	
 	// Main API function that handles caching and retrieval of data based on specified parameters
 	function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
-	    $cf = $cfd ?? false;
+		$cf = $cfd ?? false;
 	    if (!$cf) {
 	        return get_non_cached_result($url, $data, $headers);
 	    }

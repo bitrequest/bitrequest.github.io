@@ -1,8 +1,11 @@
 <?php
-    
     header("Content-Type: application/json");
     header("Access-Control-Allow-Headers: Cache-Control, Pragma");
     //header("Access-Control-Allow-Origin: *"); // uncomment for nginx
+    
+    if (function_exists("set_time_limit") && !ini_get("safe_mode")) {
+	    set_time_limit(15); // timeout after 15 seconds
+	}
 
     // Include necessary files
     try {

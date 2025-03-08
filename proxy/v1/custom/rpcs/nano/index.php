@@ -1,7 +1,6 @@
 <?php
     
     include "../../../api.php";
-    const DEFAULT_NODE = "https://www.bitrequest.app:8020";
     const MAX_HISTORY_COUNT = 15;
     const MAX_PENDING_COUNT = 15;
 
@@ -19,9 +18,14 @@
             return;
         }
 
-        $node = isset($pl_array["node"]) ? $pl_array["node"] : DEFAULT_NODE;
+        $node = isset($pl_array["node"]) ? $pl_array["node"] : null;
         $account = isset($pl_array["account"]) ? $pl_array["account"] : null;
 
+        if (!$node) {
+            send_jsonresponse(["error" => "Node not provided"]);
+            return;
+        }
+        
         if (!$account) {
             send_jsonresponse(["error" => "Account not provided"]);
             return;
