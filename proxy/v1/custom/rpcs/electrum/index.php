@@ -36,7 +36,8 @@
 	        }
 	        $payload = ["fetch" => "true"];
 	        $merged = array_merge($payload, $pl);
-	        curl_setopt($ch, CURLOPT_URL, TOR_HOST . "/proxy/v1/custom/rpcs/electrum/index.php");
+			$tor_url = TOR_HOST . "/proxy/v1/custom/rpcs/electrum/index.php";
+			curl_setopt($ch, CURLOPT_URL, $tor_url);
 	        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($merged));
 	        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
