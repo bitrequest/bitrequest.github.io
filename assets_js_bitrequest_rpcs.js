@@ -156,7 +156,8 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                 list_length = result.length;
             let done = false;
             if (list_length && is_array(result)) {
-                const short_list = (list_length > 75) ? result.slice(0, 75) : result;
+                const short_list = (list_length > 75) ? result.slice(0, 75) : result,
+                    short_list_length = short_list.length;
                 $.each(short_list, function(node_id, nd) {
                     const url = nd[1] || nd[0],
                         filter_ips = is_valid_ipv4(url);
@@ -211,7 +212,7 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                                 }
                             }).always(function() {
                                 if (done) return;
-                                const count = list_length - node_id;
+                                const count = short_list_length - node_id;
                                 if (count === 1 || count === 2 || count === 3) { // some margin for flexibility
                                     done = true;
                                     const margin_timeout = setTimeout(function() {
