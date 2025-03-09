@@ -46,7 +46,8 @@ function edit_rpcnode() {
             url_placeholder = get_rpc_placeholder(currency_name)[placeholder_key],
             btc_chain = is_btchain(currency_name) === true,
             default_placeholder = "some.node:port",
-            node_select = btc_chain ? "<div class='selectarrows icon-menu2' data-pe='none'></div><div class='options'></div>" : "",
+            scan_btn = glob_let.hascam ? "<div class='qrscanner' data-currency='" + currency_name + "' data-id='add_node' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "<div class='selectarrows icon-menu2' data-pe='none'></div>",
+            node_select = btc_chain ? scan_btn + "<div class='options'></div>" : "",
             input_form = custom_nodes ? "<div id='rpc_input_box' data-currency='" + currency_name + "' data-erc20='" + glob_let.is_erc20t + "'>\
                     <h3 class='icon-plus'>" + dialog_title + "</h3>\
                     <div id='rpc_input'>\
@@ -59,7 +60,7 @@ function edit_rpcnode() {
             current_node = item_data.selected,
             node_name = current_node.name,
             node_url = current_node.url,
-            node_title = (node_name === "electrum") ? node_url : node_name || node_url,
+            node_title = (node_name === "electrum" || node_name === "mempool.space") ? node_url : node_name || node_url,
             dialog_html = "\
             <div class='formbox' id='settingsbox' data-id='" + glob_let.ap_id + "'>\
                 <h2 class='icon-sphere'>" + tl("choose") + " " + currency_name + " " + glob_let.ap_id + "</h2>\
@@ -102,8 +103,8 @@ function edit_rpcnode() {
 }
 
 function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes) {
-    const coin_settings = get_coinsettings(currency),
-        random_node = get_random_electrum_node(predefined_nodes);
+    const existing_nodes = $.extend(predefined_nodes, custom_nodes),
+        random_node = get_random_electrum_node(existing_nodes);
     if (random_node) {
         const rpc_list = $("#rpc_list"),
             api_options = rpc_list.find(".options"),
@@ -184,7 +185,6 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                             "params": {
                                 "method": "POST",
                                 "cache": true,
-                                "timeout": 20000,
                                 "data": JSON.stringify({
                                     "id": sha_sub(rpc_url2, 6),
                                     "method": "blockchain.transaction.get",
@@ -303,7 +303,6 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_data, 
                     "params": {
                         "method": "POST",
                         "cache": true,
-                        "timeout": 20000,
                         "data": JSON.stringify({
                             "id": sha_sub(rpc_url, 6),
                             "method": "blockchain.transaction.get",
@@ -328,12 +327,13 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_data, 
                 const api_rpc_url = node_data.api ? glob_const.mempool_space[currency_name] : rpc_url;
                 api_proxy({ // mempoolspace API
                     "api_url": api_rpc_url + "/api/v1/difficulty-adjustment",
-                    "proxy": false,
+                    "proxy": api_rpc_url.includes(".onion"),
                     "params": {
                         "method": "GET"
                     }
                 }).done(function(e) {
-                    const result = e.progressPercent || e.difficultyChange || e.estimatedRetargetDate;
+                    const ar = br_result(e).result,
+                        result = ar.progressPercent || ar.difficultyChange || ar.estimatedRetargetDate;
                     is_live = (result) ? true : false;
                     create_rpc_node_element(api_list, is_live, node_id, node_data, is_selected, true);
                 }).fail(function(xhr, stat, err) {
@@ -591,7 +591,6 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                 "params": {
                     "method": "POST",
                     "cache": true,
-                    "timeout": 20000,
                     "data": JSON.stringify({
                         "id": sha_sub(rpc_url, 6),
                         "method": "blockchain.transaction.get",
@@ -615,7 +614,6 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                         "params": {
                             "method": "POST",
                             "cache": true,
-                            "timeout": 20000,
                             "data": JSON.stringify({
                                 "id": "scanning",
                                 "method": "blockchain.scripthash.get_history",
@@ -633,6 +631,7 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                                     input_section.addClass("live").removeClass("offline");
                                     node_config.name = "electrum";
                                     save_rpc_settings(currency_name, node_config, true);
+                                    closeloader();
                                     return
                                 }
                             }
@@ -640,15 +639,12 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                         test_mempoolspace(input_section, node_config, rpc_url, currency_name);
                     }).fail(function(xhr, stat, err) {
                         test_mempoolspace(input_section, node_config, rpc_url, currency_name);
-                    }).always(function() {
-                        closeloader();
                     });
                     return
                 }
                 test_mempoolspace(input_section, node_config, rpc_url, currency_name);
             }).fail(function(xhr, stat, err) {
                 test_mempoolspace(input_section, node_config, rpc_url, currency_name);
-                closeloader();
             });
             return
         }
@@ -754,7 +750,7 @@ function test_mempoolspace(input_section, node_config, rpc_url, currency_name) {
         error_message = tl("unabletoconnect");
     api_proxy({
         "api_url": rpc_url + "/api/address/" + test_address + "/txs",
-        "proxy": false,
+        "proxy": rpc_url.includes(".onion"),
         "params": {
             "method": "GET"
         }
@@ -768,6 +764,7 @@ function test_mempoolspace(input_section, node_config, rpc_url, currency_name) {
                     input_section.addClass("live").removeClass("offline");
                     node_config.name = "mempool.space";
                     save_rpc_settings(currency_name, node_config, true);
+                    closeloader();
                     return
                 }
             }
@@ -777,6 +774,8 @@ function test_mempoolspace(input_section, node_config, rpc_url, currency_name) {
     }).fail(function(error) {
         input_section.addClass("offline").removeClass("live");
         popnotify("error", error_message);
+    }).always(function() {
+        closeloader();
     });
 }
 

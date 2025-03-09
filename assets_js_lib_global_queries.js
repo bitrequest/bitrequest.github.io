@@ -1024,7 +1024,7 @@ function api_proxy(ad, p_proxy) {
         ad.api = c_apiname(api_name);
         const api_path = "proxy/v1/",
             root_url = ad.localhost ? "" : active_proxy,
-            timeout = q_obj(ad, "params.timeout") || 5000,
+            timeout = (custom_url && custom_url !== true) && custom_url.includes(".onion") ? glob_const.tor_timeout : 5000,
             proxy_config = {
                 "method": "POST",
                 "cache": false,

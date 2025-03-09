@@ -1548,6 +1548,8 @@ function set_result(result) {
         handle_address(result, payment_type);
     } else if (scan_subtype === "viewkey") {
         handle_viewkey(result, payment_type);
+    } else if (scan_subtype === "add_node") {
+        $("#popup .formbox input#rpc_url_input").val(result);
     }
     window.history.back();
     return false;
@@ -5010,7 +5012,7 @@ function append_coinsetting(currency, settings) {
 
 // Subtitle for settings
 function setting_sub_address(currency, name, url) {
-    const sub_title = (name === "electrum" || currency === "ethereum") ? url || name : name || url;
+    const sub_title = (name === "electrum" || name === "mempool.space" || currency === "ethereum") ? url || name : name || url;
     return exists(sub_title) ? truncate(sub_title) : "";
 }
 

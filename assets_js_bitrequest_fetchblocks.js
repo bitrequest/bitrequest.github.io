@@ -1771,7 +1771,6 @@ function electrum_rpc_blockheight(rd, api_data, rdo) {
         "params": {
             "method": "POST",
             "cache": true,
-            "timeout": 20000,
             "data": JSON.stringify({
                 "id": "blockheight",
                 "method": "blockchain.headers.subscribe",
@@ -1819,7 +1818,7 @@ function mempoolspace_rpc_blockheight(rd, api_data, rdo, rpc) {
     let block_height = null;
     api_proxy({ // get latest blockheight
         "api_url": base_url + "/api/blocks/tip/height",
-        "proxy": false,
+        "proxy": base_url.includes(".onion"),
         "params": {
             "method": "GET"
         }
@@ -1875,7 +1874,6 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
             "params": {
                 "method": "POST",
                 "cache": true,
-                "timeout": 20000,
                 "data": JSON.stringify({
                     "id": "scanning",
                     "method": "blockchain.scripthash.get_history",
@@ -1931,7 +1929,6 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
             "params": {
                 "method": "POST",
                 "cache": true,
-                "timeout": 20000,
                 "data": JSON.stringify({
                     "id": "polling",
                     "tx_hash": tx_hash,
@@ -1980,6 +1977,7 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latest_block) {
     const tx_list = rdo.transactionlist,
         api_url = api_data.url,
         base_url = (rpc) ? api_url : "https://" + api_url,
+        is_onion = base_url.includes(".onion"),
         request_id = rd.requestid,
         source = rdo.source;
     let tx_count = 0,
@@ -1988,7 +1986,7 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latest_block) {
         if (rdo.pending === "scanning") { // scan incoming transactions on address
             api_proxy({
                 "api_url": base_url + "/api/address/" + rd.address + "/txs",
-                "proxy": false,
+                "proxy": is_onion,
                 "params": {
                     "method": "GET"
                 }
@@ -2032,7 +2030,7 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latest_block) {
         }
         api_proxy({ // poll mempool.space transaction id
             "api_url": base_url + "/api/tx/" + rd.txhash,
-            "proxy": false,
+            "proxy": is_onion,
             "params": {
                 "method": "GET"
             }
