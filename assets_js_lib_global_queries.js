@@ -49,7 +49,7 @@ const br_bipobj = br_get_local("bpdat", true),
         "ln_socket": "wss://bitrequest.app:8030",
         "proxy_list": br_proxy_list,
         "hosted_proxy": br_hosted_proxy,
-        "proxy_version": "0.019",
+        "proxy_version": "0.020",
         "firebase_dynamic_link_domain": br_firebase_dynamic_link_domain,
         "firebase_shortlink": "https://" + br_firebase_dynamic_link_domain + "/",
         "androidpackagename": br_androidpackagename,
@@ -1024,10 +1024,11 @@ function api_proxy(ad, p_proxy) {
         ad.api = c_apiname(api_name);
         const api_path = "proxy/v1/",
             root_url = ad.localhost ? "" : active_proxy,
+            timeout = q_obj(ad, "params.timeout") || 5000,
             proxy_config = {
                 "method": "POST",
                 "cache": false,
-                "timeout": 5000,
+                timeout,
                 "url": root_url + api_path,
                 "data": $.extend(ad, api_url_data, {
                     "nokey": no_key_needed
