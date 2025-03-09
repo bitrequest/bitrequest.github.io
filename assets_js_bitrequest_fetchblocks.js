@@ -1986,6 +1986,8 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latest_block) {
         if (rdo.pending === "scanning") { // scan incoming transactions on address
             api_proxy({
                 "api_url": base_url + "/api/address/" + rd.address + "/txs",
+                "cachetime": rdo.cachetime,
+                "cachefolder": "1h",
                 "proxy": is_onion,
                 "params": {
                     "method": "GET"
@@ -2030,6 +2032,8 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latest_block) {
         }
         api_proxy({ // poll mempool.space transaction id
             "api_url": base_url + "/api/tx/" + rd.txhash,
+            "cachetime": rdo.cachetime,
+            "cachefolder": "1h",
             "proxy": is_onion,
             "params": {
                 "method": "GET"

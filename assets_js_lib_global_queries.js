@@ -319,6 +319,7 @@ let request = null,
 //get_erc20_settings
 //add_prefix_to_keys
 //get_cached_tokens
+//is_valid_ipv4
 
 // ** Core Storage Functions: **
 
@@ -1314,4 +1315,9 @@ function get_cached_tokens(check) {
         }
     }
     return false;
+}
+
+function is_valid_ipv4(ip) {
+    const regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    return regex.test(ip);
 }
