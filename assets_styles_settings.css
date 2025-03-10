@@ -284,13 +284,15 @@ ul.conf_options li .conf_emoji {
 	margin-bottom: 0.6em;
 }
 
-#rpc_list .selectarrows {
+#rpc_list .selectarrows,
+#rpc_list .qrscanner {
 	opacity:0;
 	pointer-events: none;
 	transition: opacity 1000ms ease;
 }
 
-#rpc_list.show_select .selectarrows {
+#rpc_list.show_select .selectarrows,
+#rpc_list.show_select .qrscanner {
 	opacity:1;
 	pointer-events: all;
 }
