@@ -791,7 +791,7 @@ function share_backup_file() {
 
             api_proxy({
                 "custom": "system_bu",
-                "api_url": true,
+                "api_url": "x", // dummy value, don't remove
                 "proxy": true,
                 "params": {
                     "url": $(this).attr("data-url"),
@@ -828,7 +828,7 @@ function check_systembu(sbu) {
 
     api_proxy({
         "custom": "get_system_bu",
-        "api_url": true,
+        "api_url": "x", // dummy value, don't remove
         "proxy": true,
         "params": ro_id
     }, ro_proxy).done(function(e) {
@@ -1999,7 +1999,7 @@ function share_csv() {
             const account = $("#accountsettings").data("selected");
             api_proxy({
                 "custom": "system_bu",
-                "api_url": true,
+                "api_url": "x", // dummy value, don't remove
                 "proxy": true,
                 "params": {
                     "url": csv,
@@ -2031,7 +2031,7 @@ function check_csvexport(csv) {
         rproxy = rdata.proxy;
     api_proxy({
         "custom": "get_system_bu",
-        "api_url": true,
+        "api_url": "x", // dummy value, don't remove
         "proxy": true,
         "params": roid
     }, rproxy).done(function(e) {
@@ -2781,7 +2781,8 @@ function test_custom_proxy(value) {
             "timeout": 5000,
             "url": url + "proxy/v1/",
             "data": {
-                "custom": "add"
+                "custom": "add",
+                "api_url": "x" // dummy value, don't remove
             }
         }).done(function(e) {
             const result = br_result(e),
@@ -3657,7 +3658,7 @@ function share_teaminvite() {
             const account = $("#accountsettings").data("selected");
             api_proxy({
                 "custom": "system_bu",
-                "api_url": true,
+                "api_url": "x", // dummy value, don't remove
                 "proxy": true,
                 "params": {
                     "url": $(this).attr("data-url"),
@@ -3688,7 +3689,7 @@ function check_teaminvite(ro) {
         ro_proxy = ro_dat.proxy;
     api_proxy({
         "custom": "get_system_bu",
-        "api_url": true,
+        "api_url": "x", // dummy value, don't remove
         "proxy": true,
         "params": ro_id
     }, ro_proxy).done(function(e) {

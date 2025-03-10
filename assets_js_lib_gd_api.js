@@ -153,7 +153,7 @@ function get_oauth_credentials(auth_code) {
     if (auth_code) {
         api_proxy({
             "custom": "fetch_creds",
-            "api_url": true,
+            "api_url": "x", // dummy value, don't remove
             "proxy": true,
             "code": decodeURIComponent(auth_code),
             "redirect_uri": glob_const.redirect_uri,
@@ -213,7 +213,7 @@ function refresh_access_token(refresh_token, callback) {
     if (refresh_token) {
         api_proxy({
             "custom": "fetch_creds",
-            "api_url": true,
+            "api_url": "x", // dummy value, don't remove
             "proxy": true,
             "refresh_token": refresh_token,
             "grant_type": "refresh_token"
