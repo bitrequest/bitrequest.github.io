@@ -113,7 +113,7 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
             let has_nodes = false;
             $.each(get_session_nodes, function(index, val) {
                 const rpc_url = val.rpc_url2,
-                    node_exists = value_in_array(rpc_url, existing_nodes);
+                    node_exists = value_in_array(existing_nodes, rpc_url);
                 if (!node_exists) {
                     node_data = {
                             "name": "electrum",

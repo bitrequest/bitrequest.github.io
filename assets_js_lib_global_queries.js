@@ -836,7 +836,8 @@ function gk() {
 function fk() {
     api_proxy({
         "proxy": true,
-        "custom": "gk"
+        "custom": "gk",
+        "api_url": "x" // dummy value, don't remove
     }).done(function(e) {
         const res = br_result(e);
         result = res.result,
