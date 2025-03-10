@@ -26,7 +26,8 @@
 			if (has_tor()) { // check for TOR support
 				return socket_fetch_tor_stream($pl);
 			}
-			if ((strpos(TOR_HOST, $_SERVER["HTTP_HOST"]) !== false)) {
+			$tor_proxy = $pl["tor_proxy"] ?? "false";
+			if ((strpos($tor_proxy, $_SERVER["HTTP_HOST"]) !== false)) {
 				return error_obj("411", "Failed to connect via Tor");
 			}
 			// Call default proxy if TOR is not installed
@@ -36,7 +37,7 @@
 			}
 			$payload = ["fetch" => "true"];
 			$merged = array_merge($payload, $pl);
-			$tor_url = TOR_HOST . "/proxy/v1/custom/rpcs/electrum/index.php";
+			$tor_url = $tor_proxy . "proxy/v1/custom/rpcs/electrum/index.php";
 			curl_setopt($ch, CURLOPT_URL, $tor_url);
 			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($merged));
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

@@ -3,7 +3,6 @@ $(document).ready(function() {
     edit_rpcnode();
     //fetch_electrum_nodes
     //get_random_electrum_node
-    //check_node_exists
     //get_rpc_placeholder
     //validate_and_add_rpc_node
     //create_rpc_node_element
@@ -114,7 +113,7 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
             let has_nodes = false;
             $.each(get_session_nodes, function(index, val) {
                 const rpc_url = val.rpc_url2,
-                    node_exists = check_node_exists(rpc_url, existing_nodes);
+                    node_exists = value_in_array(rpc_url, existing_nodes);
                 if (!node_exists) {
                     node_data = {
                             "name": "electrum",
@@ -163,8 +162,7 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                         filter_ips = is_valid_ipv4(url);
                     if (filter_ips) {
                         // filter out electrum ip's and only add regular urls
-                    }
-                    else {
+                    } else {
                         let tport = null;
                         if (url) {
                             const port_arr = nd[2];
@@ -174,7 +172,7 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                         }
                         const port = tport ? ((/^\d/.test(tport)) ? ":" + port : ":" + tport.slice(1)) : "",
                             rpc_url2 = url + port,
-                            node_exists = check_node_exists(rpc_url2, existing_nodes);
+                            node_exists = value_in_array(existing_nodes, rpc_url2);
                         if (!node_exists) {
                             const node_data = {
                                     "name": "electrum",
@@ -241,11 +239,6 @@ function get_random_electrum_node(predefined_nodes) {
         return electrum_nodes[random_index];
     }
     return null;
-}
-
-// Search for any object in the array that has the matching URL
-function check_node_exists(url_to_find, node_array) {
-    return node_array.some(node => node.url === url_to_find);
 }
 
 // Provides template URL examples for different cryptocurrency node configurations and API types

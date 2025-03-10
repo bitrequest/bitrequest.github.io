@@ -1,48 +1,34 @@
 <?php
     
-    include "../../../api.php";
     const MAX_HISTORY_COUNT = 15;
     const MAX_PENDING_COUNT = 15;
 
     // Main function to process Nano transactions
-    function main() {
-        $payload = get_payload();
-        if (!$payload) {
-            send_jsonresponse(["error" => "Invalid payload"]);
-            return;
+    function main_nano($pl) {
+	    if (!$pl) {
+            return ["error" => "Invalid payload"];
         }
 
-        $pl_array = json_decode($payload, true);
-        if (!is_array($pl_array)) {
-            send_jsonresponse(["error" => "Invalid payload format"]);
-            return;
-        }
-
-        $node = isset($pl_array["node"]) ? $pl_array["node"] : null;
-        $account = isset($pl_array["account"]) ? $pl_array["account"] : null;
-
+        $node = $pl["node"];
         if (!$node) {
-            send_jsonresponse(["error" => "Node not provided"]);
-            return;
+            return ["error" => "Node not provided"];
         }
         
+        $account = $pl["account"];
         if (!$account) {
-            send_jsonresponse(["error" => "Account not provided"]);
-            return;
+            return ["error" => "Account not provided"];
         }
 
         $headers = ["Content-Type: application/json"];
 
         $merged_history = get_account_history($node, $account, $headers);
         if (isset($merged_history["error"])) {
-	        send_jsonresponse($merged_history);
-	        return;
+	        return $merged_history;
         }
         
         $transformed_pending_array = get_account_pending($node, $account, $headers);
         if (isset($transformed_pending_array["error"])) {
-	        send_jsonresponse($transformed_pending_array);
-	        return;
+	        return $transformed_pending_array;
         }
 
         if (!empty($transformed_pending_array) && !empty($merged_history)) {
@@ -54,8 +40,7 @@
         } else {
             $result = ["message" => "No transactions found"];
         }
-
-        send_jsonresponse($result);
+		return $result;
     }
 
     function get_payload() {
@@ -205,6 +190,4 @@
         });
         return $array;
     }
-
-    main();
 ?>

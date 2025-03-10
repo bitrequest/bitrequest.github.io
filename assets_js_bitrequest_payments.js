@@ -2745,9 +2745,9 @@ function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash)
             }
             const request_id = data.shorturl;
             if (request_id) {
-                const server_index = glob_const.proxy_list.indexOf(server),
-                    is_default_server = server_index > -1;
-                const short_url = is_default_server ?
+                const server_index = find_object_index(server, glob_const.proxy_list, "proxy"),
+                    is_default_server = value_in_array(glob_const.proxy_list, server);
+                short_url = is_default_server ?
                     glob_const.approot + "?i=" + server_index.toString() + request_id :
                     server + "proxy/v1/inv/4bR" + request_id;
                 share_request(short_url, shared_title);

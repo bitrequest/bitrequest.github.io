@@ -49,7 +49,6 @@ $(document).ready(function() {
     //s_lnd_proxy
     //is_local_node
     //cancelpd
-    //node_exists
     //fetch_node
     //fetch_other_nodes
     //fetch_proxy
@@ -1025,7 +1024,7 @@ function add_custom_proxy(proxy_url) {
     const proxy_node = $("#api_proxy"),
         proxy_node_data = proxy_node.data(),
         custom_proxies = proxy_node_data.custom_proxies;
-    if (custom_proxies.includes(proxy_url) || glob_const.proxy_list.includes(proxy_url)) {
+    if (custom_proxies.includes(proxy_url) || value_in_array(glob_const.proxy_list, proxy_url)) {
         return false;
     }
     custom_proxies.push(proxy_url);
@@ -1100,7 +1099,7 @@ function trigger_ln() {
             return
         }
         const normalized_url = complete_url(input_proxy_url),
-            is_default_proxy = $.inArray(normalized_url, glob_const.proxy_list) !== -1;
+            is_default_proxy = value_in_array(glob_const.proxy_list, normalized_url);
         if (is_default_proxy) {
             popnotify("error", tl("defaultproxy", {
                 "fixed_url": normalized_url
@@ -1243,7 +1242,7 @@ function test_create_invoice(implementation, proxy_data, node_host, node_key) {
         node_services = lightning_data.services,
         node_id_source = node_host ? (implementation == "lnbits" ? node_key : node_host) : proxy_url + implementation,
         node_id = sha_sub(node_id_source, 10),
-        is_node_existing = node_exists(node_services, node_id),
+        is_node_existing = value_in_array(node_services, node_id),
         default_error = tl("unabletoconnect"),
         unique_id = sha_sub(now(), 10);
 
@@ -1584,14 +1583,6 @@ function cancelpd() {
     if (is_openrequest() === true) { // update request dialog
         cancel_paymentdialog();
     }
-}
-
-// Verifies if node ID exists in provided node list
-function node_exists(node_services, node_id) {
-    if (empty_obj(node_services)) {
-        return false;
-    }
-    return node_services.some(node => node.node_id === node_id);
 }
 
 // Retrieves node by ID from node list

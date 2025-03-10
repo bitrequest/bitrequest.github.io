@@ -1,7 +1,7 @@
 <?php
 	
 	// PROXY
-	const VERSION = "0.020";
+	const VERSION = "0.021";
 	const CACHE_DURATIONS = [
 		"2m" => 6220800,  // 2 months in seconds
 		"1w" => 604800,   // 1 week in seconds
@@ -9,7 +9,6 @@
 		"1d" => 86400,    // 1 day in seconds
 		"1h" => 3600      // 1 hour in seconds
 	];
-	const TOR_HOST = "https://www.bitrequest.app";
 	
 	// Main API function that handles caching and retrieval of data based on specified parameters
 	function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
@@ -174,13 +173,22 @@
 				}
 				return error_object("404", "Electrum file not found: " . $file_path);
 			}
-			
+			// Handle nano requests
+			if ($url === "nano") {
+				$file_path = "custom/rpcs/nano/index.php";
+				if (file_exists($file_path)) {
+					include_once $file_path;
+					$nano_fetch = main_nano(json_decode($data, true));
+					return json_encode($nano_fetch);
+				}
+				return error_object("404", "Nano file not found: " . $file_path);
+			}	
 			// Handle .onion URL requests via Tor
 			if (strpos($url, ".onion") !== false) {
 				$tor_path = __DIR__ . "/ln/tor/index.php";
 				if (file_exists($tor_path)) {
 					require_once $tor_path;
-					return fetch_tor($url, $data, $headers);
+					return fetch_tor($url, json_decode($data, true), $headers);
 				}
 				return error_object("404", "Tor file not found");
 			}

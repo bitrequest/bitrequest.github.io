@@ -1849,7 +1849,7 @@ function mempoolspace_blockheight_fails(rd, api_data, rdo, rpc) {
     mempoolspace_rpc(rd, api_data, rdo, rpc);
 }
 
-// Processes Nano transactions via RPC with support for account scanning and block verification
+// Processes Electrum transactions via RPC with support for account scanning and block verification
 function electrum_rpc(rd, api_data, rdo, latest_block) {
     const currency = rd.payment,
         tx_list = rdo.transactionlist,

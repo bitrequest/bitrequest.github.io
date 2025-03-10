@@ -14,12 +14,26 @@ const br_bipobj = br_get_local("bpdat", true),
     br_hostname = "bitrequest.github.io", // change if self hosted
     br_localhostname = (br_hostname.indexOf("http") > -1) ? br_hostname.split("://").pop() : br_hostname,
     br_approot = "https://" + br_localhostname + "/",
-    br_proxy_list = [
-        "https://app.bitrequest.io/",
-        "https://www.bitrequest.io/",
-        "https://www.bitrequest.app/"
+    br_proxy_list = [{
+            "proxy": "https://app.bitrequest.io/",
+            "display": true,
+            "tor": false
+        },
+        {
+            "proxy": "https://www.bitrequest.io/",
+            "display": true,
+            "tor": false
+        },
+        {
+            "proxy": "https://www.bitrequest.app/",
+            "display": true,
+            "tor": true
+        }
     ],
-    br_hosted_proxy = random_array_item(br_proxy_list), // load balance proxies
+    displayed_proxies = extrac_filtered_keys(br_proxy_list, "proxy", "display"),
+    br_hosted_proxy = random_array_item(displayed_proxies), // load balance proxies
+    tor_proxies = extrac_filtered_keys(br_proxy_list, "proxy", "tor"),
+    tor_proxy = random_array_item(tor_proxies), // pick tor proxy
     br_firebase_dynamic_link_domain = "bitrequest.page.link",
     br_androidpackagename = "io.bitrequest.app",
     br_useragent = navigator.userAgent || navigator.vendor || window.opera,
@@ -49,7 +63,8 @@ const br_bipobj = br_get_local("bpdat", true),
         "ln_socket": "wss://bitrequest.app:8030",
         "proxy_list": br_proxy_list,
         "hosted_proxy": br_hosted_proxy,
-        "proxy_version": "0.020",
+        tor_proxy,
+        "proxy_version": "0.021",
         "firebase_dynamic_link_domain": br_firebase_dynamic_link_domain,
         "firebase_shortlink": "https://" + br_firebase_dynamic_link_domain + "/",
         "androidpackagename": br_androidpackagename,
@@ -261,6 +276,8 @@ let request = null,
 //dom_to_array
 //clone
 //object_from_array
+//value_in_array
+//find_object_index
 
 // ** DOM & UI Utilities: **
 //play_audio
@@ -292,7 +309,10 @@ let request = null,
 //get_api_data
 //proxy_dat
 //d_proxy
+//all_global_proxies
 //all_proxies
+//extract_keys
+//extrac_filtered_keys
 //fetch_aws
 
 // ** Data Access & Query Functions: **
@@ -617,6 +637,27 @@ function object_from_array(array, key, val) {
     return matched_item || false;
 }
 
+// Verifies if key value exists in provided array
+function value_in_array(array, key) {
+    if (empty_obj(array)) {
+        return false;
+    }
+    return array.some(key => key.key === key);
+}
+
+// Finds the index of an object in an array
+function find_object_index(url, array, key) {
+    return array.findIndex(item => {
+        // Handle the case where the property might not exist
+        if (!item[key]) return false;
+
+        // Remove trailing slashes for comparison
+        const item_url = item[key].endsWith("/") ? item[key].slice(0, -1) : item[key],
+            check_url = url.endsWith("/") ? url.slice(0, -1) : url;
+        return item_url === check_url;
+    });
+}
+
 // ** DOM & UI Utilities: **
 
 // Initiates audio playback with promise-based error handling
@@ -795,8 +836,7 @@ function gk() {
 function fk() {
     api_proxy({
         "proxy": true,
-        "custom": "gk",
-        "api_url": true
+        "custom": "gk"
     }).done(function(e) {
         const res = br_result(e);
         result = res.result,
@@ -1025,14 +1065,17 @@ function api_proxy(ad, p_proxy) {
         ad.api = c_apiname(api_name);
         const api_path = "proxy/v1/",
             root_url = ad.localhost ? "" : active_proxy,
-            timeout = (custom_url && custom_url !== true) && custom_url.includes(".onion") ? glob_const.tor_timeout : 5000,
+            is_onion = custom_url && custom_url.includes(".onion"),
+            timeout = is_onion ? 20000 : 5000,
+            tor_proxy = is_onion ? glob_const.tor_proxy : false,
             proxy_config = {
                 "method": "POST",
                 "cache": false,
                 timeout,
                 "url": root_url + api_path,
                 "data": $.extend(ad, api_url_data, {
-                    "nokey": no_key_needed
+                    "nokey": no_key_needed,
+                    tor_proxy
                 })
             };
         return $.ajax(proxy_config);
@@ -1110,10 +1153,28 @@ function d_proxy() {
 }
 
 // Concatenates default and custom proxy lists
-function all_proxies() {
+function all_global_proxies(filter) {
+    const global_proxies = glob_const.proxy_list,
+        proxy_list = (filter) ? extrac_filtered_keys(global_proxies, "proxy", filter) : extract_keys(global_proxies, "proxy");
+    return proxy_list;
+}
+
+// Concatenates default and custom proxy lists
+function all_proxies(filter) {
     const proxy_data = proxy_dat(),
-        custom_proxies = proxy_data.custom_proxies;
-    return glob_const.proxy_list.concat(custom_proxies);
+        custom_proxies = proxy_data.custom_proxies,
+        proxy_list = all_global_proxies(filter);
+    return proxy_list.concat(custom_proxies);
+}
+
+// Extracts object from array
+function extract_keys(array, key) {
+    return array.map(item => item[key]);
+}
+
+// Extracts object from array by filter value
+function extrac_filtered_keys(array, extract, filter) {
+    return array.filter(item => item[filter] === true).map(item => item[extract]);
 }
 
 // Constructs complete AWS S3 URL for given filename

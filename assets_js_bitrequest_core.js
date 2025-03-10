@@ -4436,7 +4436,7 @@ function expand_shoturl(input_param) {
     if (input_param) {
         const proxy_index = input_param.slice(0, 1),
             short_id = input_param.slice(1),
-            proxy_url = glob_const.proxy_list[proxy_index],
+            proxy_url = glob_const.proxy_list[proxy_index].proxy,
             is_secure_url = (proxy_url.indexOf("https://") >= 0);
         if (is_secure_url) {
             const request_payload = {

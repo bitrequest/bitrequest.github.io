@@ -2637,9 +2637,9 @@ function trigger_proxy_dialog() {
 // Displays proxy configuration dialog with available servers and custom proxy input
 function pick_api_proxy() {
     $(document).on("click", "#api_proxy", function() {
-        const proxies = all_proxies(),
-            proxy = d_proxy(),
-            content = "\
+        const proxies = all_proxies("display"),
+            proxy = d_proxy();
+        const content = "\
            <div class='formbox' id='proxyformbox'>\
                <h2 class='icon-sphere'>API Proxy</h2>\
                <div class='popnotify'></div>\
@@ -2681,7 +2681,7 @@ function pick_api_proxy() {
         const options = $("#proxyformbox").find(".options");
         $.each(proxies, function(key, value) {
             const selected = (value === proxy),
-                dfault = $.inArray(value, glob_const.proxy_list) !== -1;
+                dfault = value_in_array(glob_const.proxy_list, value);
             test_append_proxy(options, key, value, selected, dfault);
         });
     })
@@ -2770,7 +2770,7 @@ function test_custom_proxy(value) {
         data = node.data(),
         proxies = data.custom_proxies,
         url = complete_url(value);
-    if ($.inArray(url, proxies) !== -1 || $.inArray(url, glob_const.proxy_list) !== -1) {
+    if ($.inArray(url, proxies) !== -1 || value_in_array(glob_const.proxy_list, url)) {
         popnotify("error", tl("proxyexists"));
         return false;
     }
@@ -3043,7 +3043,7 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
     if (keyval.length > keylength) {
         if (ref === "infura" || ref === "alchemy") {
             const txhash = "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1",
-                baseUrl = ref === "infura" ? glob_const.main_eth_node : glob_const.main_alchemy_node,
+                base_url = ref === "infura" ? glob_const.main_eth_node : glob_const.main_alchemy_node,
                 json = {
                     "jsonrpc": "2.0",
                     "id": 3,
@@ -3052,7 +3052,7 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
                 };
             api_proxy({
                 "api": ref,
-                "api_url": baseUrl + keyval,
+                "api_url": base_url + keyval,
                 "proxy": false,
                 "params": {
                     "method": "POST",
@@ -3073,8 +3073,8 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
             });
             return
         }
-        const apiData = get_api_data(ref),
-            baseUrl = apiData.base_url,
+        const api_data = get_api_data(ref),
+            base_url = api_data.base_url,
             method = (ref === "firebase" || ref === "bitly") ? "POST" : "GET",
             params = {
                 "method": method,
@@ -3096,27 +3096,27 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
                 "bitlink_id": "bit.ly/12a4b6c"
             });
         }
-        const apiUrl = baseUrl + search,
+        const api_url = base_url + search,
             proxy = (ref === "coinmarketcap"),
-            reqData = {
+            req_data = {
                 "api": ref,
                 "search": search,
                 "cachetime": 0,
                 "cachefolder": "1h",
-                "api_url": apiUrl,
+                "api_url": api_url,
                 "proxy": proxy,
                 "params": params
             };
-        api_proxy(reqData).done(function(e) {
+        api_proxy(req_data).done(function(e) {
             const data = br_result(e).result;
             if (data) {
-                const failMsg = tl("apicallfailed");
+                const fail_msg = tl("apicallfailed");
                 if ((ref === "etherscan" || ref === "arbiscan" || ref === "polygonscan" || ref === "bscscan") && data.status != 1) {
                     if (str_match(data.result, "Invalid API Key")) {
                         api_fail(ref, keyval);
                     } else {
                         notify(tl("apicallerror"));
-                        const content = "<h2 class='icon-blocked'>" + failMsg + "</h2><p class='doselect'>" + data.message + "</p>";
+                        const content = "<h2 class='icon-blocked'>" + fail_msg + "</h2><p class='doselect'>" + data.message + "</p>";
                         popdialog(content, "canceldialog");
                     }
                     return
@@ -3133,7 +3133,7 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
                         api_fail(ref, keyval);
                     } else {
                         notify(tl("apicallerror"));
-                        const content = "<h2 class='icon-blocked'>" + failMsg + "</h2><p class='doselect'>" + data.error + "</p>";
+                        const content = "<h2 class='icon-blocked'>" + fail_msg + "</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
                     return
@@ -3157,7 +3157,7 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
                         api_fail(ref, keyval);
                     } else {
                         notify(tl("apicallerror"));
-                        const content = "<h2 class='icon-blocked'>" + failMsg + "</h2><p class='doselect'>" + data.error + "</p>";
+                        const content = "<h2 class='icon-blocked'>" + fail_msg + "</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
                     return
@@ -3170,7 +3170,7 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
                             api_fail(ref, keyval);
                         } else {
                             notify(tl("apicallerror"));
-                            const content = "<h2 class='icon-blocked'>" + failMsg + "</h2><p class='doselect'>" + data.error + "</p>";
+                            const content = "<h2 class='icon-blocked'>" + fail_msg + "</h2><p class='doselect'>" + data.error + "</p>";
                             popdialog(content, "canceldialog");
                         }
                     }
@@ -3183,7 +3183,7 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
                             api_fail(ref, keyval);
                         } else {
                             notify(tl("apicallerror"));
-                            const content = "<h2 class='icon-blocked'>" + failMsg + "</h2><p class='doselect'>" + ec + "</p>";
+                            const content = "<h2 class='icon-blocked'>" + fail_msg + "</h2><p class='doselect'>" + ec + "</p>";
                             popdialog(content, "canceldialog");
                         }
                         return
@@ -3194,7 +3194,7 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
                         api_fail(ref, keyval);
                     } else {
                         notify(tl("apicallerror"));
-                        const content = "<h2 class='icon-blocked'>" + failMsg + "</h2><p class='doselect'>" + data.error + "</p>";
+                        const content = "<h2 class='icon-blocked'>" + fail_msg + "</h2><p class='doselect'>" + data.error + "</p>";
                         popdialog(content, "canceldialog");
                     }
                     return
