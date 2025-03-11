@@ -1805,7 +1805,7 @@ function add_serviceworker() {
                 "scope": "./"
             })
             .then(function(registration) {
-                console.log("Service worker has been registered for scope: " + registration.scope);
+                //console.log("Service worker has been registered for scope: " + registration.scope);
             }).catch(function(error) {
                 // Registration failed
                 console.error("error", error);
@@ -3213,7 +3213,7 @@ function add_erc20() {
                     <div class='selectbox'>\
                         <input type='text' value='' placeholder='" + tl("erc20placeholder") + "' id='ac_input'/>\
                         <div class='selectarrows icon-menu2' data-pe='none'></div>\
-                        <div id='ac_options' class='options'>" + token_options + "</div>\
+                        <div id='ac_options' class='options show_options'>" + token_options + "</div>\
                     </div>\
                     <div id='erc20_inputs'>\
                     <div class='inputwrap'><input type='text' class='address' value='" + eth_addr_value + "' placeholder='" + tl("enteraddress") + "'/>" + scan_button + "</div>\

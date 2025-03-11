@@ -426,7 +426,7 @@ function edit_l2() {
                 content = template_dialog({
                     "id": "l2_formbox",
                     "icon": "icon-new-tab",
-                    "title": tl("layer2"),
+                    "title": thiscurrency + " " + tl("layer2"),
                     "elements": ddat
                 });
             popdialog(content, "triggersubmit");

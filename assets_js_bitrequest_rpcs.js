@@ -114,12 +114,14 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
             let has_nodes = false;
             $.each(get_session_nodes, function(index, val) {
                 const rpc_url = val.rpc_url2,
+                    v = val.v,
                     node_exists = objectkey_in_array(existing_nodes , "url", rpc_url);
                 if (!node_exists) {
                     const node_data = {
                         "name": "electrum",
                         "url": rpc_url,
-                        "display": true
+                        "display": true,
+                        v
                     },
                     node_id = val.node_id,
                     is_selected = rpc_url === node_url;
@@ -164,10 +166,12 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                     if (filter_ips) {
                         // filter out electrum ip's and only add regular urls
                     } else {
-                        let tport = null;
+                        let tport = null,
+                            v = null;
                         if (url) {
                             const port_arr = nd[2];
                             if (is_array(port_arr)) {
+                                v = port_arr[0];
                                 tport = port_arr[1];
                             }
                         }
@@ -178,7 +182,8 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                             const node_data = {
                                     "name": "electrum",
                                     "url": rpc_url2,
-                                    "display": true
+                                    "display": true,
+                                    v
                                 },
                                 test_tx = glob_const.test_tx[currency];
                             api_proxy({
@@ -206,7 +211,8 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                                     create_rpc_node_element(api_options, true, node_id, node_data, is_selected, true);
                                     node_list_obj.push({
                                         node_id,
-                                        rpc_url2
+                                        rpc_url2,
+                                        v
                                     });
                                 }
                             }).always(function() {
@@ -450,7 +456,9 @@ function create_rpc_node_element(api_list, is_live, node_id, node_data, is_selec
         node_url = node_data.url,
         vendor = node_data.vendor,
         vendor_string = (vendor) ? " (" + vendor.slice(5) + ")" : "",
-        display_name = setting_sub_address(null, node_name, node_url) + vendor_string,
+        version = node_data.v,
+        version_string = (version) ? " (" + version + ")" : "",
+        display_name = setting_sub_address(null, node_name, node_url) + vendor_string + version_string,
         node_icon_url = get_node_icon(node_name),
         node_icon = (node_icon_url) ? "<img src='" + fetch_aws(node_icon_url) + ".png' class='icon'>" : "",
         node_element = $("<div class='optionwrap" + status_class + selected_class + default_class + "' style='display:none' data-pe='none' title='" + node_url + "'><span" + node_key + " data-value='" + node_url + "' data-pe='none'>" + node_icon + display_name + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon c_stat icon-" + status_icon + "' data-pe='none'></div><div class='opt_icon icon-bin' data-pe='none'></div></div>");
