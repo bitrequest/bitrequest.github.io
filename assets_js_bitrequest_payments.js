@@ -2637,7 +2637,7 @@ function firebase_shorten(shared_url, shared_title, site_thumb, unguessable, url
         "params": {
             "method": "POST",
             "cache": false,
-            "data": JSON.stringify({
+            "data": {
                 "dynamicLinkInfo": {
                     "domainUriPrefix": glob_const.firebase_dynamic_link_domain,
                     "link": shared_url,
@@ -2660,7 +2660,7 @@ function firebase_shorten(shared_url, shared_title, site_thumb, unguessable, url
                 "suffix": {
                     "option": security
                 }
-            })
+            }
         }
     }).done(function(response) {
         const data = br_result(response).result;
@@ -2695,9 +2695,9 @@ function bitly_shorten(shared_url, shared_title, url_hash) {
         "params": {
             "method": "POST",
             "contentType": "application/json",
-            "data": JSON.stringify({
+            "data": {
                 "long_url": shared_url
-            })
+            }
         }
     }).done(function(response) {
         const data = br_result(response).result;
@@ -2745,9 +2745,9 @@ function custom_shorten(service, shared_url, shared_title, site_thumb, url_hash)
             }
             const request_id = data.shorturl;
             if (request_id) {
-                const server_index = find_object_index(server, glob_const.proxy_list, "proxy"),
-                    is_default_server = value_in_array(glob_const.proxy_list, server);
-                short_url = is_default_server ?
+                const server_index = find_object_index(glob_const.proxy_list, "proxy", server),
+                    is_default_server = objectkey_in_array(glob_const.proxy_list, "proxy", server),
+                    short_url = is_default_server ?
                     glob_const.approot + "?i=" + server_index.toString() + request_id :
                     server + "proxy/v1/inv/4bR" + request_id;
                 share_request(short_url, shared_title);

@@ -825,7 +825,6 @@ function check_systembu(sbu) {
     const ro_dat = stripb64(sbu),
         ro_id = ro_dat.ro,
         ro_proxy = ro_dat.proxy;
-
     api_proxy({
         "custom": "get_system_bu",
         "api_url": "x", // dummy value, don't remove
@@ -1223,11 +1222,9 @@ function submit_gd_restore() {
                 "file": field.text(),
                 "device": device
             }));
-
         if (result) {
             const file_id = field.attr("data-gdbu_id"),
                 p = get_auth_status();
-
             if (p.pass) {
                 api_proxy({
                     "api_url": "https://www.googleapis.com/drive/v3/files/" + file_id + "?alt=media",
@@ -1242,7 +1239,6 @@ function submit_gd_restore() {
                 }).done(function(e) {
                     const json = JSON.parse(atob(e));
                     scan_restore(json);
-
                     const data = {
                         "jasobj": json,
                         "filename": field.text(),
@@ -1251,9 +1247,7 @@ function submit_gd_restore() {
                         "thisdeviceid": field.attr("data-device-id"),
                         "type": "gd"
                     };
-
                     restore_algo(data);
-
                 }).fail(function(xhr, stat, err) {
                     console.error("API request failed:", stat, err);
                     if (textStatus === "error") {
@@ -2681,7 +2675,7 @@ function pick_api_proxy() {
         const options = $("#proxyformbox").find(".options");
         $.each(proxies, function(key, value) {
             const selected = (value === proxy),
-                dfault = value_in_array(glob_const.proxy_list, value);
+                dfault = objectkey_in_array(glob_const.proxy_list, "proxy", value);
             test_append_proxy(options, key, value, selected, dfault);
         });
     })
@@ -2770,7 +2764,7 @@ function test_custom_proxy(value) {
         data = node.data(),
         proxies = data.custom_proxies,
         url = complete_url(value);
-    if ($.inArray(url, proxies) !== -1 || value_in_array(glob_const.proxy_list, url)) {
+    if ($.inArray(url, proxies) !== -1 || objectkey_in_array(glob_const.proxy_list , "url", url)) {
         popnotify("error", tl("proxyexists"));
         return false;
     }
@@ -3057,7 +3051,7 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
                 "proxy": false,
                 "params": {
                     "method": "POST",
-                    "data": JSON.stringify(json),
+                    "data": json,
                     "headers": {
                         "Content-Type": "application/json"
                     }
@@ -3093,9 +3087,9 @@ function json_check_apikey(keylength, ref, payload, keyval, lastInput) {
                 "Authorization": "Bearer " + keyval,
                 "Content-Type": "application/json"
             };
-            params.data = JSON.stringify({
+            params.data = {
                 "bitlink_id": "bit.ly/12a4b6c"
-            });
+            };
         }
         const api_url = base_url + search,
             proxy = (ref === "coinmarketcap"),

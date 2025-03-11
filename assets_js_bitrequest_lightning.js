@@ -1024,7 +1024,7 @@ function add_custom_proxy(proxy_url) {
     const proxy_node = $("#api_proxy"),
         proxy_node_data = proxy_node.data(),
         custom_proxies = proxy_node_data.custom_proxies;
-    if (custom_proxies.includes(proxy_url) || value_in_array(glob_const.proxy_list, proxy_url)) {
+    if (custom_proxies.includes(proxy_url) || objectkey_in_array(glob_const.proxy_list, "proxy", proxy_url)) {
         return false;
     }
     custom_proxies.push(proxy_url);
@@ -1099,7 +1099,7 @@ function trigger_ln() {
             return
         }
         const normalized_url = complete_url(input_proxy_url),
-            is_default_proxy = value_in_array(glob_const.proxy_list, normalized_url);
+            is_default_proxy = objectkey_in_array(glob_const.proxy_list, "proxy", normalized_url);
         if (is_default_proxy) {
             popnotify("error", tl("defaultproxy", {
                 "fixed_url": normalized_url
@@ -1311,11 +1311,11 @@ function test_create_invoice(implementation, proxy_data, node_host, node_key) {
     const api_call_configs = {
         "lnd": {
             "api_url": node_host + "/v1/invoices",
-            "data": JSON.stringify({
+            "data": {
                 "value": 10000,
                 "memo": "test invoice LND direct",
                 "expiry": 180
-            }),
+            },
             "headers": {
                 "Grpc-Metadata-macaroon": node_key
             },
@@ -1323,12 +1323,12 @@ function test_create_invoice(implementation, proxy_data, node_host, node_key) {
         },
         "c-lightning": {
             "api_url": node_host + "/v1/invoice/genInvoice",
-            "data": JSON.stringify({
+            "data": {
                 "amount": 10000,
                 "description": "test invoice c-lightning direct",
                 "label": unique_id,
                 "expiry": 180
-            }),
+            },
             "headers": {
                 "contentType": "application/json",
                 "macaroon": node_key,
@@ -1352,12 +1352,12 @@ function test_create_invoice(implementation, proxy_data, node_host, node_key) {
         },
         "lnbits": {
             "api_url": node_host + "/api/v1/payments",
-            "data": JSON.stringify({
+            "data": {
                 "out": false,
                 "amount": 10000,
                 "memo": "test invoice LNbits direct",
                 "expiry": 180
-            }),
+            },
             "headers": {
                 "X-Api-Key": node_key
             },

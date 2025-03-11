@@ -170,7 +170,7 @@ function connect_monero_node(cachetime, address, vk) {
         "proxy": true,
         "params": {
             "method": "POST",
-            "data": JSON.stringify(payload),
+            "data": payload,
             "headers": {
                 "Content-Type": "application/json"
             }
@@ -247,7 +247,7 @@ function check_monero_transactions(cachetime, address, vk, request_ts) {
         "proxy": true,
         "params": {
             "method": "POST",
-            "data": JSON.stringify(payload),
+            "data": payload,
             "headers": {
                 "Content-Type": "application/json"
             }

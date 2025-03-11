@@ -59,7 +59,8 @@ function edit_rpcnode() {
             current_node = item_data.selected,
             node_name = current_node.name,
             node_url = current_node.url,
-            node_title = (node_name === "electrum" || node_name === "mempool.space") ? node_url : node_name || node_url,
+            url_trunc = truncate(node_url),
+            node_title = (node_name === "electrum" || node_name === "mempool.space") ? url_trunc : node_name || url_trunc,
             dialog_html = "\
             <div class='formbox' id='settingsbox' data-id='" + glob_let.ap_id + "'>\
                 <h2 class='icon-sphere'>" + tl("choose") + " " + currency_name + " " + glob_let.ap_id + "</h2>\
@@ -113,15 +114,15 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
             let has_nodes = false;
             $.each(get_session_nodes, function(index, val) {
                 const rpc_url = val.rpc_url2,
-                    node_exists = value_in_array(existing_nodes, rpc_url);
+                    node_exists = objectkey_in_array(existing_nodes , "url", rpc_url);
                 if (!node_exists) {
-                    node_data = {
-                            "name": "electrum",
-                            "url": rpc_url,
-                            "display": true
-                        },
-                        node_id = val.node_id,
-                        is_selected = rpc_url === node_url;
+                    const node_data = {
+                        "name": "electrum",
+                        "url": rpc_url,
+                        "display": true
+                    },
+                    node_id = val.node_id,
+                    is_selected = rpc_url === node_url;
                     create_rpc_node_element(api_options, true, node_id, node_data, is_selected, true);
                     has_nodes = true;
                 }
@@ -143,11 +144,11 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
             "params": {
                 "method": "POST",
                 "cache": true,
-                "data": JSON.stringify({
+                "data": {
                     "id": "peers",
                     "method": "server.peers.subscribe",
                     "node": rpc_url
-                })
+                }
             }
         }).done(function(e) {
             const api_result = br_result(e),
@@ -172,7 +173,7 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                         }
                         const port = tport ? ((/^\d/.test(tport)) ? ":" + port : ":" + tport.slice(1)) : "",
                             rpc_url2 = url + port,
-                            node_exists = value_in_array(existing_nodes, rpc_url2);
+                            node_exists = objectkey_in_array(existing_nodes , "url", rpc_url2);
                         if (!node_exists) {
                             const node_data = {
                                     "name": "electrum",
@@ -190,12 +191,12 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                                 "params": {
                                     "method": "POST",
                                     "cache": true,
-                                    "data": JSON.stringify({
+                                    "data": {
                                         "id": sha_sub(rpc_url2, 6),
                                         "method": "blockchain.transaction.get",
                                         "ref": test_tx,
                                         "node": rpc_url2
-                                    })
+                                    }
                                 }
                             }).done(function(e) {
                                 const api_result = br_result(e),
@@ -276,7 +277,7 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_data, 
                 "api_url": rpc_url,
                 "params": {
                     "method": "POST",
-                    "data": JSON.stringify(rpc_payload),
+                    "data": rpc_payload,
                     "headers": {
                         "Content-Type": "application/json"
                     }
@@ -304,12 +305,12 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_data, 
                     "params": {
                         "method": "POST",
                         "cache": true,
-                        "data": JSON.stringify({
+                        "data": {
                             "id": sha_sub(rpc_url, 6),
                             "method": "blockchain.transaction.get",
                             "ref": test_tx,
                             "node": rpc_url
-                        })
+                        }
                     }
                 }).done(function(e) {
                     const api_result = br_result(e),
@@ -353,7 +354,7 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_data, 
                 "api_url": rpc_url,
                 "params": {
                     "method": "POST",
-                    "data": JSON.stringify(glob_let.test_rpc_call),
+                    "data": glob_let.test_rpc_call,
                     "headers": {
                         "Content-Type": "text/plain"
                     }
@@ -556,7 +557,7 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                 "api_url": rpc_url,
                 "params": {
                     "method": "POST",
-                    "data": JSON.stringify(rpc_payload),
+                    "data": rpc_payload,
                     "headers": {
                         "Content-Type": "application/json"
                     }
@@ -592,12 +593,12 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                 "params": {
                     "method": "POST",
                     "cache": true,
-                    "data": JSON.stringify({
+                    "data": {
                         "id": sha_sub(rpc_url, 6),
                         "method": "blockchain.transaction.get",
                         "ref": test_tx,
                         "node": rpc_url
-                    })
+                    }
                 }
             }).done(function(response) {
                 const api_result = br_result(response).result;
@@ -615,12 +616,12 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                         "params": {
                             "method": "POST",
                             "cache": true,
-                            "data": JSON.stringify({
+                            "data": {
                                 "id": "scanning",
                                 "method": "blockchain.scripthash.get_history",
                                 "ref": script_hash,
                                 "node": rpc_url
-                            })
+                            }
                         }
                     }).done(function(response) {
                         const parsed_data = br_result(response),
@@ -658,7 +659,7 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                 "api_url": rpc_url,
                 "params": {
                     "method": "POST",
-                    "data": JSON.stringify(glob_let.test_rpc_call),
+                    "data": glob_let.test_rpc_call,
                     "headers": {
                         "Content-Type": "text/plain"
                     }

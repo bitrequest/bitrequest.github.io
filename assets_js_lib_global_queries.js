@@ -275,7 +275,7 @@ let request = null,
 //adjust_objectarray
 //dom_to_array
 //clone
-//object_from_array
+//objectkey_from_array
 //value_in_array
 //find_object_index
 
@@ -566,7 +566,7 @@ function is_btchain(currency) {
     return btc_chains.includes(currency);
 }
 
-// Returns empty object/array or provided object based on falsy input value
+// Returns empty object/array or provided object based on false input value
 function get_default_object(object, obj) { // Default object
     return object || (obj === true ? {} : []);
 }
@@ -631,13 +631,18 @@ function clone(object) {
     return JSON.parse(JSON.stringify(object));
 }
 
-// Finds first object in array matching key-value pair
-function object_from_array(array, key, val) {
+// Verifies if object key value exists array
+function objectkey_in_array(array, key, val) {
+    return (objectkey_from_array(array, key, val)) ? true : false
+}
+
+// Extracts object key value exists array
+function objectkey_from_array(array, key, val) {
     const matched_item = array.find(obj => obj[key] === val);
     return matched_item || false;
 }
 
-// Verifies if key value exists in provided array
+// Verifies if key exists in provided array
 function value_in_array(array, key) {
     if (empty_obj(array)) {
         return false;
@@ -646,7 +651,7 @@ function value_in_array(array, key) {
 }
 
 // Finds the index of an object in an array
-function find_object_index(url, array, key) {
+function find_object_index(array, key, url) {
     return array.findIndex(item => {
         // Handle the case where the property might not exist
         if (!item[key]) return false;
@@ -1039,7 +1044,13 @@ function api_proxy(ad, p_proxy) {
             "api": api_name,
             "search": ad.search
         }),
-        active_proxy = p_proxy || d_proxy();
+        proxy_url = custom_url || api_url_data.api_url_key,
+        active_proxy = p_proxy || d_proxy(),
+        is_onion = proxy_url.includes(".onion"),
+        tor_proxy = is_onion ? glob_const.tor_proxy : false,
+        payload = q_obj(ad, "params.data") || {};
+    payload.tor_proxy = tor_proxy;
+    ad.params.data = JSON.stringify(payload);
     glob_let.proxy_attempts[active_proxy] = true;
     if (api_url_data) {
         const proxy = ad.proxy,
@@ -1050,7 +1061,7 @@ function api_proxy(ad, p_proxy) {
         if (proxy === false || (proxy !== true && is_key_valid)) {
             const params = ad.params,
                 bearer = ad.bearer;
-            params.url = custom_url || api_url_data.api_url_key;
+            params.url = proxy_url;
             if (bearer && api_key) {
                 if (params.headers) {
                     params.headers["Authorization"] = "Bearer " + api_key;
@@ -1066,17 +1077,14 @@ function api_proxy(ad, p_proxy) {
         ad.api = c_apiname(api_name);
         const api_path = "proxy/v1/",
             root_url = ad.localhost ? "" : active_proxy,
-            is_onion = custom_url && custom_url.includes(".onion"),
             timeout = is_onion ? 20000 : 5000,
-            tor_proxy = is_onion ? glob_const.tor_proxy : false,
             proxy_config = {
                 "method": "POST",
                 "cache": false,
                 timeout,
                 "url": root_url + api_path,
                 "data": $.extend(ad, api_url_data, {
-                    "nokey": no_key_needed,
-                    tor_proxy
+                    "nokey": no_key_needed
                 })
             };
         return $.ajax(proxy_config);
@@ -1153,7 +1161,7 @@ function d_proxy() {
     return proxy_dat().selected;
 }
 
-// Concatenates default and custom proxy lists
+// Returns (filtered) default proxy lists
 function all_global_proxies(filter) {
     const global_proxies = glob_const.proxy_list,
         proxy_list = (filter) ? extrac_filtered_keys(global_proxies, "proxy", filter) : extract_keys(global_proxies, "proxy");

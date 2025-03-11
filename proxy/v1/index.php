@@ -57,7 +57,7 @@
             case "add":
                 return api(null, json_encode($postdata), null, 0, "1d", null, null);
             case "nano_txd":
-            	return api("nano", $data_var, $postheaders, $cache_time, $cache_folder, null, null);
+                return api("nano", $data_var, $postheaders, $cache_time, $cache_folder, null, null);
             case "electrum":
                 return api("electrum", $data_var, $postheaders, $cache_time, $cache_folder, null, null);
             case "system_bu":
@@ -99,7 +99,6 @@
         $bearer = get_postvalue("bearer");
         $cache_time = get_postvalue("cachetime");
         $cache_folder = get_postvalue("cachefolder");
-        $tor_proxy = get_postvalue("tor_proxy");
 
         // Validate API URL for non-custom requests
         if (!$custom && !$apiurl) {
@@ -109,13 +108,6 @@
 
         // Define data
         $data_var = $payload ?: null;
-        
-        // Include tor proxy
-        if ($data_var && $tor_proxy !== "false") {
-	        $data_decode = json_decode($data_var, true);
-        	$data_decode["tor_proxy"] = $tor_proxy;
-        	$data_var = json_encode($data_decode);
-        }
 
         // Define key
         $accesstoken = isset($keys) && isset($apiname) && isset($keys[$apiname]) ? $keys[$apiname] : false;

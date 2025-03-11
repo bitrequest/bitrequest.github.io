@@ -876,12 +876,12 @@ function initialize_monero_scan(rd, api_data, rdo) {
         return
     }
     const wallet_address = view_key.account || rd.address,
-        login_data = JSON.stringify({
+        login_data = {
             "address": wallet_address,
             "view_key": view_key,
             "create_account": true,
             "generated_locally": false
-        });
+        };
     api_proxy({
         "api": "mymonero api",
         "search": "login",
@@ -936,7 +936,7 @@ function scan_monero_transactions(rd, api_data, rdo, viewkey) {
         "proxy": true,
         "params": {
             "method": "POST",
-            "data": JSON.stringify(request_payload),
+            "data": request_payload,
             "headers": {
                 "Content-Type": "application/json"
             }
@@ -1771,11 +1771,11 @@ function electrum_rpc_blockheight(rd, api_data, rdo) {
         "params": {
             "method": "POST",
             "cache": true,
-            "data": JSON.stringify({
+            "data": {
                 "id": "blockheight",
                 "method": "blockchain.headers.subscribe",
                 "node": rpc_url
-            })
+            }
         }
     }).done(function(response) {
         const api_result = br_result(response).result;
@@ -1874,12 +1874,12 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
             "params": {
                 "method": "POST",
                 "cache": true,
-                "data": JSON.stringify({
+                "data": {
                     "id": "scanning",
                     "method": "blockchain.scripthash.get_history",
                     "ref": script_hash,
                     "node": rpc_url
-                })
+                }
             }
         }).done(function(response) {
             const api_result = br_result(response).result;
@@ -1929,13 +1929,13 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
             "params": {
                 "method": "POST",
                 "cache": true,
-                "data": JSON.stringify({
+                "data": {
                     "id": "polling",
                     "tx_hash": tx_hash,
                     "method": "blockchain.scripthash.get_history",
                     "ref": script_hash,
                     "node": rpc_url
-                })
+                }
             }
         }).done(function(response) {
             const api_result = br_result(response).result;
@@ -2192,12 +2192,12 @@ function eth_params(node_url, cache_time, method, params) {
         "cachefolder": "1h",
         "params": {
             "method": "POST",
-            "data": JSON.stringify({
+            "data": {
                 "jsonrpc": "2.0",
                 "id": 1,
                 "method": method,
                 "params": params
-            }),
+            },
             "headers": {
                 "Content-Type": "application/json"
             }
@@ -2261,10 +2261,10 @@ function nano_rpc(rd, api_data, rdo) {
             "params": {
                 "method": "POST",
                 "cache": true,
-                "data": JSON.stringify({
+                "data": {
                     "account": rd.address,
                     "node": api_data.url
-                })
+                }
             }
         }).done(function(response) {
             const api_result = br_result(response).result;
@@ -2314,11 +2314,11 @@ function nano_rpc(rd, api_data, rdo) {
             "params": {
                 "method": "POST",
                 "cache": true,
-                "data": JSON.stringify({
+                "data": {
                     "action": "block_info",
                     "json_block": true,
                     "hash": rd.txhash
-                })
+                }
             }
         }).done(function(response) {
             const api_result = br_result(response).result;

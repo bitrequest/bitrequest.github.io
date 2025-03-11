@@ -684,11 +684,11 @@ function update_api_source(rdo, api_data) {
 // Updates UI with API source details and connection status indicators
 function display_api_source(current_list, api_data) {
     const api_url = api_data.url,
-        api_url_short = api_url ? (api_url.length > 40 ? api_url.slice(0, 40) + "..." : api_url) : "",
+        api_url_short = truncate(api_url),
         provider_name = api_data.name,
         api_title = provider_name === "mempool.space" ? api_url : provider_name === "electrum" ? get_string_before_last_colon(api_url_short) : provider_name,
         api_source = api_title || api_url_short;
-    current_list.data("source", api_source).find(".api_source").html("<span class='src_txt' title='" + api_url_short + "'>" + tl("source") + ": " + api_source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
+    current_list.data("source", api_source).find(".api_source").html("<span class='src_txt' title='" + api_url + "'>" + tl("source") + ": " + api_source + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
 }
 
 // ** Transaction Processing: **

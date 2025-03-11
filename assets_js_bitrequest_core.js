@@ -3349,7 +3349,7 @@ function validate_address_vk(addr_data) {
                 "cachefolder": "1h",
                 "params": {
                     "method": "POST",
-                    "data": JSON.stringify(api_payload),
+                    "data": api_payload,
                     "headers": {
                         "Content-Type": "application/json"
                     }
@@ -4501,9 +4501,9 @@ function expand_bitly_url(input_param) {
         "params": {
             "method": "POST",
             "contentType": "application/json",
-            "data": JSON.stringify({
+            "data": {
                 "bitlink_id": "bit.ly/" + bitly_id
-            })
+            }
         }
     }).done(function(response) {
         const parsed_data = br_result(response).result;
@@ -5024,9 +5024,9 @@ function truncate(str) {
         if (str.length <= 35) {
             return str;
         }
-        const first_part = str.substring(0, 15),
-            last_part = str.substring(str.length - 20);
-        return first_part + "..." + last_part;
+        const first_part = str.substring(0, 9),
+            last_part = str.substring(str.length - 18);
+        return first_part + "...." + last_part;
     }
     return str;
 }

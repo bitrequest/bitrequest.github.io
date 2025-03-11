@@ -550,7 +550,7 @@ function get_network_node_config(payment, network, l2_dat, type) {
         const eth_settings = get_coinsettings(payment),
             eth_l2_settings = q_obj(eth_settings, "layer2.options." + network + "." + type + ".apis");
         if (eth_l2_settings) {
-            return object_from_array(eth_l2_settings, "network", network);
+            return objectkey_from_array(eth_l2_settings, "network", network);
         }
     }
     return false;
