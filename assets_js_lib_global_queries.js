@@ -1047,10 +1047,14 @@ function api_proxy(ad, p_proxy) {
         proxy_url = custom_url || api_url_data.api_url_key,
         active_proxy = p_proxy || d_proxy(),
         is_onion = proxy_url.includes(".onion"),
-        tor_proxy = is_onion ? glob_const.tor_proxy : false,
-        payload = q_obj(ad, "params.data") || {};
-    payload.tor_proxy = tor_proxy;
-    ad.params.data = JSON.stringify(payload);
+        payload = q_obj(ad, "params.data");
+    // add tor proxy and stringify payload
+    if (payload) {
+        if (is_onion) {
+            payload.tor_proxy = glob_const.tor_proxy;
+        }
+        ad.params.data = JSON.stringify(payload);
+    }
     glob_let.proxy_attempts[active_proxy] = true;
     if (api_url_data) {
         const proxy = ad.proxy,
