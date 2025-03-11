@@ -16,12 +16,12 @@
         ]));
     }
 
-    // Retrieves a value from POST data with optional default value
+    // Retrieves a value from POST data with optional fallback to default value
     function get_postvalue($key, $default = false) {
         return $_POST[$key] ?? $default;
     }
 
-    // Handles API key request and returns formatted key data
+    // Handles API key request, formats and encodes key data into a base64 string
     function handle_gk_request($keys) {
         $key_data = [
             "if_id" => $keys["infura"] ?? "",
@@ -32,7 +32,7 @@
         return ["k" => base64_encode(json_encode($key_data))];
     }
 
-    // Handles System BU request for account data
+    // Handles System BU request for account data with base64 URL encoding
     function handle_systembu_request($params, $postheaders) {
         $bu_data = json_encode([
             "base64" => $params["url"] ?? "",
@@ -41,7 +41,7 @@
         return api(null, $bu_data, $postheaders, 604800, "1w", null, null);
     }
 
-    // Handles credential fetch requests to Google OAuth API
+    // Handles OAuth credential fetch requests to Google's token endpoint
     function handle_fetchcreds_request($postdata, $keys) {
         $postdata["MIME-type"] = "application/x-www-form-urlencoded; charset=UTF-8";
         $postdata["client_id"] = $keys["googleauth"] ?? "";
@@ -49,7 +49,7 @@
         return api("https://oauth2.googleapis.com/token", $postdata, null, 0, "1d", null, null);
     }
 
-    // Handles various custom request types and routes to appropriate handlers
+    // Routes custom request types to their appropriate handler functions
     function handle_custom_request($custom, $postdata, $params, $data_var, $postheaders, $cache_time, $cache_folder, $keys) {
         switch ($custom) {
             case "gk":
@@ -71,7 +71,7 @@
         }
     }
 
-    // Creates a structured error response with code and message
+    // Creates a standardized error response with code and message
     function create_error_response($code, $message) {
         return [
             "error" => [
@@ -160,4 +160,3 @@
             "ping" => create_error_response("500", "Unexpected error: " . $e->getMessage())
         ]);
     }
-?>

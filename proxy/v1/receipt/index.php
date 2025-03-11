@@ -1,5 +1,4 @@
 <?php
-    
     // Compressed helper functions
     function get_param($key, $default = null) { return $_GET[$key] ?? $default; }
     
@@ -213,4 +212,3 @@
         echo "Error: " . $e->getMessage();
         exit;
     }
-?>

@@ -1,5 +1,4 @@
 <?php
-	
 	header("Content-Type: application/json");
 	header("Access-Control-Allow-Headers: Cache-Control, Pragma");
 	//header("Access-Control-Allow-Origin: *"); // uncomment for nginx
@@ -26,14 +25,14 @@
 			if (has_tor()) { // check for TOR support
 				return socket_fetch_tor_stream($pl);
 			}
-			$tor_proxy = $pl["tor_proxy"] ?? "false";
+			$tor_proxy = $pl["tor_proxy"] ?? TOR_PROXY ?? "false";
 			if ((strpos($tor_proxy, $_SERVER["HTTP_HOST"]) !== false)) {
-				return error_obj("411", "Failed to connect via Tor");
+				return err_obj("411", "Failed to connect via Tor");
 			}
 			// Call default proxy if TOR is not installed
 			$ch = curl_init();
 			if ($ch === false) {  // Added curl initialization check
-				return error_obj("411", "Failed to initialize CURL");
+				return err_obj("411", "Failed to initialize CURL");
 			}
 			$payload = ["fetch" => "true"];
 			$merged = array_merge($payload, $pl);
@@ -50,12 +49,12 @@
 			
 			curl_close($ch);
 			if ($curl_error) {
-				return error_obj("411", $error_message);
+				return err_obj("411", $error_message);
 			}
 			if ($response) {
 				return json_decode($response, true);
 			} 
-			return error_obj("411", "no result");
+			return err_obj("411", "no result");
 		}
 		// Original function for non-Tor addresses
 		return socket_fetch_ssl($pl);
@@ -161,7 +160,7 @@
 		}
 	}
 	
-// Handles communication with Electrum servers via SSL    
+	// Handles communication with Electrum servers via SSL socket connections
 	function socket_fetch_ssl($pl) {
 		// Define error codes
 		$ERROR_MISSING_PARAMS = 400;
@@ -231,7 +230,7 @@
 		}
 	}
 	
-	// Prepares request data for Electrum protocol
+	// Prepares request data for Electrum protocol based on input parameters
 	function request_data($pl) {
 		$request = [
 			"id" => $pl["id"],
@@ -243,7 +242,7 @@
 		return $request;
 	}
 	
-	// Processes response data based on the requested method
+	// Processes response data based on the requested method type and parameters
 	function fetch_methods($response, $pl) {
 		$rep_json = json_decode($response, true);
 		if (isset($rep_json["result"])) {
@@ -282,15 +281,15 @@
 			}
 			return $result;
 		}
-		return error_obj("4112", "no result");
+		return err_obj("4112", "no result");
 	}
 	
-	// Extracts timestamp from a block header hex string
+	// Extracts timestamp from a block header hexadecimal string
 	function get_timestamp($hex) {
 		return (int)hexdec(implode("", array_reverse(str_split(substr($hex, 136, 8), 2))));
 	}
 	
-	// Gets the last 4 transactions and reverses their order
+	// Gets the last 4 transactions from history and reverses their order for processing
 	function get_last_four_reversed($transactions) {
 		// Get the last 4 entries (or all if less than 4)
 		$count = count($transactions);
@@ -302,7 +301,7 @@
 		return $reversed_entries;
 	}
 	
-	// Finds a specific transaction by hash in a list of transactions
+	// Finds a specific transaction by hash in an array of transactions
 	function find_transaction($transactions, $tx_hash) {
 		foreach ($transactions as $transaction) {
 			if (isset($transaction["tx_hash"]) && $transaction["tx_hash"] === $tx_hash) {
@@ -312,7 +311,7 @@
 		return [];
 	}
 	
-	// Processes multiple transactions and complements them with additional data
+	// Processes multiple transactions and enriches them with additional blockchain data
 	function output_tx_hashes($node, $transactions) {
 		$result_array = [];  
 		if (empty($transactions) || !is_array($transactions)) {
@@ -327,7 +326,7 @@
 		return empty($result_array) ? ["error" => "Failed to process any transactions", "error_code" => 4111] : $result_array;
 	}
 	
-	// Complements a transaction with additional data from the blockchain
+	// Fetches additional transaction data and block details to enrich transaction information
 	function complement_tx($node, $transaction) {
 		$tx_hash = $transaction["tx_hash"];
 		
@@ -366,12 +365,12 @@
 		return $fetch_tx;
 	}
 	
-	// Generates a random ID for requests
+	// Generates a random ID string for request identification
 	function get_random_id() {
 		return substr(bin2hex(random_bytes(8)), 0, 5);
 	}
 	
-	// Decodes a Bitcoin transaction from hex format
+	// Decodes a Bitcoin transaction from hex format into structured data
 	function decode_bitcoin_tx($hex_data) {
 		// Initialize position and convert hex to binary
 		$position = 0;
@@ -577,8 +576,8 @@
 		];
 	}
 	
-	// Creates a JSON-encoded error object with code and message
-	function error_obj($code, $message) {
+	// Creates a standardized JSON-encoded error object with code and message
+	function err_obj($code, $message) {
 		return [
 			"error" => [
 				"code" => $code,
@@ -587,7 +586,7 @@
 		];
 	}
 	
-	// Checks if Tor is available on the system
+	// Checks if Tor is available on the system by attempting connection to SOCKS proxy
 	function has_tor() {
 		// Connect to Tor's SOCKS proxy with "127.0.0.1"
 		$socket = @fsockopen("127.0.0.1", 9050, $errno, $errstr, 1);
@@ -603,5 +602,3 @@
 		} 
 		return false;
 	}
-
-?>

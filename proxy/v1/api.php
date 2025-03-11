@@ -1,7 +1,6 @@
-<?php
-	
+<?php	
 	// PROXY
-	const VERSION = "0.021";
+	const VERSION = "0.022";
 	const CACHE_DURATIONS = [
 		"2m" => 6220800,  // 2 months in seconds
 		"1w" => 604800,   // 1 week in seconds
@@ -9,6 +8,7 @@
 		"1d" => 86400,    // 1 day in seconds
 		"1h" => 3600      // 1 hour in seconds
 	];
+	const TOR_PROXY = "https://www.bitrequest.app/";
 	
 	// Main API function that handles caching and retrieval of data based on specified parameters
 	function api($url, $data, $headers, $ct, $cfd, $meta, $fn) {
@@ -50,7 +50,7 @@
 		return (time() - $filetime) < $cache_time;
 	}
 	
-	// Retrieves and formats a cached result from storage
+	// Retrieves and formats a cached result from storage with metadata
 	function get_cached_result($cache_file, $cache_time, $meta) {
 		try {
 			$filetime = filemtime($cache_file);
@@ -78,7 +78,7 @@
 		}
 	}
 	
-	// Fetches new data from API and saves it to cache
+	// Fetches new data from API, saves it to cache, and returns formatted result
 	function get_and_cache_result($url, $data, $headers, $cache_folder, $cache_file, $cache_time, $meta, $cf) {
 		try {
 			$api_result = $url ? curl_get($url, $data, $headers) : $data;
@@ -125,7 +125,7 @@
 		}
 	}
 	
-	// Updates the cache monitor file and triggers cleanup when needed
+	// Updates the cache monitor file and triggers cleanup when needed based on time intervals
 	function update_cache_monitor($cache_folder, $cf) {
 		try {
 			$cache_monitor = $cache_folder . "cachemonitor";
@@ -144,7 +144,7 @@
 		}
 	}
 	
-	// Removes old cache files based on their expiration time
+	// Removes old cache files based on their expiration time to maintain cache efficiency
 	function cleanup_old_cache($cache_folder, $cf) {
 		try {
 			$files = glob($cache_folder . "*");
@@ -160,7 +160,7 @@
 		}
 	}
 	
-	// Performs a cURL request to fetch data from a URL with special handlers for electrum and onion sites
+	// Performs a cURL request to fetch data from URLs with special handlers for electrum, nano and onion sites
 	function curl_get($url, $data, $headers) {
 		try {
 			// Handle electrum requests
@@ -236,7 +236,7 @@
 		}
 	}
 	
-	// Creates a JSON-encoded error object with code and message
+	// Creates a JSON-encoded error object with status code and message for standardized error responses
 	function error_object($code, $message) {
 		return json_encode([
 			"error" => [
@@ -245,4 +245,3 @@
 			]
 		]);
 	}
-?>

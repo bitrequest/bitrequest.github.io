@@ -1,5 +1,4 @@
 <?php
-
 header("Content-Type: application/json");
 header("Access-Control-Allow-Headers: Cache-Control, Pragma");
 //header("Access-Control-Allow-Origin: *"); // uncomment for nginx
@@ -123,6 +122,7 @@ if ($fn === "put") {
         if ($status) {
             $statfile = "cache/tx/" . $status;
             if (file_exists($statfile) && $rqtype === "local") {
+                // Update existing status file for local request
                 $get_content = file_get_contents($statfile);
                 if ($get_content) {
                     $stat_obj = json_decode($get_content, true);
@@ -132,6 +132,7 @@ if ($fn === "put") {
                 }
                 $stat_resp = true;
             } else {
+                // Create new status entry via API
                 $put_result = api(null, json_encode($stat_content), null, 0, "tx", null, $status);
                 $p_result = $put_result["br_result"] ?? false;
                 if ($p_result) {
@@ -252,6 +253,7 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
             $invoice = create_invoice($imp, $post_pid, $host, $key, $amount, $memo, $type, $pingtest, "test", null, null, $p_expiry);
             
             if ($invoice) {
+                // Store invoice tracking data if bolt11 is requested
                 if (!empty($pdat["b11"])) {
                     $path = "cache/tx/" . $post_pid;
                     if (file_exists($path)) {
@@ -290,6 +292,7 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
             $lndecode = invoice_lookup($imp, $post_pid, $host, $key, $hash, $ttype, $p_expiry, $fn === "ln-invoice-status");
             echo json_encode($lndecode);
             
+            // Process callbacks for paid or canceled invoices
             if ($fn === "ln-invoice-status" && $callback_url && strlen($callback_url) > 10) {
                 $callback = ($pdat["callback"] ?? "") === "yes" ? "yes" : "no";
                 if ($callback === "yes" && $ttype) {
@@ -304,6 +307,7 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
 
         // Handle LNURL-pay flow
         if ($lnget) {
+            // Validate amount meets minimum requirements
             if ($specified_amount < $requested_amount) {
                 echo json_encode([
                     "status" => "ERROR",
@@ -319,6 +323,7 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
             if (file_exists($path)) {
                 $g_content = file_get_contents($path);
                 if ($g_content) {
+                    // Check for existing valid invoice
                     $g_dec = json_decode($g_content, true);
                     $timestamp = $g_dec["timestamp"] ?? false;
                     if ($timestamp && (time() * 1000 - $timestamp) < 90000) {
@@ -330,6 +335,7 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
                     }
                 }
                 
+                // Prepare invoice metadata
                 $memo = $title ?? null;
                 $logo = $setup["logo"];
                 $meta_arr = [["text/plain", $memo]];
@@ -339,6 +345,7 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
                 $desc_hash = d_hash($meta_arr);
                 $meta = bin2hex(json_encode($meta_arr));
                 
+                // Create a new invoice
                 $result = create_invoice($imp, $get_pid, $host, $key, $specified_amount, $memo, $type, null, "lnurl", $desc_hash, $meta, $p_expiry);
                 
                 if ($result) {
@@ -352,12 +359,14 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
                     $hash = $result["hash"];
                     
                     if ($pr && $hash) {
+                        // Prepare response with payment request
                         $inv_arr = ["pr" => $pr, "routes" => $routes];
                         if ($successmessage && strlen($successmessage) > 2) {
                             $inv_arr["successAction"] = ["tag" => "message", "message" => $successmessage];
                         }
                         echo json_encode($inv_arr);
                         
+                        // Store invoice details for tracking
                         $s_content = [
                             "pid" => $get_pid,
                             "rqtype" => $type_text,
@@ -375,9 +384,11 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
                         $tx_content = json_encode($s_content);
                         file_put_contents($path, $tx_content);
                         
+                        // Submit transaction to the bitrequest service
                         $postheaders = ["post: " . $tx_content, "tls_wildcard" => true];
                         curl_get("https://bitrequest.app:8030/", $tx_content, $postheaders);
                         
+                        // Trigger callback if configured
                         if ($callback_url && strlen($callback_url) > 10) {
                             handle_callback($callback_url, $s_content, $type_text, $remote_tracking, $local_tracking);
                         }
@@ -404,7 +415,7 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
     return;
 }
 
-// Helper function to handle callbacks
+// Process and send callback notifications based on transaction type and tracking settings
 function handle_callback($callback_url, $content, $type, $remote_tracking, $local_tracking) {
     if ($remote_tracking === "yes" && $local_tracking === "yes") {
         curl_get($callback_url, $content, null); // track all
@@ -421,9 +432,10 @@ function handle_callback($callback_url, $content, $type, $remote_tracking, $loca
     }
 }
 
-// Create an invoice for a Lightning Network payment
+// Create a new Lightning Network invoice based on implementation type and parameters
 function create_invoice($imp, $pid, $host, $key, $amount, $memo, $type, $pingtest, $src, $desc_hash, $meta, $expiry) {
     if ($imp == "lnd") {
+        // LND implementation
         $rpcurl = $host . "/v1/invoices";
         $pl = [];
         if ($memo) {
@@ -449,6 +461,7 @@ function create_invoice($imp, $pid, $host, $key, $amount, $memo, $type, $pingtes
     }
 
     if ($imp == "c-lightning") {
+        // c-lightning implementation
         $rpcurl = $host . "/v1/invoice/genInvoice";
         $pl = [
             "label" => $pid,
@@ -478,6 +491,7 @@ function create_invoice($imp, $pid, $host, $key, $amount, $memo, $type, $pingtes
     }
 
     if ($imp == "eclair") {
+        // Eclair implementation
         $rpcurl = $host . "/createinvoice";
         $pl = ["expireIn" => 60];
         if ($memo) {
@@ -503,6 +517,7 @@ function create_invoice($imp, $pid, $host, $key, $amount, $memo, $type, $pingtes
     }
 
     if ($imp == "lnbits") {
+        // LNbits implementation
         $rpcurl = $host . "/api/v1/payments";
         $pl = ["out" => false];
         if ($memo) {
@@ -530,7 +545,7 @@ function create_invoice($imp, $pid, $host, $key, $amount, $memo, $type, $pingtes
     return r_err("unable to create invoice", null);
 }
 
-// Standardize invoice data across different Lightning Network implementations
+// Standardize invoice data format across different Lightning Network implementations
 function invoice_uniform($imp, $inv, $type) {
     if (!$inv) {
         return false;
@@ -542,6 +557,7 @@ function invoice_uniform($imp, $inv, $type) {
         return false;
     }
     
+    // Extract any error messages from the response
     $error = isset($dat["error"]) ? $imp . ": " . $dat["error"]["code"] . ": " . $dat["error"]["message"] : null;
 
     $result = [
@@ -551,6 +567,7 @@ function invoice_uniform($imp, $inv, $type) {
         "error" => $error
     ];
 
+    // Format specific fields based on implementation
     if ($imp == "lnd") {
         return array_merge($result, [
             "bolt11" => $dat["payment_request"],
@@ -582,7 +599,7 @@ function invoice_uniform($imp, $inv, $type) {
     return false;
 }
 
-// Retrieve a list of invoices from the Lightning Network node
+// Retrieve a list of invoices from the Lightning Network node based on implementation
 function list_invoices($imp, $host, $key, $type, $pingtest) {
     $headers = [
         "tls_wildcard" => true,
@@ -590,6 +607,7 @@ function list_invoices($imp, $host, $key, $type, $pingtest) {
     ];
 
     if ($imp == "lnd") {
+        // LND implementation
         $rpcurl = $host . "/v1/invoices";
         $headers[] = "Grpc-Metadata-macaroon: " . $key;
         $invoices = curl_get($rpcurl, null, $headers);
@@ -599,6 +617,7 @@ function list_invoices($imp, $host, $key, $type, $pingtest) {
     }
 
     if ($imp == "c-lightning") {
+        // c-lightning implementation
         $rpcurl = $host . "/v1/invoice/listInvoices";
         $headers[] = "macaroon: " . $key;
         $headers[] = "encodingtype: hex";
@@ -609,6 +628,7 @@ function list_invoices($imp, $host, $key, $type, $pingtest) {
     }
 
     if ($imp == "eclair") {
+        // Eclair implementation
         $rpcurl = $host . "/listinvoices";
         $headers["Content-Type"] = "application/x-www-form-urlencoded";
         $headers[] = "Authorization: Basic " . base64_encode(":" . $key);
@@ -621,6 +641,7 @@ function list_invoices($imp, $host, $key, $type, $pingtest) {
     }
 
     if ($imp == "lnbits") {
+        // LNbits implementation
         $rpcurl = $host . "/api/v1/wallet";
         $headers[] = "X-Api-Key: " . $key;
         $invoices = curl_get($rpcurl, null, $headers);
@@ -632,22 +653,24 @@ function list_invoices($imp, $host, $key, $type, $pingtest) {
     return false;
 }
 
-// Helper function to process invoice results
+// Process and standardize invoice list results with connection status information
 function process_invoice_result($result, $connected, $type, $pingtest) {
     $m_dat = [
         "connected" => $connected,
         "type" => $type
     ];
 
+    // For ping tests, only return connection status
     if ($pingtest && $connected) {
         return ["mdat" => $m_dat];
     }
 
+    // Add metadata to full result
     $result["mdat"] = $m_dat;
     return $result;
 }
 
-// Look up details of a specific invoice
+// Look up details of a specific invoice by hash or id based on implementation
 function invoice_lookup($imp, $pid, $host, $key, $hash, $type, $expiry, $status) {
     $headers = [
         "tls_wildcard" => true,
@@ -655,6 +678,7 @@ function invoice_lookup($imp, $pid, $host, $key, $hash, $type, $expiry, $status)
     ];
 
     if ($imp == "lnd") {
+        // LND implementation - handle different hash formats
         $lnd_hash = (substr($hash, -1) == "=") ? lnd_b64_dec($hash) : $hash;
         $rpcurl = $host . "/v1/invoice/" . $lnd_hash;
         $headers[] = "Grpc-Metadata-macaroon: " . $key;
@@ -664,6 +688,7 @@ function invoice_lookup($imp, $pid, $host, $key, $hash, $type, $expiry, $status)
     }
 
     if ($imp == "c-lightning") {
+        // c-lightning implementation - lookup by label (pid)
         $rpcurl = $host . "/v1/invoice/listInvoices/?label=" . $pid;
         $headers[] = "macaroon: " . $key;
         $headers[] = "encodingtype: hex";
@@ -673,6 +698,7 @@ function invoice_lookup($imp, $pid, $host, $key, $hash, $type, $expiry, $status)
     }
 
     if ($imp == "eclair") {
+        // Eclair implementation - lookup by payment hash
         $rpcurl = $host . "/getreceivedinfo";
         $headers["Content-Type"] = "application/x-www-form-urlencoded";
         $headers[] = "Authorization: Basic " . base64_encode(":" . $key);
@@ -684,6 +710,7 @@ function invoice_lookup($imp, $pid, $host, $key, $hash, $type, $expiry, $status)
     }
 
     if ($imp == "lnbits") {
+        // LNbits implementation - lookup by payment hash
         $rpcurl = $host . "/api/v1/payments/" . $hash;
         $headers[] = "X-Api-Key: " . $key;
         $inv = curl_get($rpcurl, null, $headers);
@@ -694,9 +721,10 @@ function invoice_lookup($imp, $pid, $host, $key, $hash, $type, $expiry, $status)
     return r_err("unable to fetch invoice", null);
 }
 
-// Helper function to process invoice lookup results
+// Process the invoice lookup results and return status information if requested
 function process_invoice_lookup($imp, $inv_result, $is_valid, $pid, $type, $expiry, $status) {
     if ($is_valid) {
+        // If status is requested, get detailed status info
         if ($status) {
             return invoice_status($imp, $inv_result, $pid, $type, $expiry);
         }
@@ -705,7 +733,7 @@ function process_invoice_lookup($imp, $inv_result, $is_valid, $pid, $type, $expi
     return r_err("unable to fetch invoice", null);
 }
 
-// Get the current status of an invoice
+// Retrieve and format the current status of an invoice based on implementation
 function invoice_status($imp, $dat, $pid, $type, $expiry) {
     if (!$dat) {
         return false;
@@ -718,6 +746,7 @@ function invoice_status($imp, $dat, $pid, $type, $expiry) {
         "proxy" => $proxy_host
     ];
 
+    // Route to the appropriate implementation-specific handler
     if ($imp == "lnd") {
         return get_lnd_status($dat, $base_result);
     }
@@ -737,7 +766,7 @@ function invoice_status($imp, $dat, $pid, $type, $expiry) {
     return false;
 }
 
-// Status functions remain unchanged as they don't need compatibility updates
+// Extract and normalize LND invoice status information
 function get_lnd_status($dat, $base_result) {
     $status = $dat["state"];
     $br_state = "unknown";
@@ -746,6 +775,7 @@ function get_lnd_status($dat, $base_result) {
     if ($status == "CANCELED") $br_state = "canceled";
     if ($status == "ACCEPTED") $br_state = "accepted";
     
+    // Extract relevant fields with defaults for missing values
     $conf = ($br_state == "paid") ? 1 : 0;
     $inv_txcreated = isset($dat["creation_date"]) ? (int)$dat["creation_date"] * 1000 : 0;
     $inv_txtime = isset($dat["settle_date"]) ? (int)$dat["settle_date"] * 1000 : 0;
@@ -765,6 +795,7 @@ function get_lnd_status($dat, $base_result) {
     ]);
 }
 
+// Extract and normalize c-lightning invoice status information
 function get_c_lightning_status($dat, $base_result, $expiry) {
     $status = $dat["status"];
     $br_state = "unknown";
@@ -772,6 +803,7 @@ function get_c_lightning_status($dat, $base_result, $expiry) {
     if ($status == "unpaid") $br_state = "pending";
     if ($status == "expired") $br_state = "canceled";
     
+    // Calculate confirmation and timestamps for c-lightning
     $conf = ($br_state == "paid") ? 1 : 0;
     $inv_txcreated = isset($dat["expires_at"]) ? ((int)$dat["expires_at"] - $expiry) * 1000 : 0;
     $inv_txtime = isset($dat["paid_at"]) ? (int)$dat["paid_at"] * 1000 : 0;
@@ -791,6 +823,7 @@ function get_c_lightning_status($dat, $base_result, $expiry) {
     ]);
 }
 
+// Extract and normalize Eclair invoice status information
 function get_eclair_status($dat, $base_result) {
     $status = $dat["status"];
     $type = $status["type"];
@@ -799,6 +832,7 @@ function get_eclair_status($dat, $base_result) {
     if ($type == "pending") $br_state = "pending";
     if ($type == "expired") $br_state = "canceled";
     
+    // Navigate Eclair's nested data structure for payment info
     $request = $dat["paymentRequest"];
     $conf = ($br_state == "paid") ? 1 : 0;
     $inv_txcreated = isset($request["timestamp"]) ? (int)$request["timestamp"] * 1000 : 0;
@@ -819,6 +853,7 @@ function get_eclair_status($dat, $base_result) {
     ]);
 }
 
+// Extract and normalize LNbits invoice status information
 function get_lnbits_status($dat, $base_result, $expiry) {
     $details = $dat["details"];
     $inv_txtime = isset($details["time"]) ? (int)$details["time"] : 0;
@@ -828,6 +863,7 @@ function get_lnbits_status($dat, $base_result, $expiry) {
     if ($expired == true) $br_state = "canceled";
     if ($dat["paid"] == true) $br_state = "paid";
     
+    // LNbits has a simpler structure than other implementations
     $conf = ($br_state == "paid") ? 1 : 0;
     $inv_amount = isset($details["amount"]) ? (int)$details["amount"] : 0;
 
@@ -843,31 +879,31 @@ function get_lnbits_status($dat, $base_result, $expiry) {
     ]);
 }
 
-// Generate a description hash for LNURL
+// Generate a description hash for LNURL payment metadata
 function d_hash($arr) {
     return hash("sha256", utf8_encode(json_encode($arr)));
 }
 
-// Encode a value to base64 for LND
+// Encode a hexadecimal value to base64 for LND compatibility
 function lnd_b64_enc($val) {
     if (!$val) return "";
     return base64_encode(hex2bin($val));
 }
 
-// Decode a base64 value from LND
+// Decode a base64 value to hexadecimal for LND compatibility
 function lnd_b64_dec($val) {
     if (!$val) return "";
     return bin2hex(base64_decode($val));
 }
 
-// Create a JSON response object
+// Create a simple JSON response object
 function r_obj($dat) {
     return json_encode([
         "ping" => $dat
     ], JSON_UNESCAPED_SLASHES);
 }
 
-// Create a detailed JSON response object with cache information
+// Create a detailed JSON response object with cache and version information
 function r_objl2($dat) {
     return json_encode([
         "ping" => [
@@ -879,7 +915,7 @@ function r_objl2($dat) {
     ], JSON_UNESCAPED_SLASHES);
 }
 
-// Create an error response object
+// Create an error response object with optional error code
 function r_err($dat, $code) {
     return [
         "error" => [
