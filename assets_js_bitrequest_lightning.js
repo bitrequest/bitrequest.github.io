@@ -571,7 +571,7 @@ function lightning_option_li(is_live, node_info, selected, invoices, proxy_url) 
         implementation_icon = c_icons(implementation),
         lnurl_icon = has_lnurls ? "<div class='opt_icon icon-sphere' data-pe='none'></div>" : "",
         option = $("<div class='optionwrap" + status_class + selected_class + "' style='display:none' data-pe='none'>" +
-            "<span data-value='" + node_id + "' data-live='" + status_icon + "'>" +
+            "<span data-value='" + node_name + "' data-live='" + status_icon + "'>" +
             "<img src='" + implementation_icon + "' class='lnd_icon'/> " + node_name + "</span>" +
             "<div class='opt_icon_box' data-pe='none'>" +
             "<div class='opt_icon icon-bin' data-pe='none'></div>" +

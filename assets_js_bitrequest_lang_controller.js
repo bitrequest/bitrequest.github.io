@@ -99,11 +99,11 @@ function tl(id, dat) {
             return lang_string;
         }
         // use english if string is not found.
-        return languages.en.obj;
+        return languages.en.obj || id;
     } catch (err) {
         console.error(err.name, err.message);
         // use english if language is not found.
-        return languages.en.obj;
+        return languages.en.obj || id;
     }
 }
 

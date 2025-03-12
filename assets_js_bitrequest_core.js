@@ -323,6 +323,7 @@ function finish_functions() {
     //handle_ln_connect
     //handle_address
     //handle_viewkey
+    //handle_node_url
 
     // ** Helper Functions: **
     open_url();
@@ -1549,7 +1550,7 @@ function set_result(result) {
     } else if (scan_subtype === "viewkey") {
         handle_viewkey(result, payment_type);
     } else if (scan_subtype === "add_node") {
-        $("#popup .formbox input#rpc_url_input").val(result);
+        handle_node_url(result);
     }
     window.history.back();
     return false;
@@ -1619,6 +1620,16 @@ function handle_viewkey(result, payment) {
         return
     }
     popnotify("error", "invalid " + payment + " viewkey");
+}
+
+// Validates URL / IP QR codes
+function handle_node_url(result) {
+    const is_valid_entry = is_valid_url_or_ip(result);
+    if (!is_valid_entry) {
+        popnotify("error", tl("invalidurl"));
+        return
+    }
+    $("#popup .formbox input#rpc_url_input").val(result);
 }
 
 // ** Helper Functions: **

@@ -123,6 +123,7 @@ function lang_fr(id, data) {
         "insufficient": "Insuffisant",
         "new": "Nouveau",
         "pending": "En attente",
+        "canceled": "Annulé",
         "expired": "expiré",
         "type": "Genre",
         "created": "Créé",

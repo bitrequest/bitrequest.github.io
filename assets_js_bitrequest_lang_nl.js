@@ -123,6 +123,7 @@ function lang_nl(id, data) {
         "insufficient": "Onvoldoende",
         "new": "Nieuw",
         "pending": "In behandeling",
+        "canceled": "Geannuleerd",
         "expired": "verlopen",
         "type": "Type",
         "created": "Aangemaakt op",

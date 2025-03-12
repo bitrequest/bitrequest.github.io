@@ -512,6 +512,7 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                                                             "id": payment_id,
                                                             "nid": node_id,
                                                             "expiry": 60,
+                                                            "boltcard": true,
                                                             "x-api": proxy_key
                                                         };
                                                     if (request_type === "incoming") {

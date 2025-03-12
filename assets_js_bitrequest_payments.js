@@ -3295,7 +3295,7 @@ function update_request(update_args, should_save) {
             const meta_status = meta_list.find("li.meta_status"),
                 set_confirmations = request_data.set_confirmations || 1,
                 conf_text = (update_args.confirmations == 0) ? tl("unconfirmedtx") : update_args.confirmations + " / " + set_confirmations + " " + tl("confirmations");
-            meta_status.attr("data-conf", update_args.confirmations).find(".txli_conf > span").text(conf_text);
+            meta_status.attr("data-conf", update_args.confirmations).find(".txli_conf > span").text(tl(conf_text));
             const conf_bar = meta_status.find(".txli_conf > .confbar");
             if (conf_bar.length) {
                 conf_bar.each(function(i) {

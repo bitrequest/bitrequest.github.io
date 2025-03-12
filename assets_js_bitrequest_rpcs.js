@@ -115,16 +115,16 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
             $.each(get_session_nodes, function(index, val) {
                 const rpc_url = val.rpc_url2,
                     v = val.v,
-                    node_exists = objectkey_in_array(existing_nodes , "url", rpc_url);
+                    node_exists = objectkey_in_array(existing_nodes, "url", rpc_url);
                 if (!node_exists) {
                     const node_data = {
-                        "name": "electrum",
-                        "url": rpc_url,
-                        "display": true,
-                        v
-                    },
-                    node_id = val.node_id,
-                    is_selected = rpc_url === node_url;
+                            "name": "electrum",
+                            "url": rpc_url,
+                            "display": true,
+                            v
+                        },
+                        node_id = val.node_id,
+                        is_selected = rpc_url === node_url;
                     create_rpc_node_element(api_options, true, node_id, node_data, is_selected, true);
                     has_nodes = true;
                 }
@@ -177,7 +177,7 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                         }
                         const port = tport ? ((/^\d/.test(tport)) ? ":" + port : ":" + tport.slice(1)) : "",
                             rpc_url2 = url + port,
-                            node_exists = objectkey_in_array(existing_nodes , "url", rpc_url2);
+                            node_exists = objectkey_in_array(existing_nodes, "url", rpc_url2);
                         if (!node_exists) {
                             const node_data = {
                                     "name": "electrum",
@@ -498,8 +498,15 @@ function submit_rpcnode() {
             selected_config = node_input.data(),
             input_section = dialog_box.find("#rpc_input_box");
         if (input_section.length) {
-            const node_url = input_section.find("#rpc_url_input").val();
-            if (node_url.length > 5) {
+            const node_url = input_section.find("#rpc_url_input").val(),
+                url_length = node_url.length;
+            if (url_length) {
+                const is_valid_entry = is_valid_url_or_ip(node_url);
+                if (url_length < 6 || !is_valid_entry) {
+                    popnotify("error", tl("invalidurl"));
+                    play_audio(glob_const.funk);
+                    return
+                }
                 const options = dialog_box.find("#api_list .options .optionwrap"),
                     url_exists = nodes_match(options, node_url);
                 if (url_exists) {
@@ -517,8 +524,8 @@ function submit_rpcnode() {
                 validate_rpc_connection(input_section, node_config, currency_name);
                 return
             }
+            save_rpc_settings(currency_name, selected_config, false);
         }
-        save_rpc_settings(currency_name, selected_config, false)
     })
 }
 
@@ -646,15 +653,15 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                                 }
                             }
                         }
-                        test_mempoolspace(input_section, node_config, rpc_url, currency_name);
+                        test_mempoolspace(input_section, node_config, currency_name);
                     }).fail(function(xhr, stat, err) {
-                        test_mempoolspace(input_section, node_config, rpc_url, currency_name);
+                        test_mempoolspace(input_section, node_config, currency_name);
                     });
                     return
                 }
-                test_mempoolspace(input_section, node_config, rpc_url, currency_name);
+                test_mempoolspace(input_section, node_config, currency_name);
             }).fail(function(xhr, stat, err) {
-                test_mempoolspace(input_section, node_config, rpc_url, currency_name);
+                test_mempoolspace(input_section, node_config, currency_name);
             });
             return
         }
@@ -755,9 +762,10 @@ function is_valid_tx_hex(hex_string) {
     return is_hex && hex_string.length > 250;
 }
 
-function test_mempoolspace(input_section, node_config, rpc_url, currency_name) {
+function test_mempoolspace(input_section, node_config, currency_name) {
     const test_address = glob_const.test_address[currency_name],
-        error_message = tl("unabletoconnect");
+        error_message = tl("unabletoconnect"),
+        rpc_url = node_config.url;
     api_proxy({
         "api_url": rpc_url + "/api/address/" + test_address + "/txs",
         "proxy": rpc_url.includes(".onion"),

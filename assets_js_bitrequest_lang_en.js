@@ -123,6 +123,7 @@ function lang_en(id, data) {
         "insufficient": "Insufficient",
         "new": "New",
         "pending": "Pending",
+        "canceled": "Canceled",
         "expired": "expired",
         "type": "Type",
         "created": "Created",
