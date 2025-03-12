@@ -13,6 +13,9 @@ if (isset($pdat["ping"])) {
 }
 $gdat = $_GET;
 
+// Set global for bolt card
+define("BOLT_CARD", isset($pdat["boltcard"]) && $pdat["boltcard"]);
+
 // Server and request information
 $request_uri = $_SERVER["REQUEST_URI"];
 $path = strpos($request_uri, "v1/ln") !== false ? explode("v1/ln", $request_uri)[0] : $request_uri;
@@ -261,6 +264,7 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
                             "pid" => $post_pid,
                             "rqtype" => "outgoing",
                             "proxy" => $server_host,
+                            "boltcard" => BOLT_CARD,
                             "status" => "pending",
                             "bolt11" => $invoice["bolt11"],
                             "hash" => $invoice["hash"],
@@ -371,6 +375,7 @@ if (in_array($imp, ["lnd", "eclair", "c-lightning", "lnbits"])) {
                             "pid" => $get_pid,
                             "rqtype" => $type_text,
                             "proxy" => $server_host,
+                            "boltcard" => BOLT_CARD,
                             "status" => "pending",
                             "bolt11" => $pr,
                             "hash" => $hash,
@@ -563,6 +568,7 @@ function invoice_uniform($imp, $inv, $type) {
     $result = [
         "invoice" => $dat,
         "proxy" => $proxy_host,
+        "boltcard" => BOLT_CARD,
         "type" => $type,
         "error" => $error
     ];
@@ -743,7 +749,8 @@ function invoice_status($imp, $dat, $pid, $type, $expiry) {
     $base_result = [
         "pid" => $pid,
         "rqtype" => $type,
-        "proxy" => $proxy_host
+        "proxy" => $proxy_host,
+        "boltcard" => BOLT_CARD
     ];
 
     // Route to the appropriate implementation-specific handler

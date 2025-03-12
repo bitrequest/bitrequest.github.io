@@ -64,7 +64,7 @@ const br_bipobj = br_get_local("bpdat", true),
         "proxy_list": br_proxy_list,
         "hosted_proxy": br_hosted_proxy,
         tor_proxy,
-        "proxy_version": "0.022",
+        "proxy_version": "0.023",
         "firebase_dynamic_link_domain": br_firebase_dynamic_link_domain,
         "firebase_shortlink": "https://" + br_firebase_dynamic_link_domain + "/",
         "androidpackagename": br_androidpackagename,
@@ -339,7 +339,12 @@ let request = null,
 //get_erc20_settings
 //add_prefix_to_keys
 //get_cached_tokens
+//is_valid_domain
 //is_valid_ipv4
+//is_valid_ipv6
+//is_valid_localhost
+//sanitize_url
+//is_valid_url_or_ip
 
 // ** Core Storage Functions: **
 
@@ -1391,7 +1396,52 @@ function get_cached_tokens(check) {
     return false;
 }
 
-function is_valid_ipv4(ip) {
-    const regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-    return regex.test(ip);
+// ** Sanitizing URLS: **
+
+// Domain name regex
+function is_valid_domain(url) {
+    const clean_url = sanitize_url(url);
+    if (!clean_url) return false;
+    const domain_regex = /^(https?:\/\/)?(www\.)?([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(:[0-9]{1,5})?$/i;
+    return domain_regex.test(clean_url);
+}
+
+// IPv4 regex
+function is_valid_ipv4(ip4) {
+    const clean_ip4 = sanitize_url(ip4);
+    if (!clean_ip4) return false;
+    const ipv4_regex = /^(https?:\/\/)?(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(:[0-9]{1,5})?$/;
+    return ipv4_regex.test(clean_ip4);
+}
+
+// IPv6 regex
+function is_valid_ipv6(ip6) {
+    const clean_ip6 = sanitize_url(ip6);
+    if (!clean_ip6) return false;
+    const ipv6_regex = /^(https?:\/\/)?(\[)?(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))(\])?(\:[0-9]{1,5})?$/;
+    return ipv6_regex.test(clean_ip6);
+}
+
+// localhost regex
+function is_valid_localhost(localhost) {
+    const clean_localhost = sanitize_url(localhost);
+    if (!clean_localhost) return false;
+    const localhost_regex = /^(https?:\/\/)?localhost(:[0-9]{1,5})?$/i;
+    return localhost_regex.test(clean_localhost);
+}
+
+// sanitize_url string
+function sanitize_url(input) {
+    if (!input || typeof input !== "string") return false;
+    return input.trim();
+}
+
+// Validates if a string is a valid URL or IP address (IPv4 or IPv6)
+function is_valid_url_or_ip(input) {
+    const clean_url = sanitize_url(input);
+    if (!clean_url) return false;
+    return is_valid_domain(clean_url) ||
+        is_valid_ipv4(clean_url) ||
+        is_valid_ipv6(clean_url) ||
+        is_valid_localhost(clean_url);
 }

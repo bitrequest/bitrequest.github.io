@@ -1,6 +1,6 @@
 <?php	
 	// PROXY
-	const VERSION = "0.022";
+	const VERSION = "0.023";
 	const CACHE_DURATIONS = [
 		"2m" => 6220800,  // 2 months in seconds
 		"1w" => 604800,   // 1 week in seconds
@@ -182,17 +182,16 @@
 					return json_encode($nano_fetch);
 				}
 				return error_object("404", "Nano file not found: " . $file_path);
-			}	
+			}
 			// Handle .onion URL requests via Tor
 			if (strpos($url, ".onion") !== false) {
 				$tor_path = __DIR__ . "/ln/tor/index.php";
 				if (file_exists($tor_path)) {
 					require_once $tor_path;
-					return fetch_tor($url, json_decode($data, true), $headers);
+					return fetch_tor($url, $data, $headers);
 				}
 				return error_object("404", "Tor file not found");
 			}
-	
 			// Handle standard HTTP requests
 			$ch = curl_init();
 			curl_setopt_array($ch, [

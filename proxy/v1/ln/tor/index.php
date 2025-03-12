@@ -5,29 +5,35 @@
 	
 	// Handle direct requests with Tor support
 	if (has_tor()) {
-		$pd = file_get_contents("php://input");
-		$pd_obj = json_decode($pd, true);
-		if (isset($pd_obj)) {
-			echo curl_get_tor($pd_obj);
-			return;
-		}
+	    $pd = file_get_contents("php://input");
+	    $pd_obj = json_decode($pd, true);
+	    if (isset($pd_obj)) {
+	        // Extract method if available
+	        if (isset($pd_obj["params"]) && isset($pd_obj["params"]["method"])) {
+	            $pd_obj["method"] = $pd_obj["params"]["method"];
+	        }
+	        echo curl_get_tor($pd_obj);
+	        return;
+	    }
 	}
 	
 	// Fetches data from a URL using Tor network or falls back to default proxy
 	function fetch_tor($url, $data, $headers) {
-		$plo = [
-			"url" => $url,
-			"data" => json_encode($data),
-			"headers" => $headers
-		];
-		if (has_tor()) { // check for TOR support
-			$response = curl_get_tor($plo);
-			if ($response) {
-				return $response;
-			}
-			return err_obj("411", "Failed to connect via Tor");
-		}
-		$tor_proxy = $data["tor_proxy"] ?? TOR_PROXY ?? "false";
+	    $plo = [
+	        "url" => $url,
+	        "data" => $data,
+	        "headers" => $headers,
+	        "method" => $params["method"] ?? "GET" // Get the method from params
+	    ];
+	    
+	    if (has_tor()) {
+	        $response = curl_get_tor($plo);
+	        if ($response) {
+	            return $response;
+	        }
+	        return err_obj("411", "Failed to connect via Tor");
+	    }
+	    $tor_proxy = $data["tor_proxy"] ?? TOR_PROXY ?? "false";
 		if ($tor_proxy == "false" || (strpos($tor_proxy, $_SERVER["HTTP_HOST"]) !== false)) {
 			return err_obj("411", "Failed to connect via Tor");
 		}
@@ -63,83 +69,92 @@
 	}
 	
 	// Makes a cURL request through Tor's SOCKS5 proxy with comprehensive error handling
-	function curl_get_tor($payld) {
-		try {
-			$url = $payld["url"] ?? null;
-			$data = $payld["data"] ?? null;
-			$headers = $payld["headers"] ?? null;
-			
-			if (empty($url)) {
-				return err_obj("400", "URL is required");
-			}
-			
-			$ch = curl_init();
-			if ($ch === false) {
-				return err_obj("411", "Failed to initialize CURL");
-			}
-			
-			curl_setopt($ch, CURLOPT_URL, $url);
-			
-			// Add headers if provided
-			if (!empty($headers)) {
-				// Convert associative array to indexed array for curl
-				if (is_array($headers) && !isset($headers[0])) {
-					$header_array = [];
-					foreach ($headers as $key => $value) {
-						$header_array[] = "$key: $value";
-					}
-					$headers = $header_array;
-				}
-				
-				curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-				
-				// Check for TLS wildcard setting
-				if (isset($payld["headers"]["tls_wildcard"])) {
-					curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-					curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-				}
-			}
-			
-			// Add data if provided
-			if (!empty($data)) {
-				curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-				// Set the appropriate request method
-				curl_setopt($ch, CURLOPT_POST, 1);
-			}
-			
-			// Set Tor proxy settings
-			curl_setopt($ch, CURLOPT_PROXY, "127.0.0.1:9050");
-			curl_setopt($ch, CURLOPT_PROXYTYPE, 7); // CURLPROXY_SOCKS5_HOSTNAME
-			
-			// Set additional options
-			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
-			curl_setopt($ch, CURLOPT_TIMEOUT, 25); // timeout in seconds
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-			curl_setopt($ch, CURLOPT_MAXREDIRS, 3);
-			
-			$result = curl_exec($ch);
-			$curl_errno = curl_errno($ch);
-			$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-			
-			curl_close($ch);
-			
-			if ($curl_errno) {
-				return err_obj("411", "cURL error (" . $curl_errno . "): " . curl_error($ch));
-			}
-			
-			if ($http_code >= 400) {
-				return err_obj((string)$http_code, "HTTP error: " . $http_code);
-			}
-			
-			if ($result === false) {
-				return err_obj("411", "No result from Tor request");
-			}
-			
-			return $result;
-		} catch (Exception $e) {
-			return err_obj("500", "Exception: " . $e->getMessage());
-		}
+	function curl_get_tor($pl) {
+	    try {
+	        $url = $pl["url"] ?? null;
+	        $data = $pl["data"] ?? null;
+	        $headers = $pl["headers"] ?? null;
+	        $method = $pl["method"] ?? "GET"; // Default to GET if not specified
+	        
+	        // Make sure URL has http:// prefix
+	        if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
+	            $url = "http://" . $url;
+	        }
+	        
+	        if (empty($url)) {
+	            return err_obj("400", "URL is required");
+	        }
+	        
+	        $ch = curl_init();
+	        curl_setopt($ch, CURLOPT_URL, $url);
+	        
+	        // Set the request method
+	        if ($method == "POST") {
+	            curl_setopt($ch, CURLOPT_POST, 1);
+	            if (!empty($data)) {
+	                curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+	            }
+	        } else {
+	            // For GET requests, don't use POSTFIELDS even if data is provided
+	            curl_setopt($ch, CURLOPT_HTTPGET, 1);
+	            
+	            // If data is provided for a GET, append it to the URL as query parameters
+	            if (!empty($data) && is_array($data)) {
+	                $query = http_build_query($data);
+	                if (!empty($query)) {
+	                    $url .= (strpos($url, "?") !== false ? "&" : "?") . $query;
+	                    curl_setopt($ch, CURLOPT_URL, $url);
+	                }
+	            }
+	        }
+	        
+	        // Default headers if none provided
+	        if (empty($headers)) {
+	            $headers = [
+	                "User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0",
+	                "Accept: application/json"
+	            ];
+	        }
+	        
+	        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+	        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+	        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+	        
+	        // TOR settings
+	        curl_setopt($ch, CURLOPT_PROXY, "127.0.0.1:9050");
+	        curl_setopt($ch, CURLOPT_PROXYTYPE, 7); // CURLPROXY_SOCKS5_HOSTNAME
+	        
+	        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+	        
+	        $result = curl_exec($ch);
+	        $curl_errno = curl_errno($ch);
+	        $curl_error = curl_error($ch);
+	        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+	        
+	        curl_close($ch);
+	        
+	        if ($curl_errno) {
+	            error_log("cURL error: (" . $curl_errno . ") " . $curl_error);
+	            return err_obj("411", "cURL error (" . $curl_errno . "): " . $curl_error);
+	        }
+	        
+	        if ($http_code >= 400) {
+	            error_log("HTTP error: " . $http_code);
+	            error_log("Response: " . substr($result, 0, 200));
+	            return err_obj((string)$http_code, "HTTP error: " . $http_code);
+	        }
+	        
+	        if ($result === false) {
+	            error_log("No result from Tor request");
+	            return err_obj("411", "No result from Tor request");
+	        }
+	        
+	        return $result;
+	    } catch (Exception $e) {
+	        error_log("Exception in TOR request: " . $e->getMessage());
+	        return err_obj("500", "Exception: " . $e->getMessage());
+	    }
 	}
 	
 	// Creates a JSON-encoded error object with code and message for standardized error responses
