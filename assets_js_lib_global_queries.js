@@ -343,6 +343,7 @@ let request = null,
 //is_valid_ipv4
 //is_valid_ipv6
 //is_valid_localhost
+//is_valid_onion
 //sanitize_url
 //is_valid_url_or_ip
 
@@ -1402,7 +1403,7 @@ function get_cached_tokens(check) {
 function is_valid_domain(url) {
     const clean_url = sanitize_url(url);
     if (!clean_url) return false;
-    const domain_regex = /^(https?:\/\/)?(www\.)?([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(:[0-9]{1,5})?$/i;
+    const domain_regex = /^(https?:\/\/)?(www\.)?([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(:[0-9]{1,5})?(:[a-zA-Z0-9]+)?$/i;
     return domain_regex.test(clean_url);
 }
 
@@ -1410,7 +1411,7 @@ function is_valid_domain(url) {
 function is_valid_ipv4(ip4) {
     const clean_ip4 = sanitize_url(ip4);
     if (!clean_ip4) return false;
-    const ipv4_regex = /^(https?:\/\/)?(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(:[0-9]{1,5})?$/;
+    const ipv4_regex = /^(https?:\/\/)?(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(:[0-9]{1,5})?(:[a-zA-Z0-9]+)?$/;
     return ipv4_regex.test(clean_ip4);
 }
 
@@ -1418,7 +1419,7 @@ function is_valid_ipv4(ip4) {
 function is_valid_ipv6(ip6) {
     const clean_ip6 = sanitize_url(ip6);
     if (!clean_ip6) return false;
-    const ipv6_regex = /^(https?:\/\/)?(\[)?(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))(\])?(\:[0-9]{1,5})?$/;
+    const ipv6_regex = /^(https?:\/\/)?(\[)?(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:))(\])?(\:[0-9]{1,5})?(:[a-zA-Z0-9]+)?$/;
     return ipv6_regex.test(clean_ip6);
 }
 
@@ -1426,8 +1427,16 @@ function is_valid_ipv6(ip6) {
 function is_valid_localhost(localhost) {
     const clean_localhost = sanitize_url(localhost);
     if (!clean_localhost) return false;
-    const localhost_regex = /^(https?:\/\/)?localhost(:[0-9]{1,5})?$/i;
+    const localhost_regex = /^(https?:\/\/)?localhost(:[0-9]{1,5})?(:[a-zA-Z0-9]+)?$/i;
     return localhost_regex.test(clean_localhost);
+}
+
+// Onion address regex
+function is_valid_onion(onion) {
+    const clean_onion = sanitize_url(onion);
+    if (!clean_onion) return false;
+    const onion_regex = /^(https?:\/\/)?([a-z2-7]{16}|[a-z2-7]{56})\.onion(:[0-9]{1,5})?(:[a-zA-Z0-9]+)?$/i;
+    return onion_regex.test(clean_onion);
 }
 
 // sanitize_url string
@@ -1443,5 +1452,6 @@ function is_valid_url_or_ip(input) {
     return is_valid_domain(clean_url) ||
         is_valid_ipv4(clean_url) ||
         is_valid_ipv6(clean_url) ||
-        is_valid_localhost(clean_url);
+        is_valid_localhost(clean_url) ||
+        is_valid_onion(clean_url);
 }

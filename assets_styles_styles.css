@@ -1558,7 +1558,7 @@ html.inframe .requestlist li .req_actions .icon-folder-open {
 
 .requestlist li .metalist .meta_status img.boltcard {
 	display: inline-block;
-	height: 2em;
+	height: 1.7em;
 	margin-left: 0.3em;
 	vertical-align: bottom;
 }

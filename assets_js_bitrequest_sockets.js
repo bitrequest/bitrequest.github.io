@@ -705,7 +705,6 @@ function lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_data, pay
                 "x-api": proxy_key
             }
         }).done(function(response) {
-            console.log(response);
             poll_animate();
             const payment_status = response.status;
             if (payment_status) {
