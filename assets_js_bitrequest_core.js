@@ -5118,7 +5118,8 @@ function append_request(rd) {
         source,
         eth_layer2,
         txhistory,
-        paymenttimestamp
+        paymenttimestamp,
+        boltcard
     } = rd,
     unit = uoa.toUpperCase(),
         decimal_places = iscrypto === true ? 6 : 2,
@@ -5255,6 +5256,7 @@ function append_request(rd) {
         "<li><p class='address'><strong>" + addr_title + ":</strong> " +
         "<span class='requestaddress select'>" + address + "</span>" + label_display + "</p></li>",
         network_name = getnetwork(eth_layer2),
+        bolt_card = boltcard ? "<img src='boltcard.png' class='boltcard' title='paid with the boltcard'>" : "",
         network_box = network_name ?
         "<li><p><strong>" + tl("network") + ":</strong> " + network_name + "</p></li>" : "",
         status_final = tx_direction === "sent" ?
@@ -5290,7 +5292,7 @@ function append_request(rd) {
             unit + "</li>\
                     <li class='meta_status' data-conf='" + confirm_count +
             "'><strong>" + tl("status") + ":</strong><span class='status'> " +
-            tl(status_text) + "</span> " + confirm_display + "</li>\
+            tl(status_text) + "</span> " + confirm_display + bolt_card + "</li>\
                     <li><strong>" + tl("type") + ":</strong> " + type_text +
             monitor_status + "</li>" +
             time_box +

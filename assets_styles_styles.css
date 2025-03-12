@@ -1556,6 +1556,13 @@ html.inframe .requestlist li .req_actions .icon-folder-open {
 	color: #eeac57;
 }
 
+.requestlist li .metalist .meta_status img.boltcard {
+	display: inline-block;
+	height: 2em;
+	margin-left: 0.3em;
+	vertical-align: bottom;
+}
+
 #viewarchive {
 	display: none;
 }

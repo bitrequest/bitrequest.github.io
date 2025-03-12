@@ -174,6 +174,12 @@ function process_lightning_payment(rd, api_data, rdo) {
                                         finalize_request_state(rdo);
                                         return
                                     }
+                                    if (response.boltcard) {
+                                        update_request({
+                                            "requestid": request_id,
+                                            "boltcard": true
+                                        }, true);
+                                    }
                                     validate_payment_amounts(rd, rdo);
                                     return
                                 }

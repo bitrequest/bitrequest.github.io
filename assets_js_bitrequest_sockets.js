@@ -550,10 +550,11 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                                                                     stop_monitors(payment_id);
                                                                     close_socket(payment_id);
                                                                     stop_nfc_scan();
-                                                                    lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_result, payment_id, node_id);
+                                                                    lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_result, payment_id, node_id, true);
                                                                     glob_let.pinging[invoice_result.hash] = setInterval(function() {
                                                                         lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_result, payment_id, node_id);
                                                                     }, 3000);
+                                                                    request.boltcard = true;
                                                                     return
                                                                 }
                                                             }).fail(function(xhr, stat, err) {
@@ -704,6 +705,7 @@ function lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_data, pay
                 "x-api": proxy_key
             }
         }).done(function(response) {
+            console.log(response);
             poll_animate();
             const payment_status = response.status;
             if (payment_status) {
