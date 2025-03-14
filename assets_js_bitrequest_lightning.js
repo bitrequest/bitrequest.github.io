@@ -131,7 +131,7 @@ function render_lightning_interface(replace) {
             "<div class='options'></div>" +
             "</div><div id='add_proxy'><span class='ref'>" + tl("addrpcproxy") + "</span></div>" : "",
             lightning_markup = "<div class='popform" + node_class + proxy_class + camera_class + "'>" +
-            "<div id='select_ln_node' class='selectbox' data-nodeid='" + current_node_id + "'>" +
+            "<div id='select_ln_node' class='selectbox' data-node_id='" + current_node_id + "'>" +
             "<input type='text' value='" + node_name + "' placeholder='Select lightning node' readonly='readonly' id='ln_nodeselect'/>" +
             "<div class='selectarrows icon-menu2' data-pe='none'></div>" +
             "<div id='ln_nodelist' class='options'></div>" +
@@ -571,7 +571,7 @@ function lightning_option_li(is_live, node_info, selected, invoices, proxy_url) 
         implementation_icon = c_icons(implementation),
         lnurl_icon = has_lnurls ? "<div class='opt_icon icon-sphere' data-pe='none'></div>" : "",
         option = $("<div class='optionwrap" + status_class + selected_class + "' style='display:none' data-pe='none'>" +
-            "<span data-value='" + node_name + "' data-live='" + status_icon + "'>" +
+            "<span data-value='" + node_name + "' data-live='" + status_icon + "' data-node_id='" + node_id + "'>" +
             "<img src='" + implementation_icon + "' class='lnd_icon'/> " + node_name + "</span>" +
             "<div class='opt_icon_box' data-pe='none'>" +
             "<div class='opt_icon icon-bin' data-pe='none'></div>" +
@@ -691,7 +691,7 @@ function remove_lnd() {
 
 // Manages Lightning node selection UI with status updates and info panel display
 function handle_node_selection() {
-    $(document).on("click", "#ln_nodelist .optionwrap", function() {
+    $(document).on("mousedown", "#ln_nodelist .optionwrap", function() {
         const selected_node = $(this);
         if (selected_node.hasClass("offline")) {
             play_audio(glob_const.funk);
@@ -892,7 +892,7 @@ function test_proxy_connection(node_info, proxy_url, proxy_key) {
 
 // Handles proxy selection interface with offline state validation
 function handle_proxy_selection() {
-    $(document).on("click", "#lnd_proxy_select_input .optionwrap", function() {
+    $(document).on("mousedown", "#lnd_proxy_select_input .optionwrap", function() {
         const selected_proxy = $(this);
         if (selected_proxy.hasClass("offline")) {
             play_audio(glob_const.funk);
@@ -1038,7 +1038,7 @@ function add_custom_proxy(proxy_url) {
 
 // Controls Lightning implementation selection with proxy requirements and credential form management
 function handle_implementation_selection() {
-    $(document).on("click", "#implements .imp_select", function(e) {
+    $(document).on("mousedown", "#implements .imp_select", function(e) {
         const selected_implementation = $(this),
             lightning_data = get_lightning_settings().data(),
             proxy_list = lightning_data.proxies,
@@ -1174,7 +1174,7 @@ function trigger_ln() {
                     node_key_input.focus();
                     return
                 }
-                if (key_length > 300) { // invoice macaroons should be less than 300 characters
+                if (key_length > 1300) { // invoice macaroons should be less than 300 characters
                     popnotify("error", tl("entermacaroon"));
                     return
                 }
@@ -1195,8 +1195,8 @@ function trigger_ln() {
                     canceldialog();
                     return
                 }
-                const selected_service = fetch_node(node_services, node_selection.value),
-                    current_node_id = $("#select_ln_node").data("nodeid");
+                const selected_service = fetch_node(node_services, node_selection.node_id),
+                    current_node_id = $("#select_ln_node").data("node_id");
                 if (!selected_service || (current_node_id == selected_service.node_id)) {
                     canceldialog();
                     return
@@ -1242,17 +1242,15 @@ function test_create_invoice(implementation, proxy_data, node_host, node_key) {
         node_services = lightning_data.services,
         node_id_source = node_host ? (implementation == "lnbits" ? node_key : node_host) : proxy_url + implementation,
         node_id = sha_sub(node_id_source, 10),
-        is_node_existing = value_in_array(node_services, node_id),
+        is_node_existing = objectkey_in_array(node_services, "node_id", node_id),
         default_error = tl("unabletoconnect"),
         unique_id = sha_sub(now(), 10);
-
     if (is_node_existing) {
         popnotify("error", tl("proxynameexists", {
             "imp": implementation
         }));
         return
     }
-
     if (proxy_url) {
         loader(true);
         set_loader_text(tl("connecttolnur", {
