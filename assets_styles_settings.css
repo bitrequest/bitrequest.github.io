@@ -241,7 +241,8 @@ ul.conf_options li .conf_emoji {
 	display: none !important;
 }
 
-.selectbox .options>.optionwrap.default .opt_icon_box .icon-bin {
+.selectbox .options>.optionwrap.default .opt_icon_box .icon-bin,
+#rpc_input .selectbox .options>.optionwrap .opt_icon_box .icon-bin {
 	display: none;
 }
 

@@ -6,6 +6,7 @@ $(document).ready(function() {
     //get_rpc_placeholder
     //validate_and_add_rpc_node
     //create_rpc_node_element
+    handle_select_change();
     handle_rpc_node_selection();
     submit_rpcnode();
     //nodes_match
@@ -26,7 +27,9 @@ function edit_rpcnode() {
             ap_id = settings_item.attr("data-id"),
             item_data = settings_item.data(),
             currency_name = settings_item.children(".liwrap").attr("data-currency"),
-            predefined_nodes = clone(q_obj(get_coinsettings(currency_name), ap_id + ".apis")),
+            coin_settings = get_coinsettings(currency_name),
+            copy_settings = clone(coin_settings),
+            predefined_nodes = q_obj(copy_settings, ap_id + ".apis"),
             custom_nodes = item_data.options;
         if (!exists(custom_nodes) && !exists(predefined_nodes)) {
             return
@@ -92,7 +95,6 @@ function edit_rpcnode() {
             }
         });
         $.each(custom_nodes, function(node_id, node_config) {
-            node_config.custom = true;
             const is_selected = (node_config.url === node_url);
             validate_and_add_rpc_node(currency_name, api_list, node_id, node_config, is_selected);
         });
@@ -126,7 +128,6 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                             "name": "electrum",
                             "url": rpc_url,
                             "display": true,
-                            "sub": true,
                             custom,
                             v
                         },
@@ -163,10 +164,11 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
             const api_result = br_result(e),
                 result = q_obj(api_result, "result"),
                 list_length = result.length;
-            let done = false;
+            let done = false,
+                count = 0;
             if (list_length && is_array(result)) {
-                const short_list = (list_length > 75) ? result.slice(0, 75) : result,
-                    short_list_length = short_list.length;
+                // limit to maximum 50 nodes
+                const short_list = (list_length > 50) ? result.slice(0, 50) : result;
                 $.each(short_list, function(node_id, nd) {
                     const url = nd[1] || nd[0],
                         filter_ips = is_valid_ipv4(url);
@@ -186,57 +188,62 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                             rpc_url2 = url + port,
                             node_exists = objectkey_in_array(existing_nodes, "url", rpc_url2);
                         if (!node_exists) {
+                            count++;
                             const node_config = {
                                     "name": "electrum",
                                     "url": rpc_url2,
                                     "display": true,
-                                    "sub": true,
                                     custom,
                                     v
                                 },
                                 test_tx = glob_const.test_tx[currency];
-                            api_proxy({
-                                "api": currency,
-                                "cachetime": 25,
-                                "cachefolder": "1h",
-                                "custom": "electrum",
-                                "api_url": rpc_url2,
-                                "proxy": true,
-                                "params": {
-                                    "method": "POST",
-                                    "cache": true,
-                                    "data": {
-                                        "id": sha_sub(rpc_url2, 6),
-                                        "method": "blockchain.transaction.get",
-                                        "ref": test_tx,
-                                        "node": rpc_url2
-                                    }
-                                }
-                            }).done(function(e) {
-                                const api_result = br_result(e),
-                                    result2 = q_obj(api_result, "result");
-                                if (is_valid_tx_hex(result2)) {
-                                    const is_selected = rpc_url2 === node_url;
-                                    create_rpc_node_element(api_options, true, node_id, node_config, is_selected, true);
-                                    node_list_obj.push({
-                                        node_id,
-                                        rpc_url2,
-                                        v
+                            const delay_time = 500 * count,
+                                fetch_timeout = setTimeout(function() {
+                                    api_proxy({
+                                        "api": currency,
+                                        "cachetime": 25,
+                                        "cachefolder": "1h",
+                                        "custom": "electrum",
+                                        "api_url": rpc_url2,
+                                        "proxy": true,
+                                        "params": {
+                                            "method": "POST",
+                                            "cache": true,
+                                            "data": {
+                                                "id": sha_sub(rpc_url2, 6),
+                                                "method": "blockchain.transaction.get",
+                                                "ref": test_tx,
+                                                "node": rpc_url2
+                                            }
+                                        }
+                                    }).done(function(e) {
+                                        const api_result = br_result(e),
+                                            result2 = q_obj(api_result, "result");
+                                        if (is_valid_tx_hex(result2)) {
+                                            const is_selected = rpc_url2 === node_url;
+                                            create_rpc_node_element(api_options, true, node_id, node_config, is_selected, true);
+                                            node_list_obj.push({
+                                                node_id,
+                                                rpc_url2,
+                                                custom,
+                                                v
+                                            });
+                                        }
+                                    }).always(function() {
+                                        if (done) return;
+                                        if (node_id >= count) { // done
+                                            done = true;
+                                            const margin_timeout = setTimeout(function() {
+                                                br_set_session("electrum_" + currency, node_list_obj, true);
+                                                rpc_list.addClass("show_select");
+                                            }, 500, function() {
+                                                clearTimeout(margin_timeout);
+                                            });
+                                        }
                                     });
-                                }
-                            }).always(function() {
-                                if (done) return;
-                                const count = short_list_length - node_id;
-                                if (count === 1 || count === 2 || count === 3) { // some margin for flexibility
-                                    done = true;
-                                    const margin_timeout = setTimeout(function() {
-                                        br_set_session("electrum_" + currency, node_list_obj, true);
-                                        rpc_list.addClass("show_select");
-                                    }, 500, function() {
-                                        clearTimeout(margin_timeout);
-                                    });
-                                }
-                            });
+                                }, delay_time, function() {
+                                    clearTimeout(fetch_timeout);
+                                });
                         }
                     }
                 });
@@ -471,8 +478,8 @@ function create_rpc_node_element(api_list, is_live, node_id, node_config, is_sel
         node_name = node_config.name,
         custom = node_config.custom,
         node_url = node_config.url,
-        stripped_url = custom && (node_name == "alchemy" || node_name == "infura") ? strip_key_from_url(node_url) : node_url;
-    vendor = node_config.vendor,
+        stripped_url = custom && (node_name == "alchemy" || node_name == "infura") ? strip_key_from_url(node_url) : node_url,
+        vendor = node_config.vendor,
         vendor_string = (vendor) ? " (" + vendor.slice(5) + ")" : "",
         version = node_config.v,
         version_string = (version) ? " (" + version + ")" : "",
@@ -485,9 +492,23 @@ function create_rpc_node_element(api_list, is_live, node_id, node_config, is_sel
     node_element.slideDown(500);
 }
 
+// Handles input change for selectbox elements
+function handle_select_change() {
+    $(document).on("input", "#rpc_list.selectbox > input:not([readonly])", function() {
+        const select_input = $(this),
+            current_value = select_input.val(),
+            options = $(this).parent(".selectbox").find(".options");
+        if (current_value) {
+            options.removeClass("show_options");
+            return
+        }
+        options.addClass("show_options");
+    })
+}
+
 // Handles RPC node selection in UI with offline node detection and data persistence
 function handle_rpc_node_selection() {
-    $(document).on("click", "#settingsbox .selectbox .options > div", function(e) {
+    $(document).on("mousedown", "#settingsbox .selectbox .options > div", function(e) {
         const clicked_element = $(e.target);
         if (clicked_element.hasClass("icon-bin")) {
             return // prevent selection when deleting
@@ -504,7 +525,7 @@ function handle_rpc_node_selection() {
         node_select_input.removeData().data(node_config);
         dialog_box.find(".options .optionwrap").removeClass("rpc_selected");
         node_option.addClass("rpc_selected");
-        if (node_config.sub) return;
+        if (node_config.custom) return;
         // clear sub input
         dialog_box.find("#rpc_url_input").val("");
     })
@@ -707,6 +728,7 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                 const parsed_data = br_result(response);
                 if (q_obj(parsed_data, "result.rpc_version")) {
                     input_section.addClass("live").removeClass("offline");
+                    node_config.name = "nano";
                     save_rpc_settings(currency_name, node_config, true);
                     return
                 }
@@ -714,7 +736,7 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                 popnotify("error", error_message);
             }).fail(function(xhr, stat, err) {
                 input_section.addClass("offline").removeClass("live");
-                topnotify(error_message);
+                popnotify("error", error_message);
             }).always(function() {
                 closeloader();
             });
@@ -914,17 +936,13 @@ function delete_rpc_node() {
 }
 
 function get_node_icon(node_name) {
-    return (node_name === "electrum") ? "electrum_node" :
+    if (!node_name) return "node";
+    const node_array = ["blockchair", "etherscan", "arbiscan", "polygonscan", "bscscan", "binplorer", "alchemy"],
+        in_array = node_array.includes(node_name);
+    return in_array ? node_name : (node_name === "electrum") ? "electrum_node" :
         (node_name.includes("mempool.space")) ? "mempool_node" :
         (node_name.includes("blockchain.info")) ? "blockchain_info" :
         (node_name.includes("infura")) ? "infura" :
         (node_name.includes("blockcypher")) ? "blockcypher" :
-        (node_name === "blockchair") ? "blockchair" :
-        (node_name === "etherscan") ? "etherscan" :
-        (node_name === "arbiscan") ? "arbiscan" :
-        (node_name === "polygonscan") ? "polygonscan" :
-        (node_name === "bscscan") ? "bscscan" :
-        (node_name === "binplorer") ? "binplorer" :
-        (node_name === "alchemy") ? "alchemy" :
         (node_name === "nano") ? "nano" : "node";
 }

@@ -55,7 +55,6 @@ $(document).ready(function() {
         }, 600);
     }, 600);
     handle_select_input();
-    handle_select_change();
     handle_option_selection();
     canceldialog_trigger();
     console.log({
@@ -2872,23 +2871,9 @@ function handle_select_input() {
     })
 }
 
-// Handles input change for selectbox elements
-function handle_select_change() {
-    $(document).on("input", "#rpc_list.selectbox > input:not([readonly])", function() {
-        const select_input = $(this),
-            current_value = select_input.val(),
-            options = $(this).parent(".selectbox").find(".options");
-        if (current_value) {
-            options.removeClass("show_options");
-            return
-        }
-        options.addClass("show_options");
-    })
-}
-
 // Processes option selection in selectbox dropdown
 function handle_option_selection() {
-    $(document).on("click", ".selectbox > .options span", function() {
+    $(document).on("mousedown", ".selectbox > .options span", function() {
         const selected_option = $(this),
             option_data = selected_option.data(),
             option_text = option_data.value || selected_option.text(),
@@ -3283,15 +3268,13 @@ function pick_erc20_select() {
 function init_addressform(token_data) {
     const form_container = $("#erc20formbox"),
         input_section = form_container.find("#erc20_inputs"),
-        token_input = form_container.find("input#ac_input"),
         addr_input = form_container.find("input.address"),
-        label_input = form_container.find("input.addresslabel"), 
+        label_input = form_container.find("input.addresslabel"),
         token = token_data.currency;
     form_container.data(token_data);
     addr_input.attr("placeholder", tl("entercoinaddress", {
         "currency": token
     }));
-    token_input.val(token);
     if (!input_section.is(":visible")) {
         input_section.slideDown(300);
         addr_input.focus();
@@ -5018,7 +5001,7 @@ function append_coinsetting(currency, settings) {
 
 // Subtitle for settings
 function setting_sub_address(name, url, custom) {
-    const sub_title = (custom === true) ? url || name : name || url;
+    const sub_title = (custom === true || name === "electrum") ? url || name : name || url;
     return exists(sub_title) ? truncate(sub_title) : "";
 }
 

@@ -224,7 +224,17 @@ const glob_multi_wallets = {
                             },
                             {
                                 "name": "electrum",
+                                "url": "electrum.emzy.de:50002",
+                                "display": true
+                            },
+                            {
+                                "name": "electrum",
                                 "url": "electrum.blockstream.info:50002",
+                                "display": true
+                            },
+                            {
+                                "name": "electrum",
+                                "url": "electrum.bitaroo.net:50002",
                                 "display": true
                             },
                             {
@@ -376,6 +386,16 @@ const glob_multi_wallets = {
                             {
                                 "name": "electrum",
                                 "url": "ltc.aftrek.org:50002",
+                                "display": true
+                            },
+                            {
+                                "name": "electrum",
+                                "url": "electrum-ltc.bysh.me:50002",
+                                "display": true
+                            },
+                            {
+                                "name": "electrum",
+                                "url": "electrum.ltc.xurious.com:50002",
                                 "display": true
                             },
                             {
@@ -760,6 +780,11 @@ const glob_multi_wallets = {
                             {
                                 "name": "electrum",
                                 "url": "electroncash.de:50002",
+                                "display": true
+                            },
+                            {
+                                "name": "electrum",
+                                "url": "bch.imaginary.cash:50002",
                                 "display": true
                             },
                             {
