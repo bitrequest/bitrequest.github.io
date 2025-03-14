@@ -1225,6 +1225,7 @@ body.seed_dialog #seed_panel {
 	border-bottom: 0.07em solid #b1b1b1;
 	color: #009788;
 	cursor: pointer;
+	pointer-events: all;
 }
 
 #ua {

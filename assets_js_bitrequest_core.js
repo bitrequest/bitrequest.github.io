@@ -3267,7 +3267,7 @@ function autocomplete_erc20token() {
 
 // Handles the selection of an ERC20 token from the dropdown
 function pick_erc20_select() {
-    $(document).on("click", "#erc20formbox .selectbox > #ac_options span", function() {
+    $(document).on("mousedown", "#erc20formbox .selectbox > #ac_options span", function() {
         const selected_token = $(this),
             token_data = {
                 "cmcid": selected_token.attr("data-id"),
@@ -3283,16 +3283,18 @@ function pick_erc20_select() {
 function init_addressform(token_data) {
     const form_container = $("#erc20formbox"),
         input_section = form_container.find("#erc20_inputs"),
-        addr_field = form_container.find("input.address"),
-        label_field = form_container.find("input.addresslabel");
-    addr_field.add(label_field);
+        token_input = form_container.find("input#ac_input"),
+        addr_input = form_container.find("input.address"),
+        label_input = form_container.find("input.addresslabel"), 
+        token = token_data.currency;
     form_container.data(token_data);
-    addr_field.attr("placeholder", tl("entercoinaddress", {
-        "currency": token_data.currency
+    addr_input.attr("placeholder", tl("entercoinaddress", {
+        "currency": token
     }));
+    token_input.val(token);
     if (!input_section.is(":visible")) {
         input_section.slideDown(300);
-        addr_field.focus();
+        addr_input.focus();
     }
 }
 

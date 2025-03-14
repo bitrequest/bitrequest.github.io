@@ -1935,7 +1935,6 @@ input:invalid {
 	background-color: rgba(0, 0, 0, 0.96);
 	border: 1px solid #909090;
 	overflow: hidden;
-	pointer-events: all;
 }
 
 #notifysign .icon-cross {
@@ -1946,6 +1945,7 @@ input:invalid {
 	margin-left: 0.5em;
 	cursor: pointer;
 	display: none;
+	pointer-events: all;
 }
 
 #notifysign.buttonyes {
