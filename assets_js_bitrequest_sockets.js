@@ -525,6 +525,13 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                                                         };
                                                     if (request_type === "incoming") {
                                                         invoice_data.b11 = true;
+                                                        const fetch_id = get_request_id();
+                                                        if (fetch_id) {
+                                                            update_request({
+                                                                "requestid": fetch_id,
+                                                                "boltcard": true
+                                                            }, false);
+                                                        }
                                                     }
                                                     $.ajax({
                                                         "method": "POST",
