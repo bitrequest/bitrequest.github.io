@@ -910,12 +910,12 @@ const glob_multi_wallets = {
                     "websockets": {
                         "icon": "tab",
                         "selected": {
-                            "name": "alchemy_main_ws",
+                            "name": "alchemy",
                             "url": glob_const.main_alchemy_socket,
                             "display": true
                         },
                         "apis": [{
-                            "name": "alchemy_main_ws",
+                            "name": "alchemy",
                             "url": glob_const.main_alchemy_socket,
                             "display": true
                         }],

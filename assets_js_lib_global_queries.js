@@ -143,7 +143,7 @@ const br_bipobj = br_get_local("bpdat", true),
             "litecoin": "a507149c0918d3a9403a39675c65929feb9c69c5cc5c412217b9ea48f0510ab6",
             "dogecoin": "4830dee8e225309e8a643895f637e604285a306b3e365302b64939fdaf4ccc79",
             "bitcoin-cash": "f7b74b3208fccc600919f4181114a0858a28c7862ace5cba1f408fcfe7b5d147",
-            "etehereum": "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1"
+            "ethereum": "0x919408272d05b3fd7ccfa1f47c10bea425891c8aa47ba7309dc3beb0b89197f1"
         },
         "test_address": {
             "bitcoin": "bc1qg0azlj4w2lrq8jssrrz6eprt2fe7f7edm4vpd5",
@@ -316,7 +316,7 @@ let request = null,
 //fetch_aws
 
 // ** Data Access & Query Functions: **
-//isopenrequest
+//is_openrequest
 //get_setting
 //set_setting
 //get_requestli
@@ -325,6 +325,7 @@ let request = null,
 //filter_addressli
 //filter_all_addressli
 //filter_list
+//get_request_id
 //get_currencyli
 //get_homeli
 //cs_node
@@ -339,11 +340,17 @@ let request = null,
 //get_erc20_settings
 //add_prefix_to_keys
 //get_cached_tokens
+
+// ** Sanitizing URLS: **
+//strip_key_from_url
+//complete_url
+//c_proxy
 //is_valid_domain
 //is_valid_ipv4
 //is_valid_ipv6
 //is_valid_localhost
 //is_valid_onion
+//is_websocket_url
 //sanitize_url
 //is_valid_url_or_ip
 
@@ -1204,9 +1211,9 @@ function fetch_aws(filename, bckt) {
 
 // ** Data Access & Query Functions: **
 
-// Verifies if payment request modal is currently active
-function isopenrequest() {
-    return glob_const.paymentpopup.hasClass("active");
+// Verifies if payment request form is open
+function is_openrequest() {
+    return $("#request_front").length > 0;
 }
 
 // Retrieves specific data attribute from settings DOM element
@@ -1256,6 +1263,17 @@ function filter_list(list, data_key, data_value) {
     return list.filter(function() {
         return $(this).data(data_key) === data_value;
     })
+}
+
+// Filters the request id corresponding an open request
+function get_request_id() {
+    if (!is_openrequest()) return;
+    try {
+        return filter_list($("#requestlist").find("li.rqli"), "rqdata", btoa(JSON.stringify(request.dataobject)).slice(0, -2)).data("requestid");
+    } catch (err) {
+        console.error(err.name, err.message);
+        return false;
+    }
 }
 
 // Locates currency container in active currencies list
@@ -1399,11 +1417,31 @@ function get_cached_tokens(check) {
 
 // ** Sanitizing URLS: **
 
-// Domain name regex
+// Strips key from ws_url
+function strip_key_from_url(node_url) {
+    const main_alchemy_socket = glob_const.main_alchemy_socket,
+        base_url_length = node_url.length,
+        main_socket_length = main_alchemy_socket.length,
+        length_diff = base_url_length - main_socket_length;
+    return node_url.slice(0, -length_diff);
+}
+
+// Normalizes URL format with protocol and trailing slash
+function complete_url(url) {
+    const withProtocol = url.indexOf("://") > -1 ? url : "https://" + url;
+    return withProtocol.slice(-1) === "/" ? withProtocol : withProtocol + "/";
+}
+
+// Retrieves active proxy configuration from DOM data
+function c_proxy() {
+    return $("#api_proxy").data("selected");
+}
+
+// Domain name regex with support for paths and query parameters
 function is_valid_domain(url) {
     const clean_url = sanitize_url(url);
     if (!clean_url) return false;
-    const domain_regex = /^(https?:\/\/)?(www\.)?([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(:[0-9]{1,5})?(:[a-zA-Z0-9]+)?$/i;
+    const domain_regex = /^(https?:\/\/|wss?:\/\/)?(www\.)?([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(:[0-9]{1,5})?(\/[^\s]*)?$/i;
     return domain_regex.test(clean_url);
 }
 
@@ -1437,6 +1475,14 @@ function is_valid_onion(onion) {
     if (!clean_onion) return false;
     const onion_regex = /^(https?:\/\/)?([a-z2-7]{16}|[a-z2-7]{56})\.onion(:[0-9]{1,5})?(:[a-zA-Z0-9]+)?$/i;
     return onion_regex.test(clean_onion);
+}
+
+// Check if a URL is a WebSocket URL (ws:// or wss://)
+function is_websocket_url(url) {
+    const clean_url = sanitize_url(url);
+    if (!clean_url) return false;
+    const websocket_regex = /^wss?:\/\//i;
+    return websocket_regex.test(clean_url);
 }
 
 // sanitize_url string

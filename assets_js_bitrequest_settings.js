@@ -105,8 +105,6 @@ $(document).ready(function() {
     hide_custom_proxy_field();
     //test_custom_proxy
     remove_proxy();
-    //complete_url
-    //c_proxy
 
     // ** API Keys: **
     apikeys();
@@ -2764,7 +2762,7 @@ function test_custom_proxy(value) {
         data = node.data(),
         proxies = data.custom_proxies,
         url = complete_url(value);
-    if ($.inArray(url, proxies) !== -1 || objectkey_in_array(glob_const.proxy_list , "url", url)) {
+    if ($.inArray(url, proxies) !== -1 || objectkey_in_array(glob_const.proxy_list, "url", url)) {
         popnotify("error", tl("proxyexists"));
         return false;
     }
@@ -2850,17 +2848,6 @@ function remove_proxy() {
         }
         return false;
     })
-}
-
-// Normalizes URL format with protocol and trailing slash
-function complete_url(url) {
-    const withProtocol = url.indexOf("://") > -1 ? url : "https://" + url;
-    return withProtocol.slice(-1) === "/" ? withProtocol : withProtocol + "/";
-}
-
-// Retrieves active proxy configuration from DOM data
-function c_proxy() {
-    return $("#api_proxy").data("selected");
 }
 
 // ** API Keys: **

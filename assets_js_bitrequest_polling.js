@@ -29,7 +29,7 @@ function route_transaction_monitor(tx_data, api_dat, retry) {
         return
     }
     if (tx_data) {
-        if (isopenrequest()) {
+        if (is_openrequest()) {
             if (request) {
                 const tx_hash = tx_data.txhash;
                 if (tx_hash) {
@@ -230,7 +230,7 @@ function start_monero_monitor(cachetime, address, vk) {
 
 // Queries Monero node for new transactions using view key authentication
 function check_monero_transactions(cachetime, address, vk, request_ts) {
-    if (!isopenrequest()) { // only when request is visible
+    if (!is_openrequest()) { // only when request is visible
         force_close_socket();
         return;
     }

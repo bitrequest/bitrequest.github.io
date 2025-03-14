@@ -348,7 +348,6 @@ function finish_functions() {
     //escape_and_back 
     //keyup
     //is_opendialog
-    //is_openrequest
 
     // ** Intro Flow: **
     start_trigger();
@@ -1006,7 +1005,7 @@ function fixednav() {
 
 // Closes active dialogs when URL changes
 function cancel_url_dialogs() {
-    if (isopenrequest()) {
+    if (is_openrequest()) {
         cancel_paymentdialog();
     }
     if (glob_const.body.hasClass("showcam")) {
@@ -1026,7 +1025,7 @@ function ios_redirections(url) {
     if (br_get_local("editurl") === glob_const.w_loc.search) return;
     const is_payment = new_url.includes("PAYMENT=");
     if (is_payment) {
-        if (isopenrequest()) {
+        if (is_openrequest()) {
             cancel_paymentdialog();
             setTimeout(function() {
                 openpage(url, "", "payment");
@@ -1666,8 +1665,11 @@ function get_blockcypher_apikey() {
 
 // Returns Infura API key if URL doesn't contain one already
 function get_infura_apikey(rpc_url) {
-    const saved_key = $("#apikeys").data("infura");
-    return (/^[A-Za-z0-9]+$/.test(rpc_url.slice(-15))) ? "" : saved_key || to.if_id; // check if rpcurl already contains apikey
+    const saved_key = $("#apikeys").data("infura") || to.if_id;
+    if (rpc_url) {
+        return (/^[A-Za-z0-9]+$/.test(rpc_url.slice(-15))) ? "" : saved_key; // check if rpcurl already contains apikey
+    }
+    return saved_key;
 }
 
 // Returns Alchemy API key from UI data or default
@@ -1746,12 +1748,8 @@ function prevent_screen_sleep() {
         const request_wakelock = async () => {
             try {
                 glob_let.wakelock = await glob_const.wl.request("screen");
-                glob_let.wakelock.addEventListener("release", (e) => {
-                    //console.log(e);
-                });
-            } catch (e) {
-                //console.error(e.name, e.message);
-            }
+                glob_let.wakelock.addEventListener("release", (e) => {});
+            } catch (e) {}
         };
         request_wakelock();
     }
@@ -1815,9 +1813,7 @@ function add_serviceworker() {
         navigator.serviceWorker.register("serviceworker.js", {
                 "scope": "./"
             })
-            .then(function(registration) {
-                //console.log("Service worker has been registered for scope: " + registration.scope);
-            }).catch(function(error) {
+            .then(function(registration) {}).catch(function(error) {
                 // Registration failed
                 console.error("error", error);
             });
@@ -1895,7 +1891,7 @@ function escape_and_back() {
     if (glob_const.body.hasClass("showstartpage")) {
         start_prev($(".panelactive"));
     }
-    if (isopenrequest()) {
+    if (is_openrequest()) {
         if (glob_const.paymentdialogbox.hasClass("flipped") && glob_const.paymentdialogbox.hasClass("norequest")) {
             remove_flip();
         } else {
@@ -1998,11 +1994,6 @@ function keyup() {
 // Checks if modal dialog is currently displayed
 function is_opendialog() {
     return $("#dialogbody > div.formbox").length > 0;
-}
-
-// Verifies if payment request form is open
-function is_openrequest() {
-    return $("#request_front").length > 0;
 }
 
 // ** Intro Flow: **
@@ -2133,7 +2124,7 @@ function canceldialog_click() {
 
 // Sets up dialog closing event listeners  
 function canceldialog_trigger() {
-    $(document).on("click", "#popup", function(event) {
+    $(document).on("mousedown touchstart", "#popup", function(event) {
         const target = event.target,
             jtarget = $(target),
             target_id = jtarget.attr("id"),
@@ -2186,7 +2177,7 @@ function render_html(element_data) {
                 elem_class = props.class ? " class='" + props.class + "'" : "",
                 elem_attrs = props.attr ? render_attributes(props.attr) : "",
                 elem_content = props.content ?
-                (typeof props.content === 'object' ?
+                (typeof props.content === "object" ?
                     render_html(props.content) :
                     props.content) : "",
                 tag_close = props.close ?
@@ -4990,12 +4981,14 @@ function append_coinsetting(currency, settings) {
         if (selected !== undefined) {
             const url = selected.url,
                 name = selected.name,
-                display_val = name || selected,
-                val_str = display_val.toString(),
+                custom = selected.custom,
+                api = selected.api || null,
+                display_val = name || url || selected,
+                val_str = String(display_val),
                 filtered_val = val_str === "true" || val_str === "false" ? "" : val_str,
                 trans_val = tl(filtered_val),
                 display_text = trans_val || filtered_val,
-                display_trunc = setting_sub_address(currency, display_text, url),
+                display_trunc = setting_sub_address(display_text, url, custom),
                 existing_item = settings_list.children("li[data-id='" + key + "']");
             if (existing_item.length === 0) {
                 const switch_type = setting.custom_switch ? " custom" : " global bool",
@@ -5022,8 +5015,8 @@ function append_coinsetting(currency, settings) {
 }
 
 // Subtitle for settings
-function setting_sub_address(currency, name, url) {
-    const sub_title = (name === "electrum" || name === "mempool.space" || currency === "ethereum") ? url || name : name || url;
+function setting_sub_address(name, url, custom) {
+    const sub_title = (custom === true) ? url || name : name || url;
     return exists(sub_title) ? truncate(sub_title) : "";
 }
 

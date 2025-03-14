@@ -203,7 +203,13 @@ function socket_info(socket_node, is_connected, is_polling) {
         initialize_network_status(socket_node, is_connected);
         return
     }
-    const node_identifier = socket_node.url || socket_node.name,
+    let node_url = socket_node.url;
+    const node_name = socket_node.name,
+        custom = socket_node.custom;
+    if (custom && (node_name == "alchemy" || node_name == "infura")) {
+        node_url = strip_key_from_url(node_url);
+    }
+    const node_identifier = node_url || node_name,
         status_icon = is_connected ? " <span class='pulse'></span>" : " <span class='icon-wifi-off'></span>",
         connection_type = is_polling ? "polling" : "websocket",
         status_text = connection_type + ": " + node_identifier + status_icon,
@@ -240,7 +246,9 @@ function close_socket(socket_id) {
         }
     } else { // close all sockets
         $.each(glob_let.sockets, function(key, socket) {
-            socket.close();
+            if (socket) {
+                socket.close();
+            }
         });
         glob_let.sockets = {};
     }
@@ -248,7 +256,7 @@ function close_socket(socket_id) {
 
 // Manages WebSocket failures by attempting reconnection through fallback nodes with L1/L2 network handling
 function handle_socket_fails(socket_node, wallet_address, socket_id, is_layer2) {
-    if (isopenrequest()) { // only when request is visible
+    if (is_openrequest()) { // only when request is visible
         if (request.currencysymbol === "bch" && glob_const.paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
             return
         }
@@ -301,7 +309,7 @@ function reconnect_websocket(recon_data) {
     const elapsed_time = now() - glob_let.ws_timer;
     if (elapsed_time < 10000) return;
     const retry_timeout = setTimeout(function() {
-        if (isopenrequest()) {
+        if (is_openrequest()) {
             recon_data.function(recon_data.node, wallet_address);
         }
     }, 2000, function() {
@@ -637,7 +645,7 @@ function stop_nfc_scan() {
 
 // Polls Lightning Network node for payment request status with automatic retry
 function lnd_poll_data(proxy_host, proxy_key, payment_id, node_id, invoice_mode) {
-    if (isopenrequest()) { // only when request is visible
+    if (is_openrequest()) { // only when request is visible
         const default_error = tl("unabletoconnect");
         $.ajax({
             "method": "POST",
@@ -687,7 +695,7 @@ function lnd_poll_data(proxy_host, proxy_key, payment_id, node_id, invoice_mode)
 
 // Monitors Lightning Network invoice payment status with callback handling
 function lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_data, payment_id, node_id) {
-    if (isopenrequest()) { // only when request is visible
+    if (is_openrequest()) { // only when request is visible
         const default_error = "unable to connect";
         $.ajax({
             "method": "POST",
@@ -985,7 +993,7 @@ function init_eth_sockets(payment_type, socket_node, wallet_address, retry) {
     const token_contracts = contracts(request.currencysymbol);
     // Always scan for layer 1
     if (payment_type === "ethereum") {
-        if (socket_node.url === glob_const.main_alchemy_socket) {
+        if (str_incudes(socket_node.url, glob_const.main_alchemy_socket)) {
             alchemy_eth_websocket(socket_node, wallet_address); // L1 Alchemy
         } else {
             web3_eth_websocket(socket_node, wallet_address, glob_const.main_eth_node); // L1 Infura
@@ -1004,8 +1012,11 @@ function alchemy_eth_websocket(socket_node, wallet_address) {
         return
     }
     const base_url = socket_node.url,
-        api_key = get_alchemy_apikey(),
-        ws_endpoint = base_url + api_key,
+        main_alchemy_socket = glob_const.main_alchemy_socket,
+        base_url_length = base_url.length,
+        main_socket_length = main_alchemy_socket.length,
+        has_apikey = str_incudes(base_url, main_alchemy_socket) && ((base_url_length - main_socket_length) > 25),
+        ws_endpoint = has_apikey ? complete_url(base_url) : base_url + get_alchemy_apikey(),
         socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
     socket.onopen = function(e) {
         socket_info(socket_node, true);
