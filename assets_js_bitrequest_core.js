@@ -2124,7 +2124,7 @@ function canceldialog_click() {
 
 // Sets up dialog closing event listeners  
 function canceldialog_trigger() {
-    $(document).on("mousedown touchstart", "#popup", function(event) {
+    $(document).on("mousedown", "#popup", function(event) {
         const target = event.target,
             jtarget = $(target),
             target_id = jtarget.attr("id"),

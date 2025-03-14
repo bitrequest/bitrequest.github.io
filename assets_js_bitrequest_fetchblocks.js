@@ -175,7 +175,7 @@ function process_lightning_payment(rd, api_data, rdo) {
                                         return
                                     }
                                     if (response.boltcard) {
-                                        const fetch_id = request_id || get_request_id;
+                                        const fetch_id = request_id || get_request_id();
                                         if (fetch_id) {
                                             update_request({
                                                 "requestid": fetch_id,
