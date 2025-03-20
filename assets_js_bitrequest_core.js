@@ -2285,7 +2285,8 @@ function cpd_pollcheck() {
                 close_paymentdialog();
                 return
             }
-            close_paymentdialog(true);
+            const afterscan = (request.address === "lnurl") ? false : true;
+            close_paymentdialog(afterscan);
             return
         }
     }

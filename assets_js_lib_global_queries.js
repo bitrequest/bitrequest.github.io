@@ -326,6 +326,7 @@ let request = null,
 //filter_addressli
 //filter_all_addressli
 //filter_list
+//filter_list_match
 //get_request_id
 //get_currencyli
 //get_homeli
@@ -1281,11 +1282,18 @@ function filter_list(list, data_key, data_value) {
     })
 }
 
+// Filters any DOM collection by matching data attribute value
+function filter_list_match(list, data_key, data_value) {
+    return list.filter(function() {
+        return str_match($(this).data(data_key), data_value);
+    })
+}
+
 // Filters the request id corresponding an open request
 function get_request_id() {
     if (!is_openrequest()) return;
     try {
-        return filter_list($("#requestlist").find("li.rqli"), "rqdata", btoa(JSON.stringify(request.dataobject)).slice(0, -2)).data("requestid");
+        return filter_list_match($("#requestlist").find("li.rqli"), "rqdata", btoa(JSON.stringify(request.dataobject)).slice(0, -2)).data("requestid");
     } catch (err) {
         console.error(err.name, err.message);
         return false;
