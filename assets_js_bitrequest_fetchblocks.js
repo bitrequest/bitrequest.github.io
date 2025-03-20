@@ -281,6 +281,8 @@ function process_lightning_payment(rd, api_data, rdo) {
                                     }, true);
                                     finalize_request_state(rdo);
                                 } else {
+                                    const boltcard = (request.boltcard) ? true : false;
+                                    rd.boltcard = boltcard;
                                     validate_payment_amounts(rd, rdo);
                                 }
                             }
