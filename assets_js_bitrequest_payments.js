@@ -486,6 +486,7 @@ function load_request(pass) {
             const is_erc20 = coin_data.erc20 === true,
                 request_start_time = now(),
                 is_exact = exists(url_params.exact);
+            // Start building request object
             request = {
                     "received": false,
                     "rq_init": request_start_time,
@@ -493,7 +494,8 @@ function load_request(pass) {
                     "payment": payment_currency,
                     "coindata": coin_data,
                     "erc20": is_erc20,
-                    "eth_l2s": []
+                    "eth_l2s": [],
+                    "boltcard": false
                 }, // global request object
                 helper = {
                     "exact": is_exact,
