@@ -17,6 +17,7 @@
 //lnd_poll_data
 //lnd_poll_invoice
 //lnd_poll_data_fail
+//update_boltcard
 
 // ** Bitcoin & Bitcoin-like Cryptocurrencies: **
 //blockcypherws
@@ -377,6 +378,7 @@ function lightning_socket(lnd) {
             if (socket_data.status === "pending" && socket_data.bolt11) {
                 stop_monitors(payment_id);
                 close_socket(payment_id);
+                update_boltcard(false);
                 lnd_poll_invoice(proxy_url, proxy_key, invoice_mode, socket_data, payment_id, node_id);
                 glob_let.pinging[socket_data.hash] = setInterval(function() {
                     lnd_poll_invoice(proxy_url, proxy_key, invoice_mode, socket_data, payment_id, node_id);
@@ -399,6 +401,7 @@ function lightning_socket(lnd) {
     socket.onerror = function(e) {
         glob_let.lnd_confirm = false;
         glob_const.paymentpopup.addClass("live");
+        update_boltcard(false);
         glob_let.pinging[payment_id] = setInterval(function() {
             lnd_poll_data(proxy_url, proxy_key, payment_id, node_id, invoice_mode);
         }, 5000);
@@ -558,14 +561,7 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                                                                     stop_monitors(payment_id);
                                                                     close_socket(payment_id);
                                                                     stop_nfc_scan();
-                                                                    const fetch_id = get_request_id();
-                                                                    if (fetch_id) {
-                                                                        update_request({
-                                                                            "requestid": fetch_id,
-                                                                            "boltcard": true
-                                                                        }, false);
-                                                                    }
-                                                                    request.boltcard = true;
+                                                                    update_boltcard(true);
                                                                     lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_result, payment_id, node_id, true);
                                                                     glob_let.pinging[invoice_result.hash] = setInterval(function() {
                                                                         lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_result, payment_id, node_id);
@@ -748,6 +744,18 @@ function lnd_poll_invoice(proxy_host, proxy_key, invoice_mode, invoice_data, pay
 function lnd_poll_data_fail(payment_id) {
     stop_monitors(payment_id);
     notify(tl("notmonitored"), 500000, "yes");
+}
+
+// Update boltcard status
+function update_boltcard(status) {
+    const fetch_id = get_request_id();
+    if (fetch_id) {
+        update_request({
+            "requestid": fetch_id,
+            "boltcard": status
+        }, false);
+    }
+    request.boltcard = status;
 }
 
 // ** Bitcoin & Bitcoin-like Cryptocurrencies: **
