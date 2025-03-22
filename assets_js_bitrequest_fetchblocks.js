@@ -65,6 +65,7 @@
 //kaspa_fyi_ws_data
 //lnd_tx_data
 //infura_eth_poll_data
+//has_tx
 
 // ** API Request Handling: **
 
@@ -339,22 +340,24 @@ function process_ethereum_transactions(rd, api_data, rdo) {
                 }
                 const operations = api_result.operations;
                 if (operations) {
-                    const sorted_txs = sort_transactions_by_date(ethplorer_scan_data, operations);
-                    $.each(sorted_txs, function(date, tx) {
-                        const parsed_tx = ethplorer_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, chain_type),
-                            adjusted_timestamp = (rd.inout === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
-                        if (str_match(tx.to, rd.address) === true && parsed_tx.transactiontime > adjusted_timestamp && str_match(rd.currencysymbol, q_obj(tx, "tokenInfo.symbol")) === true && parsed_tx.ccval) {
-                            matched_tx = parsed_tx;
-                            if (source === "requests") {
-                                display_api_source(current_list, api_data); // !!overwrite
-                                const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                if (tx_item) {
-                                    tx_list.append(tx_item.data(parsed_tx));
-                                    tx_count++;
+                    if (has_tx(api_result)) {
+                        const sorted_txs = sort_transactions_by_date(ethplorer_scan_data, operations);
+                        $.each(sorted_txs, function(date, tx) {
+                            const parsed_tx = ethplorer_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, chain_type),
+                                adjusted_timestamp = (rd.inout === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
+                            if (str_match(tx.to, rd.address) === true && parsed_tx.transactiontime > adjusted_timestamp && str_match(rd.currencysymbol, q_obj(tx, "tokenInfo.symbol")) === true && parsed_tx.ccval) {
+                                matched_tx = parsed_tx;
+                                if (source === "requests") {
+                                    display_api_source(current_list, api_data); // !!overwrite
+                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                    if (tx_item) {
+                                        tx_list.append(tx_item.data(parsed_tx));
+                                        tx_count++;
+                                    }
                                 }
                             }
-                        }
-                    });
+                        });
+                    }
                     process_scan_results(rd, api_data, rdo, tx_count, matched_tx, chain_type);
                     return
                 }
@@ -474,21 +477,23 @@ function blockchair_fetch(rd, api_data, rdo) {
                 const block_height = blockchain_state.state;
                 if (rd.erc20) {
                     const token_txs = q_obj(api_result, "data." + address_normalized + ".transactions") || q_obj(api_result, "data." + wallet_address + ".transactions");
-                    if (token_txs && is_array(token_txs)) {
-                        const sorted_txs = sort_transactions_by_date(blockchair_erc20_scan_data, token_txs);
-                        $.each(sorted_txs, function(date, tx) {
-                            const parsed_tx = blockchair_erc20_scan_data(tx, rdo.setconfirmations, currency_symbol, block_height);
-                            if ((parsed_tx.transactiontime > rdo.request_timestamp) && (str_match(parsed_tx.recipient, wallet_address) === true) && (str_match(parsed_tx.token_symbol, currency_symbol) === true) && parsed_tx.ccval) {
-                                matched_tx = parsed_tx;
-                                if (source === "requests") {
-                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                    if (tx_item) {
-                                        tx_list.append(tx_item.data(parsed_tx));
-                                        tx_count++;
+                    if (token_txs) {
+                        if (has_tx(token_txs)) {
+                            const sorted_txs = sort_transactions_by_date(blockchair_erc20_scan_data, token_txs);
+                            $.each(sorted_txs, function(date, tx) {
+                                const parsed_tx = blockchair_erc20_scan_data(tx, rdo.setconfirmations, currency_symbol, block_height);
+                                if ((parsed_tx.transactiontime > rdo.request_timestamp) && (str_match(parsed_tx.recipient, wallet_address) === true) && (str_match(parsed_tx.token_symbol, currency_symbol) === true) && parsed_tx.ccval) {
+                                    matched_tx = parsed_tx;
+                                    if (source === "requests") {
+                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                        if (tx_item) {
+                                            tx_list.append(tx_item.data(parsed_tx));
+                                            tx_count++;
+                                        }
                                     }
                                 }
-                            }
-                        });
+                            });
+                        }
                         process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
                         return
                     }
@@ -497,21 +502,23 @@ function blockchair_fetch(rd, api_data, rdo) {
                 }
                 if (rd.payment === "ethereum") {
                     const eth_txs = q_obj(api_result, "data." + address_normalized + ".calls") || q_obj(api_result, "data." + wallet_address + ".calls");
-                    if (eth_txs && is_array(eth_txs)) {
-                        const sorted_txs = sort_transactions_by_date(blockchair_eth_scan_data, eth_txs);
-                        $.each(sorted_txs, function(date, tx) {
-                            const parsed_tx = blockchair_eth_scan_data(tx, rdo.setconfirmations, currency_symbol, block_height);
-                            if (parsed_tx.ccval && parsed_tx.transactiontime > rdo.request_timestamp && str_match(parsed_tx.recipient, wallet_address)) {
-                                matched_tx = parsed_tx;
-                                if (source === "requests") {
-                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                    if (tx_item) {
-                                        tx_list.append(tx_item.data(parsed_tx));
-                                        tx_count++;
+                    if (eth_txs) {
+                        if (has_tx(eth_txs)) {
+                            const sorted_txs = sort_transactions_by_date(blockchair_eth_scan_data, eth_txs);
+                            $.each(sorted_txs, function(date, tx) {
+                                const parsed_tx = blockchair_eth_scan_data(tx, rdo.setconfirmations, currency_symbol, block_height);
+                                if (parsed_tx.ccval && parsed_tx.transactiontime > rdo.request_timestamp && str_match(parsed_tx.recipient, wallet_address)) {
+                                    matched_tx = parsed_tx;
+                                    if (source === "requests") {
+                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                        if (tx_item) {
+                                            tx_list.append(tx_item.data(parsed_tx));
+                                            tx_count++;
+                                        }
                                     }
                                 }
-                            }
-                        });
+                            });
+                        }
                         process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
                         return
                     }
@@ -535,19 +542,21 @@ function blockchair_fetch(rd, api_data, rdo) {
                     const tx_result = br_result(tx_response).result,
                         blockchain_data = tx_result.data;
                     if (blockchain_data) {
-                        $.each(blockchain_data, function(date, tx) {
-                            const parsed_tx = blockchair_scan_data(tx, rdo.setconfirmations, currency_symbol, wallet_address, block_height);
-                            if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) { // get all transactions after requestdate
-                                matched_tx = parsed_tx;
-                                if (source === "requests") {
-                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                    if (tx_item) {
-                                        tx_list.append(tx_item.data(parsed_tx));
-                                        tx_count++;
+                        if (has_tx(blockchain_data)) {
+                            $.each(blockchain_data, function(date, tx) {
+                                const parsed_tx = blockchair_scan_data(tx, rdo.setconfirmations, currency_symbol, wallet_address, block_height);
+                                if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) { // get all transactions after requestdate
+                                    matched_tx = parsed_tx;
+                                    if (source === "requests") {
+                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                        if (tx_item) {
+                                            tx_list.append(tx_item.data(parsed_tx));
+                                            tx_count++;
+                                        }
                                     }
                                 }
-                            }
-                        });
+                            });
+                        }
                         process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
                         return
                     }
@@ -677,23 +686,25 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
                         return
                     }
                     const transactions = api_result.result;
-                    if (transactions && is_array(transactions)) {
-                        const sorted_txs = sort_transactions_by_date(omniscan_scan_data_eth, transactions);
-                        $.each(sorted_txs, function(date, tx) {
-                            const parsed_tx = omniscan_scan_data_eth(tx, rdo.setconfirmations, network),
-                                adjusted_timestamp = (rd.inout === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
-                            if (str_match(tx.to, rd.address) && (parsed_tx.transactiontime > adjusted_timestamp) && parsed_tx.ccval) {
-                                matched_tx = parsed_tx;
-                                if (source === "requests") {
-                                    display_api_source(current_list, api_data); // !!overwrite
-                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                    if (tx_item) {
-                                        tx_list.append(tx_item.data(parsed_tx));
-                                        tx_count++;
+                    if (transactions) {
+                        if (has_tx(transactions)) {
+                            const sorted_txs = sort_transactions_by_date(omniscan_scan_data_eth, transactions);
+                            $.each(sorted_txs, function(date, tx) {
+                                const parsed_tx = omniscan_scan_data_eth(tx, rdo.setconfirmations, network),
+                                    adjusted_timestamp = (rd.inout === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
+                                if (str_match(tx.to, rd.address) && (parsed_tx.transactiontime > adjusted_timestamp) && parsed_tx.ccval) {
+                                    matched_tx = parsed_tx;
+                                    if (source === "requests") {
+                                        display_api_source(current_list, api_data); // !!overwrite
+                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                        if (tx_item) {
+                                            tx_list.append(tx_item.data(parsed_tx));
+                                            tx_count++;
+                                        }
                                     }
                                 }
-                            }
-                        });
+                            });
+                        }
                         process_scan_results(rd, api_data, rdo, tx_count, matched_tx, network);
                         return
                     }
@@ -724,23 +735,25 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
                         return
                     }
                     const transactions = api_result.result;
-                    if (transactions && is_array(transactions)) {
-                        const sorted_txs = sort_transactions_by_date(omniscan_scan_data, transactions);
-                        $.each(sorted_txs, function(date, tx) {
-                            const parsed_tx = omniscan_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, network),
-                                adjusted_timestamp = (rd.inout === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
-                            if (str_match(tx.to, rd.address) && (parsed_tx.transactiontime > adjusted_timestamp) && parsed_tx.ccval) {
-                                matched_tx = parsed_tx;
-                                if (source === "requests") {
-                                    display_api_source(current_list, api_data); // !!overwrite
-                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                    if (tx_item) {
-                                        tx_list.append(tx_item.data(parsed_tx));
-                                        tx_count++;
+                    if (transactions) {
+                        if (has_tx(transactions)) {
+                            const sorted_txs = sort_transactions_by_date(omniscan_scan_data, transactions);
+                            $.each(sorted_txs, function(date, tx) {
+                                const parsed_tx = omniscan_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, network),
+                                    adjusted_timestamp = (rd.inout === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
+                                if (str_match(tx.to, rd.address) && (parsed_tx.transactiontime > adjusted_timestamp) && parsed_tx.ccval) {
+                                    matched_tx = parsed_tx;
+                                    if (source === "requests") {
+                                        display_api_source(current_list, api_data); // !!overwrite
+                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                        if (tx_item) {
+                                            tx_list.append(tx_item.data(parsed_tx));
+                                            tx_count++;
+                                        }
                                     }
                                 }
-                            }
-                        });
+                            });
+                        }
                         process_scan_results(rd, api_data, rdo, tx_count, matched_tx, network);
                         return
                     }
@@ -776,24 +789,26 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
                             return
                         }
                         const transactions = api_result.result;
-                        if (transactions && is_array(transactions)) {
-                            const sorted_txs = sort_transactions_by_date(omniscan_scan_data_eth, transactions);
-                            $.each(sorted_txs, function(date, tx) {
-                                if (tx.hash === tx_hash) {
-                                    const parsed_tx = omniscan_scan_data_eth(tx, rdo.setconfirmations, network);
-                                    if (parsed_tx.ccval) {
-                                        matched_tx = parsed_tx;
-                                        tx_count = 1;
-                                        if (source === "requests") {
-                                            const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                            if (tx_item) {
-                                                tx_list.append(tx_item.data(parsed_tx));
+                        if (transactions) {
+                            if (has_tx(transactions)) {
+                                const sorted_txs = sort_transactions_by_date(omniscan_scan_data_eth, transactions);
+                                $.each(sorted_txs, function(date, tx) {
+                                    if (tx.hash === tx_hash) {
+                                        const parsed_tx = omniscan_scan_data_eth(tx, rdo.setconfirmations, network);
+                                        if (parsed_tx.ccval) {
+                                            matched_tx = parsed_tx;
+                                            tx_count = 1;
+                                            if (source === "requests") {
+                                                const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                                if (tx_item) {
+                                                    tx_list.append(tx_item.data(parsed_tx));
+                                                }
                                             }
+                                            return
                                         }
-                                        return
                                     }
-                                }
-                            });
+                                });
+                            }
                             process_scan_results(rd, api_data, rdo, tx_count, matched_tx, network);
                             return
                         }
@@ -824,24 +839,26 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
                             return
                         }
                         const transactions = api_result.result;
-                        if (transactions && is_array(transactions)) {
-                            const sorted_txs = sort_transactions_by_date(omniscan_scan_data, transactions);
-                            $.each(sorted_txs, function(date, tx) {
-                                if (tx.hash === tx_hash) {
-                                    const parsed_tx = omniscan_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, network);
-                                    if (parsed_tx.ccval) {
-                                        matched_tx = parsed_tx;
-                                        tx_count = 1;
-                                        if (source === "requests") {
-                                            const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                            if (tx_item) {
-                                                tx_list.append(tx_item.data(parsed_tx));
+                        if (transactions) {
+                            if (has_tx(transactions)) {
+                                const sorted_txs = sort_transactions_by_date(omniscan_scan_data, transactions);
+                                $.each(sorted_txs, function(date, tx) {
+                                    if (tx.hash === tx_hash) {
+                                        const parsed_tx = omniscan_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, network);
+                                        if (parsed_tx.ccval) {
+                                            matched_tx = parsed_tx;
+                                            tx_count = 1;
+                                            if (source === "requests") {
+                                                const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                                if (tx_item) {
+                                                    tx_list.append(tx_item.data(parsed_tx));
+                                                }
                                             }
+                                            return
                                         }
-                                        return
                                     }
-                                }
-                            });
+                                });
+                            }
                             process_scan_results(rd, api_data, rdo, tx_count, matched_tx, network);
                             return
                         }
@@ -949,28 +966,30 @@ function scan_monero_transactions(rd, api_data, rdo, viewkey) {
         const api_result = br_result(response).result,
             transactions = api_result.transactions;
         if (transactions) {
-            const sorted_txs = sort_transactions_by_date(xmr_scan_data, transactions);
-            let tx_count = 0,
-                matched_tx = false;
-            $.each(sorted_txs, function(date, tx) {
-                const tx_data = xmr_scan_data(tx, rdo.setconfirmations, "xmr", api_result.blockchain_height);
-                if (tx_data) {
-                    const pid_matches = validate_monero_payment_id(rd.xmr_ia, rd.payment_id, tx_data.payment_id); // match xmr payment_id if set
-                    if (pid_matches) {
-                        if (tx_data.ccval && tx_data.transactiontime > rdo.request_timestamp) {
-                            matched_tx = tx_data;
-                            if (rdo.source === "requests") {
-                                const tx_item = create_transaction_item(tx_data, rd.requesttype);
-                                if (tx_item) {
-                                    rdo.transactionlist.append(tx_item.data(tx_data));
-                                    tx_count++;
+            if (has_tx(transactions)) {
+                const sorted_txs = sort_transactions_by_date(xmr_scan_data, transactions);
+                let tx_count = 0,
+                    matched_tx = false;
+                $.each(sorted_txs, function(date, tx) {
+                    const tx_data = xmr_scan_data(tx, rdo.setconfirmations, "xmr", api_result.blockchain_height);
+                    if (tx_data) {
+                        const pid_matches = validate_monero_payment_id(rd.xmr_ia, rd.payment_id, tx_data.payment_id); // match xmr payment_id if set
+                        if (pid_matches) {
+                            if (tx_data.ccval && tx_data.transactiontime > rdo.request_timestamp) {
+                                matched_tx = tx_data;
+                                if (rdo.source === "requests") {
+                                    const tx_item = create_transaction_item(tx_data, rd.requesttype);
+                                    if (tx_item) {
+                                        rdo.transactionlist.append(tx_item.data(tx_data));
+                                        tx_count++;
+                                    }
                                 }
+                                return false;
                             }
-                            return false;
                         }
                     }
-                }
-            });
+                });
+            }
             process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
             return
         }
@@ -1125,19 +1144,21 @@ function scan_bitcoin_transactions(rd, api_data, rdo, block_height) {
                     }).done(function(tx_response) {
                         const tx_data = br_result(tx_response).result;
                         if (tx_data) {
-                            $.each(tx_data, function(date, transaction) {
-                                const parsed_tx = blockchaininfo_scan_data(transaction, rdo.setconfirmations, rd.currencysymbol, rd.address, block_height);
-                                if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) { // get all transactions after requestdate
-                                    matched_tx = parsed_tx;
-                                    if (source === "requests") {
-                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                        if (tx_item) {
-                                            tx_list.append(tx_item.data(parsed_tx));
-                                            tx_count++;
+                            if (has_tx(tx_data)) {
+                                $.each(tx_data, function(date, transaction) {
+                                    const parsed_tx = blockchaininfo_scan_data(transaction, rdo.setconfirmations, rd.currencysymbol, rd.address, block_height);
+                                    if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) { // get all transactions after requestdate
+                                        matched_tx = parsed_tx;
+                                        if (source === "requests") {
+                                            const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                            if (tx_item) {
+                                                tx_list.append(tx_item.data(parsed_tx));
+                                                tx_count++;
+                                            }
                                         }
                                     }
-                                }
-                            });
+                                });
+                            }
                             process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
                             return
                         }
@@ -1238,26 +1259,28 @@ function process_blockcypher_transactions(rd, api_data, rdo) {
                 const confirmed_txs = api_result.txrefs,
                     unconfirmed_txs = api_result.unconfirmed_txrefs,
                     all_transactions = (unconfirmed_txs && confirmed_txs) ? unconfirmed_txs.concat(confirmed_txs) : confirmed_txs || unconfirmed_txs;
-                if (all_transactions && !empty_obj(all_transactions)) {
-                    const sorted_txs = sort_transactions_by_date(blockcypher_scan_data, all_transactions);
-                    $.each(sorted_txs, function(date, tx) {
-                        if (!tx.spent) { // filter outgoing transactions
-                            const parsed_tx = blockcypher_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, rd.payment);
-                            if (parsed_tx.ccval && parsed_tx.transactiontime > rdo.request_timestamp) {
-                                matched_tx = parsed_tx;
-                                if (rdo.source === "requests") {
-                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                    if (tx_item) {
-                                        tx_list.append(tx_item.data(parsed_tx));
-                                        tx_count++;
+                if (all_transactions) {
+                    if (has_tx(all_transactions)) {
+                        const sorted_txs = sort_transactions_by_date(blockcypher_scan_data, all_transactions);
+                        $.each(sorted_txs, function(date, tx) {
+                            if (!tx.spent) { // filter outgoing transactions
+                                const parsed_tx = blockcypher_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, rd.payment);
+                                if (parsed_tx.ccval && parsed_tx.transactiontime > rdo.request_timestamp) {
+                                    matched_tx = parsed_tx;
+                                    if (rdo.source === "requests") {
+                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                        if (tx_item) {
+                                            tx_list.append(tx_item.data(parsed_tx));
+                                            tx_count++;
+                                        }
                                     }
                                 }
                             }
-                        }
-                    });
+                        });
+                    }
+                    process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
+                    return
                 }
-                process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
-                return
             }
             handle_scan_failure(null, rd, api_data, rdo);
         }).fail(function(xhr, stat, err) {
@@ -1341,27 +1364,25 @@ function process_nimiq_transactions(rd, api_data, rdo) {
             }).done(function(response) {
                 const api_result = br_result(response).result;
                 if (api_result) {
-                    if (empty_obj(api_result)) {
-                        finalize_request_state(rdo);
-                        return
-                    }
-                    const sorted_txs = sort_transactions_by_date(nimiq_scan_data, api_result);
-                    $.each(sorted_txs, function(date, tx) {
-                        const recipient_address = tx.receiver_address.replace(/\s/g, "");
-                        if (recipient_address === rd.address) { // filter outgoing transactions
-                            const parsed_tx = nimiq_scan_data(tx, rdo.setconfirmations);
-                            if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) {
-                                matched_tx = parsed_tx;
-                                if (source === "requests") {
-                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                    if (tx_item) {
-                                        tx_list.append(tx_item.data(parsed_tx));
-                                        tx_count++;
+                    if (has_tx(api_result)) {
+                        const sorted_txs = sort_transactions_by_date(nimiq_scan_data, api_result);
+                        $.each(sorted_txs, function(date, tx) {
+                            const recipient_address = tx.receiver_address.replace(/\s/g, "");
+                            if (recipient_address === rd.address) { // filter outgoing transactions
+                                const parsed_tx = nimiq_scan_data(tx, rdo.setconfirmations);
+                                if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) {
+                                    matched_tx = parsed_tx;
+                                    if (source === "requests") {
+                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                        if (tx_item) {
+                                            tx_list.append(tx_item.data(parsed_tx));
+                                            tx_count++;
+                                        }
                                     }
                                 }
                             }
-                        }
-                    });
+                        });
+                    }
                     process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
                     return
                 }
@@ -1558,24 +1579,22 @@ function scan_kaspa_transactions(rd, api_data, rdo, blue_score) {
         }).done(function(response) {
             const api_result = br_result(response).result;
             if (api_result) {
-                if (empty_obj(api_result)) {
-                    handle_scan_failure(null, rd, api_data, rdo);
-                    return
-                }
-                const sorted_txs = sort_transactions_by_date(kaspa_scan_data, api_result);
-                $.each(sorted_txs, function(date, tx) {
-                    const parsed_tx = kaspa_scan_data(tx, rd.address, rdo.setconfirmations, blue_score);
-                    if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) {
-                        matched_tx = parsed_tx;
-                        if (source === "requests") {
-                            const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                            if (tx_item) {
-                                tx_list.append(tx_item.data(parsed_tx));
-                                tx_count++;
+                if (has_tx(api_result)) {
+                    const sorted_txs = sort_transactions_by_date(kaspa_scan_data, api_result);
+                    $.each(sorted_txs, function(date, tx) {
+                        const parsed_tx = kaspa_scan_data(tx, rd.address, rdo.setconfirmations, blue_score);
+                        if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) {
+                            matched_tx = parsed_tx;
+                            if (source === "requests") {
+                                const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                if (tx_item) {
+                                    tx_list.append(tx_item.data(parsed_tx));
+                                    tx_count++;
+                                }
                             }
                         }
-                    }
-                });
+                    });
+                }
                 process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
                 return
             }
@@ -1667,24 +1686,26 @@ function process_dash_transactions(rd, api_data, rdo) {
                     return
                 }
                 const transactions = api_result.txs;
-                if (transactions && transactions.length > 0) {
-                    const sorted_txs = sort_transactions_by_date(insight_scan_data, transactions);
-                    $.each(sorted_txs, function(date, tx) {
-                        const parsed_tx = insight_scan_data(tx, rdo.setconfirmations, rd.address);
-                        if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) {
-                            matched_tx = parsed_tx;
-                            if (rdo.source === "requests") {
-                                const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                if (tx_item) {
-                                    tx_list.append(tx_item.data(parsed_tx));
-                                    tx_count++;
+                if (transactions) {
+                    if (has_tx(transactions)) {
+                        const sorted_txs = sort_transactions_by_date(insight_scan_data, transactions);
+                        $.each(sorted_txs, function(date, tx) {
+                            const parsed_tx = insight_scan_data(tx, rdo.setconfirmations, rd.address);
+                            if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) {
+                                matched_tx = parsed_tx;
+                                if (rdo.source === "requests") {
+                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                    if (tx_item) {
+                                        tx_list.append(tx_item.data(parsed_tx));
+                                        tx_count++;
+                                    }
                                 }
                             }
-                        }
-                    });
+                        });
+                    }
+                    process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
+                    return
                 }
-                process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
-                return
             }
             handle_scan_failure(null, rd, api_data, rdo);
         }).fail(function(xhr, stat, err) {
@@ -1894,28 +1915,32 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
                     }, rd, api_data, rdo);
                     return
                 }
-                $.each(api_result, function(key, tx) {
-                    const parsed_tx = electrum_scan_data(tx, set_confirmations, rd.currencysymbol, script_pub_key, latest_block);
-                    if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) {
-                        matched_tx = parsed_tx;
-                        if (source === "requests") {
-                            const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                            if (tx_item) {
-                                tx_list.append(tx_item.data(parsed_tx));
-                                tx_count++;
+                if (has_tx(api_result)) {
+                    $.each(api_result, function(key, tx) {
+                        const parsed_tx = electrum_scan_data(tx, set_confirmations, rd.currencysymbol, script_pub_key, latest_block);
+                        if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) {
+                            matched_tx = parsed_tx;
+                            if (source === "requests") {
+                                const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                if (tx_item) {
+                                    tx_list.append(tx_item.data(parsed_tx));
+                                    tx_count++;
+                                }
                             }
                         }
-                    }
-                });
+                    });
+                }
                 process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
                 return
             }
             handle_scan_failure(null, rd, api_data, rdo);
         }).fail(function(xhr, stat, err) {
-            const error_data = xhr || stat || err;
+            const is_proxy_error = is_proxy_fail(this.url),
+                error_data = xhr || stat || err;
             handle_scan_failure({
-                "error": error_data
-            }, rd, api_data, rdo);
+                "error": error_data,
+                "is_proxy": is_proxy_error
+            }, rd, api_data, rdo, network);
         }).always(function() {
             update_api_source(rdo, api_data);
         });
@@ -1966,10 +1991,12 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
             }
             handle_scan_failure(null, rd, api_data, rdo);
         }).fail(function(xhr, stat, err) {
-            const error_data = xhr || stat || err;
+            const is_proxy_error = is_proxy_fail(this.url),
+                error_data = xhr || stat || err;
             handle_scan_failure({
-                "error": error_data
-            }, rd, api_data, rdo);
+                "error": error_data,
+                "is_proxy": is_proxy_error
+            }, rd, api_data, rdo, network);
         }).always(function() {
             update_api_source(rdo, api_data);
         });
@@ -2003,23 +2030,25 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latest_block) {
                         handle_scan_failure(null, rd, api_data, rdo);
                         return
                     }
-                    const sorted_txs = sort_transactions_by_date(mempoolspace_scan_data, api_result),
-                        set_confirmations = latest_block ? rdo.setconfirmations : 1;
-                    $.each(sorted_txs, function(date, tx) {
-                        if (tx.txid) { // filter outgoing transactions
-                            const parsed_tx = mempoolspace_scan_data(tx, set_confirmations, rd.currencysymbol, rd.address, latest_block);
-                            if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) {
-                                matched_tx = parsed_tx;
-                                if (source === "requests") {
-                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                    if (tx_item) {
-                                        tx_list.append(tx_item.data(parsed_tx));
-                                        tx_count++;
+                    if (has_tx(api_result)) {
+                        const sorted_txs = sort_transactions_by_date(mempoolspace_scan_data, api_result),
+                            set_confirmations = latest_block ? rdo.setconfirmations : 1;
+                        $.each(sorted_txs, function(date, tx) {
+                            if (tx.txid) { // filter outgoing transactions
+                                const parsed_tx = mempoolspace_scan_data(tx, set_confirmations, rd.currencysymbol, rd.address, latest_block);
+                                if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) {
+                                    matched_tx = parsed_tx;
+                                    if (source === "requests") {
+                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                        if (tx_item) {
+                                            tx_list.append(tx_item.data(parsed_tx));
+                                            tx_count++;
+                                        }
                                     }
                                 }
                             }
-                        }
-                    });
+                        });
+                    }
                     process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
                     return
                 }
@@ -2063,10 +2092,12 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latest_block) {
             }
             handle_scan_failure(null, rd, api_data, rdo);
         }).fail(function(xhr, stat, err) {
-            const error_data = xhr || stat || err;
+            const is_proxy_error = is_proxy_fail(this.url),
+                error_data = xhr || stat || err;
             handle_scan_failure({
-                "error": error_data
-            }, rd, api_data, rdo);
+                "error": error_data,
+                "is_proxy": is_proxy_error
+            }, rd, api_data, rdo, network);
         });
     }, 500);
 }
@@ -2272,26 +2303,28 @@ function nano_rpc(rd, api_data, rdo) {
             }
         }).done(function(response) {
             const api_result = br_result(response).result;
-            if (api_result && !empty_obj(api_result)) {
+            if (api_result) {
                 if (api_result.error) {
                     handle_scan_failure({
                         "error": api_result.error
                     }, rd, api_data, rdo);
                     return
                 }
-                $.each(api_result, function(key, tx) {
-                    const parsed_tx = nano_scan_data(tx, rdo.setconfirmations, rd.currencysymbol);
-                    if ((parsed_tx.transactiontime > (rdo.request_timestamp - 10000)) && parsed_tx.ccval && (tx.subtype === "receive" || tx.receivable)) {
-                        matched_tx = parsed_tx;
-                        if (source === "requests") {
-                            const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                            if (tx_item) {
-                                tx_list.append(tx_item.data(parsed_tx));
-                                tx_count++;
+                if (has_tx(api_result)) {
+                    $.each(api_result, function(key, tx) {
+                        const parsed_tx = nano_scan_data(tx, rdo.setconfirmations, rd.currencysymbol);
+                        if ((parsed_tx.transactiontime > (rdo.request_timestamp - 10000)) && parsed_tx.ccval && (tx.subtype === "receive" || tx.receivable)) {
+                            matched_tx = parsed_tx;
+                            if (source === "requests") {
+                                const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                if (tx_item) {
+                                    tx_list.append(tx_item.data(parsed_tx));
+                                    tx_count++;
+                                }
                             }
                         }
-                    }
-                });
+                    });
+                }
                 process_scan_results(rd, api_data, rdo, tx_count, matched_tx);
                 return
             }
@@ -2994,4 +3027,9 @@ function infura_eth_poll_data(data, setconfirmations, ccsymbol, eth_layer2) {
         "ccsymbol": ccsymbol,
         "eth_layer2": eth_layer2
     };
+}
+
+// Check if address has transactions
+function has_tx(tx_list) {
+    return (is_array(tx_list) && tx_list.length) ? true : false;
 }
