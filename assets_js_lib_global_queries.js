@@ -64,7 +64,7 @@ const br_bipobj = br_get_local("bpdat", true),
         "proxy_list": br_proxy_list,
         "hosted_proxy": br_hosted_proxy,
         tor_proxy,
-        "proxy_version": "0.025",
+        "proxy_version": "0.026",
         "firebase_dynamic_link_domain": br_firebase_dynamic_link_domain,
         "firebase_shortlink": "https://" + br_firebase_dynamic_link_domain + "/",
         "androidpackagename": br_androidpackagename,
@@ -1111,7 +1111,7 @@ function api_proxy(ad, p_proxy) {
         ad.api = c_apiname(api_name);
         const api_path = "/proxy/v1/",
             root_url = ad.localhost ? "" : active_proxy,
-            timeout = is_onion ? 20000 : ad.timeout || 5000,
+            timeout = is_onion ? 30000 : ad.timeout || 5000,
             proxy_config = {
                 "method": "POST",
                 "cache": false,
