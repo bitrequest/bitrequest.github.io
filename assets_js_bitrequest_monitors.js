@@ -569,7 +569,7 @@ function extract_error_details(error_obj) {
             "errormessage": error_obj
         }
     }
-    const error = q_obj(error_obj, "error");
+    const error = error_obj || q_obj(error_obj, "error");
     if (!error) return {
         "errorcode": 0,
         "errormessage": "unknown"

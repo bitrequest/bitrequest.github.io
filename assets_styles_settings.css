@@ -248,7 +248,8 @@ ul.conf_options li .conf_emoji {
 
 .selectbox .options>.optionwrap img.icon {
 	width:2em;
-	margin-right:0.4em;
+	margin-right:0.3em;
+	margin-left:-0.3em;
 	vertical-align: middle;
 }
 
@@ -317,6 +318,33 @@ ul.conf_options li .conf_emoji {
 
 #rpc_input .optionwrap.offline .c_stat.icon-wifi-off {
 	opacity: 1;
+}
+
+#settingsbox .optionwrap .cstat {
+	display: inline;
+	border:none;
+	padding: 0;
+	color: rgba(0, 0, 0, 0.5);
+	opacity: 0;
+	transition: opacity 1000ms ease;
+}
+
+#settingsbox .optionwrap.live .cstat {
+	color: #00c000;
+	opacity: 1;
+}
+
+#settingsbox .optionwrap.offline .cstat {
+	color: #FF0000;
+	opacity: 1;
+}
+
+#settingsbox .optionwrap .v {
+	display: inline;
+	border: none;
+	padding: 0;
+	font-size: 75%;
+	color: #959595;
 }
 
 #settingsbox #rpc_input_box #rpc_username_input,

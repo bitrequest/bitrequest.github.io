@@ -2835,7 +2835,7 @@ function topnotify(message) {
 // Displays styled notification in dialog boxes
 function popnotify(result, message) { // notifications in dialogs
     const notify_box = $(".popnotify");
-    if (result == "error") {
+    if (result === "error") {
         notify_box.removeClass("success warning").addClass("error");
     } else if (result == "warning") {
         notify_box.removeClass("success error").addClass("warning");

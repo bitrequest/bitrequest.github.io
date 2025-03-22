@@ -475,20 +475,19 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_config
 function create_rpc_node_element(api_list, is_live, node_id, node_config, is_selected) {
     const status_class = is_live ? " live" : " offline",
         selected_class = is_selected ? " rpc_selected" : "",
-        status_icon = is_live ? "connection" : "wifi-off",
         node_name = node_config.name,
         custom = node_config.custom,
         node_url = node_config.url,
         stripped_url = custom && (node_name == "alchemy" || node_name == "infura") ? strip_key_from_url(node_url) : node_url,
         vendor = node_config.vendor,
-        vendor_string = (vendor) ? " (" + vendor.slice(5) + ")" : "",
+        vendor_string = (vendor) ? "<span class='v'> (" + vendor.slice(5) + ")</span>" : "",
         version = node_config.v,
-        version_string = (version) ? " (" + version + ")" : "",
+        version_string = (version) ? "<span class='v'> (" + version + ")</span>" : "",
         display_name = setting_sub_address(node_name, stripped_url, node_config.custom) + vendor_string + version_string,
         node_icon_url = get_node_icon(node_name),
         default_class = custom ? "" : " default",
         node_icon = (node_icon_url) ? "<img src='" + fetch_aws(node_icon_url) + ".png' class='icon'>" : "",
-        node_element = $("<div class='optionwrap" + status_class + selected_class + default_class + "' style='display:none' data-pe='none' title='" + stripped_url + "'><span data-value='" + node_url + "' data-pe='none'>" + node_icon + display_name + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon c_stat icon-" + status_icon + "' data-pe='none'></div><div class='opt_icon icon-bin' data-pe='none'></div></div>");
+        node_element = $("<div class='optionwrap" + status_class + selected_class + default_class + "' style='display:none' data-pe='none' title='" + stripped_url + "'><span data-value='" + node_url + "' data-pe='none'>" + node_icon + "<span class='cstat'>•</span> " + display_name + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon icon-bin' data-pe='none'></div></div>");
     node_element.data(node_config).appendTo(api_list);
     node_element.slideDown(500);
 }
@@ -854,6 +853,11 @@ function test_mempoolspace(input_section, node_config, currency_name) {
         const parsed_data = br_result(response),
             api_result = parsed_data.result;
         if (api_result) {
+            if (api_result.error) {
+                const error_obj = extract_error_details(api_result.error);
+                popnotify("error", error_obj.errormessage);
+                return
+            }
             const first_tx = api_result[0];
             if (first_tx) {
                 if (first_tx.version) {
