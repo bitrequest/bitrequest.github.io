@@ -1,7 +1,7 @@
 <?php
 header("Content-Type: application/json");
 header("Access-Control-Allow-Headers: Cache-Control, Pragma");
-//header("Access-Control-Allow-Origin: *"); // uncomment for nginx
+header("Access-Control-Allow-Origin: *");
 
 // Extract payment ID from GET parameters with validation
 $pid = isset($_GET["id"]) && is_string($_GET["id"]) ? substr($_GET["id"], 1, 10) : false;

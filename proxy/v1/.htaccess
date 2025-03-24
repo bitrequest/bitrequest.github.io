@@ -1,7 +1,3 @@
-<IfModule mod_headers.c>
-	Header set Access-Control-Allow-Origin "*"
-</IfModule>
-
 Options +SymLinksIfOwnerMatch -Indexes
 RewriteEngine on
 RewriteCond %{REQUEST_URI}::$1 ^(.*?/)(.*)::\2$

@@ -8,7 +8,7 @@ const br_bipobj = br_get_local("bpdat", true),
     br_bipid = (br_hasbip) ? br_bipobj.id : false,
     br_cashier_dat = br_get_local("cashier", true),
     br_is_cashier = (br_cashier_dat && br_cashier_dat.cashier) ? true : false,
-    br_cashier_seedid = (br_is_cashier) ? br_is_cashier.seedid : false,
+    br_cashier_seedid = br_is_cashier ? br_cashier_dat.seedid : false,
     br_init = br_get_local("init", true),
     br_io = get_default_object(br_init, true),
     br_hostname = "bitrequest.github.io", // change if self hosted
@@ -64,7 +64,7 @@ const br_bipobj = br_get_local("bpdat", true),
         "proxy_list": br_proxy_list,
         "hosted_proxy": br_hosted_proxy,
         tor_proxy,
-        "proxy_version": "0.026",
+        "proxy_version": "0.027",
         "firebase_dynamic_link_domain": br_firebase_dynamic_link_domain,
         "firebase_shortlink": "https://" + br_firebase_dynamic_link_domain + "/",
         "androidpackagename": br_androidpackagename,
@@ -240,6 +240,7 @@ let request = null,
 //br_set_session
 //br_get_session
 //br_remove_session
+//set_up
 
 // ** Time & Date Utilities: **
 //now
@@ -402,6 +403,11 @@ function br_get_session(pref, parse) {
 // Deletes item with 'bitrequest_' prefix from sessionStorage
 function br_remove_session(pref) {
     sessionStorage.removeItem("bitrequest_" + pref);
+}
+
+// Checks if app is set up
+function set_up() {
+    return exists(glob_const.stored_currencies) ? true : false;
 }
 
 // ** Time & Date Utilities: **
@@ -906,20 +912,25 @@ function check_params(params) {
         expand_shorturl(url_params.i);
         return
     }
+    if (url_params.ro) {
+        check_teaminvite(url_params.ro);
+        return
+    }
+    if (url_params.sbu) {
+        check_systembu(url_params.sbu);
+    }
+    if (url_params.csv) {
+        check_csvexport(url_params.csv);
+        return
+    }
+    if (url_params.p === "settings") {
+        if (url_params.code) {
+            validate_auth_state(url_params.code);
+            return
+        }
+    }
     if (url_params.cl) {
         click_pop(url_params.cl);
-    }
-    const page_param = url_params.p;
-    if (page_param === "settings") {
-        if (url_params.ro) {
-            check_teaminvite(url_params.ro);
-        } else if (url_params.sbu) {
-            check_systembu(url_params.sbu);
-        } else if (url_params.csv) {
-            check_csvexport(url_params.csv);
-        } else if (url_params.code) {
-            validate_auth_state(url_params.code);
-        }
         return
     }
     if (url_params.scheme) {
@@ -1230,7 +1241,7 @@ function fetch_aws(filename, bckt) {
 
 // Verifies if payment request form is open
 function is_openrequest() {
-    return $("#request_front").length > 0;
+    return ($("#request_front").length > 0) ? true : false;
 }
 
 // Retrieves specific data attribute from settings DOM element

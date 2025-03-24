@@ -2,7 +2,7 @@
    
 header("Content-Type: application/json");
 header("Access-Control-Allow-Headers: Cache-Control, Pragma");
-//header("Access-Control-Allow-Origin: *"); // uncomment for nginx
+header("Access-Control-Allow-Origin: *");
 
 // Handle direct requests with Tor support
 $pd = file_get_contents("php://input");
@@ -49,9 +49,9 @@ function fetch_tor($url, $data, $headers) {
 			return $response; // Return last response even if it's an error
 		} 
 		return err_obj("411", "Failed to connect via Tor after " . $max_retries . " attempts");
-	}   
-	$tor_proxy = $data["tor_proxy"] ?? defined("TOR_PROXY") ? TOR_PROXY : "false";
-	if ($tor_proxy == "false" || (strpos($tor_proxy, $_SERVER["HTTP_HOST"]) !== false)) {
+	}
+	$tor_proxy = $data["tor_proxy"] ?? TOR_PROXY; 
+	if ((strpos($tor_proxy, $_SERVER["HTTP_HOST"]) !== false)) {
 		return err_obj("411", "Failed to connect via Tor");
 	}
 	

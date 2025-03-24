@@ -1,7 +1,7 @@
 <?php
 header("Content-Type: application/json");
 header("Access-Control-Allow-Headers: Cache-Control, Pragma");
-//header("Access-Control-Allow-Origin: *"); // uncomment for nginx
+header("Access-Control-Allow-Origin: *");
 
 /**
  * Electrum protocol handler with Tor support
@@ -28,7 +28,7 @@ function socket_fetch($pl) {
 		if (has_tor()) { // check for TOR support
 			return socket_fetch_tor_stream($pl);
 		}
-		$tor_proxy = $pl["tor_proxy"] ?? TOR_PROXY ?? "false";
+		$tor_proxy = $pl["tor_proxy"] ?? TOR_PROXY;
 		if ((strpos($tor_proxy, $_SERVER["HTTP_HOST"]) !== false)) {
 			return err_obj("411", "Failed to connect via Tor");
 		}

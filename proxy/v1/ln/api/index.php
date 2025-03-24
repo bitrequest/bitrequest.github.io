@@ -2,7 +2,7 @@
 	
 header("Content-Type: application/json");
 header("Access-Control-Allow-Headers: Cache-Control, Pragma");
-//header("Access-Control-Allow-Origin: *"); // uncomment for nginx
+header("Access-Control-Allow-Origin: *");
 
 include "../../../config.php";
 include "../../api.php";
