@@ -39,14 +39,6 @@ body {
 	-khtml-user-select: none;
 }
 
-html.noframe body.showstartpage #mainwrap,
-html.inframe body.showstartpage #mainwrap header,
-html.inframe body.showstartpage #mainwrap #viewarchive,
-html.inframe body.showstartpage #newrequest_alias,
-html.inframe body.showstartpage #fixednav {
-	display: none !important;
-}
-
 body.nobip #bip39_passphrase,
 body.nobip .cc_settinglist li[data-id='Xpub'],
 body.nobip .cc_settinglist li[data-id='Key derivations'],
@@ -388,10 +380,6 @@ html.fixednav #fixednav {
 
 html.fixednav #relnav {
 	visibility: hidden;
-}
-
-html.fixednav body.showstartpage #fixednav {
-	display: none !important;
 }
 
 .nav {
@@ -800,7 +788,6 @@ html.showmain #newrequest_alias {
 }
 
 #usedcurrencies,
-#allcurrencies,
 .requestlist li .liwrap img.cmc_icon:nth-child(1) {
 	filter: gray;
 	-webkit-filter: grayscale(1);
@@ -1816,14 +1803,6 @@ input::-moz-placeholder {
 	color: #b7b7b7;
 }
 
-#startpage input::-webkit-input-placeholder {
-	color: rgba(255, 255, 255, 0.2);
-}
-
-#startpage input::-moz-placeholder {
-	color: rgba(255, 255, 255, 0.2);
-}
-
 .mirrordiv input::-webkit-input-placeholder {
 	padding: inherit;
 }
@@ -1851,6 +1830,29 @@ input[type=submit] {
 	margin: 1em 0;
 }
 
+/* click list */
+
+#click_list {
+	font-size: 150%;
+	font-weight: 700;
+	list-style-type: none;
+}
+
+#click_list li {
+	padding: 1em 1em 0.75em 0.5em;
+	cursor: pointer;
+	border-bottom: 1px solid #CCC;
+}
+
+#click_list li:before {
+	font-size: 150%;
+}
+
+#click_list li img {
+	vertical-align: middle;
+	width: 2em;
+	margin-right: 0.5em;
+}
 
 /* Firefox remove red border on inputfield */
 
@@ -1939,6 +1941,10 @@ input:invalid {
 	overflow: hidden;
 }
 
+#notifysign>span {
+	pointer-events: all;
+}
+
 #notifysign .icon-cross {
 	position: absolute;
 	top: 0;
@@ -1962,7 +1968,6 @@ input:invalid {
 #copyseed {
 	border-bottom: 0.07em solid #b1b1b1;
 	cursor: pointer;
-	pointer-events: all;
 }
 
 #notify.popupn {
@@ -2240,42 +2245,6 @@ html.inframe.hide_app #closeoptions {
 	align-items: center;
 }
 
-
-/* startpage */
-
-#startpage {
-	position: absolute;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	left: 0;
-	font-size: 165%;
-	overflow: hidden;
-	display: none;
-}
-
-html.noframe body.showstartpage #startpage {
-	display: block;
-}
-
-#startsteps {
-	width: 300%;
-	height: 100%;
-	width: 300vw;
-	height: 100vh;
-	overflow: hidden;
-	transition: transform 500ms ease;
-}
-
-.startpanel {
-	position: relative;
-	float: left;
-	width: 33.333333%;
-	height: auto;
-	min-height: 100%;
-	overflow: auto;
-}
-
 .panelwrap {
 	float: left;
 	width: 100%;
@@ -2289,39 +2258,6 @@ html.noframe body.showstartpage #startpage {
 	margin: auto;
 }
 
-.startcenter label {
-	font-weight: 700;
-}
-
-.startcenter .mirrordiv {
-	font-size: 200%;
-	font-weight: 700;
-	text-align: center;
-}
-
-.startcenter input {
-	background-color: rgba(255, 255, 255, 0);
-	text-align: center;
-}
-
-#intro .startcenter {
-	cursor: pointer;
-}
-
-#intro {
-	background-color: #4D5359;
-}
-
-#home_privacy {
-	display: block;
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	font-size: 14px;
-	padding: 1em;
-	color: #d2d2d2;
-}
-
 .startcenter h1 {
 	font-weight: 300;
 	font-size: 300%;
@@ -2330,133 +2266,6 @@ html.noframe body.showstartpage #startpage {
 .startcenter h2 {
 	font-weight: 400;
 }
-
-#entername {
-	background-color: #4D5359;
-}
-
-#usericon {
-	position: relative;
-	display: inline-block;
-	font-family: 'icomoon';
-	font-size: 400%;
-	width: auto;
-	height: auto;
-	padding: 0.4em;
-	margin: 0 0 0.15em 0;
-	background-color: rgba(255, 255, 255, 0.2);
-	border: solid 0.05em #FFF;
-	border-radius: 50%;
-}
-
-#choosecurrency {
-	background-color: #2c333a;
-	padding: 1em 0 0 0;
-}
-
-#choosecurrency .startcenter {
-	width: 100%;
-	max-width: 1000px;
-	margin: 0 auto;
-}
-
-#choosecurrency .startcenter>h2 {
-	text-align: left;
-	font-weight: 400;
-	font-size: 150%;
-	padding: 1em 0 0.7em 1em;
-}
-
-#allcurrencies {
-	padding: 0 0 1em 0;
-	width: 100%;
-}
-
-#allcurrencies>li.start_cli {
-	width: 100%;
-	text-align: left;
-	cursor: pointer;
-}
-
-#start_cli_margin {
-	visibility: hidden;
-}
-
-#progression {
-	position: absolute;
-	top: 0;
-	right: 0;
-	font-size: 1rem;
-	padding: 1em;
-}
-
-#startpage.sp_intro #progression {
-	opacity: 0.2;
-}
-
-#progression .pbullet {
-	position: relative;
-	display: inline-block;
-	width: 2em;
-	height: 2em;
-	margin: 0 0.2em;
-	border-radius: 50%;
-	background-color: rgba(255, 255, 255, 0.2);
-}
-
-#startpage.sp_entername #startsteps {
-	transform: translate(-33.333333%, 0);
-}
-
-#startpage.sp_choosecurrency #startsteps {
-	transform: translate(-66.666666%, 0);
-}
-
-#startpage.sp_intro .pb_intro {
-	background-color: rgba(255, 255, 255, 0.5);
-}
-
-#startpage.sp_entername .pb_entername {
-	background-color: rgba(255, 255, 255, 0.5);
-}
-
-#startpage.sp_choosecurrency .pb_choosecurrency {
-	background-color: rgba(255, 255, 255, 0.5);
-}
-
-.proceed {
-	position: absolute;
-	bottom: 0;
-	right: 0;
-	font-size: 200%;
-	padding: 0.3em 0 0.3em 0.3em;
-	cursor: not-allowed;
-	opacity: 0.3;
-	transition: opacity 500ms ease;
-	pointer-events: none;
-}
-
-.startpanel.validstep .proceed {
-	opacity: 1;
-	cursor: pointer;
-}
-
-#lettercount {
-	font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-	position: absolute;
-	bottom: 0;
-	right: -2em;
-	font-size: 50%;
-	font-weight: 700;
-	padding: 0.3em;
-	opacity: 0;
-	transition: opacity 1000ms ease;
-}
-
-#lettercount.activlc {
-	opacity: 0.2;
-}
-
 
 /* flipmode */
 
@@ -2744,10 +2553,6 @@ body.getapp #app_panel {
 
 /* ios app styles */
 
-body.ios .proceed {
-	bottom: 50px;
-}
-
 body.ios .page {
 	padding-bottom: 50px;
 }
@@ -2765,10 +2570,6 @@ body.ios #notifysign {
 
 html.inframe.hide_app #mainwrap {
 	opacity: 0;
-}
-
-html.inframe.hide_app #startpage {
-	display: none;
 }
 
 html.inframe.hide_app body {
@@ -2893,6 +2694,7 @@ html[data-role='cashier'] .editaddress,
 html[data-role='cashier'] #rest_seed,
 html[data-role='cashier'] .cc_settinglist li[data-id='Xpub'],
 html[data-role='cashier'] .cc_settinglist li[data-id='Lightning network'],
+html[data-role='cashier'] .cc_settinglist li[data-id='layer2'],
 html[data-role='cashier'] .rqli:not(.requestoutgoing) .req_actions .icon-bin,
 html[data-role='cashier'] .reset_cc_settings {
 	opacity: 0.3;

@@ -2026,8 +2026,10 @@ function mempoolspace_rpc(rd, api_data, rdo, rpc, latest_block) {
             }).done(function(response) {
                 const api_result = br_result(response).result;
                 if (api_result) {
-                    if (empty_obj(api_result)) {
-                        handle_scan_failure(null, rd, api_data, rdo);
+                    if (api_result.error) {
+                        handle_scan_failure({
+                            "error": api_result.error
+                        }, rd, api_data, rdo);
                         return
                     }
                     if (has_tx(api_result)) {

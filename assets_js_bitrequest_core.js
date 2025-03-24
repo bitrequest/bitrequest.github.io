@@ -27,9 +27,6 @@ $(document).ready(function() {
     //some api tests first
     render_settings(); //retrieve settings from localstorage (load first to retrieve apikey)
     if (glob_const.ls_support) { //check for local storage support
-        if (!glob_const.stored_currencies) { //show startpage if no addresses are added
-            glob_const.body.addClass("showstartpage");
-        }
         const bip_verified = glob_let.io.bipv,
             php_enabled = glob_let.io.phpsupport;
         if (bip_verified && glob_let.hasbip === true) {
@@ -348,13 +345,11 @@ function finish_functions() {
     //is_opendialog
 
     // ** Intro Flow: **
-    start_trigger();
-    start_next_trigger();
-    //start_next
-    //start_prev
-    lettercount_keydown();
-    lettercount_input();
-    choose_currency();
+    //init_bitcoin_select_dialog
+    init_bitcoin_select();
+    //init_eth_select_dialog
+    init_eth_select();
+    //choose_currency
 
     // ** Dialog & Modal Management: **
     //popdialog
@@ -423,7 +418,8 @@ function finish_functions() {
     get_wallet();
     submit_address_trigger();
     add_lightning();
-    add_erc20();
+    trigger_add_erc20();
+    //add_erc20
     autocomplete_erc20token();
     pick_erc20_select();
     //init_addressform
@@ -508,7 +504,6 @@ function finish_functions() {
     //platform_icon
     gk();
     glob_const.html.addClass("loaded");
-    check_params();
     //getnetwork
 
     // ** Recent Request Management: **
@@ -552,6 +547,7 @@ function finish_functions() {
 
     // ** Utility Functions: **
     //amountshort
+    check_params();
 }
 
 // Updates HTML document language and meta tag attributes based on current language code
@@ -1069,63 +1065,79 @@ function triggertx() {
 
 // Processes transaction initiation and validation
 function triggertx_function(trigger_elem) {
-    const currency_code = trigger_elem.data("currency"),
-        can_derive = derive_first_check(currency_code);
+    const currency = trigger_elem.data("currency");
+    if (!set_up()) {
+        if (currency === "bitcoin") {
+            init_bitcoin_select_dialog();
+            return
+        }
+        if (currency === "ethereum") {
+            init_eth_select_dialog();
+            return
+        }
+        choose_currency(currency);
+        return
+    }
+    const can_derive = derive_first_check(currency);
     if (can_derive === true) {
         triggertx_function(trigger_elem);
         return
     }
-    const use_random = cs_node(currency_code, "Use random address", true).selected,
-        derives = check_derivations(currency_code),
-        address_list = filter_addressli(currency_code, "checked", true),
+    const use_random = cs_node(currency, "Use random address", true).selected,
+        derives = check_derivations(currency),
+        address_list = filter_addressli(currency, "checked", true),
         first_address = address_list.first(),
         manual_addresses = address_list.not(".seed"),
         address_count = manual_addresses.length,
         random_pool = (address_count > 1) ? manual_addresses : first_address,
         random_index = generate_random_number(1, address_count) - 1,
         selected_address = (use_random === true) ? (first_address.hasClass("seed")) ? first_address : manual_addresses.eq(random_index) : first_address,
-        address_data = selected_address.data(),
-        wallet_address = address_data.address,
-        request_title = trigger_elem.attr("title"),
-        saved_url = trigger_elem.data("url"),
-        seed_id = address_data.seedid;
-    if (seed_id) {
-        if (seed_id != glob_let.bipid) {
-            if (addr_whitelist(wallet_address) === true) {} else {
-                const dialog_data = {
-                        "currency": currency_code,
-                        "address": wallet_address,
-                        "url": saved_url,
-                        "title": request_title,
-                        "seedid": seed_id
-                    },
-                    warning_content = get_address_warning("addresswarning", wallet_address, dialog_data);
-                popdialog(warning_content, "triggersubmit");
-                return false;
-            }
-        } else {
-            if (validate_trial_status() === false) {
-                return false;
+        address_data = selected_address.data();
+    if (address_data) {
+        const wallet_address = address_data.address,
+            request_title = trigger_elem.attr("title"),
+            saved_url = trigger_elem.data("url"),
+            seed_id = address_data.seedid;
+        if (seed_id) {
+            if (seed_id != glob_let.bipid) {
+                if (addr_whitelist(wallet_address) === true) {} else {
+                    const dialog_data = {
+                            "currency": currency,
+                            "address": wallet_address,
+                            "url": saved_url,
+                            "title": request_title,
+                            "seedid": seed_id
+                        },
+                        warning_content = get_address_warning("addresswarning", wallet_address, dialog_data);
+                    popdialog(warning_content, "triggersubmit");
+                    return false;
+                }
+            } else {
+                if (validate_trial_status() === false) {
+                    return false;
+                }
             }
         }
+        finishtx_function(currency, wallet_address, saved_url, request_title);
+        return
     }
-    finishtx_function(currency_code, wallet_address, saved_url, request_title)
+    choose_currency(currency);
 }
 
 // Completes transaction processing and URL generation
-function finishtx_function(currency_code, wallet_address, saved_url, display_title) {
+function finishtx_function(currency, wallet_address, saved_url, display_title) {
     glob_let.prevkey = false;
     const url_params = get_urlparameters();
     if (url_params.xss) {
         return
     }
-    const coin_data = get_coin_config(currency_code),
+    const coin_data = get_coin_config(currency),
         settings = $("#currencysettings").data(),
         use_default = settings.default,
         currency_symbol = (use_default === true && glob_const.offline === false) ? settings.currencysymbol : coin_data.ccsymbol,
         current_page = url_params.p,
         page_prefix = current_page ? "?p=" + current_page + "&payment=" : "?payment=",
-        url_base = page_prefix + currency_code + "&uoa=",
+        url_base = page_prefix + currency + "&uoa=",
         new_url = url_base + currency_symbol + "&amount=0" + "&address=" + wallet_address,
         target_url = (!saved_url || glob_const.offline !== false) ? new_url : saved_url, //load saved url if exists
         title = display_title || "bitrequest";
@@ -1286,16 +1298,17 @@ function toggle_currency() {
     $(document).on("click", ".togglecurrency", function() {
         const currency_item = $(this).closest("li"),
             currency_data = currency_item.data(),
-            currency_code = currency_data.currency,
+            currency = currency_data.currency,
             is_enabled = currency_data.checked,
-            home_item = get_homeli(currency_code);
+            home_item = get_homeli(currency);
         if (is_enabled === true) {
             currency_item.attr("data-checked", "false").data("checked", false);
             home_item.addClass("hide");
+            save_currencies(false);
         } else {
-            const stored_currency = br_get_local("cc_" + currency_code);
+            const stored_currency = br_get_local("cc_" + currency);
             if (stored_currency) {
-                const address_list = get_addresslist(currency_code),
+                const address_list = get_addresslist(currency),
                     active_addresses = address_list.find("li[data-checked='true']").length;
                 if (active_addresses === 0) {
                     address_list.find("li[data-checked='false']").first().find(".toggleaddress").trigger("click");
@@ -1303,11 +1316,11 @@ function toggle_currency() {
                     currency_item.attr("data-checked", "true").data("checked", true);
                     home_item.removeClass("hide");
                 }
+                save_currencies(false);
             } else {
                 addcurrency(currency_data);
             }
         }
-        save_currencies(false);
     });
 }
 
@@ -1318,7 +1331,7 @@ function toggle_address() {
             is_active = address_item.data("checked"),
             address_list = address_item.closest("ul.pobox"),
             active_count = address_list.find("li[data-checked='true']").length,
-            currency_code = address_list.attr("data-currency");
+            currency = address_list.attr("data-currency");
         if (is_active === true || is_active === "true") {
             address_item.attr("data-checked", "false").data("checked", false);
         } else {
@@ -1339,7 +1352,7 @@ function toggle_address() {
             } else if (address_item.hasClass("xpubu")) {
                 const wallet_address = address_data.address;
                 if (addr_whitelist(wallet_address) !== true) {
-                    const has_pub_key = has_xpub(currency_code),
+                    const has_pub_key = has_xpub(currency),
                         pub_key_id = address_data.xpubid;
                     if (has_pub_key === false || (has_pub_key && has_pub_key.key_id != pub_key_id)) {
                         const dialog_data = {
@@ -1355,35 +1368,37 @@ function toggle_address() {
             }
             address_item.attr("data-checked", "true").data("checked", true);
         }
-        save_addresses(currency_code, false);
-        check_currency(currency_code);
+        save_addresses(currency, false);
+        check_currency(currency);
         clear_savedurl();
     });
 }
 
 // Updates currency status based on active address count
-function check_currency(currency_code) {
-    const active_addresses = filter_addressli(currency_code, "checked", true).length;
+function check_currency(currency) {
+    const active_addresses = filter_addressli(currency, "checked", true).length;
     if (active_addresses > 0) {
-        currency_check(currency_code);
+        currency_check(currency);
         return
     }
-    currency_uncheck(currency_code);
+    currency_uncheck(currency);
 }
 
 // Activates currency and updates associated UI elements
-function currency_check(currency_code) {
-    const home_item = get_homeli(currency_code),
-        currency_item = get_currencyli(currency_code);
+function currency_check(currency) {
+    const home_item = get_homeli(currency),
+        currency_item = get_currencyli(currency);
     home_item.removeClass("hide");
     currency_item.attr("data-checked", "true").data("checked", true);
-    save_currencies(false);
+    // On app initiation
+    const init_currency = set_up() ? null : currency;
+    save_currencies(false, init_currency);
 }
 
 // Deactivates currency and updates associated UI elements  
-function currency_uncheck(currency_code) {
-    const home_item = get_homeli(currency_code),
-        currency_item = get_currencyli(currency_code);
+function currency_uncheck(currency) {
+    const home_item = get_homeli(currency),
+        currency_item = get_currencyli(currency);
     home_item.addClass("hide");
     currency_item.attr("data-checked", "false").data("checked", false);
     save_currencies(false);
@@ -1887,9 +1902,6 @@ function escape_and_back() {
         hide_seed_panel();
         return
     }
-    if (glob_const.body.hasClass("showstartpage")) {
-        start_prev($(".panelactive"));
-    }
     if (is_openrequest()) {
         if (glob_const.paymentdialogbox.hasClass("flipped") && glob_const.paymentdialogbox.hasClass("norequest")) {
             remove_flip();
@@ -1914,11 +1926,6 @@ function escape_and_back() {
 function keyup() {
     $(document).keyup(function(e) {
         if (e.keyCode == 39) { // ArrowRight
-            if (glob_const.body.hasClass("showstartpage")) {
-                e.preventDefault();
-                start_next($(".panelactive"));
-                return
-            }
             if (glob_const.paymentdialogbox.find("input").is(":focus")) {
                 play_audio(glob_const.funk);
                 return
@@ -1946,11 +1953,6 @@ function keyup() {
             return
         }
         if (e.keyCode == 37) { // ArrowLeft
-            if (glob_const.body.hasClass("showstartpage")) {
-                e.preventDefault();
-                start_prev($(".panelactive"));
-                return
-            }
             if (glob_const.paymentdialogbox.find("input").is(":focus")) {
                 play_audio(glob_const.funk);
                 return
@@ -1997,92 +1999,113 @@ function is_opendialog() {
 
 // ** Intro Flow: **
 
-// Initializes intro process click handler on intro panel and proceed button
-function start_trigger() {
-    $(document).on("click touchend", "#intro .panelwrap, #intro .proceeed", function() {
-        start_next($("#intro"));
+// Select on chain or lightning dialog
+function init_bitcoin_select_dialog() {
+    const ddat = [{
+        "ul": {
+            "id": "click_list",
+            "class": "cl_btc",
+            "content": [{
+                    "li": {
+                        "id": "init_btc",
+                        "content": "<img src='" + c_icons("btc-bitcoin") + "'/> On chain"
+                    }
+                },
+                {
+                    "li": {
+                        "id": "init_lnd",
+                        "content": "<img src='img_logos_btc-lnd.png'/> Lightning"
+                    }
+                }
+            ]
+        }
+    }];
+    const content = template_dialog({
+        "id": "btc_formbox",
+        "elements": ddat
+    });
+    popdialog(content, "canceldialog");
+}
+
+// Select on chain or lightning
+function init_bitcoin_select() {
+    $(document).on("click", "#click_list.cl_btc li", function() {
+        canceldialog();
+        const this_id = $(this).attr("id"),
+            timeout = setTimeout(function() {
+                if (this_id === "init_btc") {
+                    choose_currency("bitcoin");
+                    return
+                }
+                if (this_id === "init_lnd") {
+                    render_lightning_interface();
+                    return
+                }
+            }, 600, function() {
+                clearTimeout(timeout);
+            });
     });
 }
 
-// Sets up click handler for name entry panel in intro flow
-function start_next_trigger() {
-    $(document).on("click touchend", "#entername .panelwrap", function(event) {
-        if (event.target === this) {
-            start_next($("#entername"));
+// Select ethereum or erc20 dialog
+function init_eth_select_dialog() {
+    const ddat = [{
+        "ul": {
+            "id": "click_list",
+            "class": "cl_eth",
+            "content": [{
+                    "li": {
+                        "id": "init_eth",
+                        "content": "<img src='" + c_icons("eth-ethereum") + "'/> Ethereum"
+                    }
+                },
+                {
+                    "li": {
+                        "id": "init_erc20",
+                        "content": "<img src='" + fetch_aws("etherscan") + ".png'/> Erc20 token"
+                    }
+                }
+            ]
         }
+    }];
+    const content = template_dialog({
+        "id": "btc_formbox",
+        "elements": ddat
     });
+    popdialog(content, "canceldialog");
 }
 
-// Progresses to next intro panel if current step is valid
-function start_next(panel_node) {
-    const next_panel = panel_node.attr("data-next");
-    if (!next_panel) return;
-    if (panel_node.hasClass("validstep")) {
-        $("#startpage").attr("class", "sp_" + next_panel);
-        panel_node.removeClass("panelactive").next(".startpanel").addClass("panelactive");
-        $("#eninput").blur();
-        return
-    }
-    topnotify(tl("enteryourname"));
-}
-
-// Returns to previous intro panel
-function start_prev(panel_node) {
-    const prev_panel = panel_node.attr("data-prev");
-    if (!prev_panel) return;
-    $("#startpage").attr("class", "sp_" + prev_panel);
-    panel_node.removeClass("panelactive").prev(".startpanel").addClass("panelactive");
-    $("#eninput").blur();
-}
-
-// Manages keydown events and character limits for name input field
-function lettercount_keydown() {
-    $(document).on("keydown", "#eninput", function(event) {
-        const key_code = event.which || event.keyCode,
-            name_input = $(this),
-            input_length = name_input.val().length,
-            chars_remaining = parseInt(name_input.attr("data-max"), 10) - input_length;
-        if (key_code === 13) {
-            start_next($("#entername"));
-        }
-        if (key_code === 8 || key_code === 39 || key_code === 37 || key_code === 91 || key_code === 17 || event.metaKey || event.ctrlKey) { //alow backspace, arrowright, arrowleft, command, ctrl
-            return
-        }
-        if (chars_remaining === 0) {
-            play_audio(glob_const.funk);
-            event.preventDefault();
-        }
-    });
-}
-
-// Updates character count and validation state for name input
-function lettercount_input() {
-    $(document).on("input", "#eninput", function() {
-        const name_input = $(this),
-            min_chars = parseInt(name_input.attr("data-min"), 10),
-            name_panel = $("#entername"),
-            input_length = name_input.val().length,
-            chars_remaining = parseInt(name_input.attr("data-max"), 10) - input_length,
-            char_counter = $("#lettercount");
-        char_counter.text(chars_remaining);
-        name_panel.toggleClass("validstep", input_length >= min_chars);
-        char_counter.toggleClass("activlc", input_length > 0);
+// Select ethereum or erc20
+function init_eth_select() {
+    $(document).on("click", "#click_list.cl_eth li", function() {
+        canceldialog();
+        const this_id = $(this).attr("id"),
+            timeout = setTimeout(function() {
+                if (this_id === "init_eth") {
+                    choose_currency("ethereum");
+                    return
+                }
+                if (this_id === "init_erc20") {
+                    add_erc20();
+                    return
+                }
+                choose_currency("ethereum");
+            }, 600, function() {
+                clearTimeout(timeout);
+            });
     });
 }
 
 // Handles currency selection and adds associated address
-function choose_currency() {
-    $(document).on("click touch", "#allcurrencies li.choose_currency", function() {
-        const currency_code = $(this).attr("data-currency"),
-            currency_data = get_coin_config(currency_code);
-        addaddress({
-            "currency": currency_code,
-            "ccsymbol": currency_data.ccsymbol,
-            "cmcid": currency_data.cmcid,
-            "erc20": false,
-            "checked": true
-        }, false);
-    })
+function choose_currency(currency) {
+    const currency_data = get_coin_config(currency);
+    addaddress({
+        "currency": currency,
+        "ccsymbol": currency_data.ccsymbol,
+        "cmcid": currency_data.cmcid,
+        "erc20": false,
+        "checked": true
+    }, false);
 }
 
 // ** Dialog & Modal Management: **
@@ -2643,9 +2666,9 @@ function addressinfo() {
             view_key = dialog_data.vk,
             source_type = seed_id ? "seed" : xpub_id ? "xpub" : false,
             is_seed = source_type === "seed",
-            is_xpub = source_type === "xpub",
+            xpub = source_type === "xpub",
             active_xpub_data = active_xpub(currency),
-            is_active_source = is_seed ? (seed_id === glob_let.bipid) : (is_xpub ? (active_xpub_data && xpub_id === active_xpub_data.key_id) : false),
+            is_active_source = is_seed ? (seed_id === glob_let.bipid) : (xpub ? (active_xpub_data && xpub_id === active_xpub_data.key_id) : false),
             address = dialog_data.address,
             addr_whitelist_status = addr_whitelist(address),
             restore_btn = is_seed ? (glob_let.hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + seed_id + "'>" + tl("resoresecretphrase") + "</div>" : "",
@@ -3033,14 +3056,14 @@ function addaddress(addr_data, is_edit) {
         }) + "</span>",
         seed_prompt = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>" + tl("generatewallet") + "</span>",
         addr_options = glob_let.hasbip ? wallet_prompt : (glob_let.test_derive && bip39_const.c_derive[currency]) ? (has_bip32(currency) === true ? seed_prompt : wallet_prompt) : wallet_prompt,
-        notify_html = glob_const.body.hasClass("showstartpage") ? "<div class='popnotify' style='display:block'>" + addr_options + "</div>" : "<div class='popnotify'></div>",
+        notify_html = !set_up() ? "<div class='popnotify' style='display:block'>" + addr_options + "</div>" : "<div class='popnotify'></div>",
         scan_btn = glob_let.hascam && !is_edit ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
         dialog_title = is_edit ? "<h2 class='icon-pencil'>" + tl("editlabel") + "</h2>" : "<h2>" + getcc_icon(addr_data.cmcid, currency_pair_id, addr_data.erc20) + " " + tl("addcoinaddress", {
             "currency": currency
         }) + "</h2>",
         privkey_confirm = is_edit ? "" : "<div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + tl("pkownership") + "</span></div>",
         form_mode_class = is_edit ? "edit" : "add",
-        pubkey_class = no_pubkey ? " hasxpub" : " noxpub",
+        pubkey_class = no_pubkey ? " noxpub" : " hasxpub",
         addr_placeholder = no_pubkey ? tl("entercoinaddress", {
             "currency": currency
         }) : tl("nopub"),
@@ -3048,7 +3071,7 @@ function addaddress(addr_data, is_edit) {
         has_viewkey = (viewkey_val !== ""),
         viewkey_scan = glob_let.hascam ? "<div class='qrscanner' data-currency='" + currency + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
         viewkey_input = (currency == "monero") ? has_viewkey ? "" : "<div class='inputwrap'><input type='text' class='vk_input' value='" + viewkey_val + "' placeholder='" + tl("secretviewkey") + "'>" + viewkey_scan + "</div>" : "",
-        form_content = $("<div class='formbox form" + form_mode_class + pubkey_class + "' id='addressformbox'>" + dialog_title + notify_html + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' id='address_xpub_input' class='address' value='" + wallet_address + "' data-currency='" + currency + "' placeholder='" + addr_placeholder + "'" + input_readonly + ">" + scan_btn + "</div>" + viewkey_input + "<input type='text' class='addresslabel' value='" + addr_label + "' placeholder='" + tl("label") + "'>\
+        form_content = $("<div class='formbox form" + form_mode_class + pubkey_class + "' id='addressformbox'>" + dialog_title + notify_html + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' id='address_xpub_input' class='address' value='" + wallet_address + "' data-currency='" + currency + "' placeholder='" + addr_placeholder + "'" + input_readonly + " autocomplete='off' autocapitalize='off' spellcheck='false'>" + scan_btn + "</div>" + viewkey_input + "<input type='text' class='addresslabel' value='" + addr_label + "' placeholder='" + tl("label") + "' autocomplete='off' autocapitalize='off' spellcheck='false'>\
         <div id='ad_info_wrap' style='display:none'>\
             <ul class='td_box'>\
             </ul>\
@@ -3072,7 +3095,7 @@ function addaddress(addr_data, is_edit) {
 
 // Validates input for xpub addresses
 function address_xpub_change() {
-    $(document).on("input", "#addressformbox.noxpub #address_xpub_input", function(e) {
+    $(document).on("input", "#addressformbox.hasxpub #address_xpub_input", function(e) {
         const input_field = $(this),
             xpub_value = input_field.val();
         if (xpub_value.length > 103) {
@@ -3137,10 +3160,10 @@ function active_derives(currency, derive_type) {
 // Opens wallet download dialog
 function get_wallet() {
     $(document).on("click", "#get_wallet", function() {
-        const currency_code = $(this).attr("data-currency");
+        const currency = $(this).attr("data-currency");
         canceldialog();
         setTimeout(function() {
-            download_wallet(currency_code);
+            download_wallet(currency);
         }, 800);
     })
 }
@@ -3150,7 +3173,7 @@ function submit_address_trigger() {
     $(document).on("click", "#addressformbox input.submit", function(e) {
         e.preventDefault();
         const form_elem = $(this).closest("#addressformbox");
-        if (form_elem.hasClass("hasxpub")) {
+        if (form_elem.hasClass("noxpub")) {
             validate_address_vk(form_elem.data());
             return
         }
@@ -3173,48 +3196,54 @@ function add_lightning() {
     })
 }
 
+// Triggers ERC20 token dialog
+function trigger_add_erc20() {
+    $(document).on("click", "#add_erc20", function() {
+        add_erc20()
+        return
+    })
+}
+
 // Opens ERC20 token addition dialog
 function add_erc20() {
-    $(document).on("click", "#add_erc20, #choose_erc20", function() {
-        const token_registry = get_cached_tokens();
-        let token_options = "";
-        $.each(token_registry, function(key, token) {
-            token_options += "<span data-id='" + token.cmcid + "' data-currency='" + token.name + "' data-ccsymbol='" + token.symbol.toLowerCase() + "' data-contract='" + token.contract + "' data-pe='none'>" + token.symbol + " | " + token.name + "</span>";
-        });
-        const form_data = {
-                "erc20": true,
-                "monitored": true,
-                "checked": true
-            },
-            checked_eth_addresses = filter_addressli("ethereum", "checked", true),
-            first_eth_address = checked_eth_addresses[0],
-            eth_addr_data = first_eth_address ? $(first_eth_address).data() : false,
-            eth_addr_value = eth_addr_data ? eth_addr_data.address : "",
-            eth_label_value = eth_addr_data ? eth_addr_data.label : "",
-            scan_button = glob_let.hascam ? "<div class='qrscanner' data-currency='ethereum' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
-            dialog_content = $("\
-            <div class='formbox' id='erc20formbox'>\
-                <h2 class='icon-coin-dollar'>" + tl("adderc20token") + "</h2>\
-                <div class='popnotify'></div>\
-                <form id='addressform' class='popform'>\
-                    <div class='selectbox'>\
-                        <input type='text' value='' placeholder='" + tl("erc20placeholder") + "' id='ac_input'/>\
-                        <div class='selectarrows icon-menu2' data-pe='none'></div>\
-                        <div id='ac_options' class='options show_options'>" + token_options + "</div>\
+    const token_registry = get_cached_tokens();
+    let token_options = "";
+    $.each(token_registry, function(key, token) {
+        token_options += "<span data-id='" + token.cmcid + "' data-currency='" + token.name + "' data-ccsymbol='" + token.symbol.toLowerCase() + "' data-contract='" + token.contract + "' data-pe='none'>" + token.symbol + " | " + token.name + "</span>";
+    });
+    const form_data = {
+            "erc20": true,
+            "monitored": true,
+            "checked": true
+        },
+        checked_eth_addresses = filter_addressli("ethereum", "checked", true),
+        first_eth_address = checked_eth_addresses[0],
+        eth_addr_data = first_eth_address ? $(first_eth_address).data() : false,
+        eth_addr_value = eth_addr_data ? eth_addr_data.address : "",
+        eth_label_value = eth_addr_data ? eth_addr_data.label : "",
+        scan_button = glob_let.hascam ? "<div class='qrscanner' data-currency='ethereum' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+        dialog_content = $("\
+        <div class='formbox' id='erc20formbox'>\
+            <h2 class='icon-coin-dollar'>" + tl("adderc20token") + "</h2>\
+            <div class='popnotify'></div>\
+            <form id='addressform' class='popform'>\
+                <div class='selectbox'>\
+                    <input type='text' value='' placeholder='" + tl("erc20placeholder") + "' id='ac_input'/>\
+                    <div class='selectarrows icon-menu2' data-pe='none'></div>\
+                    <div id='ac_options' class='options show_options'>" + token_options + "</div>\
+                </div>\
+                <div id='erc20_inputs'>\
+                <div class='inputwrap'><input type='text' class='address' value='" + eth_addr_value + "' placeholder='" + tl("enteraddress") + "'/>" + scan_button + "</div>\
+                <input type='text' class='addresslabel' value='" + eth_label_value + "' placeholder='" + tl("label") + "'/>\
+                <div id='pk_confirm' class='noselect'>\
+                    <div id='pk_confirmwrap' class='cb_wrap' data-checked='false'>\
+                        <span class='checkbox'></span>\
                     </div>\
-                    <div id='erc20_inputs'>\
-                    <div class='inputwrap'><input type='text' class='address' value='" + eth_addr_value + "' placeholder='" + tl("enteraddress") + "'/>" + scan_button + "</div>\
-                    <input type='text' class='addresslabel' value='" + eth_label_value + "' placeholder='" + tl("label") + "'/>\
-                    <div id='pk_confirm' class='noselect'>\
-                        <div id='pk_confirmwrap' class='cb_wrap' data-checked='false'>\
-                            <span class='checkbox'></span>\
-                        </div>\
-                        <span>" + tl("pkownership") + "</span>\
-                    </div></div>\
-                    <input type='submit' class='submit' value='" + tl("okbttn") + "'/>\
-                </form></div>").data(form_data);
-        popdialog(dialog_content, "triggersubmit");
-    })
+                    <span>" + tl("pkownership") + "</span>\
+                </div></div>\
+                <input type='submit' class='submit' value='" + tl("okbttn") + "'/>\
+            </form></div>").data(form_data);
+    popdialog(dialog_content, "triggersubmit");
 }
 
 // Handles ERC20 token search autocomplete
@@ -3444,14 +3473,11 @@ function validate_address(addr_data, view_key) {
             append_coinsetting(currency, compress_layer2_config(currency, token_symbol));
             save_cc_settings(currency);
         }
-        if (glob_const.body.hasClass("showstartpage")) {
-            const account_name = $("#eninput").val();
-            $("#accountsettings").data("selected", account_name).find("p").text(account_name);
+        if (!set_up()) {
             save_settings();
             const page_url = "?p=home&payment=" + currency + "&uoa=" + token_symbol + "&amount=0" + "&address=" + parsed_addr;
             br_set_local("editurl", page_url); // to check if request is being edited
             openpage(page_url, "create " + currency + " request", "payment");
-            glob_const.body.removeClass("showstartpage");
         } else {
             loadpage("?p=" + currency);
         }
@@ -3719,7 +3745,7 @@ function edit_request() {
                 <h2 class='icon-pencil'>" + form_header + " " + tl("title") + "</h2>\
                 <div class='popnotify'></div>\
                 <div class='popform'>\
-                    <input type='text' value='" + title_input + "' placeholder='" + tl("title") + "'/>\
+                    <input type='text' value='" + title_input + "' placeholder='" + tl("title") + "' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                     <input type='submit' class='submit' value='" + tl("okbttn") + "' data-requestid='" + request_id + "'/>\
                 </div>\
             </div>";
@@ -4219,10 +4245,10 @@ function confirm_missing_seed_toggle() {
 // Updates address state and UI after seed confirmation
 function cmst_callback(address_item) {
     const address_list = address_item.closest("ul.pobox"),
-        currency_code = address_list.attr("data-currency");
+        currency = address_list.attr("data-currency");
     address_item.attr("data-checked", "true").data("checked", true);
-    check_currency(currency_code);
-    save_addresses(currency_code, false);
+    check_currency(currency);
+    save_addresses(currency, false);
     clear_savedurl();
 }
 
@@ -4726,23 +4752,20 @@ function ln_connect(params) {
 
 // Renders the currencies from cached data
 function rendercurrencies() {
-    initiate();
-    if (glob_const.stored_currencies) {
-        $.each(glob_const.stored_currencies, function(index, data) {
-            const curr_code = data.currency,
-                coin_id = data.cmcid;
-            buildpage(data, false);
-            render_currencysettings(curr_code);
-            const wallet_addrs = br_get_local("cc_" + curr_code, true);
-            if (wallet_addrs) {
-                $.each(wallet_addrs.reverse(), function(index, addr_data) {
-                    append_address(curr_code, addr_data);
-                });
-            }
-        });
-    }
-    $("ul#allcurrencies").append("<li id='choose_erc20' data-currency='erc20 token' class='start_cli'><div class='liwrap'><h2><img src='" + c_icons("ph") + "'/>" + tl("more") + "...</h2></div></li>\
-    <li id='rshome' class='restore start_cli' data-currency='erc20 token'><div class='liwrap'><h2><span class='icon-upload'> " + tl("restorefrombackup") + "</h2></div></li><li id='start_cli_margin' class='start_cli'><div class='liwrap'><h2></h2></div></li>").prepend("<li id='connectln' data-currency='bitcoin' class='start_cli'><div class='liwrap'><h2><img src='img_logos_btc-lnd.png'/>Lightning</h2></div></li>");
+    const init = !set_up();
+    initiate(init);
+    $.each(glob_const.stored_currencies, function(index, data) {
+        const curr_code = data.currency,
+            coin_id = data.cmcid;
+        buildpage(data, false, init);
+        render_currencysettings(curr_code);
+        const wallet_addrs = br_get_local("cc_" + curr_code, true);
+        if (wallet_addrs) {
+            $.each(wallet_addrs.reverse(), function(index, addr_data) {
+                append_address(curr_code, addr_data);
+            });
+        }
+    });
 }
 
 // Routes to appropriate page based on URL parameters
@@ -4852,7 +4875,7 @@ function fetch_requests(cache_name, is_archive) {
 }
 
 // Sets up initial cryptocurrency UI when no cache exists
-function initiate() {
+function initiate(init) {
     $.each(glob_config.bitrequest_coin_data, function(dat, coin) {
         if (coin.active === true) {
             const {
@@ -4871,14 +4894,14 @@ function initiate() {
                     "settings": has_settings,
                     "urlscheme": coin_data.urlscheme
                 };
-            buildpage(coin_config, true);
+            buildpage(coin_config, true, init);
             append_coinsetting(coin.currency, settings);
         }
     });
 }
 
 // Creates and manages the currency page UI with icons, settings, and address management options
-function buildpage(cd, ini) {
+function buildpage(cd, ini, init) {
     const {
         currency,
         ccsymbol,
@@ -4892,7 +4915,7 @@ function buildpage(cd, ini) {
         existing_item = main_list.children("li[data-currency='" + currency + "']"),
         home_list = $("ul#currencylist"),
         home_item = home_list.children("li[data-currency='" + currency + "']"),
-        display_state = checked ? "" : "hide",
+        display_state = checked || init ? "" : "hide",
         has_settings = settings === true || erc20 === true;
     glob_let.init = existing_item.length === 0 && ini === true;
     if (glob_let.init === true || erc20 === true) {
@@ -4944,11 +4967,6 @@ function buildpage(cd, ini) {
         existing_item.data(cd).attr("data-checked", checked);
         home_item.data(cd).removeClass("hide").addClass(display_state);
     }
-    $("ul#allcurrencies").append("<li class='start_cli choose_currency' data-currency='" + currency + "' data-checked='" + checked + "'>\
-        <div data-rel='?p=" + currency + "' class='liwrap'>\
-            <h2>" + getcc_icon(cmcid, coin_page_id, erc20) + " " + currency + "\</h2>\
-        </div>\
-    </li>");
 }
 
 // Renders coin-specific settings with switch panels and translated labels
@@ -5286,12 +5304,20 @@ function append_request(rd) {
 // ** Storage Management: **
 
 // Persists cryptocurrency list to localStorage and updates change counter
-function save_currencies(trigger_update) {
+function save_currencies(trigger_update, init_currency) {
     const currency_list = $("#usedcurrencies li").map(function() {
         return $(this).data();
     }).get();
     br_set_local("currencies", currency_list, true);
     update_changes("currencies", trigger_update);
+    // On app initiation
+    if (init_currency) {
+        glob_const.stored_currencies = currency_list;
+        if (init_currency === true) {
+            return
+        }
+        $("#currencylist > li").not("[data-currency='" + init_currency + "']").addClass("hide");
+    }
 }
 
 // Stores address list for specific currency and handles ERC20 token settings cleanup

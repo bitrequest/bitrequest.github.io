@@ -47,7 +47,7 @@ function initialize_layer2_connections(payment, address, ct, socket_node) {
             req_l2_arr = request.eth_l2s;
         let index = 0;
         $.each(l2_options, function(l2, l2_dat) {
-            const set_select = is_request ? false : !empty_obj(l2_dat),
+            const set_select = is_request ? false : (l2_dat.selected === false) ? false : !empty_obj(l2_dat),
                 inarr = ($.inArray(index, req_l2_arr) > -1),
                 selected = set_select || inarr;
             if (selected) {
@@ -610,7 +610,6 @@ function update_network_status(sn, stat) {
             helper.l2_status = l2_status;
             if (l2_status === false && helper.l1_status === false) {
                 glob_const.paymentpopup.removeClass("live");
-                notify(tl("websocketoffline"), 500000, "yes");
             }
         }
     }

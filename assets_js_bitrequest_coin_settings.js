@@ -48,7 +48,7 @@ $(document).ready(function() {
 function setup_confirmation_editor() {
     $(document).on("click", ".cc_settinglist li[data-id='confirmations'] .edit_trigger", function() {
         const edit_btn = $(this),
-            currency_name = edit_btn.attr("data-currency"),
+            currency = edit_btn.attr("data-currency"),
             settings_item = edit_btn.closest("li"),
             current_conf = settings_item.data("selected"),
             confirmation_levels = [{
@@ -104,7 +104,7 @@ function setup_confirmation_editor() {
                                 "attr": {
                                     "type": "submit",
                                     "value": tl("okbttn"),
-                                    "data-currency": currency_name
+                                    "data-currency": currency
                                 }
                             }
                         }
@@ -130,14 +130,14 @@ function save_confirmation_settings() {
     $(document).on("click", "#conf_formbox input.submit", function(e) {
         e.preventDefault();
         const submit_btn = $(this),
-            currency_name = submit_btn.attr("data-currency"),
+            currency = submit_btn.attr("data-currency"),
             conf_value = submit_btn.prev("input").val(),
-            settings_node = cs_node(currency_name, "confirmations");
+            settings_node = cs_node(currency, "confirmations");
         if (settings_node) {
             settings_node.data("selected", conf_value).find("p").html(conf_value);
             canceldialog();
             notify(tl("datasaved"));
-            save_cc_settings(currency_name, true);
+            save_cc_settings(currency, true);
         }
     })
 }
@@ -148,29 +148,29 @@ function toggle_address_reuse() {
         const toggle_btn = $(this),
             settings_item = toggle_btn.closest("li"),
             parent_wrap = toggle_btn.closest(".liwrap"),
-            currency_name = parent_wrap.attr("data-currency"),
+            currency = parent_wrap.attr("data-currency"),
             warn_msg = settings_item.data("warning");
         if (toggle_btn.hasClass("true")) {
             let can_disable = true;
             if (warn_msg) {
                 can_disable = confirm(tl("reusewarningalert", {
-                    "thiscurrency": currency_name
+                    "thiscurrency": currency
                 }));
             }
             if (can_disable) {
                 settings_item.data("selected", false);
                 toggle_btn.removeClass("true").addClass("false");
-                save_cc_settings(currency_name, false);
+                save_cc_settings(currency, false);
             }
             return
         }
         const user_confirmed = confirm(tl("reusealert", {
-            "thiscurrency": currency_name
+            "thiscurrency": currency
         }));
         if (user_confirmed) {
             settings_item.data("selected", true);
             toggle_btn.removeClass("false").addClass("true");
-            save_cc_settings(currency_name, true);
+            save_cc_settings(currency, true);
         }
     })
 }
@@ -181,10 +181,10 @@ function toggle_currency_setting() {
         const toggle_btn = $(this),
             settings_item = toggle_btn.closest("li"),
             parent_wrap = toggle_btn.closest(".liwrap"),
-            currency_name = parent_wrap.attr("data-currency"),
+            currency = parent_wrap.attr("data-currency"),
             current_state = toggle_btn.hasClass("true");
         settings_item.data("selected", current_state);
-        save_cc_settings(currency_name, false);
+        save_cc_settings(currency, false);
     })
 }
 
@@ -195,7 +195,7 @@ function setup_explorer_selection() {
             item_data = settings_item.data(),
             explorer_list = item_data.options;
         if (explorer_list) {
-            const currency_name = settings_item.children(".liwrap").attr("data-currency"),
+            const currency = settings_item.children(".liwrap").attr("data-currency"),
                 selected_explorer = item_data.selected,
                 dialog_title = tl("chooseblockexplorer"),
                 explorer_options = explorer_list.map(function(explorer) {
@@ -237,7 +237,7 @@ function setup_explorer_selection() {
                                 "attr": {
                                     "type": "submit",
                                     "value": tl("okbttn"),
-                                    "data-currency": currency_name
+                                    "data-currency": currency
                                 }
                             }
                         }]
@@ -258,14 +258,14 @@ function setup_explorer_selection() {
 function save_explorer_settings() {
     $(document).on("click", "#be_formbox input.submit", function(e) {
         e.preventDefault();
-        const currency_name = $(this).attr("data-currency"),
+        const currency = $(this).attr("data-currency"),
             selected_explorer = $("#be_formbox").find("input:first").val(),
-            settings_node = cs_node(currency_name, "blockexplorers");
+            settings_node = cs_node(currency, "blockexplorers");
         if (settings_node) {
             settings_node.data("selected", selected_explorer).find("p").html(selected_explorer);
             canceldialog();
             notify(tl("datasaved"));
-            save_cc_settings(currency_name, true);
+            save_cc_settings(currency, true);
         }
     })
 }
@@ -282,21 +282,21 @@ function key_management() {
             settings_item = menu_item.closest("li"),
             item_data = settings_item.data(),
             item_wrap = settings_item.find(".liwrap"),
-            currency_name = item_wrap.attr("data-currency"),
-            active_xpub_key = active_xpub(currency_name);
+            currency = item_wrap.attr("data-currency"),
+            active_xpub_key = active_xpub(currency);
         if (active_xpub_key) {
-            display_xpub_details(currency_name, active_xpub_key.key);
+            display_xpub_details(currency, active_xpub_key.key);
             return
         }
         if (glob_let.hasbip === true) {
-            if (currency_name === "monero" && is_viewonly() === false) {
+            if (currency === "monero" && is_viewonly() === false) {
                 all_pinpanel({
                     "func": phrase_info_pu,
-                    "args": currency_name
+                    "args": currency
                 }, true, true);
                 return
             }
-            phrase_info_pu(currency_name);
+            phrase_info_pu(currency);
             return
         }
         if (is_viewonly() === true) {
@@ -317,15 +317,15 @@ function segwit_switch() {
         const toggle_btn = $(this),
             is_segwit = toggle_btn.hasClass("true"),
             settings_item = toggle_btn.closest("li"),
-            currency_name = settings_item.attr("data-currency"),
-            xpub_settings = cs_node(currency_name, "Xpub"),
+            currency = settings_item.attr("data-currency"),
+            xpub_settings = cs_node(currency, "Xpub"),
             settings_data = xpub_settings.data(),
             current_path = settings_data.root_path,
             coin_code = current_path.split("/")[2],
-            path_display = $("#d_paths .pd_" + currency_name + " .d_path_header span.ref");
+            path_display = $("#d_paths .pd_" + currency + " .d_path_header span.ref");
         if (is_segwit === true) {
             const user_confirmed = confirm(tl("uselegacy", {
-                "thiscurrency": currency_name
+                "thiscurrency": currency
             }));
             if (user_confirmed === false) {
                 return
@@ -336,7 +336,7 @@ function segwit_switch() {
             path_display.text(legacy_path);
         } else {
             const user_confirmed = confirm(tl("usesegwit", {
-                "thiscurrency": currency_name
+                "thiscurrency": currency
             }));
             if (user_confirmed === false) {
                 return
@@ -346,8 +346,8 @@ function segwit_switch() {
             toggle_btn.addClass("true").removeClass("false");
             path_display.text(segwit_path);
         }
-        const next_btn = $("#d_paths .pd_" + currency_name + " .d_path_body .td_bar .td_next");
-        save_cc_settings(currency_name, true);
+        const next_btn = $("#d_paths .pd_" + currency + " .d_path_body .td_bar .td_next");
+        save_cc_settings(currency, true);
         derive_address_batch(next_btn, "replace");
     })
 }
@@ -358,9 +358,9 @@ function bip39_sc(currency_id) {
 }
 
 // Displays detailed Xpub information with QR code and derived addresses
-function display_xpub_details(currency_name, xpub_key) {
-    const coin_data = get_coin_config(currency_name),
-        bip32_config = get_bip32dat(currency_name),
+function display_xpub_details(currency, xpub_key) {
+    const coin_data = get_coin_config(currency),
+        bip32_config = get_bip32dat(currency),
         derivation_path = "M/0/",
         start_index = 0,
         key_config = key_cc_xpub(xpub_key),
@@ -373,16 +373,16 @@ function display_xpub_details(currency_name, xpub_key) {
             "xpub": true,
             "versionbytes": version_bytes
         },
-        derived_keys = keypair_array(false, new Array(5), start_index, derivation_path, bip32_config, master_key, chain_code, currency_name, version_bytes),
+        derived_keys = keypair_array(false, new Array(5), start_index, derivation_path, bip32_config, master_key, chain_code, currency, version_bytes),
         address_list = derived_keys.map((key_data, index) => {
             const path_index = start_index + index;
             return "<li class='adbox der_li' data-index='" + path_index + "'><strong>" + derivation_path + path_index + "</strong> | <span class='mspace'>" + key_data.address + "</span></li>";
         }).join(""),
         currency_symbol = coin_data.ccsymbol,
-        currency_icon = getcc_icon(coin_data.cmcid, currency_symbol + "-" + currency_name, coin_data.erc20),
-        dialog_content = $("<div id='ad_info_wrap'><h2>" + currency_icon + " <span>" + currency_name + " " + tl("Key derivations") + "</span></h2><ul>\
+        currency_icon = getcc_icon(coin_data.cmcid, currency_symbol + "-" + currency, coin_data.erc20),
+        dialog_content = $("<div id='ad_info_wrap'><h2>" + currency_icon + " <span>" + currency + " " + tl("Key derivations") + "</span></h2><ul>\
         <li id='xpub_box' class='clearfix noline'>\
-            <div class='xpub_ib clearfix pd_" + currency_name + "' data-xpub='" + xpub_key + "'>\
+            <div class='xpub_ib clearfix pd_" + currency + "' data-xpub='" + xpub_key + "'>\
                 <div class='show_xpub'><strong>Xpub: </strong><span class='xpref ref'>" + tl("show") + "</span></div>\
                     <div class='xp_span drawer'>\
                         <div class='qrwrap flex'><div class='qrcode'></div>" + currency_icon + "</div>\
@@ -397,9 +397,9 @@ function display_xpub_details(currency_name, xpub_key) {
     popdialog(dialog_content, "triggersubmit");
     const path_config = {
             "bip32": bip32_config,
-            "currency": currency_name
+            currency
         },
-        path_element = $("<div class='d_path pd_" + currency_name + "'>\
+        path_element = $("<div class='d_path pd_" + currency + "'>\
             <div class='d_path_header'><strong>Derivation path: </strong><span class='ref'>" + derivation_path + "</span></div>\
             <div class='d_path_body clearfix'>\
                 <div class='td_bar'><div class='td_next button'>" + tl("next") + "</div><div class='td_prev button'>" + tl("prev") + "</div></div>\
@@ -426,10 +426,10 @@ function edit_xpub_trigger() {
             return
         }
         const item_wrap = settings_item.find(".liwrap"),
-            currency_name = item_wrap.attr("data-currency"),
-            coin_data = get_coin_config(currency_name),
+            currency = item_wrap.attr("data-currency"),
+            coin_data = get_coin_config(currency),
             xpub_key = xpub_data.key,
-            currency_icon = getcc_icon(coin_data.cmcid, coin_data.ccsymbol + "-" + currency_name, coin_data.erc20),
+            currency_icon = getcc_icon(coin_data.cmcid, coin_data.ccsymbol + "-" + currency, coin_data.erc20),
             dialog_html = $("<div id='ad_info_wrap'><h2>" + currency_icon + " " + tl("bip32xpub") + "</h2>\
                 <div class='d_ulwrap'>\
                     <ul>\
@@ -440,7 +440,7 @@ function edit_xpub_trigger() {
                     </ul>\
                 </div>\
                 <div id='backupactions'>\
-                    <div id='delete_xpub' data-currency='" + currency_name + "' class='util_icon icon-bin'></div>\
+                    <div id='delete_xpub' data-currency='" + currency + "' class='util_icon icon-bin'></div>\
                     <div id='backupcd'>" + cancelbttn + "</div>\
                 </div>\
             </div>");
@@ -451,24 +451,24 @@ function edit_xpub_trigger() {
 
 // Displays form for adding new Xpub key with QR scanning support
 function edit_xpub(currency_info) {
-    const currency_name = currency_info.currency,
-        display_id = currency_info.ccsymbol + "-" + currency_name,
+    const currency = currency_info.currency,
+        display_id = currency_info.ccsymbol + "-" + currency,
         initial_address = currency_info.address || "",
-        qr_scanner = (glob_let.hascam) ? "<div class='qrscanner' data-currency='" + currency_name + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
+        qr_scanner = (glob_let.hascam) ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
         form_title = tl("addxpub", {
-            "currency": currency_name
+            currency
         }),
         dialog_content = $("<div class='formbox form add' id='xpubformbox'>\
             <h2>" + getcc_icon(currency_info.cmcid, display_id, currency_info.erc20) + " " + form_title + "</h2>\
             <div class='popnotify'></div>\
             <form class='addressform popform'>\
-                <div class='inputwrap'><input type='text' id='xpub_input' class='address' value='" + initial_address + "' placeholder='" + form_title + "' data-currency='" + currency_name + "'>" + qr_scanner + "</div>\
+                <div class='inputwrap'><input type='text' id='xpub_input' class='address' value='" + initial_address + "' placeholder='" + form_title + "' data-currency='" + currency + "' autocomplete='off' autocapitalize='off' spellcheck='false'>" + qr_scanner + "</div>\
                 <div id='ad_info_wrap' style='display:none'>\
                     <ul class='td_box'>\
                     </ul>\
                     <div id='pk_confirm' class='noselect'>\
                         <div id='matchwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + tl("xpubmatch", {
-            "currency": currency_name
+            "currency": currency
         }) + "</span><br/>\
                         <div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + tl("xpubkeys") + "</span>\
                     </div>\
@@ -485,14 +485,14 @@ function handle_xpub_input() {
     $(document).on("input", "#xpub_input", function(e) {
         const input_field = $(this),
             xpub_key = input_field.val(),
-            currency_name = input_field.attr("data-currency"),
-            is_valid = check_xpub(xpub_key, xpub_prefix(currency_name), currency_name);
+            currency = input_field.attr("data-currency"),
+            is_valid = check_xpub(xpub_key, xpub_prefix(currency), currency);
         if (is_valid) {
             clear_xpub_checkboxes();
             validate_xpub(input_field.closest("#xpubformbox"));
             return
         }
-        xpub_fail(currency_name);
+        xpub_fail(currency);
     })
 }
 
@@ -507,20 +507,20 @@ function validate_xpub_input() {
 // Performs comprehensive validation of Xpub key with address derivation and state updates
 function validate_xpub(form_container) {
     const form_data = form_container.data(),
-        currency_name = form_data.currency,
+        currency = form_data.currency,
         input_field = form_container.find(".address"),
         xpub_key = input_field.val();
     if (!xpub_key) {
-        xpub_fail(currency_name);
+        xpub_fail(currency);
         input_field.focus();
         return
     }
-    const is_valid = check_xpub(xpub_key, xpub_prefix(currency_name), currency_name),
+    const is_valid = check_xpub(xpub_key, xpub_prefix(currency), currency),
         address_list = $("#ad_info_wrap .td_box"),
         details_panel = $("#ad_info_wrap");
     if (is_valid !== true) {
         const error_message = tl("invalidxpub", {
-            "currency": currency_name
+            currency
         });
         popnotify("error", error_message);
         setTimeout(function() {
@@ -528,9 +528,9 @@ function validate_xpub(form_container) {
         }, 10);
         return
     }
-    const derived_addresses = generate_derived_addresses(currency_name, xpub_key);
+    const derived_addresses = generate_derived_addresses(currency, xpub_key);
     if (!derived_addresses) {
-        xpub_fail(currency_name);
+        xpub_fail(currency);
         return false;
     }
     address_list.html(derived_addresses);
@@ -547,7 +547,7 @@ function validate_xpub(form_container) {
         popnotify("error", tl("confirmpkownership"));
         return false;
     }
-    const settings_item = cs_node(currency_name, "Xpub"),
+    const settings_item = cs_node(currency, "Xpub"),
         existing_key = settings_item.data("key");
     if (existing_key) {
         if (existing_key === xpub_key) {
@@ -565,41 +565,39 @@ function validate_xpub(form_container) {
         "key_id": xpub_id
     }).find(".switchpanel").removeClass("false").addClass("true");
     settings_item.find("p").html("true");
-    const currency_item = get_currencyli(currency_name),
-        home_button = get_homeli(currency_name);
+    const currency_item = get_currencyli(currency),
+        home_button = get_homeli(currency);
     currency_item.attr("data-checked", "true").data("checked", true);
     home_button.removeClass("hide");
-    save_currencies(true);
-    save_cc_settings(currency_name, true);
+    const init_currency = set_up() ? null : currency;
+    save_currencies(true, init_currency);
+    save_cc_settings(currency, true);
     const key_config = key_cc_xpub(xpub_key),
-        coin_data = get_coin_config(currency_name),
-        bip32_config = get_bip32dat(currency_name);
+        coin_data = get_coin_config(currency),
+        bip32_config = get_bip32dat(currency);
     key_config.seedid = xpub_id;
     const derived_data = derive_obj("xpub", key_config, coin_data, bip32_config);
     if (derived_data) {
-        derive_add_address(currency_name, derived_data);
+        derive_add_address(currency, derived_data);
     }
     canceldialog();
     clear_savedurl();
-    if (glob_const.body.hasClass("showstartpage")) {
-        const account_name = $("#eninput").val();
-        $("#accountsettings").data("selected", account_name).find("p").html(account_name);
+    if (init_currency) {
+        canceldialog();
         save_settings();
-        openpage("?p=home", "home", "loadpage");
-        glob_const.body.removeClass("showstartpage");
         home_button.find(".rq_icon").trigger("click");
         return
     }
     notify(tl("xpubsaved"));
-    add_xpub_cb(currency_name, xpub_id);
-    save_addresses(currency_name, false);
-    currency_check(currency_name);
+    add_xpub_cb(currency, xpub_id);
+    save_addresses(currency, false);
+    currency_check(currency);
 }
 
 // Handles failed Xpub validation with error notification
-function xpub_fail(currency_name) {
+function xpub_fail(currency) {
     const error_message = tl("invalidxpub", {
-        "currency": currency_name
+        "currency": currency
     });
     popnotify("error", error_message);
     reset_xpub_form();
@@ -619,21 +617,21 @@ function clear_xpub_checkboxes() {
 }
 
 // Validates Xpub format against currency-specific patterns
-function check_xpub(xpub_key, default_prefix, currency_name) {
+function check_xpub(xpub_key, default_prefix, currency) {
     const known_prefixes = {
             bitcoin: "zpub|xpub",
             litecoin: "zpub|Ltub"
         },
-        prefix_pattern = known_prefixes[currency_name] || default_prefix,
+        prefix_pattern = known_prefixes[currency] || default_prefix,
         validation_regex = "(" + prefix_pattern + ")([a-km-zA-HJ-NP-Z1-9]{107})(\\?c=\\d*&h=bip\\d{2,3})?";
     return new RegExp(validation_regex).test(xpub_key);
 }
 
 // Generates preview of derived addresses from Xpub key
-function generate_derived_addresses(currency_name, xpub_key) {
+function generate_derived_addresses(currency, xpub_key) {
     try {
-        const coin_data = get_coin_config(currency_name),
-            bip32_config = get_bip32dat(currency_name),
+        const coin_data = get_coin_config(currency),
+            bip32_config = get_bip32dat(currency),
             derivation_path = "M/0/",
             start_index = 0,
             key_config = key_cc_xpub(xpub_key),
@@ -646,7 +644,7 @@ function generate_derived_addresses(currency_name, xpub_key) {
                 "xpub": true,
                 "versionbytes": version_bytes
             },
-            derived_keys = keypair_array(false, new Array(5), start_index, derivation_path, bip32_config, master_key, chain_code, currency_name, version_bytes),
+            derived_keys = keypair_array(false, new Array(5), start_index, derivation_path, bip32_config, master_key, chain_code, currency, version_bytes),
             address_list = derived_keys.map((key_data, index) => {
                 const path_index = start_index + index;
                 return "<li class='adbox der_li' data-index='" + path_index + "'><strong>" + derivation_path + path_index + "</strong> | <span class='mspace'>" + key_data.address + "</span></li>";
@@ -667,30 +665,30 @@ function xpub_cc_switch() {
         const toggle_btn = $(this),
             settings_item = toggle_btn.closest("li"),
             parent_wrap = toggle_btn.closest(".liwrap"),
-            currency_name = parent_wrap.attr("data-currency"),
+            currency = parent_wrap.attr("data-currency"),
             xpub_data = settings_item.data();
         if (toggle_btn.hasClass("true")) {
             const user_confirmed = confirm(tl("disablexpub"));
             if (user_confirmed) {
                 settings_item.data("selected", false).find("p").html("false");
                 toggle_btn.removeClass("true").addClass("false");
-                save_cc_settings(currency_name, true);
-                delete_xpub_cb(currency_name, xpub_data.key_id);
+                save_cc_settings(currency, true);
+                delete_xpub_cb(currency, xpub_data.key_id);
             }
             return
         }
         if (xpub_data.key) {
             settings_item.data("selected", true).find("p").text("true");
             toggle_btn.removeClass("false").addClass("true");
-            save_cc_settings(currency_name, true);
-            add_xpub_cb(currency_name, xpub_data.key_id);
-            save_addresses(currency_name, false);
-            currency_check(currency_name);
+            save_cc_settings(currency, true);
+            add_xpub_cb(currency, xpub_data.key_id);
+            save_addresses(currency, false);
+            currency_check(currency);
             return
         }
-        const coin_data = get_coin_config(currency_name),
+        const coin_data = get_coin_config(currency),
             currency_info = {
-                "currency": currency_name,
+                "currency": currency,
                 "ccsymbol": coin_data.ccsymbol,
                 "cmcid": coin_data.cmcid,
                 "erc20": coin_data.erc20
@@ -704,27 +702,27 @@ function delete_xpub() {
     $(document).on("click", "#delete_xpub", function() {
         const user_confirmed = confirm(tl("delete") + " " + tl("bip32xpub") + "?");
         if (user_confirmed) {
-            const currency_name = $(this).attr("data-currency"),
-                settings_item = cs_node(currency_name, "Xpub"),
+            const currency = $(this).attr("data-currency"),
+                settings_item = cs_node(currency, "Xpub"),
                 xpub_id = settings_item.data("key_id");
-            delete_xpub_cb(currency_name, xpub_id, true);
-            save_addresses(currency_name, false);
-            check_currency(currency_name);
+            delete_xpub_cb(currency, xpub_id, true);
+            save_addresses(currency, false);
+            check_currency(currency);
             settings_item.data({
                 "selected": false,
                 "key": null,
                 "key_id": null
             }).find(".switchpanel").removeClass("true").addClass("false");
             settings_item.find("p").html("false");
-            save_cc_settings(currency_name, true);
+            save_cc_settings(currency, true);
             canceldialog();
         }
     })
 }
 
 // Updates address list UI after Xpub key deletion
-function delete_xpub_cb(currency_name, xpub_id, reset_checked) {
-    const affected_addresses = filter_addressli(currency_name, "xpubid", xpub_id);
+function delete_xpub_cb(currency, xpub_id, reset_checked) {
+    const affected_addresses = filter_addressli(currency, "xpubid", xpub_id);
     affected_addresses.each(function() {
         const address_item = $(this);
         address_item.removeClass("xpubv").addClass("xpubu");
@@ -735,8 +733,8 @@ function delete_xpub_cb(currency_name, xpub_id, reset_checked) {
 }
 
 // Updates address list UI after adding new Xpub key
-function add_xpub_cb(currency_name, xpub_id) {
-    const affected_addresses = filter_addressli(currency_name, "xpubid", xpub_id);
+function add_xpub_cb(currency, xpub_id) {
+    const affected_addresses = filter_addressli(currency, "xpubid", xpub_id);
     affected_addresses.each(function() {
         $(this).addClass("xpubv").removeClass("xpubu").attr("data-checked", "true").data("checked", true);
     });
@@ -804,33 +802,33 @@ function save_api_key() {
 function reset_coinsettings_trigger() {
     $(document).on("click", ".reset_cc_settings", function() {
         const reset_btn = $(this),
-            currency_name = reset_btn.attr("data-currency");
+            currency = reset_btn.attr("data-currency");
         popdialog("<h2 class='icon-bin'>" + tl("resetdialog", {
-            "currency": currency_name
+            currency
         }) + "</h2>", "reset_coinsettings", reset_btn);
     })
 }
 
 // Initiates coin settings reset after user confirmation
 function reset_coinsettings(trigger_element) {
-    const currency_name = trigger_element.attr("data-currency"),
+    const currency = trigger_element.attr("data-currency"),
         user_confirmed = confirm(tl("resetconfirm", {
-            "currency": currency_name
+            currency
         }));
     if (user_confirmed !== true) {
         return
     }
-    restore_default_settings(currency_name);
+    restore_default_settings(currency);
 }
 
 // Performs coin settings reset while preserving critical configurations
-function restore_default_settings(currency_name) {
-    const stored_settings = br_get_local(currency_name + "_settings", true);
+function restore_default_settings(currency) {
+    const stored_settings = br_get_local(currency + "_settings", true);
     if (stored_settings) {
-        const lightning_config = currency_name === "bitcoin" ? stored_settings["Lightning network"] : false,
+        const lightning_config = currency === "bitcoin" ? stored_settings["Lightning network"] : false,
             xpub_config = stored_settings.Xpub || false,
             layer2_enabled = stored_settings.layer2,
-            default_settings = get_coinsettings(currency_name);
+            default_settings = get_coinsettings(currency);
         if (lightning_config) {
             default_settings["Lightning network"] = lightning_config; // don't reset lightning settings
         }
@@ -838,16 +836,16 @@ function restore_default_settings(currency_name) {
             default_settings.Xpub = xpub_config; // don't reset xpub settings
         }
         if (layer2_enabled) {
-            const compressed_settings = compress_layer2_config(currency_name);
-            br_set_local(currency_name + "_settings", compressed_settings, true);
-            append_coinsetting(currency_name, compressed_settings);
+            const compressed_settings = compress_layer2_config(currency);
+            br_set_local(currency + "_settings", compressed_settings, true);
+            append_coinsetting(currency, compressed_settings);
         } else {
-            br_set_local(currency_name + "_settings", default_settings, true);
-            append_coinsetting(currency_name, default_settings);
+            br_set_local(currency + "_settings", default_settings, true);
+            append_coinsetting(currency, default_settings);
         }
     }
     canceldialog();
     notify(tl("resetnotify", {
-        "currency": currency_name
+        currency
     }));
 }

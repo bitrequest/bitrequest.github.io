@@ -1008,13 +1008,7 @@ function seed_callback() {
         notify("🎉 " + tl("congratulations") + " 🎉");
         const seed_id = phrase_id,
             seed_phrase = glob_let.phrasearray.join(" ");
-        if (glob_const.body.hasClass("showstartpage")) {
-            derive_all_init(seed_phrase, seed_id);
-            openpage("?p=home", "home", "loadpage");
-            const selected_coin = $("#seed_steps").attr("data-goal"),
-                home_item = get_homeli(selected_coin);
-            home_item.find(".rq_icon").trigger("click");
-        } else {
+        if (set_up()) {
             const existing_derivations = filter_all_addressli("seedid", seed_id);
             if (existing_derivations.length > 0) {
                 update_address_lists();
@@ -1022,6 +1016,12 @@ function seed_callback() {
             deactivate_xpubs();
             derive_all(seed_phrase, seed_id);
             save_currencies(true);
+        } else {
+            derive_all_init(seed_phrase, seed_id);
+            openpage("?p=home", "home", "loadpage");
+            const selected_coin = $("#seed_steps").attr("data-goal"),
+                home_item = get_homeli(selected_coin);
+            home_item.find(".rq_icon").trigger("click");
         }
         encrypt_seed_data(phrase_obj);
     }
@@ -1490,11 +1490,9 @@ function get_rootkey(seed) {
 // Sets initial account settings and derives addresses for all currencies
 function derive_all_init(phrase, seed_id, extra) {
     derive_all(phrase, seed_id, extra);
-    const account_name = $("#eninput").val();
-    $("#accountsettings").data("selected", account_name).find("p").text(account_name);
     save_settings();
-    save_currencies(true);
-    glob_const.body.removeClass("showstartpage");
+    // On app initiation
+    save_currencies(true, true);
 }
 
 // Derives addresses for all supported coins from master seed

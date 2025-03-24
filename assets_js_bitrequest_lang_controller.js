@@ -21,9 +21,6 @@ function init_tl() {
     $(".tl_page2").text(tl("requests"));
     $(".tl_page3").text(tl("settings"));
     $(".tl_page4").text(tl("payoff"));
-    $(".tl_page5").attr("placeholder", tl("accountsettings"));
-    $(".tl_page6").text(tl("iwouldliketogetpaid"));
-    $(".tl_page6").text(tl("iwouldliketogetpaid"));
     $("#canceldialog").text(cancelbttn);
     $("#execute").text(okbttn);
     $("#add_erc20 .icon-plus").text(tl("more"));

@@ -148,12 +148,12 @@ function render_lightning_interface(replace) {
             "</div>" +
             "<div id='lnd_credentials'>" +
             "<div class='lndcd cs_lnd'>" +
-            "<div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host'/><div class='qrscanner' data-currency='lnd' data-id='lnconnect' title='scan qr-code'><span class='icon-qrcode'></span></div></div>" +
-            "<div class='inputwrap'><input class='invoice_macaroon (hex)' type='text' value='' placeholder='Invoice macaroon'/></div>" +
+            "<div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host' autocomplete='off' autocapitalize='off' spellcheck='false'/><div class='qrscanner' data-currency='lnd' data-id='lnconnect' title='scan qr-code'><span class='icon-qrcode'></span></div></div>" +
+            "<div class='inputwrap'><input class='invoice_macaroon (hex)' type='text' value='' placeholder='Invoice macaroon' autocomplete='off' autocapitalize='off' spellcheck='false'/></div>" +
             "</div>" +
             "<div class='lndcd cs_lnbits'>" +
-            "<div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host'/></div>" +
-            "<div class='inputwrap'><input class='invoice_macaroon' type='text' value='' placeholder='Invoice/read key'/></div>" +
+            "<div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host' autocomplete='off' autocapitalize='off' spellcheck='false'/></div>" +
+            "<div class='inputwrap'><input class='invoice_macaroon' type='text' value='' placeholder='Invoice/read key' autocomplete='off' autocapitalize='off' spellcheck='false'/></div>" +
             "</div>" +
             "</div>" +
             "<div class='switch_wrap'>" +
@@ -169,7 +169,7 @@ function render_lightning_interface(replace) {
             "<strong>2.</strong> " + tl("lnnodestep2") + "<br/>" +
             "<strong>3.</strong> " + tl("lnnodestep3") + "<br/><br/>" +
             "</p>" +
-            "<input type='text' value='' placeholder='https://...' id='lnd_proxy_url_input'/>" +
+            "<input type='text' value='' placeholder='https://...' id='lnd_proxy_url_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>" +
             "<input type='password' value='' placeholder='API key' id='proxy_pw_input'/>" +
             "</div>" +
             "</div>" +
@@ -1266,12 +1266,9 @@ function add_ln_imp(node_services, node_id, implementation, proxy_data, node_hos
     const currency = "bitcoin",
         address_list = get_addresslist(currency).children("li");
     if (!address_list.length) {
-        if (glob_const.body.hasClass("showstartpage")) {
-            const account_name = $("#eninput").val();
-            $("#accountsettings").data("selected", account_name).find("p").text(account_name);
+        if (!set_up()) {
             save_settings();
             openpage("?p=home", "home", "loadpage");
-            glob_const.body.removeClass("showstartpage");
         }
         const address_data = {
             "currency": currency,

@@ -47,10 +47,6 @@
 		width: 75%;
 	}
 
-	#allcurrencies li {
-		width: 50%;
-	}
-
 	.iconright2 .atext {
 		padding-right: 25%;
 	}
@@ -103,11 +99,6 @@
 
 	.iconbox {
 		font-size: 150%;
-	}
-
-	#allcurrencies li {
-		width: 33.333333%;
-		float: none;
 	}
 
 	#show_backup {
@@ -168,10 +159,6 @@
 		font-size: 130%;
 	}
 
-	#allcurrencies li:after {
-		font-size: 2.4rem;
-	}
-
 	#request_front {
 		font-size: 105%;
 	}
@@ -188,7 +175,6 @@
 @media only screen and (min-width:850px) {
 
 	/* max font-size dialog */
-	#startpage,
 	#startscreen {
 		font-size: 3.4rem;
 	}

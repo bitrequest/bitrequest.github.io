@@ -45,7 +45,6 @@ function lang_nl(id, data) {
 
         // INTRO
         "enteryourname": "Voer uw naam in",
-        "iwouldliketogetpaid": "Ik wil graag betaald worden in:",
         "more": "Meer",
         "restorefrombackup": "Herstel van backup",
 
@@ -214,7 +213,7 @@ function lang_nl(id, data) {
 
         // SHARE REQUEST
         "share": "deel",
-        "sharetitlename": data.requestname + " heeft een " + data.pagenameccparam + " betaalverzoek van " + data.amount + " " + data.uoa + " gestuurd voor '" + data.requesttitle + "'",
+        "sharetitlename": (data.requestname === "Bitrequest") ? "Hoi, ik heb een " + data.pagenameccparam + " bitrequest gemaakt van " + data.amount + " " + data.uoa + " voor '" + data.requesttitle + "'" : data.requestname + " heeft een " + data.pagenameccparam + " betaalverzoek van " + data.amount + " " + data.uoa + " gestuurd voor '" + data.requesttitle + "'",
         "sharetitle": data.pagenameccparam + " betaalverzoek van " + data.amount + " " + data.uoa,
         "sharetitlechange": data.payment + " betaalverzoek voor " + data.newccvalue + " " + data.newccsymbol,
 

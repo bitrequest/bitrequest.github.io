@@ -188,7 +188,7 @@ function get_oauth_credentials(auth_code) {
                                 br_set_local("rt", JSON.stringify(encoded_token));
                             }
                             handle_auth_success();
-                            if (glob_const.body.hasClass("showstartpage")) { // only show when logged in
+                            if (set_up()) { // only show when logged in
                                 trigger_restore();
                             }
                             const redirect_timer = setTimeout(function() {

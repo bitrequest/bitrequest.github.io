@@ -129,15 +129,10 @@
 	pointer-events: all;
 }
 
-html.inframe #paymentdialogbox.transacting #view_tx,
+html.inframe #paymentdialogbox #view_tx,
 #paymentdialogbox.blockd #view_tx {
 	display: none;
 	pointer-events: none;
-}
-
-html.inframe #paymentdialogbox[data-pending="no"].transacting #view_tx {
-	display: inline-block;
-	pointer-events: all;
 }
 
 #paymentdialogbox.transacting .brstatuspanel,

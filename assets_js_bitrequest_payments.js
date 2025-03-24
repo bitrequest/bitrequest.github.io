@@ -718,6 +718,7 @@ function continue_request() {
         pending_class = is_pending && is_monitored && request_type_category === "local" ? "ispending" : "",
         has_integrated_address = xmr_integrated_address === recipient_address ? false : xmr_integrated_address,
         show_qr = "showqr" in url_params,
+        saved_name = $("#accountsettings").data("selected"),
         extended_request_data = {
             "uoa": unit_of_account,
             "amount": payment_amount,
@@ -726,6 +727,7 @@ function continue_request() {
             "cmcid": coin_market_id,
             "cpid": coin_price_id,
             status,
+            saved_name,
             "pending": pending_status,
             "paid": is_paid,
             "isrequest": is_request,
@@ -1432,7 +1434,7 @@ function get_payment(ccrateeuro, ccapi) {
         crypto_icon = getcc_icon(request.cmcid, request.cpid, request.erc20),
         lightning_icon = request.payment === "bitcoin" ? "<img src='img_logos_btc-lnd.png' class='cmc_icon icon_lnd'>" : "",
         share_btn = "<div class='button" + share_active + "' id='sharebutton'><span class='icon-share2'>" + tl("sharerequestbutton") + "</span></div>",
-        init_name = has_name ? request.requestname : $("#accountsettings").data("selected"),
+        init_name = has_name ? request.requestname : request.saved_name,
         title_long = request.requesttitle && request.requesttitle.length > 65,
         exceed_class = title_long ? "title_exceed" : "",
         title_short = title_long ? request.requesttitle.substring(0, 44) + " ... " : request.requesttitle,
@@ -1506,8 +1508,8 @@ function get_payment(ccrateeuro, ccapi) {
         share_form = "\
             <div id='shareformbox'>\
                 <div id='shareformib' class='inputbreak'>\
-                    <form id='shareform' disabled='' autocomplete='off' autocorrect='off' autocapitalize='sentences' spellcheck='off'>\
-                        <label>" + tl("whatsyourname") + "<input type='text' placeholder='Name' id='requestname' value='" + init_name + "' autocomplete='false'" + readonly_attr + "></label>\
+                    <form id='shareform' disabled='' autocorrect='off' autocapitalize='sentences' spellcheck='off'>\
+                        <label>" + tl("whatsyourname") + "<input type='text' placeholder='Name' id='requestname' value='" + init_name + "'" + readonly_attr + "></label>\
                         <label>" + tl("whatsitfor") + "<input type='text' placeholder='" + tl("forexample") + ": " + tl("lunch") + " 🥪' id='requesttitle' value='" + title_str + "' data-ph1=' " + tl("festivaltickets") + "' data-ph2=' " + tl("coffee") + " ☕' data-ph3=' " + tl("present") + " 🎁' data-ph4=' " + tl("snowboarding") + " 🏂' data-ph5=' " + tl("movietheater") + " 📽️' data-ph6=' " + tl("lunch") + " 🥪' data-ph7=' " + tl("shopping") + " 🛒' data-ph8=' " + tl("videogame") + " 🎮' data-ph9=' " + tl("drinks") + " 🥤' data-ph10=' " + tl("concerttickets") + " 🎵' data-ph11=' " + tl("camping") + " ⛺' data-ph12=' " + tl("taxi") + " 🚕' data-ph13=' " + tl("zoo") + " 🦒'></label>\
                     </form>" + fallback_html +
         "</div>\
@@ -2549,7 +2551,7 @@ function share(current_button) {
             currency_symbol = request.currencysymbol,
             has_data = data_param && data_param.length > 5,
             data_object = has_data ? JSON.parse(atob(data_param)) : null, // decode data param if exists
-            request_name = has_data ? data_object.n : $("#accountsettings").data("selected"),
+            request_name = has_data ? data_object.n : request.saved_name,
             request_title = has_data ? data_object.t : "",
             is_lightning = has_data ? !!data_object.imp : false,
             new_data_string = has_data ? "&d=" + data_param : "", // construct data param if exists
@@ -2923,10 +2925,7 @@ function view_tx() {
     $(document).on("click", "#view_tx", function() {
         if (glob_const.inframe) {
             glob_const.html.removeClass("hide_app");
-        } else if (glob_const.body.hasClass("showstartpages")) {
-            cancel_paymentdialog();
-            start_next($("#intro"));
-            return;
+            return
         }
         openpage("?p=requests", "requests", "loadpage");
         const transaction_hash = $(this).attr("data-txhash"),
@@ -3077,8 +3076,9 @@ function save_payment_request(direct, lightning_url) {
         request_data_hash = current_data && current_data.length > 5 ? current_data : null, // check if data param exists
         request_meta_hash = current_meta && current_meta.length > 5 ? current_meta : null, // check if meta param exists
         data_object = request_data_hash ? JSON.parse(atob(request_data_hash)) : null, // decode data param if exists
+        request_name = request.requestname,
         request_timestamp = current_payment_timestamp || (data_object && data_object.ts) || (current_request_type === "incoming" ? null : current_timestamp), // null is unknown timestamp
-        unhashed_request_data = current_payment + current_currency + amount_string + current_address + request.requestname + request.requesttitle + confirmation_string + lightning_id,
+        unhashed_request_data = current_payment + current_currency + amount_string + current_address + request_name + request.requesttitle + confirmation_string + lightning_id,
         saved_transaction_hash = request.txhash,
         is_local = current_request_type === "local",
         request_id = is_local && saved_transaction_hash ? generate_hash(saved_transaction_hash) : generate_hash(unhashed_request_data),
@@ -3189,6 +3189,18 @@ function save_payment_request(direct, lightning_url) {
                     "lightning": lightning_object
                 });
             delete append_object.coinsettings; // don't save coinsettings in request
+
+            // update username
+            const default_name = "Bitrequest";
+            if (request_name !== default_name || current_request_type === "local" || current_request_type === "outgoing") {
+                const saved_name = request.saved_name;
+                if (saved_name === default_name) {
+                    set_setting("accountsettings", {
+                        "selected": request_name
+                    }, request_name);
+                    save_settings();
+                }
+            }
             append_request(append_object);
             setTimeout(function() {
                 save_requests();

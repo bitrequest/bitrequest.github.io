@@ -45,7 +45,6 @@ function lang_en(id, data) {
 
         // INTRO
         "enteryourname": "Please enter your name",
-        "iwouldliketogetpaid": "I would like to get paid in:",
         "more": "More",
         "restorefrombackup": "Restore from backup",
 
@@ -214,7 +213,7 @@ function lang_en(id, data) {
 
         // SHARE REQUEST
         "share": "share",
-        "sharetitlename": data.requestname + " sent a " + data.pagenameccparam + " payment request of " + data.amount + " " + data.uoa + " for '" + data.requesttitle + "'",
+        "sharetitlename": (data.requestname === "Bitrequest") ? "Hi, I made a " + data.pagenameccparam + " bitrequest of " + data.amount + " " + data.uoa + " for '" + data.requesttitle + "'" : data.requestname + " sent a " + data.pagenameccparam + " bitrequest of " + data.amount + " " + data.uoa + " for '" + data.requesttitle + "'",
         "sharetitle": data.pagenameccparam + " payment request for " + data.amount + " " + data.uoa,
         "sharetitlechange": data.payment + " request for " + data.newccvalue + " " + data.newccsymbol,
 

@@ -628,11 +628,8 @@ function start_backup_process() {
 
 // Creates and displays backup dialog with Google Drive integration and change tracking
 function backup_database() {
-    if ($("#popup").hasClass("showpu")) {
-        return;
-    }
-    if (is_openrequest() === true) {
-        return;
+    if ($("#popup").hasClass("showpu") || is_opendialog() || is_openrequest()) {
+        return
     }
     const json = generate_backup_data(),
         filename = generate_backup_filename(),
@@ -807,7 +804,7 @@ function share_backup_file() {
                         "proxy": proxy
                     }));
 
-                shorten_url(title, glob_const.approot + "?p=settings&sbu=" + data,
+                shorten_url(title, glob_const.approot + "?sbu=" + data,
                     fetch_aws("img_system_backup.png"), true);
 
             }).fail(function(xhr, stat, err) {
@@ -2008,7 +2005,7 @@ function share_csv() {
                         "ro": cache.filename,
                         "proxy": proxy
                     }));
-                shorten_url(title, glob_const.approot + "?p=settings&csv=" + data, fetch_aws("img_system_backup.png"), true);
+                shorten_url(title, glob_const.approot + "?csv=" + data, fetch_aws("img_system_backup.png"), true);
             }).fail(function(xhr, stat, err) {
                 closeloader();
             });
@@ -2649,7 +2646,7 @@ function pick_api_proxy() {
                            <strong>3.</strong> " + tl("proxystep3") + "<br/><br/>\
                        </div>\
                        <div id='rpc_input'>\
-                           <input type='text' value='' placeholder='https://...' id='proxy_url_input'/>\
+                           <input type='text' value='' placeholder='https://...' id='proxy_url_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                            <div class='c_stat icon-wifi-off'></div>\
                            <div class='c_stat icon-connection'></div>\
                        </div>\
@@ -2880,36 +2877,36 @@ function apikeys() {
                <div class='popnotify'></div>\
                <div class='popform'>\
                    <h3>Alchemy</h3>\
-                   <input type='text' value='" + keys.alchemy + "' placeholder='Alchemy " + keyph + "' data-ref='alchemy' data-checkchange='" + keys.alchemy + "' class='ak_input'/>\
+                   <input type='text' value='" + keys.alchemy + "' placeholder='Alchemy " + keyph + "' data-ref='alchemy' data-checkchange='" + keys.alchemy + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Arbiscan</h3>\
-                   <input type='text' value='" + keys.arbiscan + "' placeholder='Arbiscan " + keyph + "' data-ref='arbiscan' data-checkchange='" + keys.arbiscan + "' class='ak_input'/>\
+                   <input type='text' value='" + keys.arbiscan + "' placeholder='Arbiscan " + keyph + "' data-ref='arbiscan' data-checkchange='" + keys.arbiscan + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Bitly</h3>\
-                   <input type='text' value='" + keys.bitly + "' placeholder='Bitly access token' data-ref='bitly' data-checkchange='" + keys.bitly + "' class='ak_input'/>\
+                   <input type='text' value='" + keys.bitly + "' placeholder='Bitly access token' data-ref='bitly' data-checkchange='" + keys.bitly + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Bscscan</h3>\
-                   <input type='text' value='" + keys.bscscan + "' placeholder='Bscscan " + keyph + "' data-ref='bscscan' data-checkchange='" + keys.bscscan + "' class='ak_input'/>\
+                   <input type='text' value='" + keys.bscscan + "' placeholder='Bscscan " + keyph + "' data-ref='bscscan' data-checkchange='" + keys.bscscan + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Blockchair</h3>\
-                   <input type='text' value='" + keys.blockchair + "' placeholder='Blockchair " + keyph + "' data-ref='blockchair' data-checkchange='" + keys.blockchair + "' class='ak_input'/>\
+                   <input type='text' value='" + keys.blockchair + "' placeholder='Blockchair " + keyph + "' data-ref='blockchair' data-checkchange='" + keys.blockchair + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Blockcypher</h3>\
-                   <input type='text' value='" + keys.blockcypher + "' placeholder='Blockcypher " + keyph + "' data-ref='blockcypher' data-checkchange='" + keys.blockcypher + "' class='ak_input'/>\
+                   <input type='text' value='" + keys.blockcypher + "' placeholder='Blockcypher " + keyph + "' data-ref='blockcypher' data-checkchange='" + keys.blockcypher + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Coinmarketcap</h3>\
-                   <input type='text' value='" + keys.cmc + "' placeholder='Coinmarketcap " + keyph + "' data-ref='coinmarketcap' data-checkchange='" + keys.cmc + "' class='ak_input'/>\
+                   <input type='text' value='" + keys.cmc + "' placeholder='Coinmarketcap " + keyph + "' data-ref='coinmarketcap' data-checkchange='" + keys.cmc + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Currencylayer</h3>\
-                   <input type='text' value='" + keys.currencylayer + "' placeholder='Currencylayer " + keyph + "' data-ref='currencylayer' data-checkchange='" + keys.currencylayer + "' class='ak_input'/>\
+                   <input type='text' value='" + keys.currencylayer + "' placeholder='Currencylayer " + keyph + "' data-ref='currencylayer' data-checkchange='" + keys.currencylayer + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Etherscan</h3>\
-                   <input type='text' value='" + keys.etherscan + "' placeholder='Etherscan " + keyph + "' data-ref='etherscan' data-checkchange='" + keys.etherscan + "' class='ak_input'/>\
+                   <input type='text' value='" + keys.etherscan + "' placeholder='Etherscan " + keyph + "' data-ref='etherscan' data-checkchange='" + keys.etherscan + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Ethplorer</h3>\
-                   <input type='text' value='" + keys.ethplorer + "' placeholder='Ethplorer " + keyph + "' data-ref='ethplorer' data-checkchange='" + keys.ethplorer + "' class='ak_input'/>\
+                   <input type='text' value='" + keys.ethplorer + "' placeholder='Ethplorer " + keyph + "' data-ref='ethplorer' data-checkchange='" + keys.ethplorer + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Exchangeratesapi</h3>\
-                   <input type='text' value='" + keys.exchangerates + "' placeholder='Exchangeratesapi " + keyph + "' data-ref='exchangeratesapi' data-checkchange='" + keys.exchangerates + "' class='ak_input'/>\
+                   <input type='text' value='" + keys.exchangerates + "' placeholder='Exchangeratesapi " + keyph + "' data-ref='exchangeratesapi' data-checkchange='" + keys.exchangerates + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Firebase</h3>\
-                   <input type='text' value='" + keys.firebase + "' placeholder='Firebase " + keyph + "' data-ref='firebase' data-checkchange='" + keys.firebase + "' class='ak_input'/>\
+                   <input type='text' value='" + keys.firebase + "' placeholder='Firebase " + keyph + "' data-ref='firebase' data-checkchange='" + keys.firebase + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Fixer</h3>\
-                   <input type='text' value='" + keys.fixer + "' placeholder='Fixer " + keyph + "' data-ref='fixer' data-checkchange='" + keys.fixer + "' class='ak_input'/>\
+                   <input type='text' value='" + keys.fixer + "' placeholder='Fixer " + keyph + "' data-ref='fixer' data-checkchange='" + keys.fixer + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Infura</h3>\
-                   <input type='text' value='" + keys.infura + "' placeholder='Infura Project ID' data-ref='infura' data-checkchange='" + keys.infura + "' class='ak_input'/>\
-                   <input type='submit' class='submit' value='" + tl("okbttn") + "' id='apisubmit'/>\
+                   <input type='text' value='" + keys.infura + "' placeholder='Infura Project ID' data-ref='infura' data-checkchange='" + keys.infura + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Polygonscan</h3>\
-                   <input type='text' value='" + keys.polygonscan + "' placeholder='Polygonscan " + keyph + "' data-ref='polygonscan' data-checkchange='" + keys.polygonscan + "' class='ak_input'/>\
+                   <input type='text' value='" + keys.polygonscan + "' placeholder='Polygonscan " + keyph + "' data-ref='polygonscan' data-checkchange='" + keys.polygonscan + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
+                   <input type='submit' class='submit' value='" + tl("okbttn") + "' id='apisubmit'/>\
                </div>\
            </div>";
         popdialog(content, "triggersubmit");
@@ -3290,12 +3287,12 @@ function edit_contactform(checkout) {
         <h2 class='icon-sphere'>" + title + "</h2>" + subtitle +
         "<div class='popnotify'></div>\
         <div class='popform'>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + data.name + "' placeholder='" + tl("phname") + "' class='cf_nameinput'/><span class='required'>*</span></div>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + data.address + "' placeholder='" + tl("phaddress") + "' class='cf_addressinput'/><span class='required'>*</span></div>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + data.zipcode + "' placeholder='" + tl("phzipcode") + "' class='cf_zipcodeinput'/><span class='required'>*</span></div>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + data.city + "' placeholder='" + tl("phcity") + "' class='cf_cityinput'/><span class='required'>*</span></div>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + data.country + "' placeholder='" + tl("phcountry") + "' class='cf_countryinput'/><span class='required'>*</span></div>\
-            <div class='cf_inputwrap empty'><input type='text' value='" + data.email + "' placeholder='" + tl("phemail") + "' class='cf_emailinput'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + data.name + "' placeholder='" + tl("phname") + "' class='cf_nameinput' autocomplete='off' autocapitalize='off' spellcheck='false'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + data.address + "' placeholder='" + tl("phaddress") + "' class='cf_addressinput' autocomplete='off' autocapitalize='off' spellcheck='false'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + data.zipcode + "' placeholder='" + tl("phzipcode") + "' class='cf_zipcodeinput' autocomplete='off' autocapitalize='off' spellcheck='false'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + data.city + "' placeholder='" + tl("phcity") + "' class='cf_cityinput' autocomplete='off' autocapitalize='off' spellcheck='false'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + data.country + "' placeholder='" + tl("phcountry") + "' class='cf_countryinput' autocomplete='off' autocapitalize='off' spellcheck='false'/><span class='required'>*</span></div>\
+            <div class='cf_inputwrap empty'><input type='text' value='" + data.email + "' placeholder='" + tl("phemail") + "' class='cf_emailinput' autocomplete='off' autocapitalize='off' spellcheck='false'/><span class='required'>*</span></div>\
             <input type='submit' class='submit' value='" + tl("okbttn") + "'/>\
         </div>\
     </div>";
@@ -3655,7 +3652,7 @@ function share_teaminvite() {
                         "ro": cache.filename,
                         "proxy": proxy
                     }));
-                shorten_url(title, glob_const.approot + "?p=settings&ro=" + data, glob_const.approot + "/img_icons_apple-touch-icon.png", true);
+                shorten_url(title, glob_const.approot + "?ro=" + data, glob_const.approot + "/img_icons_apple-touch-icon.png", true);
             }).fail(function(xhr, stat, err) {
                 closeloader();
             });
@@ -3697,9 +3694,9 @@ function check_teaminvite(ro) {
                     filename = "bitrequest_team_invite" + encodeURIComponent(account) + "_" + bu_date + ".json",
                     cd = countdown(expires_in * 1000),
                     cd_format = countdown_format(cd),
-                    bpdat_seedid = br_dat.bitrequest_cashier ? br_dat.bitrequest_cashier.seedid || false : false,
-                    update = bpdat_seedid === glob_let.cashier_seedid,
-                    master_account = bpdat_seedid === glob_let.bipid,
+                    bpdat_seedid = q_obj(br_dat, "bitrequest_cashier.seedid"),
+                    update = bpdat_seedid == glob_let.cashier_seedid,
+                    master_account = bpdat_seedid == glob_let.bipid,
                     teamid = br_get_local("teamid", true),
                     teamid_arr = get_default_object(teamid),
                     is_installed = teamid_arr.includes(ro),
@@ -3764,9 +3761,8 @@ function install_teaminvite_trigger() {
         }
         const update = btn.attr("data-update") === "true",
             installid = btn.attr("data-installid"),
-            installed = (glob_let.stored_currencies) ? true : false,
             result_text = update ? tl("updatealert") : tl("installalert"),
-            result = installed ? confirm(result_text) : true;
+            result = set_up() ? confirm(result_text) : true;
         if (result) {
             const bu_dat = btn.attr("data-base64"),
                 j_filename = btn.attr("data-filename"),

@@ -551,7 +551,7 @@ function show_api_error(api_source, error_obj) {
     if (api_source) {
         const key_fail = error_data.apikey === true,
             error_message = error_data.errormessage,
-            error_code = error_data.errorcode !== undefined ? "Error: " + error_data.errorcode : "",
+            error_code = error_data.errorcode ? "Error: " + error_data.errorcode : "",
             api_button = key_fail ? "<div id='add_api' data-api='" + api_source + "' class='button'>" + tl("addapikey", {
                 "apisrc": api_source
             }) + "</div>" : "",

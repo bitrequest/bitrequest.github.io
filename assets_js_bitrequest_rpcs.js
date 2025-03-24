@@ -57,7 +57,7 @@ function edit_rpcnode() {
                     <h3>" + dialog_title + "</h3>\
                     <div id='rpc_input'>\
                         <div class='selectbox' id='rpc_list'>\
-                            <input type='text' value='' placeholder='" + (url_placeholder || default_placeholder) + "' id='rpc_url_input' data-pe='block'/>\
+                            <input type='text' value='' placeholder='" + (url_placeholder || default_placeholder) + "' id='rpc_url_input' data-pe='block' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                             <div class='c_stat icon-wifi-off'></div>\
                             <div class='c_stat icon-connection'></div>" + node_select + "</div>\
                     </div>\
