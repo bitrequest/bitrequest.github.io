@@ -76,6 +76,10 @@ audio {
 	display: none;
 }
 
+img[src=""] {
+  display: none;
+}
+
 
 /* blur window */
 

@@ -486,7 +486,7 @@ function create_rpc_node_element(api_list, is_live, node_id, node_config, is_sel
         display_name = setting_sub_address(node_name, stripped_url, node_config.custom) + vendor_string + version_string,
         node_icon_url = get_node_icon(node_name),
         default_class = custom ? "" : " default",
-        node_icon = (node_icon_url) ? "<img src='" + fetch_aws(node_icon_url) + ".png' class='icon'>" : "",
+        node_icon = (node_icon_url) ? "<img src='" + fetch_aws(node_icon_url) + ".png' class='icon' onerror=\"this.src='wp_holder.png'\">" : "",
         node_element = $("<div class='optionwrap" + status_class + selected_class + default_class + "' style='display:none' data-pe='none' title='" + stripped_url + "'><span data-value='" + node_url + "' data-pe='none'>" + node_icon + "<span class='cstat'>•</span> " + display_name + "</span><div class='opt_icon_box' data-pe='none'><div class='opt_icon icon-bin' data-pe='none'></div></div>");
     node_element.data(node_config).appendTo(api_list);
     node_element.slideDown(500);

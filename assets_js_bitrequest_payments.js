@@ -3040,7 +3040,7 @@ function download_wallet(currency) {
                 if (platform_url) {
                     const wallet_name = wallet_info.name,
                         wallet_website = wallet_info.website,
-                        wallet_icon = is_lightning ? "<img src='img_logos_btc-lnd.png' class='wallet_icon'/>" : "<img src='" + get_wallet_icon_url(wallet_name) + "' class='wallet_icon'/>",
+                        wallet_icon = is_lightning ? "<img src='img_logos_btc-lnd.png' class='wallet_icon'/>" : "<img src='" + get_wallet_icon_url(wallet_name) + "' class='wallet_icon' onerror=\"this.src='wp_holder.png'\">",
                         wallet_item = "<li><a href='" + wallet_website + "' target='_blank' class='exit app_dll'>" + wallet_icon + wallet_name + "</a><a href='" + platform_url + "' target='_blank' class='exit store_tag'>" + store_tag + "</a></li>";
                     wallet_container.append(wallet_item);
                 }

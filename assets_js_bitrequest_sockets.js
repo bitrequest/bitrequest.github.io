@@ -1143,10 +1143,6 @@ function web3_erc20_websocket(socket_node, wallet_address, contract_address, soc
     if (glob_let.sockets[socket_id]) {
         return
     }
-    if (!contract_address) {
-        web3_eth_websocket(socket_node, wallet_address);
-        return
-    }
     const network_type = socket_node.network,
         base_url = complete_url(socket_node.url),
         infura_key = get_infura_apikey(base_url),

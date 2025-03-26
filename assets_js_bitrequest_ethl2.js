@@ -334,7 +334,7 @@ function edit_l2() {
                         $.each(apis, function(i, v2) {
                             const node_name = v2.name,
                                 node_icon_url = get_node_icon(node_name),
-                                node_icon = (node_icon_url) ? "<img src='" + fetch_aws(node_icon_url) + ".png' class='icon'>" : "";
+                                node_icon = (node_icon_url) ? "<img src='" + fetch_aws(node_icon_url) + ".png' class='icon' onerror=\"this.src='wp_holder.png'\">" : "";
                             api_push.push({
                                 "span": {
                                     "class": "optionwrap",

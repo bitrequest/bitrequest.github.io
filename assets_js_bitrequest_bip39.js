@@ -1797,7 +1797,7 @@ function phrase_info_pu(selected_coin) {
                     if (platform_url && wallet_config.seed === true) {
                         const wallet_name = wallet_config.name,
                             wallet_site = wallet_config.website,
-                            wallet_logo = "<img src='" + get_wallet_icon_url(wallet_name) + "' class='wallet_icon'/>";
+                            wallet_logo = "<img src='" + get_wallet_icon_url(wallet_name) + "' class='wallet_icon' onerror=\"this.src='wp_holder.png'\">";
                         wallet_list += "<li><a href='" + wallet_site + "' target='_blank' class='exit app_dll'>" + wallet_logo + wallet_name +
                             "</a><a href='" + platform_url + "' target='_blank' class='exit store_tag'>" + store_badge + "</a></li>";
                     }
@@ -1890,7 +1890,7 @@ function list_compatible_wallets(coin) {
                     if (platform_url && wallet_config.seed === true) {
                         const wallet_name = wallet_config.name,
                             wallet_site = wallet_config.website,
-                            wallet_logo = "<img src='" + get_wallet_icon_url(wallet_name) + "' class='wallet_icon'/>";
+                            wallet_logo = "<img src='" + get_wallet_icon_url(wallet_name) + "' class='wallet_icon' onerror=\"this.src='wp_holder.png'\">";
                         wallet_list += "<li><a href='" + wallet_site + "' target='_blank' class='exit app_dll'>" + wallet_logo + wallet_name +
                             "</a><a href='" + platform_url + "' target='_blank' class='exit store_tag'>" + store_badge + "</a></li>";
                     }
