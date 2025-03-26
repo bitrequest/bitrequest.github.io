@@ -1534,10 +1534,6 @@ html.dragmode .currentpage .applist li.dragging {
 	display: block;
 }
 
-html.inframe .requestlist li .req_actions .icon-folder-open {
-	display: none;
-}
-
 .requestlist li[data-status="insufficient"] .metalist .meta_status .status {
 	/* unmonitored transactions */
 	color: #eeac57;
@@ -2083,16 +2079,6 @@ input:invalid {
 	z-index: 2;
 }
 
-html.inframe #closeoptions,
-.blurmain_options #closeoptions {
-	display: block;
-}
-
-html.inframe.hide_app #closeoptions {
-	display: none;
-}
-
-
 /* share popup */
 
 #sharecontainer {
@@ -2578,6 +2564,26 @@ html.inframe.hide_app body {
 
 html.inframe body {
 	background-color: rgba(30, 30, 33, 0.79);
+}
+
+html.inframe #mainwrap header,
+html.inframe #mainwrap #viewarchive,
+html.inframe #newrequest_alias,
+html.inframe #fixednav {
+	display: none !important;
+}
+
+html.inframe .requestlist li .req_actions .icon-folder-open {
+	display: none;
+}
+
+html.inframe #closeoptions,
+.blurmain_options #closeoptions {
+	display: block;
+}
+
+html.inframe.hide_app #closeoptions {
+	display: none;
 }
 
 #proxy_info {
