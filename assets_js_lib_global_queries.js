@@ -158,7 +158,8 @@ const br_bipobj = br_get_local("bpdat", true),
             "litecoin": "https://litecoinspace.org",
             "dogecoin": null,
             "bitcoin-cash": null
-        }
+        },
+        "eth_l2s": ["arbitrum", "polygon", "bnb"]
     },
     glob_let = {
         "socket_attempt": {},

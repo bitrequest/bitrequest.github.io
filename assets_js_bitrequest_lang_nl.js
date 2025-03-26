@@ -425,7 +425,7 @@ function lang_nl(id, data) {
         "disableproxy": "Schakel proxy " + data.set_proxy_val + " uit?",
         "enableproxy": "Schakel proxy " + data.set_proxy_val + " in?",
         // dialog
-        "unabletoconnectln": "Kan geen verbinding aken met de lightning node",
+        "unabletoconnectln": "Kan geen verbinding maken met de lightning node",
 
         // BIP39
         "disclaimer": "Disclaimer!",

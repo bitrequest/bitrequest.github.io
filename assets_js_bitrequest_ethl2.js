@@ -39,15 +39,16 @@ $(document).ready(function() {
 
 // Initializes Layer 2 socket connections for Ethereum and ERC20 token transactions
 function initialize_layer2_connections(payment, address, ct, socket_node) {
-    const l2_options = get_layer2_config(payment);
+    const idx_array = glob_const.eth_l2s,
+        l2_options = get_layer2_config(payment);
     if (l2_options) {
         const ctracts = ct || contracts(request.currencysymbol),
             l2_arr = [],
             is_request = request.isrequest,
             req_l2_arr = request.eth_l2s;
-        let index = 0;
         $.each(l2_options, function(l2, l2_dat) {
             const set_select = is_request ? false : (l2_dat.selected === false) ? false : !empty_obj(l2_dat),
+                index = idx_array.indexOf(l2),
                 inarr = ($.inArray(index, req_l2_arr) > -1),
                 selected = set_select || inarr;
             if (selected) {
@@ -55,7 +56,6 @@ function initialize_layer2_connections(payment, address, ct, socket_node) {
                 const sn = socket_node || get_network_node_config(payment, l2, l2_dat, "websockets");
                 setup_layer2_monitoring(l2, sn, address, ctracts);
             }
-            index++;
         });
         if (l2_arr.length) { // layer 2
             if (!is_request) {
@@ -77,7 +77,7 @@ function setup_layer2_monitoring(l2, sn, address, ctracts, retry) {
                 ping_id = sha_sub(socket_node.url + layer2, 15);
             socket_info(socket_node, true);
             glob_let.socket_attempt[ping_id] = true;
-            if (node_name === "infura") {
+            if (ctracts && node_name === "infura") {
                 web3_erc20_websocket(socket_node, address, contract, ping_id);
                 return
             }

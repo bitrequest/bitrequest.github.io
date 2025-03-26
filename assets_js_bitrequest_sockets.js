@@ -1011,7 +1011,7 @@ function init_eth_sockets(payment_type, socket_node, wallet_address, retry) {
         if (str_incudes(socket_node.url, glob_const.main_alchemy_socket)) {
             alchemy_eth_websocket(socket_node, wallet_address); // L1 Alchemy
         } else {
-            web3_eth_websocket(socket_node, wallet_address, glob_const.main_eth_node); // L1 Infura
+            web3_eth_websocket(socket_node, wallet_address); // L1 Infura
         }
     } else {
         web3_erc20_websocket(socket_node, wallet_address, token_contracts.main);
@@ -1074,7 +1074,7 @@ function alchemy_eth_websocket(socket_node, wallet_address) {
 }
 
 // Establishes WebSocket connection to Ethereum node for monitoring new blocks with RPC-based transaction filtering
-function web3_eth_websocket(socket_node, wallet_address, rpc_url) {
+function web3_eth_websocket(socket_node, wallet_address) {
     const network_type = socket_node.network,
         base_url = socket_node.url,
         infura_key = get_infura_apikey(base_url),
@@ -1105,7 +1105,7 @@ function web3_eth_websocket(socket_node, wallet_address, rpc_url) {
             if (block_data && block_data.hash) {
                 const api_data = helper ? q_obj(helper, "api_info.data") : null;
                 if (!api_data) return;
-                const node_url = api_data.default === false ? api_data.url : rpc_url;
+                const node_url = api_data.default === false ? api_data.url : glob_const.main_eth_node;
                 api_proxy(eth_params(node_url, 25, "eth_getBlockByHash", [block_data.hash, true])).done(function(response) {
                     const result_data = inf_result(response),
                         transactions = result_data.transactions;
@@ -1141,6 +1141,10 @@ function web3_eth_websocket(socket_node, wallet_address, rpc_url) {
 // Establishes WebSocket connection for monitoring ERC20 token transfers using contract event logs
 function web3_erc20_websocket(socket_node, wallet_address, contract_address, socket_id) {
     if (glob_let.sockets[socket_id]) {
+        return
+    }
+    if (!contract_address) {
+        web3_eth_websocket(socket_node, wallet_address);
         return
     }
     const network_type = socket_node.network,
