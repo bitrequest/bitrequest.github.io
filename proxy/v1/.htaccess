@@ -1,0 +1,9 @@
+Options +SymLinksIfOwnerMatch -Indexes
+RewriteEngine on
+RewriteCond %{REQUEST_URI}::$1 ^(.*?/)(.*)::\2$
+RewriteRule ^(.*)$ - [E=BASE:%1]
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)4bR(.*)$  %{ENV:BASE}/inv/index.php?invoice=$2 [L]
+
+##php_flag display_errors 1
