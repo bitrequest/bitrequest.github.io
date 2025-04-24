@@ -1793,7 +1793,8 @@ function current_block_height(rd, api_data, rdo) {
 
 // Routes Electrum server API requests between address polling and block height verification for Bitcoin transactions
 function electrum_rpc_init(rd, api_data, rdo) {
-    if (rdo.source === "addr_polling") {
+    const source = rdo.source;
+    if (source === "addr_polling" || source === "after_scan") {
         electrum_rpc(rd, api_data, rdo);
         return
     }
@@ -1847,12 +1848,15 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
         script_hash = script_pub.hash,
         script_pub_key = script_pub.script_pub_key,
         rpc_url = api_data.url,
-        pending = rdo.pending;
+        pending = rdo.pending,
+        cachetime = rdo.cachetime,
+        addr_polling = (source === "addr_polling" || source === "after_scan"),
+        endpoint = addr_polling ? "get_mempool" : "get_history";
     let matched_tx = false;
     if (pending === "scanning") { // scan incoming transactions on address
         api_proxy({
             "api": currency,
-            "cachetime": rdo.cachetime,
+            cachetime,
             "cachefolder": "1h",
             "custom": "electrum",
             "api_url": rpc_url,
@@ -1862,7 +1866,7 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
                 "cache": true,
                 "data": {
                     "id": "scanning",
-                    "method": "blockchain.scripthash.get_history",
+                    "method": "blockchain.scripthash." + endpoint,
                     "ref": script_hash,
                     "node": rpc_url
                 }
@@ -1876,19 +1880,81 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
                     }, rd, api_data, rdo);
                     return
                 }
-                if (has_tx(api_result)) {
-                    $.each(api_result, function(key, tx) {
-                        const parsed_tx = electrum_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, script_pub_key, latest_block);
-                        if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) {
-                            matched_tx = parsed_tx;
-                            if (source === "requests") {
-                                const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                if (tx_item) {
-                                    tx_list.append(tx_item.data(parsed_tx));
+                if (addr_polling) {
+                    if (empty_obj(api_result)) {
+                        glob_let.tx_count = 0; // set tx count
+                        process_scan_results(rd, api_data, rdo, matched_tx);
+                        return
+                    }
+                    const glob_tx_count = glob_let.tx_count,
+                        tx_count = api_result.length;
+                    if (tx_count > glob_let.tx_count) { // new tx detected
+                        const latest_tx = api_result[0].tx_hash;
+                        api_proxy({
+                            "api": currency,
+                            cachetime,
+                            "cachefolder": "1h",
+                            "custom": "electrum",
+                            "api_url": rpc_url,
+                            "proxy": true,
+                            "params": {
+                                "method": "POST",
+                                "cache": true,
+                                "data": {
+                                    "id": "scanning",
+                                    "method": "blockchain.transaction.get",
+                                    "ref": latest_tx,
+                                    "node": rpc_url
                                 }
                             }
-                        }
-                    });
+                        }).done(function(e) {
+                            const tx_result = br_result(e),
+                                res = q_obj(tx_result, "result");
+                            if (res) {
+                                const parsed_tx = electrum_scan_data(res, rdo.setconfirmations, rd.currencysymbol, script_pub_key, latest_block, latest_tx);
+                                if (parsed_tx.ccval) {
+                                    matched_tx = parsed_tx;
+                                }
+                                process_scan_results(rd, api_data, rdo, matched_tx);
+                                return
+                            }
+                            handle_scan_failure(null, rd, api_data, rdo);
+                        }).fail(function(xhr, stat, err) {
+                            const is_proxy_error = is_proxy_fail(this.url),
+                                error_data = xhr || stat || err;
+                            handle_scan_failure({
+                                "error": error_data,
+                                "is_proxy": is_proxy_error
+                            }, rd, api_data, rdo, network);
+                        }).always(function() {
+                            update_api_source(rdo, api_data);
+                        });
+                        return
+                    }
+                    if (glob_tx_count === 1000000) { // tx count not set
+                        // set initial tx count
+                        glob_let.tx_count = tx_count;
+                    }
+                    return
+                }
+                if (api_result) {
+                    const tx_arr = api_result.tx_hash ? [api_result] : api_result; // convert to array
+                    if (has_tx(tx_arr)) {
+                        $.each(tx_arr, function(key, tx) {
+                            const parsed_tx = electrum_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, script_pub_key, latest_block);
+                            if (parsed_tx.transactiontime > rdo.request_timestamp && parsed_tx.ccval) {
+                                matched_tx = parsed_tx;
+                                if (source === "requests") {
+                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                    if (tx_item) {
+                                        tx_list.append(tx_item.data(parsed_tx));
+                                    }
+                                } else {
+                                    return false
+                                }
+                            }
+                        });
+                    }
                 }
                 process_scan_results(rd, api_data, rdo, matched_tx);
                 return
@@ -1910,7 +1976,7 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
         const tx_hash = rd.txhash;
         api_proxy({
             "api": currency,
-            "cachetime": rdo.cachetime,
+            cachetime,
             "cachefolder": "1h",
             "custom": "electrum",
             "api_url": rpc_url,
@@ -2533,7 +2599,7 @@ function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, lates
 function electrum_scan_data(data, setconfirmations, ccsymbol, script_pub, latest_block, tx_hash) {
     const outputs = data.outputs,
         height = data.height || 0,
-        transactiontime = normalize_timestamp(data.timestamp, true),
+        transactiontime = height ? normalize_timestamp(data.timestamp, true) : now_utc() - 3000,
         confirmations = latest_block ? get_block_confirmations(height, latest_block) : height;
     let outputsum = 0;
     if (outputs) {
@@ -2546,7 +2612,7 @@ function electrum_scan_data(data, setconfirmations, ccsymbol, script_pub, latest
     return {
         "ccval": (outputsum) ? outputsum / 100000000 : null,
         transactiontime,
-        "txhash": data.tx_hash || tx_hash,
+        "txhash": tx_hash || data.tx_hash,
         confirmations,
         setconfirmations,
         ccsymbol

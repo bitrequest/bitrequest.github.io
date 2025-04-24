@@ -282,6 +282,9 @@ function fetch_methods($response, $pl) {
 		if (is_numeric($result)) {
 			return ["value" => $result];
 		}
+		if ($method == "blockchain.transaction.get") {
+			return decode_bitcoin_tx($result);
+		}
 		return $result;
 	}
 	return err_obj("4112", "no result");
@@ -331,7 +334,11 @@ function output_tx_hashes($node, $transactions) {
 
 // Fetches additional transaction data and block details to enrich transaction information
 function complement_tx($node, $transaction) {
-	$tx_hash = $transaction["tx_hash"];
+	$tx = isset($transaction["tx_hash"]) ? $transaction : $transaction[0];
+	if (!isset($tx)) {
+		return ["error" => "No transaction data", "error_code" => 4119];
+	}
+	$tx_hash = $tx["tx_hash"];
 	
 	// First TOR request
 	$tx_hex = socket_fetch([
@@ -348,7 +355,7 @@ function complement_tx($node, $transaction) {
 	// Process transaction data
 	$fetch_tx = decode_bitcoin_tx($tx_hex);
 	// Second TOR request
-	$height = $transaction["height"];
+	$height = $tx["height"];
 	$fetch_block = socket_fetch([
 		"id" => get_random_id(),
 		"method" => "blockchain.block.header",
@@ -375,6 +382,9 @@ function get_random_id() {
 
 // Decodes a Bitcoin transaction from hex format into structured data
 function decode_bitcoin_tx($hex_data) {
+	if (is_array($hex_data)) {
+		return $hex_data;
+	}
 	// Initialize position and convert hex to binary
 	$position = 0;
 	$data = hex2bin($hex_data);

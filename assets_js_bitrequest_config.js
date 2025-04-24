@@ -288,7 +288,7 @@ const glob_multi_wallets = {
                             {
                                 "name": "sochain api",
                                 "url": "wss://ws.chain.so/",
-                                "display": true
+                                "display": false
                             }
                         ],
                         "options": [],
@@ -443,7 +443,7 @@ const glob_multi_wallets = {
                             {
                                 "name": "sochain api",
                                 "url": "wss://ws.chain.so/",
-                                "display": true
+                                "display": false
                             }
                         ],
                         "options": [],
@@ -562,7 +562,7 @@ const glob_multi_wallets = {
                             {
                                 "name": "sochain api",
                                 "url": "wss://ws.chain.so/",
-                                "display": true
+                                "display": false
                             }
                         ],
                         "options": [],

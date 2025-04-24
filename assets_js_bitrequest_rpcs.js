@@ -12,7 +12,6 @@ $(document).ready(function() {
     //nodes_match
     //match_url
     //validate_rpc_connection
-    //is_valid_tx_hex
     //save_rpc_settings
     delete_rpc_node();
     //get_node_icon
@@ -219,8 +218,8 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                                         }
                                     }).done(function(e) {
                                         const api_result = br_result(e),
-                                            result2 = q_obj(api_result, "result");
-                                        if (is_valid_tx_hex(result2)) {
+                                            result2 = q_obj(api_result, "result.tx_hash");
+                                        if (result2) {
                                             const is_selected = rpc_url2 === node_url;
                                             create_rpc_node_element(api_options, true, node_id, node_config, is_selected);
                                             node_list_obj.push({
@@ -340,11 +339,7 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_config
                     }
                 }).done(function(e) {
                     const api_result = br_result(e),
-                        result = q_obj(api_result, "result");
-                    let is_live = false
-                    if (result) {
-                        is_live = is_valid_tx_hex(result);
-                    }
+                        is_live = q_obj(api_result, "result.tx_hash");
                     create_rpc_node_element(api_list, is_live, node_id, node_config, is_selected);
                 }).fail(function(xhr, stat, err) {
                     create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
@@ -663,9 +658,10 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                         "node": rpc_url
                     }
                 }
-            }).done(function(response) {
-                const api_result = br_result(response).result;
-                if (is_valid_tx_hex(api_result)) {
+            }).done(function(e) {
+                const parsed_data = br_result(e),
+                    api_result = q_obj(parsed_data, "result.tx_hash");
+                if (api_result) {
                     const script_pub = address_to_scripthash(test_address, currency_name),
                         script_hash = script_pub.hash,
                         script_pub_key = script_pub.script_pub_key;
@@ -687,10 +683,10 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                             }
                         }
                     }).done(function(response) {
-                        const parsed_data = br_result(response),
-                            api_result = parsed_data.result;
-                        if (api_result) {
-                            const first_tx = api_result[0];
+                        const parsed_data2 = br_result(response),
+                            api_result2 = q_obj(parsed_data2, "result");
+                        if (api_result2) {
+                            const first_tx = api_result2[0];
                             if (first_tx) {
                                 if (first_tx.version) {
                                     input_section.addClass("live").removeClass("offline");
@@ -834,12 +830,6 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
             close_socket();
         }, 5000);
     }
-}
-
-// Check if it's a string and matches hex format (0-9, a-f, A-F)
-function is_valid_tx_hex(hex_string) {
-    const is_hex = typeof hex_string === "string" && /^[0-9a-fA-F]+$/.test(hex_string);
-    return is_hex && hex_string.length > 250;
 }
 
 function test_mempoolspace(input_section, node_config, currency_name) {

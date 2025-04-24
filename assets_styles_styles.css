@@ -1254,7 +1254,7 @@ html.dragmode .currentpage .applist li.dragging {
 
 .requestlist li[data-status="new"] .metalist li.receivedamount,
 .requestlist li[data-status="new"] .metalist li.payday {
-	display: block;
+	display: none;
 }
 
 .requestlist li.rqli.lightning .metalist li.receivedamount,
