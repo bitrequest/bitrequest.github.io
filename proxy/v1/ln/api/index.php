@@ -84,7 +84,7 @@ if ($api_key && !$lnget) {
 if (isset($pdat["add"])) {
 	$result = api(null, json_encode($pdat), null, 0, "tx", null, null);
 	// Add TOR support info
-    $result["tor"] = has_tor();
+	$result["tor"] = has_tor();
 	echo json_encode(["ping" => $result]);
 	return;
 }
@@ -526,8 +526,9 @@ if (in_array($imp, ["lnd", "lnbits"])) {
 		}
 	
 		if ($imp === "lnbits") {
+			$bolt11 = isset($dat["bolt11"]) ? $dat["bolt11"] : $dat["payment_request"];
 			return array_merge($result, [
-				"bolt11" => $dat["payment_request"],
+				"bolt11" => $bolt11,
 				"hash" => $dat["payment_hash"]
 			]);
 		}
@@ -712,7 +713,7 @@ if (in_array($imp, ["lnd", "lnbits"])) {
 	// Extract and normalize LNbits invoice status information
 	function get_lnbits_status($dat, $base_result, $expiry) {
 		$details = $dat["details"];
-		$inv_txtime = isset($details["time"]) ? (int)$details["time"] : 0;
+		$inv_txtime = isset($details["time"]) ? get_timestamp($details["time"]) : 0;
 		$expired = ((time() - $inv_txtime) > $expiry);
 		$br_state = "unknown";
 		if ($details["pending"] == true) $br_state = "pending";
@@ -786,4 +787,28 @@ if (in_array($imp, ["lnd", "lnbits"])) {
 				"code" => $code
 			],
 		];
+	}
+	
+	function get_timestamp($value) {
+		if (is_numeric($value)) {
+			$intValue = (int)$value;
+			if ((string)$intValue === (string)$value && $intValue >= 0) {
+				 return $intValue;
+			}
+		}
+		if (is_string($value)) {
+			try {
+				$dateTime = new DateTime($value);
+				$timestamp = $dateTime->getTimestamp();
+				if ($timestamp !== false) {
+					return $timestamp;
+				} else {
+					 return false;
+				}
+	
+			} catch (Exception $e) {
+				return false;
+			}
+		}
+		return false;
 	}
