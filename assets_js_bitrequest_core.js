@@ -3334,6 +3334,7 @@ function submit_erc20() {
 
 // Validates the address and view key (if applicable) for the selected currency
 function validate_address_vk(addr_data) {
+    console.log(addr_data);
     const label_field = $("#addressform .addresslabel"),
         label_input = label_field.val();
     if (inj(label_input)) return
@@ -3386,9 +3387,6 @@ function validate_address_vk(addr_data) {
             api_proxy({
                 "api": "mymonero api",
                 "search": "login",
-                "cachetime": 25,
-                "cachefolder": "1h",
-                "proxy": true,
                 "params": {
                     "method": "POST",
                     "data": api_payload,

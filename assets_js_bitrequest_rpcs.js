@@ -201,14 +201,11 @@ function fetch_electrum_nodes(currency, node_url, predefined_nodes, custom_nodes
                                 fetch_timeout = setTimeout(function() {
                                     api_proxy({
                                         "api": currency,
-                                        "cachetime": 25,
-                                        "cachefolder": "1h",
                                         "custom": "electrum",
                                         "api_url": rpc_url2,
                                         "proxy": true,
                                         "params": {
                                             "method": "POST",
-                                            "cache": true,
                                             "data": {
                                                 "id": sha_sub(rpc_url2, 6),
                                                 "method": "blockchain.transaction.get",

@@ -167,9 +167,6 @@ function connect_monero_node(cachetime, address, vk) {
     api_proxy({
         "api": "mymonero api",
         "search": "login",
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "proxy": true,
         "params": {
             "method": "POST",
             "data": payload,
@@ -244,9 +241,6 @@ function check_monero_transactions(cachetime, address, vk, request_ts) {
     api_proxy({
         "api": api_name,
         "search": "get_address_txs",
-        "cachetime": cachetime,
-        "cachefolder": "1h",
-        "proxy": true,
         "params": {
             "method": "POST",
             "data": payload,

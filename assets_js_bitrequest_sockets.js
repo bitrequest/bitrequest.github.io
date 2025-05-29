@@ -140,6 +140,8 @@ function init_socket(socket_node, wallet_address, retry) {
         return
     }
     if (payment_type === "bitcoin-cash") {
+        start_address_monitor(null, null, true);
+        return
         if (node_name === "mempool.space websocket" || socket_node.default === false) {
             mempoolspace_btc_socket(socket_node, wallet_address);
             return
@@ -233,10 +235,12 @@ function socket_info(socket_node, is_connected, is_polling) {
     if (glob_const.paymentdialogbox.hasClass("transacting")) return
     if (!is_openrequest()) return
     payment_address.removeClass("live");
-    helper.l1_status = false;
-    if (helper.l2_status === false) {
-        glob_const.paymentpopup.removeClass("live");
-        notify(tl("websocketoffline"), 500000, "yes");
+    if (helper) {
+        helper.l1_status = false;
+        if (helper.l2_status === false) {
+            glob_const.paymentpopup.removeClass("live");
+            notify(tl("websocketoffline"), 500000, "yes");
+        }
     }
 }
 

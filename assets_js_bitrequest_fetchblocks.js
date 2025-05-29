@@ -923,9 +923,6 @@ function initialize_monero_scan(rd, api_data, rdo) {
     api_proxy({
         "api": "mymonero api",
         "search": "login",
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "proxy": true,
         "params": {
             "method": "POST",
             "data": login_data,
@@ -969,9 +966,6 @@ function scan_monero_transactions(rd, api_data, rdo, viewkey) {
     api_proxy({
         "api": "mymonero api",
         "search": "get_address_txs",
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "proxy": true,
         "params": {
             "method": "POST",
             "data": request_payload,

@@ -169,7 +169,8 @@ ul.conf_options li .conf_emoji {
 	cursor: pointer;
 }
 
-.selectarrows:before {
+.selectarrows:before,
+.inputwrap .qrscanner .icon-qrcode:before {
 	margin-right: 0.25em;
 	vertical-align: top!important;
 }

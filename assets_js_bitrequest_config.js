@@ -2159,7 +2159,7 @@ const glob_multi_wallets = {
             },
             {
                 "name": "mymonero api",
-                "base_url": "https://api.mymonero.com:8443/",
+                "base_url": "https://api.mymonero.com/",
                 "key_param": null,
                 "api_key": "no_key",
                 "sign_up": null

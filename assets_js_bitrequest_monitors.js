@@ -397,7 +397,7 @@ function process_scan_results(rd, api_data, rdo, tx_details, l2) {
             return
         }
         if (src === "tx_polling" || src === "l2_polling") {
-            if (block_overflow("polling")) return // prevent overflow
+            if (block_overflow("polling" && src !== "addr_polling")) return // prevent overflow
             route_transaction_monitor(tx_details, api_data);
         }
         return

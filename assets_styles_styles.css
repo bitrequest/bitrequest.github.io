@@ -2634,8 +2634,6 @@ html.inframe.hide_app #closeoptions {
 
 /* qr scanner */
 
-.qrscanner {}
-
 #scanner {
 	position: fixed;
 	top: 0px;
