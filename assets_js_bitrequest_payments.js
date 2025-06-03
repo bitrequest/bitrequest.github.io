@@ -1573,7 +1573,7 @@ function get_payment(ccrateeuro, ccapi) {
     let save_request;
     show_paymentdialog();
     refresh_currency_pool(request.amount, exchange_rate);
-    generate_payment_qr(request.payment, wallet_addr, crypto_value, request.requesttitle);
+    generate_payment_qr(request.payment, wallet_addr, crypto_value, request.requestname, request.requesttitle);
     if (request.isrequest) { // check for incoming requests
         if (!helper.contactform) { // indicates if it's a online payment so not an incoming request
             if (request.monitored) {
@@ -1670,15 +1670,16 @@ function refresh_currency_pool(current_amount, current_rate) {
 }
 
 // Generates and displays payment QR codes with amount information
-function generate_payment_qr(payment, address, amount, title) {
+function generate_payment_qr(payment, address, amount, lbl, msg) {
     const number = Number(amount),
+        label = lbl || $("#paymentdialog input#requestname").val(),
+        message = msg || $("#paymentdialog input#requesttitle").val(),
         is_zero = number === 0 || isNaN(number),
-        url_scheme = request.erc20 ? "ethereum:" + address :
-        request.coindata.urlscheme(payment, address, amount, is_zero);
+        url_scheme = request.coindata.urlscheme(payment, address, amount, is_zero, label, message);
     $("#qrcode").empty().qrcode(url_scheme);
     set_wallet_uris(url_scheme, amount);
     if (helper.lnd) { // lightning
-        set_lightning_qr(amount, title);
+        set_lightning_qr(amount, message);
     }
 }
 
@@ -1691,11 +1692,9 @@ function set_wallet_uris(url_scheme, amount) {
 }
 
 // Configures Lightning Network QR code display
-function set_lightning_qr(a, title) {
+function set_lightning_qr(a, message) {
     const ln = helper.lnd,
-        srt = title || $("#paymentdialog input#requesttitle").val(),
-        rt = srt || request.requesttitle,
-        m = rt && rt.length > 1 ? "&m=" + encodeURIComponent(rt) : "",
+        m = message && message.length > 1 ? "&m=" + encodeURIComponent(message) : "",
         nid = ln.lnurl === false ? ln.nid : "",
         url = glob_let.lnd_ph + "/proxy/v1/ln/?i=" + ln.imp + "&id=" + request.typecode + ln.pid + nid + "&a=" + (a * 100000000000).toFixed(0) + m,
         lnurl = lnurl_encode("lnurl", url).toUpperCase();
@@ -2049,6 +2048,8 @@ function validate_request_data(lnurl) {
     }
     helper.currencylistitem.data("url", new_url);
     update_request_url(new_url);
+    const cc_value = $("#paymentdialogbox .ccpool").attr("data-value");
+    generate_payment_qr(payment, address, cc_value, request_name, request_title);
 }
 
 // Triggers request data validation on form input changes

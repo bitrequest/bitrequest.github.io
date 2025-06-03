@@ -3334,7 +3334,6 @@ function submit_erc20() {
 
 // Validates the address and view key (if applicable) for the selected currency
 function validate_address_vk(addr_data) {
-    console.log(addr_data);
     const label_field = $("#addressform .addresslabel"),
         label_input = label_field.val();
     if (inj(label_input)) return

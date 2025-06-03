@@ -366,6 +366,13 @@ let request = null,
 //sanitize_url
 //is_valid_url_or_ip
 
+// ** URL schemes: **
+
+//btc_urlscheme
+//bch_urlscheme
+//nano_urlscheme
+//xmr_urlscheme
+
 // ** Animations: **
 // loading_dots();
 
@@ -1619,6 +1626,59 @@ function is_valid_url_or_ip(input) {
         is_valid_ipv6(clean_url) ||
         is_valid_localhost(clean_url) ||
         is_valid_onion(clean_url);
+}
+
+// ** URL schemes: **
+
+// Generates the URL scheme for Bitcoin payments
+function btc_urlscheme(payment, address, amount, is_zero, label, message) {
+    const base_uri = payment + ":" + address;
+    if (!is_zero) return base_uri + bip21_urlscheme(amount, label, message);
+    return base_uri
+}
+
+// Generates Bitcoin Cash payment URI scheme
+function bch_urlscheme(payment, address, amount, is_zero, label, message) {
+    const cleaned_address = address.indexOf("bitcoincash:") > -1 ? address.split("bitcoincash:").pop() : address,
+        base_uri = "bitcoincash:" + cleaned_address;
+    if (!is_zero) return base_uri + bip21_urlscheme(amount, label, message);
+    return base_uri
+}
+
+// Generates Nano payment URI scheme
+function nano_urlscheme(payment, address, amount, is_zero, label, message) {
+    const base_uri = "nano:" + address;
+    if (is_zero) return base_uri;
+    const amount_raw = NanocurrencyWeb.tools.convert(amount, "NANO", "RAW");
+    return base_uri + bip21_urlscheme(amount_raw, label, message);
+}
+
+// Generates XMR payment URI scheme
+function xmr_urlscheme(payment, address, amount, is_zero, label, message) {
+    const base_uri = "monero:" + address;
+    if (is_zero) return base_uri;
+    let label_str = "&recipient_name=Bitrequest",
+        message_str = "";
+    if (label) {
+        label_str = "&recipient_name=" + encodeURIComponent(label);
+    }
+    if (message) {
+        message_str = "&tx_description=" + encodeURIComponent(message);
+    }
+    return base_uri + "?tx_amount=" + amount + label_str + message_str;
+}
+
+// Generates Bip21 payment URI scheme
+function bip21_urlscheme(amount, label, message) {
+    let label_str = "&label=Bitrequest",
+        message_str = "";
+    if (label) {
+        label_str = "&label=" + encodeURIComponent(label);
+    }
+    if (message) {
+        message_str = "&message=" + encodeURIComponent(message);
+    }
+    return "?amount=" + amount + label_str + message_str;
 }
 
 // ** Animations: **
