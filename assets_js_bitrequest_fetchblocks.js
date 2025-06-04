@@ -977,9 +977,9 @@ function scan_monero_transactions(rd, api_data, rdo, viewkey) {
         const api_result = br_result(response).result,
             transactions = api_result.transactions;
         if (transactions) {
+            let matched_tx = false;
             if (has_tx(transactions)) {
                 const sorted_txs = sort_transactions_by_date(xmr_scan_data, transactions);
-                let matched_tx = false;
                 $.each(sorted_txs, function(date, tx) {
                     const tx_data = xmr_scan_data(tx, rdo.setconfirmations, "xmr", api_result.blockchain_height);
                     if (tx_data) {
