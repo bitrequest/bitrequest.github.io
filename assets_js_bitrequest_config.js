@@ -1,10 +1,10 @@
 const glob_multi_wallets = {
     "exodus": {
         "name": "exodus",
-        "website": "https://www.exodus.io",
+        "website": "https://www.exodus.com",
         "appstore": "https://apps.apple.com/app/id1414384820",
         "playstore": "https://play.google.com/store/apps/details?id=exodusmovement.exodus",
-        "desktop": "https://www.exodus.io/desktop",
+        "desktop": "https://www.exodus.com/desktop",
         "seed": true
     },
     "coinomi": {
@@ -33,10 +33,10 @@ const glob_multi_wallets = {
     },
     "keepkey": {
         "name": "keepkey",
-        "website": "https://shapeshift.com/keepkey",
-        "appstore": "https://beta.shapeshift.com",
-        "playstore": "https://beta.shapeshift.com",
-        "desktop": "https://beta.shapeshift.com",
+        "website": "https://keepkey.com",
+        "appstore": "https://keepkey.com/get-started",
+        "playstore": "https://keepkey.com/get-started",
+        "desktop": "https://keepkey.com/get-started",
         "seed": true
     },
     "atomicwallet": {
