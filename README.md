@@ -7,37 +7,39 @@
 
 ## Bitrequest
 
-Create and share payment requests for cryptocurrencies.  
+Create and share payment requests for cryptocurrencies. Non-custodial, client-side PWA with real-time monitoring.
 
 ## Use cases
 
-* Point of Sale.
-* Send cryptocurrency payment requests to your friends.
-* Integrate in your webshop.
+* Point of Sale (POS) with instant feedback.
+* Send cryptocurrency payment requests to friends via URL sharing.
+* Integrate in your webshop for e-commerce checkouts.
 
 ## Features
 
 #### Requests
-* __Create__ payment requests by entering the amount in crypto or fiat.
-* __Share__ payment requests pegged to fiat to reduce volatility.
-* Get __instant payment feedback.__
-* Supports __multiple cryptocurrencies__ (Bitcoin, Lightning, Nano, Litecoin, Dogecoin, Dash, Ethereum, Bitcoin-cash, Monero, Nimiq, Kaspa, and Erc20-tokens).
-* __Manage requests__ (Monitor, View details, Archive).
+* __Create__ payment requests by entering amount in crypto or fiat (170 currencies).
+* __Share__ pegged to fiat to reduce volatility; auto-shortens URLs (Firebase/Bitly/Native).
+* Get __instant payment feedback__ via WebSocket/polling on public explorers/nodes.
+* Supports __multiple cryptocurrencies__ (Bitcoin, Lightning, Nano, Litecoin, Dogecoin, Dash, Ethereum + ERC20/L2, Bitcoin-cash, Monero, Nimiq, Kaspa).
+* __Manage requests__ (Monitor status, view details/tx history, archive/unarchive, receipts, CSV export).
 
 #### Addresses
-* __Bip44 / Xpub__ key derivations.
-* __Manage multiple addresses__. (Arrange, View details).
-* Set preferred number of __confirmations.__
+* __BIP44/Xpub__ key derivations from BIP39 seeds.
+* __Manage multiple addresses__ (Arrange via drag-drop, view details/PK/VK, random selection).
+* Set preferred number of __confirmations__ (zero-conf/instant-lock support).
 
 #### Settings
-* __Real-time exchange rates for 170 world currencies__, updated every 10 minutes.
-* __Real-time exchange rates for cryptocurrencies__, updated every 2 minutes.
-* __Bip39__ mnemonic seed.
-* Set __pincode.__
+* __Real-time exchange rates for 170 fiat currencies__, updated every 10 minutes.
+* __Real-time/historical crypto rates__ (CoinMarketCap/CoinPaprika/CoinGecko) for volatility checks.
+* __BIP39__ mnemonic seed with whitelists for security.
+* Set __PIN code__ for admin access (cashier/view-only mode).
 * Export CSV.
-* __Backup / Restore__ (Download Json file / Backup with Google Drive).
-* __Shorten__ your request URL's.
-* Use / Manage your __personal API keys.__
-* Use / Manage your __personal RPC node.__
+* __Backup/Restore__ (JSON download or Google Drive sync).
+* Use/Manage __personal API keys/proxies__ (TOR support, multi-fallbacks).
+* Connect to __personal (remote) nodes__ (Electrum/Infura/LND/LNbits).
 * __Permissions:__ Admin or Cashier mode.  
-* __Team invite:__ Invite teammembers to make requests on your behalf.
+* __Team invite:__ Invite members for restricted (cashier) access to shared addresses.  
+* __Lightning:__ LND/LNbits nodes, LNURL/Boltcard/NFC integration.  
+* __Ethereum L2:__ Arbitrum, Polygon, BNB Smart Chain support.  
+* __QR Scanner:__ For addresses, viewkeys, nodes, LN connects.
