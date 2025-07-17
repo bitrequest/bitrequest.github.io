@@ -36,7 +36,6 @@ function checkout(clicked_elem) {
 
 // Appends an iframe to the body with the given source URL.
 function append_iframe(frame_url) {
-    // Use a template literal for cleaner and more readable HTML string construction.
     const framebox = "<div id='br_framebox'><iframe src='" + frame_url + "' sandbox='allow-scripts allow-same-origin allow-popups'></iframe></div><div id='br_loadbox'><div id='br_loadpanel'><div id='br_loader'></div><p>Loading request...</p></div></div>";
     // Insert the new elements at the end of the body.
     document.body.insertAdjacentHTML("beforeend", framebox);

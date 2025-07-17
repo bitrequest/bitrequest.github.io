@@ -2652,7 +2652,7 @@ function firebase_shorten(shared_url, shared_title, site_thumb, unguessable, url
                     },
                     "socialMetaTagInfo": {
                         "socialTitle": "Bitrequest",
-                        "socialDescription": "Accept crypto anywhere",
+                        "socialDescription": tl("payoff"),
                         "socialImageLink": site_thumb
                     }
                 },
