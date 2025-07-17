@@ -309,6 +309,7 @@ let request = null,
 //get_string_before_last_colon
 //parse_url_params
 //scanmeta
+//decode_entities
 //inj
 //inj_alert
 //make_local
@@ -1115,40 +1116,90 @@ function scanmeta(val) {
     return false
 }
 
+function decode_entities(str) {
+    return str.replace(/&(#(x?)([0-9a-fA-F]+)|([a-zA-Z]+));/gi, function(match, num, hex, code_hex, code_name) {
+        if (num) {
+            return String.fromCharCode(parseInt(code_hex, hex ? 16 : 10));
+        } else if (code_name) {
+            const named = {"amp": "&", "apos": "'", "ast": "*", "bsol": "\\", "colon": ":", "comma": ",", "commat": "@", "copy": "\u00A9", "dollar": "$", "equals": "=", "excl": "!", "grave": "`", "gt": ">", "hat": "^", "hyphen": "-", "lcub": "{", "lowbar": "_", "lpar": "(", "lsqb": "[", "lt": "<", "midast": "*", "num": "#", "percnt": "%", "period": ".", "plus": "+", "quest": "?", "quot": "\"", "rcub": "}", "reg": "\u00AE", "rpar": ")", "rsqb": "]", "semi": ";", "sol": "/", "tilde": "~", "verbar": "|"}[code_name.toLowerCase()];
+            return named || match;
+        }
+        return match;
+    });
+}
+
 function inj(val) {
     if (!val) {
-        return false
+        return false;
     }
-    const value = typeof val === "string" ? val : String(val),
-        xss_pattern = /<\s*[\/]?\s*(script|img|svg|iframe|object|details|embed|style|math|link|video|audio)|on\w+\s*=|javascript:|data:text\/(html|javascript)|expression\(|href\s*=\s*['"]?\s*javascript:|src\s*=\s*['"]?\s*(javascript:|data:)|style\s*=.*(?:expression|url\(javascript:)|(alert|confirm|prompt)\(/i;
-    if (xss_pattern.test(value)) {
-        inj_alert(value);
-        return true
-    }
-    const encoded_script_pattern = /%3C\s*script|script\s*%3E|%3C\s*img|%3C\s*iframe|%3C\s*svg/i;
-    if (encoded_script_pattern.test(value)) {
-        inj_alert(value);
-        return true
-    }
-    if (/%[0-9A-F]{2}/i.test(value)) {
-        let decoded_value;
+    const value = typeof val === "string" ? val : String(val);
+    // Iterative URL decoding with max iterations for safety
+    let url_decoded = value.replace(/\+/g, " "),
+        prev = "",
+        iterations = 0;
+    const max_iterations = 10; // Prevent potential infinite loops
+    while (url_decoded !== prev && iterations < max_iterations) {
+        prev = url_decoded;
         try {
-            decoded_value = decodeURIComponent(value.replace(/\+/g, " "));
-            // Only test decoded value if it's different from the original
-            if (decoded_value !== value && xss_pattern.test(decoded_value)) {
-                inj_alert(value);
-                return true
-            }
+            url_decoded = decodeURIComponent(prev);
         } catch (e) {
-            console.error(e);
+            break;
         }
+        iterations++;
     }
+
+    // Decode HTML entities only if potential entities are present
+    let entity_decoded = url_decoded;
+    if (/&(#|[\w]+);/i.test(url_decoded)) {
+        entity_decoded = decode_entities(url_decoded);
+    }
+
+    // Expanded XSS pattern
+    const xss_pattern = /<\s*[\/]?\s*(script|img|svg|iframe|object|details|embed|style|math|link|video|audio|form|input|button|marquee|isindex|body|meta|base|applet|param|frameset|frame)|on\w+\s*=|javascript:|vbscript:|data:text\/(html|javascript)|expression\(|href\s*=\s*["']?\s*javascript:|src\s*=\s*["']?\s*(javascript:|data:)|formaction\s*=\s*["']?\s*javascript:|action\s*=\s*["']?\s*javascript:|style\s*=.*(?:expression|url\(javascript:)|(alert|confirm|prompt|eval)\s*[\(\`]/i;
+
+    // Test patterns on original, URL-decoded, and entity-decoded values
+    if (xss_pattern.test(value) || xss_pattern.test(url_decoded) || xss_pattern.test(entity_decoded)) {
+        inj_alert(value);
+        return true;
+    }
+
+    // Encoded script pattern
+    const encoded_script_pattern = /%3C\s*script|script\s*%3E|%3C\s*img|%3C\s*iframe|%3C\s*svg/i;
+    if (encoded_script_pattern.test(value) || encoded_script_pattern.test(url_decoded)) {
+        inj_alert(value);
+        return true;
+    }
+
+    // Base64 data URI check for suspicious MIME types, only if looks like data URI
+    function check_base64(str) {
+        const data_uri_regex = /data:(text\/(?:html|xml|xhtml)|application\/(?:xml|xhtml\+xml)|image\/svg\+xml|text\/javascript);base64,([A-Za-z0-9+/=]+)/i,
+            match = str.match(data_uri_regex);
+        if (match) {
+            try {
+                const base64_decoded = atob(match[2]);
+                let base64_entity_decoded = base64_decoded;
+                if (/&(#|[\w]+);/i.test(base64_decoded)) {
+                    base64_entity_decoded = decode_entities(base64_decoded);
+                }
+                if (xss_pattern.test(base64_decoded) || xss_pattern.test(base64_entity_decoded)) {
+                    return true;
+                }
+            } catch (e) {}
+        }
+        return false;
+    }
+    if (check_base64(value) || check_base64(url_decoded) || check_base64(entity_decoded)) {
+        inj_alert(value);
+        return true;
+    }
+
+    // Heuristic for heavy encoding
     const encoding_pattern = /(?:&#[xX]?\d+;|%[0-9a-fA-F]{2}){3,}/;
     if (encoding_pattern.test(value)) {
         inj_alert(value);
-        return true
+        return true;
     }
-    return false
+    return false;
 }
 
 function inj_alert(val) {
@@ -1156,7 +1207,7 @@ function inj_alert(val) {
     console.warn(i_err, val);
     if (is_opendialog()) {
         popnotify("error", i_err);
-        return
+        return;
     }
     topnotify(i_err);
 }
