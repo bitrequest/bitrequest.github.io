@@ -297,6 +297,7 @@ let request = null,
 //click_pop
 //highlight_json_syntax
 //get_aws_icon_url
+//visibility_change
 
 // ** Device & Platform Detection: **
 //detect_device_type
@@ -373,6 +374,7 @@ let request = null,
 //bch_urlscheme
 //nano_urlscheme
 //xmr_urlscheme
+//bip21_urlscheme
 
 // ** Animations: **
 // loading_dots();
@@ -834,6 +836,18 @@ function get_aws_icon_url(wallet_name, clas = "wallet_icon", ext = "png") {
     return "<img src='" + glob_const.aws_bucket + "img_icons_wallet-icons_" + wallet_name + "." + ext + "' class='" + clas + "' onerror=\"this.src='wp_holder.png'\">";
 }
 
+// Fires when app comes back to foreground
+function visibility_change() {
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+            if (is_openrequest() === true) {
+                foreground_reconnect(); // assets_js_bitrequest_sockets.js
+            }
+        }
+    });
+}
+
+
 // ** Device & Platform Detection: **
 
 // Rotates to next available proxy server while preventing request overflow
@@ -1121,7 +1135,43 @@ function decode_entities(str) {
         if (num) {
             return String.fromCharCode(parseInt(code_hex, hex ? 16 : 10));
         } else if (code_name) {
-            const named = {"amp": "&", "apos": "'", "ast": "*", "bsol": "\\", "colon": ":", "comma": ",", "commat": "@", "copy": "\u00A9", "dollar": "$", "equals": "=", "excl": "!", "grave": "`", "gt": ">", "hat": "^", "hyphen": "-", "lcub": "{", "lowbar": "_", "lpar": "(", "lsqb": "[", "lt": "<", "midast": "*", "num": "#", "percnt": "%", "period": ".", "plus": "+", "quest": "?", "quot": "\"", "rcub": "}", "reg": "\u00AE", "rpar": ")", "rsqb": "]", "semi": ";", "sol": "/", "tilde": "~", "verbar": "|"}[code_name.toLowerCase()];
+            const named = {
+                "amp": "&",
+                "apos": "'",
+                "ast": "*",
+                "bsol": "\\",
+                "colon": ":",
+                "comma": ",",
+                "commat": "@",
+                "copy": "\u00A9",
+                "dollar": "$",
+                "equals": "=",
+                "excl": "!",
+                "grave": "`",
+                "gt": ">",
+                "hat": "^",
+                "hyphen": "-",
+                "lcub": "{",
+                "lowbar": "_",
+                "lpar": "(",
+                "lsqb": "[",
+                "lt": "<",
+                "midast": "*",
+                "num": "#",
+                "percnt": "%",
+                "period": ".",
+                "plus": "+",
+                "quest": "?",
+                "quot": "\"",
+                "rcub": "}",
+                "reg": "\u00AE",
+                "rpar": ")",
+                "rsqb": "]",
+                "semi": ";",
+                "sol": "/",
+                "tilde": "~",
+                "verbar": "|"
+            } [code_name.toLowerCase()];
             return named || match;
         }
         return match;

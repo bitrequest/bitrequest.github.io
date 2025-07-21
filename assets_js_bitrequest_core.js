@@ -563,6 +563,7 @@ function finish_functions() {
     const ap = all_proxies(),
         all_tor_proxies = filter_object_array(ap, "tor", true);
     glob_let.tor_proxies = filter_object_array(all_tor_proxies, "tor", true);
+    visibility_change();
 }
 
 // Updates HTML document language and meta tag attributes based on current language code
@@ -1268,7 +1269,11 @@ function after_scan(request_data, api_settings, scan_params) {
             "blockexplorer": api_settings.name
         }));
     } else {
-        hide_paymentdialog();
+        if (helper.to_foreground) {
+            // don't hide paymentdialog
+        } else {
+            hide_paymentdialog();
+        }
     }
     route_api_request(request_data, api_settings, scan_params);
     socket_info(api_settings, true);
@@ -1276,6 +1281,10 @@ function after_scan(request_data, api_settings, scan_params) {
 
 // Handles failed post-scan verification
 function cancel_after_scan() {
+    if (helper.to_foreground) {
+        init_socket(helper.selected_socket, request.address);
+        return
+    }
     closeloader();
     if (glob_const.inframe) {
         parent.postMessage("close_request_confirm", "*");

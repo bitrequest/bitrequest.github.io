@@ -5,6 +5,7 @@
 //handle_socket_fails
 //handle_socket_close
 //reconnect_websocket
+//foreground_reconnect
 //try_next_socket
 
 // ** Lightning Network & NFC Handling: **
@@ -49,6 +50,8 @@ function init_socket(socket_node, wallet_address, retry) {
         return
     }
     glob_let.rpc_attempts = {};
+    helper.to_foreground = false;
+    prevent_screen_sleep();
     const payment_type = request.payment;
     let node_name;
     if (socket_node) {
@@ -322,6 +325,18 @@ function reconnect_websocket(recon_data) {
     }, 2000, function() {
         clearTimeout(retry_timeout);
     });
+}
+
+// Reconnects if websocket got lost in background (Only apply for mobile devices)
+function foreground_reconnect() {
+    if (!glob_const.supportsTouch) return
+    if (helper.l1_status === true) return
+    force_close_socket();
+    const api_settings = q_obj(request, "coinsettings.apis.selected");
+    if (api_settings) {
+        helper.to_foreground = true;
+        after_scan_init(api_settings);
+    }
 }
 
 // Selects next available WebSocket endpoint from configuration with overflow protection and duplicate attempt prevention

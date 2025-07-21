@@ -503,7 +503,8 @@ function load_request(pass) {
                     "lnd": false,
                     "lnd_status": false,
                     "l1_status": false,
-                    "l2_status": false
+                    "l2_status": false,
+                    "to_foreground": false
                 }, // global helper object
                 glob_let.api_attempt["crypto_price_apis"] = {},
                 glob_let.api_attempt["fiat_price_apis"] = {},
@@ -1606,7 +1607,6 @@ function get_payment(ccrateeuro, ccapi) {
     console.log({
         "helper": helper
     });
-    prevent_screen_sleep();
     const lightning_info = helper.lnd;
     if (lightning_info) {
         if (!request.lightning_id) {
