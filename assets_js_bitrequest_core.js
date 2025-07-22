@@ -1282,7 +1282,8 @@ function after_scan(request_data, api_settings, scan_params) {
 // Handles failed post-scan verification
 function cancel_after_scan() {
     if (helper.to_foreground) {
-        init_socket(helper.selected_socket, request.address);
+        init_socket(helper.selected_socket, request.address, null, true);
+        set_dialog_timeout();
         return
     }
     closeloader();

@@ -97,7 +97,11 @@ function start_layer2_scan(socket_node, contract, ping_id, retry) {
             execute_layer2_scan(rdo, socket_node);
         }
         glob_let.pinging[ping_id] = setInterval(function() {
-            execute_layer2_scan(rdo, socket_node);
+            try {
+                execute_layer2_scan(rdo, socket_node);
+            } catch (err) {
+                console.error("error", err);
+            }
         }, timeout);
         return
     }

@@ -44,7 +44,7 @@
 // ** Core WebSocket Initialization & Management: **
 
 // Establishes WebSocket connections for cryptocurrency payment monitoring based on payment type and node configuration
-function init_socket(socket_node, wallet_address, retry) {
+function init_socket(socket_node, wallet_address, retry, foreground) {
     if (glob_let.offline) {
         notify(tl("youareoffline") + ". " + tl("notmonitored"));
         return
@@ -83,7 +83,7 @@ function init_socket(socket_node, wallet_address, retry) {
             if (retry) {
                 return
             }
-            lightning_socket(helper.lnd);
+            lightning_socket(helper.lnd, foreground);
         }
         return
     }
@@ -331,9 +331,9 @@ function reconnect_websocket(recon_data) {
 function foreground_reconnect() {
     if (!glob_const.supportsTouch) return
     if (helper.l1_status === true) return
-    force_close_socket();
     const api_settings = q_obj(request, "coinsettings.apis.selected");
     if (api_settings) {
+        force_close_socket();
         helper.to_foreground = true;
         after_scan_init(api_settings);
     }
@@ -369,16 +369,19 @@ function try_next_socket(current_node, is_layer2) {
 // ** Lightning Network & NFC Handling: **
 
 // Establishes WebSocket connection to Lightning Network node for real-time payment monitoring
-function lightning_socket(lnd) {
+function lightning_socket(lnd, foreground) {
     glob_let.lnd_confirm = false;
     const proxy_data = lnurl_deform(lnd.proxy_host),
         proxy_url = proxy_data.url,
-        proxy_key = (lnd.pw) ? lnd.pw : proxy_data.k,
+        proxy_key = lnd.pw || proxy_data.k,
         payment_id = lnd.pid,
         node_id = lnd.nid,
         invoice_mode = lnd.imp;
     if (glob_let.sockets[payment_id]) {
         return
+    }
+    if (foreground) {
+        lnd_poll_data(proxy_url, proxy_key, payment_id, node_id, invoice_mode);
     }
     const socket = glob_let.sockets[payment_id] = new WebSocket(glob_const.ln_socket);
     socket.onopen = function(e) {

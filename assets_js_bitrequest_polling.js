@@ -134,7 +134,11 @@ function start_address_monitor(time_out, api_dat, retry) {
             "url": api_data.name
         }, true, true);
         glob_let.pinging[addr_id] = setInterval(function() {
-            check_address_transactions(rdo, api_data);
+            try {
+                check_address_transactions(rdo, api_data);
+            } catch (err) {
+                console.error("error", err);
+            }
         }, poll_interval);
         return
     }
@@ -222,8 +226,12 @@ function start_monero_monitor(cachetime, address, vk) {
         "url": "mymonero api"
     }, true, true);
     glob_let.pinging[address] = setInterval(function() {
-        poll_animate();
-        check_monero_transactions(cachetime, address, vk, req_time);
+        try {
+            poll_animate();
+            check_monero_transactions(cachetime, address, vk, req_time);
+        } catch (err) {
+            console.error("error", err);
+        }
     }, 12000);
 }
 
