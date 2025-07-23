@@ -330,7 +330,7 @@ function reconnect_websocket(recon_data) {
 // Reconnects if websocket got lost in background (Only apply for mobile devices)
 function foreground_reconnect() {
     if (!glob_const.supportsTouch) return
-    if (helper.l1_status === true) return
+    if (!request.eth_l2s.length && helper.l1_status === true) return
     const api_settings = q_obj(request, "coinsettings.apis.selected");
     if (api_settings) {
         force_close_socket();
