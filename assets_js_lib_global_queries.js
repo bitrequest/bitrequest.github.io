@@ -298,6 +298,7 @@ let request = null,
 //highlight_json_syntax
 //get_aws_icon_url
 //visibility_change
+//visible_tab
 
 // ** Device & Platform Detection: **
 //detect_device_type
@@ -839,14 +840,22 @@ function get_aws_icon_url(wallet_name, clas = "wallet_icon", ext = "png") {
 // Fires when app comes back to foreground
 function visibility_change() {
     document.addEventListener("visibilitychange", () => {
-        if (!document.hidden) {
+        if (visible_tab()) { // to foreground
             if (is_openrequest() === true) {
                 foreground_reconnect(); // assets_js_bitrequest_sockets.js
             }
         }
+        // to background
     });
 }
 
+// Checks if tab is visible in foreground
+function visible_tab() {
+    if (document.hidden) {
+        return false
+    }
+    return true
+}
 
 // ** Device & Platform Detection: **
 

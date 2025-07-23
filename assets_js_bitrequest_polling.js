@@ -11,6 +11,7 @@
 //check_monero_transactions
 //validate_confirmations
 //stop_monitors
+//stop_background_monitors
 //clear_recent_requests
 
 // Initiates transaction monitoring and sets UI state for payment processing
@@ -138,6 +139,7 @@ function start_address_monitor(time_out, api_dat, retry) {
                 check_address_transactions(rdo, api_data);
             } catch (err) {
                 console.error("error", err);
+                stop_background_monitors(addr_id);
             }
         }, poll_interval);
         return
@@ -231,6 +233,7 @@ function start_monero_monitor(cachetime, address, vk) {
             check_monero_transactions(cachetime, address, vk, req_time);
         } catch (err) {
             console.error("error", err);
+            stop_background_monitors(address);
         }
     }, 12000);
 }
@@ -440,6 +443,13 @@ function stop_monitors(socket_id) {
             clearInterval(value);
         });
         glob_let.pinging = {};
+    }
+}
+
+// Terminates all active polling intervals when background throttles
+function stop_background_monitors(socket_id) {
+    if (!visible_tab()) { // check if app is in background
+        stop_monitors(socket_id)
     }
 }
 

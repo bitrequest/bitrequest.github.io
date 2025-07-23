@@ -77,6 +77,7 @@ function setup_layer2_monitoring(l2, sn, address, ctracts, retry) {
                 ping_id = sha_sub(socket_node.url + layer2, 15);
             socket_info(socket_node, true);
             glob_let.socket_attempt[ping_id] = true;
+            start_layer2_scan(socket_node, contract, ping_id, "init"); // initial scan
             if (ctracts && node_name === "infura") {
                 web3_erc20_websocket(socket_node, address, contract, ping_id);
                 return
@@ -95,12 +96,16 @@ function start_layer2_scan(socket_node, contract, ping_id, retry) {
         if (retry) {
             stop_monitors(ping_id);
             execute_layer2_scan(rdo, socket_node);
+            if (retry === "init") {
+                return
+            }
         }
         glob_let.pinging[ping_id] = setInterval(function() {
             try {
                 execute_layer2_scan(rdo, socket_node);
             } catch (err) {
                 console.error("error", err);
+                stop_background_monitors(ping_id);
             }
         }, timeout);
         return

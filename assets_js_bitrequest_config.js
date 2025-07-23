@@ -955,7 +955,8 @@ glob_config = {
                         "url": glob_const.main_alchemy_socket,
                         "display": true
                     }],
-                    "options": []
+                    "options": [],
+                    "poll_fallback": true
                 },
                 "layer2": {
                     "icon": "new-tab",
