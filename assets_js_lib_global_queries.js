@@ -842,6 +842,7 @@ function visibility_change() {
     document.addEventListener("visibilitychange", () => {
         if (visible_tab()) { // to foreground
             if (is_openrequest() === true) {
+                set_dialog_timeout();
                 foreground_reconnect(); // assets_js_bitrequest_sockets.js
             }
         }

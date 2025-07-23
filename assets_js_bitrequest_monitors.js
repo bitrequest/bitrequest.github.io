@@ -365,7 +365,7 @@ function process_scan_results(rd, api_data, rdo, tx_details, l2) {
         if (src === "requests") {
             if (eth_layer2) {
                 const has_l2 = rd.eth_layer2;
-                if (!rd.eth_layer2) {
+                if (!has_l2) {
                     // save eth l2 chain
                     rd.eth_layer2 = eth_layer2;
                     // block l2 scanning on match
@@ -385,7 +385,13 @@ function process_scan_results(rd, api_data, rdo, tx_details, l2) {
             }
             if (eth_layer2) { // Eth layer 2
                 initialize_network_status(api_data, "paid");
-                return
+                if (src === "l2_scanning") {
+                    glob_const.html.addClass("blurmain_payment");
+                    glob_const.paymentpopup.addClass("active");
+                    closeloader();
+                } else {
+                    return
+                }
             }
             if (src === "after_scan") {
                 glob_const.html.addClass("blurmain_payment");
