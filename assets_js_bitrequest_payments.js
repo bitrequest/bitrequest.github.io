@@ -3247,6 +3247,7 @@ function save_payment_request(direct, lightning_url) {
             meta_data_object = request_meta_hash ? JSON.parse(atob(request_meta_hash)) : null, // decode meta param if exists
             fiat_value_rounded = trimdecimals(request.fiatvalue, 2),
             received_in_currency = is_crypto_currency ? request.receivedamount : fiat_value_rounded,
+            paymentimestamp = payment_timestamp || current_timestamp,
             transaction_data = {
                 "currencyname": request.currencyname,
                 "requestid": request_id,
