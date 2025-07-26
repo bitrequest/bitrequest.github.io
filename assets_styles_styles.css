@@ -1215,13 +1215,16 @@ main {
   padding: 0.15em 0;
   list-style-type: none;
   font-weight: 600;
-  text-transform: capitalize;
 }
 
 .metalist li strong {
   display: inline;
   font-weight: 700;
   opacity: 0.5;
+}
+
+.metalist li strong:first-letter {
+  text-transform: capitalize;
 }
 
 .metalist li p.address {
