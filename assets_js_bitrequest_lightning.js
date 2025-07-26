@@ -451,7 +451,7 @@ function lightning_option_li(is_live, node_info, selected, invoices, proxy_url) 
                     invoice_title = invoice_description || "invoice" + invoice_id,
                     bolt_card = invoice_title.indexOf("Boltcard") === 0 ? " <img src='boltcard.png' class='boltcard' title='paid with the boltcard'>" : "",
                     timestamp = invoice.creation_date || invoice.timestamp || false,
-                    invoice_date = timestamp ? short_date(parseInt(timestamp * 1000) + glob_const.timezone) : "",
+                    invoice_date = timestamp ? short_date(parseInt(timestamp * 1000)) : "",
                     settlement_icon = invoice.settled === true || invoice.status === "paid" ? "icon-checkmark" :
                     (invoice.settled === false || invoice.status === "expired" ? "icon-clock" : false),
                     icon_span = settlement_icon ? "<span class='" + settlement_icon + "'></span>" : "<img src='" + implementation_icon + "' class='lnd_icon'>";
@@ -1114,7 +1114,7 @@ function test_create_invoice(implementation, proxy_data, node_host, node_key) {
         node_id = sha_sub(node_id_source, 10),
         is_node_existing = objectkey_in_array(node_services, "node_id", node_id),
         default_error = tl("unabletoconnect"),
-        unique_id = sha_sub(now(), 10);
+        unique_id = sha_sub(now_utc(), 10);
     if (is_node_existing) {
         popnotify("error", tl("proxynameexists", {
             "imp": implementation
@@ -1543,7 +1543,7 @@ function validate_lnurl_connection(lightning_node) {
             if (is_connected) {
                 helper.lnd_status = true;
                 if (node_id) {
-                    sessionStorage.setItem("lnd_timer_" + node_id, now());
+                    sessionStorage.setItem("lnd_timer_" + node_id, now_utc());
                 }
             }
         }
@@ -1575,7 +1575,7 @@ function check_lnd_status(lightning_node) {
             if (node_data.invoices) {
                 helper.lnd_status = true;
                 if (lightning_node.nid) {
-                    sessionStorage.setItem("lnd_timer_" + lightning_node.nid, now());
+                    sessionStorage.setItem("lnd_timer_" + lightning_node.nid, now_utc());
                 }
             }
         }
@@ -1607,7 +1607,7 @@ function check_lnbits_status(lightning_node) {
             if (node_data.balance > -1) {
                 helper.lnd_status = true;
                 if (lightning_node.nid) {
-                    sessionStorage.setItem("lnd_timer_" + lightning_node.nid, now());
+                    sessionStorage.setItem("lnd_timer_" + lightning_node.nid, now_utc());
                 }
             }
         }

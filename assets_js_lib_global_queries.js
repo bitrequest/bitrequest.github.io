@@ -247,8 +247,7 @@ let request = null,
 //set_up
 
 // ** Time & Date Utilities: **
-//now
-//now_utc 
+//now_utc
 //short_date
 //format_datetime_string
 //parse_datetime_string
@@ -435,19 +434,14 @@ function set_up() {
 
 // ** Time & Date Utilities: **
 
-// Returns current timestamp in milliseconds since epoch
-function now() {
-    return Date.now();
-}
-
-// Returns current UTC timestamp adjusted for timezone offset
+// Returns current UTC timestamp
 function now_utc() {
-    return Date.now() + glob_const.timezone;
+    return Date.now();
 }
 
 // Formats timestamp into localized short date with time
 function short_date(tx_time) {
-    return new Date(tx_time - glob_const.timezone).toLocaleString(langcode, {
+    return new Date(tx_time).toLocaleString(langcode, {
         "day": "2-digit",
         "month": "2-digit",
         "year": "2-digit",
@@ -1635,7 +1629,7 @@ function get_cached_tokens(check) {
         const cache_timestamp = initial_tokens.timestamp;
         if (cache_timestamp) {
             if (check) {
-                const cache_age = now() - cache_timestamp;
+                const cache_age = now_utc() - cache_timestamp;
                 // flush cache every week
                 if (cache_age < glob_const.token_cache * 1000) {
                     return true

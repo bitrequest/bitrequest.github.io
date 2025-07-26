@@ -196,7 +196,7 @@ function swipe_start() {
             glob_let.blockswipe = true;
         }
         const start_height = e.originalEvent.touches ? e.originalEvent.touches[0].pageY : e.pageY;
-        startswipetime = now();
+        startswipetime = now_utc();
         swipe(current_dialog.height(), start_height);
     })
 }
@@ -231,7 +231,7 @@ function swipe_end() {
         const current_unit = $(this);
         if (current_unit.hasClass("swiping")) {
             const payment_dialog = $("#paymentdialog"),
-                swipe_duration = now() - startswipetime,
+                swipe_duration = now_utc() - startswipetime,
                 is_large_swipe = Math.abs(glob_let.percent) > 90,
                 is_quick_swipe = Math.abs(glob_let.percent) > 25;
             if (is_large_swipe || (is_quick_swipe && swipe_duration < 500)) {
@@ -484,7 +484,7 @@ function load_request(pass) {
             coin_data = get_coin_config(payment_currency);
         if (coin_data) {
             const is_erc20 = coin_data.erc20 === true,
-                request_start_time = now(),
+                request_start_time = now_utc(),
                 is_exact = exists(url_params.exact);
             // Start building request object
             request = {
@@ -879,7 +879,7 @@ function lightning_setup() {
             is_lnurl_only = is_lnurl && !node_host,
             is_proxy_enabled = (proxy_enabled == true) ? true : false,
             saved_payment_id = br_get_session("lndpid"),
-            payment_id = saved_payment_id ? saved_payment_id : sha_sub(now(), 10),
+            payment_id = saved_payment_id ? saved_payment_id : sha_sub(now_utc(), 10),
             use_lnurl = is_lnurl_only || is_proxy_enabled,
             lnd_config = {
                 "request": false,
@@ -979,7 +979,7 @@ function test_lnd(is_lnurl) {
     }
     const status_cache_key = "lnd_timer_" + lnd_config.nid,
         cached_status_time = sessionStorage.getItem(status_cache_key);
-    if (cached_status_time && (now() - cached_status_time) < 20000) { // get cached status
+    if (cached_status_time && (now_utc() - cached_status_time) < 20000) { // get cached status
         // lightning status is cached for 10 minutes
         helper.lnd_status = true;
         proceed_pf();
@@ -1033,7 +1033,7 @@ function proceed_pf(error_obj) {
         crypto_api_list = "crypto_price_apis",
         cached_exchange_rates = br_get_session("xrates_" + request.currencysymbol, true);
     if (cached_exchange_rates) { //check for cached crypto rates in localstorage
-        const current_timestamp = now(),
+        const current_timestamp = now_utc(),
             cached_timestamp = cached_exchange_rates.timestamp,
             usd_exchange_rate = cached_exchange_rates.ccrate,
             api_source = cached_exchange_rates.apisrc,
@@ -1104,7 +1104,7 @@ function get_cc_exchangerates(api_list, selected_api) {
                     null;
                 if (crypto_exchange_rate) {
                     set_loader_text(tl("success"));
-                    const current_timestamp = now(),
+                    const current_timestamp = now_utc(),
                         cached_rate_data = {
                             "timestamp": current_timestamp,
                             "ccrate": crypto_exchange_rate,
@@ -1154,7 +1154,7 @@ function cc_fail(api_list, selected_api, error_object, is_proxy_failure) {
 function init_exchangerate(crypto_rate, crypto_api, cache_age) {
     set_loader_text(tl("getfiatrates"));
     const inverse_crypto_rate = 1 / crypto_rate,
-        current_timestamp = now(),
+        current_timestamp = now_utc(),
         is_new_currency = request.fiatcurrency !== request.localcurrency &&
         request.fiatcurrency !== "eur" &&
         request.fiatcurrency !== "usd" &&
@@ -1278,7 +1278,7 @@ function get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currenc
                 render_currencypool(rates, crypto_rate, crypto_api, selected_fiat_api, cache_age, "0"); // render exchangerates
                 // cache exchange rates
                 const exchange_rate_cache = {
-                    "timestamp": now(),
+                    "timestamp": now_utc(),
                     "fiat_exchangerates": rates,
                     "api": selected_fiat_api
                 };
@@ -2306,7 +2306,7 @@ function update_payment_status(status, pending, status_text) {
 // Manages address switching functionality with socket handling
 function switch_address() {
     $(document).on("click", "#paymentdialogbox.norequest #labelbttn", function() {
-        const time_elapsed = now() - glob_let.sa_timer;
+        const time_elapsed = now_utc() - glob_let.sa_timer;
         if (time_elapsed < 1500) { // prevent clicking too fast
             play_audio(glob_const.funk);
             return
@@ -2358,7 +2358,7 @@ function switch_address() {
             });
             glob_const.paymentdialogbox.attr("data-pending", is_pending && request.monitored ? "ispending" : "");
             request.address = new_address;
-            glob_let.sa_timer = now();
+            glob_let.sa_timer = now_utc();
             force_close_socket();
             init_socket(selected_socket, new_address);
         }
@@ -3077,7 +3077,7 @@ function save_payment_request(direct, lightning_url) {
         current_amount = url_params.amount,
         currency_symbol = request.currencysymbol,
         current_request_type = request.requesttype,
-        current_payment_timestamp = request.paymenttimestamp,
+        payment_timestamp = request.paymenttimestamp,
         set_confirmations = request.set_confirmations,
         is_lightning_mode = lightning_mode(),
         lightning_info = is_lightning_mode ? helper.lnd : false,
@@ -3092,7 +3092,7 @@ function save_payment_request(direct, lightning_url) {
         request_meta_hash = current_meta && current_meta.length > 5 ? current_meta : null, // check if meta param exists
         data_object = request_data_hash ? JSON.parse(atob(request_data_hash)) : null, // decode data param if exists
         request_name = request.requestname,
-        request_timestamp = current_payment_timestamp || (data_object && data_object.ts) || (current_request_type === "incoming" ? null : current_timestamp), // null is unknown timestamp
+        request_timestamp = payment_timestamp || (data_object && data_object.ts) || (current_request_type === "incoming" ? null : current_timestamp), // null is unknown timestamp
         unhashed_request_data = current_payment + current_currency + amount_string + current_address + request_name + request.requesttitle + confirmation_string + lightning_id,
         saved_transaction_hash = request.txhash,
         is_local = current_request_type === "local",
@@ -3247,7 +3247,6 @@ function save_payment_request(direct, lightning_url) {
             meta_data_object = request_meta_hash ? JSON.parse(atob(request_meta_hash)) : null, // decode meta param if exists
             fiat_value_rounded = trimdecimals(request.fiatvalue, 2),
             received_in_currency = is_crypto_currency ? request.receivedamount : fiat_value_rounded,
-            transaction_payment_timestamp = current_payment_timestamp || current_timestamp,
             transaction_data = {
                 "currencyname": request.currencyname,
                 "requestid": request_id,
@@ -3264,7 +3263,7 @@ function save_payment_request(direct, lightning_url) {
                 "receiver": current_address,
                 "confirmations": request.confirmations,
                 set_confirmations,
-                "transactiontime": transaction_payment_timestamp,
+                "transactiontime": paymentimestamp,
                 "pending": request.pending,
                 "lightning": lightning_object,
                 "erc20": request.erc20,
@@ -3317,7 +3316,7 @@ function update_request(update_args, should_save) {
             meta_list.find(".payday.pd_fiat .fiatvalue").text(" " + trimdecimals(update_args.fiatvalue, 2));
         }
         if (update_args.paymenttimestamp) {
-            const formatted_date = fulldateformat(new Date(update_args.paymenttimestamp - glob_const.timezone), langcode, true);
+            const formatted_date = fulldateformat(new Date(update_args.paymenttimestamp), langcode, true);
             meta_list.find(".payday.pd_paydate span.paydate").html(" " + formatted_date);
             meta_list.find(".payday.pd_fiat strong span.pd_fiat").html(" " + formatted_date);
         }

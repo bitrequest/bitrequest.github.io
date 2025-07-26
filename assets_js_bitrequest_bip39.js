@@ -243,7 +243,7 @@ function is_trial() {
     const trial_timestamp = br_get_local("tp");
     if (trial_timestamp) {
         const trial_duration = 43200000;
-        if ((now() - parseFloat(trial_timestamp)) < trial_duration) {
+        if ((now_utc() - parseFloat(trial_timestamp)) < trial_duration) {
             return true
         }
     }
@@ -996,7 +996,7 @@ function seed_callback() {
         phrase_obj.pid = phrase_id;
         phrase_obj.pob = seed_string;
         br_set_local("bpdat", storage_data, true);
-        br_set_local("tp", now());
+        br_set_local("tp", now_utc());
         glob_let.bipobj = storage_data,
             glob_let.hasbip = true,
             glob_let.bipid = phrase_id;

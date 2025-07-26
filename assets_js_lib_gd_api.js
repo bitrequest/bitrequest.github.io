@@ -66,7 +66,7 @@ function get_auth_status() {
         can_refresh = refresh_token || "norefresh";
     if (stored_token) {
         const access_token = stored_token.access_token,
-            elapsed_time = (now() - stored_token.created) + 60000,
+            elapsed_time = (now_utc() - stored_token.created) + 60000,
             expiry_time = stored_token.expires_in * 1000,
             is_expired = (elapsed_time > expiry_time),
             time_remaining = (expiry_time - elapsed_time),
@@ -174,7 +174,7 @@ function get_oauth_credentials(auth_code) {
                         const access_token = auth_result.access_token;
                         if (access_token) {
                             const token_data = {
-                                "created": now(),
+                                "created": now_utc(),
                                 "active": true,
                                 "access_token": access_token,
                                 "expires_in": auth_result.expires_in
@@ -238,7 +238,7 @@ function refresh_access_token(refresh_token, callback) {
                         const access_token = auth_result.access_token;
                         if (access_token) {
                             const token_data = {
-                                "created": now(),
+                                "created": now_utc(),
                                 "active": true,
                                 "access_token": access_token,
                                 "expires_in": auth_result.expires_in
@@ -474,7 +474,7 @@ function init_backup_toggle() {
 // Updates Google Drive app data with rate limiting and error handling
 function sync_drive_data(auth_state) {
     const last_update = br_get_session("gd_timer"); // prevent Ddos
-    if (last_update && (now() - last_update) < 3000) {
+    if (last_update && (now_utc() - last_update) < 3000) {
         return
     }
     const access_token = auth_state.token;
@@ -483,7 +483,7 @@ function sync_drive_data(auth_state) {
     }
     const backup_id = br_get_local("backupfile_id");
     if (backup_id) {
-        br_set_session("gd_timer", now());
+        br_set_session("gd_timer", now_utc());
         const request_data = {
             "api_url": glob_const.drivepath + "/upload/drive/v3/files/" + backup_id + "?uploadType=media&alt=json",
             "proxy": false,

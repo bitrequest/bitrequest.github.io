@@ -208,7 +208,7 @@ function store_coindata(tokens_first, tokens_second) {
         const converted_first = convert_coinlist(tokens_first);
         if (converted_first) {
             cr_push = {
-                "timestamp": now(),
+                "timestamp": now_utc(),
                 "token_arr": converted_first
             }
             br_set_local("erc20tokens_init", cr_push, true);
@@ -609,7 +609,7 @@ function check_pin_lock() {
     const url_params = get_urlparameters(),
         lock_duration = $("#pinsettings").data("locktime"),
         last_lock = br_get_local("locktime"),
-        time_since_lock = now() - last_lock,
+        time_since_lock = now_utc() - last_lock,
         lock_seconds = parseFloat(lock_duration);
     return url_params.payment ? false : (check_pin_enabled() === true && time_since_lock > lock_seconds);
 }
@@ -704,7 +704,7 @@ function enterapp(pin_input) {
         stored_pin = pin_config.pinhash,
         attempt_count = pin_config.attempts,
         hashed_pin = generate_hash(pin_input),
-        timestamp = now(),
+        timestamp = now_utc(),
         is_global = pin_container.hasClass("global");
     if (hashed_pin == stored_pin) {
         if (is_global) {
@@ -1246,11 +1246,9 @@ function continue_cpd() {
 function after_scan_init(api_settings) {
     if (is_scanning()) return
     glob_let.rpc_attempts = {};
-    const request_init_time = request.rq_init,
-        request_timestamp = request_init_time + glob_const.timezone,
-        required_confirms = request.set_confirmations || 0,
+    const required_confirms = request.set_confirmations || 0,
         scan_params = { // request data object
-            "request_timestamp": request_timestamp,
+            "request_timestamp": request.rq_init,
             "setconfirmations": required_confirms,
             "pending": "scanning",
             "erc20": request.erc20,
@@ -1954,7 +1952,7 @@ function keyup() {
                 play_audio(glob_const.funk);
                 return
             }
-            const time_passed = now() - glob_let.sa_timer;
+            const time_passed = now_utc() - glob_let.sa_timer;
             if (time_passed < 500) { // prevent clicking too fast
                 play_audio(glob_const.funk);
                 return
@@ -1973,7 +1971,7 @@ function keyup() {
                 return
             }
             flip_right1();
-            glob_let.sa_timer = now();
+            glob_let.sa_timer = now_utc();
             return
         }
         if (e.keyCode == 37) { // ArrowLeft
@@ -1981,7 +1979,7 @@ function keyup() {
                 play_audio(glob_const.funk);
                 return
             }
-            const time_passed = now() - glob_let.sa_timer;
+            const time_passed = now_utc() - glob_let.sa_timer;
             if (time_passed < 500) { // prevent clicking too fast
                 play_audio(glob_const.funk);
                 return
@@ -2000,7 +1998,7 @@ function keyup() {
                 glob_const.paymentpopup.addClass("flipping");
                 glob_const.paymentdialogbox.css("-webkit-transform", "rotateY(180deg)");
             }, 400);
-            glob_let.sa_timer = now();
+            glob_let.sa_timer = now_utc();
             return
         }
         if (e.keyCode == 27) { // Escape
@@ -2304,7 +2302,7 @@ function cancel_paymentdialog_trigger() {
         if (glob_const.html.hasClass("flipmode")) { // prevent closing request when flipping
             return
         }
-        const time_elapsed = now() - glob_let.cp_timer;
+        const time_elapsed = now_utc() - glob_let.cp_timer;
         if (time_elapsed < 1500) { // prevent clicking too fast
             play_audio(glob_const.funk);
             console.log("clicking too fast");
@@ -2312,7 +2310,7 @@ function cancel_paymentdialog_trigger() {
         }
         if (event.target === this) {
             escape_and_back();
-            glob_let.cp_timer = now();
+            glob_let.cp_timer = now_utc();
         }
     });
 }
@@ -2326,7 +2324,7 @@ function unfocus_inputs() {
 function cpd_pollcheck() {
     if (q_obj(request, "received") !== true) {
         const request_timer = request.rq_timer,
-            request_time = now() - request_timer;
+            request_time = now_utc() - request_timer;
         if (request_time > glob_const.after_scan_timeout) {
             if (empty_obj(glob_let.sockets)) { // No afterscan when polling
                 close_paymentdialog();
@@ -2451,7 +2449,7 @@ function showoptions(content, add_class) {
         const pin_settings = $("#pinsettings").data(),
             pin_timeout = pin_settings.timeout;
         if (pin_timeout) {
-            if (now() > pin_timeout) {
+            if (now_utc() > pin_timeout) {
                 pin_settings.timeout = null;
                 save_settings();
             } else {
@@ -2517,7 +2515,7 @@ function clearoptions() {
 
 // Displays lock screen with countdown
 function lockscreen(timeout) {
-    const time_left = timeout - now(),
+    const time_left = timeout - now_utc(),
         countdown_data = countdown(time_left),
         days_str = (countdown_data.days) ? countdown_data.days + " " + tl("days") + "<br/>" : "",
         hours_str = (countdown_data.hours) ? countdown_data.hours + " " + tl("hours") + "<br/>" : "",
@@ -3003,7 +3001,7 @@ function all_pinpanel(callback, show_top, pin_set) {
     const top_class = (show_top) ? " ontop" : "";
     if (check_pin_enabled(pin_set) === true) {
         const last_lock_time = br_get_local("locktime"),
-            time_since_lock = now() - last_lock_time,
+            time_since_lock = now_utc() - last_lock_time,
             is_recent = (time_since_lock < 10000);
         if (callback && is_recent) { // keep unlocked in 10 second time window
             callback.func(callback.args);
@@ -3629,7 +3627,7 @@ function recent_requests_list(recent_payments) {
                 tx_source = payment.source,
                 eth_layer = payment.eth_layer2,
                 explorer_url = blockexplorer_url(currency, false, is_erc20, tx_source, eth_layer) + wallet_addr;
-            request_html += "<li class='rp_li'>" + getcc_icon(coin_id, coin_symbol + "-" + currency, is_erc20) + "<strong style='opacity:0.5'>" + short_date(request_time + glob_const.timezone) + "</strong><br/>\
+            request_html += "<li class='rp_li'>" + getcc_icon(coin_id, coin_symbol + "-" + currency, is_erc20) + "<strong style='opacity:0.5'>" + short_date(request_time) + "</strong><br/>\
             <a href='" + explorer_url + "' target='_blank' class='ref check_recent'>\
             <span class='select'>" + wallet_addr + "</span> <span class='icon-new-tab'></a></li>";
         }
@@ -3943,7 +3941,7 @@ function get_pdf_url(request_data) {
     status_text = status === "new" ? "Waiting for payment" : status,
         is_lightning = txhash && txhash.slice(0, 9) === "lightning",
         is_hybrid = lightning && lightning.hybrid === true,
-        payment_date = fulldateformat(new Date(paymenttimestamp - glob_const.timezone), langcode),
+        payment_date = fulldateformat(new Date(paymenttimestamp), langcode),
         received_amount = trimdecimals(receivedamount, 6),
         fiat_amount = trimdecimals(fiatvalue, 2),
         is_incoming = requesttype === "incoming",
@@ -3954,11 +3952,10 @@ function get_pdf_url(request_data) {
         decimals = iscrypto ? 6 : 2,
         formatted_amount = trimdecimals(amount, decimals),
         currency_symbol = uoa.toUpperCase(),
-        utc_time = timestamp - glob_const.timezone,
-        local_time = requestdate ? requestdate - glob_const.timezone : utc_time,
+        local_time = requestdate || timestamp,
         date_obj = new Date(local_time),
         request_date = requestdate ? fulldateformat(date_obj, langcode) : "unknown",
-        utc_date = fulldateformat(new Date(utc_time)),
+        utc_date = fulldateformat(date_obj),
         ln_network = is_lightning ? "lightning" : "",
         invoice_data = {
             "Request ID": requestid,
@@ -4656,7 +4653,7 @@ function check_app_install_prompt() {
     const dialog_timestamp = br_get_local("appstore_dialog");
     if (dialog_timestamp) {
         const min_delay = 300000,
-            time_elapsed = now() - dialog_timestamp;
+            time_elapsed = now_utc() - dialog_timestamp;
         if (time_elapsed < min_delay) {
             return
         }
@@ -4673,7 +4670,7 @@ function check_app_install_prompt() {
             }
         }
     } else {
-        br_set_local("appstore_dialog", now());
+        br_set_local("appstore_dialog", now_utc());
     }
 }
 
@@ -4697,7 +4694,7 @@ function show_app_download_prompt(platform_type) {
     setTimeout(function() {
         glob_const.body.addClass("getapp");
     }, 1500);
-    br_set_local("appstore_dialog", now());
+    br_set_local("appstore_dialog", now_utc());
 }
 
 // Handles dismissal of app download promotion
@@ -5151,8 +5148,7 @@ function append_request(rd) {
         received_formatted = trimdecimals(receivedamount, 6),
         fiat_formatted = trimdecimals(fiatvalue, 2),
         request_container = archive ? $("#archivelist") : $("#requestlist"),
-        time_utc = timestamp - glob_const.timezone,
-        time_local = requestdate ? requestdate - glob_const.timezone : time_utc,
+        time_local = requestdate || timestamp,
         is_incoming = requesttype === "incoming",
         is_local = requesttype === "local",
         is_checkout = requesttype === "checkout",
@@ -5183,7 +5179,7 @@ function append_request(rd) {
         expire_time = is_ln_expire ? 604800000 :
         (iscrypto === true) ? 25920000000 :
         6048000000, // expirydate crypto: 300 days / fiat: 70 days / lightning: 7 days
-        is_expired = (status == "expired" || (now() - time_local) >= expire_time &&
+        is_expired = (status == "expired" || (now_utc() - time_local) >= expire_time &&
             (is_ln_expire || status == "new" || is_insufficient === true)),
         expired_class = is_expired ? " expired" : "",
         time_obj = new Date(time_local),
@@ -5191,7 +5187,7 @@ function append_request(rd) {
         time_display = "<span class='rq_month'>" + time_obj.toLocaleString(langcode, {
             "month": "short"
         }) + "</span> <span class='rq_day'>" + time_obj.getDate() + "</span>",
-        payment_time = fulldateformat(new Date(paymenttimestamp - glob_const.timezone), langcode, true),
+        payment_time = fulldateformat(new Date(paymenttimestamp), langcode, true),
         amount_short = amountshort(amount, receivedamount, fiatvalue, iscrypto),
         short_suffix = is_insufficient ? " (" + amount_short + " " + unit + " " + tl("amountshort") + ")" : "",
         short_crypto = iscrypto ? short_suffix : "",
@@ -5216,8 +5212,7 @@ function append_request(rd) {
         monitor_status = !monitored ? " (unmonitored transaction)" : "",
         time_box = is_incoming ?
         "<li><strong>" + tl("created") + ":</strong> " + date_created + "</li>" +
-        "<li><strong>" + tl("firstviewed") + ":</strong> " +
-        fulldateformat(new Date(time_utc), langcode) + "</li>" :
+        "<li><strong>" + tl("firstviewed") + ":</strong> " + fulldateformat(new Date(timestamp), langcode) + "</li>" :
         is_outgoing ?
         "<li><strong>" + tl("sendon") + ":</strong> " + date_full + "</li>" :
         is_local ?

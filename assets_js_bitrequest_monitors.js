@@ -110,7 +110,7 @@ function process_request_updates(trigger, active_requests) {
         const is_delayed = trigger === "delay",
             status_cache = br_get_session("txstatus", true);
         if (status_cache) {
-            const cache_age = now() - status_cache.timestamp,
+            const cache_age = now_utc() - status_cache.timestamp,
                 request_states = status_cache.requeststates;
             if (cache_age > 30000 || empty_obj(request_states)) { //check if cached crypto rates are expired (check every 30 seconds on page refresh or when opening request page)
                 active_requests.addClass("scan");
@@ -157,7 +157,7 @@ function process_request_updates(trigger, active_requests) {
             save_requests();
         }
         const status_object = {
-            "timestamp": now(),
+            "timestamp": now_utc(),
             "requeststates": glob_let.statuspush
         };
         br_set_session("txstatus", status_object, true);
@@ -173,13 +173,13 @@ function process_transaction_data(rd, dl) {
             const delay = 10000,
                 monitor_timer_cache = br_get_session("monitor_timer"),
                 monitor_timer = monitor_timer_cache ? parseInt(monitor_timer_cache, 10) : delay,
-                time_since_last = now() - monitor_timer;
+                time_since_last = now_utc() - monitor_timer;
             if (time_since_last < delay) { // prevent over scanning
                 play_audio(glob_const.funk);
                 clearscan();
                 return
             }
-            br_set_session("monitor_timer", now());
+            br_set_session("monitor_timer", now_utc());
         }
         const api_info = check_api(rd.payment),
             api_data = api_info.data,
@@ -758,7 +758,7 @@ function format_transaction_details(data) {
             local_symbol_upper = local_symbol ? local_symbol.toUpperCase() : local_symbol,
             local_rate_info = local_symbol_upper === "USD" ? "" : crypto_symbol_upper + "-" + local_symbol_upper + ": " + local_crypto_rate.toFixed(6) + "\n" + local_symbol_upper + "-USD: " + local_usd_rate.toFixed(2);
         // set historic data
-        historic_details = "Historic data (" + fulldateformat(new Date(timestamp - glob_const.timezone), langcode) + "):\n" +
+        historic_details = "Historic data (" + fulldateformat(new Date(timestamp), langcode) + "):\n" +
             "Fiatvalue: " + local_value.toFixed(2) + " " + local_symbol_upper + "\n" +
             crypto_symbol_upper + "-USD: " + price.toFixed(6) + "\n" +
             local_rate_info + "\n" +
@@ -790,9 +790,8 @@ function validate_payment_amounts(rd, rdo) {
                 no_conf = rd.no_conf || first_confirmations === false,
                 conf = no_conf ? 0 : first_confirmations,
                 latest_transaction_time = first_transaction.data("transactiontime"),
-                timezone = glob_const.timezone,
-                first_time_offset = parseInt(now() - (first_transaction_time - timezone)),
-                last_time_offset = parseInt(now() - (latest_transaction_time - timezone)),
+                first_time_offset = parseInt(now_utc() - first_transaction_time),
+                last_time_offset = parseInt(now_utc() - latest_transaction_time),
                 is_recent = (first_time_offset < 300000 && last_time_offset < 300000),
                 crypto_amount = parseFloat(rd.cc_amount),
                 amount_margin = 0.97;
@@ -802,7 +801,7 @@ function validate_payment_amounts(rd, rdo) {
                 crypto_pending = pending_status,
                 is_crypto_confirmed = false,
                 crypto_confirmations = 0,
-                crypto_payment_timestamp,
+                paymenttimestamp,
                 crypto_transaction_hash,
                 total_crypto_amount = 0,
                 fiat_value = rd.fiatvalue;
@@ -814,7 +813,7 @@ function validate_payment_amounts(rd, rdo) {
                         transaction_data = current_transaction.data(),
                         correction_confirmations = transaction_data.instant_lock ? 0 : set_confirmations; // correction if dash instant_lock
                     crypto_confirmations = transaction_data.confirmations,
-                        crypto_payment_timestamp = transaction_data.transactiontime,
+                        paymenttimestamp = transaction_data.transactiontime,
                         crypto_transaction_hash = transaction_data.txhash,
                         total_crypto_amount += parseFloat(transaction_data.ccval) || 0; // sum of outputs
                     if (total_crypto_amount >= crypto_amount * amount_margin) { // compensation for small fluctuations in rounding amount
@@ -877,7 +876,7 @@ function validate_payment_amounts(rd, rdo) {
                     "status": crypto_status,
                     "receivedamount": total_crypto_amount,
                     "fiatvalue": fiat_value,
-                    "paymenttimestamp": crypto_payment_timestamp,
+                    paymenttimestamp,
                     "txhash": crypto_transaction_hash,
                     "confirmations": crypto_confirmations,
                     "pending": crypto_pending,
@@ -1058,8 +1057,8 @@ function fetch_crypto_rates(rd, rdo, fiat_api, api_list, api, currency_rate, usd
         coin_id = api === "coincodex" ? crypto_symbol : // coincodex id
         api === "coingecko" ? payment_method : // coingecko id
         crypto_symbol + "-" + payment_method, // coinpaprika id
-        start_time_sec = parseInt((first_input - glob_const.timezone) / 1000),
-        end_time_sec = parseInt((latest_input - glob_const.timezone) / 1000),
+        start_time_sec = parseInt(first_input) / 1000,
+        end_time_sec = parseInt(latest_input) / 1000,
         erc20_contract = rd.token_contract,
         search = api === "coincodex" ? get_payload_historic_coincodex(coin_id, start_time_sec, end_time_sec) :
         api === "coinmarketcap" || api === "coingecko" ? get_payload_historic_coingecko(coin_id, start_time_sec, end_time_sec, erc20_contract) :
@@ -1285,7 +1284,7 @@ function match_price_timestamps(api, values, price_array, transaction_timestamp)
 function get_historic_object_coingecko(value) {
     if (value) {
         return {
-            "timestamp": value[0] + glob_const.timezone + 60000, // add 1 minute for compensation margin
+            "timestamp": value[0] + 60000, // add 1 minute for compensation margin
             "price": value[1]
         };
     }
@@ -1307,7 +1306,7 @@ function get_historic_object_coinpaprika(value) {
 function get_historic_object_coincodex(value) {
     if (value) {
         return {
-            "timestamp": value[0] * 1000 + glob_const.timezone + 60000, // add 1 minute for compensation margin
+            "timestamp": (value[0] * 1000) + 60000, // add 1 minute for compensation margin
             "price": value[1]
         };
     }

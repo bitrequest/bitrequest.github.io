@@ -143,8 +143,6 @@ function init_socket(socket_node, wallet_address, retry, foreground) {
         return
     }
     if (payment_type === "bitcoin-cash") {
-        start_address_monitor(null, null, true);
-        return
         if (node_name === "mempool.space websocket" || socket_node.default === false) {
             mempoolspace_btc_socket(socket_node, wallet_address);
             return
@@ -227,7 +225,9 @@ function socket_info(socket_node, is_connected, is_polling) {
     $("#current_socket").html(status_text);
     if (is_connected) {
         console.log("Connected: " + node_identifier);
-        helper.l1_status = true;
+        if (helper) {
+            helper.l1_status = true;
+        }
         payment_address.addClass("live");
         glob_const.paymentpopup.addClass("live");
         glob_const.paymentdialogbox.removeClass("switching");
@@ -316,7 +316,7 @@ function reconnect_websocket(recon_data) {
     const close_code = recon_data.trigger,
         wallet_address = recon_data.address;
     if (close_code !== 1000 || !wallet_address || glob_const.paymentdialogbox.attr("data-status") !== "new") return
-    const elapsed_time = now() - glob_let.ws_timer;
+    const elapsed_time = now_utc() - glob_let.ws_timer;
     if (elapsed_time < 10000) return
     const retry_timeout = setTimeout(function() {
         if (is_openrequest()) {
@@ -443,12 +443,12 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
             "signal": glob_let.ctrl.signal
         });
         glob_const.ndef.onreading = event => {
-            if ((now() - 6000) < glob_let.ndef_timer) { // prevent too many taps
+            if ((now_utc() - 6000) < glob_let.ndef_timer) { // prevent too many taps
                 play_audio(glob_const.funk);
                 notify(tl("ndeftablimit"), 6000);
                 return
             }
-            glob_let.ndef_timer = now();
+            glob_let.ndef_timer = now_utc();
             closenotify();
             const nfc_message = event.message;
             if (nfc_message) {
@@ -1271,7 +1271,7 @@ function nano_socket(socket_node, wallet_address) {
                     return // block outgoing transactions
                 }
                 if (!tx_data.hash) return
-                const tx_details = nano_scan_data(tx_data, undefined, request.currencysymbol),
+                const tx_details = nano_scan_data(tx_data, null, true),
                     tx_time = tx_details.transactiontime,
                     time_delta = Math.abs(tx_time - current_utc);
                 if (time_delta < 60000) { // filter transactions longer then a minute ago
@@ -1302,10 +1302,10 @@ function kaspa_websocket(socket_node, wallet_address) {
     if (glob_let.sockets[wallet_address]) {
         return
     }
-    const ws_endpoint = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket&sid=" + now(),
+    const ws_endpoint = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket&sid=" + now_utc(),
         socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
     socket.onopen = function(e) {
-        glob_let.ws_timer = now();
+        glob_let.ws_timer = now_utc();
         socket_info(socket_node, true);
         socket.send("2probe");
     };

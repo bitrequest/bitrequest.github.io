@@ -677,7 +677,7 @@ function backup_database() {
                                             "href": "data:text/json;charset=utf-16le;base64," + json +
                                                 "' download='" + filename,
                                             "title": filename,
-                                            "data-date": new Date(now()).toLocaleString(langcode)
+                                            "data-date": new Date(now_utc()).toLocaleString(langcode)
                                                 .replace(/\s+/g, '_').replace(/\:/g, '_'),
                                             "data-lastbackup": filename,
                                             "download": "download"
@@ -756,7 +756,7 @@ function share_backup_file() {
             const account = btoa($("#accountsettings").data("selected")),
                 url = $(this).attr("data-url"),
                 url_hash = sha_sub(url, 10),
-                time_format = new Date(now()).toLocaleString(langcode),
+                time_format = new Date(now_utc()).toLocaleString(langcode),
                 title = tl("systembackup") + " " + account + " (" + time_format + ")",
                 cached_short_url = get_saved_shorturl(url_hash);
             if (cached_short_url) {
@@ -806,7 +806,7 @@ function check_systembu(sbu) {
             const cache = ping.br_cache,
                 server_time = cache.utc_timestamp,
                 file_time = cache.created_utc,
-                time_ms = file_time ? file_time * 1000 : now(),
+                time_ms = file_time ? file_time * 1000 : now_utc(),
                 time_format = new Date(time_ms).toLocaleString(langcode),
                 result = ping.br_result,
                 base64 = result.base64,
@@ -965,7 +965,7 @@ function generate_backup_data() {
 // Generates timestamped JSON backup filename with current locale
 function generate_backup_filename() {
     return "bitrequest_backup_" + langcode + "_" +
-        new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_").replace(/\:/g, "_") + ".json";
+        new Date(now_utc()).toLocaleString(langcode).replace(/\s+/g, "_").replace(/\:/g, "_") + ".json";
 }
 
 // Processes backup file download with iOS detection and confirmation dialog 
@@ -1300,7 +1300,7 @@ function pin_dialog(data, cb) {
     const settings = $("#pinsettings").data(),
         timeout = settings.timeout;
     if (timeout) {
-        const left = timeout - now();
+        const left = timeout - now_utc();
         if (left > 0) {
             lockscreen(timeout);
             return
@@ -1381,7 +1381,7 @@ function submit_pin_dialog() {
             return
         }
         if (glob_let.resd.pcnt > 1) {
-            $("#pinsettings").data("timeout", now() + 300000);
+            $("#pinsettings").data("timeout", now_utc() + 300000);
             topnotify(tl("maxattempts"));
             const result = confirm(tl("restorewithoutsecretphrase") + "?");
             if (result === true) {
@@ -1400,7 +1400,7 @@ function submit_pin_dialog() {
 
 // Resets address initialization state after successful backup restoration
 function restore_cb_init_addresses() {
-    br_set_local("tp", now());
+    br_set_local("tp", now_utc());
     const init = br_get_local("init", true),
         io = get_default_object(init, true);
     delete io.bipv;
@@ -1412,7 +1412,7 @@ function restore_callback_file(data, np) {
     const newphrase = glob_let.hasbip === true ? np : true;
     restore_storage(data.jasobj, newphrase);
     render_settings(["restore", "backup", "pinsettings"]);
-    const restore_time = "last restore: " + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_");
+    const restore_time = "last restore: " + new Date(now_utc()).toLocaleString(langcode).replace(/\s+/g, "_");
     set_setting("restore", {
         "titlerestore": restore_time,
         "fileused": data.filename,
@@ -1431,7 +1431,7 @@ function restore_callback_gd(data, np) {
     const newphrase = (glob_let.hasbip === true) ? np : true;
     restore_storage(data.jasobj, newphrase);
     render_settings(["restore", "backup", "pinsettings"]);
-    const restore_time = "last restore: " + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_");
+    const restore_time = "last restore: " + new Date(now_utc()).toLocaleString(langcode).replace(/\s+/g, "_");
     set_setting("restore", {
         "titlerestore": restore_time,
         "fileused": data.filename,
@@ -1672,7 +1672,7 @@ function csvexport_trigger() {
             has_requests = requests && !empty_obj(requests),
             has_archive = archive && !empty_obj(archive);
         if (has_requests || has_archive) {
-            const filename = "bitrequest_csv_export_" + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_").replace(/:/g, "_") + ".csv",
+            const filename = "bitrequest_csv_export_" + new Date(now_utc()).toLocaleString(langcode).replace(/\s+/g, "_").replace(/:/g, "_") + ".csv",
                 show_archive = has_requests ? "false" : "true",
                 content = "<div class='formbox' id='exportcsvbox'>\
                     <h2 class='icon-table'>" + tl("csvexport") + "</h2>\
@@ -1915,7 +1915,7 @@ function share_csv() {
             set_loader_text(tl("generatebu"));
             const account = btoa($("#accountsettings").data("selected")),
                 csv_hash = sha_sub(csv, 10),
-                time_format = new Date(now()).toLocaleString(langcode),
+                time_format = new Date(now_utc()).toLocaleString(langcode),
                 title = "CSV Export " + account + " (" + time_format + ")",
                 cached_short_url = get_saved_shorturl(csv_hash);
             if (cached_short_url) {
@@ -1964,7 +1964,7 @@ function check_csvexport(csv) {
             const cache = ping.br_cache,
                 servertime = cache.utc_timestamp,
                 filetime = cache.created_utc,
-                timestamp = filetime ? filetime * 1000 : now(),
+                timestamp = filetime ? filetime * 1000 : now_utc(),
                 timestr = new Date(timestamp).toLocaleString(langcode),
                 result = ping.br_result,
                 base64 = result.base64,
@@ -3703,7 +3703,7 @@ function check_teaminvite(ro) {
                 const cache = ping.br_cache,
                     server_time = cache.utc_timestamp,
                     filetime = cache.created_utc,
-                    filetimesec = filetime ? filetime * 1000 : now(),
+                    filetimesec = filetime ? filetime * 1000 : now_utc(),
                     filetime_format = new Date(filetimesec).toLocaleString(langcode),
                     base64 = br_result.base64,
                     cb64 = strip_quotes(base64),
@@ -3811,7 +3811,7 @@ function install_teaminvite(jsonobject, bu_filename, iid) {
         br_set_local("teamid", teamid_arr, true);
     }
     render_settings(["restore", "backup"]); // exclude restore and backup settings
-    const lastrestore = tl("lastrestore") + "<br/><span class='icon-folder-open'>" + tl("teaminvite") + " " + new Date(now()).toLocaleString(langcode).replace(/\s+/g, "_") + "</span>";
+    const lastrestore = tl("lastrestore") + "<br/><span class='icon-folder-open'>" + tl("teaminvite") + " " + new Date(now_utc()).toLocaleString(langcode).replace(/\s+/g, "_") + "</span>";
     set_setting("restore", {
         "titlerestore": lastrestore,
         "fileused": bu_filename,

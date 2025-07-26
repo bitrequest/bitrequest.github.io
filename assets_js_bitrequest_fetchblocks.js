@@ -2380,7 +2380,7 @@ function nano_rpc(rd, api_data, rdo) {
                 }
                 if (has_tx(api_result)) {
                     $.each(api_result, function(key, tx) {
-                        const parsed_tx = nano_scan_data(tx, rdo.setconfirmations, rd.currencysymbol);
+                        const parsed_tx = nano_scan_data(tx);
                         if ((parsed_tx.transactiontime > (rdo.request_timestamp - 10000)) && parsed_tx.ccval && (tx.subtype === "receive" || tx.receivable)) {
                             matched_tx = parsed_tx;
                             if (source === "requests") {
@@ -2433,7 +2433,7 @@ function nano_rpc(rd, api_data, rdo) {
                     }, rd, api_data, rdo);
                     return
                 }
-                const parsed_tx = nano_scan_data(api_result, rdo.setconfirmations, rd.currencysymbol, rd.txhash);
+                const parsed_tx = nano_scan_data(api_result, rd.txhash);
                 if (parsed_tx.ccval) {
                     matched_tx = parsed_tx;
                     if (source === "requests") {
@@ -2484,13 +2484,17 @@ function calculate_total_outputs(outputs, address, value_processor) {
 
 // Converts and normalizes transaction timestamps with optional UTC conversion
 function normalize_timestamp(ts, convert_utc) {
-    const ts_int = to_integer(ts);
-    if (ts_int) {
-        const ts_milli = timestamp_ms(ts_int);
-        ts_utc = convert_utc ? ts_milli + glob_const.timezone : ts_milli;
-        return ts_utc - 3000; // 3 second margin for mempool / current timestamps
+    const timezone = glob_const.timezone;
+    if (ts) {
+        const ts_int = to_integer(ts);
+        if (ts_int) {
+            const ts_milli = timestamp_ms(ts_int),
+                ts_utc = convert_utc ? ts_milli + timezone : ts_milli;
+            return ts_utc - 3000; // 3 second margin for mempool / current timestamps
+        }
     }
-    const current = convert_utc ? now_utc() : now();
+    const utc = now_utc(),
+        current = convert_utc ? utc : utc - timezone;
     return current - 3000;
 }
 
@@ -2536,7 +2540,7 @@ function blockchain_ws_data(data, setconfirmations, ccsymbol, address, legacy) {
         return str_match(output_addr, target_addr) || str_match(output_addr, "bitcoincash:" + target_addr) || str_match(output_addr, legacy) ? output.value || 0 : 0;
     }
     const total_output = calculate_total_outputs(data.out, address, process_value),
-        transactiontime = normalize_timestamp(data.time, true);
+        transactiontime = normalize_timestamp(data.time);
     return {
         "ccval": total_output ? total_output / 1e8 : null,
         transactiontime,
@@ -2553,7 +2557,7 @@ function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) {
         return str_match(output.scriptpubkey_address, target_addr) ? output.value || 0 : 0;
     }
     const total_output = calculate_total_outputs(data.vout, address, process_value),
-        transactiontime = normalize_timestamp(data.firstSeen, true);
+        transactiontime = normalize_timestamp(data.firstSeen);
     return {
         "ccval": total_output ? total_output / 1e8 : null,
         transactiontime,
@@ -2567,7 +2571,7 @@ function mempoolspace_ws_data(data, setconfirmations, ccsymbol, address) {
 // Processes mempool.space transaction data with block height confirmation calculation
 function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, latest_block) {
     const status = data.status,
-        transactiontime = normalize_timestamp(status.block_time, true);
+        transactiontime = normalize_timestamp(status.block_time);
     if (setconfirmations === "sort") {
         return transactiontime;
     }
@@ -2593,7 +2597,7 @@ function mempoolspace_scan_data(data, setconfirmations, ccsymbol, address, lates
 function electrum_scan_data(data, setconfirmations, ccsymbol, script_pub, latest_block, tx_hash) {
     const outputs = data.outputs,
         height = data.height || 0,
-        transactiontime = height ? normalize_timestamp(data.timestamp, true) : now_utc() - 3000,
+        transactiontime = normalize_timestamp(data.timestamp) - 3000,
         confirmations = latest_block ? get_block_confirmations(height, latest_block) : height;
     let outputsum = 0;
     if (outputs) {
@@ -2619,7 +2623,7 @@ function sochain_ws_data(data, setconfirmations, ccsymbol, address) {
         return str_match(output.addr, target_addr) ? output.value || 0 : 0;
     }
     const total_output = calculate_total_outputs(data.outputs, address, process_value),
-        transactiontime = normalize_timestamp(data.time, true);
+        transactiontime = normalize_timestamp(data.time);
     return {
         "ccval": total_output ? total_output / 1e8 : null,
         transactiontime,
@@ -2633,9 +2637,10 @@ function sochain_ws_data(data, setconfirmations, ccsymbol, address) {
 // Processes BlockCypher transaction data with ETH/non-ETH value scaling and hash formatting
 function blockcypher_scan_data(data, setconfirmations, ccsymbol) {
     const date_key = (data.confirmed) ? data.confirmed : (data.received) ? data.received : false,
-        tx_timestamp = to_ts(date_key);
+        tx_timestamp = to_ts(date_key),
+        transactiontime = tx_timestamp - glob_const.timezone;
     if (setconfirmations === "sort") {
-        return tx_timestamp;
+        return transactiontime;
     }
     const is_eth = ccsymbol === "eth",
         tx_value = data.value ? (is_eth ? parseFloat((data.value / 1e18).toFixed(8)) : data.value / 1e8) : null,
@@ -2643,7 +2648,7 @@ function blockcypher_scan_data(data, setconfirmations, ccsymbol) {
         formatted_hash = tx_hash && is_eth ? (tx_hash.startsWith("0x") ? tx_hash : "0x" + tx_hash) : tx_hash;
     return {
         "ccval": tx_value,
-        "transactiontime": tx_timestamp,
+        transactiontime,
         "txhash": formatted_hash,
         "confirmations": data.confirmations || 0,
         "setconfirmations": setconfirmations,
@@ -2655,7 +2660,7 @@ function blockcypher_scan_data(data, setconfirmations, ccsymbol) {
 // Processes Insight API transaction data with script pubkey validation and DASH-specific features
 function insight_scan_data(data, setconfirmations, address) {
     const base_time = data.time || data.blocktime,
-        transactiontime = normalize_timestamp(base_time, true);
+        transactiontime = normalize_timestamp(base_time);
     if (setconfirmations === "sort") {
         return transactiontime;
     }
@@ -2687,7 +2692,8 @@ function insight_scan_data(data, setconfirmations, address) {
 // Handles BlockCypher polling data with Ethereum-specific address and value formatting
 function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) {
     const is_eth = ccsymbol === "eth",
-        tx_timestamp = to_ts(data.received);
+        tx_timestamp = to_ts(data.received),
+        transactiontime = tx_timestamp - glob_const.timezone;
 
     function process_output_value(output, target_addr) {
         const output_value = output.value;
@@ -2699,7 +2705,7 @@ function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) {
         formatted_hash = tx_hash && is_eth ? (tx_hash.startsWith("0x") ? tx_hash : "0x" + tx_hash) : tx_hash;
     return {
         "ccval": tx_value,
-        "transactiontime": tx_timestamp,
+        transactiontime,
         "txhash": formatted_hash,
         "confirmations": data.confirmations || 0,
         "setconfirmations": setconfirmations,
@@ -2710,7 +2716,7 @@ function blockcypher_poll_data(data, setconfirmations, ccsymbol, address) {
 
 // Processes blockchain.info transaction data with mempool status and confirmation calculation
 function blockchaininfo_scan_data(data, setconfirmations, ccsymbol, address, latest_block) {
-    const transactiontime = normalize_timestamp(data.time, true);
+    const transactiontime = normalize_timestamp(data.time);
     if (setconfirmations === "sort") {
         return transactiontime;
     }
@@ -2736,9 +2742,10 @@ function blockchaininfo_scan_data(data, setconfirmations, ccsymbol, address, lat
 function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latest_block) {
     const tx_data = data.transaction;
     if (!tx_data) return default_tx_data();
-    const tx_timestamp = tx_data.time ? parse_datetime_string(tx_data.time).getTime() : null;
+    const tx_timestamp = tx_data.time ? parse_datetime_string(tx_data.time).getTime() : null,
+        transactiontime = tx_timestamp - glob_const.timezone;
     if (setconfirmations === "sort") {
-        return tx_timestamp;
+        return transactiontime;
     }
 
     function process_value(output, target_addr) {
@@ -2749,7 +2756,7 @@ function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latest_
         total_output = calculate_total_outputs(data.outputs, address, process_value);
     return {
         "ccval": total_output ? total_output / 1e8 : null,
-        "transactiontime": tx_timestamp,
+        transactiontime,
         "txhash": tx_data.hash || null,
         "confirmations": block_confs,
         "setconfirmations": setconfirmations,
@@ -2761,15 +2768,16 @@ function blockchair_scan_data(data, setconfirmations, ccsymbol, address, latest_
 
 // Handles Blockchair Ethereum transaction data with precise ETH value conversion
 function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latest_block) {
-    const tx_timestamp = data.time ? parse_datetime_string(data.time).getTime() : null;
+    const tx_timestamp = data.time ? parse_datetime_string(data.time).getTime() : null,
+        transactiontime = tx_timestamp - glob_const.timezone;
     if (setconfirmations === "sort") {
-        return tx_timestamp;
+        return transactiontime;
     }
     const eth_value = data.value ? parseFloat((data.value / 1e18).toFixed(8)) : null,
         block_confs = get_block_confirmations(data.block_id, latest_block);
     return {
         "ccval": eth_value,
-        "transactiontime": tx_timestamp,
+        transactiontime,
         "txhash": data.transaction_hash || null,
         "confirmations": block_confs,
         "setconfirmations": setconfirmations,
@@ -2780,15 +2788,16 @@ function blockchair_eth_scan_data(data, setconfirmations, ccsymbol, latest_block
 
 // Processes Blockchair ERC20 token data with dynamic decimal precision handling
 function blockchair_erc20_scan_data(data, setconfirmations, ccsymbol, latest_block) {
-    const tx_timestamp = data.time ? parse_datetime_string(data.time).getTime() : null;
+    const tx_timestamp = data.time ? parse_datetime_string(data.time).getTime() : null,
+        transactiontime = tx_timestamp - glob_const.timezone;
     if (setconfirmations === "sort") {
-        return tx_timestamp;
+        return transactiontime;
     }
     const token_value = data.value ? parseFloat((data.value / (10 ** data.token_decimals)).toFixed(8)) : null,
         block_confs = get_block_confirmations(data.block_id, latest_block);
     return {
         "ccval": token_value,
-        "transactiontime": tx_timestamp,
+        transactiontime,
         "txhash": data.transaction_hash || null,
         "confirmations": block_confs,
         "setconfirmations": setconfirmations,
@@ -2806,11 +2815,12 @@ function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latest_blo
         return default_tx_data();
     }
     const tx_timestamp = tx_data.time ? parse_datetime_string(tx_data.time).getTime() : null,
-        token_value = token_data.value ? parseFloat((token_data.value / (10 ** token_data.token_decimals)).toFixed(8)) : null,
+        transactiontime = tx_timestamp - glob_const.timezone;
+    token_value = token_data.value ? parseFloat((token_data.value / (10 ** token_data.token_decimals)).toFixed(8)) : null,
         block_confs = get_block_confirmations(tx_data.block_id, latest_block);
     return {
         "ccval": token_value,
-        "transactiontime": tx_timestamp,
+        transactiontime,
         "txhash": tx_data.hash || null,
         "confirmations": block_confs,
         "setconfirmations": setconfirmations,
@@ -2821,7 +2831,7 @@ function blockchair_erc20_poll_data(data, setconfirmations, ccsymbol, latest_blo
 
 // Handles Etherscan/Polygonscan API data with Layer2 network support
 function omniscan_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
-    const transactiontime = normalize_timestamp(data.timeStamp, true);
+    const transactiontime = normalize_timestamp(data.timeStamp);
     if (setconfirmations === "sort") {
         return transactiontime;
     }
@@ -2839,7 +2849,7 @@ function omniscan_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
 
 // Processes Layer2 Ethereum transactions with native ETH value conversion
 function omniscan_scan_data_eth(data, setconfirmations, eth_layer2) {
-    const transactiontime = normalize_timestamp(data.timeStamp, true);
+    const transactiontime = normalize_timestamp(data.timeStamp);
     if (setconfirmations === "sort") {
         return transactiontime;
     }
@@ -2857,7 +2867,7 @@ function omniscan_scan_data_eth(data, setconfirmations, eth_layer2) {
 
 // Handles Ethplorer transaction data with token info and Layer2 support
 function ethplorer_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
-    const transactiontime = normalize_timestamp(data.timestamp, true);
+    const transactiontime = normalize_timestamp(data.timestamp);
     if (setconfirmations === "sort") {
         return transactiontime;
     }
@@ -2873,12 +2883,9 @@ function ethplorer_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
 }
 
 // Processes Nano transaction data with raw-to-NANO conversion and local timestamp handling
-function nano_scan_data(data, setconfirmations, ccsymbol, tx_hash) {
-    const transactiontime = normalize_timestamp(data.local_timestamp, true);
-    if (setconfirmations === "sort") {
-        return transactiontime;
-    }
-    const ccval = data.amount ? parseFloat((data.amount / 1e30).toFixed(8)) : null,
+function nano_scan_data(data, tx_hash, socket) {
+    const transactiontime = socket ? normalize_timestamp(data.local_timestamp, true) : normalize_timestamp(data.local_timestamp),
+        ccval = data.amount ? parseFloat((data.amount / 1e30).toFixed(8)) : null,
         txhash = data.hash ? data.hash : tx_hash || null;
     return {
         ccval,
@@ -2886,13 +2893,13 @@ function nano_scan_data(data, setconfirmations, ccsymbol, tx_hash) {
         txhash,
         "confirmations": false,
         "setconfirmations": false,
-        ccsymbol
+        "ccsymbol": "xno"
     };
 }
 
 // Processes Bitcoin RPC node data with scriptPubKey address validation
 function bitcoin_rpc_data(data, setconfirmations, ccsymbol, address) {
-    const transactiontime = normalize_timestamp(data.time, true);
+    const transactiontime = normalize_timestamp(data.time);
 
     function process_output_value(output, target_addr) {
         const sat_value = output.value * 1e8;
@@ -2914,7 +2921,7 @@ function infura_erc20_poll_data(data, setconfirmations, ccsymbol, eth_layer2) {
     const raw_value = data.value || null,
         token_decimals = data.decimals || null,
         ccval = token_decimals ? parseFloat((raw_value / 10 ** token_decimals).toFixed(8)) : null,
-        transactiontime = normalize_timestamp(data.timestamp, true);
+        transactiontime = normalize_timestamp(data.timestamp);
     return {
         ccval,
         transactiontime,
@@ -2929,7 +2936,7 @@ function infura_erc20_poll_data(data, setconfirmations, ccsymbol, eth_layer2) {
 // Processes Infura block data with ETH value conversion and timestamp normalization
 function infura_block_data(data, setconfirmations, ccsymbol, ts) {
     const ccval = data.value ? parseFloat((Number(data.value) / 1e18).toFixed(8)) : null,
-        transactiontime = normalize_timestamp(ts, true);
+        transactiontime = normalize_timestamp(ts);
     return {
         ccval,
         transactiontime,
@@ -2941,14 +2948,15 @@ function infura_block_data(data, setconfirmations, ccsymbol, ts) {
 
 // Processes Monero transaction data with payment ID validation and piconero conversion
 function xmr_scan_data(data, setconfirmations, ccsymbol, latest_block) {
-    const tx_timestamp = to_ts(data.timestamp);
+    const tx_timestamp = to_ts(data.timestamp),
+        transactiontime = tx_timestamp - glob_const.timezone;
     if (setconfirmations === "sort") {
-        return tx_timestamp;
+        return transactiontime;
     }
     const block_confs = get_block_confirmations(data.height, latest_block);
     return {
         "ccval": data.total_received / 1e12,
-        "transactiontime": tx_timestamp,
+        transactiontime,
         "txhash": data.hash,
         "confirmations": block_confs,
         "setconfirmations": setconfirmations,
@@ -2962,7 +2970,7 @@ function blockchair_xmr_data(data, setconfirmations) {
     function process_output_value(output) {
         return output.match ? output.amount : 0;
     }
-    const transactiontime = normalize_timestamp(data.tx_timestamp, true),
+    const transactiontime = normalize_timestamp(data.tx_timestamp),
         total_output = calculate_total_outputs(data.outputs, null, process_output_value);
     return {
         "ccval": total_output / 1e12,
@@ -2977,7 +2985,7 @@ function blockchair_xmr_data(data, setconfirmations) {
 
 // Processes Nimiq transaction data with confirmation calculation and value scaling
 function nimiq_scan_data(data, setconfirmations, latest_block, tx_hash) {
-    const transactiontime = normalize_timestamp(data.timestamp, true);
+    const transactiontime = normalize_timestamp(data.timestamp);
     if (setconfirmations === "sort") {
         return transactiontime;
     }
@@ -2997,7 +3005,7 @@ function nimiq_scan_data(data, setconfirmations, latest_block, tx_hash) {
 
 // Handles Kaspa transaction data with blue score confirmation calculation
 function kaspa_scan_data(data, thisaddress, setconfirmations, latest_block) {
-    const transactiontime = normalize_timestamp(data.block_time, true);
+    const transactiontime = normalize_timestamp(data.block_time);
     if (setconfirmations === "sort") {
         return transactiontime;
     }
@@ -3027,7 +3035,7 @@ function kaspa_poll_fyi_data(data, thisaddress, setconfirmations) {
     const total_output = calculate_total_outputs(data.outputs, thisaddress, process_output_value);
     return {
         "ccval": total_output ? total_output / 1e8 : null,
-        "transactiontime": normalize_timestamp(data.blockTime, true),
+        "transactiontime": normalize_timestamp(data.blockTime),
         "txhash": data.transactionId,
         "confirmations": data.isAccepted || data.confirmations || 0,
         setconfirmations,
@@ -3068,7 +3076,7 @@ function kaspa_fyi_ws_data(data, thisaddress) {
 // Handles Lightning Network transaction data with satoshi-to-BTC conversion
 function lnd_tx_data(data) {
     const tx_timestamp = data.txtime || data.timestamp,
-        transactiontime = normalize_timestamp(tx_timestamp, true),
+        transactiontime = normalize_timestamp(tx_timestamp),
         btc_amount = parseFloat(data.amount / 100000000000);
     return {
         "ccval": Math.abs(btc_amount),
@@ -3084,7 +3092,7 @@ function lnd_tx_data(data) {
 // Processes Infura Ethereum polling data with Layer2 network support
 function infura_eth_poll_data(data, setconfirmations, ccsymbol, eth_layer2) {
     const ccval = data.value ? parseFloat((data.value / 1e18).toFixed(8)) : null,
-        transactiontime = normalize_timestamp(data.timestamp, true);
+        transactiontime = normalize_timestamp(data.timestamp);
     return {
         ccval,
         transactiontime,

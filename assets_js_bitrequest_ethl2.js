@@ -628,8 +628,7 @@ function update_network_status(sn, stat) {
 function create_layer2_request(timeout, pending, contract, ping_id) {
     if (!request) return false
     const rq_init = request.rq_init,
-        request_ts_utc = rq_init + glob_const.timezone,
-        request_ts = request_ts_utc - 15000, // 15 second margin
+        request_ts = rq_init - 15000, // 15 second margin
         set_confirmations = request.set_confirmations || 0,
         cachetime = (timeout - 1000) / 1000,
         source = "l2_" + pending;

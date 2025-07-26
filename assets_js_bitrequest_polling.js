@@ -21,6 +21,9 @@ function start_transaction_monitor(tx_data, api_data, retry) {
     glob_let.apikey_fails = false;
     route_transaction_monitor(tx_data, api_data, retry);
     glob_const.paymentdialogbox.addClass("transacting");
+    if (!request.paymenttimestamp && tx_data.transactiontime) {
+        request.paymenttimestamp = tx_data.transactiontime;
+    }
 }
 
 // Directs transaction monitoring to appropriate chain (L1/L2) based on transaction data
@@ -109,14 +112,11 @@ function clear_polling_timeout() {
 function start_address_monitor(time_out, api_dat, retry) {
     const addr_id = request.address,
         poll_interval = time_out || 7000,
-        init_time = request.rq_init,
-        req_time_utc = init_time + glob_const.timezone,
-        req_time = req_time_utc,
         conf_required = request.set_confirmations || 0,
         cache_time = (poll_interval - 1000) / 1000,
         rdo = { // request data object
             "requestid": request.requestid,
-            "request_timestamp": req_time,
+            "request_timestamp": request.rq_init,
             "setconfirmations": conf_required,
             "pending": "scanning",
             "erc20": request.erc20,
@@ -221,9 +221,7 @@ function xmr_node_access(vk) {
 
 // Creates periodic polling interval for Monero address monitoring
 function start_monero_monitor(cachetime, address, vk) {
-    const init_time = request.rq_init,
-        req_time_utc = init_time + glob_const.timezone,
-        req_time = req_time_utc - 10000; // 10 second compensation
+    const req_time = request.rq_init - 10000; // 10 second compensation
     socket_info({
         "url": "mymonero api"
     }, true, true);
@@ -344,11 +342,10 @@ function validate_confirmations(tx_data, direct, ln) {
                     confirm_span.text(tx_confirms).attr("data-conf", tx_confirms);
                 }, 500);
                 const tx_hash = tx_data.txhash,
-                    layer2_tx = tx_data.eth_layer2,
+                    eth_layer2 = tx_data.eth_layer2,
                     amount_rel = $("#open_wallet").attr("data-rel"),
                     crypto_amount = amount_rel && amount_rel.length ? parseFloat(amount_rel) : 0,
                     received_utc = request.paymenttimestamp || tx_data.transactiontime,
-                    received_local = received_utc - glob_const.timezone,
                     received_crypto = tx_data.ccval,
                     received_formatted = parseFloat(received_crypto.toFixed(6)),
                     current_currency = request.uoa,
@@ -366,13 +363,13 @@ function validate_confirmations(tx_data, direct, ln) {
                     "txhash": tx_hash,
                     "confirmations": tx_confirms,
                     "set_confirmations": required_confirms,
-                    eth_layer2: layer2_tx
+                    eth_layer2
                 });
                 // don't update time of payment
                 if (!request.paymenttimestamp) {
                     request.paymenttimestamp = received_utc;
                 }
-                status_panel.find("span.paymentdate").html(fulldateformat(new Date(received_local), langcode));
+                status_panel.find("span.paymentdate").html(fulldateformat(new Date(received_utc), langcode));
                 if (!is_crypto) {
                     status_panel.find("span.receivedcrypto").text(received_formatted + " " + crypto_symbol);
                 }
