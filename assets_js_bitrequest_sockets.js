@@ -1271,7 +1271,7 @@ function nano_socket(socket_node, wallet_address) {
                     return // block outgoing transactions
                 }
                 if (!tx_data.hash) return
-                const tx_details = nano_scan_data(tx_data, null, true),
+                const tx_details = nano_scan_data(tx_data),
                     tx_time = tx_details.transactiontime,
                     time_delta = Math.abs(tx_time - current_utc);
                 if (time_delta < 60000) { // filter transactions longer then a minute ago
