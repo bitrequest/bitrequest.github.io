@@ -2458,7 +2458,6 @@ function showoptions(content, add_class) {
             }
         }
     }
-    if (inj(content)) return // xss filter
     const extra_class = add_class ? " " + add_class : "";
     $("#optionspop").addClass("showpu active" + extra_class);
     $("#optionsbox").html(content);
