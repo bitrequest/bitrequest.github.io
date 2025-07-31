@@ -2458,6 +2458,7 @@ function showoptions(content, add_class) {
             }
         }
     }
+    if (inj(content)) return // xss filter
     const extra_class = add_class ? " " + add_class : "";
     $("#optionspop").addClass("showpu active" + extra_class);
     $("#optionsbox").html(content);
@@ -2844,6 +2845,7 @@ function show_vk_cb(key_data) {
 
 // Shows notification popup with optional duration and button style
 function notify(message, display_time = 4000, button_style = "no") {
+    if (inj(message)) return // xss filter
     const notify_elem = $("#notify");
     $("#notifysign").html(message + "<span class='icon-cross'></div>").attr("class", "button" + button_style);
     notify_elem.addClass("popupn");
@@ -2879,6 +2881,7 @@ function topnotify(message) {
 
 // Displays styled notification in dialog boxes
 function popnotify(result, message) { // notifications in dialogs
+    if (inj(message)) return
     const notify_box = $(".popnotify");
     if (result === "error") {
         notify_box.removeClass("success warning").addClass("error");
@@ -4690,6 +4693,7 @@ function show_app_download_prompt(platform_type) {
         panel_content = "<h2>Download the app</h2>\
             <a href='" + store_url + "' class='exit store_bttn'><img src='" + store_button + "'></a><br/>\
             <div id='not_now'>Not now</div>";
+    if (inj(panel_content)) return // xss filter
     app_panel.html(panel_content);
     setTimeout(function() {
         glob_const.body.addClass("getapp");

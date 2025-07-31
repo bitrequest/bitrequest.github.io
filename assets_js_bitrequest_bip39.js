@@ -687,6 +687,7 @@ function bip39(dat) {
             </div>\
         </div>\
     </div>").data(dialog_data);
+    if (inj(ui_state)) return // xss filter
     $("#sd_panel").html(markup).addClass(ui_state);
     glob_const.body.addClass("seed_dialog");
     if (current_step === 3) {

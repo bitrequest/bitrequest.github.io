@@ -163,7 +163,7 @@
 }
 
 .selectarrows:before,
-.inputwrap .qrscanner .icon-qrcode:before {
+.qrscanner .icon-qrcode:before {
   margin-right: 0.25em;
   vertical-align: top !important;
 }
@@ -280,15 +280,13 @@
   margin-bottom: 0.6em;
 }
 
-#rpc_list .selectarrows,
-#rpc_list .qrscanner {
+#rpc_list .selectarrows {
   opacity: 0;
   pointer-events: none;
   transition: opacity 1000ms ease;
 }
 
-#rpc_list.show_select .selectarrows,
-#rpc_list.show_select .qrscanner {
+#rpc_list.show_select .selectarrows {
   opacity: 1;
   pointer-events: all;
 }
