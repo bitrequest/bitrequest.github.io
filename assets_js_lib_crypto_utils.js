@@ -297,6 +297,26 @@ function b58enc_uint_array(u) {
     return s;
 }
 
+// Optimize b58enc_uint_array: Use array push + join
+function b58enc_uint_array(u) {
+    let d = [],
+        s = [];
+    for (const [i, c] of u.entries()) {
+        let j = 0,
+            n;
+        if (c || s.length ^ i) s.push("");
+        else s.push("1");
+        while (j in d || c) {
+            n = d[j] ? d[j] * 256 + c : c;
+            c = Math.floor(n / 58);
+            d[j] = n % 58;
+            j++;
+        }
+    }
+    while (j--) s.push(b58ab[d[j]]);
+    return s.join(""); // Single join at end
+}
+
 // Decodes Base58 string to UTF-8 or hexadecimal output
 function b58dec(dec, decode) {
     const buffer = b58dec_uint_array(dec);
@@ -516,7 +536,7 @@ function verify_checksum_with_type(hrp, data) {
 // Converts a binary array to decimal array for Bech32 encoding
 function bech32_dec_array(bitarr) {
     const hexstr = [0];
-    $.each(bitarr, function(i, bits) {
+    bitarr.forEach(bits => {
         hexstr.push(parseInt(bits, 2));
     });
     return hexstr;
