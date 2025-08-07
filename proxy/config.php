@@ -47,6 +47,11 @@ $lightning_setup = array(
 	    "key" => "",
 	    "routes" => []
 	),
+	"core-lightning" => array(
+		"host" => "",
+		"key" => "",
+		"routes" => []
+	),
 	"lnbits" => array(
 	    "host" => "",
 	    "key" => "",

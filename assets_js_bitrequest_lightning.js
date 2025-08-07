@@ -143,13 +143,18 @@ function render_lightning_interface(replace) {
             "<div class='selectarrows icon-menu2' data-pe='none'></div>" +
             "<div class='options' id='implements'>" +
             "<span data-value='lnd' class='imp_select'><img src='" + c_icons("lnd") + "' class='lnd_icon'> LND</span>" +
+            "<span data-value='core-lightning' class='imp_select'><img src='" + c_icons("core-lightning") + "' class='lnd_icon'> core-lightning</span>" +
             "<span data-value='lnbits' class='imp_select'><img src='" + c_icons("lnbits") + "' class='lnd_icon'> LNbits</span>" +
             "</div>" +
             "</div>" +
             "<div id='lnd_credentials'>" +
             "<div class='lndcd cs_lnd'>" +
             "<div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host' autocomplete='off' autocapitalize='off' spellcheck='false'/><div class='qrscanner' data-currency='lnd' data-id='lnconnect' title='scan qr-code'><span class='icon-qrcode'></span></div></div>" +
-            "<div class='inputwrap'><input class='invoice_macaroon (hex)' type='text' value='' placeholder='Invoice macaroon' autocomplete='off' autocapitalize='off' spellcheck='false'/></div>" +
+            "<div class='inputwrap'><input class='invoice_macaroon' type='text' value='' placeholder='Invoice macaroon' autocomplete='off' autocapitalize='off' spellcheck='false'/></div>" +
+            "</div>" +
+            "<div class='lndcd cs_core-lightning'>" +
+            "<div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host' autocomplete='off' autocapitalize='off' spellcheck='false'/></div>" +
+            "<div class='inputwrap'><input class='invoice_macaroon' type='text' value='' placeholder='Invoice rune' autocomplete='off' autocapitalize='off' spellcheck='false'/></div>" +
             "</div>" +
             "<div class='lndcd cs_lnbits'>" +
             "<div class='inputwrap'><input class='lnd_host' type='text' value='' placeholder='REST Host' autocomplete='off' autocapitalize='off' spellcheck='false'/></div>" +
@@ -201,6 +206,9 @@ function render_lightning_interface(replace) {
                     switch (implementation) {
                         case "lnd":
                             test_lnd_option_li(node, is_selected, "append");
+                            break;
+                        case "core-lightning":
+                            test_c_lightning_option_li(node, is_selected, "append");
                             break;
                         case "lnbits":
                             test_lnbits_option_li(node, is_selected, "append");
@@ -302,7 +310,7 @@ function node_option_li(node_info, selected, action, proxy_url, proxy_key) {
                 return
             }
             const node_metadata = response.mdat,
-                is_connected = node_metadata.connected;
+                is_connected = q_obj(node_metadata, "connected");
             if (action === "append") {
                 if (is_connected) {
                     lightning_option_li(true, node_info, selected, invoices, proxy_url);
@@ -340,6 +348,53 @@ function test_lnd_option_li(node_info, selected, action) {
             "data": null,
             "headers": {
                 "Grpc-Metadata-macaroon": node_info.key
+            }
+        }
+    }).done(function(response) {
+        closeloader();
+        const api_result = br_result(response).result;
+        if (api_result) {
+            if (action === "append") {
+                if (api_result.invoices) {
+                    lightning_option_li(true, node_info, selected, api_result.invoices);
+                    return
+                }
+                lightning_option_li(false, node_info, selected);
+                return
+            }
+            if (api_result.invoices) {
+                update_connection_status(true);
+                return
+            }
+            update_connection_status();
+        }
+    }).fail(function(xhr, status, error) {
+        closeloader();
+        if (action === "append") {
+            lightning_option_li(false, node_info, selected);
+            return
+        }
+        update_connection_status();
+    });
+}
+
+// Validates core-lightning node connection and creates corresponding option list item
+function test_c_lightning_option_li(node_info, selected, action) {
+    const node_host = node_info.host,
+        is_onion_host = node_host.indexOf(".onion") > 0;
+    loader(true);
+    set_loader_text(tl("connecttolnur", {
+        "url": truncate_middle(node_host)
+    }));
+    api_proxy({
+        "proxy": is_onion_host,
+        "api_url": node_host + "/v1/listinvoices",
+        "params": {
+            "method": "POST",
+            "cache": false,
+            "data": null,
+            "headers": {
+                "Rune": node_info.key
             }
         }
     }).done(function(response) {
@@ -443,7 +498,7 @@ function lightning_option_li(is_live, node_info, selected, invoices, proxy_url) 
     if (has_invoices) {
         invoices.reverse().forEach(function(invoice) {
             const invoice_description = invoice.memo || invoice.description;
-            if (invoice_description && invoice_description.indexOf("test invoice ") === 0) {
+            if (invoice_description && invoice_description.indexOf("test invoice") === 0) {
                 // filter out test invoices
             } else {
                 const invoice_id = invoice.payment_request ? " " + invoice.payment_request.slice(0, 16) :
@@ -1032,7 +1087,7 @@ function trigger_ln() {
                 node_host_input.focus();
                 return
             }
-            const node_key = b64urldecode(node_key_raw);
+            const node_key = (implementation === "core-lightning") ? node_key_raw : b64urldecode(node_key_raw);
             if (node_key) {
                 const key_length = node_key.length;
                 if (key_length < 5) {
@@ -1182,13 +1237,27 @@ function test_create_invoice(implementation, proxy_data, node_host, node_key) {
             "api_url": node_host + "/v1/invoices",
             "data": {
                 "value": 10000,
-                "memo": "test invoice lnd direct",
+                "memo": "test invoice",
                 "expiry": 180
             },
             "headers": {
                 "Grpc-Metadata-macaroon": node_key
             },
             "successKey": "r_hash"
+        },
+        "core-lightning": {
+            "api_url": node_host + "/v1/invoice",
+            "data": {
+                "amount_msat": 10000,
+                "label": unique_id,
+                "description": "test invoice",
+                "expiry": 180
+            },
+            "headers": {
+                "contentType": "application/json",
+                "Rune": node_key,
+            },
+            "successKey": "payment_hash"
         },
         "lnbits": {
             "api_url": node_host + "/api/v1/payments",
@@ -1567,6 +1636,38 @@ function check_lnd_status(lightning_node) {
             "data": null,
             "headers": {
                 "Grpc-Metadata-macaroon": lightning_node.key
+            }
+        }
+    }).done(function(response) {
+        const node_data = br_result(response).result;
+        if (node_data) {
+            if (node_data.invoices) {
+                helper.lnd_status = true;
+                if (lightning_node.nid) {
+                    sessionStorage.setItem("lnd_timer_" + lightning_node.nid, now_utc());
+                }
+            }
+        }
+        proceed_pf();
+    }).fail(function(xhr, status, error) {
+        const error_object = xhr || status || error;
+        proceed_pf({
+            "error": error_object
+        });
+    });
+}
+
+function check_c_lightning_status(lightning_node) {
+    api_proxy({
+        "proxy": false,
+        "api_url": lightning_node.host + "/v1/listinvoices",
+        "params": {
+            "method": "POST",
+            "cache": false,
+            "data": null,
+            "headers": {
+                "contentType": "application/json",
+                "Rune": lightning_node.key
             }
         }
     }).done(function(response) {

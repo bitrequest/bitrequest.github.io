@@ -761,7 +761,7 @@ function add_apikey(api_name) {
         current_key = stored_key || "",
         api_config = get_api_data(api_name),
         signup_url = api_config.sign_up,
-        signup_link = !signup_url ? "" : "<div id='api_signin'>Get your " + api_name + " API key <a href='" + signup_url + "' target='blank' class='exit'>here</a></div>",
+        signup_link = !signup_url ? "" : "<div id='api_signin'>Get your " + api_name + " API key <a href='" + signup_url + "' target='blank' class='exit linkcolor'>here</a></div>",
         dialog_content = "\
         <div class='formbox' id='add_apikey'>\
             <h2 class='icon-key'>Set " + api_name + " API key</h2>\

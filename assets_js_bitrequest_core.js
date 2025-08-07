@@ -240,6 +240,7 @@ function convert_coinlist(token_list) {
 // Set up various functions for the application
 function set_functions() {
     set_locales(); //set meta attribute
+    set_theme();
     set_permissions();
 
     // ** Pincode **
@@ -571,6 +572,17 @@ function set_locales() {
     glob_const.html.attr("lang", langcode);
     $("meta[property='og:locale']").attr("content", langcode);
     $("meta[property='og:url']").attr("content", glob_const.w_loc.href);
+}
+
+// Sets selected stylesheer
+function set_theme() {
+    var filename = $("#themesettings").data("selected");
+    if (filename) {
+        if (filename === "default.css") {
+            return
+        }
+        $("link#theme").attr("href", d_proxy() + "/proxy/v1/themes/" + filename);
+    }
 }
 
 // Sets HTML element data-role based on user permission level
@@ -2524,7 +2536,7 @@ function lockscreen(timeout) {
         countdown_text = days_str + hours_str + mins_str + secs_str,
         unlock_attempts = $("#pinsettings").data("attempts"),
         has_seed = (glob_let.hasbip || glob_let.cashier_seedid) ? true : false,
-        unlock_seed_btn = (has_seed === true && unlock_attempts > 5) ? "<p id='seed_unlock'>" + tl("unlockwithsecretphrase") + "</p>" : "",
+        unlock_seed_btn = (has_seed === true && unlock_attempts > 5) ? "<p id='seed_unlock' class='linkcolor'>" + tl("unlockwithsecretphrase") + "</p>" : "",
         lock_content = "<h1 id='lock_heading'>" + glob_const.apptitle + "</h1><div id='lockscreen'><h2><span class='icon-lock'></span></h2><p class='tmua'>" + tl("tomanyunlocks") + "</p>\
         <p><br/>" + tl("tryagainin") + "<br/>" + countdown_text + "</p>" + unlock_seed_btn +
         "<div id='phrasewrap'>\
@@ -3075,10 +3087,10 @@ function addaddress(addr_data, is_edit) {
         addr_label = addr_data.label || "",
         input_readonly = (is_edit === true) ? " readonly" : "",
         no_pubkey = glob_let.test_derive === false || (is_xpub(currency) === false || has_xpub(currency) !== false),
-        wallet_prompt = "<span id='get_wallet' class='address_option' data-currency='" + currency + "'>" + tl("noaddressyet", {
+        wallet_prompt = "<span id='get_wallet' class='address_option linkcolor' data-currency='" + currency + "'>" + tl("noaddressyet", {
             "currency": currency
         }) + "</span>",
-        seed_prompt = "<span id='option_makeseed' class='address_option' data-currency='" + currency + "'>" + tl("generatewallet") + "</span>",
+        seed_prompt = "<span id='option_makeseed' class='address_option linkcolor' data-currency='" + currency + "'>" + tl("generatewallet") + "</span>",
         addr_options = glob_let.hasbip ? wallet_prompt : (glob_let.test_derive && bip39_const.c_derive[currency]) ? (has_bip32(currency) === true ? seed_prompt : wallet_prompt) : wallet_prompt,
         notify_html = !set_up() ? "<div class='popnotify' style='display:block'>" + addr_options + "</div>" : "<div class='popnotify'></div>",
         scan_btn = glob_let.hascam && !is_edit ? "<div class='qrscanner' data-currency='" + currency + "' data-id='address' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
@@ -4436,12 +4448,13 @@ function check_intents(encoded_scheme) {
         return
     }
 
-    if (protocol == "lndconnect") {
-        const implementation = protocol === "lndconnect" ? "lnd" : protocol,
+    if (protocol == "lndconnect" || proto == "clnrest") {
+        const implementation = (protocol === "lndconnect") ? "lnd" :
+            (protocol === "clnrest") ? "core-lightning" : protocol,
             connection_data = renderlnconnect(decoded_url);
         if (connection_data) {
             const rest_url = connection_data.resturl,
-                macaroon_data = connection_data.macaroon;
+                macaroon_data = connection_data.macaroon || scheme_obj.rune;
             // wait for settings to be rendered
             if (rest_url && macaroon_data) {
                 setTimeout(function() {
@@ -4857,7 +4870,7 @@ function build_settings() {
                     <h2>" + tl(setting_id) + "</h2>\
                     <p>" + truncate_middle(display_val) + "</p>\
                  </div>\
-                 <div class='iconbox'>\
+                 <div class='iconbox linkcolor'>\
                      <span class='icon-pencil'></span>\
                 </div>\
               </div>\
@@ -5039,7 +5052,7 @@ function append_coinsetting(currency, settings) {
                                 <h2>" + tl(key) + "</h2>\
                                 <p>" + display_trunc + "</p>\
                             </div>\
-                            <div class='iconbox'>" + control + "</div>\
+                            <div class='iconbox linkcolor'>" + control + "</div>\
                             </div>\
                     </li>");
                 settings_item.data(setting).appendTo(settings_list);
@@ -5091,7 +5104,7 @@ function append_address(currency, addr_data) {
                 </div>\
                 <div class='iconbox'>\
                     <span class='checkbox toggleaddress'></span>\
-                    <span class='popoptions icon-menu2'></span>\
+                    <span class='popoptions icon-menu2 linkcolor'></span>\
                 </div>\
             </div>\
         </li>");
@@ -5238,7 +5251,7 @@ function append_request(rd) {
         "<li><strong class='show_tx'><span class='icon-power'></span>" +
         "<span class='ref'>" + tl("viewinvoice") + "</span></strong></li>" :
         (txhash) ?
-        "<li><strong class='show_tx'><span class='icon-eye'></span>" +
+        "<li><strong class='show_tx'><span class='icon-eye linkcolor'></span>" +
         tl("viewon") + " blockchain</strong></li>" : "",
         status_text = !monitored ? "" :
         (status == "new") ? "Waiting for payment" : status,
@@ -5317,7 +5330,7 @@ function append_request(rd) {
             network_box +
             payment_id_box +
             int_addr_box +
-            "<li class='receipt'><p><span class='icon-file-pdf' title='View receipt'/>" +
+            "<li class='receipt'><p class='linkcolor'><span class='icon-file-pdf' title='View receipt'/>" +
             tl("receipt") + "</p></li>" + tx_view +
             "</ul>\
                 <ul class='transactionlist'>\

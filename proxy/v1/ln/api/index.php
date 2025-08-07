@@ -1,5 +1,4 @@
 <?php
-	
 header("Content-Type: application/json");
 header("Access-Control-Allow-Headers: Cache-Control, Pragma");
 header("Access-Control-Allow-Origin: *");
@@ -176,7 +175,7 @@ if ($fn === "ln-request-status" && $post_pid) {
 }
 
 // Check if the implementation is supported
-if (in_array($imp, ["lnd", "lnbits"])) {
+if (in_array($imp, ["lnd", "lnbits", "core-lightning"])) {
 	$allowed_functions = ["ln-create-invoice", "ln-list-invoices", "ln-invoice-status", "ln-invoice-decode", "ln-delete-invoice"];
 	if ($lnget || in_array($fn, $allowed_functions)) {
 		
@@ -460,12 +459,30 @@ if (in_array($imp, ["lnd", "lnbits"])) {
 				return invoice_uniform($imp, $inv, $type);
 			}
 		}
-	
-		if ($imp == "c-lightning") {
-			// Core-lightning support is temporarily disabled
-			// Waiting for stable API and improved documentation
-			// Will be re-implemented in a future update
-			return r_err("Core-lightning support is currently under development", null);
+		
+		if ($imp === "core-lightning") {
+			$rpcurl = $host . "/v1/invoice";
+			$pl = [];
+			$pl["label"] = $pid;
+			if ($memo) {
+				$pl["description"] = $memo;
+			}
+			if ($amount) {
+				$pl["amount_msat"] = $amount;
+			}
+			$pl["expiry"] = $expiry;
+			$payload = json_encode($pl);
+			$headers = [
+				"tls_wildcard" => true
+			];
+			$headers[] = "Content-Length: " . strlen($payload);
+			$headers[] = "Content-Type: application/json";
+			$headers[] = "Rune: " . $key;
+			$inv = curl_get($rpcurl, $payload, $headers);
+			if ($inv) {
+				$result = invoice_uniform($imp, $inv, $type);
+				return $result;
+			}
 		}
 	
 		if ($imp === "lnbits") {
@@ -524,6 +541,13 @@ if (in_array($imp, ["lnd", "lnbits"])) {
 				"hash" => lnd_b64_dec($dat["r_hash"])
 			]);
 		}
+		
+		if ($imp === "core-lightning") {
+			return [
+				"bolt11" => $dat["bolt11"],
+				"hash" => $dat["payment_hash"]
+			];
+		}
 	
 		if ($imp === "lnbits") {
 			$bolt11 = isset($dat["bolt11"]) ? $dat["bolt11"] : $dat["payment_request"];
@@ -562,12 +586,28 @@ if (in_array($imp, ["lnd", "lnbits"])) {
 			} 
 			return process_invoice_result($result, $connected, $type, $pingtest);
 		}
-	
-		if ($imp === "c-lightning") {
-			// Core-lightning support is temporarily disabled
-			// Waiting for stable API and improved documentation
-			// Will be re-implemented in a future update
-			return r_err("Core-lightning support is currently under development", null);
+		
+		if ($imp === "core-lightning") {
+			$rpcurl = $host . "/v1/listinvoices";
+			$headers = [
+				"tls_wildcard" => true
+			];
+			$headers[] = "Content-Type: application/json";
+			$headers[] = "Rune: " . $key;
+			$invoices = curl_get($rpcurl, null, $headers);
+			$result = json_decode($invoices, true);
+			
+			// Check if we got an array of invoices or a single invoice
+			if (isset($result["invoices"]) && is_array($result["invoices"])) {
+				$connected = !empty($result["invoices"]) && isset($result["invoices"][0]["payment_hash"]);
+			} else if (isset($result["payment_hash"])) {
+				// We received a single invoice - wrap it in the expected structure
+				$result = ["invoices" => [$result]];
+				$connected = true;
+			} else {
+				$connected = false;
+			} 
+			return process_invoice_result($result, $connected, $type, $pingtest);
 		}
 	
 		if ($imp === "lnbits") {
@@ -618,15 +658,23 @@ if (in_array($imp, ["lnd", "lnbits"])) {
 			
 			// Check for valid response with r_hash
 			$is_valid = is_array($result) && isset($result["r_hash"]);
-			
 			return process_invoice_lookup($imp, $result, $is_valid, $pid, $type, $expiry, $status);
 		}
-	
-		if ($imp === "c-lightning") {
-			// Core-lightning support is temporarily disabled
-			// Waiting for stable API and improved documentation
-			// Will be re-implemented in a future update
-			return r_err("Core-lightning support is currently under development", null);
+		
+		if ($imp === "core-lightning") {
+			$rpcurl = $host . "/v1/invoice";
+			$headers = [
+				"tls_wildcard" => true
+			];
+			$headers[] = "Content-Type: application/json";
+			$headers[] = "payment_hash: " . $hash;
+			$headers[] = "Rune: " . $key;
+			$inv = curl_get($rpcurl, null, $headers);
+			$result = json_decode($inv, true);
+			
+			// Check for valid response with r_hash
+			$is_valid = is_array($result) && isset($result["payment_hash"]);
+			return process_invoice_lookup($imp, $result, $is_valid, $pid, $type, $expiry, $status);
 		}
 	
 		if ($imp === "lnbits") {
@@ -640,7 +688,6 @@ if (in_array($imp, ["lnd", "lnbits"])) {
 			$result = json_decode($inv, true);
 			return process_invoice_lookup($imp, $result, isset($result["details"]), $pid, $type, $expiry, $status);
 		}
-	
 		return r_err("unable to fetch invoice", null);
 	}
 	
@@ -673,6 +720,10 @@ if (in_array($imp, ["lnd", "lnbits"])) {
 		if ($imp === "lnd") {
 			return get_lnd_status($dat, $base_result);
 		}
+		
+		if ($imp === "core-lightning") {
+			return get_c_lightning_status($dat, $base_result);
+		}
 	
 		if ($imp === "lnbits") {
 			return get_lnbits_status($dat, $base_result, $expiry);
@@ -701,6 +752,34 @@ if (in_array($imp, ["lnd", "lnbits"])) {
 		return array_merge($base_result, [
 			"status" => $br_state,
 			"bolt11" => $dat["payment_request"],
+			"hash" => $inv_hash,
+			"amount" => $inv_amount,
+			"amount_paid" => ($br_state === "paid") ? $inv_amount_paid : null,
+			"timestamp" => $inv_txcreated,
+			"txtime" => $inv_txtime,
+			"conf" => $conf
+		]);
+	}
+	
+	// Extract and normalize core-lightning invoice status information
+	function get_c_lightning_status($dat, $base_result) {
+		$status = $dat["state"];
+		$br_state = "unknown";
+		if ($status === "paid") $br_state = "paid";
+		if ($status === "unpaid") $br_state = "pending";
+		if ($status === "expired") $br_state = "canceled";
+		
+		// Extract relevant fields with defaults for missing values
+		$conf = ($br_state === "paid") ? 1 : 0;
+		$inv_txcreated = isset($dat["expires_at"]) ? ((int)$dat["expires_at"] - $expiry) * 1000 : 0;
+		$inv_txtime = isset($dat["paid_at"]) ? (int)$dat["paid_at"] * 1000 : 0;
+		$inv_amount = isset($dat["amount_msat"]) ? (int)$dat["amount_msat"] : 0;
+		$inv_amount_paid = isset($dat["amount_received_msat"]) ? (int)$dat["amount_received_msat"] : 0;
+		$inv_hash = isset($dat["payment_hash"]) ? $dat["payment_hash"] : null;
+	
+		return array_merge($base_result, [
+			"status" => $br_state,
+			"bolt11" => $dat["bolt11"],
 			"hash" => $inv_hash,
 			"amount" => $inv_amount,
 			"amount_paid" => ($br_state === "paid") ? $inv_amount_paid : null,

@@ -1879,6 +1879,12 @@ glob_config = {
             "icon": "icon-bubble2"
         },
         {
+            "id": "themesettings",
+            "heading": "Choose theme",
+               "selected": "default.css",
+               "icon": "icon-paint-format"
+        },
+        {
             "id": "heading",
             "heading": "security"
         },

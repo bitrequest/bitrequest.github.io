@@ -997,6 +997,10 @@ function test_lnd(is_lnurl) {
         check_lnd_status(lnd_config);
         return
     }
+    if (lnd_config.imp === "core-lightning") {
+        check_c_lightning_status(lnd_config);
+        return
+    }
     if (lnd_config.imp === "lnbits") {
         check_lnbits_status(lnd_config);
         return
@@ -1406,7 +1410,7 @@ function get_payment(ccrateeuro, ccapi) {
         saved_address = filter_addressli(request.payment, "address", request.address),
         has_label = saved_address.length > 0 && saved_address.data("label").length > 0,
         label_text = has_label ? saved_address.data("label") : "",
-        label_html = has_label ? "<span id='labelbttn'>" + label_text + "</span>" : "", // check if label is set
+        label_html = has_label ? "<span id='labelbttn' class='linkcolor'>" + label_text + "</span>" : "", // check if label is set
         crypto_amount_raw = (request.amount / exchange_rate) * ccrateeuro,
         crypto_amount = parseFloat(crypto_amount_raw.toFixed(6)),
         zero_text = glob_const.zeroplaceholder,
@@ -1495,7 +1499,7 @@ function get_payment(ccrateeuro, ccapi) {
                         <span class='wifi_off icon-wifi-off'></span>" +
         conf_html +
         "</span><br/>\
-                    <span id='view_tx'>" + tl("viewdetails") + "</span>\
+                    <span id='view_tx' class='linkcolor'>" + tl("viewdetails") + "</span>\
                 </p>\
             </div>",
         readonly_attr = is_viewonly() ? " readonly='readonly'" : "",
@@ -1505,7 +1509,7 @@ function get_payment(ccrateeuro, ccapi) {
             <div id='shareformbox'>\
                 <div id='shareformib' class='inputbreak'>\
                     <form id='shareform' disabled='' autocorrect='off' autocapitalize='sentences' spellcheck='off'>\
-                        <label>" + tl("whatsyourname") + "<input type='text' placeholder='Name' id='requestname' value='" + init_name + "'" + readonly_attr + "></label>\
+                        <label>" + tl("whatsyourname") + "<input type='text' placeholder='Name' id='requestname' class='linkcolor' value='" + init_name + "'" + readonly_attr + "></label>\
                         <label>" + tl("whatsitfor") + "<input type='text' placeholder='" + tl("forexample") + ": " + tl("lunch") + " 🥪' id='requesttitle' value='" + title_str + "' data-ph1=' " + tl("festivaltickets") + "' data-ph2=' " + tl("coffee") + " ☕' data-ph3=' " + tl("present") + " 🎁' data-ph4=' " + tl("snowboarding") + " 🏂' data-ph5=' " + tl("movietheater") + " 📽️' data-ph6=' " + tl("lunch") + " 🥪' data-ph7=' " + tl("shopping") + " 🛒' data-ph8=' " + tl("videogame") + " 🎮' data-ph9=' " + tl("drinks") + " 🥤' data-ph10=' " + tl("concerttickets") + " 🎵' data-ph11=' " + tl("camping") + " ⛺' data-ph12=' " + tl("taxi") + " 🚕' data-ph13=' " + tl("zoo") + " 🦒'></label>\
                     </form>" + fallback_html +
         "</div>\
@@ -1532,7 +1536,7 @@ function get_payment(ccrateeuro, ccapi) {
 
     $("#request_front").prepend("<div class='time_panel'><div class='time_bar'></div></div><div id='cl_wrap'>" + crypto_icon + "</div>\
         <div class='actionbar clearfix'>\
-            <div id='sharerequest' class='abl icon-share2 sbactive'>" + tl("sharerequest") + "</div><div id='open_wallet' class='openwallet abr icon-folder-open' data-currency='" + request.payment + "' data-rel='0'>" + tl("openwallet") + "</div>" + lightning_wallet +
+            <div id='sharerequest' class='abl icon-share2 sbactive linkcolor'>" + tl("sharerequest") + "</div><div id='open_wallet' class='openwallet abr icon-folder-open linkcolor' data-currency='" + request.payment + "' data-rel='0'>" + tl("openwallet") + "</div>" + lightning_wallet +
         "</div>\
         <div class='qrwrap flex' id='main_qrwrap'>" + qr_html + lightning_qr + status_panel +
         "</div>\
@@ -1547,7 +1551,7 @@ function get_payment(ccrateeuro, ccapi) {
                         <span>" + amount_placeholder + "</span>\
                         <input value='" + amount_value + "' data-xrate='" + exchange_rate + "' step='" + fiat_step + "' type='number' placeholder='" + zero_text + "'" + readonly + ">\
                     </span>\
-                    <span id='pickcurrency'>" + request.uoa + "</span>\
+                    <span id='pickcurrency' class='linkcolor'>" + request.uoa + "</span>\
                 </div>\
                 <div id='ibsat' class='inputbreak'>\
                     <span id='satinputmirror' class='mirrordiv'>\
@@ -2128,7 +2132,7 @@ function flip_request() {
         const is_lightning_mode = lightning_mode();
         if (glob_const.paymentdialogbox.attr("data-pending") === "ispending" && !is_lightning_mode) {
             if (request.payment === "monero") {
-                notify(tl("addressinuse") + ". <span id='xmrsettings'>" + tl("activateintegrated") + "?</span>", 40000, "yes");
+                notify(tl("addressinuse") + ". <span id='xmrsettings' class='linkcolor'>" + tl("activateintegrated") + "?</span>", 40000, "yes");
                 return
             }
             pending_request();
@@ -2468,7 +2472,7 @@ function add_address_from_dialog() {
             viewkey_scanner = glob_let.hascam ? "<div class='qrscanner' data-currency='" + payment + "' data-id='viewkey' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "",
             viewkey_box = payment === "monero" ? "<div class='inputwrap'><input type='text' class='vk_input' value='' placeholder='View key'>" + viewkey_scanner + "</div>" : "",
             derivation_source = derived_data ? (derived_data.xpubid ? " from Xpub" : " from seed") : "",
-            seed_message = derived_data ? "<div class='popnotify' style='display:block'><span id='addfromseed' class='address_option'>Generate address" + derivation_source + "</span></div>" : "<div class='popnotify'></div>",
+            seed_message = derived_data ? "<div class='popnotify' style='display:block'><span id='addfromseed' class='address_option linkcolor'>Generate address" + derivation_source + "</span></div>" : "<div class='popnotify'></div>",
             content = $("<div class='formbox form add' id='addressformbox'><h2>" + getcc_icon(currency_id, request.cpid, is_erc20) + " " + tl("addcoinaddress", {
                 "currency": payment
             }) + "</h2>" + seed_message + "<form id='addressform' class='popform'><div class='inputwrap'><input type='text' class='address' value='' placeholder='" + tl("nopub") + "'>" + qr_scanner + "</div>" + viewkey_box + "<input type='text' class='addresslabel' value='' placeholder='label'><div id='pk_confirm' class='noselect'><div id='pk_confirmwrap' class='cb_wrap' data-checked='false'><span class='checkbox'></span></div><span>" + tl("pkownership") + "</span></div><input type='submit' class='submit' value='" + tl("okbttn") + "'></form></div>").data(address_data);
@@ -3031,7 +3035,7 @@ function download_wallet(currency) {
         wallet_list = wallet_options.wallets;
     if (download_page || wallet_list) {
         const wallet_ul = wallet_list ? "<ul id='formbox_ul'></ul>" : "",
-            more_wallets_link = download_page ? "<a href='" + download_page + "' target='_blank' class='exit formbox_href'>" + tl("findmorewallets") + "</a>" : "",
+            more_wallets_link = download_page ? "<a href='" + download_page + "' target='_blank' class='exit formbox_href linkcolor'>" + tl("findmorewallets") + "</a>" : "",
             content = "\
             <div class='formbox' id='wdl_formbox'>\
                 <h2 class='icon-download'>" + tl("downloadwallet", {

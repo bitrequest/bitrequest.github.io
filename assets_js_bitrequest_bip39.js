@@ -655,13 +655,13 @@ function bip39(dat) {
             </div>\
             <div class='ss_content flex'>\
                 <div id='phrase_cb' class='ss_content_box" + phrase_class + "'>\
-                    <h2 id='showphrase'><span class='icon-eye-blocked eye'></span><span class='icon-eye eye'></span>" + tl("bip39_passphrase") + ":</h2>\
+                    <h2 id='showphrase'><span class='icon-eye-blocked eye linkcolor'></span><span class='icon-eye eye linkcolor'></span>" + tl("bip39_passphrase") + ":</h2>\
                     <p>" + save_prompt + "</p>\
                     <div id='phrasewrap'>\
                         <div id='bip39phrase' contenteditable='" + can_edit + "' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' lang='en' class='noselect'>" + seed_phrase + "</div>\
                         <div id='phrase_actions'>\
-                            <div id='copyphrase' class='button'>" + tl("copy") + "</div>\
-                            <div id='phrase_info' title='seed info'><span class='icon-info'></span></div>\
+                            <div id='copyphrase' class='button linkcolor'>" + tl("copy") + "</div>\
+                            <div id='phrase_info' class='linkcolor' title='seed info'><span class='icon-info'></span></div>\
                         </div>\
                         <div id='phraseblur'></div>\
                     </div>\

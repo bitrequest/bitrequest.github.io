@@ -726,7 +726,7 @@ function create_transaction_item(tx_details, request_type) {
         checked_span = "<span class='icon-checkmark' title='" + confirmation_title + "'></span>",
         confirmation_span = is_confirmed ? checked_span : confirmations ? "<div class='txli_conf' title='" + confirmation_title + "'><div class='confbar'></div><span>" + confirmation_title + "</span></div>" :
         "<div class='txli_conf unconfirmed' title='" + unconfirmed_text + "'><div class='confbar'></div><span>" + unconfirmed_text + "</span></div>",
-        tx_list_item = $("<li><div class='txli_content'>" + formatted_date + confirmation_span + "<div class='txli_conf txl_canceled'><span class='icon-blocked'></span>" + tl("canceled") + "</div><span class='tx_val'> + " + value_string + " <span class='icon-eye show_tx' title='view on blockexplorer'></span></span></div></li>");
+        tx_list_item = $("<li><div class='txli_content'>" + formatted_date + confirmation_span + "<div class='txli_conf txl_canceled'><span class='icon-blocked'></span>" + tl("canceled") + "</div><span class='tx_val'> + " + value_string + " <span class='icon-eye show_tx linkcolor' title='view on blockexplorer'></span></span></div></li>");
     if (glob_let.tx_list.includes(tx_hash)) { // check for indexed transaction id's
         return request_type === "outgoing" ? null : tx_list_item;
     }
