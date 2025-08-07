@@ -172,7 +172,7 @@ function lang_nl(id, data) {
         "unconfirmedtx": "Onbevestigde transactie",
         "amountshort": "te kort",
         "sharelocktitle": "Betaalverzoekje op dit adres is tijdelijk niet mogelijk.",
-        "sharelockttext": "Dit adres heeft een <span id='view_pending_tx' data-requestid='" + data.pending_requestid + "'>betaalverzoek in behandeling</span>.",
+        "sharelockttext": "Dit adres heeft een <span id='view_pending_tx' class='linkcolor' data-requestid='" + data.pending_requestid + "'>betaalverzoek in behandeling</span>.",
         "waitforconfirm": "Wacht aub tot de transactie is bevestigd zodat u dit adres opnieuw kunt gebruiken.",
         "pickanotheraddress": "Kies een ander adres:",
         // ** request suggestion placeholders ** //
@@ -224,6 +224,8 @@ function lang_nl(id, data) {
         "setasdefault": "Stel in als standaard",
         "langsettings": "Taal",
         "chooselanguage": "Kies een taal",
+        "themesettings": "Thema",
+        "choosetheme": "Kies een thema",
         "security": "Beveiliging",
         "pinsettings": "Pincode vergrendeling",
         "bip39_passphrase": "Geheime zin",

@@ -172,7 +172,7 @@ function lang_fr(id, data) {
         "unconfirmedtx": "Transaction non confirmée",
         "amountshort": "court",
         "sharelocktitle": "Temporairement impossible de partager paiement.",
-        "sharelockttext": "Cette adresse a un <span id='view_pending_tx' data-requestid='" + data.pending_requestid + "'>paiement partagée en attente</span>.",
+        "sharelockttext": "Cette adresse a un <span id='view_pending_tx' class='linkcolor' data-requestid='" + data.pending_requestid + "'>paiement partagée en attente</span>.",
         "waitforconfirm": "Veuillez attendre la confirmation de la transaction avant de réutiliser l'adresse.",
         "pickanotheraddress": "Choisissez une autre adresse:",
         // ** request suggestion placeholders ** //
@@ -224,6 +224,8 @@ function lang_fr(id, data) {
         "setasdefault": "Définir par défaut",
         "langsettings": "langue",
         "chooselanguage": "Choisissez la langue",
+        "themesettings": "Thème",
+        "choosetheme": "Choisissez le thème",
         "security": "Sécurité",
         "pinsettings": "Verrouillage par code PIN",
         "bip39_passphrase": "Phrase secrète",

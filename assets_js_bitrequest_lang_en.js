@@ -172,7 +172,7 @@ function lang_en(id, data) {
         "unconfirmedtx": "Unconfirmed transaction",
         "amountshort": "short",
         "sharelocktitle": "Temporarily unable to share request.",
-        "sharelockttext": "This address has a <span id='view_pending_tx' data-requestid='" + data.pending_requestid + "'>pending shared request</span>.",
+        "sharelockttext": "This address has a <span id='view_pending_tx' class='linkcolor' data-requestid='" + data.pending_requestid + "'>pending shared request</span>.",
         "waitforconfirm": "Please wait for the transaction to confirm before re-using the address.",
         "pickanotheraddress": "Pick another address:",
         // ** request suggestion placeholders ** //
@@ -224,6 +224,8 @@ function lang_en(id, data) {
         "setasdefault": "Set as default",
         "langsettings": "language",
         "chooselanguage": "Choose language",
+        "themesettings": "Theme",
+        "choosetheme": "Choose a theme",
         "security": "Security",
         "pinsettings": "Passcode Lock",
         "bip39_passphrase": "Secret Phrase",
