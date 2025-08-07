@@ -10,13 +10,15 @@
  */
 
 /* --- Keyframe Animations --- */
+/* CORRECTED: This animation now scrolls the original texture the full height of the screen */
 @keyframes scanline {
     0% {
         transform: translateY(0);
     }
 
     100% {
-        transform: translateY(100px);
+        transform: translateY(100%);
+        /* Moves down by half its own height (100% of the screen) */
     }
 }
 
@@ -63,15 +65,16 @@ body::after {
     left: 0;
     width: 100%;
     height: 200%;
-    /* Taller to allow smooth animation loop */
     background: repeating-linear-gradient(to bottom,
             rgba(255, 255, 255, 0.05),
             rgba(255, 255, 255, 0.05) 1px,
             transparent 1px,
             transparent 4px);
-    animation: scanline 2.5s infinite linear;
+    /* Apply corrected animation with a slower, more deliberate speed */
+    animation: scanline 8s infinite linear;
     pointer-events: none;
-    z-index: 100;
+    /* Max z-index to ensure it overlays everything */
+    z-index: 2147483647;
 }
 
 #startscreen {
@@ -86,7 +89,6 @@ body::after {
 header,
 #fixednav {
     font-family: 'Courier New', Courier, monospace;
-    /* Classic hacker font */
     background-color: rgba(13, 1, 26, 1);
     border-bottom: 2px solid #ff00c1;
     box-shadow: 0 0 20px rgba(255, 0, 193, 0.5);
@@ -95,7 +97,6 @@ header,
 /* --- Heading Styles --- */
 .heading {
     font-family: 'Courier New', Courier, monospace;
-    /* Classic hacker font */
     padding-bottom: 1.3em;
     color: #ffffff;
     animation: text-flicker 3s infinite linear;
@@ -106,7 +107,6 @@ header,
     background-color: rgba(29, 9, 48, 0.4);
     margin-bottom: 2px;
     border: 1px solid rgba(0, 255, 255, 0.3);
-    /* "Damaged" corner effect */
     clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 90%);
     transition: all 0.2s ease-in-out;
 }
@@ -128,7 +128,6 @@ header,
 /* Text color inside list items */
 .liwrap {
     font-family: 'Courier New', Courier, monospace;
-    /* Classic hacker font */
     color: #b3b3b3;
 }
 
@@ -145,7 +144,6 @@ header,
 .qrscanner,
 .ref {
     color: #ff00c1;
-    /* Electric Cyan */
 }
 
 .button,
@@ -154,7 +152,6 @@ header,
     border: none;
     font-weight: bold;
     text-transform: uppercase;
-    /* Aggressive angular shape */
     clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
     box-shadow: 0 0 15px rgba(255, 0, 193, 0.6);
     transition: all 0.2s;
@@ -169,6 +166,5 @@ header,
 
 /* --- Icon Filter --- */
 .currencylist .cmc_icon {
-    /* Filter to create a magenta monochrome effect */
     filter: grayscale(1) sepia(1) hue-rotate(240deg) saturate(8) brightness(0.9);
 }
