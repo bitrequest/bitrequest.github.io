@@ -1,0 +1,131 @@
+/*
+ *  Aurora iOS Theme (Mint Edition)
+ *
+ *  A bright, modern, and tactile interface inspired by soft materials and pastel gradients.
+ *  Key principles:
+ *  1.  Light & Airy Background: A soft, multi-tone pastel gradient creates a serene backdrop.
+ *  2.  Claymorphism & Depth: UI elements use layered, soft shadows to appear as if they are
+ *      extruded from the background, creating a tactile "clay" effect.
+ *  3.  Vibrant Accents: A lively mint-to-teal gradient for interactive elements makes the UI pop.
+ *  4.  Clarity & Readability: Crisp, dark text and rounded, friendly shapes ensure ease of use.
+ */
+
+/* Body and base background */
+body {
+    /* A beautiful, subtle gradient that evokes a sunrise or aurora */
+    background: linear-gradient(135deg, #E6E6FA, #E0FFFF, #FFF0F5);
+    background-attachment: fixed;
+    color: #3D4451;
+    /* A soft, dark slate color for primary text */
+}
+
+.requestlist>li.rqli,
+.requestlist>li .brmarker,
+.requestlist>li .brstatuspanel {
+    /* Base background for list items, this will be styled more specifically below */
+    background-color: transparent;
+}
+
+#startscreen {
+    background-color: rgba(255, 255, 255, 0.4);
+    -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+/* Header and navigation background */
+header,
+#fixednav {
+    background-color: rgba(255, 255, 255, 0.6);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+    /* A soft shadow to "lift" the header off the page */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+/* Heading styles */
+.heading {
+    padding-bottom: 1.3em;
+    color: #2c333a;
+    /* Darker heading for more emphasis */
+}
+
+/* Request list item backgrounds - The "Claymorphic" elements */
+.requestlist>li.rqli {
+    background-color: #f7f7f7;
+    border-radius: 15px;
+    margin-bottom: 12px;
+    /* Key for the clay effect: a combination of a soft outer shadow and a subtle inner highlight */
+    box-shadow: 5px 5px 10px rgba(180, 190, 200, 0.4),
+        inset 2px 2px 4px rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.requestlist>li.rqli:hover {
+    transform: translateY(-2px);
+    box-shadow: 8px 8px 15px rgba(180, 190, 200, 0.5),
+        inset 2px 2px 4px rgba(255, 255, 255, 0.8);
+}
+
+.requestlist>li.rqli:nth-child(odd) {
+    /* Keeping the background consistent for a cleaner look in this theme */
+    background-color: #f7f7f7;
+}
+
+.requestlist>li.requestoutgoing.visible_request,
+.requestlist>li.requestoutgoing.visible_request .brstatuspanel,
+.requestlist>li.requestoutgoing .brmarker {
+    background-color: rgba(230, 240, 230, 0.8);
+    /* A very subtle green tint */
+}
+
+.requestlist>li.requestlocal.visible_request,
+.requestlist>li.requestlocal.visible_request .brstatuspanel,
+.requestlist>li.requestlocal .brmarker {
+    background-color: rgba(230, 235, 245, 0.8);
+    /* A very subtle blue tint */
+}
+
+/* Link and interactive element colors */
+#dialogbody h2:before,
+#toseed,
+#actions div,
+#dialog .customtrigger,
+#canceldialog,
+#backupcd,
+#backupactions .util_icon,
+.linkcolor,
+.selectarrows,
+.qrscanner,
+.ref {
+    color: #1ABC9C;
+    /* A vibrant, friendly teal for links and icons */
+}
+
+.button,
+.alias {
+    /* A fresh pastel green gradient for the main call-to-action buttons */
+    background: linear-gradient(45deg, #A9DFBF, #48C9B0);
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(72, 201, 176, 0.4);
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.button:hover,
+.alias:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(72, 201, 176, 0.5);
+}
+
+.currencylist .cmc_icon {
+    filter: grayscale(1) sepia(1) hue-rotate(120deg) saturate(5) brightness(1.1);
+}
+
+.currencylist .rq_icon:after {
+    color: #FFF;
+}

@@ -1,0 +1,178 @@
+/*
+ *  Terminal Entry
+ *
+ *  A classic, retro-futuristic hacker theme inspired by old operating systems and monochrome CRT monitors.
+ *  Key principles:
+ *  1.  Monochrome Glow: Luminous green text on a deep black background is the only color palette.
+ *  2.  CRT Realism: A subtle scanline overlay and glowing text-shadows simulate a vintage monitor.
+ *  3.  Monospaced & Blocky: A classic monospace font and sharp, rectangular UI elements.
+ *  4.  Command-Line Interface: The UI mimics a terminal, with blinking cursors and simple, functional layouts.
+ */
+
+/* --- Keyframe Animations --- */
+/* CORRECTED: This animation now toggles opacity to make the text character blink */
+@keyframes blink-caret {
+
+    from,
+    to {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
+
+@keyframes scanline-scroll {
+    0% {
+        background-position: 0 0;
+    }
+
+    100% {
+        background-position: 0 100%;
+    }
+}
+
+/* --- Body and Background --- */
+body {
+    background-color: #051005;
+    /* A very dark, slightly green-tinted black */
+    color: #00FF41;
+    /* The classic luminous green */
+    position: relative;
+}
+
+/* CRT Scanline Overlay */
+body::after {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: repeating-linear-gradient(0deg,
+            rgba(0, 0, 0, 0.5),
+            rgba(0, 0, 0, 0.5) 1px,
+            transparent 1px,
+            transparent 2px);
+    animation: scanline-scroll 0.75s infinite linear;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+#startscreen {
+    background-color: #0A0A0A;
+    border: 1px solid #00FF41;
+}
+
+/* --- Header and Navigation --- */
+header,
+#fixednav {
+    font-family: 'Lucida Console', 'Andale Mono', 'Courier New', monospace;
+    text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+    background-color: #0A0A0A;
+    border-bottom: 2px solid #00FF41;
+}
+
+/* --- Heading Styles with Blinking Cursor --- */
+.heading {
+    font-family: 'Lucida Console', 'Andale Mono', 'Courier New', monospace;
+    text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+    padding-bottom: 1.3em;
+    position: relative;
+    display: inline-block;
+    /* Required for the blinking cursor to position correctly */
+}
+
+.heading::after {
+    content: "_";
+    font-weight: bold;
+    /* The animation is now correctly targeting opacity */
+    animation: blink-caret 1s step-end infinite;
+    margin-left: 10px;
+}
+
+
+/* --- List Items as Terminal Output --- */
+.requestlist>li.rqli {
+    background-color: transparent;
+    border-bottom: 1px dashed rgba(0, 255, 65, 0.2);
+    padding: 8px 0;
+}
+
+/* Add a command prompt ">" before each list item */
+.requestlist>li.rqli .liwrap .atext h2 {
+    position: relative;
+    padding-left: 0.8em;
+}
+
+.requestlist>li.rqli .liwrap .atext h2::before {
+    content: ">";
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.requestlist>li.rqli:nth-child(odd) {
+    /* No alternating color needed in a monochrome terminal */
+    background-color: transparent;
+}
+
+.requestlist>li.requestoutgoing.visible_request,
+.requestlist>li.requestlocal.visible_request {
+    /* Highlight active/visible items slightly */
+    background-color: rgba(0, 255, 65, 0.05);
+}
+
+.liwrap {
+    font-family: 'Lucida Console', 'Andale Mono', 'Courier New', monospace;
+    color: #00FF41;
+    /* Ensure all list item text is the primary green */
+}
+
+.render .liwrap p {
+    color: #FFF;
+}
+
+/* --- Links & Buttons --- */
+#dialogbody h2:before,
+#toseed,
+#actions div,
+#dialog .customtrigger,
+#canceldialog,
+#backupcd,
+#backupactions .util_icon,
+.linkcolor,
+.selectarrows,
+.qrscanner,
+.ref {
+    color: #00FF41;
+    text-decoration: underline;
+}
+
+.button,
+.alias {
+    font-family: 'Lucida Console', 'Andale Mono', 'Courier New', monospace;
+    background-color: #00FF41;
+    color: #051005;
+    /* Dark background color for text on the button */
+    border: none;
+    text-shadow: none;
+    /* Remove glow from button text for clarity */
+    clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+    /* CORRECTED: Shadow color now matches the green theme */
+    box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+    border-radius: inherit;
+    text-transform: uppercase;
+}
+
+.alias {
+    color: rgba(255, 255, 255, 0);
+}
+
+/* --- Icon Filter --- */
+.currencylist .cmc_icon {
+    /* Filter to create a perfect monochrome green effect */
+    filter: grayscale(1) brightness(0.5) sepia(1) hue-rotate(55deg) saturate(20);
+}

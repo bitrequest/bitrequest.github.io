@@ -15,6 +15,13 @@ $(document).ready(function() {
     select_language();
     save_language_settings();
 
+    // ** Choose theme **
+    edit_theme();
+    select_theme();
+    cancel_theme();
+    submit_theme();
+    theme_not_found();
+
     // ** SECURITY: **
 
     // ** Passcode lock: **
@@ -452,6 +459,150 @@ function save_language_settings() {
     });
 }
 
+// Choose theme
+
+// Displays language selection dialog with current locale and available translations
+function edit_theme() {
+    $(document).on("click", "#themesettings", function() {
+        const theme = $("#themesettings").data("selected"),
+            default_theme = "<span>default.css</span>",
+            ddat = [{
+                    "div": {
+                        "class": "popform",
+                        "content": [{
+                                "div": {
+                                    "class": "selectbox",
+                                    "content": [{
+                                            "input": {
+                                                "attr": {
+                                                    "type": "text",
+                                                    "value": theme,
+                                                    "placeholder": "Pick a theme",
+                                                    "readonly": "readonly"
+                                                },
+                                                "close": true
+                                            },
+                                            "div": {
+                                                "class": "selectarrows icon-menu2",
+                                                "attr": {
+                                                    "data-pe": "none"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "div": {
+                                                "class": "options",
+                                                "content": default_theme
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "input": {
+                                    "class": "submit",
+                                    "attr": {
+                                        "type": "submit",
+                                        "value": tl("okbttn")
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "div": {
+                        "id": "backupactions",
+                        "content": [{
+                                "div": {
+                                    "id": "submittheme",
+                                    "class": "customtrigger",
+                                    "content": tl("okbttn")
+                                }
+                            },
+                            {
+                                "div": {
+                                    "id": "canceltheme",
+                                    "class": "customtrigger",
+                                    "content": tl("cancelbttn")
+                                }
+                            }
+                        ]
+                    }
+                }
+            ],
+            content = template_dialog({
+                "id": "themeformbox",
+                "icon": "icon-paint-format",
+                "title": tl("choosetheme"),
+                "elements": ddat
+            });
+        popdialog(content, "triggersubmit");
+        let options = $("#themeformbox").find(".options"),
+            get_session_themes = br_get_session("themes", true);
+        if (get_session_themes) {
+            $.each(get_session_themes, function(key, value) {
+                options.append("<span data-pe='none'>" + value + "</span>");
+            });
+            return
+        }
+        api_proxy({
+            "api_url": d_proxy() + "/proxy/v1/themes/"
+        }).done(function(data) {
+            const api_result = br_result(data);
+            if (api_result) {
+                const data = api_result.result;
+                if (data) {
+                    if (data.error) {
+                        theme_not_found();
+                        return
+                    }
+                    $.each(data, function(key, value) {
+                        options.append("<span data-pe='none'>" + value + "</span>");
+                    });
+                    br_set_session("themes", data, true);
+                }
+            }
+            theme_not_found();
+        }).fail(function(error) {
+            console.error("Error fetching themes:", error);
+            theme_not_found();
+        });
+    });
+}
+
+function select_theme() {
+    $(document).on("mousedown", "#themeformbox .selectbox > .options span", function() {
+        const filename = $(this).text();
+        if (filename === "default.css") {
+            theme_not_found();
+            return
+        }
+        $("link#theme").attr("href", d_proxy() + "/proxy/v1/themes/" + filename);
+    })
+}
+
+function cancel_theme() {
+    $(document).on("click", "#canceltheme", function() {
+        $("link#theme").attr("href", d_proxy() + "/proxy/v1/themes/" + $("#themesettings").data("selected"));
+        canceldialog();
+    })
+}
+
+function submit_theme() {
+    $(document).on("click touch", "#submittheme", function() {
+        var thisvalue = $("#themeformbox").find("input:first").val();
+        $("#themesettings").data("selected", thisvalue).find("p").html(thisvalue);
+        canceldialog();
+        notify("Data saved");
+        save_settings();
+    })
+}
+
+function theme_not_found() {
+    $("link#theme").attr("href", "assets_styles_themes_default.css");
+}
+
 // ** SECURITY: **
 
 // ** Passcode lock: **
@@ -624,8 +775,7 @@ function backup_database() {
             "nr_changes": num_changes
         }) + "</p>",
         show_changelog = gd_on ? "display:none" : "display:block",
-        change_notice = ((!gd_on && glob_const.body.hasClass("haschanges")) ||
-            glob_const.html.hasClass("proxyupdate")) ? alert_text : "",
+        change_notice = ((!gd_on && glob_const.body.hasClass("haschanges")) || glob_const.html.hasClass("proxyupdate")) ? alert_text : "",
         ddat = [{
                 "div": {
                     "id": "dialogcontent",
@@ -678,7 +828,7 @@ function backup_database() {
                                                 "' download='" + filename,
                                             "title": filename,
                                             "data-date": new Date(now_utc()).toLocaleString(langcode)
-                                                .replace(/\s+/g, '_').replace(/\:/g, '_'),
+                                                .replace(/\s+/g, "_").replace(/\:/g, "_"),
                                             "data-lastbackup": filename,
                                             "download": "download"
                                         },
