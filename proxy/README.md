@@ -33,6 +33,7 @@ Replace the 'v1' folder, making sure to leave the config.php file intact.
 ### Connect:
 
 * **LND:** host: {REST host}, key: {Invoice Macaroon (hex)}
+* **core-lightning:** host: {API host}, key: 'Invoice Rune'
 * **LNbits:** host: {API host}, key: 'Invoice/read key'
 
 ### Settings:
@@ -55,7 +56,7 @@ Available endpoints:
 
 **Endpoint:** {API proxy}/proxy/v1/ln/api/
 
-imp {$implementation} : "lnd" / "lnbits"
+imp {$implementation} : "lnd" / "core-lightning" / "lnbits"
 
 ### ln-create-invoice:
 
@@ -69,7 +70,7 @@ Payload:
   "imp": "{$implementation}",
   "amount": "{$amount}",
   "memo": "{$memo}",
-  "id": "{$unique id}",
+  "id": "{$unique id}", // required for core-lightning label
   "expiry": "{$expiry}", // in seconds
   "x-api": "{$api-key}" // optional
 }
