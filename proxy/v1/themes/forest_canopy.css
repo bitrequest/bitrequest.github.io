@@ -90,12 +90,3 @@ header,
     -webkit-backdrop-filter: blur(5px);
     backdrop-filter: blur(5px);
 }
-
-.alias {
-    color: rgba(255, 255, 255, 0);
-}
-
-.currencylist .cmc_icon {
-    /* Hue-rotated to a matching green */
-    filter: grayscale(1) sepia(1) hue-rotate(85deg) saturate(3.5) brightness(0.7);
-}
