@@ -561,6 +561,7 @@ function edit_theme() {
                         options.append("<span data-pe='none'>" + value + "</span>");
                     });
                     br_set_session("themes", data, true);
+                    return
                 }
             }
             theme_not_found();
