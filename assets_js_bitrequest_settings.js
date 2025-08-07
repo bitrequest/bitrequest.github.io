@@ -20,7 +20,7 @@ $(document).ready(function() {
     select_theme();
     cancel_theme();
     submit_theme();
-    theme_not_found();
+    //theme_not_found
 
     // ** SECURITY: **
 
