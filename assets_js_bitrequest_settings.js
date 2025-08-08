@@ -579,20 +579,22 @@ function select_theme() {
             theme_not_found();
             return
         }
-        $("link#theme").attr("href", d_proxy() + "/proxy/v1/themes/" + filename);
+        const version = $("#ua").attr("data-version");
+        $("link#theme").attr("href", d_proxy() + "/proxy/v1/themes/" + filename + "?v=" + version);
     })
 }
 
 function cancel_theme() {
     $(document).on("click", "#canceltheme", function() {
-        $("link#theme").attr("href", d_proxy() + "/proxy/v1/themes/" + $("#themesettings").data("selected"));
+        const version = $("#ua").attr("data-version");
+        $("link#theme").attr("href", d_proxy() + "/proxy/v1/themes/" + $("#themesettings").data("selected") + "?v=" + version);
         canceldialog();
     })
 }
 
 function submit_theme() {
     $(document).on("click touch", "#submittheme", function() {
-        var thisvalue = $("#themeformbox").find("input:first").val();
+        const thisvalue = $("#themeformbox").find("input:first").val();
         $("#themesettings").data("selected", thisvalue).find("p").html(thisvalue);
         canceldialog();
         notify("Data saved");
@@ -601,7 +603,8 @@ function submit_theme() {
 }
 
 function theme_not_found() {
-    $("link#theme").attr("href", "assets_styles_themes_default.css");
+    const version = $("#ua").attr("data-version");
+    $("link#theme").attr("href", "assets_styles_themes_default.css?v=" + version);
 }
 
 // ** SECURITY: **

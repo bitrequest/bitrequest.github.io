@@ -1747,7 +1747,7 @@ li[data-checked="false"] .checkbox:before,
 }
 
 #actions {
-    float: left;
+    float: right;
     width: 100%;
     padding: 0;
     font-size: 140%;
@@ -1756,6 +1756,7 @@ li[data-checked="false"] .checkbox:before,
 
 #actions.custom {
     opacity: 0;
+    pointer-events:none;
 }
 
 #actions div {

@@ -581,7 +581,8 @@ function set_theme() {
         if (filename === "default.css") {
             return
         }
-        $("link#theme").attr("href", d_proxy() + "/proxy/v1/themes/" + filename);
+        const version = $("#ua").attr("data-version");
+        $("link#theme").attr("href", d_proxy() + "/proxy/v1/themes/" + filename + "?v=" + version);
     }
 }
 

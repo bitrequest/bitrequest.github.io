@@ -1,26 +1,18 @@
 /*
- * iOS Glassmorphism Theme
- * Key principles:
- * 1. Translucent, blurred backgrounds using backdrop-filter.
- * 2. Semi-transparent fills (rgba) to let the background show through.
- * 3. Subtle, light borders to define the "glass" edges.
- * 4. High-contrast text for readability.
+ *  Twilight Grove
+ *  A mystical, calming theme inspired by a forest at twilight.
  */
 
 /* Body and base background */
 body {
-    /* A subtle gradient that matches the purple accents and enhances the depth */
     background: linear-gradient(to bottom, #3a2d4f, #1a1a1c);
     background-attachment: fixed;
-    /* Keeps the gradient in place during scroll */
     color: #EAEAEA;
-    /* A slightly off-white for main text for better readability */
 }
 
 .requestlist>li.rqli,
 .requestlist>li .brmarker,
 .requestlist>li .brstatuspanel {
-    /* Fallback background, mostly overridden by glass styles below */
     background-color: #1a1a1c;
 }
 
@@ -35,20 +27,15 @@ body {
 header,
 #fixednav {
     background-color: rgba(118, 71, 138, 0.65);
-    /* Semi-transparent background */
     -webkit-backdrop-filter: blur(15px);
-    /* Frosted glass effect for WebKit browsers */
     backdrop-filter: blur(15px);
-    /* Frosted glass effect */
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    /* Subtle bottom border to lift the element */
 }
 
 /* Heading styles */
 .heading {
     padding-bottom: 1.3em;
     color: #ffffff;
-    /* White text for better contrast */
 }
 
 /* Request list item backgrounds */
@@ -58,14 +45,11 @@ header,
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     margin-bottom: 8px;
-    /* Added margin to separate the glass panels */
     border-radius: 12px;
-    /* Rounded corners are a key part of the iOS aesthetic */
 }
 
 .requestlist>li.rqli:nth-child(odd) {
     background-color: rgba(255, 255, 255, 0.1);
-    /* Slightly more visible for odd items */
 }
 
 .requestlist>li.requestoutgoing.visible_request,
@@ -93,13 +77,11 @@ header,
 .qrscanner,
 .ref {
     color: #A78BFA;
-    /* A lighter, more vibrant purple for better accessibility */
 }
 
 .button,
 .alias {
     background-color: rgba(167, 139, 250, 0.8);
-    /* Semi-transparent purple */
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 10px;
     -webkit-backdrop-filter: blur(5px);
@@ -111,6 +93,5 @@ header,
 }
 
 .currencylist .cmc_icon {
-    /* The purple monotone filter is already a great fit for this theme */
     filter: grayscale(100%) sepia(100%) hue-rotate(220deg) saturate(5);
 }

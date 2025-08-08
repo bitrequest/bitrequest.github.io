@@ -5,7 +5,6 @@
 
 /* Body and base background */
 body {
-    /* A subtle gradient from deep forest green to a dark, earthy floor */
     background: linear-gradient(to bottom, #2d4f3f, #1a1a1c);
     background-attachment: fixed;
     color: #EAEAEA;
@@ -27,8 +26,7 @@ body {
 /* Header and navigation background */
 header,
 #fixednav {
-    /* A semi-transparent deep green glass */
-    background-color: rgba(45, 79, 63, 0.65);
+    background-color: rgba(32, 40, 36, 0.65);
     -webkit-backdrop-filter: blur(15px);
     backdrop-filter: blur(15px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -79,7 +77,6 @@ header,
 .qrscanner,
 .ref {
     color: #009788;
-    /* A bright, minty green */
 }
 
 .button,

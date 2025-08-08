@@ -1,16 +1,10 @@
 /*
  *  Malignant Glare
- *
- *  An aggressive, malware-inspired cyberpunk interface.
- *  Key principles:
- *  1.  Corrupted Grid: A dark, deep-space background with a hex grid and animated scanlines.
- *  2.  Menacing Neon: A vibrant, dangerous magenta is the primary accent, offset by electric cyan.
- *  3.  Damaged & Angular UI: Elements are "chipped" and broken using clip-path for a corrupted feel.
- *  4.  Flickering & Unstable: Animations on headings and borders create a sense of system instability.
+ *  An aggressive, cyberpunk-inspired interface.
  */
 
-/* --- Keyframe Animations --- */
-/* CORRECTED: This animation now scrolls the original texture the full height of the screen */
+
+/* Keyframe Animations */
 @keyframes scanline {
     0% {
         transform: translateY(0);
@@ -18,37 +12,61 @@
 
     100% {
         transform: translateY(100%);
-        /* Moves down by half its own height (100% of the screen) */
     }
 }
 
-@keyframes text-flicker {
+@keyframes cyber-flicker {
+
+    0%,
+    75%,
+    100% {
+        text-shadow: 0 0 5px #ff00c1, 0 0 10px #ff00c1;
+        transform: translate(0, 0) skewX(0);
+    }
+
+    76% {
+        text-shadow: 0 0 5px #ff00c1, 0 0 10px #ff00c1, -1px 0 2px #00ffff;
+    }
+
+    77% {
+        text-shadow: 0 0 5px #ff00c1, 0 0 10px #ff00c1, -2px 1px 3px #00ffff, 2px -1px 3px #e81c67;
+        transform: translate(1px, -2px) skewX(-5deg);
+    }
+
+    78% {
+        text-shadow: 0 0 5px #ff00c1, 0 0 10px #ff00c1, 1px -1px 3px #00ffff, -1px 1px 3px #e81c67;
+        transform: translate(-1px, 1px) skewX(5deg);
+    }
+
+    79% {
+        text-shadow: 0 0 5px #ff00c1, 0 0 10px #ff00c1;
+        transform: translate(0, 0) skewX(0);
+    }
+}
+
+@keyframes glitch-skew {
     0% {
-        text-shadow: 0 0 10px #ff00c1, 0 0 5px #00ffff, 0 0 2px #ffffff;
+        transform: skewX(0);
     }
 
-    15% {
-        text-shadow: 0 0 12px #ff00c1, 0 0 7px #00ffff, 0 0 3px #ffffff;
-    }
-
-    30% {
-        text-shadow: 0 0 8px #ff00c1, 0 0 4px #00ffff, 0 0 2px #ffffff;
+    25% {
+        transform: skewX(-4deg);
     }
 
     50% {
-        text-shadow: none;
+        transform: skewX(4deg);
     }
 
-    51% {
-        text-shadow: 0 0 10px #ff00c1, 0 0 5px #00ffff, 0 0 2px #ffffff;
+    75% {
+        transform: skewX(-2deg);
     }
 
     100% {
-        text-shadow: 0 0 10px #ff00c1, 0 0 5px #00ffff, 0 0 2px #ffffff;
+        transform: skewX(0);
     }
 }
 
-/* --- Body and Background --- */
+/* Body and base background */
 body {
     background-color: #0d011a;
     color: #b3b3b3;
@@ -70,10 +88,8 @@ body::after {
             rgba(255, 255, 255, 0.05) 1px,
             transparent 1px,
             transparent 4px);
-    /* Apply corrected animation with a slower, more deliberate speed */
     animation: scanline 8s infinite linear;
     pointer-events: none;
-    /* Max z-index to ensure it overlays everything */
     z-index: 2147483647;
 }
 
@@ -85,7 +101,7 @@ body::after {
     box-shadow: inset 0 0 15px rgba(255, 0, 193, 0.3), 0 0 15px rgba(255, 0, 193, 0.3);
 }
 
-/* --- Header & Nav --- */
+/* Header and navigation background */
 header,
 #fixednav {
     font-family: 'Courier New', Courier, monospace;
@@ -94,15 +110,15 @@ header,
     box-shadow: 0 0 20px rgba(255, 0, 193, 0.5);
 }
 
-/* --- Heading Styles --- */
+/* Heading styles */
 .heading {
     font-family: 'Courier New', Courier, monospace;
     padding-bottom: 1.3em;
     color: #ffffff;
-    animation: text-flicker 3s infinite linear;
+    animation: cyber-flicker 4s infinite linear;
 }
 
-/* --- List Items --- */
+/* Request list item backgrounds */
 .requestlist>li.rqli {
     background-color: rgba(29, 9, 48, 0.4);
     margin-bottom: 2px;
@@ -131,7 +147,7 @@ header,
     color: #b3b3b3;
 }
 
-/* --- Links & Buttons --- */
+/* Link and interactive element colors */
 #dialogbody h2:before,
 #toseed,
 #actions div,
@@ -149,6 +165,7 @@ header,
 .button,
 .alias {
     background-color: #ff00c1;
+    border: 1px solid #ff00c1;
     border: none;
     font-weight: bold;
     text-transform: uppercase;
@@ -162,9 +179,11 @@ header,
     background-color: #ffffff;
     color: #ff00c1;
     box-shadow: 0 0 25px rgba(255, 255, 255, 0.8);
+    animation: glitch-skew 0.35s ease-in-out both;
+    border: 1px solid #ff00c1;
 }
 
-/* --- Icon Filter --- */
+/* Icon Filter */
 .currencylist .cmc_icon {
     filter: grayscale(1) sepia(1) hue-rotate(240deg) saturate(8) brightness(0.9);
 }

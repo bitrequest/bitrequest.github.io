@@ -5,7 +5,6 @@
 
 /* Body and base background */
 body {
-    /* A subtle gradient from deep sea blue to a dark abyss */
     background: linear-gradient(to bottom, #1d3b5f, #1a1a1c);
     background-attachment: fixed;
     color: #EAEAEA;
@@ -27,8 +26,7 @@ body {
 /* Header and navigation background */
 header,
 #fixednav {
-    /* A semi-transparent deep blue glass */
-    background-color: rgba(29, 59, 95, 0.65);
+    background-color: rgba(20, 29, 41, 0.65);
     -webkit-backdrop-filter: blur(15px);
     backdrop-filter: blur(15px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -78,14 +76,12 @@ header,
 .selectarrows,
 .qrscanner,
 .ref {
-    color: #63e2b7;
-    /* A vibrant, light teal */
+    color: #009788;
 }
 
 .button,
 .alias {
-    background-color: rgba(99, 226, 183, 0.8);
-    /* Semi-transparent teal */
+    background-color: #009788;
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 10px;
     -webkit-backdrop-filter: blur(5px);
