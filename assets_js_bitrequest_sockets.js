@@ -38,8 +38,6 @@
 // ** Other Cryptocurrencies: **
 //nano_socket
 //poll_nimiq_network
-//kaspa_websocket
-//kaspa_fyi_websocket
 
 // ** Core WebSocket Initialization & Management: **
 
@@ -159,7 +157,7 @@ function init_socket(socket_node, wallet_address, retry, foreground) {
         return
     }
     if (payment_type === "nimiq") {
-        poll_nimiq_network();
+        start_address_monitor(5000);
         return
     }
     if (payment_type === "ethereum" || request.erc20) {
@@ -188,15 +186,7 @@ function init_socket(socket_node, wallet_address, retry, foreground) {
         return
     }
     if (payment_type === "kaspa") {
-        if (node_name === glob_const.main_kas_wss) {
-            kaspa_websocket(socket_node, wallet_address);
-            return
-        }
-        if (node_name === glob_const.sec_kas_wss) {
-            kaspa_fyi_websocket(socket_node, wallet_address);
-            return
-        }
-        kaspa_websocket(socket_node, wallet_address);
+        start_address_monitor(5000);
         return
     }
     notify(tl("notmonitored"), 500000, "yes")
@@ -1284,122 +1274,6 @@ function nano_socket(socket_node, wallet_address) {
         }
     };
     socket.onclose = function(e) {
-        handle_socket_close(socket_node);
-    };
-    socket.onerror = function(e) {
-        handle_socket_fails(socket_node, wallet_address);
-        return
-    };
-}
-
-// Initiates 5-second interval polling for Nimiq blockchain status
-function poll_nimiq_network() {
-    start_address_monitor(5000);
-}
-
-// Establishes WebSocket connection to Kaspa node with Socket.IO protocol and block subscription
-function kaspa_websocket(socket_node, wallet_address) {
-    if (glob_let.sockets[wallet_address]) {
-        return
-    }
-    const ws_endpoint = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket&sid=" + now_utc(),
-        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-    socket.onopen = function(e) {
-        glob_let.ws_timer = now_utc();
-        socket_info(socket_node, true);
-        socket.send("2probe");
-    };
-    socket.onmessage = function(e) {
-        const msg_data = e.data;
-        if (!msg_data) return
-        const msg_type = msg_data.slice(0, 2);
-        if (msg_data === "3probe") {
-            socket.send('42["join-room","blocks"]');
-            return
-        }
-        if (msg_type === "42") {
-            const parsed_data = msg_data.slice(2),
-                socket_data = JSON.parse(parsed_data),
-                block_data = socket_data[1];
-            if (block_data) {
-                const block_txs = block_data.txs;
-                if (block_txs) {
-                    $.each(block_txs, function(dat, value) {
-                        const tx_details = kaspa_ws_data(value, wallet_address);
-                        if (tx_details.ccval) {
-                            close_socket();
-                            start_transaction_monitor(tx_details);
-                            return
-                        }
-                    });
-                }
-            }
-        }
-    };
-    socket.onclose = function(e) {
-        reconnect_websocket({ // reconnect if ws closes
-            "function": kaspa_websocket,
-            "node": socket_node,
-            "address": wallet_address,
-            "trigger": e.code
-        });
-        handle_socket_close(socket_node);
-    };
-    socket.onerror = function(e) {
-        handle_socket_fails(socket_node, wallet_address);
-        return
-    };
-}
-
-// Establishes WebSocket connection to Kaspa FYI explorer with Socket.IO protocol and transaction monitoring
-function kaspa_fyi_websocket(socket_node, wallet_address) {
-    if (glob_let.sockets[wallet_address]) {
-        return
-    }
-    const ws_endpoint = socket_node.url + "/ws/socket.io/?EIO=4&transport=websocket",
-        socket = glob_let.sockets[wallet_address] = new WebSocket(ws_endpoint);
-    socket.onopen = function(e) {
-        socket_info(socket_node, true);
-        socket.send("40");
-    };
-    socket.onmessage = function(e) {
-        const msg_data = e.data;
-        if (!msg_data) return
-        const msg_type = msg_data.slice(0, 2);
-        if (msg_type == "40") {
-            socket.send('42["join-room","blocks"]');
-            return
-        }
-        if (msg_type == "42") {
-            try {
-                const parsed_data = msg_data.slice(2),
-                    socket_data = JSON.parse(parsed_data),
-                    block_data = socket_data[1];
-                if (block_data) {
-                    const block_txs = block_data.transactions;
-                    if (block_txs) {
-                        $.each(block_txs, function(dat, value) {
-                            const tx_details = kaspa_fyi_ws_data(value, wallet_address);
-                            if (tx_details.ccval) {
-                                close_socket();
-                                start_transaction_monitor(tx_details);
-                                return
-                            }
-                        });
-                    }
-                }
-            } catch (error) {
-                console.error("Error processing Kaspa FYI message:", error);
-            }
-        }
-    };
-    socket.onclose = function(e) {
-        reconnect_websocket({ // reconnect if ws closes
-            "function": kaspa_fyi_websocket,
-            "node": socket_node,
-            "address": wallet_address,
-            "trigger": e.code
-        });
         handle_socket_close(socket_node);
     };
     socket.onerror = function(e) {
