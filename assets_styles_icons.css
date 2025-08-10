@@ -442,5 +442,13 @@
 }
 
 .icon-power:before {
-  content: "\e9b5";
+ 	content: "\e9b5";
+}
+
+.icon-volume-mute2:before {
+	content: "\ea2a";
+}
+
+.icon-volume-medium:before {
+	content: "\ea27";
 }

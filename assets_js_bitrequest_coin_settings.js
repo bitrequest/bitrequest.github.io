@@ -36,6 +36,11 @@ $(document).ready(function() {
     //add_apikey
     save_api_key();
 
+    // ** Soundbyte Management: **
+    setup_soundbyte_selection();
+    select_soundbyte();
+    save_soundbyte_settings();
+
     // ** Settings Reset: **
     reset_coinsettings_trigger();
     //reset_coinsettings
@@ -417,7 +422,7 @@ function display_xpub_details(currency, xpub_key) {
 function edit_xpub_trigger() {
     $(document).on("click", ".cc_settinglist li[data-id='Xpub'] .atext", function() {
         if (!glob_let.test_derive) {
-            play_audio(glob_const.funk)
+            play_audio("funk");
             return
         }
         const xpub_element = $(this),
@@ -665,7 +670,7 @@ function generate_derived_addresses(currency, xpub_key) {
 function xpub_cc_switch() {
     $(document).on("mouseup", ".cc_settinglist li[data-id='Xpub'] .switchpanel.custom", function() {
         if (glob_let.test_derive !== true) {
-            play_audio(glob_const.funk);
+            play_audio("funk");
             return
         }
         const toggle_btn = $(this),
@@ -799,6 +804,103 @@ function save_api_key() {
         }
         key_input.attr("data-checkchange", new_key);
         checkapikey(form_container.attr("data-api"), new_key, true);
+    })
+}
+
+// ** API Soundbyte Management: **
+
+// Triggers Soundbyte key input dialog
+function setup_soundbyte_selection() {
+    $(document).on("click", ".cc_settinglist li[data-id='soundbytes']", function() {
+        const settings_item = $(this),
+            item_data = settings_item.data(),
+            sb_list = item_data.options;
+        if (sb_list) {
+            const currency = settings_item.children(".liwrap").attr("data-currency"),
+                selected_sb = item_data.selected,
+                selected_tl = selected_sb === "none" ? tl("none") : selected_sb,
+                dialog_title = tl("choosesoundbytes"),
+                sb_options = sb_list.map(function(sb) {
+                    const thistext = sb === "none" ? tl("none") : sb,
+                        icon = sb === "none" ? "icon-volume-mute2" : "icon-volume-medium";
+                    return "<span class='" + icon + "' data-pe='none' data-val='" + sb + "'>" + thistext + "</span>";
+                }).join(""),
+                dialog_data = [{
+                    "div": {
+                        "class": "popform",
+                        "content": [{
+                            "div": {
+                                "class": "selectbox",
+                                "content": [{
+                                        "input": {
+                                            "attr": {
+                                                "type": "text",
+                                                "value": selected_tl,
+                                                "placeholder": dialog_title,
+                                                "readonly": "readonly"
+                                            },
+                                            "close": true
+                                        },
+                                        "div": {
+                                            "class": "selectarrows icon-menu2",
+                                            "attr": {
+                                                "data-pe": "none"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "div": {
+                                            "class": "options",
+                                            "content": sb_options
+                                        }
+                                    }
+                                ]
+                            },
+                            "input": {
+                                "class": "submit",
+                                "attr": {
+                                    "type": "submit",
+                                    "value": tl("okbttn"),
+                                    "data-currency": currency
+                                }
+                            }
+                        }]
+                    }
+                }],
+                dialog_html = template_dialog({
+                    "id": "sb_formbox",
+                    "icon": "icon-volume-medium",
+                    "title": dialog_title,
+                    "elements": dialog_data
+                });
+            popdialog(dialog_html, "triggersubmit");
+        }
+    })
+}
+
+function select_soundbyte() {
+    $(document).on("mousedown", "#sb_formbox .selectbox > .options span", function() {
+        const this_sb = $(this),
+            this_val = this_sb.data("val");
+        $("#sb_formbox").data("val", this_val);
+        play_audio(this_val);
+    })
+}
+
+// Save soundbyte settings
+function save_soundbyte_settings() {
+    $(document).on("click", "#sb_formbox input.submit", function(e) {
+        e.preventDefault();
+        const currency = $(this).attr("data-currency"),
+            val = $("#sb_formbox").data("val");
+        if (inj(val)) return
+        const settings_node = cs_node(currency, "soundbytes");
+        if (settings_node) {
+            settings_node.data("selected", val).find("p").html(val);
+            canceldialog();
+            notify(tl("datasaved"));
+            save_cc_settings(currency, true);
+        }
     })
 }
 

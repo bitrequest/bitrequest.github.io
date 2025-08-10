@@ -175,7 +175,7 @@ function process_transaction_data(rd, dl) {
                 monitor_timer = monitor_timer_cache ? parseInt(monitor_timer_cache, 10) : delay,
                 time_since_last = now_utc() - monitor_timer;
             if (time_since_last < delay) { // prevent over scanning
-                play_audio(glob_const.funk);
+                play_audio("funk");
                 clearscan();
                 return
             }
@@ -1323,7 +1323,7 @@ function is_scanning() {
             clearscan();
         }
         glob_let.block_scan += 1;
-        play_audio(glob_const.funk);
+        play_audio("funk");
     }
     return scanning;
 }

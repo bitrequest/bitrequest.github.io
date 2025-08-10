@@ -460,7 +460,7 @@ function load_request(pass) {
         return
     }
     if (!empty_obj(glob_let.sockets)) {
-        play_audio(glob_const.funk);
+        play_audio("funk");
         notify(tl("closingsockets"));
         return
     }
@@ -1867,7 +1867,7 @@ function lnd_switch_function() {
     $(document).on("click", "#paymentdialogbox #lightning_switch", function() {
         if (helper.lnd) {
             if (helper.lnd_only) {
-                play_audio(glob_const.funk);
+                play_audio("funk");
                 return
             }
             if (helper.lnd.selected) {
@@ -1887,11 +1887,11 @@ function lnd_switch_function() {
                 notify("<span id='lnd_offline'>" + tl("lnoffline") + "</span>", 200000, "yes");
                 return
             }
-            play_audio(glob_const.funk);
+            play_audio("funk");
             return
         }
         if (request.isrequest) {
-            play_audio(glob_const.funk);
+            play_audio("funk");
             return
         }
         lnd_popup();
@@ -1916,7 +1916,7 @@ function lnd_statusx() {
         return
     }
     if (request.isrequest) {
-        play_audio(glob_const.funk);
+        play_audio("funk");
         return
     }
     notify("<span id='lnd_offline'>" + tl("lnoffline") + "</span>", 200000, "yes");
@@ -2068,7 +2068,7 @@ function input_requestdata() {
 function validate_steps() {
     $(document).on("keydown", "#paymentdialogbox .mirrordiv input", function(e) {
         if (glob_let.blocktyping === true) {
-            play_audio(glob_const.funk);
+            play_audio("funk");
             glob_let.blocktyping = false;
             e.preventDefault();
             return
@@ -2294,7 +2294,7 @@ function show_pending_status(payment_request) { // show pending dialog if tx is 
 
 // Updates payment dialog UI elements based on transaction status
 function update_payment_status(status, pending, status_text) {
-    const sound_effect = status === "insufficient" ? glob_const.funk : glob_const.blip,
+    const sound_effect = status === "insufficient" ? "funk" : "blip",
         status_panel = glob_const.paymentdialogbox.find(".brstatuspanel");
     play_audio(sound_effect);
     add_flip();
@@ -2312,29 +2312,29 @@ function switch_address() {
     $(document).on("click", "#paymentdialogbox.norequest #labelbttn", function() {
         const time_elapsed = now_utc() - glob_let.sa_timer;
         if (time_elapsed < 1500) { // prevent clicking too fast
-            play_audio(glob_const.funk);
+            play_audio("funk");
             return
         }
         const url_params = get_urlparameters(),
             payment = url_params.payment;
         if (payment === "monero") {
             //disable address switching for Monero
-            play_audio(glob_const.funk);
+            play_audio("funk");
             return
         }
         if (payment === "ethereum" && request.eth_l2s.length) {
             //disable address switching for ethereum layer 2's
-            play_audio(glob_const.funk);
+            play_audio("funk");
             return
         }
         if (request.erc20) {
             //disable address switching for erc20 tokens
-            play_audio(glob_const.funk);
+            play_audio("funk");
             return
         }
         if (q_obj(request, "coinsettings.Lightning network.selected")) {
             //disable address switching on lightning payments
-            play_audio(glob_const.funk);
+            play_audio("funk");
             return
         }
         const current_address = url_params.address,
@@ -2953,7 +2953,7 @@ function view_tx() {
 // Expands transaction details with animation and scrolling
 function open_tx(transaction_node) {
     if (!transaction_node.length) {
-        play_audio(glob_const.funk);
+        play_audio("funk");
         return
     }
     const info_panel = transaction_node.find(".moreinfo"),
@@ -3349,7 +3349,7 @@ function update_request(update_args, should_save) {
             if (current_status === "paid" || current_status === "archive_pending") {
                 if (current_status === "paid") {
                     if (glob_const.inframe === false) {
-                        play_audio(glob_const.blip);
+                        play_audio("blip");
                     }
                     request_element.addClass("shownotification");
                 }

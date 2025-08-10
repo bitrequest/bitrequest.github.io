@@ -358,6 +358,8 @@ function lang_en(id, data) {
         "xpubkeys": "I own the secret phrase / Xpriv key",
         "Key derivations": "Key derivations",
         "derivationpath": "Derivation path",
+        "soundbytes": "Soundbytes",
+        "choosesoundbytes": "Choose soundbyte",
         "resetbutton": "reset",
         // notifications
         "unabletoconnect": "Unable to connect",
@@ -575,6 +577,7 @@ function lang_en(id, data) {
         "apikey": "API key",
         "yes": "yes",
         "no": "no",
+        "none": "none",
         "verified": "verified",
         "error": "Error",
         "apierror": "api error",

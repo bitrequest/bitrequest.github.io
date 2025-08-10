@@ -1673,7 +1673,7 @@ function delete_phrase_trigger() {
     $(document).on("click", "#deletephrase", function() {
         const warning_exists = $("#dialogbody").find("#dseedwarning");
         if (warning_exists.length) {
-            play_audio(glob_const.funk);
+            play_audio("funk");
             return
         }
         const warning_content = "<h2 style='color:#B33A3A' id='dseedwarning'><span class='icon-warning'></span>" + tl("deletingyoursecretphrase") + "</h2><p><strong>" + tl("continuewithbackup") + "</strong></p>";

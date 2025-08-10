@@ -403,7 +403,7 @@ function lightning_socket(lnd, foreground) {
                 glob_const.paymentdialogbox.addClass("accept_lnd");
                 notify(tl("acceptthepayment"), 500000);
                 vibrate();
-                play_audio(glob_const.blip);
+                play_audio("blip");
             }
             set_dialog_timeout();
             return
@@ -434,7 +434,7 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
         });
         glob_const.ndef.onreading = event => {
             if ((now_utc() - 6000) < glob_let.ndef_timer) { // prevent too many taps
-                play_audio(glob_const.funk);
+                play_audio("funk");
                 notify(tl("ndeftablimit"), 6000);
                 return
             }
@@ -457,16 +457,16 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                                             crypto_amount = amount_rel.length ? parseFloat(amount_rel) : 0,
                                             milli_sats = (crypto_amount * 100000000000).toFixed(0);
                                         if (crypto_amount <= 0) {
-                                            play_audio(glob_const.funk);
+                                            play_audio("funk");
                                             notify(tl("enteramount"), 5000);
                                             return
                                         }
                                         if (glob_let.ndef_processing) {
-                                            play_audio(glob_const.funk);
+                                            play_audio("funk");
                                             console.error("error", "already processing");
                                             return
                                         }
-                                        play_audio(glob_const.blip);
+                                        play_audio("blip");
                                         notify("Processing...", 50000);
                                         glob_const.paymentdialogbox.addClass("accept_lnd");
                                         set_dialog_timeout();
@@ -481,14 +481,14 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                                         }, proxy_host).done(function(e) {
                                             const api_response = br_result(e).result;
                                             if (!api_response) { // catch lightning node connection failure
-                                                play_audio(glob_const.funk);
+                                                play_audio("funk");
                                                 notify(tl("unabletoconnectln"), 5000);
                                                 glob_const.paymentdialogbox.removeClass("accept_lnd");
                                                 glob_let.ndef_processing = false;
                                                 return
                                             }
                                             if (api_response.status === "ERROR") {
-                                                play_audio(glob_const.funk);
+                                                play_audio("funk");
                                                 const error_message = api_response.reason;
                                                 notify(error_message, 5000);
                                                 glob_const.paymentdialogbox.removeClass("accept_lnd");
@@ -496,7 +496,7 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                                                 return
                                             }
                                             if (api_response.error) {
-                                                play_audio(glob_const.funk);
+                                                play_audio("funk");
                                                 fail_dialogs(null, {
                                                     "error": api_response.error
                                                 });
@@ -506,14 +506,14 @@ async function process_nfc_payment(proxy_host, proxy_key, payment_id, node_id, i
                                                 return
                                             }
                                             if (milli_sats > api_response.maxWithdrawable) {
-                                                play_audio(glob_const.funk);
+                                                play_audio("funk");
                                                 notify(tl("cardmax"), 5000);
                                                 glob_const.paymentdialogbox.removeClass("accept_lnd");
                                                 glob_let.ndef_processing = false;
                                                 return
                                             }
                                             if (milli_sats < api_response.minWithdrawable) {
-                                                play_audio(glob_const.funk);
+                                                play_audio("funk");
                                                 notify(tl("minamount", {
                                                     "min": api_response.minWithdrawable
                                                 }), 5000);
@@ -635,7 +635,7 @@ function show_nfc_error(error_text) {
         status_header = status_panel.find("h2");
     status_header.text(error_text);
     payment_dialog.addClass("accept_lnd transacting pd_error");
-    play_audio(glob_const.funk);
+    play_audio("funk");
     closenotify();
     setTimeout(function() {
         payment_dialog.removeClass("accept_lnd transacting pd_error");
@@ -697,7 +697,7 @@ function lnd_poll_data(proxy_host, proxy_key, payment_id, node_id, invoice_mode)
                     glob_let.lnd_confirm = true;
                     glob_const.paymentdialogbox.addClass("accept_lnd");
                     notify(tl("acceptthepayment"), 500000);
-                    play_audio(glob_const.blip);
+                    play_audio("blip");
                 }
                 return
             }

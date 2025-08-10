@@ -308,7 +308,8 @@ function validate_confirmations(tx_data, direct, ln) {
         closeloader();
         clearTimeout(glob_let.request_timer);
         if (tx_data && tx_data.ccval) {
-            const payment_dialog = $("#paymentdialogbox"),
+            const payment = request.payment,
+                payment_dialog = $("#paymentdialogbox"),
                 status_panel = payment_dialog.find(".brstatuspanel"),
                 status_header = status_panel.find("h2"),
                 tx_status = tx_data.status;
@@ -381,7 +382,7 @@ function validate_confirmations(tx_data, direct, ln) {
                     if (amount_valid) {
                         if (tx_confirms >= required_confirms || is_instant === true) {
                             force_close_socket();
-                            play_audio(crypto_symbol === "doge" ? glob_const.howl : glob_const.cashier);
+                            play_audio("collect", payment);
                             const status_msg = request_type === "incoming" ? tl("paymentsent") : tl("paymentreceived"),
                                 is_insufficient = payment_dialog.hasClass("insufficient"), // keep scanning when amount was insufficient
                                 insufficient_status = is_insufficient ? "pending" : "paid",
@@ -396,7 +397,6 @@ function validate_confirmations(tx_data, direct, ln) {
                             new_status = insufficient_status;
                         } else {
                             if (ln && request.status === "pending") {} else {
-                                //play_audio(glob_const.blip);
                                 payment_dialog.addClass("transacting").attr("data-status", "pending");
                                 const broadcast_msg = ln ? tl("waitingforpayment") : tl("txbroadcasted");
                                 status_header.text(broadcast_msg);
@@ -417,7 +417,7 @@ function validate_confirmations(tx_data, direct, ln) {
                         status_panel.find("#view_tx").attr("data-txhash", tx_hash);
                         new_status = "insufficient";
                     }
-                    play_audio(glob_const.funk);
+                    play_audio("funk");
                 }
             }
         }

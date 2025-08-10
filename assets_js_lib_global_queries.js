@@ -60,12 +60,10 @@ const br_bipobj = br_get_local("bpdat", true),
         "approot": br_approot,
         "apptitle": "Bitrequest",
         "aws_bucket": "https://brq.s3.us-west-2.amazonaws.com/",
-        "blip": $("#blip"), // blip sound effect
         "body": $("body"),
         "c_host": br_w_loc.origin + br_w_loc.pathname,
         "cacheperiodcrypto": 120000, //120000 = 2 minutes
         "cacheperiodfiat": 600000, //600000 = 10 minutes
-        "cashier": $("#cashier"), // cashier sound effect
         "cmc_icon_loc": "https://s2.coinmarketcap.com/static/img/coins/200x200/",
         "collect": $("#collect"), // collect sound effect
         "copycontent": $("#copyinput"),
@@ -75,13 +73,11 @@ const br_bipobj = br_get_local("bpdat", true),
         "exp_referrer": br_exp_referrer,
         "firebase_dynamic_link_domain": br_firebase_dynamic_link_domain,
         "firebase_shortlink": "https://" + br_firebase_dynamic_link_domain + "/",
-        "funk": $("#funk"), // funk sound effect
         "has_bigint": hasbigint(),
         "has_ndef": br_has_ndef,
         "hosted_proxy": br_hosted_proxy,
         "hostlocation": br_hostlocation,
         "hostname": br_hostname,
-        "howl": $("#howl"), // howl sound effect
         "html": $("html"),
         "inframe": br_inframe,
         "ios_standalone": navigator.standalone,
@@ -152,7 +148,6 @@ const br_bipobj = br_get_local("bpdat", true),
         "useragent": br_useragent,
         "video": br_video,
         "w_loc": br_w_loc,
-        "waterdrop": $("#waterdrop"), // waterdrop sound effect
         "wl": navigator.wakeLock,
         "xinput": "input not allowed",
         "xss_alert": "xss attempt detected",
@@ -755,8 +750,18 @@ function find_object_index(array, key, url) {
 // ** DOM & UI Utilities: **
 
 // Initiates audio playback with promise-based error handling
-function play_audio(audio) {
-    const play_promise = audio[0].play();
+function play_audio(audio, payment) {
+    let selected = audio;
+    if (payment) {
+        const cc_settings = active_coinsettings(payment);
+        selected = q_obj(cc_settings, "soundbytes.selected");
+        console.log(cc_settings);
+    }
+    if (!selected || selected === "none") {
+        return
+    }
+    const element = $("#" + selected),
+        play_promise = element[0].play();
     if (play_promise) {
         play_promise.then(function() {
             // Autoplay started!

@@ -724,20 +724,20 @@ function enterapp(pin_input) {
             br_set_local("locktime", timestamp);
             finish_functions();
             setTimeout(function() {
-                play_audio(glob_const.waterdrop);
+                play_audio("waterdrop");
                 canceloptions(true);
             }, 500);
         } else if (pin_container.hasClass("admin")) {
             br_set_local("locktime", timestamp);
             loadpage("?p=currencies");
             $(".currenciesbttn .self").addClass("activemenu");
-            play_audio(glob_const.waterdrop);
+            play_audio("waterdrop");
             canceloptions(true);
         } else if (pin_container.hasClass("reset")) {
             br_set_local("locktime", timestamp);
             $("#pintext").text(tl("enternewpin"));
             pin_container.addClass("p_admin").removeClass("pinwall reset");
-            play_audio(glob_const.waterdrop);
+            play_audio("waterdrop");
             setTimeout(function() {
                 $("#pininput").val("");
             }, 200);
@@ -748,7 +748,7 @@ function enterapp(pin_input) {
             } else {
                 br_set_local("locktime", timestamp);
             }
-            play_audio(glob_const.waterdrop);
+            play_audio("waterdrop");
             canceloptions(true);
         }
         pin_config.attempts = 0;
@@ -756,7 +756,7 @@ function enterapp(pin_input) {
         remove_cashier();
     } else {
         if (!navigator.vibrate) {
-            play_audio(glob_const.funk);
+            play_audio("funk");
         }
         shake(pin_container);
         setTimeout(function() {
@@ -832,7 +832,7 @@ function pinvalidate(pin_button) {
                 "selected": pin_status
             }).find("p").text(pin_status);
             save_settings();
-            play_audio(glob_const.waterdrop);
+            play_audio("waterdrop");
             canceloptions(true);
             const pin_callback = pin_container.data("pincb");
             if (pin_callback) {
@@ -843,7 +843,7 @@ function pinvalidate(pin_button) {
         } else {
             topnotify(tl("pinmatch"));
             if (navigator.vibrate) {} else {
-                play_audio(glob_const.funk);
+                play_audio("funk");
             }
             shake(pin_container);
             confirm_field.val("");
@@ -1817,7 +1817,7 @@ function allow_screen_sleep() {
 // Shows notification and plays sound for view-only restrictions
 function show_view_only_error() {
     notify(tl("cashiernotallowed"));
-    play_audio(glob_const.funk);
+    play_audio("funk");
 }
 
 // Converts timestamp to days/hours/minutes/seconds object
@@ -1962,12 +1962,12 @@ function keyup() {
     $(document).keyup(function(e) {
         if (e.keyCode == 39) { // ArrowRight
             if (glob_const.paymentdialogbox.find("input").is(":focus")) {
-                play_audio(glob_const.funk);
+                play_audio("funk");
                 return
             }
             const time_passed = now_utc() - glob_let.sa_timer;
             if (time_passed < 500) { // prevent clicking too fast
-                play_audio(glob_const.funk);
+                play_audio("funk");
                 return
             }
             glob_const.paymentpopup.removeClass("flipping");
@@ -1980,7 +1980,7 @@ function keyup() {
                 return
             }
             if (glob_const.paymentdialogbox.hasClass("norequest") && (glob_const.paymentdialogbox.attr("data-pending") == "ispending" || (glob_const.offline === true))) {
-                play_audio(glob_const.funk);
+                play_audio("funk");
                 return
             }
             flip_right1();
@@ -1989,12 +1989,12 @@ function keyup() {
         }
         if (e.keyCode == 37) { // ArrowLeft
             if (glob_const.paymentdialogbox.find("input").is(":focus")) {
-                play_audio(glob_const.funk);
+                play_audio("funk");
                 return
             }
             const time_passed = now_utc() - glob_let.sa_timer;
             if (time_passed < 500) { // prevent clicking too fast
-                play_audio(glob_const.funk);
+                play_audio("funk");
                 return
             }
             glob_const.paymentpopup.removeClass("flipping");
@@ -2003,7 +2003,7 @@ function keyup() {
                 return
             }
             if (glob_const.paymentdialogbox.hasClass("norequest") && (glob_const.paymentdialogbox.attr("data-pending") === "ispending" || (glob_const.offline === true))) {
-                play_audio(glob_const.funk);
+                play_audio("funk");
                 return
             }
             flip_left1();
@@ -2317,7 +2317,7 @@ function cancel_paymentdialog_trigger() {
         }
         const time_elapsed = now_utc() - glob_let.cp_timer;
         if (time_elapsed < 1500) { // prevent clicking too fast
-            play_audio(glob_const.funk);
+            play_audio("funk");
             console.log("clicking too fast");
             return
         }
@@ -2435,7 +2435,7 @@ function showoptionstrigger() {
         const addr_data = $(this).closest("li").data(),
             address = addr_data.address;
         if (address === "lnurl") {
-            play_audio(glob_const.funk);
+            play_audio("funk");
             return
         }
         const saved_request = $("#requestlist li[data-address='" + address + "']"),
@@ -2660,7 +2660,7 @@ function showtransaction_trigger() {
                         }
                     }
                 }
-                play_audio(glob_const.funk);
+                play_audio("funk");
                 return
             }
             const currency = request_data.payment,
@@ -3566,7 +3566,7 @@ function send_trigger() {
             list_compatible_wallets($(this).attr("data-currency"));
             return
         }
-        play_audio(glob_const.funk);
+        play_audio("funk");
     })
 }
 

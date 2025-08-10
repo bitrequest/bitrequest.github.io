@@ -615,7 +615,7 @@ function handle_node_selection() {
     $(document).on("mousedown", "#ln_nodelist .optionwrap", function() {
         const selected_node = $(this);
         if (selected_node.hasClass("offline")) {
-            play_audio(glob_const.funk);
+            play_audio("funk");
         }
         $("#ln_nodelist .optionwrap").not(selected_node).removeClass("show");
         selected_node.addClass("show");
@@ -735,7 +735,7 @@ function handle_node_proxy_toggle() {
             lightning_data = lightning_item.data(),
             node_services = lightning_data.services;
         if (empty_obj(node_services)) {
-            play_audio(glob_const.funk);
+            play_audio("funk");
             return
         }
         const network_switch = $(this),
@@ -814,7 +814,7 @@ function handle_proxy_selection() {
     $(document).on("mousedown", "#lnd_proxy_select_input .optionwrap", function() {
         const selected_proxy = $(this);
         if (selected_proxy.hasClass("offline")) {
-            play_audio(glob_const.funk);
+            play_audio("funk");
             return
         }
         $("#lnd_proxy_select_input > input").attr("data-pid", selected_proxy.data("pid"));
@@ -1023,7 +1023,7 @@ function trigger_ln() {
         if (input_proxy_url.length < 10) {
             topnotify(tl("enterserver"));
             proxy_url_input.val("").focus();
-            play_audio(glob_const.funk);
+            play_audio("funk");
             return
         }
         const normalized_url = complete_url(input_proxy_url),
@@ -1039,13 +1039,13 @@ function trigger_ln() {
         if (existing_proxy) {
             topnotify(tl("proxyexists"));
             $("#lnd_proxy_url_input").focus();
-            play_audio(glob_const.funk);
+            play_audio("funk");
             return
         }
         if (normalized_url.indexOf("http") < 0) {
             topnotify(tl("invalidurl"));
             $("#lnd_proxy_url_input").focus();
-            play_audio(glob_const.funk);
+            play_audio("funk");
             return
         }
         const proxy_key = $("#proxy_pw_input").val(),
@@ -1138,7 +1138,7 @@ function trigger_ln() {
             }
             if (node_selection.live === "lock") {
                 notify(tl("proxylocked"));
-                play_audio(glob_const.funk);
+                play_audio("funk");
                 return
             }
             if (empty_obj(node_selection)) {
@@ -1151,7 +1151,7 @@ function trigger_ln() {
             notify(tl("proxyoffline", {
                 "proxy_message": proxy_action
             }));
-            play_audio(glob_const.funk);
+            play_audio("funk");
         }
     }
 }

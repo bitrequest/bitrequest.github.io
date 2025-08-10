@@ -586,8 +586,18 @@ function select_theme() {
 
 function cancel_theme() {
     $(document).on("click", "#canceltheme", function() {
-        const version = $("#ua").attr("data-version");
-        $("link#theme").attr("href", d_proxy() + "/proxy/v1/themes/" + $("#themesettings").data("selected") + "?v=" + version);
+        const filename = $("#themesettings").data("selected");
+        if (filename) {
+            if (filename === "default.css") {
+                theme_not_found();
+                canceldialog();
+                return
+            }
+            $("link#theme").attr("href", d_proxy() + "/proxy/v1/themes/" + filename + "?v=" + version);
+            canceldialog();
+            return
+        }
+        theme_not_found();
         canceldialog();
     })
 }
@@ -1897,7 +1907,7 @@ function csvexport_trigger() {
             popdialog(content, "triggersubmit", null, true);
             return
         }
-        play_audio(glob_const.funk);
+        play_audio("funk");
         notify(tl("nocsvexports"));
     });
 }
@@ -2930,7 +2940,7 @@ function remove_proxy() {
         if (proxies.length > 0) {
             const opt = $(this).closest(".optionwrap");
             if (opt.hasClass("default")) {
-                play_audio(glob_const.funk);
+                play_audio("funk");
                 topnotify(tl("removedefaultnode"));
                 return
             }

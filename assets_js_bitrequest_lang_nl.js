@@ -358,6 +358,8 @@ function lang_nl(id, data) {
         "xpubkeys": "Ik ben in het bezit van de geheime zin / Xpriv sleutel.",
         "Key derivations": "Key derivations",
         "derivationpath": "Derivation path",
+        "soundbytes": "Geluidseffect",
+        "choosesoundbytes": "Kies geluidseffect",
         "resetbutton": "reset",
         // notifications
         "unabletoconnect": "Niet in staat om te verbinden",
@@ -575,6 +577,7 @@ function lang_nl(id, data) {
         "apikey": "API sleutel",
         "yes": "ja",
         "no": "nee",
+        "none": "geen",
         "verified": "geverifieerd",
         "error": "fout",
         "apierror": "api error",

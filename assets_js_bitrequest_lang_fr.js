@@ -358,6 +358,8 @@ function lang_fr(id, data) {
         "xpubkeys": "Je possède la phrase secrète / la clé Xpriv",
         "Key derivations": "Clés dérivations",
         "derivationpath": "Itinéraire de dérivation",
+        "soundbytes": "Effet sonore",
+        "choosesoundbytes": "Choisissez l'effet sonore",
         "resetbutton": "réinitialiser",
         // notifications
         "unabletoconnect": "Unable to connect",
@@ -575,6 +577,7 @@ function lang_fr(id, data) {
         "apikey": "Clé API",
         "yes": "oui",
         "no": "non",
+        "none": "non",
         "verified": "vérifié",
         "error": "Erreur",
         "apierror": "erreur API",

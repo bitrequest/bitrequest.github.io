@@ -508,7 +508,7 @@ function handle_rpc_node_selection() {
         const node_option = $(this),
             node_config = node_option.data();
         if (node_option.hasClass("offline")) {
-            play_audio(glob_const.funk);
+            play_audio("funk");
             topnotify(tl("unabletoconnect"));
             return
         }
@@ -542,7 +542,7 @@ function submit_rpcnode() {
                 const is_valid_entry = (glob_let.ap_id === "apis") ? is_valid_url_or_ip(node_url) : is_websocket_url(node_url);
                 if (url_length < 6 || !is_valid_entry) {
                     popnotify("error", tl("invalidurl"));
-                    play_audio(glob_const.funk);
+                    play_audio("funk");
                     return
                 }
                 const options = dialog_box.find("#api_list .options .optionwrap"),
@@ -907,7 +907,7 @@ function delete_rpc_node() {
                 matching_nodes = nodes_container.find("span[data-value='" + node_url + "']"),
                 has_duplicates = matching_nodes.length > 1;
             if (is_default === true && !has_duplicates) {
-                play_audio(glob_const.funk);
+                play_audio("funk");
                 topnotify(tl("removedefaultnode"));
                 return
             }

@@ -64,6 +64,11 @@ const glob_multi_wallets = {
         "seed": true
     }
 },
+soundbytes = {
+    "icon": "volume-medium",
+    "selected": "collect",
+    "options": ["none", "cashier", "collect"]
+},
 glob_config = {
     "bitrequest_coin_data": [{
             "currency": "bitcoin",
@@ -318,7 +323,8 @@ glob_config = {
                     "icon": "cog",
                     "selected": "compatiblewallets",
                     "segwit": true
-                }
+                },
+                soundbytes
             }
         },
         {
@@ -473,7 +479,8 @@ glob_config = {
                     "icon": "cog",
                     "selected": "compatiblewallets",
                     "segwit": true
-                }
+                },
+                soundbytes
             }
         },
         {
@@ -589,6 +596,11 @@ glob_config = {
                 "Key derivations": {
                     "icon": "cog",
                     "selected": "compatiblewallets",
+                },
+                "soundbytes": {
+                    "icon": "volume-medium",
+                    "selected": "howl",
+                    "options": ["none", "howl", "cashier", "collect"]
                 }
             }
         },
@@ -717,7 +729,8 @@ glob_config = {
                 "Key derivations": {
                     "icon": "cog",
                     "selected": "compatiblewallets",
-                }
+                },
+                soundbytes
             }
         },
         {
@@ -842,7 +855,8 @@ glob_config = {
                 "Key derivations": {
                     "icon": "cog",
                     "selected": "compatiblewallets",
-                }
+                },
+                soundbytes
             }
         },
         {
@@ -1091,7 +1105,8 @@ glob_config = {
                 "Key derivations": {
                     "icon": "cog",
                     "selected": "compatiblewallets",
-                }
+                },
+                soundbytes
             }
         },
         {
@@ -1255,7 +1270,8 @@ glob_config = {
                 "Key derivations": {
                     "icon": "cog",
                     "selected": "compatiblewallets",
-                }
+                },
+                soundbytes
             }
         },
         {
@@ -1361,7 +1377,8 @@ glob_config = {
                 "Key derivations": {
                     "icon": "cog",
                     "selected": "compatiblewallets",
-                }
+                },
+                soundbytes
             }
         },
         {
@@ -1458,7 +1475,8 @@ glob_config = {
                     "pk_vbytes": {
                         "wif": 128
                     }
-                }
+                },
+                soundbytes
             }
         },
         {
@@ -1538,7 +1556,8 @@ glob_config = {
                     "pk_vbytes": {
                         "wif": 0
                     }
-                }
+                },
+                soundbytes
             }
         }
     ],
@@ -1855,7 +1874,8 @@ glob_config = {
                         }
                     }
                 }
-            }
+            },
+            soundbytes
         }
     },
     "app_settings": [{
