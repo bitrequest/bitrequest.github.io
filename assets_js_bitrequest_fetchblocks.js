@@ -2884,7 +2884,7 @@ function ethplorer_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
 function nano_scan_data(data, tx_hash) {
     const transactiontime = normalize_timestamp(data.local_timestamp),
         ccval = data.amount ? parseFloat((data.amount / 1e30).toFixed(8)) : null,
-        txhash = data.hash ? data.hash : tx_hash || null;
+        txhash = data.link || data.hash || null;
     return {
         ccval,
         transactiontime,
