@@ -1065,7 +1065,7 @@ function get_cc_exchangerates(api_list, selected_api) {
     const payment_currency = request.payment,
         token_contract = request.token_contract,
         is_erc20 = request.erc20 === true,
-        api_search_path = selected_api === "coinmarketcap" ? "v1/cryptocurrency/quotes/latest?id=" + request.cmcid :
+        api_search_path = selected_api === "coinmarketcap" ? "v2/cryptocurrency/quotes/latest?id=" + request.cmcid :
         selected_api === "coinpaprika" ? request.currencysymbol + "-" + payment_currency :
         selected_api === "coingecko" ? (is_erc20 ? "simple/token_price/ethereum?contract_addresses=" + token_contract + "&vs_currencies=usd" : "simple/price?ids=" + payment_currency + "&vs_currencies=usd") :
         false;
