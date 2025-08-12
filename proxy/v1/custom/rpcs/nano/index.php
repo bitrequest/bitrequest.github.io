@@ -1,6 +1,6 @@
 <?php
     const MAX_HISTORY_COUNT = 15;
-    const MAX_PENDING_COUNT = 15;
+    const MAX_PENDING_COUNT = 85;
     
     // Main function to process Nano transactions and combine history with pending transactions
     function main_nano($pl) {
