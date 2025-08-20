@@ -395,8 +395,8 @@ function process_ethereum_transactions(rd, api_data, rdo) {
                         return
                     }
                     const tx_input = api_result.input,
-                        amount_hex = tx_input.slice(74),
-                        token_value = hex_to_number_string(amount_hex),
+                        amount_hex = tx_input ? tx_input.slice(74) : null,
+                        token_value = amount_hex ? hex_to_number_string(amount_hex) : q_obj(api_result.operations[0], "intValue"),
                         confirmation_count = api_result.confirmations < 0 ? 0 : api_result.confirmations,
                         tx_data = {
                             "timestamp": api_result.timestamp,
