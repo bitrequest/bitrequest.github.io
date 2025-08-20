@@ -1466,7 +1466,7 @@ glob_config = {
                     "custom_switch": true,
                     "selected": false,
                     "key": null,
-                    "root_path": "m/44'/972'/0'/0/",
+                    "root_path": "m/44'/111111'/0'/0/",
                     "prefix": {
                         "pub": 0,
                         "pubx": 76067358,
