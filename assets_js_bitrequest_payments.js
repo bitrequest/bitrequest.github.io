@@ -2066,6 +2066,45 @@ function input_requestdata() {
 
 // Enforces numeric input constraints and step validation for payment amounts
 function validate_steps() {
+    function basic_normalize(value) {
+        let match = value.match(/([.,])(?=\d*$)/),
+            decimal_pos = match ? match.index : -1,
+            normalized = "";
+        for (let i = 0; i < value.length; i++) {
+            let char = value[i];
+            if (/\d/.test(char)) {
+                normalized += char;
+            } else if (i === decimal_pos) {
+                normalized += ".";
+            }
+        }
+        return normalized;
+    }
+
+    function full_normalize(value, remove_trailing_dot = false) {
+        let normalized = basic_normalize(value),
+            ends_with_dot = normalized.endsWith(".");
+        if (remove_trailing_dot && ends_with_dot) {
+            normalized = normalized.slice(0, -1);
+            ends_with_dot = false;
+        }
+        if (normalized.replace(/\./g, "") === "") {
+            return "";
+        }
+        const parts = normalized.split(".");
+        let int_part = parts[0] || "",
+            dec_part = parts[1] || "";
+        const original_int_part_length = int_part.length;
+        int_part = int_part.replace(/^0+/, "");
+        if (int_part === "") {
+            if (original_int_part_length > 0 || dec_part !== "" || ends_with_dot) {
+                int_part = "0";
+            }
+        }
+        let result = int_part + (dec_part ? "." + dec_part : (ends_with_dot ? "." : ""));
+        return result;
+    }
+
     $(document).on("keydown", "#paymentdialogbox .mirrordiv input", function(e) {
         if (glob_let.blocktyping === true) {
             play_audio("funk");
@@ -2080,14 +2119,26 @@ function validate_steps() {
         if (restricted_key_codes.includes(key_code)) { // prevent double commas and dots
             const value_length = current_value.length;
             if (value_length) {
-                if (key_code === 188) {
-                    if ((glob_const.supportsTouch && glob_const.is_safari) || glob_const.is_ios_app) { // prevent commas for mobile safari and ios app
-                        e.preventDefault();
-                        return
-                    }
-                }
                 if (glob_let.prevkey || current_value.includes(".") || current_value.includes(",") || !e.target.validity.valid || current_input.hasClass("satinput")) {
                     e.preventDefault();
+                    return
+                }
+                // For comma keys, insert dot instead
+                if (key_code === 188 || key_code === 110) {
+                    e.preventDefault();
+                    const input_element = this;
+                    input_element.type = "text";
+                    const start = input_element.selectionStart,
+                        end = input_element.selectionEnd;
+                    input_element.value = current_value.slice(0, start) + "." + current_value.slice(end);
+                    input_element.selectionStart = input_element.selectionEnd = start + 1;
+                    // Trigger 'input' event to apply normalization immediately
+                    input_element.dispatchEvent(new Event("input", {
+                        "bubbles": true
+                    }));
+                    // Do not restore type here; handle in 'input' and 'blur'
+                    glob_let.prevkey = true;
+                    return
                 }
                 glob_let.prevkey = true;
                 return
@@ -2119,7 +2170,54 @@ function validate_steps() {
             return
         }
         e.preventDefault();
-    })
+    });
+
+    // Handle paste event to normalize pasted content
+    $(document).on("paste", "#paymentdialogbox .mirrordiv input", function(e) {
+        e.preventDefault();
+        const input_element = this,
+            pasted = (e.originalEvent || e).clipboardData.getData("text"),
+            normalized = basic_normalize(pasted);
+        // Temporarily switch to text for insertion
+        input_element.type = "text";
+        const start = input_element.selectionStart,
+            end = input_element.selectionEnd,
+            current_value = input_element.value;
+        input_element.value = current_value.slice(0, start) + normalized + current_value.slice(end);
+        input_element.selectionStart = input_element.selectionEnd = start + normalized.length;
+        // Trigger 'input' event to apply normalization immediately
+        input_element.dispatchEvent(new Event("input", {
+            "bubbles": true
+        }));
+        // Do not switch back; let 'input' handle
+    });
+
+    // Additional handler to normalize the input value and ensure only one decimal
+    $(document).on("input", "#paymentdialogbox .mirrordiv input", function() {
+        const input_element = this;
+        let value = input_element.value,
+            normalized = full_normalize(value);
+        if (normalized !== value) {
+            input_element.value = normalized;
+            value = normalized;
+        }
+        // If type is 'text' and value is empty or now a valid number (no trailing dot), switch back to 'number'
+        if (input_element.type === "text" && (normalized === "" || (!normalized.endsWith(".") && !isNaN(parseFloat(normalized)) && isFinite(normalized)))) {
+            input_element.type = "number";
+        }
+    });
+
+    // On blur, clean up trailing dot and switch back to 'number'
+    $(document).on("blur", "#paymentdialogbox .mirrordiv input", function() {
+        const input_element = this;
+        if (input_element.type === "text") {
+            let value = input_element.value,
+                normalized = full_normalize(value, true);
+            input_element.value = normalized;
+            input_element.type = "number";
+        }
+        glob_let.prevkey = false;
+    });
 }
 
 // Toggles payment request form display with pending payment validation
