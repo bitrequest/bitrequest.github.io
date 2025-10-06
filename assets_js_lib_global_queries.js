@@ -1648,6 +1648,13 @@ function get_cached_tokens(check) {
             }
         }
     }
+    if (check) {
+        return false
+    }
+    const ctrcts = contracts("br_all");
+    if (ctrcts) {
+        return ctrcts;
+    }
     return false
 }
 

@@ -188,8 +188,7 @@ function get_erc20tokens() {
                 }
             }
         }
-        const error_msg = "<h2 class='icon-bin'>" + tl("apicallfailed") + "</h2><p class='doselect'>" + tl("nofetchtokeninfo") + "</p>";
-        popdialog(error_msg, "canceldialog");
+        store_coindata_fallback();
     }).fail(function(xhr, stat, err) {
         if (get_next_proxy()) {
             get_erc20tokens();
@@ -207,7 +206,7 @@ function store_coindata(tokens_first, tokens_second) {
     if (tokens_first) {
         const converted_first = convert_coinlist(tokens_first);
         if (converted_first) {
-            cr_push = {
+            const cr_push = {
                 "timestamp": now_utc(),
                 "token_arr": converted_first
             }
@@ -220,6 +219,29 @@ function store_coindata(tokens_first, tokens_second) {
             br_set_local("erc20tokens", converted_second, true);
         }
     }
+}
+
+// Splits and stores local token data in localStorage with timestamp for cache management
+function store_coindata_fallback() {
+    const tokens_list = contracts("br_all");
+    if (tokens_list) {
+        const mid_point = Math.floor(tokens_list.length / 2),
+            tokens_first = tokens_list.slice(0, mid_point);
+        if (tokens_first) {
+            const cr_push = {
+                "timestamp": now_utc(),
+                "token_arr": tokens_first
+            }
+            br_set_local("erc20tokens_init", cr_push, true);
+        }
+        const tokens_second = tokens_list.slice(mid_point);
+        if (tokens_second) {
+            br_set_local("erc20tokens", tokens_second, true);
+        }
+        return
+    }
+    const error_msg = "<h2 class='icon-bin'>" + tl("apicallfailed") + "</h2><p class='doselect'>" + tl("nofetchtokeninfo") + "</p>";
+    popdialog(error_msg, "canceldialog");
 }
 
 // Filters Ethereum-based tokens (platform ID 1027) and maps to simplified token object structure
