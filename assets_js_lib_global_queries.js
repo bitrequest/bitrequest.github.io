@@ -755,7 +755,6 @@ function play_audio(audio, payment) {
     if (payment) {
         const cc_settings = active_coinsettings(payment);
         selected = q_obj(cc_settings, "soundbytes.selected");
-        console.log(cc_settings);
     }
     if (!selected || selected === "none") {
         return

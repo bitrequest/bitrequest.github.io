@@ -2882,9 +2882,9 @@ function ethplorer_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
 
 // Processes Nano transaction data with raw-to-NANO conversion and local timestamp handling
 function nano_scan_data(data, tx_hash) {
-    const transactiontime = normalize_timestamp(data.local_timestamp),
-        ccval = data.amount ? parseFloat((data.amount / 1e30).toFixed(8)) : null,
-        txhash = data.link || data.hash || null;
+    const ccval = data.amount ? parseFloat((data.amount / 1e30).toFixed(8)) : null,
+        transactiontime = normalize_timestamp(data.local_timestamp),
+        txhash = tx_hash || data.hash || null;
     return {
         ccval,
         transactiontime,

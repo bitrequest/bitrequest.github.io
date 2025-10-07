@@ -3978,7 +3978,7 @@ function get_pdf_url(request_data) {
     status_text = status === "new" ? "Waiting for payment" : status,
         is_lightning = txhash && txhash.slice(0, 9) === "lightning",
         is_hybrid = lightning && lightning.hybrid === true,
-        payment_date = fulldateformat(new Date(paymenttimestamp), langcode),
+        payment_date = fulldateformat(new Date(paymenttimestamp || timestamp), langcode),
         received_amount = trimdecimals(receivedamount, 6),
         fiat_amount = trimdecimals(fiatvalue, 2),
         is_incoming = requesttype === "incoming",
@@ -5226,7 +5226,7 @@ function append_request(rd) {
         time_display = "<span class='rq_month'>" + time_obj.toLocaleString(langcode, {
             "month": "short"
         }) + "</span> <span class='rq_day'>" + time_obj.getDate() + "</span>",
-        payment_time = fulldateformat(new Date(paymenttimestamp), langcode, true),
+        payment_time = fulldateformat(new Date(paymenttimestamp || timestamp), langcode, true),
         amount_short = amountshort(amount, receivedamount, fiatvalue, iscrypto),
         short_suffix = is_insufficient ? " (" + amount_short + " " + unit + " " + tl("amountshort") + ")" : "",
         short_crypto = iscrypto ? short_suffix : "",
