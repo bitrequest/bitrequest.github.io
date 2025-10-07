@@ -1990,14 +1990,16 @@ function complile_csv() {
             rqname = val.requestname || "",
             desc = val.requesttitle || "",
             type = val.requesttype,
+            requestdate = val.requestdate,
             timestamp = val.timestamp,
+            created_time = requestdate || timestamp,
             received = val.receivedamount,
             ccsymbol = val.currencysymbol,
             fiatval = val.fiatvalue,
             fiatcur = val.fiatcurrency,
-            pts = val.paymenttimestamp,
+            pts = val.paymenttimestamp || timestamp,
             pdfurl = get_pdf_url(val),
-            rectime = pts ? short_date(pts) : "",
+            paid_time = pts ? short_date(pts) : "",
             layer = val.eth_layer2,
             network = getnetwork(layer) || lnstr,
             netstr = network || "";
@@ -2013,7 +2015,7 @@ function complile_csv() {
             csv[transclear("network")] = netstr;
             const rqtype = type === "local" ? "point of sale" : type;
             csv[transclear("type")] = transclear(rqtype);
-            csv[transclear("created")] = short_date(timestamp);
+            csv[transclear("created")] = short_date(created_time);
             csv[transclear("amount")] = amount + " " + uoa;
             const rval = received ? received + " " + ccsymbol : "",
                 paidrecv = type === "incoming" ? transclear("paid") : transclear("received"),
@@ -2021,7 +2023,7 @@ function complile_csv() {
                 fiatstr = fiatval ? fiatval.toFixed(2) + " " + fiatcur : "";
             csv[pttitle] = rval + " (" + paidrecv + ")";
             csv[transclear("fiatvalue")] = fiatstr;
-            csv[transclear("sendon")] = rectime;
+            csv[transclear("paidon")] = paid_time;
             if (include.address) {
                 csv[transclear("receivingaddress")] = address;
             }

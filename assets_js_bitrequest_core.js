@@ -3989,10 +3989,12 @@ function get_pdf_url(request_data) {
         decimals = iscrypto ? 6 : 2,
         formatted_amount = trimdecimals(amount, decimals),
         currency_symbol = uoa.toUpperCase(),
-        local_time = requestdate || timestamp,
-        date_obj = new Date(local_time),
-        request_date = requestdate ? fulldateformat(date_obj, langcode) : "unknown",
-        utc_date = fulldateformat(date_obj),
+        created_time = requestdate || timestamp,
+        first_viewed_time = timestamp || requestdate,
+        created_date_obj = new Date(created_time),
+        fw_date_obj = new Date(first_viewed_time),
+        request_date = fulldateformat(created_date_obj, langcode),
+        fw_date = fulldateformat(fw_date_obj, langcode),
         ln_network = is_lightning ? "lightning" : "",
         invoice_data = {
             "Request ID": requestid,
@@ -4010,7 +4012,7 @@ function get_pdf_url(request_data) {
     }
     if (is_incoming) {
         invoice_data[transclear("created")] = request_date;
-        invoice_data[transclear("firstviewed")] = utc_date;
+        invoice_data[transclear("firstviewed")] = fw_date;
     }
     if (status === "paid") {
         const amount_label = is_incoming ? transclear("amountpaid") : transclear("amountreceived");
