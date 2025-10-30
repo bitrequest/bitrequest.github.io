@@ -58,7 +58,8 @@ function init_socket(socket_node, wallet_address, retry, foreground) {
             start_address_monitor(null, null, true);
             return
         } else {
-            glob_let.socket_attempt[sha_sub(socket_node.url, 15)] = true;
+            const socket_id = socket_node.url || node_name;
+            glob_let.socket_attempt[sha_sub(socket_id, 15)] = true;
         }
     }
     if (payment_type === "bitcoin") {
@@ -165,24 +166,7 @@ function init_socket(socket_node, wallet_address, retry, foreground) {
         return
     }
     if (payment_type === "monero") {
-        const viewkey = request.viewkey || get_vk(wallet_address);
-        if (viewkey) {
-            const monero_requests = get_requestli("payment", "monero"),
-                pending_txs = filter_list(monero_requests, "pending", "scanning");
-            if (pending_txs.length) { // update pending xmr tx's to prevent tx duplication
-                scan_pending_requests(true, pending_txs);
-            }
-            const xmr_account = viewkey.account || wallet_address,
-                xmr_key = viewkey.vk;
-            request.monitored = true;
-            request.viewkey = viewkey;
-            closenotify();
-            connect_monero_node(9, xmr_account, xmr_key);
-            return
-        }
-        request.monitored = false;
-        request.viewkey = false;
-        notify(tl("notmonitored"), 500000, "yes");
+        init_xmr_polling(null, wallet_address);
         return
     }
     if (payment_type === "kaspa") {
@@ -321,11 +305,11 @@ function reconnect_websocket(recon_data) {
 function foreground_reconnect() {
     if (!glob_const.supportsTouch) return
     if (!request.eth_l2s.length && helper.l1_status === true) return
-    const api_settings = q_obj(request, "coinsettings.apis.selected");
-    if (api_settings) {
+    const api_data = q_obj(helper, "api_info.data");
+    if (api_data) {
         force_close_socket();
         helper.to_foreground = true;
-        after_scan_init(api_settings);
+        post_scan_init(api_data);
     }
 }
 
@@ -346,8 +330,9 @@ function try_next_socket(current_node, is_layer2) {
     if (current_index > -1) {
         const next_node = available_nodes[current_index + 1],
             fallback_node = next_node || available_nodes[0],
+            socket_id = fallback_node.url || fallback_node.name,
             network_prefix = is_layer2 || "";
-        if (glob_let.socket_attempt[sha_sub(fallback_node.url + network_prefix, 15)] === true) {
+        if (glob_let.socket_attempt[sha_sub(socket_id + network_prefix, 15)] === true) {
             return false
         }
         if (fallback_node) {

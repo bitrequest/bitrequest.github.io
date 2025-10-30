@@ -54,7 +54,7 @@ const br_bipobj = br_get_local("bpdat", true),
         console.log(error);
     }),
     glob_const = {
-        "after_scan_timeout": 30000, // Preform extra tx lookup when closing paymentdialog after 30 seconds
+        "post_scan_timeout": 30000, // Preform extra tx lookup when closing paymentdialog after 30 seconds
         "android_standalone": window.matchMedia("(display-mode: standalone)").matches,
         "androidpackagename": br_androidpackagename,
         "approot": br_approot,
@@ -157,6 +157,7 @@ const br_bipobj = br_get_local("bpdat", true),
         })).toFixed(2)
     },
     glob_let = {
+        "post_scan": false,
         "angle": 0,
         "ap_id": null,
         "api_attempt": {},
@@ -223,6 +224,7 @@ const br_bipobj = br_get_local("bpdat", true),
         "tx_count": 1000000,
         "tx_list": [],
         "vk": null,
+        "xmr_pool": [],
         "wakelock": false,
         "ws_timer": 0
     }
@@ -282,6 +284,8 @@ let request = null,
 //objectkey_from_array
 //value_in_array
 //find_object_index
+//add_unique_items
+//remove_array_items
 
 // ** DOM & UI Utilities: **
 //play_audio
@@ -302,7 +306,6 @@ let request = null,
 // ** URL & Parameter Handling: **
 //get_search
 //get_urlparameters
-//get_string_before_last_colon
 //parse_url_params
 //scanmeta
 //decode_entities
@@ -747,6 +750,20 @@ function find_object_index(array, key, url) {
     });
 }
 
+// Merge arrays without duplicates
+function add_unique_items(target_array, source_array) {
+    const existing_set = new Set(target_array),
+        new_items = source_array.filter(item => !existing_set.has(item));
+    target_array.push(...new_items);
+    return new_items; // Returns what was added
+}
+
+// Remove items in one array from another array
+function remove_array_items(main_array, items_to_remove) {
+    const remove_set = new Set(items_to_remove);
+    return main_array.filter(item => !remove_set.has(item));
+}
+
 // ** DOM & UI Utilities: **
 
 // Initiates audio playback with promise-based error handling
@@ -1087,14 +1104,6 @@ function get_search(str) {
 // Retrieves URL parameters from current window location's search string
 function get_urlparameters(str) {
     return parse_url_params(glob_const.w_loc.search.substring(1));
-}
-
-function get_string_before_last_colon(str) {
-    const last_colon_index = str.lastIndexOf(":");
-    if (last_colon_index === -1) {
-        return str; // Return the original string if no colon is found
-    }
-    return str.substring(0, last_colon_index);
 }
 
 // Parses URL query string into object

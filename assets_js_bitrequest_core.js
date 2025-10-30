@@ -320,9 +320,9 @@ function finish_functions() {
     payrequest();
     //close_paymentdialog
     //continue_cpd
-    //after_scan_init
-    //after_scan
-    //cancel_after_scan
+    //post_scan_init
+    //post_scan
+    //cancel_post_scan
     //set_recent_requests
 
     // ** UI Components: **
@@ -353,6 +353,8 @@ function finish_functions() {
     //handle_address
     //handle_viewkey
     //handle_node_url
+    //handle_xmrrpc
+    //parse_monero_rpc_uri
 
     // ** Helper Functions: **
     open_url();
@@ -517,7 +519,6 @@ function finish_functions() {
     dragend();
 
     // ** URL & Link Handling: **
-    //set_xmr_node_access
     //check_intents
     //expand_shorturl
     //expand_bitly_url
@@ -1249,11 +1250,11 @@ function payrequest() {
 }
 
 // Closes payment dialog with optional post-scan actions
-function close_paymentdialog(afterscan) {
-    if (afterscan) {
-        const api_settings = q_obj(request, "coinsettings.apis.selected");
-        if (api_settings) {
-            after_scan_init(api_settings);
+function close_paymentdialog(post_scan, xmr) {
+    if (post_scan) {
+        const api_data = q_obj(helper, "api_info.data");
+        if (api_data) {
+            post_scan_init(api_data);
             return
         }
     }
@@ -1278,9 +1279,14 @@ function continue_cpd() {
 }
 
 // Initializes post-scan transaction verification
-function after_scan_init(api_settings) {
+function post_scan_init(api_data) {
+    if (request.payment === "monero") { // custom post scan for xmr
+        xmr_post_scan(api_data); // assets_js_bitrequest_polling.js
+        return
+    }
     if (is_scanning()) return
     glob_let.rpc_attempts = {};
+    glob_let.post_scan = true;
     const required_confirms = request.set_confirmations || 0,
         scan_params = { // request data object
             "request_timestamp": request.rq_init,
@@ -1288,18 +1294,18 @@ function after_scan_init(api_settings) {
             "pending": "scanning",
             "erc20": request.erc20,
             "cachetime": 20,
-            "source": "after_scan"
+            "source": "post_scan"
         };
-    after_scan(request, api_settings, scan_params);
+    post_scan(request, api_data, scan_params);
 }
 
 // Performs final transaction scan verification
-function after_scan(request_data, api_settings, scan_params) {
+function post_scan(request_data, api_data, scan_params) {
     if (glob_const.inframe) {
         loader(true);
         set_loader_text(tl("lookuppayment", {
             "currency": request_data.payment,
-            "blockexplorer": api_settings.name
+            "blockexplorer": api_data.name
         }));
     } else {
         if (helper.to_foreground) {
@@ -1308,12 +1314,12 @@ function after_scan(request_data, api_settings, scan_params) {
             hide_paymentdialog();
         }
     }
-    route_api_request(request_data, api_settings, scan_params);
-    socket_info(api_settings, true);
+    route_api_request(request_data, api_data, scan_params);
+    socket_info(api_data, true);
 }
 
 // Handles failed post-scan verification
-function cancel_after_scan() {
+function cancel_post_scan() {
     if (helper.to_foreground) {
         init_socket(helper.selected_socket, request.address, null, true);
         return
@@ -1620,6 +1626,8 @@ function set_scan_result(result) {
             handle_viewkey(result, payment_type);
         } else if (scan_subtype === "add_node") {
             handle_node_url(result);
+        } else if (scan_subtype === "xmrrpc") {
+            handle_xmrrpc(result);
         }
         window.history.back();
         return false
@@ -1700,6 +1708,48 @@ function handle_node_url(result) {
         return
     }
     $("#popup .formbox input#rpc_url_input").val(result);
+}
+
+// Validates Monero RPC URI
+function handle_xmrrpc(uri) {
+    const rpc_uri_obj = parse_monero_rpc_uri(uri);
+    if (rpc_uri_obj) {
+        const base_url = rpc_uri_obj.base_url;
+        if (base_url) {
+            const is_valid_entry = is_valid_url_or_ip(base_url);
+            if (is_valid_entry) {
+                $("#popup .formbox input#rpc_url_input").val(base_url);
+                return
+            }
+        }
+    }
+    popnotify("error", tl("invalidurl"));
+}
+
+// Get XMR RPC url
+function parse_monero_rpc_uri(uri) {
+    try {
+        // Replace custom protocol with http for parsing
+        const parsable_uri = uri.replace(/^xmrrpc:\/\//, "http://"),
+            url = new URL(parsable_uri),
+            username = url.username || "",
+            password = url.password || "",
+            host = url.hostname,
+            port = url.port || false,
+            port_string = port ? ":" + port : "",
+            base_url = "http://" + host + port_string,
+            label = url.searchParams.get("label") || "";
+        return {
+            base_url,
+            username,
+            password,
+            "label": decodeURIComponent(label),
+            "has_credentials": username !== "" && password !== ""
+        };
+    } catch (error) {
+        console.error("Failed to parse Monero RPC URI:", error);
+        return null;
+    }
 }
 
 // ** Helper Functions: **
@@ -2360,13 +2410,17 @@ function cpd_pollcheck() {
     if (q_obj(request, "received") !== true) {
         const request_timer = request.rq_timer,
             request_time = now_utc() - request_timer;
-        if (request_time > glob_const.after_scan_timeout) {
-            if (empty_obj(glob_let.sockets)) { // No afterscan when polling
+        if (request_time > glob_const.post_scan_timeout) {
+            if (request.payment === "monero") { // always do a post scan for monero
+                close_paymentdialog(true);
+                return
+            }
+            if (empty_obj(glob_let.sockets)) { // No post_scan when polling
                 close_paymentdialog();
                 return
             }
-            const afterscan = (request.address === "lnurl") ? false : true;
-            close_paymentdialog(afterscan);
+            const post_scan = (request.address === "lnurl") ? false : true;
+            close_paymentdialog(post_scan);
             return
         }
     }
@@ -2412,7 +2466,8 @@ function reset_paymentdialog() {
         request = null,
         helper = null,
         glob_let.l2s = {},
-        glob_let.apikey_fails = false;
+        glob_let.apikey_fails = false,
+        glob_let.post_scan = false;
     reset_overflow(); // reset overflow limits
     const socket_timeout = setTimeout(function() {
         close_socket();
@@ -3397,20 +3452,13 @@ function validate_address_vk(addr_data) {
         const viewkey_field = $("#addressform .vk_input"),
             vk_val = viewkey_field.val();
         if (inj(vk_val)) return
-        const viewkey_value = (currency === "monero" && viewkey_field.length) ? vk_val : 0,
+        const is_xmr = currency === "monero",
+            viewkey_value = (is_xmr && viewkey_field.length) ? vk_val : 0,
             viewkey_length = viewkey_value.length;
         if (viewkey_length) {
-            if (viewkey_length !== 64) {
+            const verify_vk = verify_viewkey(addr_value, viewkey_value);
+            if (!verify_vk) {
                 popnotify("error", tl("invalidvk"));
-                return
-            }
-            if (!check_vk(viewkey_value)) {
-                popnotify("error", tl("invalidvk"));
-                return
-            }
-            if (str_match(glob_let.vk, viewkey_value)) {
-                // vk already valid
-                validate_address(addr_data, viewkey_value);
                 return
             }
             const is_valid = check_address(addr_value, currency);
@@ -3421,38 +3469,14 @@ function validate_address_vk(addr_data) {
                 popnotify("error", error_msg);
                 return
             }
-            const api_payload = {
-                "address": addr_value,
-                "view_key": viewkey_value,
-                "create_account": true,
-                "generated_locally": false
-            };
-            api_proxy({
-                "api": "mymonero api",
-                "search": "login",
-                "params": {
-                    "method": "POST",
-                    "data": api_payload,
-                    "headers": {
-                        "Content-Type": "application/json"
-                    }
-                }
-            }).done(function(response) {
-                const api_data = br_result(response).result,
-                    api_error = api_data.Error;
-                if (api_error) {
-                    const error_msg = api_error || tl("invalidvk");
-                    popnotify("error", error_msg);
-                    return
-                }
-                const sync_height = api_data.start_height;
-                if (sync_height > -1) { // success!
-                    set_xmr_node_access(viewkey_value);
-                    validate_address(addr_data, viewkey_value);
-                }
-            }).fail(function(xhr, stat, err) {
-                popnotify("error", tl("errorvk"));
-            });
+            validate_address(addr_data, viewkey_value);
+            return
+        }
+        if (is_xmr) {
+            const vk_confirm = confirm(tl("continuevk"));
+            if (vk_confirm) {
+                validate_address(addr_data, false);
+            }
             return
         }
         validate_address(addr_data, false);
@@ -3461,13 +3485,26 @@ function validate_address_vk(addr_data) {
     popnotify("error", tl("pickacurrency"));
 }
 
+function verify_viewkey(address, viewkey) {
+    const regex = /^[0-9a-f]{64}$/i;
+    if (!regex.test(viewkey)) {
+        return false
+    }
+    try {
+        const decoded = cn_base_58.decode(address),
+            public_viewkey_from_address = decoded.slice(66, 130),
+            computed_public_viewkey = xmr_get_publickey(viewkey);
+        if (computed_public_viewkey === public_viewkey_from_address) {
+            return true
+        }
+        return false
+    } catch (e) {
+        return false
+    }
+}
+
 // Validates the address for the selected currency and handles the addition or editing of the address
 function validate_address(addr_data, view_key) {
-    if (view_key) {
-        if (glob_let.vk === null) {
-            glob_let.vk = view_key;
-        }
-    }
     const label_field = $("#addressform .addresslabel"),
         label_input = label_field.val();
     if (inj(label_input)) return
@@ -4447,17 +4484,6 @@ function dragend() {
 
 // ** URL & Link Handling: **
 
-// Stores Monero view key in session storage
-function set_xmr_node_access(view_key) {
-    const stored_keys = br_get_session("xmrvks", true);
-    if (stored_keys) {
-        stored_keys.push(view_key);
-        br_set_session("xmrvks", stored_keys, true);
-        return
-    }
-    br_set_session("xmrvks", [view_key], true);
-}
-
 // Processes and validates custom URL scheme handlers
 function check_intents(encoded_scheme) {
     if (encoded_scheme == "false") {
@@ -5093,7 +5119,7 @@ function append_coinsetting(currency, settings) {
 
 // Subtitle for settings
 function setting_sub_address(name, url, custom) {
-    const sub_title = (custom === true || name === "electrum") ? url || name : name || url;
+    const sub_title = (custom === true || name === "electrum" || name === "xmr_node") ? url || name : name || url;
     return exists(sub_title) ? truncate_middle(sub_title) : "";
 }
 

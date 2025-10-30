@@ -57,6 +57,7 @@ function lang_en(id, data) {
         "label": "label (optional)",
         "errorvk": "Error verifying Viewkey",
         "invalidvk": "Invalid Viewkey",
+        "continuevk": "Are you sure you want to continue without a viewkey? Without the viewkey transactions can not be monitored.",
         "novalidaddress": "is NOT a valid " + data.currency + " address.",
         "pickacurrency": "Pick a currency",
         "invalidlabel": "invalid label",

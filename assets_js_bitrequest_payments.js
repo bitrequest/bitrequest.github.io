@@ -31,6 +31,7 @@ $(document).ready(function() {
     //get_tokeninfo
     //get_tokeninfo_local
     //continue_request
+    //monero_setup
     //lightning_setup
     //lnd_put
     //test_lnd
@@ -454,6 +455,10 @@ function poll_animate() {
 
 // Initializes the payment process and validates request parameters
 function load_request(pass) {
+    if (glob_let.post_scan) { // wait till post_scan is finished
+        play_audio("funk");
+        return
+    }
     reset_overflow();
     glob_let.apikey_fails = false;
     if (is_openrequest() === true) { // prevent double load
@@ -780,11 +785,69 @@ function continue_request() {
     $.extend(request, extended_request_data);
     // Extend global helper object
     $.extend(helper, extended_helper_data);
-    if (payment_currency == "bitcoin") {
-        lightning_setup();
-    } else {
-        proceed_pf();
+    if (payment_currency === "monero" && view_key) {
+        monero_setup(api_details.data);
+        return
     }
+    if (payment_currency === "bitcoin") {
+        lightning_setup();
+        return
+    }
+    proceed_pf();
+}
+
+// Checks monero node connection by fetching latest block used for starting index
+function monero_setup(api_data) {
+    if (api_data) {
+        const node = api_data.url;
+        glob_let.rpc_attempts[sha_sub(node, 15)] = true;
+        set_loader_text("connecting to " + truncate_middle(node));
+        api_proxy({
+            "api_url": node + "/json_rpc",
+            "proxy": node.includes(".onion"),
+            "params": {
+                "method": "POST",
+                "contentType": "application/json",
+                "data": {
+                    "jsonrpc": "2.0",
+                    "id": "0",
+                    "method": "get_last_block_header"
+                },
+            }
+        }).done(function(e) {
+            const response = br_result(e).result;
+            if (response) {
+                const latest_block = q_obj(response, "result.block_header.height");
+                if (latest_block) {
+                    // set block index
+                    request.xmr_block_index = latest_block;
+                    if (api_data !== q_obj(helper, "api_info.data")) {
+                        // reset api data
+                        helper.api_info.data = api_data;
+                    }
+                    proceed_pf();
+                    return
+                }
+            }
+            monero_setup_fail(api_data);
+        }).fail(function(e) {
+            monero_setup_fail(api_data);
+        });
+    }
+}
+
+function monero_setup_fail(api_data) {
+    const next_rpc = get_next_rpc("monero", api_data);
+    if (next_rpc) {
+        monero_setup(next_rpc);
+        return
+    }
+    cancel_paymentdialog();
+    // show monero RPC dialog
+    $("#monero_settings .cc_settinglist li[data-id='apis']").trigger("click");
+    // Redirect to monero settings page
+    openpage("?p=monero_settings", "monero_settings", "loadpage");
+    closeloader();
 }
 
 // Configures Lightning Network payment settings and validates node credentials for incoming or local requests

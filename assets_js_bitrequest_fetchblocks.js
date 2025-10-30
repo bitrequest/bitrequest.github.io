@@ -4,9 +4,10 @@
 //blockchair_fetch
 //scan_layer2_transactions
 //initialize_monero_scan
+//set_mymonero_node_access
+//mymonero_node_access
 //scan_monero_transactions
 //validate_monero_payment_id
-//poll_monero_blockchair
 //initialize_bitcoin_scan
 //get_bitcoin_block_height
 //scan_bitcoin_transactions
@@ -57,8 +58,8 @@
 //bitcoin_rpc_data
 //infura_erc20_poll_data
 //infura_block_data
-//xmr_scan_data
-//blockchair_xmr_data
+//mymonero_tx_data
+//xmr_tx_data
 //nimiq_scan_data
 //kaspa_scan_data
 //kaspa_poll_fyi_data
@@ -898,22 +899,20 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
     }
 }
 
-// Initializes Monero transaction processing by selecting appropriate API path (Blockchair or MyMonero) based on payment state
-// Manages account creation and authentication with MyMonero service
-// Handles viewkey validation and node access verification for transaction scanning
+// Scan monero transactions using mymonero API / Poll transactions using node RPC
 function initialize_monero_scan(rd, api_data, rdo) {
-    if (rdo.pending === "polling") {
-        poll_monero_blockchair(rd, api_data, rdo); // use blockchair api for tx lookup
-        return
-    }
     const view_key = q_obj(rd, "viewkey.vk");
     if (!view_key) return
+    if (rdo.pending === "polling") { // assets_js_bitrequest_polling.js
+        poll_monero_rpc(rd, api_data, rdo); // use xmr node for tx lookup
+        return
+    }
     const viewkey = rd.viewkey;
-    if (xmr_node_access(view_key)) {
+    if (mymonero_node_access(view_key)) {
         scan_monero_transactions(rd, api_data, rdo, viewkey);
         return
     }
-    const wallet_address = view_key.account || rd.address,
+    const wallet_address = viewkey.account || rd.address,
         login_data = {
             "address": wallet_address,
             "view_key": view_key,
@@ -934,7 +933,7 @@ function initialize_monero_scan(rd, api_data, rdo) {
         const api_result = br_result(response).result;
         if (api_result) {
             if (api_result.start_height > -1) { // success!
-                set_xmr_node_access(view_key);
+                set_mymonero_node_access(view_key);
                 scan_monero_transactions(rd, api_data, rdo, viewkey);
                 return
             }
@@ -954,9 +953,31 @@ function initialize_monero_scan(rd, api_data, rdo) {
     });
 }
 
-// Executes Monero transaction lookup using MyMonero API with validated viewkey credentials
-// Processes and sorts transaction data chronologically to identify matching payments
-// Filters transactions based on payment IDs and timestamp validation
+// Stores Monero view key in session storage
+function set_mymonero_node_access(view_key) {
+    const stored_keys = br_get_session("xmrvks", true);
+    if (stored_keys) {
+        stored_keys.push(view_key);
+        br_set_session("xmrvks", stored_keys, true);
+        return
+    }
+    br_set_session("xmrvks", [view_key], true);
+}
+
+// Verifies if view key has existing authenticated session with Monero node
+function mymonero_node_access(vk) {
+    if (vk) {
+        const stored_keys = br_get_session("xmrvks", true);
+        if (stored_keys) {
+            if (stored_keys.includes(vk)) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
+// Look up incoming transactions using mymonero API
 function scan_monero_transactions(rd, api_data, rdo, viewkey) {
     const wallet_address = viewkey.account || rd.address,
         request_payload = {
@@ -979,9 +1000,9 @@ function scan_monero_transactions(rd, api_data, rdo, viewkey) {
         if (transactions) {
             let matched_tx = false;
             if (has_tx(transactions)) {
-                const sorted_txs = sort_transactions_by_date(xmr_scan_data, transactions);
+                const sorted_txs = sort_transactions_by_date(mymonero_tx_data, transactions);
                 $.each(sorted_txs, function(date, tx) {
-                    const tx_data = xmr_scan_data(tx, rdo.setconfirmations, "xmr", api_result.blockchain_height);
+                    const tx_data = mymonero_tx_data(tx, rdo.setconfirmations, api_result.blockchain_height);
                     if (tx_data) {
                         const pid_matches = validate_monero_payment_id(rd.xmr_ia, rd.payment_id, tx_data.payment_id); // match xmr payment_id if set
                         if (pid_matches) {
@@ -1018,60 +1039,6 @@ function validate_monero_payment_id(xmria, xmrpid, xmr_pid) {
         return xmrpid === xmr_pid;
     }
     return !xmrpid && !xmr_pid;
-}
-
-// Queries Blockchair API for Monero transaction verification using viewkey-based output scanning
-// Validates transaction outputs against provided transaction hash and address
-// Updates transaction UI and confirmation status based on blockchain data
-function poll_monero_blockchair(rd, api_data, rdo) {
-    const viewkey = rd.viewkey;
-    if (!viewkey) return
-    const tx_hash = rd.txhash,
-        is_integrated = rd.xmr_ia,
-        wallet_address = viewkey.account || rd.address,
-        view_key = viewkey.vk;
-    api_proxy({
-        "api_url": "https://api.blockchair.com/monero/raw/outputs?txprove=0&txhash=" + tx_hash + "&address=" + wallet_address + "&viewkey=" + view_key,
-        "cachetime": 25,
-        "cachefolder": "1h",
-        "proxy": true,
-        "params": {
-            "method": "GET"
-        }
-    }).done(function(response) {
-        const api_result = br_result(response).result;
-        let matched_tx = false;
-        if (api_result) {
-            const tx_data = api_result.data;
-            if (tx_data) {
-                const parsed_tx = blockchair_xmr_data(tx_data, rdo.setconfirmations);
-                if (parsed_tx.txhash === tx_hash && parsed_tx.ccval) {
-                    matched_tx = parsed_tx;
-                    if (rdo.source === "requests") {
-                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                        if (tx_item) {
-                            const tx_list = rdo.transactionlist;
-                            tx_list.append(tx_item.data(parsed_tx));
-                        }
-                    }
-                }
-                process_scan_results(rd, api_data, rdo, matched_tx);
-                return
-            }
-        }
-        handle_scan_failure(null, rd, api_data, rdo);
-    }).fail(function(xhr, stat, err) {
-        const is_proxy_error = is_proxy_fail(this.url),
-            error_data = xhr || stat || err;
-        handle_scan_failure({
-            "error": error_data,
-            "is_proxy": is_proxy_error
-        }, rd, api_data, rdo);
-    }).always(function() {
-        update_api_source(rdo, {
-            "name": "blockchair api"
-        });
-    });
 }
 
 // Routes blockchain.info API requests between address polling and transaction scanning with block height verification
@@ -1788,7 +1755,7 @@ function current_block_height(rd, api_data, rdo) {
 // Routes Electrum server API requests between address polling and block height verification for Bitcoin transactions
 function electrum_rpc_init(rd, api_data, rdo) {
     const source = rdo.source;
-    if (source === "addr_polling" || source === "after_scan") {
+    if (source === "addr_polling" || source === "post_scan") {
         electrum_rpc(rd, api_data, rdo);
         return
     }
@@ -1844,7 +1811,7 @@ function electrum_rpc(rd, api_data, rdo, latest_block) {
         rpc_url = api_data.url,
         pending = rdo.pending,
         cachetime = rdo.cachetime,
-        addr_polling = (source === "addr_polling" || source === "after_scan"),
+        addr_polling = (source === "addr_polling" || source === "post_scan"),
         endpoint = addr_polling ? "get_mempool" : "get_history";
     let matched_tx = false;
     if (pending === "scanning") { // scan incoming transactions on address
@@ -2944,8 +2911,8 @@ function infura_block_data(data, setconfirmations, ccsymbol, ts) {
     };
 }
 
-// Processes Monero transaction data with payment ID validation and piconero conversion
-function xmr_scan_data(data, setconfirmations, ccsymbol, latest_block) {
+// Processes myonero transaction data
+function mymonero_tx_data(data, setconfirmations, latest_block) {
     const tx_timestamp = to_ts(data.timestamp),
         transactiontime = tx_timestamp - glob_const.timezone;
     if (setconfirmations === "sort") {
@@ -2958,26 +2925,31 @@ function xmr_scan_data(data, setconfirmations, ccsymbol, latest_block) {
         "txhash": data.hash,
         confirmations,
         setconfirmations,
-        ccsymbol,
+        "ccsymbol": "xmr",
         "payment_id": data.payment_id || false
     };
 }
 
-// Handles Blockchair Monero data with output matching and payment ID tracking
-function blockchair_xmr_data(data, setconfirmations) {
+// Processes Monero node RPC transaction data
+function xmr_tx_data(data, setconfirmations) {
     function process_output_value(output) {
-        return output.match ? output.amount : 0;
+        return output.amount || 0;
     }
-    const transactiontime = normalize_timestamp(data.tx_timestamp),
-        total_output = calculate_total_outputs(data.outputs, null, process_output_value);
+    const total_output = calculate_total_outputs(data.outputs, null, process_output_value),
+        confirmations = data.confirmations || 0,
+        timestamp = data.block_timestamp,
+        transactiontime = timestamp ? timestamp * 1000 : now_utc(),
+        payment_id = data.payment_id,
+        double_spend = data.double_spend_seen;
     return {
         "ccval": total_output / 1e12,
         transactiontime,
         "txhash": data.tx_hash,
-        "confirmations": data.tx_confirmations || 0,
+        confirmations,
         setconfirmations,
         "ccsymbol": "xmr",
-        "payment_id": data.payment_id || false
+        payment_id,
+        double_spend
     };
 }
 

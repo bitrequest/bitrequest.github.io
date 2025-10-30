@@ -57,6 +57,7 @@ function lang_nl(id, data) {
         "label": "label (optioneel)",
         "errorvk": "Fout verificatie Viewkey",
         "invalidvk": "Ongeldige Viewkey",
+        "continuevk": "Weet u zeker dat u wilt doorgaan zonder viewkey? Zonder viewkey kunnen transacties niet worden gecontroleerd.",
         "novalidaddress": "is geen geldig " + data.currency + " adres.",
         "pickacurrency": "Kies een currency",
         "invalidlabel": "Ongeldig label",

@@ -5,10 +5,24 @@
 //clear_polling_timeout
 //start_address_monitor
 //check_address_transactions
-//connect_monero_node
-//xmr_node_access
-//start_monero_monitor
-//check_monero_transactions
+
+// ** Monero RPC: **
+//init_xmr_polling
+//connect_xmr_node
+//poll_xmr_mempool
+//xmr_pool_hashes
+//xmr_get_transactions
+//process_chunks_sequentially
+//handle_chunk_error
+//render_incoming_xmr
+//filter_incoming_transactions
+//poll_monero_rpc
+//xmr_post_scan
+//xmr_get_latest_block_hash
+//xmr_get_latest_block_by_hash
+//xmr_get_mempool_hashes
+//handle_xmr_rpc_fails
+
 //validate_confirmations
 //stop_monitors
 //stop_background_monitors
@@ -154,28 +168,75 @@ function check_address_transactions(rdo, api_data) {
     socket_info(api_data, true, true);
 }
 
-// Polling
+// Custom Polling
 
-// XMR Poll
+// Monero RPC
 
 // Establishes initial connection to Monero node with view key authentication
-function connect_monero_node(cachetime, address, vk) {
-    if (xmr_node_access(vk)) {
-        start_monero_monitor(cachetime, address, vk);
+function init_xmr_polling(api_dat, wallet_address, retry) {
+    const viewkey = request.viewkey || get_vk(wallet_address);
+    if (viewkey) {
+        const address = viewkey.account || wallet_address,
+            xmr_key = viewkey.vk,
+            api_data = api_dat || q_obj(helper, "api_info.data"),
+            node_name = api_data.name;
+        request.monitored = true;
+        closenotify();
+        if (node_name === "xmr_node") {
+            connect_xmr_node(api_data, address, xmr_key, retry);
+            return
+        }
+    }
+    request.monitored = false;
+    notify(tl("notmonitored"), 500000, "yes");
+    return
+}
+
+// Establishes initial connection to Monero node with view key authentication
+function connect_xmr_node(api_data, address, vk, retry) {
+    const timeout = retry ? 0 : 8000;
+    glob_let.xmr_pool = [];
+    socket_info({
+        "url": api_data.url
+    }, true, true);
+    if (timeout) {
+        glob_let.tpto = setTimeout(function() {
+            poll_xmr_mempool(api_data, address, vk);
+        }, timeout, function() {
+            clear_polling_timeout();
+        });
         return
     }
-    const payload = {
-        "address": address,
-        "view_key": vk,
-        "create_account": true,
-        "generated_locally": false
+    poll_xmr_mempool(api_data, address, vk, retry);
+}
+
+// Periodically checks the Monero mempool for incoming transactions.
+function poll_xmr_mempool(api_data, address, vk, retry) {
+    const spk = get_spend_pubkey_from_address(address);
+    if (retry) {
+        poll_animate();
+        xmr_pool_hashes(api_data, address, vk, spk)
     }
+    glob_let.pinging[address] = setInterval(function() {
+        try {
+            poll_animate();
+            xmr_pool_hashes(api_data, address, vk, spk);
+        } catch (err) {
+            console.error("error", err);
+            stop_background_monitors(address);
+        }
+    }, 12000); // poll every 12 seconds, be gentle on the host
+}
+
+// Fetches all transaction hashes currently in the Monero mempool.
+function xmr_pool_hashes(api_data, address, vk, spk) {
+    const api_rpc_url = api_data.url;
+    glob_let.rpc_attempts[sha_sub(api_rpc_url, 15)] = true;
     api_proxy({
-        "api": "mymonero api",
-        "search": "login",
+        "api_url": api_rpc_url + "/get_transaction_pool_hashes",
+        "proxy": api_rpc_url.includes(".onion"),
         "params": {
             "method": "POST",
-            "data": payload,
             "headers": {
                 "Content-Type": "application/json"
             }
@@ -183,121 +244,463 @@ function connect_monero_node(cachetime, address, vk) {
     }).done(function(e) {
         const response = br_result(e).result;
         if (response) {
-            const error_msg = response.Error;
-            if (error_msg) {
-                const error = error_msg || tl("invalidvk");
-                popnotify("error", error);
-                return
-            }
-            const start_height = response.start_height;
-            if (start_height > -1) { // success!
-                set_xmr_node_access(vk);
-                start_monero_monitor(cachetime, address, vk);
-                return
+            const txs_hashes = response.tx_hashes;
+            if (txs_hashes && txs_hashes.length > 0) {
+                xmr_get_transactions(api_data, txs_hashes, vk, spk);
             }
         }
-        notify(tl("notmonitored"), 500000, "yes");
     }).fail(function(xhr, stat, err) {
-        if (get_next_proxy()) {
-            connect_monero_node(cachetime, address, vk);
-            return
-        }
-        notify(tl("errorvk"));
+        handle_xmr_rpc_fails(api_data, address);
     });
 }
 
-// Verifies if view key has existing authenticated session with Monero node
-function xmr_node_access(vk) {
-    if (vk) {
-        const stored_keys = br_get_session("xmrvks", true);
-        if (stored_keys) {
-            if (stored_keys.includes(vk)) {
-                return true
-            }
-        }
+// Fetches and processes transaction details for a given list of hashes in chunks.
+function xmr_get_transactions(api_data, hashes, vk, spk) {
+    const config = {
+            "chunk_size": 50,
+            "delay_ms": 250, // Delay between chunks
+            "max_retries": 3, // Maximum retry attempts per chunk
+            "retry_delay_ms": 1000
+        },
+        xmr_pool = glob_let.xmr_pool,
+        filtered_hashes = (xmr_pool.length > 0) ? remove_array_items(hashes, xmr_pool) : hashes,
+        chunks = [],
+        fhl = filtered_hashes.length;
+    for (let i = 0; i < fhl; i += config.chunk_size) {
+        chunks.push(filtered_hashes.slice(i, i + config.chunk_size));
     }
-    return false
+    console.log("Total hashes: " + hashes.length);
+    console.log("Total filtered_hashes: " + fhl);
+    console.log("Number of chunks: " + chunks.length);
+    // Start processing
+    process_chunks_sequentially(api_data, chunks, vk, spk, config, 0, []);
 }
 
-// Creates periodic polling interval for Monero address monitoring
-function start_monero_monitor(cachetime, address, vk) {
-    const req_time = request.rq_init - 10000; // 10 second compensation
-    socket_info({
-        "url": "mymonero api"
-    }, true, true);
-    glob_let.pinging[address] = setInterval(function() {
-        try {
-            poll_animate();
-            check_monero_transactions(cachetime, address, vk, req_time);
-        } catch (err) {
-            console.error("error", err);
-            stop_background_monitors(address);
+// Sequentially processes chunks of transaction hashes with delays and retry logic.
+function process_chunks_sequentially(api_data, chunks, vk, spk, config, index, all_incoming, retry_count = 0) {
+    // Check if all chunks have been processed
+    if (index >= chunks.length) {
+        const total_length = all_incoming.length;
+        console.log("✓ All chunks processed!");
+        console.log("Total incoming transactions found: " + total_length);
+        if (total_length > 0) {
+            // Process all found transactions or just the first one
+            render_incoming_xmr(all_incoming, api_data, vk);
+            return
         }
-    }, 12000);
-}
-
-// Queries Monero node for new transactions using view key authentication
-function check_monero_transactions(cachetime, address, vk, request_ts) {
-    if (!is_openrequest()) { // only when request is visible
-        force_close_socket();
+        console.log("No incoming transactions found in mempool");
+        if (glob_let.post_scan) { // close dialog if post scan
+            cancel_post_scan();
+        }
         return
     }
-    const api_name = "mymonero api",
-        payload = {
-            "address": address,
-            "view_key": vk
-        };
+    // Add delay before each request (except the first one and retries)
+    const wait_time = (index === 0 || retry_count > 0) ? 0 : config.delay_ms;
+    setTimeout(() => {
+        const current_chunk = chunks[index],
+            attempt_info = retry_count > 0 ? " (Retry " + (retry_count / config.max_retries) + ")" : "",
+            api_rpc_url = api_data.url;
+        console.log("Processing chunk " + (index + 1) + "/" + chunks.length + " (" + current_chunk.length + " hashes) " + attempt_info);
+        api_proxy({
+            "api_url": api_data.url + "/get_transactions",
+            "proxy": api_rpc_url.includes(".onion"),
+            "params": {
+                "method": "POST",
+                "data": {
+                    "txs_hashes": current_chunk
+                },
+                "headers": {
+                    "Content-Type": "application/json"
+                }
+            }
+        }).done(function(e) {
+            const response = br_result(e).result;
+            if (response && response.txs) {
+                const incoming = filter_incoming_transactions(response, vk, spk);
+                if (incoming.length > 0) {
+                    console.log("✓ Chunk " + (index + 1) + " Found " + incoming.length + " incoming transaction(s)");
+                    all_incoming.push(...incoming);
+                    const ail = all_incoming.length;
+                    if (ail > 0) {
+                        console.log("Total incoming transactions found: " + ail);
+                        // Process the found transaction(s)
+                        render_incoming_xmr(all_incoming, api_data, vk);
+                        return
+                    }
+                } else {
+                    const existing_set = glob_let.xmr_pool,
+                        updated_set = add_unique_items(existing_set, current_chunk);
+                    glob_let.xmr_pool = updated_set;
+                    console.log("- Chunk " + (index + 1) + " : No incoming transactions");
+                }
+                // Success - move to next chunk
+                process_chunks_sequentially(api_data, chunks, vk, spk, config, index + 1, all_incoming, 0);
+            } else {
+                // Invalid response - treat as error
+                console.warn("⚠ Chunk " + (index + 1) + ": Invalid response format");
+                handle_chunk_error(api_data, chunks, vk, spk, config, index, all_incoming, retry_count, {
+                    "error": "Invalid response format"
+                });
+            }
+
+        }).fail(function(xhr, stat, err) {
+            console.error("✗ Chunk " + (index + 1) + " failed:", stat, err);
+            handle_chunk_error(api_data, chunks, vk, spk, config, index, all_incoming, retry_count, {
+                xhr,
+                stat,
+                err
+            });
+        });
+    }, wait_time);
+}
+
+// Manages errors during chunk processing, including retries and skipping.
+function handle_chunk_error(api_data, chunks, vk, spk, config, index, all_incoming, retry_count, error_info) {
+    // Check if we should retry
+    if (retry_count < config.max_retries) {
+        console.log("↻ Retrying chunk " + (index + 1) + " in " + config.retry_delay_ms + " ms...");
+        setTimeout(() => {
+            process_chunks_sequentially(api_data, chunks, vk, spk, config, index, all_incoming, retry_count + 1);
+        }, config.retry_delay_ms);
+
+    } else {
+        // Max retries reached - skip this chunk and continue
+        console.error("✗ Chunk " + (index + 1) + " failed after " + config.max_retries + " retries. Skipping...");
+        console.error("Error details:", error_info);
+        // Continue with next chunk
+        process_chunks_sequentially(api_data, chunks, vk, spk, config, index + 1, all_incoming, 0);
+    }
+}
+
+// Renders and handles verified incoming Monero transactions.
+function render_incoming_xmr(all_incoming, api_data, vk) {
+    const conf = q_obj(request, "set_confirmations") || 0,
+        incoming_count = all_incoming.length,
+        request_ts = request.rq_init - 10000; // 10 second compensation
+    let match = false,
+        tx_data = false;
+    all_incoming.forEach((tx, i) => {
+        console.log("Processing incoming transaction " + ((i + 1) / incoming_count));
+        const txdat = xmr_tx_data(tx, conf);
+        if (txdat.ccval && txdat.transactiontime > request_ts) {
+            match = true,
+                tx_data = txdat;
+            return false;
+        }
+    });
+    if (match) {
+        const tx_exists = get_requestli("txhash", tx_data.txhash); // scan pending xmr tx's to prevent duplicates
+        if (tx_exists.length) {
+            if (glob_let.post_scan) { // close dialog if post scan
+                cancel_post_scan();
+            }
+            return
+        }
+        const pid_matches = validate_monero_payment_id(request.xmr_ia, request.payment_id, tx_data.payment_id); // match xmr payment_id if set
+        if (pid_matches) {
+            if (glob_let.post_scan) { // reopen dialog if post scan
+                glob_const.html.addClass("blurmain_payment");
+                glob_const.paymentpopup.addClass("active");
+                closeloader();
+            }
+            stop_monitors(request.address);
+            setTimeout(() => {
+                start_transaction_monitor(tx_data, api_data);
+            }, 1000);
+        }
+    }
+}
+
+// Scans through transactions to find and verify outputs belonging to the user's view and spend keys.
+function filter_incoming_transactions(rpc_data, view_key, spend_pubkey) {
+    const incoming_txs = [];
+    rpc_data.txs.forEach((tx_data, idx) => {
+        const tx_hex = tx_data.as_hex;
+        if (tx_hex) {
+            try {
+                const tx_json = parse_xmr_tx_hex(tx_hex),
+                    rct = tx_json.rct_signatures;
+                if (rct) {
+                    if (!tx_json.extra || tx_json.extra.length < 33 || tx_json.extra[0] !== 1) {
+                        return
+                    }
+                    const tx_pub_key = bytes_to_hex(tx_json.extra.slice(1, 33)),
+                        r_point = xmr_getpoint(tx_pub_key),
+                        a_scalar = bytes_to_number_le(hex_to_bytes(view_key)),
+                        shared_secret_point = r_point.multiply(a_scalar).multiply(8n),
+                        shared_secret_hex = point_to_monero_hex(shared_secret_point),
+                        b_point = xmr_getpoint(spend_pubkey); // Spend public key point
+                    let outputs = [];
+                    tx_json.vout.forEach((output, output_index) => {
+                        const view_tag = output.target?.tagged_key?.view_tag;
+                        if (!view_tag) return
+                        // STEP 1: Check view tag (fast pre-check)
+                        const prefix_bytes_tag = str_to_bin("view_tag"),
+                            hash_input_for_tag = bytes_to_hex(concat_bytes(prefix_bytes_tag, hex_to_bytes(shared_secret_hex), encode_varint(output_index))),
+                            computed_tag = fasthash(hash_input_for_tag).slice(0, 2);
+                        if (computed_tag !== view_tag) return // View tag doesn't match
+                        // STEP 2: View tag matched - now verify the output public key
+                        const output_pubkey = output.target?.tagged_key?.key;
+                        if (!output_pubkey) return
+                        // Derive expected output key: P = hs(aR,i)G + B
+                        // Create derivation data: shared_secret + output_index
+                        const derivation_data = bytes_to_hex(concat_bytes(
+                                hex_to_bytes(shared_secret_hex),
+                                encode_varint(output_index)
+                            )),
+                            hash_result = fasthash(derivation_data),
+                            hs_bytes = sc_reduce32(hash_result),
+                            hs = bytes_to_number_le(hs_bytes),
+                            hs_g = xPoint.BASE.multiply(hs),
+                            expected_output_point = hs_g.add(b_point),
+                            expected_output_key = expected_output_point.toHex();
+                        // Compare with actual output key
+                        if (expected_output_key !== output_pubkey) {
+                            console.log("⚠ Output " + output_index + ": View tag matched but output key doesn't belong to us (false positive)");
+                            return // This output is not ours - it's a view tag collision
+                        }
+                        // Output is confirmed to be ours - now decode amount
+                        const parse_amount = decode_rct_amount(rct, output_index, shared_secret_hex);
+                        if (!parse_amount) {
+                            console.log("⚠ Output " + output_index + ": Could not decode amount");
+                            return
+                        }
+                        // Additional sanity check on amount
+                        if (parse_amount <= 0n || parse_amount > 18446744073709551615n) {
+                            console.log("⚠ Output " + output_index + ": Invalid amount " + parse_amount);
+                            return
+                        }
+                        const amount = parse_amount.toString();
+                        outputs.push({
+                            output_index,
+                            amount
+                        });
+                    });
+                    if (outputs.length > 0) {
+                        const fee = rct?.txnFee || 0,
+                            tx_result = {
+                                fee,
+                                ...tx_data,
+                                outputs
+                            };
+                        // Extract payment ID if present
+                        const payment_id_data = extract_xmr_payment_id(tx_json.extra, tx_pub_key, view_key);
+                        if (payment_id_data) {
+                            tx_result.payment_id = payment_id_data.payment_id;
+                            tx_result.payment_id_type = payment_id_data.type;
+                        }
+                        incoming_txs.push(tx_result);
+                    }
+                }
+            } catch (error) {
+                console.error("✗ Error parsing transaction:", error.message);
+            }
+        }
+    });
+    return incoming_txs;
+}
+
+// Polls the Monero RPC for a specific transaction hash to confirm its details.
+function poll_monero_rpc(rd, api_data, rdo) {
+    const viewkey = rd.viewkey,
+        tx_hash = rd.txhash,
+        vk = viewkey.vk,
+        spk = get_spend_pubkey_from_address(rd.address),
+        api_rpc_url = api_data.url;
     api_proxy({
-        "api": api_name,
-        "search": "get_address_txs",
+        "api_url": api_rpc_url + "/get_transactions",
+        "proxy": api_rpc_url.includes(".onion"),
         "params": {
             "method": "POST",
-            "data": payload,
+            "data": {
+                "txs_hashes": [tx_hash]
+            },
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }
+    }).done(function(response) {
+        const rpc_result = br_result(response).result;
+        let matched_tx = false;
+        if (rpc_result && rpc_result.txs) {
+            const incoming = filter_incoming_transactions(rpc_result, vk, spk),
+                parsed_tx = xmr_tx_data(incoming[0], rdo.setconfirmations);
+            if (parsed_tx.txhash === tx_hash && parsed_tx.ccval) {
+                matched_tx = parsed_tx;
+                if (rdo.source === "requests") {
+                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                    if (tx_item) {
+                        const tx_list = rdo.transactionlist;
+                        tx_list.append(tx_item.data(parsed_tx));
+                    }
+                }
+            }
+            process_scan_results(rd, api_data, rdo, matched_tx);
+            return
+        }
+        handle_scan_failure(null, rd, api_data, rdo);
+    }).fail(function(xhr, stat, err) {
+        const is_proxy_error = is_proxy_fail(this.url),
+            error_data = xhr || stat || err;
+        handle_scan_failure({
+            "error": error_data,
+            "is_proxy": is_proxy_error
+        }, rd, api_data, rdo);
+    }).always(function() {
+        update_api_source(rdo, api_data);
+    });
+}
+
+// Custom function for XMR post scan. Scanning last block in case tx was not found in mempool
+function xmr_post_scan(api_data) {
+    if (api_data.name !== "xmr_node") {
+        cancel_post_scan();
+        return
+    }
+    stop_monitors(request.address);
+    const viewkey = q_obj(request, "viewkey.vk");
+    if (viewkey) {
+        glob_let.post_scan = true;
+        if (glob_const.inframe) {
+            loader(true);
+            set_loader_text(tl("lookuppayment", {
+                "currency": "monero",
+                "blockexplorer": api_data.url
+            }));
+        } else {
+            if (helper.to_foreground) {
+                // don't hide paymentdialog
+            } else {
+                hide_paymentdialog();
+            }
+        }
+        xmr_get_latest_block_hash(api_data);
+        socket_info(api_data, true);
+        return
+    }
+    cancel_post_scan();
+}
+
+function xmr_get_latest_block_hash(api_data) {
+    const node = api_data.url;
+    let hash = false;
+    api_proxy({
+        "api_url": node + "/json_rpc",
+        "proxy": node.includes(".onion"),
+        "params": {
+            "method": "POST",
+            "contentType": "application/json",
+            "data": {
+                "jsonrpc": "2.0",
+                "id": "0",
+                "method": "get_last_block_header"
+            },
+        }
+    }).done(function(e) {
+        const response = br_result(e).result;
+        if (response) {
+            const latest_block_height = q_obj(response, "result.block_header.height"),
+                pre_start_index = request.xmr_block_index; // last block before start request
+            if (latest_block_height && pre_start_index) {
+                const start_index = pre_start_index + 1; // first potential block
+                if (latest_block_height >= start_index) {
+                    hash = q_obj(response, "result.block_header.hash");
+                }
+            }
+        }
+        xmr_get_latest_block_by_hash(api_data, hash);
+    }).fail(function(error) {
+        xmr_get_latest_block_by_hash(api_data, hash);
+    });
+}
+
+function xmr_get_latest_block_by_hash(api_data, hash) {
+    const viewkey = request.viewkey;
+    if (viewkey) {
+        const vk = viewkey.vk,
+            spk = get_spend_pubkey_from_address(viewkey.account);
+        if (vk && spk) {
+            if (hash) {
+                console.log("new block detected");
+                const node = api_data.url;
+                api_proxy({
+                    "api_url": node + "/json_rpc",
+                    "proxy": node.includes(".onion"),
+                    "params": {
+                        "method": "POST",
+                        "contentType": "application/json",
+                        "data": {
+                            "jsonrpc": "2.0",
+                            "id": "0",
+                            "method": "get_block",
+                            "params": {
+                                hash
+                            }
+                        },
+                    }
+                }).done(function(e) {
+                    const response = br_result(e).result;
+                    if (response) {
+                        const txs_hashes = q_obj(response, "result.tx_hashes");
+                        if (txs_hashes && txs_hashes.length > 0) {
+                            xmr_get_mempool_hashes(api_data, txs_hashes, vk, spk);
+                            return
+                        }
+                    }
+                    xmr_get_mempool_hashes(api_data, [], vk, spk);
+                }).fail(function(error) {
+                    xmr_get_mempool_hashes(api_data, [], vk, spk);
+                });
+                return
+            }
+            console.log("no new block detected");
+            xmr_get_mempool_hashes(api_data, [], vk, spk);
+        }
+        return
+    }
+    cancel_post_scan();
+}
+
+// include mempool in afterscan
+function xmr_get_mempool_hashes(api_data, txs_hashes, vk, spk) {
+    const node = api_data.url;
+    api_proxy({
+        "api_url": node + "/get_transaction_pool_hashes",
+        "proxy": node.includes(".onion"),
+        "params": {
+            "method": "POST",
             "headers": {
                 "Content-Type": "application/json"
             }
         }
     }).done(function(e) {
         const response = br_result(e).result;
-        if (response.Error) {
-            socket_info({
-                "url": api_name
-            }, false, true);
-            stop_monitors(address);
-            return
-        }
-        const txs = response.transactions;
-        if (!txs) return
-        socket_info({
-            "url": api_name
-        }, true, true);
-        const conf_required = q_obj(request, "set_confirmations") || 0,
-            txs_reversed = txs.reverse(),
-            recent_txs = txs_reversed.slice(0, 25); // get last 25 transactions
-        $.each(recent_txs, function(dat, value) {
-            const tx_data = xmr_scan_data(value, conf_required, "xmr", response.blockchain_height);
-            if (tx_data.ccval && tx_data.transactiontime > request_ts) {
-                const tx_exists = get_requestli("txhash", tx_data.txhash); // scan pending xmr tx's to prevent duplicates, mempool tx's don't have correct timestamps
-                if (tx_exists.length) {
-                    return false
-                }
-                stop_monitors(address);
-                start_transaction_monitor(tx_data, {
-                    "api": true,
-                    "name": "blockchair_xmr",
-                    "display": true
-                });
-                return false
+        if (response) {
+            const pool_hashes = response.tx_hashes;
+            if (pool_hashes && pool_hashes.length > 0) {
+                const all_hashes = pool_hashes.concat(txs_hashes);
+                xmr_get_transactions(api_data, all_hashes, vk, spk);
+                return
             }
-        });
-    }).fail(function() {
-        if (get_next_proxy()) {
-            check_monero_transactions(cachetime, address, vk, request_ts);
-            return
         }
-        stop_monitors(address);
-        notify(tl("websocketoffline"), 500000, "yes");
+        xmr_get_transactions(api_data, txs_hashes, vk, spk);
+    }).fail(function(error) {
+        xmr_get_transactions(api_data, txs_hashes, vk, spk);
     });
+}
+
+// Manages XMR mempool polling failures by attempting reconnection through fallback nodes
+function handle_xmr_rpc_fails(api_data, address) {
+    stop_monitors(address);
+    const next_rpc = get_next_rpc("monero", api_data);
+    if (next_rpc) {
+        init_xmr_polling(next_rpc, address, true);
+        return
+    }
+    socket_info(api_data, false);
+    request.monitored = false;
+    notify(tl("notmonitored"), 500000, "yes");
+    console.error("Socket error:", "unable to connect to " + api_data.url);
 }
 
 // Updates UI and payment status based on transaction confirmation count
@@ -376,49 +779,46 @@ function validate_confirmations(tx_data, direct, ln) {
                 }
                 status_panel.find("span.receivedfiat").text(" (" + received_amount + " " + current_currency + ")");
                 const exact_match = helper.exact,
-                    is_valid = crypto_symbol === "xmr" ? (received_formatted > (crypto_amount * 0.97) && received_formatted < (crypto_amount * 1.03)) : true; // error margin for xmr integrated addresses
-                if (is_valid) {
-                    const amount_valid = exact_match ? received_formatted === crypto_amount : received_formatted >= (crypto_amount * 0.97);
-                    if (amount_valid) {
-                        if (tx_confirms >= required_confirms || is_instant === true) {
-                            force_close_socket();
-                            play_audio("collect", payment);
-                            const status_msg = request_type === "incoming" ? tl("paymentsent") : tl("paymentreceived"),
-                                is_insufficient = payment_dialog.hasClass("insufficient"), // keep scanning when amount was insufficient
-                                insufficient_status = is_insufficient ? "pending" : "paid",
-                                insufficient_pending = is_insufficient ? "scanning" : "polling";
-                            payment_dialog.addClass("transacting").attr("data-status", "paid");
-                            status_header.text(status_msg);
-                            request.status = insufficient_status,
-                                request.pending = insufficient_pending;
-                            save_payment_request(direct, ln);
-                            $("span#ibstatus").fadeOut(500);
-                            closenotify();
-                            new_status = insufficient_status;
-                        } else {
-                            if (ln && request.status === "pending") {} else {
-                                payment_dialog.addClass("transacting").attr("data-status", "pending");
-                                const broadcast_msg = ln ? tl("waitingforpayment") : tl("txbroadcasted");
-                                status_header.text(broadcast_msg);
-                                request.status = "pending",
-                                    request.pending = "polling";
-                                save_payment_request(direct, ln);
-                            }
-                        }
-                        status_panel.find("#view_tx").attr("data-txhash", tx_hash);
-                        return new_status;
-                    }
-                    if (!exact_match) {
-                        status_header.text(tl("insufficientamount"));
-                        payment_dialog.addClass("transacting").attr("data-status", "insufficient");
-                        request.status = "insufficient",
-                            request.pending = "scanning";
+                    amount_valid = exact_match ? received_formatted === crypto_amount : received_formatted >= (crypto_amount * 0.97);
+                if (amount_valid) {
+                    if (tx_confirms >= required_confirms || is_instant === true) {
+                        force_close_socket();
+                        play_audio("collect", payment);
+                        const status_msg = request_type === "incoming" ? tl("paymentsent") : tl("paymentreceived"),
+                            is_insufficient = payment_dialog.hasClass("insufficient"), // keep scanning when amount was insufficient
+                            insufficient_status = is_insufficient ? "pending" : "paid",
+                            insufficient_pending = is_insufficient ? "scanning" : "polling";
+                        payment_dialog.addClass("transacting").attr("data-status", "paid");
+                        status_header.text(status_msg);
+                        request.status = insufficient_status,
+                            request.pending = insufficient_pending;
                         save_payment_request(direct, ln);
-                        status_panel.find("#view_tx").attr("data-txhash", tx_hash);
-                        new_status = "insufficient";
+                        $("span#ibstatus").fadeOut(500);
+                        closenotify();
+                        new_status = insufficient_status;
+                    } else {
+                        if (ln && request.status === "pending") {} else {
+                            payment_dialog.addClass("transacting").attr("data-status", "pending");
+                            const broadcast_msg = ln ? tl("waitingforpayment") : tl("txbroadcasted");
+                            status_header.text(broadcast_msg);
+                            request.status = "pending",
+                                request.pending = "polling";
+                            save_payment_request(direct, ln);
+                        }
                     }
-                    play_audio("funk");
+                    status_panel.find("#view_tx").attr("data-txhash", tx_hash);
+                    return new_status;
                 }
+                if (!exact_match) {
+                    status_header.text(tl("insufficientamount"));
+                    payment_dialog.addClass("transacting").attr("data-status", "insufficient");
+                    request.status = "insufficient",
+                        request.pending = "scanning";
+                    save_payment_request(direct, ln);
+                    status_panel.find("#view_tx").attr("data-txhash", tx_hash);
+                    new_status = "insufficient";
+                }
+                play_audio("funk");
             }
         }
         return new_status;
@@ -446,7 +846,7 @@ function stop_monitors(socket_id) {
 // Terminates all active polling intervals when background throttles
 function stop_background_monitors(socket_id) {
     if (!visible_tab()) { // check if app is in background
-        stop_monitors(socket_id)
+        stop_monitors(socket_id);
     }
 }
 

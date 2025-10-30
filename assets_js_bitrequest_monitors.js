@@ -287,10 +287,6 @@ function route_api_request(rd, api_data, rdo) {
 // Routes cryptocurrency requests to specific API endpoints based on provider capabilities
 function route_crypto_api(rd, api_data, rdo) {
     const provider = api_data.name;
-    if (provider === "mymonero api" || provider === "blockchair_xmr") {
-        initialize_monero_scan(rd, api_data, rdo);
-        return
-    }
     if (provider === "mempool.space") {
         mempoolspace_rpc_init(rd, api_data, rdo, false);
         return
@@ -319,12 +315,16 @@ function route_crypto_api(rd, api_data, rdo) {
         process_nimiq_transactions(rd, api_data, rdo);
         return
     }
+    if (provider === "dash.org") {
+        process_dash_transactions(rd, api_data, rdo);
+        return
+    }
     if (rd.payment === "kaspa") {
         initialize_kaspa_scan(rd, api_data, rdo);
         return
     }
-    if (provider === "dash.org") {
-        process_dash_transactions(rd, api_data, rdo);
+    if (rd.payment === "monero") {
+        initialize_monero_scan(rd, api_data, rdo);
         return
     }
     finalize_request_state(rdo);
@@ -342,6 +342,10 @@ function route_blockchain_rpc(rd, api_data, rdo) {
     }
     if (rd.payment === "nano") {
         nano_rpc(rd, api_data, rdo);
+        return
+    }
+    if (rd.payment === "monero") {
+        initialize_monero_scan(rd, api_data, rdo);
         return
     }
     finalize_request_state(rdo);
@@ -393,7 +397,7 @@ function process_scan_results(rd, api_data, rdo, tx_details, l2) {
                     return
                 }
             }
-            if (src === "after_scan") {
+            if (src === "post_scan") {
                 glob_const.html.addClass("blurmain_payment");
                 glob_const.paymentpopup.addClass("active");
                 closeloader();
@@ -419,8 +423,8 @@ function process_scan_results(rd, api_data, rdo, tx_details, l2) {
         finalize_request_state(rdo);
         return
     }
-    if (src === "after_scan") {
-        cancel_after_scan();
+    if (src === "post_scan") {
+        cancel_post_scan();
         return
     }
 }
@@ -571,9 +575,9 @@ function extract_error_details(error_obj, string) {
             "errormessage": error_obj
         }
     }
-    const errorcode = error_obj.code ?? error_obj.status ?? error_obj.error_obj_code ?? 0,
-        errormessage = error_obj.message ?? error_obj.error_obj_message ?? error_obj.responseText ?? error_obj.statusText ?? error_obj.type ?? error_obj.error_obj ?? error_obj.result ?? null,
-        api_key_check = (errormessage && typeof errormessage === 'string') ? (errormessage.indexOf("API Key") > -1 || errormessage.indexOf("API calls limits have been reached") > -1 || errormessage.indexOf("Limits reached") > -1) : false,
+    const errorcode = error_obj.code ?? error_obj.status ?? error_obj.error_obj_code ?? error_obj.error?.code ?? error_obj.error ?? 0,
+        errormessage = error_obj.message ?? error_obj.error_obj_message ?? error_obj.responseText ?? error_obj.statusText ?? error_obj.type ?? error_obj.error_obj ?? error_obj.result ?? error_obj.error?.message ?? error_obj.error ?? null,
+        api_key_check = (errormessage && typeof errormessage === "string") ? (errormessage.indexOf("API Key") > -1 || errormessage.indexOf("API calls limits have been reached") > -1 || errormessage.indexOf("Limits reached") > -1) : false,
         api_key = (
             errorcode === 101 || // fixer
             errorcode === 402 || // blockchair
@@ -648,8 +652,8 @@ function get_next_rpc(this_payment, api_data, request_id, l2) {
     const api_settings = cs_node(this_payment, "apis", true);
     if (api_settings) {
         const api_list = api_settings.apis,
-            rpc_list = api_settings.options;
-        combined_list = (rpc_list && rpc_list.length) ? $.merge(api_list, rpc_list) : api_list,
+            rpc_list = api_settings.options,
+            combined_list = (rpc_list && rpc_list.length) ? $.merge(api_list, rpc_list) : api_list,
             list_length = combined_list.length;
         if (combined_list && list_length) {
             const next_index = combined_list.findIndex(option => option.url === api_data.url),
@@ -675,8 +679,8 @@ function switch_rpc_endpoint(rd, rdo, next_rpc, timeout) {
         monitor_main_chain(rdo.txdat, next_rpc, true);
         return
     }
-    if (src === "after_scan") {
-        after_scan(rd, next_rpc, rdo);
+    if (src === "post_scan") {
+        post_scan(rd, next_rpc, rdo);
         return
     }
     route_api_request(rd, next_rpc, rdo);
@@ -692,10 +696,8 @@ function update_api_source(rdo, api_data) {
 // Updates UI with API source details and connection status indicators
 function display_api_source(current_list, api_data) {
     const api_url = api_data.url,
-        api_url_short = truncate_middle(api_url),
         provider_name = api_data.name,
-        api_title = provider_name === "mempool.space" ? api_url : provider_name === "electrum" ? get_string_before_last_colon(api_url_short) : provider_name,
-        api_source = api_title || api_url_short;
+        api_source = (provider_name === "mempool.space" || provider_name === "xmr_node" || provider_name === "electrum") ? api_url : provider_name;
     current_list.data("source", api_source).find(".api_source").html("<span class='src_txt' title='" + api_url + "'>" + tl("source") + ": " + truncate_middle(api_source, 15, 18, 41) + "</span><span class='icon-wifi-off'></span><span class='icon-connection'></span>");
 }
 

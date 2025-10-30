@@ -10,6 +10,8 @@
 //hex_to_number_string
 //hex_to_int
 //pad_binary
+//concat_bytes
+//encode_varint
 
 // ** SJCL Bitwise Operations: **
 //to_bits
@@ -193,6 +195,29 @@ function pad_binary(binary_str, target_length) {
         padded_str = "0" + padded_str;
     }
     return padded_str;
+}
+
+// Combines multiple byte arrays into a single continuous byte array
+function concat_bytes(...arrays) {
+    const total_length = arrays.reduce((acc, arr) => acc + arr.length, 0),
+        result = new Uint8Array(total_length);
+    let offset = 0;
+    for (const arr of arrays) {
+        result.set(arr, offset);
+        offset += arr.length;
+    }
+    return result;
+}
+
+// Encodes a number into variable-length byte format (larger numbers use more bytes)
+function encode_varint(n) {
+    const bytes = [];
+    while (n >= 0x80) {
+        bytes.push((n & 0x7f) | 0x80);
+        n >>= 7;
+    }
+    bytes.push(n);
+    return new Uint8Array(bytes);
 }
 
 // ** SJCL Bitwise Operations: **

@@ -282,14 +282,12 @@
 #rpc_list .selectarrows,
 #rpc_list .qrscanner {
     opacity: 0.5;
-    pointer-events: none;
     transition: opacity 1000ms ease;
 }
 
 #rpc_list.show_select .selectarrows,
 #rpc_list.show_select .qrscanner {
     opacity: 1;
-    pointer-events: all;
 }
 
 #rpc_input .c_stat {

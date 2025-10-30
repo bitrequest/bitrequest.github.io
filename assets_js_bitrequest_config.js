@@ -1301,14 +1301,6 @@ glob_config = {
                         "seed": true
                     },
                     {
-                        "name": "mymonero",
-                        "website": "https://mymonero.com",
-                        "appstore": "https://apps.apple.com/app/id1372508199",
-                        "playstore": null,
-                        "desktop": "https://github.com/mymonero/mymonero-app-js/releases",
-                        "seed": true
-                    },
-                    {
                         "name": "guiwallet",
                         "website": "https://www.getmonero.org",
                         "appstore": null,
@@ -1346,15 +1338,27 @@ glob_config = {
                 "apis": {
                     "icon": "sphere",
                     "selected": {
-                        "name": "mymonero api",
-                        "api": true,
+                        "name": "xmr_node",
+                        "url": "https://xmr.visnova.pl",
                         "display": true
                     },
                     "apis": [{
-                        "name": "mymonero api",
-                        "api": true,
-                        "display": true
-                    }]
+                            "name": "xmr_node",
+                            "url": "https://xmr.visnova.pl",
+                            "display": true
+                        },
+                        {
+                            "name": "xmr_node",
+                            "url": "https://xmr.surveillance.monster",
+                            "display": true
+                        },
+                        {
+                            "name": "xmr_node",
+                            "url": "https://xmr-node.cakewallet.com:18081",
+                            "display": true
+                        }
+                    ],
+                    "options": []
                 },
                 "Xpub": {
                     "active": true,
@@ -1901,8 +1905,8 @@ glob_config = {
         {
             "id": "themesettings",
             "heading": "Choose theme",
-               "selected": "default.css",
-               "icon": "icon-paint-format"
+            "selected": "default.css",
+            "icon": "icon-paint-format"
         },
         {
             "id": "heading",

@@ -57,6 +57,7 @@ function lang_fr(id, data) {
         "label": "étiquette (facultatif)",
         "errorvk": "Erreur lors de la vérification du Viewkey",
         "invalidvk": "Viewkey invalide",
+        "continuevk": "Êtes-vous sûr de vouloir continuer sans Viewkey ? Sans Viewkey, les transactions ne peuvent pas être surveillées.",
         "novalidaddress": "N'est pas une " + data.currency + " adresse valide.",
         "pickacurrency": "Choisissez une monnaie",
         "invalidlabel": "Étiquette invalide",
