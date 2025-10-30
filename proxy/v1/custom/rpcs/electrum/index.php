@@ -17,7 +17,7 @@ if (isset($pd_obj["fetch"])) {
 		echo json_encode($response);
 		return;
 	}
-	echo err_obj("411", "TOR not supported on " . $_SERVER["HTTP_HOST"]);
+	echo json_encode(err_obj("411", "TOR not supported on " . $_SERVER["HTTP_HOST"]));
 	return;
 }
 
