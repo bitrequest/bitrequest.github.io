@@ -1107,32 +1107,34 @@ function get_urlparameters(str) {
 }
 
 // Parses URL query string into object
+// MODIFIED - Parses URL query string into an object securely
 function parse_url_params(str) {
-    const has_xss = inj(str);
-    if (has_xss) {
-        return {
-            "xss": true
-        }
-    }
     const param_pairs = str.split("&"),
         param_obj = {};
-    param_pairs.forEach(function(pair) {
-        const key_val = pair.split("=");
-        param_obj[decodeURIComponent(key_val[0])] = decodeURIComponent(key_val[1]);
-    });
+    for (const pair of param_pairs) {
+        // Ensure there is a key-value pair
+        if (pair.indexOf("=") === -1) {
+            continue;
+        }
+        const key_val = pair.split("="),
+            decoded_key = decodeURIComponent(key_val[0]);
+        decoded_val = key_val[1] ? decodeURIComponent(key_val[1].replace(/\+/g, " ")) : "";
+        // Scan both the key and the value individually
+        if (inj(decoded_key) || inj(decoded_val)) {
+            return {
+                "xss": true
+            };
+        }
+        param_obj[decoded_key] = decoded_val;
+    }
     const data_param = param_obj.d,
         meta_param = param_obj.m;
-    if (data_param) {
-        const is_xss = scanmeta(data_param);
-        if (is_xss) {
-            param_obj.xss = true;
-        }
+
+    if (data_param && scanmeta(data_param)) {
+        param_obj.xss = true;
     }
-    if (meta_param) {
-        const is_xss = scanmeta(meta_param);
-        if (is_xss) {
-            param_obj.xss = true;
-        }
+    if (meta_param && scanmeta(meta_param)) {
+        param_obj.xss = true;
     }
     return param_obj;
 }
@@ -1199,8 +1201,14 @@ function inj(val) {
     if (!val) {
         return false;
     }
-    const value = typeof val === "string" ? val : String(val);
-    // Iterative URL decoding with max iterations for safety
+    const value = typeof val === "string" ? val : String(val),
+        is_likely_base64 = value.length > 200 && /^[A-Za-z0-9+/=]+$/.test(value);
+    if (is_likely_base64) {
+        try {
+            const decoded = atob(value);
+            return inj(decoded);
+        } catch (e) {}
+    }
     let url_decoded = value.replace(/\+/g, " "),
         prev = "",
         iterations = 0;
@@ -1214,30 +1222,21 @@ function inj(val) {
         }
         iterations++;
     }
-
-    // Decode HTML entities only if potential entities are present
     let entity_decoded = url_decoded;
     if (/&(#|[\w]+);/i.test(url_decoded)) {
         entity_decoded = decode_entities(url_decoded);
     }
-
-    // Expanded XSS pattern
     const xss_pattern = /<\s*[\/]?\s*(script|img|svg|iframe|object|details|embed|style|math|link|video|audio|form|input|button|marquee|isindex|body|meta|base|applet|param|frameset|frame)|on\w+\s*=|javascript:|vbscript:|data:text\/(html|javascript)|expression\(|href\s*=\s*["']?\s*javascript:|src\s*=\s*["']?\s*(javascript:|data:)|formaction\s*=\s*["']?\s*javascript:|action\s*=\s*["']?\s*javascript:|style\s*=.*(?:expression|url\(javascript:)|(alert|confirm|prompt|eval)\s*[\(\`]/i;
-
-    // Test patterns on original, URL-decoded, and entity-decoded values
     if (xss_pattern.test(value) || xss_pattern.test(url_decoded) || xss_pattern.test(entity_decoded)) {
         inj_alert(value);
         return true;
     }
-
-    // Encoded script pattern
     const encoded_script_pattern = /%3C\s*script|script\s*%3E|%3C\s*img|%3C\s*iframe|%3C\s*svg/i;
     if (encoded_script_pattern.test(value) || encoded_script_pattern.test(url_decoded)) {
         inj_alert(value);
         return true;
     }
 
-    // Base64 data URI check for suspicious MIME types, only if looks like data URI
     function check_base64(str) {
         const data_uri_regex = /data:(text\/(?:html|xml|xhtml)|application\/(?:xml|xhtml\+xml)|image\/svg\+xml|text\/javascript);base64,([A-Za-z0-9+/=]+)/i,
             match = str.match(data_uri_regex);
@@ -1259,8 +1258,6 @@ function inj(val) {
         inj_alert(value);
         return true;
     }
-
-    // Heuristic for heavy encoding
     const encoding_pattern = /(?:&#[xX]?\d+;|%[0-9a-fA-F]{2}){3,}/;
     if (encoding_pattern.test(value)) {
         inj_alert(value);
