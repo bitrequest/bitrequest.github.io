@@ -50,7 +50,7 @@ function edit_rpcnode() {
             placeholder_key = glob_let.ap_id + node_type + generate_random_number(1, 3),
             url_placeholder = get_rpc_placeholder(currency_name)[placeholder_key],
             btc_chain = is_btchain(currency_name) === true,
-            qr_id = (currency_name === "monero") ? "xmrrpc" : add_node,
+            qr_id = (currency_name === "monero") ? "xmrrpc" : "add_node",
             default_placeholder = "some.node:port",
             scan_btn = glob_let.hascam ? "<div class='qrscanner' data-currency='" + currency_name + "' data-id='" + qr_id + "' title='scan qr-code'><span class='icon-qrcode'></span></div>" : "<div class='selectarrows icon-menu2' data-pe='none'></div>",
             node_select = (currency_name === "monero" || btc_chain) ? scan_btn + "<div class='options'></div>" : "",
