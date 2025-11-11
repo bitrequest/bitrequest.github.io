@@ -3,10 +3,10 @@
 //process_ethereum_transactions 
 //blockchair_fetch
 //scan_layer2_transactions
-//initialize_monero_scan
-//set_mymonero_node_access
-//mymonero_node_access
-//scan_monero_transactions
+//monero_lws_login
+//set_monero_lws_node_access
+//monero_lws_node_access
+//monero_lws_get_address_txs
 //validate_monero_payment_id
 //initialize_bitcoin_scan
 //get_bitcoin_block_height
@@ -58,7 +58,7 @@
 //bitcoin_rpc_data
 //infura_erc20_poll_data
 //infura_block_data
-//mymonero_tx_data
+//monero_lws_tx_data
 //xmr_tx_data
 //nimiq_scan_data
 //kaspa_scan_data
@@ -899,8 +899,8 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
     }
 }
 
-// Scan monero transactions using mymonero API / Poll transactions using node RPC
-function initialize_monero_scan(rd, api_data, rdo) {
+// Scan monero transactions using monero_lws RPC / Poll transactions using node RPC
+function monero_lws_login(rd, api_data, rdo) {
     const view_key = q_obj(rd, "viewkey.vk");
     if (!view_key) return
     if (rdo.pending === "polling") { // assets_js_bitrequest_polling.js
@@ -908,23 +908,28 @@ function initialize_monero_scan(rd, api_data, rdo) {
         return
     }
     const viewkey = rd.viewkey;
-    if (mymonero_node_access(view_key)) {
-        scan_monero_transactions(rd, api_data, rdo, viewkey);
+    if (monero_lws_node_access(view_key)) {
+        monero_lws_get_address_txs(rd, api_data, rdo, viewkey);
         return
     }
     const wallet_address = viewkey.account || rd.address,
-        login_data = {
+        data = {
             "address": wallet_address,
             "view_key": view_key,
             "create_account": true,
             "generated_locally": false
-        };
+        },
+        xmr_block_index = rd.xmr_block_index;
+    if (xmr_block_index) {
+        data.start_height = xmr_block_index;
+    }
     api_proxy({
-        "api": "mymonero api",
+        "api": "monero_lws",
         "search": "login",
+        "proxy": true,
         "params": {
             "method": "POST",
-            "data": login_data,
+            data,
             "headers": {
                 "Content-Type": "application/json"
             }
@@ -932,11 +937,9 @@ function initialize_monero_scan(rd, api_data, rdo) {
     }).done(function(response) {
         const api_result = br_result(response).result;
         if (api_result) {
-            if (api_result.start_height > -1) { // success!
-                set_mymonero_node_access(view_key);
-                scan_monero_transactions(rd, api_data, rdo, viewkey);
-                return
-            }
+            set_monero_lws_node_access(view_key);
+            monero_lws_get_address_txs(rd, api_data, rdo, viewkey);
+            return
         }
         handle_scan_failure(null, rd, api_data, rdo);
     }).fail(function(xhr, stat, err) {
@@ -946,15 +949,11 @@ function initialize_monero_scan(rd, api_data, rdo) {
             "error": error_data,
             "is_proxy": is_proxy_error
         }, rd, api_data, rdo);
-    }).always(function() {
-        update_api_source(rdo, {
-            "name": "mymonero api"
-        });
     });
 }
 
 // Stores Monero view key in session storage
-function set_mymonero_node_access(view_key) {
+function set_monero_lws_node_access(view_key) {
     const stored_keys = br_get_session("xmrvks", true);
     if (stored_keys) {
         stored_keys.push(view_key);
@@ -965,7 +964,7 @@ function set_mymonero_node_access(view_key) {
 }
 
 // Verifies if view key has existing authenticated session with Monero node
-function mymonero_node_access(vk) {
+function monero_lws_node_access(vk) {
     if (vk) {
         const stored_keys = br_get_session("xmrvks", true);
         if (stored_keys) {
@@ -977,16 +976,20 @@ function mymonero_node_access(vk) {
     return false
 }
 
-// Look up incoming transactions using mymonero API
-function scan_monero_transactions(rd, api_data, rdo, viewkey) {
+// Look up incoming transactions using monero_lws RPC
+function monero_lws_get_address_txs(rd, api_data, rdo, viewkey) {
     const wallet_address = viewkey.account || rd.address,
         request_payload = {
             "address": wallet_address,
-            "view_key": viewkey.vk
+            "view_key": viewkey.vk,
+            "limit": 10
         };
     api_proxy({
-        "api": "mymonero api",
+        "api_url": br_proxy + "/monero_lws_proxy/",
         "search": "get_address_txs",
+        "cachetime": rdo.cachetime,
+        "cachefolder": "1h",
+        "proxy": true,
         "params": {
             "method": "POST",
             "data": request_payload,
@@ -1000,11 +1003,11 @@ function scan_monero_transactions(rd, api_data, rdo, viewkey) {
         if (transactions) {
             let matched_tx = false;
             if (has_tx(transactions)) {
-                const sorted_txs = sort_transactions_by_date(mymonero_tx_data, transactions);
+                const sorted_txs = sort_transactions_by_date(monero_lws_tx_data, transactions);
                 $.each(sorted_txs, function(date, tx) {
-                    const tx_data = mymonero_tx_data(tx, rdo.setconfirmations, api_result.blockchain_height);
+                    const tx_data = monero_lws_tx_data(tx, rdo.setconfirmations, api_result.blockchain_height);
                     if (tx_data) {
-                        const pid_matches = validate_monero_payment_id(rd.xmr_ia, rd.payment_id, tx_data.payment_id); // match xmr payment_id if set
+                        const pid_matches = validate_monero_payment_id(rd, tx_data); // match xmr payment_id if set
                         if (pid_matches) {
                             if (tx_data.ccval && tx_data.transactiontime > rdo.request_timestamp) {
                                 matched_tx = tx_data;
@@ -1030,15 +1033,25 @@ function scan_monero_transactions(rd, api_data, rdo, viewkey) {
         handle_scan_failure({
             "error": error_data
         }, rd, api_data, rdo);
+    }).always(function() {
+        update_api_source(rdo, {
+            "name": "monero-lws"
+        });
     });
 }
 
 // Performs Monero payment ID validation with integrated address support
-function validate_monero_payment_id(xmria, xmrpid, xmr_pid) {
-    if (xmria) {
-        return xmrpid === xmr_pid;
+function validate_monero_payment_id(rd, tx_data) {
+    if (rd.xmr_ia) {
+        const xmr_pid = tx_data.payment_id;
+        if (xmr_pid == "0000000000000000") { // sometimes monero-lws does not return payment id
+            const ccval = tx_data.ccval,
+                cc_amount = rd.cc_amount;
+            return (ccval > (cc_amount * 0.97) && ccval < (cc_amount * 1.03)); // error margin for xmr integrated addresses
+        }
+        return rd.payment_id === xmr_pid;
     }
-    return !xmrpid && !xmr_pid;
+    return true;
 }
 
 // Routes blockchain.info API requests between address polling and transaction scanning with block height verification
@@ -2911,8 +2924,8 @@ function infura_block_data(data, setconfirmations, ccsymbol, ts) {
     };
 }
 
-// Processes myonero transaction data
-function mymonero_tx_data(data, setconfirmations, latest_block) {
+// Processes monero_lws transaction data
+function monero_lws_tx_data(data, setconfirmations, latest_block) {
     const tx_timestamp = to_ts(data.timestamp),
         transactiontime = tx_timestamp - glob_const.timezone;
     if (setconfirmations === "sort") {

@@ -230,11 +230,12 @@ function poll_xmr_mempool(api_data, address, vk, retry) {
 
 // Fetches all transaction hashes currently in the Monero mempool.
 function xmr_pool_hashes(api_data, address, vk, spk) {
-    const api_rpc_url = api_data.url;
+    const api_rpc_url = api_data.url,
+        proxy = api_rpc_url.includes(".onion") || glob_const.inframe;
     glob_let.rpc_attempts[sha_sub(api_rpc_url, 15)] = true;
     api_proxy({
         "api_url": api_rpc_url + "/get_transaction_pool_hashes",
-        "proxy": api_rpc_url.includes(".onion"),
+        proxy,
         "params": {
             "method": "POST",
             "headers": {
@@ -299,11 +300,12 @@ function process_chunks_sequentially(api_data, chunks, vk, spk, config, index, a
     setTimeout(() => {
         const current_chunk = chunks[index],
             attempt_info = retry_count > 0 ? " (Retry " + (retry_count / config.max_retries) + ")" : "",
-            api_rpc_url = api_data.url;
+            api_rpc_url = api_data.url,
+            proxy = api_rpc_url.includes(".onion") || glob_const.inframe;
         console.log("Processing chunk " + (index + 1) + "/" + chunks.length + " (" + current_chunk.length + " hashes) " + attempt_info);
         api_proxy({
             "api_url": api_data.url + "/get_transactions",
-            "proxy": api_rpc_url.includes(".onion"),
+            proxy,
             "params": {
                 "method": "POST",
                 "data": {
@@ -396,7 +398,7 @@ function render_incoming_xmr(all_incoming, api_data, vk) {
             }
             return
         }
-        const pid_matches = validate_monero_payment_id(request.xmr_ia, request.payment_id, tx_data.payment_id); // match xmr payment_id if set
+        const pid_matches = validate_monero_payment_id(request, tx_data); // match xmr payment_id if set
         if (pid_matches) {
             if (glob_let.post_scan) { // reopen dialog if post scan
                 glob_const.html.addClass("blurmain_payment");
@@ -506,10 +508,11 @@ function poll_monero_rpc(rd, api_data, rdo) {
         tx_hash = rd.txhash,
         vk = viewkey.vk,
         spk = get_spend_pubkey_from_address(rd.address),
-        api_rpc_url = api_data.url;
+        api_rpc_url = api_data.url,
+        proxy = api_rpc_url.includes(".onion") || glob_const.inframe;
     api_proxy({
         "api_url": api_rpc_url + "/get_transactions",
-        "proxy": api_rpc_url.includes(".onion"),
+        proxy,
         "params": {
             "method": "POST",
             "data": {
@@ -582,11 +585,12 @@ function xmr_post_scan(api_data) {
 }
 
 function xmr_get_latest_block_hash(api_data) {
-    const node = api_data.url;
+    const node = api_data.url,
+        proxy = node.includes(".onion") || glob_const.inframe;
     let hash = false;
     api_proxy({
         "api_url": node + "/json_rpc",
-        "proxy": node.includes(".onion"),
+        proxy,
         "params": {
             "method": "POST",
             "contentType": "application/json",
@@ -622,10 +626,11 @@ function xmr_get_latest_block_by_hash(api_data, hash) {
         if (vk && spk) {
             if (hash) {
                 console.log("new block detected");
-                const node = api_data.url;
+                const node = api_data.url,
+                    proxy = node.includes(".onion") || glob_const.inframe;
                 api_proxy({
                     "api_url": node + "/json_rpc",
-                    "proxy": node.includes(".onion"),
+                    proxy,
                     "params": {
                         "method": "POST",
                         "contentType": "application/json",
@@ -663,10 +668,11 @@ function xmr_get_latest_block_by_hash(api_data, hash) {
 
 // include mempool in afterscan
 function xmr_get_mempool_hashes(api_data, txs_hashes, vk, spk) {
-    const node = api_data.url;
+    const node = api_data.url,
+        proxy = node.includes(".onion") || glob_const.inframe;
     api_proxy({
         "api_url": node + "/get_transaction_pool_hashes",
-        "proxy": node.includes(".onion"),
+        proxy,
         "params": {
             "method": "POST",
             "headers": {

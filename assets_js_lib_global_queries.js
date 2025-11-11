@@ -12,6 +12,7 @@ const br_bipobj = br_get_local("bpdat", true),
     br_init = br_get_local("init", true),
     br_io = get_default_object(br_init, true),
     br_hostname = "bitrequest.github.io", // change if self hosted
+    br_proxy = "https://www.bitrequest.app",
     br_localhostname = (br_hostname.indexOf("http") > -1) ? br_hostname.split("://").pop() : br_hostname,
     br_approot = "https://" + br_localhostname + "/",
     br_proxy_list = [{
@@ -25,7 +26,7 @@ const br_bipobj = br_get_local("bpdat", true),
             "tor": false
         },
         {
-            "proxy": "https://www.bitrequest.app",
+            "proxy": br_proxy,
             "display": true,
             "tor": true
         }
@@ -48,7 +49,7 @@ const br_bipobj = br_get_local("bpdat", true),
     br_thishostname = br_w_loc.hostname,
     br_hostlocation = (br_thishostname === "" || br_thishostname === "localhost" || br_thishostname === "127.0.0.1") ? "local" :
     (br_thishostname === "bitrequest.github.io") ? "hosted" :
-    (br_thishostname === br_thishostname) ? "selfhosted" : "unknown",
+    (br_thishostname === br_hostname) ? "selfhosted" : "unknown",
     br_video = $("#qr-video")[0],
     init_qrscanner = br_hostlocation === "local" ? false : new QrScanner(br_video, result => set_scan_result(result), error => {
         console.log(error);

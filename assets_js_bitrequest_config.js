@@ -1171,14 +1171,14 @@ glob_config = {
                     "icon": "sphere",
                     "selected": {
                         "name": "bitrequest.app",
-                        "url": "https://www.bitrequest.app:8020",
+                        "url": br_proxy + ":8020",
                         "username": "",
                         "password": "",
                         "display": true
                     },
                     "apis": [{
                             "name": "bitrequest.app",
-                            "url": "https://www.bitrequest.app:8020",
+                            "url": br_proxy + ":8020",
                             "username": "",
                             "password": "",
                             "display": true
@@ -1339,10 +1339,15 @@ glob_config = {
                     "icon": "sphere",
                     "selected": {
                         "name": "xmr_node",
-                        "url": "https://xmr.visnova.pl",
+                        "url": "https://node.bitrequest.app:18090",
                         "display": true
                     },
                     "apis": [{
+                            "name": "xmr_node",
+                            "url": "https://node.bitrequest.app:18090",
+                            "display": true
+                        },
+                        {
                             "name": "xmr_node",
                             "url": "https://xmr.visnova.pl",
                             "display": true
@@ -2191,8 +2196,8 @@ glob_config = {
             "sign_up": "https://firebase.google.com/"
         },
         {
-            "name": "mymonero api",
-            "base_url": "https://api.mymonero.com/",
+            "name": "monero_lws",
+            "base_url": br_proxy + ":8050/",
             "key_param": null,
             "api_key": "no_key",
             "sign_up": null

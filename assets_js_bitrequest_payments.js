@@ -799,12 +799,13 @@ function continue_request() {
 // Checks monero node connection by fetching latest block used for starting index
 function monero_setup(api_data) {
     if (api_data) {
-        const node = api_data.url;
+        const node = api_data.url,
+            proxy = node.includes(".onion") || glob_const.inframe;
         glob_let.rpc_attempts[sha_sub(node, 15)] = true;
         set_loader_text("connecting to " + truncate_middle(node));
         api_proxy({
             "api_url": node + "/json_rpc",
-            "proxy": node.includes(".onion"),
+            proxy,
             "params": {
                 "method": "POST",
                 "contentType": "application/json",
