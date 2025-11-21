@@ -21,6 +21,7 @@ $(document).ready(function() {
     // ** Settings Management: **
     edit_l2_init();
     //edit_l2
+    //has_contracts
     pick_l2_select();
     toggle_l2_services();
     save_layer2_settings();
@@ -376,6 +377,10 @@ function edit_l2_init() {
 
 // Handles Layer 2 settings UI interaction
 function edit_l2(thiscurrency, l2_contacts) {
+    if (!(has_contracts(l2_contacts))) {
+        play_audio("funk");
+        return
+    }
     const l2_options = get_layer2_config(thiscurrency),
         eth_settings = get_coinsettings(thiscurrency),
         eth_l2_settings = q_obj(eth_settings, "layer2.options");
@@ -405,81 +410,81 @@ function edit_l2(thiscurrency, l2_contacts) {
                         selected_network = l2;
                     }
                     $.each(l2_dat, function(k, v) {
-                            const selected = v.selected
-                            if (k === "selected") return
-                            const apis = v.apis,
-                                select_name = k === "apis" ? select.apis : select.websockets,
-                                select_val = select_name || selected.name,
-                                api_push = [];
-                            $.each(apis, function(i, v2) {
-                                const node_name = v2.name,
-                                    node_icon_url = get_node_icon(node_name),
-                                    node_icon = (node_icon_url) ? "<img src='" + fetch_aws(node_icon_url) + ".png' class='icon'/>" : "";
-                                api_push.push({
-                                    "span": {
-                                        "class": "optionwrap",
-                                        "data-pe": "none",
-                                        "attr": add_prefix_to_keys(v2),
-                                        "content": node_icon + node_name
-                                    }
-                                });
-                            });
-                            s_boxes.push({
-                                "div": {
-                                    "class": "l2_apis",
-                                    "attr": {
-                                        "data-type": k
-                                    },
-                                    "content": [{
-                                        "h3": {
-                                            "content": k
-                                        },
-                                        "div": {
-                                            "class": "selectbox",
-                                            "content": [{
-                                                    "input": {
-                                                        "attr": {
-                                                            "type": "text",
-                                                            "value": select_val,
-                                                            "placeholder": tl("layer2"),
-                                                            "readonly": "readonly"
-                                                        },
-                                                        "close": true
-                                                    },
-                                                    "div": {
-                                                        "class": "selectarrows icon-menu2",
-                                                        "attr": {
-                                                            "data-pe": "none"
-                                                        }
-                                                    }
-                                                },
-                                                {
-                                                    "div": {
-                                                        "class": "options",
-                                                        "content": api_push
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    }]
+                        if (k === "selected") return
+                        const selected = v.selected,
+                            apis = v.apis,
+                            select_name = k === "apis" ? select.apis : select.websockets,
+                            select_val = select_name || selected.name,
+                            api_push = [];
+                        $.each(apis, function(i, v2) {
+                            const node_name = v2.name,
+                                node_icon_url = get_node_icon(node_name),
+                                node_icon = (node_icon_url) ? "<img src='" + fetch_aws(node_icon_url) + ".png' class='icon'/>" : "";
+                            api_push.push({
+                                "span": {
+                                    "class": "optionwrap",
+                                    "data-pe": "none",
+                                    "attr": add_prefix_to_keys(v2),
+                                    "content": node_icon + node_name
                                 }
                             });
-                        }),
-                        l2_contents = "<img src='" + fetch_aws(l2_class) + ".png' class='icon'/>" + l2;
-                    networks.push({
-                            "span": {
-                                "class": "optionwrap",
-                                "data-pe": "none",
-                                "content": l2_contents
-                            }
-                        }),
-                        toggle = nw_selected ? "show_abi " : "",
-                        apibox.push({
+                        });
+                        s_boxes.push({
                             "div": {
-                                "class": "apibox_item " + toggle + l2_class,
-                                "content": s_boxes
+                                "class": "l2_apis",
+                                "attr": {
+                                    "data-type": k
+                                },
+                                "content": [{
+                                    "h3": {
+                                        "content": k
+                                    },
+                                    "div": {
+                                        "class": "selectbox",
+                                        "content": [{
+                                                "input": {
+                                                    "attr": {
+                                                        "type": "text",
+                                                        "value": select_val,
+                                                        "placeholder": tl("layer2"),
+                                                        "readonly": "readonly"
+                                                    },
+                                                    "close": true
+                                                },
+                                                "div": {
+                                                    "class": "selectarrows icon-menu2",
+                                                    "attr": {
+                                                        "data-pe": "none"
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "div": {
+                                                    "class": "options",
+                                                    "content": api_push
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }]
                             }
                         });
+                    });
+                    const l2_contents = "<img src='" + fetch_aws(l2_class) + ".png' class='icon'/>" + l2,
+                        toggle = nw_selected ? "show_abi " : "";
+                    networks.push({
+                        "span": {
+                            "class": "optionwrap",
+                            "data-pe": "none",
+                            "content": l2_contents
+                        }
+                    });
+                    apibox.push({
+                        "div": {
+                            "class": "apibox_item " + toggle + l2_class,
+                            "content": s_boxes
+                        }
+                    });
                 }
             }
         });
@@ -543,6 +548,14 @@ function edit_l2(thiscurrency, l2_contacts) {
             });
         popdialog(content, "triggersubmit");
     }
+}
+
+function has_contracts(obj) {
+    if (obj === null || typeof obj !== "object" || Array.isArray(obj)) {
+        return false;
+    }
+    const keys = Object.keys(obj);
+    return keys.length >= 2;
 }
 
 // Updates UI elements based on selected l2 network
