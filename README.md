@@ -41,5 +41,5 @@ Create and share payment requests for cryptocurrencies. Non-custodial, client-si
 * __Permissions:__ Admin or Cashier mode.  
 * __Team invite:__ Invite members for restricted (cashier) access to shared addresses.  
 * __Lightning:__ LND/LNbits nodes, LNURL/Boltcard/NFC integration.  
-* __Ethereum L2:__ Arbitrum, Polygon, BNB Smart Chain support.  
+* __Ethereum L2:__ Base, Arbitrum one, Polygon pos, Binance Smart Chain support.  
 * __QR Scanner:__ For addresses, viewkeys, nodes, LN connects.

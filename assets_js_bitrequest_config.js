@@ -64,6 +64,128 @@ const glob_multi_wallets = {
         "seed": true
     }
 },
+ethl2s = {
+    "arbitrum one": {
+        "selected": false,
+        "apis": {
+            "icon": "sphere",
+            "selected": {
+                "network": "arbitrum one",
+                "name": "alchemy",
+                "url": glob_const.arbitrum_alchemy_node,
+                "api": true,
+                "display": true
+            },
+            "apis": [{
+                    "network": "arbitrum one",
+                    "name": "alchemy",
+                    "url": glob_const.arbitrum_alchemy_node,
+                    "api": true,
+                    "display": true
+                },
+                {
+                    "network": "arbitrum one",
+                    "name": "etherscan",
+                    "url": "etherscan.io",
+                    "api": true,
+                    "display": true
+                },
+                {
+                    "network": "arbitrum one",
+                    "name": "infura",
+                    "url": glob_const.main_arbitrum_node,
+                    "api": true,
+                    "display": true
+                }
+            ]
+        },
+        "websockets": {
+            "icon": "tab",
+            "selected": {
+                "network": "arbitrum one",
+                "name": "infura",
+                "url": glob_const.main_arbitrum_socket,
+                "api": true,
+                "display": true
+            },
+            "apis": [{
+                    "network": "arbitrum one",
+                    "name": "infura",
+                    "url": glob_const.main_arbitrum_socket,
+                    "api": true,
+                    "display": true
+                },
+                {
+                    "network": "arbitrum one",
+                    "name": "alchemy",
+                    "url": glob_const.arbitrum_alchemy_node,
+                    "api": true,
+                    "display": true
+                },
+                {
+                    "network": "arbitrum one",
+                    "name": "etherscan",
+                    "url": "etherscan.io",
+                    "api": true,
+                    "display": true
+                }
+            ]
+        }
+    },
+    "base": {
+        "selected": false,
+        "apis": {
+            "icon": "sphere",
+            "selected": {
+                "network": "base",
+                "name": "alchemy",
+                "url": glob_const.base_alchemy_node,
+                "api": true,
+                "display": true
+            },
+            "apis": [{
+                    "network": "base",
+                    "name": "alchemy",
+                    "url": glob_const.base_alchemy_node,
+                    "api": true,
+                    "display": true
+                },
+                {
+                    "network": "base",
+                    "name": "etherscan",
+                    "url": "etherscan.io",
+                    "api": true,
+                    "display": true
+                }
+            ]
+        },
+        "websockets": {
+            "icon": "tab",
+            "selected": {
+                "network": "base",
+                "name": "alchemy",
+                "url": glob_const.base_alchemy_node,
+                "api": true,
+                "display": true
+            },
+            "apis": [{
+                    "network": "base",
+                    "name": "alchemy",
+                    "url": glob_const.base_alchemy_node,
+                    "api": true,
+                    "display": true
+                },
+                {
+                    "network": "base",
+                    "name": "etherscan",
+                    "url": "etherscan.io",
+                    "api": true,
+                    "display": true
+                }
+            ]
+        }
+    }
+},
 soundbytes = {
     "icon": "volume-medium",
     "selected": "collect",
@@ -923,12 +1045,18 @@ glob_config = {
                 "apis": {
                     "icon": "sphere",
                     "selected": {
-                        "name": "etherscan",
-                        "url": "etherscan.io",
+                        "name": "alchemy",
+                        "url": glob_const.main_alchemy_node,
                         "api": true,
                         "display": true
                     },
                     "apis": [{
+                            "name": "alchemy",
+                            "url": glob_const.main_alchemy_node,
+                            "api": true,
+                            "display": true
+                        },
+                        {
                             "name": "etherscan",
                             "url": "etherscan.io",
                             "api": true,
@@ -976,112 +1104,8 @@ glob_config = {
                     "icon": "new-tab",
                     "selected": false,
                     "options": {
-                        "arbitrum": {
-                            "selected": false,
-                            "apis": {
-                                "icon": "sphere",
-                                "selected": {
-                                    "network": "arbitrum",
-                                    "name": "etherscan",
-                                    "url": "etherscan.io",
-                                    "api": true,
-                                    "display": true
-                                },
-                                "apis": [{
-                                        "network": "arbitrum",
-                                        "name": "etherscan",
-                                        "url": "etherscan.io",
-                                        "api": true,
-                                        "display": true
-                                    },
-                                    {
-                                        "network": "arbitrum",
-                                        "name": "arbiscan",
-                                        "url": "arbiscan.io",
-                                        "api": true,
-                                        "display": true
-                                    }
-                                ]
-                            },
-                            "websockets": {
-                                "icon": "tab",
-                                "selected": {
-                                    "network": "arbitrum",
-                                    "name": "etherscan",
-                                    "url": "etherscan.io",
-                                    "api": true,
-                                    "display": true
-                                },
-                                "apis": [{
-                                        "network": "arbitrum",
-                                        "name": "etherscan",
-                                        "url": "etherscan.io",
-                                        "api": true,
-                                        "display": true
-                                    },
-                                    {
-                                        "network": "arbitrum",
-                                        "name": "arbiscan",
-                                        "url": "arbiscan.io",
-                                        "api": true,
-                                        "display": true
-                                    }
-                                ]
-                            }
-                        },
-                        "polygon": {
-                            "selected": false,
-                            "apis": {
-                                "icon": "sphere",
-                                "selected": {
-                                    "network": "polygon",
-                                    "name": "etherscan",
-                                    "url": "etherscan.io",
-                                    "api": true,
-                                    "display": true
-                                },
-                                "apis": [{
-                                        "network": "polygon",
-                                        "name": "etherscan",
-                                        "url": "etherscan.io",
-                                        "api": true,
-                                        "display": true
-                                    },
-                                    {
-                                        "network": "polygon",
-                                        "name": "polygonscan",
-                                        "url": "polygonscan.com",
-                                        "api": true,
-                                        "display": true
-                                    }
-                                ]
-                            },
-                            "websockets": {
-                                "icon": "tab",
-                                "selected": {
-                                    "network": "polygon",
-                                    "name": "etherscan",
-                                    "url": "etherscan.io",
-                                    "api": true,
-                                    "display": true
-                                },
-                                "apis": [{
-                                        "network": "polygon",
-                                        "name": "etherscan",
-                                        "url": "etherscan.io",
-                                        "api": true,
-                                        "display": true
-                                    },
-                                    {
-                                        "network": "polygon",
-                                        "name": "polygonscan",
-                                        "url": "polygonscan.com",
-                                        "api": true,
-                                        "display": true
-                                    }
-                                ]
-                            }
-                        }
+                        "arbitrum one": ethl2s["arbitrum one"],
+                        "base": ethl2s.base
                     }
                 },
                 "Xpub": {
@@ -1620,12 +1644,18 @@ glob_config = {
             "apis": {
                 "icon": "sphere",
                 "selected": {
-                    "name": "ethplorer",
-                    "url": "ethplorer.io",
+                    "name": "alchemy",
+                    "url": glob_const.main_alchemy_node,
                     "api": true,
                     "display": true
                 },
                 "apis": [{
+                        "name": "alchemy",
+                        "url": glob_const.main_alchemy_node,
+                        "api": true,
+                        "display": true
+                    },
+                    {
                         "name": "ethplorer",
                         "url": "ethplorer.io",
                         "api": true,
@@ -1667,100 +1697,34 @@ glob_config = {
                 "icon": "new-tab",
                 "selected": false,
                 "options": {
-                    "arbitrum": {
+                    "arbitrum one": ethl2s["arbitrum one"],
+                    "polygon pos": {
                         "selected": false,
                         "apis": {
                             "icon": "sphere",
                             "selected": {
-                                "network": "arbitrum",
-                                "name": "etherscan",
-                                "url": "etherscan.io",
+                                "network": "polygon pos",
+                                "name": "alchemy",
+                                "url": glob_const.polygon_alchemy_node,
                                 "api": true,
                                 "display": true
                             },
                             "apis": [{
-                                    "network": "arbitrum",
+                                    "network": "polygon pos",
+                                    "name": "alchemy",
+                                    "url": glob_const.polygon_alchemy_node,
+                                    "api": true,
+                                    "display": true
+                                },
+                                {
+                                    "network": "polygon pos",
                                     "name": "etherscan",
                                     "url": "etherscan.io",
                                     "api": true,
                                     "display": true
                                 },
                                 {
-                                    "network": "arbitrum",
-                                    "name": "arbiscan",
-                                    "url": "arbiscan.io",
-                                    "api": true,
-                                    "display": true
-                                },
-                                {
-                                    "network": "arbitrum",
-                                    "name": "infura",
-                                    "url": glob_const.main_arbitrum_node,
-                                    "api": true,
-                                    "display": true
-                                }
-                            ]
-                        },
-                        "websockets": {
-                            "icon": "tab",
-                            "selected": {
-                                "network": "arbitrum",
-                                "name": "infura",
-                                "url": glob_const.main_arbitrum_socket,
-                                "api": true,
-                                "display": true
-                            },
-                            "apis": [{
-                                    "network": "arbitrum",
-                                    "name": "infura",
-                                    "url": glob_const.main_arbitrum_socket,
-                                    "api": true,
-                                    "display": true
-                                },
-                                {
-                                    "network": "arbitrum",
-                                    "name": "etherscan",
-                                    "url": "etherscan.io",
-                                    "api": true,
-                                    "display": true
-                                },
-                                {
-                                    "network": "arbitrum",
-                                    "name": "arbiscan",
-                                    "url": "arbiscan.io",
-                                    "api": true,
-                                    "display": true
-                                }
-                            ]
-                        }
-                    },
-                    "polygon": {
-                        "selected": false,
-                        "apis": {
-                            "icon": "sphere",
-                            "selected": {
-                                "network": "polygon",
-                                "name": "etherscan",
-                                "url": "etherscan.io",
-                                "api": true,
-                                "display": true
-                            },
-                            "apis": [{
-                                    "network": "polygon",
-                                    "name": "etherscan",
-                                    "url": "etherscan.io",
-                                    "api": true,
-                                    "display": true
-                                },
-                                {
-                                    "network": "polygon",
-                                    "name": "polygonscan",
-                                    "url": "polygonscan.com",
-                                    "api": true,
-                                    "display": true
-                                },
-                                {
-                                    "network": "polygon",
+                                    "network": "polygon pos",
                                     "name": "infura",
                                     "url": glob_const.main_polygon_node,
                                     "api": true,
@@ -1771,70 +1735,63 @@ glob_config = {
                         "websockets": {
                             "icon": "tab",
                             "selected": {
-                                "network": "polygon",
+                                "network": "polygon pos",
                                 "name": "infura",
                                 "url": glob_const.main_polygon_socket,
                                 "api": true,
                                 "display": true
                             },
                             "apis": [{
-                                    "network": "polygon",
+                                    "network": "polygon pos",
                                     "name": "infura",
                                     "url": glob_const.main_polygon_socket,
                                     "api": true,
                                     "display": true
                                 },
                                 {
-                                    "network": "polygon",
-                                    "name": "etherscan",
-                                    "url": "etherscan.io",
+                                    "network": "polygon pos",
+                                    "name": "alchemy",
+                                    "url": glob_const.polygon_alchemy_node,
                                     "api": true,
                                     "display": true
                                 },
                                 {
-                                    "network": "polygon",
-                                    "name": "polygonscan",
-                                    "url": "polygonscan.com",
+                                    "network": "polygon pos",
+                                    "name": "etherscan",
+                                    "url": "etherscan.io",
                                     "api": true,
                                     "display": true
                                 }
                             ]
                         }
                     },
-                    "bnb": {
+                    "binance smart chain": {
                         "selected": false,
                         "apis": {
                             "icon": "sphere",
                             "selected": {
-                                "network": "bnb",
-                                "name": "etherscan",
-                                "url": "etherscan.io",
+                                "network": "binance smart chain",
+                                "name": "binplorer",
+                                "url": "binplorer.com",
                                 "api": true,
                                 "display": true
                             },
                             "apis": [{
-                                    "network": "bnb",
-                                    "name": "etherscan",
-                                    "url": "etherscan.io",
-                                    "api": true,
-                                    "display": true
-                                },
-                                {
-                                    "network": "bnb",
-                                    "name": "bscscan",
-                                    "url": "bscscan.com",
-                                    "api": true,
-                                    "display": true
-                                },
-                                {
-                                    "network": "bnb",
+                                    "network": "binance smart chain",
                                     "name": "binplorer",
                                     "url": "binplorer.com",
                                     "api": true,
                                     "display": true
                                 },
                                 {
-                                    "network": "bnb",
+                                    "network": "binance smart chain",
+                                    "name": "etherscan",
+                                    "url": "etherscan.io",
+                                    "api": true,
+                                    "display": true
+                                },
+                                {
+                                    "network": "binance smart chain",
                                     "name": "infura",
                                     "url": glob_const.main_bnb_node,
                                     "api": true,
@@ -1845,43 +1802,37 @@ glob_config = {
                         "websockets": {
                             "icon": "tab",
                             "selected": {
-                                "network": "bnb",
+                                "network": "binance smart chain",
                                 "name": "infura",
                                 "url": glob_const.main_bnb_socket,
                                 "api": true,
                                 "display": true
                             },
                             "apis": [{
-                                    "network": "bnb",
+                                    "network": "binance smart chain",
                                     "name": "infura",
                                     "url": glob_const.main_bnb_socket,
                                     "api": true,
                                     "display": true
                                 },
                                 {
-                                    "network": "bnb",
-                                    "name": "etherscan",
-                                    "url": "etherscan.io",
-                                    "api": true,
-                                    "display": true
-                                },
-                                {
-                                    "network": "bnb",
-                                    "name": "bscscan",
-                                    "url": "bscscan.com",
-                                    "api": true,
-                                    "display": true
-                                },
-                                {
-                                    "network": "bnb",
+                                    "network": "binance smart chain",
                                     "name": "binplorer",
                                     "url": "binplorer.com",
+                                    "api": true,
+                                    "display": true
+                                },
+                                {
+                                    "network": "binance smart chain",
+                                    "name": "etherscan",
+                                    "url": "etherscan.io",
                                     "api": true,
                                     "display": true
                                 }
                             ]
                         }
-                    }
+                    },
+                    "base": ethl2s.base
                 }
             },
             soundbytes
@@ -1995,9 +1946,7 @@ glob_config = {
             "selected": "",
             "icon": "icon-key",
             "alchemy": null,
-            "arbiscan": null,
             "bitly": null,
-            "bscscan": null,
             "blockchair": null,
             "blockcypher": null,
             "coinmarketcap": null,
@@ -2007,8 +1956,7 @@ glob_config = {
             "exchangeratesapi": null,
             "firebase": null,
             "fixer": null,
-            "infura": null,
-            "polygonscan": null
+            "infura": null
         },
         {
             "id": "contactform",
@@ -2062,27 +2010,6 @@ glob_config = {
             "key_param": "apikey=",
             "api_key": null,
             "sign_up": "https://etherscan.io/register/"
-        },
-        {
-            "name": "arbiscan",
-            "base_url": "https://api.arbiscan.io/api",
-            "key_param": "apikey=",
-            "api_key": null,
-            "sign_up": "https://arbiscan.io/register/"
-        },
-        {
-            "name": "polygonscan",
-            "base_url": "https://api.polygonscan.com/api",
-            "key_param": "apikey=",
-            "api_key": null,
-            "sign_up": "https://polygonscan.com/register/"
-        },
-        {
-            "name": "bscscan",
-            "base_url": "https://api.bscscan.com/api",
-            "key_param": "apikey=",
-            "api_key": null,
-            "sign_up": "https://bscscan.com/register/"
         },
         {
             "name": "alchemy",
@@ -2238,14 +2165,14 @@ glob_config = {
             "sign_up": "https://infura.io/register"
         },
         {
-            "name": "arbitrum",
+            "name": "arbitrum one",
             "base_url": glob_const.main_arbitrum_node,
             "key_param": null,
             "api_key": null,
             "sign_up": "https://infura.io/register"
         },
         {
-            "name": "polygon",
+            "name": "polygon pos",
             "base_url": glob_const.main_polygon_node,
             "key_param": null,
             "api_key": null,

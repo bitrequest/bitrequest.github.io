@@ -162,7 +162,16 @@ function init_socket(socket_node, wallet_address, retry, foreground) {
         return
     }
     if (payment_type === "ethereum" || request.erc20) {
-        init_eth_sockets(payment_type, socket_node, wallet_address, retry);
+        init_fetch_l2_contracts({ // route to fetch contracts
+            "currency": payment_type,
+            "name": "init_eth_sockets",
+            "params": {
+                payment_type,
+                socket_node,
+                wallet_address,
+                retry
+            }
+        });
         return
     }
     if (payment_type === "monero") {
@@ -241,18 +250,23 @@ function close_socket(socket_id) {
 // Manages WebSocket failures by attempting reconnection through fallback nodes with L1/L2 network handling
 function handle_socket_fails(socket_node, wallet_address, socket_id, is_layer2) {
     if (is_openrequest()) { // only when request is visible
-        if (request.currencysymbol === "bch" && glob_const.paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
-            return
+        if (request) {
+            const ccsymbol = request.currencysymbol;
+            if (ccsymbol) {
+                if (ccsymbol === "bch" && glob_const.paymentdialogbox.hasClass("transacting")) { // temp fix for bch socket
+                    return
+                }
+            }
         }
         const ws_id = socket_id || wallet_address;
         force_close_socket(ws_id);
         const fallback_node = try_next_socket(socket_node, is_layer2);
         if (fallback_node) {
             if (is_layer2) {
-                const token_contracts = contracts(request.currencysymbol);
+                const token_contracts = fetch_localstorage_contracts(request.payment);
                 if (token_contracts && socket_id) {
                     stop_monitors(socket_id);
-                    setup_layer2_monitoring(is_layer2, fallback_node, wallet_address, token_contracts, true);
+                    setup_layer2_monitoring(is_layer2, fallback_node, wallet_address, token_contracts.contracts, true);
                 }
                 return
             }
@@ -795,8 +809,8 @@ function blockcypher_websocket(socket_node, wallet_address) {
         const tx_hash = tx_data.hash;
         if (!tx_hash) return
         close_socket();
-        const required_confirms = request.set_confirmations || 0,
-            tx_details = blockcypher_poll_data(tx_data, required_confirms, request.currencysymbol, wallet_address);
+        const setconfirmations = request.set_confirmations || 0,
+            tx_details = blockcypher_poll_data(tx_data, setconfirmations, request.currencysymbol, wallet_address);
         if (tx_details.double_spend) {
             const alert_content = "<h2 class='icon-warning'>Double spend detected</h2>";
             popdialog(alert_content, "canceldialog");
@@ -839,8 +853,8 @@ function blockchain_btc_socket(socket_node, wallet_address) {
             const tx_data = JSON.parse(e.data).x,
                 tx_hash = tx_data.hash;
             if (!tx_hash) return
-            const required_confirms = request.set_confirmations || 0,
-                tx_details = blockchain_ws_data(tx_data, required_confirms, request.currencysymbol, wallet_address);
+            const setconfirmations = request.set_confirmations || 0,
+                tx_details = blockchain_ws_data(tx_data, setconfirmations, request.currencysymbol, wallet_address);
             if (tx_details) {
                 close_socket();
                 start_transaction_monitor(tx_details);
@@ -885,8 +899,8 @@ function blockchain_bch_socket(socket_node, wallet_address) {
                 tx_hash = tx_data.hash;
             if (!tx_hash) return
             const legacy_format = bch_legacy(wallet_address),
-                required_confirms = request.set_confirmations || 0,
-                tx_details = blockchain_ws_data(tx_data, required_confirms, request.currencysymbol, wallet_address, legacy_format);
+                setconfirmations = request.set_confirmations || 0,
+                tx_details = blockchain_ws_data(tx_data, setconfirmations, request.currencysymbol, wallet_address, legacy_format);
             if (tx_details) {
                 close_socket();
                 start_transaction_monitor(tx_details);
@@ -932,8 +946,8 @@ function mempoolspace_btc_socket(socket_node, wallet_address) {
                 if (tx_data) {
                     const tx_hash = tx_data.txid;
                     if (!tx_hash) return
-                    const required_confirms = request.set_confirmations || 0,
-                        tx_details = mempoolspace_ws_data(tx_data, required_confirms, request.currencysymbol, wallet_address);
+                    const setconfirmations = request.set_confirmations || 0,
+                        tx_details = mempoolspace_ws_data(tx_data, setconfirmations, request.currencysymbol, wallet_address);
                     if (tx_details) {
                         close_socket();
                         start_transaction_monitor(tx_details);
@@ -1002,11 +1016,16 @@ function poll_dash_network() {
 // ** Ethereum & Layer-2 Networks: **
 
 // Configures WebSocket connections for Ethereum L1/L2 networks and ERC20 tokens with provider-specific routing
-function init_eth_sockets(payment_type, socket_node, wallet_address, retry) {
-    const token_contracts = contracts(request.currencysymbol);
+function init_eth_sockets(params, token_contracts) {
+    const {
+        payment_type,
+        socket_node,
+        wallet_address,
+        retry
+    } = params;
     // Always scan for layer 1
     if (payment_type === "ethereum") {
-        if (str_includes(socket_node.url, glob_const.main_alchemy_socket)) {
+        if (socket_node.name === "alchemy") {
             alchemy_eth_websocket(socket_node, wallet_address); // L1 Alchemy
         } else {
             web3_eth_websocket(socket_node, wallet_address); // L1 Infura
@@ -1053,8 +1072,8 @@ function alchemy_eth_websocket(socket_node, wallet_address) {
             const msg_data = JSON.parse(e.data),
                 tx_data = q_obj(msg_data, "params.result");
             if (tx_data && tx_data.hash && str_match(tx_data.to, wallet_address)) {
-                const required_confirms = request.set_confirmations || 0,
-                    tx_details = infura_block_data(tx_data, required_confirms, request.currencysymbol);
+                const setconfirmations = request.set_confirmations || 0,
+                    tx_details = infura_block_data(tx_data, setconfirmations, request.currencysymbol);
                 close_socket();
                 start_transaction_monitor(tx_details);
             }
@@ -1108,10 +1127,10 @@ function web3_eth_websocket(socket_node, wallet_address) {
                     const result_data = inf_result(response),
                         transactions = result_data.transactions;
                     if (transactions) {
-                        const required_confirms = request.set_confirmations || 0;
+                        const setconfirmations = request.set_confirmations || 0;
                         $.each(transactions, function(i, tx) {
                             if (str_match(tx.to, wallet_address) === true) {
-                                const tx_details = infura_block_data(tx, required_confirms, request.currencysymbol, block_data.timestamp);
+                                const tx_details = infura_block_data(tx, setconfirmations, request.currencysymbol, block_data.timestamp);
                                 close_socket();
                                 start_transaction_monitor(tx_details);
                                 if (network_type) {
@@ -1174,13 +1193,13 @@ function web3_erc20_websocket(socket_node, wallet_address, contract_address, soc
                     token_decimals = request.decimals,
                     token_amount = parseFloat((raw_value / Math.pow(10, token_decimals)).toFixed(8));
                 if (token_amount === Infinity) return
-                const required_confirms = request.set_confirmations || 0,
+                const setconfirmations = request.set_confirmations || 0,
                     tx_details = {
                         "ccval": token_amount,
                         "transactiontime": now_utc(),
                         "txhash": log_data.transactionHash,
                         "confirmations": 0,
-                        "setconfirmations": required_confirms,
+                        setconfirmations,
                         "ccsymbol": request.currencysymbol,
                         "eth_layer2": network_type
                     };

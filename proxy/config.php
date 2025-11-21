@@ -15,10 +15,7 @@ $keys = array(
 	"exchangeratesapi" => "",
 	"googleauth" => "",
 	"google_secret" => "",
-	"arbiscan" => "",
-	"alchemy" => "",
-	"polygonscan" => "",
-	"bscscan" => ""
+	"alchemy" => ""
 );
 
 /* Sign up:
@@ -34,10 +31,7 @@ $keys = array(
 	infura: https://infura.io/register
 	exchangeratesapi: https://exchangeratesapi.io/
 	googleauth: https://developers.google.com/
-	arbiscan: https://arbiscan.io/register/
 	alchemy: https://auth.alchemy.com/signup/
-	polygonscan: https://polygonscan.com/register/
-	bscscan: https://bscscan.com/register/
 */
 
 // enter lightning node keys here

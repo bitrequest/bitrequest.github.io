@@ -70,7 +70,7 @@ const br_bipobj = br_get_local("bpdat", true),
         "copycontent": $("#copyinput"),
         "deviceid": null,
         "drivepath": "https://content.googleapis.com",
-        "eth_l2s": ["arbitrum", "polygon", "bnb"],
+        "eth_l2s": ["arbitrum one", "polygon pos", "binance smart chain", "base"],
         "exp_referrer": br_exp_referrer,
         "firebase_dynamic_link_domain": br_firebase_dynamic_link_domain,
         "firebase_shortlink": "https://" + br_firebase_dynamic_link_domain + "/",
@@ -84,24 +84,27 @@ const br_bipobj = br_get_local("bpdat", true),
         "ios_standalone": navigator.standalone,
         "is_android_app": (br_ref_match) ? true : false, // android app fingerprint
         "is_ios_app": false, // ios app fingerprint
-        "is_safari": (br_lower_useragent.indexOf("safari/") > -1 && br_lower_useragent.indexOf("android") == -1),
+        "is_safari": is_safari(),
         "ln_socket": "wss://bitrequest.app:8030",
         "localhostname": br_localhostname,
         "lower_useragent": br_lower_useragent,
         "ls_support": test_local_storage(),
         "main_alchemy_node": "https://eth-mainnet.g.alchemy.com/v2/",
+        "arbitrum_alchemy_node": "https://arb-mainnet.g.alchemy.com/v2/",
+        "polygon_alchemy_node": "https://polygon-mainnet.g.alchemy.com/v2/",
+        "base_alchemy_node": "https://base-mainnet.g.alchemy.com/v2/",
         "main_alchemy_socket": "wss://eth-mainnet.g.alchemy.com/v2/",
         "main_arbitrum_node": "https://arbitrum-mainnet.infura.io/v3/",
         "main_arbitrum_socket": "wss://arbitrum-mainnet.infura.io/ws/v3/",
-        "main_bc_ws": "ws://socket.blockcypher.com/v1/",
-        "main_bc_wss": "wss://socket.blockcypher.com/v1/",
+        "main_polygon_node": "https://polygon-mainnet.infura.io/v3/",
+        "main_polygon_socket": "wss://polygon-mainnet.infura.io/ws/v3/",
         "main_bnb_node": "https://bsc-mainnet.infura.io/v3/",
         "main_bnb_socket": "wss://bsc-mainnet.infura.io/ws/v3/",
         "main_eth_node": "https://mainnet.infura.io/v3/",
         "main_eth_socket": "wss://mainnet.infura.io/ws/v3/",
+        "main_bc_ws": "ws://socket.blockcypher.com/v1/",
+        "main_bc_wss": "wss://socket.blockcypher.com/v1/",
         "main_kas_wss": "wss://api.kaspa.org",
-        "main_polygon_node": "https://polygon-mainnet.infura.io/v3/",
-        "main_polygon_socket": "wss://polygon-mainnet.infura.io/ws/v3/",
         "mempool_space": {
             "bitcoin": "https://mempool.space",
             "bitcoin-cash": null,
@@ -243,6 +246,7 @@ let request = null,
 //br_get_session
 //br_remove_session
 //set_up
+//is_safari
 
 // ** Time & Date Utilities: **
 //now_utc
@@ -287,6 +291,7 @@ let request = null,
 //find_object_index
 //add_unique_items
 //remove_array_items
+//merge_by_key
 
 // ** DOM & UI Utilities: **
 //play_audio
@@ -429,6 +434,20 @@ function br_remove_session(pref) {
 // Checks if app is set up
 function set_up() {
     return exists(glob_const.stored_currencies) ? true : false;
+}
+
+// checks useragent for safari browsers
+function is_safari() {
+    const is_chrome = br_lower_useragent.indexOf("chrome") > -1,
+        is_chromium = br_lower_useragent.indexOf("chromium") > -1,
+        is_safari = br_lower_useragent.indexOf("safari") > -1,
+        is_chrome_ios = br_lower_useragent.indexOf("crios") > -1,
+        is_firefox_ios = br_lower_useragent.indexOf("fxios") > -1;
+    if (is_safari && !is_chrome && !is_chromium && !is_chrome_ios && !is_firefox_ios) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 // ** Time & Date Utilities: **
@@ -763,6 +782,10 @@ function add_unique_items(target_array, source_array) {
 function remove_array_items(main_array, items_to_remove) {
     const remove_set = new Set(items_to_remove);
     return main_array.filter(item => !remove_set.has(item));
+}
+
+function merge_by_key(array, new_item, key) {
+    return [...array.filter(item => item[key] !== new_item[key]), new_item];
 }
 
 // ** DOM & UI Utilities: **
@@ -1351,7 +1374,7 @@ function api_proxy(ad, p_proxy) {
 
 // Normalizes API names for consistent proxy handling
 function c_apiname(api_name) {
-    if (api_name === "arbitrum" || api_name === "polygon") return "infura";
+    if (api_name === "arbitrum one" || api_name === "polygon pos") return "infura";
     if (api_name === "binplorer") return "ethplorer";
     return api_name;
 }
@@ -1667,12 +1690,24 @@ function get_cached_tokens(check) {
 // ** Sanitizing URLS: **
 
 // Strips key from ws_url
-function strip_key_from_url(node_url) {
-    const main_alchemy_socket = glob_const.main_alchemy_socket,
-        base_url_length = node_url.length,
-        main_socket_length = main_alchemy_socket.length,
-        length_diff = base_url_length - main_socket_length;
-    return node_url.slice(0, -length_diff);
+function strip_key_from_url(url) {
+    // Handle trailing slash
+    const has_trailing_slash = url.endsWith("/"),
+        url_without_trailing_slash = has_trailing_slash ? url.slice(0, -1) : url,
+        protocol_end = url_without_trailing_slash.indexOf("://"),
+        search_tart = protocol_end !== -1 ? protocol_end + 3 : 0,
+        last_slash_index = url_without_trailing_slash.lastIndexOf("/", url_without_trailing_slash.length);
+    // If no slash found after protocol, or only slash is in protocol, return original
+    if (last_slash_index === -1 || last_slash_index < search_tart) {
+        return url;
+    }
+    // Get the segment after the last slash
+    const last_segment = url_without_trailing_slash.substring(last_slash_index + 1);
+    // If longer than 20 characters, strip it
+    if (last_segment.length > 20) {
+        return url_without_trailing_slash.substring(0, last_slash_index + 1);
+    }
+    return url; // Return original if <= 20 chars
 }
 
 // Normalizes URL format with protocol and trailing slash

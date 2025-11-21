@@ -140,7 +140,7 @@ function save_confirmation_settings() {
         if (inj(conf_value)) return
         const settings_node = cs_node(currency, "confirmations");
         if (settings_node) {
-            settings_node.data("selected", parseInt(conf_value, 10)).find("p").html(conf_value);
+            settings_node.data("selected", parseInt(conf_value, 10)).find("p").text(conf_value);
             canceldialog();
             notify(tl("datasaved"));
             save_cc_settings(currency, true);
@@ -269,7 +269,7 @@ function save_explorer_settings() {
         if (inj(selected_explorer)) return
         const settings_node = cs_node(currency, "blockexplorers");
         if (settings_node) {
-            settings_node.data("selected", selected_explorer).find("p").html(selected_explorer);
+            settings_node.data("selected", selected_explorer).find("p").text(selected_explorer);
             canceldialog();
             notify(tl("datasaved"));
             save_cc_settings(currency, true);
@@ -575,7 +575,7 @@ function validate_xpub(form_container) {
         "key": xpub_key,
         "key_id": xpub_id
     }).find(".switchpanel").removeClass("false").addClass("true");
-    settings_item.find("p").html("true");
+    settings_item.find("p").text("true");
     const currency_item = get_currencyli(currency),
         home_button = get_homeli(currency);
     currency_item.attr("data-checked", "true").data("checked", true);
@@ -681,7 +681,7 @@ function xpub_cc_switch() {
         if (toggle_btn.hasClass("true")) {
             const user_confirmed = confirm(tl("disablexpub"));
             if (user_confirmed) {
-                settings_item.data("selected", false).find("p").html("false");
+                settings_item.data("selected", false).find("p").text("false");
                 toggle_btn.removeClass("true").addClass("false");
                 save_cc_settings(currency, true);
                 delete_xpub_cb(currency, xpub_data.key_id);
@@ -724,7 +724,7 @@ function delete_xpub() {
                 "key": null,
                 "key_id": null
             }).find(".switchpanel").removeClass("true").addClass("false");
-            settings_item.find("p").html("false");
+            settings_item.find("p").text("false");
             save_cc_settings(currency, true);
             canceldialog();
         }
@@ -896,7 +896,7 @@ function save_soundbyte_settings() {
         if (inj(val)) return
         const settings_node = cs_node(currency, "soundbytes");
         if (settings_node) {
-            settings_node.data("selected", val).find("p").html(val);
+            settings_node.data("selected", val).find("p").text(val);
             canceldialog();
             notify(tl("datasaved"));
             save_cc_settings(currency, true);

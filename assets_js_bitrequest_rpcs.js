@@ -67,7 +67,7 @@ function edit_rpcnode() {
             node_name = current_node.name,
             node_url = current_node.url,
             url_trunc = truncate_middle(node_url),
-            node_title = (node_name === "electrum" || node_name === "mempool.space" || node_name === "xmr_node") ? url_trunc : node_name || url_trunc,
+            node_title = (node_name === "electrum" || node_name === "mempool.space" || node_name === "xmr_node" || node_name === "infura") ? url_trunc : node_name || url_trunc,
             dialog_html = "<div class='formbox' id='settingsbox' data-id='" + glob_let.ap_id + "'>\
                 <h2 class='icon-sphere'>" + tl("choose") + " " + currency_name + " " + glob_let.ap_id + "</h2>\
                 <div class='popnotify'></div>\
@@ -601,7 +601,7 @@ function create_rpc_node_element(api_list, is_live, node_id, node_config, is_sel
         node_name = node_config.name,
         custom = node_config.custom,
         node_url = node_config.url,
-        stripped_url = custom && (node_name == "alchemy" || node_name == "infura") ? strip_key_from_url(node_url) : node_url,
+        stripped_url = custom && (node_name === "alchemy" || node_name === "infura") ? strip_key_from_url(node_url) : node_url,
         vendor = node_config.vendor,
         vendor_string = (vendor) ? "<span class='v'> (" + vendor.slice(5) + ")</span>" : "",
         version = node_config.v,
@@ -1093,7 +1093,7 @@ function delete_rpc_node() {
 
 function get_node_icon(node_name) {
     if (!node_name) return "node";
-    const node_array = ["blockchair", "etherscan", "arbiscan", "polygonscan", "bscscan", "binplorer", "alchemy"],
+    const node_array = ["blockchair", "etherscan", "binplorer", "alchemy"],
         in_array = node_array.includes(node_name);
     return in_array ? node_name : (node_name === "electrum") ? "electrum_node" :
         (node_name === "xmr_node") ? "monero" :

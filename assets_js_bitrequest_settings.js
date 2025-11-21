@@ -605,7 +605,7 @@ function cancel_theme() {
 function submit_theme() {
     $(document).on("click touch", "#submittheme", function() {
         const thisvalue = $("#themeformbox").find("input:first").val();
-        $("#themesettings").data("selected", thisvalue).find("p").html(thisvalue);
+        $("#themesettings").data("selected", thisvalue).find("p").text(thisvalue);
         canceldialog();
         notify("Data saved");
         save_settings();
@@ -1106,7 +1106,7 @@ function generate_backup_data() {
             "bitrequest_symbols", "bitrequest_changes", "bitrequest_erc20tokens_init",
             "bitrequest_erc20tokens", "bitrequest_editurl", "bitrequest_recent_requests",
             "bitrequest_backupfile_id", "bitrequest_appstore_dialog", "bitrequest_init",
-            "bitrequest_k", "bitrequest_awl", "bitrequest_dat", "bitrequest_tp"
+            "bitrequest_eth_l2_contracts", "bitrequest_k", "bitrequest_awl", "bitrequest_dat", "bitrequest_tp"
         ];
     for (let key in localStorage) {
         const value = localStorage.getItem(key);
@@ -2001,7 +2001,7 @@ function complile_csv() {
             pdfurl = get_pdf_url(val),
             paid_time = pts ? short_date(pts) : "",
             layer = val.eth_layer2,
-            network = getnetwork(layer) || lnstr,
+            network = layer || lnstr,
             netstr = network || "";
         if (should_include_request(status, type, include.paid, include.ins, include.new, include.pending, include.pos, include.outgoing, include.incoming)) {
             if (include.from) {
@@ -2372,7 +2372,7 @@ function toggle_url_shortener() {
 
 // Updates UI elements based on selected URL shortening service
 function pick_urlshortener_select() {
-    $(document).on("click", "#usformbox .selectbox > .options span", function() {
+    $(document).on("mousedown", "#usformbox .selectbox > .options span", function() {
         const select = $(this),
             val = select.text(),
             form = select.closest(".popform"),
@@ -2536,7 +2536,7 @@ function configure_crypto_api() {
 
 // Toggles CoinMarketCap API key input field visibility based on provider selection
 function select_crypto_api() {
-    $(document).on("click", "#ccapiformbox .selectbox > .options span", function() {
+    $(document).on("mousedown", "#ccapiformbox .selectbox > .options span", function() {
         const select = $(this),
             val = select.text(),
             form = select.closest(".popform"),
@@ -2667,7 +2667,7 @@ function configure_fiat_api() {
 
 // Toggles Fixer API key input visibility based on provider selection
 function select_fiat_api() {
-    $(document).on("click", "#fiatxrapiformbox .selectbox > .options span", function() {
+    $(document).on("mousedown", "#fiatxrapiformbox .selectbox > .options span", function() {
         const select = $(this),
             val = select.text(),
             form = select.closest(".popform"),
@@ -2975,9 +2975,7 @@ function apikeys() {
         const data = $(this).data(),
             keys = {
                 "alchemy": data.alchemy || "",
-                "arbiscan": data.arbiscan || "",
                 "bitly": data.bitly || "",
-                "bscscan": data.bscscan || "",
                 "blockchair": data.blockchair || "",
                 "blockcypher": data.blockcypher || "",
                 "cmc": data.coinmarketcap || "",
@@ -2987,8 +2985,7 @@ function apikeys() {
                 "exchangerates": data.exchangeratesapi || "",
                 "firebase": data.firebase || "",
                 "fixer": data.fixer || "",
-                "infura": data.infura || "",
-                "polygonscan": data.polygonscan || ""
+                "infura": data.infura || ""
             },
             keyph = tl("apikey"),
             content = "\
@@ -2998,12 +2995,8 @@ function apikeys() {
                <div class='popform'>\
                    <h3>Alchemy</h3>\
                    <input type='text' value='" + keys.alchemy + "' placeholder='Alchemy " + keyph + "' data-ref='alchemy' data-checkchange='" + keys.alchemy + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
-                   <h3>Arbiscan</h3>\
-                   <input type='text' value='" + keys.arbiscan + "' placeholder='Arbiscan " + keyph + "' data-ref='arbiscan' data-checkchange='" + keys.arbiscan + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Bitly</h3>\
                    <input type='text' value='" + keys.bitly + "' placeholder='Bitly access token' data-ref='bitly' data-checkchange='" + keys.bitly + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
-                   <h3>Bscscan</h3>\
-                   <input type='text' value='" + keys.bscscan + "' placeholder='Bscscan " + keyph + "' data-ref='bscscan' data-checkchange='" + keys.bscscan + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Blockchair</h3>\
                    <input type='text' value='" + keys.blockchair + "' placeholder='Blockchair " + keyph + "' data-ref='blockchair' data-checkchange='" + keys.blockchair + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Blockcypher</h3>\
@@ -3024,8 +3017,6 @@ function apikeys() {
                    <input type='text' value='" + keys.fixer + "' placeholder='Fixer " + keyph + "' data-ref='fixer' data-checkchange='" + keys.fixer + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <h3>Infura</h3>\
                    <input type='text' value='" + keys.infura + "' placeholder='Infura Project ID' data-ref='infura' data-checkchange='" + keys.infura + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
-                   <h3>Polygonscan</h3>\
-                   <input type='text' value='" + keys.polygonscan + "' placeholder='Polygonscan " + keyph + "' data-ref='polygonscan' data-checkchange='" + keys.polygonscan + "' class='ak_input' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
                    <input type='submit' class='submit' value='" + tl("okbttn") + "' id='apisubmit'/>\
                </div>\
            </div>";
@@ -3078,17 +3069,9 @@ function submit_api() {
 // Initiates API-specific key validation process
 function validate_api_key(ref, keyval, last_input) {
     const tokens = {
-        "arbiscan": {
-            "keylength": 6,
-            "payload": "?module=block&action=getblockreward&blockno=131049&apikey="
-        },
         "bitly": {
             "keylength": 6,
             "payload": "expand"
-        },
-        "bscscan": {
-            "keylength": 6,
-            "payload": "?module=block&action=getblockreward&blockno=131049&apikey="
         },
         "blockchair": {
             "keylength": 6,
@@ -3125,10 +3108,6 @@ function validate_api_key(ref, keyval, last_input) {
         "fixer": {
             "keylength": 20,
             "payload": "symbols?access_key="
-        },
-        "polygonscan": {
-            "keylength": 6,
-            "payload": "?module=block&action=getblockreward&blockno=131049&apikey="
         }
     };
     const data = tokens[ref] || {
@@ -3211,7 +3190,7 @@ function json_check_apikey(keylength, ref, payload, keyval, last_input) {
             const data = br_result(e).result;
             if (data) {
                 const fail_msg = tl("apicallfailed");
-                if ((ref === "etherscan" || ref === "arbiscan" || ref === "polygonscan" || ref === "bscscan") && data.status != 1) {
+                if (ref === "etherscan" && data.status != 1) {
                     if (str_match(data.result, "Invalid API Key")) {
                         api_fail(ref, keyval);
                     } else {

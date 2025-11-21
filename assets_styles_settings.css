@@ -1267,25 +1267,20 @@ body.seed_dialog #sd_panel {
 }
 
 /* Ethereum layer2 settings */
-#l2_formbox h2.nwheading {
-    display: block;
-    padding: 0.5em;
-    color: #7e7e7e;
-    text-transform: capitalize;
-    border-bottom: 1px solid #ccc;
-    cursor: pointer;
-}
-
-#l2_formbox h2.nwheading .switchpanel {
-    float: right;
-}
 
 #l2_formbox .popform {
     padding-bottom: 1em;
 }
 
-#l2_formbox .sboxwrap {
-    padding-bottom: 2em;
+#l2_formbox .l2_services {
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 0 0 0 0.5em;
+    text-decoration: underline;
+}
+
+#l2_apibox .apibox_item .l2_apis {
+    display:none;
 }
 
 /* App info section */
@@ -1301,4 +1296,12 @@ body.seed_dialog #sd_panel {
 
 #app_info a {
     color: #3498db;
+}
+
+#l2_apibox .apibox_item {
+    display:none;
+}
+
+#l2_apibox .apibox_item.show_abi {
+    display:block;
 }

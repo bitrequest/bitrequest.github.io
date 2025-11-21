@@ -9,8 +9,9 @@ $(document).ready(function() {
     // ** Network Operations: **
     //route_layer2_operation
     //arbitrum_apis
-    //polygon_apis 
+    //polygon_apis
     //bnb_apis
+    //base_apis
 
     // ** API Request Handling: **
     //route_layer2_api_request
@@ -18,9 +19,10 @@ $(document).ready(function() {
     //poll_layer2_network
 
     // ** Settings Management: **
-    edit_l2();
-    toggle_network_panel();
-    toggle_network_status();
+    edit_l2_init();
+    //edit_l2
+    pick_l2_select();
+    toggle_l2_services();
     save_layer2_settings();
 
     // ** Configuration Helpers: **
@@ -28,6 +30,13 @@ $(document).ready(function() {
     //get_layer2_config
     //find_network_index
     //get_network_node_config
+
+    // ** Fetch contracts: **
+    //init_fetch_l2_contracts
+    //fetch_l2_contracts
+    //construct_l2_contracts
+    //fetch_localstorage_contracts
+    //fetch_contracts_callback
 
     // ** Status Management: **
     //initialize_network_status
@@ -38,18 +47,18 @@ $(document).ready(function() {
 // ** Core L2 Management: **
 
 // Initializes Layer 2 socket connections for Ethereum and ERC20 token transactions
-function initialize_layer2_connections(payment, address, ct, socket_node) {
+function initialize_layer2_connections(payment, address, ctracts, socket_node) {
     const idx_array = glob_const.eth_l2s,
         l2_options = get_layer2_config(payment);
     if (l2_options) {
-        const ctracts = ct || contracts(request.currencysymbol),
-            l2_arr = [],
+        const l2_arr = [],
             is_request = request.isrequest,
-            req_l2_arr = request.eth_l2s;
+            req_l2_arr = request.eth_l2s,
+            req_l2_3 = req_l2_arr.slice(0, 3); // allow 3 l2's max
         $.each(l2_options, function(l2, l2_dat) {
             const set_select = is_request ? false : (l2_dat.selected === false) ? false : !empty_obj(l2_dat),
                 index = idx_array.indexOf(l2),
-                inarr = ($.inArray(index, req_l2_arr) > -1),
+                inarr = ($.inArray(index, req_l2_3) > -1),
                 selected = set_select || inarr;
             if (selected) {
                 l2_arr.push(index);
@@ -77,7 +86,7 @@ function setup_layer2_monitoring(l2, sn, address, ctracts, retry) {
                 ping_id = sha_sub(socket_node.url + layer2, 15);
             socket_info(socket_node, true);
             glob_let.socket_attempt[ping_id] = true;
-            start_layer2_scan(socket_node, contract, ping_id, "init"); // initial scan
+            //start_layer2_scan(socket_node, contract, ping_id, "init"); // initial scan
             if (ctracts && node_name === "infura") {
                 web3_erc20_websocket(socket_node, address, contract, ping_id);
                 return
@@ -148,12 +157,14 @@ function route_layer2_operation(dat, network) {
             const rq_id = q_obj(dat, "rd.requestid") || "",
                 l2 = network || q_obj(dat, "api_data.network");
             glob_let.rpc_attempts[sha_sub(rq_id + url + l2, 15)] = true;
-            if (l2 === "arbitrum") {
+            if (l2 === "arbitrum one") {
                 arbitrum_apis(dat);
-            } else if (l2 === "polygon") {
+            } else if (l2 === "polygon pos") {
                 polygon_apis(dat);
-            } else if (l2 === "bnb") {
+            } else if (l2 === "binance smart chain") {
                 bnb_apis(dat);
+            } else if (l2 === "base") {
+                base_apis(dat);
             }
             return
         }
@@ -164,33 +175,31 @@ function route_layer2_operation(dat, network) {
 // Manages Arbitrum network API interactions
 function arbitrum_apis(dat) {
     const api_name = q_obj(dat, "api_data.name");
-    if (api_name === "arbiscan") {
-        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract);
-    } else if (api_name === "etherscan") {
+    if (api_name === "etherscan") {
         scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract, 42161);
     } else if (api_name === "infura") {
         infura_txd_rpc(dat.rd, dat.api_data, dat.rdo, dat.contract, 42161);
+    } else { // alchemy
+        initialize_alchemy_scan(dat.rd, dat.api_data, dat.rdo, dat.contract);
     }
 }
 
 // Manages Polygon network API interactions
 function polygon_apis(dat) {
     const api_name = q_obj(dat, "api_data.name");
-    if (api_name === "polygonscan") {
-        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract);
-    } else if (api_name === "etherscan") {
+    if (api_name === "etherscan") {
         scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract, 137);
     } else if (api_name === "infura") {
         infura_txd_rpc(dat.rd, dat.api_data, dat.rdo, dat.contract, 137);
+    } else { // alchemy
+        initialize_alchemy_scan(dat.rd, dat.api_data, dat.rdo, dat.contract);
     }
 }
 
 // Manages BNB Chain API interactions
 function bnb_apis(dat) {
     const api_name = q_obj(dat, "api_data.name");
-    if (api_name === "bscscan") {
-        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract);
-    } else if (api_name === "binplorer") {
+    if (api_name === "binplorer") {
         process_ethereum_transactions(dat.rd, dat.api_data, dat.rdo);
     } else if (api_name === "etherscan") {
         scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract, 56);
@@ -199,100 +208,149 @@ function bnb_apis(dat) {
     }
 }
 
+// Manages Base network API interactions
+function base_apis(dat) {
+    const api_name = q_obj(dat, "api_data.name");
+    if (api_name === "etherscan") {
+        scan_layer2_transactions(dat.rd, dat.api_data, dat.rdo, dat.contract, 8453);
+    } else { // alchemy
+        initialize_alchemy_scan(dat.rd, dat.api_data, dat.rdo, dat.contract);
+    }
+}
+
 // ** API Request Handling: **
 
 // Routes Layer 2 API queries based on pending status
-function route_layer2_api_request(rd, rdo, api_dat, l2) {
-    const network = rd.eth_layer2 || l2;
+function route_layer2_api_request(rd, rdo, api_dat) {
+    if (block_overflow("l2", 10)) return false // prevent overflow
+    const network = rd.eth_layer2;
+    init_fetch_l2_contracts({ // route to fetch contracts
+        "currency": rd.payment,
+        "name": "route_layer2_api_request_contracts",
+        "params": {
+            rd,
+            rdo,
+            api_dat,
+            network
+        }
+    });
+}
+
+// route_layer2_api_request with contracts
+function route_layer2_api_request_contracts(params, token_contracts) {
+    const {
+        rd,
+        rdo,
+        api_dat,
+        network
+    } = params;
     if (rdo.pending === "polling" && network) {
-        poll_layer2_network(rd, rdo, api_dat, network);
+        poll_layer2_network(rd, rdo, api_dat, network, token_contracts);
         return
     }
-    scan_layer2_networks(rd, rdo, api_dat, network);
+    scan_layer2_networks(rd, rdo, api_dat, network, token_contracts);
 }
 
 // Scans Layer 2 networks for transaction data
-function scan_layer2_networks(rd, rdo, api_dat, network) {
+function scan_layer2_networks(rd, rdo, api_dat, network, ctracts) {
     glob_let.l2_fetched = {};
-    const req_l2_arr = rd.eth_l2s;
-    if (empty_obj(req_l2_arr)) { // No l2's
+    const req_l2_arr = rd.eth_l2s,
+        req_l2_3 = req_l2_arr.slice(0, 3); // allow 3 l2's max
+    if (empty_obj(req_l2_3)) { // No l2's
         finalize_request_state(rdo);
         return
     }
     const currency = rd.payment,
-        l2_options = get_layer2_config(currency);
-    if (l2_options) {
-        const ctracts = contracts(rd.currencysymbol);
-        if (network) { // l2 network is known so only scan this network
-            const api_data = api_dat || get_network_node_config(currency, network, l2_options[network], "apis");
-            if (api_data) {
-                const contract = ctracts[network],
-                    dat = {
-                        contract,
-                        rd,
-                        api_data,
-                        rdo
-                    };
-                route_layer2_operation(dat, network);
-            }
-            return
+        set_l2_options = get_layer2_config(currency),
+        static_l2_options = q_obj(get_erc20_settings(), "layer2.options"),
+        l2_options = set_l2_options || static_l2_options;
+    if (network) { // l2 network is known so only scan this network
+        const api_data = api_dat || get_network_node_config(currency, network, l2_options[network], "apis");
+        if (api_data) {
+            const contract = ctracts[network],
+                dat = {
+                    contract,
+                    rd,
+                    api_data,
+                    rdo
+                };
+            route_layer2_operation(dat, network);
         }
-        // scan all supported l2 networks
-        const requestid = rd.requestid,
-            l2_length = Object.keys(l2_options).length,
-            add_delay = 2000;
-        let index = 0,
-            delay = 0;
-        $.each(l2_options, function(l2, l2_dat) {
-            setTimeout(function() {
-                if (glob_let.l2_fetched.id === requestid) { // Stop scanning for other networks if tx is found
-                } else {
-                    const inarr = $.inArray(index, req_l2_arr) !== -1;
-                    if (inarr) {
-                        const api_data = api_dat || get_network_node_config(currency, l2, l2_dat, "apis");
-                        if (api_data) {
-                            const contract = ctracts[l2],
-                                dat = {
-                                    contract,
-                                    rd,
-                                    api_data,
-                                    rdo
-                                };
-                            route_layer2_operation(dat, l2);
-                        }
-                    }
-                }
-                index++;
-                if (index === l2_length) {
-                    // Detect when scanning is finished
-                    const timeout = setTimeout(function() {
-                        if (glob_let.l2_fetched.id === requestid) { // Process tx if found
-                            rd.eth_layer2 = glob_let.l2_fetched.l2;
-                            validate_payment_amounts(rd, rdo);
-                            glob_let.l2_fetched = {};
-                        } else { // Move to next request
-                            finalize_request_state(rdo);
-                        }
-                    }, add_delay, function() {
-                        clearTimeout(timeout);
-                    });
-                }
-            }, delay * add_delay);
-            delay++;
-        });
+        return
     }
+    if (api_dat) { // apidata is known so it's a second api attempt
+        const nw = api_dat.network,
+            contract = ctracts[nw],
+            api_data = api_dat,
+            dat = {
+                contract,
+                rd,
+                api_data,
+                rdo
+            };
+        route_layer2_operation(dat, nw);
+        return
+    }
+    const requestid = rd.requestid,
+        static_array = Object.keys(static_l2_options),
+        set_array = Object.keys(set_l2_options),
+        l2_length = set_array.length,
+        add_delay = 2000;
+    let index = 0,
+        delay = 0;
+    req_l2_3.forEach(function(i) {
+        setTimeout(function() {
+            if (glob_let.l2_fetched.id === requestid) { // Stop scanning for other networks if tx is found
+            } else {
+                const l2 = static_array[i],
+                    ss_val = static_l2_options[l2],
+                    ss_select = q_obj(ss_val, "apis.selected"),
+                    sa_key = set_array[i],
+                    l2_dat = set_l2_options[sa_key],
+                    appdt = get_network_node_config(currency, l2, l2_dat, "apis"),
+                    api_data = api_dat || appdt || ss_select;
+                if (api_data) {
+                    const contract = ctracts[l2],
+                        dat = {
+                            contract,
+                            rd,
+                            api_data,
+                            rdo
+                        };
+                    route_layer2_operation(dat, l2);
+                }
+            }
+            index++;
+            if (index === l2_length) {
+                // Detect when scanning is finished
+                const timeout = setTimeout(function() {
+                    if (glob_let.l2_fetched.id === requestid) { // Process tx if found
+                        rd.eth_layer2 = glob_let.l2_fetched.l2;
+                        validate_payment_amounts(rd, rdo);
+                        glob_let.l2_fetched = {};
+                    } else { // Move to next request
+                        finalize_request_state(rdo);
+                    }
+                }, add_delay, function() {
+                    clearTimeout(timeout);
+                });
+            }
+        }, delay * add_delay);
+        delay++;
+    });
 }
 
 // Polls specific Layer 2 network API for updates
-function poll_layer2_network(rd, rdo, api_dat, l2) {
-    const l2_options = get_layer2_config(rd.payment),
-        api_data = api_dat || get_network_node_config(rd.payment, l2, l2_options[l2], "apis"),
+function poll_layer2_network(rd, rdo, api_dat, l2, ctracts) {
+    const currency = rd.payment,
+        set_l2_options = get_layer2_config(currency),
+        static_l2_options = q_obj(get_erc20_settings(), "layer2.options"),
+        l2_options = set_l2_options || static_l2_options,
+        api_data = api_dat || get_network_node_config(currency, l2, l2_options[l2], "apis"),
         api_name = api_data.name,
         network = api_data.network;
     if (api_name && network) {
-        const ccsymbol = rd.currencysymbol,
-            ctracts = contracts(ccsymbol),
-            contract = ctracts[network],
+        const contract = ctracts[network],
             dat = {
                 contract,
                 rd,
@@ -305,208 +363,259 @@ function poll_layer2_network(rd, rdo, api_dat, l2) {
 
 // ** Settings Management: **
 
-// Handles Layer 2 settings UI interaction
-function edit_l2() {
+// Initiates Layer 2 settings UI interaction
+function edit_l2_init() {
     $(document).on("click", ".cc_settinglist li[data-id='layer2']", function() {
-        const thiscurrency = $(this).children(".liwrap").attr("data-currency");
-        let l2_options = get_layer2_config(thiscurrency);
-        const old_format = q_obj(l2_options, "arbitrum.selected") !== undefined; // look for uncompressed l2 format
-        if (old_format) {
-            l2_options = q_obj(compress_layer2_config(thiscurrency), "layer2.options"); // convert to compressed l2 format
-            const csnode = cs_node(thiscurrency, "layer2"); // update l2 settings li data
-            csnode.data("options", l2_options);
-        }
-        const eth_settings = get_coinsettings(thiscurrency),
-            eth_l2_settings = q_obj(eth_settings, "layer2.options");
-        if (l2_options) {
-            const ccsymbol = fetch_symbol(thiscurrency),
-                symbol = ccsymbol.symbol,
-                ctracts = contracts(symbol),
-                arb_contract = ctracts.arbitrum,
-                polygon_contract = ctracts.polygon,
-                bnb_contract = ctracts.bnb,
-                networks = [];
-            $.each(eth_l2_settings, function(l2, l2_dat) {
-                if (l2_options.hasOwnProperty(l2)) {
-                    const nw_name = l2 === "bnb" ? "bnb smart chain" : l2,
-                        select = l2_options[l2],
-                        nw_selected = !empty_obj(select),
-                        s_boxes = [];
+        const currency = $(this).children(".liwrap").attr("data-currency");
+        init_fetch_l2_contracts({ // route to fetch contracts
+            currency,
+            "name": "edit_l2"
+        });
+    })
+}
 
+// Handles Layer 2 settings UI interaction
+function edit_l2(thiscurrency, l2_contacts) {
+    const l2_options = get_layer2_config(thiscurrency),
+        eth_settings = get_coinsettings(thiscurrency),
+        eth_l2_settings = q_obj(eth_settings, "layer2.options");
+    if (l2_options) {
+        const networks = [{
+            "span": {
+                "class": "optionwrap",
+                "data-pe": "none",
+                "content": "<img src='" + fetch_aws("ethereum") + ".png' class='icon'/>ethereum"
+            }
+        }];
+        const apibox = [];
+        let selected_network = "ethereum";
+        $.each(eth_l2_settings, function(l2, l2_dat) {
+            if (l2_contacts.hasOwnProperty(l2)) {
+                const select = l2_options[l2];
+                if (select) {
+                    const nw_selected = !empty_obj(select),
+                        l2_class = l2.replace(/ /g, "-"),
+                        s_boxes = [{
+                            "h2": {
+                                "class": "linkcolor l2_services " + l2_class,
+                                "content": tl("choose") + " " + l2 + " " + tl("layer2") + " API"
+                            }
+                        }];
+                    if (nw_selected) {
+                        selected_network = l2;
+                    }
                     $.each(l2_dat, function(k, v) {
-                        const selected = v.selected
-                        if (k === "selected") return
-                        const apis = v.apis,
-                            select_name = k === "apis" ? select.apis : select.websockets,
-                            select_val = select_name || selected.name,
-                            api_push = [];
-                        $.each(apis, function(i, v2) {
-                            const node_name = v2.name,
-                                node_icon_url = get_node_icon(node_name),
-                                node_icon = (node_icon_url) ? "<img src='" + fetch_aws(node_icon_url) + ".png' class='icon'/>" : "";
-                            api_push.push({
-                                "span": {
-                                    "class": "optionwrap",
-                                    "data-pe": "none",
-                                    "attr": add_prefix_to_keys(v2),
-                                    "content": node_icon + node_name
-                                }
+                            const selected = v.selected
+                            if (k === "selected") return
+                            const apis = v.apis,
+                                select_name = k === "apis" ? select.apis : select.websockets,
+                                select_val = select_name || selected.name,
+                                api_push = [];
+                            $.each(apis, function(i, v2) {
+                                const node_name = v2.name,
+                                    node_icon_url = get_node_icon(node_name),
+                                    node_icon = (node_icon_url) ? "<img src='" + fetch_aws(node_icon_url) + ".png' class='icon'/>" : "";
+                                api_push.push({
+                                    "span": {
+                                        "class": "optionwrap",
+                                        "data-pe": "none",
+                                        "attr": add_prefix_to_keys(v2),
+                                        "content": node_icon + node_name
+                                    }
+                                });
                             });
-                        });
-                        s_boxes.push({
-                            "div": {
-                                "class": "l2_apis",
-                                "attr": {
-                                    "data-type": k
-                                },
-                                "content": [{
-                                    "h3": {
-                                        "content": k
+                            s_boxes.push({
+                                "div": {
+                                    "class": "l2_apis",
+                                    "attr": {
+                                        "data-type": k
                                     },
-                                    "div": {
-                                        "class": "selectbox",
-                                        "content": [{
-                                                "input": {
-                                                    "attr": {
-                                                        "type": "text",
-                                                        "value": select_val,
-                                                        "placeholder": tl("layer2"),
-                                                        "readonly": "readonly"
+                                    "content": [{
+                                        "h3": {
+                                            "content": k
+                                        },
+                                        "div": {
+                                            "class": "selectbox",
+                                            "content": [{
+                                                    "input": {
+                                                        "attr": {
+                                                            "type": "text",
+                                                            "value": select_val,
+                                                            "placeholder": tl("layer2"),
+                                                            "readonly": "readonly"
+                                                        },
+                                                        "close": true
                                                     },
-                                                    "close": true
+                                                    "div": {
+                                                        "class": "selectarrows icon-menu2",
+                                                        "attr": {
+                                                            "data-pe": "none"
+                                                        }
+                                                    }
                                                 },
-                                                "div": {
-                                                    "class": "selectarrows icon-menu2",
-                                                    "attr": {
-                                                        "data-pe": "none"
+                                                {
+                                                    "div": {
+                                                        "class": "options",
+                                                        "content": api_push
                                                     }
                                                 }
-                                            },
-                                            {
-                                                "div": {
-                                                    "class": "options single",
-                                                    "content": api_push
-                                                }
-                                            }
-                                        ]
-                                    }
-                                }]
+                                            ]
+                                        }
+                                    }]
+                                }
+                            });
+                        }),
+                        l2_contents = "<img src='" + fetch_aws(l2_class) + ".png' class='icon'/>" + l2;
+                    networks.push({
+                            "span": {
+                                "class": "optionwrap",
+                                "data-pe": "none",
+                                "content": l2_contents
+                            }
+                        }),
+                        toggle = nw_selected ? "show_abi " : "",
+                        apibox.push({
+                            "div": {
+                                "class": "apibox_item " + toggle + l2_class,
+                                "content": s_boxes
                             }
                         });
-                    });
-                    networks.push({
-                        "div": {
-                            "class": "nw2box",
-                            "attr": {
-                                "data-network": l2
-                            },
-                            "content": [{
-                                "h2": {
-                                    "class": "nwheading",
-                                    "content": nw_name + switch_panel(nw_selected, " custom")
-                                },
-                                "div": {
-                                    "class": "sboxwrap hide",
-                                    "content": s_boxes
+                }
+            }
+        });
+        const ddat = [{
+                "div": {
+                    "class": "popform",
+                    "content": [{
+                            "div": {
+                                "id": "l2select",
+                                "class": "selectbox",
+                                "content": [{
+                                        "input": {
+                                            "attr": {
+                                                "type": "text",
+                                                "value": selected_network,
+                                                "placeholder": tl("choose") + " " + tl("layer2"),
+                                                "readonly": "readonly"
+                                            },
+                                            "close": true
+                                        },
+                                        "div": {
+                                            "class": "selectarrows icon-menu2",
+                                            "attr": {
+                                                "data-pe": "none"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "div": {
+                                            "class": "options",
+                                            "content": networks
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "div": {
+                                "id": "l2_apibox",
+                                "content": apibox
+                            }
+                        },
+                        {
+                            "input": {
+                                "class": "submit",
+                                "attr": {
+                                    "type": "submit",
+                                    "value": tl("okbttn"),
+                                    "data-currency": thiscurrency
                                 }
-                            }]
+                            }
                         }
-                    });
-
+                    ]
                 }
+            }],
+            content = template_dialog({
+                "id": "l2_formbox",
+                "icon": "icon-new-tab",
+                "title": thiscurrency + " " + tl("layer2"),
+                "elements": ddat
             });
-            networks.push({
-                "input": {
-                    "class": "submit",
-                    "attr": {
-                        "type": "submit",
-                        "value": tl("okbttn"),
-                        "data-currency": thiscurrency
-                    }
-                }
-            });
-            const sb_render = render_html(networks),
-                ddat = [{
-                    "div": {
-                        "class": "popform",
-                        "content": sb_render
-                    }
-                }],
-                content = template_dialog({
-                    "id": "l2_formbox",
-                    "icon": "icon-new-tab",
-                    "title": thiscurrency + " " + tl("layer2"),
-                    "elements": ddat
-                });
-            popdialog(content, "triggersubmit");
-        }
-    })
+        popdialog(content, "triggersubmit");
+    }
 }
 
-// Controls Layer 2 network panel visibility
-function toggle_network_panel() {
-    $(document).on("mouseup", "#l2_formbox h2.nwheading", function(e) {
-        const target = $(e.target);
-        if (target.hasClass("switchpanel")) {
-            return // prevent selection when deleting
-        }
-        const all_bws = $("#l2_formbox").find(".sboxwrap"),
-            this_boxwrap = $(this).next(".sboxwrap");
-        if (this_boxwrap.is(":visible")) {
-            all_bws.slideUp(200);
+// Updates UI elements based on selected l2 network
+function pick_l2_select() {
+    $(document).on("mousedown", "#l2select > .options span", function() {
+        const select = $(this),
+            val = select.text(),
+            form = select.closest("#l2_formbox"),
+            l2_apibox = form.find("#l2_apibox");
+        if (val === "ethereum") {
+            l2_apibox.hide(); // Or slideUp(150) for a consistent animation feel.
             return
         }
-        all_bws.not(this_boxwrap).slideUp(200);
-        this_boxwrap.slideDown(200);
-    })
+        const val_class = val.replace(/ /g, "-"),
+            item_to_show = l2_apibox.find("." + val_class);
+        item_to_show.show().siblings(".apibox_item").hide();
+        l2_apibox.show();
+    });
 }
 
-// Manages Layer 2 network enable/disable switching
-function toggle_network_status() {
-    $(document).on("mouseup", "#l2_formbox h2.nwheading .switchpanel", function() {
-        const this_switch = $(this),
-            sboxwrap = this_switch.parent("h2.nwheading").next(".sboxwrap");
-        if (this_switch.hasClass("true")) {
-            this_switch.removeClass("true").addClass("false");
-            sboxwrap.slideUp(300);
+// Toggles l2 network services
+function toggle_l2_services() {
+    $(document).on("click", "#l2_apibox > .apibox_item .l2_services", function() {
+        const this_node = $(this),
+            apibox_item = this_node.closest(".apibox_item"),
+            l2_apis = apibox_item.find(".l2_apis");
+        if (l2_apis.is(":visible")) {
+            l2_apis.hide();
             return
         }
-        this_switch.removeClass("false").addClass("true");
-    })
+        l2_apis.show();
+    });
 }
 
 // Processes Layer 2 settings form submission
 function save_layer2_settings() {
     $(document).on("click", "#l2_formbox input.submit", function(e) {
         e.preventDefault();
-        const payment = $(this).attr("data-currency"),
-            csnode = cs_node(payment, "layer2");
-        if (csnode) {
-            const options = csnode.data("options"),
-                nw2box = $("#l2_formbox").find(".popform > .nw2box");
-            nw2box.each(function() {
-                const l2_type_obj = {},
-                    this_box = $(this),
-                    this_network = this_box.data("network"),
-                    this_switch = this_box.find(".switchpanel"),
-                    l2_apis = this_box.find(".l2_apis"),
-                    select = this_switch.hasClass("true");
-                l2_apis.each(function() {
-                    const this_nw = $(this),
-                        input = this_nw.find(".selectbox > input"),
-                        input_data = input.val();
-                    if (input_data) {
-                        const this_type = this_nw.data("type");
-                        l2_type_obj[this_type] = input_data;
-                    }
-                });
-                options[this_network] = select ? l2_type_obj : {};
-            });
-            csnode.data("options", options).find("p").html("");
-            canceldialog();
-            notify(tl("datasaved"));
-            save_cc_settings(payment, true);
+        const this_network = $("#l2select > input").val(),
+            l2_reset = glob_const.eth_l2s.reduce((obj, key) => (obj[key] = {}, obj), {}),
+            payment = $(this).attr("data-currency"),
+            csnode = cs_node(payment, "layer2"),
+            options = l2_reset;
+        if (this_network === "ethereum" || !csnode) { // keep reset
+        } else {
+            const l2_class = this_network.replace(/ /g, "-"),
+                apibox_item = $("#l2_apibox .apibox_item." + l2_class);
+            if (apibox_item.length) {
+                const l2_apis = apibox_item.find(".l2_apis");
+                if (l2_apis.length) {
+                    l2_type_obj = {};
+                    l2_apis.each(function() {
+                        const this_nw = $(this),
+                            input = this_nw.find(".selectbox > input"),
+                            input_data = input.val();
+                        if (input_data) {
+                            const this_type = this_nw.data("type");
+                            l2_type_obj[this_type] = input_data;
+                        }
+                    });
+                    options[this_network] = l2_type_obj;
+                }
+            }
         }
+        csnode.data({
+            "options": options,
+            "selected": {
+                "name": this_network
+            }
+        }).find("p").text(this_network);
+        canceldialog();
+        notify(tl("datasaved"));
+        save_cc_settings(payment, true);
     })
 }
 
@@ -516,25 +625,11 @@ function save_layer2_settings() {
 function compress_layer2_config(currency, ccsymbol) {
     // Initialize the result object with the base structure
     const eth_settings = clone(get_coinsettings(currency)), // make a deep clone to prevent duplicates
-        cc_symbol = ccsymbol || q_obj(fetch_symbol(currency), "symbol"),
-        symbol = cc_symbol || "eth",
-        l2_settings = eth_settings.layer2,
-        ctracts = contracts(symbol),
         result = {
             "icon": "new-tab",
             "selected": false,
-            "options": {}
+            "options": glob_const.eth_l2s.reduce((obj, key) => (obj[key] = {}, obj), {})
         };
-    // Get all networks from options
-    const networks = Object.entries(l2_settings.options);
-
-    // Filter and process only networks that have selected: true
-    networks.forEach(([network_name, network_data]) => {
-        if (ctracts[network_name] || currency === "ethereum") {
-            // Initialize this network in result if it's selected
-            result.options[network_name] = {};
-        }
-    });
     eth_settings.layer2 = result;
     return eth_settings;
 }
@@ -559,10 +654,142 @@ function get_network_node_config(payment, network, l2_dat, type) {
         const eth_settings = get_coinsettings(payment),
             eth_l2_settings = q_obj(eth_settings, "layer2.options." + network + "." + type + ".apis");
         if (eth_l2_settings) {
-            return objectkey_from_array(eth_l2_settings, "network", network);
+            return objectkey_from_array(eth_l2_settings, "name", selected);
         }
     }
     return false
+}
+
+// ** Fetch contracts: **
+
+// Initiates Layer 2 settings UI interaction
+function init_fetch_l2_contracts(callback) {
+    const currency = callback.currency,
+        l2_contacts = br_get_local("eth_l2_contracts", true);
+    if (l2_contacts) {
+        const currency_contracts = objectkey_from_array(l2_contacts, "currency", currency);
+        if (currency_contracts) {
+            const timestamp = currency_contracts.timestamp, // check if it is expired
+                cache_age = now_utc() - timestamp,
+                expired = cache_age > 604800000; // cache one week
+            if (expired) { // refresh contract
+                fetch_l2_contracts(currency, l2_contacts, callback);
+                return
+            }
+            const contracts = currency_contracts.contracts;
+            if (!empty_obj(contracts)) {
+                fetch_contracts_callback(callback, contracts);
+                return
+            }
+            play_audio("funk");
+            return
+        }
+        fetch_l2_contracts(currency, l2_contacts, callback);
+        return
+    }
+    fetch_l2_contracts(currency, null, callback);
+}
+
+// Fetch l2 contracts from coingecko
+function fetch_l2_contracts(currency, l2_contacts, callback) {
+    loader();
+    set_loader_text("fetching l2 contracts");
+    const coin_conf = get_coin_config(currency);
+    if (coin_conf) {
+        const cmcid = coin_conf.cmcid;
+        if (cmcid) {
+            const contracts = {};
+            api_proxy({
+                "api": "coinmarketcap",
+                "search": "v2/cryptocurrency/info?id=" + cmcid,
+                "cachetime": 604000,
+                "cachefolder": "1w",
+                "params": {
+                    "method": "GET",
+                    "cache": true
+                }
+            }).done(function(resp) {
+                const data = br_result(resp).result,
+                    platforms = q_obj(data, "data." + cmcid + ".contract_address");
+                if (platforms) {
+                    $.each(platforms, function(k, v) {
+                        const platform_name = v?.platform?.name;
+                        if (platform_name) {
+                            const contract = v.contract_address;
+                            if (platform_name === "Ethereum") {
+                                contracts["main"] = contract;
+                            }
+                            if (platform_name === "Arbitrum") {
+                                contracts["arbitrum one"] = contract;
+                            }
+                            if (platform_name === "Polygon") {
+                                contracts["polygon pos"] = contract;
+                            }
+                            if (platform_name === "BNB Smart Chain (BEP20)") {
+                                contracts["binance smart chain"] = contract;
+                            }
+                            if (platform_name === "Base") {
+                                contracts["base"] = contract;
+                            }
+                        }
+                    });
+                }
+            }).always(function() {
+                construct_l2_contracts(currency, l2_contacts, contracts, callback);
+                closeloader();
+            });
+            return
+        }
+    }
+    play_audio("funk");
+}
+
+// Construct l2 contracts
+function construct_l2_contracts(currency, l2_contacts, contracts, callback) {
+    const timestamp = now_utc(),
+        contract_array = (l2_contacts && l2_contacts.length > 25) ? [] : l2_contacts || [], // Restrict contract data size
+        contract_item = {
+            currency,
+            timestamp,
+            contracts
+        },
+        new_contract_array = merge_by_key(contract_array, contract_item, "currency");
+    br_set_local("eth_l2_contracts", new_contract_array, true);
+    if (!empty_obj(contracts)) {
+        fetch_contracts_callback(callback, contracts);
+        return
+    }
+    notify("no l2 contracts found");
+    play_audio("funk");
+}
+
+// Fetch l2 contracts from localstorage
+function fetch_localstorage_contracts(currency) {
+    const l2_contacts = br_get_local("eth_l2_contracts", true);
+    if (l2_contacts && currency) {
+        return objectkey_from_array(l2_contacts, "currency", currency);
+    }
+    return false;
+}
+
+// Callback functions after fetching L2 contracts
+function fetch_contracts_callback(callback, contracts) {
+    if (callback.name === "edit_l2") {
+        edit_l2(callback.currency, contracts);
+        return
+    }
+    if (callback.name === "init_eth_sockets") {
+        init_eth_sockets(callback.params, contracts);
+        return
+    }
+    if (callback.name === "route_layer2_api_request_contracts") {
+        route_layer2_api_request_contracts(callback.params, contracts);
+        return
+    }
+    if (callback.name === "monitor_l2_contracts") {
+        monitor_l2_contracts(callback.params, contracts);
+        return
+    }
 }
 
 // ** Status Management: **
@@ -605,7 +832,7 @@ function update_network_status(sn, stat) {
             stt = " " + st,
             anim = (stat === "paid") ? " blob" : "",
             title = nw_select[1],
-            nw_name = l2 === "bnb" ? "bnb smart chain" : l2;
+            nw_name = l2;
         nw_li += "<li class='nwl2" + stt + anim + "' title='" + title + "'>" + nw_name + "</li>";
         if (st === "offline") {
             offline_count++

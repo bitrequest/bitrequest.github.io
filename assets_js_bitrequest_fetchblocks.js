@@ -3,6 +3,9 @@
 //process_ethereum_transactions 
 //blockchair_fetch
 //scan_layer2_transactions
+//initialize_alchemy_scan
+//get_alchemy_block_height
+//process_alchemy_transactions
 //monero_lws_login
 //set_monero_lws_node_access
 //monero_lws_node_access
@@ -27,6 +30,7 @@
 //mempoolspace_blockheight_fails
 //mempoolspace_rpc
 //infura_txd_rpc
+//build_rpc_endpoint_url
 //eth_params
 //inf_result
 //inf_err
@@ -53,6 +57,9 @@
 //blockchair_erc20_poll_data
 //omniscan_scan_data
 //omniscan_scan_data_eth
+//alchemy_scan_data_eth
+//alchemy_poll_data_eth
+//alchemy_poll_data_erc20
 //ethplorer_scan_data
 //nano_scan_data
 //bitcoin_rpc_data
@@ -317,7 +324,7 @@ function process_ethereum_transactions(rd, api_data, rdo) {
         tx_list = rdo.transactionlist,
         source = rdo.source,
         tx_hash = rd.txhash,
-        chain_type = api_name === "binplorer" ? "bnb" : false;
+        network = api_data.network || false;
     let matched_tx = false;
     if (rdo.pending === "scanning") { // scan incoming transactions on address
         api_proxy({
@@ -335,15 +342,15 @@ function process_ethereum_transactions(rd, api_data, rdo) {
                 if (error) {
                     handle_scan_failure({
                         "error": error
-                    }, api_data, rdo, chain_type);
+                    }, api_data, rdo, network);
                     return
                 }
                 const operations = api_result.operations;
                 if (operations) {
-                    if (has_tx(api_result)) {
+                    if (has_tx(operations)) {
                         const sorted_txs = sort_transactions_by_date(ethplorer_scan_data, operations);
                         $.each(sorted_txs, function(date, tx) {
-                            const parsed_tx = ethplorer_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, chain_type),
+                            const parsed_tx = ethplorer_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, network),
                                 adjusted_timestamp = (rd.inout === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
                             if (str_match(tx.to, rd.address) === true && parsed_tx.transactiontime > adjusted_timestamp && str_match(rd.currencysymbol, q_obj(tx, "tokenInfo.symbol")) === true && parsed_tx.ccval) {
                                 matched_tx = parsed_tx;
@@ -359,18 +366,18 @@ function process_ethereum_transactions(rd, api_data, rdo) {
                             }
                         });
                     }
-                    process_scan_results(rd, api_data, rdo, matched_tx, chain_type);
+                    process_scan_results(rd, api_data, rdo, matched_tx, network);
                     return
                 }
             }
-            handle_scan_failure(null, rd, api_data, rdo, chain_type);
+            handle_scan_failure(null, rd, api_data, rdo, network);
         }).fail(function(xhr, stat, err) {
             const is_proxy_error = is_proxy_fail(this.url),
                 error_data = xhr || stat || err;
             handle_scan_failure({
                 "error": error_data,
                 "is_proxy": is_proxy_error
-            }, rd, api_data, rdo, chain_type);
+            }, rd, api_data, rdo, network);
         }).always(function() {
             update_api_source(rdo, api_data);
         });
@@ -392,7 +399,7 @@ function process_ethereum_transactions(rd, api_data, rdo) {
                     if (error) {
                         handle_scan_failure({
                             "error": error
-                        }, rd, api_data, rdo, chain_type);
+                        }, rd, api_data, rdo, network);
                         return
                     }
                     const tx_input = api_result.input,
@@ -406,7 +413,7 @@ function process_ethereum_transactions(rd, api_data, rdo) {
                             "value": token_value,
                             "decimals": rd.decimals
                         },
-                        parsed_tx = infura_erc20_poll_data(tx_data, rdo.setconfirmations, rd.currencysymbol, chain_type);
+                        parsed_tx = infura_erc20_poll_data(tx_data, rdo.setconfirmations, rd.currencysymbol, network);
                     if (parsed_tx.ccval) {
                         matched_tx = parsed_tx;
                         if (source === "requests") {
@@ -417,17 +424,17 @@ function process_ethereum_transactions(rd, api_data, rdo) {
                             }
                         }
                     }
-                    process_scan_results(rd, api_data, rdo, matched_tx, chain_type);
+                    process_scan_results(rd, api_data, rdo, matched_tx, network);
                     return
                 }
-                handle_scan_failure(null, rd, api_data, rdo, chain_type);
+                handle_scan_failure(null, rd, api_data, rdo, network);
             }).fail(function(xhr, stat, err) {
                 const is_proxy_error = is_proxy_fail(this.url),
                     error_data = xhr || stat || err;
                 handle_scan_failure({
                     "error": error_data,
                     "is_proxy": is_proxy_error
-                }, rd, api_data, rdo, chain_type);
+                }, rd, api_data, rdo, network);
             }).always(function() {
                 update_api_source(rdo, api_data);
             });
@@ -661,12 +668,10 @@ function blockchair_fetch(rd, api_data, rdo) {
 // ** Arbiscan / Polygonscan / Bnbscan API **
 // Handles ETH Layer2 transaction scanning and polling across multiple networks with contract verification
 function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
-    const request_id = rd.requestid,
-        api_name = api_data.name,
+    const api_name = api_data.name,
         network = api_data.network,
         current_list = rdo.thislist,
         tx_list = rdo.transactionlist,
-        tx_hash = rd.txhash,
         chain_param = chainid ? "&chainid=" + chainid : "",
         eth_request = {
             "api": api_name,
@@ -693,37 +698,31 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
             api_proxy(eth_request).done(function(response) {
                 const api_result = br_result(response).result;
                 if (api_result) {
-                    const error = api_result.error;
-                    if (error) {
-                        const error_data = api_result.error || api_result;
-                        handle_scan_failure({
-                            "error": error_data
-                        }, rd, api_data, rdo, network);
-                        return
-                    }
                     const transactions = api_result.result;
                     if (transactions) {
-                        if (has_tx(transactions)) {
-                            const sorted_txs = sort_transactions_by_date(omniscan_scan_data_eth, transactions);
-                            $.each(sorted_txs, function(date, tx) {
-                                const parsed_tx = omniscan_scan_data_eth(tx, rdo.setconfirmations, network),
-                                    adjusted_timestamp = (rd.inout === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
-                                if (str_match(tx.to, rd.address) && (parsed_tx.transactiontime > adjusted_timestamp) && parsed_tx.ccval) {
-                                    matched_tx = parsed_tx;
-                                    if (source === "requests") {
-                                        display_api_source(current_list, api_data); // !!overwrite
-                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                        if (tx_item) {
-                                            tx_list.append(tx_item.data(parsed_tx));
+                        if (is_array(transactions)) {
+                            if (has_tx(transactions)) {
+                                const sorted_txs = sort_transactions_by_date(omniscan_scan_data_eth, transactions);
+                                $.each(sorted_txs, function(date, tx) {
+                                    const parsed_tx = omniscan_scan_data_eth(tx, rdo.setconfirmations, network),
+                                        adjusted_timestamp = (rd.inout === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
+                                    if (str_match(tx.to, rd.address) && (parsed_tx.transactiontime > adjusted_timestamp) && parsed_tx.ccval) {
+                                        matched_tx = parsed_tx;
+                                        if (source === "requests") {
+                                            display_api_source(current_list, api_data); // !!overwrite
+                                            const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                            if (tx_item) {
+                                                tx_list.append(tx_item.data(parsed_tx));
+                                            }
+                                        } else {
+                                            return false
                                         }
-                                    } else {
-                                        return false
                                     }
-                                }
-                            });
+                                });
+                            }
+                            process_scan_results(rd, api_data, rdo, matched_tx, network);
+                            return
                         }
-                        process_scan_results(rd, api_data, rdo, matched_tx, network);
-                        return
                     }
                 }
                 handle_scan_failure(null, rd, api_data, rdo, network);
@@ -743,37 +742,31 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
             api_proxy(token_request).done(function(response) {
                 const api_result = br_result(response).result;
                 if (api_result) {
-                    const error = api_result.error;
-                    if (error) {
-                        const error_data = error || api_result;
-                        handle_scan_failure({
-                            "error": error_data
-                        }, rd, api_data, rdo, network);
-                        return
-                    }
                     const transactions = api_result.result;
                     if (transactions) {
-                        if (has_tx(transactions)) {
-                            const sorted_txs = sort_transactions_by_date(omniscan_scan_data, transactions);
-                            $.each(sorted_txs, function(date, tx) {
-                                const parsed_tx = omniscan_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, network),
-                                    adjusted_timestamp = (rd.inout === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
-                                if (str_match(tx.to, rd.address) && (parsed_tx.transactiontime > adjusted_timestamp) && parsed_tx.ccval) {
-                                    matched_tx = parsed_tx;
-                                    if (source === "requests") {
-                                        display_api_source(current_list, api_data); // !!overwrite
-                                        const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                        if (tx_item) {
-                                            tx_list.append(tx_item.data(parsed_tx));
+                        if (is_array(transactions)) {
+                            if (has_tx(transactions)) {
+                                const sorted_txs = sort_transactions_by_date(omniscan_scan_data, transactions);
+                                $.each(sorted_txs, function(date, tx) {
+                                    const parsed_tx = omniscan_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, network),
+                                        adjusted_timestamp = (rd.inout === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
+                                    if (str_match(tx.to, rd.address) && (parsed_tx.transactiontime > adjusted_timestamp) && parsed_tx.ccval) {
+                                        matched_tx = parsed_tx;
+                                        if (source === "requests") {
+                                            display_api_source(current_list, api_data); // !!overwrite
+                                            const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                            if (tx_item) {
+                                                tx_list.append(tx_item.data(parsed_tx));
+                                            }
+                                        } else {
+                                            return false
                                         }
-                                    } else {
-                                        return false
                                     }
-                                }
-                            });
+                                });
+                            }
+                            process_scan_results(rd, api_data, rdo, matched_tx, network);
+                            return
                         }
-                        process_scan_results(rd, api_data, rdo, matched_tx, network);
-                        return
                     }
                 }
                 handle_scan_failure(null, rd, api_data, rdo, network);
@@ -793,42 +786,37 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
         return
     }
     if (rdo.pending === "polling") { // poll transaction id
+        const tx_hash = rd.txhash;
         if (tx_hash) {
             if (rd.payment === "ethereum") {
                 api_proxy(eth_request).done(function(response) {
                     const api_result = br_result(response).result;
                     if (api_result) {
-                        const error = api_result.error;
-                        if (error) {
-                            const error_data = error || api_result;
-                            handle_scan_failure({
-                                "error": error_data
-                            }, rd, api_data, rdo, network);
-                            return
-                        }
                         const transactions = api_result.result;
                         if (transactions) {
-                            if (has_tx(transactions)) {
-                                const sorted_txs = sort_transactions_by_date(omniscan_scan_data_eth, transactions);
-                                $.each(sorted_txs, function(date, tx) {
-                                    if (tx.hash === tx_hash) {
-                                        const parsed_tx = omniscan_scan_data_eth(tx, rdo.setconfirmations, network);
-                                        if (parsed_tx.ccval) {
-                                            matched_tx = parsed_tx;
-                                            if (source === "requests") {
-                                                const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                                if (tx_item) {
-                                                    tx_list.append(tx_item.data(parsed_tx));
+                            if (is_array(transactions)) {
+                                if (has_tx(transactions)) {
+                                    const sorted_txs = sort_transactions_by_date(omniscan_scan_data_eth, transactions);
+                                    $.each(sorted_txs, function(date, tx) {
+                                        if (tx.hash === tx_hash) {
+                                            const parsed_tx = omniscan_scan_data_eth(tx, rdo.setconfirmations, network);
+                                            if (parsed_tx.ccval) {
+                                                matched_tx = parsed_tx;
+                                                if (source === "requests") {
+                                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                                    if (tx_item) {
+                                                        tx_list.append(tx_item.data(parsed_tx));
+                                                    }
+                                                } else {
+                                                    return false
                                                 }
-                                            } else {
-                                                return false
                                             }
                                         }
-                                    }
-                                });
+                                    });
+                                }
+                                process_scan_results(rd, api_data, rdo, matched_tx, network);
+                                return
                             }
-                            process_scan_results(rd, api_data, rdo, matched_tx, network);
-                            return
                         }
                     }
                     handle_scan_failure(null, rd, api_data, rdo, network);
@@ -848,37 +836,31 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
                 api_proxy(token_request).done(function(response) {
                     const api_result = br_result(response).result;
                     if (api_result) {
-                        const error = api_result.error;
-                        if (error) {
-                            const error_data = error || api_result;
-                            handle_scan_failure({
-                                "error": error_data
-                            }, rd, api_data, rdo, network);
-                            return
-                        }
                         const transactions = api_result.result;
                         if (transactions) {
-                            if (has_tx(transactions)) {
-                                const sorted_txs = sort_transactions_by_date(omniscan_scan_data, transactions);
-                                $.each(sorted_txs, function(date, tx) {
-                                    if (tx.hash === tx_hash) {
-                                        const parsed_tx = omniscan_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, network);
-                                        if (parsed_tx.ccval) {
-                                            matched_tx = parsed_tx;
-                                            if (source === "requests") {
-                                                const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
-                                                if (tx_item) {
-                                                    tx_list.append(tx_item.data(parsed_tx));
+                            if (is_array(transactions)) {
+                                if (has_tx(transactions)) {
+                                    const sorted_txs = sort_transactions_by_date(omniscan_scan_data, transactions);
+                                    $.each(sorted_txs, function(date, tx) {
+                                        if (tx.hash === tx_hash) {
+                                            const parsed_tx = omniscan_scan_data(tx, rdo.setconfirmations, rd.currencysymbol, network);
+                                            if (parsed_tx.ccval) {
+                                                matched_tx = parsed_tx;
+                                                if (source === "requests") {
+                                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                                    if (tx_item) {
+                                                        tx_list.append(tx_item.data(parsed_tx));
+                                                    }
+                                                } else {
+                                                    return false
                                                 }
-                                            } else {
-                                                return false
                                             }
                                         }
-                                    }
-                                });
+                                    });
+                                }
+                                process_scan_results(rd, api_data, rdo, matched_tx, network);
+                                return
                             }
-                            process_scan_results(rd, api_data, rdo, matched_tx, network);
-                            return
                         }
                     }
                     handle_scan_failure(null, rd, api_data, rdo, network);
@@ -896,6 +878,243 @@ function scan_layer2_transactions(rd, api_data, rdo, contract, chainid) {
             }
         }
         finalize_request_state(rdo);
+    }
+}
+
+// ** Alchemy.com API **
+
+// Routes alchemy.com API requests between address polling and transaction scanning with block height verification
+function initialize_alchemy_scan(rd, api_data, rdo, ctract) {
+    const source = rdo.source;
+    if (source === "addr_polling" || source === "l2_scanning") {
+        process_alchemy_transactions(rd, api_data, rdo, ctract, false);
+        return
+    }
+    get_alchemy_block_height(rd, api_data, rdo, ctract);
+}
+
+// Fetches and validates current blockchain height from alchemy.com for accurate transaction confirmation counting
+function get_alchemy_block_height(rd, api_data, rdo, ctract) {
+    const api_url = api_data.url;
+    api_proxy({ // get latest blockheight
+        "api": "alchemy",
+        api_url,
+        "cachetime": rdo.cachetime,
+        "cachefolder": "1h",
+        "params": {
+            "method": "POST",
+            "data": {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "eth_blockNumber",
+                "params": []
+            },
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }
+    }).done(function(res) {
+        const block_data = br_result(res);
+        if (block_data) {
+            const block_height = q_obj(block_data, "result.result");
+            if (block_height) {
+                process_alchemy_transactions(rd, api_data, rdo, ctract, block_height);
+                return
+            }
+        }
+        handle_scan_failure(null, rd, api_data, rdo);
+    }).fail(function(xhr, stat, err) {
+        const is_proxy_error = is_proxy_fail(this.url),
+            error_data = xhr || stat || err;
+        handle_scan_failure({
+            "error": error_data,
+            "is_proxy": is_proxy_error
+        }, rd, api_data, rdo);
+    }).always(function() {
+        update_api_source(rdo, api_data);
+    });
+}
+
+// Handles ETH and ERC20 transaction scanning and polling using alchemy.com API
+function process_alchemy_transactions(rd, api_data, rdo, ctract, block_height) {
+    const api_url = api_data.url,
+        api = "alchemy",
+        request_id = rd.requestid,
+        current_list = rdo.thislist,
+        tx_list = rdo.transactionlist,
+        address = rd.address,
+        contract = ctract || rd.token_contract,
+        is_erc20 = (rd.erc20 && contract),
+        contractAddresses = is_erc20 ? [contract] : false,
+        category = is_erc20 ? ["erc20"] : contractAddresses ? ["external", "internal"] : ["external"],
+        cc_symbol = rd.currencysymbol,
+        setconfirmations = rdo.setconfirmations,
+        source = rdo.source,
+        cachetime = rdo.cachetime,
+        network = api_data.network || false;
+    let matched_tx = false;
+    if (rdo.pending === "scanning") { // scan incoming transactions on address
+        const eth_scan = {
+            api,
+            api_url,
+            cachetime,
+            "cachefolder": "1h",
+            "params": {
+                "method": "POST",
+                "data": {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "alchemy_getAssetTransfers",
+                    "params": [{
+                        "toAddress": address,
+                        contractAddresses,
+                        category,
+                        "withMetadata": true,
+                        "maxCount": "0x32",
+                        "order": "desc"
+                    }]
+                },
+                "headers": {
+                    "Content-Type": "application/json"
+                }
+            }
+        };
+        api_proxy(eth_scan).done(function(response) {
+            const api_result = br_result(response);
+            if (api_result) {
+                //if (api_url == glob_const.arbitrum_alchemy_node) return
+                const transactions = q_obj(api_result, "result.result.transfers");
+                if (transactions) {
+                    if (has_tx(transactions)) {
+                        const sorted_txs = sort_transactions_by_date(alchemy_scan_data_eth, transactions);
+                        $.each(sorted_txs, function(date, tx) {
+                            const parsed_tx = alchemy_scan_data_eth(tx, setconfirmations, cc_symbol, network, block_height),
+                                adjusted_timestamp = (rd.inout === "local" && rd.status === "insufficient") ? rdo.request_timestamp - 30000 : rdo.request_timestamp; // substract extra 30 seconds (extra compensation)
+                            if (str_match(tx.to, rd.address) && (parsed_tx.transactiontime > adjusted_timestamp) && parsed_tx.ccval) {
+                                matched_tx = parsed_tx;
+                                if (source === "requests") {
+                                    display_api_source(current_list, api_data); // !!overwrite
+                                    const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                    if (tx_item) {
+                                        tx_list.append(tx_item.data(parsed_tx));
+                                    }
+                                } else {
+                                    return false
+                                }
+                            }
+                        });
+                    }
+                    process_scan_results(rd, api_data, rdo, matched_tx, network);
+                    return
+                }
+            }
+            handle_scan_failure(null, rd, api_data, rdo, network);
+        }).fail(function(xhr, stat, err) {
+            const is_proxy_error = is_proxy_fail(this.url),
+                error_data = xhr || stat || err;
+            handle_scan_failure({
+                "error": error_data,
+                "is_proxy": is_proxy_error
+            }, rd, api_data, rdo, network);
+        }).always(function() {
+            update_api_source(rdo, api_data);
+        });
+        return
+    }
+    if (rdo.pending === "polling") { // poll transaction id
+        const tx_hash = rd.txhash;
+        if (tx_hash) {
+            const eth_poll = {
+                api,
+                api_url,
+                cachetime,
+                "cachefolder": "1h",
+                "params": {
+                    "method": "POST",
+                    "data": {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "eth_getTransactionByHash",
+                        "params": [tx_hash],
+                        "withMetadata": true,
+                    },
+                    "headers": {
+                        "Content-Type": "application/json"
+                    }
+                }
+            };
+            api_proxy(eth_poll).done(function(response) {
+                const api_result = br_result(response),
+                    tx_data = q_obj(api_result, "result.result");
+                if (tx_data) {
+                    const blocknr = tx_data.blockNumber;
+                    if (blocknr) {
+                        const eth_blocknr = {
+                            api,
+                            api_url,
+                            cachetime,
+                            "cachefolder": "1h",
+                            "params": {
+                                "method": "POST",
+                                "data": {
+                                    "jsonrpc": "2.0",
+                                    "id": 1,
+                                    "method": "eth_getBlockByNumber",
+                                    "params": [blocknr, false]
+                                },
+                                "headers": {
+                                    "Content-Type": "application/json"
+                                }
+                            }
+                        };
+                        api_proxy(eth_blocknr).done(function(response) {
+                            const api_result = br_result(response),
+                                block_data = q_obj(api_result, "result.result");
+                            if (block_data) {
+                                const timestamp = block_data.timestamp;
+                                if (timestamp) {
+                                    const tx_timestamp = Number(timestamp),
+                                        transactiontime = tx_timestamp * 1000,
+                                        parsed_tx = (rd.erc20) ? alchemy_poll_data_erc20(tx_data, setconfirmations, cc_symbol, network, transactiontime, rd.decimals, block_height) :
+                                        alchemy_poll_data_eth(tx_data, setconfirmations, cc_symbol, network, transactiontime, block_height);
+                                    if (parsed_tx.ccval) {
+                                        matched_tx = parsed_tx;
+                                        if (source === "requests") {
+                                            const tx_item = create_transaction_item(parsed_tx, rd.requesttype);
+                                            if (tx_item) {
+                                                tx_list.append(tx_item.data(parsed_tx));
+                                            }
+                                        }
+                                    }
+                                    process_scan_results(rd, api_data, rdo, matched_tx, network);
+                                    return
+                                }
+                            }
+                            handle_scan_failure(null, rd, api_data, rdo, network);
+                        }).fail(function(xhr, stat, err) {
+                            const is_proxy_error = is_proxy_fail(this.url),
+                                error_data = xhr || stat || err;
+                            handle_scan_failure({
+                                "error": error_data,
+                                "is_proxy": is_proxy_error
+                            }, rd, api_data, rdo, network);
+                        }).always(function() {
+                            update_api_source(rdo, api_data);
+                        });
+                        return
+                    };
+                }
+            }).fail(function(xhr, stat, err) {
+                const is_proxy_error = is_proxy_fail(this.url),
+                    error_data = xhr || stat || err;
+                handle_scan_failure({
+                    "error": error_data,
+                    "is_proxy": is_proxy_error
+                }, rd, api_data, rdo, network);
+            }).always(function() {
+                update_api_source(rdo, api_data);
+            });
+        }
     }
 }
 
@@ -985,7 +1204,7 @@ function monero_lws_get_address_txs(rd, api_data, rdo, viewkey) {
             "limit": 10
         };
     api_proxy({
-        "api_url": br_proxy + "/monero_lws_proxy/",
+        "api_url": br_proxy + "/monero-lws/",
         "search": "get_address_txs",
         "cachetime": rdo.cachetime,
         "cachefolder": "1h",
@@ -2158,17 +2377,21 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
     const network_type = api_data.network;
     if (rdo.pending === "scanning") {
         const coin_config = get_coinsettings(rd.payment);
-        let selected_api = api_data;
-        if (network_type) { // switch to default (etherscan) txdata
-            selected_api = q_obj(coin_config, "layer2.options." + network_type + ".apis.selected");
+        if (network_type) { // switch to default (alchemy) txdata
+            const selected_api = q_obj(coin_config, "layer2.options." + network_type + ".apis.selected");
             if (selected_api) {
+                const network_name = selected_api.name;
+                if (network_name === "alchemy") {
+                    initialize_alchemy_scan(rd, selected_api, rdo, contract);
+                    return
+                }
                 scan_layer2_transactions(rd, selected_api, rdo, contract, chainid || 1);
                 return
             }
             handle_scan_failure(null, rd, api_data, rdo, network_type);
             return
         }
-        selected_api = q_obj(coin_config, "apis.selected");
+        const selected_api = q_obj(coin_config, "apis.selected");
         if (selected_api) {
             if (rd.erc20) {
                 process_ethereum_transactions(rd, selected_api, rdo);
@@ -2269,6 +2492,20 @@ function infura_txd_rpc(rd, api_data, rdo, contract, chainid) {
     });
 }
 
+// Function to construct RPC URL with optional authentication
+function build_rpc_endpoint_url(rpc_data) {
+    if (rpc_data === false) {
+        return false;
+    }
+    const url = rpc_data.url,
+        username = rpc_data.username,
+        password = rpc_data.password,
+        login_param = (username && password) ? username + ":" + password + "@" : "",
+        hasprefix = url.includes("http"),
+        urlsplit = hasprefix ? url.split("://") : url;
+    return hasprefix ? urlsplit[0] + "://" + login_param + urlsplit[1] : url;
+}
+
 // Constructs RPC request parameters with support for multiple Ethereum node providers
 function eth_params(node_url, cache_time, method, params) {
     const request_payload = {
@@ -2293,11 +2530,15 @@ function eth_params(node_url, cache_time, method, params) {
         });
     } else if (node_url === glob_const.main_arbitrum_node) {
         $.extend(request_payload, {
-            "api": "arbitrum"
+            "api": "arbitrum one"
         });
     } else if (node_url === glob_const.main_polygon_node) {
         $.extend(request_payload, {
-            "api": "polygon"
+            "api": "polygon pos"
+        });
+    } else if (node_url === glob_const.main_bnb_node) {
+        $.extend(request_payload, {
+            "api": "binance smart chain"
         });
     } else {
         $.extend(request_payload, {
@@ -2843,6 +3084,78 @@ function omniscan_scan_data_eth(data, setconfirmations, eth_layer2) {
     };
 }
 
+// Processes Ethereum transactions from the alchemy API with native ETH value conversion
+function alchemy_scan_data_eth(data, setconfirmations, ccsymbol, eth_layer2, lb) {
+    const tx_timestamp = to_ts(q_obj(data, "metadata.blockTimestamp")),
+        transactiontime = tx_timestamp - glob_const.timezone;
+    if (setconfirmations === "sort") {
+        return transactiontime;
+    }
+    const ccval = data.value || null;
+    let confirmations = 0;
+    if (lb) {
+        const block_height = parseInt(data.blockNum, 16) || null,
+            latest_block = parseInt(lb, 16) || null;
+        confirmations = get_block_confirmations(block_height, latest_block);
+    }
+    return {
+        ccval,
+        transactiontime,
+        "txhash": data.hash || null,
+        confirmations,
+        setconfirmations,
+        ccsymbol,
+        eth_layer2
+    };
+}
+
+// Processes Ethereum transactions from the alchemy API
+function alchemy_poll_data_eth(data, setconfirmations, ccsymbol, eth_layer2, transactiontime, lb) {
+    let confirmations = 0;
+    if (lb) {
+        const block_height = parseInt(data.blockNumber, 16) || null,
+            latest_block = parseInt(lb, 16) || null;
+        confirmations = get_block_confirmations(block_height, latest_block);
+    }
+    const hexval = data.value,
+        wei_val = BigInt(hexval),
+        eth_val = Number(wei_val),
+        ccval = parseFloat((eth_val / 1e18).toFixed(8));
+    return {
+        ccval,
+        transactiontime,
+        "txhash": data.hash || null,
+        confirmations,
+        setconfirmations,
+        ccsymbol,
+        eth_layer2
+    };
+}
+
+// Processes Ethereum erc20 transactions from the alchemy API
+function alchemy_poll_data_erc20(data, setconfirmations, ccsymbol, eth_layer2, transactiontime, td, lb) {
+    let confirmations = 0;
+    if (lb) {
+        const block_height = parseInt(data.blockNumber, 16) || null,
+            latest_block = parseInt(lb, 16) || null;
+        confirmations = get_block_confirmations(block_height, latest_block);
+    }
+    const tx_input = data.input,
+        token_decimals = td || 18,
+        amount_hex = tx_input.slice(74),
+        token_value = hex_to_number_string(amount_hex),
+        ccval = parseFloat((token_value / 10 ** token_decimals).toFixed(8));
+    return {
+        ccval,
+        transactiontime,
+        "txhash": data.hash || null,
+        confirmations,
+        setconfirmations,
+        ccsymbol,
+        eth_layer2
+    };
+}
+
 // Handles Ethplorer transaction data with token info and Layer2 support
 function ethplorer_scan_data(data, setconfirmations, ccsymbol, eth_layer2) {
     const transactiontime = normalize_timestamp(data.timestamp);
@@ -3060,7 +3373,8 @@ function kaspa_fyi_ws_data(data, thisaddress) {
 function lnd_tx_data(data) {
     const tx_timestamp = data.txtime || data.timestamp,
         transactiontime = normalize_timestamp(tx_timestamp),
-        btc_amount = parseFloat(data.amount / 100000000000);
+        btc_amount = parseFloat(data.amount / 100000000000),
+        eth_layer2 = "lightning network";
     return {
         "ccval": Math.abs(btc_amount),
         transactiontime,
@@ -3068,7 +3382,8 @@ function lnd_tx_data(data) {
         "confirmations": data.conf,
         "setconfirmations": 1,
         "ccsymbol": "btc",
-        "status": data.status
+        "status": data.status,
+        eth_layer2
     };
 }
 

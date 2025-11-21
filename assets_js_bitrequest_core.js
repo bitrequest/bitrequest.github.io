@@ -540,7 +540,6 @@ function finish_functions() {
     //platform_icon
     gk();
     glob_const.html.addClass("loaded");
-    //getnetwork
 
     // ** Recent Request Management: **
     //check_rr
@@ -1287,10 +1286,10 @@ function post_scan_init(api_data) {
     if (is_scanning()) return
     glob_let.rpc_attempts = {};
     glob_let.post_scan = true;
-    const required_confirms = request.set_confirmations || 0,
+    const setconfirmations = request.set_confirmations || 0,
         scan_params = { // request data object
             "request_timestamp": request.rq_init,
-            "setconfirmations": required_confirms,
+            setconfirmations,
             "pending": "scanning",
             "erc20": request.erc20,
             "cachetime": 20,
@@ -1786,6 +1785,7 @@ function get_blockcypher_apikey() {
 
 // Returns Infura API key if URL doesn't contain one already
 function get_infura_apikey(rpc_url) {
+    if (rpc_url.indexOf("infura.io") === -1) return "";
     const saved_key = $("#apikeys").data("infura") || to.if_id;
     if (rpc_url) {
         return (/^[A-Za-z0-9]+$/.test(rpc_url.slice(-15))) ? "" : saved_key; // check if rpcurl already contains apikey
@@ -3320,10 +3320,13 @@ function trigger_add_erc20() {
 
 // Opens ERC20 token addition dialog
 function add_erc20() {
-    const token_registry = get_cached_tokens();
+    const render_icon = (glob_const.is_safari || glob_let.local),
+        token_registry = get_cached_tokens();
     let token_options = "";
     $.each(token_registry, function(key, token) {
-        token_options += "<span data-id='" + token.cmcid + "' data-currency='" + token.name + "' data-ccsymbol='" + token.symbol.toLowerCase() + "' data-contract='" + token.contract + "' data-pe='none'>" + token.symbol + " | " + token.name + "</span>";
+        const cmcid = token.cmcid,
+            icon_string = render_icon ? "" : "<img src='https://s2.coinmarketcap.com/static/img/coins/64x64/" + cmcid + ".png' class='icon' loading='lazy'/>";
+        token_options += "<span data-id='" + cmcid + "' data-currency='" + token.name + "' data-ccsymbol='" + token.symbol.toLowerCase() + "' data-contract='" + token.contract + "' data-pe='none' class='optionwrap'>" + icon_string + token.symbol + " | " + token.name + "</span>";
     });
     const form_data = {
             "erc20": true,
@@ -4062,7 +4065,7 @@ function get_pdf_url(request_data) {
     if (exists(txhash)) {
         invoice_data["TxID"] = txhash;
     }
-    const network = getnetwork(eth_layer2) || ln_network;
+    const network = eth_layer2 || ln_network;
     if (network) {
         invoice_data[transclear("network")] = network;
     }
@@ -4654,14 +4657,17 @@ function open_blockexplorer_url(explorer_url) {
 // Generates block explorer URL based on currency, transaction type and network parameters
 function blockexplorer_url(currency, is_tx, is_erc20, source, network_layer) {
     const path_prefix = is_tx ? "tx/" : "address/";
-    if (network_layer === "bnb") {
+    if (network_layer === "binance smart chain") {
         return "https://bscscan.com/" + path_prefix;
     }
-    if (network_layer === "arbitrum") {
+    if (network_layer === "arbitrum one") {
         return "https://arbiscan.io/" + path_prefix;
     }
-    if (network_layer === "polygon") {
+    if (network_layer === "polygon pos") {
         return "https://polygonscan.com/" + path_prefix;
+    }
+    if (network_layer === "base") {
+        return "https://basescan.org/" + path_prefix;
     }
     if (is_erc20) {
         return "https://ethplorer.io/" + path_prefix;
@@ -4783,17 +4789,6 @@ function platform_icon(store_type) {
             return fetch_aws("img_button-appstore.png");
         default:
             return fetch_aws("img_button-desktop_app.png");
-    }
-}
-
-// Returns network name based on blockchain layer
-function getnetwork(layer) {
-    if (!layer) return false
-    switch (layer) {
-        case "bnb":
-            return "BNB smart chain";
-        default:
-            return layer;
     }
 }
 
@@ -5334,7 +5329,7 @@ function append_request(rd) {
         addr_box = lightning && (is_lightning_tx || is_hybrid === false) ? "" :
         "<li><p class='address'><strong>" + addr_title + ":</strong> " +
         "<span class='requestaddress select'>" + address + "</span>" + label_display + "</p></li>",
-        network_name = getnetwork(eth_layer2),
+        network_name = eth_layer2,
         bolt_card = boltcard ? "<img src='boltcard.png' class='boltcard' title='paid with the boltcard'>" : "",
         network_box = network_name ?
         "<li><p><strong>" + tl("network") + ":</strong> " + network_name + "</p></li>" : "",

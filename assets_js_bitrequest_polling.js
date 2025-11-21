@@ -1,7 +1,8 @@
 //start_transaction_monitor
 //route_transaction_monitor
 //monitor_main_chain
-//monitor_layer2_chain
+//monitor_layer2
+//monitor_l2_contracts
 //clear_polling_timeout
 //start_address_monitor
 //check_address_transactions
@@ -59,7 +60,7 @@ function route_transaction_monitor(tx_data, api_dat, retry) {
                     const is_layer2 = tx_data.eth_layer2;
                     if (is_layer2) {
                         request.txhash = tx_hash;
-                        monitor_layer2_chain(is_layer2, api_dat, retry);
+                        monitor_layer2(is_layer2, api_dat, retry);
                         return
                     }
                     monitor_main_chain(tx_data, api_dat, retry);
@@ -102,13 +103,31 @@ function monitor_main_chain(tx_data, api_dat, retry) {
 }
 
 // Monitors Layer 2 blockchain transactions using network-specific API endpoints
-function monitor_layer2_chain(eth_layer2, api_dat, retry) {
+function monitor_layer2(eth_layer2, api_dat, retry) {
+    init_fetch_l2_contracts({ // route to fetch contracts
+        "currency": request.payment,
+        "name": "monitor_l2_contracts",
+        "params": {
+            eth_layer2,
+            api_dat,
+            retry
+        }
+    });
+}
+
+// Monitors Layer 2 blockchain transactions using network-specific API endpoints with fetched contracts
+function monitor_l2_contracts(params, contracts_list) {
     clear_polling_timeout();
+    const {
+        eth_layer2,
+        api_dat,
+        retry
+    } = params;
     const timeout = retry ? 10 : 30000,
-        l2_config = get_layer2_config(request.payment),
-        api_data = api_dat || get_network_node_config(request.payment, eth_layer2, l2_config[eth_layer2], "apis"),
-        contracts_list = contracts(request.currencysymbol),
-        contract = contracts_list ? contracts_list[eth_layer2] : false;
+        currency = request.payment,
+        l2_config = get_layer2_config(currency),
+        api_data = api_dat || get_network_node_config(currency, eth_layer2, l2_config[eth_layer2], "apis"),
+        contract = contracts_list[eth_layer2];
     glob_let.tpto = setTimeout(function() {
         start_layer2_polling(api_data, contract);
     }, timeout, function() {
@@ -126,12 +145,12 @@ function clear_polling_timeout() {
 function start_address_monitor(time_out, api_dat, retry) {
     const addr_id = request.address,
         poll_interval = time_out || 7000,
-        conf_required = request.set_confirmations || 0,
+        setconfirmations = request.set_confirmations || 0,
         cache_time = (poll_interval - 1000) / 1000,
         rdo = { // request data object
             "requestid": request.requestid,
             "request_timestamp": request.rq_init,
-            "setconfirmations": conf_required,
+            setconfirmations,
             "pending": "scanning",
             "erc20": request.erc20,
             "source": "addr_polling",
@@ -734,22 +753,22 @@ function validate_confirmations(tx_data, direct, ln) {
                 force_close_socket();
                 return "canceled";
             }
-            const required_confirms = tx_data.setconfirmations ? parseInt(tx_data.setconfirmations, 10) : 0,
-                confirm_text = required_confirms ? required_confirms.toString() : "",
+            const set_confirmations = tx_data.setconfirmations ? parseInt(tx_data.setconfirmations, 10) : 0,
+                confirm_text = set_confirmations ? set_confirmations.toString() : "",
                 confirm_box = status_panel.find("span.confbox"),
                 confirm_span = confirm_box.find("span"),
                 stored_confirms = parseFloat(confirm_span.attr("data-conf")),
                 current_confirms = Number.isNaN(stored_confirms) ? 0 : stored_confirms,
-                tx_confirms = tx_data.confirmations || 0,
-                is_instant = required_confirms === false || tx_data.instant_lock; // Dashpay instant_lock
+                confirmations = tx_data.confirmations || 0,
+                is_instant = set_confirmations === false || tx_data.instant_lock; // Dashpay instant_lock
             status_panel.find("span#confnumber").text(confirm_text);
-            if (tx_confirms >= current_confirms || is_instant || direct) {
+            if (confirmations >= current_confirms || is_instant || direct) {
                 clear_recent_requests();
                 br_remove_session("txstatus"); // remove cached historical exchange rates
                 confirm_box.removeClass("blob");
                 setTimeout(function() {
                     confirm_box.addClass("blob");
-                    confirm_span.text(tx_confirms).attr("data-conf", tx_confirms);
+                    confirm_span.text(confirmations).attr("data-conf", confirmations);
                 }, 500);
                 const tx_hash = tx_data.txhash,
                     eth_layer2 = tx_data.eth_layer2,
@@ -771,8 +790,8 @@ function validate_confirmations(tx_data, direct, ln) {
                     "receivedamount": received_formatted,
                     "fiatvalue": fiat_value,
                     "txhash": tx_hash,
-                    "confirmations": tx_confirms,
-                    "set_confirmations": required_confirms,
+                    confirmations,
+                    set_confirmations,
                     eth_layer2
                 });
                 // don't update time of payment
@@ -787,7 +806,7 @@ function validate_confirmations(tx_data, direct, ln) {
                 const exact_match = helper.exact,
                     amount_valid = exact_match ? received_formatted === crypto_amount : received_formatted >= (crypto_amount * 0.97);
                 if (amount_valid) {
-                    if (tx_confirms >= required_confirms || is_instant === true) {
+                    if (confirmations >= set_confirmations || is_instant === true) {
                         force_close_socket();
                         play_audio("collect", payment);
                         const status_msg = request_type === "incoming" ? tl("paymentsent") : tl("paymentreceived"),

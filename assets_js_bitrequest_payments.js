@@ -613,7 +613,7 @@ function get_tokeninfo_local() {
         return false
     }
     const token_decimals = token_contracts.dec;
-    return token_decimals ? token_decimals : (token_decimals === null) ? false : 18;
+    return token_decimals || false;
 }
 
 // Sets up payment dialog UI and initializes payment monitoring

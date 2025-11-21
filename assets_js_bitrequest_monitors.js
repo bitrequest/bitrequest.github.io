@@ -91,6 +91,7 @@ function scan_pending_requests(trigger, active_req_list) {
         glob_let.tx_list = [], // reset transaction index
         glob_let.statuspush = [],
         glob_let.l2_fetched = {};
+    reset_overflow("l2");
     const requests = active_req_list || $("#requestlist .rqli").filter(function() {
         return $(this).data("pending") !== "unknown";
     });
@@ -303,6 +304,10 @@ function route_crypto_api(rd, api_data, rdo) {
         scan_layer2_transactions(rd, api_data, rdo, null, 1);
         return
     }
+    if (provider === "alchemy") {
+        initialize_alchemy_scan(rd, api_data, rdo);
+        return
+    }
     if (provider === "ethplorer") {
         process_ethereum_transactions(rd, api_data, rdo);
         return
@@ -355,8 +360,8 @@ function route_blockchain_rpc(rd, api_data, rdo) {
 function process_scan_results(rd, api_data, rdo, tx_details, l2) {
     glob_let.apikey_fails = false;
     const src = rdo.source,
-        pending = rdo.pending
-    tx_hash = tx_details.txhash || rd.txhash;
+        pending = rdo.pending,
+        tx_hash = tx_details.txhash || rd.txhash;
     if (src === "requests") {
         const current_list = rdo.thislist;
         if (current_list) {
@@ -372,10 +377,9 @@ function process_scan_results(rd, api_data, rdo, tx_details, l2) {
                 if (!has_l2) {
                     // save eth l2 chain
                     rd.eth_layer2 = eth_layer2;
-                    // block l2 scanning on match
                     glob_let.l2_fetched.id = rd.requestid;
                     glob_let.l2_fetched.l2 = eth_layer2;
-                    return
+                    //return
                 }
             }
             validate_payment_amounts(rd, rdo);
@@ -520,7 +524,7 @@ function handle_api_failure(rd, rdo, error_obj, api_data, l2) {
                 return
             }
             if (src === "l2_polling") {
-                monitor_layer2_chain(l2, next_l2_api, true);
+                monitor_layer2(l2, next_l2_api, true);
                 return
             }
         }
@@ -769,7 +773,7 @@ function format_transaction_details(data) {
     const confirmation_details = data.confirmations ? data.confirmations + "/" + data.setconfirmations : tl("unconfirmedtx"),
         confirmation_var = data.instant_lock ? "(instant_lock)" : confirmation_details,
         confirmation_info = data.setconfirmations === false ? "" : "Confirmations: " + confirmation_var,
-        layer2_source = data.l2 ? "\nLayer: " + data.l2 : "",
+        layer2_source = data.eth_layer2 ? "\nNetwork: " + data.eth_layer2 : "",
         title_string = historic_details + confirmation_info + layer2_source;
     return title_string.length ? title_string : false;
 }

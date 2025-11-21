@@ -16,6 +16,33 @@ self.addEventListener("install", function(event) {
 // If any fetch fails, it will show the offline page.
 self.addEventListener("fetch", function(event) {
 	if (event.request.method !== "GET") return;
+
+	// --- IMAGE CACHING LOGIC ---
+	if (event.request.destination === "image") {
+		event.respondWith(
+			// CORRECTED: Use the 'CACHE' variable you defined.
+			caches.open(CACHE).then(cache => {
+				// 1. Check if the image is in our cache
+				return cache.match(event.request).then(cachedResponse => {
+					// 2. If it's in the cache, return it immediately
+					if (cachedResponse) {
+						return cachedResponse;
+					}
+
+					// 3. If not, fetch it from the network
+					return fetch(event.request).then(networkResponse => {
+						// 4. And store a copy in the cache for next time
+						cache.put(event.request, networkResponse.clone());
+						return networkResponse;
+					});
+				});
+			})
+		);
+		// Important: Return here to stop the rest of the function from running for images
+		return;
+	}
+
+	// --- OFFLINE FALLBACK LOGIC for other requests ---
 	event.respondWith(
 		fetch(event.request).catch(function(error) {
 			// The following validates that the request was for a navigation to a new document
