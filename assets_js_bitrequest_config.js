@@ -1373,17 +1373,7 @@ glob_config = {
                         },
                         {
                             "name": "xmr_node",
-                            "url": "https://xmr.visnova.pl",
-                            "display": true
-                        },
-                        {
-                            "name": "xmr_node",
-                            "url": "https://xmr.surveillance.monster",
-                            "display": true
-                        },
-                        {
-                            "name": "xmr_node",
-                            "url": "https://xmr-node.cakewallet.com:18081",
+                            "url": "https://moneronode.org:18081",
                             "display": true
                         }
                     ],
