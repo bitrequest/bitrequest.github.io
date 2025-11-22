@@ -62,6 +62,28 @@ const glob_multi_wallets = {
         "playstore": "https://play.google.com/store/apps/details?id=com.cypherstack.stackwallet",
         "desktop": "https://stackwallet.com",
         "seed": true
+    },
+    "myetherwallet": {
+        "name": "myetherwallet",
+        "website": "https://www.mewwallet.com",
+        "appstore": "https://apps.apple.com/app/id1464614025",
+        "playstore": "https://play.google.com/store/apps/details?id=com.myetherwallet.mewwallet",
+        "desktop": "https://www.myetherwallet.com",
+        "seed": true
+    },
+    "metamask": {
+        "name": "metamask",
+        "website": "https://metamask.io",
+        "desktop": "https://metamask.io/download",
+        "seed": true
+    },
+    "base": {
+        "name": "base",
+        "website": "https://www.coinbase.com/wallet",
+        "appstore": "https://apps.apple.com/app/id1278383455",
+        "playstore": "https://play.google.com/store/apps/details?id=org.toshi",
+        "desktop": "https://wallet.coinbase.com",
+        "seed": true
     }
 },
 ethl2s = {
@@ -1004,20 +1026,9 @@ glob_config = {
                     glob_multi_wallets.ledger,
                     glob_multi_wallets.keepkey,
                     glob_multi_wallets.stackwallet,
-                    {
-                        "name": "myetherwallet",
-                        "website": "https://www.mewwallet.com",
-                        "appstore": "https://apps.apple.com/app/id1464614025",
-                        "playstore": "https://play.google.com/store/apps/details?id=com.myetherwallet.mewwallet",
-                        "desktop": "https://www.myetherwallet.com",
-                        "seed": true
-                    },
-                    {
-                        "name": "metamask",
-                        "website": "https://metamask.io",
-                        "desktop": "https://metamask.io/download",
-                        "seed": true
-                    }
+                    glob_multi_wallets.myetherwallet,
+                    glob_multi_wallets.metamask,
+                    glob_multi_wallets.base
                 ]
             },
             "settings": {
@@ -1595,26 +1606,10 @@ glob_config = {
         },
         "wallets": {
             "wallet_download_page": "https://ethereum.org/en/wallets/",
-            "wallets": [{
-                    "name": "myetherwallet",
-                    "website": "https://www.mewwallet.com",
-                    "appstore": "https://apps.apple.com/app/id1464614025",
-                    "playstore": "https://play.google.com/store/apps/details?id=com.myetherwallet.mewwallet",
-                    "desktop": "https://www.myetherwallet.com"
-                },
-                {
-                    "name": "metamask",
-                    "website": "https://metamask.io",
-                    "desktop": "https://metamask.io/download",
-                    "seed": true
-                },
-                {
-                    "name": "enjin",
-                    "website": "https://enjin.io/software/wallet",
-                    "appstore": "https://apps.apple.com/app/id1349078375",
-                    "playstore": "http://enj.in/google-play",
-                    "desktop": null
-                }
+            "wallets": [
+                glob_multi_wallets.myetherwallet,
+                glob_multi_wallets.metamask,
+                glob_multi_wallets.base
             ]
         },
         "settings": {
