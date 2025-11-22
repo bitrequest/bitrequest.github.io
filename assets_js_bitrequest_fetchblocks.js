@@ -3289,8 +3289,7 @@ function kaspa_fyi_ws_data(data, thisaddress) {
 function lnd_tx_data(data) {
     const tx_timestamp = data.txtime || data.timestamp,
         transactiontime = normalize_timestamp(tx_timestamp),
-        btc_amount = parseFloat(data.amount / 100000000000),
-        eth_layer2 = "lightning network";
+        btc_amount = parseFloat(data.amount / 100000000000);
     return {
         "ccval": Math.abs(btc_amount),
         transactiontime,
@@ -3298,8 +3297,7 @@ function lnd_tx_data(data) {
         "confirmations": data.conf,
         "setconfirmations": 1,
         "ccsymbol": "btc",
-        "status": data.status,
-        eth_layer2
+        "status": data.status
     };
 }
 
