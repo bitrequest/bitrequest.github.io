@@ -245,7 +245,7 @@ function poll_xmr_mempool(api_data, address, vk, retry) {
             console.error("error", err);
             stop_background_monitors(address);
         }
-    }, 10000); // poll every 10 seconds, be gentle on the host
+    }, 12000); // poll every 12 seconds, be gentle on the host
 }
 
 // Fetches all transaction hashes currently in the Monero mempool.
@@ -663,7 +663,7 @@ function xmr_process_block_range(api_data, range) {
 
     function process_next_block(index, total_hashes) {
         if (index >= range_length) {
-            console.log("Finished processing all blocks in range. Total hashes found:", total_hashes);
+            console.log("Finished processing all blocks in range. Total hashes found in blocks: ", total_hashes.length);
             xmr_get_mempool_hashes(api_data, total_hashes, vk, spk);
             return
         }
