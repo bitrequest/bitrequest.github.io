@@ -58,8 +58,6 @@
 //omniscan_scan_data
 //omniscan_scan_data_eth
 //alchemy_scan_data_eth
-//alchemy_poll_data_eth
-//alchemy_poll_data_erc20
 //ethplorer_scan_data
 //nano_scan_data
 //bitcoin_rpc_data
@@ -3005,62 +3003,6 @@ function alchemy_scan_data_eth(data, setconfirmations, ccsymbol, eth_layer2, lb)
             latest_block = parseInt(lb, 16) || null;
         confirmations = get_block_confirmations(block_height, latest_block);
     }
-    return {
-        ccval,
-        transactiontime,
-        "txhash": data.hash || null,
-        confirmations,
-        setconfirmations,
-        ccsymbol,
-        eth_layer2
-    };
-}
-
-// Processes Ethereum transactions from the alchemy API
-function alchemy_poll_data_eth(data, setconfirmations, ccsymbol, eth_layer2, transactiontime, lb) {
-    let confirmations = 0;
-    if (lb) {
-        const block_height = parseInt(data.blockNumber, 16) || null,
-            latest_block = parseInt(lb, 16) || null;
-        confirmations = get_block_confirmations(block_height, latest_block);
-    }
-    const hexval = data.value,
-        wei_val = BigInt(hexval),
-        eth_val = Number(wei_val),
-        ccval = parseFloat((eth_val / 1e18).toFixed(8));
-    return {
-        ccval,
-        transactiontime,
-        "txhash": data.hash || null,
-        confirmations,
-        setconfirmations,
-        ccsymbol,
-        eth_layer2
-    };
-}
-
-// Processes Ethereum erc20 transactions from the alchemy API
-function alchemy_poll_data_erc20(data, setconfirmations, ccsymbol, eth_layer2, transactiontime, td, lb) {
-    console.log(JSON.stringify({
-        data,
-        setconfirmations,
-        ccsymbol,
-        eth_layer2,
-        transactiontime,
-        td,
-        lb
-    }));
-    let confirmations = 0;
-    if (lb) {
-        const block_height = parseInt(data.blockNumber, 16) || null,
-            latest_block = parseInt(lb, 16) || null;
-        confirmations = get_block_confirmations(block_height, latest_block);
-    }
-    const tx_input = data.input,
-        token_decimals = td || 18,
-        amount_hex = tx_input.slice(74),
-        token_value = hex_to_number_string(amount_hex),
-        ccval = parseFloat((token_value / 10 ** token_decimals).toFixed(8));
     return {
         ccval,
         transactiontime,
