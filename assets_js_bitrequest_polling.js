@@ -20,7 +20,8 @@
 //poll_monero_rpc
 //xmr_post_scan
 //xmr_get_latest_block_hash
-//xmr_get_latest_block_by_hash
+//xmr_process_block_range
+//xmr_get_block_txs
 //xmr_get_mempool_hashes
 //handle_xmr_rpc_fails
 
@@ -213,7 +214,7 @@ function init_xmr_polling(api_dat, wallet_address, retry) {
 
 // Establishes initial connection to Monero node with view key authentication
 function connect_xmr_node(api_data, address, vk, retry) {
-    const timeout = retry ? 0 : 8000;
+    const timeout = retry ? 0 : 10000;
     glob_let.xmr_pool = [];
     socket_info({
         "url": api_data.url
@@ -244,7 +245,7 @@ function poll_xmr_mempool(api_data, address, vk, retry) {
             console.error("error", err);
             stop_background_monitors(address);
         }
-    }, 12000); // poll every 12 seconds, be gentle on the host
+    }, 10000); // poll every 10 seconds, be gentle on the host
 }
 
 // Fetches all transaction hashes currently in the Monero mempool.
@@ -606,7 +607,6 @@ function xmr_post_scan(api_data) {
 function xmr_get_latest_block_hash(api_data) {
     const node = api_data.url,
         proxy = node.includes(".onion") || glob_const.inframe;
-    let hash = false;
     api_proxy({
         "api_url": node + "/json_rpc",
         proxy,
@@ -627,62 +627,91 @@ function xmr_get_latest_block_hash(api_data) {
             if (latest_block_height && pre_start_index) {
                 const start_index = pre_start_index + 1; // first potential block
                 if (latest_block_height >= start_index) {
-                    hash = q_obj(response, "result.block_header.hash");
+                    const range = create_range_array(start_index, latest_block_height);
+                    if (range.length) {
+                        xmr_process_block_range(api_data, range);
+                        return
+                    }
                 }
             }
         }
-        xmr_get_latest_block_by_hash(api_data, hash);
+        // only scan mempool one more time
+        xmr_process_block_range(api_data, []);
     }).fail(function(error) {
-        xmr_get_latest_block_by_hash(api_data, hash);
+        xmr_process_block_range(api_data, []);
     });
 }
 
-function xmr_get_latest_block_by_hash(api_data, hash) {
+// This is the new "controller" function that manages the recursive loop.
+function xmr_process_block_range(api_data, range) {
     const viewkey = request.viewkey;
-    if (viewkey) {
-        const vk = viewkey.vk,
-            spk = get_spend_pubkey_from_address(viewkey.account);
-        if (vk && spk) {
-            if (hash) {
-                console.log("new block detected");
-                const node = api_data.url,
-                    proxy = node.includes(".onion") || glob_const.inframe;
-                api_proxy({
-                    "api_url": node + "/json_rpc",
-                    proxy,
-                    "params": {
-                        "method": "POST",
-                        "contentType": "application/json",
-                        "data": {
-                            "jsonrpc": "2.0",
-                            "id": "0",
-                            "method": "get_block",
-                            "params": {
-                                hash
-                            }
-                        },
-                    }
-                }).done(function(e) {
-                    const response = br_result(e).result;
-                    if (response) {
-                        const txs_hashes = q_obj(response, "result.tx_hashes");
-                        if (txs_hashes && txs_hashes.length > 0) {
-                            xmr_get_mempool_hashes(api_data, txs_hashes, vk, spk);
-                            return
-                        }
-                    }
-                    xmr_get_mempool_hashes(api_data, [], vk, spk);
-                }).fail(function(error) {
-                    xmr_get_mempool_hashes(api_data, [], vk, spk);
-                });
-                return
-            }
-            console.log("no new block detected");
-            xmr_get_mempool_hashes(api_data, [], vk, spk);
-        }
+    if (!viewkey) {
+        cancel_post_scan();
         return
     }
-    cancel_post_scan();
+    const vk = viewkey.vk,
+        spk = get_spend_pubkey_from_address(viewkey.account),
+        range_length = range.length;
+    if (range_length === 0 || range_length > 5) { // Don't index more then 5 blocks
+        xmr_get_mempool_hashes(api_data, [], vk, spk);
+        return
+    }
+    if (!vk || !spk) {
+        cancel_post_scan();
+        return
+    }
+
+    function process_next_block(index, total_hashes) {
+        if (index >= range_length) {
+            console.log("Finished processing all blocks in range. Total hashes found:", total_hashes);
+            xmr_get_mempool_hashes(api_data, total_hashes, vk, spk);
+            return
+        }
+        const height = range[index];
+        console.log("Processing block height: " + height);
+        xmr_get_block_txs(api_data, height, (found_hashes) => {
+            const newtotal_hashes = total_hashes.concat(found_hashes);
+            setTimeout(() => {
+                process_next_block(index + 1, newtotal_hashes);
+            }, 500); // 500ms delay
+        });
+    }
+    process_next_block(0, []);
+}
+
+// XMR get block by height
+function xmr_get_block_txs(api_data, height, callback) {
+    const node = api_data.url,
+        proxy = node.includes(".onion") || glob_const.inframe;
+    api_proxy({
+        "api_url": node + "/json_rpc",
+        proxy,
+        "params": {
+            "method": "POST",
+            "contentType": "application/json",
+            "data": {
+                "jsonrpc": "2.0",
+                "id": "0",
+                "method": "get_block",
+                "params": {
+                    height
+                }
+            },
+        }
+    }).done(function(e) {
+        const response = br_result(e).result;
+        if (response) {
+            const txs_hashes = q_obj(response, "result.tx_hashes");
+            if (txs_hashes && txs_hashes.length > 0) {
+                callback(txs_hashes);
+                return;
+            }
+        }
+        callback([]);
+    }).fail(function(error) {
+        console.error("Failed to fetch block " + height + ":", error);
+        callback([]);
+    });
 }
 
 // include mempool in afterscan

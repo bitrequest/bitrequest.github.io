@@ -292,6 +292,7 @@ let request = null,
 //add_unique_items
 //remove_array_items
 //merge_by_key
+//create_range_array
 
 // ** DOM & UI Utilities: **
 //play_audio
@@ -786,6 +787,17 @@ function remove_array_items(main_array, items_to_remove) {
 
 function merge_by_key(array, new_item, key) {
     return [...array.filter(item => item[key] !== new_item[key]), new_item];
+}
+
+function create_range_array(start, end) {
+    if (start > end) {
+        return [];
+    }
+    const result = [];
+    for (let i = start; i <= end; i++) {
+        result.push(i);
+    }
+    return result;
 }
 
 // ** DOM & UI Utilities: **
