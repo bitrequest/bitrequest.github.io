@@ -1362,7 +1362,7 @@ glob_config = {
                 },
                 "Integrated addresses": {
                     "icon": "cog",
-                    "selected": false,
+                    "selected": true,
                     "switch": true,
                 },
                 "blockexplorers": {
