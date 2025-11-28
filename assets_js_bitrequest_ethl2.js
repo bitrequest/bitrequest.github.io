@@ -167,6 +167,10 @@ function route_layer2_operation(dat, network) {
             } else if (l2 === "base") {
                 base_apis(dat);
             }
+            const source = q_obj(dat, "rdo.source");
+            if (source === "addr_polling") {
+                initialize_network_status(dat.api_data, true);
+            }
             return
         }
     }
@@ -223,7 +227,9 @@ function base_apis(dat) {
 
 // Routes Layer 2 API queries based on pending status
 function route_layer2_api_request(rd, rdo, api_dat) {
-    if (block_overflow("l2", 10)) return false // prevent overflow
+    const source = rdo.source,
+        overflow_limit = (source === "addr_polling") ? 150 : 10;
+    if (block_overflow("l2", overflow_limit)) return false // prevent overflow
     const network = rd.eth_layer2;
     init_fetch_l2_contracts({ // route to fetch contracts
         "currency": rd.payment,
@@ -296,12 +302,13 @@ function scan_layer2_networks(rd, rdo, api_dat, network, ctracts) {
         static_array = Object.keys(static_l2_options),
         set_array = Object.keys(set_l2_options),
         l2_length = set_array.length,
-        add_delay = 2000;
+        add_delay = 2000,
+        fetch_match = (requestid && glob_let.l2_fetched.id === requestid);
     let index = 0,
         delay = 0;
     req_l2_3.forEach(function(i) {
         setTimeout(function() {
-            if (glob_let.l2_fetched.id === requestid) { // Stop scanning for other networks if tx is found
+            if (fetch_match) { // Stop scanning for other networks if tx is found
             } else {
                 const l2 = static_array[i],
                     ss_val = static_l2_options[l2],
@@ -325,7 +332,7 @@ function scan_layer2_networks(rd, rdo, api_dat, network, ctracts) {
             if (index === l2_length) {
                 // Detect when scanning is finished
                 const timeout = setTimeout(function() {
-                    if (glob_let.l2_fetched.id === requestid) { // Process tx if found
+                    if (fetch_match) { // Process tx if found
                         rd.eth_layer2 = glob_let.l2_fetched.l2;
                         validate_payment_amounts(rd, rdo);
                         glob_let.l2_fetched = {};

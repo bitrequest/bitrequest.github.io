@@ -1307,11 +1307,7 @@ function post_scan(request_data, api_data, scan_params) {
             "blockexplorer": api_data.name
         }));
     } else {
-        if (helper.to_foreground) {
-            // don't hide paymentdialog
-        } else {
-            hide_paymentdialog();
-        }
+        hide_paymentdialog();
     }
     route_api_request(request_data, api_data, scan_params);
     socket_info(api_data, true);
@@ -1319,10 +1315,6 @@ function post_scan(request_data, api_data, scan_params) {
 
 // Handles failed post-scan verification
 function cancel_post_scan() {
-    if (helper.to_foreground) {
-        init_socket(helper.selected_socket, request.address, null, true);
-        return
-    }
     closeloader();
     if (glob_const.inframe) {
         parent.postMessage("close_request_confirm", "*");

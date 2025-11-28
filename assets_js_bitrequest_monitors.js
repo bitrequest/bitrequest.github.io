@@ -393,7 +393,7 @@ function process_scan_results(rd, api_data, rdo, tx_details, l2) {
             }
             if (eth_layer2) { // Eth layer 2
                 initialize_network_status(api_data, "paid");
-                if (src === "l2_scanning") {
+                if (src === "l2_scanning" || src === "addr_polling") {
                     glob_const.html.addClass("blurmain_payment");
                     glob_const.paymentpopup.addClass("active");
                     closeloader();
@@ -416,7 +416,7 @@ function process_scan_results(rd, api_data, rdo, tx_details, l2) {
         }
         return
     }
-    if (src === "requests") {
+    if (src === "requests" || src === "addr_polling") {
         if (rd.erc20 || rd.payment === "ethereum") {
             if (!l2) {
                 // Init eth layer 2's
@@ -424,7 +424,9 @@ function process_scan_results(rd, api_data, rdo, tx_details, l2) {
                 return
             }
         }
-        finalize_request_state(rdo);
+        if (src === "requests") {
+            finalize_request_state(rdo);
+        }
         return
     }
     if (src === "post_scan") {

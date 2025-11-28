@@ -193,8 +193,9 @@ function check_address_transactions(rdo, api_data) {
 // Monero RPC
 
 // Establishes initial connection to Monero node with view key authentication
-function init_xmr_polling(api_dat, wallet_address, retry) {
-    const viewkey = request.viewkey || get_vk(wallet_address);
+function init_xmr_polling(api_dat, retry) {
+    const wallet_address = request.address,
+        viewkey = request.viewkey || get_vk(wallet_address);
     if (viewkey) {
         const address = viewkey.account || wallet_address,
             xmr_key = viewkey.vk,
@@ -591,11 +592,7 @@ function xmr_post_scan(api_data) {
                 "blockexplorer": api_data.url
             }));
         } else {
-            if (helper.to_foreground) {
-                // don't hide paymentdialog
-            } else {
-                hide_paymentdialog();
-            }
+            hide_paymentdialog();
         }
         xmr_get_latest_block_hash(api_data);
         socket_info(api_data, true);
@@ -745,10 +742,10 @@ function xmr_get_mempool_hashes(api_data, txs_hashes, vk, spk) {
 
 // Manages XMR mempool polling failures by attempting reconnection through fallback nodes
 function handle_xmr_rpc_fails(api_data, address) {
-    stop_monitors(address);
+    stop_monitors();
     const next_rpc = get_next_rpc("monero", api_data);
     if (next_rpc) {
-        init_xmr_polling(next_rpc, address, true);
+        init_xmr_polling(next_rpc, true);
         return
     }
     socket_info(api_data, false);

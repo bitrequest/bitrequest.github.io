@@ -1,5 +1,6 @@
 // ** Core WebSocket Initialization & Management: **
 //init_socket
+//force_poll
 //socket_info
 //close_socket 
 //handle_socket_fails
@@ -10,6 +11,7 @@
 
 // ** Lightning Network & NFC Handling: **
 //lightning_socket
+//poll_lightning_status
 //process_nfc_payment
 //handle_nfc_api_error
 //show_nfc_error
@@ -27,7 +29,6 @@
 //blockchain_bch_socket
 //mempoolspace_btc_socket
 //sochain_socket
-//poll_dash_network
 
 // ** Ethereum & Layer-2 Networks: **
 //init_eth_sockets
@@ -47,20 +48,41 @@ function init_socket(socket_node, wallet_address, retry, foreground) {
         notify(tl("youareoffline") + ". " + tl("notmonitored"));
         return
     }
+    if (!wallet_address) {
+        notify(tl("notmonitored"), 500000, "yes");
+        return
+    }
     glob_let.rpc_attempts = {};
-    helper.to_foreground = false;
     prevent_screen_sleep();
     const payment_type = request.payment;
-    let node_name;
-    if (socket_node) {
-        node_name = socket_node.name;
-        if (node_name === "poll_fallback") {
-            start_address_monitor(null, null, true);
-            return
-        } else {
-            const socket_id = socket_node.url || node_name;
-            glob_let.socket_attempt[sha_sub(socket_id, 15)] = true;
-        }
+    if (!socket_node || foreground) {
+        force_poll(payment_type);
+        return
+    }
+    const node_name = socket_node.name;
+    if (node_name === "poll_fallback") {
+        start_address_monitor(null, null, true);
+        return
+    } else {
+        const socket_id = socket_node.url || node_name;
+        glob_let.socket_attempt[sha_sub(socket_id, 15)] = true;
+    }
+    if (payment_type === "monero") {
+        init_xmr_polling(null, retry);
+        return
+    }
+    if (payment_type === "ethereum" || request.erc20) {
+        init_fetch_l2_contracts({ // route to fetch contracts
+            "currency": payment_type,
+            "name": "init_eth_sockets",
+            "params": {
+                payment_type,
+                socket_node,
+                wallet_address,
+                retry
+            }
+        });
+        return
     }
     if (payment_type === "bitcoin") {
         if (wallet_address === "lnurl") {
@@ -82,7 +104,7 @@ function init_socket(socket_node, wallet_address, retry, foreground) {
             if (retry) {
                 return
             }
-            lightning_socket(helper.lnd, foreground);
+            lightning_socket(helper.lnd);
         }
         return
     }
@@ -128,7 +150,7 @@ function init_socket(socket_node, wallet_address, retry, foreground) {
     }
     if (payment_type === "dash") {
         if (node_name === "dash.org") {
-            poll_dash_network();
+            start_address_monitor(5000);
             return
         }
         if (node_name === "blockcypher wss") {
@@ -161,28 +183,22 @@ function init_socket(socket_node, wallet_address, retry, foreground) {
         start_address_monitor(5000);
         return
     }
-    if (payment_type === "ethereum" || request.erc20) {
-        init_fetch_l2_contracts({ // route to fetch contracts
-            "currency": payment_type,
-            "name": "init_eth_sockets",
-            "params": {
-                payment_type,
-                socket_node,
-                wallet_address,
-                retry
-            }
-        });
-        return
-    }
-    if (payment_type === "monero") {
-        init_xmr_polling(null, wallet_address);
-        return
-    }
     if (payment_type === "kaspa") {
         start_address_monitor(5000);
         return
     }
-    notify(tl("notmonitored"), 500000, "yes")
+}
+
+// Use polling only, no websockets
+function force_poll(payment_type) {
+    if (payment_type === "monero") {
+        init_xmr_polling(null, true);
+        return
+    }
+    start_address_monitor(null, null, true);
+    if (helper.lnd_status) {
+        lightning_socket(helper.lnd, true);
+    }
 }
 
 // Updates UI elements to reflect WebSocket connection status and handles L1/L2 state transitions
@@ -245,6 +261,9 @@ function close_socket(socket_id) {
         });
         glob_let.sockets = {};
     }
+    if (glob_let.pinging[socket_id]) { // remove pinging globals
+        delete glob_let.pinging[socket_id];
+    }
 }
 
 // Manages WebSocket failures by attempting reconnection through fallback nodes with L1/L2 network handling
@@ -292,8 +311,9 @@ function handle_socket_fails(socket_node, wallet_address, socket_id, is_layer2) 
 }
 
 // Updates connection state and resets WebSocket timer on connection closure
-function handle_socket_close(socket_node) {
+function handle_socket_close(socket_node, socket_id) {
     socket_info(socket_node, false);
+    close_socket(socket_id);
     console.log("Disconnected from " + socket_node.url);
     glob_let.ws_timer = 0;
 }
@@ -321,9 +341,11 @@ function foreground_reconnect() {
     if (!request.eth_l2s.length && helper.l1_status === true) return
     const api_data = q_obj(helper, "api_info.data");
     if (api_data) {
-        force_close_socket();
-        helper.to_foreground = true;
-        post_scan_init(api_data);
+        const wallet_address = request.address;
+        if (wallet_address) {
+            force_close_socket();
+            init_socket(api_data, wallet_address, true, true);
+        }
     }
 }
 
@@ -369,8 +391,9 @@ function lightning_socket(lnd, foreground) {
     if (glob_let.sockets[payment_id]) {
         return
     }
-    if (foreground) {
-        lnd_poll_data(proxy_url, proxy_key, payment_id, node_id, invoice_mode);
+    if (foreground) { // use polling instead of websocket
+        poll_lightning_status(proxy_url, proxy_key, payment_id, node_id, invoice_mode)
+        return
     }
     const socket = glob_let.sockets[payment_id] = new WebSocket(glob_const.ln_socket);
     socket.onopen = function(e) {
@@ -410,16 +433,23 @@ function lightning_socket(lnd, foreground) {
     };
     socket.onclose = function(e) {
         console.log("Disconnected");
+        close_socket(payment_id);
     };
     socket.onerror = function(e) {
-        glob_let.lnd_confirm = false;
-        glob_const.paymentpopup.addClass("live");
-        update_boltcard(false);
-        glob_let.pinging[payment_id] = setInterval(function() {
-            lnd_poll_data(proxy_url, proxy_key, payment_id, node_id, invoice_mode);
-        }, 5000);
+        poll_lightning_status(proxy_url, proxy_key, payment_id, node_id, invoice_mode);
     };
     process_nfc_payment(proxy_url, proxy_key, payment_id, node_id, invoice_mode);
+}
+
+// Poll lightning status instead of using websocket
+function poll_lightning_status(proxy_url, proxy_key, payment_id, node_id, invoice_mode) {
+    glob_let.lnd_confirm = false;
+    glob_const.paymentpopup.addClass("live");
+    update_boltcard(false);
+    lnd_poll_data(proxy_url, proxy_key, payment_id, node_id, invoice_mode);
+    glob_let.pinging[payment_id] = setInterval(function() {
+        lnd_poll_data(proxy_url, proxy_key, payment_id, node_id, invoice_mode);
+    }, 5000);
 }
 
 // Processes NFC tap events for Lightning Network card payments with LNURL-withdraw protocol
@@ -820,7 +850,7 @@ function blockcypher_websocket(socket_node, wallet_address) {
         start_transaction_monitor(tx_details);
     };
     socket.onclose = function(e) {
-        handle_socket_close(socket_node);
+        handle_socket_close(socket_node, wallet_address);
     };
     socket.onerror = function(e) {
         handle_socket_fails(socket_node, wallet_address);
@@ -864,7 +894,7 @@ function blockchain_btc_socket(socket_node, wallet_address) {
         }
     };
     socket.onclose = function(e) {
-        handle_socket_close(socket_node);
+        handle_socket_close(socket_node, wallet_address);
     };
     socket.onerror = function(e) {
         handle_socket_fails(socket_node, wallet_address);
@@ -910,7 +940,7 @@ function blockchain_bch_socket(socket_node, wallet_address) {
         }
     };
     socket.onclose = function(e) {
-        handle_socket_close(socket_node);
+        handle_socket_close(socket_node, wallet_address);
     };
     socket.onerror = function(e) {
         handle_socket_fails(socket_node, wallet_address);
@@ -959,7 +989,7 @@ function mempoolspace_btc_socket(socket_node, wallet_address) {
         }
     };
     mempool_socket.onclose = function(e) {
-        handle_socket_close(socket_node);
+        handle_socket_close(socket_node, wallet_address);
     };
     mempool_socket.onerror = function(e) {
         handle_socket_fails(socket_node, wallet_address);
@@ -1000,17 +1030,12 @@ function sochain_socket(socket_node, wallet_address, network) {
         }
     };
     socket.onclose = function(e) {
-        handle_socket_close(socket_node);
+        handle_socket_close(socket_node, wallet_address);
     };
     socket.onerror = function(e) {
         handle_socket_fails(socket_node, wallet_address);
         return
     };
-}
-
-// Initiates polling interval for Dash blockchain status with 5-second frequency
-function poll_dash_network() {
-    start_address_monitor(5000);
 }
 
 // ** Ethereum & Layer-2 Networks: **
@@ -1082,7 +1107,7 @@ function alchemy_eth_websocket(socket_node, wallet_address) {
         }
     };
     socket.onclose = function(e) {
-        handle_socket_close(socket_node);
+        handle_socket_close(socket_node, wallet_address);
     };
     socket.onerror = function(e) {
         handle_socket_fails(socket_node, wallet_address);
@@ -1147,7 +1172,7 @@ function web3_eth_websocket(socket_node, wallet_address) {
         }
     };
     socket.onclose = function(e) {
-        handle_socket_close(socket_node);
+        handle_socket_close(socket_node, socket_id);
     };
     socket.onerror = function(e) {
         handle_socket_fails(socket_node, wallet_address, socket_id);
@@ -1220,7 +1245,7 @@ function web3_erc20_websocket(socket_node, wallet_address, contract_address, soc
             handle_socket_fails(socket_node, wallet_address, socket_id, network_type);
             return
         }
-        handle_socket_close(socket_node);
+        handle_socket_close(socket_node, socket_id);
     };
     socket.onerror = function(e) {
         handle_socket_fails(socket_node, wallet_address, socket_id, network_type);
@@ -1278,7 +1303,7 @@ function nano_socket(socket_node, wallet_address) {
         }
     };
     socket.onclose = function(e) {
-        handle_socket_close(socket_node);
+        handle_socket_close(socket_node, wallet_address);
     };
     socket.onerror = function(e) {
         handle_socket_fails(socket_node, wallet_address);

@@ -508,8 +508,7 @@ function load_request(pass) {
                     "lnd": false,
                     "lnd_status": false,
                     "l1_status": false,
-                    "l2_status": false,
-                    "to_foreground": false
+                    "l2_status": false
                 }, // global helper object
                 glob_let.api_attempt["crypto_price_apis"] = {},
                 glob_let.api_attempt["fiat_price_apis"] = {},
@@ -693,7 +692,9 @@ function continue_request() {
         request_timestamp = decoded_data && decoded_data.ts ? decoded_data.ts : null,
         request_name = decoded_data && decoded_data.n ? decoded_data.n : null,
         request_title = decoded_data && decoded_data.t ? decoded_data.t : null,
-        eth_layer2_networks = decoded_data && decoded_data.l2 ? decoded_data.l2 : [],
+        l2_object = q_obj(coin_settings, "layer2.options"),
+        l2_array = is_request ? [] : l2_object ? get_indexes_of_non_empty_objects(l2_object) : [],
+        eth_layer2_networks = decoded_data && decoded_data.l2 ? decoded_data.l2 : l2_array,
         current_confirmations = q_obj(coin_settings, "confirmations.selected"),
         data_obj_confirmations = q_obj(decoded_data, "c"),
         set_confirmations = parseFloat(data_obj_confirmations) || current_confirmations,
@@ -1596,7 +1597,7 @@ function get_payment(ccrateeuro, ccapi) {
         bottom_content = request.isrequest ? payment_methods : share_form,
         qr_html = "<div id='qrcode' class='qrcode'><canvas width='256' height='256'></canvas></div>" + crypto_icon,
         lightning_qr = (request.payment === "bitcoin") ? "<div id='qrcode_lnd' class='qrcode'><canvas width='256' height='256'></canvas></div><img src='img_logos_btc-lnd.png' class='cmc_icon' id='lnd_icon'><img src='" + c_icons("phone-icon") + "' class='cmc_icon' id='phone_icon'>" : "",
-        lightning_wallet = (request.payment === "bitcoin") ? "<div class='openwallet_lnd abr icon-folder-open' data-currency='bitcoin' data-rel='0'>" + wallet_text + "</div>" : "";
+        lightning_wallet = (request.payment === "bitcoin") ? "<div class='openwallet_lnd abr icon-folder-open linkcolor' data-currency='bitcoin' data-rel='0'>" + wallet_text + "</div>" : "";
 
     $("#request_front").prepend("<div class='time_panel'><div class='time_bar'></div></div><div id='cl_wrap'>" + crypto_icon + "</div>\
         <div class='actionbar clearfix'>\

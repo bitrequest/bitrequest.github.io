@@ -293,6 +293,7 @@ let request = null,
 //remove_array_items
 //merge_by_key
 //create_range_array
+//get_indexes_of_non_empty_objects
 
 // ** DOM & UI Utilities: **
 //play_audio
@@ -800,6 +801,19 @@ function create_range_array(start, end) {
     return result;
 }
 
+// Get indexes of non empty objects
+function get_indexes_of_non_empty_objects(obj) {
+    const object_values = Object.values(obj),
+        non_empty_indexes = [];
+    object_values.forEach((value, index) => {
+        // Check if the current value is an object and if it has more than 0 keys
+        if (typeof value === "object" && value !== null && Object.keys(value).length > 0) {
+            non_empty_indexes.push(index);
+        }
+    });
+    return non_empty_indexes;
+}
+
 // ** DOM & UI Utilities: **
 
 // Initiates audio playback with promise-based error handling
@@ -893,8 +907,16 @@ function visibility_change() {
     document.addEventListener("visibilitychange", () => {
         if (visible_tab()) { // to foreground
             if (is_openrequest() === true) {
-                set_dialog_timeout();
-                foreground_reconnect(); // assets_js_bitrequest_sockets.js
+                if (request) {
+                    const glob_sockets = glob_let.sockets,
+                        glob_pinging = glob_let.pinging;
+                    if (empty_obj(glob_sockets) && empty_obj(glob_pinging)) {
+                        set_dialog_timeout();
+                        foreground_reconnect(); // assets_js_bitrequest_sockets.js
+                        return
+                    }
+
+                }
             }
         }
         // to background
