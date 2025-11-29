@@ -1012,8 +1012,8 @@ glob_config = {
                 "cmcid": 1027,
                 "urlscheme": function(payment, address, amount, iszero) {
                     const chainid = request.chainid,
-                        cid_string = chainid ? "@" + chainid : "";
-                    amnt = (iszero === true) ? "" : "?value=" + amount + "e18";
+                        cid_string = chainid ? "@" + chainid : "",
+                        amnt = (iszero === true) ? "" : "?value=" + amount + "e18";
                     return payment + ":" + address + cid_string + amnt;
                 },
                 "address_regex": "^0x[a-fA-F0-9]{40}$"
