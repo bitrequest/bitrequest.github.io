@@ -1279,6 +1279,10 @@ body.seed_dialog #sd_panel {
     text-decoration: underline;
 }
 
+#l2_apibox.hide_l2ab {
+    display:none!important;
+}
+
 #l2_apibox .apibox_item .l2_apis {
     display:none;
 }

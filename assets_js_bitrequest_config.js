@@ -1011,9 +1011,10 @@ glob_config = {
                 "ccsymbol": "eth",
                 "cmcid": 1027,
                 "urlscheme": function(payment, address, amount, iszero) {
-                    //no wallet support for value parameter
-                    //const amnt = (iszero === true) ? "" : "?value=" + tofixedspecial((parseFloat(amount) * 1000000000000000000).toString(), 0);
-                    return payment + ":" + address;
+                    const chainid = request.chainid,
+                        cid_string = chainid ? "@" + chainid : "";
+                    amnt = (iszero === true) ? "" : "?value=" + amount + "e18";
+                    return payment + ":" + address + cid_string + amnt;
                 },
                 "address_regex": "^0x[a-fA-F0-9]{40}$"
             },
@@ -1599,7 +1600,11 @@ glob_config = {
         "data": {
             "monitored": true,
             "urlscheme": function(payment, address, amount, iszero) {
-                return "ethereum:" + address;
+                const amnt = (iszero === true) ? "" : "&uint256=" + amount + "e" + request.decimals,
+                    token_contract = request.token_l2_contract || request.token_contract,
+                    chainid = request.chainid,
+                    cid_string = chainid ? "@" + chainid : "";
+                return "ethereum:" + token_contract + cid_string + "/transfer?address=" + address + amnt;
             },
             "address_regex": "^0x[a-fA-F0-9]{40}$",
             "erc20": true

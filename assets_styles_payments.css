@@ -773,7 +773,7 @@
 }
 
 .networks ul li.nwl2 {
-    padding: 0 1.3em 0 0;
+    padding: 0.4em 1.3em 0.4em 0.3em;
     text-transform: capitalize;
     font-weight: 400;
 }
@@ -793,6 +793,14 @@
 
 #paymentdialogbox:not(.transacting) .networks ul li.nwl2.offline {
     text-decoration-line: line-through;
+    color: #afafaf;
+}
+
+.networks ul li.nwl2.dim {
+    opacity:0.5;
+}
+
+.networks ul li.nwl2.dim:after {
     color: #afafaf;
 }
 

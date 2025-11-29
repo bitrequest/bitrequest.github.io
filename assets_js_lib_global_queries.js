@@ -70,7 +70,12 @@ const br_bipobj = br_get_local("bpdat", true),
         "copycontent": $("#copyinput"),
         "deviceid": null,
         "drivepath": "https://content.googleapis.com",
-        "eth_l2s": ["arbitrum one", "polygon pos", "binance smart chain", "base"],
+        "eth_l2s": {
+            "arbitrum one": 42161,
+            "polygon pos": 137,
+            "binance smart chain": 56,
+            "base": 8453
+        },
         "exp_referrer": br_exp_referrer,
         "firebase_dynamic_link_domain": br_firebase_dynamic_link_domain,
         "firebase_shortlink": "https://" + br_firebase_dynamic_link_domain + "/",
@@ -293,7 +298,6 @@ let request = null,
 //remove_array_items
 //merge_by_key
 //create_range_array
-//get_indexes_of_non_empty_objects
 
 // ** DOM & UI Utilities: **
 //play_audio
@@ -801,19 +805,6 @@ function create_range_array(start, end) {
     return result;
 }
 
-// Get indexes of non empty objects
-function get_indexes_of_non_empty_objects(obj) {
-    const object_values = Object.values(obj),
-        non_empty_indexes = [];
-    object_values.forEach((value, index) => {
-        // Check if the current value is an object and if it has more than 0 keys
-        if (typeof value === "object" && value !== null && Object.keys(value).length > 0) {
-            non_empty_indexes.push(index);
-        }
-    });
-    return non_empty_indexes;
-}
-
 // ** DOM & UI Utilities: **
 
 // Initiates audio playback with promise-based error handling
@@ -915,7 +906,6 @@ function visibility_change() {
                         foreground_reconnect(); // assets_js_bitrequest_sockets.js
                         return
                     }
-
                 }
             }
         }
@@ -1175,8 +1165,8 @@ function parse_url_params(str) {
             continue;
         }
         const key_val = pair.split("="),
-            decoded_key = decodeURIComponent(key_val[0]);
-        decoded_val = key_val[1] ? decodeURIComponent(key_val[1].replace(/\+/g, " ")) : "";
+            decoded_key = decodeURIComponent(key_val[0]),
+            decoded_val = key_val[1] ? decodeURIComponent(key_val[1].replace(/\+/g, " ")) : "";
         // Scan both the key and the value individually
         if (inj(decoded_key) || inj(decoded_val)) {
             return {

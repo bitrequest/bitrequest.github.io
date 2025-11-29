@@ -1215,12 +1215,8 @@ function payrequest() {
         }
         const request_item = request_btn.closest("li.rqli"),
             request_data = request_item.data(),
-            layer2_network = request_data.eth_layer2; // detected l2
-        let layer2_index = false;
-        if (layer2_network) {
-            layer2_index = find_network_index(layer2_network);
-        }
-        const payment_type = request_data.payment,
+            layer2_network = request_data.eth_layer2, // detected l2
+            payment_type = request_data.payment,
             unit = request_data.uoa,
             status = request_data.status,
             request_type = request_data.requesttype,
@@ -1239,8 +1235,6 @@ function payrequest() {
                 "proxy": lightning_data.proxy_host,
                 "nid": lightning_data.nid,
                 "lid": lightning_data.pid
-            })) : (layer2_index !== false) ? "&d=" + btoa(JSON.stringify({
-                "l2": [layer2_index]
             })) : "",
             payment_url = "?p=requests&payment=" + payment_type + "&uoa=" + unit + "&amount=" + payment_amount + url_middle + url_suffix + lightning_params;
         openpage(payment_url, "", "payment");
@@ -3576,7 +3570,7 @@ function validate_address(addr_data, view_key) {
     if (index === 1) {
         if (is_erc20 === true) {
             buildpage(addr_data, true);
-            append_coinsetting(currency, compress_layer2_config(currency, token_symbol));
+            append_coinsetting(currency, compress_layer2_config(currency));
             save_cc_settings(currency);
         }
         if (!set_up()) {

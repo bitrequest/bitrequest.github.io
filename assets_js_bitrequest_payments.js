@@ -31,6 +31,7 @@ $(document).ready(function() {
     //get_tokeninfo
     //get_tokeninfo_local
     //continue_request
+    //get_l2_contracts
     //monero_setup
     //lightning_setup
     //lnd_put
@@ -526,6 +527,10 @@ function load_request(pass) {
                 closeloader();
                 return
             }
+            if (payment_currency === "ethereum") {
+                get_l2_contracts("ethereum");
+                return
+            }
             continue_request();
             return
         }
@@ -547,7 +552,7 @@ function get_tokeninfo(payment_currency, contract) {
     const cached_decimals = br_get_local("decimals_" + payment_currency);
     if (cached_decimals) { // check for cached values
         request.decimals = cached_decimals;
-        continue_request();
+        get_l2_contracts(payment_currency);
         return
     }
     set_loader_text(tl("gettokeninfo"));
@@ -566,7 +571,7 @@ function get_tokeninfo(payment_currency, contract) {
             const fallback_decimals = get_tokeninfo_local();
             if (fallback_decimals) {
                 request.decimals = fallback_decimals;
-                continue_request();
+                get_l2_contracts(payment_currency);
                 br_set_local("decimals_" + payment_currency, fallback_decimals); //cache token decimals
                 return
             }
@@ -578,13 +583,13 @@ function get_tokeninfo(payment_currency, contract) {
         }
         const token_decimals = data.decimals;
         request.decimals = token_decimals;
-        continue_request();
+        get_l2_contracts(payment_currency);
         br_set_local("decimals_" + payment_currency, token_decimals); //cache token decimals
     }).fail(function(xhr, status, error) {
         const fallback_decimals = get_tokeninfo_local();
         if (fallback_decimals) {
             request.decimals = fallback_decimals;
-            continue_request();
+            get_l2_contracts(payment_currency);
             br_set_local("decimals_" + payment_currency, fallback_decimals); //cache token decimals
             return
         }
@@ -615,8 +620,16 @@ function get_tokeninfo_local() {
     return token_decimals || false;
 }
 
+// Fetch layer2 contracts if not already in cache
+function get_l2_contracts(currency) {
+    init_fetch_l2_contracts({ // route to fetch contracts
+        currency,
+        "name": "set_l2_contract"
+    });
+}
+
 // Sets up payment dialog UI and initializes payment monitoring
-function continue_request() {
+function continue_request(contracts) {
     //set globals
     const url_params = get_urlparameters();
     if (url_params.xss) { //xss detection
@@ -693,9 +706,25 @@ function continue_request() {
         request_name = decoded_data && decoded_data.n ? decoded_data.n : null,
         request_title = decoded_data && decoded_data.t ? decoded_data.t : null,
         l2_object = q_obj(coin_settings, "layer2.options"),
-        l2_array = is_request ? [] : l2_object ? get_indexes_of_non_empty_objects(l2_object) : [],
+        l2_array = is_request ? [] : l2_object ? get_set_l2s(l2_object, payment_currency) : [],
         eth_layer2_networks = decoded_data && decoded_data.l2 ? decoded_data.l2 : l2_array,
-        current_confirmations = q_obj(coin_settings, "confirmations.selected"),
+        l2_index = eth_layer2_networks[0];
+    if (l2_index > -1 && contracts) {
+        const l2_global = glob_const.eth_l2s,
+            l2_name = Object.keys(l2_global)[l2_index];
+        if (l2_name) {
+            const l2_contract = contracts[l2_name];
+            if (l2_contract) {
+                const chainid = l2_global[l2_name];
+                if (chainid) {
+                    request.token_l2_contracts = contracts,
+                        request.token_l2_contract = l2_contract,
+                        request.chainid = chainid
+                }
+            }
+        }
+    }
+    const current_confirmations = q_obj(coin_settings, "confirmations.selected"),
         data_obj_confirmations = q_obj(decoded_data, "c"),
         set_confirmations = parseFloat(data_obj_confirmations) || current_confirmations,
         is_instant = !set_confirmations,
@@ -1111,9 +1140,6 @@ function proceed_pf(error_obj) {
             get_cc_exchangerates(crypto_api_list, selected_crypto_api);
             return
         } //fetch cache
-        set_loader_text(tl("readingfromcache", {
-            "ccsymbol": request.currencysymbol
-        }));
         init_exchangerate(usd_exchange_rate, api_source, cache_age); //check for fiat rates and pass usd amount
         return
     }
@@ -1135,7 +1161,6 @@ function get_cc_exchangerates(api_list, selected_api) {
         selected_api === "coingecko" ? (is_erc20 ? "simple/token_price/ethereum?contract_addresses=" + token_contract + "&vs_currencies=usd" : "simple/price?ids=" + payment_currency + "&vs_currencies=usd") :
         false;
     if (api_search_path === false) {
-        set_loader_text(tl("apierror"));
         closeloader();
         cancel_paymentdialog();
         fail_dialogs(selected_api, {
@@ -1249,7 +1274,6 @@ function init_exchangerate(crypto_rate, crypto_api, cache_age) {
                 get_fiat_exchangerate(fiat_api_list, fiat_api, inverse_crypto_rate, currency_list, crypto_api, cache_age);
                 return
             } //fetch cached exchange rates
-            set_loader_text(tl("readingfiatratesfromcache"));
             render_currencypool(exchange_rates, inverse_crypto_rate, crypto_api, currency_cache.api, cache_age, cache_expiration);
             return
         }
@@ -1271,7 +1295,6 @@ function get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currenc
         selected_fiat_api === "coinbase" ? "exchange-rates" :
         false;
     if (!api_search_path) {
-        set_loader_text(tl("error"));
         closeloader();
         cancel_paymentdialog();
         fail_dialogs(selected_fiat_api, {
@@ -1331,7 +1354,6 @@ function get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currenc
                         local_rate = local_key * usd_rate;
                 }
             } else {
-                set_loader_text(tl("error"));
                 closeloader();
                 cancel_paymentdialog();
                 fail_dialogs(selected_fiat_api, {
@@ -1360,7 +1382,6 @@ function get_fiat_exchangerate(api_list, selected_fiat_api, crypto_rate, currenc
             get_fiat_exchangerate(api_list, next_fiat_api, crypto_rate, currency_list, crypto_api, cache_age);
             return
         }
-        set_loader_text(tl("error"));
         closeloader();
         cancel_paymentdialog();
         const error_code = api_response_data.error || "Failed to load data from " + selected_fiat_api;
@@ -1401,7 +1422,6 @@ function next_fiat_api(api_list, selected_fiat_api, error_object, crypto_rate, c
 
 // Handles final error state when all exchange rate APIs and proxies fail
 function no_xrate_result(api, error_obj) {
-    set_loader_text(tl("apierror"));
     closeloader();
     cancel_paymentdialog();
     fail_dialogs(api, {
