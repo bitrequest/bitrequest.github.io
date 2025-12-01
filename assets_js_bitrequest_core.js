@@ -4173,7 +4173,8 @@ function animate_confbar(conf_bar, delay_index) {
 
 // Shows transaction metadata on double click for touch devices
 function show_transaction_meta() {
-    $(document).on("dblclick", ".requestlist li .transactionlist li", function() {
+    $(document).on("dblclick contextmenu", ".requestlist li .transactionlist li", function(e) {
+        e.preventDefault();
         const tx_item = $(this),
             tx_meta = tx_item.children(".historic_meta");
         if (tx_meta.is(":visible")) {
@@ -5100,7 +5101,7 @@ function append_coinsetting(currency, settings) {
 
 // Subtitle for settings
 function setting_sub_address(name, url, custom) {
-    const sub_title = (custom === true || name === "electrum" || name === "xmr_node") ? url || name : name || url;
+    const sub_title = (custom === true || name === "electrum" || name === "xmr_node" || name === "lws") ? url || name : name || url;
     return exists(sub_title) ? truncate_middle(sub_title) : "";
 }
 

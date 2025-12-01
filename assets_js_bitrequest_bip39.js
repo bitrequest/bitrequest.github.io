@@ -341,7 +341,7 @@ function xmr_check() { // https://coinomi.github.io/tools/bip39/
     try {
         const spend_key = get_ssk(bip39_const.expected_seed, true),
             derived_keys = xmr_getpubs(spend_key, 0);
-        return glob_const.test_address.xmr === derived_keys.address;
+        return glob_const.test_address.monero === derived_keys.address;
     } catch (e) {
         console.error(e.name, e.message);
         return false

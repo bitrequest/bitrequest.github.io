@@ -1031,9 +1031,12 @@ function monero_lws_login(rd, api_data, rdo) {
         poll_monero_rpc(rd, api_data, rdo); // use xmr node for tx lookup
         return
     }
-    const viewkey = rd.viewkey;
+    const viewkey = rd.viewkey,
+        xmr_settings = active_coinsettings("monero"),
+        set_lws_host = q_obj(xmr_settings, "apis.lws_selected.url"),
+        lws_host = set_lws_host || lws_proxy;
     if (monero_lws_node_access(view_key)) {
-        monero_lws_get_address_txs(rd, api_data, rdo, viewkey);
+        monero_lws_get_address_txs(rd, api_data, rdo, viewkey, lws_host);
         return
     }
     const wallet_address = viewkey.account || rd.address,
@@ -1048,8 +1051,7 @@ function monero_lws_login(rd, api_data, rdo) {
         data.start_height = xmr_block_index;
     }
     api_proxy({
-        "api": "monero_lws",
-        "search": "login",
+        "api_url": lws_host + "/login",
         "proxy": true,
         "params": {
             "method": "POST",
@@ -1061,11 +1063,14 @@ function monero_lws_login(rd, api_data, rdo) {
     }).done(function(response) {
         const api_result = br_result(response).result;
         if (api_result) {
-            set_monero_lws_node_access(view_key);
-            monero_lws_get_address_txs(rd, api_data, rdo, viewkey);
-            return
+            const new_address = api_result.new_address;
+            if (new_address === true || new_address === false) { // confirm response
+                set_monero_lws_node_access(view_key);
+                monero_lws_get_address_txs(rd, api_data, rdo, viewkey, lws_host);
+                return
+            }
         }
-        handle_scan_failure(null, rd, api_data, rdo);
+        finalize_request_state(rdo);
     }).fail(function(xhr, stat, err) {
         const is_proxy_error = is_proxy_fail(this.url),
             error_data = xhr || stat || err;
@@ -1101,16 +1106,16 @@ function monero_lws_node_access(vk) {
 }
 
 // Look up incoming transactions using monero_lws RPC
-function monero_lws_get_address_txs(rd, api_data, rdo, viewkey) {
-    const wallet_address = viewkey.account || rd.address,
+function monero_lws_get_address_txs(rd, api_data, rdo, viewkey, lws_host) {
+    const api_url = (lws_host === lws_proxy) ? br_proxy + "/monero-lws/" : lws_host + "/get_address_txs",
+        wallet_address = viewkey.account || rd.address,
         request_payload = {
             "address": wallet_address,
             "view_key": viewkey.vk,
             "limit": 10
         };
     api_proxy({
-        "api_url": br_proxy + "/monero-lws/",
-        "search": "get_address_txs",
+        api_url,
         "cachetime": rdo.cachetime,
         "cachefolder": "1h",
         "proxy": true,

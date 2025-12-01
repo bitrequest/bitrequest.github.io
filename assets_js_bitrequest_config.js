@@ -1389,7 +1389,18 @@ glob_config = {
                             "display": true
                         }
                     ],
-                    "options": []
+                    "options": [],
+                    "lws_selected": {
+                        "name": "lws",
+                        "url": lws_proxy,
+                        "display": true
+                    },
+                    "lws": [{
+                        "name": "lws",
+                        "url": lws_proxy,
+                        "display": true
+                    }],
+                    "lws_options": []
                 },
                 "Xpub": {
                     "active": true,
@@ -2114,7 +2125,7 @@ glob_config = {
         },
         {
             "name": "monero_lws",
-            "base_url": br_proxy + ":8050/",
+            "base_url": lws_proxy,
             "key_param": null,
             "api_key": "no_key",
             "sign_up": null

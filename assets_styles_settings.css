@@ -311,6 +311,12 @@
     opacity: 1;
 }
 
+#lws_repo {
+    font-size:0.75em;
+    text-transform: none;
+    color:#999;
+}
+
 #dialogbody .optionwrap .cstat {
     display: inline;
     border: none;

@@ -56,7 +56,7 @@ function init_socket(socket_node, wallet_address, retry, foreground) {
     prevent_screen_sleep();
     const payment_type = request.payment;
     if (!socket_node || foreground) {
-        force_poll(payment_type);
+        force_poll(payment_type, foreground);
         return
     }
     const node_name = socket_node.name;
@@ -190,12 +190,12 @@ function init_socket(socket_node, wallet_address, retry, foreground) {
 }
 
 // Use polling only, no websockets
-function force_poll(payment_type) {
+function force_poll(payment_type, foreground) {
     if (payment_type === "monero") {
-        init_xmr_polling(null, true);
+        init_xmr_polling(null, foreground);
         return
     }
-    start_address_monitor(null, null, true);
+    start_address_monitor(null, null, foreground);
     if (helper.lnd_status) {
         lightning_socket(helper.lnd, true);
     }

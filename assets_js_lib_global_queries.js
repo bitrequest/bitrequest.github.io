@@ -13,6 +13,7 @@ const br_bipobj = br_get_local("bpdat", true),
     br_io = get_default_object(br_init, true),
     br_hostname = "bitrequest.github.io", // change if self hosted
     br_proxy = "https://www.bitrequest.app",
+    lws_proxy = br_proxy + ":8050",
     br_localhostname = (br_hostname.indexOf("http") > -1) ? br_hostname.split("://").pop() : br_hostname,
     br_approot = "https://" + br_localhostname + "/",
     br_proxy_list = [{
@@ -140,7 +141,8 @@ const br_bipobj = br_get_local("bpdat", true),
             "ethereum": "0x2161DedC3Be05B7Bb5aa16154BcbD254E9e9eb68",
             "litecoin": "LZakyXotaE29Pehw21SoPuU832UhvJp4LG",
             "nano": "nano_1mbtirc4x3kixfy5wufxaqakd3gbojpn6gpmk6kjiyngnjwgy6yty3txgztq",
-            "xmr": "477h3C6E6C4VLMR36bQL3yLcA8Aq3jts1AHLzm5QXipDdXVCYPnKEvUKykh2GTYqkkeQoTEhWpzvVQ4rMgLM1YpeD6qdHbS"
+            "monero": "477h3C6E6C4VLMR36bQL3yLcA8Aq3jts1AHLzm5QXipDdXVCYPnKEvUKykh2GTYqkkeQoTEhWpzvVQ4rMgLM1YpeD6qdHbS",
+            "xmrvk": "e4d63789cdfa2ec48571e93e47520690b2c6e11386c90448e8b357d1cd917c00"
         },
         "test_tx": {
             "bitcoin": "b84fc802ad3ead719583b6f87ab36c95ae6544a291f2c2b8abb328989703f64a",
@@ -233,7 +235,10 @@ const br_bipobj = br_get_local("bpdat", true),
         "tx_count": 1000000,
         "tx_list": [],
         "vk": null,
-        "xmr_pool": [],
+        "xmr_indexed": {
+            "mempool": [],
+            "blocks": []
+        },
         "wakelock": false,
         "ws_timer": 0
     }
@@ -781,7 +786,7 @@ function add_unique_items(target_array, source_array) {
     const existing_set = new Set(target_array),
         new_items = source_array.filter(item => !existing_set.has(item));
     target_array.push(...new_items);
-    return new_items; // Returns what was added
+    return target_array; // Returns what was added
 }
 
 // Remove items in one array from another array

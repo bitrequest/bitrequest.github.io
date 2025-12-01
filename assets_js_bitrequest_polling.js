@@ -10,8 +10,11 @@
 // ** Monero RPC: **
 //init_xmr_polling
 //connect_xmr_node
-//poll_xmr_mempool
-//xmr_pool_hashes
+//poll_xmr
+//xmr_get_latest_block_hash
+//xmr_process_block_range
+//xmr_get_block_txs
+//xmr_get_mempool_hashes
 //xmr_get_transactions
 //process_chunks_sequentially
 //handle_chunk_error
@@ -19,10 +22,6 @@
 //filter_incoming_transactions
 //poll_monero_rpc
 //xmr_post_scan
-//xmr_get_latest_block_hash
-//xmr_process_block_range
-//xmr_get_block_txs
-//xmr_get_mempool_hashes
 //handle_xmr_rpc_fails
 
 //validate_confirmations
@@ -194,6 +193,8 @@ function check_address_transactions(rdo, api_data) {
 
 // Establishes initial connection to Monero node with view key authentication
 function init_xmr_polling(api_dat, retry) {
+    glob_let.xmr_indexed.mempool = [];
+    glob_let.xmr_indexed.blocks = [];
     const wallet_address = request.address,
         viewkey = request.viewkey || get_vk(wallet_address);
     if (viewkey) {
@@ -216,32 +217,34 @@ function init_xmr_polling(api_dat, retry) {
 // Establishes initial connection to Monero node with view key authentication
 function connect_xmr_node(api_data, address, vk, retry) {
     const timeout = retry ? 0 : 10000;
-    glob_let.xmr_pool = [];
     socket_info({
         "url": api_data.url
     }, true, true);
     if (timeout) {
         glob_let.tpto = setTimeout(function() {
-            poll_xmr_mempool(api_data, address, vk);
+            poll_xmr(api_data, address, vk);
         }, timeout, function() {
             clear_polling_timeout();
         });
         return
     }
-    poll_xmr_mempool(api_data, address, vk, retry);
+    poll_xmr(api_data, address, vk, retry);
 }
 
 // Periodically checks the Monero mempool for incoming transactions.
-function poll_xmr_mempool(api_data, address, vk, retry) {
+function poll_xmr(api_data, address, vk, retry) {
     const spk = get_spend_pubkey_from_address(address);
     if (retry) {
         poll_animate();
-        xmr_pool_hashes(api_data, address, vk, spk)
+        xmr_get_latest_block_hash(api_data, vk, spk);
+        if (retry === "post_scan") { // poll once on postscan
+            return
+        }
     }
     glob_let.pinging[address] = setInterval(function() {
         try {
             poll_animate();
-            xmr_pool_hashes(api_data, address, vk, spk);
+            xmr_get_latest_block_hash(api_data, vk, spk);
         } catch (err) {
             console.error("error", err);
             stop_background_monitors(address);
@@ -249,31 +252,135 @@ function poll_xmr_mempool(api_data, address, vk, retry) {
     }, 12000); // poll every 12 seconds, be gentle on the host
 }
 
-// Fetches all transaction hashes currently in the Monero mempool.
-function xmr_pool_hashes(api_data, address, vk, spk) {
-    const api_rpc_url = api_data.url,
-        proxy = api_rpc_url.includes(".onion") || glob_const.inframe;
-    glob_let.rpc_attempts[sha_sub(api_rpc_url, 15)] = true;
+function xmr_get_latest_block_hash(api_data, vk, spk) {
+    const node = api_data.url,
+        proxy = node.includes(".onion") || glob_const.inframe;
     api_proxy({
-        "api_url": api_rpc_url + "/get_transaction_pool_hashes",
+        "api_url": node + "/json_rpc",
         proxy,
         "params": {
             "method": "POST",
-            "headers": {
-                "Content-Type": "application/json"
-            }
+            "contentType": "application/json",
+            "data": {
+                "jsonrpc": "2.0",
+                "id": "0",
+                "method": "get_last_block_header"
+            },
         }
     }).done(function(e) {
         const response = br_result(e).result;
         if (response) {
-            const txs_hashes = response.tx_hashes;
-            if (txs_hashes && txs_hashes.length > 0) {
-                xmr_get_transactions(api_data, txs_hashes, vk, spk);
+            const latest_block_height = q_obj(response, "result.block_header.height"),
+                pre_start_index = request.xmr_block_index; // last block before start request
+            if (latest_block_height && pre_start_index) {
+                const start_index = pre_start_index + 1; // first potential block
+                if (latest_block_height >= start_index) {
+                    const range = create_range_array(start_index, latest_block_height),
+                        indexed_blocks = glob_let.xmr_indexed.blocks;
+                    filtered_range = (indexed_blocks.length > 0) ? remove_array_items(range, indexed_blocks) : range;
+                    if (filtered_range.length) {
+                        xmr_process_block_range(api_data, filtered_range, vk, spk);
+                        return
+                    }
+                }
             }
         }
-    }).fail(function(xhr, stat, err) {
-        handle_xmr_rpc_fails(api_data, address);
+        // only scan mempool
+        xmr_get_mempool_hashes(api_data, [], vk, spk);
+    }).fail(function(error) {
+        handle_xmr_rpc_fails(api_data);
     });
+}
+
+// This is the new "controller" function that manages the recursive loop.
+function xmr_process_block_range(api_data, range, vk, spk) {
+    const range_length = range.length;
+
+    function process_next_block(index, total_hashes) {
+        if (index >= range_length) {
+            console.log("Finished processing all blocks in range. Total hashes found in blocks: ", total_hashes.length);
+            xmr_get_mempool_hashes(api_data, total_hashes, vk, spk);
+            return
+        }
+        const height = range[index];
+        console.log("Processing block height: " + height);
+        xmr_get_block_txs(api_data, height, (found_hashes) => {
+            const newtotal_hashes = total_hashes.concat(found_hashes);
+            setTimeout(() => {
+                process_next_block(index + 1, newtotal_hashes);
+            }, 500); // 500ms delay
+        });
+    }
+    process_next_block(0, []);
+}
+
+// XMR get block by height
+function xmr_get_block_txs(api_data, height, callback) {
+    const node = api_data.url,
+        proxy = node.includes(".onion") || glob_const.inframe;
+    api_proxy({
+        "api_url": node + "/json_rpc",
+        proxy,
+        "params": {
+            "method": "POST",
+            "contentType": "application/json",
+            "data": {
+                "jsonrpc": "2.0",
+                "id": "0",
+                "method": "get_block",
+                "params": {
+                    height
+                }
+            },
+        }
+    }).done(function(e) {
+        const response = br_result(e).result;
+        if (response) {
+            const txs_hashes = q_obj(response, "result.tx_hashes");
+            if (txs_hashes && txs_hashes.length > 0) {
+                const existing_set = glob_let.xmr_indexed.blocks,
+                    updated_set = add_unique_items(existing_set, [height]);
+                glob_let.xmr_indexed.blocks = updated_set;
+                callback(txs_hashes);
+                return
+            }
+        }
+        callback([]);
+    }).fail(function(error) {
+        console.error("Failed to fetch block " + height + ":", error);
+        callback([]);
+    });
+}
+
+// get transaction pool hashes
+function xmr_get_mempool_hashes(api_data, txs_hashes, vk, spk) {
+    setTimeout(() => {
+        const node = api_data.url,
+            proxy = node.includes(".onion") || glob_const.inframe;
+        api_proxy({
+            "api_url": node + "/get_transaction_pool_hashes",
+            proxy,
+            "params": {
+                "method": "POST",
+                "headers": {
+                    "Content-Type": "application/json"
+                }
+            }
+        }).done(function(e) {
+            const response = br_result(e).result;
+            if (response) {
+                const pool_hashes = response.tx_hashes;
+                if (pool_hashes && pool_hashes.length > 0) {
+                    const all_hashes = pool_hashes.concat(txs_hashes);
+                    xmr_get_transactions(api_data, all_hashes, vk, spk);
+                    return
+                }
+            }
+            xmr_get_transactions(api_data, txs_hashes, vk, spk);
+        }).fail(function(error) {
+            xmr_get_transactions(api_data, txs_hashes, vk, spk);
+        });
+    }, 500); // 500ms delay
 }
 
 // Fetches and processes transaction details for a given list of hashes in chunks.
@@ -284,7 +391,7 @@ function xmr_get_transactions(api_data, hashes, vk, spk) {
             "max_retries": 3, // Maximum retry attempts per chunk
             "retry_delay_ms": 1000
         },
-        xmr_pool = glob_let.xmr_pool,
+        xmr_pool = glob_let.xmr_indexed.mempool,
         filtered_hashes = (xmr_pool.length > 0) ? remove_array_items(hashes, xmr_pool) : hashes,
         chunks = [],
         fhl = filtered_hashes.length;
@@ -351,9 +458,9 @@ function process_chunks_sequentially(api_data, chunks, vk, spk, config, index, a
                         return
                     }
                 } else {
-                    const existing_set = glob_let.xmr_pool,
+                    const existing_set = glob_let.xmr_indexed.mempool,
                         updated_set = add_unique_items(existing_set, current_chunk);
-                    glob_let.xmr_pool = updated_set;
+                    glob_let.xmr_indexed.mempool = updated_set;
                     console.log("- Chunk " + (index + 1) + " : No incoming transactions");
                 }
                 // Success - move to next chunk
@@ -581,7 +688,8 @@ function xmr_post_scan(api_data) {
         cancel_post_scan();
         return
     }
-    stop_monitors(request.address);
+    const address = request.address;
+    stop_monitors(address);
     const viewkey = q_obj(request, "viewkey.vk");
     if (viewkey) {
         glob_let.post_scan = true;
@@ -594,154 +702,14 @@ function xmr_post_scan(api_data) {
         } else {
             hide_paymentdialog();
         }
-        xmr_get_latest_block_hash(api_data);
-        socket_info(api_data, true);
+        connect_xmr_node(api_data, address, viewkey, "post_scan");
         return
     }
     cancel_post_scan();
 }
 
-function xmr_get_latest_block_hash(api_data) {
-    const node = api_data.url,
-        proxy = node.includes(".onion") || glob_const.inframe;
-    api_proxy({
-        "api_url": node + "/json_rpc",
-        proxy,
-        "params": {
-            "method": "POST",
-            "contentType": "application/json",
-            "data": {
-                "jsonrpc": "2.0",
-                "id": "0",
-                "method": "get_last_block_header"
-            },
-        }
-    }).done(function(e) {
-        const response = br_result(e).result;
-        if (response) {
-            const latest_block_height = q_obj(response, "result.block_header.height"),
-                pre_start_index = request.xmr_block_index; // last block before start request
-            if (latest_block_height && pre_start_index) {
-                const start_index = pre_start_index + 1; // first potential block
-                if (latest_block_height >= start_index) {
-                    const range = create_range_array(start_index, latest_block_height);
-                    if (range.length) {
-                        xmr_process_block_range(api_data, range);
-                        return
-                    }
-                }
-            }
-        }
-        // only scan mempool one more time
-        xmr_process_block_range(api_data, []);
-    }).fail(function(error) {
-        xmr_process_block_range(api_data, []);
-    });
-}
-
-// This is the new "controller" function that manages the recursive loop.
-function xmr_process_block_range(api_data, range) {
-    const viewkey = request.viewkey;
-    if (!viewkey) {
-        cancel_post_scan();
-        return
-    }
-    const vk = viewkey.vk,
-        spk = get_spend_pubkey_from_address(viewkey.account),
-        range_length = range.length;
-    if (range_length === 0 || range_length > 5) { // Don't index more then 5 blocks
-        xmr_get_mempool_hashes(api_data, [], vk, spk);
-        return
-    }
-    if (!vk || !spk) {
-        cancel_post_scan();
-        return
-    }
-
-    function process_next_block(index, total_hashes) {
-        if (index >= range_length) {
-            console.log("Finished processing all blocks in range. Total hashes found in blocks: ", total_hashes.length);
-            xmr_get_mempool_hashes(api_data, total_hashes, vk, spk);
-            return
-        }
-        const height = range[index];
-        console.log("Processing block height: " + height);
-        xmr_get_block_txs(api_data, height, (found_hashes) => {
-            const newtotal_hashes = total_hashes.concat(found_hashes);
-            setTimeout(() => {
-                process_next_block(index + 1, newtotal_hashes);
-            }, 500); // 500ms delay
-        });
-    }
-    process_next_block(0, []);
-}
-
-// XMR get block by height
-function xmr_get_block_txs(api_data, height, callback) {
-    const node = api_data.url,
-        proxy = node.includes(".onion") || glob_const.inframe;
-    api_proxy({
-        "api_url": node + "/json_rpc",
-        proxy,
-        "params": {
-            "method": "POST",
-            "contentType": "application/json",
-            "data": {
-                "jsonrpc": "2.0",
-                "id": "0",
-                "method": "get_block",
-                "params": {
-                    height
-                }
-            },
-        }
-    }).done(function(e) {
-        const response = br_result(e).result;
-        if (response) {
-            const txs_hashes = q_obj(response, "result.tx_hashes");
-            if (txs_hashes && txs_hashes.length > 0) {
-                callback(txs_hashes);
-                return;
-            }
-        }
-        callback([]);
-    }).fail(function(error) {
-        console.error("Failed to fetch block " + height + ":", error);
-        callback([]);
-    });
-}
-
-// include mempool in afterscan
-function xmr_get_mempool_hashes(api_data, txs_hashes, vk, spk) {
-    const node = api_data.url,
-        proxy = node.includes(".onion") || glob_const.inframe;
-    api_proxy({
-        "api_url": node + "/get_transaction_pool_hashes",
-        proxy,
-        "params": {
-            "method": "POST",
-            "headers": {
-                "Content-Type": "application/json"
-            }
-        }
-    }).done(function(e) {
-        const response = br_result(e).result;
-        if (response) {
-            const pool_hashes = response.tx_hashes;
-            if (pool_hashes && pool_hashes.length > 0) {
-                const all_hashes = pool_hashes.concat(txs_hashes);
-                xmr_get_transactions(api_data, all_hashes, vk, spk);
-                return
-            }
-        }
-        xmr_get_transactions(api_data, txs_hashes, vk, spk);
-    }).fail(function(error) {
-        xmr_get_transactions(api_data, txs_hashes, vk, spk);
-    });
-}
-
 // Manages XMR mempool polling failures by attempting reconnection through fallback nodes
-function handle_xmr_rpc_fails(api_data, address) {
+function handle_xmr_rpc_fails(api_data) {
     stop_monitors();
     const next_rpc = get_next_rpc("monero", api_data);
     if (next_rpc) {
