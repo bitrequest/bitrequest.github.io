@@ -1035,7 +1035,7 @@ function monero_lws_login(rd, api_data, rdo) {
         xmr_settings = active_coinsettings("monero"),
         set_lws_host = q_obj(xmr_settings, "apis.lws_selected.url"),
         lws_host = set_lws_host || lws_proxy;
-    if (monero_lws_node_access(view_key)) {
+    if (monero_lws_node_access(lws_host, view_key)) {
         monero_lws_get_address_txs(rd, api_data, rdo, viewkey, lws_host);
         return
     }
@@ -1065,7 +1065,7 @@ function monero_lws_login(rd, api_data, rdo) {
         if (api_result) {
             const new_address = api_result.new_address;
             if (new_address === true || new_address === false) { // confirm response
-                set_monero_lws_node_access(view_key);
+                set_monero_lws_node_access(lws_host, view_key);
                 monero_lws_get_address_txs(rd, api_data, rdo, viewkey, lws_host);
                 return
             }
@@ -1082,22 +1082,24 @@ function monero_lws_login(rd, api_data, rdo) {
 }
 
 // Stores Monero view key in session storage
-function set_monero_lws_node_access(view_key) {
-    const stored_keys = br_get_session("xmrvks", true);
+function set_monero_lws_node_access(host, view_key) {
+    const hostkey_hash = sha_sub(host + view_key, 6),
+        stored_keys = br_get_session("xmrvks", true);
     if (stored_keys) {
-        stored_keys.push(view_key);
+        stored_keys.push(hostkey_hash);
         br_set_session("xmrvks", stored_keys, true);
         return
     }
-    br_set_session("xmrvks", [view_key], true);
+    br_set_session("xmrvks", [hostkey_hash], true);
 }
 
 // Verifies if view key has existing authenticated session with Monero node
-function monero_lws_node_access(vk) {
-    if (vk) {
+function monero_lws_node_access(host, view_key) {
+    if (host && view_key) {
         const stored_keys = br_get_session("xmrvks", true);
         if (stored_keys) {
-            if (stored_keys.includes(vk)) {
+            const hostkey_hash = sha_sub(host + view_key, 6);
+            if (stored_keys.includes(hostkey_hash)) {
                 return true
             }
         }

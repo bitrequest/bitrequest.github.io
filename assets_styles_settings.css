@@ -311,10 +311,37 @@
     opacity: 1;
 }
 
+#lws_toggle {
+    float:left;
+    width:100%;
+    cursor:pointer;
+    font-size:1.1em;
+    font-weight: 700;
+    padding:0 0.6em;
+    margin-top:1em;
+    text-decoration: underline;
+}
+
+#lws_drawer {
+    float:left;
+    width:100%;
+    margin:0;
+    padding:0;
+    display:none;
+}
+
+#lws_drawer h3 {
+    margin:0;
+}
+
 #lws_repo {
-    font-size:0.75em;
+    font-size:0.65em;
     text-transform: none;
     color:#999;
+}
+
+#lws_list {
+    margin-bottom:1em;
 }
 
 #dialogbody .optionwrap .cstat {

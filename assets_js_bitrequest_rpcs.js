@@ -13,8 +13,11 @@ $(document).ready(function() {
     //nodes_match
     //match_url
     //validate_rpc_connection
-    //save_rpc_settings_init
+    //pre_save_rpc_settings
+    //save_rpc_settings
+    //save_lws_settings
     delete_rpc_node();
+    toggle_lws();
     //get_node_icon
 });
 
@@ -27,11 +30,19 @@ function edit_rpcnode() {
             ap_id = settings_item.attr("data-id"),
             item_data = settings_item.data(),
             currency_name = settings_item.children(".liwrap").attr("data-currency"),
-            coin_settings = get_coinsettings(currency_name),
+            is_xmr = (currency_name === "monero");
+        if (is_xmr) {
+            const address_data = get_address_data(currency_name),
+                viewkey = address_data.vk;
+            if (!viewkey) {
+                play_audio("funk");
+                return
+            }
+        }
+        const coin_settings = get_coinsettings(currency_name),
             copy_settings = clone(coin_settings),
             predefined_nodes = q_obj(copy_settings, ap_id + ".apis"),
-            custom_nodes = item_data.options,
-            is_xmr = (currency_name === "monero");
+            custom_nodes = item_data.options;
         if (!exists(custom_nodes) && !exists(predefined_nodes)) {
             return
         }
@@ -111,13 +122,16 @@ function edit_rpcnode() {
                 lws_name = current_lws.name,
                 lws_url = current_lws.url,
                 lws_trunc = truncate_middle(lws_url),
-                lws_html = "<h3>Monero LWS <span id='lws_repo'>(<a href='https://github.com/vtnerd/monero-lws' target='_blank' class='linkcolor exit'>https://github.com/vtnerd/monero-lws</a>)</span></h3>\
+                lws_html = "<div id='lws_toggle' class='linkcolor'>Monero-lws</div>\
+                <div id='lws_drawer'>\
+                <h3>Monero LWS <span id='lws_repo'><a href='https://github.com/vtnerd/monero-lws' target='_blank' class='linkcolor exit'> github <span class='icon-new-tab'></span></a></span></h3>\
                 <div class='selectbox' id='lws_list'>\
                     <input type='text' value='" + lws_trunc + "' data-set='" + lws_trunc + "' placeholder='Monero LWS server' readonly='readonly' id='lws_main_input'/>\
                     <div class='selectarrows icon-menu2' data-pe='none'></div>\
                     <div class='options'></div>\
                 </div>\
-                <input type='text' value='' placeholder='Add Monero LWS server' id='lws_url_input' data-pe='block' autocomplete='off' autocapitalize='off' spellcheck='false'/>";
+                <input type='text' value='' placeholder='Add Monero LWS server' id='lws_url_input' data-pe='block' autocomplete='off' autocapitalize='off' spellcheck='false'/>\
+                </div>";
             $("#lws_container").html(lws_html);
             const predefined_lws = q_obj(copy_settings, "apis.lws"),
                 custom_lws = item_data.lws_options,
@@ -410,8 +424,7 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_config
     const rpc_url = node_config.url,
         rpc_name = node_config.name,
         test_address = glob_const.test_address[currency_name],
-        custom = node_config.custom,
-        is_xmr = (currency_name === "monero");
+        custom = node_config.custom;
     if (glob_let.ap_id === "apis") {
         if (currency_name === "ethereum" || glob_let.is_erc20t === true) {
             const test_hash = glob_const.test_tx.ethereum, // random tx
@@ -518,61 +531,76 @@ function validate_and_add_rpc_node(currency_name, api_list, node_id, node_config
             });
             return
         }
-        if (is_xmr) {
-            if (rpc_name === "xmr_node") {
-                api_proxy({
-                    "api_url": rpc_url + "/get_transaction_pool_hashes",
-                    "proxy": rpc_url.includes(".onion"),
-                    "params": {
-                        "method": "POST",
-                        "headers": {
-                            "Content-Type": "application/json"
+        if (currency_name === "monero") {
+            const address_data = get_address_data("monero");
+            if (address_data) {
+                const address = address_data.address,
+                    view_key = address_data.vk;
+                if (address && view_key) {
+                    if (monero_lws_node_access(rpc_url, view_key)) { // xmr node connection already verified
+                        create_rpc_node_element(api_list, true, node_id, node_config, is_selected);
+                    } else {
+                        if (rpc_name === "xmr_node") {
+                            api_proxy({
+                                "api_url": rpc_url + "/get_transaction_pool_hashes",
+                                "proxy": rpc_url.includes(".onion"),
+                                "params": {
+                                    "method": "POST",
+                                    "headers": {
+                                        "Content-Type": "application/json"
+                                    }
+                                }
+                            }).done(function(e) {
+                                const parsed_data = br_result(e).result;
+                                if (parsed_data) {
+                                    const txs_hashes = parsed_data.tx_hashes;
+                                    if (txs_hashes && txs_hashes.length > 0) { // confirm response
+                                        set_monero_lws_node_access(rpc_url, view_key); // save xmr node connection status
+                                        create_rpc_node_element(api_list, true, node_id, node_config, is_selected);
+                                    } else {
+                                        create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
+                                    }
+                                } else {
+                                    create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
+                                }
+                            }).fail(function(xhr, stat, err) {
+                                create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
+                            });
+                        } else if (rpc_name === "lws") {
+                            api_proxy({
+                                "api_url": rpc_url + "/login",
+                                "proxy": false,
+                                "params": {
+                                    "method": "POST",
+                                    "data": {
+                                        address,
+                                        view_key,
+                                        "create_account": true,
+                                        "generated_locally": false
+                                    },
+                                    "headers": {
+                                        "Content-Type": "application/json"
+                                    }
+                                }
+                            }).done(function(e) {
+                                const parsed_data = br_result(e).result;
+                                if (parsed_data) {
+                                    const new_address = parsed_data.new_address;
+                                    if (new_address === true || new_address === false) { // confirm response
+                                        set_monero_lws_node_access(rpc_url, view_key); // save lws node connection status
+                                        create_rpc_node_element(api_list, true, node_id, node_config, is_selected);
+                                    } else {
+                                        create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
+                                    }
+                                } else {
+                                    create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
+                                }
+                            }).fail(function(xhr, stat, err) {
+                                create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
+                            });
                         }
                     }
-                }).done(function(e) {
-                    const parsed_data = br_result(e).result;
-                    if (parsed_data) {
-                        const txs_hashes = parsed_data.tx_hashes;
-                        if (txs_hashes && txs_hashes.length > 0) {
-                            create_rpc_node_element(api_list, true, node_id, node_config, is_selected);
-                            return
-                        }
-                    }
-                    create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
-                }).fail(function(xhr, stat, err) {
-                    create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
-                });
-                return
-            }
-            if (rpc_name === "lws") {
-                api_proxy({
-                    "api_url": rpc_url + "/login",
-                    "proxy": false,
-                    "params": {
-                        "method": "POST",
-                        "data": {
-                            "address": test_address, // dummy xmr address
-                            "view_key": glob_const.test_address.xmrvk, // dummy xmr viewkey
-                            "create_account": true,
-                            "generated_locally": false
-                        },
-                        "headers": {
-                            "Content-Type": "application/json"
-                        }
-                    }
-                }).done(function(e) {
-                    const parsed_data = br_result(e).result;
-                    if (parsed_data) {
-                        const new_address = parsed_data.new_address;
-                        if (new_address === true || new_address === false) { // confirm response
-                            create_rpc_node_element(api_list, true, node_id, node_config, is_selected);
-                            return
-                        }
-                    }
-                    create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
-                }).fail(function(xhr, stat, err) {
-                    create_rpc_node_element(api_list, false, node_id, node_config, is_selected);
-                });
+                }
             }
             return
         }
@@ -711,10 +739,9 @@ function submit_rpcnode() {
     $(document).on("click", "#settingsbox input.submit", function(e) {
         e.preventDefault();
         const dialog_box = $("#settingsbox"),
-            currency_name = $(this).attr("data-currency"),
-            is_xmr = (currency_name === "monero");
+            currency_name = $(this).attr("data-currency");
         let lws_changes = false;
-        if (is_xmr) {
+        if (currency_name === "monero") {
             const lws_main_input = dialog_box.find("#lws_main_input"),
                 lmi_set_val = lws_main_input.attr("data-set"),
                 lmi_val = lws_main_input.val();
@@ -788,12 +815,11 @@ function submit_rpcnode() {
         }
         const nsi_set_val = node_select_input.attr("data-set");
         if (nsi_set_val === nsi_val && lws_changes === false) { // no changes
-            console.log("abort");
             canceldialog();
             return
         }
         const selected_config = node_select_input.data();
-        save_rpc_settings_init(currency_name, selected_config, false);
+        pre_save_rpc_settings(currency_name, selected_config, false);
     });
 }
 
@@ -828,8 +854,7 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
     node_config.custom = true;
     const error_message = tl("unabletoconnect"),
         rpc_url = node_config.url,
-        test_address = glob_const.test_address[currency_name],
-        is_xmr = (currency_name === "monero");
+        test_address = glob_const.test_address[currency_name];
     if (glob_let.ap_id === "apis") {
         if (currency_name === "ethereum" || glob_let.is_erc20t === true) {
             const test_hash = glob_const.test_tx.ethereum, // random tx
@@ -854,7 +879,7 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                 if (response_hash === test_hash) {
                     input_section.addClass("live").removeClass("offline");
                     node_config.name = "infura";
-                    save_rpc_settings_init(currency_name, node_config, true);
+                    pre_save_rpc_settings(currency_name, node_config, true);
                     return
                 }
                 input_section.addClass("offline").removeClass("live");
@@ -919,7 +944,7 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                                 if (first_tx.version) {
                                     input_section.addClass("live").removeClass("offline");
                                     node_config.name = "electrum";
-                                    save_rpc_settings_init(currency_name, node_config, true);
+                                    pre_save_rpc_settings(currency_name, node_config, true);
                                     closeloader();
                                     return
                                 }
@@ -956,7 +981,7 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                 if (q_obj(parsed_data, "result.rpc_version")) {
                     input_section.addClass("live").removeClass("offline");
                     node_config.name = "nano";
-                    save_rpc_settings_init(currency_name, node_config, true);
+                    pre_save_rpc_settings(currency_name, node_config, true);
                     return
                 }
                 input_section.addClass("offline").removeClass("live");
@@ -969,72 +994,86 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
             });
             return
         }
-        if (is_xmr) {
-            const node_name = node_config.name;
-            if (node_name && node_name === "lws") {
-                api_proxy({
-                    "api_url": rpc_url + "/login",
-                    "proxy": false,
-                    "params": {
-                        "method": "POST",
-                        "data": {
-                            "address": test_address, // dummy xmr address
-                            "view_key": glob_const.test_address.xmrvk, // dummy xmr viewkey
-                            "create_account": true,
-                            "generated_locally": false
-                        },
-                        "headers": {
-                            "Content-Type": "application/json"
-                        }
-                    }
-                }).done(function(e) {
-                    const parsed_data = br_result(e).result;
-                    if (parsed_data) {
-                        const new_address = parsed_data.new_address;
-                        if (new_address === true || new_address === false) { // confirm response
-                            input_section.addClass("live").removeClass("offline");
-                            save_rpc_settings_init(currency_name, node_config, true);
-                            return
-                        }
-                    }
-                    input_section.addClass("offline").removeClass("live");
-                    popnotify("error", error_message);
-                }).fail(function(xhr, stat, err) {
-                    input_section.addClass("offline").removeClass("live");
-                    popnotify("error", error_message);
-                }).always(function() {
-                    closeloader();
-                });
-                return
-            }
-            api_proxy({
-                "api_url": rpc_url + "/get_transaction_pool_hashes",
-                "proxy": rpc_url.includes(".onion"),
-                "params": {
-                    "method": "POST",
-                    "headers": {
-                        "Content-Type": "application/json"
-                    }
-                }
-            }).done(function(e) {
-                const parsed_data = br_result(e).result;
-                if (parsed_data) {
-                    const txs_hashes = parsed_data.tx_hashes;
-                    if (txs_hashes && txs_hashes.length > 0) {
-                        input_section.addClass("live").removeClass("offline");
-                        node_config.name = "xmr_node";
-                        save_rpc_settings_init(currency_name, node_config, true);
+        if (currency_name === "monero") {
+            const address_data = get_address_data("monero");
+            if (address_data) {
+                const address = address_data.address,
+                    view_key = address_data.vk;
+                if (address && view_key) {
+                    if (monero_lws_node_access(rpc_url, view_key)) { // lws node connection already verified
+                        pre_save_rpc_settings(currency_name, node_config, true);
                         return
                     }
+                    const node_name = node_config.name;
+                    if (node_name && node_name === "lws") {
+                        api_proxy({
+                            "api_url": rpc_url + "/login",
+                            "proxy": false,
+                            "params": {
+                                "method": "POST",
+                                "data": {
+                                    address,
+                                    view_key,
+                                    "create_account": true,
+                                    "generated_locally": false
+                                },
+                                "headers": {
+                                    "Content-Type": "application/json"
+                                }
+                            }
+                        }).done(function(e) {
+                            const parsed_data = br_result(e).result;
+                            if (parsed_data) {
+                                const new_address = parsed_data.new_address;
+                                if (new_address === true || new_address === false) { // confirm response
+                                    set_monero_lws_node_access(rpc_url, view_key); // save lws connection status
+                                    input_section.addClass("live").removeClass("offline");
+                                    pre_save_rpc_settings(currency_name, node_config, true);
+                                    return
+                                }
+                            }
+                            input_section.addClass("offline").removeClass("live");
+                            popnotify("error", error_message);
+                        }).fail(function(xhr, stat, err) {
+                            input_section.addClass("offline").removeClass("live");
+                            popnotify("error", error_message);
+                        }).always(function() {
+                            closeloader();
+                        });
+                        return
+                    }
+                    api_proxy({
+                        "api_url": rpc_url + "/get_transaction_pool_hashes",
+                        "proxy": rpc_url.includes(".onion"),
+                        "params": {
+                            "method": "POST",
+                            "headers": {
+                                "Content-Type": "application/json"
+                            }
+                        }
+                    }).done(function(e) {
+                        const parsed_data = br_result(e).result;
+                        if (parsed_data) {
+                            const txs_hashes = parsed_data.tx_hashes;
+                            if (txs_hashes && txs_hashes.length > 0) {
+                                set_monero_lws_node_access(rpc_url, view_key); // save xmr node connection status
+                                input_section.addClass("live").removeClass("offline");
+                                node_config.name = "xmr_node";
+                                pre_save_rpc_settings(currency_name, node_config, true);
+                                return
+                            }
+                        }
+                        input_section.addClass("offline").removeClass("live");
+                        popnotify("error", error_message);
+                    }).fail(function(xhr, stat, err) {
+                        input_section.addClass("offline").removeClass("live");
+                        popnotify("error", error_message);
+                    }).always(function() {
+                        closeloader();
+                    });
                 }
-                input_section.addClass("offline").removeClass("live");
-                popnotify("error", error_message);
-            }).fail(function(xhr, stat, err) {
-                input_section.addClass("offline").removeClass("live");
-                popnotify("error", error_message);
-            }).always(function() {
-                closeloader();
-            });
+            }
+            return
         }
         return
     }
@@ -1106,7 +1145,7 @@ function validate_rpc_connection(input_section, node_config, currency_name) {
                 glob_let.sockets["ws_submit"] = null;
                 close_socket("ws_submit");
                 input_section.addClass("live").removeClass("offline");
-                save_rpc_settings_init(currency_name, node_config, true);
+                pre_save_rpc_settings(currency_name, node_config, true);
                 return
             }
             popnotify("error", error_message);
@@ -1152,7 +1191,7 @@ function test_mempoolspace(input_section, node_config, currency_name) {
                 if (first_tx.version) {
                     input_section.addClass("live").removeClass("offline");
                     node_config.name = "mempool.space";
-                    save_rpc_settings_init(currency_name, node_config, true);
+                    pre_save_rpc_settings(currency_name, node_config, true);
                     closeloader();
                     return
                 }
@@ -1169,10 +1208,10 @@ function test_mempoolspace(input_section, node_config, currency_name) {
 }
 
 // Pick monero-lws or global node settings
-function save_rpc_settings_init(currency_name, node_config, is_new_node) {
+function pre_save_rpc_settings(currency_name, node_config, is_new_node) {
     const node_name = node_config.name;
     if (currency_name === "monero" && node_name === "lws") {
-        save_rpc_settings_lws(currency_name, node_config, is_new_node);
+        save_lws_settings(currency_name, node_config, is_new_node);
         return
     }
     save_rpc_settings(currency_name, node_config, is_new_node);
@@ -1180,7 +1219,6 @@ function save_rpc_settings_init(currency_name, node_config, is_new_node) {
 
 // Updates UI and persists RPC configuration after successful validation
 function save_rpc_settings(currency_name, node_config, is_new_node) {
-    console.log("save rpc!");
     const node_name = node_config.name,
         settings_item = cs_node(currency_name, glob_let.ap_id),
         custom_nodes = settings_item.data("options"),
@@ -1200,8 +1238,7 @@ function save_rpc_settings(currency_name, node_config, is_new_node) {
 }
 
 // Save monero-lws settings 
-function save_rpc_settings_lws(currency_name, node_config, is_new_node) {
-    console.log("save lws!");
+function save_lws_settings(currency_name, node_config, is_new_node) {
     const node_name = node_config.name,
         settings_item = cs_node(currency_name, "apis"),
         custom_nodes = settings_item.data("lws_options"),
@@ -1257,6 +1294,18 @@ function delete_rpc_node() {
             }
         }
         return
+    })
+}
+
+// Toggles Monero-lws inputs
+function toggle_lws() {
+    $(document).on("click", "#lws_toggle", function() {
+        const lws_drawer = $("#lws_drawer");
+        if (lws_drawer.is(":visible")) {
+            lws_drawer.slideUp(200);
+            return
+        }
+        lws_drawer.slideDown(200);
     })
 }
 

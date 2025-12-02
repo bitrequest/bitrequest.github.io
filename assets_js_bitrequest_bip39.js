@@ -1361,7 +1361,7 @@ function format_keys(seed, key_data, bip32_config, index, coin) {
             return {
                 "index": index,
                 "address": xmr_keys.address,
-                "vk": xmr_keys.account + xmr_keys.svk
+                "vk": xmr_keys.svk
             }
         }
         return formatted_keys;

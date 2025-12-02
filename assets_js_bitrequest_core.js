@@ -1134,16 +1134,7 @@ function triggertx_function(trigger_elem) {
         triggertx_function(trigger_elem);
         return
     }
-    const use_random = cs_node(currency, "Use random address", true).selected,
-        derives = check_derivations(currency),
-        address_list = filter_addressli(currency, "checked", true),
-        first_address = address_list.first(),
-        manual_addresses = address_list.not(".seed"),
-        address_count = manual_addresses.length,
-        random_pool = (address_count > 1) ? manual_addresses : first_address,
-        random_index = generate_random_number(1, address_count) - 1,
-        selected_address = (use_random === true) ? (first_address.hasClass("seed")) ? first_address : manual_addresses.eq(random_index) : first_address,
-        address_data = selected_address.data();
+    const address_data = get_address_data(currency);
     if (address_data) {
         const wallet_address = address_data.address,
             request_title = trigger_elem.attr("title"),
@@ -1151,7 +1142,7 @@ function triggertx_function(trigger_elem) {
             seed_id = address_data.seedid;
         if (seed_id) {
             if (seed_id != glob_let.bipid) {
-                if (addr_whitelist(wallet_address) === true) {} else {
+                if (!addr_whitelist(wallet_address)) {
                     const dialog_data = {
                             "currency": currency,
                             "address": wallet_address,
@@ -1387,7 +1378,7 @@ function toggle_address() {
             if (address_item.hasClass("seedu")) {
                 const wallet_address = address_data.address,
                     seed_id = address_data.seedid;
-                if (addr_whitelist(wallet_address) !== true) {
+                if (!addr_whitelist(wallet_address)) {
                     const dialog_data = {
                             "address": wallet_address,
                             "pli": address_item,
@@ -1399,7 +1390,7 @@ function toggle_address() {
                 }
             } else if (address_item.hasClass("xpubu")) {
                 const wallet_address = address_data.address;
-                if (addr_whitelist(wallet_address) !== true) {
+                if (!addr_whitelist(wallet_address)) {
                     const has_pub_key = has_xpub(currency),
                         pub_key_id = address_data.xpubid;
                     if (has_pub_key === false || (has_pub_key && has_pub_key.key_id != pub_key_id)) {
@@ -2646,7 +2637,7 @@ function newrequest() {
             seed_id = addr_data.seedid;
         if (seed_id) {
             if (seed_id !== glob_let.bipid) {
-                if (addr_whitelist(address) !== true) {
+                if (!addr_whitelist(address)) {
                     const warning_data = {
                             "currency": currency,
                             "address": address,
@@ -2755,24 +2746,12 @@ function addressinfo() {
     $(document).on("click", ".address_info", function() {
         const dialog_wrap = $(this).closest("ul"),
             dialog_data = dialog_wrap.data(),
-            label = dialog_data.label || dialog_data.a_id || "",
             currency = dialog_data.currency,
-            hasbip32 = has_bip32(currency),
-            bip32_data = hasbip32 ? get_bip32dat(currency) : null,
-            seed_id = dialog_data.seedid,
-            xpub_id = dialog_data.xpubid,
-            view_key = dialog_data.vk,
-            source_type = seed_id ? "seed" : xpub_id ? "xpub" : false,
-            is_seed = source_type === "seed",
-            xpub = source_type === "xpub",
-            active_xpub_data = active_xpub(currency),
-            is_active_source = is_seed ? (seed_id === glob_let.bipid) : (xpub ? (active_xpub_data && xpub_id === active_xpub_data.key_id) : false),
-            address = dialog_data.address,
-            addr_whitelist_status = addr_whitelist(address),
-            restore_btn = is_seed ? (glob_let.hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + seed_id + "'>" + tl("resoresecretphrase") + "</div>" : "",
-            source_label = source_type ? (is_active_source) ? source_type + " <span class='icon-checkmark'>" : source_type + " (Unavailable)" + restore_btn : "external",
             derive_index = dialog_data.derive_index,
-            purpose = dialog_data.purpose;
+            purpose = dialog_data.purpose,
+            address = dialog_data.address,
+            hasbip32 = has_bip32(currency),
+            bip32_data = hasbip32 ? get_bip32dat(currency) : null;
         let deriv_path = bip32_data ? bip32_data.root_path + derive_index : "";
         if (purpose) {
             const path_parts = deriv_path.split("/");
@@ -2783,15 +2762,27 @@ function addressinfo() {
             dialog_data.bip32dat = bip32_data,
             dialog_data.address = address;
         const currency_icon = getcc_icon(dialog_data.cmcid, dialog_data.ccsymbol + "-" + currency, dialog_data.erc20),
-            path_info = is_seed ? "<li><strong>" + tl("derivationpath") + ":</strong> " + deriv_path + "</li>" : "",
+            xpub_id = dialog_data.xpubid,
+            seed_id = dialog_data.seedid,
+            source_type = seed_id ? "seed" : xpub_id ? "xpub" : false,
             pk_verified = "Unknown <span class='icon-checkmark'></span>",
+            show_label = tl("show"),
+            addr_whitelist_status = addr_whitelist(address),
+            active_xpub_data = active_xpub(currency),
+            xpub = source_type === "xpub",
+            is_seed = source_type === "seed",
+            is_active_source = is_seed ? (seed_id === glob_let.bipid) : (xpub ? (active_xpub_data && xpub_id === active_xpub_data.key_id) : false),
+            view_key = dialog_data.vk,
             view_key_obj = view_key ? vk_obj(view_key) : false,
             view_key_data = view_key_obj ? (is_seed && is_active_source ? "derive" : view_key_obj.vk) : false,
-            show_label = tl("show"),
             pk_display = view_key_data ? "<span id='show_vk' class='ref' data-vk='" + view_key_data + "'>" + show_label + "</span>" :
-            (is_seed ? (is_active_source ? "<span id='show_pk' class='ref'>" + show_label + "</span>" :
-                (addr_whitelist_status === true ? pk_verified : "Unknown")) : pk_verified);
-        privatekey_label = tl("privatekey"),
+            is_seed ? is_active_source ? "<span id='show_pk' class='ref'>" + show_label + "</span>" :
+            addr_whitelist_status ? pk_verified : "Unknown" : pk_verified,
+            privatekey_label = tl("privatekey"),
+            label = dialog_data.label || dialog_data.a_id || "",
+            restore_btn = is_seed ? (glob_let.hasbip === true) ? "" : "<div id='rest_seed' class='ref' data-seedid='" + seed_id + "'>" + tl("resoresecretphrase") + "</div>" : "",
+            source_label = source_type ? (is_active_source) ? source_type + " <span class='icon-checkmark'>" : source_type + " (Unavailable)" + restore_btn : "external",
+            path_info = is_seed ? "<li><strong>" + tl("derivationpath") + ":</strong> " + deriv_path + "</li>" : "",
             info_content = $("<div id='ad_info_wrap'><h2>" + currency_icon + " <span>" + label + "</span></h2><ul>\
                <li><strong>" + tl("address") + ": </strong><span class='adbox adboxl select'>" + address + "</span>\
                <div id='qrcodea' class='qrwrap flex'><div class='qrcode'></div>" + currency_icon + "</div>\
@@ -3692,7 +3683,7 @@ function recent_requests_list(recent_payments) {
                 explorer_url = blockexplorer_url(currency, false, is_erc20, tx_source, eth_layer) + wallet_addr;
             request_html += "<li class='rp_li'>" + getcc_icon(coin_id, coin_symbol + "-" + currency, is_erc20) + "<strong style='opacity:0.5'>" + short_date(request_time) + "</strong><br/>\
             <a href='" + explorer_url + "' target='_blank' class='ref check_recent'>\
-            <span class='select'>" + wallet_addr + "</span> <span class='icon-new-tab'></a></li>";
+            <span class='select'>" + wallet_addr + "</span> <span class='icon-new-tab'></span></a></li>";
         }
     });
     return request_html;

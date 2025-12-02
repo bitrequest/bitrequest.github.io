@@ -352,6 +352,7 @@ let request = null,
 //get_addresslist
 //filter_addressli
 //filter_all_addressli
+//get_address_data
 //filter_list
 //filter_list_match
 //get_request_id
@@ -1005,8 +1006,9 @@ function renderlnconnect(str) {
 
 // Generates cryptographically secure random integer within specified range
 function generate_random_number(min, max) {
-    return Math.floor(Math.random() * (max - min) + min);
+    return Math.floor(Math.random() * (max - min + 1) + min);
 }
+
 // Returns random element from array using Math.random() distribution
 function random_array_item(arr) {
     if (is_array(arr)) {
@@ -1543,6 +1545,18 @@ function filter_addressli(currency, data_key, data_value) {
 // Searches all address elements across currencies by data attribute
 function filter_all_addressli(data_key, data_value) {
     return filter_list($(".adli"), data_key, data_value);
+}
+
+// Get address data from active address
+function get_address_data(currency) {
+    const use_random = cs_node(currency, "Use random address", true).selected,
+        address_list = filter_addressli(currency, "checked", true),
+        first_address = address_list.first(),
+        manual_addresses = address_list.not(".seed"),
+        address_count = manual_addresses.length,
+        random_index = generate_random_number(1, address_count) - 1,
+        selected_address = (use_random === true) ? (first_address.hasClass("seed")) ? first_address : manual_addresses.eq(random_index) : first_address;
+    return selected_address.data();
 }
 
 // Filters any DOM collection by matching data attribute value
