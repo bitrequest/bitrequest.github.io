@@ -797,6 +797,7 @@
 }
 
 .networks ul li.nwl2.dim {
+    text-decoration-line: line-through;
     opacity:0.5;
 }
 

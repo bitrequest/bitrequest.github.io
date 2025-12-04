@@ -934,7 +934,6 @@ function create_layer2_request(timeout, pending, contract, ping_id) {
 // Switch l2
 function switch_l2() {
     $(document).on("click", ".nwl2", function() {
-        if (request.isrequest) return
         const this_node = $(this);
         if (this_node.hasClass("offline")) {
             play_audio("funk");
